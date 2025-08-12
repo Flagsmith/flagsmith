@@ -21,7 +21,7 @@ import {
 import { useRouteContext } from 'components/providers/RouteContext'
 import PlanBasedAccess from 'components/PlanBasedAccess'
 import { NEW_PIPELINE_STAGE, NEW_PIPELINE_STAGE_ACTION_TYPE } from './constants'
-import { StageActionType } from 'common/types/responses'
+import { StageActionBody, StageActionType } from 'common/types/responses'
 import ButtonDropdown from 'components/base/forms/ButtonDropdown'
 
 type CreateReleasePipelineParams = {
@@ -144,6 +144,37 @@ function CreateReleasePipeline() {
     setPipelineData((prev) => ({ ...prev, stages: updatedStages }))
   }
 
+  const checkFieldRange = (field: number, min: number, max: number) => {
+    if (!field) {
+      return false
+    }
+
+    return field >= min && field <= max
+  }
+
+  const validatePhasedRolloutAction = (actionBody: StageActionBody) => {
+    if (
+      !actionBody?.increase_by ||
+      !actionBody?.initial_split ||
+      !actionBody?.increase_every
+    ) {
+      return false
+    }
+
+    if (
+      !checkFieldRange(actionBody.increase_by, 0, 100) ||
+      !checkFieldRange(actionBody.initial_split, 0, 100)
+    ) {
+      return false
+    }
+
+    if (actionBody.increase_by + actionBody.initial_split > 100) {
+      return false
+    }
+
+    return true
+  }
+
   const validateStage = (stage: PipelineStageRequest) => {
     if (!stage.actions.length) {
       return false
@@ -162,9 +193,23 @@ function CreateReleasePipeline() {
       (action) =>
         action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT,
     )
+    const isSegmentsValid = segments.every(
+      (segment) => !!segment.action_body.segment_id,
+    )
 
-    if (segments.length) {
-      return segments.every((segment) => !!segment.action_body.segment_id)
+    if (segments.length && !isSegmentsValid) {
+      return false
+    }
+
+    const phasedRolloutActions = stage.actions.filter(
+      (action) => action.action_type === StageActionType.PHASED_ROLLOUT,
+    )
+    const isPhasedRolloutValid = phasedRolloutActions.every((action) =>
+      validatePhasedRolloutAction(action.action_body),
+    )
+
+    if (phasedRolloutActions.length && !isPhasedRolloutValid) {
+      return false
     }
 
     return !!stage.name.length

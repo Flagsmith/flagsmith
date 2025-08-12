@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.190.1](https://github.com/Flagsmith/flagsmith/compare/v2.190.0...v2.190.1) (2025-08-07)
+
+
+### Bug Fixes
+
+* Bring API docs back ([#5908](https://github.com/Flagsmith/flagsmith/issues/5908)) ([92ba39a](https://github.com/Flagsmith/flagsmith/commit/92ba39adb368aee26b8b44e42cc9b38cd0c05c8b))
+
+## [2.190.0](https://github.com/Flagsmith/flagsmith/compare/v2.189.0...v2.190.0) (2025-08-07)
+
+
+### Features
+
+* add save and publish pipeline ([#5827](https://github.com/Flagsmith/flagsmith/issues/5827)) ([e59b3c6](https://github.com/Flagsmith/flagsmith/commit/e59b3c610d4b20fb1a0b0ef066ab7523b85fcc70))
+* added-hosted-preferences-to-onboarding-data ([#5883](https://github.com/Flagsmith/flagsmith/issues/5883)) ([5598da0](https://github.com/Flagsmith/flagsmith/commit/5598da06c393687af149e55757cf6cd5b1add00f))
+* hosting preferences ([#5806](https://github.com/Flagsmith/flagsmith/issues/5806)) ([464c217](https://github.com/Flagsmith/flagsmith/commit/464c21708e2bff63d60535e6ba1b9c7fbedb9599))
+
+
+### Bug Fixes
+
+* filter unhealthy events ([#5884](https://github.com/Flagsmith/flagsmith/issues/5884)) ([5ac9098](https://github.com/Flagsmith/flagsmith/commit/5ac90981f8fc3b648976dafbba5786dd7ced9d6d))
+* Segment updates deleting rules ([#5902](https://github.com/Flagsmith/flagsmith/issues/5902)) ([ad90f59](https://github.com/Flagsmith/flagsmith/commit/ad90f599c105e9f81080f07175afc5ff6d6adde4))
+* split-operator-to-remove-append ([#5871](https://github.com/Flagsmith/flagsmith/issues/5871)) ([df27bb1](https://github.com/Flagsmith/flagsmith/commit/df27bb1ab0a49f037dc83fe97f76324bb9c34859))
+* **tests:** Improper `skip_if_no_analytics_db` marker behaviour ([#5876](https://github.com/Flagsmith/flagsmith/issues/5876)) ([de61b8b](https://github.com/Flagsmith/flagsmith/commit/de61b8b4ccdaab13bd03634942c620bebd1772ca))
+
 ## [2.189.0](https://github.com/Flagsmith/flagsmith/compare/v2.188.1...v2.189.0) (2025-07-31)
 
 

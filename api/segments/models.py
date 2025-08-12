@@ -6,7 +6,7 @@ from copy import deepcopy
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     BEFORE_CREATE,
@@ -117,34 +117,71 @@ class Segment(
         self.version_of = self
         self.save_without_historical_record()
 
-    def _clone_segment_rules(self, cloned_segment: "Segment") -> list["SegmentRule"]:
-        cloned_rules = []
-        for rule in self.rules.all():
-            cloned_rule = rule.deep_clone(cloned_segment)
-            cloned_rules.append(cloned_rule)
-        cloned_segment.refresh_from_db()
-        assert (
-            len(self.rules.all())
-            == len(cloned_rules)
-            == len(cloned_segment.rules.all())
-        ), "Mismatch during rules creation"
-
-        return cloned_rules
-
-    # TODO: To be depreacted in flagsmith-common and flagsmith-workflows
-    def deep_clone(self) -> "Segment":
+    @transaction.atomic
+    def clone(self, is_revision: bool = False, **extra_attrs: typing.Any) -> "Segment":
+        """
+        Create a revision of the segment
+        """
         cloned_segment = deepcopy(self)
-        cloned_segment.id = None
+        cloned_segment.pk = None
         cloned_segment.uuid = uuid.uuid4()
-        cloned_segment.version_of = self
+        cloned_segment.version_of = None  # Unset for now
+        cloned_segment.version = 0  # Unset for now
+        for attr_name, value in extra_attrs.items():
+            setattr(cloned_segment, attr_name, value)
         cloned_segment.save()
 
-        self.version += 1  # type: ignore[operator]
-        self.save_without_historical_record()
+        cloned_segment.copy_rules_and_conditions_from(self)
 
-        self._clone_segment_rules(cloned_segment)
+        # Handle versioning
+        version_of = self if is_revision else cloned_segment
+        cloned_segment.version_of = extra_attrs.get("version_of", version_of)
+        cloned_segment.version = self.version if is_revision else 1
+        Segment.objects.filter(pk=cloned_segment.pk).update(
+            version_of=cloned_segment.version_of,
+            version=cloned_segment.version,
+        )
+
+        # Increase self version
+        if is_revision:
+            self.version = (self.version or 1) + 1
+            Segment.objects.filter(pk=self.pk).update(version=self.version)
 
         return cloned_segment
+
+    def copy_rules_and_conditions_from(self, source_segment: "Segment") -> None:
+        """
+        Recursively copy rules and conditions from another segment
+        """
+        assert transaction.get_connection().in_atomic_block, "Must run in a transaction"
+
+        # Delete existing rules
+        SegmentRule.objects.filter(segment=self).delete()
+
+        source_rules = SegmentRule.objects.filter(
+            models.Q(segment=source_segment) | models.Q(rule__segment=source_segment)
+        )
+
+        # Ensure top-level rules are cloned first (for dependencies)
+        source_rules = source_rules.order_by(models.F("rule").asc(nulls_first=True))
+
+        rule_to_cloned_rule_map: dict[SegmentRule, SegmentRule] = {}
+        for rule in source_rules:
+            cloned_rule = deepcopy(rule)
+            cloned_rule.pk = None
+            cloned_rule.uuid = uuid.uuid4()
+            cloned_rule.segment = self if rule.segment else None
+            cloned_rule.rule = rule_to_cloned_rule_map.get(rule.rule)
+            cloned_rule.save()
+            rule_to_cloned_rule_map[rule] = cloned_rule
+
+        source_conditions = Condition.objects.filter(rule__in=rule_to_cloned_rule_map)
+        for condition in source_conditions:
+            cloned_condition = deepcopy(condition)
+            cloned_condition.pk = None
+            cloned_condition.uuid = uuid.uuid4()
+            cloned_condition.rule = rule_to_cloned_rule_map[condition.rule]
+            cloned_condition.save()
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return SEGMENT_CREATED_MESSAGE % self.name
@@ -183,96 +220,29 @@ class SegmentRule(
 
     history_record_class_path = "segments.models.HistoricalSegmentRule"
 
-    def clean(self):  # type: ignore[no-untyped-def]
-        super().clean()
-        parents = [self.segment, self.rule]
-        num_parents = sum(parent is not None for parent in parents)
-        if num_parents != 1:
-            raise ValidationError(
-                "Segment rule must have exactly one parent, %d found",
-                num_parents,  # type: ignore[arg-type]
-            )
-
     def __str__(self):  # type: ignore[no-untyped-def]
         return "%s rule for %s" % (
             self.type,
             str(self.segment) if self.segment else str(self.rule),
         )
 
-    def get_skip_create_audit_log(self) -> bool:
-        try:
-            segment = self.get_segment()  # type: ignore[no-untyped-call]
-            if segment.deleted_at:
-                return True
-            if segment.is_system_segment:
-                return True
-            return segment.version_of_id != segment.id  # type: ignore[no-any-return]
-        except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
-            # handle hard delete
-            return True
+    def clean(self) -> None:
+        super().clean()
+        self._validate_one_parent()
 
-    def _get_project(self) -> typing.Optional[Project]:
-        return self.get_segment().project  # type: ignore[no-untyped-call,no-any-return]
 
-    def get_segment(self):  # type: ignore[no-untyped-def]
-        """
-        rules can be a child of a parent rule instead of a segment, this method iterates back up the tree to find the
-        segment
-
-        TODO: denormalise the segment information so that we don't have to make multiple queries here in complex cases
-        """
-        rule = self
-        while not rule.segment_id:
-            rule = rule.rule  # type: ignore[assignment]
-        return rule.segment
-
-    def deep_clone(self, cloned_segment: Segment) -> "SegmentRule":
-        if self.rule:
-            # Since we're expecting a rule that is only belonging to a
-            # segment, since a rule either belongs to a segment xor belongs
-            # to a rule, we don't expect there also to be a rule associated.
-            assert False, "Unexpected rule, expecting segment set not rule"
-        cloned_rule = deepcopy(self)
-        cloned_rule.segment = cloned_segment
-        cloned_rule.uuid = uuid.uuid4()
-        cloned_rule.id = None
-        cloned_rule.save()
-        logger.info(
-            f"Deep copying rule {self.id} for cloned rule {cloned_rule.id} for cloned segment {cloned_segment.id}"
-        )
-
-        # Conditions are only part of the sub-rules.
-        assert self.conditions.exists() is False
-
-        for sub_rule in self.rules.all():
-            if sub_rule.rules.exists():
-                assert False, "Expected two layers of rules, not more"
-
-            cloned_sub_rule = deepcopy(sub_rule)
-            cloned_sub_rule.rule = cloned_rule
-            cloned_sub_rule.uuid = uuid.uuid4()
-            cloned_sub_rule.id = None
-            cloned_sub_rule.save()
-            logger.info(
-                f"Deep copying sub rule {sub_rule.id} for cloned sub rule {cloned_sub_rule.id} "
-                f"for cloned segment {cloned_segment.id}"
+    def _validate_one_parent(self) -> None:
+        parents = [self.segment, self.rule]
+        if (num_parents := sum(parent is not None for parent in parents)) != 1:
+            raise ValidationError(
+                f"SegmentRule must have exactly one parent, {num_parents} found"
             )
 
-            cloned_conditions = []
-            for condition in sub_rule.conditions.all():
-                cloned_condition = deepcopy(condition)
-                cloned_condition.rule = cloned_sub_rule
-                cloned_condition.uuid = uuid.uuid4()
-                cloned_condition.id = None
-                cloned_conditions.append(cloned_condition)
-                logger.info(
-                    f"Cloning condition {condition.id} for cloned condition {cloned_condition.uuid} "
-                    f"for cloned segment {cloned_segment.id}"
-                )
-
-            Condition.objects.bulk_create(cloned_conditions)
-
-        return cloned_rule
+    def get_skip_create_audit_log(self) -> bool:
+        # NOTE: We'll transition to storing rules and conditions in JSON so
+        # individual audit logs for rules and conditions is irrelevant.
+        # This model will be deleted as of https://github.com/Flagsmith/flagsmith/issues/5846
+        return True
 
 
 class ConditionManager(SoftDeleteExportableManager):
@@ -335,7 +305,7 @@ class Condition(
 
     objects: typing.ClassVar[ConditionManager] = ConditionManager()
 
-    def __str__(self):  # type: ignore[no-untyped-def]
+    def __str__(self) -> str:
         return "Condition for %s: %s %s %s" % (
             str(self.rule),
             self.property,
@@ -343,46 +313,24 @@ class Condition(
             self.value,
         )
 
-    def get_skip_create_audit_log(self) -> bool:
-        try:
-            if self.rule.deleted_at:
-                return True
 
-            segment = self.rule.get_segment()  # type: ignore[no-untyped-call]
-            if segment.deleted_at:
-                return True
-            if segment.is_system_segment:
-                return True
+    def get_skip_create_audit_log(self) -> bool:  # pragma: no cover
+        # NOTE: We'll transition to storing rules and conditions in JSON so
+        # individual audit logs for rules and conditions is irrelevant.
+        # This model will be deleted as of https://github.com/Flagsmith/flagsmith/issues/5846
+        return True
 
-            return segment.version_of_id != segment.id  # type: ignore[no-any-return]
-        except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
-            # handle hard delete
-            return True
+    def get_update_log_message(self, _: typing.Any) -> None:  # pragma: no cover
+        return None
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
-        return f"Condition updated on segment '{self._get_segment().name}'."
+    def get_create_log_message(self, _: typing.Any) -> None:  # pragma: no cover
+        return None
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def,return]
-        if not self.created_with_segment:
-            return f"Condition added to segment '{self._get_segment().name}'."
+    def get_delete_log_message(self, _: typing.Any) -> None:  # pragma: no cover
+        return None
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def,return]
-        if not self._get_segment().deleted_at:
-            return f"Condition removed from segment '{self._get_segment().name}'."
-
-    def get_audit_log_related_object_id(self, history_instance) -> int:  # type: ignore[no-untyped-def]
-        return self._get_segment().id
-
-    def _get_segment(self) -> Segment:
-        """
-        Temporarily cache the segment on the condition object to reduce number of queries.
-        """
-        if not hasattr(self, "segment"):
-            setattr(self, "segment", self.rule.get_segment())  # type: ignore[no-untyped-call]
-        return self.segment  # type: ignore[no-any-return]
-
-    def _get_project(self) -> typing.Optional[Project]:
-        return self.rule.get_segment().project  # type: ignore[no-untyped-call,no-any-return]
+    def get_audit_log_related_object_id(self, _: typing.Any) -> int:  # pragma: no cover
+        raise NotImplementedError("No longer used, will be removed soon.")
 
 
 class WhitelistedSegment(models.Model):

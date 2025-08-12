@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+import structlog
+from django.db import transaction
 from django.utils import timezone
 
 from environments.tasks import rebuild_environment_document
@@ -7,12 +9,12 @@ from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
 from features.workflows.core.exceptions import ChangeRequestNotApprovedError
-from segments.models import Segment
-from segments.services import SegmentCloneService
 
 if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
     from users.models import FFAdminUser
+
+logger = structlog.get_logger()
 
 
 class ChangeRequestCommitService:
@@ -95,26 +97,24 @@ class ChangeRequestCommitService:
         for change_set in self.change_request.change_sets.all():
             change_set.publish(user=published_by)
 
+    @transaction.atomic
     def _publish_segments(self) -> None:
-        for segment in self.change_request.segments.all():
-            target_segment: Segment = segment.version_of  # type: ignore[assignment]
-            assert target_segment != segment
+        for draft_segment in self.change_request.segments.all():
+            live_segment = draft_segment.version_of
+            if not live_segment:  # pragma: no cover
+                logger.warning("missing-live-segment", draft_segment=draft_segment.uuid)
+                continue
 
-            # Deep clone the segment to establish historical version this is required
-            # because the target segment will be altered when the segment is published.
-            # Think of it like a regular update to a segment where we create the clone
-            # to create the version, then modifying the new 'draft' version with the
-            # data from the change request.
-            SegmentCloneService(target_segment).deep_clone()
+            # Make a revision of the live segment
+            revision = live_segment.clone(is_revision=True)
+            logger.info(
+                "segment-revision-created",
+                segment_id=live_segment.id,
+                revision_id=revision.id,
+            )
 
-            # Set the properties of the change request's segment to the properties
-            # of the target (i.e., canonical) segment.
-            target_segment.name = segment.name
-            target_segment.description = segment.description
-            target_segment.feature = segment.feature
-            target_segment.save()
-
-            # Delete the rules in order to replace them with copies of the segment.
-            target_segment.rules.all().delete()
-            for rule in segment.rules.all():
-                rule.deep_clone(target_segment)
+            live_segment.name = draft_segment.name
+            live_segment.description = draft_segment.description
+            live_segment.feature = draft_segment.feature
+            live_segment.save()
+            live_segment.copy_rules_and_conditions_from(draft_segment)
