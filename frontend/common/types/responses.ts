@@ -262,6 +262,7 @@ export type GettingStartedTask = {
   completed_at?: string
 }
 export type Onboarding = {
+  hosting_preferences: ('public_saas' | 'private_saas' | 'self_hosted')[]
   tools: {
     completed: boolean
     integrations: string[]
@@ -740,6 +741,7 @@ export type HealthEventReason = {
 }
 
 export type HealthEvent = {
+  id: number
   created_at: string
   environment: number
   feature: number
@@ -849,7 +851,7 @@ export interface ReleasePipeline {
 }
 
 export interface SingleReleasePipeline extends ReleasePipeline {
-  stages: PipelineStage[]
+  stages: PipelineDetailStage[]
   completed_features: number[]
 }
 
@@ -868,16 +870,29 @@ export type StageTrigger = {
 export enum StageActionType {
   TOGGLE_FEATURE = 'TOGGLE_FEATURE',
   TOGGLE_FEATURE_FOR_SEGMENT = 'TOGGLE_FEATURE_FOR_SEGMENT',
+  PHASED_ROLLOUT = 'PHASED_ROLLOUT',
 }
 
-export type StageActionBody = { enabled: boolean; segment_id?: number }
+export type StageActionBody = {
+  enabled: boolean
+  segment_id?: number
+  initial_split?: number
+  increase_by?: number
+  increase_every?: string
+}
 export interface StageAction {
   id: number
   action_type: StageActionType
   action_body: StageActionBody
 }
 
-export type PipelineStage = {
+export type Features = {
+  [id: number]: {
+    name: string
+  }
+}
+
+export interface BasePipelineStage {
   id: number
   name: string
   pipeline: number
@@ -885,7 +900,14 @@ export type PipelineStage = {
   order: number
   trigger: StageTrigger
   actions: StageAction[]
+}
+
+export interface PipelineStage extends BasePipelineStage {
   features: number[]
+}
+
+export interface PipelineDetailStage extends BasePipelineStage {
+  features: Features
 }
 
 export type Res = {
@@ -1043,6 +1065,5 @@ export type Res = {
   releasePipelines: PagedResponse<ReleasePipeline>
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
-  pipelineStage: PipelineStage
   // END OF TYPES
 }

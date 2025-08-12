@@ -1,9 +1,10 @@
 import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
-import { ProjectFlag } from 'common/types/responses'
+import { Features, ProjectFlag } from 'common/types/responses'
 import { useCallback, useEffect, useState } from 'react'
+
 type StageFeatureDetailProps = {
-  features: number[]
+  features: Features | number[]
   projectId: number
 }
 
@@ -11,15 +12,18 @@ const StageFeatureDetail = ({
   features,
   projectId,
 }: StageFeatureDetailProps) => {
+  const featureIds = Array.isArray(features)
+    ? features
+    : Object.keys(features || {}).map(Number)
   const [projectFlags, setProjectFlags] = useState<ProjectFlag[]>([])
   const getProjectFlags = useCallback(async () => {
-    if (!features.length) {
+    if (!featureIds.length) {
       return
     }
 
     try {
       const res = await Promise.all(
-        features.map((id) =>
+        featureIds.map((id) =>
           getProjectFlag(getStore(), {
             id: `${id}`,
             project: projectId,
@@ -32,13 +36,13 @@ const StageFeatureDetail = ({
       console.error(error)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [features?.join(','), projectId])
+  }, [featureIds?.join(','), projectId])
 
   useEffect(() => {
     getProjectFlags()
   }, [getProjectFlags])
 
-  if (!features.length) {
+  if (!featureIds.length) {
     return (
       <>
         <h6>Features (0)</h6>
@@ -49,7 +53,7 @@ const StageFeatureDetail = ({
 
   return (
     <>
-      <h6>Features ({features.length})</h6>
+      <h6>Features ({featureIds.length})</h6>
       {projectFlags?.map((flag) => (
         <p key={flag.id} className='text-muted'>
           <b>{flag.name}</b>

@@ -30,18 +30,18 @@ def test_create_import_request__return_expected(
     ld_client_mock: MagicMock,
     ld_client_class_mock: MagicMock,
     project: Project,
-    test_user: FFAdminUser,
+    staff_user: FFAdminUser,
 ) -> None:
     # Given
     ld_project_key = "test-project-key"
     ld_token = "test-token"
 
-    expected_salt = f"ld_import_{test_user.id}"
+    expected_salt = f"ld_import_{staff_user.id}"
 
     # When
     result = create_import_request(
         project=project,
-        user=test_user,
+        user=staff_user,
         ld_project_key=ld_project_key,
         ld_token=ld_token,
     )
@@ -58,7 +58,7 @@ def test_create_import_request__return_expected(
     }
     assert signing.loads(result.ld_token, salt=expected_salt) == ld_token
     assert result.ld_project_key == ld_project_key
-    assert result.created_by == test_user
+    assert result.created_by == staff_user
     assert result.project == project
 
 

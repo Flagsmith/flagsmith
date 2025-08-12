@@ -9,6 +9,7 @@ import Icon from 'components/Icon'
 import {
   useCreateReleasePipelineMutation,
   useGetReleasePipelineQuery,
+  usePublishReleasePipelineMutation,
   useUpdateReleasePipelineMutation,
 } from 'common/services/useReleasePipelines'
 import { useHistory, useParams } from 'react-router-dom'
@@ -20,7 +21,8 @@ import {
 import { useRouteContext } from 'components/providers/RouteContext'
 import PlanBasedAccess from 'components/PlanBasedAccess'
 import { NEW_PIPELINE_STAGE, NEW_PIPELINE_STAGE_ACTION_TYPE } from './constants'
-import { StageActionType } from 'common/types/responses'
+import { StageActionBody, StageActionType } from 'common/types/responses'
+import ButtonDropdown from 'components/base/forms/ButtonDropdown'
 
 type CreateReleasePipelineParams = {
   id?: string
@@ -62,6 +64,8 @@ function CreateReleasePipeline() {
     },
   ] = useUpdateReleasePipelineMutation()
 
+  const [publishReleasePipeline] = usePublishReleasePipelineMutation()
+
   const [pipelineData, setPipelineData] = useState<ReleasePipelineRequest>({
     name: '',
     project: Number(projectId),
@@ -80,7 +84,13 @@ function CreateReleasePipeline() {
     [history, projectId],
   )
 
+  const [isSavingAndPublishing, setIsSavingAndPublishing] = useState(false)
+
   useEffect(() => {
+    if (isSavingAndPublishing) {
+      return
+    }
+
     if (isCreatingPipelineSuccess) {
       return handleSuccess()
     }
@@ -88,9 +98,18 @@ function CreateReleasePipeline() {
     if (isUpdatingPipelineSuccess) {
       return handleSuccess(true)
     }
-  }, [isCreatingPipelineSuccess, isUpdatingPipelineSuccess, handleSuccess])
+  }, [
+    isCreatingPipelineSuccess,
+    isUpdatingPipelineSuccess,
+    handleSuccess,
+    isSavingAndPublishing,
+  ])
 
   useEffect(() => {
+    if (isSavingAndPublishing) {
+      return
+    }
+
     if (isCreatingPipelineError) {
       toast('Error creating release pipeline', 'danger')
     }
@@ -106,6 +125,7 @@ function CreateReleasePipeline() {
     createPipelineError,
     isUpdatingPipelineError,
     updatePipelineError,
+    isSavingAndPublishing,
   ])
 
   useEffect(() => {
@@ -122,6 +142,37 @@ function CreateReleasePipeline() {
       i === index ? newStageData : stage,
     )
     setPipelineData((prev) => ({ ...prev, stages: updatedStages }))
+  }
+
+  const checkFieldRange = (field: number, min: number, max: number) => {
+    if (!field) {
+      return false
+    }
+
+    return field >= min && field <= max
+  }
+
+  const validatePhasedRolloutAction = (actionBody: StageActionBody) => {
+    if (
+      !actionBody?.increase_by ||
+      !actionBody?.initial_split ||
+      !actionBody?.increase_every
+    ) {
+      return false
+    }
+
+    if (
+      !checkFieldRange(actionBody.increase_by, 0, 100) ||
+      !checkFieldRange(actionBody.initial_split, 0, 100)
+    ) {
+      return false
+    }
+
+    if (actionBody.increase_by + actionBody.initial_split > 100) {
+      return false
+    }
+
+    return true
   }
 
   const validateStage = (stage: PipelineStageRequest) => {
@@ -142,9 +193,23 @@ function CreateReleasePipeline() {
       (action) =>
         action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT,
     )
+    const isSegmentsValid = segments.every(
+      (segment) => !!segment.action_body.segment_id,
+    )
 
-    if (segments.length) {
-      return segments.every((segment) => !!segment.action_body.segment_id)
+    if (segments.length && !isSegmentsValid) {
+      return false
+    }
+
+    const phasedRolloutActions = stage.actions.filter(
+      (action) => action.action_type === StageActionType.PHASED_ROLLOUT,
+    )
+    const isPhasedRolloutValid = phasedRolloutActions.every((action) =>
+      validatePhasedRolloutAction(action.action_body),
+    )
+
+    if (phasedRolloutActions.length && !isPhasedRolloutValid) {
+      return false
     }
 
     return !!stage.name.length
@@ -158,27 +223,46 @@ function CreateReleasePipeline() {
     return pipelineData.stages.every(validateStage)
   }
 
-  const handleSave = () => {
-    createReleasePipeline({
+  const handleSubmit = async (id?: number) => {
+    if (id) {
+      return await updateReleasePipeline({
+        id,
+        name: pipelineData.name,
+        project: Number(projectId),
+        stages: pipelineData.stages.map((stage, index) => ({
+          ...stage,
+          order: index,
+        })),
+      }).unwrap()
+    }
+
+    return await createReleasePipeline({
       name: pipelineData.name,
       project: Number(projectId),
       stages: pipelineData.stages.map((stage, index) => ({
         ...stage,
         order: index,
       })),
-    })
+    }).unwrap()
   }
 
-  const handleUpdate = (id: number) => {
-    updateReleasePipeline({
-      id,
-      name: pipelineData.name,
-      project: Number(projectId),
-      stages: pipelineData.stages.map((stage, index) => ({
-        ...stage,
-        order: index,
-      })),
-    })
+  const handleSubmitAndPublish = async (id?: number) => {
+    try {
+      setIsSavingAndPublishing(true)
+      const response = await handleSubmit(id)
+      await publishReleasePipeline({
+        pipelineId: response.id,
+        projectId: Number(projectId),
+      })
+      toast(`Release pipeline published successfully`)
+    } catch (error) {
+      toast(
+        `Error ${id ? 'updating' : 'creating'} and publishing pipeline`,
+        'danger',
+      )
+    } finally {
+      setIsSavingAndPublishing(false)
+    }
   }
 
   const handleRemoveStage = (index: number) => {
@@ -188,6 +272,7 @@ function CreateReleasePipeline() {
 
   const isSaveDisabled =
     !validatePipelineData() || isCreatingPipeline || isUpdatingPipeline
+
   const saveButtonText = existingPipeline?.id ? 'Update' : 'Save'
 
   if (isLoadingExistingPipeline) {
@@ -246,16 +331,20 @@ function CreateReleasePipeline() {
             </Row>
           }
           cta={
-            <Button
+            <ButtonDropdown
+              type='button'
+              data-test='create-update-release-pipeline-btn'
               disabled={isSaveDisabled}
-              onClick={() =>
-                existingPipeline?.id
-                  ? handleUpdate(existingPipeline.id)
-                  : handleSave()
-              }
+              dropdownItems={[
+                {
+                  label: `${saveButtonText} & Publish`,
+                  onClick: () => handleSubmitAndPublish(existingPipeline?.id),
+                },
+              ]}
+              onClick={() => handleSubmit(existingPipeline?.id)}
             >
-              {saveButtonText}
-            </Button>
+              {saveButtonText} as Draft
+            </ButtonDropdown>
           }
         />
         <div className='release-pipeline-container px-2 overflow-auto'>

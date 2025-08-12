@@ -26,6 +26,9 @@ const renderActionDetail = (
           {actionPrefixText} flag for <b>everyone</b>
         </span>
       )
+    case StageActionType.PHASED_ROLLOUT:
+      // TODO: TBD
+      return <span>Phased rollout</span>
     default:
       return null
   }

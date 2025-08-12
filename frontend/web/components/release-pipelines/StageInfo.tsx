@@ -1,6 +1,6 @@
 import { StageTriggerBody, StageTriggerType } from 'common/types/responses'
 
-import { PipelineStage } from 'common/types/responses'
+import { PipelineDetailStage } from 'common/types/responses'
 import StageCard from './StageCard'
 import StageArrow from './StageArrow'
 import moment from 'moment'
@@ -9,7 +9,7 @@ import FlagActionDetail from './FlagActionDetail'
 
 type StageInfoProps = {
   environmentName: string
-  stageData: PipelineStage
+  stageData: PipelineDetailStage
   projectId: number
 }
 

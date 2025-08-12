@@ -12,13 +12,13 @@ from users.models import FFAdminUser
 
 
 def test_send_onboarding_request_to_saas_flagsmith_view_for_non_admin_user(
-    test_user_client: APIClient, is_oss: MagicMock
+    staff_client: APIClient, is_oss: MagicMock
 ) -> None:
     # Given
     url = reverse("api-v1:onboarding:send-onboarding-request")
 
     # When
-    response = test_user_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN

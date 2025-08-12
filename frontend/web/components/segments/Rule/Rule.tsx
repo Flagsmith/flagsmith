@@ -26,6 +26,7 @@ interface RuleProps {
   showDescription?: boolean
   'data-test'?: string
   errors: SegmentConditionsError[]
+  projectId: number
 }
 
 const Rule: React.FC<RuleProps> = ({
@@ -33,6 +34,7 @@ const Rule: React.FC<RuleProps> = ({
   errors,
   onChange,
   operators,
+  projectId,
   readOnly,
   rule,
   showDescription,
@@ -69,7 +71,10 @@ const Rule: React.FC<RuleProps> = ({
     )
     const newOperator = operators.find((op) => op.value === operatorValue)
 
-    const updates: Partial<SegmentCondition> = { operator: operatorValue }
+    // Split the append part of the operator as not handled by backend
+    const updates: Partial<SegmentCondition> = {
+      operator: operatorValue?.split(':')[0],
+    }
 
     if (newOperator?.hideValue) {
       updates.value = null
@@ -87,7 +92,6 @@ const Rule: React.FC<RuleProps> = ({
 
       const invalidPercentageSplit =
         condition?.value && isInvalidPercentageSplit(condition.value)
-
       if (invalidPercentageSplit) {
         updates.value = ''
       } else {
@@ -103,7 +107,6 @@ const Rule: React.FC<RuleProps> = ({
     value: string | boolean,
   ) => {
     const condition = rule.conditions[conditionIndex]
-
     if (
       condition?.operator === 'PERCENTAGE_SPLIT' &&
       isInvalidPercentageSplit(value)
@@ -174,6 +177,7 @@ const Rule: React.FC<RuleProps> = ({
             addRule={addRule}
             rules={rules}
             data-test={`${dataTest}`}
+            projectId={projectId}
           />
         ))}
       </div>
