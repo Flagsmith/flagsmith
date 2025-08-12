@@ -304,7 +304,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             name,
             project: projectId,
             rules,
-            segment_id: segment.id!,
+            version_of: segment.id!,
           },
         ],
         title: changeRequestData.title,

@@ -1,10 +1,42 @@
-import { Res } from 'common/types/responses'
+import { Res, Segment, SegmentRule } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 import transformCorePaging from 'common/transformCorePaging'
 import { getStore } from 'common/store'
 import { segmentService } from './useSegment'
+
+export function stripIdsAndDeletedFromRulesAndConditions(
+  segment: Partial<Segment>,
+): Partial<Segment> {
+  const cleanRule = (rule: SegmentRule): SegmentRule | null => {
+    if (rule.delete || (rule as any).deleted) return null
+
+    const rules = (rule.rules ?? [])
+      .map(cleanRule)
+      .filter((r): r is SegmentRule => r !== null)
+
+    const conditions = (rule.conditions ?? [])
+      .filter((cond: any) => !cond.delete && !cond.deleted)
+      .map((cond: any) => ({ ...cond, id: undefined }))
+
+    return {
+      ...rule,
+      conditions,
+      id: undefined,
+      rules,
+    }
+  }
+
+  const rules = (segment.rules ?? [])
+    .map(cleanRule)
+    .filter((r): r is SegmentRule => r !== null)
+
+  return {
+    ...segment,
+    rules,
+  }
+}
 
 export const projectChangeRequestService = service
   .enhanceEndpoints({ addTagTypes: ['ProjectChangeRequest'] })
@@ -35,7 +67,12 @@ export const projectChangeRequestService = service
         invalidatesTags: [{ id: 'LIST', type: 'ProjectChangeRequest' }],
         queryFn: async (query, baseQueryApi, extraOptions, baseQuery) => {
           const result = await baseQuery({
-            body: query.data,
+            body: {
+              ...query.data,
+              segments: query.data.segments.map(
+                stripIdsAndDeletedFromRulesAndConditions,
+              ),
+            },
             method: 'POST',
             url: `projects/${query.project_id}/change-requests/`,
           })
@@ -85,7 +122,12 @@ export const projectChangeRequestService = service
           { id: 'LIST', type: 'ProjectChangeRequest' },
         ],
         query: (query: Req['updateProjectChangeRequest']) => ({
-          body: query.data,
+          body: {
+            ...query.data,
+            segments: query.data.segments.map(
+              stripIdsAndDeletedFromRulesAndConditions,
+            ),
+          },
           method: 'PUT',
           url: `projects/${query.project_id}/change-requests/${query.data.id}/`,
         }),

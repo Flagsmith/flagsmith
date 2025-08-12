@@ -90,7 +90,6 @@ export type ProjectChangeRequest = Omit<
   | 'environment'
 > & {
   segments: (WithoutId<Segment> & {
-    segment_id?: number
     version_of?: number
   })[]
 }
