@@ -32,21 +32,23 @@ from projects.models import Project
 
 from .managers import LiveSegmentManager, SegmentManager
 
+T = typing.TypeVar("T", bound=models.Model)
+
 logger = logging.getLogger(__name__)
 
 
-class ConfiguredOrderManager(SoftDeleteExportableManager):
+class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[T]):
     def get_queryset(
         self,
-    ) -> models.QuerySet["Condition"]:
+    ) -> models.QuerySet[T]:
         # Effectively `Condition.Meta.ordering = ("id",) if ... else ()`,
         # but avoid the weirdness of a setting-dependant migration
         # and having to reload everything in tests
-        qs: models.QuerySet["Condition"]
+        qs: models.QuerySet[T]
         if settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED:
-            qs = super().get_queryset().order_by("id")
+            qs = SoftDeleteExportableManager.get_queryset(self).order_by("id")
         else:
-            qs = super().get_queryset()
+            qs = SoftDeleteExportableManager.get_queryset(self)
         return qs
 
 
@@ -177,7 +179,7 @@ class Segment(
         # Ensure top-level rules are cloned first (for dependencies)
         source_rules = source_rules.order_by(models.F("rule").asc(nulls_first=True))
 
-        rule_to_cloned_rule_map: dict[SegmentRule, SegmentRule] = {}
+        rule_to_cloned_rule_map: dict[SegmentRule | None, SegmentRule] = {}
         for rule in source_rules:
             cloned_rule = deepcopy(rule)
             cloned_rule.pk = None
@@ -232,7 +234,9 @@ class SegmentRule(
 
     history_record_class_path = "segments.models.HistoricalSegmentRule"
 
-    objects: typing.ClassVar[ConfiguredOrderManager] = ConfiguredOrderManager()
+    objects: typing.ClassVar[ConfiguredOrderManager["SegmentRule"]] = (
+        ConfiguredOrderManager()
+    )
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "%s rule for %s" % (
@@ -301,7 +305,9 @@ class Condition(
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
-    objects: typing.ClassVar[ConfiguredOrderManager] = ConfiguredOrderManager()
+    objects: typing.ClassVar[ConfiguredOrderManager["Condition"]] = (
+        ConfiguredOrderManager()
+    )
 
     def __str__(self) -> str:
         return "Condition for %s: %s %s %s" % (
