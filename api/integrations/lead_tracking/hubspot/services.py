@@ -70,8 +70,7 @@ def create_self_hosted_onboarding_lead(
     email: str, first_name: str, last_name: str, organisation_name: str
 ) -> None:
     email_parts = email.split("@")
-    if len(email_parts) > 1:
-        email_domain = email_parts[1]
+    email_domain = email_parts[1] if len(email_parts) > 1 else organisation_name
     hubspot_client = HubspotClient()
     company = hubspot_client.get_company_by_domain(email_domain)
     if not company:
