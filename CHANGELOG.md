@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.191.0](https://github.com/Flagsmith/flagsmith/compare/v2.190.1...v2.191.0) (2025-08-13)
+
+
+### Features
+
+* adds phased rollout action ([#5897](https://github.com/Flagsmith/flagsmith/issues/5897)) ([799d0ce](https://github.com/Flagsmith/flagsmith/commit/799d0ce7a36f0617f0bd53250150444949c1c3a7))
+* filter by email in user select inputs ([#5917](https://github.com/Flagsmith/flagsmith/issues/5917)) ([1796467](https://github.com/Flagsmith/flagsmith/commit/1796467079587f8784f506e65bf226d50a4d5a08))
+* Responsive features page ([#5809](https://github.com/Flagsmith/flagsmith/issues/5809)) ([3018bec](https://github.com/Flagsmith/flagsmith/commit/3018becc56569eeb669c6364bbdce8315ca1f814))
+* use dropdown for values with context environment ([#5832](https://github.com/Flagsmith/flagsmith/issues/5832)) ([6153206](https://github.com/Flagsmith/flagsmith/commit/6153206f65a5441291b40edbc04339f1cc9cf319))
+
+
+### Bug Fixes
+
+* `SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED` does not affect rules ([#5866](https://github.com/Flagsmith/flagsmith/issues/5866)) ([9d8e2d6](https://github.com/Flagsmith/flagsmith/commit/9d8e2d6fbfe5b8d73700327779c37142b66312ed))
+* Organisation usage charts are not correctly showing environment-document requests ([#5924](https://github.com/Flagsmith/flagsmith/issues/5924)) ([7a797b2](https://github.com/Flagsmith/flagsmith/commit/7a797b25a90c7fb9489074e262ee05912e48a281))
+
+
+### Dependency Updates
+
+* bump saml ([#5910](https://github.com/Flagsmith/flagsmith/issues/5910)) ([475f744](https://github.com/Flagsmith/flagsmith/commit/475f744a50df7a2cbedd07b0a3d73cd1fe7c2531))
+
 ## [2.190.1](https://github.com/Flagsmith/flagsmith/compare/v2.190.0...v2.190.1) (2025-08-07)
 
 
