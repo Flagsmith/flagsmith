@@ -242,5 +242,7 @@ def test_delete_user():  # type: ignore[no-untyped-def]
         ("incorrect_email", None),
     ],
 )
-def test_user_email_domain_property(email: str, expected_email_domain: str | None) -> None:
+def test_user_email_domain_property(
+    email: str, expected_email_domain: str | None
+) -> None:
     assert FFAdminUser(email=email).email_domain == expected_email_domain
