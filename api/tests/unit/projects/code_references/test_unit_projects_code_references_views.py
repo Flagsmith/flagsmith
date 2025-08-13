@@ -18,7 +18,7 @@ def test_CodeReferenceCreateAPIView__responds_201_with_accepted_code_references(
 
     # When
     response = staff_client.post(
-        f"/api/v1/projects/{project.pk}/code_references/",
+        f"/api/v1/projects/{project.pk}/code-references/",
         data={
             "repository_url": "https://svn.flagsmith.com/",
             "revision": "revision-hash",
@@ -75,7 +75,7 @@ def test_CodeReferenceCreateAPIView__responds_401_when_not_authenticated(
 ) -> None:
     # When
     response = client.post(
-        f"/api/v1/projects/{project.pk}/code_references/",
+        f"/api/v1/projects/{project.pk}/code-references/",
         data={
             "repository_url": "https://svn.flagsmith.com/",
             "revision": "revision-hash",
@@ -105,7 +105,7 @@ def test_CodeReferenceCreateAPIView__responds_400_when_invalid_data(
 
     # When
     response = staff_client.post(
-        f"/api/v1/projects/{project.pk}/code_references/",
+        f"/api/v1/projects/{project.pk}/code-references/",
         data={
             "repository_url": "https://svn.flagsmith.com/",
             "revision": "revision-hash",
