@@ -27,7 +27,6 @@ from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
-from segments.services import SegmentCloneService
 from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
 
@@ -94,6 +93,40 @@ def test_can_create_segments_with_boolean_condition(project, client):  # type: i
 
     # Then
     assert res.status_code == status.HTTP_201_CREATED
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_can_not_create_system_segment(project: Project, client: APIClient):  # type: ignore[no-untyped-def]
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "New segment name",
+        "project": project.id,
+        "is_system_segment": True,
+        "rules": [
+            {
+                "type": "ALL",
+                "rules": [],
+                "conditions": [
+                    {"operator": EQUAL, "property": "test-property", "value": True}
+                ],
+            }
+        ],
+    }
+
+    # When
+    res = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert res.status_code == status.HTTP_201_CREATED
+    assert "is_system_segment" not in res.json()
+    assert (
+        Segment.objects.filter(id=res.json()["id"], is_system_segment=True).exists()
+        is False
+    )
 
 
 @pytest.mark.parametrize(
@@ -173,8 +206,8 @@ def test_segments_limit_ignores_old_segment_versions(
     project.save()
 
     # and create some older versions for the segment fixture
-    SegmentCloneService(segment).deep_clone()
-    assert Segment.objects.filter(version_of_id=segment.id).count() == 3
+    segment.clone(is_revision=True)
+    assert Segment.objects.filter(version_of=segment).count() == 2
     assert Segment.live_objects.count() == 1
 
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
@@ -201,9 +234,12 @@ def test_segments_limit_ignores_old_segment_versions(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_audit_log_created_when_segment_updated(project, client):  # type: ignore[no-untyped-def]
+def test_audit_log_created_when_segment_updated(
+    client: APIClient,
+    project: Project,
+    segment: Segment,
+) -> None:
     # Given
-    segment = Segment.objects.create(name="Test segment", project=project)
     url = reverse(
         "api-v1:projects:project-segments-detail",
         args=[project.id, segment.id],
@@ -220,12 +256,10 @@ def test_audit_log_created_when_segment_updated(project, client):  # type: ignor
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    assert (
-        AuditLog.objects.filter(
-            related_object_type=RelatedObjectType.SEGMENT.name
-        ).count()
-        == 1
-    )
+    assert AuditLog.objects.filter(
+        related_object_type=RelatedObjectType.SEGMENT.name,
+        log="Segment updated: New segment name",
+    ).exists()
 
 
 @pytest.mark.parametrize(
@@ -275,6 +309,26 @@ def test_audit_log_created_when_segment_deleted(project, segment, client):  # ty
         ).count()
         == 1
     )
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_cannot_delete_system_segment(
+    project: Project, system_segment: Segment, client: APIClient
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project.id, system_segment.id],
+    )
+
+    # When
+    res = client.delete(url, content_type="application/json")
+
+    # Then
+    assert res.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.parametrize(
@@ -513,6 +567,24 @@ def test_list_segments_num_queries_without_rbac(
     assert response_json["count"] == num_segments
 
 
+def test_system_segment_is_not_part_of_list_segments(
+    project: Project,
+    admin_client: APIClient,
+    system_segment: Segment,
+) -> None:
+    # When
+    response = admin_client.get(
+        reverse("api-v1:projects:project-segments-list", args=[project.id])
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 0
+    assert response_json["results"] == []
+
+
 @pytest.mark.skipif(
     settings.IS_RBAC_INSTALLED is False,
     reason="Skip this test if RBAC is not installed",
@@ -707,8 +779,34 @@ def test_update_segment_add_new_condition(
     assert response.status_code == status.HTTP_200_OK
 
     assert nested_rule.conditions.count() == 2
-    assert nested_rule.conditions.last().property == new_condition_property
-    assert nested_rule.conditions.last().value == new_condition_value
+    assert (expected_new_condition := nested_rule.conditions.last())
+    assert expected_new_condition.property == new_condition_property
+    assert expected_new_condition.value == new_condition_value
+
+
+def test_can_not_update_system_segment(
+    project: Project,
+    admin_client_new: APIClient,
+    system_segment: Segment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, system_segment.id]
+    )
+    data = {
+        "name": system_segment.name,
+        "project": project.id,
+        "description": "Updated description",
+        "rules": [],
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_update_segment_versioned_segment(
@@ -727,10 +825,6 @@ def test_update_segment_versioned_segment(
     existing_condition = Condition.objects.create(
         rule=nested_rule, property="foo", operator=EQUAL, value="bar"
     )
-
-    # Before updating the segment confirm pre-existing version count which is
-    # automatically set by the fixture.
-    assert Segment.objects.filter(version_of=segment).count() == 2
 
     new_condition_property = "foo2"
     new_condition_value = "bar"
@@ -777,11 +871,11 @@ def test_update_segment_versioned_segment(
     assert response.status_code == status.HTTP_200_OK
 
     # Now verify that a new versioned segment has been set.
-    assert Segment.objects.filter(version_of=segment).count() == 3
+    assert Segment.objects.filter(version_of=segment).count() == 2
 
     # Now check the previously versioned segment to match former count of conditions.
 
-    versioned_segment = Segment.objects.filter(version_of=segment, version=2).first()
+    versioned_segment = Segment.objects.filter(version_of=segment, version=1).first()
     assert versioned_segment != segment
     assert versioned_segment.rules.count() == 1
     versioned_rule = versioned_segment.rules.first()
@@ -812,7 +906,7 @@ def test_update_segment_versioned_segment_with_thrown_exception(
         rule=nested_rule, property="foo", operator=EQUAL, value="bar"
     )
 
-    assert segment.version == 2 == Segment.objects.filter(version_of=segment).count()
+    assert segment.version == 1 == Segment.objects.filter(version_of=segment).count()
 
     new_condition_property = "foo2"
     new_condition_value = "bar"
@@ -863,7 +957,7 @@ def test_update_segment_versioned_segment_with_thrown_exception(
     segment.refresh_from_db()
 
     # Now verify that the version of the segment has not been changed.
-    assert segment.version == 2 == Segment.objects.filter(version_of=segment).count()
+    assert segment.version == 1 == Segment.objects.filter(version_of=segment).count()
 
 
 @pytest.mark.parametrize(
@@ -1431,13 +1525,6 @@ def test_clone_endpoint_uses_segment_clone_service(
         "api-v1:projects:project-segments-clone", args=[project.id, segment.id]
     )
     new_segment_name = "cloned_segment"
-    service_mock = mocker.patch("segments.services.SegmentCloneService")
-    service_mock.return_value.clone.return_value = Segment(
-        id=1,
-        name="new_segment_name",
-        project=project,
-        version=1,
-    )
     data = {
         "name": new_segment_name,
     }

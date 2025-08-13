@@ -1,15 +1,10 @@
 import classNames from 'classnames'
 import Switch from './Switch'
-import {
-  FeatureListProviderData,
-  FeatureState,
-  ProjectFlag,
-} from 'common/types/responses'
-import FeatureValue from './FeatureValue'
+import { FeatureListProviderData, ProjectFlag } from 'common/types/responses'
+import FeatureValue from './feature-summary/FeatureValue'
 import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
 import Constants from 'common/constants'
-import Utils from 'common/utils/utils'
 
 export interface CondensedFeatureRowProps {
   disableControls?: boolean
@@ -17,11 +12,7 @@ export interface CondensedFeatureRowProps {
   projectFlag: ProjectFlag
   environmentFlags: FeatureListProviderData['environmentFlags']
   permission?: boolean
-  editFeature: (
-    projectFlag: ProjectFlag,
-    environmentFlag?: FeatureState,
-    tab?: string,
-  ) => void
+  editFeature: (tab?: string) => void
   onChange: () => void
   style?: React.CSSProperties
   className?: string
@@ -58,8 +49,6 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
         if (disableControls) return
         !readOnly &&
           editFeature(
-            projectFlag,
-            environmentFlags?.[id],
             hasUnhealthyEvents
               ? Constants.featurePanelTabs.FEATURE_HEALTH
               : undefined,
@@ -86,11 +75,7 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
       <Flex className='table-column clickable'>
         <Row>
           <div
-            onClick={() =>
-              permission &&
-              !readOnly &&
-              editFeature(projectFlag, environmentFlags?.[id])
-            }
+            onClick={() => permission && !readOnly && editFeature()}
             style={{ flex: 1 }}
             className={`overflow-hidden ${fadeValue ? 'faded' : ''}`}
           >
@@ -103,22 +88,14 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
           <SegmentOverridesIcon
             onClick={(e) => {
               e.stopPropagation()
-              editFeature(
-                projectFlag,
-                environmentFlags?.[id],
-                Constants.featurePanelTabs.SEGMENT_OVERRIDES,
-              )
+              editFeature(Constants.featurePanelTabs.SEGMENT_OVERRIDES)
             }}
             count={projectFlag.num_segment_overrides}
           />
           <IdentityOverridesIcon
             onClick={(e) => {
               e.stopPropagation()
-              editFeature(
-                projectFlag,
-                environmentFlags?.[id],
-                Constants.featurePanelTabs.IDENTITY_OVERRIDES,
-              )
+              editFeature(Constants.featurePanelTabs.IDENTITY_OVERRIDES)
             }}
             count={projectFlag.num_identity_overrides}
             showPlusIndicator={showPlusIndicator}

@@ -8,7 +8,7 @@ import PanelSearch from 'components/PanelSearch'
 import FeatureListStore from 'common/stores/feature-list-store'
 import FeatureListProvider from 'common/providers/FeatureListProvider'
 import AppActions from 'common/dispatcher/app-actions'
-import FeatureRow from 'components/FeatureRow'
+import FeatureRow from 'components/feature-summary/FeatureRow'
 import {
   FeatureListProviderData,
   FeatureState,

@@ -1,5 +1,50 @@
 # Changelog
 
+## [2.191.0](https://github.com/Flagsmith/flagsmith/compare/v2.190.1...v2.191.0) (2025-08-13)
+
+
+### Features
+
+* adds phased rollout action ([#5897](https://github.com/Flagsmith/flagsmith/issues/5897)) ([799d0ce](https://github.com/Flagsmith/flagsmith/commit/799d0ce7a36f0617f0bd53250150444949c1c3a7))
+* filter by email in user select inputs ([#5917](https://github.com/Flagsmith/flagsmith/issues/5917)) ([1796467](https://github.com/Flagsmith/flagsmith/commit/1796467079587f8784f506e65bf226d50a4d5a08))
+* Responsive features page ([#5809](https://github.com/Flagsmith/flagsmith/issues/5809)) ([3018bec](https://github.com/Flagsmith/flagsmith/commit/3018becc56569eeb669c6364bbdce8315ca1f814))
+* use dropdown for values with context environment ([#5832](https://github.com/Flagsmith/flagsmith/issues/5832)) ([6153206](https://github.com/Flagsmith/flagsmith/commit/6153206f65a5441291b40edbc04339f1cc9cf319))
+
+
+### Bug Fixes
+
+* `SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED` does not affect rules ([#5866](https://github.com/Flagsmith/flagsmith/issues/5866)) ([9d8e2d6](https://github.com/Flagsmith/flagsmith/commit/9d8e2d6fbfe5b8d73700327779c37142b66312ed))
+* Organisation usage charts are not correctly showing environment-document requests ([#5924](https://github.com/Flagsmith/flagsmith/issues/5924)) ([7a797b2](https://github.com/Flagsmith/flagsmith/commit/7a797b25a90c7fb9489074e262ee05912e48a281))
+
+
+### Dependency Updates
+
+* bump saml ([#5910](https://github.com/Flagsmith/flagsmith/issues/5910)) ([475f744](https://github.com/Flagsmith/flagsmith/commit/475f744a50df7a2cbedd07b0a3d73cd1fe7c2531))
+
+## [2.190.1](https://github.com/Flagsmith/flagsmith/compare/v2.190.0...v2.190.1) (2025-08-07)
+
+
+### Bug Fixes
+
+* Bring API docs back ([#5908](https://github.com/Flagsmith/flagsmith/issues/5908)) ([92ba39a](https://github.com/Flagsmith/flagsmith/commit/92ba39adb368aee26b8b44e42cc9b38cd0c05c8b))
+
+## [2.190.0](https://github.com/Flagsmith/flagsmith/compare/v2.189.0...v2.190.0) (2025-08-07)
+
+
+### Features
+
+* add save and publish pipeline ([#5827](https://github.com/Flagsmith/flagsmith/issues/5827)) ([e59b3c6](https://github.com/Flagsmith/flagsmith/commit/e59b3c610d4b20fb1a0b0ef066ab7523b85fcc70))
+* added-hosted-preferences-to-onboarding-data ([#5883](https://github.com/Flagsmith/flagsmith/issues/5883)) ([5598da0](https://github.com/Flagsmith/flagsmith/commit/5598da06c393687af149e55757cf6cd5b1add00f))
+* hosting preferences ([#5806](https://github.com/Flagsmith/flagsmith/issues/5806)) ([464c217](https://github.com/Flagsmith/flagsmith/commit/464c21708e2bff63d60535e6ba1b9c7fbedb9599))
+
+
+### Bug Fixes
+
+* filter unhealthy events ([#5884](https://github.com/Flagsmith/flagsmith/issues/5884)) ([5ac9098](https://github.com/Flagsmith/flagsmith/commit/5ac90981f8fc3b648976dafbba5786dd7ced9d6d))
+* Segment updates deleting rules ([#5902](https://github.com/Flagsmith/flagsmith/issues/5902)) ([ad90f59](https://github.com/Flagsmith/flagsmith/commit/ad90f599c105e9f81080f07175afc5ff6d6adde4))
+* split-operator-to-remove-append ([#5871](https://github.com/Flagsmith/flagsmith/issues/5871)) ([df27bb1](https://github.com/Flagsmith/flagsmith/commit/df27bb1ab0a49f037dc83fe97f76324bb9c34859))
+* **tests:** Improper `skip_if_no_analytics_db` marker behaviour ([#5876](https://github.com/Flagsmith/flagsmith/issues/5876)) ([de61b8b](https://github.com/Flagsmith/flagsmith/commit/de61b8b4ccdaab13bd03634942c620bebd1772ca))
+
 ## [2.189.0](https://github.com/Flagsmith/flagsmith/compare/v2.188.1...v2.189.0) (2025-07-31)
 
 

@@ -28,7 +28,6 @@ from .serializers import (
     SegmentListQuerySerializer,
     SegmentSerializer,
 )
-from .services import SegmentCloneService
 
 logger = logging.getLogger()
 
@@ -51,7 +50,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         )
         project = get_object_or_404(permitted_projects, pk=self.kwargs["project_pk"])
 
-        queryset = Segment.live_objects.filter(project=project)
+        queryset = Segment.live_objects.filter(project=project, is_system_segment=False)
 
         if self.action == "list":
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
@@ -138,9 +137,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         source_segment = self.get_object()
         serializer = CloneSegmentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        clone = SegmentCloneService(source_segment).clone(
-            serializer.validated_data["name"]
-        )
+        clone = source_segment.clone(name=serializer.validated_data["name"])
         return Response(SegmentSerializer(clone).data, status=status.HTTP_201_CREATED)
 
 
