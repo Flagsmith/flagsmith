@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Generator, Type
 from unittest import mock
 from unittest.mock import MagicMock
@@ -14,6 +14,7 @@ from pytest_mock import MockerFixture
 from urllib3.exceptions import HTTPError
 
 import app_analytics
+from app_analytics.dataclasses import UsageData
 from app_analytics.influxdb_wrapper import (
     InfluxDBWrapper,
     build_filter_string,
@@ -249,6 +250,84 @@ def test_get_multiple_event_list_for_organisation__calls_expected(
             org=influx_org,
             query=expected_query,
         )
+    ]
+
+
+def test_get_multiple_event_list_for_organisation__returns_expected(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_influxdb_client = mocker.patch(
+        "app_analytics.influxdb_wrapper.influxdb_client",
+        autospec=True,
+    )
+
+    mock_query_api = mock_influxdb_client.query_api.return_value
+    mock_query_api.query.return_value = [
+        mocker.MagicMock(
+            records=[
+                mocker.MagicMock(
+                    values={
+                        "_time": datetime.fromisoformat(
+                            "2023-01-19T09:09:47.325132+00:00"
+                        ),
+                        "_value": 1,
+                        "resource": "untracked",
+                    }
+                ),
+                mocker.MagicMock(
+                    values={
+                        "_time": datetime.fromisoformat(
+                            "2023-01-19T09:09:47.325132+00:00"
+                        ),
+                        "_value": 4,
+                        "resource": "environment-document",
+                    }
+                ),
+                mocker.MagicMock(
+                    values={
+                        "_time": datetime.fromisoformat(
+                            "2023-01-19T09:09:47.325132+00:00"
+                        ),
+                        "_value": 2,
+                        "resource": "flags",
+                    }
+                ),
+                mocker.MagicMock(
+                    values={
+                        "_time": datetime.fromisoformat(
+                            "2024-01-19T09:09:47.325132+00:00"
+                        ),
+                        "_value": 5,
+                        "resource": "identities",
+                        "user_agent": "python-requests/2.31.0",
+                    }
+                ),
+            ]
+        ),
+    ]
+
+    # When
+    result = get_multiple_event_list_for_organisation(1)
+
+    # Then
+    assert result == [
+        UsageData(
+            day=date(2023, 1, 19),
+            flags=2,
+            traits=0,
+            identities=0,
+            environment_document=4,
+            labels={},
+        ),
+        UsageData(
+            day=date(2024, 1, 19),
+            flags=0,
+            traits=0,
+            identities=5,
+            environment_document=0,
+            labels={"user_agent": "python-requests/2.31.0"},
+        ),
     ]
 
 
