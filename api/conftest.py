@@ -265,8 +265,10 @@ def staff_client(staff_user):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def organisation(db, admin_user, staff_user):  # type: ignore[no-untyped-def]
-    org = Organisation.objects.create(name="Test Org")
+def organisation(
+    db: None, admin_user: FFAdminUser, staff_user: FFAdminUser
+) -> Organisation:
+    org: Organisation = Organisation.objects.create(name="Test Org")
     admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
     staff_user.add_organisation(org, role=OrganisationRole.USER)
     return org

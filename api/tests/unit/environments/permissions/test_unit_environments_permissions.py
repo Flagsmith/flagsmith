@@ -3,6 +3,7 @@ from unittest import mock
 from common.projects.permissions import (
     CREATE_ENVIRONMENT,
 )
+from pytest_mock import MockerFixture
 
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -45,24 +46,28 @@ def test_environment_admin_permissions_has_permissions_returns_false_for_non_adm
     assert has_permission is False
 
 
-def test_environment_admin_permissions_has_permissions_returns_true_for_admin_user(  # type: ignore[no-untyped-def]
-    environment, django_user_model, mocker
+def test_environment_admin_permissions_has_permissions_returns_true_for_admin_user(
+    environment: Environment,
+    staff_user: FFAdminUser,
+    user_environment_permission: UserEnvironmentPermission,
+    mocker: MockerFixture,
 ) -> None:
     # Given
-    user = django_user_model.objects.create(username="test_user")
-    UserEnvironmentPermission.objects.create(
-        user=user, environment=environment, admin=True
-    )
     mocked_request = mocker.MagicMock()
-    mocked_request.user = user
+    mocked_request.user = staff_user
 
     mocked_view = mocker.MagicMock()
     mocked_view.kwargs = {"environment_api_key": environment.api_key}
+
+    user_environment_permission.admin = True
+    user_environment_permission.save()
 
     # When
     has_permission = environment_admin_permissions.has_permission(  # type: ignore[no-untyped-call]
         mocked_request, mocked_view
     )
+
+    # Then
     assert has_permission is True
 
 
