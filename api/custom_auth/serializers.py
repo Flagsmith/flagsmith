@@ -23,7 +23,7 @@ from .constants import (
     USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
 )
 
-EMAIL_REGEX = re.compile(r"^[^@]+@[^@]+\.[^@]+$")
+EMAIL_REGEX = re.compile(r"^[^@]+@(?:\w+\.)+\w{2,}$")
 
 
 class CustomTokenCreateSerializer(TokenCreateSerializer):  # type: ignore[misc]

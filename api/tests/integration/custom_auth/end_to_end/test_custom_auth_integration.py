@@ -740,6 +740,7 @@ def test_marketing_consent_given_defaults_to_true(
         "invalid@email@com.com",
         "invalid_email.com",
         "invalid_email@com",
+        "foo@..!.bar.",
     ],
 )
 def test_create_user_returns_error_if_email_is_invalid(
