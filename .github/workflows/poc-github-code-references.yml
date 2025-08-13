@@ -33,7 +33,7 @@ jobs:
         run: |
           uv run - <<EOF
           # /// script
-          # requires-python = "==${{ env.PYTHON_VERSION }}"
+          # requires-python = ">=${{ env.PYTHON_VERSION }}"
           # dependencies = ["requests==${{ env.PYTHON_REQUESTS_VERSION }}"]
           # ///
           import json
@@ -81,7 +81,8 @@ jobs:
                           for feature_name in feature_names:
                               if feature_name not in line:  # Match feature name
                                   continue
-                              if re.search(fr"""(?i:(?:feature|flag)\w*\(\s*(["']){feature_name})\1""", "".join(context)):  # Function calls
+                              re_function_calls = rf"""(?i:(?:feature|flag)\w*\(\s*(["']){re.escape(feature_name)})\1"""
+                              if re.search(re_function_calls, "".join(context)):
                                   yield feature_name, str(path), line_number
                               # TODO: Add more sophisticated matching, e.g. feature names defined as constants
 
@@ -92,7 +93,7 @@ jobs:
                   headers={"Authorization": f"Api-Key ${{ env.FLAGSMITH_ADMIN_API_KEY }}"},
               )
               response.raise_for_status()
-              return sorted(feature["name"] for feature in response.json()["results"])
+              return [feature["name"] for feature in response.json()["results"]]
 
           # Fetch visible features
           feature_names = retrieve_feature_names()
@@ -113,20 +114,20 @@ jobs:
         run: |
           uv run - <<EOF
           # /// script
-          # requires-python = "==${{ env.PYTHON_VERSION }}"
+          # requires-python = ">=${{ env.PYTHON_VERSION }}"
           # ///
           import json
           from collections import defaultdict
 
-          code_references = json.loads('''${{ steps.collect.outputs.code_references }}''')
+          code_references = json.loads("""${{ steps.collect.outputs.code_references }}""")
           if not code_references:
               print("No code references found.")
               exit(0)
 
           references_by_feature = defaultdict(list)
-          sorted_code_references = sorted(code_references, key=lambda x: (x['feature_name'], x['file_path'], x['line_number']))
+          sorted_code_references = sorted(code_references, key=lambda x: (x["feature_name"], x["file_path"], x["line_number"]))
           for reference in sorted_code_references:
-              references_by_feature[reference['feature_name']].append((reference['file_path'], reference['line_number']))
+              references_by_feature[reference["feature_name"]].append((reference["file_path"], reference["line_number"]))
 
           print("Code References:")
           for feature_name, references in references_by_feature.items():
@@ -139,14 +140,13 @@ jobs:
         run: |
           uv run - <<EOF
           # /// script
-          # requires-python = "==${{ env.PYTHON_VERSION }}"
+          # requires-python = ">=${{ env.PYTHON_VERSION }}"
           # dependencies = ["requests==${{ env.PYTHON_REQUESTS_VERSION }}"]
           # ///
           import json
-          import os
           import requests
 
-          code_references = json.loads('''${{ steps.collect.outputs.code_references }}''')
+          code_references = json.loads("""${{ steps.collect.outputs.code_references }}""")
           if not code_references:
               print("No code references to upload.")
               exit(0)
