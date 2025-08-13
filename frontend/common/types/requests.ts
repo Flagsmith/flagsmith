@@ -21,6 +21,7 @@ import {
   Onboarding,
   StageTrigger,
   StageActionType,
+  StageActionBody,
 } from './responses'
 import { UtmsType } from './utms'
 
@@ -74,13 +75,6 @@ export type RegisterRequest = {
   utm_data?: UtmsType
 }
 
-export type StageActionBody = {
-  enabled: boolean
-  segment_id?: number
-  initial_split?: number
-  increase_by?: number
-  increase_every?: string
-}
 export interface StageActionRequest {
   action_type: StageActionType | ''
   action_body: StageActionBody
@@ -717,7 +711,7 @@ export type Req = {
   }
   getUser: { id: number }
   updateOnboarding: Partial<Onboarding>
-  getReleasePipelines: PagedRequest<{ projectId: number }>
+  getReleasePipelines: PagedRequest<{ projectId: number; order_by?: string }>
   getReleasePipeline: { projectId: number; pipelineId: number }
   createReleasePipeline: ReleasePipelineRequest
   updateReleasePipeline: UpdateReleasePipelineRequest
