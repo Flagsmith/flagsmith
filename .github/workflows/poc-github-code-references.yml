@@ -3,7 +3,6 @@ permissions:
   contents: read
 
 on:
-  pull_request:
   schedule:
     - cron: '0 0 * * *'  # Runs daily at midnight UTC
   workflow_dispatch:
@@ -11,7 +10,7 @@ on:
 env:
   EXCLUDE_PATTERNS: node_modules,venv,.git,cache,build,htmlcov,docs,.json,tests
   FLAGSMITH_ADMIN_API_URL: https://api.flagsmith.com
-  FLAGSMITH_SERVER_KEY: ${{ secrets.FLAGSMITH_CODE_REFERENCES_API_KEY }}
+  FLAGSMITH_ADMIN_API_KEY: ${{ secrets.FLAGSMITH_CODE_REFERENCES_API_KEY }}
   FLAGSMITH_PROJECT_ID: 12
   PYTHON_REQUESTS_VERSION: '2.32.4'
   PYTHON_VERSION: '3.13'
@@ -90,7 +89,7 @@ jobs:
               """Fetch feature names from the Flagsmith API."""
               response = requests.get(  # TODO: Make better use of pagination
                   f"${{ env.FLAGSMITH_ADMIN_API_URL }}/api/v1/projects/${{ env.FLAGSMITH_PROJECT_ID }}/features/?page_size=1000",
-                  headers={"Authorization": f"Api-Key ${{ env.FLAGSMITH_SERVER_KEY }}"},
+                  headers={"Authorization": f"Api-Key ${{ env.FLAGSMITH_ADMIN_API_KEY }}"},
               )
               response.raise_for_status()
               return sorted(feature["name"] for feature in response.json()["results"])
@@ -153,10 +152,8 @@ jobs:
               exit(0)
 
           response = requests.post(
-              # f"${{ env.FLAGSMITH_ADMIN_API_URL }}/api/v1/projects/${{ env.FLAGSMITH_PROJECT_ID }}/code-references/",
-              # headers={"Authorization": f"Api-Key ${{ env.FLAGSMITH_SERVER_KEY }}"},
-              "https://mocktarget.apigee.net/echo",
-              headers={"Authorization": f"Api-Key beware-the-hacker"},
+              f"${{ env.FLAGSMITH_ADMIN_API_URL }}/api/v1/projects/${{ env.FLAGSMITH_PROJECT_ID }}/code-references/",
+              headers={"Authorization": f"Api-Key ${{ env.FLAGSMITH_ADMIN_API_KEY }}"},
               json={
                   "repository_url": "${{ github.server_url }}/${{ github.repository }}",
                   "revision": "${{ github.sha }}",
@@ -164,5 +161,5 @@ jobs:
               },
           )
           response.raise_for_status()
-          print("Code references uploaded successfully.")
+          print(f"Uploaded {len(code_references)} code references.")
           EOF
