@@ -25,8 +25,8 @@
     "bundledjango": "npx webpack --config ./webpack/webpack.config.django.prod.js"
   },
   "engines": {
-    "node": "18.x",
-    "npm": "9.x"
+    "node": "22.x",
+    "npm": "10.x"
   },
   "overrides": {
     "react": "16.14.0",

@@ -16,7 +16,7 @@ developers are on the same NodeJS version.
 
 | Location                                                                | Suggested Version |
 | ----------------------------------------------------------------------- | :---------------: |
-| <a href="https://nodejs.org/en/">NodeJS</a>                             |     >= 16.0.0     |
+| <a href="https://nodejs.org/en/">NodeJS</a>                             |     >= 22.0.0     |
 | <a href="https://nodejs.org/en/">npm</a>                                |     >= 8.0.0      |
 | <a href="https://github.com/nvm-sh/nvm#installing-and-updating">nvm</a> |     >= 0.39.0     |
 | <a href="https://github.com/nvm-sh/nvm#zsh">nvm zshrc setup</a>         |        n/a        |
