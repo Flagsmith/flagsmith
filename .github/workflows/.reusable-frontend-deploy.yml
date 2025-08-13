@@ -28,10 +28,10 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 16.x
+      - name: Setup Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version-file: .nvmrc
 
       - name: Cache dependencies
         uses: actions/cache@v3
