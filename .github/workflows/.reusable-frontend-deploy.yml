@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version-file: .nvmrc
 
       - name: Cache dependencies
         uses: actions/cache@v3
