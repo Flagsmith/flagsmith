@@ -26,7 +26,7 @@ class VCSFeatureFlagCodeReferences(models.Model):
             GinIndex(  # Helps filtering code references by feature name
                 Func(
                     models.F("code_references"),
-                    models.Value("$[*].name"),
+                    models.Value("$[*].feature_name"),
                     function="jsonb_path_query_array",
                 ),
                 name="code_references_feature_name",

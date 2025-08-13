@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
                     django.contrib.postgres.indexes.GinIndex(
                         models.Func(
                             models.F("code_references"),
-                            models.Value("$[*].name"),
+                            models.Value("$[*].feature_name"),
                             function="jsonb_path_query_array",
                         ),
                         name="code_references_feature_name",
