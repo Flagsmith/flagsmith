@@ -96,6 +96,7 @@ class Segment(
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
+    is_system_segment = models.BooleanField(default=False)
 
     objects = SegmentManager()  # type: ignore[misc]
 
@@ -109,6 +110,8 @@ class Segment(
         return "Segment - %s" % self.name
 
     def get_skip_create_audit_log(self) -> bool:
+        if self.is_system_segment:
+            return True
         try:
             if self.version_of_id and self.version_of_id != self.id:
                 return True

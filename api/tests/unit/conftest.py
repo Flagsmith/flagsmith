@@ -12,6 +12,7 @@ from features.models import Feature
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.tags.models import Tag
+from segments.models import Segment
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
 
@@ -253,3 +254,13 @@ def use_local_mem_cache_for_cache_middleware(mocker: MockerFixture) -> None:
         self.cache_alias = "default"  # force use of in-memory test cache
 
     mocker.patch.object(CacheMiddleware, "__init__", custom_init)
+
+
+@pytest.fixture()
+def system_segment(project: Project) -> Segment:
+    segment: Segment = Segment.objects.create(
+        project=project,
+        name="System Segment",
+        is_system_segment=True,
+    )
+    return segment
