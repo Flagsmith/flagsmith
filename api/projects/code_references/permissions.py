@@ -12,11 +12,8 @@ class SubmitCodeReferences(IsAuthenticated):
         if not super().has_permission(request, view):
             return False
 
-        if not (project_id := view.kwargs.get("project_pk")):
+        if not isinstance(request.user, FFAdminUser):  # pragma: no cover
             return False
 
-        if not isinstance(request.user, FFAdminUser):
-            return False
-
-        project = Project.objects.get(id=project_id)
+        project = Project.objects.get(id=view.kwargs["project_pk"])
         return request.user.has_project_permission(VIEW_PROJECT, project)
