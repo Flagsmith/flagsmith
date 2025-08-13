@@ -3,14 +3,16 @@ permissions:
   contents: read
 
 on:
+  pull_request:
   schedule:
     - cron: '0 0 * * *'  # Runs daily at midnight UTC
   workflow_dispatch:
 
 env:
   EXCLUDE_PATTERNS: node_modules,venv,.git,cache,build,htmlcov,docs,.json,tests
-  FLAGSMITH_EDGE_API_URL: https://edge.api.flagsmith.com
-  FLAGSMITH_ENVIRONMENT_KEY: ENktaJnfLVbLifybz34JmX
+  FLAGSMITH_ADMIN_API_URL: https://api.flagsmith.com
+  FLAGSMITH_SERVER_KEY: ${{ secrets.FLAGSMITH_CODE_REFERENCES_API_KEY }}
+  FLAGSMITH_PROJECT_ID: 12
   PYTHON_REQUESTS_VERSION: '2.32.4'
   PYTHON_VERSION: '3.13'
 
@@ -84,10 +86,17 @@ jobs:
                                   yield feature_name, str(path), line_number
                               # TODO: Add more sophisticated matching, e.g. feature names defined as constants
 
+          def retrieve_feature_names() -> list[str]:
+              """Fetch feature names from the Flagsmith API."""
+              response = requests.get(  # TODO: Make better use of pagination
+                  f"${{ env.FLAGSMITH_ADMIN_API_URL }}/api/v1/projects/${{ env.FLAGSMITH_PROJECT_ID }}/features/?page_size=1000",
+                  headers={"Authorization": f"Api-Key ${{ env.FLAGSMITH_SERVER_KEY }}"},
+              )
+              response.raise_for_status()
+              return sorted(feature["name"] for feature in response.json()["results"])
+
           # Fetch visible features
-          all_flags = requests.get(f"${{ env.FLAGSMITH_EDGE_API_URL }}/api/v1/flags", headers={"X-Environment-Key": "${{ env.FLAGSMITH_ENVIRONMENT_KEY }}"}).json()
-          feature_names = sorted([flag["feature"]["name"] for flag in all_flags])
-          print("Feature names:", feature_names)
+          feature_names = retrieve_feature_names()
 
           # Find code references
           code_references = [
@@ -102,8 +111,11 @@ jobs:
           EOF
 
       - name: Display code references
-        shell: python
         run: |
+          uv run - <<EOF
+          # /// script
+          # requires-python = "==${{ env.PYTHON_VERSION }}"
+          # ///
           import json
           from collections import defaultdict
 
@@ -122,6 +134,35 @@ jobs:
               print(f"\nFeature: {feature_name}")
               for file_path, line_number in references:
                   print(f"  - {file_path}:{line_number}")
+          EOF
 
-      # TODO
-      # - name: Upload code references
+      - name: Upload code references
+        run: |
+          uv run - <<EOF
+          # /// script
+          # requires-python = "==${{ env.PYTHON_VERSION }}"
+          # dependencies = ["requests==${{ env.PYTHON_REQUESTS_VERSION }}"]
+          # ///
+          import json
+          import os
+          import requests
+
+          code_references = json.loads('''${{ steps.collect.outputs.code_references }}''')
+          if not code_references:
+              print("No code references to upload.")
+              exit(0)
+
+          response = requests.post(
+              # f"${{ env.FLAGSMITH_ADMIN_API_URL }}/api/v1/projects/${{ env.FLAGSMITH_PROJECT_ID }}/code-references/",
+              # headers={"Authorization": f"Api-Key ${{ env.FLAGSMITH_SERVER_KEY }}"},
+              "https://mocktarget.apigee.net/echo",
+              headers={"Authorization": f"Api-Key beware-the-hacker"},
+              json={
+                  "repository_url": "${{ github.server_url }}/${{ github.repository }}",
+                  "revision": "${{ github.sha }}",
+                  "code_references": code_references,
+              },
+          )
+          response.raise_for_status()
+          print("Code references uploaded successfully.")
+          EOF
