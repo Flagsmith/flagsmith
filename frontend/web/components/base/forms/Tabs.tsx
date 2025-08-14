@@ -28,6 +28,7 @@ interface TabsProps {
   noFocus?: boolean
   isRoles?: boolean
   history?: any
+  overflowX?: boolean
 }
 
 const Tabs: React.FC<TabsProps> = ({
@@ -39,6 +40,7 @@ const Tabs: React.FC<TabsProps> = ({
   isRoles,
   noFocus,
   onChange,
+  overflowX = false,
   theme = 'tab',
   uncontrolled = false,
   urlParam,
@@ -73,7 +75,10 @@ const Tabs: React.FC<TabsProps> = ({
     <div className={`tabs ${className}`}>
       <div
         className={`${hideNav ? '' : 'tabs-nav'} ${theme}`}
-        style={isMobile ? { flexWrap: 'wrap' } : {}}
+        style={{
+          ...(overflowX ? { overflowX: 'scroll' } : {}),
+          ...(isMobile ? { flexWrap: 'wrap' } : {}),
+        }}
       >
         {!hideNav &&
           tabChildren.map((child, i) => {
