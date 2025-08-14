@@ -73,6 +73,7 @@ class ReleasePipeline(
         null=True,
         blank=True,
     )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def publish(self, published_by: FFAdminUser) -> None:
         if self.published_at is not None:
