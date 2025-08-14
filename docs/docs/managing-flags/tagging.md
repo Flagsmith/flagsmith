@@ -4,7 +4,7 @@ sidebar_label: Tagging
 sidebar_position: 2
 ---
 
-You can create tags within Flagsmith and tag flags in order to organise them. Tags can also be used to filter the list of flags in the event that you have a large number of them.
+You can create tags within Flagsmith and tag feature flags in order to organise them. Tags can also be used to filter the list of feature flags in the event that you have a large number of them.
 
 This guide explains how to create and apply tags to feature flags within Flagsmith, as well as some tagging good practices and conventions.
 
@@ -14,21 +14,21 @@ This guide explains how to create and apply tags to feature flags within Flagsmi
 
 You can add tags to feature flags during creation or when editing an existing flag.
 
-### When Creating a Flag
+### When Creating a Feature Flag
 
 1. Go to the **Features** section in your dashboard.
 2. Click **Create Feature**.
-3. Fill in the flag details. In the **Tags** field (optional), enter one or more tags to organise your flag. You can also add special tags such as `protected` to prevent accidental deletion.
+3. Fill in the feature flag details. In the **Tags** field (optional), enter one or more tags to organise your feature flag. You can also add special tags such as `protected` to prevent accidental deletion.
 4. Click **Create Feature** to save your changes.
 
-### When Editing a Flag
+### When Editing a Feature Flag
 
-1. In the **Features** section, select the flag you want to edit.
+1. In the **Features** section, select the feature flag you want to edit.
 2. Go to the **Settings** tab.
 3. In the **Tags** field, add or remove tags as needed.
 4. Click **Update Settings** to save your changes.
 
-You can quickly find and manage flags by using the **tag filter** in the Features list to display only flags with specific tags. This is especially useful for large projects with many flags.
+You can quickly find and manage feature flags by using the **tag filter** in the Features list to display only feature flags with specific tags. This is especially useful for large projects with many feature flags.
 
 ---
 
@@ -41,7 +41,7 @@ You can quickly find and manage flags by using the **tag filter** in the Feature
 
 :::info Protected Tags
 
-Tags with the following names will prevent users from being able to delete tagged flags via the dashboard:
+Tags with the following names will prevent users from being able to delete tagged feature flags via the dashboard:
 
 - `protected`
 - `donotdelete`
@@ -53,14 +53,14 @@ Tags with the following names will prevent users from being able to delete tagge
 ---
 
 ## Best Practices for Tag Management
-- Use tags to group related flags (e.g., by feature, team, or release).
-- Apply protected tags (`protected`, `donotdelete`, `permanent`) to critical or long-lived flags to prevent accidental deletion.
-- Regularly review and update tags to keep your flag management organised.
+- Use tags to group related feature flags (e.g., by feature, team, or release).
+- Apply protected tags (`protected`, `donotdelete`, `permanent`) to critical or long-lived feature flags to prevent accidental deletion.
+- Regularly review and update tags to keep your feature flag management organised.
 
 ---
 
 ## What's Next
 
 - Learn how to configure [tag-based permissions for roles](../system-administration/rbac.md).
-- See more advanced [flag management](../advanced-use/flag-management.md) techniques.
+- See more advanced [feature flag management](../advanced-use/flag-management.md) techniques.
 

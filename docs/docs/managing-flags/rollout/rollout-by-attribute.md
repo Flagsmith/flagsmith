@@ -35,9 +35,9 @@ flagsmith.setTrait('version', '5.4.1');
 
 ### 3. Apply a Segment Override to Your Feature Flag
 
-1. In the environment where you want to apply the rollout, go to the **Features** section and select the feature you want to roll out.
+1. In the environment where you want to apply the rollout, go to the **Features** section and select the feature flag you want to roll out.
 2. Navigate to the **Segment Overrides** tab.
-- Select the segment you created in the dropdown and set the desired flag state or value for users in that segment.
+- Select the segment you created in the dropdown and set the desired feature flag state or value for users in that segment.
 - Save your changes.
 
 Done! Now you can test with users who match (and don’t match) the segment to ensure the feature is enabled/disabled as expected.

@@ -1,14 +1,14 @@
 ---
-title: Core Management
-sidebar_label: Core Management
+title: Basic Flag Management
+sidebar_label: Basic Flag Management
 sidebar_position: 1
 ---
 
-Flags in Flagsmith are used to categorise and monitor user actions or events, such as detecting spam or abuse. This guide covers how to create, edit, clone, and delete flags in your project.
+Feature Flags in Flagsmith are used to categorise and monitor user actions or events, such as detecting spam or abuse. This guide covers how to create, edit, clone, and delete flags in your project.
 
 ---
 
-## Creating a Flag
+## Creating a Feature Flag
 
 To create a new feature flag:
 
@@ -31,12 +31,12 @@ By clicking the **Create A/B/n Test** button, you can define values for A/B test
 
 ---
 
-## Editing a Flag
+## Editing a Feature Flag
 
-You create feature flags once per project, but you edit them within each environment. To edit an existing flag:
+You create feature flags once per project, but you edit them within each environment. To edit an existing feature flag:
 
 1. While on the **Environments** tab on the dashboard, use the dropdown to select the environment where you want to apply the changes.
-2. Locate the feature flag you want to edit and click on it. You can use the search bar to find the flag by its name.
+2. Locate the feature flag you want to edit and click on it. You can use the search bar to find the feature flag by its name.
 
 :::tip
 
@@ -44,14 +44,14 @@ If you just want to toggle the feature flag *on* or *off*, use the switch under 
 
 :::
 
-3. On the **Value** tab, you can set the flag to be on or off, as well as edit a value for it. Click **Update Feature Value** to save your changes.
-4. Optionally, create segment-specific features and define **segment overrides**. Refer to the documentation to learn more about [segments](../basic-features/segments.md). Save any changes by clicking the **Update Segment Overrides** button.
+3. On the **Value** tab, you can set the feature flag to be on or off, as well as edit a value for it. Click **Update Feature Value** to save your changes.
+4. Optionally, create segment-specific feature flags and define **segment overrides**. Refer to the documentation to learn more about [segments](../basic-features/segments.md). Save any changes by clicking the **Update Segment Overrides** button.
 5. On the **Settings** tab, you can:
     - Add tags to your feature flag.
     - Assign it to specific *users* and *groups*.
-    - Update the flag's description.
-    - Mark the flag as **Server-side only** to prevent it from being accessed by client-side SDKs.
-    - Set the **Archived** status to filter the flag as no longer relevant. Note that the flag will still be returned by the endpoint as before.
+    - Update the feature flag's description.
+    - Mark the feature flag as **Server-side only** to prevent it from being accessed by client-side SDKs.
+    - Set the **Archived** status to filter the feature flag as no longer relevant. Note that the feature flag will still be returned by the endpoint as before.
   Click **Update Settings** to save your changes.
 
 :::tip
@@ -62,17 +62,17 @@ Changes made in the **Settings** tab affect all environments. Changes made in ot
 
 ---
 
-## Deleting a Flag
+## Deleting a Feature Flag
 
 To delete a feature flag:
 
-1. In the **Features** section, locate the flag you want to remove and click the **three dots** icon on the right.
+1. In the **Features** section, locate the feature flag you want to remove and click the **three dots** icon on the right.
 2. Select the **Remove feature** option.
-3. Type in the name of the feature to confirm the deletion.
+3. Type in the name of the feature flag to confirm the deletion.
 
 :::caution
 
-Deleting a flag is permanent and cannot be undone. Make sure your applications do not contain any reference to this feature before confirming deleting it.
+Deleting a feature flag is permanent and cannot be undone. Make sure your applications do not contain any reference to this feature flag before confirming deleting it.
 
 :::
 
@@ -80,11 +80,11 @@ Deleting a flag is permanent and cannot be undone. Make sure your applications d
 
 ## Troubleshooting
 
-### Flags Not Updating
+### Feature Flags Not Updating
 
 - Make sure you have saved your changes in each tab of the edit feature flag panel.
 - Check that you are in the correct project and environment.
 
 ### Permission Issues
 
-- You may need additional permissions to create, edit, clone, or delete flags. If you see permission errors or options are disabled, contact your Flagsmith administrator to review your access rights. For more information, see the [Permissions and Roles](../system-administration/rbac.md) page.
+- You may need additional permissions to create, edit, clone, or delete feature flags. If you see permission errors or options are disabled, contact your Flagsmith administrator to review your access rights. For more information, see the [Permissions and Roles](../system-administration/rbac.md) page.

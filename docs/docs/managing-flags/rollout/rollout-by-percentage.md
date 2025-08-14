@@ -6,7 +6,7 @@ sidebar_position: 2
 
 **Rollouts by percentage** (also known as staged feature rollouts) allow you to test a new feature with a small subset of your user base. If you are happy with the feature, you can increase the percentage of users that see the feature until it is available to your entire user base.
 
-This method increases confidence in rolling out a new feature. If issues arise, you can disable the feature flag, thus hiding the feature within your application.
+This method increases confidence in rolling out a new feature. If issues arise, you can disable the feature flag, thus hiding the feature flag within your application.
 
 ## Prerequisites
 
@@ -43,13 +43,13 @@ Before you begin, make sure you have:
 
 - Go to the **Features** section and select the feature you want to roll out.
 - In the environment where you want to apply the rollout, go to the **Segment Overrides** tab.
-- Add the segment you created and set the desired flag state or value for users in that segment.
+- Add the segment you created and set the desired feature flag state or value for users in that segment.
 
 ### 3. Save and Monitor
 
 - Save your changes.
 - Monitor the rollout. If all goes well, gradually increase the **% Split** value to roll out the feature to more users over time.
-- If issues arise, you can quickly disable the feature for all users by removing the override or setting the flag to disabled.
+- If issues arise, you can quickly disable the feature flag for all users by removing the override or setting the feature flag to disabled.
 
 ---
 
