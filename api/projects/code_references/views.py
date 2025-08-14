@@ -94,14 +94,14 @@ class FeatureFlagCodeReferenceDetailAPIView(
         return [
             CodeReference(
                 scanned_at=scan.created_at,
-                vcs_provider=scan.vcs_provider,
+                vcs_provider=VCSProvider(scan.vcs_provider),
                 repository_url=scan.repository_url,
                 revision=scan.revision,
                 feature_name=feature.name,
                 file_path=reference["file_path"],
                 line_number=reference["line_number"],
                 permalink=self._get_permalink(
-                    provider=scan.vcs_provider,
+                    provider=VCSProvider(scan.vcs_provider),
                     repository_url=scan.repository_url,
                     revision=scan.revision,
                     file_path=reference["file_path"],
@@ -121,8 +121,12 @@ class FeatureFlagCodeReferenceDetailAPIView(
         file_path: str,
         line_number: int,
     ) -> str:
-        """Generate a permalink for the code reference.
-
-        NOTE: Only GitHub is supported right now.
-        """
-        return urljoin(repository_url, f"blob/{revision}/{file_path}#L{line_number}")
+        """Generate a permalink for the code reference."""
+        match provider:
+            case VCSProvider.GITHUB:
+                return urljoin(
+                    repository_url, f"blob/{revision}/{file_path}#L{line_number}"
+                )
+        raise NotImplementedError(  # pragma: no cover
+            f"Permalink generation for {provider} is not implemented."
+        )
