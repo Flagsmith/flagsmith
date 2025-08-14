@@ -38,7 +38,7 @@ jobs:
           import json
           import os
           import re
-          from collections import deque
+          from collections import defaultdict, deque
           from pathlib import Path
           from typing import Generator
 
@@ -107,18 +107,7 @@ jobs:
           json_references = json.dumps(code_references)
           with open(os.environ["GITHUB_OUTPUT"], "a") as gh_output:
               print(f"code_references={json_references}", file=gh_output)
-          EOF
 
-      - name: Display code references
-        run: |
-          uv run - <<EOF
-          # /// script
-          # requires-python = ">=${{ env.PYTHON_VERSION }}"
-          # ///
-          import json
-          from collections import defaultdict
-
-          code_references = json.loads("""${{ steps.collect.outputs.code_references }}""")
           if not code_references:
               print("No code references found.")
               exit(0)
