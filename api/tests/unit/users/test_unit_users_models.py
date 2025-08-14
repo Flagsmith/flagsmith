@@ -241,5 +241,5 @@ def test_delete_user():  # type: ignore[no-untyped-def]
     assert Organisation.objects.filter(name="org1").count() == 1
 
 
-def test_user_email_domain_property():  # type: ignore[no-untyped-def]
+def test_user_email_domain_property() -> None:
     assert FFAdminUser(email="test@example.com").email_domain == "example.com"

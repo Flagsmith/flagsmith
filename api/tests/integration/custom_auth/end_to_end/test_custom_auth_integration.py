@@ -746,3 +746,33 @@ def test_marketing_consent_given_defaults_to_true(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["marketing_consent_given"] is True
+
+
+@pytest.mark.parametrize(
+    "invalid_email",
+    [
+        "invalid_email",
+        "12345",
+        "invalid@email@com.com",
+        "invalid_email.com",
+        "invalid_email@com",
+        "foo@..!.bar.",
+    ],
+)
+def test_create_user_returns_error_if_email_is_invalid(
+    staff_client: APIClient,
+    invalid_email: str,
+) -> None:
+    # Given
+    url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
+    register_data = {
+        "email": invalid_email,
+        "password": "password",
+    }
+
+    # When
+    response = staff_client.post(url, data=register_data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["email"][0] == "Invalid email format."
