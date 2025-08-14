@@ -14,6 +14,8 @@ import {
   UserGroup,
   AttributeName,
   Identity,
+  ChangeRequest,
+  ProjectChangeRequest,
   Role,
   RolePermission,
   Webhook,
@@ -58,7 +60,16 @@ export type CreateVersionFeatureState = {
   sha: string
   featureState: FeatureState
 }
-
+export type WithoutId<T> = Omit<
+  T,
+  | 'id'
+  | 'uuid'
+  | 'created_at'
+  | 'updated_at'
+  | 'user'
+  | 'committed_at'
+  | 'deleted_at'
+>
 export type LoginRequest = {
   email: string
   password: string
@@ -644,6 +655,27 @@ export type Req = {
     environmentId: string
     data: Identity
   }
+  getProjectChangeRequests: PagedRequest<{
+    project_id: string
+    version_of?: string
+    live_from_after?: string
+    committed?: boolean
+  }>
+  getProjectChangeRequest: { project_id: string; id: string }
+  updateProjectChangeRequest: {
+    data: ProjectChangeRequest
+    project_id: string
+  }
+  createProjectChangeRequest: {
+    data: WithoutId<ProjectChangeRequest>
+    project_id: string
+  }
+  actionProjectChangeRequest: {
+    actionType: 'approve' | 'commit'
+    project_id: string
+    id: string
+  }
+  deleteProjectChangeRequest: { project_id: string; id: string }
   createAuditLogWebhooks: {
     organisationId: string
     data: Omit<Webhook, 'id' | 'created_at' | 'updated_at'>

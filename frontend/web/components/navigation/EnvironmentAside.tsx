@@ -1,6 +1,5 @@
 import React, { ComponentProps, FC, useEffect, useState } from 'react'
 import ProjectStore from 'common/stores/project-store'
-import ChangeRequestStore from 'common/stores/change-requests-store'
 import Utils from 'common/utils/utils'
 import { Environment } from 'common/types/responses'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -106,22 +105,6 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
     { projectId: projectId },
     { skip: !projectId },
   )
-
-  useEffect(() => {
-    if (environmentId) {
-      AppActions.getChangeRequests(environmentId, {})
-    }
-  }, [environmentId])
-  const [_, setChangeRequestsUpdated] = useState(Date.now())
-
-  useEffect(() => {
-    const onChangeRequestsUpdated = () => setChangeRequestsUpdated(Date.now())
-    ChangeRequestStore.on('change', onChangeRequestsUpdated)
-    return () => {
-      ChangeRequestStore.off('change', onChangeRequestsUpdated)
-    }
-    //eslint-disable-next-line
-  }, [])
 
   const unhealthyEnvironments = healthEvents
     ?.filter((event) => event?.type === 'UNHEALTHY' && !!event?.environment)
