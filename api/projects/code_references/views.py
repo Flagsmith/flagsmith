@@ -1,22 +1,21 @@
 from rest_framework import generics
 
-from .models import VCSFeatureFlagCodeReferences
-from .permissions import SubmitCodeReferences
-from .serializers import VCSFeatureFlagCodeReferencesSerializer
+from projects.code_references.models import FeatureFlagCodeReferencesScan
+from projects.code_references.permissions import SubmitFeatureFlagCodeReferences
+from projects.code_references.serializers import FeatureFlagCodeReferencesScanSerializer
 
 
-class CodeReferenceCreateAPIView(generics.CreateAPIView[VCSFeatureFlagCodeReferences]):
+class FeatureFlagCodeReferencesScanCreateAPIView(
+    generics.CreateAPIView[FeatureFlagCodeReferencesScan]
+):
     """
     API view to create code references for a project
     """
 
-    serializer_class = VCSFeatureFlagCodeReferencesSerializer
-    permission_classes = [SubmitCodeReferences]
+    serializer_class = FeatureFlagCodeReferencesScanSerializer
+    permission_classes = [SubmitFeatureFlagCodeReferences]
 
     def perform_create(  # type: ignore[override]
-        self, serializer: VCSFeatureFlagCodeReferencesSerializer
+        self, serializer: FeatureFlagCodeReferencesScanSerializer
     ) -> None:
-        """
-        Save the code references with the project context
-        """
         serializer.save(project_id=self.kwargs["project_pk"])

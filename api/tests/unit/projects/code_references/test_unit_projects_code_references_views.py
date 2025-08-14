@@ -2,7 +2,7 @@ import freezegun
 from common.projects.permissions import VIEW_PROJECT
 from rest_framework.test import APIClient
 
-from projects.code_references.models import VCSFeatureFlagCodeReferences
+from projects.code_references.models import FeatureFlagCodeReferencesScan
 from projects.models import Project
 from tests.types import WithProjectPermissionsCallable
 
@@ -50,7 +50,7 @@ def test_CodeReferenceCreateAPIView__responds_201_with_accepted_code_references(
     assert len(response.data["code_references"]) == 3
     assert response.data["project"] == project.pk
     assert response.data["created_at"] == "2025-04-14T12:30:00Z"
-    assert VCSFeatureFlagCodeReferences.objects.get().code_references == [
+    assert FeatureFlagCodeReferencesScan.objects.get().code_references == [
         {
             "feature_name": "feature-1",
             "file_path": "path/to/file1.py",
@@ -92,7 +92,7 @@ def test_CodeReferenceCreateAPIView__responds_401_when_not_authenticated(
 
     # Then
     assert response.status_code == 401
-    assert not VCSFeatureFlagCodeReferences.objects.exists()
+    assert not FeatureFlagCodeReferencesScan.objects.exists()
 
 
 def test_CodeReferenceCreateAPIView__responds_400_when_invalid_data(
@@ -125,4 +125,4 @@ def test_CodeReferenceCreateAPIView__responds_400_when_invalid_data(
     assert response.data == {
         "code_references": [{"line_number": ["This field is required."]}]
     }
-    assert not VCSFeatureFlagCodeReferences.objects.exists()
+    assert not FeatureFlagCodeReferencesScan.objects.exists()

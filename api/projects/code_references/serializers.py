@@ -2,7 +2,7 @@ from typing import TypedDict
 
 from rest_framework import serializers
 
-from .models import VCSFeatureFlagCodeReferences
+from projects.code_references.models import FeatureFlagCodeReferencesScan
 
 
 class _CodeReference(TypedDict):
@@ -17,15 +17,15 @@ class _CodeReferenceSerializer(serializers.Serializer[_CodeReference]):
     line_number = serializers.IntegerField(min_value=1)
 
 
-class VCSFeatureFlagCodeReferencesSerializer(
-    serializers.ModelSerializer[VCSFeatureFlagCodeReferences],
+class FeatureFlagCodeReferencesScanSerializer(
+    serializers.ModelSerializer[FeatureFlagCodeReferencesScan],
 ):
     code_references = _CodeReferenceSerializer(
         many=True, required=True, allow_empty=False
     )
 
     class Meta:
-        model = VCSFeatureFlagCodeReferences
+        model = FeatureFlagCodeReferencesScan
         fields = [
             "created_at",
             "repository_url",

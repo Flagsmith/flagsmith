@@ -7,7 +7,7 @@ from projects.models import Project
 from users.models import FFAdminUser
 
 
-class SubmitCodeReferences(IsAuthenticated):
+class SubmitFeatureFlagCodeReferences(IsAuthenticated):
     def has_permission(self, request: Request, view: APIView) -> bool:
         if not super().has_permission(request, view):
             return False

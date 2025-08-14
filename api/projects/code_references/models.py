@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models.expressions import Func
 
 
-class VCSFeatureFlagCodeReferences(models.Model):
+class FeatureFlagCodeReferencesScan(models.Model):
     """
     A JSON package of feature flag code references within a repository
     """
