@@ -12,7 +12,6 @@ env:
   FLAGSMITH_ADMIN_API_URL: https://api.flagsmith.com
   FLAGSMITH_ADMIN_API_KEY: ${{ secrets.FLAGSMITH_CODE_REFERENCES_API_KEY }}
   FLAGSMITH_PROJECT_ID: 12
-  PYTHON_REQUESTS_VERSION: '2.32.4'
   PYTHON_VERSION: '3.13'
 
 jobs:
@@ -34,7 +33,7 @@ jobs:
           uv run - <<EOF
           # /// script
           # requires-python = ">=${{ env.PYTHON_VERSION }}"
-          # dependencies = ["requests==${{ env.PYTHON_REQUESTS_VERSION }}"]
+          # dependencies = ["requests"]
           # ///
           import json
           import os
@@ -141,7 +140,7 @@ jobs:
           uv run - <<EOF
           # /// script
           # requires-python = ">=${{ env.PYTHON_VERSION }}"
-          # dependencies = ["requests==${{ env.PYTHON_REQUESTS_VERSION }}"]
+          # dependencies = ["requests"]
           # ///
           import json
           import requests
