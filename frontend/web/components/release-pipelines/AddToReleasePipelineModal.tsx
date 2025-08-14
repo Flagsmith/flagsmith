@@ -21,7 +21,7 @@ const AddToReleasePipelineModal = ({
     number | null
   >(null)
   const { data: releasePipelines } = useGetReleasePipelinesQuery({
-    order_by: 'created_at',
+    order_by: '-created_at',
     page: 1,
     page_size: 100,
     projectId,
