@@ -1,8 +1,12 @@
+import re
 from typing import Any
 
 from common.core.utils import is_saas
 from django.conf import settings
-from djoser.serializers import UserCreateSerializer  # type: ignore[import-untyped]
+from djoser.serializers import (  # type: ignore[import-untyped]
+    TokenCreateSerializer,
+    UserCreateSerializer,
+)
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
@@ -18,6 +22,15 @@ from .constants import (
     INVALID_PASSWORD_ERROR,
     USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
 )
+
+EMAIL_REGEX = re.compile(r"^[^@]+@(?:\w+\.)+\w{2,}$")
+
+
+class CustomTokenCreateSerializer(TokenCreateSerializer):  # type: ignore[misc]
+    def validate_email(self, value: str) -> str:
+        if not EMAIL_REGEX.match(value):
+            raise serializers.ValidationError("Invalid email format.")
+        return value
 
 
 class CustomTokenSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
