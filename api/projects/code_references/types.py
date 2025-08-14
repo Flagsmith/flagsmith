@@ -1,5 +1,12 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TypedDict
+
+
+class JSONCodeReference(TypedDict):
+    feature_name: str
+    file_path: str
+    line_number: int
 
 
 @dataclass

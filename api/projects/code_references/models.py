@@ -1,5 +1,7 @@
 from django.db import models
 
+from projects.code_references.types import JSONCodeReference
+
 
 class FeatureFlagCodeReferencesScan(models.Model):
     """
@@ -24,7 +26,7 @@ class FeatureFlagCodeReferencesScan(models.Model):
         default=Providers.GITHUB,  # TODO: Remove when adding other providers
     )
     revision = models.CharField(max_length=100)
-    code_references = models.JSONField(default=list)
+    code_references = models.JSONField[list[JSONCodeReference]](default=list)
 
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
