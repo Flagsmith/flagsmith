@@ -16,6 +16,7 @@ from audit.constants import (
     RELEASE_PIPELINE_DELETED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
+from core.helpers import get_current_site_url
 from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
@@ -126,6 +127,17 @@ class ReleasePipeline(
 
     def _get_project(self) -> Project:
         return self.project
+
+    @property
+    def url(self) -> str:
+        if not self.id:
+            raise AttributeError(
+                "Release pipeline must be saved before it has a url attribute."
+            )
+        url = get_current_site_url()
+        url += f"/project/{self.project_id}"
+        url += f"/release-pipelines/{self.id}"
+        return url
 
 
 class PipelineStage(models.Model):
