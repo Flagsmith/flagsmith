@@ -122,6 +122,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "audit",
     "permissions",
+    "projects.code_references",
     "projects.tags",
     "api_keys",
     "webhooks",

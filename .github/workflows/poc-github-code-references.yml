@@ -9,9 +9,9 @@ on:
 
 env:
   EXCLUDE_PATTERNS: node_modules,venv,.git,cache,build,htmlcov,docs,.json,tests
-  FLAGSMITH_EDGE_API_URL: https://edge.api.flagsmith.com
-  FLAGSMITH_ENVIRONMENT_KEY: ENktaJnfLVbLifybz34JmX
-  PYTHON_REQUESTS_VERSION: '2.32.4'
+  FLAGSMITH_ADMIN_API_URL: https://api.flagsmith.com
+  FLAGSMITH_ADMIN_API_KEY: ${{ secrets.FLAGSMITH_CODE_REFERENCES_API_KEY }}
+  FLAGSMITH_PROJECT_ID: 12
   PYTHON_VERSION: '3.13'
 
 jobs:
@@ -32,13 +32,13 @@ jobs:
         run: |
           uv run - <<EOF
           # /// script
-          # requires-python = "==${{ env.PYTHON_VERSION }}"
-          # dependencies = ["requests==${{ env.PYTHON_REQUESTS_VERSION }}"]
+          # requires-python = ">=${{ env.PYTHON_VERSION }}"
+          # dependencies = ["requests"]
           # ///
           import json
           import os
           import re
-          from collections import deque
+          from collections import defaultdict, deque
           from pathlib import Path
           from typing import Generator
 
@@ -80,14 +80,22 @@ jobs:
                           for feature_name in feature_names:
                               if feature_name not in line:  # Match feature name
                                   continue
-                              if re.search(fr"""(?i:(?:feature|flag)\w*\(\s*(["']){feature_name})\1""", "".join(context)):  # Function calls
+                              re_function_calls = rf"""(?i:(?:feature|flag)\w*\(\s*(["']){re.escape(feature_name)})\1"""
+                              if re.search(re_function_calls, "".join(context)):
                                   yield feature_name, str(path), line_number
                               # TODO: Add more sophisticated matching, e.g. feature names defined as constants
 
+          def retrieve_feature_names() -> list[str]:
+              """Fetch feature names from the Flagsmith API."""
+              response = requests.get(  # TODO: Make better use of pagination
+                  f"${{ env.FLAGSMITH_ADMIN_API_URL }}/api/v1/projects/${{ env.FLAGSMITH_PROJECT_ID }}/features/?page_size=1000",
+                  headers={"Authorization": f"Api-Key ${{ env.FLAGSMITH_ADMIN_API_KEY }}"},
+              )
+              response.raise_for_status()
+              return [feature["name"] for feature in response.json()["results"]]
+
           # Fetch visible features
-          all_flags = requests.get(f"${{ env.FLAGSMITH_EDGE_API_URL }}/api/v1/flags", headers={"X-Environment-Key": "${{ env.FLAGSMITH_ENVIRONMENT_KEY }}"}).json()
-          feature_names = sorted([flag["feature"]["name"] for flag in all_flags])
-          print("Feature names:", feature_names)
+          feature_names = retrieve_feature_names()
 
           # Find code references
           code_references = [
@@ -99,29 +107,47 @@ jobs:
           json_references = json.dumps(code_references)
           with open(os.environ["GITHUB_OUTPUT"], "a") as gh_output:
               print(f"code_references={json_references}", file=gh_output)
-          EOF
 
-      - name: Display code references
-        shell: python
-        run: |
-          import json
-          from collections import defaultdict
-
-          code_references = json.loads('''${{ steps.collect.outputs.code_references }}''')
           if not code_references:
               print("No code references found.")
               exit(0)
 
           references_by_feature = defaultdict(list)
-          sorted_code_references = sorted(code_references, key=lambda x: (x['feature_name'], x['file_path'], x['line_number']))
+          sorted_code_references = sorted(code_references, key=lambda x: (x["feature_name"], x["file_path"], x["line_number"]))
           for reference in sorted_code_references:
-              references_by_feature[reference['feature_name']].append((reference['file_path'], reference['line_number']))
+              references_by_feature[reference["feature_name"]].append((reference["file_path"], reference["line_number"]))
 
           print("Code References:")
           for feature_name, references in references_by_feature.items():
               print(f"\nFeature: {feature_name}")
               for file_path, line_number in references:
                   print(f"  - {file_path}:{line_number}")
+          EOF
 
-      # TODO
-      # - name: Upload code references
+      - name: Upload code references
+        run: |
+          uv run - <<EOF
+          # /// script
+          # requires-python = ">=${{ env.PYTHON_VERSION }}"
+          # dependencies = ["requests"]
+          # ///
+          import json
+          import requests
+
+          code_references = json.loads("""${{ steps.collect.outputs.code_references }}""")
+          if not code_references:
+              print("No code references to upload.")
+              exit(0)
+
+          response = requests.post(
+              f"${{ env.FLAGSMITH_ADMIN_API_URL }}/api/v1/projects/${{ env.FLAGSMITH_PROJECT_ID }}/code-references/",
+              headers={"Authorization": f"Api-Key ${{ env.FLAGSMITH_ADMIN_API_KEY }}"},
+              json={
+                  "repository_url": "${{ github.server_url }}/${{ github.repository }}",
+                  "revision": "${{ github.sha }}",
+                  "code_references": code_references,
+              },
+          )
+          response.raise_for_status()
+          print(f"Uploaded {len(code_references)} code references.")
+          EOF

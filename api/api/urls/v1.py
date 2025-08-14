@@ -82,6 +82,7 @@ urlpatterns = [
     ),
     # Test webhook url
     re_path(r"^webhooks/", include("webhooks.urls", namespace="webhooks")),
+    path("", include("projects.code_references.urls", namespace="code_references")),
 ]
 
 if settings.SPLIT_TESTING_INSTALLED:
