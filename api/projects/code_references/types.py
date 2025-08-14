@@ -32,3 +32,9 @@ class FeatureFlagCodeReferences:
     first_scanned_at: datetime | None
     last_scanned_at: datetime | None
     code_references: list[CodeReference]
+
+
+@dataclass
+class CodeReferencesRepositoryCount:
+    repository_url: str
+    count: int

@@ -3,6 +3,7 @@ from rest_framework import serializers
 from projects.code_references.models import FeatureFlagCodeReferencesScan
 from projects.code_references.types import (
     CodeReference,
+    CodeReferencesRepositoryCount,
     FeatureFlagCodeReferences,
     VCSProvider,
 )
@@ -61,3 +62,10 @@ class FeatureFlagCodeReferencesSerializer(
             "last_scanned_at",
             "code_references",
         ]
+
+
+class CodeReferencesRepositoryCountSerializer(
+    serializers.Serializer[CodeReferencesRepositoryCount],
+):
+    repository_url = serializers.URLField()
+    count = serializers.IntegerField()

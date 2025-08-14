@@ -24,6 +24,7 @@ from environments.sdk.serializers_mixins import (
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
+from projects.code_references.serializers import CodeReferencesRepositoryCountSerializer
 from projects.models import Project
 from users.serializers import (
     UserIdsSerializer,
@@ -327,8 +328,16 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerializer):
     metadata = MetadataSerializer(required=False, many=True)
 
+    code_references_counts = CodeReferencesRepositoryCountSerializer(
+        many=True,
+        read_only=True,
+    )
+
     class Meta(CreateFeatureSerializer.Meta):
-        fields = CreateFeatureSerializer.Meta.fields + ("metadata",)  # type: ignore[assignment]
+        fields = CreateFeatureSerializer.Meta.fields + (  # type: ignore[assignment]
+            "metadata",
+            "code_references_counts",
+        )
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
