@@ -9,6 +9,7 @@ import StaleFlagWarning from './StaleFlagWarning'
 import Tag from 'components/tags/Tag'
 import Utils from 'common/utils/utils'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
+import GithubReferencesTag from 'components/tags/GithubReferencesTag'
 
 type FeatureTagsType = {
   editFeature: (tab?: string) => void
@@ -20,6 +21,7 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
     { projectId: String(projectFlag.project) },
     { skip: !projectFlag?.project },
   )
+
   const featureUnhealthyEvents = useMemo(
     () =>
       healthEvents?.filter(
@@ -53,6 +55,14 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
         count={projectFlag.num_identity_overrides}
         showPlusIndicator={showPlusIndicator}
       />
+      {!!(projectFlag?.code_references?.total_count || true) && (
+        <GithubReferencesTag
+          count={
+            projectFlag?.code_references?.total_count ||
+            Math.round(Math.random() * 10)
+          }
+        />
+      )}
       {projectFlag.is_server_key_only && (
         <Tooltip
           title={

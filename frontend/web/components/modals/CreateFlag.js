@@ -55,6 +55,7 @@ import { warning } from 'ionicons/icons'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import { FlagValueFooter } from './FlagValueFooter'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
+import FeatureCodeReferences from 'components/feature-page/FeatureNavTab/FeatureCodeReferences'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -1111,6 +1112,7 @@ const CreateFlag = class extends Component {
                                   onChange={() => this.forceUpdate()}
                                   urlParam='tab'
                                   history={this.props.history}
+                                  overflowX
                                 >
                                   <TabItem
                                     data-test='value'
@@ -1865,7 +1867,6 @@ const CreateFlag = class extends Component {
                                       )
                                     }
                                   </Permission>
-
                                   {!existingChangeRequest &&
                                     this.props.flagId &&
                                     isVersioned && (
@@ -1913,6 +1914,12 @@ const CreateFlag = class extends Component {
                                       </InfoMessage>
                                     </TabItem>
                                   )}
+                                  <TabItem tabLabel={'Code References'}>
+                                    <FeatureCodeReferences
+                                      featureId={projectFlag.id}
+                                      projectId={this.props.projectId}
+                                    />
+                                  </TabItem>
                                   {this.props.hasUnhealthyEvents && (
                                     <TabItem
                                       data-test='feature_health'

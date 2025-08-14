@@ -889,6 +889,16 @@ export interface PipelineDetailStage extends BasePipelineStage {
   features: Features
 }
 
+export type FeatureCodeReferences = {
+  first_scanned_at: string
+  last_scanned_at: string
+  code_references: {
+    file_path: string
+    line_number: number
+    permalink: string
+  }[]
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -1041,5 +1051,6 @@ export type Res = {
   releasePipelines: PagedResponse<ReleasePipeline>
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
+  featureCodeReferences: FeatureCodeReferences
   // END OF TYPES
 }
