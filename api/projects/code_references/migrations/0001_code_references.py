@@ -26,6 +26,12 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("repository_url", models.URLField()),
+                (
+                    "vcs_provider",
+                    models.CharField(
+                        choices=[("github", "GitHub")], default="github", max_length=50
+                    ),
+                ),
                 ("revision", models.CharField(max_length=100)),
                 ("code_references", models.JSONField(default=list)),
                 ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
