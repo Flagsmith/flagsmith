@@ -2,6 +2,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TypedDict
 
+from django.db.models import TextChoices
+
+
+class VCSProvider(TextChoices):
+    GITHUB = "github", "GitHub"
+
 
 class JSONCodeReference(TypedDict):
     feature_name: str
@@ -12,6 +18,8 @@ class JSONCodeReference(TypedDict):
 @dataclass
 class CodeReference:
     scanned_at: datetime
+    vcs_provider: VCSProvider
+    repository_url: str
     revision: str
     feature_name: str
     file_path: str

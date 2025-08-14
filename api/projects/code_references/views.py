@@ -19,6 +19,7 @@ from projects.code_references.serializers import (
 from projects.code_references.types import (
     CodeReference,
     FeatureFlagCodeReferences,
+    VCSProvider,
 )
 
 
@@ -92,17 +93,20 @@ class FeatureFlagCodeReferenceDetailAPIView(
 
         return [
             CodeReference(
+                scanned_at=scan.created_at,
+                vcs_provider=scan.vcs_provider,
+                repository_url=scan.repository_url,
+                revision=scan.revision,
                 feature_name=feature.name,
                 file_path=reference["file_path"],
                 line_number=reference["line_number"],
                 permalink=self._get_permalink(
+                    provider=scan.vcs_provider,
                     repository_url=scan.repository_url,
                     revision=scan.revision,
                     file_path=reference["file_path"],
                     line_number=reference["line_number"],
                 ),
-                scanned_at=scan.created_at,
-                revision=scan.revision,
             )
             for scan in last_scans_of_each_repository
             for reference in scan.code_references
@@ -111,6 +115,7 @@ class FeatureFlagCodeReferenceDetailAPIView(
 
     def _get_permalink(
         self,
+        provider: VCSProvider,
         repository_url: str,
         revision: str,
         file_path: str,

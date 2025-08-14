@@ -192,6 +192,8 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
     assert response.data["last_scanned_at"] == "2099-01-02T11:00:00Z"
     assert len(references := response.data["code_references"]) == 3
     assert references[0]["scanned_at"] == "2099-01-01T10:00:00Z"
+    assert references[0]["vcs_provider"] == "github"
+    assert references[0]["repository_url"] == "https://github.flagsmith.com/backend/"
     assert references[0]["revision"] == "backend-1"
     assert references[1]["scanned_at"] == "2099-01-02T11:00:00Z"
     assert references[0]["file_path"] == "backend/file1.py"
@@ -200,6 +202,8 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
         "https://github.flagsmith.com/backend/blob/backend-1/backend/file1.py#L20"
     )
     assert references[1]["scanned_at"] == "2099-01-02T11:00:00Z"
+    assert references[1]["vcs_provider"] == "github"
+    assert references[1]["repository_url"] == "https://github.flagsmith.com/frontend/"
     assert references[1]["revision"] == "frontend-2"
     assert references[1]["file_path"] == "frontend/file1.js"
     assert references[1]["line_number"] == 12
@@ -207,6 +211,8 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
         "https://github.flagsmith.com/frontend/blob/frontend-2/frontend/file1.js#L12"
     )
     assert references[2]["scanned_at"] == "2099-01-02T11:00:00Z"
+    assert references[2]["vcs_provider"] == "github"
+    assert references[2]["repository_url"] == "https://github.flagsmith.com/frontend/"
     assert references[2]["revision"] == "frontend-2"
     assert references[2]["file_path"] == "frontend/file2.js"
     assert references[2]["line_number"] == 5

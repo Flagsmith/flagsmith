@@ -4,6 +4,7 @@ from projects.code_references.models import FeatureFlagCodeReferencesScan
 from projects.code_references.types import (
     CodeReference,
     FeatureFlagCodeReferences,
+    VCSProvider,
 )
 
 
@@ -17,9 +18,11 @@ class _CodeReferenceSubmitSerializer(_BaseCodeReferenceSerializer):
 
 
 class _CodeReferenceDetailSerializer(_BaseCodeReferenceSerializer):
-    permalink = serializers.URLField()
     scanned_at = serializers.DateTimeField()
+    vcs_provider = serializers.ChoiceField(choices=VCSProvider.choices)
+    repository_url = serializers.URLField()
     revision = serializers.CharField()
+    permalink = serializers.URLField()
 
 
 class FeatureFlagCodeReferencesScanSerializer(

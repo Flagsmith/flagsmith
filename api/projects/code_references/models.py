@@ -2,16 +2,13 @@ from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.db.models.expressions import Func
 
-from projects.code_references.types import JSONCodeReference
+from projects.code_references.types import JSONCodeReference, VCSProvider
 
 
 class FeatureFlagCodeReferencesScan(models.Model):
     """
     A scan of feature flag code references in a repository
     """
-
-    class Providers(models.TextChoices):
-        GITHUB = "github", "GitHub"
 
     project = models.ForeignKey(
         "projects.Project",
@@ -24,8 +21,8 @@ class FeatureFlagCodeReferencesScan(models.Model):
 
     vcs_provider = models.CharField(
         max_length=50,
-        choices=Providers.choices,
-        default=Providers.GITHUB,  # TODO: Remove when adding other providers
+        choices=VCSProvider.choices,
+        default=VCSProvider.GITHUB,  # TODO: Remove when adding other providers
     )
     revision = models.CharField(max_length=100)
     code_references = models.JSONField[list[JSONCodeReference]](default=list)
