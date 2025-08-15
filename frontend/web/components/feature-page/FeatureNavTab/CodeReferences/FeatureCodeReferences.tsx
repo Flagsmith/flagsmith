@@ -3,7 +3,7 @@ import moment from 'moment'
 import React from 'react'
 import CodeReferencesTabHeader from './CodeReferencesTabHeader'
 import CodeReferencesByRepoList from './CodeReferencesByRepoList'
-import { CodeReference } from 'common/types/responses'
+
 interface FeatureCodeReferencesProps {
   featureId: number
   projectId: number
@@ -24,18 +24,13 @@ const FeatureCodeReferences: React.FC<FeatureCodeReferencesProps> = ({
     ? moment(data.last_scanned_at, 'YYYY-MM-DD')
     : null
 
-  if (!data || data?.code_references?.length === 0) {
+  if (!data || Object.keys(data.by_repository).length === 0) {
     return (
       <div className='flex flex-col gap-5'>
         <p className='text-sm text-gray-500'>No code references found</p>
       </div>
     )
   }
-
-  const codeReferencesByRepo = data.code_references.reduce((acc, curr) => {
-    acc[curr.repository_url] = [...(acc[curr.repository_url] || []), curr]
-    return acc
-  }, {} as Record<string, CodeReference[]>)
 
   return (
     <div className='flex flex-col gap-4'>
@@ -45,7 +40,7 @@ const FeatureCodeReferences: React.FC<FeatureCodeReferencesProps> = ({
           lastScannedAt={lastScannedAt}
         />
       )}
-      <CodeReferencesByRepoList codeReferencesByRepo={codeReferencesByRepo} />
+      <CodeReferencesByRepoList codeReferencesByRepo={data.by_repository} />
     </div>
   )
 }
