@@ -172,7 +172,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    with freezegun.freeze_time("2099-01-01T10:00:00Z"):
+    with freezegun.freeze_time("2099-01-01T10:00:00-0300"):
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
             repository_url="https://github.flagsmith.com/backend/",
@@ -197,7 +197,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
                 },
             ],
         )
-    with freezegun.freeze_time("2099-01-02T11:00:00Z"):
+    with freezegun.freeze_time("2099-01-02T11:00:00-0300"):
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
             repository_url="https://github.flagsmith.com/frontend/",
@@ -223,37 +223,50 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
 
     # Then
     assert response.status_code == 200
-    assert response.data["first_scanned_at"] == "2099-01-01T10:00:00Z"
-    assert response.data["last_scanned_at"] == "2099-01-02T11:00:00Z"
-    assert len(references := response.data["code_references"]) == 3
-    assert references[0]["scanned_at"] == "2099-01-01T10:00:00Z"
-    assert references[0]["vcs_provider"] == "github"
-    assert references[0]["repository_url"] == "https://github.flagsmith.com/backend/"
-    assert references[0]["revision"] == "backend-1"
-    assert references[1]["scanned_at"] == "2099-01-02T11:00:00Z"
-    assert references[0]["file_path"] == "backend/file1.py"
-    assert references[0]["line_number"] == 20
-    assert references[0]["permalink"] == (
-        "https://github.flagsmith.com/backend/blob/backend-1/backend/file1.py#L20"
-    )
-    assert references[1]["scanned_at"] == "2099-01-02T11:00:00Z"
-    assert references[1]["vcs_provider"] == "github"
-    assert references[1]["repository_url"] == "https://github.flagsmith.com/frontend/"
-    assert references[1]["revision"] == "frontend-2"
-    assert references[1]["file_path"] == "frontend/file1.js"
-    assert references[1]["line_number"] == 12
-    assert references[1]["permalink"] == (
-        "https://github.flagsmith.com/frontend/blob/frontend-2/frontend/file1.js#L12"
-    )
-    assert references[2]["scanned_at"] == "2099-01-02T11:00:00Z"
-    assert references[2]["vcs_provider"] == "github"
-    assert references[2]["repository_url"] == "https://github.flagsmith.com/frontend/"
-    assert references[2]["revision"] == "frontend-2"
-    assert references[2]["file_path"] == "frontend/file2.js"
-    assert references[2]["line_number"] == 5
-    assert references[2]["permalink"] == (
-        "https://github.flagsmith.com/frontend/blob/frontend-2/frontend/file2.js#L5"
-    )
+    assert response.json() == [
+        {
+            "repository_url": "https://github.flagsmith.com/backend/",
+            "vcs_provider": "github",
+            "revision": "backend-1",
+            "last_successful_repository_scanned_at": "2099-01-01T13:00:00+00:00",
+            "last_feature_found_at": "2099-01-01T13:00:00+00:00",
+            "code_references": [
+                {
+                    "feature_name": feature.name,
+                    "file_path": "backend/file1.py",
+                    "line_number": 20,
+                    "permalink": (
+                        "https://github.flagsmith.com/backend/blob/backend-1/backend/file1.py#L20"
+                    ),
+                },
+            ],
+        },
+        {
+            "repository_url": "https://github.flagsmith.com/frontend/",
+            "vcs_provider": "github",
+            "revision": "frontend-2",
+            "last_successful_repository_scanned_at": "2099-01-02T14:00:00+00:00",
+            "last_feature_found_at": "2099-01-02T14:00:00+00:00",
+            "code_references": [
+                {
+                    "feature_name": feature.name,
+                    "file_path": "frontend/file1.js",
+                    "line_number": 12,
+                    "permalink": (
+                        "https://github.flagsmith.com/frontend/blob/frontend-2/frontend/file1.js#L12"
+                    ),
+                },
+                {
+                    "feature_name": feature.name,
+                    "file_path": "frontend/file2.js",
+                    "line_number": 5,
+                    "permalink": (
+                        "https://github.flagsmith.com/frontend/blob/frontend-2/frontend/file2.js#L5"
+                    ),
+                },
+            ],
+        },
+    ]
 
 
 def test_FeatureCodeReferencesDetailAPIView__responds_200_with_feature_flag_removed(
@@ -264,7 +277,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_feature_flag_remo
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    with freezegun.freeze_time("2099-01-01T10:00:00Z"):
+    with freezegun.freeze_time("2099-01-01T10:00:00-0300"):
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
             repository_url="https://github.flagsmith.com/",
@@ -277,7 +290,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_feature_flag_remo
                 },
             ],
         )
-    with freezegun.freeze_time("2099-01-02T11:00:00Z"):
+    with freezegun.freeze_time("2099-01-02T11:00:00-0300"):
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
             repository_url="https://github.flagsmith.com/",
@@ -292,9 +305,16 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_feature_flag_remo
 
     # Then
     assert response.status_code == 200
-    assert response.data["first_scanned_at"] == "2099-01-01T10:00:00Z"
-    assert response.data["last_scanned_at"] == "2099-01-01T10:00:00Z"
-    assert len(response.data["code_references"]) == 0
+    assert response.json() == [
+        {
+            "repository_url": "https://github.flagsmith.com/",
+            "vcs_provider": "github",
+            "revision": "revision-hash-2",
+            "last_successful_repository_scanned_at": "2099-01-02T14:00:00+00:00",
+            "last_feature_found_at": "2099-01-01T13:00:00+00:00",
+            "code_references": [],
+        },
+    ]
 
 
 def test_FeatureCodeReferencesDetailAPIView__responds_200_even_without_code_references(
@@ -313,9 +333,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_even_without_code_refe
 
     # Then
     assert response.status_code == 200
-    assert response.data["first_scanned_at"] is None
-    assert response.data["last_scanned_at"] is None
-    assert response.data["code_references"] == []
+    assert response.json() == []
 
 
 def test_FeatureCodeReferencesDetailAPIView__responds_401_when_not_authenticated(

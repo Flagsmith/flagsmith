@@ -1,0 +1,2 @@
+# TODO: Implement history cleanup?
+FEATURE_FLAG_CODE_REFERENCES_RETENTION_DAYS = 30
