@@ -640,6 +640,10 @@ const CreateFlag = class extends Component {
     let regexValid = true
     const metadataEnable = Utils.getPlansPermission('METADATA')
 
+    const isGithubPocEnabled = Utils.getFlagsmithHasFeature(
+      'git_code_references',
+    )
+
     try {
       if (!isEdit && name && regex) {
         regexValid = name.match(new RegExp(regex))
@@ -1914,12 +1918,14 @@ const CreateFlag = class extends Component {
                                       </InfoMessage>
                                     </TabItem>
                                   )}
-                                  <TabItem tabLabel={'Code References'}>
-                                    <FeatureCodeReferences
-                                      featureId={projectFlag.id}
-                                      projectId={this.props.projectId}
-                                    />
-                                  </TabItem>
+                                  {isGithubPocEnabled && (
+                                    <TabItem tabLabel={'Code References'}>
+                                      <FeatureCodeReferences
+                                        featureId={projectFlag.id}
+                                        projectId={this.props.projectId}
+                                      />
+                                    </TabItem>
+                                  )}
                                   {this.props.hasUnhealthyEvents && (
                                     <TabItem
                                       data-test='feature_health'
