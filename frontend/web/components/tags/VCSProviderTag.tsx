@@ -3,12 +3,12 @@ import { GithubIcon } from 'components/base/icons/GithubIcon'
 import { getDarkMode } from 'project/darkMode'
 import GitlabIcon from 'components/base/icons/GitlabIcon'
 
-interface GithubReferencesTagProps {
+interface VCSProviderTagProps {
   count: number
-  vcsProvider?: 'github' | 'gitlab'
+  vcsProvider?: 'github' | 'gitlab' | 'bitbucket'
 }
 
-const GithubReferencesTag: React.FC<GithubReferencesTagProps> = ({
+const VCSProviderTag: React.FC<VCSProviderTagProps> = ({
   count,
   vcsProvider = 'github',
 }) => {
@@ -16,7 +16,7 @@ const GithubReferencesTag: React.FC<GithubReferencesTagProps> = ({
   return (
     <div className='d-flex align-items-center'>
       <span
-        className={`chip me-2 chip--xs text-white`}
+        className={`chip chip--xs text-white`}
         style={{
           backgroundColor: darkMode ? '#343a40' : '#343a40',
           border: 'none',
@@ -38,4 +38,4 @@ const GithubReferencesTag: React.FC<GithubReferencesTagProps> = ({
   )
 }
 
-export default GithubReferencesTag
+export default VCSProviderTag
