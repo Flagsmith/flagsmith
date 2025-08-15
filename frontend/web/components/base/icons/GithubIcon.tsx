@@ -1,4 +1,3 @@
-import { getDarkMode } from 'project/darkMode'
 import React from 'react'
 
 interface GithubIconProps {
