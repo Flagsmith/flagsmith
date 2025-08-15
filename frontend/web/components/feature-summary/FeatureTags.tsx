@@ -39,7 +39,8 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
 
   const isGithubPocEnabled = Utils.getFlagsmithHasFeature('git_code_references')
-
+  const codeReferencesCounts =
+    projectFlag?.code_references_counts || Math.round(Math.random() * 10)
   return (
     <>
       <SegmentOverridesIcon
@@ -57,15 +58,12 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
         count={projectFlag.num_identity_overrides}
         showPlusIndicator={showPlusIndicator}
       />
-      {isGithubPocEnabled &&
-        !!(projectFlag?.code_references?.total_count || true) && (
-          <VCSProviderTag
-            count={
-              projectFlag?.code_references?.total_count ||
-              Math.round(Math.random() * 10)
-            }
-          />
-        )}
+      {isGithubPocEnabled && (
+        <VCSProviderTag
+          count={codeReferencesCounts}
+          isWarning={codeReferencesCounts === 0}
+        />
+      )}
       {projectFlag.is_server_key_only && (
         <Tooltip
           title={

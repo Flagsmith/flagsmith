@@ -1,24 +1,24 @@
 import React from 'react'
 import { GithubIcon } from 'components/base/icons/GithubIcon'
-import { getDarkMode } from 'project/darkMode'
 import GitlabIcon from 'components/base/icons/GitlabIcon'
 
 interface VCSProviderTagProps {
   count: number
   vcsProvider?: 'github' | 'gitlab' | 'bitbucket'
+  isWarning?: boolean
 }
 
 const VCSProviderTag: React.FC<VCSProviderTagProps> = ({
   count,
+  isWarning = false,
   vcsProvider = 'github',
 }) => {
-  const darkMode = getDarkMode()
   return (
     <div className='d-flex align-items-center'>
       <span
         className={`chip chip--xs text-white`}
         style={{
-          backgroundColor: darkMode ? '#343a40' : '#343a40',
+          backgroundColor: isWarning ? '#ff9f43' : '#343a40',
           border: 'none',
         }}
       >

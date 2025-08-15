@@ -1,5 +1,5 @@
 import Icon from 'components/Icon'
-import { CodeReference } from './FeatureCodeReferences'
+import { CodeReference } from 'common/types/responses'
 
 interface CodeReferenceItemProps {
   codeReference: CodeReference
