@@ -1,6 +1,4 @@
-from django.contrib.postgres.indexes import GinIndex
 from django.db import models
-from django.db.models.expressions import Func
 
 from projects.code_references.types import JSONCodeReference, VCSProvider
 
@@ -31,13 +29,3 @@ class FeatureFlagCodeReferencesScan(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
-        indexes = [
-            GinIndex(  # Helps filtering code references by feature name
-                Func(
-                    models.F("code_references"),
-                    models.Value("$[*].feature_name"),
-                    function="jsonb_path_query_array",
-                ),
-                name="code_references_feature_name",
-            ),
-        ]
