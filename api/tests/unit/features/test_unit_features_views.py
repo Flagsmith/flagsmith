@@ -51,6 +51,7 @@ from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import MetadataModelField
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
+from projects.code_references.models import FeatureFlagCodeReferencesScan
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
@@ -3341,6 +3342,92 @@ def test_list_features_with_filter_by_search_value_boolean(
 
     assert len(response.data["results"]) == 1
     assert response.data["results"][0]["name"] == feature2.name
+
+
+def test_FeatureViewSet_list__includes_code_references_counts(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    environment: Environment,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    with freeze_time("2099-01-01T10:00:00-0300"):
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://github.flagsmith.com/backend/",
+            revision="backend-1",
+            code_references=[
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/file.py",
+                    "line_number": 42,
+                },
+            ],
+        )
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://gitlab.flagsmith.com/frontend/",
+            revision="frontend-1",
+            code_references=[
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/file.js",
+                    "line_number": 23,
+                },
+            ],
+        )
+    with freeze_time("2099-01-02T11:00:00-0300"):
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://github.flagsmith.com/backend/",
+            revision="backend-2",
+            code_references=[
+                {
+                    "feature_name": f"Another {feature.name}",
+                    "file_path": "path/to/another/file.py",
+                    "line_number": 11,
+                },
+            ],
+        )
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://gitlab.flagsmith.com/frontend/",
+            revision="frontend-2",
+            code_references=[
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/file.js",
+                    "line_number": 23,
+                },
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/another/file.js",
+                    "line_number": 50,
+                },
+            ],
+        )
+
+    # When
+    response = staff_client.get(f"/api/v1/projects/{project.pk}/features/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["results"][0]["code_references_counts"] == [
+        {
+            "repository_url": "https://github.flagsmith.com/backend/",
+            "count": 0,
+            "last_successful_repository_scanned_at": "2099-01-02T14:00:00+00:00",
+            "last_feature_found_at": "2099-01-01T13:00:00+00:00",
+        },
+        {
+            "repository_url": "https://gitlab.flagsmith.com/frontend/",
+            "count": 2,
+            "last_successful_repository_scanned_at": "2099-01-02T14:00:00+00:00",
+            "last_feature_found_at": "2099-01-02T14:00:00+00:00",
+        },
+    ]
 
 
 def test_simple_feature_state_returns_only_latest_versions(

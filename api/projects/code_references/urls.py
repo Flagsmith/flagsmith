@@ -10,4 +10,9 @@ urlpatterns = [
         views.FeatureFlagCodeReferencesScanCreateAPIView.as_view(),
         name="code_reference_create",
     ),
+    path(
+        "projects/<int:project_pk>/features/<int:feature_pk>/code-references/",
+        views.FeatureFlagCodeReferenceDetailAPIView.as_view(),
+        name="feature_code_reference_detail",
+    ),
 ]
