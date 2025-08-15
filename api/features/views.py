@@ -39,6 +39,9 @@ from environments.permissions.permissions import (
     NestedEnvironmentPermissions,
 )
 from features.value_types import BOOLEAN, INTEGER, STRING
+from projects.code_references.services import (
+    annotate_feature_queryset_with_code_references_summary,
+)
 from projects.models import Project
 from users.models import FFAdminUser, UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
@@ -142,6 +145,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         query_serializer = FeatureQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
         query_data = query_serializer.validated_data
+
+        queryset = annotate_feature_queryset_with_code_references_summary(queryset)
 
         queryset = self._filter_queryset(queryset)
 
