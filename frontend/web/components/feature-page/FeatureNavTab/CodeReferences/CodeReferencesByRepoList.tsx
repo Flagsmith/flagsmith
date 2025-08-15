@@ -1,5 +1,5 @@
 import React from 'react'
-import { CodeReference } from './FeatureCodeReferences'
+import { CodeReference } from 'common/types/responses'
 import RepoCodeReferencesSection from './RepoCodeReferencesSection'
 
 interface CodeReferencesByRepoListProps {
