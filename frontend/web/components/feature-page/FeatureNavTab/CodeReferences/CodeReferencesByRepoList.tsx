@@ -1,9 +1,9 @@
 import React from 'react'
-import { CodeReference } from 'common/types/responses'
+import { RepositoryCodeReferenceScan } from 'common/types/responses'
 import RepoCodeReferencesSection from './RepoCodeReferencesSection'
 
 interface CodeReferencesByRepoListProps {
-  codeReferencesByRepo: Record<string, CodeReference[]>
+  codeReferencesByRepo: Record<string, RepositoryCodeReferenceScan>
 }
 
 const CodeReferencesByRepoList: React.FC<CodeReferencesByRepoListProps> = ({
@@ -14,7 +14,7 @@ const CodeReferencesByRepoList: React.FC<CodeReferencesByRepoListProps> = ({
     <div className='flex flex-col gap-3'>
       {codeReferencesRepos.map((repo) => (
         <RepoCodeReferencesSection
-          codeReferences={codeReferencesByRepo[repo]}
+          repositoryScan={codeReferencesByRepo[repo]}
           key={repo}
           repositoryName={repo}
         />

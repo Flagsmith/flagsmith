@@ -41,24 +41,22 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
   const isGithubPocEnabled = Utils.getFlagsmithHasFeature('git_code_references')
   const fakeCodeReferencesCounts = [
     {
-      count: Math.round(Math.random() * 10),
+      count: Math.round(Math.random() * 2),
       repository_url: 'https://github.com/Flagsmith/flagsmith',
     },
     {
-      count: Math.round(Math.random() * 10),
+      count: Math.round(Math.random() * 2),
       repository_url: 'https://github.com/Flagsmith/flagsmith-python-client',
     },
     {
-      count: Math.round(Math.random() * 10),
+      count: Math.round(Math.random() * 2),
       repository_url: 'https://github.com/Flagsmith/flagsmith-go-client',
     },
   ]
+  // projectFlag?.code_references_counts ||
   const codeReferencesCounts =
-    (projectFlag?.code_references_counts || fakeCodeReferencesCounts).reduce(
-      (acc, curr) => acc + curr.count,
-      0,
-    ) || 0
-
+    fakeCodeReferencesCounts.reduce((acc, curr) => acc + curr.count, 0) || 0
+  console.log(projectFlag?.code_references_counts)
   return (
     <>
       <SegmentOverridesIcon
@@ -86,9 +84,7 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
           }
           place='top'
         >
-          {`Scanned ${codeReferencesCounts?.toString()} times in ${(
-            projectFlag.code_references_counts || fakeCodeReferencesCounts
-          ).length?.toString()} repositories`}
+          {`Scanned ${codeReferencesCounts?.toString()} times in ${fakeCodeReferencesCounts.length?.toString()} repositories`}
         </Tooltip>
       )}
       {projectFlag.is_server_key_only && (

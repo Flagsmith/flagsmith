@@ -896,15 +896,20 @@ export interface CodeReference {
   permalink: string
   repository_url: string
   vcs_provider: 'github' | 'gitlab' | 'bitbucket'
-  scanned_at: string
   feature_name: string
   revision: string
+}
+
+export type RepositoryCodeReferenceScan = {
+  code_references: CodeReference[]
+  last_feature_found_at: string
+  last_successful_scanned_at: string
 }
 
 export type FeatureCodeReferences = {
   first_scanned_at: string
   last_scanned_at: string
-  code_references: CodeReference[]
+  by_repository: Record<string, RepositoryCodeReferenceScan>
 }
 
 export type Res = {

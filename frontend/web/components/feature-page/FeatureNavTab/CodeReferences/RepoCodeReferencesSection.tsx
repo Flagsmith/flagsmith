@@ -1,23 +1,26 @@
 import React, { useState } from 'react'
-import { CodeReference } from 'common/types/responses'
+import { RepositoryCodeReferenceScan } from 'common/types/responses'
 
 import CodeReferenceItem from './CodeReferenceItem'
 import RepoSectionHeader from './RepoSectionHeader'
 
 interface RepoCodeReferencesSectionProps {
-  codeReferences: CodeReference[]
+  repositoryScan: RepositoryCodeReferenceScan
   repositoryName: string
 }
 
 const RepoCodeReferencesSection: React.FC<RepoCodeReferencesSectionProps> = ({
-  codeReferences,
   repositoryName,
+  repositoryScan,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
-  const countByProviders = codeReferences.reduce((acc, curr) => {
-    acc[curr.vcs_provider] = (acc[curr.vcs_provider] || 0) + 1
-    return acc
-  }, {} as Record<'github' | 'gitlab' | 'bitbucket', number>)
+  const countByProviders = repositoryScan?.code_references?.reduce(
+    (acc, curr) => {
+      acc[curr.vcs_provider] = (acc[curr.vcs_provider] || 0) + 1
+      return acc
+    },
+    {} as Record<'github' | 'gitlab' | 'bitbucket', number>,
+  )
 
   return (
     <>
@@ -42,7 +45,10 @@ const RepoCodeReferencesSection: React.FC<RepoCodeReferencesSectionProps> = ({
         </Row>
         {isOpen && (
           <div className='flex flex-col gap-2 mt-2'>
-            {codeReferences?.map((codeReference) => (
+            <p className='text-sm text-gray-500 mb-0'>
+              Last scanned at {repositoryScan?.last_successful_scanned_at}
+            </p>
+            {repositoryScan?.code_references?.map((codeReference) => (
               <CodeReferenceItem
                 codeReference={codeReference}
                 key={codeReference.permalink}
