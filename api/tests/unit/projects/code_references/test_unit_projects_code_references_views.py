@@ -146,7 +146,7 @@ def test_CodeReferenceCreateAPIView__responds_400_when_file_path_too_long(
             "code_references": [
                 {
                     "feature_name": "feature-1",
-                    "file_path": "windows/limit/" * 100 + "file.py",
+                    "file_path": "would/you/even/" * 1000 + "file.py",
                     "line_number": 10,
                 },
             ],
@@ -158,7 +158,7 @@ def test_CodeReferenceCreateAPIView__responds_400_when_file_path_too_long(
     assert response.status_code == 400
     assert response.data == {
         "code_references": [
-            {"file_path": ["Ensure this field has no more than 260 characters."]}
+            {"file_path": ["Ensure this field has no more than 4096 characters."]}
         ],
     }
     assert not FeatureFlagCodeReferencesScan.objects.exists()

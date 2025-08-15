@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from projects.code_references.constants import MAX_FILE_PATH_LENGTH
 from projects.code_references.models import FeatureFlagCodeReferencesScan
 from projects.code_references.types import (
     CodeReference,
@@ -10,7 +11,7 @@ from projects.code_references.types import (
 
 
 class _BaseCodeReferenceSerializer(serializers.Serializer[CodeReference]):
-    file_path = serializers.CharField(max_length=260)  # Windows' MAX_PATH
+    file_path = serializers.CharField(max_length=MAX_FILE_PATH_LENGTH)
     line_number = serializers.IntegerField(min_value=1)
 
 
