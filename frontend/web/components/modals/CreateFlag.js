@@ -55,7 +55,7 @@ import { warning } from 'ionicons/icons'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import { FlagValueFooter } from './FlagValueFooter'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
-import FeatureCodeReferences from 'components/feature-page/FeatureNavTab/FeatureCodeReferences'
+import FeatureCodeReferences from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferences'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
