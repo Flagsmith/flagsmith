@@ -28,6 +28,26 @@ export const codeReferencesService = service
                   vcs_provider: 'github',
                 },
                 {
+                  file_path: 'flagsmith/api/jwt_cookie/authentication.py',
+                  line_number: 4,
+                  permalink:
+                    'https://github.com/Flagsmith/flagsmith/pull/5931/files#diff-eeac2c6b2db177cd1efd1b93be145042550c8743b0f993e1d4581061ebdd5797R8-R46',
+                  repository_url: 'https://github.com/Flagsmith/flagsmith',
+                  revision: 'main',
+                  scanned_at: '2021-01-01',
+                  vcs_provider: 'gitlab',
+                },
+                {
+                  file_path: 'flagsmith/api/audit/models.py',
+                  line_number: 35,
+                  permalink:
+                    'https://github.com/Flagsmith/flagsmith/pull/5931/files#diff-eeac2c6b2db177cd1efd1b93be145042550c8743b0f993e1d4581061ebdd5797R8-R46',
+                  repository_url: 'https://github.com/Flagsmith/flagsmith',
+                  revision: 'main',
+                  scanned_at: '2021-01-01',
+                  vcs_provider: 'gitlab',
+                },
+                {
                   file_path: 'flagsmith/api/organisations/invites/models.py',
                   line_number: 12,
                   permalink:
@@ -49,8 +69,8 @@ export const codeReferencesService = service
                   vcs_provider: 'gitlab',
                 },
               ],
-              first_scanned_at: '2021-01-01',
-              last_scanned_at: '2021-01-01',
+              first_scanned_at: '2024-08-15',
+              last_scanned_at: '2025-08-12',
             },
           }
         },

@@ -2,14 +2,14 @@ import { useGetFeatureCodeReferencesQuery } from 'common/services/useCodeReferen
 import moment from 'moment'
 import React from 'react'
 import CodeReferencesTabHeader from './CodeReferencesTabHeader'
-import CodeReferencesList from './CodeReferencesList'
+import CodeReferencesByRepoList from './CodeReferencesByRepoList'
 
 export interface CodeReference {
   file_path: string
   line_number: number
   permalink: string
   repository_url: string
-  vcs_provider: 'github' | 'gitlab'
+  vcs_provider: 'github' | 'gitlab' | 'bitbucket'
 }
 
 interface FeatureCodeReferencesProps {
@@ -40,6 +40,11 @@ const FeatureCodeReferences: React.FC<FeatureCodeReferencesProps> = ({
     )
   }
 
+  const codeReferencesByRepo = data.code_references.reduce((acc, curr) => {
+    acc[curr.repository_url] = [...(acc[curr.repository_url] || []), curr]
+    return acc
+  }, {} as Record<string, CodeReference[]>)
+
   return (
     <div className='flex flex-col gap-4'>
       {firstScannedAt && lastScannedAt && (
@@ -48,9 +53,7 @@ const FeatureCodeReferences: React.FC<FeatureCodeReferencesProps> = ({
           lastScannedAt={lastScannedAt}
         />
       )}
-      {data?.code_references && (
-        <CodeReferencesList codeReferences={data.code_references} />
-      )}
+      <CodeReferencesByRepoList codeReferencesByRepo={codeReferencesByRepo} />
     </div>
   )
 }

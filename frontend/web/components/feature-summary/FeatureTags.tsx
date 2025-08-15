@@ -9,7 +9,7 @@ import StaleFlagWarning from './StaleFlagWarning'
 import Tag from 'components/tags/Tag'
 import Utils from 'common/utils/utils'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
-import GithubReferencesTag from 'components/tags/GithubReferencesTag'
+import VCSProviderTag from 'components/tags/VCSProviderTag'
 
 type FeatureTagsType = {
   editFeature: (tab?: string) => void
@@ -56,7 +56,7 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
         showPlusIndicator={showPlusIndicator}
       />
       {!!(projectFlag?.code_references?.total_count || true) && (
-        <GithubReferencesTag
+        <VCSProviderTag
           count={
             projectFlag?.code_references?.total_count ||
             Math.round(Math.random() * 10)
