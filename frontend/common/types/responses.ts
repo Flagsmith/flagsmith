@@ -500,6 +500,7 @@ export type ProjectFlag = {
   tags: number[]
   type: string
   uuid: string
+  code_references_counts: { repository_url: string; count: number }[]
 }
 
 export type FeatureListProviderData = {

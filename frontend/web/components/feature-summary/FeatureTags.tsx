@@ -39,8 +39,26 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
 
   const isGithubPocEnabled = Utils.getFlagsmithHasFeature('git_code_references')
+  const fakeCodeReferencesCounts = [
+    {
+      count: Math.round(Math.random() * 10),
+      repository_url: 'https://github.com/Flagsmith/flagsmith',
+    },
+    {
+      count: Math.round(Math.random() * 10),
+      repository_url: 'https://github.com/Flagsmith/flagsmith-python-client',
+    },
+    {
+      count: Math.round(Math.random() * 10),
+      repository_url: 'https://github.com/Flagsmith/flagsmith-go-client',
+    },
+  ]
   const codeReferencesCounts =
-    projectFlag?.code_references_counts || Math.round(Math.random() * 10)
+    (projectFlag?.code_references_counts || fakeCodeReferencesCounts).reduce(
+      (acc, curr) => acc + curr.count,
+      0,
+    ) || 0
+
   return (
     <>
       <SegmentOverridesIcon
@@ -59,10 +77,19 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
         showPlusIndicator={showPlusIndicator}
       />
       {isGithubPocEnabled && (
-        <VCSProviderTag
-          count={codeReferencesCounts}
-          isWarning={codeReferencesCounts === 0}
-        />
+        <Tooltip
+          title={
+            <VCSProviderTag
+              count={codeReferencesCounts}
+              isWarning={codeReferencesCounts === 0}
+            />
+          }
+          place='top'
+        >
+          {`Scanned ${codeReferencesCounts?.toString()} times in ${(
+            projectFlag.code_references_counts || fakeCodeReferencesCounts
+          ).length?.toString()} repositories`}
+        </Tooltip>
       )}
       {projectFlag.is_server_key_only && (
         <Tooltip
