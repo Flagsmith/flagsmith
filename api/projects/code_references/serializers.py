@@ -10,7 +10,7 @@ from projects.code_references.types import (
 
 
 class _BaseCodeReferenceSerializer(serializers.Serializer[CodeReference]):
-    file_path = serializers.CharField(max_length=200)
+    file_path = serializers.CharField(max_length=260)  # Windows' MAX_PATH
     line_number = serializers.IntegerField(min_value=1)
 
 

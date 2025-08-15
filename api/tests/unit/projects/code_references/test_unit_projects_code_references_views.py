@@ -96,7 +96,7 @@ def test_CodeReferenceCreateAPIView__responds_401_when_not_authenticated(
     assert not FeatureFlagCodeReferencesScan.objects.exists()
 
 
-def test_CodeReferenceCreateAPIView__responds_400_when_invalid_data(
+def test_CodeReferenceCreateAPIView__responds_400_when_missing_field(
     project: Project,
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -124,7 +124,42 @@ def test_CodeReferenceCreateAPIView__responds_400_when_invalid_data(
     # Then
     assert response.status_code == 400
     assert response.data == {
-        "code_references": [{"line_number": ["This field is required."]}]
+        "code_references": [{"line_number": ["This field is required."]}],
+    }
+    assert not FeatureFlagCodeReferencesScan.objects.exists()
+
+
+def test_CodeReferenceCreateAPIView__responds_400_when_file_path_too_long(
+    project: Project,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+
+    # When
+    response = staff_client.post(
+        f"/api/v1/projects/{project.pk}/code-references/",
+        data={
+            "repository_url": "https://svn.flagsmith.com/",
+            "revision": "revision-hash",
+            "code_references": [
+                {
+                    "feature_name": "feature-1",
+                    "file_path": "windows/limit/" * 100 + "file.py",
+                    "line_number": 10,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.data == {
+        "code_references": [
+            {"file_path": ["Ensure this field has no more than 260 characters."]}
+        ],
     }
     assert not FeatureFlagCodeReferencesScan.objects.exists()
 
