@@ -10,7 +10,6 @@ const CodeReferencesByRepoList: React.FC<CodeReferencesByRepoListProps> = ({
   codeReferencesByRepo,
 }) => {
   const codeReferencesRepos = Object.keys(codeReferencesByRepo)
-  console.log(codeReferencesByRepo)
   return (
     <div className='flex flex-col gap-3'>
       {codeReferencesRepos.map((repo) => (
