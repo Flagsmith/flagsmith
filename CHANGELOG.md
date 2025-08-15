@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.192.0](https://github.com/Flagsmith/flagsmith/compare/v2.191.0...v2.192.0) (2025-08-15)
+
+
+### Features
+
+* **github-poc:** Retrieve feature code references ([#5931](https://github.com/Flagsmith/flagsmith/issues/5931)) ([16a6c76](https://github.com/Flagsmith/flagsmith/commit/16a6c76ba2b69ca660f36b1e1cd44c1527d86b1e))
+* **github-poc:** Submit feature flag code references ([#5928](https://github.com/Flagsmith/flagsmith/issues/5928)) ([21cb9b9](https://github.com/Flagsmith/flagsmith/commit/21cb9b959cbaff0bc3c33c38ea63ce75faf97223))
+* phased rollout ([#5890](https://github.com/Flagsmith/flagsmith/issues/5890)) ([d52c452](https://github.com/Flagsmith/flagsmith/commit/d52c4529097329b238c5e69e2a5fa44cdcf7faa5))
+
+
+### Bug Fixes
+
+* check-split-length-before-accessing-with-index ([#5848](https://github.com/Flagsmith/flagsmith/issues/5848)) ([e5740aa](https://github.com/Flagsmith/flagsmith/commit/e5740aa4323b31aaee7dfea7d0bb6c80019af57d))
+* order release pipelines by created at ([#5929](https://github.com/Flagsmith/flagsmith/issues/5929)) ([047758e](https://github.com/Flagsmith/flagsmith/commit/047758ec1fc08cd4d079f1c6588bb6d42fb4a423))
+* Update node version in gh action ([#5926](https://github.com/Flagsmith/flagsmith/issues/5926)) ([7598110](https://github.com/Flagsmith/flagsmith/commit/75981103bdc52693d7e922b047bba809d56e5165))
+* update-path-of-nvmrc ([#5927](https://github.com/Flagsmith/flagsmith/issues/5927)) ([3a46748](https://github.com/Flagsmith/flagsmith/commit/3a4674899520908a41677931205089c8bacc4e1e))
+
 ## [2.191.0](https://github.com/Flagsmith/flagsmith/compare/v2.190.1...v2.191.0) (2025-08-13)
 
 
