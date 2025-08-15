@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { CodeReference } from './FeatureCodeReferences'
+import { CodeReference } from 'common/types/responses'
 
 import CodeReferenceItem from './CodeReferenceItem'
 import RepoSectionHeader from './RepoSectionHeader'

@@ -889,18 +889,21 @@ export interface PipelineDetailStage extends BasePipelineStage {
   features: Features
 }
 
+export interface CodeReference {
+  file_path: string
+  line_number: number
+  permalink: string
+  repository_url: string
+  vcs_provider: 'github' | 'gitlab' | 'bitbucket'
+  scanned_at: string
+  feature_name: string
+  revision: string
+}
+
 export type FeatureCodeReferences = {
   first_scanned_at: string
   last_scanned_at: string
-  code_references: {
-    scanned_at: string
-    vcs_provider: 'github' | 'gitlab' | 'bitbucket'
-    revision: string
-    file_path: string
-    line_number: number
-    permalink: string
-    repository_url: string
-  }[]
+  code_references: CodeReference[]
 }
 
 export type Res = {

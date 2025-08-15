@@ -3,15 +3,7 @@ import moment from 'moment'
 import React from 'react'
 import CodeReferencesTabHeader from './CodeReferencesTabHeader'
 import CodeReferencesByRepoList from './CodeReferencesByRepoList'
-
-export interface CodeReference {
-  file_path: string
-  line_number: number
-  permalink: string
-  repository_url: string
-  vcs_provider: 'github' | 'gitlab' | 'bitbucket'
-}
-
+import { CodeReference } from 'common/types/responses'
 interface FeatureCodeReferencesProps {
   featureId: number
   projectId: number
