@@ -206,7 +206,7 @@
                 }
             },
             "required": [
-                "path",
+                "property",
                 "operator",
                 "value"
             ],
