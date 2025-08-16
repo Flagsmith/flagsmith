@@ -500,6 +500,7 @@ export type ProjectFlag = {
   tags: number[]
   type: string
   uuid: string
+  code_references_counts: { repository_url: string; count: number }[]
 }
 
 export type FeatureListProviderData = {
@@ -889,6 +890,23 @@ export interface PipelineDetailStage extends BasePipelineStage {
   features: Features
 }
 
+export interface CodeReference {
+  file_path: string
+  line_number: number
+  permalink: string
+  repository_url: string
+  vcs_provider: 'github' | 'gitlab' | 'bitbucket'
+  scanned_at: string
+  feature_name: string
+  revision: string
+}
+
+export type FeatureCodeReferences = {
+  first_scanned_at: string
+  last_scanned_at: string
+  code_references: CodeReference[]
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -1041,5 +1059,6 @@ export type Res = {
   releasePipelines: PagedResponse<ReleasePipeline>
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
+  featureCodeReferences: FeatureCodeReferences
   // END OF TYPES
 }

@@ -9,6 +9,7 @@ import StaleFlagWarning from './StaleFlagWarning'
 import Tag from 'components/tags/Tag'
 import Utils from 'common/utils/utils'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
+import VCSProviderTag from 'components/tags/VCSProviderTag'
 
 type FeatureTagsType = {
   editFeature: (tab?: string) => void
@@ -20,6 +21,7 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
     { projectId: String(projectFlag.project) },
     { skip: !projectFlag?.project },
   )
+
   const featureUnhealthyEvents = useMemo(
     () =>
       healthEvents?.filter(
@@ -35,6 +37,27 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
     editFeature(Constants.featurePanelTabs.FEATURE_HEALTH)
   }
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
+
+  const isGithubPocEnabled = Utils.getFlagsmithHasFeature('git_code_references')
+  const fakeCodeReferencesCounts = [
+    {
+      count: Math.round(Math.random() * 10),
+      repository_url: 'https://github.com/Flagsmith/flagsmith',
+    },
+    {
+      count: Math.round(Math.random() * 10),
+      repository_url: 'https://github.com/Flagsmith/flagsmith-python-client',
+    },
+    {
+      count: Math.round(Math.random() * 10),
+      repository_url: 'https://github.com/Flagsmith/flagsmith-go-client',
+    },
+  ]
+  const codeReferencesCounts =
+    (projectFlag?.code_references_counts || fakeCodeReferencesCounts).reduce(
+      (acc, curr) => acc + curr.count,
+      0,
+    ) || 0
 
   return (
     <>
@@ -53,6 +76,21 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
         count={projectFlag.num_identity_overrides}
         showPlusIndicator={showPlusIndicator}
       />
+      {isGithubPocEnabled && (
+        <Tooltip
+          title={
+            <VCSProviderTag
+              count={codeReferencesCounts}
+              isWarning={codeReferencesCounts === 0}
+            />
+          }
+          place='top'
+        >
+          {`Scanned ${codeReferencesCounts?.toString()} times in ${(
+            projectFlag.code_references_counts || fakeCodeReferencesCounts
+          ).length?.toString()} repositories`}
+        </Tooltip>
+      )}
       {projectFlag.is_server_key_only && (
         <Tooltip
           title={
