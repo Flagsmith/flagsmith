@@ -1,0 +1,9 @@
+Hi {{ user.full_name | default:"there" }},
+
+The Feature {{feature_name}} has completed stage {{stage_name}} of release pipeline {{pipeline_name}}. Please click on the link below for more details.
+
+{{url}}
+
+
+Regards,
+The Flagsmith Team

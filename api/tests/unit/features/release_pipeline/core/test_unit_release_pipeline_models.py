@@ -494,3 +494,25 @@ def test_release_pipeline_get_feature_versions_in_pipeline_qs(
         ).exists()
         is True
     )
+
+
+def test_release_pipeline_url(release_pipeline: ReleasePipeline) -> None:
+    # When
+    url = release_pipeline.url
+    # Then
+    assert (
+        url
+        == f"https://example.com/project/{release_pipeline.project.id}/release-pipelines/{release_pipeline.id}"
+    )
+
+
+def test_release_pipeline_url_raises_error_if_pipeline_is_not_saved(
+    release_pipeline: ReleasePipeline,
+) -> None:
+    # When/ Then
+    release_pipeline.id = None
+    with pytest.raises(
+        AttributeError,
+        match="Release pipeline must be saved before it has a url attribute.",
+    ):
+        release_pipeline.url
