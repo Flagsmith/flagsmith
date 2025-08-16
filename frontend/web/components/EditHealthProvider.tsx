@@ -13,6 +13,7 @@ import {
 } from 'common/services/useHealthProvider'
 import { components } from 'react-select'
 import InfoMessage from './InfoMessage'
+import InteractiveDemo from './InteractiveDemo'
 
 type EditHealthProviderType = {
   projectId: number
@@ -130,7 +131,9 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
   return (
     <div className='mt-4'>
       <Row>
-        <h5>Manage Health Providers</h5>
+        <h5>
+          Manage Health Providers <InteractiveDemo feature={'FEATURE_HEALTH'} />
+        </h5>
       </Row>
       <p className='fs-small lh-sm col-md-8 mb-4'>
         Flagsmith lets you connect health providers for tagging feature flags
