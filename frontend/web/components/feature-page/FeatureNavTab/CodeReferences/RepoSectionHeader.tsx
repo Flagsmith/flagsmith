@@ -5,24 +5,27 @@ import React from 'react'
 
 interface RepoSectionHeaderProps {
   repositoryName: string
-  countByProviders: Record<'gitlab' | 'github' | 'bitbucket', number>
+  provider: 'github' | 'gitlab' | 'bitbucket'
+  count: number
+  // countByProviders: Record<'gitlab' | 'github' | 'bitbucket', number>
   isOpen: boolean
   collapsible?: boolean
 }
 
 const RepoSectionHeader: React.FC<RepoSectionHeaderProps> = ({
   collapsible = false,
-  countByProviders,
+  count,
   isOpen,
+  provider,
   repositoryName,
 }) => {
   const darkMode = getDarkMode()
   // TODO: would be an enum
-  const providers = Object.keys(countByProviders) as (
-    | 'gitlab'
-    | 'github'
-    | 'bitbucket'
-  )[]
+  // const providers = Object.keys(countByProviders) as (
+  //   | 'gitlab'
+  //   | 'github'
+  //   | 'bitbucket'
+  // )[]
 
   return (
     <>
@@ -51,7 +54,8 @@ const RepoSectionHeader: React.FC<RepoSectionHeaderProps> = ({
           </a>
         </div>
       </Row>
-      <div className='flex flex-row gap-1'>
+      <VCSProviderTag count={count} vcsProvider={provider} key={provider} />
+      {/* <div className='flex flex-row gap-1'>
         {providers.map((provider) => {
           return (
             <>
@@ -65,7 +69,7 @@ const RepoSectionHeader: React.FC<RepoSectionHeaderProps> = ({
             </>
           )
         })}
-      </div>
+      </div> */}
     </>
   )
 }

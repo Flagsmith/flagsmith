@@ -500,7 +500,12 @@ export type ProjectFlag = {
   tags: number[]
   type: string
   uuid: string
-  code_references_counts: { repository_url: string; count: number }[]
+  code_references_counts: {
+    repository_url: string
+    count: number
+    last_successful_repository_scanned_at: string
+    last_feature_found_at: string
+  }[]
 }
 
 export type FeatureListProviderData = {
@@ -894,22 +899,23 @@ export interface CodeReference {
   file_path: string
   line_number: number
   permalink: string
-  repository_url: string
-  vcs_provider: 'github' | 'gitlab' | 'bitbucket'
-  feature_name: string
-  revision: string
+  // vcs_provider: 'github' | 'gitlab' | 'bitbucket'
+  // feature_name: string
+  vcs_revision: string
 }
 
-export type RepositoryCodeReferenceScan = {
-  code_references: CodeReference[]
-  last_feature_found_at: string
-  last_successful_scanned_at: string
-}
+// export type RepositoryCodeReferenceScan = {
+//   code_references: CodeReference[]
+//   last_feature_found_at: string
+//   last_successful_repository_scanned_at: string
+// }
 
 export type FeatureCodeReferences = {
-  first_scanned_at: string
-  last_scanned_at: string
-  by_repository: Record<string, RepositoryCodeReferenceScan>
+  last_feature_found_at: string
+  vcs_provider: 'github' | 'gitlab' | 'bitbucket'
+  last_successful_repository_scanned_at: string
+  repository_url: string
+  code_references: CodeReference[]
 }
 
 export type Res = {
@@ -1064,6 +1070,6 @@ export type Res = {
   releasePipelines: PagedResponse<ReleasePipeline>
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
-  featureCodeReferences: FeatureCodeReferences
+  featureCodeReferences: FeatureCodeReferences[]
   // END OF TYPES
 }

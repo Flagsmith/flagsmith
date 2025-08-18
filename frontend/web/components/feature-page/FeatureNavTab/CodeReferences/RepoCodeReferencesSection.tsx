@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
-import { RepositoryCodeReferenceScan } from 'common/types/responses'
-
+import { CodeReference, FeatureCodeReferences } from 'common/types/responses'
+import moment from 'moment'
 import CodeReferenceItem from './CodeReferenceItem'
 import RepoSectionHeader from './RepoSectionHeader'
+import Icon from 'components/Icon'
+import CodeReferenceScanIndicator from './CodeReferenceScanIndicator'
 
 interface RepoCodeReferencesSectionProps {
-  repositoryScan: RepositoryCodeReferenceScan
+  repositoryScan: FeatureCodeReferences
   repositoryName: string
 }
 
@@ -14,13 +16,19 @@ const RepoCodeReferencesSection: React.FC<RepoCodeReferencesSectionProps> = ({
   repositoryScan,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
-  const countByProviders = repositoryScan?.code_references?.reduce(
-    (acc, curr) => {
-      acc[curr.vcs_provider] = (acc[curr.vcs_provider] || 0) + 1
-      return acc
-    },
-    {} as Record<'github' | 'gitlab' | 'bitbucket', number>,
-  )
+  const lastScannedAt = repositoryScan?.last_successful_repository_scanned_at
+    ? moment(repositoryScan?.last_successful_repository_scanned_at)
+    : null
+  const lastFeatureFoundAt = repositoryScan?.last_feature_found_at
+    ? moment(repositoryScan?.last_feature_found_at)
+    : null
+
+  const scanStatus =
+    lastScannedAt?.isValid &&
+    lastFeatureFoundAt?.isValid &&
+    lastFeatureFoundAt.isSameOrAfter(lastScannedAt)
+      ? 'success'
+      : 'warning'
 
   return (
     <>
@@ -38,23 +46,42 @@ const RepoCodeReferencesSection: React.FC<RepoCodeReferencesSectionProps> = ({
         >
           <RepoSectionHeader
             isOpen={isOpen}
+            count={repositoryScan?.code_references?.length}
             repositoryName={repositoryName}
-            countByProviders={countByProviders}
+            provider={repositoryScan?.vcs_provider}
             collapsible={true}
           />
         </Row>
         {isOpen && (
-          <div className='flex flex-col gap-2 mt-2'>
-            <p className='text-sm text-gray-500 mb-0'>
-              Last scanned at {repositoryScan?.last_successful_scanned_at}
-            </p>
-            {repositoryScan?.code_references?.map((codeReference) => (
-              <CodeReferenceItem
-                codeReference={codeReference}
-                key={codeReference.permalink}
-              />
-            ))}
-          </div>
+          <>
+            {lastScannedAt?.isValid && (
+              <Row className='flex items-center gap-1'>
+                <Icon
+                  name={'chevron-down'}
+                  className='w-4 h-4 transparent'
+                  style={{ visibility: 'hidden' }}
+                />
+                <p className='text-sm text-gray-500 mb-0'>
+                  <strong>Last successful repository scan</strong>:{' '}
+                  {lastScannedAt.format('MMM D, YYYY')}
+                </p>
+                <CodeReferenceScanIndicator
+                  lastFeatureFoundAt={
+                    lastFeatureFoundAt?.isValid ? lastFeatureFoundAt : null
+                  }
+                  scanStatus={scanStatus}
+                />
+              </Row>
+            )}
+            <div className='flex flex-col gap-2 mt-2'>
+              {repositoryScan?.code_references?.map((codeReference) => (
+                <CodeReferenceItem
+                  codeReference={codeReference}
+                  key={codeReference.permalink}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </>
