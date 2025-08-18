@@ -29,7 +29,7 @@ const CodeReferenceScanIndicator: React.FC<CodeReferenceScanIndicatorProps> = ({
       break
   }
   return (
-    <div className='flex items-center'>
+    <div className='flex items-center cursor-pointer'>
       {
         <Tooltip
           title={
