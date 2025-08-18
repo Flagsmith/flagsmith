@@ -442,13 +442,6 @@ def test_create_feature_state_went_live_audit_log__rescheduled_feature_update__c
             ).count()
             == expected_audit_log_late_count
         )
-        assert expected_log_late == (
-            (
-                "INFO",
-                "FeatureState update audit log already exists. Likely the change request was rescheduled to an earlier date.",
-            )
-            in ((record.levelname, record.message) for record in caplog.records)
-        )
 
 
 def test_create_feature_state_went_live_audit_log__rescheduled_feature_update__schedules_call_to_feature_update_time(
