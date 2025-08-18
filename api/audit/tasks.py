@@ -36,7 +36,6 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
     feature_state_id: int, msg_template: str
 ):
     from features.models import FeatureState
-    from features.signals import feature_state_change_went_live
 
     feature_state = FeatureState.objects.filter(id=feature_state_id).first()
 
@@ -65,7 +64,9 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
         feature_state.change_request.title,
     )
     # NOTE: This NEEDS to leverage btree indexes on AuditLog
-    audit_log, log_created = AuditLog.objects.get_or_create(
+    AuditLog.objects.create(
+        history_record_id=feature_state.history.latest().history_id,
+        history_record_class_path=feature_state.history_record_class_path,
         created_date=feature_state.live_from,
         environment=feature_state.environment,
         is_system_event=True,
@@ -74,13 +75,6 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
         related_object_id=feature_state.id,
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
     )
-    if log_created:
-        feature_state_change_went_live.send(audit_log)
-    else:
-        logger.info(
-            "FeatureState update audit log already exists. "
-            "Likely the change request was rescheduled to an earlier date.",
-        )
 
 
 @register_task_handler(priority=TaskPriority.HIGHEST)
