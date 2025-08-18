@@ -53,10 +53,15 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
       repository_url: 'https://github.com/Flagsmith/flagsmith-go-client',
     },
   ]
-  // projectFlag?.code_references_counts ||
+
+  const hasScannedCodeReferences =
+    projectFlag?.code_references_counts.length > 0
   const codeReferencesCounts =
-    fakeCodeReferencesCounts.reduce((acc, curr) => acc + curr.count, 0) || 0
-  console.log(projectFlag?.code_references_counts)
+    projectFlag?.code_references_counts.reduce(
+      (acc, curr) => acc + curr.count,
+      0,
+    ) || 0
+
   return (
     <>
       <SegmentOverridesIcon
@@ -74,7 +79,7 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
         count={projectFlag.num_identity_overrides}
         showPlusIndicator={showPlusIndicator}
       />
-      {isGithubPocEnabled && (
+      {isGithubPocEnabled && hasScannedCodeReferences && (
         <Tooltip
           title={
             <VCSProviderTag
@@ -84,7 +89,7 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
           }
           place='top'
         >
-          {`Scanned ${codeReferencesCounts?.toString()} times in ${fakeCodeReferencesCounts.length?.toString()} repositories`}
+          {`Scanned ${codeReferencesCounts?.toString()} times in ${projectFlag?.code_references_counts.length?.toString()} repositories`}
         </Tooltip>
       )}
       {projectFlag.is_server_key_only && (
