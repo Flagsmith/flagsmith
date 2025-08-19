@@ -1,18 +1,43 @@
 import React from 'react'
 import { GithubIcon } from 'components/base/icons/GithubIcon'
 import GitlabIcon from 'components/base/icons/GitlabIcon'
+import { VCSProvider } from 'common/types/responses'
 
 interface VCSProviderTagProps {
   count: number
-  vcsProvider?: 'github' | 'gitlab' | 'bitbucket'
+  vcsProvider?: VCSProvider
   isWarning?: boolean
 }
 
 const VCSProviderTag: React.FC<VCSProviderTagProps> = ({
   count,
   isWarning = false,
-  vcsProvider = 'github',
+  vcsProvider = VCSProvider.GITHUB,
 }) => {
+  let providerIcon = <></>
+  switch (vcsProvider) {
+    case VCSProvider.GITHUB:
+      providerIcon = (
+        <GithubIcon
+          width={12}
+          height={12}
+          className='chip-svg-icon'
+          fill={'#ffffff'}
+        />
+      )
+      break
+    case VCSProvider.GITLAB:
+      providerIcon = (
+        <GitlabIcon width={12} height={12} className='chip-svg-icon' />
+      )
+      break
+    case VCSProvider.BITBUCKET:
+    default:
+      providerIcon = (
+        <GithubIcon width={12} height={12} className='chip-svg-icon' />
+      )
+  }
+
   return (
     <div className='d-flex align-items-center'>
       <span
@@ -22,16 +47,7 @@ const VCSProviderTag: React.FC<VCSProviderTagProps> = ({
           border: 'none',
         }}
       >
-        {vcsProvider === 'gitlab' ? (
-          <GitlabIcon width={12} height={12} className='chip-svg-icon' />
-        ) : (
-          <GithubIcon
-            width={12}
-            height={12}
-            className='chip-svg-icon'
-            fill={'#ffffff'}
-          />
-        )}
+        {providerIcon}
         <span>{count}</span>
       </span>
     </div>

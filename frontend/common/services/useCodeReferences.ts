@@ -59,7 +59,7 @@ export const codeReferencesService = service
                 'last_successful_repository_scanned_at': '2025-08-18T14:32:00Z',
                 'repository_url':
                   'https://github.com/flagsmith/flagsmith-python-client',
-                'vcs_provider': 'github',
+                'vcs_provider': 'gitlab',
               },
             ],
           }

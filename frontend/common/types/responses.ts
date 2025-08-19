@@ -899,20 +899,18 @@ export interface CodeReference {
   file_path: string
   line_number: number
   permalink: string
-  // vcs_provider: 'github' | 'gitlab' | 'bitbucket'
-  // feature_name: string
   vcs_revision: string
 }
 
-// export type RepositoryCodeReferenceScan = {
-//   code_references: CodeReference[]
-//   last_feature_found_at: string
-//   last_successful_repository_scanned_at: string
-// }
+export enum VCSProvider {
+  GITHUB = 'github',
+  GITLAB = 'gitlab',
+  BITBUCKET = 'bitbucket',
+}
 
 export type FeatureCodeReferences = {
   last_feature_found_at: string
-  vcs_provider: 'github' | 'gitlab' | 'bitbucket'
+  vcs_provider: VCSProvider
   last_successful_repository_scanned_at: string
   repository_url: string
   code_references: CodeReference[]

@@ -2,12 +2,11 @@ import Icon from 'components/Icon'
 import VCSProviderTag from 'components/tags/VCSProviderTag'
 import { getDarkMode } from 'project/darkMode'
 import React from 'react'
-
+import { VCSProvider } from 'common/types/responses'
 interface RepoSectionHeaderProps {
   repositoryName: string
-  provider: 'github' | 'gitlab' | 'bitbucket'
+  provider: VCSProvider
   count: number
-  // countByProviders: Record<'gitlab' | 'github' | 'bitbucket', number>
   isOpen: boolean
   collapsible?: boolean
 }
@@ -20,12 +19,6 @@ const RepoSectionHeader: React.FC<RepoSectionHeaderProps> = ({
   repositoryName,
 }) => {
   const darkMode = getDarkMode()
-  // TODO: would be an enum
-  // const providers = Object.keys(countByProviders) as (
-  //   | 'gitlab'
-  //   | 'github'
-  //   | 'bitbucket'
-  // )[]
 
   return (
     <>
@@ -55,21 +48,6 @@ const RepoSectionHeader: React.FC<RepoSectionHeaderProps> = ({
         </div>
       </Row>
       <VCSProviderTag count={count} vcsProvider={provider} key={provider} />
-      {/* <div className='flex flex-row gap-1'>
-        {providers.map((provider) => {
-          return (
-            <>
-              {countByProviders[provider] > 0 && (
-                <VCSProviderTag
-                  count={countByProviders[provider]}
-                  vcsProvider={provider}
-                  key={provider}
-                />
-              )}
-            </>
-          )
-        })}
-      </div> */}
     </>
   )
 }
