@@ -13,7 +13,7 @@ type CodeReferencesByRepo = Record<string, FeatureCodeReferences>
 const FeatureCodeReferencesContainer: React.FC<
   FeatureCodeReferencesContainerProps
 > = ({ featureId, projectId }) => {
-  const { data, isLoading } = useGetFeatureCodeReferencesQuery({
+  const { data = [], isLoading } = useGetFeatureCodeReferencesQuery({
     featureId: featureId,
     projectId: projectId,
   })
@@ -34,10 +34,20 @@ const FeatureCodeReferencesContainer: React.FC<
     [data],
   )
 
+  if (isLoading) {
+    return (
+      <div className='d-flex justify-content-center items-center'>
+        <Loader />
+      </div>
+    )
+  }
+
   if (!data || data.length === 0) {
     return (
-      <div className='flex flex-col gap-5'>
-        <p className='text-sm text-gray-500'>No code references found</p>
+      <div className='d-flex justify-content-center items-center'>
+        <h6 className='text-gray-500'>
+          No code references found for this feature
+        </h6>
       </div>
     )
   }
