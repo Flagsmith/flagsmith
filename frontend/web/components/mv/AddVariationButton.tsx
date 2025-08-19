@@ -1,11 +1,17 @@
 import Button from 'components/base/forms/Button'
 import React from 'react'
 
-export default function AddVariationButton({
+interface AddVariationButtonProps {
+  disabled: boolean
+  multivariateOptions: any[]
+  onClick: () => void
+}
+
+export const AddVariationButton: React.FC<AddVariationButtonProps> = ({
   disabled,
   multivariateOptions,
   onClick,
-}) {
+}) => {
   return (
     <div className='text-end'>
       <Button
