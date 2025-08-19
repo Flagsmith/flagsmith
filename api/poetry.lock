@@ -2038,13 +2038,13 @@ files = []
 develop = false
 
 [package.dependencies]
-release-pipelines-logic = {git = "https://github.com/Flagsmith/flagsmith-private/", rev = "main", subdirectory = "flagsmith-release-pipelines-logic"}
+release-pipelines-logic = {git = "https://github.com/Flagsmith/flagsmith-private/", rev = "fix/email-subject", subdirectory = "flagsmith-release-pipelines-logic"}
 
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-private/"
-reference = "v0.4.0"
-resolved_reference = "0ae9fae587b45e2f1a6534179480f410ad68c44b"
+reference = "v0.4.1"
+resolved_reference = "f7b28638d201187ae68e7d03a699b7d9f8791e8b"
 
 [[package]]
 name = "flagsmith-split-testing"
@@ -4343,8 +4343,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-private/"
-reference = "main"
-resolved_reference = "0ae9fae587b45e2f1a6534179480f410ad68c44b"
+reference = "fix/email-subject"
+resolved_reference = "e834b5f4178199c8982bc7928bbcd27f45f0b9bf"
 subdirectory = "flagsmith-release-pipelines-logic"
 
 [[package]]
@@ -5439,4 +5439,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "dcd3072eea7aefd4477f7fe770919dd3184d520512353ea524ffdd343f025e97"
+content-hash = "52739c94f68c1796823ae198ac53080590d1543b4a626c50569bf0960fe3b1f8"
