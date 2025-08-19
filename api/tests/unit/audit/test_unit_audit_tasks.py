@@ -394,19 +394,17 @@ def test_create_feature_state_went_live_audit_log__rescheduled_feature_update__c
     earlier_schedule = min(scheduled_time, rescheduled_time)
     later_schedule = max(scheduled_time, rescheduled_time)
 
-    with freeze_time(now):
-        # Given
-        change_request_feature_state.live_from = scheduled_time
-        change_request_feature_state.save()
-        change_request.committed_at = timezone.now()
-        change_request.save()  # Triggers hook
+    # Given - the change request is scheduled to go live at `scheduled_time`
+    change_request_feature_state.live_from = scheduled_time
+    change_request_feature_state.save()
+    change_request.committed_at = timezone.now()
+    change_request.save()
 
-    with freeze_time(now + timedelta(hours=1)):  # A little later
-        # Given
-        change_request_feature_state.live_from = rescheduled_time
-        change_request_feature_state.save()
-        change_request.committed_at = timezone.now()
-        change_request.save()  # Triggers hook
+    # But the change request was rescheduled to go live at `rescheduled_time
+    change_request_feature_state.live_from = rescheduled_time
+    change_request_feature_state.save()
+    change_request.committed_at = timezone.now()
+    change_request.save()
 
     with freeze_time(earlier_schedule):
         # When
@@ -415,7 +413,7 @@ def test_create_feature_state_went_live_audit_log__rescheduled_feature_update__c
         # Then
         assert (
             AuditLog.objects.filter(
-                created_date=earlier_schedule,
+                created_date=change_request_feature_state.live_from,
                 related_object_id=change_request_feature_state.id,
                 log__contains="went live",
             ).count()
@@ -442,6 +440,15 @@ def test_create_feature_state_went_live_audit_log__rescheduled_feature_update__c
             ).count()
             == expected_audit_log_late_count
         )
+    # Finally, there should be only one audit log for the change request going live
+    assert (
+        AuditLog.objects.filter(
+            created_date=change_request_feature_state.live_from,
+            related_object_id=change_request_feature_state.id,
+            log__contains="went live",
+        ).count()
+        == 1
+    )
 
 
 def test_create_feature_state_went_live_audit_log__rescheduled_feature_update__schedules_call_to_feature_update_time(

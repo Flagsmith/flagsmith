@@ -64,7 +64,7 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
         feature_state.change_request.title,
     )
     # NOTE: This NEEDS to leverage btree indexes on AuditLog
-    AuditLog.objects.create(
+    AuditLog.objects.get_or_create(
         history_record_id=feature_state.history.latest().history_id,
         history_record_class_path=feature_state.history_record_class_path,
         created_date=feature_state.live_from,
