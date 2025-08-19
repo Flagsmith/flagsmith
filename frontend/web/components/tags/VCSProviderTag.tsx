@@ -15,6 +15,7 @@ const VCSProviderTag: React.FC<VCSProviderTagProps> = ({
   vcsProvider = VCSProvider.GITHUB,
 }) => {
   let providerIcon = <></>
+
   switch (vcsProvider) {
     case VCSProvider.GITHUB:
       providerIcon = (

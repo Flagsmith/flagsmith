@@ -1,7 +1,7 @@
 import React, { FC, useMemo } from 'react'
 import SegmentOverridesIcon from 'components/SegmentOverridesIcon'
 import Constants from 'common/constants'
-import { ProjectFlag } from 'common/types/responses'
+import { ProjectFlag, VCSProvider } from 'common/types/responses'
 import IdentityOverridesIcon from 'components/IdentityOverridesIcon'
 import TagValues from 'components/tags/TagValues'
 import UnhealthyFlagWarning from './UnhealthyFlagWarning'
@@ -39,21 +39,6 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
 
   const isGithubPocEnabled = Utils.getFlagsmithHasFeature('git_code_references')
-  const fakeCodeReferencesCounts = [
-    {
-      count: Math.round(Math.random() * 2),
-      repository_url: 'https://github.com/Flagsmith/flagsmith',
-    },
-    {
-      count: Math.round(Math.random() * 2),
-      repository_url: 'https://github.com/Flagsmith/flagsmith-python-client',
-    },
-    {
-      count: Math.round(Math.random() * 2),
-      repository_url: 'https://github.com/Flagsmith/flagsmith-go-client',
-    },
-  ]
-
   const hasScannedCodeReferences =
     projectFlag?.code_references_counts.length > 0
   const codeReferencesCounts =
@@ -85,11 +70,12 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
             <VCSProviderTag
               count={codeReferencesCounts}
               isWarning={codeReferencesCounts === 0}
+              vcsProvider={VCSProvider.GITHUB}
             />
           }
           place='top'
         >
-          {`Scanned ${codeReferencesCounts?.toString()} times in ${projectFlag?.code_references_counts.length?.toString()} repositories`}
+          {`Scanned ${projectFlag?.code_references_counts.length?.toString()} times in ${projectFlag?.code_references_counts.length?.toString()} repositories`}
         </Tooltip>
       )}
       {projectFlag.is_server_key_only && (
