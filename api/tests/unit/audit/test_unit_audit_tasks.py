@@ -400,7 +400,7 @@ def test_create_feature_state_went_live_audit_log__rescheduled_feature_update__c
     change_request.committed_at = timezone.now()
     change_request.save()
 
-    # But the change request was rescheduled to go live at `rescheduled_time
+    # But the change request was rescheduled to go live at `rescheduled_time`
     change_request_feature_state.live_from = rescheduled_time
     change_request_feature_state.save()
     change_request.committed_at = timezone.now()
