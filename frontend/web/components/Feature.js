@@ -2,8 +2,8 @@
 import React, { PureComponent } from 'react'
 import ValueEditor from './ValueEditor'
 import Constants from 'common/constants'
-import VariationOptions from './mv/VariationOptions'
-import AddVariationButton from './mv/AddVariationButton'
+import { VariationOptions } from './mv/VariationOptions'
+import { AddVariationButton } from './mv/AddVariationButton'
 import ErrorMessage from './ErrorMessage'
 import Tooltip from './Tooltip'
 import Icon from './Icon'
@@ -177,6 +177,7 @@ export default class Feature extends PureComponent {
             <FormGroup className='mb-0'>
               {(!!environmentVariations || !isEdit) && (
                 <VariationOptions
+                  canCreateFeature={this.props.canCreateFeature}
                   disabled={!!identity || readOnly}
                   controlValue={environmentFlag?.feature_state_value}
                   controlPercentage={controlPercentage}
