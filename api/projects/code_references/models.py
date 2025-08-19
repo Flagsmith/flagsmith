@@ -4,8 +4,6 @@ from django.db.models.expressions import Func
 
 from projects.code_references.types import JSONCodeReference, VCSProvider
 
-from projects.code_references.types import JSONCodeReference, VCSProvider
-
 
 class FeatureFlagCodeReferencesScan(models.Model):
     """
