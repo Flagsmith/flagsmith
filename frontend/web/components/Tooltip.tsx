@@ -48,9 +48,9 @@ const Tooltip: FC<TooltipProps> = ({
   return (
     <>
       {title && (
-        <div className={titleClassName} data-for={id} data-tip>
+        <span className={titleClassName} data-for={id} data-tip>
           {title}
-        </div>
+        </span>
       )}
       {!!children && (
         <TooltipPortal renderInPortal={renderInPortal}>
