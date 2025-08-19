@@ -17,10 +17,6 @@ class JSONCodeReference(TypedDict):
 
 @dataclass
 class CodeReference:
-    scanned_at: datetime
-    vcs_provider: VCSProvider
-    repository_url: str
-    revision: str
     feature_name: str
     file_path: str
     line_number: int
@@ -28,9 +24,12 @@ class CodeReference:
 
 
 @dataclass
-class FeatureFlagCodeReferences:
-    first_scanned_at: datetime | None
-    last_scanned_at: datetime | None
+class FeatureFlagCodeReferencesRepositorySummary:
+    repository_url: str
+    vcs_provider: VCSProvider
+    revision: str
+    last_successful_repository_scanned_at: datetime
+    last_feature_found_at: datetime | None
     code_references: list[CodeReference]
 
 
@@ -38,3 +37,5 @@ class FeatureFlagCodeReferences:
 class CodeReferencesRepositoryCount:
     repository_url: str
     count: int
+    last_successful_repository_scanned_at: datetime
+    last_feature_found_at: datetime | None

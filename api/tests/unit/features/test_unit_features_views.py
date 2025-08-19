@@ -3353,63 +3353,81 @@ def test_FeatureViewSet_list__includes_code_references_counts(
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    FeatureFlagCodeReferencesScan.objects.create(
-        project=project,
-        repository_url="https://github.flagsmith.com/backend/",
-        revision="backend-1",
-        code_references=[
-            {
-                "feature_name": feature.name,
-                "file_path": "path/to/file.py",
-                "line_number": 42,
-            },
-        ],
-    )
-    FeatureFlagCodeReferencesScan.objects.create(
-        project=project,
-        repository_url="https://gitlab.flagsmith.com/frontend/",
-        revision="frontend-1",
-        code_references=[
-            {
-                "feature_name": feature.name,
-                "file_path": "path/to/file.js",
-                "line_number": 23,
-            },
-        ],
-    )
-    FeatureFlagCodeReferencesScan.objects.create(
-        project=project,
-        repository_url="https://gitlab.flagsmith.com/frontend/",
-        revision="frontend-2",
-        code_references=[
-            {
-                "feature_name": feature.name,
-                "file_path": "path/to/file.js",
-                "line_number": 24,
-            },
-            {
-                "feature_name": feature.name,
-                "file_path": "path/to/another/file.js",
-                "line_number": 10,
-            },
-            {
-                "feature_name": f"Another {feature.name}",
-                "file_path": "path/to/another/file.js",
-                "line_number": 11,
-            },
-        ],
-    )
+    with freeze_time("2099-01-01T10:00:00-0300"):
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://github.flagsmith.com/backend/",
+            revision="backend-1",
+            code_references=[
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/file.py",
+                    "line_number": 42,
+                },
+            ],
+        )
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://gitlab.flagsmith.com/frontend/",
+            revision="frontend-1",
+            code_references=[
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/file.js",
+                    "line_number": 23,
+                },
+            ],
+        )
+    with freeze_time("2099-01-02T11:00:00-0300"):
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://github.flagsmith.com/backend/",
+            revision="backend-2",
+            code_references=[
+                {
+                    "feature_name": f"Another {feature.name}",
+                    "file_path": "path/to/another/file.py",
+                    "line_number": 11,
+                },
+            ],
+        )
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://gitlab.flagsmith.com/frontend/",
+            revision="frontend-2",
+            code_references=[
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/file.js",
+                    "line_number": 23,
+                },
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/another/file.js",
+                    "line_number": 50,
+                },
+            ],
+        )
 
     # When
     response = staff_client.get(f"/api/v1/projects/{project.pk}/features/")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert (counts := response.data["results"][0]["code_references_counts"])
-    assert counts[0]["repository_url"] == "https://github.flagsmith.com/backend/"
-    assert counts[0]["count"] == 1
-    assert counts[1]["repository_url"] == "https://gitlab.flagsmith.com/frontend/"
-    assert counts[1]["count"] == 2
+    assert response.json()["results"][0]["code_references_counts"] == [
+        {
+            "repository_url": "https://github.flagsmith.com/backend/",
+            "count": 0,
+            "last_successful_repository_scanned_at": "2099-01-02T14:00:00+00:00",
+            "last_feature_found_at": "2099-01-01T13:00:00+00:00",
+        },
+        {
+            "repository_url": "https://gitlab.flagsmith.com/frontend/",
+            "count": 2,
+            "last_successful_repository_scanned_at": "2099-01-02T14:00:00+00:00",
+            "last_feature_found_at": "2099-01-02T14:00:00+00:00",
+        },
+    ]
 
 
 def test_simple_feature_state_returns_only_latest_versions(

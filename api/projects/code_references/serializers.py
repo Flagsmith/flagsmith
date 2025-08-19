@@ -1,16 +1,17 @@
 from rest_framework import serializers
 
+from projects.code_references.constants import MAX_FILE_PATH_LENGTH
 from projects.code_references.models import FeatureFlagCodeReferencesScan
 from projects.code_references.types import (
     CodeReference,
     CodeReferencesRepositoryCount,
-    FeatureFlagCodeReferences,
+    FeatureFlagCodeReferencesRepositorySummary,
     VCSProvider,
 )
 
 
 class _BaseCodeReferenceSerializer(serializers.Serializer[CodeReference]):
-    file_path = serializers.CharField(max_length=200)
+    file_path = serializers.CharField(max_length=MAX_FILE_PATH_LENGTH)
     line_number = serializers.IntegerField(min_value=1)
 
 
@@ -48,24 +49,21 @@ class FeatureFlagCodeReferencesScanSerializer(
         ]
 
 
-class FeatureFlagCodeReferencesSerializer(
-    serializers.Serializer[FeatureFlagCodeReferences],
+class FeatureFlagCodeReferencesRepositorySummarySerializer(
+    serializers.Serializer[FeatureFlagCodeReferencesRepositorySummary],
 ):
-    first_scanned_at = serializers.DateTimeField()
-    last_scanned_at = serializers.DateTimeField()
-
+    repository_url = serializers.URLField()
+    vcs_provider = serializers.ChoiceField(choices=VCSProvider.choices)
+    revision = serializers.CharField()
+    last_successful_repository_scanned_at = serializers.DateTimeField()
+    last_feature_found_at = serializers.DateTimeField(allow_null=True)
     code_references = _CodeReferenceDetailSerializer(many=True)
 
-    class Meta:
-        fields = read_only_fields = [
-            "first_scanned_at",
-            "last_scanned_at",
-            "code_references",
-        ]
 
-
-class CodeReferencesRepositoryCountSerializer(
+class FeatureFlagCodeReferencesRepositoryCountSerializer(
     serializers.Serializer[CodeReferencesRepositoryCount],
 ):
     repository_url = serializers.URLField()
     count = serializers.IntegerField()
+    last_successful_repository_scanned_at = serializers.DateTimeField()
+    last_feature_found_at = serializers.DateTimeField(allow_null=True)

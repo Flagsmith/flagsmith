@@ -24,7 +24,9 @@ from environments.sdk.serializers_mixins import (
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
-from projects.code_references.serializers import CodeReferencesRepositoryCountSerializer
+from projects.code_references.serializers import (
+    FeatureFlagCodeReferencesRepositoryCountSerializer,
+)
 from projects.models import Project
 from users.serializers import (
     UserIdsSerializer,
@@ -328,7 +330,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerializer):
     metadata = MetadataSerializer(required=False, many=True)
 
-    code_references_counts = CodeReferencesRepositoryCountSerializer(
+    code_references_counts = FeatureFlagCodeReferencesRepositoryCountSerializer(
         many=True,
         read_only=True,
     )
