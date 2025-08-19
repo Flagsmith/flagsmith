@@ -38,7 +38,9 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
   }
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
 
-  const isGithubPocEnabled = Utils.getFlagsmithHasFeature('git_code_references')
+  const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
+    'git_code_references',
+  )
   const hasScannedCodeReferences =
     projectFlag?.code_references_counts.length > 0
   const codeReferencesCounts =
@@ -64,7 +66,7 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
         count={projectFlag.num_identity_overrides}
         showPlusIndicator={showPlusIndicator}
       />
-      {isGithubPocEnabled && hasScannedCodeReferences && (
+      {isCodeReferencesEnabled && hasScannedCodeReferences && (
         <Tooltip
           title={
             <VCSProviderTag

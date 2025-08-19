@@ -640,7 +640,7 @@ const CreateFlag = class extends Component {
     let regexValid = true
     const metadataEnable = Utils.getPlansPermission('METADATA')
 
-    const isGithubPocEnabled = Utils.getFlagsmithHasFeature(
+    const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
       'git_code_references',
     )
 
@@ -1918,7 +1918,7 @@ const CreateFlag = class extends Component {
                                       </InfoMessage>
                                     </TabItem>
                                   )}
-                                  {isGithubPocEnabled && (
+                                  {isCodeReferencesEnabled && (
                                     <TabItem tabLabel={'Code References'}>
                                       <FeatureCodeReferencesContainer
                                         featureId={projectFlag.id}

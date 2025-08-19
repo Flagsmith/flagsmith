@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import ModalHR from 'components/modals/ModalHR'
 import Utils from 'common/utils/utils'
 import Button, { themeClassNames } from './Button'
-import { useHistory, useLocation } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 
 interface TabItemProps {
   tabLabel: React.ReactNode
@@ -70,13 +70,18 @@ const Tabs: React.FC<TabsProps> = ({
   }
 
   const hideNav = tabChildren.length === 1 && hideNavOnSingleTab
+  const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
+    'git_code_references',
+  )
 
   return (
     <div className={`tabs ${className}`}>
       <div
         className={`${hideNav ? '' : 'tabs-nav'} ${theme}`}
         style={{
-          ...(overflowX ? { overflowX: 'scroll' } : {}),
+          ...(overflowX && isCodeReferencesEnabled
+            ? { overflowX: 'scroll' }
+            : {}),
           ...(isMobile ? { flexWrap: 'wrap' } : {}),
         }}
       >
