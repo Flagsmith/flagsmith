@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.192.1](https://github.com/Flagsmith/flagsmith/compare/v2.192.0...v2.192.1) (2025-08-20)
+
+
+### Bug Fixes
+
+* revert "fix: check-split-length-before-accessing-with-index" ([#5943](https://github.com/Flagsmith/flagsmith/issues/5943)) ([023a547](https://github.com/Flagsmith/flagsmith/commit/023a547c2c015dfd6572b463bea67710771979a8))
+
 ## [2.192.0](https://github.com/Flagsmith/flagsmith/compare/v2.191.0...v2.192.0) (2025-08-20)
 
 
