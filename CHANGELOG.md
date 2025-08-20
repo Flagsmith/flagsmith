@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.192.2](https://github.com/Flagsmith/flagsmith/compare/v2.192.1...v2.192.2) (2025-08-20)
+
+
+### Bug Fixes
+
+* **infra:** use ConfiguredOrderManager as a base class instead ([#5948](https://github.com/Flagsmith/flagsmith/issues/5948)) ([0dcd073](https://github.com/Flagsmith/flagsmith/commit/0dcd0739b82c67ad7d700ed43ac0150f670b04ef))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* split out rules and conditions ordering vars and enable conditions ordering in production ([#5946](https://github.com/Flagsmith/flagsmith/issues/5946)) ([c8c3afd](https://github.com/Flagsmith/flagsmith/commit/c8c3afdd6607839f5b40f48108c38e65dfafac7e))
+
 ## [2.192.1](https://github.com/Flagsmith/flagsmith/compare/v2.192.0...v2.192.1) (2025-08-20)
 
 
