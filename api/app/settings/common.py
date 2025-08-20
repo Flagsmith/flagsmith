@@ -1368,8 +1368,23 @@ if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:  # pragma: no cover
 
 SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
 
+# These settings are to handle large datasets / odd behaviour where rules and conditions
+# often aren't returned in the order that they were created in, which the code implicitly
+# expects.
 SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
     "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED", default=False
+)
+
+# In SaaS, we need to be able to split out rules and conditions
+# (since the ordering issue has been evident on rules for longer, and
+# only recently happened to conditions).
+SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
+    "SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
+    default=SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED,
+)
+SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED = env.bool(
+    "SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED",
+    default=SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED,
 )
 
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)

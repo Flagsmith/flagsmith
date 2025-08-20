@@ -196,6 +196,10 @@
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
                     "value": "https://edge.api.flagsmith.com/api/v1/"
+                },
+                {
+                    "name": "SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
+                    "value": "True"
                 }
             ],
             "secrets": [
