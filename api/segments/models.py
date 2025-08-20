@@ -38,11 +38,11 @@ logger = logging.getLogger(__name__)
 
 
 class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]):
-    def __init__(
-        self, *args: typing.Any, setting_name: str, **kwargs: typing.Any
-    ) -> None:
+    setting_name: str
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)
-        self.enable_specific_ordering = getattr(settings, setting_name)
+        self.enable_specific_ordering = getattr(settings, self.setting_name)
 
     def get_queryset(
         self,
@@ -56,6 +56,14 @@ class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]
         else:
             qs = super().get_queryset()
         return qs
+
+
+class SegmentRuleManager(ConfiguredOrderManager["SegmentRule"]):
+    setting_name = "SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED"
+
+
+class SegmentConditionManager(ConfiguredOrderManager["Condition"]):
+    setting_name = "SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED"
 
 
 class Segment(
@@ -244,9 +252,7 @@ class SegmentRule(
 
     history_record_class_path = "segments.models.HistoricalSegmentRule"
 
-    objects: typing.ClassVar[ConfiguredOrderManager["SegmentRule"]] = (
-        ConfiguredOrderManager(setting_name="SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED")
-    )
+    objects: typing.ClassVar[SegmentRuleManager] = SegmentRuleManager()
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "%s rule for %s" % (
@@ -315,11 +321,7 @@ class Condition(
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
-    objects: typing.ClassVar[ConfiguredOrderManager["Condition"]] = (
-        ConfiguredOrderManager(
-            setting_name="SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED"
-        )
-    )
+    objects: typing.ClassVar[SegmentConditionManager] = SegmentConditionManager()
 
     def __str__(self) -> str:
         return "Condition for %s: %s %s %s" % (
