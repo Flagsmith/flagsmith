@@ -272,6 +272,18 @@ $side-width: 750px;
   .tabs-nav {
     margin: 0 1.5rem;
     margin-top: 1rem;
+    @include customScroll();
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+  
+  /* Hide scrollbar completely */
+  &::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+  
+  scrollbar-width: none;
+    -ms-overflow-style: none;
   }
   .tab-item {
     padding: 0 1.5rem;

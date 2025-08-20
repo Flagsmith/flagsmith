@@ -100,6 +100,10 @@ export interface PipelineStageRequest {
 }
 
 export type Req = {
+  getFeatureCodeReferences: {
+    projectId: number | string
+    featureId: number | string
+  }
   getSegments: PagedRequest<{
     q?: string
     projectId: number | string
