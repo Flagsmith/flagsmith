@@ -389,7 +389,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                 <Button
                                   theme='text'
                                   target='_blank'
-                                  href='https://docs.flagsmith.com/advanced-use/permissions'
+                                  href='https://docs.flagsmith.com/system-administration/rbac'
                                   className='fw-normal'
                                 >
                                   Learn about User Roles.
