@@ -38,6 +38,12 @@ logger = logging.getLogger(__name__)
 
 
 class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]):
+    def __init__(
+        self, *args: typing.Any, setting_name: str, **kwargs: typing.Any
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.enable_specific_ordering = getattr(settings, setting_name)
+
     def get_queryset(
         self,
     ) -> models.QuerySet[ModelT]:
@@ -45,7 +51,7 @@ class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]
         # but avoid the weirdness of a setting-dependant migration
         # and having to reload everything in tests
         qs: models.QuerySet[ModelT]
-        if settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED:
+        if self.enable_specific_ordering:
             qs = super().get_queryset().order_by("id")
         else:
             qs = super().get_queryset()
@@ -239,7 +245,7 @@ class SegmentRule(
     history_record_class_path = "segments.models.HistoricalSegmentRule"
 
     objects: typing.ClassVar[ConfiguredOrderManager["SegmentRule"]] = (
-        ConfiguredOrderManager()
+        ConfiguredOrderManager(setting_name="SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED")
     )
 
     def __str__(self):  # type: ignore[no-untyped-def]
@@ -310,7 +316,9 @@ class Condition(
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
     objects: typing.ClassVar[ConfiguredOrderManager["Condition"]] = (
-        ConfiguredOrderManager()
+        ConfiguredOrderManager(
+            setting_name="SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED"
+        )
     )
 
     def __str__(self) -> str:
