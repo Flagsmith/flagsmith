@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import ModalHR from 'components/modals/ModalHR'
 import Utils from 'common/utils/utils'
 import Button, { themeClassNames } from './Button'
-import { useHistory, useLocation } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 
 interface TabItemProps {
   tabLabel: React.ReactNode
@@ -28,6 +28,7 @@ interface TabsProps {
   noFocus?: boolean
   isRoles?: boolean
   history?: any
+  overflowX?: boolean
 }
 
 const Tabs: React.FC<TabsProps> = ({
@@ -39,6 +40,7 @@ const Tabs: React.FC<TabsProps> = ({
   isRoles,
   noFocus,
   onChange,
+  overflowX = false,
   theme = 'tab',
   uncontrolled = false,
   urlParam,
@@ -68,12 +70,20 @@ const Tabs: React.FC<TabsProps> = ({
   }
 
   const hideNav = tabChildren.length === 1 && hideNavOnSingleTab
+  const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
+    'git_code_references',
+  )
 
   return (
     <div className={`tabs ${className}`}>
       <div
         className={`${hideNav ? '' : 'tabs-nav'} ${theme}`}
-        style={isMobile ? { flexWrap: 'wrap' } : {}}
+        style={{
+          ...(overflowX && isCodeReferencesEnabled
+            ? { overflowX: 'scroll' }
+            : {}),
+          ...(isMobile ? { flexWrap: 'wrap' } : {}),
+        }}
       >
         {!hideNav &&
           tabChildren.map((child, i) => {
