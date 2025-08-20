@@ -91,10 +91,11 @@ export const testSegment1 = async (flagsmith: any) => {
   ])
 
   await gotoSegments()
+  const isCloneSegmentEnabled = await flagsmith.hasFeature('clone_segment')
 
   log('Update segment')
   const lastRule = segmentRules[segmentRules.length - 1]
-  await createSegment(0, 'zegment_1', [lastRule])
+  await createSegment(0, 'segment_1', [lastRule])
   await closeModal()
   await click(byId('segment-0-name'))
   await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
@@ -106,8 +107,9 @@ export const testSegment1 = async (flagsmith: any) => {
   await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value)
   await click(byId('update-segment'))
   await closeModal()
-  await deleteSegment(0, 'zegment_1', false)
-
+  await deleteSegment(0, 'segment_1', !isCloneSegmentEnabled)
+  await gotoSegments()
+  
   log('Segment age rules')
   // (=== 18 || === 19) && (> 17 || < 19) && (!=20) && (<=18) && (>=18)
   // Rule 1- Age === 18 || Age === 19
@@ -146,7 +148,6 @@ export const testSegment1 = async (flagsmith: any) => {
   await waitAndRefresh()
   await assertTextContent(byId('user-feature-value-0'), '"medium"')
 
-  const isCloneSegmentEnabled = await flagsmith.hasFeature('clone_segment')
   if (isCloneSegmentEnabled) {
     log('Clone segment')
     await gotoSegments()
