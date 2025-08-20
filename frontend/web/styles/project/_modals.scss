@@ -352,3 +352,25 @@ $side-width: 750px;
     }
   }
 }
+
+.modal-full-screen {
+  .modal-dialog {
+    max-width: 75vw;
+  }
+  hr {
+    display: none;
+  }
+  .modal-header {
+    display: none;
+  }
+  .modal-content {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    .modal-body {
+      background: transparent;
+      padding: 0;
+    }
+  }
+}
