@@ -30,7 +30,7 @@ from custom_auth.mfa.trench.models import MFAMethod
 from custom_auth.mfa.trench.responses import ErrorResponse
 from custom_auth.mfa.trench.serializers import CodeLoginSerializer
 from custom_auth.mfa.trench.utils import user_token_generator
-from custom_auth.serializers import CustomTokenCreateSerializer, CustomUserDelete
+from custom_auth.serializers import CustomUserDelete
 from integrations.lead_tracking.hubspot.services import (
     register_hubspot_tracker_and_track_user,
 )
@@ -46,7 +46,6 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):  # type: ignore[mis
     Class to handle throttling for login requests
     """
 
-    serializer_class = CustomTokenCreateSerializer
     authentication_classes = []  # type: ignore[var-annotated]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "login"
