@@ -13,6 +13,12 @@ from features.views import SDKFeatureStates
 from integrations.github.views import github_webhook
 from organisations.views import chargebee_webhook
 
+schema_view_permission_class = (  # pragma: no cover
+    permissions.IsAuthenticated
+    if settings.REQUIRE_AUTHENTICATION_FOR_API_DOCS
+    else permissions.AllowAny
+)
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Flagsmith API",
@@ -22,7 +28,7 @@ schema_view = get_schema_view(
         contact=openapi.Contact(email="support@flagsmith.com"),
     ),
     public=True,
-    permission_classes=[permissions.AllowAny],
+    permission_classes=[schema_view_permission_class],
     authentication_classes=[authentication.SessionAuthentication],
 )
 

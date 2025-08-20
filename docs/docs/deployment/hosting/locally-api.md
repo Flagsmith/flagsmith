@@ -230,6 +230,7 @@ the below variables will be ignored.
 - `API_USAGE_CACHE_SECONDS`: Controls how frequently the usage cache is flushed. Defaults to 60 seconds
 - `PROMETHEUS_ENABLED`: Enables the Prometheus `/metrics` endpoint. Default is False.
 - `PROMETHEUS_HISTOGRAM_BUCKETS`: Allows to specify your bucket sizes for Prometheus histograms, e.g., `"0.5,0.6,1.0,Inf"`. Defaults to Python Prometheus client default histogram sizes.
+- `REQUIRE_AUTHENTICATION_FOR_API_DOCS`: If set to True, users must be authenticated with django admin to access API docs.
 
 #### Security Environment Variables
 
