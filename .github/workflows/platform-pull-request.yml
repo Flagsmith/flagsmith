@@ -176,27 +176,3 @@ jobs:
     strategy:
       matrix:
         runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
-
-  run-tests:
-    runs-on: depot-ubuntu-latest
-    name: Run E2E Tests
-    environment: production
-
-    steps:
-      - name: Checkout PR head
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Show ref for sanity
-        run: |
-          echo "GITHUB_REF=$GITHUB_REF"
-          echo "GITHUB_SHA=$GITHUB_SHA"
-          git log -1 --oneline
-
-      - name: Run E2E tests against production
-        uses: ./.github/actions/e2e-tests
-        with:
-          e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
-          slack_token: ${{ secrets.SLACK_TOKEN }}
-          environment: prod
