@@ -90,25 +90,29 @@ export const testSegment1 = async (flagsmith: any) => {
     { value: 'small', weight: 0 },
   ])
 
-  log('Segment age rules')
   await gotoSegments()
+
+  log('Update segment')
+  const lastRule = segmentRules[segmentRules.length - 1]
+  await createSegment(0, 'zegment_1', [lastRule])
+  await closeModal()
+  await click(byId('segment-0-name'))
+  await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
+  await click(byId('update-segment'))
+  await closeModal()
+  await gotoSegments()
+  await click(byId('segment-0-name'))
+  await assertInputValue(byId(`rule-${0}-value-0`), `${lastRule.value + 1}`)
+  await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value)
+  await click(byId('update-segment'))
+  await closeModal()
+  await deleteSegment(0, 'zegment_1', false)
+
+  log('Segment age rules')
   // (=== 18 || === 19) && (> 17 || < 19) && (!=20) && (<=18) && (>=18)
   // Rule 1- Age === 18 || Age === 19
 
   await createSegment(0, '18_or_19', segmentRules)
-
-  log('Update segment')
-  await click(byId('segment-0-name'))
-  const lastRule = segmentRules[segmentRules.length - 1]
-  await setSegmentRule(segmentRules.length - 1, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
-  await click(byId('update-segment'))
-  await closeModal()
-  await gotoSegments()
-  await click(byId('segment-0-name'))
-  await assertInputValue(byId(`rule-${segmentRules.length - 1}-value-0`), `${lastRule.value + 1}`)
-  await setSegmentRule(segmentRules.length - 1, 0, lastRule.name, lastRule.operator, lastRule.value)
-  await click(byId('update-segment'))
-  await closeModal()
 
   log('Add segment trait for user')
   await gotoTraits()
