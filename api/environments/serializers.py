@@ -58,7 +58,10 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):  # type: ignore[t
             "use_identity_overrides_in_local_eval",
             "is_creating",
         )
-        read_only_fields = ("use_v2_feature_versioning",)
+        read_only_fields = (
+            "use_v2_feature_versioning",
+            "is_creating",
+        )
 
     def get_use_mv_v2_evaluation(self, instance: Environment) -> bool:
         """
@@ -104,7 +107,6 @@ class EnvironmentRetrieveSerializerWithMetadata(EnvironmentSerializerWithMetadat
         fields = EnvironmentSerializerWithMetadata.Meta.fields + (  # type: ignore[has-type]
             "total_segment_overrides",
         )
-        read_only_fields = ("total_segment_overrides",)
 
 
 class CreateUpdateEnvironmentSerializer(

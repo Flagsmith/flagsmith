@@ -965,6 +965,30 @@ def test_audit_log_entry_created_when_environment_updated(
     )
 
 
+def test_environment_update_cannot_change_is_creating(
+    environment: Environment, project: Project, admin_client_new: APIClient
+) -> None:
+    # Given
+    environment = Environment.objects.create(name="Test environment", project=project)
+    assert environment.is_creating is False
+    url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
+
+    data = {
+        "project": project.id,
+        "name": "New name",
+        "is_creating": True,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["is_creating"] is False
+
+
 def test_get_document(
     environment: Environment,
     project: Project,
