@@ -183,8 +183,16 @@ jobs:
     environment: production
 
     steps:
-      - name: Cloning repo
+      - name: Checkout PR head
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Show ref for sanity
+        run: |
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          git log -1 --oneline
 
       - name: Run E2E tests against production
         uses: ./.github/actions/e2e-tests
