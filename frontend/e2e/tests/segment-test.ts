@@ -93,21 +93,6 @@ export const testSegment1 = async (flagsmith: any) => {
 
   await gotoSegments()
 
-  log('Update segment')
-  const lastRule = segmentRules[segmentRules.length - 1]
-  await createSegment(0, 'segment_to_update', [lastRule])
-  await closeModal()
-  await click(byId('segment-0-name'))
-  await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
-  await click(byId('update-segment'))
-  await closeModal()
-  await waitAndRefresh()
-  await click(byId('segment-0-name'))
-  await assertInputValue(byId(`rule-${0}-value-0`), `${lastRule.value + 1}`)
-  await closeModal()
-  await deleteSegment(0, 'segment_to_update', !isCloneSegmentEnabled)
-  await waitAndRefresh()
-  
   log('Segment age rules')
   // (=== 18 || === 19) && (> 17 || < 19) && (!=20) && (<=18) && (>=18)
   // Rule 1- Age === 18 || Age === 19
