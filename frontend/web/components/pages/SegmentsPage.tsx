@@ -45,7 +45,7 @@ const SegmentsPage: FC = () => {
 
   useEffect(() => {
     if (id) {
-      editSegment(id, !manageSegmentsPermission)
+      history.push(id, !manageSegmentsPermission)
     } else if (!id && typeof closeModal !== 'undefined') {
       closeModal()
     }
@@ -88,10 +88,8 @@ const SegmentsPage: FC = () => {
     openModal(
       'New Segment',
       <CreateSegmentModal
-        onComplete={(segment) => {
-          //todo: remove when CreateSegment uses hooks
-          setModalTitle(`Edit Segment: ${segment.name}`)
-          toast('Created segment')
+        onComplete={() => {
+          closeModal()
         }}
         environmentId={environmentId!}
         projectId={projectId}
@@ -105,38 +103,6 @@ const SegmentsPage: FC = () => {
     level: 'project',
     permission: 'MANAGE_SEGMENTS',
   })
-
-  const editSegment = (id: number, readOnly?: boolean) => {
-    API.trackEvent(Constants.events.VIEW_SEGMENT)
-
-    openModal(
-      `Edit Segment`,
-      <CreateSegmentModal
-        key={id}
-        segment={id}
-        onSegmentRetrieved={(segment) => {
-          setShowFeatureSpecific(!!segment?.feature)
-          setModalTitle(`Edit Segment: ${segment.name}`)
-        }}
-        readOnly={readOnly}
-        onComplete={() => {
-          refetch()
-          toast('Updated Segment')
-        }}
-        environmentId={environmentId!}
-        projectId={projectId}
-      />,
-      'side-modal create-segment-modal',
-      () => {
-        history.push(
-          `${document.location.pathname}?${Utils.toParam({
-            ...Utils.fromParam(),
-            id: undefined,
-          })}`,
-        )
-      },
-    )
-  }
 
   const renderWithPermission = (
     permission: boolean,
