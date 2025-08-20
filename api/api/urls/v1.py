@@ -29,7 +29,7 @@ schema_view = get_schema_view(
     ),
     public=True,
     permission_classes=[schema_view_permission_class],
-    authentication_classes=[authentication.SessionAuthentication],
+    authentication_classes=[authentication.BasicAuthentication],
 )
 
 traits_router = routers.DefaultRouter()
