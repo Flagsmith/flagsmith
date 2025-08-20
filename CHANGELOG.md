@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.192.0](https://github.com/Flagsmith/flagsmith/compare/v2.191.0...v2.192.0) (2025-08-20)
+
+
+### Features
+
+* add environment variable to protect API docs with authentication ([#5941](https://github.com/Flagsmith/flagsmith/issues/5941)) ([6b8ef8f](https://github.com/Flagsmith/flagsmith/commit/6b8ef8f75582805752049bfd766847f3ac8e428c))
+* frontend GitHub code references ([#5939](https://github.com/Flagsmith/flagsmith/issues/5939)) ([ca7ef13](https://github.com/Flagsmith/flagsmith/commit/ca7ef13437edb22a37de05843e6db569d01d6d80))
+* **github-poc:** Retrieve feature code references ([#5931](https://github.com/Flagsmith/flagsmith/issues/5931)) ([16a6c76](https://github.com/Flagsmith/flagsmith/commit/16a6c76ba2b69ca660f36b1e1cd44c1527d86b1e))
+* **github-poc:** Submit feature flag code references ([#5928](https://github.com/Flagsmith/flagsmith/issues/5928)) ([21cb9b9](https://github.com/Flagsmith/flagsmith/commit/21cb9b959cbaff0bc3c33c38ea63ce75faf97223))
+* phased rollout ([#5890](https://github.com/Flagsmith/flagsmith/issues/5890)) ([d52c452](https://github.com/Flagsmith/flagsmith/commit/d52c4529097329b238c5e69e2a5fa44cdcf7faa5))
+* release pipelines beta ([#5930](https://github.com/Flagsmith/flagsmith/issues/5930)) ([2e22046](https://github.com/Flagsmith/flagsmith/commit/2e22046a877a5fe5fc49a6bafb0fb4239c064891))
+
+
+### Bug Fixes
+
+* check-split-length-before-accessing-with-index ([#5848](https://github.com/Flagsmith/flagsmith/issues/5848)) ([e5740aa](https://github.com/Flagsmith/flagsmith/commit/e5740aa4323b31aaee7dfea7d0bb6c80019af57d))
+* **cr/audit-log:** Add history record to fs went live by audit log ([#5934](https://github.com/Flagsmith/flagsmith/issues/5934)) ([1e984ee](https://github.com/Flagsmith/flagsmith/commit/1e984ee1df48b7d373ac1422fbd81b17112f145b))
+* disable update mv value without create feature ([#5916](https://github.com/Flagsmith/flagsmith/issues/5916)) ([9ec8e05](https://github.com/Flagsmith/flagsmith/commit/9ec8e05a0876a233826ca44c6337816957e27066))
+* **env-update:** make is_creating read only ([#5942](https://github.com/Flagsmith/flagsmith/issues/5942)) ([cbea78e](https://github.com/Flagsmith/flagsmith/commit/cbea78e8a1aa8a88cc2f976c1b929abb18508f0f))
+* order release pipelines by created at ([#5929](https://github.com/Flagsmith/flagsmith/issues/5929)) ([047758e](https://github.com/Flagsmith/flagsmith/commit/047758ec1fc08cd4d079f1c6588bb6d42fb4a423))
+* **release-pipelines:** make email more redable ([#5936](https://github.com/Flagsmith/flagsmith/issues/5936)) ([ff031c8](https://github.com/Flagsmith/flagsmith/commit/ff031c835d1b44155ccba18445d31c573a96415b))
+* Update node version in gh action ([#5926](https://github.com/Flagsmith/flagsmith/issues/5926)) ([7598110](https://github.com/Flagsmith/flagsmith/commit/75981103bdc52693d7e922b047bba809d56e5165))
+* update-path-of-nvmrc ([#5927](https://github.com/Flagsmith/flagsmith/issues/5927)) ([3a46748](https://github.com/Flagsmith/flagsmith/commit/3a4674899520908a41677931205089c8bacc4e1e))
+
 ## [2.191.0](https://github.com/Flagsmith/flagsmith/compare/v2.190.1...v2.191.0) (2025-08-13)
 
 
