@@ -63,7 +63,7 @@ def test_get_admin_organisations(
 ) -> None:
     # Given
     non_admin_organisation = Organisation.objects.create(name="non-admin")
-    admin_user.add_organisation(non_admin_organisation, OrganisationRole.USER)  # type: ignore[no-untyped-call]
+    admin_user.add_organisation(non_admin_organisation, OrganisationRole.USER)
 
     # When
     admin_orgs = admin_user.get_admin_organisations()  # type: ignore[no-untyped-call]
@@ -105,7 +105,7 @@ def test_unique_user_organisation(
     organisation: Organisation,
 ) -> None:
     with pytest.raises(IntegrityError):
-        admin_user.add_organisation(organisation, OrganisationRole.USER)  # type: ignore[no-untyped-call]
+        admin_user.add_organisation(organisation, OrganisationRole.USER)
 
 
 def test_has_organisation_permission_is_true_for_organisation_admin(

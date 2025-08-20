@@ -68,7 +68,7 @@ def seed_data() -> None:
         password=PASSWORD,
         username=settings.E2E_USER,
     )
-    org_admin.add_organisation(organisation, OrganisationRole.ADMIN)  # type: ignore[no-untyped-call]
+    org_admin.add_organisation(organisation, OrganisationRole.ADMIN)
     non_admin_user_with_org_permissions: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]  # noqa: E501
         email=settings.E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS,
         password=PASSWORD,
@@ -87,18 +87,10 @@ def seed_data() -> None:
         email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE,
         password=PASSWORD,
     )
-    non_admin_user_with_org_permissions.add_organisation(  # type: ignore[no-untyped-call]
-        organisation,
-    )
-    non_admin_user_with_project_permissions.add_organisation(  # type: ignore[no-untyped-call]
-        organisation,
-    )
-    non_admin_user_with_env_permissions.add_organisation(  # type: ignore[no-untyped-call]
-        organisation,
-    )
-    non_admin_user_with_a_role.add_organisation(  # type: ignore[no-untyped-call]
-        organisation,
-    )
+    non_admin_user_with_org_permissions.add_organisation(organisation)
+    non_admin_user_with_project_permissions.add_organisation(organisation)
+    non_admin_user_with_env_permissions.add_organisation(organisation)
+    non_admin_user_with_a_role.add_organisation(organisation)
 
     # Add permissions to the non-admin user with org permissions
     user_org_permission = UserOrganisationPermission.objects.create(

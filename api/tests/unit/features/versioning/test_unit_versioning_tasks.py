@@ -239,7 +239,7 @@ def test_enable_v2_versioning_for_scheduled_changes(
     # where enabling feature versioning 'stole' scheduled feature states from other
     # projects.
     another_organisation = Organisation.objects.create(name="another organisation")
-    staff_user.add_organisation(another_organisation)  # type: ignore[no-untyped-call]
+    staff_user.add_organisation(another_organisation)
     another_project = Project.objects.create(
         name="another project", organisation=another_organisation
     )

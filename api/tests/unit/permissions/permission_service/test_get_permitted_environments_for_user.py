@@ -12,7 +12,9 @@ from environments.models import Environment
 from environments.permissions.models import (
     EnvironmentPermissionModel,
     UserEnvironmentPermission,
+    UserPermissionGroupEnvironmentPermission,
 )
+from organisations.models import Organisation, UserOrganisation
 from permissions.models import PermissionModel
 from permissions.permission_service import get_permitted_environments_for_user
 from projects.models import (
@@ -20,7 +22,7 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 def test_get_permitted_environments_for_user_returns_all_environments_for_org_admin(  # type: ignore[no-untyped-def]
@@ -147,3 +149,45 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
             if permission not in permissions_as_group + permissions_as_user
             else 1
         )
+
+
+def test_get_permitted_environments_for_user__does_not_return_environment_for_orphan_group_permission(
+    organisation: Organisation,
+    project: Project,
+    environment: Environment,
+    user_permission_group: UserPermissionGroup,
+    environment_permission_using_user_permission_group: UserPermissionGroupEnvironmentPermission,
+    staff_user: FFAdminUser,
+    view_environment_permission: PermissionModel,
+) -> None:
+    """
+    Specific test to verify that a user no longer has permission to access resources via a group,
+    if they no longer belong to the organisation.
+
+    Note that a user should never be a member of a group without being a member of the organisation
+    but this test exists to ensure no security holes.
+    """
+
+    # Given
+    environment_permission_using_user_permission_group.permissions.add(
+        view_environment_permission
+    )
+    assert (
+        get_permitted_environments_for_user(
+            user=staff_user, project=project, permission_key=VIEW_ENVIRONMENT
+        ).count()
+        == 1
+    )
+
+    # When
+    # We delete the user organisation to remove the user from the organisation, without
+    # allowing any signals / hooks to run.
+    UserOrganisation.objects.filter(user=staff_user, organisation=organisation).delete()
+
+    # Then
+    assert (
+        get_permitted_environments_for_user(
+            user=staff_user, project=project, permission_key=VIEW_ENVIRONMENT
+        ).count()
+        == 0
+    )

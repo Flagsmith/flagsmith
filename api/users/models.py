@@ -231,7 +231,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
             else:
                 raise SubscriptionDoesNotSupportSeatUpgrade()
 
-        self.add_organisation(organisation, role=OrganisationRole(invite.role))  # type: ignore[no-untyped-call]
+        self.add_organisation(organisation, role=OrganisationRole(invite.role))
 
     def is_organisation_admin(self, organisation: typing.Union["Organisation", int]):  # type: ignore[no-untyped-def]
         return is_user_organisation_admin(self, organisation)
@@ -242,7 +242,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
             userorganisation__role=OrganisationRole.ADMIN.name,
         )
 
-    def add_organisation(self, organisation, role=OrganisationRole.USER):  # type: ignore[no-untyped-def]
+    def add_organisation(
+        self, organisation: Organisation, role: OrganisationRole = OrganisationRole.USER
+    ) -> None:
         UserOrganisation.objects.create(
             user=self, organisation=organisation, role=role.name
         )
