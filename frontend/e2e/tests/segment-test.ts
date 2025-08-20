@@ -80,6 +80,7 @@ const segmentRules =  [
 ]
 
 export const testSegment1 = async (flagsmith: any) => {
+  const isCloneSegmentEnabled = await flagsmith.hasFeature('clone_segment')
   log('Login')
   await login(E2E_USER, PASSWORD)
   await click('#project-select-1')
@@ -91,7 +92,6 @@ export const testSegment1 = async (flagsmith: any) => {
   ])
 
   await gotoSegments()
-  const isCloneSegmentEnabled = await flagsmith.hasFeature('clone_segment')
 
   log('Update segment')
   const lastRule = segmentRules[segmentRules.length - 1]
@@ -104,18 +104,16 @@ export const testSegment1 = async (flagsmith: any) => {
   await gotoSegments()
   await click(byId('segment-0-name'))
   await assertInputValue(byId(`rule-${0}-value-0`), `${lastRule.value + 1}`)
-  await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value)
-  await click(byId('update-segment'))
   await closeModal()
   await deleteSegment(0, 'segment_1', !isCloneSegmentEnabled)
-  await gotoSegments()
+  await waitAndRefresh()
   
   log('Segment age rules')
   // (=== 18 || === 19) && (> 17 || < 19) && (!=20) && (<=18) && (>=18)
   // Rule 1- Age === 18 || Age === 19
 
   await createSegment(0, '18_or_19', segmentRules)
-
+  await closeModal()
   log('Add segment trait for user')
   await gotoTraits()
   await createTrait(0, 'age', 18)
