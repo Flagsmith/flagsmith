@@ -873,7 +873,7 @@ export interface StageAction {
 
 export type Features = {
   [id: number]: {
-    name: string
+    created_at?: string
   }
 }
 
