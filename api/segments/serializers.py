@@ -89,10 +89,11 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         that are marked for deletion.
         """
         data = kwargs.get("data")
-        if data:
+        if data and "rules" in data:
             data["rules"] = self._get_rules_and_conditions_without_deleted(
                 data["rules"]
             )
+            kwargs["data"] = data
 
         super().__init__(*args, **kwargs)
 
