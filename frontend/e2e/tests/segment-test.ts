@@ -28,6 +28,7 @@ import {
   cloneSegment,
   setSegmentRule,
   assertInputValue,
+  clickSegmentByName,
 } from '../helpers.cafe'
 import { E2E_USER, PASSWORD } from '../config'
 
@@ -145,19 +146,22 @@ export const testSegment1 = async (flagsmith: any) => {
   await deleteFeature(0, 'mv_flag')
   
   log('Update segment')
+  const SEGMENT_TO_UPDATE_NAME = 'segment_to_update'
   await gotoSegments()
   const lastRule = segmentRules[segmentRules.length - 1]
-  await createSegment(0, 'segment_to_update', [lastRule])
+  await createSegment(0, SEGMENT_TO_UPDATE_NAME, [lastRule])
   await closeModal()
-  await click(byId('segment-0-name'))
+  await waitAndRefresh()
+  await clickSegmentByName(SEGMENT_TO_UPDATE_NAME)
   await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
   await click(byId('update-segment'))
   await closeModal()
-  await gotoSegments()
-  await click(byId('segment-0-name'))
+  await waitAndRefresh()
+  await clickSegmentByName(SEGMENT_TO_UPDATE_NAME)
   await assertInputValue(byId(`rule-${0}-value-0`), `${lastRule.value + 1}`)
   await closeModal()
-  await deleteSegment(0, 'segment_to_update', !isCloneSegmentEnabled)
+  await waitAndRefresh()
+  await deleteSegment(0, SEGMENT_TO_UPDATE_NAME, !isCloneSegmentEnabled)
   await waitAndRefresh()
 }
 
