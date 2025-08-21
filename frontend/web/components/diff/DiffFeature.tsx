@@ -3,8 +3,8 @@ import {
   FeatureConflict,
   FeatureStateWithConflict,
 } from 'common/types/responses'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
 import {

@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import ModalHR from 'components/modals/ModalHR'
 import Utils from 'common/utils/utils'
-import Button, { themeClassNames } from './Button'
 import { useHistory } from 'react-router-dom'
+import TabButton from './TabButton'
 
 interface TabItemProps {
   tabLabel: React.ReactNode
@@ -46,13 +46,61 @@ const Tabs: React.FC<TabsProps> = ({
   urlParam,
   value: propValue = 0,
 }) => {
-  const [internalValue, setInternalValue] = useState(0)
-  const routerHistory = useHistory() || history
   const tabChildren = (Array.isArray(children) ? children : [children]).filter(
     Boolean,
   )
-  let value = uncontrolled ? internalValue : propValue
+  const [internalValue, setInternalValue] = useState(0)
+  const routerHistory = useHistory() || history
+  const [visibleCount, setVisibleCount] = useState(tabChildren.length)
 
+  const navRef = useRef<HTMLDivElement | null>(null)
+  // We need to measure the parent width against the tab widths to see how many we can fit
+  const tabRefs = useRef<(HTMLAnchorElement | HTMLButtonElement | null)[]>(
+    Array(tabChildren.length).fill(null),
+  )
+
+  const registerTab = useCallback(
+    (i: number) => (el: HTMLAnchorElement | HTMLButtonElement | null) => {
+      tabRefs.current[i] = el
+    },
+    [],
+  )
+
+  const computeVisible = useCallback(() => {
+    const container = navRef.current
+    if (!container) return
+    const cw = container.clientWidth
+    let used = 0
+    let vis = 0
+    for (let i = 0; i < tabRefs.current.length; i++) {
+      const el = tabRefs.current[i]
+      if (!el) {
+        vis++
+        continue
+      } // if not mounted yet, optimistically include
+      const w = Math.ceil(el.getBoundingClientRect().width)
+      if (used + w <= cw) {
+        used += w
+        vis++
+      } else break
+    }
+    setVisibleCount(vis)
+  }, [])
+
+  React.useEffect(() => {
+    // run after first paint and when tab count changes
+    computeVisible()
+  }, [computeVisible, tabChildren.length])
+
+  React.useEffect(() => {
+    if (!navRef.current) return
+    const ro = new ResizeObserver(() => computeVisible())
+    ro.observe(navRef.current)
+    return () => ro.disconnect()
+  }, [computeVisible])
+
+  let value = uncontrolled ? internalValue : propValue
+  console.log(visibleCount)
   if (urlParam) {
     const tabParam = Utils.fromParam()[urlParam]
     if (tabParam) {
@@ -77,11 +125,12 @@ const Tabs: React.FC<TabsProps> = ({
   return (
     <div className={`tabs ${className}`}>
       <div
+        ref={navRef}
         className={`${hideNav ? '' : 'tabs-nav'} ${theme}`}
         style={{
-          ...(overflowX && isCodeReferencesEnabled
-            ? { overflowX: 'scroll' }
-            : {}),
+          // ...(overflowX && isCodeReferencesEnabled
+          //   ? { overflowX: 'scroll' }
+          //   : {}),
           ...(isMobile ? { flexWrap: 'wrap' } : {}),
         }}
       >
@@ -92,40 +141,22 @@ const Tabs: React.FC<TabsProps> = ({
               return null
             }
             return (
-              <Button
-                type='button'
-                theme={buttonTheme as keyof typeof themeClassNames}
-                data-test={child.props['data-test']}
-                id={child.props.id}
+              <TabButton
+                ref={registerTab(i)}
+                buttonTheme={buttonTheme}
                 key={`button${i}`}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  e.preventDefault()
-                  if (urlParam) {
-                    const searchParams = new URLSearchParams(
-                      window.location.search,
-                    )
-                    searchParams.set(
-                      urlParam,
-                      String(child.props.tabLabelString || child.props.tabLabel)
-                        .toLowerCase()
-                        .replace(/ /g, '-'),
-                    )
-                    routerHistory?.replace({
-                      pathname: window.location.pathname,
-                      search: searchParams.toString(),
-                    })
-                  } else if (uncontrolled) {
-                    setInternalValue(i)
-                  }
-                  onChange?.(i)
-                }}
-                className={`btn-tab ${noFocus ? 'btn-no-focus' : ''} ${
-                  isSelected ? ' tab-active' : ''
-                }`}
+                isSelected={isSelected}
+                noFocus={noFocus}
+                onChange={onChange}
+                routerHistory={routerHistory}
+                setInternalValue={setInternalValue}
+                uncontrolled={uncontrolled}
+                urlParam={urlParam}
+                child={child}
+                i={i}
               >
                 {child.props.tabLabel}
-              </Button>
+              </TabButton>
             )
           })}
       </div>

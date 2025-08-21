@@ -17,8 +17,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
 import SegmentOverrides from 'components/SegmentOverrides'
 import AddEditTags from 'components/tags/AddEditTags'
 import FlagOwners from 'components/FlagOwners'

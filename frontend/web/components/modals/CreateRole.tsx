@@ -8,8 +8,8 @@ import React, {
   useState,
 } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
 
 import {
   useCreateRoleMutation,
