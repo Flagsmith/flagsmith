@@ -188,11 +188,6 @@ export class CreateAPIKey extends PureComponent {
                   <label>Name</label>
                 </div>
                 <Input
-                  ref={(v) => {
-                    setTimeout(() => {
-                      v.focus()
-                    }, 500)
-                  }}
                   value={this.state.name}
                   onChange={(e) =>
                     this.setState({ name: Utils.safeParseEventValue(e) })
