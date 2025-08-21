@@ -874,6 +874,14 @@ export interface StageAction {
 export type Features = {
   [id: number]: {
     created_at?: string
+    phased_rollout_state?: {
+      current_split: number
+      increase_by: number
+      increase_every: string
+      initial_split: number
+      is_rollout_complete: boolean
+      last_updated_at: string
+    }
   }
 }
 

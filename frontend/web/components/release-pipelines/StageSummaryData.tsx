@@ -41,7 +41,7 @@ const StageSummaryData = ({
   const timeRemainingDuration = moment.duration(Math.max(0, timeRemaining))
 
   const isTimeLeft = timeRemainingDuration.asMilliseconds() > 0
-  const isActionPending = isWaitType && isTimeLeft
+  const isTimePending = isWaitType && isTimeLeft
 
   return (
     <div className='p-2'>
@@ -69,23 +69,21 @@ const StageSummaryData = ({
       )}
 
       {stageActions?.map((action) => (
-        <Row key={action.id} className='mt-2'>
-          {!isActionPending && (
+        <Row key={action.id} className='mt-2 align-items-start'>
+          <div>
             <Icon
-              name='checkmark-circle'
+              name={isTimePending ? 'radio' : 'checkmark-circle'}
               width={18}
               height={18}
-              fill='#53af41'
+              fill={isTimePending ? '#767d85' : '#53af41'}
             />
-          )}
-          {isActionPending && (
-            <Icon name='radio' width={18} height={18} fill='#767d85' />
-          )}
+          </div>
           <div className='ml-2'>
             {renderActionDetail(
               action.action_type,
-              action.action_body.enabled,
+              action.action_body,
               '',
+              featureInStage?.phased_rollout_state?.current_split,
             )}
           </div>
         </Row>
