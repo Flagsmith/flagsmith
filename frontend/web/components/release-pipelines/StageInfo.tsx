@@ -1,4 +1,8 @@
-import { StageTriggerBody, StageTriggerType } from 'common/types/responses'
+import {
+  Environment,
+  StageTriggerBody,
+  StageTriggerType,
+} from 'common/types/responses'
 
 import { PipelineDetailStage } from 'common/types/responses'
 import StageCard from './StageCard'
@@ -8,7 +12,7 @@ import StageFeatureDetail from './StageFeatureDetail'
 import FlagActionDetail from './FlagActionDetail'
 
 type StageInfoProps = {
-  environmentName: string
+  environmentData?: Environment
   stageData: PipelineDetailStage
   projectId: number
 }
@@ -23,7 +27,10 @@ const getTriggerText = (
 
   if (triggerType === StageTriggerType.WAIT_FOR) {
     return (
-      <span>Wait for {moment.duration(triggerBody?.wait_for).humanize()}</span>
+      <span>
+        Wait for {moment.duration(triggerBody?.wait_for).humanize()} to proceed
+        to next action
+      </span>
     )
   }
 
@@ -31,17 +38,18 @@ const getTriggerText = (
 }
 
 const StageInfo = ({
-  environmentName,
+  environmentData,
   projectId,
   stageData,
 }: StageInfoProps) => {
+  console.log('environmentData', environmentData)
   return (
     <Row>
       <Row className='align-items-start no-wrap'>
         <StageCard>
           <div>
             <h5>{stageData?.name}</h5>
-            <p>{environmentName}</p>
+            <p>{environmentData?.name}</p>
             <p className='text-muted'>
               {getTriggerText(
                 stageData?.trigger?.trigger_type,
@@ -49,7 +57,7 @@ const StageInfo = ({
               )}
               {stageData?.actions?.map((action, index) => {
                 return (
-                  <div key={action.id} className='mt-1'>
+                  <div key={action.id} className='mt-2'>
                     <FlagActionDetail
                       actionBody={action.action_body}
                       actionType={action.action_type}
@@ -64,6 +72,7 @@ const StageInfo = ({
             </p>
             <StageFeatureDetail
               features={stageData?.features}
+              enviromentKey={environmentData?.api_key}
               projectId={projectId}
             />
           </div>
