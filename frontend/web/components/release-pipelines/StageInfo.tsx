@@ -42,7 +42,6 @@ const StageInfo = ({
   projectId,
   stageData,
 }: StageInfoProps) => {
-  console.log('environmentData', environmentData)
   return (
     <Row>
       <Row className='align-items-start no-wrap'>
