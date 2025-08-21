@@ -83,6 +83,11 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     metadata = MetadataSerializer(required=False, many=True)
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Because WritableNestedModelSerializer uses `initial_data` instead of `data`
+        we need to override the `__init__` method to remove rules and conditions
+        that are marked for deletion.
+        """
         data = kwargs.get("data")
         if data:
             data["rules"] = self._get_rules_and_conditions_without_deleted(
