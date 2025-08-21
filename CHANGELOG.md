@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.192.3](https://github.com/Flagsmith/flagsmith/compare/v2.192.2...v2.192.3) (2025-08-21)
+
+
+### Bug Fixes
+
+* disable test update segment ([#5962](https://github.com/Flagsmith/flagsmith/issues/5962)) ([e40105e](https://github.com/Flagsmith/flagsmith/commit/e40105eebbc5fb58eb4476cb72f15e692cbbe0ae))
+* extracted-update-segment-test ([#5951](https://github.com/Flagsmith/flagsmith/issues/5951)) ([bac797a](https://github.com/Flagsmith/flagsmith/commit/bac797ad01e043b0056ab4a84e3d427f0d4921a9))
+* removed-focus-timeout ([#5954](https://github.com/Flagsmith/flagsmith/issues/5954)) ([4da2999](https://github.com/Flagsmith/flagsmith/commit/4da2999a2152725875c9fd656cf96e485bd07ad6))
+* **segment-update:** handle rules/conditons without id correctly ([#5953](https://github.com/Flagsmith/flagsmith/issues/5953)) ([ad1d568](https://github.com/Flagsmith/flagsmith/commit/ad1d56862a76635c37b6c705b4777cea9a44f8fd))
+* stop-using-index-to-access-update-segment ([#5960](https://github.com/Flagsmith/flagsmith/issues/5960)) ([1dbf0c2](https://github.com/Flagsmith/flagsmith/commit/1dbf0c2a7c8c9ea112c2f86e4444729d6c493005))
+
 ## [2.192.2](https://github.com/Flagsmith/flagsmith/compare/v2.192.1...v2.192.2) (2025-08-20)
 
 
