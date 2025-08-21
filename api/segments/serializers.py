@@ -82,6 +82,21 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     rules = SegmentRuleSerializer(many=True, required=True, allow_empty=False)
     metadata = MetadataSerializer(required=False, many=True)
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Because WritableNestedModelSerializer uses `initial_data` instead of `data`
+        we need to override the `__init__` method to remove rules and conditions
+        that are marked for deletion.
+        """
+        data = kwargs.get("data")
+        if data and "rules" in data:
+            data["rules"] = self._get_rules_and_conditions_without_deleted(
+                data["rules"]
+            )
+            kwargs["data"] = data
+
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = Segment
         fields = [
@@ -98,15 +113,11 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "metadata",
         ]
 
-    def get_initial(self) -> dict[str, Any]:
-        attrs: dict[str, Any] = super().get_initial()
-        attrs["rules"] = self._get_rules_and_conditions_without_deleted(attrs["rules"])
-        return attrs
-
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
         project = self.instance.project if self.instance else attrs["project"]  # type: ignore[union-attr]
         organisation = project.organisation
+
         self._validate_required_metadata(organisation, attrs.get("metadata", []))
         self._validate_segment_rules_conditions_limit(attrs["rules"])
         self._validate_project_segment_limit(project)

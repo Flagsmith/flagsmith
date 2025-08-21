@@ -714,6 +714,120 @@ def test_create_segments_with_description_condition(project, client):  # type: i
     assert segment_condition_description_value == "test-description"
 
 
+def test_update_segment_add_new_root_rule(
+    project: Project, admin_client_new: APIClient, segment: Segment
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "type": "ANY",
+                "rules": [
+                    {
+                        "type": "ALL",
+                        "rules": [],
+                        "conditions": [
+                            {"property": "foo", "operator": "EQUAL", "value": "bar"}
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["rules"][0]["type"] == "ANY"
+    assert response.json()["rules"][0]["rules"][0]["type"] == "ALL"
+    assert response.json()["rules"][0]["rules"][0]["conditions"][0]["property"] == "foo"
+    assert (
+        response.json()["rules"][0]["rules"][0]["conditions"][0]["operator"] == "EQUAL"
+    )
+    assert response.json()["rules"][0]["rules"][0]["conditions"][0]["value"] == "bar"
+
+
+def test_update_segment_add_new_rule(
+    project: Project,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = True
+
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+    existing_condition = Condition.objects.create(
+        rule=nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                        ],
+                    },
+                    {  # New rule
+                        "type": SegmentRule.ANY_RULE,
+                        "rules": [],
+                        "conditions": [
+                            {
+                                "property": "foo",
+                                "operator": EQUAL,
+                                "value": "bar",
+                            },
+                        ],
+                    },
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["rules"][0]["rules"][1]["type"] == SegmentRule.ANY_RULE
+    assert response.json()["rules"][0]["rules"][1]["conditions"][0]["property"] == "foo"
+    assert response.json()["rules"][0]["rules"][1]["conditions"][0]["operator"] == EQUAL
+    assert response.json()["rules"][0]["rules"][1]["conditions"][0]["value"] == "bar"
+
+    assert segment_rule.rules.count() == 2
+
+
 def test_update_segment_add_new_condition(
     project: Project,
     admin_client_new: APIClient,
@@ -782,6 +896,79 @@ def test_update_segment_add_new_condition(
     assert (expected_new_condition := nested_rule.conditions.last())
     assert expected_new_condition.property == new_condition_property
     assert expected_new_condition.value == new_condition_value
+
+
+def test_update_segment_delete_and_update_existing_condition(
+    project: Project,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = True
+
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+    existing_condition = Condition.objects.create(
+        rule=nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+    new_condition = Condition.objects.create(
+        rule=nested_rule, property="foo2", operator=EQUAL, value="bar2"
+    )
+
+    new_condition_updated_property = "foo3"
+    new_condition_updated_value = "bar3"
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            {
+                                "id": existing_condition.id,
+                                "delete": True,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                            {
+                                "id": new_condition.id,
+                                "property": new_condition_updated_property,
+                                "operator": new_condition.operator,
+                                "value": new_condition_updated_value,
+                            },
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    assert nested_rule.conditions.count() == 1
+    assert (expected_new_condition := nested_rule.conditions.first())
+    assert expected_new_condition.property == new_condition_updated_property
+    assert expected_new_condition.value == new_condition_updated_value
 
 
 def test_can_not_update_system_segment(
@@ -1011,7 +1198,6 @@ def test_update_segment_delete_existing_condition(  # type: ignore[no-untyped-de
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-
     assert nested_rule.conditions.count() == 0
 
 
@@ -1041,21 +1227,20 @@ def test_update_segment_delete_existing_rule(project, client, segment, segment_r
                         "type": nested_rule.type,
                         "rules": [],
                         "conditions": [],
+                        "delete": True,
                     }
                 ],
                 "conditions": [],
-                "delete": True,
             }
         ],
     }
 
     # When
     response = client.put(url, data=json.dumps(data), content_type="application/json")
-
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    assert segment_rule.conditions.count() == 0
+    assert nested_rule.conditions.count() == 0
 
 
 @pytest.mark.parametrize(
