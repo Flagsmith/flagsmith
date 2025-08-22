@@ -60,7 +60,7 @@ const StageStatus = ({
       {showLeftLine && (
         <div
           className={classNames('position-absolute line-left', {
-            'completed': isFeatureInStage,
+            'completed': isCompleted || isFeatureInStage,
           })}
         />
       )}

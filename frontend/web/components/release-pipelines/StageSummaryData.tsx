@@ -32,9 +32,10 @@ const StageSummaryData = ({
     ? moment().diff(moment(featureInStage.created_at))
     : 0
 
-  const timeoutDuration = stageTrigger?.trigger_body?.wait_for
-    ? waitForTimeoutDuration.asMilliseconds()
-    : 0
+  const timeoutDuration =
+    featureInStage?.created_at && stageTrigger?.trigger_body?.wait_for
+      ? waitForTimeoutDuration.asMilliseconds()
+      : 0
 
   const timeRemaining = timeoutDuration - timeDifference
   const timeRemainingDuration = moment.duration(Math.max(0, timeRemaining))

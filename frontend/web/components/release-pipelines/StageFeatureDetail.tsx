@@ -8,11 +8,11 @@ import { useHistory } from 'react-router-dom'
 type StageFeatureDetailProps = {
   features: Features | number[]
   projectId: number
-  enviromentKey?: string
+  environmentKey?: string
 }
 
 const StageFeatureDetail = ({
-  enviromentKey,
+  environmentKey,
   features,
   projectId,
 }: StageFeatureDetailProps) => {
@@ -58,12 +58,12 @@ const StageFeatureDetail = ({
   }
 
   const handleFeatureClick = (flag: ProjectFlag) => {
-    if (!enviromentKey || !flag.id || !projectId) {
+    if (!environmentKey || !flag.id || !projectId) {
       return
     }
 
     history.push(
-      `/project/${projectId}/environment/${enviromentKey}/features?feature=${flag.id}&tab=value`,
+      `/project/${projectId}/environment/${environmentKey}/features?feature=${flag.id}&tab=value`,
     )
   }
 
@@ -74,7 +74,7 @@ const StageFeatureDetail = ({
         <p
           key={flag.id}
           className={classNames('text-muted', {
-            'cursor-pointer': !!enviromentKey,
+            'cursor-pointer': !!environmentKey,
           })}
           onClick={() => handleFeatureClick(flag)}
         >
