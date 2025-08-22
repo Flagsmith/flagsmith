@@ -31,6 +31,7 @@ def send_api_flags_blocked_notification(organisation: Organisation) -> None:
     context = {
         "organisation": organisation,
         "grace_period": not hasattr(organisation, "breached_grace_period"),
+        "usage_url": f"{url}/organisation/{organisation.id}/usage",
         "url": url,
     }
     message = "organisations/api_flags_blocked_notification.txt"
@@ -77,7 +78,6 @@ def _send_api_usage_notification(
         "organisation": organisation,
         "matched_threshold": matched_threshold,
         "grace_period": not hasattr(organisation, "breached_grace_period"),
-        "url": url,
         "usage_url": f"{url}/organisation/{organisation.id}/usage",
     }
 
