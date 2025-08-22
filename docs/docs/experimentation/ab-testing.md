@@ -8,13 +8,13 @@ A/B testing enables you to experiment with design and functionality variants of 
 
 You can use Flagsmith to perform A/B tests. Using a combination of [multivariate flags](/basic-features/managing-features.md#multi-variate-flags) and a 3rd party analytics tool like [Amplitude](https://amplitude.com/) or [Mixpanel](https://mixpanel.com/), you can easily perform complex A/B tests that will help improve your product.
 
-Running AB tests require two main components: a bucketing engine and an analytics platform. The bucketing engine is used to put users into a particular AB testing bucket. These buckets will control the specific user experience that is being tested. The analytics platform will receive a stream of event data derived from the behaviour of the user. Combining these two concepts allows you to deliver seamless AB test.
+Running A/B tests require two main components: a bucketing engine and an analytics platform. The bucketing engine is used to put users into a particular A/B testing bucket. These buckets will control the specific user experience that is being tested. The analytics platform will receive a stream of event data derived from the behaviour of the user. Combining these two concepts allows you to deliver seamless A/B test.
 
 We have [integrations](/integrations) with a number of analytics platforms. If we don't integrate with the platform you are using, you can still manually send the test data to the downstream platform manually.
 
 By the end of this tutorial, you will be able to:
 
--   Set up a Multivariate Flag in Flagsmith for A/B testing.
+-   Set up a multivariate flag in Flagsmith for A/B testing.
 -   Implement logic in your application to bucket users and display variants.
 -   Send A/B test data to an analytics platform.
 -   Understand how to use anonymous identities for A/B testing on unknown users.
@@ -23,7 +23,7 @@ By the end of this tutorial, you will be able to:
 
 To follow this tutorial, you will need:
 
-- A basic understanding of [Multivariate Flags](/basic-features/managing-features.md#multi-variate-flags) in Flagsmith.
+- A basic understanding of [multivariate flags](/basic-features/managing-features.md#multi-variate-flags) in Flagsmith.
 - Access to a third-party analytics platform (e.g., Amplitude, Mixpanel) where you can send custom events. You can explore Flagsmith [integrations](/integrations) for this purpose.
 - A development environment for your application where you can implement changes and integrate the Flagsmith SDK.
 
@@ -52,7 +52,7 @@ Because Flagsmith flags can contain both boolean states as well as multivariate 
 4. Send an event message to the analytics platform, adding the name/value pair of `paypal_button_test` and the value of the flag; in this case it would be one of either `control`, `show` or `hide`.
 5. Deploy our app, enable the flag and watch the data come in to your analytics platform.
 
-Here is what creating the Flag would look like.
+Here is what creating the flag would look like.
 
 ![Image](/img/ab-test-paypal-example.png)
 
@@ -64,18 +64,18 @@ To do A/B testing you need to use identities. Without an identity to key from, i
 
 What if you want to run an A/B test in an area of your application where you don't know who your users are? For example on the homepage of your website? In this instance, you need to generate _anonymous identities_ values for your users. In this case we will generate a _GUID_ for each user.
 
-A _GUID_ value is just a random string that has an extremely high likelihood of being unique. There's more info about generating GUID values [on Stack Overflow](https://stackoverflow.com/a/2117523).
+A GUID value is just a random string that has an extremely high likelihood of being unique. There's more info about generating GUID values [on Stack Overflow](https://stackoverflow.com/a/2117523).
 
 The general flow would be:
 
 1. A new browser visits your website homepage for the first time.
-2. You see that this is an anonymous user, so you generate a random _GUID_ for that user and assign it to them.
-3. You send that GUID along with an Identify call to Flagsmith. This will then segment that visitor.
+2. You see that this is an anonymous user, so you generate a random GUID for that user and assign it to them.
+3. You send that GUID along with an identify call to Flagsmith. This will then segment that visitor.
 4. You add a cookie to the browser and store the GUID. That way, if the user returns to your page, they will still be in the same segment.
 
 These techniques will be slightly different depending on what platform you are developing for, but the general concept will remain the same.
 
 ## Next steps
 
-- Explore [Flagsmith's Integrations](/integrations) with analytics platforms.
-- Learn more about [managing Identities](/basic-features/managing-identities.md) in Flagsmith.
+- Explore [Flagsmith's integrations](/integrations) with analytics platforms.
+- Learn more about [managing identities](/basic-features/managing-identities.md) in Flagsmith.
