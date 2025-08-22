@@ -55,11 +55,9 @@ const SinglePipelineStageAction = ({
   onSegmentChange,
   segmentOptions,
 }: SinglePipelineStageActionProps) => {
-  // const isPhasedRolloutEnabled =  Utils.getFlagsmithHasFeature(
-  //   'pipelines-phased-rollout',
-  // )
-
-  const isPhasedRolloutEnabled = true
+  const isPhasedRolloutEnabled = Utils.getFlagsmithHasFeature(
+    'pipelines-phased-rollout',
+  )
 
   const actionOptions = useMemo(() => {
     return FLAG_ACTION_OPTIONS.filter((option) => {
