@@ -98,9 +98,6 @@ export const testSegment1 = async (flagsmith: any) => {
   // (=== 18 || === 19) && (> 17 || < 19) && (!=20) && (<=18) && (>=18)
   // Rule 1- Age === 18 || Age === 19
 
-  await createSegment(0, '18_or_19', segmentRules)
-  await closeModal()
-
   log('Update segment')
   await gotoSegments()
   const lastRule = segmentRules[segmentRules.length - 1]
@@ -116,6 +113,11 @@ export const testSegment1 = async (flagsmith: any) => {
   await closeModal()
   await deleteSegment(0, 'segment_to_update', !isCloneSegmentEnabled)
   await waitAndRefresh()
+
+  log('Create segment')
+  await createSegment(0, '18_or_19', segmentRules)
+  await closeModal()
+
 
   log('Add segment trait for user')
   await gotoTraits()
