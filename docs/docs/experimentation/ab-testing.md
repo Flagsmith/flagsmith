@@ -62,7 +62,7 @@ Once the test is set up, and the flag has been enabled, data will start streamin
 
 To do A/B testing you need to use identities. Without an identity to key from, it's impossible for the platform to serve a consistent experience to your users.
 
-What if you want to run an A/B test in an area of your application where you don't know who your users are? For example on the homepage of your website? In this instance, you need to generate _anonymous identities_ values for your users. In this case we will generate a _GUID_ for each user.
+What if you want to run an A/B test in an area of your application where you don't know who your users are? For example on the homepage of your website? In this instance, you need to generate _anonymous identities_ values for your users. In this case we will generate a GUID for each user.
 
 A GUID value is just a random string that has an extremely high likelihood of being unique. There's more info about generating GUID values [on Stack Overflow](https://stackoverflow.com/a/2117523).
 
