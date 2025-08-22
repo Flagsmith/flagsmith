@@ -28,7 +28,7 @@ Feature Flags are a development methodology that allow you to ship code and feat
 
 1. You are about to start work on a new feature. Let's imagine you are going to implement a sharing button with your application.
 
-2. Create a new Feature Flag in Flagsmith, calling it "sharing_button". Set it to enabled on your development environment, and disabled on your production environment.
+2. Create a new feature flag in Flagsmith, calling it "sharing_button". Set it to enabled on your development environment, and disabled on your production environment.
 
 3. Start working on the feature. Whenever you write code that shows the button within the UI, wrap it in a conditional statement, testing against the value of the flag "sharing button". Only show the button if the flag is enabled.
 
