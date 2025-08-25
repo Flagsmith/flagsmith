@@ -51,7 +51,7 @@ import { getPermission } from 'common/services/usePermission'
 import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from './FeatureHealthTabContent'
 import { IonIcon } from '@ionic/react'
-import { warning } from 'ionicons/icons'
+import { checkmarkCircle, warning } from 'ionicons/icons'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import { FlagValueFooter } from './FlagValueFooter'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
@@ -1930,22 +1930,24 @@ const CreateFlag = class extends Component {
                                       />
                                     </TabItem>
                                   )}
-                                  {this.props.hasUnhealthyEvents && (
+                                  {
                                     <TabItem
                                       data-test='feature_health'
                                       tabLabelString='Feature Health'
                                       tabLabel={
-                                        <Row className='inline-block justify-content-center pr-1'>
-                                          Feature Health{' '}
-                                          <IonIcon
-                                            icon={warning}
-                                            style={{
-                                              color:
-                                                Constants.featureHealth
-                                                  .unhealthyColor,
-                                              marginBottom: -2,
-                                            }}
-                                          />
+                                        <Row className='d-flex justify-content-center align-items-center pr-1 gap-1'>
+                                          Feature Health
+                                          {this.props.hasUnhealthyEvents && (
+                                            <IonIcon
+                                              icon={warning}
+                                              style={{
+                                                color:
+                                                  Constants.featureHealth
+                                                    .unhealthyColor,
+                                                marginBottom: -2,
+                                              }}
+                                            />
+                                          )}
                                         </Row>
                                       }
                                     >
@@ -1955,7 +1957,7 @@ const CreateFlag = class extends Component {
                                         featureId={projectFlag.id}
                                       />
                                     </TabItem>
-                                  )}
+                                  }
                                   {hasIntegrationWithGithub &&
                                     projectFlag?.id && (
                                       <TabItem
