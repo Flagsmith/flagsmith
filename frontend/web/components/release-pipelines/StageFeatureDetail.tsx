@@ -1,17 +1,23 @@
+import classNames from 'classnames'
 import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
 import { Features, ProjectFlag } from 'common/types/responses'
 import { useCallback, useEffect, useState } from 'react'
+import { useHistory } from 'react-router-dom'
 
 type StageFeatureDetailProps = {
   features: Features | number[]
   projectId: number
+  environmentKey?: string
 }
 
 const StageFeatureDetail = ({
+  environmentKey,
   features,
   projectId,
 }: StageFeatureDetailProps) => {
+  const history = useHistory()
+
   const featureIds = Array.isArray(features)
     ? features
     : Object.keys(features || {}).map(Number)
@@ -51,11 +57,27 @@ const StageFeatureDetail = ({
     )
   }
 
+  const handleFeatureClick = (flag: ProjectFlag) => {
+    if (!environmentKey || !flag.id || !projectId) {
+      return
+    }
+
+    history.push(
+      `/project/${projectId}/environment/${environmentKey}/features?feature=${flag.id}&tab=value`,
+    )
+  }
+
   return (
     <>
       <h6>Features ({featureIds.length})</h6>
       {projectFlags?.map((flag) => (
-        <p key={flag.id} className='text-muted'>
+        <p
+          key={flag.id}
+          className={classNames('text-muted', {
+            'cursor-pointer': !!environmentKey,
+          })}
+          onClick={() => handleFeatureClick(flag)}
+        >
           <b>{flag.name}</b>
         </p>
       ))}

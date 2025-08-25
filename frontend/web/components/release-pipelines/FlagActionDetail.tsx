@@ -7,7 +7,7 @@ type FlagActionDetailProps = {
   projectId: number
 }
 
-const renderActionDetail = (
+export const renderActionDetail = (
   actionType: StageActionType,
   enabled: boolean,
   segmentName?: string,

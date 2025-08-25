@@ -1,5 +1,4 @@
 import { FC } from 'react'
-import { fi } from 'date-fns/locale'
 
 export type IconName =
   | 'arrow-left'
@@ -56,6 +55,7 @@ export type IconName =
   | 'pr-draft'
   | 'pr-linked'
   | 'pr-merged'
+  | 'radio'
   | 'refresh'
   | 'request'
   | 'required'
@@ -1488,6 +1488,28 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
         </svg>
       )
     }
+
+    case 'radio': {
+      return (
+        <svg
+          viewBox='0 0 24 24'
+          height={height ?? '24'}
+          width={width ?? '24'}
+          fill={fill ?? '#000000'}
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <g id='Outlined/circle'>
+            <path
+              id='Icon'
+              fillRule='evenodd'
+              clipRule='evenodd'
+              d='M12 4C7.589 4 4 7.589 4 12C4 16.411 7.589 20 12 20C16.411 20 20 16.411 20 12C20 7.589 16.411 4 12 4ZM12 22C6.486 22 2 17.514 2 12C2 6.486 6.486 2 12 2C17.514 2 22 6.486 22 12C22 17.514 17.514 22 12 22Z'
+            />
+          </g>
+        </svg>
+      )
+    }
+
     default:
       return null
   }
