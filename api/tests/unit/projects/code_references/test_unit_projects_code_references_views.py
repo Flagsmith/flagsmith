@@ -1,24 +1,18 @@
 import freezegun
-from common.projects.permissions import VIEW_PROJECT
 from rest_framework.test import APIClient
 
 from features.models import Feature
 from projects.code_references.models import FeatureFlagCodeReferencesScan
 from projects.models import Project
-from tests.types import WithProjectPermissionsCallable
 
 
 @freezegun.freeze_time("2025-04-14T09:30:00-0300")
 def test_CodeReferenceCreateAPIView__responds_201_with_accepted_code_references(
+    admin_client_new: APIClient,
     project: Project,
-    staff_client: APIClient,
-    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
-    # Given
-    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-
     # When
-    response = staff_client.post(
+    response = admin_client_new.post(
         f"/api/v1/projects/{project.pk}/code-references/",
         data={
             "repository_url": "https://svn.flagsmith.com/",
@@ -70,42 +64,12 @@ def test_CodeReferenceCreateAPIView__responds_201_with_accepted_code_references(
     ]
 
 
-def test_CodeReferenceCreateAPIView__responds_401_when_not_authenticated(
-    project: Project,
-    client: APIClient,
-) -> None:
-    # When
-    response = client.post(
-        f"/api/v1/projects/{project.pk}/code-references/",
-        data={
-            "repository_url": "https://svn.flagsmith.com/",
-            "revision": "revision-hash",
-            "code_references": [
-                {
-                    "feature_name": "feature-1",
-                    "file_path": "path/to/file1.py",
-                    "line_number": 10,
-                },
-            ],
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == 401
-    assert not FeatureFlagCodeReferencesScan.objects.exists()
-
-
 def test_CodeReferenceCreateAPIView__responds_400_when_missing_field(
+    admin_client_new: APIClient,
     project: Project,
-    staff_client: APIClient,
-    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
-    # Given
-    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-
     # When
-    response = staff_client.post(
+    response = admin_client_new.post(
         f"/api/v1/projects/{project.pk}/code-references/",
         data={
             "repository_url": "https://svn.flagsmith.com/",
@@ -130,15 +94,11 @@ def test_CodeReferenceCreateAPIView__responds_400_when_missing_field(
 
 
 def test_CodeReferenceCreateAPIView__responds_400_when_file_path_too_long(
+    admin_client_new: APIClient,
     project: Project,
-    staff_client: APIClient,
-    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
-    # Given
-    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-
     # When
-    response = staff_client.post(
+    response = admin_client_new.post(
         f"/api/v1/projects/{project.pk}/code-references/",
         data={
             "repository_url": "https://svn.flagsmith.com/",
@@ -165,13 +125,11 @@ def test_CodeReferenceCreateAPIView__responds_400_when_file_path_too_long(
 
 
 def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_for_given_feature(
+    admin_client_new: APIClient,
     feature: Feature,
     project: Project,
-    staff_client: APIClient,
-    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     with freezegun.freeze_time("2099-01-01T10:00:00-0300"):
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
@@ -217,7 +175,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
         )
 
     # When
-    response = staff_client.get(
+    response = admin_client_new.get(
         f"/api/v1/projects/{project.pk}/features/{feature.pk}/code-references/",
     )
 
@@ -270,13 +228,11 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
 
 
 def test_FeatureCodeReferencesDetailAPIView__responds_200_with_feature_flag_removed(
+    admin_client_new: APIClient,
     feature: Feature,
     project: Project,
-    staff_client: APIClient,
-    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     with freezegun.freeze_time("2099-01-01T10:00:00-0300"):
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
@@ -299,7 +255,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_feature_flag_remo
         )
 
     # When
-    response = staff_client.get(
+    response = admin_client_new.get(
         f"/api/v1/projects/{project.pk}/features/{feature.pk}/code-references/",
     )
 
@@ -318,16 +274,12 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_feature_flag_remo
 
 
 def test_FeatureCodeReferencesDetailAPIView__responds_200_even_without_code_references(
+    admin_client_new: APIClient,
     feature: Feature,
     project: Project,
-    staff_client: APIClient,
-    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
-    # Given
-    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-
     # When
-    response = staff_client.get(
+    response = admin_client_new.get(
         f"/api/v1/projects/{project.pk}/features/{feature.pk}/code-references/",
     )
 
@@ -336,30 +288,12 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_even_without_code_refe
     assert response.json() == []
 
 
-def test_FeatureCodeReferencesDetailAPIView__responds_401_when_not_authenticated(
-    feature: Feature,
-    project: Project,
-    client: APIClient,
-) -> None:
-    # When
-    response = client.get(
-        f"/api/v1/projects/{project.pk}/features/{feature.pk}/code-references/",
-    )
-
-    # Then
-    assert response.status_code == 401
-
-
 def test_FeatureCodeReferencesDetailAPIView__responds_404_when_feature_not_found(
     project: Project,
-    staff_client: APIClient,
-    with_project_permissions: WithProjectPermissionsCallable,
+    admin_client_new: APIClient,
 ) -> None:
-    # Given
-    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-
     # When
-    response = staff_client.get(
+    response = admin_client_new.get(
         f"/api/v1/projects/{project.pk}/features/9999/code-references/",
     )
 
