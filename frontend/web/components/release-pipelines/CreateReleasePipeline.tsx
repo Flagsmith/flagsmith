@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import CreatePipelineStage from './CreatePipelineStage'
 import Breadcrumb from 'components/Breadcrumb'
 import { Button } from 'components/base/forms/Button'
@@ -64,7 +64,8 @@ function CreateReleasePipeline() {
     },
   ] = useUpdateReleasePipelineMutation()
 
-  const [publishReleasePipeline] = usePublishReleasePipelineMutation()
+  const [publishReleasePipeline, { isLoading: isPublishingPipeline }] =
+    usePublishReleasePipelineMutation()
 
   const [pipelineData, setPipelineData] = useState<ReleasePipelineRequest>({
     name: '',
@@ -75,19 +76,22 @@ function CreateReleasePipeline() {
   const [isEditingName, setIsEditingName] = useState(
     !pipelineData?.name?.length,
   )
+  const skipNextCreateToast = useRef(false)
 
   const handleSuccess = useCallback(
-    (updated = false) => {
+    (updated = false, skipToast = false) => {
       history.push(`/project/${projectId}/release-pipelines`)
-      toast(`Release pipeline ${updated ? 'updated' : 'created'} successfully`)
+      if (!skipToast) {
+        toast(
+          `Release pipeline ${updated ? 'updated' : 'created'} successfully`,
+        )
+      }
     },
     [history, projectId],
   )
 
-  const [isSavingAndPublishing, setIsSavingAndPublishing] = useState(false)
-
   useEffect(() => {
-    if (isSavingAndPublishing) {
+    if (skipNextCreateToast.current) {
       return
     }
 
@@ -98,15 +102,10 @@ function CreateReleasePipeline() {
     if (isUpdatingPipelineSuccess) {
       return handleSuccess(true)
     }
-  }, [
-    isCreatingPipelineSuccess,
-    isUpdatingPipelineSuccess,
-    handleSuccess,
-    isSavingAndPublishing,
-  ])
+  }, [isCreatingPipelineSuccess, isUpdatingPipelineSuccess, handleSuccess])
 
   useEffect(() => {
-    if (isSavingAndPublishing) {
+    if (skipNextCreateToast.current) {
       return
     }
 
@@ -125,7 +124,6 @@ function CreateReleasePipeline() {
     createPipelineError,
     isUpdatingPipelineError,
     updatePipelineError,
-    isSavingAndPublishing,
   ])
 
   useEffect(() => {
@@ -248,20 +246,20 @@ function CreateReleasePipeline() {
 
   const handleSubmitAndPublish = async (id?: number) => {
     try {
-      setIsSavingAndPublishing(true)
+      skipNextCreateToast.current = true
       const response = await handleSubmit(id)
       await publishReleasePipeline({
         pipelineId: response.id,
         projectId: Number(projectId),
-      })
-      toast(`Release pipeline published successfully`)
+      }).unwrap()
+      toast('Release pipeline published successfully')
+      handleSuccess(true, true)
+      skipNextCreateToast.current = false
     } catch (error) {
       toast(
         `Error ${id ? 'updating' : 'creating'} and publishing pipeline`,
         'danger',
       )
-    } finally {
-      setIsSavingAndPublishing(false)
     }
   }
 
@@ -271,7 +269,10 @@ function CreateReleasePipeline() {
   }
 
   const isSaveDisabled =
-    !validatePipelineData() || isCreatingPipeline || isUpdatingPipeline
+    !validatePipelineData() ||
+    isCreatingPipeline ||
+    isUpdatingPipeline ||
+    isPublishingPipeline
 
   const saveButtonText = existingPipeline?.id ? 'Update' : 'Save'
 
