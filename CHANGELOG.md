@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.192.4](https://github.com/Flagsmith/flagsmith/compare/v2.192.3...v2.192.4) (2025-08-25)
+
+
+### Bug Fixes
+
+* **GitHub PoC:** Fix API authentication ([#5979](https://github.com/Flagsmith/flagsmith/issues/5979)) ([70a652b](https://github.com/Flagsmith/flagsmith/commit/70a652b2fa7beb6f374003d669566a6e294ceb10))
+* remove extra close modal call ([#5972](https://github.com/Flagsmith/flagsmith/issues/5972)) ([43793f0](https://github.com/Flagsmith/flagsmith/commit/43793f074c20d51483f473f3b44a010235efc02e))
+* reverted-tests ([#5966](https://github.com/Flagsmith/flagsmith/issues/5966)) ([1c20aa5](https://github.com/Flagsmith/flagsmith/commit/1c20aa5a8825793dca8f52f439a85c85de14e64d))
+* slack-upload ([#5969](https://github.com/Flagsmith/flagsmith/issues/5969)) ([cba8fa0](https://github.com/Flagsmith/flagsmith/commit/cba8fa0ce19a048aa0fb081c2c540826fb168215))
+* **usage-notifications:** construct the variable outside of template ([#5964](https://github.com/Flagsmith/flagsmith/issues/5964)) ([a576eef](https://github.com/Flagsmith/flagsmith/commit/a576eef5120f9b38cb3d3b4182aad7b0dc6a5404))
+
 ## [2.192.3](https://github.com/Flagsmith/flagsmith/compare/v2.192.2...v2.192.3) (2025-08-21)
 
 
