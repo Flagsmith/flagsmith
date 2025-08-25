@@ -25,7 +25,7 @@ module.exports = function uploadFile(path) {
     channel_id: channelId,
     file: fs.createReadStream(path),
     filename,
-    initial_comment: `${title} ${process.env.GITHUB_ACTION_URL || ''}`,
+    initial_comment: `✖ ${title} ${process.env.GITHUB_ACTION_URL || ''}`,
   })
 }
 new Date().valueOf()
