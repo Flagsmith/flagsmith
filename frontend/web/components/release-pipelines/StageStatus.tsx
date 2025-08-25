@@ -75,7 +75,7 @@ const StageStatus = ({
         titleClassName='circle-container-z-index'
         title={
           <div
-            className={classNames('circle-container', {
+            className={classNames('circle-container cursor-pointer', {
               'completed': isCompleted,
               'in-stage': isFeatureInStage,
             })}
@@ -101,6 +101,7 @@ const StageStatus = ({
                 stageActions={stageActions}
                 stageTrigger={stageTrigger}
                 featureInStage={featureInStage}
+                isCompleted={isCompleted}
               />,
             )}
       </Tooltip>
