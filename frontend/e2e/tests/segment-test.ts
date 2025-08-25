@@ -102,7 +102,6 @@ export const testSegment1 = async (flagsmith: any) => {
   await gotoSegments()
   const lastRule = segmentRules[segmentRules.length - 1]
   await createSegment(0, 'segment_to_update', [lastRule])
-  await closeModal()
   await click(byId('segment-0-name'))
   await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
   await click(byId('update-segment'))
