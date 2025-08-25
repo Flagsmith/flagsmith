@@ -71,15 +71,15 @@ const StageSummaryData = ({
 
       {stageActions?.map((action) => (
         <Row key={action.id} className='mt-2'>
-          {!isCompleted ? (
-            <Icon name='radio' width={18} height={18} fill='#767d85' />
-          ) : (
+          {isCompleted ? (
             <Icon
               name='checkmark-circle'
               width={18}
               height={18}
               fill='#53af41'
             />
+          ) : (
+            <Icon name='radio' width={18} height={18} fill='#767d85' />
           )}
           <div className='ml-2'>
             {renderActionDetail(
