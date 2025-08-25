@@ -80,7 +80,7 @@ const FeaturePipelineStatus = ({
                 ? featureInStage
                 : undefined
             }
-            isCompleted={stage.order < (stageHasFeature?.order ?? NaN)}
+            isCompleted={stage.order < (stageHasFeature?.order ?? -1)}
           />
         ))}
         <StageStatus
