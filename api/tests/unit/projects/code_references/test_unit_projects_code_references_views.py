@@ -64,6 +64,58 @@ def test_CodeReferenceCreateAPIView__responds_201_with_accepted_code_references(
     ]
 
 
+def test_CodeReferenceCreateView__responds_401_if_not_authenticated(
+    client: APIClient,
+    project: Project,
+) -> None:
+    # When
+    response = client.post(
+        f"/api/v1/projects/{project.pk}/code-references/",
+        data={
+            "repository_url": "https://svn.flagsmith.com/",
+            "revision": "revision-hash",
+            "code_references": [
+                {
+                    "feature_name": "feature-1",
+                    "file_path": "path/to/file1.py",
+                    "line_number": 10,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 401
+    assert not FeatureFlagCodeReferencesScan.objects.exists()
+
+
+def test_CodeReferenceCreateAPIView__responds_403_if_incorrect_permissions(
+    project: Project,
+    staff_client: APIClient,
+) -> None:
+    # When
+    response = staff_client.post(
+        f"/api/v1/projects/{project.pk}/code-references/",
+        data={
+            "repository_url": "https://svn.flagsmith.com/",
+            "revision": "revision-hash",
+            "code_references": [
+                {
+                    "feature_name": "feature-1",
+                    "file_path": "path/to/file1.py",
+                    "line_number": 10,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 403
+    assert not FeatureFlagCodeReferencesScan.objects.exists()
+
+
 def test_CodeReferenceCreateAPIView__responds_400_when_missing_field(
     admin_client_new: APIClient,
     project: Project,
@@ -286,6 +338,35 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_even_without_code_refe
     # Then
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_FeatureCodeReferencesDetailAPIView__responds_401_if_not_authenticated(
+    client: APIClient,
+    feature: Feature,
+    project: Project,
+) -> None:
+    # When
+    response = client.get(
+        f"/api/v1/projects/{project.pk}/features/{feature.pk}/code-references/",
+    )
+
+    # Then
+    assert response.status_code == 401
+    assert response.data["detail"] == "Authentication credentials were not provided."
+
+
+def test_FeatureCodeReferencesDetailAPIView__responds_403_if_incorrect_permissions(
+    feature: Feature,
+    project: Project,
+    staff_client: APIClient,
+) -> None:
+    # When
+    response = staff_client.get(
+        f"/api/v1/projects/{project.pk}/features/{feature.pk}/code-references/",
+    )
+
+    # Then
+    assert response.status_code == 403
 
 
 def test_FeatureCodeReferencesDetailAPIView__responds_404_when_feature_not_found(
