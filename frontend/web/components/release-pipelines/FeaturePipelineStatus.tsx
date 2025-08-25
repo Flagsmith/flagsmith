@@ -99,28 +99,30 @@ const FeaturePipelineStatus = ({
   if (!stages) return null
 
   return (
-    <AccordionCard title='Release Pipeline'>
-      <Row className='flex mt-4 align-items-start justify-content-between'>
-        {stages?.map((stage) => (
+    <div className='m-4'>
+      <AccordionCard title='Release Pipeline'>
+        <Row className='flex mt-4 align-items-start justify-content-between'>
+          {stages?.map((stage) => (
+            <StageStatus
+              key={stage.id}
+              stageOrder={stage.order}
+              stageName={stage.name}
+              stageFeatures={stage.features}
+              stageEnvironment={stage.environment}
+              totalStages={totalStages}
+              featureId={featureId}
+            />
+          ))}
           <StageStatus
-            key={stage.id}
-            stageOrder={stage.order}
-            stageName={stage.name}
-            stageFeatures={stage.features}
-            stageEnvironment={stage.environment}
+            stageOrder={totalStages - 1}
+            stageName='Done'
+            stageFeatures={[]}
             totalStages={totalStages}
             featureId={featureId}
           />
-        ))}
-        <StageStatus
-          stageOrder={totalStages - 1}
-          stageName='Done'
-          stageFeatures={[]}
-          totalStages={totalStages}
-          featureId={featureId}
-        />
-      </Row>
-    </AccordionCard>
+        </Row>
+      </AccordionCard>
+    </div>
   )
 }
 

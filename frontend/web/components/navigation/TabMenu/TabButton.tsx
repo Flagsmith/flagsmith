@@ -10,18 +10,20 @@ interface TabButtonProps {
   urlParam?: string
   noFocus?: boolean
   isSelected: boolean
-  onChange?: (value: number) => void
+  onChange?: (e: React.MouseEvent<HTMLButtonElement>) => void
   buttonTheme?: string
+  className?: string
   child: React.ReactElement
   i: number
   children: React.ReactNode
 }
 
-const TabButton = React.forwardRef<HTMLButtonElement, TabButtonProps>(
+const TabButton = React.forwardRef<HTMLButtonElement | null, TabButtonProps>(
   (
     {
       buttonTheme,
       child,
+      className,
       i,
       isSelected,
       noFocus,
@@ -33,27 +35,6 @@ const TabButton = React.forwardRef<HTMLButtonElement, TabButtonProps>(
     },
     ref,
   ) => {
-    const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation()
-      e.preventDefault()
-      if (urlParam) {
-        const searchParams = new URLSearchParams(window.location.search)
-        searchParams.set(
-          urlParam,
-          String(child.props.tabLabelString || child.props.tabLabel)
-            .toLowerCase()
-            .replace(/ /g, '-'),
-        )
-        routerHistory?.replace({
-          pathname: window.location.pathname,
-          search: searchParams.toString(),
-        })
-      } else if (uncontrolled) {
-        setInternalValue(i)
-      }
-      onChange?.(i)
-    }
-
     return (
       <Button
         ref={ref as React.RefObject<HTMLButtonElement>}
@@ -61,10 +42,10 @@ const TabButton = React.forwardRef<HTMLButtonElement, TabButtonProps>(
         theme={buttonTheme as keyof typeof themeClassNames}
         data-test={child.props['data-test']}
         id={child.props.id}
-        onClick={onClick}
+        onClick={onChange}
         className={`btn-tab ${noFocus ? 'btn-no-focus' : ''} ${
           isSelected ? ' tab-active' : ''
-        }`}
+        } ${className}`}
       >
         {child.props.tabLabel}
       </Button>

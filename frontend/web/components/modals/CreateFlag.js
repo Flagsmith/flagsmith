@@ -1105,12 +1105,10 @@ const CreateFlag = class extends Component {
                             {isEdit && !identity ? (
                               <>
                                 {isReleasePipelineEnabled && (
-                                  <div className='m-4'>
-                                    <FeaturePipelineStatus
-                                      projectId={this.props.projectId}
-                                      featureId={projectFlag?.id}
-                                    />
-                                  </div>
+                                  <FeaturePipelineStatus
+                                    projectId={this.props.projectId}
+                                    featureId={projectFlag?.id}
+                                  />
                                 )}
                                 <Tabs
                                   onChange={() => this.forceUpdate()}
@@ -1919,7 +1917,13 @@ const CreateFlag = class extends Component {
                                     </TabItem>
                                   )}
                                   {isCodeReferencesEnabled && (
-                                    <TabItem tabLabel={'Code References'}>
+                                    <TabItem
+                                      tabLabel={
+                                        <Row className='justify-content-center'>
+                                          Code References
+                                        </Row>
+                                      }
+                                    >
                                       <FeatureCodeReferencesContainer
                                         featureId={projectFlag.id}
                                         projectId={this.props.projectId}
