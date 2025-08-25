@@ -69,7 +69,7 @@ const StageFeatureDetail = ({
     )
   }
 
-  const calculateAmountRemaining = (feature: Features[number]) => {
+  const getRolloutRemainingText = (feature: Features[number]) => {
     if (!feature.phased_rollout_state) {
       return ''
     }
@@ -108,7 +108,7 @@ const StageFeatureDetail = ({
           </b>
           {!Array.isArray(features) &&
             features[flag.id]?.phased_rollout_state && (
-              <div>{calculateAmountRemaining(features[flag.id])}</div>
+              <div>{getRolloutRemainingText(features[flag.id])}</div>
             )}
         </div>
       ))}
