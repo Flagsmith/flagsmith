@@ -236,7 +236,14 @@
                                 "type": "string"
                             }
                         }
-                    }
+                    },
+                    "required": [
+                        "property",
+                        "operator",
+                        "value"
+                    ],
+                    "title": "InSegmentCondition",
+                    "type": "object"
                 }
             ]
         },
