@@ -171,47 +171,74 @@
             "type": "object"
         },
         "SegmentCondition": {
-            "description": "Represents a condition within a segment rule for feature flag evaluation.",
-            "properties": {
-                "property": {
-                    "description": "A reference to the identity trait or value in the evaluation context.",
-                    "title": "Property",
-                    "type": "string"
+            "anyOf": [
+                {
+                    "description": "Represents a condition within a segment rule for feature flag evaluation.",
+                    "properties": {
+                        "property": {
+                            "description": "A reference to the identity trait or value in the evaluation context.",
+                            "title": "Property",
+                            "type": "string"
+                        },
+                        "operator": {
+                            "description": "The operator to use for evaluating the condition.",
+                            "title": "Operator",
+                            "type": "string",
+                            "enum": [
+                                "EQUAL",
+                                "GREATER_THAN",
+                                "LESS_THAN",
+                                "LESS_THAN_INCLUSIVE",
+                                "CONTAINS",
+                                "GREATER_THAN_INCLUSIVE",
+                                "NOT_CONTAINS",
+                                "NOT_EQUAL",
+                                "REGEX",
+                                "PERCENTAGE_SPLIT",
+                                "MODULO",
+                                "IS_SET",
+                                "IS_NOT_SET",
+                                "IN"
+                            ]
+                        },
+                        "value": {
+                            "description": "The value to compare against the trait or context value.",
+                            "title": "Value",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "property",
+                        "operator",
+                        "value"
+                    ],
+                    "title": "SegmentCondition",
+                    "type": "object"
                 },
-                "operator": {
-                    "description": "The operator to use for evaluating the condition.",
-                    "title": "Operator",
-                    "type": "string",
-                    "enum": [
-                        "EQUAL",
-                        "GREATER_THAN",
-                        "LESS_THAN",
-                        "LESS_THAN_INCLUSIVE",
-                        "CONTAINS",
-                        "GREATER_THAN_INCLUSIVE",
-                        "NOT_CONTAINS",
-                        "NOT_EQUAL",
-                        "REGEX",
-                        "PERCENTAGE_SPLIT",
-                        "MODULO",
-                        "IS_SET",
-                        "IS_NOT_SET",
-                        "IN"
-                    ]
-                },
-                "value": {
-                    "description": "The value to compare against the trait or context value.",
-                    "title": "Value",
-                    "type": "string"
+                {
+                    "description": "Represents an IN condition within a segment rule for feature flag evaluation.",
+                    "properties": {
+                        "property": {
+                            "description": "A reference to the identity trait or value in the evaluation context.",
+                            "title": "Property",
+                            "type": "string"
+                        },
+                        "operator": {
+                            "description": "The operator to use for evaluating the condition.",
+                            "title": "Operator",
+                            "const": "IN"
+                        },
+                        "value": {
+                            "description": "The values to compare against the trait or context value.",
+                            "title": "Value",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
                 }
-            },
-            "required": [
-                "property",
-                "operator",
-                "value"
-            ],
-            "title": "SegmentCondition",
-            "type": "object"
+            ]
         },
         "SegmentRule": {
             "description": "Represents a rule within a segment for feature flag evaluation.",
