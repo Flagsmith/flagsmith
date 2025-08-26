@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.193.0](https://github.com/Flagsmith/flagsmith/compare/v2.192.4...v2.193.0) (2025-08-26)
+
+
+### Features
+
+* Force segment rule ordering in production ([#5982](https://github.com/Flagsmith/flagsmith/issues/5982)) ([8c10f78](https://github.com/Flagsmith/flagsmith/commit/8c10f78c78af67a5fc1e9438145771720ef10267))
+
+
+### Bug Fixes
+
+* use-correct-count-in-tooltip ([#5981](https://github.com/Flagsmith/flagsmith/issues/5981)) ([e3adfc3](https://github.com/Flagsmith/flagsmith/commit/e3adfc31e456bc50fcec450617567df041631832))
+
 ## [2.192.4](https://github.com/Flagsmith/flagsmith/compare/v2.192.3...v2.192.4) (2025-08-25)
 
 
