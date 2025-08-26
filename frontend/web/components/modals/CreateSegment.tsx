@@ -442,7 +442,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </Row>
             }
           >
-            <div className='my-4 col-lg-8'>
+            <div className='my-4 col-lg-8 offset-2'>
               <CreateSegmentRulesTabForm
                 save={save}
                 condensed={condensed}
