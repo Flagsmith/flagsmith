@@ -124,7 +124,7 @@ const Tabs: React.FC<TabsProps> = ({
         ref={outerContainerRef}
         className={`${
           hideNav ? '' : 'tabs-nav'
-        } ${theme} justify-content-between align-items-center full-width`}
+        } ${theme} justify-content-between align-items-center`}
       >
         <div
           ref={itemsContainerRef}
