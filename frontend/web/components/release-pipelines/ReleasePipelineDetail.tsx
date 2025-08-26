@@ -84,14 +84,12 @@ function ReleasePipelineDetail() {
     )
   }
 
-  const getEnvironmentName = (
+  const getEnvironmentData = (
     environmentsData: Environment[] | undefined,
     stageData: PipelineDetailStage,
   ) => {
-    return (
-      environmentsData?.find(
-        (environment) => environment.id === stageData?.environment,
-      )?.name ?? ''
+    return environmentsData?.find(
+      (environment) => environment.id === stageData?.environment,
     )
   }
 
@@ -124,7 +122,7 @@ function ReleasePipelineDetail() {
             <StageInfo
               key={stageData?.id}
               stageData={stageData}
-              environmentName={getEnvironmentName(
+              environmentData={getEnvironmentData(
                 environmentsData?.results,
                 stageData,
               )}
