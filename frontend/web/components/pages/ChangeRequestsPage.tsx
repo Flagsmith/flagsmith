@@ -13,8 +13,6 @@ import {
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import { Link } from 'react-router-dom'
-import { IonIcon } from '@ionic/react'
-import { timeOutline } from 'ionicons/icons'
 import PageTitle from 'components/PageTitle'
 import PlanBasedAccess, {
   featureDescriptions,
@@ -22,12 +20,8 @@ import PlanBasedAccess, {
 import InfoMessage from 'components/InfoMessage'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
-import PanelSearch from 'components/PanelSearch'
-import JSONReference from 'components/JSONReference'
-import moment from 'moment'
-import Icon from 'components/Icon'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import getUserDisplayName from 'common/utils/getUserDisplayName'
+import ChangeRequestList from 'components/ChangeRequestsList'
 
 type ChangeRequestsPageType = {
   router: RouterChildContext['router']
@@ -152,75 +146,6 @@ export const ChangeRequestsInner: FC<ChangeRequestsInnerType> = ({
     }
   }, [])
 
-  const renderItems = (
-    items: PagedResponse<ChangeRequestSummary> | undefined,
-    page: number,
-    setPage: (page: number) => void,
-  ) => {
-    return (
-      <PanelSearch
-        renderSearchWithNoResults
-        className='mt-4 no-pad'
-        isLoading={isLoading || !changeRequests}
-        items={items?.results}
-        paging={items}
-        nextPage={() => setPage(page + 1)}
-        prevPage={() => setPage(page + 1)}
-        goToPage={setPage}
-        renderFooter={() => (
-          <JSONReference
-            className='mt-4 ml-3'
-            title={'Change Requests'}
-            json={items?.results}
-          />
-        )}
-        renderRow={({
-          created_at,
-          description,
-          id,
-          live_from,
-          title,
-          user: _user,
-        }: ChangeRequestSummary) => {
-          const user = users?.find((v) => v.id === _user)
-          const isScheduled =
-            new Date(`${live_from}`).valueOf() > new Date().valueOf()
-          return (
-            <Link
-              to={getLink(`${id}`)}
-              className='flex-row list-item clickable'
-            >
-              <Flex className='table-column px-3'>
-                <div className='font-weight-medium'>
-                  {title}
-                  {isScheduled && (
-                    <span className='ml-1 mr-4 ion'>
-                      <IonIcon icon={timeOutline} />
-                    </span>
-                  )}
-                </div>
-                <div className='list-item-subtitle mt-1'>
-                  Created {moment(created_at).format('Do MMM YYYY HH:mma')}
-                  {!!user && (
-                    <>
-                      {' '}
-                      by {(user && user.first_name) || 'Unknown'}{' '}
-                      {(user && user.last_name) || 'user'}
-                    </>
-                  )}
-                  {description ? ` - ${description}` : ''}
-                </div>
-              </Flex>
-              <div className='table-column'>
-                <Icon name='chevron-right' fill='#9DA4AE' width={20} />
-              </div>
-            </Link>
-          )
-        }}
-      />
-    )
-  }
-
   return (
     <div
       data-test='change-requests-page'
@@ -237,7 +162,7 @@ export const ChangeRequestsInner: FC<ChangeRequestsInnerType> = ({
           <div>
             {changeRequestsDisabled && <p>{ChangeRequestsDisabledMessage}</p>}
 
-            <Tabs history={history} urlParam={'tab'}>
+            <Tabs urlParam={'tab'}>
               <TabItem
                 tabLabelString='Open'
                 tabLabel={
@@ -251,8 +176,17 @@ export const ChangeRequestsInner: FC<ChangeRequestsInnerType> = ({
                   </span>
                 }
               >
-                {renderItems(changeRequests, page, setPage)}
+                <ChangeRequestList
+                  items={changeRequests}
+                  page={page}
+                  setPage={setPage}
+                  isLoading={isLoading}
+                  changeRequests={changeRequests}
+                  getLink={getLink}
+                  users={users}
+                />
               </TabItem>
+
               <TabItem
                 tabLabelString='Closed'
                 tabLabel={
@@ -261,11 +195,15 @@ export const ChangeRequestsInner: FC<ChangeRequestsInnerType> = ({
                   </span>
                 }
               >
-                {renderItems(
-                  committedChangeRequests,
-                  pageCommitted,
-                  setPageCommitted,
-                )}
+                <ChangeRequestList
+                  items={committedChangeRequests}
+                  page={pageCommitted}
+                  setPage={setPageCommitted}
+                  isLoading={isLoading}
+                  changeRequests={committedChangeRequests}
+                  getLink={getLink}
+                  users={users}
+                />
               </TabItem>
             </Tabs>
           </div>

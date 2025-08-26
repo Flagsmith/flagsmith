@@ -50,7 +50,10 @@ type ChangeRequestPageType = {
   }
 }
 
-const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
+const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({
+  match,
+  router,
+}) => {
   const { environmentId, id, projectId } = match.params
   const [_, setUpdate] = useState(Date.now())
   const error = ChangeRequestStore.error
@@ -220,7 +223,7 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
           />
           {!!changeRequest?.conflicts?.length && (
             <div className='mt-2'>
-              <ErrorMessage
+              <WarningMessage
                 warningMessage={
                   <div>
                     A change request was published since the creation of this
@@ -698,4 +701,4 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
   )
 }
 
-export default ConfigProvider(ChangeRequestPage)
+export default ConfigProvider(ChangeRequestDetailPage)

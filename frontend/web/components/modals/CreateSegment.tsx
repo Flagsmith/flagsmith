@@ -278,42 +278,50 @@ const CreateSegment: FC<CreateSegmentType> = ({
       }
     })
   }, [valueChanged, isEdit])
-  const onCreateChangeRequest = (changeRequestData: {
+  const onCreateChangeRequest = async (changeRequestData: {
     approvals: []
     description: string
     title: string
   }) => {
     closeModal2()
     setValueChanged(false)
-    createChangeRequest({
-      data: {
-        approvals: (changeRequestData.approvals || []).filter((v) => !!v.user),
-        committed_by: null,
-        conflicts: [],
-        description: changeRequestData.description,
-        group_assignments: (changeRequestData.approvals || []).filter(
-          (v) => !!v.group,
-        ),
-        is_approved: false,
-        is_committed: false,
-        segments: [
-          {
-            description,
-            feature: feature,
-            metadata: metadata as Metadata[],
-            name,
-            project: projectId,
-            rules,
-            version_of: segment.id!,
-          },
-        ],
-        title: changeRequestData.title,
-      },
-      project_id: `${projectId}`,
-    }).then(() => {
+
+    try {
+      await createChangeRequest({
+        data: {
+          approvals: (changeRequestData.approvals || []).filter(
+            (v) => !!v.user,
+          ),
+          committed_by: null,
+          conflicts: [],
+          description: changeRequestData.description,
+          group_assignments: (changeRequestData.approvals || []).filter(
+            (v) => !!v.group,
+          ),
+          is_approved: false,
+          is_committed: false,
+          segments: [
+            {
+              description,
+              feature,
+              metadata: metadata as Metadata[],
+              name,
+              project: projectId,
+              rules,
+              version_of: segment.id!,
+            },
+          ],
+          title: changeRequestData.title,
+        },
+        project_id: `${projectId}`,
+      })
+
       closeModal()
       toast('Created change request')
-    })
+    } catch (error) {
+      console.error('Failed to create change request:', error)
+      toast('Failed to create change request')
+    }
   }
   useEffect(() => {
     setInterceptClose(onClosing)

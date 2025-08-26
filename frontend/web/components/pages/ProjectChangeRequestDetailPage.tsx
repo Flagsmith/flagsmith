@@ -12,7 +12,7 @@ import {
   useGetProjectChangeRequestQuery,
   useUpdateProjectChangeRequestMutation,
 } from 'common/services/useProjectChangeRequest'
-import { ChangeRequestPageInner } from './ChangeRequestPage'
+import { ChangeRequestPageInner } from './ChangeRequestDetailPage'
 import { useGetSegmentQuery } from 'common/services/useSegment'
 import { useGetProjectQuery } from 'common/services/useProject'
 import DiffSegment from 'components/diff/DiffSegment'
@@ -28,7 +28,7 @@ type ProjectChangeRequestPageType = {
   }
 }
 
-const ProjectChangeRequestPage: FC<ProjectChangeRequestPageType> = ({
+const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
   match,
   router,
 }) => {
@@ -229,8 +229,8 @@ const ProjectChangeRequestPage: FC<ProjectChangeRequestPageType> = ({
         error={error}
         addOwner={addOwner}
         removeOwner={removeOwner}
-        publishPermissionDescription={Constants.environmentPermissions(
-          'Update Feature States',
+        publishPermissionDescription={Constants.projectPermissions(
+          'Update Segments',
         )}
         deleteChangeRequest={deleteChangeRequest}
         minApprovals={minApprovals || 0}
@@ -273,4 +273,4 @@ const ProjectChangeRequestPage: FC<ProjectChangeRequestPageType> = ({
   )
 }
 
-export default ConfigProvider(ProjectChangeRequestPage)
+export default ConfigProvider(ProjectChangeRequestDetailPage)
