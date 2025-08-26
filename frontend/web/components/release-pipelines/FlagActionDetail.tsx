@@ -53,8 +53,11 @@ export const renderActionDetail = (
             </div>
           )}
           {currentSplit && (
-            <div className='mb-1'>
-              Current split of <b>{currentSplit}%</b>
+            <div className='mb-1 fs-caption text-muted'>
+              Current rollout:{' '}
+              <b className={currentSplit ? 'text-success' : ''}>
+                {currentSplit}%
+              </b>
             </div>
           )}
         </div>
