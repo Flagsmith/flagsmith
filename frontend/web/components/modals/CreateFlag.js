@@ -1869,23 +1869,6 @@ const CreateFlag = class extends Component {
                                       )
                                     }
                                   </Permission>
-                                  {!existingChangeRequest &&
-                                    this.props.flagId &&
-                                    isVersioned && (
-                                      <TabItem
-                                        data-test='change-history'
-                                        tabLabel='History'
-                                      >
-                                        <FeatureHistory
-                                          feature={projectFlag.id}
-                                          projectId={`${this.props.projectId}`}
-                                          environmentId={environment.id}
-                                          environmentApiKey={
-                                            environment.api_key
-                                          }
-                                        />
-                                      </TabItem>
-                                    )}
                                   {!Project.disableAnalytics && (
                                     <TabItem tabLabel={'Analytics'}>
                                       <FormGroup className='mb-4'>
@@ -1916,20 +1899,6 @@ const CreateFlag = class extends Component {
                                       </InfoMessage>
                                     </TabItem>
                                   )}
-                                  {isCodeReferencesEnabled && (
-                                    <TabItem
-                                      tabLabel={
-                                        <Row className='justify-content-center'>
-                                          Code References
-                                        </Row>
-                                      }
-                                    >
-                                      <FeatureCodeReferencesContainer
-                                        featureId={projectFlag.id}
-                                        projectId={this.props.projectId}
-                                      />
-                                    </TabItem>
-                                  )}
                                   {
                                     <TabItem
                                       data-test='feature_health'
@@ -1958,6 +1927,20 @@ const CreateFlag = class extends Component {
                                       />
                                     </TabItem>
                                   }
+                                  {isCodeReferencesEnabled && (
+                                    <TabItem
+                                      tabLabel={
+                                        <Row className='justify-content-center'>
+                                          Code References
+                                        </Row>
+                                      }
+                                    >
+                                      <FeatureCodeReferencesContainer
+                                        featureId={projectFlag.id}
+                                        projectId={this.props.projectId}
+                                      />
+                                    </TabItem>
+                                  )}
                                   {hasIntegrationWithGithub &&
                                     projectFlag?.id && (
                                       <TabItem
@@ -1978,6 +1961,23 @@ const CreateFlag = class extends Component {
                                           projectId={`${this.props.projectId}`}
                                           environmentId={
                                             this.props.environmentId
+                                          }
+                                        />
+                                      </TabItem>
+                                    )}
+                                  {!existingChangeRequest &&
+                                    this.props.flagId &&
+                                    isVersioned && (
+                                      <TabItem
+                                        data-test='change-history'
+                                        tabLabel='History'
+                                      >
+                                        <FeatureHistory
+                                          feature={projectFlag.id}
+                                          projectId={`${this.props.projectId}`}
+                                          environmentId={environment.id}
+                                          environmentApiKey={
+                                            environment.api_key
                                           }
                                         />
                                       </TabItem>

@@ -6,7 +6,7 @@ import TabButton from './TabButton'
 
 import classNames from 'classnames'
 import DropdownMenu from 'components/base/DropdownMenu'
-import { useOverflowVisibleCount } from 'common/hooks/useVisibleCount'
+import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
 
 interface TabItemProps {
   tabLabel: React.ReactNode
@@ -94,7 +94,7 @@ const Tabs: React.FC<TabsProps> = ({
     () => tabChildren.slice(visibleCount),
     [tabChildren, visibleCount],
   )
-  const canGrow = visibleCount === tabChildren.length
+  const canGrow = !isMeasuring && visibleCount === tabChildren.length
 
   const handleChange = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>, tabLabel: string, i: number) => {
@@ -124,7 +124,7 @@ const Tabs: React.FC<TabsProps> = ({
         ref={outerContainerRef}
         className={`${
           hideNav ? '' : 'tabs-nav'
-        } ${theme} justify-content-between align-items-center`}
+        } ${theme} justify-content-between align-items-center full-width`}
       >
         <div
           ref={itemsContainerRef}

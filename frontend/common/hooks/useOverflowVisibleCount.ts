@@ -69,7 +69,6 @@ export const useOverflowVisibleCount = ({
       }
 
       const containerWidth = outerCont.clientWidth
-
       // All items fit
       if (sumWidths(widths.length) <= containerWidth) {
         setVisibleCount(widths.length)
