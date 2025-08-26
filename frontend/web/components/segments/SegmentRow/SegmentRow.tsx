@@ -114,7 +114,10 @@ export const SegmentRow: FC<SegmentRowProps> = ({
         className='table-column px-3'
         onClick={
           manageSegmentsPermission
-            ? () => history.push(`${document.location.pathname}/${id}`)
+            ? () =>
+                history.push(
+                  `${document.location.pathname.replace(/\/$/, '')}/${id}`,
+                )
             : undefined
         }
       >
