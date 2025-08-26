@@ -45,7 +45,7 @@ const StageSummaryData = ({
   const isTimeLeft = timeRemainingDuration.asMilliseconds() > 0
 
   return (
-    <div className='p-2'>
+    <div className='py-2'>
       <h6>Status</h6>
       {isWaitType && (
         <div>
@@ -73,10 +73,10 @@ const StageSummaryData = ({
         <Row key={action.id} className='mt-2'>
           {isCompleted ? (
             <Icon
-              name={isTimePending ? 'radio' : 'checkmark-circle'}
+              name={'checkmark-circle'}
               width={18}
               height={18}
-              fill={isTimePending ? '#767d85' : '#53af41'}
+              fill={'#53af41'}
             />
           ) : (
             <Icon name='radio' width={18} height={18} fill='#767d85' />
