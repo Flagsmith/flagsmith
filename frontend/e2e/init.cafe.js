@@ -98,7 +98,7 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
 
 test('Segment-part-1', async () => await testSegment1(flagsmith)).meta({ category: 'oss' })
 
-test.only('Segment-part-2', testSegment2).meta({ autoLogout: true, category: 'oss' })
+test('Segment-part-2', testSegment2).meta({ autoLogout: true, category: 'oss' })
 
 test('Segment-part-3', testSegment3).meta({ autoLogout: true, category: 'oss' })
 
