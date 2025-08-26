@@ -194,11 +194,12 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
             placeholder='Condition description (Optional)'
             onChange={(e) => {
               const value = Utils.safeParseEventValue(e)
-              setRuleProperty(ruleIndex, 'description', value)
+              setRuleProperty(ruleIndex, 'description', { value })
             }}
           />
         </Row>
       )}
+
       {showEvaluationContextWarning && !isSkippingEvaluationContextWarning && (
         <Row className='mt-2'>
           <div className='d-flex align-items-center gap-1'>
