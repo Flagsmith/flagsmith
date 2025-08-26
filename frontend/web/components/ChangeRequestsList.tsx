@@ -39,7 +39,7 @@ const ChangeRequestList: FC<ChangeRequestListProps> = ({
       items={items?.results}
       paging={items}
       nextPage={() => setPage(page + 1)}
-      prevPage={() => setPage(page - 1)} // ✅ fixed bug: was page+1 in both
+      prevPage={() => setPage(page - 1)}
       goToPage={setPage}
       renderFooter={() => (
         <JSONReference
