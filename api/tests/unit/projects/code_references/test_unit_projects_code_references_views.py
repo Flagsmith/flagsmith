@@ -185,7 +185,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
     with freezegun.freeze_time("2099-01-01T10:00:00-0300"):
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
-            repository_url="https://github.flagsmith.com/backend/",
+            repository_url="https://github.flagsmith.com/backend",
             revision="backend-1",
             code_references=[
                 {
@@ -197,7 +197,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
         )
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
-            repository_url="https://github.flagsmith.com/frontend/",
+            repository_url="https://github.flagsmith.com/frontend",
             revision="frontend-1",
             code_references=[
                 {
@@ -210,7 +210,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
     with freezegun.freeze_time("2099-01-02T11:00:00-0300"):
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
-            repository_url="https://github.flagsmith.com/frontend/",
+            repository_url="https://github.flagsmith.com/frontend",
             revision="frontend-2",
             code_references=[
                 {
@@ -235,7 +235,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
     assert response.status_code == 200
     assert response.json() == [
         {
-            "repository_url": "https://github.flagsmith.com/backend/",
+            "repository_url": "https://github.flagsmith.com/backend",
             "vcs_provider": "github",
             "revision": "backend-1",
             "last_successful_repository_scanned_at": "2099-01-01T13:00:00+00:00",
@@ -252,7 +252,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
             ],
         },
         {
-            "repository_url": "https://github.flagsmith.com/frontend/",
+            "repository_url": "https://github.flagsmith.com/frontend",
             "vcs_provider": "github",
             "revision": "frontend-2",
             "last_successful_repository_scanned_at": "2099-01-02T14:00:00+00:00",
