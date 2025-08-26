@@ -71,7 +71,7 @@ const StageInfo = ({
             </p>
             <StageFeatureDetail
               features={stageData?.features}
-              enviromentKey={environmentData?.api_key}
+              environmentKey={environmentData?.api_key}
               projectId={projectId}
             />
           </div>
