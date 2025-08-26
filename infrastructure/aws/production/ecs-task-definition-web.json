@@ -6,7 +6,9 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-api",
-            "command": ["serve"],
+            "command": [
+                "serve"
+            ],
             "cpu": 0,
             "portMappings": [
                 {
@@ -198,7 +200,7 @@
                     "value": "https://edge.api.flagsmith.com/api/v1/"
                 },
                 {
-                    "name": "SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
+                    "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
                     "value": "True"
                 }
             ],
@@ -282,7 +284,9 @@
             }
         }
     ],
-    "requiresCompatibilities": ["FARGATE"],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
     "cpu": "1024",
     "memory": "2048"
 }
