@@ -9,7 +9,7 @@ type BreadcrumbType = {
 const Breadcrumb: FC<BreadcrumbType> = ({ currentPage, items }) => {
   return (
     <nav aria-label='breadcrumb'>
-      <ol className='breadcrumb my-2 py-1"'>
+      <ol className='breadcrumb my-2 py-1'>
         {items?.map((item) => (
           <li key={item.url} className='breadcrumb-item h6 fs-lg lh-sm'>
             <Link className='text-primary' to={item.url}>
