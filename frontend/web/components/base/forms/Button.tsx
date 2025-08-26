@@ -1,9 +1,10 @@
 import React from 'react'
 import cn from 'classnames'
 import { ButtonHTMLAttributes, FC, HTMLAttributeAnchorTarget } from 'react'
-import { IconName } from 'components/Icon'
+import Icon, { IconName } from 'components/Icon'
 import Constants from 'common/constants'
 import Utils, { PaidFeature } from 'common/utils/utils'
+import PlanBasedBanner from 'components/PlanBasedAccess'
 
 export const themeClassNames = {
   danger: 'btn btn-danger',
@@ -84,7 +85,9 @@ export const Button = React.forwardRef<
             />
           )}
           {children}
-          {!hasPlan && <PlanBasedBanner feature={feature} theme={'badge'} />}
+          {!hasPlan && feature && (
+            <PlanBasedBanner feature={feature} theme={'badge'} />
+          )}
         </div>
         {!!iconRight && (
           <Icon
