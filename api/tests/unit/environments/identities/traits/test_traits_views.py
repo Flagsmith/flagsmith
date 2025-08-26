@@ -3,10 +3,8 @@ from unittest import mock
 
 from common.environments.permissions import (
     MANAGE_IDENTITIES,
-    VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
 )
-from common.projects.permissions import VIEW_PROJECT
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
@@ -26,6 +24,7 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from organisations.models import Organisation
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
+from users.models import FFAdminUser
 
 
 def test_can_set_trait_for_an_identity(
@@ -970,26 +969,20 @@ def test_set_trait_for_an_identity_is_not_throttled_by_user_throttle(  # type: i
         assert res.status_code == status.HTTP_200_OK
 
 
-def test_user_with_manage_identities_permission_can_add_trait_for_identity(  # type: ignore[no-untyped-def]
-    environment, identity, django_user_model, api_client
-):
+def test_user_with_manage_identities_permission_can_add_trait_for_identity(
+    environment: Environment,
+    identity: Identity,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    user_environment_permission: UserEnvironmentPermission,
+    user_project_permission: UserProjectPermission,
+    view_environment_permission: PermissionModel,
+    manage_identities_permission: PermissionModel,
+    view_project_permission: PermissionModel,
+) -> None:
     # Given
-    user = django_user_model.objects.create(email="user@example.com")
-    api_client.force_authenticate(user)
-
-    view_environment_permission = PermissionModel.objects.get(key=VIEW_ENVIRONMENT)
-    manage_identities_permission = PermissionModel.objects.get(key=MANAGE_IDENTITIES)
-    view_project_permission = PermissionModel.objects.get(key=VIEW_PROJECT)
-
-    user_environment_permission = UserEnvironmentPermission.objects.create(
-        user=user, environment=environment
-    )
     user_environment_permission.permissions.add(
         view_environment_permission, manage_identities_permission
-    )
-
-    user_project_permission = UserProjectPermission.objects.create(
-        user=user, project=environment.project
     )
     user_project_permission.permissions.add(view_project_permission)
 
@@ -999,7 +992,7 @@ def test_user_with_manage_identities_permission_can_add_trait_for_identity(  # t
     )
 
     # When
-    response = api_client.post(
+    response = staff_client.post(
         url, data={"trait_key": "foo", "value_type": "unicode", "string_value": "foo"}
     )
 

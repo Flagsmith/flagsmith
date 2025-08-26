@@ -32,7 +32,38 @@ from projects.models import Project
 
 from .managers import LiveSegmentManager, SegmentManager
 
+ModelT = typing.TypeVar("ModelT", bound=models.Model)
+
 logger = logging.getLogger(__name__)
+
+
+class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]):
+    setting_name: str
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.enable_specific_ordering = getattr(settings, self.setting_name)
+
+    def get_queryset(
+        self,
+    ) -> models.QuerySet[ModelT]:
+        # Effectively `<ModelT>.Meta.ordering = ("id",) if ... else ()`,
+        # but avoid the weirdness of a setting-dependant migration
+        # and having to reload everything in tests
+        qs: models.QuerySet[ModelT]
+        if self.enable_specific_ordering:
+            qs = super().get_queryset().order_by("id")
+        else:
+            qs = super().get_queryset()
+        return qs
+
+
+class SegmentRuleManager(ConfiguredOrderManager["SegmentRule"]):
+    setting_name = "SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED"
+
+
+class SegmentConditionManager(ConfiguredOrderManager["Condition"]):
+    setting_name = "SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED"
 
 
 class Segment(
@@ -79,6 +110,7 @@ class Segment(
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
+    is_system_segment = models.BooleanField(default=False)
 
     objects = SegmentManager()  # type: ignore[misc]
 
@@ -92,6 +124,8 @@ class Segment(
         return "Segment - %s" % self.name
 
     def get_skip_create_audit_log(self) -> bool:
+        if self.is_system_segment:
+            return True
         try:
             if self.version_of_id and self.version_of_id != self.id:
                 return True
@@ -168,7 +202,8 @@ class Segment(
             cloned_rule.pk = None
             cloned_rule.uuid = uuid.uuid4()
             cloned_rule.segment = self if rule.segment else None
-            cloned_rule.rule = rule_to_cloned_rule_map.get(rule.rule)
+            if rule.rule in rule_to_cloned_rule_map:
+                cloned_rule.rule = rule_to_cloned_rule_map[rule.rule]
             cloned_rule.save()
             rule_to_cloned_rule_map[rule] = cloned_rule
 
@@ -217,6 +252,8 @@ class SegmentRule(
 
     history_record_class_path = "segments.models.HistoricalSegmentRule"
 
+    objects: typing.ClassVar[SegmentRuleManager] = SegmentRuleManager()
+
     def __str__(self):  # type: ignore[no-untyped-def]
         return "%s rule for %s" % (
             self.type,
@@ -239,21 +276,6 @@ class SegmentRule(
         # individual audit logs for rules and conditions is irrelevant.
         # This model will be deleted as of https://github.com/Flagsmith/flagsmith/issues/5846
         return True
-
-
-class ConditionManager(SoftDeleteExportableManager):
-    def get_queryset(
-        self,
-    ) -> models.QuerySet["Condition"]:
-        # Effectively `Condition.Meta.ordering = ("id",) if ... else ()`,
-        # but avoid the weirdness of a setting-dependant migration
-        # and having to reload everything in tests
-        qs: models.QuerySet["Condition"]
-        if settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED:
-            qs = super().get_queryset().order_by("id")
-        else:
-            qs = super().get_queryset()
-        return qs
 
 
 class Condition(
@@ -299,7 +321,7 @@ class Condition(
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
-    objects: typing.ClassVar[ConditionManager] = ConditionManager()
+    objects: typing.ClassVar[SegmentConditionManager] = SegmentConditionManager()
 
     def __str__(self) -> str:
         return "Condition for %s: %s %s %s" % (

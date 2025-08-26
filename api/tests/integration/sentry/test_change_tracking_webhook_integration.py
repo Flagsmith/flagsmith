@@ -10,8 +10,9 @@ from pytest_structlog import StructuredLogCapture
 from responses import RequestsMock
 from rest_framework.test import APIClient
 
-from core.signals import create_audit_log_from_historical_record
+from audit.tasks import create_feature_state_updated_by_change_request_audit_log
 from features.models import FeatureState
+from features.workflows.core.models import ChangeRequest
 from integrations.sentry.models import SentryChangeTrackingConfiguration
 from users.models import FFAdminUser
 
@@ -154,9 +155,15 @@ def test_sentry_change_tracking__flag_state_schedule__sends_update_to_sentry(
     log: StructuredLogCapture,
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
+    environment: int,
 ) -> None:
     # Given
+    cr = ChangeRequest.objects.create(
+        environment_id=environment, title="Test CR", user_id=admin_user.id
+    )
     feature_state_obj = FeatureState.objects.get(pk=feature_state)
+    feature_state_obj.change_request = cr
+    feature_state_obj.save()
     responses.post(sentry_configuration.webhook_url, status=200, body="")
 
     # When
@@ -165,22 +172,14 @@ def test_sentry_change_tracking__flag_state_schedule__sends_update_to_sentry(
         feature_state_obj.enabled = False
         feature_state_obj.live_from = now + timedelta(hours=1)
         feature_state_obj.save()
-        create_audit_log_from_historical_record(
-            instance=feature_state_obj,
-            history_user=admin_user,
-            history_instance=feature_state_obj.history.first(),
-        )
+        create_feature_state_updated_by_change_request_audit_log(feature_state_obj.id)
 
     # Then
     assert len(responses.calls) == 0  # Not yet
 
     # When
     with freezegun.freeze_time("2199-01-01T01:00:01.500000+00:00"):
-        create_audit_log_from_historical_record(
-            instance=feature_state_obj,
-            history_user=admin_user,
-            history_instance=feature_state_obj.history.first(),
-        )
+        create_feature_state_updated_by_change_request_audit_log(feature_state_obj.id)
 
     # Then
     assert len(responses.calls) == 1
@@ -193,7 +192,7 @@ def test_sentry_change_tracking__flag_state_schedule__sends_update_to_sentry(
             {
                 "action": "updated",
                 "created_at": "2199-01-01T01:00:00+00:00",
-                "created_by": {"id": admin_user.email, "type": "email"},
+                "created_by": {"id": "app@flagsmith.com", "type": "email"},
                 "change_id": str(feature_state),
                 "flag": feature_name,
             },
@@ -231,7 +230,6 @@ def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
 ) -> None:
     # Given
     responses.post(sentry_configuration.webhook_url, status=200, body="")
-
     # When
     with freezegun.freeze_time("2199-01-01T00:00:00+00:00"):
         response = admin_client.delete(

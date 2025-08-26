@@ -352,7 +352,7 @@ def _create_segment_rule_for_segment(
                 f" skipping for segment: {segment.name}",
             )
 
-    return parent_rule  # type: ignore[no-any-return]
+    return parent_rule
 
 
 def _create_feature_segment_from_clauses(

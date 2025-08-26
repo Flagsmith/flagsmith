@@ -15,6 +15,7 @@ const ReleasePipelinesPage = () => {
   const [page, setPage] = useState(1)
   const pageSize = 10
   const { data, isLoading } = useGetReleasePipelinesQuery({
+    order_by: '-created_at',
     page,
     page_size: pageSize,
     projectId: Number(projectId),

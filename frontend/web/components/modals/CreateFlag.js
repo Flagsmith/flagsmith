@@ -33,7 +33,7 @@ import IdentitySelect from 'components/IdentitySelect'
 import { setInterceptClose, setModalTitle } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
-import FeatureValue from 'components/FeatureValue'
+import FeatureValue from 'components/feature-summary/FeatureValue'
 import { getStore } from 'common/store'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
@@ -55,6 +55,7 @@ import { warning } from 'ionicons/icons'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import { FlagValueFooter } from './FlagValueFooter'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
+import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -639,6 +640,10 @@ const CreateFlag = class extends Component {
     let regexValid = true
     const metadataEnable = Utils.getPlansPermission('METADATA')
 
+    const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
+      'git_code_references',
+    )
+
     try {
       if (!isEdit && name && regex) {
         regexValid = name.match(new RegExp(regex))
@@ -1078,7 +1083,6 @@ const CreateFlag = class extends Component {
               const isReleasePipelineEnabled =
                 Utils.getFlagsmithHasFeature('release_pipelines')
 
-
               return (
                 <Permission
                   level='project'
@@ -1112,6 +1116,7 @@ const CreateFlag = class extends Component {
                                   onChange={() => this.forceUpdate()}
                                   urlParam='tab'
                                   history={this.props.history}
+                                  overflowX
                                 >
                                   <TabItem
                                     data-test='value'
@@ -1866,7 +1871,6 @@ const CreateFlag = class extends Component {
                                       )
                                     }
                                   </Permission>
-
                                   {!existingChangeRequest &&
                                     this.props.flagId &&
                                     isVersioned && (
@@ -1912,6 +1916,14 @@ const CreateFlag = class extends Component {
                                           View docs
                                         </a>
                                       </InfoMessage>
+                                    </TabItem>
+                                  )}
+                                  {isCodeReferencesEnabled && (
+                                    <TabItem tabLabel={'Code References'}>
+                                      <FeatureCodeReferencesContainer
+                                        featureId={projectFlag.id}
+                                        projectId={this.props.projectId}
+                                      />
                                     </TabItem>
                                   )}
                                   {this.props.hasUnhealthyEvents && (

@@ -28,6 +28,7 @@ import {
   cloneSegment,
   setSegmentRule,
   assertInputValue,
+  clickSegmentByName,
 } from '../helpers.cafe'
 import { E2E_USER, PASSWORD } from '../config'
 
@@ -80,6 +81,7 @@ const segmentRules =  [
 ]
 
 export const testSegment1 = async (flagsmith: any) => {
+  const isCloneSegmentEnabled = await flagsmith.hasFeature('clone_segment')
   log('Login')
   await login(E2E_USER, PASSWORD)
   await click('#project-select-1')
@@ -90,25 +92,31 @@ export const testSegment1 = async (flagsmith: any) => {
     { value: 'small', weight: 0 },
   ])
 
-  log('Segment age rules')
   await gotoSegments()
+  
+  log('Segment age rules')
   // (=== 18 || === 19) && (> 17 || < 19) && (!=20) && (<=18) && (>=18)
   // Rule 1- Age === 18 || Age === 19
 
-  await createSegment(0, '18_or_19', segmentRules)
-
   log('Update segment')
-  await click(byId('segment-0-name'))
+  await gotoSegments()
   const lastRule = segmentRules[segmentRules.length - 1]
-  await setSegmentRule(segmentRules.length - 1, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
+  await createSegment(0, 'segment_to_update', [lastRule])
+  await click(byId('segment-0-name'))
+  await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
   await click(byId('update-segment'))
   await closeModal()
   await gotoSegments()
   await click(byId('segment-0-name'))
-  await assertInputValue(byId(`rule-${segmentRules.length - 1}-value-0`), `${lastRule.value + 1}`)
-  await setSegmentRule(segmentRules.length - 1, 0, lastRule.name, lastRule.operator, lastRule.value)
-  await click(byId('update-segment'))
+  await assertInputValue(byId(`rule-${0}-value-0`), `${lastRule.value + 1}`)
   await closeModal()
+  await deleteSegment(0, 'segment_to_update', !isCloneSegmentEnabled)
+  await waitAndRefresh()
+
+  log('Create segment')
+  await createSegment(0, '18_or_19', segmentRules)
+  await closeModal()
+
 
   log('Add segment trait for user')
   await gotoTraits()
@@ -142,7 +150,6 @@ export const testSegment1 = async (flagsmith: any) => {
   await waitAndRefresh()
   await assertTextContent(byId('user-feature-value-0'), '"medium"')
 
-  const isCloneSegmentEnabled = await flagsmith.hasFeature('clone_segment')
   if (isCloneSegmentEnabled) {
     log('Clone segment')
     await gotoSegments()
