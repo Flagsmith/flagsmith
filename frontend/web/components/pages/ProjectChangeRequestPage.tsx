@@ -259,13 +259,6 @@ const ProjectChangeRequestPage: FC<ProjectChangeRequestPageType> = ({
               oldSegment={segment}
               newSegment={changeRequest.segments[0]}
             />
-            {/*<DiffChangeRequest*/}
-            {/*  environmentId={environmentId}*/}
-            {/*  isVersioned={isVersioned}*/}
-            {/*  changeRequest={changeRequest}*/}
-            {/*  feature={projectFlag.id}*/}
-            {/*  projectId={projectId}*/}
-            {/*/>*/}
           </div>
         }
       />
