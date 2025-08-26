@@ -32,8 +32,8 @@ def test_get_permalink_generates_valid_public_github_url(
 @pytest.mark.parametrize(
     "repository_url",
     [
-        "https://github.flagsmith.com/backend",
-        "https://github.flagsmith.com/backend/",  # with trailing slash
+        "https://github.flagsmith.com/flagsmith/backend",
+        "https://github.flagsmith.com/flagsmith/backend/",  # with trailing slash
     ],
 )
 def test_get_permalink_generates_valid_private_github_url(
@@ -50,5 +50,5 @@ def test_get_permalink_generates_valid_private_github_url(
 
     # Then
     assert result == (
-        "https://github.flagsmith.com/backend/blob/revision-hash/path/to/file.py#L10"
+        "https://github.flagsmith.com/flagsmith/backend/blob/revision-hash/path/to/file.py#L10"
     )
