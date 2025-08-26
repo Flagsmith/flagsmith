@@ -21,6 +21,7 @@
     "start": "cross-env NODE_ENV=production node ./api/index",
     "typecheck": "tsc",
     "dev": "cross-env npm run env && npx nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
+    "dev:local": "ENV=local cross-env npm run env && npx nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
     "bundle": "npx webpack --config ./webpack/webpack.config.prod.js",
     "bundledjango": "npx webpack --config ./webpack/webpack.config.django.prod.js"
   },

@@ -442,6 +442,7 @@ const Constants = {
  "event_type": "FLAG_UPDATED"
 }`,
   featureHealth: {
+    healthyColor: '#60bd4e',
     unhealthyColor: '#D35400',
   },
   featurePanelTabs: {

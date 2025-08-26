@@ -234,7 +234,7 @@
 }
 
 .bg-primary-opacity-5 {
-    background-color: transparentize($primary, 0.95);
+    background-color: transparentize($primary, 0.95) !important;
 }
 
 .border-primary {

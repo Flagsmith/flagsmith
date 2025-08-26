@@ -1,7 +1,7 @@
 // import propTypes from 'prop-types';
 import React, { Component } from 'react'
-import TabItem from 'components/base/forms/TabItem'
-import Tabs from 'components/base/forms/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
 import CompareEnvironments from 'components/CompareEnvironments'
 import CompareFeatures from 'components/CompareFeatures'
 import ConfigProvider from 'common/providers/ConfigProvider'
