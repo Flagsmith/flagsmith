@@ -1,5 +1,39 @@
 # Changelog
 
+## [2.193.0](https://github.com/Flagsmith/flagsmith/compare/v2.192.4...v2.193.0) (2025-08-26)
+
+
+### Features
+
+* Force segment rule ordering in production ([#5982](https://github.com/Flagsmith/flagsmith/issues/5982)) ([8c10f78](https://github.com/Flagsmith/flagsmith/commit/8c10f78c78af67a5fc1e9438145771720ef10267))
+
+
+### Bug Fixes
+
+* use-correct-count-in-tooltip ([#5981](https://github.com/Flagsmith/flagsmith/issues/5981)) ([e3adfc3](https://github.com/Flagsmith/flagsmith/commit/e3adfc31e456bc50fcec450617567df041631832))
+
+## [2.192.4](https://github.com/Flagsmith/flagsmith/compare/v2.192.3...v2.192.4) (2025-08-25)
+
+
+### Bug Fixes
+
+* **GitHub PoC:** Fix API authentication ([#5979](https://github.com/Flagsmith/flagsmith/issues/5979)) ([70a652b](https://github.com/Flagsmith/flagsmith/commit/70a652b2fa7beb6f374003d669566a6e294ceb10))
+* remove extra close modal call ([#5972](https://github.com/Flagsmith/flagsmith/issues/5972)) ([43793f0](https://github.com/Flagsmith/flagsmith/commit/43793f074c20d51483f473f3b44a010235efc02e))
+* reverted-tests ([#5966](https://github.com/Flagsmith/flagsmith/issues/5966)) ([1c20aa5](https://github.com/Flagsmith/flagsmith/commit/1c20aa5a8825793dca8f52f439a85c85de14e64d))
+* slack-upload ([#5969](https://github.com/Flagsmith/flagsmith/issues/5969)) ([cba8fa0](https://github.com/Flagsmith/flagsmith/commit/cba8fa0ce19a048aa0fb081c2c540826fb168215))
+* **usage-notifications:** construct the variable outside of template ([#5964](https://github.com/Flagsmith/flagsmith/issues/5964)) ([a576eef](https://github.com/Flagsmith/flagsmith/commit/a576eef5120f9b38cb3d3b4182aad7b0dc6a5404))
+
+## [2.192.3](https://github.com/Flagsmith/flagsmith/compare/v2.192.2...v2.192.3) (2025-08-21)
+
+
+### Bug Fixes
+
+* disable test update segment ([#5962](https://github.com/Flagsmith/flagsmith/issues/5962)) ([e40105e](https://github.com/Flagsmith/flagsmith/commit/e40105eebbc5fb58eb4476cb72f15e692cbbe0ae))
+* extracted-update-segment-test ([#5951](https://github.com/Flagsmith/flagsmith/issues/5951)) ([bac797a](https://github.com/Flagsmith/flagsmith/commit/bac797ad01e043b0056ab4a84e3d427f0d4921a9))
+* removed-focus-timeout ([#5954](https://github.com/Flagsmith/flagsmith/issues/5954)) ([4da2999](https://github.com/Flagsmith/flagsmith/commit/4da2999a2152725875c9fd656cf96e485bd07ad6))
+* **segment-update:** handle rules/conditons without id correctly ([#5953](https://github.com/Flagsmith/flagsmith/issues/5953)) ([ad1d568](https://github.com/Flagsmith/flagsmith/commit/ad1d56862a76635c37b6c705b4777cea9a44f8fd))
+* stop-using-index-to-access-update-segment ([#5960](https://github.com/Flagsmith/flagsmith/issues/5960)) ([1dbf0c2](https://github.com/Flagsmith/flagsmith/commit/1dbf0c2a7c8c9ea112c2f86e4444729d6c493005))
+
 ## [2.192.2](https://github.com/Flagsmith/flagsmith/compare/v2.192.1...v2.192.2) (2025-08-20)
 
 
