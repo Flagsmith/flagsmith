@@ -9,7 +9,7 @@ const CodeReferenceItem: React.FC<CodeReferenceItemProps> = ({
   codeReference,
 }) => {
   return (
-    <Row className='flex items-center gap-1'>
+    <Row className='flex items-center gap-1' noWrap>
       <Icon
         name={'chevron-down'}
         className='w-4 h-4 transparent'
