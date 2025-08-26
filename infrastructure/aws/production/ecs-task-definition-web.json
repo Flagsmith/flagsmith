@@ -198,7 +198,7 @@
                     "value": "https://edge.api.flagsmith.com/api/v1/"
                 },
                 {
-                    "name": "SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
+                    "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
                     "value": "True"
                 }
             ],
