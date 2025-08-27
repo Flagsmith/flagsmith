@@ -7,16 +7,6 @@ import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import FeatureListStore from 'common/stores/feature-list-store'
 import IdentityProvider from 'common/providers/IdentityProvider'
-
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import SegmentOverrides from 'components/SegmentOverrides'
@@ -450,70 +440,6 @@ const CreateFlag = class extends Component {
       return value.trim()
     }
     return value
-  }
-  drawChart = (data) => {
-    // Aggregate data by day, summing counts across different user agents
-    const aggregatedData = data?.length
-      ? Object.values(
-          data.reduce((acc, item) => {
-            const day = item.day
-            if (!acc[day]) {
-              acc[day] = {
-                count: 0,
-                day: day,
-              }
-            }
-            acc[day].count += item.count || 0
-            return acc
-          }, {}),
-        )
-      : []
-
-    return aggregatedData?.length ? (
-      <ResponsiveContainer height={400} width='100%' className='mt-4'>
-        <BarChart data={aggregatedData}>
-          <CartesianGrid strokeDasharray='3 5' strokeOpacity={0.4} />
-          <XAxis
-            padding='gap'
-            interval={0}
-            height={100}
-            angle={-90}
-            textAnchor='end'
-            allowDataOverflow={false}
-            dataKey='day'
-            tick={{ dx: -4, fill: '#656D7B' }}
-            tickLine={false}
-            axisLine={{ stroke: '#656D7B' }}
-          />
-          <YAxis
-            allowDataOverflow={false}
-            tick={{ fill: '#656D7B' }}
-            axisLine={{ stroke: '#656D7B' }}
-          />
-          <RechartsTooltip cursor={{ fill: 'transparent' }} />
-          <Bar
-            dataKey={'count'}
-            stackId='a'
-            fill='rgba(149, 108, 255,0.48)'
-            barSize={14}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    ) : (
-      <div className='modal-caption fs-small lh-sm'>
-        There has been no activity for this flag within the past month. Find out
-        about Flag Analytics{' '}
-        <Button
-          theme='text'
-          target='_blank'
-          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-          className='fw-normal'
-        >
-          here
-        </Button>
-        .
-      </div>
-    )
   }
 
   addItem = () => {
