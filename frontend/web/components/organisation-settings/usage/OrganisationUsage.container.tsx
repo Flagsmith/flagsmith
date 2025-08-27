@@ -1,5 +1,5 @@
-import Utils, { planNames } from 'common/utils/utils'
-import React, { FC, useMemo, useState } from 'react'
+import Utils from 'common/utils/utils'
+import React, { FC, useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -10,7 +10,6 @@ import {
   CartesianGrid,
   TooltipProps,
 } from 'recharts'
-import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import ProjectFilter from 'components/ProjectFilter'
 import EnvironmentFilter from 'components/EnvironmentFilter'
 import moment from 'moment'
@@ -21,15 +20,23 @@ import {
 import InfoMessage from 'components/InfoMessage'
 import { IonIcon } from '@ionic/react'
 import { checkmarkSharp } from 'ionicons/icons'
-import AccountStore from 'common/stores/account-store'
 import { billingPeriods, freePeriods, Req } from 'common/types/requests'
-import {
-  AggregateUsageDataItem,
-  AggregateUsageDataItem as UsageEventItem,
-} from 'common/types/responses'
+import { AggregateUsageDataItem, Res } from 'common/types/responses'
 
-type OrganisationUsageType = {
+type OrganisationUsageProps = {
   organisationId: string
+  data: Res['organisationUsage'] | undefined
+  isError: boolean
+  consolidatedDailyUsage: AggregateUsageDataItem[]
+  project: string | undefined
+  setProject: (project: string | undefined) => void
+  environment: string | undefined
+  setEnvironment: (environment: string | undefined) => void
+  billingPeriod: Req['getOrganisationUsage']['billing_period']
+  setBillingPeriod: (
+    period: Req['getOrganisationUsage']['billing_period'],
+  ) => void
+  isOnFreePlanPeriods: boolean
 }
 type LegendItemType = {
   title: string
@@ -75,56 +82,19 @@ const LegendItem: FC<LegendItemType> = ({
   )
 }
 
-const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
-  const [project, setProject] = useState<string | undefined>()
-  const [environment, setEnvironment] = useState<string | undefined>()
-  const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
-  const orgSubscription = AccountStore.getOrganisation()?.subscription
-  const isOnFreePlanPeriods =
-    planNames.free === currentPlan ||
-    !orgSubscription?.has_active_billing_periods
-  const [billingPeriod, setBillingPeriod] = useState<
-    Req['getOrganisationUsage']['billing_period']
-  >(isOnFreePlanPeriods ? '90_day_period' : 'current_billing_period')
-
-  const { data, isError } = useGetOrganisationUsageQuery(
-    {
-      billing_period: billingPeriod,
-      environmentId: environment,
-      organisationId,
-      projectId: project,
-    },
-    { skip: !organisationId },
-  )
-
-  // Aggregate usage events by date, summing metrics across all client types (user agents)
-  const consolidatedDailyUsage = useMemo(() => {
-    return Object.values(
-      data?.events_list?.reduce((acc, event) => {
-        const date = event.day
-        if (!acc[date]) {
-          acc[date] = {
-            day: date,
-            environment_document: 0,
-            flags: 0,
-            identities: 0,
-            traits: 0,
-          }
-        }
-
-        acc[date].flags = (acc[date].flags ?? 0) + (event.flags ?? 0)
-        acc[date].identities =
-          (acc[date].identities ?? 0) + (event.identities ?? 0)
-        acc[date].traits = (acc[date].traits ?? 0) + (event.traits ?? 0)
-        acc[date].environment_document =
-          (acc[date].environment_document ?? 0) +
-          (event.environment_document ?? 0)
-
-        return acc
-      }, {} as Record<string, AggregateUsageDataItem>) || {},
-    )
-  }, [data?.events_list])
-
+const OrganisationUsage: FC<OrganisationUsageProps> = ({
+  billingPeriod,
+  consolidatedDailyUsage,
+  data,
+  environment,
+  isError,
+  isOnFreePlanPeriods,
+  organisationId,
+  project,
+  setBillingPeriod,
+  setEnvironment,
+  setProject,
+}) => {
   const colours = ['#0AADDF', '#27AB95', '#FF9F43', '#EF4D56']
   const [selection, setSelection] = useState([
     'Flags',
@@ -132,6 +102,7 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
     'Environment Document',
     'Traits',
   ])
+
   const updateSelection = (key) => {
     if (selection.includes(key)) {
       setSelection(selection.filter((v) => v !== key))
@@ -370,99 +341,99 @@ const RechartsTooltip: FC<TooltipProps<ValueType, NameType>> = ({
   label,
   payload,
 }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className='recharts-tooltip py-2'>
-        <div className='px-4 py-2 fs-small lh-sm fw-bold recharts-tooltip-header'>
-          {moment(label).format('D MMM')}
-        </div>
-        <hr className='py-0 my-0 mb-3' />
-        {payload.map((el: any) => {
-          const { dataKey, fill, payload } = el
-          switch (dataKey) {
-            case 'traits': {
-              return (
-                <Row key={dataKey} className='px-4 mb-3'>
-                  <span
-                    style={{
-                      backgroundColor: fill,
-                      borderRadius: 2,
-                      display: 'inline-block',
-                      height: 16,
-                      width: 16,
-                    }}
-                  />
-                  <span className='text-muted ml-2'>
-                    Traits: {Utils.numberWithCommas(payload[dataKey])}
-                  </span>
-                </Row>
-              )
-            }
-            case 'flags': {
-              return (
-                <Row key={dataKey} className='px-4 mb-3'>
-                  <span
-                    style={{
-                      backgroundColor: fill,
-                      borderRadius: 2,
-                      display: 'inline-block',
-                      height: 16,
-                      width: 16,
-                    }}
-                  />
-                  <span className='text-muted ml-2'>
-                    Flags: {Utils.numberWithCommas(payload[dataKey])}
-                  </span>
-                </Row>
-              )
-            }
-            case 'identities': {
-              return (
-                <Row key={dataKey} className='px-4 mb-3'>
-                  <span
-                    style={{
-                      backgroundColor: fill,
-                      borderRadius: 2,
-                      display: 'inline-block',
-                      height: 16,
-                      width: 16,
-                    }}
-                  />
-                  <span className='text-muted ml-2'>
-                    Identities: {Utils.numberWithCommas(payload[dataKey])}
-                  </span>
-                </Row>
-              )
-            }
-            case 'environment_document': {
-              return (
-                <Row key={dataKey} className='px-4 mb-3'>
-                  <span
-                    style={{
-                      backgroundColor: fill,
-                      borderRadius: 2,
-                      display: 'inline-block',
-                      height: 16,
-                      width: 16,
-                    }}
-                  />
-                  <span className='text-muted ml-2'>
-                    Environment Document:{' '}
-                    {Utils.numberWithCommas(payload[dataKey])}
-                  </span>
-                </Row>
-              )
-            }
-            default: {
-              return null
-            }
-          }
-        })}
-      </div>
-    )
+  if (!active || !payload || payload.length === 0) {
+    return null
   }
 
-  return null
+  return (
+    <div className='recharts-tooltip py-2'>
+      <div className='px-4 py-2 fs-small lh-sm fw-bold recharts-tooltip-header'>
+        {moment(label).format('D MMM')}
+      </div>
+      <hr className='py-0 my-0 mb-3' />
+      {payload.map((el: any) => {
+        const { dataKey, fill, payload } = el
+        switch (dataKey) {
+          case 'traits': {
+            return (
+              <Row key={dataKey} className='px-4 mb-3'>
+                <span
+                  style={{
+                    backgroundColor: fill,
+                    borderRadius: 2,
+                    display: 'inline-block',
+                    height: 16,
+                    width: 16,
+                  }}
+                />
+                <span className='text-muted ml-2'>
+                  Traits: {Utils.numberWithCommas(payload[dataKey])}
+                </span>
+              </Row>
+            )
+          }
+          case 'flags': {
+            return (
+              <Row key={dataKey} className='px-4 mb-3'>
+                <span
+                  style={{
+                    backgroundColor: fill,
+                    borderRadius: 2,
+                    display: 'inline-block',
+                    height: 16,
+                    width: 16,
+                  }}
+                />
+                <span className='text-muted ml-2'>
+                  Flags: {Utils.numberWithCommas(payload[dataKey])}
+                </span>
+              </Row>
+            )
+          }
+          case 'identities': {
+            return (
+              <Row key={dataKey} className='px-4 mb-3'>
+                <span
+                  style={{
+                    backgroundColor: fill,
+                    borderRadius: 2,
+                    display: 'inline-block',
+                    height: 16,
+                    width: 16,
+                  }}
+                />
+                <span className='text-muted ml-2'>
+                  Identities: {Utils.numberWithCommas(payload[dataKey])}
+                </span>
+              </Row>
+            )
+          }
+          case 'environment_document': {
+            return (
+              <Row key={dataKey} className='px-4 mb-3'>
+                <span
+                  style={{
+                    backgroundColor: fill,
+                    borderRadius: 2,
+                    display: 'inline-block',
+                    height: 16,
+                    width: 16,
+                  }}
+                />
+                <span className='text-muted ml-2'>
+                  Environment Document:{' '}
+                  {Utils.numberWithCommas(payload[dataKey])}
+                </span>
+              </Row>
+            )
+          }
+          default: {
+            return null
+          }
+        }
+      })}
+    </div>
+  )
 }
 
 export default OrganisationUsage
