@@ -11,14 +11,14 @@ import {
   TooltipProps,
 } from 'recharts'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
-import ProjectFilter from './ProjectFilter'
-import EnvironmentFilter from './EnvironmentFilter'
+import ProjectFilter from 'components/ProjectFilter'
+import EnvironmentFilter from 'components/EnvironmentFilter'
 import moment from 'moment'
 import {
   NameType,
   ValueType,
 } from 'recharts/types/component/DefaultTooltipContent'
-import InfoMessage from './InfoMessage'
+import InfoMessage from 'components/InfoMessage'
 import { IonIcon } from '@ionic/react'
 import { checkmarkSharp } from 'ionicons/icons'
 import AccountStore from 'common/stores/account-store'
