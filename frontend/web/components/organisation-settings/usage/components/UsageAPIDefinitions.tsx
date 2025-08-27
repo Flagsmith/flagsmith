@@ -3,7 +3,7 @@ import InfoMessage from 'components/InfoMessage'
 
 const UsageAPIDefinitions: React.FC = () => {
   return (
-    <>
+    <div>
       <InfoMessage>
         Please be aware that usage data can be delayed by up to 3 hours.
       </InfoMessage>
@@ -79,7 +79,7 @@ const UsageAPIDefinitions: React.FC = () => {
         <h5>Total API calls</h5>
         <p>This is a sum of the above.</p>
       </div>
-    </>
+    </div>
   )
 }
 

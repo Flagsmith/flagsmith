@@ -14,13 +14,8 @@ import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsa
 import UsageFilters from 'components/organisation-settings/usage/components/UsageFilters'
 import UsageTotals from 'components/organisation-settings/usage/components/UsageTotals'
 
-interface RouteParams {
-  organisationId: string
-}
-
 const OrganisationUsagePage: FC = () => {
   const { organisationId } = useRouteContext()
-  const match = useRouteMatch<RouteParams>()
   const location = useLocation()
 
   const getInitialView = useCallback((): 'global' | 'metrics' => {
@@ -116,18 +111,16 @@ const OrganisationUsagePage: FC = () => {
 
   return (
     <div className='app-container px-3 px-md-0 pb-2'>
-      <Row className='grid-container gap-x-3'>
+      <Row className='grid-container gap-x-12 align-items-start'>
         <div className='col-12 col-md-2 border-md-right home-aside aside-small d-flex flex-column'>
-          <div style={{ maxWidth: '200px' }}>
-            {organisationId && (
-              <OrganisationUsageSideBar
-                organisationId={organisationId}
-                activeTab={chartsView}
-              />
-            )}
-          </div>
+          {organisationId && (
+            <OrganisationUsageSideBar
+              organisationId={organisationId}
+              activeTab={chartsView}
+            />
+          )}
         </div>
-        <div className='col-12 col-md-8'>
+        <div className='col-12 col-md-9'>
           <UsageFilters
             organisationId={organisationId?.toString() || ''}
             project={project}
@@ -145,22 +138,13 @@ const OrganisationUsagePage: FC = () => {
             colours={colours}
           />
           {chartsView === 'metrics' ? (
-            <OrganisationUsageMetrics />
+            <OrganisationUsageMetrics data={data} colours={colours} />
           ) : (
             <OrganisationUsage
-              organisationId={match.params.organisationId}
-              data={data}
-              isError={isError}
               chartData={chartData}
-              project={project}
-              setProject={setProject}
-              environment={environment}
-              setEnvironment={setEnvironment}
-              billingPeriod={billingPeriod}
-              setBillingPeriod={setBillingPeriod}
-              isOnFreePlanPeriods={isOnFreePlanPeriods}
-              selection={selection}
               colours={colours}
+              isError={isError}
+              selection={selection}
             />
           )}
         </div>
