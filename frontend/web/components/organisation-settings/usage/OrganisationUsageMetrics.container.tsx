@@ -1,6 +1,10 @@
 import React from 'react'
 
-const OrganisationUsageMetrics = () => {
+export interface OrganisationUsageMetricsProps {}
+
+const OrganisationUsageMetrics: React.FC<
+  OrganisationUsageMetricsProps
+> = ({}) => {
   return <div>OrganisationUsageMetrics</div>
 }
 

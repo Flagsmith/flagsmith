@@ -27,7 +27,7 @@ const OrganisationUsageSideBar = ({
       to: `/organisation/${organisationId}/usage?p=metrics`,
     },
   ]
-  console.log(activeTab)
+
   return (
     <div className='d-flex flex-column gap-2 mt-2'>
       {sideBarItems.map((item) => (
