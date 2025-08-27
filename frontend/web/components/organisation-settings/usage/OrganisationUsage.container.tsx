@@ -1,5 +1,5 @@
 import Utils, { planNames } from 'common/utils/utils'
-import React, { FC, useState } from 'react'
+import React, { FC, useMemo, useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -23,6 +23,10 @@ import { IonIcon } from '@ionic/react'
 import { checkmarkSharp } from 'ionicons/icons'
 import AccountStore from 'common/stores/account-store'
 import { billingPeriods, freePeriods, Req } from 'common/types/requests'
+import {
+  AggregateUsageDataItem,
+  AggregateUsageDataItem as UsageEventItem,
+} from 'common/types/responses'
 
 type OrganisationUsageType = {
   organisationId: string
@@ -92,6 +96,35 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
     },
     { skip: !organisationId },
   )
+
+  // Aggregate usage events by date, summing metrics across all client types (user agents)
+  const consolidatedDailyUsage = useMemo(() => {
+    return Object.values(
+      data?.events_list?.reduce((acc, event) => {
+        const date = event.day
+        if (!acc[date]) {
+          acc[date] = {
+            day: date,
+            environment_document: 0,
+            flags: 0,
+            identities: 0,
+            traits: 0,
+          }
+        }
+
+        acc[date].flags = (acc[date].flags ?? 0) + (event.flags ?? 0)
+        acc[date].identities =
+          (acc[date].identities ?? 0) + (event.identities ?? 0)
+        acc[date].traits = (acc[date].traits ?? 0) + (event.traits ?? 0)
+        acc[date].environment_document =
+          (acc[date].environment_document ?? 0) +
+          (event.environment_document ?? 0)
+
+        return acc
+      }, {} as Record<string, AggregateUsageDataItem>) || {},
+    )
+  }, [data?.events_list])
+
   const colours = ['#0AADDF', '#27AB95', '#FF9F43', '#EF4D56']
   const [selection, setSelection] = useState([
     'Flags',
@@ -179,7 +212,7 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
       ) : (
         <ResponsiveContainer height={400} width='100%'>
           <BarChart
-            data={data.events_list.map((v) => {
+            data={consolidatedDailyUsage?.map((v) => {
               return {
                 ...v,
                 environment_document: selection.includes('Environment Document')
