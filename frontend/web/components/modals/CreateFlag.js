@@ -56,6 +56,7 @@ import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineS
 import { FlagValueFooter } from './FlagValueFooter'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
+import FeatureAnalytics from 'components/feature-page/FeatureNavTab/FeatureAnalytics/FeatureAnalytics.container'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -451,9 +452,26 @@ const CreateFlag = class extends Component {
     return value
   }
   drawChart = (data) => {
-    return data?.length ? (
+    // Aggregate data by day, summing counts across different user agents
+    const aggregatedData = data?.length
+      ? Object.values(
+          data.reduce((acc, item) => {
+            const day = item.day
+            if (!acc[day]) {
+              acc[day] = {
+                count: 0,
+                day: day,
+              }
+            }
+            acc[day].count += item.count || 0
+            return acc
+          }, {}),
+        )
+      : []
+
+    return aggregatedData?.length ? (
       <ResponsiveContainer height={400} width='100%' className='mt-4'>
-        <BarChart data={data}>
+        <BarChart data={aggregatedData}>
           <CartesianGrid strokeDasharray='3 5' strokeOpacity={0.4} />
           <XAxis
             padding='gap'
@@ -1890,32 +1908,11 @@ const CreateFlag = class extends Component {
                                     )}
                                   {!Project.disableAnalytics && (
                                     <TabItem tabLabel={'Analytics'}>
-                                      <FormGroup className='mb-4'>
-                                        {!!usageData && (
-                                          <h5 className='mb-2'>
-                                            Flag events for last 30 days
-                                          </h5>
-                                        )}
-                                        {!usageData && (
-                                          <div className='text-center'>
-                                            <Loader />
-                                          </div>
-                                        )}
-
-                                        {this.drawChart(usageData)}
-                                      </FormGroup>
-                                      <InfoMessage>
-                                        The Flag Analytics data will be visible
-                                        in the Dashboard between 30 minutes and
-                                        1 hour after it has been collected.{' '}
-                                        <a
-                                          target='_blank'
-                                          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-                                          rel='noreferrer'
-                                        >
-                                          View docs
-                                        </a>
-                                      </InfoMessage>
+                                      <div className='mb-4'>
+                                        <FeatureAnalytics
+                                          usageData={usageData}
+                                        />
+                                      </div>
                                     </TabItem>
                                   )}
                                   {isCodeReferencesEnabled && (

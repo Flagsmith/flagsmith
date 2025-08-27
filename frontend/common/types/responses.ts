@@ -924,6 +924,14 @@ export type FeatureCodeReferences = {
   code_references: CodeReference[]
 }
 
+export interface AggregateUsageDataItem {
+  day: string
+  environment_document: number | null
+  flags: number
+  identities: number | null
+  traits: number | null
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -943,13 +951,7 @@ export type Res = {
       traits: number
       total: number
     }
-    events_list: {
-      environment_document: number | null
-      flags: number | null
-      identities: number | null
-      traits: number | null
-      name: string
-    }[]
+    events_list: AggregateUsageDataItem[]
   }
   identity: { id: string } //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
