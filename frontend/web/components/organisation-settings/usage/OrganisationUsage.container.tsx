@@ -1,5 +1,5 @@
 import Utils from 'common/utils/utils'
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import {
   Bar,
   BarChart,
@@ -10,171 +10,30 @@ import {
   CartesianGrid,
   TooltipProps,
 } from 'recharts'
-import ProjectFilter from 'components/ProjectFilter'
-import EnvironmentFilter from 'components/EnvironmentFilter'
 import moment from 'moment'
 import {
   NameType,
   ValueType,
 } from 'recharts/types/component/DefaultTooltipContent'
-import InfoMessage from 'components/InfoMessage'
-import { IonIcon } from '@ionic/react'
-import { checkmarkSharp } from 'ionicons/icons'
-import { billingPeriods, freePeriods, Req } from 'common/types/requests'
-import { AggregateUsageDataItem, Res } from 'common/types/responses'
+import { AggregateUsageDataItem } from 'common/types/responses'
+import UsageAPIDefinitions from './components/UsageAPIDefinitions'
 
 type OrganisationUsageProps = {
-  organisationId: string
-  data: Res['organisationUsage'] | undefined
+  chartData: AggregateUsageDataItem[]
   isError: boolean
-  consolidatedDailyUsage: AggregateUsageDataItem[]
-  project: string | undefined
-  setProject: (project: string | undefined) => void
-  environment: string | undefined
-  setEnvironment: (environment: string | undefined) => void
-  billingPeriod: Req['getOrganisationUsage']['billing_period']
-  setBillingPeriod: (
-    period: Req['getOrganisationUsage']['billing_period'],
-  ) => void
-  isOnFreePlanPeriods: boolean
-}
-type LegendItemType = {
-  title: string
-  value: number
   selection: string[]
-  onChange: (v: string) => void
-  colour?: string
-}
-
-const LegendItem: FC<LegendItemType> = ({
-  colour,
-  onChange,
-  selection,
-  title,
-  value,
-}) => {
-  if (!value) {
-    return null
-  }
-  return (
-    <div className='mb-4'>
-      <h3 className='mb-2'>{Utils.numberWithCommas(value)}</h3>
-      <Row className='cursor-pointer' onClick={() => onChange(title)}>
-        {!!colour && (
-          <span
-            className='text-white text-center'
-            style={{
-              backgroundColor: colour,
-              borderRadius: 2,
-              display: 'inline-block',
-              height: 16,
-              width: 16,
-            }}
-          >
-            {selection.includes(title) && (
-              <IonIcon size={'8px'} color='white' icon={checkmarkSharp} />
-            )}
-          </span>
-        )}
-        <span className='text-muted ml-2'>{title}</span>
-      </Row>
-    </div>
-  )
+  colours: string[]
 }
 
 const OrganisationUsage: FC<OrganisationUsageProps> = ({
-  billingPeriod,
-  consolidatedDailyUsage,
-  data,
-  environment,
+  chartData,
+  colours,
   isError,
-  isOnFreePlanPeriods,
-  organisationId,
-  project,
-  setBillingPeriod,
-  setEnvironment,
-  setProject,
+  selection,
 }) => {
-  const colours = ['#0AADDF', '#27AB95', '#FF9F43', '#EF4D56']
-  const [selection, setSelection] = useState([
-    'Flags',
-    'Identities',
-    'Environment Document',
-    'Traits',
-  ])
-
-  const updateSelection = (key) => {
-    if (selection.includes(key)) {
-      setSelection(selection.filter((v) => v !== key))
-    } else {
-      setSelection(selection.concat([key]))
-    }
-  }
-
-  return data?.totals || isError ? (
-    <div className='mt-4 row'>
-      <div className='col-md-4'>
-        <label>Period</label>
-        <Select
-          onChange={(v) => setBillingPeriod(v.value)}
-          value={billingPeriods.find((v) => v.value === billingPeriod)}
-          options={isOnFreePlanPeriods ? freePeriods : billingPeriods}
-        />
-      </div>
-      <div className='col-md-4 mb-5'>
-        <label>Project</label>
-        <ProjectFilter
-          showAll
-          organisationId={parseInt(organisationId)}
-          onChange={setProject}
-          value={project}
-        />
-      </div>
-      {project && (
-        <div className='col-md-4'>
-          <label>Environment</label>
-          <EnvironmentFilter
-            showAll
-            projectId={project}
-            onChange={setEnvironment}
-            value={environment}
-          />
-        </div>
-      )}
-      {data?.totals && (
-        <div className='d-flex gap-5 align-items-center'>
-          <LegendItem
-            selection={selection}
-            onChange={updateSelection}
-            colour={colours[0]}
-            value={data.totals.flags}
-            title='Flags'
-          />
-          <LegendItem
-            selection={selection}
-            onChange={updateSelection}
-            colour={colours[1]}
-            value={data.totals.identities}
-            title='Identities'
-          />
-          <LegendItem
-            selection={selection}
-            onChange={updateSelection}
-            colour={colours[2]}
-            value={data.totals.environmentDocument}
-            title='Environment Document'
-          />
-          <LegendItem
-            selection={selection}
-            onChange={updateSelection}
-            colour={colours[3]}
-            value={data.totals.traits}
-            title='Traits'
-          />
-          <LegendItem value={data.totals.total} title='Total API Calls' />
-        </div>
-      )}
-      {isError || data?.events_list?.length === 0 ? (
+  return chartData || isError ? (
+    <>
+      {isError || chartData?.length === 0 ? (
         <div className='py-4 fw-semibold text-center'>
           {isError
             ? 'Your organisation does not have recurrent billing periods'
@@ -182,28 +41,13 @@ const OrganisationUsage: FC<OrganisationUsageProps> = ({
         </div>
       ) : (
         <ResponsiveContainer height={400} width='100%'>
-          <BarChart
-            data={consolidatedDailyUsage?.map((v) => {
-              return {
-                ...v,
-                environment_document: selection.includes('Environment Document')
-                  ? v.environment_document
-                  : undefined,
-                flags: selection.includes('Flags') ? v.flags : undefined,
-                identities: selection.includes('Identities')
-                  ? v.identities
-                  : undefined,
-                traits: selection.includes('Traits') ? v.traits : undefined,
-              }
-            })}
-            style={{ stroke: '#fff', strokeWidth: 1 }}
-          >
+          <BarChart data={chartData} style={{ stroke: '#fff', strokeWidth: 1 }}>
             <CartesianGrid stroke='#EFF1F4' vertical={false} />
             <XAxis
               padding='gap'
               allowDataOverflow={false}
               dataKey='day'
-              interval={data.events_list?.length > 31 ? 7 : 0}
+              interval={chartData?.length > 31 ? 7 : 0}
               height={120}
               angle={-90}
               textAnchor='end'
@@ -253,82 +97,8 @@ const OrganisationUsage: FC<OrganisationUsageProps> = ({
           </BarChart>
         </ResponsiveContainer>
       )}
-      <InfoMessage>
-        Please be aware that usage data can be delayed by up to 3 hours.
-      </InfoMessage>
-      <div>
-        <h4>What do these numbers mean?</h4>
-        <h5>Flags</h5>
-        <p>
-          This is a single call to get the Environment Flag defaults, without
-          providing an Identity. Note that if you trigger an update of flags via
-          the SDK, this will count as an additional call.
-        </p>
-        <p>
-          <a
-            href='https://docs.flagsmith.com/basic-features/managing-features'
-            target='_blank'
-            rel='noreferrer'
-          >
-            Learn more.
-          </a>
-        </p>
-        <h5>Identities</h5>
-        <p>
-          This is a single call to get the flags for a specific Identity. If
-          this is the first time flags have been requested for that Identity, it
-          will be persisted in our datastore. Note that this number is{' '}
-          <em>not</em> a total count of Identities in the datastore, but the
-          number of times an Identity has requested their flags. Note that if
-          you trigger an update of flags via the SDK, this will count as an
-          additional call.
-        </p>
-        <p>
-          <a
-            href='https://docs.flagsmith.com/basic-features/managing-identities'
-            target='_blank'
-            rel='noreferrer'
-          >
-            Learn more.
-          </a>
-        </p>
-        <h5>Environment Document</h5>
-        <p>
-          This is a single call made by Server-Side SDKs (when running in Local
-          Evaluation Mode), and the Edge Proxy to get the entire Environment
-          dataset so they can run flag evaluations locally.
-        </p>
-        <p>
-          By default, server-side SDKs refresh this data every 60 seconds, and
-          the Edge Proxy every 10 seconds. Each refresh will count as a single
-          call. These time periods are configurable.
-        </p>
-        <p>
-          <a
-            href='https://docs.flagsmith.com/clients/overview#local-evaluation'
-            target='_blank'
-            rel='noreferrer'
-          >
-            Learn more.
-          </a>
-        </p>
-        <h5>Traits</h5>
-        <p>
-          This is the number of times Traits for an Identity have been written.
-        </p>
-        <p>
-          <a
-            href='https://docs.flagsmith.com/basic-features/managing-identities'
-            target='_blank'
-            rel='noreferrer'
-          >
-            Learn more.
-          </a>
-        </p>
-        <h5>Total API calls</h5>
-        <p>This is a sum of the above.</p>
-      </div>
-    </div>
+      <UsageAPIDefinitions />
+    </>
   ) : (
     <div className='text-center'>
       <Loader />

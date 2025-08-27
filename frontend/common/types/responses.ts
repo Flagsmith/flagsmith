@@ -927,7 +927,7 @@ export type FeatureCodeReferences = {
 export interface AggregateUsageDataItem {
   day: string
   environment_document: number | null
-  flags: number
+  flags: number | null
   identities: number | null
   traits: number | null
 }

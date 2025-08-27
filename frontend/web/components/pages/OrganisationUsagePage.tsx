@@ -11,6 +11,8 @@ import AccountStore from 'common/stores/account-store'
 import { planNames } from 'common/utils/utils'
 import { Req } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
+import UsageFilters from 'components/organisation-settings/usage/components/UsageFilters'
+import UsageTotals from 'components/organisation-settings/usage/components/UsageTotals'
 
 interface RouteParams {
   organisationId: string
@@ -31,7 +33,14 @@ const OrganisationUsagePage: FC = () => {
   )
   const [project, setProject] = useState<string | undefined>()
   const [environment, setEnvironment] = useState<string | undefined>()
+  const [selection, setSelection] = useState([
+    'Flags',
+    'Identities',
+    'Environment Document',
+    'Traits',
+  ])
 
+  const colours = ['#0AADDF', '#27AB95', '#FF9F43', '#EF4D56']
   const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
   const orgSubscription = AccountStore.getOrganisation()?.subscription
   const isOnFreePlanPeriods =
@@ -42,13 +51,6 @@ const OrganisationUsagePage: FC = () => {
     Req['getOrganisationUsage']['billing_period']
   >(isOnFreePlanPeriods ? '90_day_period' : 'current_billing_period')
 
-  console.log('Query params:', {
-    billing_period: billingPeriod,
-    environmentId: environment,
-    organisationId: organisationId?.toString() || '',
-    projectId: project,
-  })
-
   const { data, isError } = useGetOrganisationUsageQuery(
     {
       billing_period: billingPeriod,
@@ -58,12 +60,10 @@ const OrganisationUsagePage: FC = () => {
     },
     { skip: !organisationId },
   )
-  console.log('Query result:', { data, isError })
 
   // Aggregate usage events by date, summing metrics across all client types
-  const consolidatedDailyUsage = useMemo(() => {
-    console.log('recomputing')
-    return Object.values(
+  const chartData = useMemo(() => {
+    const consolidated = Object.values(
       data?.events_list?.reduce((acc, event) => {
         const date = event.day
         if (!acc[date]) {
@@ -87,8 +87,18 @@ const OrganisationUsagePage: FC = () => {
         return acc
       }, {} as Record<string, AggregateUsageDataItem>) || {},
     )
-  }, [data?.events_list])
-  console.log('consolidatedDailyUsage', consolidatedDailyUsage?.length)
+
+    return consolidated.map((v) => ({
+      ...v,
+      environment_document: selection.includes('Environment Document')
+        ? v.environment_document
+        : null,
+      flags: selection.includes('Flags') ? v.flags : null,
+      identities: selection.includes('Identities') ? v.identities : null,
+      traits: selection.includes('Traits') ? v.traits : null,
+    }))
+  }, [data?.events_list, selection])
+
   useEffect(() => {
     const currentView = getInitialView()
     if (currentView !== chartsView) {
@@ -96,19 +106,14 @@ const OrganisationUsagePage: FC = () => {
     }
   }, [location.search, chartsView, getInitialView])
 
-  // Shared usage data props
-  const usageDataProps = {
-    billingPeriod,
-    consolidatedDailyUsage,
-    data,
-    environment,
-    isError,
-    isOnFreePlanPeriods,
-    project,
-    setBillingPeriod,
-    setEnvironment,
-    setProject,
+  const updateSelection = (key) => {
+    if (selection.includes(key)) {
+      setSelection(selection.filter((v) => v !== key))
+    } else {
+      setSelection(selection.concat([key]))
+    }
   }
+
   return (
     <div className='app-container px-3 px-md-0 pb-2'>
       <Row className='grid-container gap-x-3'>
@@ -123,6 +128,22 @@ const OrganisationUsagePage: FC = () => {
           </div>
         </div>
         <div className='col-12 col-md-8'>
+          <UsageFilters
+            organisationId={organisationId?.toString() || ''}
+            project={project}
+            setProject={setProject}
+            environment={environment}
+            setEnvironment={setEnvironment}
+            billingPeriod={billingPeriod}
+            setBillingPeriod={setBillingPeriod}
+            isOnFreePlanPeriods={isOnFreePlanPeriods}
+          />
+          <UsageTotals
+            data={data}
+            selection={selection}
+            updateSelection={updateSelection}
+            colours={colours}
+          />
           {chartsView === 'metrics' ? (
             <OrganisationUsageMetrics />
           ) : (
@@ -130,7 +151,7 @@ const OrganisationUsagePage: FC = () => {
               organisationId={match.params.organisationId}
               data={data}
               isError={isError}
-              consolidatedDailyUsage={consolidatedDailyUsage}
+              chartData={chartData}
               project={project}
               setProject={setProject}
               environment={environment}
@@ -138,6 +159,8 @@ const OrganisationUsagePage: FC = () => {
               billingPeriod={billingPeriod}
               setBillingPeriod={setBillingPeriod}
               isOnFreePlanPeriods={isOnFreePlanPeriods}
+              selection={selection}
+              colours={colours}
             />
           )}
         </div>
