@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.194.0](https://github.com/Flagsmith/flagsmith/compare/v2.193.0...v2.194.0) (2025-08-27)
+
+
+### Features
+
+* wait for trigger summary ui update ([#5956](https://github.com/Flagsmith/flagsmith/issues/5956)) ([7c972a6](https://github.com/Flagsmith/flagsmith/commit/7c972a6fbd6e3927976199320dc38beffbfdbb46))
+
+
+### Bug Fixes
+
+* correctly-pass-description-value ([#5985](https://github.com/Flagsmith/flagsmith/issues/5985)) ([7ba62a4](https://github.com/Flagsmith/flagsmith/commit/7ba62a45e0adccd488291e9aad4bd8f135bafca6))
+* **GitHub PoC:** added-no-wrap-to-code-reference-item ([#5989](https://github.com/Flagsmith/flagsmith/issues/5989)) ([d28f688](https://github.com/Flagsmith/flagsmith/commit/d28f6884f0f6c0f81bd8ee6ef7392020bce40ea2))
+* **GitHub PoC:** Fix permalinks ([#5988](https://github.com/Flagsmith/flagsmith/issues/5988)) ([cf05b7a](https://github.com/Flagsmith/flagsmith/commit/cf05b7a5598bd5f45c426b0179fcabc304511334))
+
 ## [2.193.0](https://github.com/Flagsmith/flagsmith/compare/v2.192.4...v2.193.0) (2025-08-26)
 
 
