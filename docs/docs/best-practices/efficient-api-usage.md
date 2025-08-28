@@ -62,7 +62,7 @@ Consideration needs to be given to the caveats of running the Edge Proxy, but it
 
 ## Micro-service Architectures
 
-Choosing the right project structure for your micro-services can have a significant impact on API usage. When you have multiple services, should you create a single Flagsmith Project for all of them, or one project per service?
+Choosing the right project structure for your micro-services can have a significant impact on API usage. When you have multiple services, should you create a single Flagsmith project for all of them, or one project per service?
 
 The answer depends on how coupled your services are.
 
