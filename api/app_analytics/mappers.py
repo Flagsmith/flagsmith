@@ -3,12 +3,11 @@ from functools import partial
 from typing import Any, Iterable
 
 from django.http import HttpRequest
-from fastuaparser import parse_ua  # type: ignore[import-untyped]
 from influxdb_client.client.flux_table import FluxTable
 from pydantic import Field, create_model
 from pydantic.type_adapter import TypeAdapter
 
-from app_analytics.constants import LABELS, TRACK_HEADERS
+from app_analytics.constants import LABELS, SDK_USER_AGENT_KNOWN_VERSIONS, TRACK_HEADERS
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
 from app_analytics.models import FeatureEvaluationRaw, Resource
 from app_analytics.types import (
@@ -119,19 +118,20 @@ def map_flux_tables_to_feature_evaluation_data(
 def map_input_labels_to_labels(input_labels: InputLabels) -> Labels:
     labels: Labels = {}
     for label, value in input_labels.items():
-        if label == "sdk_user_agent":
-            labels["user_agent"] = value
+        if label == "sdk_user_agent" or label == "user_agent":
+            labels["user_agent"] = map_user_agent_to_sdk_user_agent(value)
             continue
-        elif label == "user_agent":
-            # fastuaparser classifies unrecognized UAs as "Other" — assume these to
-            # represent server-side SDKs.
-            parsed_ua_string: str = parse_ua(value)
-            is_server_side_sdk = parsed_ua_string.startswith("Other")
-            # Skip browser SDKs that don't send the special header.
-            if not is_server_side_sdk:
-                continue
         labels[label] = value
     return labels
+
+
+def map_user_agent_to_sdk_user_agent(value: str) -> str:
+    sdk_name, sdk_version = value.split("/")
+    if versions := SDK_USER_AGENT_KNOWN_VERSIONS.get(sdk_name):
+        if sdk_version in versions:
+            return value
+        return f"{sdk_name}/unknown"
+    return "unknown/unknown"
 
 
 def map_request_to_labels(request: HttpRequest) -> Labels:
