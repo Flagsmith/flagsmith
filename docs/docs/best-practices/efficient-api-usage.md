@@ -21,7 +21,7 @@ The most common, most efficient workflow we have found with people using Flagsmi
 3. The application makes a request for the flags for the environment (_not_ the Identity as the user is still unknown at this stage).
 4. The user logs into the application. A request is then made for the identity flags (along with any traits for that identity).
 5. This data is then cached locally on the device and used for the duration of the user's session.
-6. When the user reopens the app (for example, the following day) the cached values in the previous step are used. The application then re-requests the Identity flags (in case any flags have changed in the meantime) and caches the data.
+6. When the user reopens the app (for example, the following day) the cached values in the previous step are used. The application then re-requests the identity flags (in case any flags have changed in the meantime) and caches the data.
 
 ### Setting Traits Efficiently
 
