@@ -1,46 +1,92 @@
-import { Res } from 'common/types/responses'
 import React, { useMemo } from 'react'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-} from 'recharts'
-import moment from 'moment'
-import Utils from 'common/utils/utils'
-import { Tooltip as _Tooltip } from 'recharts'
+import { Res } from 'common/types/responses'
+import SingleSDKLabelsChart from './components/SingleSDKLabelsChart'
 
 export interface OrganisationUsageMetricsProps {
-  data: Res['organisationUsage']
-  colours: string[]
+  data?: Res['organisationUsage']
+  selectedMetrics: string[]
 }
+export type ChartDataPoint = {
+  day: any
+} & Record<string, number>
 
 const OrganisationUsageMetrics: React.FC<OrganisationUsageMetricsProps> = ({
-  colours,
   data,
+  selectedMetrics,
 }) => {
-  const flagsChartData = useMemo(() => {
-    if (!data?.events_list) return []
+  const colours = [
+    'rgba(37, 99, 235, 0.8)',
+    'rgba(220, 38, 38, 0.8)',
+    'rgba(22, 163, 74, 0.8)',
+    'rgba(234, 88, 12, 0.8)',
+    'rgba(124, 58, 237, 0.8)',
+    'rgba(8, 145, 178, 0.8)',
+    'rgba(219, 39, 119, 0.8)',
+    'rgba(132, 204, 22, 0.8)',
+    'rgba(245, 158, 11, 0.8)',
+    'rgba(139, 92, 246, 0.8)',
+    'rgba(6, 182, 212, 0.8)',
+    'rgba(244, 114, 182, 0.8)',
+    'rgba(16, 185, 129, 0.8)',
+    'rgba(249, 115, 22, 0.8)',
+    'rgba(99, 102, 241, 0.8)',
+    'rgba(239, 68, 68, 0.8)',
+    'rgba(34, 197, 94, 0.8)',
+    'rgba(168, 85, 247, 0.8)',
+    'rgba(20, 184, 166, 0.8)',
+    'rgba(234, 179, 8, 0.8)',
+  ]
+  const {
+    environmentDocumentChartData,
+    flagsChartData,
+    identitiesChartData,
+    traitsChartData,
+  } = useMemo(() => {
+    if (!data?.events_list)
+      return {
+        environmentDocumentChartData: [],
+        flagsChartData: [],
+        identitiesChartData: [],
+        traitsChartData: [],
+      }
 
-    // Group by day, then by user_agent
-    const grouped = data.events_list.reduce((acc, event) => {
-      if (!event.flags) return acc // Skip if no flags data
+    const flagsGrouped: Record<string, ChartDataPoint> = {}
+    const identitiesGrouped: Record<string, ChartDataPoint> = {}
+    const environmentDocumentGrouped: Record<string, ChartDataPoint> = {}
+    const traitsGrouped: Record<string, ChartDataPoint> = {}
 
+    data.events_list.forEach((event) => {
       const date = event.day
       const userAgent = event.labels?.user_agent || 'Unknown'
 
-      if (!acc[date]) acc[date] = { day: date }
-      acc[date][userAgent] = (acc[date][userAgent] || 0) + event.flags
+      if (!flagsGrouped[date])
+        flagsGrouped[date] = { day: date } as ChartDataPoint
+      if (!identitiesGrouped[date])
+        identitiesGrouped[date] = { day: date } as ChartDataPoint
+      if (!environmentDocumentGrouped[date])
+        environmentDocumentGrouped[date] = { day: date } as ChartDataPoint
+      if (!traitsGrouped[date])
+        traitsGrouped[date] = { day: date } as ChartDataPoint
 
-      return acc
-    }, {} as Record<string, any>)
+      flagsGrouped[date][userAgent] =
+        (flagsGrouped[date][userAgent] || 0) + (event.flags || 0)
+      identitiesGrouped[date][userAgent] =
+        (identitiesGrouped[date][userAgent] || 0) + (event.identities || 0)
+      environmentDocumentGrouped[date][userAgent] =
+        (environmentDocumentGrouped[date][userAgent] || 0) +
+        (event.environment_document || 0)
+      traitsGrouped[date][userAgent] =
+        (traitsGrouped[date][userAgent] || 0) + (event.traits || 0)
+    })
 
-    return Object.values(grouped)
+    return {
+      environmentDocumentChartData: Object.values(environmentDocumentGrouped),
+      flagsChartData: Object.values(flagsGrouped),
+      identitiesChartData: Object.values(identitiesGrouped),
+      traitsChartData: Object.values(traitsGrouped),
+    }
   }, [data?.events_list])
 
-  // Unique user agents for legend/colors
   const userAgents = useMemo(() => {
     if (!data?.events_list) return []
     return [
@@ -50,94 +96,52 @@ const OrganisationUsageMetrics: React.FC<OrganisationUsageMetricsProps> = ({
     ]
   }, [data?.events_list])
 
+  const chartItems = [
+    {
+      data: flagsChartData,
+      metricKey: 'flags',
+      title: 'Flags',
+      userAgents,
+      visible: selectedMetrics?.includes('Flags'),
+    },
+    {
+      data: identitiesChartData,
+      metricKey: 'identities',
+      title: 'Identities',
+      userAgents,
+      visible: selectedMetrics?.includes('Identities'),
+    },
+    {
+      data: environmentDocumentChartData,
+      metricKey: 'environmentDocuments',
+      title: 'Environment Documents',
+      userAgents,
+      visible: selectedMetrics?.includes('Environment Document'),
+    },
+    {
+      data: traitsChartData,
+      metricKey: 'traits',
+      title: 'Traits',
+      userAgents,
+      visible: selectedMetrics?.includes('Traits'),
+    },
+  ]
+
   return (
     <div className='row'>
-      <div className='col-12 col-lg-6 mb-4'>
-        <div className='border rounded p-3'>
-          <h5>Flags Analytics</h5>
-          <ResponsiveContainer height={250} width='100%'>
-            <BarChart data={flagsChartData}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <_Tooltip
-                cursor={{ fill: 'transparent' }}
-                content={<RechartsTooltip />}
-              />
-              <XAxis
-                dataKey='day'
-                tickFormatter={(v) => moment(v).format('M/D')}
-              />
-              <YAxis />
-              {userAgents.map((userAgent, index) => (
-                <Bar
-                  key={userAgent}
-                  dataKey={userAgent}
-                  stackId='flags'
-                  fill={colours[index % colours.length]}
-                />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className='col-12 col-lg-6 mb-4'>
-        <div className='border rounded p-3'>
-          <h5>Identities Analytics</h5>
-          {/* Identities chart component */}
-        </div>
-      </div>
-
-      <div className='col-12 col-lg-6 mb-4'>
-        <div className='border rounded p-3'>
-          <h5>Environment Documents Analytics</h5>
-          {/* Environment Documents chart component */}
-        </div>
-      </div>
-
-      <div className='col-12 col-lg-6 mb-4'>
-        <div className='border rounded p-3'>
-          <h5>Traits Analytics</h5>
-          {/* Traits chart component */}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const RechartsTooltip: FC<TooltipProps<ValueType, NameType>> = ({
-  active,
-  label,
-  payload,
-}) => {
-  if (!active || !payload || payload.length === 0) {
-    return null
-  }
-
-  return (
-    <div className='recharts-tooltip py-2'>
-      <div className='px-4 py-2 fs-small lh-sm fw-bold recharts-tooltip-header'>
-        {moment(label).format('D MMM')}
-      </div>
-      <hr className='py-0 my-0 mb-3' />
-      {payload.map((el: any) => {
-        const { dataKey, fill, value } = el
-        return (
-          <Row key={dataKey} className='px-4 mb-3'>
-            <span
-              style={{
-                backgroundColor: fill,
-                borderRadius: 2,
-                display: 'inline-block',
-                height: 16,
-                width: 16,
-              }}
+      {chartItems
+        .filter((chart) => chart.visible)
+        .map((chart) => (
+          <div className='col-12 mb-4' key={chart.metricKey}>
+            <SingleSDKLabelsChart
+              data={chart.data}
+              userAgents={chart.userAgents}
+              metricKey={chart.metricKey}
+              title={chart.title}
+              colours={colours}
             />
-            <span className='text-muted ml-2'>
-              {dataKey}: {Utils.numberWithCommas(value)}
-            </span>
-          </Row>
-        )
-      })}
+          </div>
+        ))}
     </div>
   )
 }

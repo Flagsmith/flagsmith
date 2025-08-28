@@ -7,7 +7,7 @@
 }
 
 @media (min-width: 1220px) {
-  .app-container {
+  .app-container:not(.fullwidth-app-container) {
     max-width: 1220px;
   }
 }

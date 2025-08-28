@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import OrganisationUsage from 'components/organisation-settings/usage/OrganisationUsage.container'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import { useLocation, useRouteMatch } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import OrganisationUsageMetrics from 'components/organisation-settings/usage/OrganisationUsageMetrics.container'
 import OrganisationUsageSideBar from 'components/organisation-settings/usage/components/OrganisationUsageSideBar'
 import { useRouteContext } from 'components/providers/RouteContext'
@@ -101,7 +101,7 @@ const OrganisationUsagePage: FC = () => {
     }
   }, [location.search, chartsView, getInitialView])
 
-  const updateSelection = (key) => {
+  const updateSelection = (key: string) => {
     if (selection.includes(key)) {
       setSelection(selection.filter((v) => v !== key))
     } else {
@@ -110,7 +110,7 @@ const OrganisationUsagePage: FC = () => {
   }
 
   return (
-    <div className='app-container px-3 px-md-0 pb-2'>
+    <div className='app-container fullwidth-app-container px-3 px-md-0 pb-2'>
       <Row className='grid-container gap-x-12 align-items-start'>
         <div className='col-12 col-md-2 border-md-right home-aside aside-small d-flex flex-column'>
           {organisationId && (
@@ -138,7 +138,7 @@ const OrganisationUsagePage: FC = () => {
             colours={colours}
           />
           {chartsView === 'metrics' ? (
-            <OrganisationUsageMetrics data={data} colours={colours} />
+            <OrganisationUsageMetrics data={data} selectedMetrics={selection} />
           ) : (
             <OrganisationUsage
               chartData={chartData}
