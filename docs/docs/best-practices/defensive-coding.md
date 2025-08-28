@@ -6,7 +6,7 @@ sidebar_position: 30
 
 Introducing feature flags and remote config to your applications can provide a wealth of benefits, but there are also a few drawbacks. Fortunately, the majority of these can be avoided through [defensive coding](#defensive-coding) and sensible approaches to default flags.
 
-In addition to the approaches you can take integrating our SDKs, there are a number of [Design for Failure](#designing-for-failure) concepts that are built into the platform architecture to ensure that Flagsmith provides a reliable, dependable solution.
+In addition to the approaches you can take integrating our SDKs, there are a number of [design for failure](#designing-for-failure) concepts that are built into the platform architecture to ensure that Flagsmith provides a reliable, dependable solution.
 
 ## Defensive Coding
 

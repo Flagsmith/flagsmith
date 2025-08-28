@@ -17,15 +17,15 @@ It is good engineering practise to reduce the frequency of API calls made from y
 The most common, most efficient workflow we have found with people using Flagsmith on the client side (browsers, mobile apps etc) is the following:
 
 1. The user opens the app for the first time, as an anonymous user.
-2. The application loads, using Default Flag values as defined in code.
-3. The application makes a request for the Flags for the Environment (_not_ the Identity as the user is still unknown at this stage).
-4. The user logs into the application. A request is then made for the Identity Flags (along with any Traits for that Identity).
+2. The application loads, using default flag values as defined in code.
+3. The application makes a request for the flags for the environment (_not_ the Identity as the user is still unknown at this stage).
+4. The user logs into the application. A request is then made for the identity flags (along with any traits for that identity).
 5. This data is then cached locally on the device and used for the duration of the user's session.
 6. When the user reopens the app (for example, the following day) the cached values in the previous step are used. The application then re-requests the Identity flags (in case any flags have changed in the meantime) and caches the data.
 
 ### Setting Traits Efficiently
 
-Every time a Trait as set via the SDK, they will make a request to the Flagsmith API with the Trait data and receive an updated set of flags.
+Every time a trait as set via the SDK, they will make a request to the Flagsmith API with the trait data and receive an updated set of flags.
 
 In order to reduce these calls, we recommend setting the full complement of traits in a single SDK call. There's more info around achieving this in our [Javascript FAQ](/clients/javascript#faqs).
 
@@ -39,7 +39,7 @@ That being said, there are use-cases for real time flags. Using our [real-time f
 
 ### Local Evaluation Mode
 
-The most efficient way of evaluating Flags on the Server is using [Local Evaluation mode](/clients#local-evaluation). There are [some caveats](/clients#local-evaluation), so please be aware of them!
+The most efficient way of evaluating feature flags on the server is using [local evaluation mode](/clients#local-evaluation). There are [some caveats](/clients#local-evaluation), so please be aware of them!
 
 ### CDN Usage
 
