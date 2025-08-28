@@ -5,7 +5,7 @@ import React from 'react'
 
 type OrganisationUsageSideBarProps = {
   organisationId: number
-  activeTab: 'global' | 'metrics'
+  activeTab: 'global' | 'user-agents'
 }
 
 const OrganisationUsageSideBar = ({
@@ -17,14 +17,14 @@ const OrganisationUsageSideBar = ({
     {
       icon: 'bar-chart',
       id: 'global',
-      label: 'Global Usage',
+      label: 'By Endpoint',
       to: `/organisation/${organisationId}/usage`,
     },
     {
       icon: 'search',
-      id: 'metrics',
-      label: 'Metrics',
-      to: `/organisation/${organisationId}/usage?p=metrics`,
+      id: 'user-agents',
+      label: 'By SDK',
+      to: `/organisation/${organisationId}/usage?p=user-agents`,
     },
   ]
 

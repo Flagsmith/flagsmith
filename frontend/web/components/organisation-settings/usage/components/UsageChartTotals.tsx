@@ -51,61 +51,67 @@ const LegendItem: FC<LegendItemType> = ({
   )
 }
 
-export interface UsageTotalsProps {
+export interface UsageChartTotalsProps {
   data: Res['organisationUsage'] | undefined
   selection: string[]
   updateSelection: (key: string) => void
   colours: string[]
+  withColor?: boolean
 }
 
-const UsageTotals: FC<UsageTotalsProps> = ({
+const UsageChartTotals: FC<UsageChartTotalsProps> = ({
   colours,
   data,
   selection,
   updateSelection,
+  withColor = true,
 }) => {
   if (!data?.totals) {
     return null
   }
 
+  const totalItems = [
+    {
+      colour: colours[0],
+      title: 'Flags',
+      value: data.totals.flags,
+    },
+    {
+      colour: colours[1],
+      title: 'Identities',
+      value: data.totals.identities,
+    },
+    {
+      colour: colours[2],
+      title: 'Environment Document',
+      value: data.totals.environmentDocument,
+    },
+    {
+      colour: colours[3],
+      title: 'Traits',
+      value: data.totals.traits,
+    },
+    {
+      colour: undefined,
+      title: 'Total API Calls',
+      value: data.totals.total,
+    },
+  ]
+
   return (
     <div className='d-flex gap-5 align-items-start'>
-      <LegendItem
-        selection={selection}
-        onChange={updateSelection}
-        colour={colours[0]}
-        value={data.totals.flags}
-        title='Flags'
-      />
-      <LegendItem
-        selection={selection}
-        onChange={updateSelection}
-        colour={colours[1]}
-        value={data.totals.identities}
-        title='Identities'
-      />
-      <LegendItem
-        selection={selection}
-        onChange={updateSelection}
-        colour={colours[2]}
-        value={data.totals.environmentDocument}
-        title='Environment Document'
-      />
-      <LegendItem
-        selection={selection}
-        onChange={updateSelection}
-        colour={colours[3]}
-        value={data.totals.traits}
-        title='Traits'
-      />
-      <LegendItem
-        selection={selection}
-        onChange={updateSelection}
-        value={data.totals.total}
-        title='Total API Calls'
-      />
+      {totalItems.map((item) => (
+        <LegendItem
+          key={item.title}
+          selection={selection}
+          onChange={updateSelection}
+          colour={!withColor && item.colour ? '#6837fc' : item.colour}
+          value={item.value}
+          title={item.title}
+        />
+      ))}
     </div>
   )
 }
 
-export default UsageTotals
+export default UsageChartTotals

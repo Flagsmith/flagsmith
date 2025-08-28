@@ -11,19 +11,19 @@ import AccountStore from 'common/stores/account-store'
 import { planNames } from 'common/utils/utils'
 import { Req } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
-import UsageFilters from 'components/organisation-settings/usage/components/UsageFilters'
-import UsageTotals from 'components/organisation-settings/usage/components/UsageTotals'
+import UsageChartFilters from 'components/organisation-settings/usage/components/UsageChartFilters'
+import UsageChartTotals from 'components/organisation-settings/usage/components/UsageChartTotals'
 
 const OrganisationUsagePage: FC = () => {
   const { organisationId } = useRouteContext()
   const location = useLocation()
 
-  const getInitialView = useCallback((): 'global' | 'metrics' => {
+  const getInitialView = useCallback((): 'global' | 'user-agents' => {
     const params = new URLSearchParams(location.search)
-    return params.get('p') === 'metrics' ? 'metrics' : 'global'
+    return params.get('p') === 'user-agents' ? 'user-agents' : 'global'
   }, [location.search])
 
-  const [chartsView, setChartsView] = useState<'global' | 'metrics'>(
+  const [chartsView, setChartsView] = useState<'global' | 'user-agents'>(
     getInitialView(),
   )
   const [project, setProject] = useState<string | undefined>()
@@ -121,7 +121,7 @@ const OrganisationUsagePage: FC = () => {
           )}
         </div>
         <div className='col-12 col-md-9'>
-          <UsageFilters
+          <UsageChartFilters
             organisationId={organisationId?.toString() || ''}
             project={project}
             setProject={setProject}
@@ -131,13 +131,14 @@ const OrganisationUsagePage: FC = () => {
             setBillingPeriod={setBillingPeriod}
             isOnFreePlanPeriods={isOnFreePlanPeriods}
           />
-          <UsageTotals
+          <UsageChartTotals
             data={data}
             selection={selection}
             updateSelection={updateSelection}
             colours={colours}
+            withColor={chartsView !== 'user-agents'}
           />
-          {chartsView === 'metrics' ? (
+          {chartsView === 'user-agents' ? (
             <OrganisationUsageMetrics data={data} selectedMetrics={selection} />
           ) : (
             <OrganisationUsage

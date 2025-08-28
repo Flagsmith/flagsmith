@@ -19,10 +19,11 @@ import { ChartDataPoint } from 'components/organisation-settings/usage/Organisat
 import Utils from 'common/utils/utils'
 
 interface UsageChartProps {
+  colours: string[]
   title: string
   data: ChartDataPoint[]
-  userAgents: string[]
-  colours: string[]
+  userAgents?: string[]
+  userAgentsColorMap: Map<any, any>
   metricKey: string
 }
 
@@ -31,7 +32,8 @@ const UsageChart: React.FC<UsageChartProps> = ({
   data,
   metricKey,
   title,
-  userAgents,
+  userAgents = [],
+  userAgentsColorMap,
 }) => (
   <div className='border rounded p-3'>
     <h5>{title}</h5>
@@ -42,15 +44,27 @@ const UsageChart: React.FC<UsageChartProps> = ({
           cursor={{ fill: 'transparent' }}
           content={<RechartsTooltip />}
         />
-        <XAxis dataKey='day' tickFormatter={(v) => moment(v).format('M/D')} />
+        <XAxis
+          dataKey='day'
+          tickFormatter={(v) => moment(v).format('D MMM')}
+          interval={7}
+          axisLine={{ stroke: '#EFF1F4' }}
+          tick={{ dx: -4, fill: '#656D7B' }}
+          tickLine={false}
+          allowDataOverflow={false}
+        />
         <YAxis />
         <Legend />
-        {userAgents.map((userAgent, index) => (
+        {userAgents?.map((userAgent, index) => (
           <Bar
             key={userAgent}
             dataKey={userAgent}
             stackId={metricKey}
-            fill={colours[index % colours.length]}
+            fill={
+              userAgentsColorMap
+                ? userAgentsColorMap.get(userAgent)
+                : colours[index % colours.length]
+            }
           />
         ))}
       </BarChart>

@@ -3,7 +3,7 @@ import ProjectFilter from 'components/ProjectFilter'
 import EnvironmentFilter from 'components/EnvironmentFilter'
 import { billingPeriods, freePeriods, Req } from 'common/types/requests'
 
-export interface UsageFiltersProps {
+export interface UsageChartFiltersProps {
   organisationId: string
   project: string | undefined
   setProject: (project: string | undefined) => void
@@ -16,7 +16,7 @@ export interface UsageFiltersProps {
   isOnFreePlanPeriods: boolean
 }
 
-const UsageFilters: FC<UsageFiltersProps> = ({
+const UsageChartFilters: FC<UsageChartFiltersProps> = ({
   billingPeriod,
   environment,
   isOnFreePlanPeriods,
@@ -60,4 +60,4 @@ const UsageFilters: FC<UsageFiltersProps> = ({
   )
 }
 
-export default UsageFilters
+export default UsageChartFilters
