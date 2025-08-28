@@ -21,18 +21,20 @@ const SidebarLink: FC<SidebarLinkType> = ({
   const Tag = (to ? NavLink : 'div') as any
   const activeClassName =
     'text-primary fw-semibold bg-primary-opacity-5 fill-primary'
-  const inactiveClassName = 'text-body fill-body'
+  const inactiveClassName = 'text-body fill-body fw-semibold'
+
   return (
     <Tag
       {...rest}
       to={to}
       activeClassName={activeClassName}
       inactiveClassName={activeClassName}
+      exact={true}
       className={classNames(
         rest.className,
         'd-flex hover-fill-primary hover-bg-primary gap-2 cursor-pointer align-items-center p-2 rounded',
         {
-          [activeClassName]: active,
+          [activeClassName]: !to && active,
           [inactiveClassName]: !to && !active,
         },
       )}
