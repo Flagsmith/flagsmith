@@ -7,16 +7,6 @@ import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import FeatureListStore from 'common/stores/feature-list-store'
 import IdentityProvider from 'common/providers/IdentityProvider'
-
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import SegmentOverrides from 'components/SegmentOverrides'
@@ -56,6 +46,7 @@ import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineS
 import { FlagValueFooter } from './FlagValueFooter'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
+import FeatureAnalytics from 'components/feature-page/FeatureNavTab/FeatureAnalytics/FeatureAnalytics.container'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -449,53 +440,6 @@ const CreateFlag = class extends Component {
       return value.trim()
     }
     return value
-  }
-  drawChart = (data) => {
-    return data?.length ? (
-      <ResponsiveContainer height={400} width='100%' className='mt-4'>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray='3 5' strokeOpacity={0.4} />
-          <XAxis
-            padding='gap'
-            interval={0}
-            height={100}
-            angle={-90}
-            textAnchor='end'
-            allowDataOverflow={false}
-            dataKey='day'
-            tick={{ dx: -4, fill: '#656D7B' }}
-            tickLine={false}
-            axisLine={{ stroke: '#656D7B' }}
-          />
-          <YAxis
-            allowDataOverflow={false}
-            tick={{ fill: '#656D7B' }}
-            axisLine={{ stroke: '#656D7B' }}
-          />
-          <RechartsTooltip cursor={{ fill: 'transparent' }} />
-          <Bar
-            dataKey={'count'}
-            stackId='a'
-            fill='rgba(149, 108, 255,0.48)'
-            barSize={14}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    ) : (
-      <div className='modal-caption fs-small lh-sm'>
-        There has been no activity for this flag within the past month. Find out
-        about Flag Analytics{' '}
-        <Button
-          theme='text'
-          target='_blank'
-          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-          className='fw-normal'
-        >
-          here
-        </Button>
-        .
-      </div>
-    )
   }
 
   addItem = () => {
@@ -1890,32 +1834,11 @@ const CreateFlag = class extends Component {
                                     )}
                                   {!Project.disableAnalytics && (
                                     <TabItem tabLabel={'Analytics'}>
-                                      <FormGroup className='mb-4'>
-                                        {!!usageData && (
-                                          <h5 className='mb-2'>
-                                            Flag events for last 30 days
-                                          </h5>
-                                        )}
-                                        {!usageData && (
-                                          <div className='text-center'>
-                                            <Loader />
-                                          </div>
-                                        )}
-
-                                        {this.drawChart(usageData)}
-                                      </FormGroup>
-                                      <InfoMessage>
-                                        The Flag Analytics data will be visible
-                                        in the Dashboard between 30 minutes and
-                                        1 hour after it has been collected.{' '}
-                                        <a
-                                          target='_blank'
-                                          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-                                          rel='noreferrer'
-                                        >
-                                          View docs
-                                        </a>
-                                      </InfoMessage>
+                                      <div className='mb-4'>
+                                        <FeatureAnalytics
+                                          usageData={usageData}
+                                        />
+                                      </div>
                                     </TabItem>
                                   )}
                                   {isCodeReferencesEnabled && (
