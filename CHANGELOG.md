@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.194.1](https://github.com/Flagsmith/flagsmith/compare/v2.194.0...v2.194.1) (2025-08-29)
+
+
+### Bug Fixes
+
+* **Maintenance:** Fix Poetry install ([#5999](https://github.com/Flagsmith/flagsmith/issues/5999)) ([47e0cdc](https://github.com/Flagsmith/flagsmith/commit/47e0cdc565681fea5e3308b17ccd648e1a6579c9))
+* **SAML:** Prevent SAML users from creating organizations ([#5994](https://github.com/Flagsmith/flagsmith/issues/5994)) ([771bb28](https://github.com/Flagsmith/flagsmith/commit/771bb28e6ffeaefe3ad9ea0793e1dd069fdf8c7b))
+
 ## [2.194.0](https://github.com/Flagsmith/flagsmith/compare/v2.193.0...v2.194.0) (2025-08-27)
 
 
