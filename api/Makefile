@@ -7,7 +7,7 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-POETRY_VERSION ?= 2.1.1
+POETRY_VERSION ?= 2.1.4
 
 SAML_REVISION ?= v1.6.5
 RBAC_REVISION ?= v0.11.6
@@ -17,11 +17,11 @@ RBAC_REVISION ?= v0.11.6
 
 .PHONY: install-pip
 install-pip:
-	python -m pip install --upgrade pip
+	python -m pip -q install --upgrade pip
 
 .PHONY: install-poetry
 install-poetry:
-	curl -sSL https://install.python-poetry.org | python3 - --version ${POETRY_VERSION}
+	python -m pip -q install poetry==${POETRY_VERSION}
 
 .PHONY: install-packages
 install-packages:
