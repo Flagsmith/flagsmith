@@ -53,7 +53,7 @@ provider "flagsmith" {
   master_api_key = "<Your Terraform API Key>"
 }
 
-# the feature that you want to manage
+# the feature flag that you want to manage
 resource "flagsmith_feature" "new_standard_feature" {
   feature_name = "new_standard_feature"
   project_uuid = "10421b1f-5f29-4da9-abe2-30f88c07c9e8"
@@ -63,7 +63,7 @@ resource "flagsmith_feature" "new_standard_feature" {
 
 ```
 
-Now, to create the feature all you have to do is run `terraform apply`.
+Now, to create the feature flag all you have to do is run `terraform apply`.
 
 ```bash
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
@@ -99,10 +99,10 @@ flagsmith_feature.new_standard_feature: Creation complete after 2s
 Apply complete! Resources: 1 added, 0 changed, 0 to destroy.
 ```
 
-Next, let's say you want to update the description of the feature:
+Next, let's say you want to update the description of the feature flag:
 
 ```hcl
-# the feature that you want to manage
+# the feature flag that you want to manage
 resource "flagsmith_feature" "new_standard_feature" {
   feature_name = "new_standard_feature"
   project_uuid = "10421b1f-5f29-4da9-abe2-30f88c07c9e8"
@@ -140,5 +140,5 @@ flagsmith_feature.new_standard_feature: Modifications complete after 1s
 Apply complete! Resources: 0 added, 1 changed, 0 to destroy.
 ```
 
-To bring an existing Flagsmith feature into Terraform (and start tracking state) you can go ahead and
+To bring an existing Flagsmith feature flag into Terraform (and start tracking state) you can go ahead and
 [import](https://registry.terraform.io/providers/Flagsmith/flagsmith/latest/docs/resources/feature#import) it. 

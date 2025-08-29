@@ -11,9 +11,9 @@ import ReactPlayer from 'react-player'
 You can integrate Flagsmith with Datadog in three ways:
 
 - [1. Integrate Flagsmith into your Datadog Dashboard](#1-integrate-flagsmith-into-your-datadog-dashboard)
-- [2. Send Flag Change events to Datadog](#2-send-flag-change-events-to-datadog)
+- [2. Send flag change events to Datadog](#2-send-flag-change-events-to-datadog)
   - [Custom Source](#custom-source)
-- [3. Integrate with the DataDog RUM](#3-integrate-with-the-datadog-rum)
+- [3. Integrate with the Datadog RUM](#3-integrate-with-the-datadog-rum)
 
 ## 1. Integrate Flagsmith into your Datadog Dashboard
 
@@ -32,7 +32,7 @@ The video below will walk you through the steps of adding the integration:
 
 ## 2. Send Flag Change events to Datadog
 
-The second type of integration allows you to send Flag change events in Flagsmith into your Datadog event stream.
+The second type of integration allows you to send flag change events in Flagsmith into your Datadog event stream.
 
 ![Datadog](/img/integrations/datadog/datadog-3.png)
 
@@ -51,5 +51,5 @@ Flag change events will now be sent to Datadog.
 
 ## 3. Integrate with the DataDog RUM
 
-You can also send Identity flag values from Flagsmith to DataDog using our
+You can also send identity flag values from Flagsmith to Datadog using our
 [Javascript Integration](/clients/client-side/javascript.md#datadog-rum-javascript-sdk-integration). 

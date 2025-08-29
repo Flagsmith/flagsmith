@@ -47,7 +47,7 @@ Annotations for feature-specific events include project tags, user-defined tags,
 
 :::info
 
-[Feature Health](/advanced-use/feature-health) is in Beta, please email support@flagsmith.com or chat with us <a href="#" class="open-chat" data-crisp-chat-message="Hello, I'm interested in joining the feature health beta.">here</a> if you'd like to join. 
+[Feature Health](/advanced-use/feature-health) is in Beta, please email support@flagsmith.com or chat with us <a href="#" class="open-chat" data-crisp-chat-message="Hello, I'm interested in joining the feature health beta.">here</a> if you'd like to join.
 :::
 
 ### In Flagsmith:
@@ -60,11 +60,11 @@ Annotations for feature-specific events include project tags, user-defined tags,
 
 1. Create a new Webhook contact point using the Webhook URL from Flagsmith. Refer to the [Grafana documentation on contact points](https://grafana.com/docs/grafana/latest/alerting/configure-notifications/manage-contact-points/#add-a-contact-point) for details.
 2. Leave Optional Webhook settings empty. Ensure the "Disable resolved message" checkbox is unchecked.
-3. Add the `flagsmith_feature` label to your alert rule, specifying the Flagsmith Feature name. Refer to the [Grafana documentation on alert rule labels](https://grafana.com/docs/grafana/latest/alerting/fundamentals/alert-rules/annotation-label/#labels) for more information.
-4. Optionally, include the `flagsmith_environment` label in your alert rule, using the Flagsmith Environment name as the value.
+3. Add the `flagsmith_feature` label to your alert rule, specifying the Flagsmith feature name. Refer to the [Grafana documentation on alert rule labels](https://grafana.com/docs/grafana/latest/alerting/fundamentals/alert-rules/annotation-label/#labels) for more information.
+4. Optionally, include the `flagsmith_environment` label in your alert rule, using the Flagsmith environment name as the value.
 5. Set the previously created contact point as the alert rule recipient.
 
-You can create multiple alert rules pointing to the Feature Health Provider webhook. Ensure they include the `flagsmith_feature` label with a Feature name from the Project you created the Feature Health Provider for, to see Feature Health status changes for your features.
+You can create multiple alert rules pointing to the Feature Health Provider webhook. Ensure they include the `flagsmith_feature` label with a feature name from the project you created the Feature Health Provider for, to see Feature Health status changes for your features.
 
 You can integrate Grafana Feature Health with Prometheus Alertmanager. For detailed instructions on adding Flagsmith labels to your alerts in Prometheus, refer to the [Prometheus Alertmanager webhook configuration](https://prometheus.io/docs/alerting/latest/configuration/#webhook_config) and [Alerting rules configuration](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#defining-alerting-rules) documentation.
 

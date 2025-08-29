@@ -31,7 +31,7 @@ Integrating with _Evaluation Tracking_ is currently only possible via our
    1. **Do not close this page!** We're not done yet.
 1. **In Flagsmith**
    1. Go to Integrations > Sentry > Add Integration.
-   1. Choose the Environment from which Sentry will receive feature flag change events.
+   1. Choose the environment from which Sentry will receive feature flag change events.
    1. Paste the URL copied above into "Sentry webhook URL".
    1. Insert a secret (10-60 characters) and copy it.
    1. Click "Save". ✅

@@ -30,8 +30,7 @@ For flags that contain remote config values, Flagsmith will pass the value of th
 
 :::
 
-Identity flag values are passed into Amplitude. If we make the call to the Flagsmith API to get the flags for an
-Identity:
+Identity flag values are passed into Amplitude. If we make the call to the Flagsmith API to get the flags for an identity:
 
 ```bash
 curl 'https://edge.api.flagsmith.com/api/v1/identities/?identifier=development_user_123456' \
@@ -50,5 +49,4 @@ saw. This means you can run AB tests driven by Flagsmith segments, and have the 
 
 ## Integration Notes
 
-You have to identify users on both platforms in the same way. The Flagsmith `Identity ID` must be the same as the
-Amplitude `user_id`. 
+You have to identify users on both platforms in the same way. The Flagsmith `Identity ID` must be the same as the Amplitude `user_id`. 

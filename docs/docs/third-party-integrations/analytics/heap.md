@@ -27,7 +27,7 @@ If the flag has no remote config value, Flagsmith will just pass the boolean sta
 
 :::
 
-Identity flag values are passed into Heap. If we make the call to the Flagsmith API to get the flags for an Identity.
+Identity flag values are passed into Heap. If we make the call to the Flagsmith API to get the flags for an identity.
 
 ```bash
 curl 'https://edge.api.flagsmith.com/api/v1/identities/?identifier=development_user_123456' \
@@ -60,19 +60,16 @@ In Heap, go to Definitions > New Definition > New Event. Set up your event simil
 
 ### Step 2 - Create a Segment based on this new Custom Event Property
 
-In Heap, go to Definitions > New Definition > New Segment. Set up your Segment similar to the below:
+In Heap, go to Definitions > New Definition > New Segment. Set up your segment similar to the below:
 
 ![Heap Analytics Step 2](/img/integrations/heap/heap-mv-step-2.png)
 
 ### Step 3 - Create your Report
 
-Once you have your Segment created, based on a Flagsmith flag value, you can use that Segment in reports within Heap.
-Here's an example of us seeing what the conversion rate of a dark mode vs non-dark mode user looks like. Notice the
-"Group Analysis - Conversion Rate" at the bottom of the page.
+Once you have your segment created, based on a Flagsmith feature flag value, you can use that segment in reports within Heap. Here's an example of us seeing what the conversion rate of a dark mode vs non-dark mode user looks like. Notice the "Group Analysis - Conversion Rate" at the bottom of the page.
 
 ![Heap Analytics Step 3](/img/integrations/heap/heap-mv-step-3.png)
 
 ## Integration Notes
 
-You have to identify users on both platforms in the same way. The Flagsmith `Identity ID` must be the same as the Heap
-`identity`. 
+You have to identify users on both platforms in the same way. The Flagsmith `Identity ID` must be the same as the Heap `identity`. 

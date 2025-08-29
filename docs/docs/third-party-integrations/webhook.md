@@ -87,9 +87,7 @@ Flagsmith will send a `POST` request to the Webhook url you provide, with the fo
 
 ## Use Case
 
-Once the integration has been set up, you can start segmenting your data warehouse users based on the flags that they
-saw and the Segments that they are a member of. This allows you to enrich the data within your warehouse through
-Flagsmith.
+Once the integration has been set up, you can start segmenting your data warehouse users based on the flags that they saw and the segments that they are a member of. This allows you to enrich the data within your warehouse through Flagsmith.
 
 ## Webhook Signature
 
