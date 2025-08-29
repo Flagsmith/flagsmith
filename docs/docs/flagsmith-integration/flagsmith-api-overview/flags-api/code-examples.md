@@ -16,11 +16,11 @@ curl 'https://edge.api.flagsmith.com/api/v1/flags/' \
 
 ### Get Flags for an Identified User
 
-This command performs the entire SDK Identity workflow in a single call:
+This command performs the entire SDK identity workflow in a single call:
 
-1.  Lazily creates an Identity if it doesn't already exist.
-2.  Sets or updates Traits for that Identity.
-3.  Receives the flags for that Identity, including any segment or identity-specific overrides.
+1.  Lazily creates an identity if it doesn't already exist.
+2.  Sets or updates traits for that identity.
+3.  Receives the flags for that identity, including any segment or identity-specific overrides.
 
 ```bash
 curl --request POST 'https://edge.api.flagsmith.com/api/v1/identities/' \

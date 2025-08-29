@@ -1,7 +1,7 @@
 ---
 title: Flagsmith Flutter SDK
 sidebar_label: Flutter
-description: Manage your Feature Flags and Remote Config in your Flutter applications.
+description: Manage your Feature Flags and Remote Config in your Flutter Applications.
 slug: /clients/flutter
 ---
 
@@ -146,7 +146,7 @@ bool isFeatureEnabled = flagsmithClient.hasCachedFeatureFlag('feature');
 
 ### Identifying users
 
-To check if a feature exists for an Identity:
+To check if a feature exists for an identity:
 
 ```dart
 final user = Identity(identifier: 'flagsmith_sample_user');
@@ -158,7 +158,7 @@ if (featureEnabled) {
 }
 ```
 
-To get the feature flag configuration value for an Identity:
+To get the feature flag configuration value for an identity:
 
 ```dart
 final myRemoteConfig = await flagsmithClient.getFeatureFlagValue('my_test_feature', user: user);
@@ -169,7 +169,7 @@ if (myRemoteConfig != null) {
 }
 ```
 
-To get the user traits for an Identity:
+To get the user traits for an identity:
 
 ```dart
 final userTraits = await flagsmithClient.getTraits(user)
@@ -180,7 +180,7 @@ if (userTraits != null && userTraits) {
 }
 ```
 
-To get the trait value for an Identity and specific Trait key:
+To get the trait value for an identity and specific trait key:
 
 ```dart
 final userTrait = await flagsmithClient.getTrait(user, 'cookies_key');
@@ -191,7 +191,7 @@ if (userTrait != null) {
 }
 ```
 
-Or get user traits for an Identity and specific Trait keys:
+Or get user traits for an identity and specific trait keys:
 
 ```dart
 final userTraits = await flagsmithClient.getTraits(user, keys: ['cookies_key', 'other_trait']);
@@ -202,7 +202,7 @@ if (userTraits != null) {
 }
 ```
 
-To update a user trait for an Identity:
+To update a user trait for an identity:
 
 ```dart
 final userTrait = await flagsmithClient.getTrait(user, 'cookies_key');

@@ -6,14 +6,11 @@ sidebar_position: 50
 
 # OpenFeature
 
-[OpenFeature](https://openfeature.dev/) is an open standard for feature flag management, created to support a robust
-feature flag ecosystem using cloud native technologies. OpenFeature provides a unified API and SDK, and a
-developer-first, cloud-native implementation, with extensibility for open source and commercial offerings.
+[OpenFeature](https://openfeature.dev/) is an open standard for feature flag management, created to support a robust feature flag ecosystem using cloud native technologies. OpenFeature provides a unified API and SDK, and a developer-first, cloud-native implementation, with extensibility for open source and commercial offerings.
 
-Flagsmith is proud to contribute to this initiative, and is a governance board member of this CNCF project. Our goal,
-and that of OpenFeature, is to recommend using OpenFeature as the default SDK interface for Flagsmith projects.
+Flagsmith is proud to contribute to this initiative, and is a governance board member of this CNCF project. Our goal, and that of OpenFeature, is to recommend using OpenFeature as the default SDK interface for Flagsmith projects.
 
-OpenFeature is being actively worked on; we encourage anyone interested Feature Flags and Open Source to get involved!
+OpenFeature is being actively worked on; we encourage anyone interested in feature flags and open source to get involved!
 
 ## Flagsmith OpenFeature Providers
 

@@ -81,7 +81,7 @@ flagsmith.getFeatureFlags { result ->
 }
 ```
 
-### Get Flags for an identity
+### Get Flags for an Identity
 
 To get feature flags for a specific identity:
 

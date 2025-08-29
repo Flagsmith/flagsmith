@@ -1,15 +1,13 @@
 ---
 title: Flagsmith JavaScript SDK
 sidebar_label: JavaScript
-description: Manage your Feature Flags and Remote Config in your JavaScript applications.
+description: Manage your Feature Flags and Remote Config in your JavaScript Applications.
 slug: /clients/javascript
 ---
 
-This library can be used with pure JavaScript, React (and all other popular frameworks/libraries) and React Native
-projects. The source code for the client is available on [GitHub](https://github.com/flagsmith/flagsmith-js-client).
+This library can be used with pure JavaScript, React (and all other popular frameworks/libraries) and React Native projects. The source code for the client is available on [GitHub](https://github.com/flagsmith/flagsmith-js-client).
 
-Example applications for a variety of JavaScript frameworks such as React, Vue and Angular, as well as React Native, can
-be found here:
+Example applications for a variety of JavaScript frameworks such as React, Vue and Angular, as well as React Native, can be found here:
 
 - [Flagsmith Framework Examples](https://github.com/Flagsmith/flagsmith-js-examples/tree/main)
 
@@ -126,7 +124,7 @@ cli commands can be found [here](https://github.com/Flagsmith/flagsmith-cli).
 ## Identifying users
 
 Identifying users allows you to target specific users from the Flagsmith dashboard and configure features and traits.
-You can call this before or after you initialise the project, calling it after will re-fetch features from the API.
+You can call this before or after you initialise the project, calling it after will re-fetch feature flags from the API.
 
 You can identify the users as part of initialising the client or after with the function `flagsmith.identify`.
 
@@ -148,7 +146,7 @@ flagsmith.init({
 
   const { isFromServer } = params; //determines if the update came from the server or local cached storage
 
-  //Set a trait against the Identity
+  //Set a trait against the identity
   flagsmith.setTrait('favourite_colour', 'blue'); //This save the trait against the user, it can be queried with flagsmith.getTrait
 
   //Check for a feature
@@ -196,7 +194,7 @@ flagsmith.init({
 
   const { isFromServer } = params; //determines if the update came from the server or local cached storage
 
-  //Set a trait against the Identity
+  //Set a trait against the identity
   flagsmith.setTrait('favourite_colour', 'blue'); //This save the trait against the user, it can be queried with flagsmith.getTrait
 
   //Check for a feature
@@ -229,7 +227,7 @@ All function and property types can be seen
 
 | Property                                                                                    |                                                                                                                    Description                                                                                                                    | Required |                                         Default Value |
 | ------------------------------------------------------------------------------------------- | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | -------: | ----------------------------------------------------: |
-| `environmentID: string`                                                                     |                                                                          Defines which project environment you wish to get flags for. _example ACME Project - Staging._                                                                           |  **YES** |                                                  null |
+| `environmentID: string`                                                                     |                                                                          Defines which project environment you wish to get flags for. _example ACME project - Staging._                                                                           |  **YES** |                                                  null |
 | `onChange?: (previousFlags:IFlags, params:IRetrieveInfo, loadingState:LoadingState)=> void` |                                           Your callback function for when the flags are retrieved `(previousFlags,{isFromServer:true/false,flagsChanged: true/false, traitsChanged:true/false})=>{...}`                                           |  **YES** |                                                  null |
 | `onError?: (res:{message:string}) => void`                                                  |                                                                                         Callback function on failure to retrieve flags. `(error)=>{...}`                                                                                          |          |                                                  null |
 | `realtime?:boolean`                                                                         |                                                                                   Whether to listen for [Real Time Flag events](/advanced-use/real-time-flags)                                                                                    |          |                                                 false |

@@ -33,7 +33,7 @@ FLAGS
   -o, --output=<value>    [default: ./flagsmith.json] The file path output
 
 DESCRIPTION
-  Retrieve flagsmith features from the Flagsmith API and output them to a file.
+  Retrieve flagsmith feature flags from the Flagsmith API and output them to a file.
 
 EXAMPLES
   $ FLAGSMITH_ENVIRONMENT=x flagsmith get

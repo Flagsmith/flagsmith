@@ -6,7 +6,7 @@ sidebar_position: 10
 
 Flagsmith is designed to be integrated into your applications in a variety of ways, depending on your architecture and requirements. This guide provides an overview of the different integration options available.
 
-## Deciding between Front-end and Back-end Flags
+## Deciding between Front-end and Back-end Feature Flags
 
 One of the first decisions to make when integrating Flagsmith is whether to evaluate flags on the front-end (client-side) or back-end (server-side).
 

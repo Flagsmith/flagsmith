@@ -3,7 +3,7 @@ title: Code Examples
 sidebar_label: Code Examples
 ---
 
-Here is a simple example of how to use the Admin API with `curl` to create a new Environment within a Project.
+Here is a simple example of how to use the Admin API with `curl` to create a new environment within a project.
 
 ```bash
 curl 'https://api.flagsmith.com/api/v1/environments/' \

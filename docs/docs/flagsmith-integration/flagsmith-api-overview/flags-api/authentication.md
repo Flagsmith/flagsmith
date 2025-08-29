@@ -9,7 +9,7 @@ The Flags API uses a non-secret **Environment Key** for authentication. This key
 
 You can find the Environment Key for each of your environments in the Flagsmith dashboard.
 
-1.  Navigate to the Project you want to work with.
+1.  Navigate to the project you want to work with.
 2.  Go to the **Environments** tab.
 3.  You will see a list of your environments, each with its own Client-side Environment Key.
 

@@ -576,23 +576,23 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 
 ### When running in [Remote Evaluation mode](/clients#remote-evaluation)
 
-- When requesting Flags for an Identity, all the Traits defined in the SDK will automatically be persisted against the
-  Identity within the Flagsmith API.
-- Traits passed to the SDK will be added to all the other previously persisted Traits associated with that Identity.
-- This full set of Traits are then used to evaluate the Flag values for the Identity.
+- When requesting flags for an identity, all the traits defined in the SDK will automatically be persisted against the
+  identity within the Flagsmith API.
+- Traits passed to the SDK will be added to all the other previously persisted traits associated with that identity.
+- This full set of traits are then used to evaluate the flag values for the identity.
 - This all happens in a single request/response.
 
 ### When running in [Local Evaluation mode](/clients#local-evaluation)
 
-- _Only_ the Traits provided to the SDK at runtime will be used. Local Evaluation mode, by design, does not make any
-  network requests to the Flagsmith API when evaluating Flags for an Identity.
+- _Only_ the traits provided to the SDK at runtime will be used. Local Evaluation mode, by design, does not make any
+  network requests to the Flagsmith API when evaluating flags for an identity.
     - When running in Local Evaluation Mode, the SDK requests the
       [Environment Document](/clients#the-environment-document) from the Flagsmith API. This contains all the
-      information required to make Flag Evaluations, but it does _not_ contain any Trait data.
+      information required to make flag evaluations, but it does _not_ contain any trait data.
 
 ## Managing Default Flags
 
-Default Flags are configured by passing in a function that is called when a Flag cannot be found or if the network
+Default flags are configured by passing in a function that is called when a flag cannot be found or if the network
 request to the API fails when retrieving flags.
 
 <Tabs groupId="language" queryString>
@@ -1004,9 +1004,9 @@ The Server Side SDKS share the same network behaviour across the different langu
 
 ### Remote Evaluation Mode Network Behaviour
 
-- A blocking network request is made every time you make a call to get an Environment Flags. In Python, for example,
+- A blocking network request is made every time you make a call to get an environment flags. In Python, for example,
   `flagsmith.get_environment_flags()` will trigger this request.
-- A blocking network request is made every time you make a call to get an Identities Flags. In Python, for example,
+- A blocking network request is made every time you make a call to get an identities flags. In Python, for example,
   `flagsmith.get_identity_flags(identifier=identifier, traits=traits)` will trigger this request.
 
 ### Local Evaluation Mode Network Behaviour
@@ -1019,12 +1019,12 @@ To use Local Evaluation mode, you must use a Server Side key.
 
 :::
 
-- When the SDK is initialised, it will make an asynchronous network request to retrieve details about the Environment.
-- Every 60 seconds (by default), it will repeat this aysnchronous request to ensure that the Environment information it
+- When the SDK is initialised, it will make an asynchronous network request to retrieve details about the environment.
+- Every 60 seconds (by default), it will repeat this aysnchronous request to ensure that the environment information it
   has is up to date.
 
 To achieve Local Evaluation, in most languages, the SDK spawns a separate thread (or equivalent) to poll the API for
-changes to the Environment. In certain languages, you may be required to terminate this thread before cleaning up the
+changes to the environment. In certain languages, you may be required to terminate this thread before cleaning up the
 instance of the Flagsmith client. Languages in which this is necessary are provided below.
 
 <Tabs groupId="language" queryString>
