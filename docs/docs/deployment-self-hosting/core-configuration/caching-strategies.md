@@ -7,9 +7,9 @@ sidebar_position: 40
 The application utilises an in-memory cache for a number of different API endpoints to improve performance. The main things that are cached are listed below:
 
 1. Environment flags - the application utilises an in memory cache for the flags returned when calling /flags. The number of seconds this is cached for is configurable using the environment variable `"CACHE_FLAGS_SECONDS"`
-2. Project Segments - the application utilises an in memory cache for returning the segments for a given project. The number of seconds this is cached for is configurable using the environment variable `"CACHE_PROJECT_SEGMENTS_SECONDS"`.
-3. Flags and Identities endpoint caching - the application provides the ability to cache the responses to the GET /flags and GET /identities endpoints. The application exposes the configuration to allow the caching to be handled in a manner chosen by the developer. The configuration options are explained in more detail below.
-4. Environment document - when making heavy use of the environment document, it is often wise to utilise caching to reduce the load on the database. Details are provided below. 
+2. Project segments - the application utilises an in memory cache for returning the segments for a given project. The number of seconds this is cached for is configurable using the environment variable `"CACHE_PROJECT_SEGMENTS_SECONDS"`.
+3. Flags and identities endpoint caching - the application provides the ability to cache the responses to the GET /flags and GET /identities endpoints. The application exposes the configuration to allow the caching to be handled in a manner chosen by the developer. The configuration options are explained in more detail below.
+4. Environment document - when making heavy use of the environment document, it is often wise to utilise caching to reduce the load on the database. Details are provided below.
 
 ## Flags & Identities Endpoint Caching
 
