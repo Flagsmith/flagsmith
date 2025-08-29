@@ -14,6 +14,27 @@ NINETY_DAY_PERIOD: PeriodType
     NINETY_DAY_PERIOD,
 ) = get_args(PeriodType)
 
+
+SDK_USER_AGENT_KNOWN_VERSIONS = {
+    "flagsmith-dotnet-sdk": ["unknown"],
+    "flagsmith-elixir-sdk": ["unknown"],
+    "flagsmith-flutter-sdk": ["unknown"],
+    "flagsmith-go-sdk": ["unknown"],
+    "flagsmith-java-sdk": ["unknown"],
+    "flagsmith-js-sdk": [
+        "unknown",
+        "9.3.1",
+    ],
+    "flagsmith-kotlin-android-sdk": ["unknown"],
+    "flagsmith-nodejs-sdk": ["unknown"],
+    "flagsmith-php-sdk": ["unknown"],
+    "flagsmith-python-sdk": ["unknown"],
+    "flagsmith-ruby-sdk": ["unknown"],
+    "flagsmith-rust-sdk": ["unknown"],
+    "flagsmith-swift-ios-sdk": ["unknown"],
+}
+
+
 # Optional headers sent from client SDK mapped to their respective labels.
 TRACK_HEADERS: dict[str, InputLabel] = {
     "Flagsmith-Application-Name": "client_application_name",
