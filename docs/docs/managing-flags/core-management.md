@@ -4,7 +4,7 @@ sidebar_label: Basic Flag Management
 sidebar_position: 1
 ---
 
-Feature Flags in Flagsmith are used to categorise and monitor user actions or events, such as detecting spam or abuse. This guide covers how to create, edit, clone, and delete flags in your project.
+Feature flags in Flagsmith are used to categorise and monitor user actions or events, such as detecting spam or abuse. This guide covers how to create, edit, clone, and delete flags in your project.
 
 ---
 
