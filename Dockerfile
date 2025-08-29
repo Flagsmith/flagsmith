@@ -51,7 +51,7 @@
 ARG CI_COMMIT_SHA=dev
 
 # Pin runtimes versions
-ARG NODE_VERSION=16
+ARG NODE_VERSION=22
 ARG PYTHON_VERSION=3.11
 
 FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm AS node

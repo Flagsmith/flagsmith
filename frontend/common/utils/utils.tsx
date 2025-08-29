@@ -51,6 +51,8 @@ export type PaidFeature =
   | '2FA'
   | 'RELEASE_PIPELINES'
 
+export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
+
 // Define a type for plan categories
 type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
 
@@ -727,7 +729,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       ])
       if (organisation) {
         $crisp.push(['set', 'user:company', formatOrganisation(organisation)])
-        console.log(user, organisation)
         $crisp.push([
           'set',
           'session:data',

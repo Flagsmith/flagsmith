@@ -91,10 +91,12 @@ def map_flux_tables_to_usage_data(
                     day=date,
                     labels=labels,
                 )
-            if resource := values.get("resource"):
+            if (resource := Resource.get_from_name(values["resource"])) and (
+                resource_attr := resource.column_name
+            ):
                 setattr(
                     data_by_key[key],
-                    resource,
+                    resource_attr,
                     values["_value"],
                 )
     return list(data_by_key.values())

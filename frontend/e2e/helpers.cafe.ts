@@ -66,6 +66,15 @@ export const waitForElementClickable = async (selector: string) => {
   await t.expect(Selector(selector).hasAttribute('disabled')).notOk()
 }
 
+export const clickSegmentByName = async (name: string) => {
+   const el = Selector('[data-test^="segment-"][data-test$="-name"]').withText(
+      name,
+   )
+   await t.scrollIntoView(el)
+   await t.expect(el.visible).ok(`segment "${name}" not visible`, { timeout: LONG_TIMEOUT })
+   await t.click(el)
+  }
+  
 export const logResults = async (requests: LoggedRequest[], t) => {
   if (!t.testRun?.errs?.length) {
     log('Finished without errors')
@@ -78,7 +87,8 @@ export const logResults = async (requests: LoggedRequest[], t) => {
       requests.filter((v) => {
         if (
           v.request?.url?.includes('get-subscription-metadata') ||
-          v.request?.url?.includes('analytics/flags')
+          v.request?.url?.includes('analytics/flags') ||
+          v.request?.url?.includes('/usage-data?')
         ) {
           return false
         }
@@ -132,6 +142,7 @@ export const clickByText = async (text: string, element = 'button') => {
 
 export const gotoSegments = async () => {
   await click('#segments-link')
+  await waitForElementVisible(byId('show-create-segment-btn'))
 }
 
 export const getLogger = () =>
@@ -313,6 +324,8 @@ export const setSegmentOverrideIndex = async (
   await setText(byId(`sort-${index}`), `${newIndex}`)
 }
 
+export const assertInputValue = (selector: string, v: string) =>
+  t.expect(Selector(selector).value).eql(v)
 export const assertTextContent = (selector: string, v: string) =>
   t.expect(Selector(selector).textContent).eql(v)
 export const assertTextContentContains = (selector: string, v: string) =>

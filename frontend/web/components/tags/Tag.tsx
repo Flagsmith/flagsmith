@@ -30,6 +30,33 @@ export const getTagColor = (tag: Partial<TTag>, selected?: boolean) => {
   return tag.color
 }
 
+export const TagWrapper = ({
+  children,
+  className,
+  disabled,
+  onClick,
+  tag,
+  tagColor,
+}: any) => {
+  return (
+    <div
+      onClick={() => {
+        if (!disabled) {
+          onClick?.(tag as TTag)
+        }
+      }}
+      style={{
+        backgroundColor: `${tagColor.fade(0.92)}`,
+        border: `1px solid ${tagColor.fade(0.76)}`,
+        color: `${tagColor.darken(0.1)}`,
+      }}
+      className={cx('chip', className)}
+    >
+      {children}
+    </div>
+  )
+}
+
 const Tag: FC<TagType> = ({
   className,
   hideNames,
@@ -77,21 +104,18 @@ const Tag: FC<TagType> = ({
   }
 
   return (
-    <div
-      onClick={() => {
-        if (!disabled) {
-          onClick?.(tag as TTag)
-        }
-      }}
-      style={{
-        backgroundColor: `${tagColor.fade(0.92)}`,
-        border: `1px solid ${tagColor.fade(0.76)}`,
-        color: `${tagColor.darken(0.1)}`,
-      }}
-      className={cx('chip', className)}
+    <TagWrapper
+      tagColor={tagColor}
+      className={className}
+      disabled={disabled}
+      hideNames={hideNames}
+      isDot={isDot}
+      onClick={onClick}
+      selected={selected}
+      tag={tag}
     >
       <TagContent tag={tag} />
-    </div>
+    </TagWrapper>
   )
 }
 

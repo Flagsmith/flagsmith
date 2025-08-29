@@ -242,6 +242,7 @@ export type GettingStartedTask = {
   completed_at?: string
 }
 export type Onboarding = {
+  hosting_preferences: ('public_saas' | 'private_saas' | 'self_hosted')[]
   tools: {
     completed: boolean
     integrations: string[]
@@ -499,6 +500,12 @@ export type ProjectFlag = {
   tags: number[]
   type: string
   uuid: string
+  code_references_counts: {
+    repository_url: string
+    count: number
+    last_successful_repository_scanned_at: string
+    last_feature_found_at: string
+  }[]
 }
 
 export type FeatureListProviderData = {
@@ -829,7 +836,7 @@ export interface ReleasePipeline {
 }
 
 export interface SingleReleasePipeline extends ReleasePipeline {
-  stages: PipelineStage[]
+  stages: PipelineDetailStage[]
   completed_features: number[]
 }
 
@@ -848,16 +855,37 @@ export type StageTrigger = {
 export enum StageActionType {
   TOGGLE_FEATURE = 'TOGGLE_FEATURE',
   TOGGLE_FEATURE_FOR_SEGMENT = 'TOGGLE_FEATURE_FOR_SEGMENT',
+  PHASED_ROLLOUT = 'PHASED_ROLLOUT',
 }
 
-export type StageActionBody = { enabled: boolean; segment_id?: number }
+export type StageActionBody = {
+  enabled: boolean
+  segment_id?: number
+  initial_split?: number
+  increase_by?: number
+  increase_every?: string
+}
 export interface StageAction {
   id: number
   action_type: StageActionType
   action_body: StageActionBody
 }
 
-export type PipelineStage = {
+export type Features = {
+  [id: number]: {
+    created_at?: string
+    phased_rollout_state?: {
+      current_split: number
+      increase_by: number
+      increase_every: string
+      initial_split: number
+      is_rollout_complete: boolean
+      last_updated_at: string
+    }
+  }
+}
+
+export interface BasePipelineStage {
   id: number
   name: string
   pipeline: number
@@ -865,7 +893,35 @@ export type PipelineStage = {
   order: number
   trigger: StageTrigger
   actions: StageAction[]
+}
+
+export interface PipelineStage extends BasePipelineStage {
   features: number[]
+}
+
+export interface PipelineDetailStage extends BasePipelineStage {
+  features: Features
+}
+
+export interface CodeReference {
+  file_path: string
+  line_number: number
+  permalink: string
+  vcs_revision: string
+}
+
+export enum VCSProvider {
+  GITHUB = 'github',
+  GITLAB = 'gitlab',
+  BITBUCKET = 'bitbucket',
+}
+
+export type FeatureCodeReferences = {
+  last_feature_found_at: string
+  vcs_provider: VCSProvider
+  last_successful_repository_scanned_at: string
+  repository_url: string
+  code_references: CodeReference[]
 }
 
 export type Res = {
@@ -1020,6 +1076,6 @@ export type Res = {
   releasePipelines: PagedResponse<ReleasePipeline>
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
-  pipelineStage: PipelineStage
+  featureCodeReferences: FeatureCodeReferences[]
   // END OF TYPES
 }

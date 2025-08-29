@@ -88,8 +88,13 @@ class HasOrganisationPermission(BasePermission):
 
 class OrganisationPermission(BasePermission):
     def has_permission(self, request, view):  # type: ignore[no-untyped-def]
-        if view.action == "create" and settings.RESTRICT_ORG_CREATE_TO_SUPERUSERS:
-            return request.user.is_superuser
+        if view.action == "create":
+            if settings.RESTRICT_ORG_CREATE_TO_SUPERUSERS:
+                return request.user.is_superuser
+            if getattr(request.user, "saml_user", None):
+                raise PermissionDenied(
+                    "Users with SAML authentication cannot create organisations."
+                )
 
         organisation_id = view.kwargs.get("pk")
         if organisation_id and not organisation_id.isnumeric():
