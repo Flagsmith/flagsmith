@@ -1,10 +1,10 @@
 from collections import defaultdict
 from functools import partial
-from typing import Any, Iterable
+from typing import Annotated, Any, Iterable
 
 from django.http import HttpRequest
 from influxdb_client.client.flux_table import FluxTable
-from pydantic import Field, create_model
+from pydantic import BeforeValidator, Field, create_model
 from pydantic.type_adapter import TypeAdapter
 
 from app_analytics.constants import LABELS, SDK_USER_AGENT_KNOWN_VERSIONS, TRACK_HEADERS
@@ -21,8 +21,23 @@ from app_analytics.types import (
 )
 from integrations.flagsmith.client import get_client
 
+
+def map_user_agent_to_sdk_user_agent(value: str) -> str | None:
+    sdk_name, _, sdk_version = value.partition("/")
+    if versions := SDK_USER_AGENT_KNOWN_VERSIONS.get(sdk_name):
+        if sdk_version in versions:
+            return value
+        return f"{sdk_name}/unknown"
+    return None
+
+
 _request_header_labels_model_fields: dict[str, Any] = {
-    str(label): (str | None, Field(default=None, alias=header))
+    str(label): (
+        Annotated[str | None, BeforeValidator(map_user_agent_to_sdk_user_agent)]
+        if label in ("user_agent", "sdk_user_agent")
+        else str | None,
+        Field(default=None, alias=header),
+    )
     for header, label in TRACK_HEADERS.items()
 }
 _RequestHeaderLabelsModel = create_model(
@@ -119,19 +134,10 @@ def map_input_labels_to_labels(input_labels: InputLabels) -> Labels:
     labels: Labels = {}
     for label, value in input_labels.items():
         if label == "sdk_user_agent" or label == "user_agent":
-            labels["user_agent"] = map_user_agent_to_sdk_user_agent(value)
+            labels["user_agent"] = value
             continue
         labels[label] = value
     return labels
-
-
-def map_user_agent_to_sdk_user_agent(value: str) -> str:
-    sdk_name, sdk_version = value.split("/")
-    if versions := SDK_USER_AGENT_KNOWN_VERSIONS.get(sdk_name):
-        if sdk_version in versions:
-            return value
-        return f"{sdk_name}/unknown"
-    return "unknown/unknown"
 
 
 def map_request_to_labels(request: HttpRequest) -> Labels:
@@ -141,12 +147,13 @@ def map_request_to_labels(request: HttpRequest) -> Labels:
         .is_feature_enabled("sdk_metrics_labels")
     ):
         return {}
-    labels: InputLabels = _RequestHeaderLabelsModel.model_validate(
+    input_labels: InputLabels = _RequestHeaderLabelsModel.model_validate(
         request.headers,
     ).model_dump(
         exclude_unset=True,
+        exclude_none=True,
     )
-    return map_input_labels_to_labels(labels)
+    return map_input_labels_to_labels(input_labels)
 
 
 def map_feature_evaluation_cache_to_track_feature_evaluations_by_environment_kwargs(

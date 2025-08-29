@@ -578,6 +578,8 @@ def test_set_sdk_analytics_flags_with_identifier__influx__calls_expected(
             {
                 "user_agent": "flagsmith-js-sdk/unknown",
             },
+        ),
+        (
             {
                 "Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1",
             },
