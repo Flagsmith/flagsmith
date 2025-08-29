@@ -273,7 +273,7 @@ By default, Flagsmith uses PostgreSQL to store time series data. You can alterna
 
 ### Task Processor
 
-The task processor itself is documented [here](/deployment/configuration/task-processor). See the table below for the values to set to configure the task processor using the Helm chart.
+The task processor itself is documented [here](/deployment-self-hosting/scaling-and-performance/asynchronous-task-processor). See the table below for the values to set to configure the task processor using the Helm chart.
 
 ## Chart Values
 

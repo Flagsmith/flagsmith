@@ -69,4 +69,4 @@ Once Flagsmith is running in Aptible, make sure to create the first admin user b
 
 ## Limitations
 
-The steps described in this document do not deploy the [asynchronous task processor](/deployment/configuration/task-processor), which may affect performance in production workloads.
+The steps described in this document do not deploy the [asynchronous task processor](/deployment-self-hosting/scaling-and-performance/asynchronous-task-processor), which may affect performance in production workloads.

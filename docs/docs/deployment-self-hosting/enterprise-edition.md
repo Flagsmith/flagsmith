@@ -90,13 +90,13 @@ There is a bug in the AppDynamics wizard that sets the value `ssl = (on)` which 
 When running with traditional Docker, you can use the code snippet below to inject the required information for running AppDynamics:
 
 ```shell
-docker run -t {image_name} -v {config_file_path}:/etc/appdynamics.cfg -e APP_DYNAMICS=on
+docker run -t \{image_name\} -v \{config_file_path\}:/etc/appdynamics.cfg -e APP_DYNAMICS=on
 ```
 
 Replacing the values for:
 
-- **_{image_name}_**: the tagged name of the Docker image you are using
-- **_{config_file_path}_**: the absolute path of the appdynamics.cfg file on your system
+- **\{image_name\}**: the tagged name of the Docker image you are using
+- **\{config_file_path\}**: the absolute path of the appdynamics.cfg file on your system
 
 ### Running with Docker Compose
 
@@ -110,10 +110,10 @@ api:
  env:
   APP_DYNAMICS: 'on'
  volumes:
-  - {config_file_path}:/etc/appdynamics.cfg
+  - \{config_file_path\}:/etc/appdynamics.cfg
 ```
 
-Replacing the value for **_{config_file_path}_** with the absolute path of the appdynamics.cfg file on your system.
+Replacing the value for **\{config_file_path\}** with the absolute path of the appdynamics.cfg file on your system.
 
 Running the command below will build the Docker image with all the AppDynamics config included:
 

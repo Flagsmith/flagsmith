@@ -23,9 +23,9 @@ We have [Pulumi](https://www.pulumi.com/) scripts available for AWS deployments.
 
 Unless you have specific requirements, we recommend running the [unified Docker image](https://hub.docker.com/repository/docker/flagsmith/flagsmith).
 
-It's best to study our [docker-compose file](https://github.com/Flagsmith/flagsmith/blob/main/docker-compose.yml) in order to set up the base environment variables. Further environment variables are [described here](locally-api.md#environment-variables).
+It's best to study our [docker-compose file](https://github.com/Flagsmith/flagsmith/blob/main/docker-compose.yml) in order to set up the base environment variables. Further environment variables are [described here](/deployment-self-hosting/core-configuration/environment-variables).
 
-Run a single ECS service with at least two Fargate instances running for failover. For more info on Fargate sizes, see our [scaling page](/deployment/configuration/sizing-and-scaling).
+Run a single ECS service with at least two Fargate instances running for failover. For more info on Fargate sizes, see our [scaling page](/deployment-self-hosting/scaling-and-performance/sizing-and-scaling).
 
 If you are using health checks, make sure to use `/health` as the health-check endpoint.
 
