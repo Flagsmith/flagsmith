@@ -23,19 +23,19 @@ The Edge Proxy has the same [caveats as running our SDK in Local Evaluation mode
 
 You can think of the Edge Proxy as a copy of our Python Server Side SDK, running in [Local Evaluation Mode](/clients#local-evaluation), with an API interface that is compatible with the Flagsmith SDK API.
 
-The Edge Proxy runs as a lightweight Docker container. It connects to the Flagsmith API (either powered by us at api.flagsmith.com or self hosted by you) to get Environment Flags and Segment rules. You can then point the Flagsmith SDKs to your Edge Proxy; it implements all the current SDK endpoints. This means you can serve a very large number of requests close to your infrastructure and users, at very low latency. Check out the [architecture below](#architecture).
+The Edge Proxy runs as a lightweight Docker container. It connects to the Flagsmith API (either powered by us at `api.flagsmith.com` or self hosted by you) to get environment flags and segment rules. You can then point the Flagsmith SDKs to your Edge Proxy; it implements all the current SDK endpoints. This means you can serve a very large number of requests close to your infrastructure and users, at very low latency. Check out the [architecture below](#architecture).
 
-The Proxy also acts as a local cache, allowing you to make requests to the Proxy without hitting the core API.
+The proxy also acts as a local cache, allowing you to make requests to the proxy without hitting the Core API.
 
 ## Performance
 
-The Edge Proxy can currently serve ~2,000 requests per second (RPS) at a mean latency of ~7ms on an M1 MacBook Pro with a simple set of flags. Working with more complex Environments with many Segment rules will bring this RPS number down.
+The edge proxy can currently serve ~2,000 requests per second (RPS) at a mean latency of ~7ms on an M1 MacBook Pro with a simple set of feature flags. Working with more complex environments with many segment rules will bring this RPS number down.
 
 It is stateless and hence close to perfectly scalable being deployed behind a load balancer.
 
 ## Managing Traits
 
-There is one caveat with the Edge Proxy. Because it is entirely stateless, it is not able to persist Trait data into any sort of datastore. This means that you _have_ to provide the full complement of Traits when requesting the Flags for a particular Identity. Our SDKs all provide relevant methods to achieve this. An example using `curl` would read as follows:
+There is one caveat with the Edge Proxy. Because it is entirely stateless, it is not able to persist trait data into any sort of datastore. This means that you _have_ to provide the full complement of traits when requesting the flags for a particular identity. Our SDKs all provide relevant methods to achieve this. An example using `curl` would read as follows:
 
 ```bash
 curl -X "POST" "http://localhost:8000/api/v1/identities/?identifier=do_it_all_in_one_go_identity" \
