@@ -1,11 +1,3 @@
-from enum import Enum
-
-
-class ReplicaReadStrategy(Enum):
-    DISTRIBUTED = "DISTRIBUTED"
-    SEQUENTIAL = "SEQUENTIAL"
-
-
 class AnalyticsRouter:
     route_app_labels = ["app_analytics"]
 
