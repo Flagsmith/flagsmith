@@ -171,7 +171,7 @@ SITE_ID = 1
 db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
 DJANGO_DB_CONN_MAX_AGE = 0 if db_conn_max_age == -1 else db_conn_max_age
 
-DATABASE_ROUTERS = ["app.routers.PrimaryReplicaRouter"]
+DATABASE_ROUTERS: list[str] = []
 NUM_DB_REPLICAS = 0
 NUM_CROSS_REGION_DB_REPLICAS = 0
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
