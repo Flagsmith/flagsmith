@@ -172,8 +172,6 @@ db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
 DJANGO_DB_CONN_MAX_AGE = 0 if db_conn_max_age == -1 else db_conn_max_age
 
 DATABASE_ROUTERS: list[str] = []
-NUM_DB_REPLICAS = 0
-NUM_CROSS_REGION_DB_REPLICAS = 0
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
@@ -192,7 +190,6 @@ if "DATABASE_URL" in os.environ:
         if not os.getenv("REPLICA_DATABASE_URL_0")
         else get_numbered_env_vars_with_prefix("REPLICA_DATABASE_URL_")
     )
-    NUM_DB_REPLICAS = len(REPLICA_DATABASE_URLS)
 
     # Cross region replica databases are used as fallbacks if the
     # primary replica set becomes unavailable.
@@ -209,7 +206,6 @@ if "DATABASE_URL" in os.environ:
         if not os.getenv("CROSS_REGION_REPLICA_DATABASE_URL_0")
         else get_numbered_env_vars_with_prefix("CROSS_REGION_REPLICA_DATABASE_URL_")
     )
-    NUM_CROSS_REGION_DB_REPLICAS = len(CROSS_REGION_REPLICA_DATABASE_URLS)
 
     # DISTRIBUTED spreads the load out across replicas while
     # SEQUENTIAL only falls back once the first replica connection is faulty
