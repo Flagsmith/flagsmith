@@ -562,7 +562,6 @@ def test_set_sdk_analytics_flags_with_identifier__influx__calls_expected(
             {
                 "client_application_name": "web",
                 "client_application_version": "1.0",
-                "user_agent": "python-requests/2.31.0",
             },
         ),
         (
@@ -577,7 +576,15 @@ def test_set_sdk_analytics_flags_with_identifier__influx__calls_expected(
                 "Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/1.0.0",
             },
             {
-                "user_agent": "flagsmith-js-sdk/1.0.0",
+                "user_agent": "flagsmith-js-sdk/unknown",
+            },
+        ),
+        (
+            {
+                "Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/9.3.1",
+            },
+            {
+                "user_agent": "flagsmith-js-sdk/9.3.1",
             },
         ),
     ],

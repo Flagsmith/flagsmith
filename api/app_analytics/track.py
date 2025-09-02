@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.cache import caches
 
 from app_analytics.influxdb_wrapper import InfluxDBWrapper
+from app_analytics.mappers import map_labels_to_influx_record_values
 from app_analytics.models import Resource
 from app_analytics.types import Label, Labels, TrackFeatureEvaluationsByEnvironmentData
 from environments.models import Environment
@@ -104,9 +105,7 @@ def track_request_influxdb(
             "environment": environment.name,
             "environment_id": environment.id,
             "host": host,
-            # `Label` is not a string according to mypy. Fair enough as types like
-            # `Literal["one", 2, 2.9999999]` are possible
-            **{str(label): value for label, value in labels.items()},
+            **map_labels_to_influx_record_values(labels),
         }
 
         influxdb = InfluxDBWrapper("api_call")  # type: ignore[no-untyped-call]
@@ -130,10 +129,7 @@ def track_feature_evaluation_influxdb(
         tags: dict[str | Label, str | int] = {
             "feature_id": feature_evaluation["feature_name"],
             "environment_id": environment_id,
-            **{
-                str(label): value
-                for label, value in feature_evaluation["labels"].items()
-            },
+            **map_labels_to_influx_record_values(feature_evaluation["labels"]),
         }
         influxdb.add_data_point(
             "request_count",
