@@ -889,10 +889,11 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
                 request.environment.project.only_allow_lower_case_feature_names
             )
             for feature_state in feature_states:
-                pattern = rf"^{request.GET['feature']}$"
-                feature_name = feature_state.feature.name
+                given_feature_name = re.escape(request.GET["feature"])
+                pattern = rf"^{given_feature_name}$"
+                actual_feature_name = feature_state.feature.name
                 re_flags = re.IGNORECASE if is_case_insensitive else 0
-                is_match = re.match(pattern, feature_name, re_flags)
+                is_match = re.match(pattern, actual_feature_name, re_flags)
                 if is_match:
                     return Response(
                         self.get_serializer(feature_state).data,
