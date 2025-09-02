@@ -1,13 +1,17 @@
 from collections import defaultdict
-from functools import partial
-from typing import Annotated, Any, Iterable
+from typing import Annotated, Any, Iterable, cast
 
 from django.http import HttpRequest
 from influxdb_client.client.flux_table import FluxTable
 from pydantic import BeforeValidator, Field, create_model
-from pydantic.type_adapter import TypeAdapter
 
-from app_analytics.constants import LABELS, SDK_USER_AGENT_KNOWN_VERSIONS, TRACK_HEADERS
+from app_analytics.constants import (
+    LABELS,
+    SDK_INFLUX_IDS_BY_USER_AGENT,
+    SDK_USER_AGENT_KNOWN_VERSIONS,
+    SDK_USER_AGENTS_BY_INFLUX_ID,
+    TRACK_HEADERS,
+)
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
 from app_analytics.models import FeatureEvaluationRaw, Resource
 from app_analytics.types import (
@@ -15,6 +19,7 @@ from app_analytics.types import (
     AnnotatedAPIUsageKey,
     FeatureEvaluationCacheKey,
     InputLabels,
+    KnownSDK,
     Labels,
     TrackFeatureEvaluationsByEnvironmentData,
     TrackFeatureEvaluationsByEnvironmentKwargs,
@@ -24,8 +29,8 @@ from integrations.flagsmith.client import get_client
 
 def map_user_agent_to_sdk_user_agent(value: str) -> str | None:
     sdk_name, _, sdk_version = value.partition("/")
-    if versions := SDK_USER_AGENT_KNOWN_VERSIONS.get(sdk_name):
-        if sdk_version in versions:
+    if sdk_name in SDK_USER_AGENT_KNOWN_VERSIONS:
+        if sdk_version in SDK_USER_AGENT_KNOWN_VERSIONS[cast(KnownSDK, sdk_name)]:
             return value
         return f"{sdk_name}/unknown"
     return None
@@ -44,12 +49,32 @@ _RequestHeaderLabelsModel = create_model(
     "_RequestHeaderLabelsModel",
     **_request_header_labels_model_fields,
 )
-_labels_type_adapter: TypeAdapter[Labels] = TypeAdapter(Labels)
 
-map_influx_record_values_to_labels = partial(
-    _labels_type_adapter.dump_python,
-    include=set(LABELS),
-)
+
+def map_labels_to_influx_record_values(labels: Labels) -> dict[str, Any]:
+    influx_record_values: dict[str, Any] = {}
+    for label, value in labels.items():
+        if label == "user_agent":
+            if (influx_id := SDK_INFLUX_IDS_BY_USER_AGENT.get(value)) is not None:
+                influx_record_values["user_agent"] = influx_id
+            continue
+        influx_record_values[label] = value
+    return influx_record_values
+
+
+def map_influx_record_values_to_labels(values: dict[str, Any]) -> Labels:
+    labels: Labels = {}
+    for label in LABELS:
+        if label == "user_agent":
+            user_agent_influx_id: int | None = values.get("user_agent")
+            if user_agent_influx_id and (
+                user_agent := SDK_USER_AGENTS_BY_INFLUX_ID.get(user_agent_influx_id)
+            ):
+                labels["user_agent"] = user_agent
+            continue
+        if value := values.get(label):
+            labels[label] = value
+    return labels
 
 
 def map_annotated_api_usage_buckets_to_usage_data(

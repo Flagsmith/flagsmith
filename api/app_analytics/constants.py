@@ -1,6 +1,6 @@
 from typing import get_args
 
-from app_analytics.types import InputLabel, Label, PeriodType
+from app_analytics.types import InputLabel, KnownSDK, Label, PeriodType
 
 ANALYTICS_READ_BUCKET_SIZE = 15
 
@@ -14,8 +14,12 @@ NINETY_DAY_PERIOD: PeriodType
     NINETY_DAY_PERIOD,
 ) = get_args(PeriodType)
 
+MAX_KNOWN_VERSIONS_PER_SDK = 10_000
 
-SDK_USER_AGENT_KNOWN_VERSIONS = {
+# We make sure to only track known SDK versions
+# because, when we prepare the data for Influx, we need to map to numeric IDs.
+# This allows us to efficiently store usage and evaluation data.
+SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
     "flagsmith-dotnet-sdk": ["unknown"],
     "flagsmith-elixir-sdk": ["unknown"],
     "flagsmith-flutter-sdk": ["unknown"],
@@ -34,6 +38,22 @@ SDK_USER_AGENT_KNOWN_VERSIONS = {
     "flagsmith-swift-ios-sdk": ["unknown"],
 }
 
+SDK_USER_AGENT_INFLUX_IDS: list[tuple[KnownSDK, int]] = [
+    (sdk, idx * MAX_KNOWN_VERSIONS_PER_SDK)
+    for idx, sdk in enumerate(get_args(KnownSDK))
+]
+
+
+SDK_USER_AGENTS_BY_INFLUX_ID: dict[int, str] = {}
+SDK_INFLUX_IDS_BY_USER_AGENT: dict[str, int] = {}
+
+for sdk_name, sdk_id in SDK_USER_AGENT_INFLUX_IDS:
+    for version_index, version in enumerate(SDK_USER_AGENT_KNOWN_VERSIONS[sdk_name]):
+        influx_id = sdk_id + version_index
+        user_agent = f"{sdk_name}/{version}"
+        SDK_USER_AGENTS_BY_INFLUX_ID[influx_id] = user_agent
+        SDK_INFLUX_IDS_BY_USER_AGENT[user_agent] = influx_id
+
 
 # Optional headers sent from client SDK mapped to their respective labels.
 TRACK_HEADERS: dict[str, InputLabel] = {
@@ -42,7 +62,7 @@ TRACK_HEADERS: dict[str, InputLabel] = {
     "Flagsmith-SDK-User-Agent": "sdk_user_agent",
     "User-Agent": "user_agent",
 }
-LABELS: tuple[str, ...] = tuple(str(label) for label in get_args(Label))
+LABELS: tuple[Label, ...] = get_args(Label)
 
 NO_ANALYTICS_DATABASE_CONFIGURED_WARNING = (
     "No analytics database configured. "
