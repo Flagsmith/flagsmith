@@ -708,15 +708,16 @@ def test_get_flags_for_environment_response(
 
 
 # NOTE: DEPRECATED
-def test_get_flags_for_identity_response(
+def test_SDKFeatureStates_get__given_identifier__exists__responds_200_with_feature_list(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
     identity: Identity,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-    FeatureState.objects.create(
+    feature_state = FeatureState.objects.create(
         feature=feature,
         environment=environment,
         identity=identity,
@@ -728,8 +729,150 @@ def test_get_flags_for_identity_response(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "id": feature_state.id,
+            "enabled": feature_state.enabled,
+            "environment": environment.id,
+            "feature": mocker.ANY,
+            "feature_segment": None,
+            "feature_state_value": None,
+            "identity": identity.id,
+        },
+    ]
     assert response.json()[0]["feature"]["name"] == feature.name
-    assert response.json()[0]["enabled"] is True
+
+
+# NOTE: DEPRECATED
+def test_SDKFeatureStates_get__given_identifier__doesnt_exist__responds_200_with_feature_list(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/morpheus")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "id": feature_state.id,
+            "enabled": feature.default_enabled,
+            "environment": environment.id,
+            "feature": mocker.ANY,
+            "feature_segment": None,
+            "feature_state_value": None,
+            "identity": None,
+        },
+    ]
+    assert Identity.objects.filter(identifier="morpheus").exists()
+
+
+# NOTE: DEPRECATED
+def test_SDKFeatureStates_get__given_identifier_and_feature__both_exist__responds_200_with_feature(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+
+    # When
+    response = api_client.get(
+        f"/api/v1/flags/{identity.identifier}?feature={feature.name}"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "id": feature_state.id,
+        "enabled": feature_state.enabled,
+        "environment": environment.id,
+        "feature": mocker.ANY,
+        "feature_segment": None,
+        "feature_state_value": None,
+        "identity": identity.id,
+    }
+    assert response.json()["feature"]["name"] == feature.name
+
+
+# NOTE: DEPRECATED
+def test_SDKFeatureStates_get__given_identifier_and_feature__feature_does_not_exist__responds_404(
+    api_client: APIClient,
+    environment: Environment,
+    identity: Identity,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(f"/api/v1/flags/{identity.identifier}?feature=turbo_mode")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.parametrize("cache_flags_seconds", [0, 30])
+def test_SDKFeatureStates_get__given_feature__exists__responds_200_with_feature(
+    api_client: APIClient,
+    cache_flags_seconds: int,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.CACHE_FLAGS_SECONDS = cache_flags_seconds
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(f"/api/v1/flags/?feature={feature.name}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "id": feature_state.id,
+        "enabled": feature.default_enabled,
+        "environment": environment.id,
+        "feature": mocker.ANY,
+        "feature_segment": None,
+        "feature_state_value": None,
+        "identity": None,
+    }
+
+
+@pytest.mark.parametrize("cache_flags_seconds", [0, 30])
+def test_SDKFeatureStates_get__given_feature__doesnt_exist__responds_404(
+    api_client: APIClient,
+    cache_flags_seconds: int,
+    environment: Environment,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.CACHE_FLAGS_SECONDS = cache_flags_seconds
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/?feature=turbo_mode")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.parametrize(

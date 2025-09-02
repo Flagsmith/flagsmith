@@ -815,8 +815,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
                 additional_filters=self._additional_filters,
                 from_replica=True,
             )
-            if len(feature_states) != 1:
-                # TODO: what if more than one?
+            if not feature_states:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
