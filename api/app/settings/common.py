@@ -1201,6 +1201,7 @@ CORS_ALLOW_HEADERS = [
     *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
     "X-Environment-Key",
     "X-E2E-Test-Auth-Token",
+    "Flagsmith-SDK-User-Agent",
 ]
 
 # Hubspot settings
