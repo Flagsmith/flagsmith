@@ -1890,23 +1890,6 @@ pyreadline = {version = "*", markers = "platform_system == \"Windows\""}
 pyrepl = ">=0.8.2"
 
 [[package]]
-name = "fastuaparser"
-version = "0.1.4"
-description = "A super-fast user agent string parser "
-optional = false
-python-versions = ">=3.6"
-groups = ["main"]
-files = [
-    {file = "fastuaparser-0.1.4-py3-none-any.whl", hash = "sha256:9f84be99b435c73849d408b6cd161bdc752881054a7731a810d0deb8fd89842e"},
-    {file = "fastuaparser-0.1.4.tar.gz", hash = "sha256:c0b9113d17e40705dbf4582ca1303c703e2ea03ffdb2f0507afe267a317a3e79"},
-]
-
-[package.extras]
-dev = ["fastuaparser[docs,lint,tests]"]
-lint = ["ruff"]
-tests = ["pytest"]
-
-[[package]]
 name = "filelock"
 version = "3.16.1"
 description = "A platform independent file lock."
@@ -5442,4 +5425,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "c25e8a95ba8797b4f743d2eb0a5023e81d585a6602e4a048f61243826b63f334"
+content-hash = "4147bbac36ba2570586126718def0c72c92a2bb3e829bc9823576b533664710c"

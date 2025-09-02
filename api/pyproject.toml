@@ -167,7 +167,6 @@ djangorestframework-simplejwt = "^5.3.1"
 structlog = "^24.4.0"
 prometheus-client = "^0.21.1"
 django_cockroachdb = "~4.2"
-fastuaparser = "^0.1.4"
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -210,7 +209,6 @@ optional = true
 
 [tool.poetry.group.release-pipelines.dependencies]
 flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.4.1" }
-
 
 
 [tool.poetry.group.dev.dependencies]
