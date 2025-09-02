@@ -1,4 +1,5 @@
 import logging
+import re
 import typing
 from datetime import timedelta
 from functools import reduce
@@ -865,34 +866,36 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
 
         return data
 
-    def _get_flags_response_with_identifier(self, request, identifier):  # type: ignore[no-untyped-def]
+    def _get_flags_response_with_identifier(
+        self, request: Request, identifier: str
+    ) -> Response:
         identity, _ = Identity.objects.get_or_create(
             identifier=identifier, environment=request.environment
         )
 
-        kwargs = {
-            "identity": identity,
-            "environment": request.environment,
-            "feature_segment": None,
-        }
+        feature_states = identity.get_all_feature_states()
 
         if "feature" in request.GET:
-            kwargs["feature__name__iexact"] = request.GET["feature"]
-            try:
-                feature_state = identity.get_all_feature_states().get(  # type: ignore[attr-defined]
-                    feature__name__iexact=kwargs["feature__name__iexact"],
-                )
-            except FeatureState.DoesNotExist:
+            is_case_insensitive = (
+                request.environment.project.only_allow_lower_case_feature_names
+            )
+            for feature_state in feature_states:
+                pattern = rf"^{request.GET['feature']}$"
+                feature_name = feature_state.feature.name
+                re_flags = re.IGNORECASE if is_case_insensitive else 0
+                is_match = re.match(pattern, feature_name, re_flags)
+                if is_match:
+                    return Response(
+                        self.get_serializer(feature_state).data,
+                        status=status.HTTP_200_OK,
+                    )
+            else:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            return Response(
-                self.get_serializer(feature_state).data, status=status.HTTP_200_OK
-            )
-
-        flags = self.get_serializer(identity.get_all_feature_states(), many=True)
+        flags = self.get_serializer(feature_states, many=True)
         return Response(flags.data, status=status.HTTP_200_OK)
 
 

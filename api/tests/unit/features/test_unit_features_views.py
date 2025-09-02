@@ -707,6 +707,31 @@ def test_get_flags_for_environment_response(
     )
 
 
+# NOTE: DEPRECATED
+def test_get_flags_for_identity_response(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+
+    # When
+    response = api_client.get(f"/api/v1/flags/{identity.identifier}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()[0]["feature"]["name"] == feature.name
+    assert response.json()[0]["enabled"] is True
+
+
 @pytest.mark.parametrize(
     "environment_value, project_value, disabled_flag_returned",
     (
