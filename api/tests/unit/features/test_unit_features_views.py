@@ -707,6 +707,39 @@ def test_get_flags_for_environment_response(
     )
 
 
+@pytest.mark.parametrize("cache_flags_seconds", [0, 30])
+def test_SDKFeatureStates_get__responds_200_with_feature_list(
+    api_client: APIClient,
+    cache_flags_seconds: int,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    settings.CACHE_FLAGS_SECONDS = cache_flags_seconds
+
+    # When
+    response = api_client.get("/api/v1/flags/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "id": feature_state.id,
+            "enabled": feature_state.enabled,
+            "environment": environment.id,
+            "feature": mocker.ANY,
+            "feature_segment": None,
+            "feature_state_value": None,
+            "identity": None,
+        },
+    ]
+    assert response.json()[0]["feature"]["name"] == feature.name
+
+
 # NOTE: DEPRECATED
 def test_SDKFeatureStates_get__given_identifier__exists__responds_200_with_feature_list(
     api_client: APIClient,
@@ -826,18 +859,14 @@ def test_SDKFeatureStates_get__given_identifier_and_feature__feature_does_not_ex
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-@pytest.mark.parametrize("cache_flags_seconds", [0, 30])
 def test_SDKFeatureStates_get__given_feature__exists__responds_200_with_feature(
     api_client: APIClient,
-    cache_flags_seconds: int,
     environment: Environment,
     feature: Feature,
     feature_state: FeatureState,
     mocker: MockerFixture,
-    settings: SettingsWrapper,
 ) -> None:
     # Given
-    settings.CACHE_FLAGS_SECONDS = cache_flags_seconds
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
@@ -856,16 +885,12 @@ def test_SDKFeatureStates_get__given_feature__exists__responds_200_with_feature(
     }
 
 
-@pytest.mark.parametrize("cache_flags_seconds", [0, 30])
 def test_SDKFeatureStates_get__given_feature__doesnt_exist__responds_404(
     api_client: APIClient,
-    cache_flags_seconds: int,
     environment: Environment,
     mocker: MockerFixture,
-    settings: SettingsWrapper,
 ) -> None:
     # Given
-    settings.CACHE_FLAGS_SECONDS = cache_flags_seconds
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
