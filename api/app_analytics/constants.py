@@ -14,7 +14,6 @@ NINETY_DAY_PERIOD: PeriodType
     NINETY_DAY_PERIOD,
 ) = get_args(PeriodType)
 
-MAX_KNOWN_VERSIONS_PER_SDK = 10_000
 
 # We make sure to only track known SDK versions
 # because, when we prepare the data for Influx, we need to map to numeric IDs.
@@ -39,8 +38,19 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
 }
 
 SDK_USER_AGENT_INFLUX_IDS: list[tuple[KnownSDK, int]] = [
-    (sdk, idx * MAX_KNOWN_VERSIONS_PER_SDK)
-    for idx, sdk in enumerate(get_args(KnownSDK))
+    ("flagsmith-dotnet-sdk", 0),
+    ("flagsmith-elixir-sdk", 10000),
+    ("flagsmith-flutter-sdk", 20000),
+    ("flagsmith-go-sdk", 30000),
+    ("flagsmith-java-sdk", 40000),
+    ("flagsmith-js-sdk", 50000),
+    ("flagsmith-kotlin-android-sdk", 60000),
+    ("flagsmith-nodejs-sdk", 70000),
+    ("flagsmith-php-sdk", 80000),
+    ("flagsmith-python-sdk", 90000),
+    ("flagsmith-ruby-sdk", 100000),
+    ("flagsmith-rust-sdk", 110000),
+    ("flagsmith-swift-ios-sdk", 120000),
 ]
 
 
