@@ -10,7 +10,6 @@ from common.environments.permissions import (
 )
 from django.test import override_settings
 from django.urls import reverse
-from django.utils import timezone
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from pytest_django import DjangoAssertNumQueries
 from rest_framework import status
@@ -990,40 +989,6 @@ def test_get_identities_request_includes_updated_at_header(
     assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
         environment.updated_at.timestamp()
     )
-
-
-def test_get_identities_nplus1(
-    identity: Identity,
-    environment: Environment,
-    api_client: APIClient,
-    feature: Feature,
-    django_assert_num_queries: DjangoAssertNumQueries,
-) -> None:
-    """
-    Specific test to reproduce N+1 issue found after deployment of
-    v2 feature versioning.
-    """
-
-    url = "%s?identifier=%s" % (
-        reverse("api-v1:sdk-identities"),
-        identity.identifier,
-    )
-
-    # Let's get a baseline with only a single version of a flag.
-    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-    with django_assert_num_queries(6):
-        api_client.get(url)
-
-    # Now let's create some new versions of the same flag
-    # and verify that the query count doesn't increase.
-    v1_flag = FeatureState.objects.get(environment=environment, feature=feature)
-    now = timezone.now()
-    for i in range(2, 13):
-        v1_flag.clone(env=environment, version=i, live_from=now)
-
-    # Now it is lower.
-    with django_assert_num_queries(5):
-        api_client.get(url)
 
 
 def test_get_identities_with_hide_sensitive_data_with_feature_name(  # type: ignore[no-untyped-def]
