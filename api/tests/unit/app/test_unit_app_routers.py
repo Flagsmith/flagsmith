@@ -88,9 +88,9 @@ def test_AnalyticsRouter_allow_relation__allows_relations_between_analytics_mode
     ["db_name", "app_label", "expected"],
     [
         ("analytics", "app_analytics", True),
-        ("another_db", "app_analytics", False),
+        ("another_db", "app_analytics", None),
         ("default", "app_analytics", None),
-        ("analytics", "another_app", None),
+        ("analytics", "another_app", False),
     ],
 )
 def test_AnalyticsRouter_allow_migrate__allows_migrations_on_analytics_db(
@@ -105,4 +105,4 @@ def test_AnalyticsRouter_allow_migrate__allows_migrations_on_analytics_db(
     result = router.allow_migrate(db_name, app_label)
 
     # Then
-    assert result == expected
+    assert result is expected

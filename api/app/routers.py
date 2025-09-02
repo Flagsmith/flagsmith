@@ -34,8 +34,7 @@ class AnalyticsRouter:
         return None
 
     def allow_migrate(self, db: str, app_label: str, **hints: Any) -> bool | None:
-        """Ensure analytics models get created on the right database"""
-        if app_label in self.route_app_labels:
-            if db != "default":
-                return db == "analytics"
+        """Ensure the analytics database only gets analytics models"""
+        if db == "analytics":
+            return app_label in self.route_app_labels
         return None
