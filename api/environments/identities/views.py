@@ -115,16 +115,11 @@ class SDKIdentitiesDeprecated(SDKAPIView):
     # identifier is in a path parameter
     def get(self, request, identifier, *args, **kwargs):  # type: ignore[no-untyped-def]
         # if we have identifier fetch, or create if does not exist
-        if identifier:
-            identity, is_new_identity = Identity.objects.get_or_create_for_sdk(
-                identifier=identifier,
-                environment=request.environment,
-                integrations=IDENTITY_INTEGRATIONS,
-            )
-        else:
-            return Response(
-                {"detail": "Missing identifier"}, status=status.HTTP_400_BAD_REQUEST
-            )
+        identity, is_new_identity = Identity.objects.get_or_create_for_sdk(
+            identifier=identifier,
+            environment=request.environment,
+            integrations=IDENTITY_INTEGRATIONS,
+        )
 
         use_replica = not is_new_identity
         if use_replica:

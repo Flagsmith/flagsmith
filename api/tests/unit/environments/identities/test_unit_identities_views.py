@@ -12,6 +12,7 @@ from django.test import override_settings
 from django.urls import reverse
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from pytest_django import DjangoAssertNumQueries
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.test import APIClient
@@ -1374,4 +1375,28 @@ def test_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]
         "update": MANAGE_IDENTITIES,
         "partial_update": MANAGE_IDENTITIES,
         "destroy": MANAGE_IDENTITIES,
+    }
+
+
+# NOTE: DEPRECATED
+def test_SDKIdentitiesDeprecated__given_identifier__retrieves_identity(
+    api_client: APIClient,
+    environment: Environment,
+    feature_state: FeatureState,
+    mocker: MockerFixture,
+    identity: Identity,
+    trait: Trait,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(f"/api/v1/identities/{identity.identifier}/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "flags": [mocker.ANY],
+        "segments": [],
+        "traits": [mocker.ANY],
     }
