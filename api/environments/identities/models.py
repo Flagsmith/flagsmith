@@ -1,6 +1,6 @@
-import typing
 from itertools import chain
 
+from common.core.utils import using_database_replica
 from django.db import models
 from django.db.models import Prefetch, Q
 from flag_engine.context.mappers import map_environment_identity_to_context
@@ -60,6 +60,7 @@ class Identity(models.Model):
         self,
         traits: list[Trait] | None = None,
         additional_filters: Q | None = None,
+        from_replica: bool = False,
     ) -> list[FeatureState]:
         """
         Get all feature states for an identity. This method returns a single flag for
@@ -73,19 +74,23 @@ class Identity(models.Model):
         :return: (list) flags for an identity with the correct values based on
             identity / segment priorities
         """
-        segments = self.get_segments(traits=traits, overrides_only=True)  # type: ignore[arg-type]
+        identity = self
+        if from_replica:
+            identity = using_database_replica(Identity.objects).get(id=self.id)
+
+        segments = identity.get_segments(traits=traits, overrides_only=True)
 
         # define sub queries
-        belongs_to_environment_query = Q(environment=self.environment)
-        if self.id:
-            overridden_for_identity_query = Q(identity=self)
+        belongs_to_environment_query = Q(environment=identity.environment)
+        if identity.id:
+            overridden_for_identity_query = Q(identity=identity)
         else:
             # skip identity overrides for transient identities
             overridden_for_identity_query = Q()
 
         overridden_for_segment_query = Q(
             feature_segment__segment__in=segments,
-            feature_segment__environment=self.environment,
+            feature_segment__environment=identity.environment,
         )
         environment_default_query = Q(identity=None, feature_segment=None)
 
@@ -100,7 +105,7 @@ class Identity(models.Model):
             full_query &= additional_filters
 
         all_flags = get_environment_flags_list(
-            environment=self.environment,
+            environment=identity.environment,
             additional_filters=full_query,
             additional_select_related_args=["feature_segment__segment", "identity"],
             additional_prefetch_related_args=[
@@ -124,7 +129,7 @@ class Identity(models.Model):
                 if flag > current_flag:
                     identity_flags[flag.feature_id] = flag
 
-        if self.environment.get_hide_disabled_flags() is True:
+        if identity.environment.get_hide_disabled_flags() is True:
             # filter out any flags that are disabled
             return [value for value in identity_flags.values() if value.enabled]
 
@@ -141,9 +146,9 @@ class Identity(models.Model):
 
     def get_segments(
         self,
-        traits: typing.List[Trait] = None,  # type: ignore[assignment]
+        traits: list[Trait] | None = None,
         overrides_only: bool = False,
-    ) -> typing.List[Segment]:
+    ) -> list[Segment]:
         """
         Get the list of segments this identity is a part of.
 
@@ -152,7 +157,7 @@ class Identity(models.Model):
         :return: List of matching segments
         """
         matching_segments = []
-        traits = (
+        db_traits = (
             self.identity_traits.all() if (traits is None and self.id) else traits or []
         )
 
@@ -166,7 +171,7 @@ class Identity(models.Model):
             with_overrides=False,
             with_traits=False,
         )
-        engine_traits = map_traits_to_engine(traits)
+        engine_traits = map_traits_to_engine(db_traits)
 
         for segment in all_segments:
             engine_segment = map_segment_to_engine(segment)

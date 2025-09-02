@@ -806,13 +806,14 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         than a list.
         """
         if identifier:
-            return self._get_flags_response_with_identifier(request, identifier)  # type: ignore[no-untyped-call]
+            return self._get_flags_response_with_identifier(request, identifier)
 
         if "feature" in request.GET:
             feature_states = get_environment_flags_list(
                 environment=request.environment,
                 feature_name=request.GET["feature"],
                 additional_filters=self._additional_filters,
+                from_replica=True,
             )
             if len(feature_states) != 1:
                 # TODO: what if more than one?
@@ -824,12 +825,13 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             return Response(self.get_serializer(feature_states[0]).data)
 
         if settings.CACHE_FLAGS_SECONDS > 0:
-            data = self._get_flags_from_cache(request.environment)  # type: ignore[no-untyped-call]
+            data = self._get_flags_from_cache(request.environment, from_replica=True)
         else:
             data = self.get_serializer(
                 get_environment_flags_list(
                     environment=request.environment,
                     additional_filters=self._additional_filters,
+                    from_replica=True,
                 ),
                 many=True,
             ).data
@@ -852,13 +854,19 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
 
         return filters
 
-    def _get_flags_from_cache(self, environment):  # type: ignore[no-untyped-def]
+    def _get_flags_from_cache(
+        self,
+        environment: Environment,
+        from_replica: bool = False,
+    ) -> list[typing.Any]:
+        data: list[typing.Any]
         data = flags_cache.get(environment.api_key)
         if not data:
             data = self.get_serializer(
                 get_environment_flags_list(
                     environment=environment,
                     additional_filters=self._additional_filters,
+                    from_replica=from_replica,
                 ),
                 many=True,
             ).data
@@ -869,11 +877,12 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
     def _get_flags_response_with_identifier(
         self, request: Request, identifier: str
     ) -> Response:
-        identity, _ = Identity.objects.get_or_create(
+        identity, is_new_identity = Identity.objects.get_or_create(
             identifier=identifier, environment=request.environment
         )
 
-        feature_states = identity.get_all_feature_states()
+        use_replica = not is_new_identity
+        feature_states = identity.get_all_feature_states(from_replica=use_replica)
 
         if "feature" in request.GET:
             is_case_insensitive = (

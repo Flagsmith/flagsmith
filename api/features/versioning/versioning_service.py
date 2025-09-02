@@ -3,6 +3,7 @@ import typing
 from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 
+from common.core.utils import using_database_replica
 from environments.models import Environment
 from features.models import FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
@@ -27,6 +28,7 @@ def get_environment_flags_list(
     additional_prefetch_related_args: typing.Iterable[
         typing.Union[str, Prefetch]
     ] = None,  # type: ignore[assignment]
+    from_replica: bool = False,
 ) -> list[FeatureState]:
     """
     Get a list of the latest committed versions of FeatureState objects that are
@@ -44,6 +46,7 @@ def get_environment_flags_list(
             additional_filters,
             additional_select_related_args,
             additional_prefetch_related_args,
+            from_replica=from_replica,
         ).values()
     )
 
@@ -57,6 +60,7 @@ def get_environment_flags_dict(
         typing.Union[str, Prefetch]
     ] = None,  # type: ignore[assignment]
     key_function: typing.Callable[[FeatureState], tuple] = None,  # type: ignore[type-arg,assignment]
+    from_replica: bool = False,
 ) -> dict[tuple | str | int, FeatureState]:  # type: ignore[type-arg]
     key_function = key_function or _get_distinct_key  # type: ignore[truthy-function]
 
@@ -66,6 +70,7 @@ def get_environment_flags_dict(
         additional_filters,
         additional_select_related_args,
         additional_prefetch_related_args,
+        from_replica=from_replica,
     )
 
     # Build up a dictionary keyed off the relevant unique attributes as defined
@@ -104,13 +109,19 @@ def _get_feature_states_queryset(
     additional_prefetch_related_args: typing.Iterable[
         typing.Union[str, Prefetch]
     ] = None,  # type: ignore[assignment]
+    from_replica: bool = False,
 ) -> QuerySet[FeatureState]:
     additional_select_related_args = additional_select_related_args or tuple()
     additional_prefetch_related_args = additional_prefetch_related_args or tuple()
 
+    feature_state_manager = FeatureState.objects
+    if from_replica:
+        feature_state_manager = using_database_replica(FeatureState.objects)
+
     queryset = (
-        FeatureState.objects.get_live_feature_states(
-            environment=environment, additional_filters=additional_filters
+        feature_state_manager.get_live_feature_states(
+            environment=environment,
+            additional_filters=additional_filters,
         )
         .select_related(
             "environment",

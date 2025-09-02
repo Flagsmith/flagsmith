@@ -19,6 +19,7 @@ from app_analytics.cache import FeatureEvaluationCache
 from app_analytics.mappers import (
     map_request_to_labels,
 )
+from common.core.utils import using_database_replica
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
 from features.models import FeatureState
@@ -69,11 +70,13 @@ class SDKAnalyticsFlags(CreateAPIView):  # type: ignore[type-arg]
             return Serializer
 
         environment_feature_names = set(
-            FeatureState.objects.filter(
+            using_database_replica(FeatureState.objects)
+            .filter(
                 environment=self.request.environment,
                 feature_segment=None,
                 identity=None,
-            ).values_list("feature__name", flat=True)
+            )
+            .values_list("feature__name", flat=True)
         )
 
         class _AnalyticsSerializer(Serializer):  # type: ignore[type-arg]
@@ -126,14 +129,14 @@ class SelfHostedTelemetryAPIView(CreateAPIView):  # type: ignore[type-arg]
     serializer_class = TelemetrySerializer
 
 
-@swagger_auto_schema(
+@swagger_auto_schema(  # type: ignore[misc]
     responses={200: UsageTotalCountSerializer()},
     methods=["GET"],
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, UsageDataPermission])
-def get_usage_data_total_count_view(request, organisation_pk=None):  # type: ignore[no-untyped-def]
-    organisation = Organisation.objects.get(id=organisation_pk)
+def get_usage_data_total_count_view(request: Request, organisation_pk: int) -> Response:
+    organisation = using_database_replica(Organisation.objects).get(id=organisation_pk)
     count = get_total_events_count(organisation)
     serializer = UsageTotalCountSerializer(data={"count": count})
     serializer.is_valid(raise_exception=True)
@@ -141,18 +144,18 @@ def get_usage_data_total_count_view(request, organisation_pk=None):  # type: ign
     return Response(serializer.data)
 
 
-@swagger_auto_schema(
+@swagger_auto_schema(  # type: ignore[misc]
     query_serializer=UsageDataQuerySerializer(),
     responses={200: UsageDataSerializer()},
     methods=["GET"],
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, UsageDataPermission])
-def get_usage_data_view(request, organisation_pk=None):  # type: ignore[no-untyped-def]
+def get_usage_data_view(request: Request, organisation_pk: int) -> Response:
     filters = UsageDataQuerySerializer(data=request.query_params)
     filters.is_valid(raise_exception=True)
 
-    organisation = Organisation.objects.get(id=organisation_pk)
+    organisation = using_database_replica(Organisation.objects).get(id=organisation_pk)
     usage_data = get_usage_data(organisation, **filters.validated_data)
     serializer = UsageDataSerializer(usage_data, many=True)
 

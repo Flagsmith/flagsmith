@@ -1,6 +1,7 @@
 import typing
 from collections import namedtuple
 
+from common.core.utils import using_database_replica
 from common.environments.permissions import (
     MANAGE_IDENTITIES,
     VIEW_IDENTITIES,
@@ -115,7 +116,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
     def get(self, request, identifier, *args, **kwargs):  # type: ignore[no-untyped-def]
         # if we have identifier fetch, or create if does not exist
         if identifier:
-            identity, _ = Identity.objects.get_or_create_for_sdk(
+            identity, is_new_identity = Identity.objects.get_or_create_for_sdk(
                 identifier=identifier,
                 environment=request.environment,
                 integrations=IDENTITY_INTEGRATIONS,
@@ -125,15 +126,11 @@ class SDKIdentitiesDeprecated(SDKAPIView):
                 {"detail": "Missing identifier"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        if identity:
-            traits_data = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
-            # traits_data = self.get_serializer(identity.get_all_user_traits(), many=True)
-            # return Response(traits.data, status=status.HTTP_200_OK)
-        else:
-            return Response(
-                {"detail": "Given identifier not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        use_replica = not is_new_identity
+        if use_replica:
+            identity = using_database_replica(Identity.objects).get(id=identity.id)
+
+        traits_data = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
 
         # We need object type to pass into our IdentitySerializerTraitFlags
         IdentityFlagsWithTraitsAndSegments = namedtuple(  # type: ignore[name-match]
@@ -183,11 +180,16 @@ class SDKIdentities(SDKAPIView):
                 environment=request.environment,
             )
         else:
-            identity, _ = Identity.objects.get_or_create_for_sdk(
+            identity, is_new_identity = Identity.objects.get_or_create_for_sdk(
                 identifier=identifier,
                 environment=request.environment,
                 integrations=IDENTITY_INTEGRATIONS,
             )
+
+        use_replica = not is_new_identity
+        if use_replica:
+            identity = using_database_replica(Identity.objects).get(id=identity.id)
+
         self.identity = identity
 
         if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
