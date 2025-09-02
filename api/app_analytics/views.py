@@ -1,6 +1,7 @@
 import logging
 import typing
 
+from common.core.utils import using_database_replica
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -19,7 +20,6 @@ from app_analytics.cache import FeatureEvaluationCache
 from app_analytics.mappers import (
     map_request_to_labels,
 )
-from common.core.utils import using_database_replica
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
 from features.models import FeatureState

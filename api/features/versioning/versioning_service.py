@@ -1,9 +1,9 @@
 import typing
 
+from common.core.utils import using_database_replica
 from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 
-from common.core.utils import using_database_replica
 from environments.models import Environment
 from features.models import FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
