@@ -179,6 +179,7 @@ class SDKIdentities(SDKAPIView):
                 identifier=identifier,
                 environment=request.environment,
             )
+            is_new_identity = True
         else:
             identity, is_new_identity = Identity.objects.get_or_create_for_sdk(
                 identifier=identifier,
