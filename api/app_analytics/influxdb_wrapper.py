@@ -19,6 +19,7 @@ from app_analytics.dataclasses import FeatureEvaluationData, UsageData
 from app_analytics.mappers import (
     map_flux_tables_to_feature_evaluation_data,
     map_flux_tables_to_usage_data,
+    map_labels_to_influx_record_values,
 )
 from app_analytics.types import Labels
 
@@ -260,7 +261,10 @@ def get_multiple_event_list_for_organisation(
         filters.append(f'r["environment_id"] == "{environment_id}"')
 
     if labels_filter:
-        filters += [f'r["{key}"] == "{value}"' for key, value in labels_filter.items()]
+        filters += [
+            f'r["{key}"] == "{value}"'
+            for key, value in map_labels_to_influx_record_values(labels_filter).items()
+        ]
 
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,
@@ -331,7 +335,12 @@ def get_multiple_event_list_for_feature(
 
     if labels_filter:
         filters += " " + build_filter_string(
-            [f'r["{key}"] == "{value}"' for key, value in labels_filter.items()]
+            [
+                f'r["{key}"] == "{value}"'
+                for key, value in map_labels_to_influx_record_values(
+                    labels_filter
+                ).items()
+            ]
         )
 
     results = InfluxDBWrapper.influx_query_manager(
