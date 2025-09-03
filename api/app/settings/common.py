@@ -28,6 +28,7 @@ from task_processor.task_run_method import TaskRunMethod
 
 from app.routers import ReplicaReadStrategy
 from app.utils import get_numbered_env_vars_with_prefix
+from app_analytics.constants import TRACK_HEADERS
 from environments.enums import EnvironmentDocumentCacheMode
 
 django_stubs_ext.monkeypatch()
@@ -1189,20 +1190,26 @@ COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
 CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL", not COOKIE_AUTH_ENABLED)
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", COOKIE_AUTH_ENABLED)
 FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
-    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
+    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS",
+    default=["sentry-trace"],
 )
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
     subcast=str,
     default=[],
 )
-CORS_ALLOW_HEADERS = [
-    *default_headers,
-    *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
-    "X-Environment-Key",
-    "X-E2E-Test-Auth-Token",
-    "Flagsmith-SDK-User-Agent",
-]
+CORS_ALLOW_HEADERS = list(
+    set(
+        header.casefold()
+        for header in (
+            *default_headers,
+            *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
+            "X-Environment-Key",
+            "X-E2E-Test-Auth-Token",
+            *TRACK_HEADERS,
+        )
+    )
+)
 
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
