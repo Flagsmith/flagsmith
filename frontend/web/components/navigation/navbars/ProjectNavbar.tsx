@@ -59,7 +59,9 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
           )
         }
       </Permission>
-      <ProjectChangeRequestsLink projectId={projectId} />
+      {Utils.getFlagsmithHasFeature('segment_change_requests') && (
+        <ProjectChangeRequestsLink projectId={projectId} />
+      )}
       {!!integrations.length && (
         <NavSubLink
           icon={<Icon name='layers' />}
