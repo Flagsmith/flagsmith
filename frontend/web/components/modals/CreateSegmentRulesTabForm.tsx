@@ -71,6 +71,51 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
   showDescriptions,
 }) => {
   const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID
+
+  let buttonProps: Record<string, any> = {
+    'data-test': 'update-segment',
+    disabled: isSaving || !name || !isValid,
+    id: 'update-feature-btn',
+  }
+
+  switch (true) {
+    case isEdit && is4Eyes:
+      buttonProps = {
+        ...buttonProps,
+        children: isSaving ? 'Creating' : 'Create Change Request',
+        onClick: () => {
+          openModal2(
+            'New Change Request',
+            <ChangeRequestModal
+              showAssignees={is4Eyes}
+              hideSchedule
+              onSave={onCreateChangeRequest}
+            />,
+          )
+        },
+      }
+      break
+
+    case !isEdit:
+      buttonProps = {
+        ...buttonProps,
+        children: isSaving ? 'Creating' : 'Create Segment',
+        'data-test': 'create-segment',
+        disabled: isSaving || !name || !isValid || isLimitReached,
+        id: 'create-feature-btn',
+        type: 'submit',
+      }
+      break
+
+    case isEdit && !is4Eyes:
+    default:
+      buttonProps = {
+        ...buttonProps,
+        children: isSaving ? 'Creating' : 'Update Segment',
+        type: 'submit',
+      }
+  }
+
   return (
     <form id='create-segment-modal' onSubmit={save}>
       {!condensed && (
@@ -193,45 +238,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
                 Cancel
               </Button>
             )}
-            {isEdit ? (
-              is4Eyes ? (
-                <Button
-                  onClick={() => {
-                    openModal2(
-                      'New Change Request',
-                      <ChangeRequestModal
-                        showAssignees={is4Eyes}
-                        hideSchedule
-                        onSave={onCreateChangeRequest}
-                      />,
-                    )
-                  }}
-                  data-test='update-segment'
-                  id='update-feature-btn'
-                  disabled={isSaving || !name || !isValid}
-                >
-                  {isSaving ? 'Creating' : 'Create Change Request'}
-                </Button>
-              ) : (
-                <Button
-                  type='submit'
-                  data-test='update-segment'
-                  id='update-feature-btn'
-                  disabled={isSaving || !name || !isValid}
-                >
-                  {isSaving ? 'Creating' : 'Update Segment'}
-                </Button>
-              )
-            ) : (
-              <Button
-                disabled={isSaving || !name || !isValid || isLimitReached}
-                type='submit'
-                data-test='create-segment'
-                id='create-feature-btn'
-              >
-                {isSaving ? 'Creating' : 'Create Segment'}
-              </Button>
-            )}
+            <Button {...buttonProps} />
           </Row>
         </div>
       )}
