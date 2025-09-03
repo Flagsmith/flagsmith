@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.195.0](https://github.com/Flagsmith/flagsmith/compare/v2.194.0...v2.195.0) (2025-09-02)
+
+
+### Features
+
+* SDK user agents allow list, store numeric IDs in InfluxDB ([#6000](https://github.com/Flagsmith/flagsmith/issues/6000)) ([ed049b4](https://github.com/Flagsmith/flagsmith/commit/ed049b4f600f8e9a018fc74ed2d2fc881dd155a5))
+
+
+### Bug Fixes
+
+* CORS errors due to flagsmith-js-sdk header changes ([#6010](https://github.com/Flagsmith/flagsmith/issues/6010)) ([332a2df](https://github.com/Flagsmith/flagsmith/commit/332a2df5624ea7bcceeea73b97428a86d081e26e))
+* **Maintenance:** Fix Poetry install ([#5999](https://github.com/Flagsmith/flagsmith/issues/5999)) ([47e0cdc](https://github.com/Flagsmith/flagsmith/commit/47e0cdc565681fea5e3308b17ccd648e1a6579c9))
+* **SAML:** Prevent SAML users from creating organizations ([#5994](https://github.com/Flagsmith/flagsmith/issues/5994)) ([771bb28](https://github.com/Flagsmith/flagsmith/commit/771bb28e6ffeaefe3ad9ea0793e1dd069fdf8c7b))
+
 ## [2.194.0](https://github.com/Flagsmith/flagsmith/compare/v2.193.0...v2.194.0) (2025-08-27)
 
 
