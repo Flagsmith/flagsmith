@@ -37,9 +37,9 @@ const UsageChart: React.FC<UsageChartProps> = ({
 }) => (
   <div className='border rounded p-3'>
     <h5>{title}</h5>
-    <ResponsiveContainer height={250} width='100%'>
+    <ResponsiveContainer height={400} width='100%'>
       <BarChart data={data}>
-        <CartesianGrid strokeDasharray='3 3' />
+        <CartesianGrid stroke='#EFF1F4' vertical={false} />
         <_Tooltip
           cursor={{ fill: 'transparent' }}
           content={<RechartsTooltip />}
@@ -47,14 +47,21 @@ const UsageChart: React.FC<UsageChartProps> = ({
         <XAxis
           dataKey='day'
           tickFormatter={(v) => moment(v).format('D MMM')}
-          interval={7}
+          interval={data?.length > 31 ? 7 : 0}
+          textAnchor='end'
           axisLine={{ stroke: '#EFF1F4' }}
           tick={{ dx: -4, fill: '#656D7B' }}
+          angle={-90}
           tickLine={false}
           allowDataOverflow={false}
         />
-        <YAxis />
-        <Legend />
+        <YAxis
+          allowDataOverflow={false}
+          tickLine={false}
+          axisLine={{ stroke: '#EFF1F4' }}
+          tick={{ fill: '#1A2634' }}
+        />
+        <Legend wrapperStyle={{ paddingTop: '30px' }} />
         {userAgents?.map((userAgent, index) => (
           <Bar
             key={userAgent}

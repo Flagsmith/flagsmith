@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { Res } from 'common/types/responses'
 import SingleSDKLabelsChart from './components/SingleSDKLabelsChart'
-import { MultiValueProps } from 'react-select/lib/components/MultiValue'
 import MultiSelect from 'components/base/select/MultiSelect'
 
 export interface OrganisationUsageMetricsProps {
@@ -9,7 +8,7 @@ export interface OrganisationUsageMetricsProps {
   selectedMetrics: string[]
 }
 export type ChartDataPoint = {
-  day: any
+  day: string
 } & Record<string, number>
 
 const colours = [
@@ -41,74 +40,57 @@ const OrganisationUsageMetrics: React.FC<OrganisationUsageMetricsProps> = ({
 }) => {
   const [selectedUserAgents, setSelectedUserAgents] = useState<string[]>([])
 
-  const {
-    environmentDocumentChartData,
-    flagsChartData,
-    identitiesChartData,
-    traitsChartData,
-    userAgentColorMap = new Map(),
-  } = useMemo(() => {
-    if (!data?.events_list)
+  const { aggregateChartData, allUserAgents, userAgentColorMap } =
+    useMemo(() => {
+      if (!data?.events_list)
+        return {
+          aggregateChartData: [],
+          allUserAgents: [],
+          userAgentColorMap: new Map(),
+        }
+
+      const aggregateGrouped: Record<string, ChartDataPoint> = {}
+      const userAgents: string[] = []
+      const userAgentSet = new Set<string>()
+
+      data.events_list.forEach((event) => {
+        const date = event.day
+        const userAgent = event.labels?.user_agent || 'Unknown'
+
+        if (!userAgentSet.has(userAgent)) {
+          userAgentSet.add(userAgent)
+          userAgents.push(userAgent)
+        }
+
+        if (!aggregateGrouped[date])
+          aggregateGrouped[date] = { day: date } as ChartDataPoint
+
+        let totalForUserAgent = 0
+        if (selectedMetrics.includes('Flags'))
+          totalForUserAgent += event.flags || 0
+        if (selectedMetrics.includes('Identities'))
+          totalForUserAgent += event.identities || 0
+        if (selectedMetrics.includes('Environment Document'))
+          totalForUserAgent += event.environment_document || 0
+        if (selectedMetrics.includes('Traits'))
+          totalForUserAgent += event.traits || 0
+
+        aggregateGrouped[date][userAgent] =
+          (aggregateGrouped[date][userAgent] || 0) + totalForUserAgent
+      })
+
+      const colorMap = new Map()
+      userAgents.forEach((agent, index) => {
+        colorMap.set(agent, colours[index % colours.length])
+      })
+
       return {
-        environmentDocumentChartData: [],
-        flagsChartData: [],
-        identitiesChartData: [],
-        traitsChartData: [],
+        aggregateChartData: Object.values(aggregateGrouped),
+        allUserAgents: userAgents,
+        userAgentColorMap: colorMap,
       }
+    }, [data?.events_list, selectedMetrics])
 
-    const flagsGrouped: Record<string, ChartDataPoint> = {}
-    const identitiesGrouped: Record<string, ChartDataPoint> = {}
-    const environmentDocumentGrouped: Record<string, ChartDataPoint> = {}
-    const traitsGrouped: Record<string, ChartDataPoint> = {}
-    const userAgents = new Set<string>()
-
-    data.events_list.forEach((event) => {
-      const date = event.day
-      const userAgent = event.labels?.user_agent || 'Unknown'
-      userAgents.add(userAgent)
-
-      if (!flagsGrouped[date])
-        flagsGrouped[date] = { day: date } as ChartDataPoint
-      if (!identitiesGrouped[date])
-        identitiesGrouped[date] = { day: date } as ChartDataPoint
-      if (!environmentDocumentGrouped[date])
-        environmentDocumentGrouped[date] = { day: date } as ChartDataPoint
-      if (!traitsGrouped[date])
-        traitsGrouped[date] = { day: date } as ChartDataPoint
-
-      flagsGrouped[date][userAgent] =
-        (flagsGrouped[date][userAgent] || 0) + (event.flags || 0)
-      identitiesGrouped[date][userAgent] =
-        (identitiesGrouped[date][userAgent] || 0) + (event.identities || 0)
-      environmentDocumentGrouped[date][userAgent] =
-        (environmentDocumentGrouped[date][userAgent] || 0) +
-        (event.environment_document || 0)
-      traitsGrouped[date][userAgent] =
-        (traitsGrouped[date][userAgent] || 0) + (event.traits || 0)
-    })
-
-    const colorMap = new Map()
-    Array.from(userAgents).forEach((agent, index) => {
-      colorMap.set(agent, colours[index % colours.length])
-    })
-
-    return {
-      environmentDocumentChartData: Object.values(environmentDocumentGrouped),
-      flagsChartData: Object.values(flagsGrouped),
-      identitiesChartData: Object.values(identitiesGrouped),
-      traitsChartData: Object.values(traitsGrouped),
-      userAgentColorMap: colorMap,
-    }
-  }, [data?.events_list])
-
-  const allUserAgents = useMemo(() => {
-    if (!data?.events_list) return []
-    return [
-      ...new Set(
-        data.events_list.map((e) => e.labels?.user_agent || 'Unknown'),
-      ),
-    ]
-  }, [data?.events_list])
   const userAgentOptions = useMemo(() => {
     return allUserAgents.map((agent) => ({
       label: agent,
@@ -116,36 +98,12 @@ const OrganisationUsageMetrics: React.FC<OrganisationUsageMetricsProps> = ({
     }))
   }, [allUserAgents])
 
-  const chartItems = [
-    {
-      data: flagsChartData,
-      metricKey: 'flags',
-      title: 'Flags',
-      userAgents: allUserAgents,
-      visible: selectedMetrics?.includes('Flags'),
-    },
-    {
-      data: identitiesChartData,
-      metricKey: 'identities',
-      title: 'Identities',
-      userAgents: allUserAgents,
-      visible: selectedMetrics?.includes('Identities'),
-    },
-    {
-      data: environmentDocumentChartData,
-      metricKey: 'environmentDocuments',
-      title: 'Environment Documents',
-      userAgents: allUserAgents,
-      visible: selectedMetrics?.includes('Environment Document'),
-    },
-    {
-      data: traitsChartData,
-      metricKey: 'traits',
-      title: 'Traits',
-      userAgents: allUserAgents,
-      visible: selectedMetrics?.includes('Traits'),
-    },
-  ]
+  const filteredUserAgents =
+    selectedUserAgents.length > 0
+      ? allUserAgents.filter((userAgent) =>
+          selectedUserAgents.includes(userAgent),
+        )
+      : allUserAgents
 
   return (
     <div className='row'>
@@ -153,6 +111,7 @@ const OrganisationUsageMetrics: React.FC<OrganisationUsageMetricsProps> = ({
         <div className='row'>
           <div className='col-12'>
             <MultiSelect
+              label='Filter SDKs'
               options={userAgentOptions}
               selectedValues={selectedUserAgents}
               onSelectionChange={setSelectedUserAgents}
@@ -161,28 +120,16 @@ const OrganisationUsageMetrics: React.FC<OrganisationUsageMetricsProps> = ({
           </div>
         </div>
       </div>
-      {chartItems
-        .filter((chart) => chart.visible)
-        .map((chart) => {
-          const filteredUserAgents =
-            selectedUserAgents.length > 0
-              ? chart.userAgents?.filter((userAgent: string) =>
-                  selectedUserAgents.includes(userAgent),
-                )
-              : chart.userAgents
-          return (
-            <div className='col-12 mb-4' key={chart.metricKey}>
-              <SingleSDKLabelsChart
-                data={chart.data}
-                userAgents={filteredUserAgents}
-                metricKey={chart.metricKey}
-                title={chart.title}
-                colours={colours}
-                userAgentsColorMap={userAgentColorMap}
-              />
-            </div>
-          )
-        })}
+      <div className='col-12 mb-4'>
+        <SingleSDKLabelsChart
+          data={aggregateChartData}
+          userAgents={filteredUserAgents}
+          metricKey='aggregate'
+          title='API Usage'
+          colours={colours}
+          userAgentsColorMap={userAgentColorMap}
+        />
+      </div>
     </div>
   )
 }

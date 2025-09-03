@@ -104,7 +104,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   size = 'default',
 }) => {
   return (
-    <div className={className}>
+    <div className={`${className} d-flex flex-column gap-2`}>
       {label && <label>{label}</label>}
       <Select
         isMulti
@@ -139,10 +139,11 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
           value,
         }))}
         options={options}
-        className='react-select react-select__extensible'
+        className='react-select react-select__extensible cursor-pointer'
         styles={{
           container: (base: any) => ({
             ...base,
+            cursor: 'pointer',
             maxWidth: '100%',
             minWidth: '300px',
             width: 'fit-content',
