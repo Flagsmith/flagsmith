@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { Res } from 'common/types/responses'
 import SingleSDKLabelsChart from './components/SingleSDKLabelsChart'
 import { MultiValueProps } from 'react-select/lib/components/MultiValue'
+import MultiSelect from 'components/base/select/MultiSelect'
 
 export interface OrganisationUsageMetricsProps {
   data?: Res['organisationUsage']
@@ -45,7 +46,7 @@ const OrganisationUsageMetrics: React.FC<OrganisationUsageMetricsProps> = ({
     flagsChartData,
     identitiesChartData,
     traitsChartData,
-    userAgentColorMap,
+    userAgentColorMap = new Map(),
   } = useMemo(() => {
     if (!data?.events_list)
       return {
@@ -146,104 +147,16 @@ const OrganisationUsageMetrics: React.FC<OrganisationUsageMetricsProps> = ({
     },
   ]
 
-  const CustomMultiValue = ({
-    data,
-    removeProps,
-  }: MultiValueProps<{ label: string; value: string }>) => {
-    const backgroundColor = userAgentColorMap?.get(data.value) || colours[0]
-
-    return (
-      <div
-        className='d-flex align-items-center'
-        style={{
-          backgroundColor,
-          borderRadius: '4px',
-          color: 'white',
-          fontSize: '12px',
-          maxWidth: '150px',
-          overflow: 'hidden',
-          padding: '2px 6px',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        <span
-          className='mr-1'
-          style={{
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {data.label}
-        </span>
-        <span
-          onClick={() => removeProps?.onClick?.(data)}
-          style={{
-            cursor: 'pointer',
-            fontSize: '14px',
-            lineHeight: '1',
-          }}
-        >
-          ×
-        </span>
-      </div>
-    )
-  }
-
   return (
     <div className='row'>
       <div className='col-12 mb-4'>
         <div className='row'>
           <div className='col-12'>
-            <label>Filter SDKs</label>
-            <Select
-              isMulti
-              closeMenuOnSelect={false}
-              placeholder='Select SDKs to display...'
-              onChange={(selectedOptions: any) => {
-                const values = selectedOptions
-                  ? selectedOptions.map((opt: any) => opt.value)
-                  : []
-                setSelectedUserAgents(values)
-              }}
-              components={{
-                MultiValue: CustomMultiValue,
-              }}
-              value={selectedUserAgents.map((agent) => ({
-                label: agent,
-                value: agent,
-              }))}
+            <MultiSelect
               options={userAgentOptions}
-              className='react-select react-select__extensible'
-              styles={{
-                container: (base: any) => ({
-                  ...base,
-                  maxWidth: '100%',
-                  minWidth: '300px',
-                  width: 'fit-content',
-                }),
-                control: (base: any) => ({
-                  ...base,
-                  height: 'auto',
-                  minHeight: '44px',
-                  minWidth: '300px',
-                  width: 'fit-content',
-                }),
-                multiValue: (base: any) => ({
-                  ...base,
-                  flexShrink: 0,
-                  margin: '2px',
-                }),
-                valueContainer: (base: any) => ({
-                  ...base,
-                  flexWrap: 'wrap',
-                  gap: '4px',
-                  overflow: 'visible',
-                  paddingBottom: '6px',
-                  paddingTop: '6px',
-                }),
-              }}
+              selectedValues={selectedUserAgents}
+              onSelectionChange={setSelectedUserAgents}
+              colorMap={userAgentColorMap}
             />
           </div>
         </div>

@@ -23,7 +23,7 @@ interface UsageChartProps {
   title: string
   data: ChartDataPoint[]
   userAgents?: string[]
-  userAgentsColorMap: Map<any, any>
+  userAgentsColorMap: Map<string, string>
   metricKey: string
 }
 

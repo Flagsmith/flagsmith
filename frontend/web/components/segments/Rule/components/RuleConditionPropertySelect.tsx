@@ -3,10 +3,10 @@ import { components } from 'react-select/lib/components'
 import Utils from 'common/utils/utils'
 import { RuleContextValues } from 'common/types/rules.types'
 import Constants from 'common/constants'
-import { GroupLabel } from 'components/base/SearchableDropdown'
-import SearchableDropdown, {
+import { GroupLabel } from 'components/base/select/SearchableSelect'
+import SearchableSelect, {
   OptionType,
-} from 'components/base/SearchableDropdown'
+} from 'components/base/select/SearchableSelect'
 
 interface RuleConditionPropertySelectProps {
   ruleIndex: number
@@ -106,7 +106,7 @@ const RuleConditionPropertySelect = ({
 
   return (
     <>
-      <SearchableDropdown
+      <SearchableSelect
         dataTest={dataTest}
         value={propertyValue}
         isClearable={true}
