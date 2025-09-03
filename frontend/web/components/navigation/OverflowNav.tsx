@@ -5,7 +5,7 @@ import { ellipsisHorizontal } from 'ionicons/icons'
 import Button from 'components/base/forms/Button'
 import classNames from 'classnames'
 import { useHistory } from 'react-router-dom'
-import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount' // Assuming you place the hook here
+import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
 
 type OverflowNavProps = {
   children: ReactNode

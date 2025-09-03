@@ -56,6 +56,7 @@ import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineS
 import { FlagValueFooter } from './FlagValueFooter'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
+import BetaFlag from 'components/BetaFlag'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -1905,18 +1906,20 @@ const CreateFlag = class extends Component {
                                       tabLabelString='Feature Health'
                                       tabLabel={
                                         <Row className='d-flex justify-content-center align-items-center pr-1 gap-1'>
-                                          Feature Health
-                                          {this.props.hasUnhealthyEvents && (
-                                            <IonIcon
-                                              icon={warning}
-                                              style={{
-                                                color:
-                                                  Constants.featureHealth
-                                                    .unhealthyColor,
-                                                marginBottom: -2,
-                                              }}
-                                            />
-                                          )}
+                                          <BetaFlag flagName={'feature_health'}>
+                                            Feature Health
+                                            {this.props.hasUnhealthyEvents && (
+                                              <IonIcon
+                                                icon={warning}
+                                                style={{
+                                                  color:
+                                                    Constants.featureHealth
+                                                      .unhealthyColor,
+                                                  marginBottom: -2,
+                                                }}
+                                              />
+                                            )}
+                                          </BetaFlag>
                                         </Row>
                                       }
                                     >

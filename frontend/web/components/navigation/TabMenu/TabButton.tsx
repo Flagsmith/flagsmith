@@ -23,7 +23,7 @@ const TabButton = React.forwardRef<HTMLButtonElement | null, TabButtonProps>(
         data-test={child.props['data-test']}
         id={child.props.id}
         onClick={(e) => onClick?.(e)}
-        className={`btn-tab ${noFocus ? 'btn-no-focus' : ''} ${
+        className={`btn-tab px-2 ${noFocus ? 'btn-no-focus' : ''} ${
           isSelected ? ' tab-active' : ''
         } ${className}`}
       >

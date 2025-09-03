@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react'
+import React, {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import ModalHR from 'components/modals/ModalHR'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
@@ -34,9 +40,6 @@ interface TabsProps {
   history?: any
   overflowX?: boolean
 }
-
-const MORE_BTN_SIZE = 34
-const EXTRA_RESERVE = MORE_BTN_SIZE + 20
 
 const Tabs: React.FC<TabsProps> = ({
   buttonTheme,
@@ -76,9 +79,20 @@ const Tabs: React.FC<TabsProps> = ({
 
   const outerContainerRef = useRef<HTMLDivElement>(null)
   const itemsContainerRef = useRef<HTMLDivElement>(null)
+  const overflowButtonRef = useRef<HTMLDivElement>(null)
+  const [overflowButtonWidth, setOverflowButtonWidth] = useState(54) // fallback
 
+  useLayoutEffect(() => {
+    if (overflowButtonRef.current) {
+      const width = overflowButtonRef.current.offsetWidth
+      const marginLeft =
+        parseInt(getComputedStyle(overflowButtonRef.current).marginLeft, 10) ||
+        0
+      setOverflowButtonWidth(width + marginLeft)
+    }
+  }, [])
   const { isMeasuring, visibleCount } = useOverflowVisibleCount({
-    extraWidth: EXTRA_RESERVE,
+    extraWidth: overflowButtonWidth,
     force: false,
     gap: 2,
     itemCount: tabChildren.length,

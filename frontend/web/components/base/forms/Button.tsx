@@ -1,6 +1,6 @@
 import React from 'react'
 import cn from 'classnames'
-import { ButtonHTMLAttributes, FC, HTMLAttributeAnchorTarget } from 'react'
+import { ButtonHTMLAttributes, HTMLAttributeAnchorTarget } from 'react'
 import Icon, { IconName } from 'components/Icon'
 import Constants from 'common/constants'
 import Utils, { PaidFeature } from 'common/utils/utils'
@@ -66,10 +66,10 @@ export const Button = React.forwardRef<
     return href || !hasPlan ? (
       <a
         onClick={
-          !hasPlan ? undefined : (rest.onClick as React.MouseEventHandler)
+          hasPlan ? (rest.onClick as React.MouseEventHandler) : undefined
         }
         className={cn(className, themeClassNames[theme], sizeClassNames[size])}
-        target={!hasPlan ? '_blank' : target}
+        target={hasPlan ? target : '_blank'}
         href={hasPlan ? href : Constants.getUpgradeUrl()}
         rel='noreferrer'
         ref={ref as React.RefObject<HTMLAnchorElement>}

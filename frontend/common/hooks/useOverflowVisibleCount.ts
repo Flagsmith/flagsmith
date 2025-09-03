@@ -1,7 +1,7 @@
 // hooks/useVisibleCount.ts
 import { useState, useLayoutEffect, RefObject } from 'react'
 
-const GAP_MULTIPLIER = 5 // Assuming a spacer unit. Adjust if your system is different.
+const GAP_MULTIPLIER = 5
 
 type UseOverflowVisibleCountOptions = {
   outerContainerRef: RefObject<HTMLDivElement>
