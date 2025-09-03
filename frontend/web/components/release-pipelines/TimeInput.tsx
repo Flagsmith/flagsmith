@@ -74,11 +74,11 @@ const TimeIntervalInput: React.FC<TimeIntervalInputProps> = ({
         }}
         inputClassName='input'
         name='amount-of-time'
-        isValid={amountOfTime > 0}
+        isValid={amountOfTime >= 1}
         min={1}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
           const value = Utils.safeParseEventValue(e)
-          handleChange(Number(value) || 1, selectedTimeUnit)
+          handleChange(Number(value), selectedTimeUnit)
         }}
         type='number'
         placeholder='Amount of time'

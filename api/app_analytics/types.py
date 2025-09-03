@@ -4,6 +4,22 @@ from typing import TYPE_CHECKING, Literal, NamedTuple, TypeAlias, TypedDict
 if TYPE_CHECKING:
     from app_analytics.models import Resource
 
+KnownSDK = Literal[
+    "flagsmith-dotnet-sdk",
+    "flagsmith-elixir-sdk",
+    "flagsmith-flutter-sdk",
+    "flagsmith-go-sdk",
+    "flagsmith-java-sdk",
+    "flagsmith-js-sdk",
+    "flagsmith-kotlin-android-sdk",
+    "flagsmith-nodejs-sdk",
+    "flagsmith-php-sdk",
+    "flagsmith-python-sdk",
+    "flagsmith-ruby-sdk",
+    "flagsmith-rust-sdk",
+    "flagsmith-swift-ios-sdk",
+]
+
 PeriodType = Literal[
     "current_billing_period",
     "previous_billing_period",

@@ -151,7 +151,8 @@ def _get_permalink(
     match provider:
         case VCSProvider.GITHUB:
             return urljoin(
-                repository_url, f"blob/{revision}/{file_path}#L{line_number}"
+                f"{repository_url}/",
+                f"blob/{revision}/{file_path}#L{line_number}",
             )
     raise NotImplementedError(  # pragma: no cover
         f"Permalink generation for {provider} is not implemented."

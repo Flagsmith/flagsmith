@@ -300,7 +300,7 @@ def test_get_multiple_event_list_for_organisation__returns_expected(
                         ),
                         "_value": 5,
                         "resource": "identities",
-                        "user_agent": "python-requests/2.31.0",
+                        "user_agent": 50001,
                     }
                 ),
             ]
@@ -326,7 +326,7 @@ def test_get_multiple_event_list_for_organisation__returns_expected(
             traits=0,
             identities=5,
             environment_document=0,
-            labels={"user_agent": "python-requests/2.31.0"},
+            labels={"user_agent": "flagsmith-js-sdk/9.3.1"},
         ),
     ]
 
