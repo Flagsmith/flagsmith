@@ -211,41 +211,39 @@ const CreateSegment: FC<CreateSegmentType> = ({
     setRules(newRules)
   }
 
-  const removeRule = (rulesIndex: number, elementNumber: number) => {
-    const newRules = cloneDeep(rules)
-    newRules[0].rules.splice(elementNumber, 1)
-    setRules(newRules)
-  }
-
-  const save = (e: FormEvent) => {
-    Utils.preventDefault(e)
-    setValueChanged(false)
-    setMetadataValueChanged(false)
-    const segmentData: Omit<Segment, 'id' | 'uuid'> = {
-      description,
-      feature: feature,
-      metadata: metadata as Metadata[],
-      name,
-      project: projectId,
-      rules,
-    }
-    if (name) {
-      if (segment.id) {
-        editSegment({
-          projectId,
-          segment: {
-            ...segmentData,
-            id: segment.id,
-            project: segment.project as number,
-            uuid: segment.uuid as string,
-          },
-        })
-      } else {
-        createSegment({
-          projectId,
-          segment: segmentData,
-        })
+  const save = async (e: FormEvent) => {
+    try {
+      Utils.preventDefault(e)
+      setValueChanged(false)
+      setMetadataValueChanged(false)
+      const segmentData: Omit<Segment, 'id' | 'uuid'> = {
+        description,
+        feature: feature,
+        metadata: metadata as Metadata[],
+        name,
+        project: projectId,
+        rules,
       }
+      if (name) {
+        if (segment.id) {
+          await editSegment({
+            projectId,
+            segment: {
+              ...segmentData,
+              id: segment.id,
+              project: segment.project as number,
+              uuid: segment.uuid as string,
+            },
+          }).unwrap()
+        } else {
+          await createSegment({
+            projectId,
+            segment: segmentData,
+          }).unwrap()
+        }
+      }
+    } catch (error: any) {
+      toast(error?.data?.metadata?.[0] || 'Error creating segment', 'danger')
     }
   }
 
@@ -420,6 +418,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             entity={segmentContentType?.model}
             onChange={(m) => {
               setMetadata(m as Metadata[])
+              // Need to fix this to be more robust and handle post save
               if (isEdit) {
                 setMetadataValueChanged(true)
               }
