@@ -25,9 +25,7 @@ import {
   useGetSegmentQuery,
   useUpdateSegmentMutation,
 } from 'common/services/useSegment'
-import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
-
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
@@ -38,10 +36,13 @@ import Tabs from 'components/navigation/TabMenu/Tabs'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { cloneDeep } from 'lodash'
 import ProjectStore from 'common/stores/project-store'
-import classNames from 'classnames'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 import { setInterceptClose } from './base/ModalDefault'
+import SegmentRuleDivider from 'components/SegmentRuleDivider'
+import { useGetProjectQuery } from 'common/services/useProject'
+import { useCreateProjectChangeRequestMutation } from 'common/services/useProjectChangeRequest'
+import ExistingProjectChangeRequestAlert from 'components/ExistingProjectChangeRequestAlert'
 import CreateSegmentRulesTabForm from './CreateSegmentRulesTabForm'
 import CreateSegmentUsersTabContent from './CreateSegmentUsersTabContent'
 import useDebouncedSearch from 'common/useDebouncedSearch'
@@ -138,6 +139,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [description, setDescription] = useState(segment.description)
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
+
   useEffect(() => {
     if (segment) {
       setRules(segment.rules)
@@ -146,6 +148,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
   }, [segment])
   const isEdit = !!segment.id
+  const { data: project } = useGetProjectQuery(
+    { id: `${projectId}` },
+    { skip: !projectId },
+  )
+  const is4Eyes =
+    isEdit &&
+    Utils.changeRequestsEnabled(project?.minimum_change_request_approvals)
+
   const [
     createSegment,
     {
@@ -164,7 +174,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
       isSuccess: updateSuccess,
     },
   ] = useUpdateSegmentMutation()
-
+  const [createChangeRequest, { isLoading: isCreatingChangeRequest }] =
+    useCreateProjectChangeRequestMutation({})
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
   const [tab, setTab] = useState(UserTabs.RULES)
@@ -211,41 +222,39 @@ const CreateSegment: FC<CreateSegmentType> = ({
     setRules(newRules)
   }
 
-  const removeRule = (rulesIndex: number, elementNumber: number) => {
-    const newRules = cloneDeep(rules)
-    newRules[0].rules.splice(elementNumber, 1)
-    setRules(newRules)
-  }
-
-  const save = (e: FormEvent) => {
-    Utils.preventDefault(e)
-    setValueChanged(false)
-    setMetadataValueChanged(false)
-    const segmentData: Omit<Segment, 'id' | 'uuid'> = {
-      description,
-      feature: feature,
-      metadata: metadata as Metadata[],
-      name,
-      project: projectId,
-      rules,
-    }
-    if (name) {
-      if (segment.id) {
-        editSegment({
-          projectId,
-          segment: {
-            ...segmentData,
-            id: segment.id,
-            project: segment.project as number,
-            uuid: segment.uuid as string,
-          },
-        })
-      } else {
-        createSegment({
-          projectId,
-          segment: segmentData,
-        })
+  const save = async (e: FormEvent) => {
+    try {
+      Utils.preventDefault(e)
+      setValueChanged(false)
+      setMetadataValueChanged(false)
+      const segmentData: Omit<Segment, 'id' | 'uuid'> = {
+        description,
+        feature: feature,
+        metadata: metadata as Metadata[],
+        name,
+        project: projectId,
+        rules,
       }
+      if (name) {
+        if (segment.id) {
+          await editSegment({
+            projectId,
+            segment: {
+              ...segmentData,
+              id: segment.id,
+              project: segment.project as number,
+              uuid: segment.uuid as string,
+            },
+          }).unwrap()
+        } else {
+          await createSegment({
+            projectId,
+            segment: segmentData,
+          }).unwrap()
+        }
+      }
+    } catch (error: any) {
+      toast(error?.data?.metadata?.[0] || 'Error creating segment', 'danger')
     }
   }
 
@@ -267,7 +276,51 @@ const CreateSegment: FC<CreateSegmentType> = ({
       }
     })
   }, [valueChanged, isEdit])
+  const onCreateChangeRequest = async (changeRequestData: {
+    approvals: []
+    description: string
+    title: string
+  }) => {
+    closeModal2()
+    setValueChanged(false)
 
+    try {
+      await createChangeRequest({
+        data: {
+          approvals: (changeRequestData.approvals || []).filter(
+            (v) => !!v.user,
+          ),
+          committed_by: null,
+          conflicts: [],
+          description: changeRequestData.description,
+          group_assignments: (changeRequestData.approvals || []).filter(
+            (v) => !!v.group,
+          ),
+          is_approved: false,
+          is_committed: false,
+          segments: [
+            {
+              description,
+              feature,
+              metadata: metadata as Metadata[],
+              name,
+              project: projectId,
+              rules,
+              version_of: segment.id!,
+            },
+          ],
+          title: changeRequestData.title,
+        },
+        project_id: `${projectId}`,
+      })
+
+      closeModal()
+      toast('Created change request')
+    } catch (error) {
+      console.error('Failed to create change request:', error)
+      toast('Failed to create change request')
+    }
+  }
   useEffect(() => {
     setInterceptClose(onClosing)
     return () => setInterceptClose(null)
@@ -347,21 +400,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             const displayIndex = rulesToShow.indexOf(rule)
             return (
               <div key={i}>
-                <Row
-                  className={classNames('and-divider my-1', {
-                    'text-danger': rule.type !== 'ANY',
-                  })}
-                >
-                  <Flex className='and-divider__line' />
-                  {Format.camelCase(
-                    `${displayIndex > 0 ? 'And ' : ''}${
-                      rule.type === 'ANY'
-                        ? 'Any of the following'
-                        : 'None of the following'
-                    }`,
-                  )}
-                  <Flex className='and-divider__line' />
-                </Row>
+                <SegmentRuleDivider rule={rule} index={displayIndex} />
                 <Rule
                   showDescription={showDescriptions}
                   readOnly={readOnly}
@@ -420,6 +459,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             entity={segmentContentType?.model}
             onChange={(m) => {
               setMetadata(m as Metadata[])
+              // Need to fix this to be more robust and handle post save
               if (isEdit) {
                 setMetadataValueChanged(true)
               }
@@ -432,6 +472,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   return (
     <>
+      <ExistingProjectChangeRequestAlert
+        className='m-2'
+        projectId={`${projectId}`}
+        segmentId={`${segment.id}`}
+      />
       {isEdit && !condensed ? (
         <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
           <TabItem
@@ -445,6 +490,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
           >
             <div className='my-4'>
               <CreateSegmentRulesTabForm
+                is4Eyes={is4Eyes}
+                onCreateChangeRequest={onCreateChangeRequest}
                 save={save}
                 condensed={condensed}
                 segmentsLimitAlert={segmentsLimitAlert}
@@ -520,6 +567,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <div className={className || 'my-3 mx-4'}>
               <CreateSegmentRulesTabForm
                 save={save}
+                is4Eyes={is4Eyes}
+                onCreateChangeRequest={onCreateChangeRequest}
                 condensed={condensed}
                 segmentsLimitAlert={segmentsLimitAlert}
                 name={name}
@@ -594,14 +643,18 @@ type LoadingCreateSegmentType = {
 
 const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
   const [environmentId, setEnvironmentId] = useState(props.environmentId)
-  const { data: segmentData, isLoading } = useGetSegmentQuery(
+  const { data: segmentData, isLoading: segmentLoading } = useGetSegmentQuery(
     {
       id: `${props.segment}`,
       projectId: `${props.projectId}`,
     },
     { skip: !props.segment },
   )
-
+  const { isLoading: projectLoading } = useGetProjectQuery(
+    { id: `${props.projectId}` },
+    { skip: !props.projectId },
+  )
+  const isLoading = projectLoading || segmentLoading
   const [page, setPage] = useState<PageType>({
     number: 1,
     pageType: undefined,
