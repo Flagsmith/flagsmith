@@ -95,7 +95,8 @@ def get_usage_data_from_local_db(
         bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
     )
     if project_id:
-        environment_ids = list(  # Evaluate because analytics db has no access
+        # Evaluate the queryset because the analytics database has no environments table
+        environment_ids = list(
             using_database_replica(Environment.objects)
             .filter(project_id=project_id)
             .values_list("id", flat=True)

@@ -22,7 +22,7 @@ def get_environment_flags_queryset(
 
 def get_environment_flags_list(
     environment: Environment,
-    feature_name: str = None,  # type: ignore[assignment]
+    feature_name: str | None = None,
     additional_filters: Q = None,  # type: ignore[assignment]
     additional_select_related_args: typing.Iterable[str] = None,  # type: ignore[assignment]
     additional_prefetch_related_args: typing.Iterable[
@@ -53,7 +53,7 @@ def get_environment_flags_list(
 
 def get_environment_flags_dict(
     environment: Environment,
-    feature_name: str = None,  # type: ignore[assignment]
+    feature_name: str | None = None,
     additional_filters: Q = None,  # type: ignore[assignment]
     additional_select_related_args: typing.Iterable[str] = None,  # type: ignore[assignment]
     additional_prefetch_related_args: typing.Iterable[
@@ -103,7 +103,7 @@ def get_current_live_environment_feature_version(
 
 def _get_feature_states_queryset(
     environment: "Environment",
-    feature_name: str = None,  # type: ignore[assignment]
+    feature_name: str | None = None,
     additional_filters: Q = None,  # type: ignore[assignment]
     additional_select_related_args: typing.Iterable[str] = None,  # type: ignore[assignment]
     additional_prefetch_related_args: typing.Iterable[
@@ -116,6 +116,7 @@ def _get_feature_states_queryset(
 
     feature_state_manager = FeatureState.objects
     if from_replica:
+        # Shift queries to a database replica
         feature_state_manager = using_database_replica(FeatureState.objects)
 
     queryset = (

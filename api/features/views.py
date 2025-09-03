@@ -1,9 +1,9 @@
 import logging
-import re
 import typing
 from datetime import timedelta
 from functools import reduce
 
+from common.core.utils import using_database_replica
 from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from django.core.cache import caches
@@ -880,30 +880,23 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             identifier=identifier, environment=request.environment
         )
 
-        use_replica = not is_new_identity
-        feature_states = identity.get_all_feature_states(from_replica=use_replica)
+        # New identities may take a while to replicate — otherwise use a replica
+        if not is_new_identity:
+            identity = using_database_replica(Identity.objects).get(id=identity.id)
 
-        if "feature" in request.GET:
-            is_case_insensitive = (
-                request.environment.project.only_allow_lower_case_feature_names
-            )
-            for feature_state in feature_states:
-                given_feature_name = re.escape(request.GET["feature"])
-                pattern = rf"^{given_feature_name}$"
-                actual_feature_name = feature_state.feature.name
-                re_flags = re.IGNORECASE if is_case_insensitive else 0
-                is_match = re.match(pattern, actual_feature_name, re_flags)
-                if is_match:
-                    return Response(
-                        self.get_serializer(feature_state).data,
-                        status=status.HTTP_200_OK,
-                    )
-            else:
+        if feature_name := request.GET.get("feature"):
+            feature_states = identity.get_all_feature_states(feature_name=feature_name)
+            if not feature_states:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
+            return Response(
+                self.get_serializer(feature_states[0]).data,
+                status=status.HTTP_200_OK,
+            )
 
+        feature_states = identity.get_all_feature_states()
         flags = self.get_serializer(feature_states, many=True)
         return Response(flags.data, status=status.HTTP_200_OK)
 

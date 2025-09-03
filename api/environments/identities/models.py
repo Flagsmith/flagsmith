@@ -1,6 +1,5 @@
 from itertools import chain
 
-from common.core.utils import using_database_replica
 from django.db import models
 from django.db.models import Prefetch, Q
 from flag_engine.context.mappers import map_environment_identity_to_context
@@ -58,9 +57,9 @@ class Identity(models.Model):
 
     def get_all_feature_states(
         self,
+        feature_name: str | None = None,
         traits: list[Trait] | None = None,
         additional_filters: Q | None = None,
-        from_replica: bool = False,
     ) -> list[FeatureState]:
         """
         Get all feature states for an identity. This method returns a single flag for
@@ -74,23 +73,19 @@ class Identity(models.Model):
         :return: (list) flags for an identity with the correct values based on
             identity / segment priorities
         """
-        identity = self
-        if from_replica:
-            identity = using_database_replica(Identity.objects).get(id=self.id)
-
-        segments = identity.get_segments(traits=traits, overrides_only=True)
+        segments = self.get_segments(traits=traits, overrides_only=True)
 
         # define sub queries
-        belongs_to_environment_query = Q(environment=identity.environment)
-        if identity.id:
-            overridden_for_identity_query = Q(identity=identity)
+        belongs_to_environment_query = Q(environment=self.environment)
+        if self.id:
+            overridden_for_identity_query = Q(identity=self)
         else:
             # skip identity overrides for transient identities
             overridden_for_identity_query = Q()
 
         overridden_for_segment_query = Q(
             feature_segment__segment__in=segments,
-            feature_segment__environment=identity.environment,
+            feature_segment__environment=self.environment,
         )
         environment_default_query = Q(identity=None, feature_segment=None)
 
@@ -105,7 +100,8 @@ class Identity(models.Model):
             full_query &= additional_filters
 
         all_flags = get_environment_flags_list(
-            environment=identity.environment,
+            environment=self.environment,
+            feature_name=feature_name,
             additional_filters=full_query,
             additional_select_related_args=["feature_segment__segment", "identity"],
             additional_prefetch_related_args=[
@@ -129,7 +125,7 @@ class Identity(models.Model):
                 if flag > current_flag:
                     identity_flags[flag.feature_id] = flag
 
-        if identity.environment.get_hide_disabled_flags() is True:
+        if self.environment.get_hide_disabled_flags() is True:
             # filter out any flags that are disabled
             return [value for value in identity_flags.values() if value.enabled]
 

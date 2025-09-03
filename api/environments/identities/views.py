@@ -121,8 +121,8 @@ class SDKIdentitiesDeprecated(SDKAPIView):
             integrations=IDENTITY_INTEGRATIONS,
         )
 
-        use_replica = not is_new_identity
-        if use_replica:
+        # New identities may take a while to replicate — otherwise use a replica
+        if not is_new_identity:
             identity = using_database_replica(Identity.objects).get(id=identity.id)
 
         traits_data = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
@@ -182,8 +182,8 @@ class SDKIdentities(SDKAPIView):
                 integrations=IDENTITY_INTEGRATIONS,
             )
 
-        use_replica = not is_new_identity
-        if use_replica:
+        # New identities may take a while to replicate — otherwise use a replica
+        if not is_new_identity:
             identity = using_database_replica(Identity.objects).get(id=identity.id)
 
         self.identity = identity
