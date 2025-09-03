@@ -24,7 +24,12 @@ export const featureDescriptions: Record<PaidFeature, any> = {
   '4_EYES': {
     description: 'Add a 4-eyes approval mechanism to your feature changes.',
     docs: 'https://docs.flagsmith.com/advanced-use/change-requests',
-    title: 'Change Requests',
+    title: 'Feature Change Requests',
+  },
+  '4_EYES_PROJECT': {
+    description: 'Add a 4-eyes approval mechanism to your segment changes.',
+    docs: 'https://docs.flagsmith.com/advanced-use/change-requests',
+    title: 'Segment Change Requests',
   },
   'AUDIT': {
     description:

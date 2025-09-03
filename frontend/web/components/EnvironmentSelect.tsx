@@ -11,6 +11,7 @@ export type EnvironmentSelectType = Partial<Omit<Props, 'value'>> & {
   readOnly?: boolean
   idField?: 'id' | 'api_key'
   ignore?: string[]
+  dataTest?: (value: { label: string }) => string
 }
 
 const EnvironmentSelect: FC<EnvironmentSelectType> = ({

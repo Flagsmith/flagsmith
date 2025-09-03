@@ -2,11 +2,13 @@ import {
   FeatureConflict,
   FeatureState,
   FeatureStateWithConflict,
-  ProjectFlag,
   Segment,
+  SegmentCondition,
+  SegmentRule,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
-import { sortBy, uniq, uniqBy } from 'lodash'
+import { sortBy, uniqBy } from 'lodash'
+
 export function getFeatureStateDiff(
   oldFeatureState: FeatureState | undefined,
   newFeatureState: FeatureStateWithConflict | undefined,
@@ -34,7 +36,7 @@ export function getFeatureStateDiff(
   return diff
 }
 
-export type TDiffSegment = {
+export type TDiffSegmentOverride = {
   segment: Segment
   newEnabled: boolean
   newPriority: number
@@ -62,7 +64,7 @@ export type TDiffVariations = {
   totalChanges: number
 }
 
-export const getSegmentDiff = (
+export const getSegmentOverrideDiff = (
   oldFeatureStates: FeatureStateWithConflict[] | undefined,
   newFeatureStates: FeatureStateWithConflict[] | undefined,
   segments: Segment[] | undefined,
@@ -150,7 +152,7 @@ export const getSegmentDiff = (
       segment,
       totalChanges: segmentChanges,
       variationDiff,
-    } as TDiffSegment
+    } as TDiffSegmentOverride
   })
   return {
     diffs,
@@ -199,4 +201,69 @@ export const getVariationDiff = (
     diffs,
     totalChanges,
   } as TDiffVariations
+}
+
+export type TSegmentDiff = {
+  newString: string
+  oldString: string
+  totalChanges: number
+}
+
+export function getSegmentDiff(
+  oldSegment: Segment | undefined,
+  newSegment: Segment | undefined,
+): TSegmentDiff {
+  const oldRules = oldSegment?.rules || []
+  const newRules = newSegment?.rules || []
+  const oldString = getRulesDiff(oldRules, 0)
+  const newString = getRulesDiff(newRules, 0)
+  return { newString, oldString, totalChanges: newString === oldString ? 0 : 1 }
+}
+
+function getRulesDiff(
+  rules: SegmentRule[],
+  level: number,
+  currentString = '',
+): string {
+  const indent = '  '.repeat(level)
+  let str = currentString || `${indent}\n`
+
+  rules.forEach((rule, i) => {
+    const prepend = i > 0 ? 'And ' : ''
+
+    if (rule.type === 'ANY') {
+      str += `${indent}------ ${prepend}Any of the following ------\n`
+    } else if (rule.type === 'NONE') {
+      str += `${indent}------  ${prepend}None of the following ------\n`
+    }
+    str = getConditionsDiff(rule.conditions, level + 1, str)
+    if (rule.rules) {
+      str = getRulesDiff(rule.rules, level + 1, str)
+    }
+  })
+
+  return str
+}
+
+function getConditionsDiff(
+  conditions: SegmentCondition[],
+  level: number,
+  currentString: string,
+): string {
+  const operators = Utils.getFlagsmithJSONValue('segment_operators', [])
+  const indent = '  '.repeat(level)
+  let str = currentString
+
+  conditions.forEach((condition, index) => {
+    const operatorLabel = operators.find(
+      (o) => o.value === condition.operator,
+    )?.label
+    const line = [condition.property, operatorLabel, condition.value]
+      .filter(Boolean)
+      .join(' ')
+
+    str += `${indent}${line}\n`
+  })
+
+  return str
 }

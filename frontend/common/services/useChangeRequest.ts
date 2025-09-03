@@ -9,6 +9,7 @@ import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 import sortBy from 'lodash/sortBy'
 import moment from 'moment'
+import transformCorePaging from 'common/transformCorePaging'
 
 export const changeRequestService = service
   .enhanceEndpoints({ addTagTypes: ['ChangeRequest'] })
@@ -24,6 +25,7 @@ export const changeRequestService = service
             { ...rest },
           )}`,
         }),
+        transformResponse: (res, _, req) => transformCorePaging(req, res),
       }),
       // END OF ENDPOINTS
     }),
