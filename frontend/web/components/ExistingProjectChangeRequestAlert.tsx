@@ -1,11 +1,6 @@
-import { FC, useRef } from 'react'
-import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
+import { FC } from 'react'
 import WarningMessage from './WarningMessage'
-import moment from 'moment'
-import {
-  useGetProjectChangeRequestQuery,
-  useGetProjectChangeRequestsQuery,
-} from 'common/services/useProjectChangeRequest'
+import { useGetProjectChangeRequestsQuery } from 'common/services/useProjectChangeRequest'
 
 type ExistingProjectChangeRequestAlertType = {
   projectId: string

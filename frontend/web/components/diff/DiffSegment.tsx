@@ -9,7 +9,6 @@ import SegmentRuleDivider from 'components/SegmentRuleDivider'
 import DiffString from './DiffString'
 import Utils from 'common/utils/utils'
 import Tabs from 'components/base/forms/Tabs'
-import { Tab } from '@material-ui/core'
 import TabItem from 'components/base/forms/TabItem'
 
 type DiffSegmentType = {

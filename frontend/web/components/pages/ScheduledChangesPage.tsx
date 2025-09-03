@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useRef, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import moment from 'moment/moment'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import { RouterChildContext } from 'react-router'
@@ -15,8 +15,6 @@ import PlanBasedBanner, {
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 import Icon from 'components/Icon'
-import { IonIcon } from '@ionic/react'
-import { calendar } from 'ionicons/icons'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 type ScheduledChangesPageType = {
