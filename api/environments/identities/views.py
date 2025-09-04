@@ -1,7 +1,7 @@
 import typing
 from collections import namedtuple
 
-from common.core.utils import using_database_replica
+from common.core.utils import is_database_replica_setup, using_database_replica
 from common.environments.permissions import (
     MANAGE_IDENTITIES,
     VIEW_IDENTITIES,
@@ -118,8 +118,12 @@ class SDKIdentitiesDeprecated(SDKAPIView):
         )
 
         # New identities may take a while to replicate — otherwise use a replica
-        if not is_new_identity:
-            identity = using_database_replica(Identity.objects).get(id=identity.id)
+        if not is_new_identity and is_database_replica_setup():
+            identity = (
+                using_database_replica(Identity.objects)
+                .with_context()
+                .get(id=identity.id)
+            )
 
         traits_data = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
 
@@ -178,7 +182,7 @@ class SDKIdentities(SDKAPIView):
             )
 
         # New identities may take a while to replicate — otherwise use a replica
-        if not is_new_identity:
+        if not is_new_identity and is_database_replica_setup():
             identity = (
                 using_database_replica(Identity.objects)
                 .with_context()

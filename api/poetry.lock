@@ -1982,14 +1982,14 @@ resolved_reference = "303954ba54fd2f402c75806b3b9ba7f2d42aa426"
 
 [[package]]
 name = "flagsmith-common"
-version = "2.1.0"
+version = "2.2.0"
 description = "Flagsmith's common library"
 optional = false
 python-versions = "<4.0,>=3.11"
 groups = ["main", "dev", "split-testing", "workflows"]
 files = [
-    {file = "flagsmith_common-2.1.0-py3-none-any.whl", hash = "sha256:71e3a2f468fcd347e86e5811c464ba161920e84a363c9fbb9b39c6c0094ab54d"},
-    {file = "flagsmith_common-2.1.0.tar.gz", hash = "sha256:69dd86832b88c3025be272ac14563c3d664333a327f3908eadccf4b43fdd3cff"},
+    {file = "flagsmith_common-2.2.0-py3-none-any.whl", hash = "sha256:c9ccfd9dd3d5be4ec2539d26e45688ce1038f4b5530816fee043052b1c8c0c9d"},
+    {file = "flagsmith_common-2.2.0.tar.gz", hash = "sha256:6b7e959a402732600a16151814f76e56477ea02a3ae70719f78986fc3f559225"},
 ]
 
 [package.dependencies]
@@ -5461,4 +5461,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "4147bbac36ba2570586126718def0c72c92a2bb3e829bc9823576b533664710c"
+content-hash = "1063ac473deabe91542f6cccfee902f7ef84a6fab2b1e7e53d7847a06d240a2e"

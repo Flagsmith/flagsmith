@@ -3,7 +3,7 @@ import typing
 from datetime import timedelta
 from functools import reduce
 
-from common.core.utils import using_database_replica
+from common.core.utils import is_database_replica_setup, using_database_replica
 from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from django.core.cache import caches
@@ -881,8 +881,12 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         )
 
         # New identities may take a while to replicate — otherwise use a replica
-        if not is_new_identity:
-            identity = using_database_replica(Identity.objects).get(id=identity.id)
+        if not is_new_identity and is_database_replica_setup():
+            identity = (
+                using_database_replica(Identity.objects)
+                .with_context()
+                .get(id=identity.id)
+            )
 
         if feature_name := request.GET.get("feature"):
             feature_states = identity.get_all_feature_states(feature_name=feature_name)

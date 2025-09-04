@@ -201,19 +201,12 @@ def get_feature_evaluation_data_from_local_db(
 
 
 def _get_environment_ids_for_org(organisation: Organisation) -> list[int]:
-    # We need to do this to prevent Django from generating a query that
-    # references the environments and projects tables,
-    # as they do not exist in the analytics database.
-    return [
-        *using_database_replica(Environment.objects)
-        .filter(
-            project__organisation=organisation,
-        )
-        .values_list(
-            "id",
-            flat=True,
-        )
-    ]
+    # Evaluate the queryset because the analytics database has no environments table
+    return list(
+        using_database_replica(Environment.objects)
+        .filter(project__organisation=organisation)
+        .values_list("id", flat=True)
+    )
 
 
 def _get_start_date_and_stop_date_for_subscribed_organisation(
