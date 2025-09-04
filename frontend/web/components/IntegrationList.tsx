@@ -11,7 +11,7 @@ import {
   ActiveIntegration,
   Environment,
   IntegrationData,
-} from 'common/types/responses' // Assuming these utilities exist
+} from 'common/types/responses'
 import map from 'lodash/map'
 import Button from './base/forms/Button'
 import Utils from 'common/utils/utils'
