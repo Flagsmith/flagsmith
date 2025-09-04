@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     "common.core",
     "core.custom_admin.apps.CustomAdminConfig",
     "django.contrib.auth",
+    "mozilla_django_oidc",  # TODO: if oidc is installed
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -163,6 +164,7 @@ INSTALLED_APPS = [
     "metadata",
     "app_analytics",
 ]
+
 
 SILENCED_SYSTEM_CHECKS = ["axes.W002"]
 
@@ -1268,6 +1270,25 @@ GITHUB_APP_URL = env.int(
     "GITHUB_APP_URL",
     default=None,
 )
+
+IS_OIDC_INSTALLED = True
+if IS_OIDC_INSTALLED:
+    # TODO: use a custom backend here that supports multiple op
+    AUTHENTICATION_BACKENDS.insert(
+        0,
+        "mozilla_django_oidc.auth.OIDCAuthenticationBackend",
+    )
+    # TODO: this should be moved into a dict with a unique key for every op
+    OIDC_RP_CLIENT_ID = ""
+    OIDC_RP_CLIENT_SECRET = ""
+
+    OIDC_OP_AUTHORIZATION_ENDPOINT = ""
+    OIDC_OP_TOKEN_ENDPOINT = ""
+    OIDC_OP_USER_ENDPOINT = ""
+
+    LOGIN_REDIRECT_URL = "http://localhost:8000/login"
+    LOGOUT_REDIRECT_URL = "<URL path to redirect to after logout>"
+
 
 # LDAP setting
 LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")

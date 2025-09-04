@@ -71,6 +71,10 @@ if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
         ),
     ]
 
+# TODO: if oidc is installed
+urlpatterns += [
+    path("oidc/", include("mozilla_django_oidc.urls")),
+]
 
 if settings.SERVE_FE_ASSETS:  # pragma: no cover
     # add route to serve FE assets for any unrecognised paths
