@@ -8,8 +8,8 @@ import { Operator, Segment } from 'common/types/responses'
 import SegmentRuleDivider from 'components/SegmentRuleDivider'
 import DiffString from './DiffString'
 import Utils from 'common/utils/utils'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
 
 type DiffSegmentType = {
   oldSegment: Segment

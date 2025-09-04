@@ -289,6 +289,14 @@ $side-width: 750px;
     padding: 0 1.5rem;
   }
 
+  .tab-dropdown-item {
+    &:hover {
+      border-radius: 4px !important;
+      transition: background-color 0.15s ease !important;
+      background-color: #6610f210 !important;
+      color: black !important;
+    }
+  }
   .tab-nav-hr {
     margin: 0 1.5rem;
   }
@@ -297,8 +305,7 @@ $side-width: 750px;
   .tabs-nav button.btn,
   .tabs-nav button.btn-primary {
     font-size: $font-sm;
-    line-height: $line-height-sm;
-    padding: 0 16px;
+    padding: 0 14px;
   }
 }
 

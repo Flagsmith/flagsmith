@@ -18,8 +18,8 @@ import PlanBasedAccess, {
   featureDescriptions,
 } from 'components/PlanBasedAccess'
 import InfoMessage from 'components/InfoMessage'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ChangeRequestList from 'components/ChangeRequestsList'
 
