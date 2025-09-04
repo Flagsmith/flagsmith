@@ -34,10 +34,7 @@ from environments.sdk.serializers import (
     IdentitySerializerWithTraitsAndSegments,
 )
 from features.serializers import SDKFeatureStateSerializer
-from integrations.integration import (
-    IDENTITY_INTEGRATIONS,
-    identify_integrations,
-)
+from integrations.integration import identify_integrations
 from util.views import SDKAPIView
 
 
@@ -118,7 +115,6 @@ class SDKIdentitiesDeprecated(SDKAPIView):
         identity, is_new_identity = Identity.objects.get_or_create_for_sdk(
             identifier=identifier,
             environment=request.environment,
-            integrations=IDENTITY_INTEGRATIONS,
         )
 
         # New identities may take a while to replicate — otherwise use a replica
@@ -179,12 +175,15 @@ class SDKIdentities(SDKAPIView):
             identity, is_new_identity = Identity.objects.get_or_create_for_sdk(
                 identifier=identifier,
                 environment=request.environment,
-                integrations=IDENTITY_INTEGRATIONS,
             )
 
         # New identities may take a while to replicate — otherwise use a replica
         if not is_new_identity:
-            identity = using_database_replica(Identity.objects).get(id=identity.id)
+            identity = (
+                using_database_replica(Identity.objects)
+                .with_context()
+                .get(id=identity.id)
+            )
 
         self.identity = identity
 

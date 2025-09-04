@@ -154,7 +154,7 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
     environment,
     identity,
     identity_identifier,
-    django_assert_max_num_queries,
+    django_assert_num_queries,
 ):
     # Firstly, let's create some features to use
     for i in range(2):
@@ -183,7 +183,7 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
     base_url = reverse("api-v1:sdk-identities")
     url = f"{base_url}?identifier={identity_identifier}"
 
-    with django_assert_max_num_queries(50) as captured:
+    with django_assert_num_queries(8) as captured:
         first_identity_response = sdk_client.get(url)
     expected_queries = [
         query
@@ -215,7 +215,7 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
         variant_2_value,
     )
 
-    with django_assert_max_num_queries(50) as captured:
+    with django_assert_num_queries(7) as captured:
         second_identity_response = sdk_client.get(url)
     expected_queries = [
         query
