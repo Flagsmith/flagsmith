@@ -2,7 +2,6 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
-import fakeUsageData from './usage-test.js'
 
 export const organisationUsageService = service
   .enhanceEndpoints({ addTagTypes: ['OrganisationUsage'] })
@@ -13,22 +12,29 @@ export const organisationUsageService = service
         Req['getOrganisationUsage']
       >({
         providesTags: () => [{ id: 'LIST', type: 'OrganisationUsage' }],
-        queryFn: async (query: Req['getOrganisationUsage']) => {
-          const data = fakeUsageData
-          // Apply the same transformation logic here
+        query: (query: Req['getOrganisationUsage']) => {
+          return {
+            url: `organisations/${
+              query.organisationId
+            }/usage-data/?${Utils.toParam({
+              environment_id: query.environmentId,
+              period: query.billing_period,
+              project_id: query.projectId,
+            })}`,
+          }
+        },
+        transformResponse: (data: Res['organisationUsage']['events_list']) => {
           let flags = 0
           let traits = 0
           let environmentDocument = 0
           let identities = 0
-
           data?.map((v) => {
             flags += v.flags || 0
             traits += v.traits || 0
             environmentDocument += v.environment_document || 0
             identities += v.identities || 0
           })
-
-          const transformedData = {
+          return {
             events_list: data,
             totals: {
               environmentDocument,
@@ -38,43 +44,7 @@ export const organisationUsageService = service
               traits,
             },
           }
-
-          return { data: transformedData }
         },
-
-        // query: (query: Req['getOrganisationUsage']) => {
-        //   return {
-        //     url: `organisations/${
-        //       query.organisationId
-        //     }/usage-data/?${Utils.toParam({
-        //       environment_id: query.environmentId,
-        //       period: query.billing_period,
-        //       project_id: query.projectId,
-        //     })}`,
-        //   }
-        // },
-        // transformResponse: (data: Res['organisationUsage']['events_list']) => {
-        //   let flags = 0
-        //   let traits = 0
-        //   let environmentDocument = 0
-        //   let identities = 0
-        //   data?.map((v) => {
-        //     flags += v.flags || 0
-        //     traits += v.traits || 0
-        //     environmentDocument += v.environment_document || 0
-        //     identities += v.identities || 0
-        //   })
-        //   return {
-        //     events_list: data,
-        //     totals: {
-        //       environmentDocument,
-        //       flags,
-        //       identities,
-        //       total: flags + traits + environmentDocument + identities,
-        //       traits,
-        //     },
-        //   }
-        // },
       }),
       // END OF ENDPOINTS
     }),
