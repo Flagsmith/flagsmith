@@ -54,7 +54,7 @@ const InlineModal: FC<InlineModalProps> = ({
     <div className={relativeToParent ? '' : 'relative'}>
       {isOpen && (
         <div ref={modalRef} className={classNames('inline-modal', className)}>
-          <div className='d-flex py-2 d-lg-none justify-content-end'>
+          <div className='d-flex py-2 d-lg-none justify-content-end px-4'>
             <ModalClose onClick={onClose} />
           </div>
           {(!!title || !hideClose) && (

@@ -1,9 +1,9 @@
 // hooks/useVisibleCount.ts
 import { useState, useLayoutEffect, RefObject } from 'react'
 
-const GAP_MULTIPLIER = 5 // Assuming a spacer unit. Adjust if your system is different.
+const GAP_MULTIPLIER = 5
 
-type UseVisibleCountOptions = {
+type UseOverflowVisibleCountOptions = {
   outerContainerRef: RefObject<HTMLDivElement>
   itemsContainerRef: RefObject<HTMLDivElement>
   itemCount: number
@@ -12,14 +12,14 @@ type UseVisibleCountOptions = {
   force?: boolean
 }
 
-export const useVisibleCount = ({
+export const useOverflowVisibleCount = ({
   extraWidth,
   force,
   gap,
   itemCount,
   itemsContainerRef,
   outerContainerRef,
-}: UseVisibleCountOptions) => {
+}: UseOverflowVisibleCountOptions) => {
   const [visibleCount, setVisibleCount] = useState(force ? 0 : itemCount)
   const [widths, setWidths] = useState<number[]>([])
 
@@ -69,7 +69,6 @@ export const useVisibleCount = ({
       }
 
       const containerWidth = outerCont.clientWidth
-
       // All items fit
       if (sumWidths(widths.length) <= containerWidth) {
         setVisibleCount(widths.length)
