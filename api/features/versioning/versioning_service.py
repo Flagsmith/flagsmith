@@ -116,7 +116,6 @@ def _get_feature_states_queryset(
 
     feature_state_manager = FeatureState.objects
     if from_replica:
-        # Shift queries to a database replica
         feature_state_manager = using_database_replica(FeatureState.objects)
 
     queryset = (
