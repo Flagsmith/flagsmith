@@ -7,11 +7,12 @@ import { calculateListPosition } from 'common/utils/calculateListPosition'
 
 type MenuItem = {
   icon?: IconName
-  label: string
-  onClick: (e: React.MouseEvent) => void
+  label: string | React.ReactNode
+  onClick: (e: React.MouseEvent<HTMLDivElement>) => void
   disabled?: boolean
   tooltip?: string
   dataTest?: string
+  className?: string
 }
 
 type DropdownMenuProps = {
@@ -72,9 +73,13 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
                 key={index}
                 title={
                   <div
-                    className={classNames('feature-action__item', {
-                      'feature-action__item_disabled': item.disabled,
-                    })}
+                    className={classNames(
+                      'feature-action__item',
+                      item.className,
+                      {
+                        'feature-action__item_disabled': item.disabled,
+                      },
+                    )}
                     data-test={item.dataTest}
                     onClick={(e) => {
                       e.stopPropagation()
@@ -82,6 +87,9 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
                         item.onClick(e)
                         setIsOpen(false)
                       }
+                    }}
+                    style={{
+                      zIndex: 999999,
                     }}
                   >
                     {item.icon && (
@@ -91,7 +99,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
                         fill={iconFill}
                       />
                     )}
-                    <span>{item.label}</span>
+                    {item.label}
                   </div>
                 }
                 place='right'
