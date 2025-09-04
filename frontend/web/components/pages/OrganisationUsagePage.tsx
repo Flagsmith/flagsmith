@@ -1,4 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import cn from 'classnames'
 import OrganisationUsage from 'components/organisation-settings/usage/OrganisationUsage.container'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useLocation } from 'react-router-dom'
@@ -15,10 +16,15 @@ import UsageChartFilters from 'components/organisation-settings/usage/components
 import UsageChartTotals from 'components/organisation-settings/usage/components/UsageChartTotals'
 
 const OrganisationUsagePage: FC = () => {
+  const isSdkViewEnabled = Utils.getFlagsmithHasFeature('sdk_usage_charts')
+
   const { organisationId } = useRouteContext()
   const location = useLocation()
 
   const getInitialView = useCallback((): 'global' | 'user-agents' => {
+    if (!isSdkViewEnabled) {
+      return 'global'
+    }
     const params = new URLSearchParams(location.search)
     return params.get('p') === 'user-agents' ? 'user-agents' : 'global'
   }, [location.search])
@@ -95,11 +101,15 @@ const OrganisationUsagePage: FC = () => {
   }, [data?.events_list, selection])
 
   useEffect(() => {
+    if (!isSdkViewEnabled) {
+      return setChartsView('global')
+    }
+
     const currentView = getInitialView()
     if (currentView !== chartsView) {
       setChartsView(currentView)
     }
-  }, [location.search, chartsView, getInitialView])
+  }, [location.search, chartsView, getInitialView, isSdkViewEnabled])
 
   const updateSelection = (key: string) => {
     if (selection.includes(key)) {
@@ -110,17 +120,31 @@ const OrganisationUsagePage: FC = () => {
   }
 
   return (
-    <div className='app-container fullwidth-app-container px-3 px-md-0 pb-2'>
+    <div
+      className={cn(
+        'app-container',
+        isSdkViewEnabled
+          ? 'fullwidth-app-container px-3 pb-2 px-md-0 '
+          : 'px-12 px-md-5',
+      )}
+    >
       <Row className='grid-container gap-x-12 align-items-start'>
-        <div className='col-12 col-md-2 border-md-right home-aside aside-small d-flex flex-column'>
-          {organisationId && (
-            <OrganisationUsageSideBar
-              organisationId={organisationId}
-              activeTab={chartsView}
-            />
+        {isSdkViewEnabled && (
+          <div className='col-12 col-md-2 border-md-right home-aside aside-small d-flex flex-column mx-0'>
+            {organisationId && (
+              <OrganisationUsageSideBar
+                organisationId={organisationId}
+                activeTab={chartsView}
+              />
+            )}
+          </div>
+        )}
+        <div
+          className={cn(
+            'col-12',
+            isSdkViewEnabled ? 'col-md-8 col-lg-9' : 'col-md-12',
           )}
-        </div>
-        <div className='col-12 col-md-9'>
+        >
           <UsageChartFilters
             organisationId={organisationId?.toString() || ''}
             project={project}
