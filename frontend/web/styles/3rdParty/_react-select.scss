@@ -78,6 +78,20 @@
       color: $text-icon-light-grey;
     }
   }
+
+  &.react-select__extensible {
+    .react-select__control {
+      height: auto;
+      min-height: 44px;
+    }
+    .react-select__value-container {
+      flex-wrap: wrap;
+      gap: 4px;
+      padding-bottom: 6px;
+      padding-top: 6px;
+      overflow: hidden;
+    }
+  }
   &__control {
     background: $input-bg;
     height: $input-height;
