@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import SearchableDropdown, {
+import SearchableSelect, {
   GroupLabel,
   OptionType,
-} from 'components/base/SearchableDropdown'
+} from 'components/base/select/SearchableSelect'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import Utils from 'common/utils/utils'
 
@@ -60,7 +60,7 @@ const EnvironmentSelectDropdown: React.FC<EnvironmentSelectDropdownProps> = ({
   const allOptions = [...customSelectionAsOption, ...environmentOptions]
 
   return (
-    <SearchableDropdown
+    <SearchableSelect
       options={allOptions}
       value={value?.toString() || null}
       placeholder={'Environment'}

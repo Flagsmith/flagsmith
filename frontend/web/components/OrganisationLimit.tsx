@@ -27,13 +27,13 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
   })
   const { data: maxApiCalls } = useGetSubscriptionMetadataQuery({ id })
   const maxApiCallsPercentage = Utils.calculateRemainingLimitsPercentage(
-    totalApiCalls?.totals.total,
+    totalApiCalls?.totals?.total,
     maxApiCalls?.max_api_calls,
     70,
   ).percentage
 
   const apiUsageMessageText = `${Format.shortenNumber(
-    totalApiCalls?.totals.total,
+    totalApiCalls?.totals?.total,
   )}/${Format.shortenNumber(maxApiCalls?.max_api_calls)}`
 
   const alertMaxApiCallsText = `You have used ${apiUsageMessageText} of your allowed requests`

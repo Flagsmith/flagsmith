@@ -37,7 +37,7 @@ export const GroupLabel = ({
   )
 }
 
-interface SearchableDropdownProps {
+interface SearchableSelectProps {
   placeholder: string
   options: OptionType[] | GroupedOptionType[]
   value: string | number | null
@@ -54,7 +54,7 @@ interface SearchableDropdownProps {
   components?: any
 }
 
-const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
+const SearchableSelect: React.FC<SearchableSelectProps> = ({
   components,
   dataTest,
   displayedLabel,
@@ -94,4 +94,4 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   )
 }
 
-export default SearchableDropdown
+export default SearchableSelect

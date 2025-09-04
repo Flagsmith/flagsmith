@@ -13,7 +13,7 @@ import RuleConditionPropertySelect from './RuleConditionPropertySelect'
 import RuleConditionValueInput from './RuleConditionValueInput'
 import { RuleContextValues } from 'common/types/rules.types'
 import { RuleContextLabels } from 'common/types/rules.types'
-import { OptionType } from 'components/base/SearchableDropdown'
+import { OptionType } from 'components/base/select/SearchableSelect'
 
 interface RuleConditionRowProps {
   rule: SegmentCondition

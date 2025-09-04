@@ -7,7 +7,7 @@
 }
 
 @media (min-width: 1220px) {
-  .app-container {
+  .app-container:not(.fullwidth-app-container) {
     max-width: 1220px;
   }
 }
@@ -20,4 +20,12 @@
 
 .container-mw-700 {
   max-width: 700px;
+}
+
+.gap-x-12 {
+  column-gap: 3rem;
+}
+
+.gap-x-2 {
+  column-gap: 0.5rem;
 }

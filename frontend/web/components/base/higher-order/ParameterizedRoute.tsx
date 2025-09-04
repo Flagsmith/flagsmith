@@ -36,6 +36,7 @@ export const ParameterizedRoute = ({
         <RouteProvider
           value={{
             environmentId: componentProps.match.params.environmentId,
+            organisationId: parsedOrganisationId,
             projectId: parsedProjectId,
           }}
         >
