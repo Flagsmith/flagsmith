@@ -8,7 +8,7 @@ import {
     createRemoteConfig,
     editRemoteConfig, getFlagsmith,
     log,
-    login, refreshUntilElementVisible,
+    login,
     waitForElementVisible,
 } from '../helpers.cafe';
 import { E2E_USER, PASSWORD } from '../config';
