@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, get_args
 
+from common.core.utils import using_database_replica
 from django.conf import settings
 from rest_framework import serializers
 
@@ -84,11 +85,13 @@ class SDKAnalyticsFlagsSerializer(serializers.Serializer):  # type: ignore[type-
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         request = self.context["request"]
         environment_feature_names = set(
-            FeatureState.objects.filter(
+            using_database_replica(FeatureState.objects)
+            .filter(
                 environment=request.environment,
                 feature_segment=None,
                 identity=None,
-            ).values_list("feature__name", flat=True)
+            )
+            .values_list("feature__name", flat=True)
         )
         return {
             "evaluations": [

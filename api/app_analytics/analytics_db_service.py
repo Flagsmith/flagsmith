@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta
 
 import structlog
+from common.core.utils import using_database_replica
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import Q, Sum
@@ -38,9 +39,11 @@ def get_usage_data(
     period: PeriodType | None = None,
     labels_filter: Labels | None = None,
 ) -> list[UsageData]:
-    sub_cache = OrganisationSubscriptionInformationCache.objects.filter(
-        organisation=organisation
-    ).first()
+    sub_cache = (
+        using_database_replica(OrganisationSubscriptionInformationCache.objects)
+        .filter(organisation=organisation)
+        .first()
+    )
 
     date_start, date_stop = _get_start_date_and_stop_date_for_subscribed_organisation(
         sub_cache=sub_cache,
@@ -92,12 +95,12 @@ def get_usage_data_from_local_db(
         bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
     )
     if project_id:
-        environment_ids = Environment.objects.filter(project_id=project_id).values_list(
-            "id", flat=True
+        # Evaluate the queryset because the analytics database has no environments table
+        environment_ids = list(
+            using_database_replica(Environment.objects)
+            .filter(project_id=project_id)
+            .values_list("id", flat=True)
         )
-        # evaluate the queryset because analytics db does not have
-        # access to environment/project table
-        environment_ids = list(environment_ids)
         qs = qs.filter(environment_id__in=environment_ids)
 
     if environment_id:
@@ -198,17 +201,12 @@ def get_feature_evaluation_data_from_local_db(
 
 
 def _get_environment_ids_for_org(organisation: Organisation) -> list[int]:
-    # We need to do this to prevent Django from generating a query that
-    # references the environments and projects tables,
-    # as they do not exist in the analytics database.
-    return [
-        *Environment.objects.filter(
-            project__organisation=organisation,
-        ).values_list(
-            "id",
-            flat=True,
-        )
-    ]
+    # Evaluate the queryset because the analytics database has no environments table
+    return list(
+        using_database_replica(Environment.objects)
+        .filter(project__organisation=organisation)
+        .values_list("id", flat=True)
+    )
 
 
 def _get_start_date_and_stop_date_for_subscribed_organisation(

@@ -42,6 +42,7 @@ from environments.dynamodb import (
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
+from features import views
 from features.dataclasses import EnvironmentFeatureOverridesData
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
@@ -705,6 +706,218 @@ def test_get_flags_for_environment_response(
     assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
         environment.updated_at.timestamp()
     )
+
+
+@pytest.mark.parametrize("cache_flags_seconds", [0, 30])
+def test_SDKFeatureStates_get__responds_200_with_feature_list(
+    api_client: APIClient,
+    cache_flags_seconds: int,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    settings.CACHE_FLAGS_SECONDS = cache_flags_seconds
+
+    # When
+    response = api_client.get("/api/v1/flags/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "id": feature_state.id,
+            "enabled": feature_state.enabled,
+            "environment": environment.id,
+            "feature": mocker.ANY,
+            "feature_segment": None,
+            "feature_state_value": None,
+            "identity": None,
+        },
+    ]
+    assert response.json()[0]["feature"]["name"] == feature.name
+
+
+# NOTE: DEPRECATED
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "num_queries"],
+    [
+        pytest.param(False, True, 9, id="default_database,new_identity"),
+        pytest.param(False, False, 8, id="default_database,existing_identity"),
+        pytest.param(True, True, 9, id="replica_database,new_identity"),
+        pytest.param(True, False, 7, id="replica_database,existing_identity"),
+    ],
+)
+def test_SDKFeatureStates_get__given_identifier__responds_200_with_feature_list(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    is_new_identity: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "morpheus" if is_new_identity else identity.identifier
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = api_client.get(f"/api/v1/flags/{identifier}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "id": mocker.ANY if is_new_identity else feature_state.id,
+            "enabled": not is_new_identity,
+            "environment": environment.id,
+            "feature": mocker.ANY,
+            "feature_segment": None,
+            "feature_state_value": None,
+            "identity": None if is_new_identity else identity.id,
+        },
+    ]
+    assert response.json()[0]["feature"]["name"] == feature.name
+    assert Identity.objects.filter(identifier=identifier).exists()
+
+
+# NOTE: DEPRECATED
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "num_queries"],
+    [
+        pytest.param(False, True, 9, id="default_database,new_identity"),
+        pytest.param(False, False, 8, id="default_database,existing_identity"),
+        pytest.param(True, True, 9, id="replica_database,new_identity"),
+        pytest.param(True, False, 7, id="replica_database,existing_identity"),
+    ],
+)
+def test_SDKFeatureStates_get__given_identifier_and_feature__both_exist__responds_200_with_feature(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    is_new_identity: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "morpheus" if is_new_identity else identity.identifier
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = api_client.get(f"/api/v1/flags/{identifier}?feature={feature.name}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "id": mocker.ANY if is_new_identity else feature_state.id,
+        "enabled": not is_new_identity,
+        "environment": environment.id,
+        "feature": mocker.ANY,
+        "feature_segment": None,
+        "feature_state_value": None,
+        "identity": None if is_new_identity else identity.id,
+    }
+    assert response.json()["feature"]["name"] == feature.name
+    assert Identity.objects.filter(identifier=identifier).exists()
+
+
+# NOTE: DEPRECATED
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "num_queries"],
+    [
+        pytest.param(False, True, 8, id="default_database,new_identity"),
+        pytest.param(False, False, 7, id="default_database,existing_identity"),
+        pytest.param(True, True, 8, id="replica_database,new_identity"),
+        pytest.param(True, False, 6, id="replica_database,existing_identity"),
+    ],
+)
+def test_SDKFeatureStates_get__given_identifier_and_feature__feature_does_not_exist__responds_404(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    identity: Identity,
+    is_new_identity: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "morpheus" if is_new_identity else identity.identifier
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = api_client.get(f"/api/v1/flags/{identifier}?feature=turbo_mode")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert Identity.objects.filter(identifier=identifier).exists()
+
+
+def test_SDKFeatureStates_get__given_feature__exists__responds_200_with_feature(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(f"/api/v1/flags/?feature={feature.name}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "id": feature_state.id,
+        "enabled": feature.default_enabled,
+        "environment": environment.id,
+        "feature": mocker.ANY,
+        "feature_segment": None,
+        "feature_state_value": None,
+        "identity": None,
+    }
+
+
+def test_SDKFeatureStates_get__given_feature__doesnt_exist__responds_404(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/?feature=turbo_mode")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.parametrize(

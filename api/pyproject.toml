@@ -57,13 +57,16 @@ unfixable = []
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
 exclude_also = [
-  'if TYPE_CHECKING:',
-  'if typing.TYPE_CHECKING:',
   '@(abc\\.)?abstractmethod',
 ]
 
 [tool.coverage.run]
-omit = ["scripts/*", "manage.py", "e2etests/*"]
+omit = [
+  "app/settings/common.py",
+  "manage.py",
+  "e2etests/*",
+  "scripts/*",
+]
 
 [tool.pytest.ini_options]
 addopts = [
@@ -160,7 +163,7 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-common = "^2.0.0"
+flagsmith-common = "^2.2.0"
 django-stubs = "^5.1.3"
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"

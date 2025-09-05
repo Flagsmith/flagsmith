@@ -10,9 +10,9 @@ from common.environments.permissions import (
 )
 from django.test import override_settings
 from django.urls import reverse
-from django.utils import timezone
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from pytest_django import DjangoAssertNumQueries
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.test import APIClient
@@ -22,12 +22,12 @@ from core.constants import (
     SDK_ENVIRONMENT_KEY_HEADER,
     STRING,
 )
+from environments.identities import views
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.identities.views import IdentityViewSet
 from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
 from environments.permissions.permissions import NestedEnvironmentPermissions
@@ -992,40 +992,6 @@ def test_get_identities_request_includes_updated_at_header(
     )
 
 
-def test_get_identities_nplus1(
-    identity: Identity,
-    environment: Environment,
-    api_client: APIClient,
-    feature: Feature,
-    django_assert_num_queries: DjangoAssertNumQueries,
-) -> None:
-    """
-    Specific test to reproduce N+1 issue found after deployment of
-    v2 feature versioning.
-    """
-
-    url = "%s?identifier=%s" % (
-        reverse("api-v1:sdk-identities"),
-        identity.identifier,
-    )
-
-    # Let's get a baseline with only a single version of a flag.
-    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-    with django_assert_num_queries(6):
-        api_client.get(url)
-
-    # Now let's create some new versions of the same flag
-    # and verify that the query count doesn't increase.
-    v1_flag = FeatureState.objects.get(environment=environment, feature=feature)
-    now = timezone.now()
-    for i in range(2, 13):
-        v1_flag.clone(env=environment, version=i, live_from=now)
-
-    # Now it is lower.
-    with django_assert_num_queries(5):
-        api_client.get(url)
-
-
 def test_get_identities_with_hide_sensitive_data_with_feature_name(  # type: ignore[no-untyped-def]
     environment, feature, identity, api_client
 ):
@@ -1393,7 +1359,7 @@ def test_user_with_view_environment_permission_can_not_list_identities(
 
 def test_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]
     # Given
-    view_set = IdentityViewSet()
+    view_set = views.IdentityViewSet()
 
     # When
     permissions = view_set.get_permissions()  # type: ignore[no-untyped-call]
@@ -1410,3 +1376,85 @@ def test_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]
         "partial_update": MANAGE_IDENTITIES,
         "destroy": MANAGE_IDENTITIES,
     }
+
+
+# NOTE: DEPRECATED
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "num_queries"],
+    [
+        pytest.param(False, True, 12, id="default_database,new_identity"),
+        pytest.param(False, False, 7, id="default_database,existing_identity"),
+        pytest.param(True, True, 12, id="replica_database,new_identity"),
+        pytest.param(True, False, 9, id="replica_database,existing_identity"),
+    ],
+)
+def test_SDKIdentitiesDeprecated__given_identifier__retrieves_identity(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    feature_state: FeatureState,
+    identity: Identity,
+    is_new_identity: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    trait: Trait,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "jamesbond" if is_new_identity else identity.identifier
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = api_client.get(f"/api/v1/identities/{identifier}/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "flags": [mocker.ANY],
+        "segments": [],
+        "traits": [mocker.ANY] * (not is_new_identity),
+    }
+
+
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "is_transient", "num_queries"],
+    [
+        pytest.param(False, True, False, 10, id="default_db,new_identity"),
+        pytest.param(False, False, False, 6, id="default_db,old_identity"),
+        pytest.param(True, True, False, 10, id="replica_db,new_identity"),
+        pytest.param(True, False, False, 8, id="replica_db,old_identity"),
+        pytest.param(False, True, True, 4, id="default_db,new_identity,transient"),
+        pytest.param(False, False, True, 4, id="default_db,old_identity,transient"),
+        pytest.param(True, True, True, 4, id="replica_db,new_identity,transient"),
+        pytest.param(True, False, True, 4, id="replica_db,old_identity,transient"),
+    ],
+)
+def test_SDKIdentities_retrieves_identity_feature_states(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    feature_state: FeatureState,
+    identity: Identity,
+    is_new_identity: bool,
+    is_transient: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    trait: Trait,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "jamesbond" if is_new_identity else identity.identifier
+
+    # When
+    with django_assert_num_queries(num_queries):
+        transient = "&transient=true" if is_transient else ""
+        response = api_client.get(
+            f"/api/v1/identities/?identifier={identifier}{transient}"
+        )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
