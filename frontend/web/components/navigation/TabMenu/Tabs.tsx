@@ -178,6 +178,7 @@ const Tabs: React.FC<TabsProps> = ({
               height: 32,
               width: 32,
             }}
+            data-test='tabs-overflow-button'
           >
             <DropdownMenu
               items={overflow.map((child, i) => {
