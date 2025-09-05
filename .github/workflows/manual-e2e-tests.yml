@@ -27,7 +27,17 @@ jobs:
         env:
           E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e-token }}
           FLAGSMITH_API_URL: ${{ inputs.api-url }}
+          UPLOAD_TO_GITHUB_ACTIONS: true
         run: |
           npm ci
           npm run env
           npm run test
+
+      - name: Upload failed test videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failed-test-videos-manual-${{ github.run_attempt }}
+          path: frontend/reports/screen-captures/*.mp4
+          if-no-files-found: ignore
+          retention-days: 30

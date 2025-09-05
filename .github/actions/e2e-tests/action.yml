@@ -51,3 +51,13 @@ runs:
         SLACK_TOKEN: ${{ inputs.slack_token }}
         ENV: ${{ inputs.environment == 'production' && 'prod' || inputs.environment }}
         GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        UPLOAD_TO_GITHUB_ACTIONS: true
+
+    - name: Upload failed test videos
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-failed-test-videos-${{ inputs.environment }}-${{ github.run_attempt }}
+        path: frontend/reports/screen-captures/*.mp4
+        if-no-files-found: ignore
+        retention-days: 30
