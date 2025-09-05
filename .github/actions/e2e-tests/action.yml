@@ -51,7 +51,6 @@ runs:
         SLACK_TOKEN: ${{ inputs.slack_token }}
         ENV: ${{ inputs.environment == 'production' && 'prod' || inputs.environment }}
         GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        UPLOAD_TO_GITHUB_ACTIONS: true
 
     - name: Upload failed test videos
       if: failure()

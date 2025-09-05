@@ -71,13 +71,10 @@ createTestCafe()
         if (fs.existsSync(dir) && !process.env.E2E_DEV) {
             try {
                 const files = fs.readdirSync(dir);
-                if (process.env.UPLOAD_TO_GITHUB_ACTIONS) {
-                    // When running in GitHub Actions, let the action handle video upload
-                    console.log(`Found ${files.length} video files for GitHub Actions upload:`, files);
-                } else {
-                    // Upload to Slack (existing behavior)
-                    await Promise.all(files.map(f => upload(path.join(dir, f))));
-                }
+                // Upload to Slack (existing behavior)
+                await Promise.all(files.map(f => upload(path.join(dir, f))));
+                // Videos will also be uploaded to GitHub Actions artifacts by the workflow
+                console.log(`${files.length} video files processed for Slack upload and available for GitHub Actions artifacts`);
             } catch (e) { console.log('error uploading files', e); }
         } else {
             console.log('No files to upload');

@@ -86,7 +86,6 @@ jobs:
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          UPLOAD_TO_GITHUB_ACTIONS: true
 
       - name: Extract videos from Docker container
         if: failure()
