@@ -71,7 +71,7 @@ createTestCafe()
         if (fs.existsSync(dir) && !process.env.E2E_DEV) {
             try {
                 const files = fs.readdirSync(dir);
-                // Upload to Slack (existing behavior)
+                // Upload to Slack
                 await Promise.all(files.map(f => upload(path.join(dir, f))));
                 // Videos will also be uploaded to GitHub Actions artifacts by the workflow
                 console.log(`${files.length} video files processed for Slack upload and available for GitHub Actions artifacts`);
