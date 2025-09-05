@@ -371,7 +371,12 @@ export const logout = async () => {
 
 export const goToFeatureVersions = async (featureIndex: number) => {
   await gotoFeature(featureIndex)
-  await click(byId('change-history'))
+  if (await isElementExists('change-history')) {
+    await click(byId('change-history'))
+  } else {
+    await click(byId('tabs-overflow-button'))
+    await click(byId('change-history'))
+  }
 }
 
 export const compareVersion = async (
