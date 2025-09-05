@@ -1,6 +1,6 @@
 ---
 id: intro
-slug: /
+slug: /docs
 title: Welcome to the Flagsmith Docs
 sidebar_position: 1
 sidebar_label: Overview
