@@ -92,10 +92,10 @@ jobs:
         run: |
           # Create local directory for videos
           mkdir -p ./e2e-videos
-          
+
           # Get the container ID for the frontend service
           CONTAINER_ID=$(docker compose ps -q frontend 2>/dev/null || echo "")
-          
+
           if [ ! -z "$CONTAINER_ID" ]; then
             # Copy videos from container to local filesystem
             docker cp $CONTAINER_ID:/app/reports/screen-captures/ ./e2e-videos/ 2>/dev/null || echo "No videos found in container"
