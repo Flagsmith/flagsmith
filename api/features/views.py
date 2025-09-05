@@ -3,6 +3,7 @@ import typing
 from datetime import timedelta
 from functools import reduce
 
+from common.core.utils import is_database_replica_setup, using_database_replica
 from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from django.core.cache import caches
@@ -805,16 +806,16 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         than a list.
         """
         if identifier:
-            return self._get_flags_response_with_identifier(request, identifier)  # type: ignore[no-untyped-call]
+            return self._get_flags_response_with_identifier(request, identifier)
 
         if "feature" in request.GET:
             feature_states = get_environment_flags_list(
                 environment=request.environment,
                 feature_name=request.GET["feature"],
                 additional_filters=self._additional_filters,
+                from_replica=True,
             )
-            if len(feature_states) != 1:
-                # TODO: what if more than one?
+            if not feature_states:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
@@ -823,12 +824,13 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             return Response(self.get_serializer(feature_states[0]).data)
 
         if settings.CACHE_FLAGS_SECONDS > 0:
-            data = self._get_flags_from_cache(request.environment)  # type: ignore[no-untyped-call]
+            data = self._get_flags_from_cache(request.environment, from_replica=True)
         else:
             data = self.get_serializer(
                 get_environment_flags_list(
                     environment=request.environment,
                     additional_filters=self._additional_filters,
+                    from_replica=True,
                 ),
                 many=True,
             ).data
@@ -851,13 +853,19 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
 
         return filters
 
-    def _get_flags_from_cache(self, environment):  # type: ignore[no-untyped-def]
+    def _get_flags_from_cache(
+        self,
+        environment: Environment,
+        from_replica: bool = False,
+    ) -> list[typing.Any]:
+        data: list[typing.Any]
         data = flags_cache.get(environment.api_key)
         if not data:
             data = self.get_serializer(
                 get_environment_flags_list(
                     environment=environment,
                     additional_filters=self._additional_filters,
+                    from_replica=from_replica,
                 ),
                 many=True,
             ).data
@@ -865,34 +873,35 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
 
         return data
 
-    def _get_flags_response_with_identifier(self, request, identifier):  # type: ignore[no-untyped-def]
-        identity, _ = Identity.objects.get_or_create(
+    def _get_flags_response_with_identifier(
+        self, request: Request, identifier: str
+    ) -> Response:
+        identity, is_new_identity = Identity.objects.get_or_create(
             identifier=identifier, environment=request.environment
         )
 
-        kwargs = {
-            "identity": identity,
-            "environment": request.environment,
-            "feature_segment": None,
-        }
+        # New identities may take a while to replicate — otherwise use a replica
+        if not is_new_identity and is_database_replica_setup():
+            identity = (
+                using_database_replica(Identity.objects)
+                .with_context()
+                .get(id=identity.id)
+            )
 
-        if "feature" in request.GET:
-            kwargs["feature__name__iexact"] = request.GET["feature"]
-            try:
-                feature_state = identity.get_all_feature_states().get(  # type: ignore[attr-defined]
-                    feature__name__iexact=kwargs["feature__name__iexact"],
-                )
-            except FeatureState.DoesNotExist:
+        if feature_name := request.GET.get("feature"):
+            feature_states = identity.get_all_feature_states(feature_name=feature_name)
+            if not feature_states:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
-
             return Response(
-                self.get_serializer(feature_state).data, status=status.HTTP_200_OK
+                self.get_serializer(feature_states[0]).data,
+                status=status.HTTP_200_OK,
             )
 
-        flags = self.get_serializer(identity.get_all_feature_states(), many=True)
+        feature_states = identity.get_all_feature_states()
+        flags = self.get_serializer(feature_states, many=True)
         return Response(flags.data, status=status.HTTP_200_OK)
 
 
