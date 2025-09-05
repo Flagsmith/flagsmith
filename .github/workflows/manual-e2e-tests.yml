@@ -27,7 +27,6 @@ jobs:
         env:
           E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e-token }}
           FLAGSMITH_API_URL: ${{ inputs.api-url }}
-          UPLOAD_TO_GITHUB_ACTIONS: true
         run: |
           npm ci
           npm run env
