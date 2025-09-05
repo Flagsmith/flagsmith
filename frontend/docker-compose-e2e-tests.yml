@@ -49,6 +49,7 @@ services:
       FLAGSMITH_API: flagsmith-api:8000/api/v1/
       SLACK_TOKEN: ${SLACK_TOKEN}
       GITHUB_ACTION_URL: ${GITHUB_ACTION_URL}
+      UPLOAD_TO_GITHUB_ACTIONS: ${UPLOAD_TO_GITHUB_ACTIONS}
     ports:
       - 3000:3000
     depends_on:
