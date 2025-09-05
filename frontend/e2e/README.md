@@ -4,7 +4,7 @@ This document explains how video recording works for failed E2E tests in GitHub 
 
 ## Overview
 
-The E2E tests are configured to automatically record videos of **failed tests only** and upload them to both Slack (existing workflow) and GitHub Actions artifacts for debugging purposes.
+The E2E tests are configured to automatically record videos of **failed tests only** and upload them to both Slack and GitHub Actions artifacts for debugging purposes.
 
 ## How it works
 
@@ -14,9 +14,9 @@ The E2E tests are configured to automatically record videos of **failed tests on
    - Files are named with environment, timestamp, and test index for easy identification
 
 2. **Dual Upload System**: 
-   - **Slack**: Videos are uploaded to the team's Slack channel (existing behavior)
+   - **Slack**: Videos are uploaded to the team's Slack channel
    - **GitHub Actions**: Videos are also uploaded as artifacts for easy access
-   - Both uploads happen automatically without changing existing team workflows
+   - Both uploads happen automatically
 
 3. **GitHub Actions Artifacts**: 
    - Videos are automatically uploaded as artifacts when tests fail
@@ -33,22 +33,20 @@ The E2E tests are configured to automatically record videos of **failed tests on
 2. Scroll down to the "Artifacts" section at the bottom of the run page
 3. Download the video artifact(s) to view the recordings of failed tests
 
-### Slack (Existing)
-Videos are automatically posted to the team's Slack channel as before - no change to existing workflow.
+### Slack
+Videos are automatically posted to the team's Slack channel.
 
 ## Benefits
 
-- **No Workflow Disruption**: Existing Slack uploads continue to work exactly as before
-- **Additional Access**: Videos are now also available as GitHub Actions artifacts
+- **Multiple Access Points**: Videos available both in Slack and GitHub Actions
 - **Better Accessibility**: Team members can access videos directly from the GitHub Actions run
-- **Retention**: 30-day retention in GitHub Actions provides longer access than Slack
+- **Extended Retention**: 30-day retention in GitHub Actions provides longer access
 
 ## Configuration
 
 The video recording behavior is controlled by:
 - TestCafe configuration in `.testcaferc.js` - controls video quality, path, and naming
 - GitHub Actions workflow files - handle the artifact upload
-- Existing Slack upload functionality remains unchanged
 
 ## Video Settings
 
@@ -63,4 +61,4 @@ The video recording behavior is controlled by:
 - If no videos appear in artifacts, check that tests actually failed (videos are only recorded on failure)
 - For Docker-based tests, ensure the video extraction step completed successfully
 - Check the test logs for any video-related error messages
-- Slack uploads continue to work independently of GitHub Actions artifacts
+- Slack uploads work independently of GitHub Actions artifacts
