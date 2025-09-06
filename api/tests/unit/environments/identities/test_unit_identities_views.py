@@ -2,6 +2,7 @@ import json
 import urllib
 from typing import Any
 from unittest import mock
+from urllib.parse import quote, unquote
 
 import pytest
 from common.environments.permissions import (
@@ -1431,7 +1432,7 @@ def test_SDKIdentitiesDeprecated__given_identifier__retrieves_identity(
         pytest.param(True, False, True, 4, id="replica_db,old_identity,transient"),
     ],
 )
-def test_SDKIdentities_retrieves_identity_feature_states(
+def test_SDKIdentities__retrieves_identity_feature_states(
     api_client: APIClient,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
@@ -1458,3 +1459,71 @@ def test_SDKIdentities_retrieves_identity_feature_states(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.parametrize(
+    "given_identifier",
+    [
+        "bond...jamesbond",
+        "ゴジラ",
+        "ElChapulínColorado",
+        "dalek#6453@skaro.gov",
+        "agáta={^_^}=",
+        "_ツ_/-handless-shrug",
+        "who+am+i?",
+        "i_100%_dont_know!",
+        "~neo|simulation`0065192*75`",
+        "KacperGustyr$Flagsmat",
+    ],
+)
+def test_SDKIdentities__identifier_sanitization__accepts_valid_identifiers(
+    api_client: APIClient,
+    environment: Environment,
+    given_identifier: str,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(
+        f"/api/v1/identities/?identifier={quote(given_identifier)}"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["identifier"] == unquote(given_identifier)
+
+
+_long_error_message = "Identifier can only contain unicode letters, numbers, and the symbols: ! # $ % & * + / = ? ^ _ ` { } | ~ @ . -"
+
+
+@pytest.mark.parametrize(
+    ["given_identifier", "error_message"],
+    [
+        ("", "This field may not be blank."),
+        (" ", "This field may not be blank."),
+        ("or really anything with a whitespace", _long_error_message),
+        ("<script>alert(1)</script>", _long_error_message),
+        ("'; DROP TABLE users;--", _long_error_message),
+        ("'single-quotes'", _long_error_message),
+        ('"double-quotes"', _long_error_message),
+        ("figaro" * 334, "Ensure this field has no more than 2000 characters."),
+    ],
+)
+def test_SDKIdentities__identifier_sanitization__rejects_invalid_identifiers(
+    api_client: APIClient,
+    environment: Environment,
+    error_message: str,
+    given_identifier: str,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(
+        f"/api/v1/identities/?identifier={quote(given_identifier)}"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == error_message
