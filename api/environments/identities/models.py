@@ -1,5 +1,6 @@
 from itertools import chain
 
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Prefetch, Q
 from flag_engine.context.mappers import map_environment_identity_to_context
@@ -21,7 +22,15 @@ from util.mappers.engine import (
 
 
 class Identity(models.Model):
-    identifier = models.CharField(max_length=2000)
+    identifier = models.CharField(
+        max_length=2000,
+        validators=[
+            RegexValidator(
+                regex=r"^[\w!#$%&*+/=?^_`{}|~@.\-]+$",
+                message="Identifier can only contain unicode letters, numbers, and the symbols: ! # $ %% & * + / = ? ^ _ ` { } | ~ @ . -",
+            ),
+        ],
+    )
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     environment = models.ForeignKey(
         Environment, related_name="identities", on_delete=models.CASCADE
