@@ -39,6 +39,8 @@ from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from segments.models import Condition, Segment, SegmentRule
 
+_invalid_identifier_error_message = "Identifier can only contain unicode letters, numbers, and the symbols: ! # $ % & * + / = ? ^ _ ` { } | ~ @ . -"
+
 
 def test_should_return_identities_list_when_requested(
     environment: Environment,
@@ -1494,19 +1496,16 @@ def test_SDKIdentities__identifier_sanitization__accepts_valid_identifiers(
     assert response.json()["identifier"] == unquote(given_identifier)
 
 
-_long_error_message = "Identifier can only contain unicode letters, numbers, and the symbols: ! # $ % & * + / = ? ^ _ ` { } | ~ @ . -"
-
-
 @pytest.mark.parametrize(
     ["given_identifier", "error_message"],
     [
         ("", "This field may not be blank."),
         (" ", "This field may not be blank."),
-        ("or really anything with a whitespace", _long_error_message),
-        ("<script>alert(1)</script>", _long_error_message),
-        ("'; DROP TABLE users;--", _long_error_message),
-        ("'single-quotes'", _long_error_message),
-        ('"double-quotes"', _long_error_message),
+        ("or really anything with a whitespace", _invalid_identifier_error_message),
+        ("<script>alert(1)</script>", _invalid_identifier_error_message),
+        ("'; DROP TABLE users;--", _invalid_identifier_error_message),
+        ("'single-quotes'", _invalid_identifier_error_message),
+        ('"double-quotes"', _invalid_identifier_error_message),
         ("figaro" * 334, "Ensure this field has no more than 2000 characters."),
     ],
 )
