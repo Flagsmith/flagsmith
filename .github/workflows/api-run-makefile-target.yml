@@ -11,8 +11,12 @@ on:
         required: false
         default: ""
       pr-title:
-        description: The title to use for the PR 
+        description: The title to use for the PR
         required: true
+      comment:
+        description: Additional comment to add to the PR body
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -47,4 +51,7 @@ jobs:
         with:
           branch: chore/make-${{ inputs.target }}-${{ github.run_id }}
           title: ${{ inputs.pr-title }}
-          body: Results of `${{ inputs.target }} opts="${{ inputs.opts }}"` ran on commit ${{ github.sha }}.
+          body: |
+            Results of `${{ inputs.target }} opts="${{ inputs.opts }}"` ran on commit ${{ github.sha }}.
+
+            ${{ inputs.comment }}
