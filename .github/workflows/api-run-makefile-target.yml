@@ -13,8 +13,8 @@ on:
       pr-title:
         description: The title to use for the PR
         required: true
-      pr-comment:
-        description: Additional comment to add to the PR body
+      pr-notes:
+        description: Additional notes to add to the PR body
         required: false
         default: ""
 
@@ -54,4 +54,4 @@ jobs:
           body: |
             Results of `${{ inputs.target }} opts="${{ inputs.opts }}"` ran on commit ${{ github.sha }}.
 
-            ${{ inputs.pr-comment }}
+            ${{ inputs.pr-notes }}
