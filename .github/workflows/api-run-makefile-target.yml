@@ -52,6 +52,6 @@ jobs:
           branch: chore/make-${{ inputs.target }}-${{ github.run_id }}
           title: ${{ inputs.pr-title }}
           body: |
-            Results of `${{ inputs.target }} opts="${{ inputs.opts }}"` ran on commit ${{ github.sha }}.
+            Results of `make ${{ inputs.target }} opts="${{ inputs.opts }}"` ran on commit ${{ github.sha }}.
 
             ${{ inputs.pr-notes }}
