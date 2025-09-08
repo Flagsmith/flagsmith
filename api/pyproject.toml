@@ -249,6 +249,7 @@ types-pytz = "^2025.1.0.20250204"
 ruff = "^0.9.7"
 flagsmith-common = { version = "*", extras = ["test-tools"] }
 pytest-responses = "^0.5.1"
+libcst = "^1.8.2"
 
 [build-system]
 requires = ["poetry>=2.0.0"]
