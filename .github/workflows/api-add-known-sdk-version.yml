@@ -3,11 +3,8 @@ name: API Add Known SDK Version
 on:
   workflow_dispatch:
     inputs:
-      sdk-key:
-        description: The SDK key to update (e.g. "flagsmith-python-sdk", "flagsmith-js-sdk")
-        required: true
-      sdk-version:
-        description: The SDK version to add (e.g. "1.2.3")
+      opts:
+        description: Options to pass to the script (e.g. '--sdk flagsmith-python-sdk --version 1.2.3')
         required: true
 
 permissions:
@@ -31,7 +28,7 @@ jobs:
 
       - name: Run `make add-known-sdk-version`
         env:
-          opts: --sdk ${{ github.event.inputs.sdk-key }} --version ${{ github.event.inputs.sdk-version }}
+          opts: ${{ inputs.opts }}
         run: make add-known-sdk-version
 
       - name: Create Pull Request
