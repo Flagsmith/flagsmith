@@ -1,0 +1,50 @@
+name: API Run Makefile Target
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: The Makefile target to run (e.g. 'add-known-sdk-version')
+        required: true
+      opts:
+        description: Options to pass (e.g. '--sdk flagsmith-python-sdk --version 1.2.3')
+        required: false
+        default: ""
+      pr-title:
+        description: The title to use for the PR 
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+defaults:
+  run:
+    working-directory: api
+
+jobs:
+  add-sdk-version:
+    runs-on: depot-ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+          cache: "poetry"
+
+      - name: Install Dependencies
+        run: make install-packages
+
+      - name: Run `make ${{ inputs.target }} opts=${{ inputs.opts }}`
+        env:
+          opts: ${{ inputs.opts }}
+        run: make ${{ inputs.target }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          branch: chore/make-${{ inputs.target }}-${{ github.run_id }}
+          title: ${{ inputs.pr-title }}
+          body: Results of `${{ inputs.target }} opts="${{ inputs.opts }}"` ran on commit ${{ github.sha }}.
