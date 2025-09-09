@@ -1,5 +1,6 @@
 import argparse
 import typing
+from pathlib import Path
 
 import libcst as cst
 from libcst.codemod import (
@@ -129,7 +130,7 @@ def main() -> None:
         sdk=args.sdk,
         version=args.version,
     )
-    code = open(MODULE_PATH).read()
+    code = Path(MODULE_PATH).read_text()
     if result := exec_transform_with_prettyprint(
         codemod,
         code,
