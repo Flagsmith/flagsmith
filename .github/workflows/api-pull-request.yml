@@ -44,16 +44,15 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install Poetry
+        run: make install-poetry
 
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
+          cache: poetry
 
       - name: Install Dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: make install-packages
 
       - name: Create analytics database
