@@ -30,12 +30,10 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Install poetry
-        run: pipx install poetry
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'poetry'
+          cache: poetry
 
       - name: Install SAML Dependencies
         run: sudo apt-get install -y xmlsec1
@@ -46,7 +44,7 @@ jobs:
         run: |
           echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
           git config --global credential.helper store
-          make install-packages opts="--with saml,auth-controller,workflows"
+          make install opts="--with saml,auth-controller,workflows"
           make install-private-modules
           make integrate-private-tests
           rm -rf ${HOME}/.git-credentials
