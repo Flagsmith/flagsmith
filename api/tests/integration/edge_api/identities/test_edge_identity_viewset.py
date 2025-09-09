@@ -1,7 +1,9 @@
 import json
 import urllib
 from typing import Any
+from unittest.mock import Mock
 
+import pytest
 from boto3.dynamodb.conditions import Key
 from django.urls import reverse
 from mypy_boto3_dynamodb.service_resource import Table
@@ -17,6 +19,8 @@ from environments.dynamodb.wrappers.identity_wrapper import (
     DynamoIdentityWrapper,
 )
 from environments.models import Environment
+
+_invalid_identifier_error_message = "Identifier can only contain unicode letters, numbers, and the symbols: ! # $ % & * + / = ? ^ _ ` { } | ~ @ . -"
 
 
 def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(  # type: ignore[no-untyped-def]
@@ -114,6 +118,78 @@ def test_create_identity(  # type: ignore[no-untyped-def]
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["identifier"] == identifier
     assert response.json()["identity_uuid"] is not None
+
+
+@pytest.mark.parametrize(
+    "given_identifier",
+    [
+        "bond...jamesbond",
+        "ゴジラ",
+        "ElChapulínColorado",
+        "dalek#6453@skaro.gov",
+        "agáta={^_^}=",
+        "_ツ_/-handless-shrug",
+        "who+am+i?",
+        "i_100%_dont_know!",
+        "~neo|simulation`0065192*75`",
+        "KacperGustyr$Flagsmat",
+    ],
+)
+@pytest.mark.usefixtures(
+    "dynamo_enabled_environment",
+)
+def test_create_identity_accepts_valid_identifiers(
+    admin_client: APIClient,
+    environment_api_key: str,
+    given_identifier: str,
+    edge_identity_dynamo_wrapper_mock: Mock,
+) -> None:
+    # Given
+    edge_identity_dynamo_wrapper_mock.get_item.return_value = None
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/edge-identities/",
+        data={"identifier": given_identifier},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["identifier"] == given_identifier
+
+
+@pytest.mark.parametrize(
+    ["given_identifier", "error_message"],
+    [
+        ("", "This field may not be blank."),
+        (" ", "This field may not be blank."),
+        ("or really anything with a whitespace", _invalid_identifier_error_message),
+        ("<script>alert(1)</script>", _invalid_identifier_error_message),
+        ("'; DROP TABLE users;--", _invalid_identifier_error_message),
+        ("'single-quotes'", _invalid_identifier_error_message),
+        ('"double-quotes"', _invalid_identifier_error_message),
+        ("figaro" * 334, "Ensure this field has no more than 2000 characters."),
+    ],
+)
+@pytest.mark.usefixtures(
+    "dynamo_enabled_environment",
+    "edge_identity_dynamo_wrapper_mock",
+)
+def test_create_identity_responds_400_if_identifier_is_invalid(
+    admin_client: APIClient,
+    environment_api_key: str,
+    error_message: str,
+    given_identifier: str,
+) -> None:
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/edge-identities/",
+        data={"identifier": given_identifier},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"identifier": [error_message]}
 
 
 def test_create_identity_returns_400_if_identity_already_exists(  # type: ignore[no-untyped-def]
