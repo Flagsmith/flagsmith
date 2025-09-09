@@ -27,7 +27,7 @@ defaults:
     working-directory: api
 
 jobs:
-  add-sdk-version:
+  run-makefile-target:
     runs-on: depot-ubuntu-latest
 
     steps:
@@ -36,10 +36,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.11
-          cache: "poetry"
+          cache: poetry
 
       - name: Install Dependencies
-        run: make install-packages
+        run: make install
 
       - name: Run `make ${{ inputs.target }} opts=${{ inputs.opts }}`
         env:
