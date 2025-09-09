@@ -44,13 +44,16 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v4
 
+      - name: Install Poetry
+        run: make install-poetry
+
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: poetry
 
       - name: Install Dependencies
-        run: make install
+        run: make install-packages
 
       - name: Create analytics database
         env:

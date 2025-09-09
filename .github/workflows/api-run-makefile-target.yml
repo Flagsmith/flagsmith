@@ -33,13 +33,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Poetry
+        run: make install-poetry
+
       - uses: actions/setup-python@v5
         with:
           python-version: 3.11
           cache: poetry
 
       - name: Install Dependencies
-        run: make install
+        run: make install-packages
 
       - name: Run `make ${{ inputs.target }} opts=${{ inputs.opts }}`
         env:
