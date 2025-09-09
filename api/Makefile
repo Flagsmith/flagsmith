@@ -152,3 +152,7 @@ integrate-private-tests:
 .PHONY: generate-docs
 generate-docs:
 	poetry run flagsmith docgen metrics > ../docs/docs/system-administration/metrics.md
+
+.PHONY: add-known-sdk-version
+add-known-sdk-version:
+	poetry run python scripts/add-known-sdk-version.py $(opts)
