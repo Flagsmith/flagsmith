@@ -1526,3 +1526,65 @@ def test_SDKIdentities__identifier_sanitization__rejects_invalid_identifiers(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json()["detail"] == error_message
+
+
+@pytest.mark.parametrize(
+    "given_identifier",
+    [
+        "bond...jamesbond",
+        "ゴジラ",
+        "ElChapulínColorado",
+        "dalek#6453@skaro.gov",
+        "agáta={^_^}=",
+        "_ツ_/-handless-shrug",
+        "who+am+i?",
+        "i_100%_dont_know!",
+        "~neo|simulation`0065192*75`",
+        "KacperGustyr$Flagsmat",
+    ],
+)
+def test_IdentityViewSet_create__accepts_valid_identifiers(
+    admin_client: APIClient,
+    environment: Environment,
+    given_identifier: str,
+) -> None:
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment.api_key}/identities/",
+        data={"identifier": given_identifier},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["identifier"] == given_identifier
+    assert Identity.objects.filter(identifier=given_identifier).exists()
+
+
+@pytest.mark.parametrize(
+    ["given_identifier", "error_message"],
+    [
+        ("", "This field may not be blank."),
+        (" ", "This field may not be blank."),
+        ("or really anything with a whitespace", _invalid_identifier_error_message),
+        ("<script>alert(1)</script>", _invalid_identifier_error_message),
+        ("'; DROP TABLE users;--", _invalid_identifier_error_message),
+        ("'single-quotes'", _invalid_identifier_error_message),
+        ('"double-quotes"', _invalid_identifier_error_message),
+        ("figaro" * 334, "Ensure this field has no more than 2000 characters."),
+    ],
+)
+def test_IdentityViewSet_create__rejects_invalid_identifiers(
+    admin_client: APIClient,
+    environment: Environment,
+    error_message: str,
+    given_identifier: str,
+) -> None:
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment.api_key}/identities/",
+        data={"identifier": given_identifier},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"identifier": [error_message]}
