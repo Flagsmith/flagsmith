@@ -50,7 +50,6 @@ jobs:
           cache: poetry
 
       - name: Install Dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: make install
 
       - name: Create analytics database
