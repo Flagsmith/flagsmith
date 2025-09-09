@@ -39,6 +39,7 @@ export type PaidFeature =
   | 'AUDIT'
   | 'FORCE_2FA'
   | '4_EYES'
+  | '4_EYES_PROJECT'
   | 'STALE_FLAGS'
   | 'VERSIONING_DAYS'
   | 'AUDIT_DAYS'
@@ -50,6 +51,8 @@ export type PaidFeature =
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
   | 'RELEASE_PIPELINES'
+
+export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
 
 // Define a type for plan categories
 type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
@@ -486,6 +489,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'FLAG_OWNERS':
       case 'RBAC':
       case 'AUDIT':
+      case 'FORCE_2FA':
+      case '4_EYES_PROJECT':
       case '4_EYES': {
         plan = 'scale-up'
         break
@@ -727,7 +732,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       ])
       if (organisation) {
         $crisp.push(['set', 'user:company', formatOrganisation(organisation)])
-        console.log(user, organisation)
         $crisp.push([
           'set',
           'session:data',

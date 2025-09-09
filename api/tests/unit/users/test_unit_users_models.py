@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from common.projects.permissions import VIEW_PROJECT
 from django.db.utils import IntegrityError
@@ -7,7 +9,7 @@ from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
 from projects.models import Project
 from tests.types import WithProjectPermissionsCallable
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 def test_user_belongs_to_success(
@@ -61,7 +63,7 @@ def test_get_admin_organisations(
 ) -> None:
     # Given
     non_admin_organisation = Organisation.objects.create(name="non-admin")
-    admin_user.add_organisation(non_admin_organisation, OrganisationRole.USER)  # type: ignore[no-untyped-call]
+    admin_user.add_organisation(non_admin_organisation, OrganisationRole.USER)
 
     # When
     admin_orgs = admin_user.get_admin_organisations()  # type: ignore[no-untyped-call]
@@ -103,7 +105,7 @@ def test_unique_user_organisation(
     organisation: Organisation,
 ) -> None:
     with pytest.raises(IntegrityError):
-        admin_user.add_organisation(organisation, OrganisationRole.USER)  # type: ignore[no-untyped-call]
+        admin_user.add_organisation(organisation, OrganisationRole.USER)
 
 
 def test_has_organisation_permission_is_true_for_organisation_admin(
@@ -154,15 +156,20 @@ def test_has_organisation_permission_is_false_when_user_does_not_have_permission
     )
 
 
-def test_user_add_organisation_adds_user_to_the_default_user_permission_group(  # type: ignore[no-untyped-def]
-    test_user, organisation, default_user_permission_group, user_permission_group
-):
+def test_user_add_organisation_adds_user_to_the_default_user_permission_group(
+    organisation: Organisation,
+    default_user_permission_group: UserPermissionGroup,
+    user_permission_group: UserPermissionGroup,
+) -> None:
+    # Given
+    user = FFAdminUser.objects.create(email=f"test{uuid.uuid4()}@example.com")
+
     # When
-    test_user.add_organisation(organisation, OrganisationRole.USER)
+    user.add_organisation(organisation, OrganisationRole.USER)
 
     # Then
-    assert default_user_permission_group in test_user.permission_groups.all()
-    assert user_permission_group not in test_user.permission_groups.all()
+    assert default_user_permission_group in user.permission_groups.all()
+    assert user_permission_group not in user.permission_groups.all()
 
 
 def test_user_remove_organisation_removes_user_from_the_user_permission_group(  # type: ignore[no-untyped-def]

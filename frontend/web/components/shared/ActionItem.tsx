@@ -8,11 +8,13 @@ interface ActionRowProps {
   icon: ReactNode
   label: string
   disabled?: boolean
+  disableE2E?: boolean
   action: 'remove' | 'copy' | 'audit' | 'history' | 'clone'
 }
 
 const ActionItem: FC<ActionRowProps> = ({
   action,
+  disableE2E,
   disabled,
   entity,
   handleActionClick,
@@ -25,7 +27,7 @@ const ActionItem: FC<ActionRowProps> = ({
       className={classNames('feature-action__item', {
         'feature-action__item_disabled': disabled,
       })}
-      data-test={`${entity}-${action}-${index}`}
+      data-test={!disableE2E ? `${entity}-${action}-${index}` : undefined}
       onClick={(e) => {
         if (disabled) {
           return

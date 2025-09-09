@@ -20,14 +20,15 @@ import dj_database_url
 import django_stubs_ext
 import prometheus_client
 import pytz
+from common.core import ReplicaReadStrategy
 from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
 from task_processor.task_run_method import TaskRunMethod
 
-from app.routers import ReplicaReadStrategy
 from app.utils import get_numbered_env_vars_with_prefix
+from app_analytics.constants import TRACK_HEADERS
 from environments.enums import EnvironmentDocumentCacheMode
 
 django_stubs_ext.monkeypatch()
@@ -122,6 +123,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "audit",
     "permissions",
+    "projects.code_references",
     "projects.tags",
     "api_keys",
     "webhooks",
@@ -170,9 +172,7 @@ SITE_ID = 1
 db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
 DJANGO_DB_CONN_MAX_AGE = 0 if db_conn_max_age == -1 else db_conn_max_age
 
-DATABASE_ROUTERS = ["app.routers.PrimaryReplicaRouter"]
-NUM_DB_REPLICAS = 0
-NUM_CROSS_REGION_DB_REPLICAS = 0
+DATABASE_ROUTERS: list[str] = []
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
@@ -191,7 +191,6 @@ if "DATABASE_URL" in os.environ:
         if not os.getenv("REPLICA_DATABASE_URL_0")
         else get_numbered_env_vars_with_prefix("REPLICA_DATABASE_URL_")
     )
-    NUM_DB_REPLICAS = len(REPLICA_DATABASE_URLS)
 
     # Cross region replica databases are used as fallbacks if the
     # primary replica set becomes unavailable.
@@ -208,7 +207,6 @@ if "DATABASE_URL" in os.environ:
         if not os.getenv("CROSS_REGION_REPLICA_DATABASE_URL_0")
         else get_numbered_env_vars_with_prefix("CROSS_REGION_REPLICA_DATABASE_URL_")
     )
-    NUM_CROSS_REGION_DB_REPLICAS = len(CROSS_REGION_REPLICA_DATABASE_URLS)
 
     # DISTRIBUTED spreads the load out across replicas while
     # SEQUENTIAL only falls back once the first replica connection is faulty
@@ -270,7 +268,7 @@ TASK_PROCESSOR_DATABASE_HOST = env("TASK_PROCESSOR_DATABASE_HOST", default="")
 TASK_PROCESSOR_DATABASE_PORT = env("TASK_PROCESSOR_DATABASE_PORT", default="")
 TASK_PROCESSOR_DATABASE_NAME = env("TASK_PROCESSOR_DATABASE_NAME", default="")
 
-if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:  # pragma: no cover
+if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:
     if TASK_PROCESSOR_DATABASE_URL:
         DATABASES["task_processor"] = dj_database_url.parse(
             TASK_PROCESSOR_DATABASE_URL,
@@ -683,7 +681,7 @@ if APPLICATION_INSIGHTS_CONNECTION_STRING:
     LOGGING["loggers"][""]["handlers"].append("azure")
 
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
-if ENABLE_DB_LOGGING:  # pragma: no cover
+if ENABLE_DB_LOGGING:
     if not DEBUG:
         warnings.warn("Setting DEBUG=True to ensure DB logging functions correctly.")
         DEBUG = True
@@ -775,7 +773,7 @@ if (
     warnings.warn(
         "Ignoring CACHE_ENVIRONMENT_DOCUMENT_SECONDS variable "
         'since CACHE_ENVIRONMENT_DOCUMENT_MODE == "PERSISTENT"'
-    )  # pragma: no cover
+    )
 
 USER_THROTTLE_CACHE_NAME = "user-throttle"
 USER_THROTTLE_CACHE_BACKEND = env.str(
@@ -1044,7 +1042,7 @@ GITHUB_WEBHOOK_SECRET = env.str("GITHUB_WEBHOOK_SECRET", default="")
 # Additional functionality for using SAML in Flagsmith SaaS
 SAML_INSTALLED = importlib.util.find_spec("saml") is not None
 
-if SAML_INSTALLED:  # pragma: no cover
+if SAML_INSTALLED:
     SAML_REQUESTS_CACHE_LOCATION = "saml_requests_cache"
     CACHES[SAML_REQUESTS_CACHE_LOCATION] = {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
@@ -1072,7 +1070,7 @@ RELEASE_PIPELINES_LOGIC_INSTALLED = (
     importlib.util.find_spec("release_pipelines_logic") is not None
 )
 
-if RELEASE_PIPELINES_LOGIC_INSTALLED:  # pragma: no cover
+if RELEASE_PIPELINES_LOGIC_INSTALLED:
     INSTALLED_APPS.append("release_pipelines_logic")
 
 
@@ -1188,19 +1186,26 @@ COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
 CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL", not COOKIE_AUTH_ENABLED)
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", COOKIE_AUTH_ENABLED)
 FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
-    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
+    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS",
+    default=["sentry-trace"],
 )
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
     subcast=str,
     default=[],
 )
-CORS_ALLOW_HEADERS = [
-    *default_headers,
-    *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
-    "X-Environment-Key",
-    "X-E2E-Test-Auth-Token",
-]
+CORS_ALLOW_HEADERS = list(
+    set(
+        header.casefold()
+        for header in (
+            *default_headers,
+            *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
+            "X-Environment-Key",
+            "X-E2E-Test-Auth-Token",
+            *TRACK_HEADERS,
+        )
+    )
+)
 
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
@@ -1274,7 +1279,7 @@ LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
 LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
 LDAP_ENABLED = LDAP_INSTALLED and LDAP_AUTH_URL
 
-if LDAP_ENABLED:  # pragma: no cover
+if LDAP_ENABLED:
     AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
     INSTALLED_APPS.append("flagsmith_ldap")
 
@@ -1360,15 +1365,30 @@ if not 0 <= SEGMENT_CONDITION_VALUE_LIMIT < 2000000:
     )
 
 FEATURE_VALUE_LIMIT = env.int("FEATURE_VALUE_LIMIT", default=20_000)
-if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:  # pragma: no cover
+if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:
     raise ImproperlyConfigured(
         "FEATURE_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
     )
 
 SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
 
+# These settings are to handle large datasets / odd behaviour where rules and conditions
+# often aren't returned in the order that they were created in, which the code implicitly
+# expects.
 SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
     "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED", default=False
+)
+
+# In SaaS, we need to be able to split out rules and conditions
+# (since the ordering issue has been evident on rules for longer, and
+# only recently happened to conditions).
+SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
+    "SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
+    default=SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED,
+)
+SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED = env.bool(
+    "SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED",
+    default=SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED,
 )
 
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
@@ -1429,7 +1449,7 @@ SUBSCRIPTION_LICENCE_PRIVATE_KEY = env.str("SUBSCRIPTION_LICENCE_PRIVATE_KEY", N
 
 LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
 
-if LICENSING_INSTALLED:  # pragma: no cover
+if LICENSING_INSTALLED:
     INSTALLED_APPS.append("licensing")
 
 PROMETHEUS_ENABLED = env.bool("PROMETHEUS_ENABLED", False)
@@ -1441,3 +1461,7 @@ PROMETHEUS_HISTOGRAM_BUCKETS = tuple(
 )
 
 DOCGEN_MODE = env.bool("DOCGEN_MODE", default=False)
+
+REQUIRE_AUTHENTICATION_FOR_API_DOCS = env.bool(
+    "REQUIRE_AUTHENTICATION_FOR_API_DOCS", default=False
+)

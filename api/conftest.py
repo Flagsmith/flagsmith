@@ -9,10 +9,11 @@ import pytest
 from common.environments.permissions import (
     MANAGE_IDENTITIES,
     MANAGE_SEGMENT_OVERRIDES,
+    UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
 )
-from common.projects.permissions import VIEW_PROJECT
+from common.projects.permissions import CREATE_ENVIRONMENT, DELETE_FEATURE, VIEW_PROJECT
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
@@ -27,7 +28,6 @@ from pytest import FixtureRequest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 from task_processor.task_run_method import TaskRunMethod
 from urllib3 import BaseHTTPResponse
@@ -81,7 +81,6 @@ from projects.models import (
 )
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
-from segments.services import SegmentCloneService
 from tests.test_helpers import fix_issue_3869
 from tests.types import (
     AdminClientAuthType,
@@ -218,16 +217,6 @@ trait_value = "value1"
 
 
 @pytest.fixture()
-def test_user(django_user_model):  # type: ignore[no-untyped-def]
-    return django_user_model.objects.create(email="user@example.com")
-
-
-@pytest.fixture()
-def auth_token(test_user):  # type: ignore[no-untyped-def]
-    return Token.objects.create(user=test_user)
-
-
-@pytest.fixture()
 def admin_client_original(admin_user):  # type: ignore[no-untyped-def]
     client = APIClient()
     client.force_authenticate(user=admin_user)
@@ -255,12 +244,6 @@ def admin_client(admin_client_original):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def test_user_client(api_client, test_user):  # type: ignore[no-untyped-def]
-    api_client.force_authenticate(test_user)
-    return api_client
-
-
-@pytest.fixture()
 def staff_user(django_user_model):  # type: ignore[no-untyped-def]
     """
     A non-admin user fixture.
@@ -282,8 +265,10 @@ def staff_client(staff_user):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def organisation(db, admin_user, staff_user):  # type: ignore[no-untyped-def]
-    org = Organisation.objects.create(name="Test Org")
+def organisation(
+    db: None, admin_user: FFAdminUser, staff_user: FFAdminUser
+) -> Organisation:
+    org: Organisation = Organisation.objects.create(name="Test Org")
     admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
     staff_user.add_organisation(org, role=OrganisationRole.USER)
     return org
@@ -392,13 +377,9 @@ def project(organisation):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def segment(project: Project):  # type: ignore[no-untyped-def]
-    _segment = Segment.objects.create(name="segment", project=project)
-    # Deep clone the segment to ensure that any bugs around
-    # versioning get bubbled up through the test suite.
-    SegmentCloneService(_segment).deep_clone()
-
-    return _segment
+def segment(project: Project) -> Segment:
+    segment: Segment = Segment.objects.create(name="segment", project=project)
+    return segment
 
 
 @pytest.fixture()
@@ -805,27 +786,50 @@ def create_project_permission(db):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
+def create_environment_permission(db: None) -> PermissionModel:
+    return PermissionModel.objects.get(key=CREATE_ENVIRONMENT)
+
+
+@pytest.fixture()
 def manage_segment_overrides_permission(db: None) -> PermissionModel:
     return PermissionModel.objects.get(key=MANAGE_SEGMENT_OVERRIDES)
 
 
 @pytest.fixture()
-def user_environment_permission(test_user, environment):  # type: ignore[no-untyped-def]
+def delete_feature_permission(db: None) -> PermissionModel:
+    return PermissionModel.objects.get(key=DELETE_FEATURE)
+
+
+@pytest.fixture()
+def update_feature_state_permission(db: None) -> PermissionModel:
+    return PermissionModel.objects.get(key=UPDATE_FEATURE_STATE)
+
+
+@pytest.fixture()
+def user_environment_permission(
+    staff_user: FFAdminUser,
+    environment: Environment,
+) -> UserEnvironmentPermission:
     return UserEnvironmentPermission.objects.create(
-        user=test_user, environment=environment
+        user=staff_user, environment=environment
     )
 
 
 @pytest.fixture()
-def user_environment_permission_group(test_user, user_permission_group, environment):  # type: ignore[no-untyped-def]
+def user_environment_permission_group(
+    user_permission_group: UserPermissionGroup,
+    environment: Environment,
+) -> UserPermissionGroupEnvironmentPermission:
     return UserPermissionGroupEnvironmentPermission.objects.create(
         group=user_permission_group, environment=environment
     )
 
 
 @pytest.fixture()
-def user_project_permission(test_user, project):  # type: ignore[no-untyped-def]
-    return UserProjectPermission.objects.create(user=test_user, project=project)
+def user_project_permission(
+    staff_user: FFAdminUser, project: Project
+) -> UserProjectPermission:
+    return UserProjectPermission.objects.create(user=staff_user, project=project)
 
 
 @pytest.fixture()
@@ -1298,3 +1302,9 @@ def enable_features(
         )
 
     return _enable_features
+
+
+@pytest.fixture(autouse=True)
+def clear_content_type_cache() -> typing.Generator[None, None, None]:
+    yield
+    ContentType.objects.clear_cache()

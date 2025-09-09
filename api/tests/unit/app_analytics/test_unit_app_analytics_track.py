@@ -131,7 +131,10 @@ def test_track_feature_evaluation_influxdb(mocker: MockerFixture) -> None:
         ),
         TrackFeatureEvaluationsByEnvironmentData(
             feature_name="baz",
-            labels={"client_application_name": "test-app"},
+            labels={
+                "client_application_name": "test-app",
+                "user_agent": "flagsmith-js-sdk/9.3.1",
+            },
             evaluation_count=44,
         ),
     ]
@@ -167,6 +170,7 @@ def test_track_feature_evaluation_influxdb(mocker: MockerFixture) -> None:
                 "environment_id": environment_id,
                 "feature_id": "baz",
                 "client_application_name": "test-app",
+                "user_agent": 50001,
             },
         ),
     ]

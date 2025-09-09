@@ -195,6 +195,27 @@ def test_create_new_orgnisation_returns_403_with_non_superuser(
     )
 
 
+def test_saml_users_cannot_create_organisation(
+    mocker: MockerFixture,
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    setattr(staff_user, "saml_user", mocker.Mock())
+
+    # When
+    response = staff_client.post(
+        reverse("api-v1:organisations:organisation-list"),
+        data={"name": "Yet Another Org"},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == (
+        "Users with SAML authentication cannot create organisations."
+    )
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],

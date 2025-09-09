@@ -908,7 +908,7 @@ def test_can_create_project_with_duplicate_name_in_another_organisation(
 ) -> None:
     # Given
     assert project.organisation != organisation_two
-    admin_user.add_organisation(organisation_two, OrganisationRole.ADMIN)  # type: ignore[no-untyped-call]
+    admin_user.add_organisation(organisation_two, OrganisationRole.ADMIN)
 
     data = {
         "name": project.name,

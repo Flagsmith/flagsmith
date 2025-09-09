@@ -1,5 +1,6 @@
 import typing
 
+from common.core.utils import using_database_replica
 from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 
@@ -21,12 +22,13 @@ def get_environment_flags_queryset(
 
 def get_environment_flags_list(
     environment: Environment,
-    feature_name: str = None,  # type: ignore[assignment]
+    feature_name: str | None = None,
     additional_filters: Q = None,  # type: ignore[assignment]
     additional_select_related_args: typing.Iterable[str] = None,  # type: ignore[assignment]
     additional_prefetch_related_args: typing.Iterable[
         typing.Union[str, Prefetch]
     ] = None,  # type: ignore[assignment]
+    from_replica: bool = False,
 ) -> list[FeatureState]:
     """
     Get a list of the latest committed versions of FeatureState objects that are
@@ -44,19 +46,21 @@ def get_environment_flags_list(
             additional_filters,
             additional_select_related_args,
             additional_prefetch_related_args,
+            from_replica=from_replica,
         ).values()
     )
 
 
 def get_environment_flags_dict(
     environment: Environment,
-    feature_name: str = None,  # type: ignore[assignment]
+    feature_name: str | None = None,
     additional_filters: Q = None,  # type: ignore[assignment]
     additional_select_related_args: typing.Iterable[str] = None,  # type: ignore[assignment]
     additional_prefetch_related_args: typing.Iterable[
         typing.Union[str, Prefetch]
     ] = None,  # type: ignore[assignment]
     key_function: typing.Callable[[FeatureState], tuple] = None,  # type: ignore[type-arg,assignment]
+    from_replica: bool = False,
 ) -> dict[tuple | str | int, FeatureState]:  # type: ignore[type-arg]
     key_function = key_function or _get_distinct_key  # type: ignore[truthy-function]
 
@@ -66,6 +70,7 @@ def get_environment_flags_dict(
         additional_filters,
         additional_select_related_args,
         additional_prefetch_related_args,
+        from_replica=from_replica,
     )
 
     # Build up a dictionary keyed off the relevant unique attributes as defined
@@ -98,19 +103,25 @@ def get_current_live_environment_feature_version(
 
 def _get_feature_states_queryset(
     environment: "Environment",
-    feature_name: str = None,  # type: ignore[assignment]
+    feature_name: str | None = None,
     additional_filters: Q = None,  # type: ignore[assignment]
     additional_select_related_args: typing.Iterable[str] = None,  # type: ignore[assignment]
     additional_prefetch_related_args: typing.Iterable[
         typing.Union[str, Prefetch]
     ] = None,  # type: ignore[assignment]
+    from_replica: bool = False,
 ) -> QuerySet[FeatureState]:
     additional_select_related_args = additional_select_related_args or tuple()
     additional_prefetch_related_args = additional_prefetch_related_args or tuple()
 
+    feature_state_manager = FeatureState.objects
+    if from_replica:
+        feature_state_manager = using_database_replica(FeatureState.objects)
+
     queryset = (
-        FeatureState.objects.get_live_feature_states(
-            environment=environment, additional_filters=additional_filters
+        feature_state_manager.get_live_feature_states(
+            environment=environment,
+            additional_filters=additional_filters,
         )
         .select_related(
             "environment",

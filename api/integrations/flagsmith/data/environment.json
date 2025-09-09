@@ -54,7 +54,7 @@
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 905678,
+      "django_id": 933832,
       "enabled": false,
       "feature": {
         "id": 148935,
@@ -63,7 +63,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "f632c3f8-6f49-45c5-9977-762d9880e7f7",
+      "featurestate_uuid": "1d584003-a0cc-46dd-aeea-30f392a4da80",
       "multivariate_feature_state_values": []
     },
     {

@@ -7,18 +7,8 @@ import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import FeatureListStore from 'common/stores/feature-list-store'
 import IdentityProvider from 'common/providers/IdentityProvider'
-
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
 import SegmentOverrides from 'components/SegmentOverrides'
 import AddEditTags from 'components/tags/AddEditTags'
 import FlagOwners from 'components/FlagOwners'
@@ -33,7 +23,7 @@ import IdentitySelect from 'components/IdentitySelect'
 import { setInterceptClose, setModalTitle } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
-import FeatureValue from 'components/FeatureValue'
+import FeatureValue from 'components/feature-summary/FeatureValue'
 import { getStore } from 'common/store'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
@@ -55,6 +45,9 @@ import { warning } from 'ionicons/icons'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import { FlagValueFooter } from './FlagValueFooter'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
+import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
+import FeatureAnalytics from 'components/feature-page/FeatureNavTab/FeatureAnalytics/FeatureAnalytics.container'
+import BetaFlag from 'components/BetaFlag'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -449,53 +442,6 @@ const CreateFlag = class extends Component {
     }
     return value
   }
-  drawChart = (data) => {
-    return data?.length ? (
-      <ResponsiveContainer height={400} width='100%' className='mt-4'>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray='3 5' strokeOpacity={0.4} />
-          <XAxis
-            padding='gap'
-            interval={0}
-            height={100}
-            angle={-90}
-            textAnchor='end'
-            allowDataOverflow={false}
-            dataKey='day'
-            tick={{ dx: -4, fill: '#656D7B' }}
-            tickLine={false}
-            axisLine={{ stroke: '#656D7B' }}
-          />
-          <YAxis
-            allowDataOverflow={false}
-            tick={{ fill: '#656D7B' }}
-            axisLine={{ stroke: '#656D7B' }}
-          />
-          <RechartsTooltip cursor={{ fill: 'transparent' }} />
-          <Bar
-            dataKey={'count'}
-            stackId='a'
-            fill='rgba(149, 108, 255,0.48)'
-            barSize={14}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    ) : (
-      <div className='modal-caption fs-small lh-sm'>
-        There has been no activity for this flag within the past month. Find out
-        about Flag Analytics{' '}
-        <Button
-          theme='text'
-          target='_blank'
-          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-          className='fw-normal'
-        >
-          here
-        </Button>
-        .
-      </div>
-    )
-  }
 
   addItem = () => {
     const { environmentFlag, environmentId, identity, projectFlag } = this.props
@@ -638,6 +584,10 @@ const CreateFlag = class extends Component {
     const noPermissions = this.props.noPermissions
     let regexValid = true
     const metadataEnable = Utils.getPlansPermission('METADATA')
+
+    const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
+      'git_code_references',
+    )
 
     try {
       if (!isEdit && name && regex) {
@@ -1100,17 +1050,16 @@ const CreateFlag = class extends Component {
                             {isEdit && !identity ? (
                               <>
                                 {isReleasePipelineEnabled && (
-                                  <div className='m-4'>
-                                    <FeaturePipelineStatus
-                                      projectId={this.props.projectId}
-                                      featureId={projectFlag?.id}
-                                    />
-                                  </div>
+                                  <FeaturePipelineStatus
+                                    projectId={this.props.projectId}
+                                    featureId={projectFlag?.id}
+                                  />
                                 )}
                                 <Tabs
                                   onChange={() => this.forceUpdate()}
                                   urlParam='tab'
                                   history={this.props.history}
+                                  overflowX
                                 >
                                   <TabItem
                                     data-test='value'
@@ -1865,76 +1814,56 @@ const CreateFlag = class extends Component {
                                       )
                                     }
                                   </Permission>
-
-                                  {!existingChangeRequest &&
-                                    this.props.flagId &&
-                                    isVersioned && (
-                                      <TabItem
-                                        data-test='change-history'
-                                        tabLabel='History'
-                                      >
-                                        <FeatureHistory
-                                          feature={projectFlag.id}
-                                          projectId={`${this.props.projectId}`}
-                                          environmentId={environment.id}
-                                          environmentApiKey={
-                                            environment.api_key
-                                          }
-                                        />
-                                      </TabItem>
-                                    )}
                                   {!Project.disableAnalytics && (
                                     <TabItem tabLabel={'Analytics'}>
-                                      <FormGroup className='mb-4'>
-                                        {!!usageData && (
-                                          <h5 className='mb-2'>
-                                            Flag events for last 30 days
-                                          </h5>
-                                        )}
-                                        {!usageData && (
-                                          <div className='text-center'>
-                                            <Loader />
-                                          </div>
-                                        )}
-
-                                        {this.drawChart(usageData)}
-                                      </FormGroup>
-                                      <InfoMessage>
-                                        The Flag Analytics data will be visible
-                                        in the Dashboard between 30 minutes and
-                                        1 hour after it has been collected.{' '}
-                                        <a
-                                          target='_blank'
-                                          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-                                          rel='noreferrer'
-                                        >
-                                          View docs
-                                        </a>
-                                      </InfoMessage>
+                                      <div className='mb-4'>
+                                        <FeatureAnalytics
+                                          usageData={usageData}
+                                        />
+                                      </div>
                                     </TabItem>
                                   )}
-                                  {this.props.hasUnhealthyEvents && (
+                                  {
                                     <TabItem
                                       data-test='feature_health'
                                       tabLabelString='Feature Health'
                                       tabLabel={
-                                        <Row className='inline-block justify-content-center pr-1'>
-                                          Feature Health{' '}
-                                          <IonIcon
-                                            icon={warning}
-                                            style={{
-                                              color:
-                                                Constants.featureHealth
-                                                  .unhealthyColor,
-                                              marginBottom: -2,
-                                            }}
-                                          />
+                                        <Row className='d-flex justify-content-center align-items-center pr-1 gap-1'>
+                                          <BetaFlag flagName={'feature_health'}>
+                                            Feature Health
+                                            {this.props.hasUnhealthyEvents && (
+                                              <IonIcon
+                                                icon={warning}
+                                                style={{
+                                                  color:
+                                                    Constants.featureHealth
+                                                      .unhealthyColor,
+                                                  marginBottom: -2,
+                                                }}
+                                              />
+                                            )}
+                                          </BetaFlag>
                                         </Row>
                                       }
                                     >
                                       <FeatureHealthTabContent
                                         projectId={projectFlag.project}
                                         environmentId={this.props.environmentId}
+                                        featureId={projectFlag.id}
+                                      />
+                                    </TabItem>
+                                  }
+                                  {isCodeReferencesEnabled && (
+                                    <TabItem
+                                      tabLabel={
+                                        <Row className='justify-content-center'>
+                                          Code References
+                                        </Row>
+                                      }
+                                    >
+                                      <FeatureCodeReferencesContainer
+                                        featureId={projectFlag.id}
+                                        projectId={this.props.projectId}
                                       />
                                     </TabItem>
                                   )}
@@ -1958,6 +1887,23 @@ const CreateFlag = class extends Component {
                                           projectId={`${this.props.projectId}`}
                                           environmentId={
                                             this.props.environmentId
+                                          }
+                                        />
+                                      </TabItem>
+                                    )}
+                                  {!existingChangeRequest &&
+                                    this.props.flagId &&
+                                    isVersioned && (
+                                      <TabItem
+                                        data-test='change-history'
+                                        tabLabel='History'
+                                      >
+                                        <FeatureHistory
+                                          feature={projectFlag.id}
+                                          projectId={`${this.props.projectId}`}
+                                          environmentId={environment.id}
+                                          environmentApiKey={
+                                            environment.api_key
                                           }
                                         />
                                       </TabItem>

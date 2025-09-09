@@ -1,7 +1,16 @@
+import typing
+
 import pytest
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 
+from organisations.models import Organisation, UserOrganisation
 from permissions.permission_service import is_user_project_admin
+from projects.models import (
+    Project,
+    UserPermissionGroupProjectPermission,
+    UserProjectPermission,
+)
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 def test_is_user_project_admin_returns_true_for_org_admin(admin_user, project):  # type: ignore[no-untyped-def]
@@ -15,20 +24,22 @@ def test_is_user_project_admin_returns_true_for_org_admin(admin_user, project): 
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_is_user_project_admin_returns_true_for_project_admin(  # type: ignore[no-untyped-def]
-    test_user,
-    project,
-    project_admin,
-):
+def test_is_user_project_admin_returns_true_for_project_admin(
+    staff_user: FFAdminUser,
+    project: Project,
+    project_admin: typing.Union[
+        UserProjectPermission, UserPermissionGroupProjectPermission
+    ],
+) -> None:
     # Then
-    assert is_user_project_admin(test_user, project) is True
+    assert is_user_project_admin(staff_user, project) is True
 
 
-def test_is_user_project_admin_returns_false_for_user_with_no_permission(  # type: ignore[no-untyped-def]
-    test_user,
-    project,
-):
-    assert is_user_project_admin(test_user, project) is False
+def test_is_user_project_admin_returns_false_for_user_with_no_permission(
+    staff_user: FFAdminUser,
+    project: Project,
+) -> None:
+    assert is_user_project_admin(staff_user, project) is False
 
 
 def test_is_user_project_admin_returns_false_for_user_with_admin_permission_of_other_org(  # type: ignore[no-untyped-def]  # noqa: E501
@@ -55,3 +66,33 @@ def test_is_user_project_admin_returns_false_for_user_with_incorrect_permission(
 
     # Then - the user should not have admin permission on the other project
     assert is_user_project_admin(admin_user, organisation_two_project_one) is False
+
+
+def test_is_user_project_admin__does_not_return_project_for_orphan_group_permission(
+    organisation: Organisation,
+    project: Project,
+    user_permission_group: UserPermissionGroup,
+    project_permission_using_user_permission_group: UserPermissionGroupProjectPermission,
+    staff_user: FFAdminUser,
+) -> None:
+    """
+    Specific test to verify that a user no longer has permission to access resources via a group,
+    if they no longer belong to the organisation.
+
+    Note that a user should never be a member of a group without being a member of the organisation
+    but this test exists to ensure no security holes.
+    """
+
+    # Given
+    project_permission_using_user_permission_group.admin = True
+    project_permission_using_user_permission_group.save()
+
+    assert is_user_project_admin(user=staff_user, project=project)
+
+    # When
+    # We delete the user organisation to remove the user from the organisation, without
+    # allowing any signals / hooks to run.
+    UserOrganisation.objects.filter(user=staff_user, organisation=organisation).delete()
+
+    # Then
+    assert not is_user_project_admin(user=staff_user, project=project)
