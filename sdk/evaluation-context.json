@@ -292,14 +292,7 @@
             "description": "Environment context required for evaluation."
         },
         "identity": {
-            "anyOf": [
-                {
-                    "$ref": "#/$defs/IdentityContext"
-                },
-                {
-                    "type": "null"
-                }
-            ],
+            "$ref": "#/$defs/IdentityContext",
             "default": null,
             "description": "Identity context used for identity-based evaluation."
         },
