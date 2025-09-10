@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.196.0](https://github.com/Flagsmith/flagsmith/compare/v2.195.0...v2.196.0) (2025-09-10)
+
+
+### Features
+
+* always show feature health tab ([#5987](https://github.com/Flagsmith/flagsmith/issues/5987)) ([71d48b4](https://github.com/Flagsmith/flagsmith/commit/71d48b4da4c761167900db583b4d7f6abb169672))
+* organisation sdk metrics charts ([#5996](https://github.com/Flagsmith/flagsmith/issues/5996)) ([642527f](https://github.com/Flagsmith/flagsmith/commit/642527fb0773b9c3567a433ae92a32ada57aec79))
+* Segment change requests ([#4852](https://github.com/Flagsmith/flagsmith/issues/4852)) ([d8e6c2c](https://github.com/Flagsmith/flagsmith/commit/d8e6c2c639b81b623f6d66eb763b2e184a080358))
+
+
+### Bug Fixes
+
+* added-dropdown-opening-step-inversioning-tests ([#6022](https://github.com/Flagsmith/flagsmith/issues/6022)) ([55e6c68](https://github.com/Flagsmith/flagsmith/commit/55e6c689027ab6846752acdb742322fdb230d004))
+* catch-error-on-segment-creation-or-update ([#6013](https://github.com/Flagsmith/flagsmith/issues/6013)) ([b07d231](https://github.com/Flagsmith/flagsmith/commit/b07d23130aa541850c4a549a4ebe51521727b30f))
+* CORS errors when sending tracked headers other than `Flagsmith-SDK-User-Agent` ([#6017](https://github.com/Flagsmith/flagsmith/issues/6017)) ([8a066a8](https://github.com/Flagsmith/flagsmith/commit/8a066a88e196b3a837a98f8607286d4871333f9f))
+* **DB replication:** Prevent replica lag issues in SDK views ([#6009](https://github.com/Flagsmith/flagsmith/issues/6009)) ([4f67003](https://github.com/Flagsmith/flagsmith/commit/4f67003fe8059583bc75452305c8d06bdbd61858))
+
+
+### Dependency Updates
+
+* bump django from 4.2.22 to 4.2.24 in /api ([#6043](https://github.com/Flagsmith/flagsmith/issues/6043)) ([a809f7c](https://github.com/Flagsmith/flagsmith/commit/a809f7c23da96bc67720785df245a39a77d9c3d4))
+
 ## [2.195.0](https://github.com/Flagsmith/flagsmith/compare/v2.194.0...v2.195.0) (2025-09-02)
 
 
