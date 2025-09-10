@@ -746,3 +746,104 @@ def test_marketing_consent_given_defaults_to_true(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["marketing_consent_given"] is True
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "invalid_email",
+    [
+        "invalid_email",
+        "12345",
+        "invalid@email@com.com",
+        "invalid_email.com",
+        "invalid_email@com",
+        "foo@..!.bar.",
+    ],
+)
+def test_register_returns_error_if_email_is_invalid(
+    api_client: APIClient,
+    invalid_email: str,
+) -> None:
+    # Given
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "email": invalid_email,
+        "password": password,
+        "re_password": password,
+        "first_name": "Test",
+        "last_name": "User",
+    }
+
+    # When
+    response = api_client.post(url, data=register_data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["email"][0] == "Enter a valid email address."
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "invalid_email",
+    [
+        "invalid_email",
+        "12345",
+        "invalid@email@com.com",
+        "invalid_email.com",
+        "invalid_email@com",
+        "foo@..!.bar.",
+    ],
+)
+def test_login_returns_error_if_email_is_invalid(
+    api_client: APIClient,
+    invalid_email: str,
+) -> None:
+    # Given
+    url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
+
+    password = FFAdminUser.objects.make_random_password()
+
+    register_data = {
+        "email": invalid_email,
+        "password": password,
+    }
+
+    # When
+    response = api_client.post(url, data=register_data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["email"][0] == "Invalid email format."
+
+
+@pytest.mark.django_db
+def test_register_and_login_with_email_including_plus_sign(
+    api_client: APIClient,
+) -> None:
+    # Given
+    email_address = "valid+withplussign@example.com"
+
+    password = FFAdminUser.objects.make_random_password()
+
+    login_url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    login_data = {
+        "email": email_address,
+        "password": password,
+    }
+    register_data = {
+        **login_data,
+        "re_password": password,
+        "first_name": "Test",
+        "last_name": "User",
+    }
+
+    # When
+    register_response = api_client.post(register_url, data=register_data)
+    login_response = api_client.post(login_url, data=login_data)
+
+    # Then
+    assert register_response.status_code == status.HTTP_201_CREATED
+    assert login_response.status_code == status.HTTP_200_OK
