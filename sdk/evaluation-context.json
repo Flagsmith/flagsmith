@@ -292,7 +292,15 @@
             "description": "Environment context required for evaluation."
         },
         "identity": {
-            "$ref": "#/$defs/IdentityContext",
+            "existingJavaType": "com.flagsmith.flagengine.IdentityContext",
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/IdentityContext"
+                },
+                {
+                    "type": "null"
+                }
+            ],
             "default": null,
             "description": "Identity context used for identity-based evaluation."
         },
