@@ -1464,6 +1464,37 @@ def test_SDKIdentities__retrieves_identity_feature_states(
 
 
 @pytest.mark.parametrize(
+    ["transient_value", "expected_status"],
+    [
+        ("true", status.HTTP_200_OK),
+        ("false", status.HTTP_200_OK),
+        ("1", status.HTTP_200_OK),
+        ("0", status.HTTP_200_OK),
+        ("yes", status.HTTP_200_OK),
+        ("no", status.HTTP_200_OK),
+        ("foo", status.HTTP_400_BAD_REQUEST),
+        ("123", status.HTTP_400_BAD_REQUEST),
+    ],
+)
+def test_SDKIdentities__given_transient_value__responds_accordingly(
+    api_client: APIClient,
+    environment: Environment,
+    transient_value: str,
+    expected_status: int,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(
+        f"/api/v1/identities/?identifier=jamesbond&transient={transient_value}"
+    )
+
+    # Then
+    assert response.status_code == expected_status
+
+
+@pytest.mark.parametrize(
     "given_identifier",
     [
         "bond...jamesbond",
@@ -1525,7 +1556,7 @@ def test_SDKIdentities__identifier_sanitization__rejects_invalid_identifiers(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == error_message
+    assert response.json() == {"identifier": [error_message]}
 
 
 @pytest.mark.parametrize(

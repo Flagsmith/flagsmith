@@ -165,11 +165,7 @@ class SDKIdentities(SDKAPIView):
     def get(self, request: Request) -> Response:
         query_serializer = SDKIdentitiesQuerySerializer(data=request.query_params)
         if not query_serializer.is_valid():
-            [error_message] = query_serializer.errors["identifier"]
-            return Response(
-                {"detail": error_message},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(query_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         identifier = query_serializer.validated_data["identifier"]
 
