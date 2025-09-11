@@ -39,8 +39,6 @@ from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from segments.models import Condition, Segment, SegmentRule
 
-_invalid_identifier_error_message = "Identifier can only contain unicode letters, numbers, and the symbols: ! # $ % & * + / = ? ^ _ ` { } | ~ @ . -"
-
 
 def test_should_return_identities_list_when_requested(
     environment: Environment,
@@ -1494,128 +1492,72 @@ def test_SDKIdentities__given_transient_value__responds_accordingly(
     assert response.status_code == expected_status
 
 
-@pytest.mark.parametrize(
-    "given_identifier",
-    [
-        "bond...jamesbond",
-        "ゴジラ",
-        "ElChapulínColorado",
-        "dalek#6453@skaro.gov",
-        "agáta={^_^}=",
-        "_ツ_/-handless-shrug",
-        "who+am+i?",
-        "i_100%_dont_know!",
-        "~neo|simulation`0065192*75`",
-        "KacperGustyr$Flagsmat",
-    ],
-)
+@pytest.mark.valid_identity_identifiers
 def test_SDKIdentities__identifier_sanitization__accepts_valid_identifiers(
     api_client: APIClient,
     environment: Environment,
-    given_identifier: str,
+    identifier: str,
 ) -> None:
     # Given
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
-    response = api_client.get(
-        f"/api/v1/identities/?identifier={quote(given_identifier)}"
-    )
+    response = api_client.get(f"/api/v1/identities/?identifier={quote(identifier)}")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["identifier"] == unquote(given_identifier)
+    assert response.json()["identifier"] == unquote(identifier)
 
 
-@pytest.mark.parametrize(
-    ["given_identifier", "error_message"],
-    [
-        ("", "This field may not be blank."),
-        (" ", "This field may not be blank."),
-        ("or really anything with a whitespace", _invalid_identifier_error_message),
-        ("<script>alert(1)</script>", _invalid_identifier_error_message),
-        ("'; DROP TABLE users;--", _invalid_identifier_error_message),
-        ("'single-quotes'", _invalid_identifier_error_message),
-        ('"double-quotes"', _invalid_identifier_error_message),
-        ("figaro" * 334, "Ensure this field has no more than 2000 characters."),
-    ],
-)
+@pytest.mark.invalid_identity_identifiers
 def test_SDKIdentities__identifier_sanitization__rejects_invalid_identifiers(
     api_client: APIClient,
     environment: Environment,
-    error_message: str,
-    given_identifier: str,
+    identifier: str,
+    identifier_error_message: str,
 ) -> None:
     # Given
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
-    response = api_client.get(
-        f"/api/v1/identities/?identifier={quote(given_identifier)}"
-    )
+    response = api_client.get(f"/api/v1/identities/?identifier={quote(identifier)}")
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {"identifier": [error_message]}
+    assert response.json() == {"identifier": [identifier_error_message]}
 
 
-@pytest.mark.parametrize(
-    "given_identifier",
-    [
-        "bond...jamesbond",
-        "ゴジラ",
-        "ElChapulínColorado",
-        "dalek#6453@skaro.gov",
-        "agáta={^_^}=",
-        "_ツ_/-handless-shrug",
-        "who+am+i?",
-        "i_100%_dont_know!",
-        "~neo|simulation`0065192*75`",
-        "KacperGustyr$Flagsmat",
-    ],
-)
+@pytest.mark.valid_identity_identifiers
 def test_IdentityViewSet_create__accepts_valid_identifiers(
     admin_client: APIClient,
     environment: Environment,
-    given_identifier: str,
+    identifier: str,
 ) -> None:
     # When
     response = admin_client.post(
         f"/api/v1/environments/{environment.api_key}/identities/",
-        data={"identifier": given_identifier},
+        data={"identifier": identifier},
     )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["identifier"] == given_identifier
-    assert Identity.objects.filter(identifier=given_identifier).exists()
+    assert response.json()["identifier"] == identifier
+    assert Identity.objects.filter(identifier=identifier).exists()
 
 
-@pytest.mark.parametrize(
-    ["given_identifier", "error_message"],
-    [
-        ("", "This field may not be blank."),
-        (" ", "This field may not be blank."),
-        ("or really anything with a whitespace", _invalid_identifier_error_message),
-        ("<script>alert(1)</script>", _invalid_identifier_error_message),
-        ("'; DROP TABLE users;--", _invalid_identifier_error_message),
-        ("'single-quotes'", _invalid_identifier_error_message),
-        ('"double-quotes"', _invalid_identifier_error_message),
-        ("figaro" * 334, "Ensure this field has no more than 2000 characters."),
-    ],
-)
+@pytest.mark.invalid_identity_identifiers
 def test_IdentityViewSet_create__rejects_invalid_identifiers(
     admin_client: APIClient,
     environment: Environment,
-    error_message: str,
-    given_identifier: str,
+    identifier: str,
+    identifier_error_message: str,
 ) -> None:
     # When
     response = admin_client.post(
         f"/api/v1/environments/{environment.api_key}/identities/",
-        data={"identifier": given_identifier},
+        data={"identifier": identifier},
     )
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {"identifier": [error_message]}
+    assert response.json() == {"identifier": [identifier_error_message]}
