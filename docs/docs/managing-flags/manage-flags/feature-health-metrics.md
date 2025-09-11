@@ -32,7 +32,7 @@ Feature Health is in Beta, please email support@flagsmith.com or chat with us <a
 
 ### Grafana / Prometheus Alertmanager
 
-[Learn more](/integrations/apm/grafana/#feature-health-provider-setup) about configuring Grafana / Prometheus Alertmanager feature health provider.
+[Learn more](/third-party-integrations/observability-and-monitoring/grafana) about configuring Grafana / Prometheus Alertmanager feature health provider.
 
 ### Sample Provider
 
@@ -115,5 +115,5 @@ You can use the webhook in your custom integration. Refer to the payload schema 
 
 ## What's next?
 
-- For more on observability integrations, see the [integrations documentation](/integrations/).
+- For more on observability integrations, see the [observability integrations](/third-party-integrations/observability-and-monitoring/grafana).
 - Need help or want to join the Beta? Contact [support@flagsmith.com](mailto:support@flagsmith.com) or chat with us in-app.

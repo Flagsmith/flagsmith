@@ -13,7 +13,7 @@ There are two methods for creating a scheduled feature flag change:
 
 ## Prerequisites
 
-- To schedule feature flag changes with a change request, you must [have change requests enabled](../../advanced-use/change-requests.md) in your environment. This is not necessary to directly schedule changes when editing a flag.
+- To schedule feature flag changes with a change request, you must [have change requests enabled](/administration-and-security/governance-and-compliance/change-requests) in your environment. This is not necessary to directly schedule changes when editing a flag.
 - Scheduled flags are available only for our **Scale-up** and **Enterprise** plans.
 
 ---
@@ -51,5 +51,5 @@ Once the scheduled date and time have passed and the feature flag change has bee
 
 ## What's next?
 
-- To learn more about managing and approving changes to your feature flags, see the [change requests](../../advanced-use/change-requests.md) page.
+- To learn more about managing and approving changes to your feature flags, see the [change requests](/administration-and-security/governance-and-compliance/change-requests) page.
 - To learn how to monitor the performance and health of your feature flags, see the [feature health metrics](./feature-health-metrics.md) page.
