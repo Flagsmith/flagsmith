@@ -2,7 +2,7 @@ import json
 import urllib
 from typing import Any
 from unittest import mock
-from urllib.parse import quote, unquote
+from urllib.parse import quote
 
 import pytest
 from common.environments.permissions import (
@@ -1506,7 +1506,7 @@ def test_SDKIdentities__identifier_sanitization__accepts_valid_identifiers(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["identifier"] == unquote(identifier)
+    assert response.json()["identifier"] == identifier
 
 
 @pytest.mark.invalid_identity_identifiers
