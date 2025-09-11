@@ -16,41 +16,6 @@ from util.mappers import (
 )
 
 
-def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
-    if metafunc.definition.get_closest_marker("valid_identity_identifiers"):
-        metafunc.parametrize(
-            "identifier",
-            [
-                "bond...jamesbond",
-                "ゴジラ",
-                "ElChapulínColorado",
-                "dalek#6453@skaro.gov",
-                "agáta={^_^}=",
-                "_ツ_/-handless-shrug",
-                "who+am+i?",
-                "i_100%_dont_know!",
-                "~neo|simulation`0065192*75`",
-                "KacperGustyr$Flagsmat",
-            ],
-        )
-
-    if metafunc.definition.get_closest_marker("invalid_identity_identifiers"):
-        error_message = "Identifier can only contain unicode letters, numbers, and the symbols: ! # $ % & * + / = ? ^ _ ` { } | ~ @ . -"
-        metafunc.parametrize(
-            ["identifier", "identifier_error_message"],
-            [
-                ("", "This field may not be blank."),
-                (" ", "This field may not be blank."),
-                ("or really anything with a whitespace", error_message),
-                ("<script>alert(1)</script>", error_message),
-                ("'; DROP TABLE users;--", error_message),
-                ("'single-quotes'", error_message),
-                ('"double-quotes"', error_message),
-                ("figaro" * 334, "Ensure this field has no more than 2000 characters."),
-            ],
-        )
-
-
 @pytest.fixture()
 def edge_identity_dynamo_wrapper_mock(mocker):  # type: ignore[no-untyped-def]
     return mocker.patch(
