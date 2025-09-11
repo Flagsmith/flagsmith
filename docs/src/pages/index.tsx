@@ -55,7 +55,7 @@ export default function Home() {
           <div className={styles.heroInner}>
             <div>
               <h1>Manage feature flags and remote config across web, mobile, and server-side apps.</h1>
-              <Link className="button button--primary button--lg" to="/docs/">
+              <Link className="button button--primary button--lg" to="/getting-started/feature-flags">
                 Get Started
               </Link>
             </div>
@@ -69,25 +69,25 @@ export default function Home() {
           <Card 
             title="Quickstart Guide" 
             description="Create your first project and flag" 
-            link="/quickstart"
+            link="/getting-started/quick-start"
             icon={play} 
           />
           <Card 
             title="What are Feature Flags?" 
             description="Concepts and basics" 
-            link="/basic-features/managing-features"
+            link="/getting-started/feature-flags"
             icon={flag} 
           />
           <Card 
             title="Advanced Capabilities" 
             description="Testing, monitoring, analytics, experiments" 
-            link="/advanced-use/ab-testing"
+            link="/experimentation/ab-testing"
             icon={cog} 
           />
           <Card 
             title="Compare Plans" 
             description="Overview of Flagsmith plans" 
-            link="/version-comparison"
+            link="https://flagsmith.com/pricing"
             icon={gitCompare} 
           />
         </Section>
@@ -96,25 +96,25 @@ export default function Home() {
           <Card 
             title="OpenFeature Compatibility" 
             description="Use Flagsmith with OpenFeature" 
-            link="/clients/openfeature"
+            link="/flagsmith-integration/openfeature/"
             icon={gitMerge} 
           />
           <Card 
             title="Client-Side SDKs" 
             description="Web, React Native, etc." 
-            link="/clients#client-side-sdks"
+            link="/flagsmith-integration/integration-overview/"
             icon={phonePortrait} 
           />
           <Card 
             title="Server-Side SDKs" 
             description="Node, Python, Java, etc." 
-            link="/clients#server-side-sdks"
+            link="/flagsmith-integration/server-side"
             icon={server} 
           />
           <Card 
             title="Flagsmith API" 
             description="REST API reference and usage examples" 
-            link="/clients/rest"
+            link="/flagsmith-integration/flagsmith-api-overview/"
             icon={codeWorking} 
           />
         </Section>
@@ -123,19 +123,19 @@ export default function Home() {
           <Card 
             title="Integrations" 
             description="Third-party integrations (Segment, Datadog)" 
-            link="/integrations"
+            link="/third-party-integrations/analytics/segment/"
             icon={extensionPuzzle} 
           />
           <Card 
             title="System Settings" 
             description="Admin settings and multi-tenancy" 
-            link="/system-administration/authentication/"
+            link="/administration-and-security/platform-configuration/environment-settings/"
             icon={settings} 
           /> {/*Placeholder until this section has a index*/}
           <Card 
             title="Self-hosting & Deployment" 
             description="Hosting options and setup" 
-            link="/deployment"
+            link="/deployment-self-hosting/"
             icon={cloudUpload} 
           />
         </Section>
@@ -144,19 +144,19 @@ export default function Home() {
           <Card 
             title="Release Notes" 
             description="What's new in Flagsmith" 
-            link="/platform/releases"
+            link="/project-and-community/release-notes/"
             icon={documentText} 
           />
           <Card 
             title="Public Roadmap" 
             description="Features coming soon" 
-            link="/platform/roadmap"
+            link="/project-and-community/roadmap/"
             icon={map} 
           />
           <Card 
             title="Contribute to Flagsmith" 
             description="How to file issues, PRs, and contribute" 
-            link="/support"
+            link="/project-and-community/contributing/"
             icon={gitMerge} 
           />
         </Section>
