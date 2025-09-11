@@ -17,7 +17,7 @@ Wait for the images to download and run, then visit `http://localhost:8000/`. As
 
 ## Environment Variables
 
-As well as the Environment Variables specified in the [API](/deployment/hosting/locally-api#environment-variables) and [Frontend](/deployment/hosting/locally-frontend#environment-variables), you can also specify the following:
+As well as the Environment Variables specified in the [API](/deployment-self-hosting/core-configuration/environment-variables#api-environment-variables) and [Frontend](/deployment-self-hosting/core-configuration/environment-variables#frontend-environment-variables), you can also specify the following:
 
 - `GUNICORN_CMD_ARGS`: Gunicorn command line arguments. Overrides Flagsmith's defaults. See [Gunicorn documentation](https://docs.gunicorn.org/en/stable/settings.html) for reference.
 - `GUNICORN_WORKERS`: The number of [Gunicorn Workers](https://docs.gunicorn.org/en/stable/settings.html#workers) that are created

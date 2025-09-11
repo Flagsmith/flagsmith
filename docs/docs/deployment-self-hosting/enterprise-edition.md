@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # Enterprise Edition
 
-Flagsmith is also provided as an "Enterprise Edition" which has additional features and capabilities over the Open Source product as detailed [in the Version Comparison page](/version-comparison).
+Flagsmith is also provided as an "Enterprise Edition" which has additional features and capabilities over the Open Source product. For more information about the differences between versions, please contact our sales team.
 
 ## Deployment Options
 

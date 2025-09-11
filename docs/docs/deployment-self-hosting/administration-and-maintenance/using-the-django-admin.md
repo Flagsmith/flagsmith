@@ -24,8 +24,8 @@ A user with [`is_superuser`](https://docs.djangoproject.com/en/4.2/ref/contrib/a
 
 You can obtain a user with these permissions using any of these methods:
 
-* Use the [`createsuperuser` management command](/deployment/hosting/locally-api#locally) from a Flagsmith API shell.
-* If no users exist yet, [visit the Initialise Config page](/deployment/hosting/locally-api#environments-with-no-direct-console-access-eg-heroku-ecs).
+* Use the [`createsuperuser` management command](/deployment-self-hosting/core-configuration/initial-setup#local-installation) from a Flagsmith API shell.
+* If no users exist yet, [visit the Initialise Config page](/deployment-self-hosting/core-configuration/initial-setup#cloud-environments-eg-heroku-ecs).
 * Manually set the `is_staff` and `is_superuser` database fields for your user in the `users_ffadminuser` table.
 
 ## Authentication
@@ -38,7 +38,7 @@ To log in to Django Admin with a password, make sure the Flagsmith API has the `
 
 If your Flagsmith account does not have a password, you can create one using any of these methods:
 
-* From the Flagsmith login page, click "Forgot password". Make sure your Flagsmith API is [configured to send emails](/deployment/hosting/locally-api#email).
+* From the Flagsmith login page, click "Forgot password". Make sure your Flagsmith API is [configured to send emails](/deployment-self-hosting/core-configuration/email-setup).
 * From a Flagsmith API shell, run `python manage.py changepassword your_email@example.com` and type a password.
 
 ### Google
