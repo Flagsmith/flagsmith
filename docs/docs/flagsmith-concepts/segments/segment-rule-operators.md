@@ -100,8 +100,8 @@ These are the default limits for segments and rules:
 - 100 rules per segment override
 - 1000 bytes per segment rule value
 
-See the [documentation on System Limits](system-administration/system-limits.md) for more details.
+See the [documentation on System Limits](/administration-and-security/governance-and-compliance/system-limits) for more details.
 
 ## Custom fields
 
-Optional or required custom fields can be defined when creating or updating segments. [Learn more](/advanced-use/custom-fields.md)
+Optional or required custom fields can be defined when creating or updating segments. [Learn more](/administration-and-security/governance-and-compliance/custom-fields)

@@ -34,7 +34,7 @@ Features are shared across all environments within a project, but their values/s
 
 Identities are individual users associated with each environment. Registering identities within the client application allows you to manage features for individual users. Identity features can be overridden from your environment defaults. For example, joe@yourwebsite.com would be a different identity in your development environment to the one in production, and they can have different features enabled for each environment.
 
-For more information, see [Identities](/basic-features/managing-identities).
+For more information, see [Identities](/flagsmith-concepts/identities).
 
 ### Traits
 
@@ -44,10 +44,10 @@ You can store any number of traits against an identity. Traits are key-value pai
 Their theme preference (eg. dark mode)
 - Whether they have performed certain actions within your application.
 
-For more information, see [Traits](/basic-features/managing-identities.md#identity-traits).
+For more information, see [Traits](/flagsmith-concepts/identities#identity-traits).
 
 ### Segments
 
 Segments define a group of users by traits such as login count, device, location, or any number of custom-defined traits. Similar to individual users, you can override environment defaults for features for a segment. For example, you might show certain features for a "power user" segment.
 
-For more information, see [Segments](/basic-features/segments.md).
+For more information, see [Segments](/flagsmith-concepts/segments).
