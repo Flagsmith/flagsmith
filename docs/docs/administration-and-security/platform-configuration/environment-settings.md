@@ -22,4 +22,4 @@ split operator) when evaluated against the remote API. Evaluations in local eval
 ## Custom fields
 
 Optional or required custom fields can be defined when creating or updating environments.
-[Learn more](/advanced-use/custom-fields.md)
+[Learn more](/administration-and-security/governance-and-compliance/custom-fields)

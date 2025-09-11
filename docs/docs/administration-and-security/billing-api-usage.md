@@ -31,7 +31,7 @@ The following screenshot shows an example usage graph from the Flagsmith dashboa
 
 When your application is integrated with Flagsmith, it makes requests to the Flagsmith API to perform actions such as
 retrieving the current state of its flags. Some of these actions count towards your limit of billable API requests. The
-billable API requests that your application makes depend mainly on which [flag evaluation mode](/clients) it uses.
+billable API requests that your application makes depend mainly on which [flag evaluation mode](/flagsmith-integration/integration-overview) it uses.
 
 **Remote Evaluation** is the default for all applications. Applications using Remote Evaluation call the Flagsmith API
   when they need to fetch the flags for the current environment or user.
@@ -39,15 +39,15 @@ billable API requests that your application makes depend mainly on which [flag e
   - `/identities`: [Get identity flags](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_environments_identities_create)
 
 **Local Evaluation** is optional, and only for server-side applications. Each individual application or
-[Edge Proxy](/advanced-use/edge-proxy) instance polls the Flagsmith API at a configurable interval (60 seconds by
+[Edge Proxy](/performance/edge-proxy) instance polls the Flagsmith API at a configurable interval (60 seconds by
 default) to fetch the flags for the current environment and all users in one API request.
   - `/environment-document`: [Get environment document](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_environment-document_list)
 
 The following requests are not billable:
 
-- [Admin API](/clients/rest#private-admin-api-endpoints) requests.
-- Requests made by Flagsmith SDKs to track [Flag Analytics](/advanced-use/flag-analytics).
-- Connecting to a [real-time flag updates](/advanced-use/real-time-flags) stream.
+- [Admin API](/flagsmith-integration/flagsmith-api-overview/admin-api) requests.
+- Requests made by Flagsmith SDKs to track [Flag Analytics](/experimentation/flag-analytics).
+- Connecting to a [real-time flag updates](/performance/real-time-flags) stream.
 
 ### Example: client-side application
 
@@ -58,7 +58,7 @@ look like this:
    production environment (1 API request).
 2. The user logs in to their account. Now that we know the user's identity, their device calls Flagsmith to get the
    flags for this specific user, taking into account their
-   [A/B tests or progressive rollouts](/advanced-use/ab-testing), [segments](/basic-features/segments) and user-specific
+   [A/B tests or progressive rollouts](/experimentation/ab-testing), [segments](/flagsmith-concepts/segments) and user-specific
    flags (1 API request). Any user data sent by your application is stored by Flagsmith as traits.
 3. The user performs some action that should update their stored data in Flagsmith. The device calls Flagsmith to update
    this user's traits and receives their latest flags in return (1 API request).
@@ -89,7 +89,7 @@ its lifecycle could look like this:
 
 - An instance of your application, running in a container or server, using the Flagsmith SDK with Local Evaluation
   enabled.
-- An [Edge Proxy](/advanced-use/edge-proxy) container instance.
+- An [Edge Proxy](/performance/edge-proxy) container instance.
 
 Following the example above, if you used the default polling frequency of 60 seconds, you could estimate your monthly
 API usage as:
@@ -117,12 +117,12 @@ application. For example, when a user visits a certain part of your application 
 a mobile application is brought to the foreground.
 * Consider using an Edge Proxy as your source of flags instead of calling the Flagsmith API directly.
 * If you have a suitable backend, consider evaluating flags server-side instead. This enables other usage patterns that
-result in fewer API calls, such as [Local Evaluation](/clients#local-evaluation) and custom cache implementations.
+result in fewer API calls, such as [Local Evaluation](/flagsmith-integration/integration-overview#local-evaluation-mode) and custom cache implementations.
 
 For server-side applications:
 
-* Consider using [Local Evaluation](/clients#local-evaluation), or deploying [Edge Proxies](/advanced-use/edge-proxy).
+* Consider using [Local Evaluation](/flagsmith-integration/), or deploying [Edge Proxies](/performance/edge-proxy).
 * Reduce the polling rate for Edge Proxies and any SDKs using Local Evaluation.
 * If your use case allows for it, use the Flagsmith SDK in Offline Mode.
 
-Using [real-time flag updates](/advanced-use/real-time-flags) can also reduce or eliminate the need for polling.
+Using [real-time flag updates](/performance/real-time-flags) can also reduce or eliminate the need for polling.

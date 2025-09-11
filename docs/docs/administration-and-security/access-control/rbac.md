@@ -17,7 +17,7 @@ For example, RBAC allows you to achieve the following scenarios:
 
 - Only allow certain users to modify your production environments.
 - Grant a default set of permissions to all users that join your Flagsmith organisation.
-- Lock down an [Admin API](/clients/rest/#private-admin-api-endpoints) key to a specific set of permissions.
+- Lock down an [Admin API](/flagsmith-integration/flagsmith-api-overview/admin-api) key to a specific set of permissions.
 - Provide Flagsmith permissions based on your enterprise identity provider's groups when using
   [SAML single sign-on](/administration-and-security/access-control/saml).
 
@@ -51,7 +51,7 @@ following built-in roles:
 - _Organisation Administrator_ grants full access to everything in your Flagsmith organisation.
 - _User_ grants no access and requires you to assign permissions using custom roles and/or groups.
 
-**Custom roles** can be assigned to users, groups or [Admin API](/clients/rest/#private-admin-api-endpoints) keys. Any
+**Custom roles** can be assigned to users, groups or [Admin API](/flagsmith-integration/flagsmith-api-overview/admin-api) keys. Any
 number of custom roles can be created and assigned.
 
 Creating, modifying or assigning roles requires organisation administrator permissions.
