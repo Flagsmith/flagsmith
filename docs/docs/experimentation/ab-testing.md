@@ -6,11 +6,11 @@ sidebar_position: 10
 
 A/B testing enables you to experiment with design and functionality variants of your application. The data generated will allow you to make modifications to your app, safe in the knowledge that it will have a net positive effect.
 
-You can use Flagsmith to perform A/B tests. Using a combination of [multivariate flags](/basic-features/managing-features.md#multi-variate-flags) and a 3rd party analytics tool like [Amplitude](https://amplitude.com/) or [Mixpanel](https://mixpanel.com/), you can easily perform complex A/B tests that will help improve your product.
+You can use Flagsmith to perform A/B tests. Using a combination of [multivariate flags](/managing-flags/core-management) and a 3rd party analytics tool like [Amplitude](https://amplitude.com/) or [Mixpanel](https://mixpanel.com/), you can easily perform complex A/B tests that will help improve your product.
 
 Running A/B tests require two main components: a bucketing engine and an analytics platform. The bucketing engine is used to put users into a particular A/B testing bucket. These buckets will control the specific user experience that is being tested. The analytics platform will receive a stream of event data derived from the behaviour of the user. Combining these two concepts allows you to deliver seamless A/B test.
 
-We have [integrations](/integrations) with a number of analytics platforms. If we don't integrate with the platform you are using, you can still manually send the test data to the downstream platform manually.
+We have [integrations](/third-party-integrations/analytics/segment) with a number of analytics platforms. If we don't integrate with the platform you are using, you can still manually send the test data to the downstream platform manually.
 
 By the end of this tutorial, you will be able to:
 
@@ -23,8 +23,8 @@ By the end of this tutorial, you will be able to:
 
 To follow this tutorial, you will need:
 
-- A basic understanding of [multivariate flags](/basic-features/managing-features.md#multi-variate-flags) in Flagsmith.
-- Access to a third-party analytics platform (e.g., Amplitude, Mixpanel) where you can send custom events. You can explore Flagsmith [integrations](/integrations) for this purpose.
+- A basic understanding of [multivariate flags](/managing-flags/core-management) in Flagsmith.
+- Access to a third-party analytics platform (e.g., Amplitude, Mixpanel) where you can send custom events. You can explore Flagsmith [integrations](/third-party-integrations/analytics/segment) for this purpose.
 - A development environment for your application where you can implement changes and integrate the Flagsmith SDK.
 
 ## Scenario - Testing a new Paypal button
@@ -41,13 +41,13 @@ Because Flagsmith flags can contain both boolean states as well as multivariate 
 
 ## Steps
 
-1. Create a new [multivariate flag](/basic-features/managing-features.md#multi-variate-flags) that will control which of the 3 buckets the user is put into. We'll call this flag `paypal_button_test`. We will provide 3 variate options:
+1. Create a new [multivariate flag](/managing-flags/core-management) that will control which of the 3 buckets the user is put into. We'll call this flag `paypal_button_test`. We will provide 3 variate options:
 
    1. Control - 90% of users
    2. Paypal button - 5% of users
    3. Test users that don't see the Paypal button - 5% of users
 
-2. In our app, we want to [identify](/basic-features/managing-identities.md) each user before they start the checkout process. All Flagsmith multivariate flags need us to identify the user, so we can bucket them in a reproducible manner.
+2. In our app, we want to [identify](/flagsmith-concepts/identities) each user before they start the checkout process. All Flagsmith multivariate flags need us to identify the user, so we can bucket them in a reproducible manner.
 3. When we get to the checkout page, check the `value` of the `paypal_button_test` flag for that user. If it evaluates to `show`, show the PayPal payment button. Otherwise, don't show the button.
 4. Send an event message to the analytics platform, adding the name/value pair of `paypal_button_test` and the value of the flag; in this case it would be one of either `control`, `show` or `hide`.
 5. Deploy our app, enable the flag and watch the data come in to your analytics platform.
@@ -77,5 +77,5 @@ These techniques will be slightly different depending on what platform you are d
 
 ## Next steps
 
-- Explore [Flagsmith's integrations](/integrations) with analytics platforms.
-- Learn more about [managing identities](/basic-features/managing-identities.md) in Flagsmith.
+- Explore [Flagsmith's integrations](/third-party-integrations/analytics/segment) with analytics platforms.
+- Learn more about [managing identities](/flagsmith-concepts/identities) in Flagsmith.

@@ -46,6 +46,6 @@ When you want to release a new feature to a specific group of beta testers, you 
 
 ## Further Reading
 
-- For a deeper dive into the different types of feature flag lifecycles, check out the [Feature Flags Lifecycles guide](./flag-lifecycle.md).
-- Learn more about [A/B and multivariate testing](../advanced-use/ab-testing.md) to see how experimentation can be managed with Flagsmith.
-- Explore how [Segments](../basic-features/segments.md) can help you target features to specific groups of users. 
+- For a deeper dive into the different types of feature flag lifecycles, check out the [Feature Flags Lifecycles guide](/best-practices/flag-lifecycle).
+- Learn more about [A/B and multivariate testing](/experimentation/ab-testing) to see how experimentation can be managed with Flagsmith.
+- Explore how [Segments](/flagsmith-concepts/segments) can help you target features to specific groups of users. 

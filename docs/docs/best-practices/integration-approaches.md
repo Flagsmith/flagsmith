@@ -14,7 +14,7 @@ If, for example, your database uses an auto-incrementing integer as the user rec
 
 Note that this only relates to _Client Side Keys_. _Server Side Keys_, on the other hand, should be considered secret and stored appropriately.
 
-You can also prevent client-side SDKS from [setting Traits](/system-administration/security#preventing-client-sdks-from-setting-traits).
+You can also prevent client-side SDKS from [setting Traits](/administration-and-security/governance-and-compliance/security#preventing-client-sdks-from-setting-traits).
 
 ### Segment and Targeting rules are not leaked to the client
 
@@ -50,13 +50,13 @@ This approach depends on whether your application has an ability to persist data
 4. On subsequent app launches, check local storage to see if any flags are available. If they are, load them immediately.
 5. Asynchronously call the Flagsmith API to retrieve the up-to-date Flags.
 
-The official [Javascript Client](/clients/javascript/) offers optional caching built in to the SDK.
+The official [Javascript Client](/flagsmith-integration/client-side-sdks/javascript) offers optional caching built in to the SDK.
 
 ## Caching Flags on a Server (Flagsmith Client)
 
 :::tip
 
-Note that you can also [evaluate flags locally](/clients) in our Server Side SDKs.
+Note that you can also [evaluate flags locally](/flagsmith-integration/integration-overview) in our Server Side SDKs.
 
 :::
 
@@ -64,6 +64,6 @@ When running the Flagsmith SDK within a Server environment, it is difficult for 
 
 1. When your server (flagsmith client) starts up, get the Flags from the Flagsmith API. Flagsmith server will now store the Flags in memory within the server runtime.
 2. If you have caching infrastructure available (for example, memcache, redis etc), you can then store the flags for that environment within your caching infrastructure.
-3. You can set up a [Web Hook](/system-administration/webhooks) within Flagsmith that sends flag change events to your server infrastructure.
+3. You can set up a [Web Hook](/third-party-integrations/webhook) within Flagsmith that sends flag change events to your server infrastructure.
 4. Write an API endpoint within your infrastructure that receives flag change events and stores them in your local cache.
 5. You can now rely on your local cache to get up to date flags.

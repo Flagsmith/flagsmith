@@ -32,7 +32,7 @@ Once that's done, there is no reason to have the flag existing either in Flagsmi
 
 ### Experimentation
 
-You can use Multi-variate flags to drive [A/B and multivariate tests](../advanced-use/ab-testing.md). Once your experiment is complete, there is typically no need for the flag to remain, and hence it can be removed.
+You can use Multi-variate flags to drive [A/B and multivariate tests](/experimentation/ab-testing). Once your experiment is complete, there is typically no need for the flag to remain, and hence it can be removed.
 
 ## Long-Lived Flags
 
@@ -46,7 +46,7 @@ Kill switches are generally long-lived; they often exist in the event of an unex
 
 ### Feature Management Flags
 
-You can make use of [Segments](../basic-features/segments.md) and Flags to control how different features are enabled or disabled depending on the user. For example, you can send a Trait `plan` with the relevant user value (e.g. `scale-up`) to Flagsmith, then create a Segment that defines all users on the `scale-up` plan. You can then show or hide features based on this Segment and plan.
+You can make use of [Segments](/flagsmith-concepts/segments) and Flags to control how different features are enabled or disabled depending on the user. For example, you can send a Trait `plan` with the relevant user value (e.g. `scale-up`) to Flagsmith, then create a Segment that defines all users on the `scale-up` plan. You can then show or hide features based on this Segment and plan.
 
 When employing feature flags in this manner, generally you would never remove this Flag or Segment, as you are using them to drive platform features for the lifetime of the application.
 
@@ -74,6 +74,6 @@ With Flagsmith, you can:
 
 ## Further Reading
 
-- For a deeper dive into the different types of feature flag lifecycles, check out the [Feature Flags Lifecycles guide](../guides-and-examples/flag-lifecycle.md).
-- Learn more about [A/B and multivariate testing](../advanced-use/ab-testing.md) to see how experimentation can be managed with Flagsmith.
-- Explore how [Segments](../basic-features/segments.md) can help you target features to specific groups of users.
+- For a deeper dive into the different types of feature flag lifecycles, check out the [Feature Flags Lifecycles guide](/best-practices/flag-lifecycle).
+- Learn more about [A/B and multivariate testing](/experimentation/ab-testing) to see how experimentation can be managed with Flagsmith.
+- Explore how [Segments](/flagsmith-concepts/segments) can help you target features to specific groups of users.

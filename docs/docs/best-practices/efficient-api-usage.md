@@ -27,26 +27,26 @@ The most common, most efficient workflow we have found with people using Flagsmi
 
 Every time a trait as set via the SDK, they will make a request to the Flagsmith API with the trait data and receive an updated set of flags.
 
-In order to reduce these calls, we recommend setting the full complement of traits in a single SDK call. There's more info around achieving this in our [Javascript FAQ](/clients/javascript#faqs).
+In order to reduce these calls, we recommend setting the full complement of traits in a single SDK call. There's more info around achieving this in our [Javascript FAQ](/flagsmith-integration/client-side-sdks/javascript).
 
 ### Real Time Flag Updates
 
 In our experience, most applications do not benefit a great deal from real time flag updates. In addition, and especially with client-side flags, thought needs to be given to ensuring features/UI widgets don't appear/disappear in real time due to flag changes.
 
-That being said, there are use-cases for real time flags. Using our [real-time flags service](/advanced-use/real-time-flags) negates the need to poll the API from the client SDK, which can significantly reduce API usage.
+That being said, there are use-cases for real time flags. Using our [real-time flags service](/performance/real-time-flags) negates the need to poll the API from the client SDK, which can significantly reduce API usage.
 
 ## Server Side
 
 ### Local Evaluation Mode
 
-The most efficient way of evaluating feature flags on the server is using [local evaluation mode](/clients#local-evaluation). There are [some caveats](/clients#local-evaluation), so please be aware of them!
+The most efficient way of evaluating feature flags on the server is using [local evaluation mode](/flagsmith-integration/integration-overview). There are [some caveats](/flagsmith-integration/integration-overview), so please be aware of them!
 
 ### CDN Usage
 
 There are 3 main API calls the Flagsmith SDK can make:
 
-1. Get the [Environment Document](/clients#the-environment-document) for
-   [Local Evaluation mode](/clients#local-evaluation).
+1. Get the [Environment Document](/flagsmith-integration/integration-overview) for
+   [Local Evaluation mode](/flagsmith-integration/integration-overview).
 2. Get the Flags for an Environment.
 3. Get the Flags for an Identity.
 
@@ -56,7 +56,7 @@ Note that you almost certainly _don't_ want to cache the Get the Flags for an Id
 
 ### Edge Proxy
 
-Using the [Edge Proxy](/advanced-use/edge-proxy) can significantly reduce API usage. A single instance of the Edge Proxy makes one API request by default every 10 seconds to the Flagsmith API. With that request data it can then serve potentially thousands of requests per second.
+Using the [Edge Proxy](/performance/edge-proxy) can significantly reduce API usage. A single instance of the Edge Proxy makes one API request by default every 10 seconds to the Flagsmith API. With that request data it can then serve potentially thousands of requests per second.
 
 Consideration needs to be given to the caveats of running the Edge Proxy, but its deployment can have a dramatic effect on reducing API call volume.
 
