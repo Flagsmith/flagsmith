@@ -2,7 +2,6 @@
 title: Flagsmith Flutter SDK
 sidebar_label: Flutter
 description: Manage your Feature Flags and Remote Config in your Flutter Applications.
-slug: /clients/flutter
 ---
 
 import CodeBlock from '@theme/CodeBlock'; import { FlutterVersion } from '@site/src/components/SdkVersions.js';

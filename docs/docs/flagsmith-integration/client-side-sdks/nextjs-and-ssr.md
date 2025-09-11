@@ -2,7 +2,6 @@
 title: Flagsmith React SDK
 sidebar_label: Next.js and SSR
 description: Manage your Feature Flags and Remote Config with NextJS and SSR.
-slug: /clients/next-ssr
 ---
 
 The JavaScript Library contains a bundled isomorphic library, allowing you to fetch flags in the server and hydrate your

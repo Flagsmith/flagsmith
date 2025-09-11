@@ -24,7 +24,7 @@ Server-side SDKs run in your trusted back-end environment. They are ideal for co
 - **Pros:** Secure environment, full access to all targeting rules, can be used to control critical application logic.
 - **Cons:** May require an additional API call from the front-end to the back-end to get the flag state if it's needed in the UI.
 
-You can read more about the differences in our [SDKs Overview documentation](../clients).
+You can read more about the differences in our [SDKs Overview documentation](/flagsmith-integration/integration-overview).
 
 ## Identities and Traits
 
@@ -37,7 +37,7 @@ To get the most out of Flagsmith, you'll want to identify your users. This allow
 
 An **identity** represents a single user in your application. You can also store **traits** against an identity. Traits are key-value pairs that describe a user, for example, their subscription plan, their location, or how many times they've logged in.
 
-You can learn more in our documentation on [Managing Identities](../basic-features/managing-identities.md).
+You can learn more in our documentation on [Managing Identities](/flagsmith-concepts/identities).
 
 ### Transient Traits and Identities
 
@@ -47,8 +47,8 @@ For privacy-sensitive use cases, you can use transient traits and identities. Th
 -   Running experiments on anonymous users.
 -   Temporarily overriding a trait for a single session.
 
-Learn more about this feature in our [Transient Traits and Identities documentation](../advanced-use/transient-traits.md).
+Learn more about this feature in our [Transient Traits and Identities documentation](/flagsmith-concepts/identities#transient-traits).
 
 ## Third-party Integrations
 
-Flagsmith also integrates with a variety of third-party tools for analytics, project management, and more. You can browse all available integrations in the [Integrations section](../integrations). 
+Flagsmith also integrates with a variety of third-party tools for analytics, project management, and more. You can browse all available integrations in the [Integrations section](/third-party-integrations/analytics/segment). 

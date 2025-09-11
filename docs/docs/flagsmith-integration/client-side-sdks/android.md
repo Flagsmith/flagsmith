@@ -2,7 +2,6 @@
 title: Flagsmith Android/Kotlin SDK
 sidebar_label: Android / Kotlin
 description: Manage your Feature Flags and Remote Config in your Android applications.
-slug: /clients/android
 ---
 
 import CodeBlock from '@theme/CodeBlock'; import { AndroidVersion } from '@site/src/components/SdkVersions.js';
