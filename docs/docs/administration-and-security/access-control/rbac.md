@@ -82,7 +82,7 @@ Users can also join your organisation directly by logging in to Flagsmith using
 :::info
 
 If you are self-hosting Flagsmith, you must
-[configure an email provider](/deployment/hosting/locally-api#email-environment-variables) before using email invites.
+[configure an email provider](/deployment-self-hosting/core-configuration/email-setup) before using email invites.
 
 :::
 

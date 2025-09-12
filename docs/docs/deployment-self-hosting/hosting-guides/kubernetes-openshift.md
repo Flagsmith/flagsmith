@@ -209,7 +209,7 @@ If you are using our Helm charts and don't provide a `secretKey`, one will be ge
 
 :::
 
-The chart handles most environment variables required, but see the [API readme](/deployment/hosting/locally-api#environment-variables) for all available configuration options. These can be set using `api.extraEnv`. For example, in the `charts/flagsmith/values.yaml` file:
+The chart handles most environment variables required, but see the [API environment variables](/deployment-self-hosting/core-configuration/environment-variables#api-environment-variables) for all available configuration options. These can be set using `api.extraEnv`. For example, in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 api:

@@ -141,7 +141,7 @@ flagsmith.setTrait(Trait(key = "set-from-client", value = "12345"), identity = "
 ### Get all Traits
 
 To retrieve a trait for a particular identity as explained here
-[Traits](../../basic-features/managing-identities.md#identity-traits)
+[Traits](/flagsmith-concepts/identities#identity-traits)
 
 ```kotlin
 flagsmith.getTraits(identity = "test@test.com") { result ->

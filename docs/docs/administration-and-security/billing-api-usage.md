@@ -121,7 +121,7 @@ result in fewer API calls, such as [Local Evaluation](/flagsmith-integration/int
 
 For server-side applications:
 
-* Consider using [Local Evaluation](/flagsmith-integration/), or deploying [Edge Proxies](/performance/edge-proxy).
+* Consider using [Local Evaluation](/flagsmith-integration/integration-overview#local-evaluation-mode), or deploying [Edge Proxies](/performance/edge-proxy).
 * Reduce the polling rate for Edge Proxies and any SDKs using Local Evaluation.
 * If your use case allows for it, use the Flagsmith SDK in Offline Mode.
 
