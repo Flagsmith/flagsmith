@@ -1,7 +1,7 @@
 ---
 title: Mobile App Versioning
 sidebar_label: Mobile App Versioning
-sidebar_position: 70
+sidebar_position: 7
 ---
 
 ## The Problem

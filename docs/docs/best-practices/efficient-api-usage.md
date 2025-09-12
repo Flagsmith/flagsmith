@@ -1,7 +1,7 @@
 ---
 title: Efficient API Usage
 sidebar_label: Efficient API Usage
-sidebar_position: 50
+sidebar_position: 5
 ---
 
 It is good engineering practise to reduce the frequency of API calls made from your applications to Flagsmith. There are a number of reasons for this:

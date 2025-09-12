@@ -1,7 +1,7 @@
 ---
 title: Testing with Feature Flags
 sidebar_label: Testing with Feature Flags
-sidebar_position: 60
+sidebar_position: 3
 ---
 
 Feature flags are an invaluable tool for testing new functionality in a controlled and safe manner. They allow you to test in production-like environments, release features to specific user groups for beta testing, and run experiments to gather data before a full roll-out.

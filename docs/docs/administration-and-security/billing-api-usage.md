@@ -1,6 +1,6 @@
 ---
 title: Billing and API Usage
-sidebar_position: 120
+sidebar_position: 1
 ---
 
 When you use Flagsmith on Flagsmith-managed infrastructure (SaaS or private cloud), your pricing plan has a limit of API

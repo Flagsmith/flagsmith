@@ -1,7 +1,7 @@
 ---
 title: "Manual Installation"
 description: "How to manually install both the Frontend and the API for a more configurable environment."
-sidebar_position: 70
+sidebar_position: 5
 ---
 
 If you want a more configurable environment, you can manually install both the Frontend and the API.

@@ -1,7 +1,7 @@
 ---
 title: When to use Feature Flags
 sidebar_label: When to use Feature Flags
-sidebar_position: 20
+sidebar_position: 2
 ---
 
 Feature Flags are a powerful tool for modern software development. They allow teams to modify system behaviour without changing code and deploying new versions. But when exactly should you use them? This guide covers the common use cases for feature flags.

@@ -1,6 +1,6 @@
 ---
 title: Edge Proxy
-sidebar_position: 30
+sidebar_position: 3
 ---
 
 The Flagsmith Edge Proxy is a service that you host yourself, which allows you to run an instance of the Flagsmith Engine close to your servers. If you are running Flagsmith within a server-side environment and you want to have very low latency flags, you have two options:

@@ -1,7 +1,7 @@
 ---
 title: Kubernetes and OpenShift
 description: "Deploying Flagsmith on Kubernetes and OpenShift using our Helm charts."
-sidebar_position: 50
+sidebar_position: 2
 ---
 
 ## Overview

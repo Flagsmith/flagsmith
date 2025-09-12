@@ -1,7 +1,7 @@
 ---
 title: Platform Architecture
 sidebar_label: Platform Architecture
-sidebar_position: 20
+sidebar_position: 2
 ---
 
 # Flagsmith Platform Architecture

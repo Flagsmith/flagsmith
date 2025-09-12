@@ -1,7 +1,7 @@
 ---
 title: Defensive Coding and Designing for Failure
 sidebar_label: Defensive Coding
-sidebar_position: 30
+sidebar_position: 4
 ---
 
 Introducing feature flags and remote config to your applications can provide a wealth of benefits, but there are also a few drawbacks. Fortunately, the majority of these can be avoided through [defensive coding](#defensive-coding) and sensible approaches to default flags.

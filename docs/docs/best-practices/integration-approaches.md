@@ -1,7 +1,7 @@
 ---
 title: Integration Approaches
 sidebar_label: Integration Approaches
-sidebar_position: 60
+sidebar_position: 6
 ---
 
 ## Client Side SDK Flag endpoints are public

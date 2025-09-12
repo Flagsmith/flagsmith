@@ -1,7 +1,7 @@
 ---
 title: Feature Flags Lifecycles
 sidebar_label: Feature Flags Lifecycles
-sidebar_position: 10
+sidebar_position: 1
 ---
 
 Feature Flags generally have two lifecycles:

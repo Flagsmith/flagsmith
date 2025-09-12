@@ -1,7 +1,7 @@
 ---
 sidebar_label: Docker
 description: Getting Started with Flagsmith on Docker
-sidebar_position: 10
+sidebar_position: 1
 ---
 
 This guide explains how to run a full Flagsmith environment on your local machine using Docker. This is useful for development, testing, or evaluating Flagsmith's features.

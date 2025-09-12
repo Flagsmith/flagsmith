@@ -1,7 +1,7 @@
 ---
 title: Data Model
 sidebar_label: Data Model
-sidebar_position: 10
+sidebar_position: 1
 ---
 
 Flagsmith uses a flexible data model to help you manage feature flags and remote configurations across multiple projects, environments, and user groups.
