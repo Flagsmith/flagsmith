@@ -15,6 +15,7 @@ from django.views.decorators.vary import vary_on_headers
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
@@ -149,7 +150,7 @@ class SDKIdentities(SDKAPIView):
     pagination_class = None  # set here to ensure documentation is correct
     throttle_classes = []
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={200: SDKIdentitiesResponseSerializer()},
         query_serializer=SDKIdentitiesQuerySerializer(),
         operation_id="identify_user",
@@ -161,14 +162,14 @@ class SDKIdentities(SDKAPIView):
             cache=settings.GET_IDENTITIES_ENDPOINT_CACHE_NAME,
         )
     )
-    def get(self, request):  # type: ignore[no-untyped-def]
-        identifier = request.query_params.get("identifier")
-        if not identifier:
-            return Response(
-                {"detail": "Missing identifier"}
-            )  # TODO: add 400 status - will this break the clients?
+    def get(self, request: Request) -> Response:
+        query_serializer = SDKIdentitiesQuerySerializer(data=request.query_params)
+        if not query_serializer.is_valid():
+            return Response(query_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        if request.query_params.get("transient"):
+        identifier = query_serializer.validated_data["identifier"]
+
+        if query_serializer.validated_data["transient"]:
             identity = Identity(
                 created_date=timezone.now(),
                 identifier=identifier,
