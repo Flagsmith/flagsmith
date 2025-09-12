@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.196.1](https://github.com/Flagsmith/flagsmith/compare/v2.196.0...v2.196.1) (2025-09-12)
+
+
+### Bug Fixes
+
+* **hubspot:** restore logic for updating `orgid_unique` property ([#6044](https://github.com/Flagsmith/flagsmith/issues/6044)) ([d519430](https://github.com/Flagsmith/flagsmith/commit/d519430b113d77f3ca11086885aa1d9f1e85597a))
+* **Identities:** Sanitize identifiers ([#6024](https://github.com/Flagsmith/flagsmith/issues/6024)) ([dfb41c6](https://github.com/Flagsmith/flagsmith/commit/dfb41c6e4beadac17adb9f08cd2b8abc02d2d872))
+
+
+### Dependency Updates
+
+* bump djangorestframework-simplejwt from 5.3.1 to 5.5.1 in /api ([#6020](https://github.com/Flagsmith/flagsmith/issues/6020)) ([0a606d2](https://github.com/Flagsmith/flagsmith/commit/0a606d24e7f07734ef4530b6fcaf4ad111a8bbc4))
+
 ## [2.196.0](https://github.com/Flagsmith/flagsmith/compare/v2.195.0...v2.196.0) (2025-09-10)
 
 
