@@ -1,4 +1,4 @@
-@import '../new/variables-new';
+@import '../variables';
 
 .feature-action {
   display: flex;
@@ -7,20 +7,35 @@
 
   &__list {
     position: absolute;
-    z-index: 10;
+    z-index: 2000000000001;
     margin-top: 6px;
     overflow: hidden;
 
     border-radius: 8px;
     background: #ffffff;
     box-shadow: 0px 10px 12px 0px rgba(100, 116, 139, 0.15);
+
+    &.border {
+      border-bottom: 0.5px solid;
+    }
+
+    &.placed-top {
+      margin-top: 0px;
+      margin-bottom: 6px;
+      bottom: 100%;
+    }
+
+    &.placed-bottom {
+      top: 100%;
+    }
+
   }
 
   &__item {
     display: flex;
     align-items: center;
     column-gap: 0.5rem;
-
+    cursor: pointer;
     padding: 0.5rem 1rem;
     white-space: nowrap;
 
@@ -35,6 +50,7 @@
     &_disabled {
       opacity: 0.4;
       pointer-events: none;
+      cursor: not-allowed;
     }
 
     &:hover {

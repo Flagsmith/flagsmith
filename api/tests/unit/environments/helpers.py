@@ -1,5 +1,6 @@
 import typing
 
+from common.projects.permissions import VIEW_PROJECT
 from rest_framework.test import APIClient
 
 from environments.models import Environment
@@ -8,14 +9,13 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
 )
 from projects.models import ProjectPermissionModel, UserProjectPermission
-from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser
 
 
 def get_environment_user_client(
     user: FFAdminUser,
     environment: Environment,
-    permission_keys: typing.List[str] = None,
+    permission_keys: typing.List[str] = None,  # type: ignore[assignment]
     admin: bool = False,
 ) -> APIClient:
     """

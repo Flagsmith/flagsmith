@@ -2,31 +2,23 @@ name: Run API tests with private package
 
 on:
   pull_request:
-  merge_group:
     branches:
       - main
-    paths:
-      - api/**
-      - .github/**
+    types: [labeled]
 
 defaults:
   run:
     working-directory: api
 
-env:
-  FLAGSMITH_RBAC_REVISION: v0.7.0
-
 jobs:
   test:
-    # NOTE: we need to include pull_request trigger to trigger `merge_group` event
-    # ref: https://github.com/orgs/community/discussions/51120#discussioncomment-6312578
-    if: ${{ github.event_name == 'merge_group' }}
-    runs-on: ubuntu-latest
+    if: ${{ github.event.label.name == 'api' }}
+    runs-on: depot-ubuntu-latest
     name: API Tests
 
     services:
       postgres:
-        image: postgres:11.12-alpine
+        image: postgres:15.5-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -34,42 +26,30 @@ jobs:
         ports: ['5432:5432']
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: ['3.10', '3.11']
-
     steps:
       - name: Cloning repo
         uses: actions/checkout@v4
 
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install Poetry
+        run: make install-poetry
+
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
+          python-version: '3.12'
+          cache: poetry
 
-      - name: Install Dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: make install-packages
+      - name: Install SAML Dependencies
+        run: sudo apt-get install -y xmlsec1
 
-      - name: Checkout rbac package
-        uses: actions/checkout@v4
-        with:
-          repository: flagsmith/flagsmith-rbac
-          token: ${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-          ref: ${{ env.FLAGSMITH_RBAC_REVISION }}
-          path: ./flagsmith-rbac
-
-      - name: Integrate RBAC module
-        run: mv $GITHUB_WORKSPACE/flagsmith-rbac/rbac .
+      - name: Install packages and Tests
         shell: bash
-
-      - name: integrate rbac tests
-        run: ln -s $GITHUB_WORKSPACE/flagsmith-rbac/tests tests/rbac_tests
-        shell: bash
-        working-directory: api
+        run: |
+          echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
+          git config --global credential.helper store
+          make install-packages opts="--with saml,auth-controller,workflows"
+          make install-private-modules
+          make integrate-private-tests
+          rm -rf ${HOME}/.git-credentials
 
       - name: Run Tests
         env:

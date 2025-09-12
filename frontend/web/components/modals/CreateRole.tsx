@@ -8,25 +8,16 @@ import React, {
   useState,
 } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
-import RolePermissionsList from 'components/RolePermissionsList'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
+
 import {
   useCreateRoleMutation,
   useGetRoleQuery,
   useUpdateRoleMutation,
 } from 'common/services/useRole'
 
-import { EditPermissionsModal } from 'components/EditPermissions'
-import OrganisationStore from 'common/stores/organisation-store'
-import ProjectFilter from 'components/ProjectFilter'
-import {
-  Environment,
-  Project,
-  Role,
-  User,
-  UserGroup,
-} from 'common/types/responses'
+import { Role, User, UserGroup } from 'common/types/responses'
 import { setInterceptClose } from './base/ModalDefault'
 import UserSelect from 'components/UserSelect'
 import MyGroupsSelect from 'components/MyGroupsSelect'
@@ -44,9 +35,11 @@ import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
-import Input from 'components/base/forms/Input'
 import SettingsButton from 'components/SettingsButton'
-
+import PermissionsTabs from 'components/PermissionsTabs'
+import AccountStore from 'common/stores/account-store'
+import { RouteComponentProps } from 'react-router-dom'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 type TabRef = {
   onClosing: () => Promise<void>
   tabChanged: () => boolean
@@ -58,9 +51,12 @@ type CreateRoleType = {
   organisationId?: number
   role?: Role
   users?: User[]
+  history?: RouteComponentProps['history']
 }
+
 const CreateRole: FC<CreateRoleType> = ({
   groups,
+  history,
   isEdit,
   onComplete,
   organisationId,
@@ -70,8 +66,6 @@ const CreateRole: FC<CreateRoleType> = ({
   const buttonText = isEdit ? 'Update Role' : 'Create Role'
   const [tab, setTab] = useState<number>(0)
   const [userGroupTab, setUserGroupTab] = useState<number>(0)
-  const [project, setProject] = useState<string>('')
-  const [environments, setEnvironments] = useState<Environment[]>([])
   const [showUserSelect, setShowUserSelect] = useState<boolean>(false)
   const [showGroupSelect, setShowGroupSelect] = useState<boolean>(false)
   const [userSelected, setUserSelected] = useState<
@@ -86,8 +80,6 @@ const CreateRole: FC<CreateRoleType> = ({
       role_group_id: number
     }[]
   >([])
-
-  const projectData: Project[] = OrganisationStore.getProjects()
 
   const [createRolePermissionUser, { data: usersData, isSuccess: userAdded }] =
     useCreateRolesPermissionUsersMutation()
@@ -236,15 +228,6 @@ const CreateRole: FC<CreateRoleType> = ({
   }, [groups, groupSelected])
 
   useEffect(() => {
-    if (project && projectData) {
-      const environments = projectData.find(
-        (p) => p.id === parseInt(project),
-      )?.environments
-      setEnvironments(environments || [])
-    }
-  }, [project, projectData])
-
-  useEffect(() => {
     if (userAdded && usersData) {
       setUserSelected(
         (userSelected || []).concat({
@@ -360,6 +343,7 @@ const CreateRole: FC<CreateRoleType> = ({
             className: 'full-width',
             name: 'roleName',
           }}
+          data-test='role-name'
           value={roleName}
           unsaved={isEdit && roleNameChanged}
           onChange={(event: InputEvent) => {
@@ -387,8 +371,7 @@ const CreateRole: FC<CreateRoleType> = ({
         <div className='text-right mb-2'>
           <Button
             onClick={() => save()}
-            data-test='update-role-btn'
-            id='update-role-btn'
+            data-test='save-role'
             disabled={isSaving || !roleName}
           >
             {isSaving && isEdit
@@ -403,8 +386,6 @@ const CreateRole: FC<CreateRoleType> = ({
   })
 
   const TabValue = () => {
-    const [searchProject, setSearchProject] = useState<string>('')
-    const [searchEnv, setSearchEnv] = useState<string>('')
     const ref = useRef<TabRef>(null)
     const ref2 = useRef<TabRef>(null)
     useEffect(() => {
@@ -450,7 +431,12 @@ const CreateRole: FC<CreateRoleType> = ({
     }
 
     return isEdit ? (
-      <Tabs value={tab} onChange={changeTab} buttonTheme='text'>
+      <Tabs
+        value={tab}
+        onChange={changeTab}
+        buttonTheme='text'
+        history={history}
+      >
         <TabItem
           tabLabel={<Row className='justify-content-center'>General</Row>}
         >
@@ -458,6 +444,7 @@ const CreateRole: FC<CreateRoleType> = ({
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Members</Row>}
+          data-test='members-tab'
         >
           <div>
             <div className='mt-4'>
@@ -483,7 +470,7 @@ const CreateRole: FC<CreateRoleType> = ({
                   className='chip my-1 justify-content-between'
                 >
                   <span className='font-weight-bold'>
-                    {u.first_name} {u.last_name}
+                    {getUserDisplayName(u)}
                   </span>
                   <span className='chip-icon ion'>
                     <IonIcon icon={closeIcon} style={{ fontSize: '13px' }} />
@@ -503,7 +490,7 @@ const CreateRole: FC<CreateRoleType> = ({
                   onRemove={removeUserOrGroup}
                   isOpen={showGroupSelect}
                   onToggle={() => setShowGroupSelect(!showGroupSelect)}
-                  size='-sm'
+                  size='sm'
                 />
               )}
 
@@ -522,91 +509,23 @@ const CreateRole: FC<CreateRoleType> = ({
                 ))}
               </div>
             </div>
+            <p className='text-right mt-5 text-dark'>
+              This will edit the members for <strong>{role?.name}</strong>.
+            </p>
           </div>
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Permissions</Row>}
+          data-test='permissions-tab'
         >
           <div className='mt-4'>
-            <Tabs
+            <PermissionsTabs
+              tabRef={ref}
               value={userGroupTab}
               onChange={changeSubTab}
-              theme='pill m-0'
-              isRoles={true}
-            >
-              <TabItem
-                tabLabel={
-                  <Row className='justify-content-center'>Organisation</Row>
-                }
-              >
-                <EditPermissionsModal
-                  className='mt-2'
-                  level={'organisation'}
-                  role={role}
-                />
-              </TabItem>
-              <TabItem
-                tabLabel={<Row className='justify-content-center'>Project</Row>}
-              >
-                <Row className='justify-content-between'>
-                  <h5 className='my-3'>Permissions</h5>
-                  <Input
-                    type='text'
-                    className='ml-3'
-                    value={searchProject}
-                    onChange={(e: InputEvent) =>
-                      setSearchProject(Utils.safeParseEventValue(e))
-                    }
-                    size='small'
-                    placeholder='Search'
-                    search
-                  />
-                </Row>
-                <RolePermissionsList
-                  filter={searchProject}
-                  mainItems={projectData}
-                  role={role!}
-                  level={'project'}
-                  ref={ref}
-                />
-              </TabItem>
-              <TabItem
-                tabLabel={
-                  <Row className='justify-content-center'>Environment</Row>
-                }
-              >
-                <Row className='justify-content-between'>
-                  <h5 className='my-3'>Permissions</h5>
-                  <Input
-                    type='text'
-                    className='ml-3'
-                    value={searchEnv}
-                    onChange={(e: InputEvent) =>
-                      setSearchEnv(Utils.safeParseEventValue(e))
-                    }
-                    size='small'
-                    placeholder='Search'
-                    search
-                  />
-                </Row>
-                <div className='mb-2' style={{ width: 250 }}>
-                  <ProjectFilter
-                    organisationId={role!.organisation}
-                    onChange={setProject}
-                    value={project}
-                  />
-                </div>
-                {environments.length > 0 && (
-                  <RolePermissionsList
-                    filter={searchEnv}
-                    mainItems={environments}
-                    role={role!}
-                    level={'environment'}
-                    ref={ref}
-                  />
-                )}
-              </TabItem>
-            </Tabs>
+              role={role}
+              orgId={AccountStore.getOrganisation()?.id}
+            />
           </div>
         </TabItem>
       </Tabs>
@@ -624,4 +543,3 @@ const CreateRole: FC<CreateRoleType> = ({
   )
 }
 export default CreateRole
-module.exports = CreateRole

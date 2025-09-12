@@ -4,6 +4,11 @@
     right: 12px;
 }
 
+.react-datepicker-wrapper .react-datepicker__input-container {
+    input[type=text].invalid, input[type=password].invalid {
+        border: 1px solid $danger;
+    }
+}
 .react-datepicker__triangle {
     display: none;
 }
@@ -12,7 +17,7 @@
 }
 .react-datepicker {
     font-family: $font-family-base;
-    color: $text-icon-dark;
+    color: $body-color;
     padding: 1rem;
     border-radius: $border-radius-lg;
     border: 1px solid $basic-alpha-16;
@@ -42,7 +47,7 @@
     margin: 0;
 }
 .react-datepicker__day {
-    color: $text-icon-dark;
+    color: $body-color;
 }
 .react-datepicker__day-names {
     margin-bottom: 0;
@@ -88,7 +93,7 @@
     &:hover {
         background-color: transparent;
     }
-    color: $text-icon-dark;
+    color: $body-color;
     background-color: transparent;
     // border-radius: $border-radius;
 }

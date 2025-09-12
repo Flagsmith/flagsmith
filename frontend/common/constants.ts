@@ -1,6 +1,9 @@
 import { OAuthType } from './types/requests'
 import { SegmentCondition } from './types/responses'
+import Utils from './utils/utils'
 
+import Project from './project'
+import { integrationCategories } from 'components/pages/IntegrationsPage'
 const keywords = {
   FEATURE_FUNCTION: 'myCoolFeature',
   FEATURE_NAME: 'my_cool_feature',
@@ -12,7 +15,6 @@ const keywords = {
   NPM_NODE_CLIENT: 'flagsmith-nodejs',
   SEGMENT_NAME: 'superUsers',
   TRAIT_NAME: 'age',
-  URL_CLIENT: 'https://cdn.jsdelivr.net/npm/flagsmith/index.js',
   USER_FEATURE_FUNCTION: 'myEvenCoolerFeature',
   USER_FEATURE_NAME: 'my_even_cooler_feature',
   USER_ID: 'user_123456',
@@ -21,7 +23,7 @@ const keywordsReactNative = {
   ...keywords,
   NPM_CLIENT: 'react-native-flagsmith',
 }
-export default {
+const Constants = {
   archivedTag: { color: '#8f8f8f', label: 'Archived' },
   codeHelp: {
     'CREATE_USER': (envId: string, userId: string = keywords.USER_ID) => ({
@@ -108,12 +110,17 @@ export default {
       'Go': require('./code-help/init/init-go')(envId, keywords),
       'Java': require('./code-help/init/init-java')(envId, keywords),
       'JavaScript': require('./code-help/init/init-js')(envId, keywords),
-      'Next.js': require('./code-help/init/init-next')(envId, keywords),
+      'Next.js (app router)': require('./code-help/init/init-next-app-router')(
+        envId,
+        keywords,
+      ),
+      'Next.js (pages router)':
+        require('./code-help/init/init-next-pages-router')(envId, keywords),
       'Node JS': require('./code-help/init/init-node')(envId, keywords),
       'PHP': require('./code-help/init/init-php')(envId, keywords),
       'Python': require('./code-help/init/init-python')(envId, keywords),
       'React': require('./code-help/init/init-react')(envId, keywords),
-      'React Native': require('./code-help/init/init-js')(
+      'React Native': require('./code-help/init/init-react')(
         envId,
         keywordsReactNative,
       ),
@@ -163,7 +170,7 @@ export default {
       ),
     }),
 
-    'USER_TRAITS': (envId: string, userId?: string) => ({
+    'USER_TRAITS': (envId: string, userId = keywords.USER_ID) => ({
       '.NET': require('./code-help/traits/traits-dotnet')(
         envId,
         keywords,
@@ -228,7 +235,6 @@ export default {
       ),
       'iOS': require('./code-help/traits/traits-ios')(envId, keywords, userId),
     }),
-
     keys: {
       'Java': 'java',
       'JavaScript': 'javascript',
@@ -245,6 +251,7 @@ export default {
     property: '',
     value: '',
   } as SegmentCondition,
+  defaultTagColor: '#3d4db6',
   environmentPermissions: (perm: string) =>
     `To manage this feature you need the <i>${perm}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`,
   events: {
@@ -342,7 +349,19 @@ export default {
       'category': 'Organisation',
       'event': 'Updated user role',
     },
+    UPGRADE: (plan: string) => {
+      return {
+        'category': 'Upgrade',
+        'event': `Upgrade ${plan}`,
+      }
+    },
     'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
+    VIEW_LOCKED_FEATURE: (feature: string) => {
+      return {
+        'category': 'Locked Feature',
+        'event': `View Locked Feature ${feature}`,
+      }
+    },
     'VIEW_SEGMENT': { 'category': 'Segment', 'event': 'Segment viewed' },
     'VIEW_USER_FEATURE': {
       'category': 'User Features',
@@ -350,7 +369,7 @@ export default {
     },
   },
   exampleAuditWebhook: `{
- "created_date": "2020-02-23T17:30:57.006318Z",
+    "created_date": "2020-02-23T17:30:57.006318Z",
  "log": "New Flag / Remote Config created: my_feature",
  "author": {
   "id": 3,
@@ -422,6 +441,20 @@ export default {
  },
  "event_type": "FLAG_UPDATED"
 }`,
+  featureHealth: {
+    healthyColor: '#60bd4e',
+    unhealthyColor: '#D35400',
+  },
+  featurePanelTabs: {
+    ANALYTICS: 'analytics',
+    FEATURE_HEALTH: 'feature-health',
+    HISTORY: 'history',
+    IDENTITY_OVERRIDES: 'identity-overrides',
+    LINKS: 'links',
+    SEGMENT_OVERRIDES: 'segment-overrides',
+    SETTINGS: 'settings',
+    VALUE: 'value',
+  },
   forms: {
     maxLength: {
       'FEATURE_ID': 150,
@@ -429,6 +462,169 @@ export default {
       'TRAITS_ID': 150,
     },
   },
+
+  getFlagsmithSDKUrl: () => {
+    const apiUrl = Project.api.startsWith('/')
+      ? `${document.location.origin}${Project.api}`
+      : Project.api
+
+    const parsedUrl = new URL(apiUrl)
+    const allowedHosts = ['api.flagsmith.com']
+    return Utils.isSaas() || allowedHosts.includes(parsedUrl.host)
+      ? Project.flagsmithClientEdgeAPI
+      : apiUrl
+  },
+  getUpgradeUrl: (feature?: string) => {
+    return Utils.isSaas()
+      ? '/organisation-settings?tab=billing'
+      : `https://www.flagsmith.com/pricing${
+          feature ? `?utm_source=${feature}` : ''
+        }`
+  },
+  githubType: {
+    githubIssue: 'GitHub Issue',
+    githubPR: 'Github PR',
+  },
+  integrationCategoryDescriptions: {
+    'All': 'Send data on what flags served to each identity.',
+    'Analytics': 'Send data on what flags served to each identity.',
+    'Authentication':
+      'Use the Flagsmith Dashboard with your authentication provider.',
+    'CI/CD': 'View your Flagsmith Flags inside your Issues and Pull Request.',
+    'Developer tools': 'Interact with feature flags from your developer tools.',
+    'Infrastructure':
+      'Manage and evaluate your features within your infrastructure tooling.',
+    'Messaging':
+      'Send messages when features are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
+    'Monitoring':
+      'Send events when features are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
+    'Webhooks':
+      'Receive webhooks when your features change or when audit logs occur.',
+  } as Record<(typeof integrationCategories)[number], string>,
+  integrationSummaries: [
+    {
+      categories: ['Analytics'],
+      image: '/static/images/integrations/hubspot.svg',
+      title: 'HubSpot',
+    },
+    {
+      categories: ['Analytics'],
+      image: '/static/images/integrations/pendo.svg',
+      title: 'Pendo',
+    },
+    {
+      categories: ['Analytics'],
+      image: '/static/images/integrations/adobe-analytics.png',
+      title: 'Adobe Analytics',
+    },
+    {
+      categories: ['Analytics'],
+      image: '/static/images/integrations/google-analytics.svg',
+      title: 'Google Analytics',
+    },
+    {
+      categories: ['Authentication'],
+      image: '/static/images/integrations/okta.svg',
+      title: 'Okta',
+    },
+    {
+      categories: ['Developer tools'],
+      image: '/static/images/integrations/vs-code.svg',
+      title: 'VS Code',
+    },
+    {
+      categories: ['Infrastructure'],
+      image: '/static/images/integrations/terraform.svg',
+      title: 'Terraform',
+    },
+    {
+      categories: ['Infrastructure'],
+      image: '/static/images/integrations/vercel.svg',
+      title: 'Vercel',
+    },
+    {
+      categories: ['Messaging'],
+      image: '/static/images/integrations/microsoft-teams.svg',
+      title: 'Microsoft Teams',
+    },
+    {
+      categories: ['Developer tools'],
+      image: '/static/images/integrations/intellij.svg',
+      title: 'Intellij',
+    },
+    {
+      categories: ['Authentication'],
+      image: '/static/images/integrations/ldap.png',
+      title: 'LDAP',
+    },
+    {
+      categories: ['Authentication'],
+      image: '/static/images/integrations/saml.png',
+      title: 'SAML',
+    },
+    {
+      categories: ['CI/CD'],
+      image: '/static/images/integrations/bitbucket.svg',
+      title: 'Bitbucket',
+    },
+    {
+      categories: ['CI/CD'],
+      image: '/static/images/integrations/gitlab.svg',
+      title: 'GitLab',
+    },
+    {
+      categories: ['CI/CD'],
+      image: '/static/images/integrations/azure-devops.svg',
+      title: 'Azure DevOps',
+    },
+    {
+      categories: ['CI/CD'],
+      image: '/static/images/integrations/jenkins.svg',
+      title: 'Jenkins',
+    },
+    {
+      categories: ['Authentication'],
+      image: '/static/images/integrations/adfs.svg',
+      title: 'Microsoft Active Directory',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/appdynamics.svg',
+      title: 'AppDynamics',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/aws_cloudtrail.svg',
+      title: 'AWS CloudTrail',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/aws_cloudwatch.svg',
+      title: 'AWS CloudWatch',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/elastic.svg',
+      title: 'Elastic (ELK) Stack',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/opentelemetry.svg',
+      title: 'OpenTelemetry',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/prometheus.svg',
+      title: 'Prometheus',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/sumologic.svg',
+      title: 'SumoLogic',
+    },
+  ],
+  isCustomFlagsmithUrl: () =>
+    Constants.getFlagsmithSDKUrl() !== 'https://edge.api.flagsmith.com/api/v1/',
   modals: {
     'PAYMENT': 'Payment Modal',
   },
@@ -439,6 +635,7 @@ export default {
     'AUDIT_LOG': 'Audit Log Page',
     'COMING_SOON': 'Coming Soon Page',
     'CREATE_ENVIRONMENT': 'Create Environment Page',
+    'CREATE_ORGANISATION': 'Create Organisation Page',
     'DOCUMENTATION': 'Documentation Page',
     'ENVIRONMENT_SETTINGS': 'Environment Settings Page',
     'FEATURES': 'Features Page',
@@ -466,6 +663,20 @@ export default {
   ],
   projectPermissions: (perm: string) =>
     `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`,
+  resourceTypes: {
+    GITHUB_ISSUE: {
+      id: 1,
+      label: 'Issue',
+      resourceType: 'issues',
+      type: 'GITHUB',
+    },
+    GITHUB_PR: {
+      id: 2,
+      label: 'Pull Request',
+      resourceType: 'pulls',
+      type: 'GITHUB',
+    },
+  },
   roles: {
     'ADMIN': 'Organisation Administrator',
     'USER': 'User',
@@ -486,6 +697,8 @@ export default {
       'See which identities have specific overridden values for this feature.<br/>Identity overrides take priority over segment overrides and environment values.',
     ORGANISATION_DESCRIPTION:
       'This is used to create a default organisation for team members to create and manage projects.',
+    PERCENTAGE_SPLIT_DEFAULT_TO_IDENTITY_KEY:
+      'If no value is provided, the identity key will be used as the default value for split operator.',
     REMOTE_CONFIG_DESCRIPTION:
       'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.',
     REMOTE_CONFIG_DESCRIPTION_VARIATION:
@@ -494,6 +707,8 @@ export default {
       'Set different values for your feature based on what segments users are in. Identity overrides will take priority over any segment override.',
     TAGS_DESCRIPTION:
       'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
+    TOOLTIP_METADATA_DESCRIPTION: (entity: string) =>
+      `Add Custom fields in your <strong>${entity}</strong>, you can define the custom fields in the project settings.`,
     USER_PROPERTY_DESCRIPTION:
       'The name of the user trait or custom property belonging to the user, e.g. firstName',
     WEBHOOKS_DESCRIPTION:
@@ -502,7 +717,7 @@ export default {
   tagColors: [
     '#3d4db6',
     '#ea5a45',
-    '#f1d502',
+    '#c6b215',
     '#60bd4e',
     '#fe5505',
     '#1492f4',
@@ -523,3 +738,5 @@ export default {
   ],
   untaggedTag: { color: '#dedede', label: 'Untagged' },
 }
+
+export default Constants

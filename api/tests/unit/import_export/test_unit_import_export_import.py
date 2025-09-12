@@ -2,7 +2,7 @@ import json
 
 import boto3
 from django.core.serializers.json import DjangoJSONEncoder
-from moto import mock_s3
+from moto import mock_s3  # type: ignore[import-untyped]
 
 from import_export.export import export_organisation
 from import_export.import_ import OrganisationImporter
@@ -10,7 +10,7 @@ from organisations.models import Organisation
 
 
 @mock_s3
-def test_import_organisation(organisation):
+def test_import_organisation(organisation):  # type: ignore[no-untyped-def]
     # Given
     bucket_name = "test-bucket"
     file_key = "organisation-exports/org-1.json"
@@ -28,7 +28,7 @@ def test_import_organisation(organisation):
     s3_client = boto3.client("s3")
     s3_client.put_object(Body=body, Bucket=bucket_name, Key=file_key)
 
-    importer = OrganisationImporter(s3_client=s3_client)
+    importer = OrganisationImporter(s3_client=s3_client)  # type: ignore[no-untyped-call]
 
     # When
     importer.import_organisation(bucket_name, file_key)

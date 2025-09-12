@@ -36,7 +36,7 @@ from projects.models import Project
 from projects.tags.models import Tag
 
 
-def test_clear_stale_feature_imports_and_exports(
+def test_clear_stale_feature_imports_and_exports(  # type: ignore[no-untyped-def]
     db: None, environment: Environment, freezer: FrozenDateTimeFactory
 ):
     # Given
@@ -74,7 +74,7 @@ def test_clear_stale_feature_imports_and_exports(
     kept_feature_export.refresh_from_db()
 
 
-def test_retire_stalled_feature_imports_and_exports(
+def test_retire_stalled_feature_imports_and_exports(  # type: ignore[no-untyped-def]
     db: None, environment: Environment, freezer: FrozenDateTimeFactory
 ):
     # Given
@@ -168,9 +168,9 @@ def test_export_and_import_features_for_environment_with_skip(
     export_features_for_environment(feature_export.id)
 
     feature_export.refresh_from_db()
-    assert len(feature_export.data) > 200
+    assert len(feature_export.data) > 200  # type: ignore[arg-type]
 
-    feature_import = FeatureImport.objects.create(
+    feature_import = FeatureImport.objects.create(  # type: ignore[misc]
         environment=environment2,
         strategy=SKIP,
         data=feature_export.data,
@@ -302,9 +302,9 @@ def test_export_and_import_features_for_environment_with_overwrite_destructive(
     export_features_for_environment(feature_export.id, [design_tag.id])
 
     feature_export.refresh_from_db()
-    assert len(feature_export.data) > 200
+    assert len(feature_export.data) > 200  # type: ignore[arg-type]
 
-    feature_import = FeatureImport.objects.create(
+    feature_import = FeatureImport.objects.create(  # type: ignore[misc]
         environment=environment2,
         strategy=OVERWRITE_DESTRUCTIVE,
         data=feature_export.data,
@@ -400,14 +400,14 @@ def test_create_flagsmith_on_flagsmith_feature_export(
     assert FlagsmithOnFlagsmithFeatureExport.objects.count() == 0
 
     # When
-    _create_flagsmith_on_flagsmith_feature_export()
+    _create_flagsmith_on_flagsmith_feature_export()  # type: ignore[no-untyped-call]
 
     # Then
     assert FlagsmithOnFlagsmithFeatureExport.objects.count() == 1
     fof = FlagsmithOnFlagsmithFeatureExport.objects.first()
-    assert fof.feature_export.status == SUCCESS
+    assert fof.feature_export.status == SUCCESS  # type: ignore[union-attr]
 
-    data = json.loads(fof.feature_export.data)
+    data = json.loads(fof.feature_export.data)  # type: ignore[arg-type,union-attr]
     assert len(data) == 1
     assert data[0]["name"] == "fof_feature"
     assert data[0]["default_enabled"] is False

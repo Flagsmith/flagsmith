@@ -32,3 +32,14 @@ def generate_segment_data(
             }
         ],
     }
+
+
+def fix_issue_3869():  # type: ignore[no-untyped-def]
+    """
+    Hack to get around Pydantic issue with FreezeGun.
+
+    https://github.com/Flagsmith/flagsmith/issues/3869
+    """
+    from environments.sdk.schemas import (  # noqa: F401
+        SDKEnvironmentDocumentModel,
+    )

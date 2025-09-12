@@ -1,15 +1,15 @@
 from django.db import models
-from simple_history.models import HistoricalRecords
+from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
 
 
-class NonWritingHistoricalRecords(HistoricalRecords):
+class NonWritingHistoricalRecords(HistoricalRecords):  # type: ignore[misc]
     """
     Custom implementation of the HistoricalRecords class to prevent the signals
     being connected to the model. This allows us to stop the writing of records
     and then in a subsequent release, remove the database table.
     """
 
-    def finalize(self, sender, **kwargs):
+    def finalize(self, sender, **kwargs):  # type: ignore[no-untyped-def]
         # this should prevent the signals being added
         super(NonWritingHistoricalRecords, self).finalize(sender, **kwargs)
 

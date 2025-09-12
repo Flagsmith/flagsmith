@@ -1,0 +1,97 @@
+{
+    "$defs": {
+        "FlagResult": {
+            "properties": {
+                "feature_key": {
+                    "description": "Unique feature identifier.",
+                    "title": "Feature Key",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Feature name.",
+                    "title": "Name",
+                    "type": "string"
+                },
+                "enabled": {
+                    "description": "Indicates if the feature flag is enabled.",
+                    "title": "Enabled",
+                    "type": "boolean"
+                },
+                "value": {
+                    "description": "Feature flag value.",
+                    "title": "Value",
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "reason": {
+                    "description": "Reason for the feature flag evaluation.",
+                    "title": "Reason",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "feature_key",
+                "name",
+                "enabled",
+                "feature"
+            ],
+            "title": "FlagResult",
+            "type": "object"
+        },
+        "SegmentResult": {
+            "properties": {
+                "key": {
+                    "description": "Unique segment identifier.",
+                    "title": "Key",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Segment name.",
+                    "title": "Name",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "key",
+                "name"
+            ],
+            "title": "SegmentResult",
+            "type": "object"
+        }
+    },
+    "description": "Evaluation result object containing the used context, flag evaluation results, and segments used in the evaluation.",
+    "properties": {
+        "context": {
+            "$ref": "https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-context.json"
+        },
+        "flags": {
+            "description": "List of feature flags evaluated for the context.",
+            "items": {
+                "$ref": "#/$defs/FlagResult"
+            },
+            "title": "Flags",
+            "type": "array"
+        },
+        "segments": {
+            "description": "List of segments which the provided context belongs to.",
+            "items": {
+                "$ref": "#/$defs/SegmentResult"
+            },
+            "title": "Segments",
+            "type": "array"
+        }
+    },
+    "required": [
+        "context",
+        "flags",
+        "segments"
+    ],
+    "title": "EvaluationResult",
+    "type": "object"
+}

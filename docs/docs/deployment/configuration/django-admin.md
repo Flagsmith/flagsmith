@@ -6,32 +6,62 @@ sidebar_position: 100
 
 # Django Admin
 
-Since the application is built using Django, it benefits from the django admin pages. Flagsmith is built to utilise the
-Django admin site for certain aspects of the platform. If you are self hosting, you may find it useful to access these
-pages at certain times.
+The Flagsmith API is a Django application. As such, certain administrative tasks can be performed using
+[Django's built-in admin interface](https://docs.djangoproject.com/en/4.2/ref/contrib/admin/), which we refer to as
+Django Admin.
+
+:::danger
+
+Improper use of Django Admin can cause data loss and make your Flagsmith instance unusable. Make sure to control who 
+has access, and only perform tasks as directed by Flagsmith staff.
+
+::: 
+
+## Accessing Django Admin
+
+Django Admin can be accessed from the `/admin/` route on the Flagsmith API. Note that the trailing slash is important.
+
+Accessing Django Admin requires a user with
+[`is_staff`](https://docs.djangoproject.com/en/4.2/ref/contrib/auth/#django.contrib.auth.models.User.is_staff) set.
+This does not grant any additional permissions beyond accessing Django Admin itself.
+
+A user with
+[`is_superuser`](https://docs.djangoproject.com/en/4.2/ref/contrib/auth/#django.contrib.auth.models.User.is_superuser)
+is granted all permissions. Note that superusers still require `is_staff` to access Django Admin.
+
+You can obtain a user with these permissions using any of these methods:
+
+* Use the [`createsuperuser` management command](/deployment/hosting/locally-api#locally) from a Flagsmith API shell.
+* If no users exist yet,
+  [visit the Initialise Config page](/deployment/hosting/locally-api#environments-with-no-direct-console-access-eg-heroku-ecs).
+* Manually set the `is_staff` and `is_superuser` database fields for your user in the `users_ffadminuser` table.
 
 ## Authentication
 
-The admin pages are only available to uses that are designated as 'super users'. This can only be done when first
-setting up the platform or via the database. If you're just starting out, you can follow the instructions
-[here](/deployment/hosting/locally-api#initialising), otherwise, you need to set the `is_staff` and `is_superuser` flags
-against any of the users in your database.
+You can log in to Django Admin using the same email and password you use to log in to Flagsmith, or using Google login.
 
-Once you have a user, you can access the django admin pages at `/admin/`. You will be prompted to log in with the
-credentials of any of your super users.
+### Email and password
 
-:::info
+To log in to Django Admin with a password, make sure the Flagsmith API has the `ENABLE_ADMIN_ACCESS_USER_PASS` 
+environment variable set to `true`.
 
-If the login page is only showing the option to 'Log in using SSO' then you may need to set the
-`ENABLE_ADMIN_ACCESS_USER_PASS` environment variable. See
-[this list](/deployment/hosting/locally-api#application-environment-variables) for more information.
+If your Flagsmith account does not have a password, you can create one using any of these methods:
 
-:::
+* From the Flagsmith login page, click "Forgot password". Make sure your Flagsmith API is
+  [configured to send emails](/deployment/hosting/locally-api#email).
+* From a Flagsmith API shell, run `python manage.py changepassword your_email@example.com` and type a password.
 
-## Admin Pages
+### Google
 
-### Organisation
+Google accounts uses OAuth 2.0, which requires TLS.
 
-The key pages that one might want to access are the ones that configuration organisations on the platform. From the home
-page of the admin, you'll see an link to `Organisations` about halfway down the page. From here, you can manage the
-organisations on your platform as required. For example, SAML configuration data must be set via these pages.
+To set up Google authentication for Django Admin, create an OAuth client ID and secret from
+[Google Developer Console](https://console.developers.google.com/project). The redirect URI should point to
+`/admin/admin_sso/assignment/end/` on your API domain.
+
+Set your Google OAuth client ID and secret in the following Flagsmith API environment variables:
+
+* `OAUTH_CLIENT_ID`
+* `OAUTH_CLIENT_SECRET`
+
+To log in with Google, click "Log in using SSO" from the Django Admin login page.

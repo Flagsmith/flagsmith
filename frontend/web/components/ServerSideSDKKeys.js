@@ -9,6 +9,11 @@ import {
   deleteServersideEnvironmentKeys,
   getServersideEnvironmentKeys,
 } from 'common/services/useServersideEnvironmentKey'
+import Utils from 'common/utils/utils'
+import Constants from 'common/constants'
+import { useHasPermission } from 'common/providers/Permission'
+import Button from './base/forms/Button'
+import Tooltip from './Tooltip'
 
 class CreateServerSideKeyModal extends Component {
   state = {}
@@ -79,6 +84,7 @@ class ServerSideSDKKeys extends Component {
 
   static propTypes = {
     environmentId: propTypes.string.isRequired,
+    isAdmin: propTypes.bool.isRequired,
   }
 
   componentDidMount() {
@@ -168,13 +174,22 @@ class ServerSideSDKKeys extends Component {
             Server-side SDKs should be initialised with a Server-side
             Environment Key.
           </p>
-          <Button
-            onClick={this.createKey}
-            className='my-4'
-            disabled={this.state.isSaving}
-          >
-            Create Server-side Environment Key
-          </Button>
+          {this.props.isAdmin ? (
+            <Button onClick={this.createKey} className='my-4'>
+              Create Server-side Environment Key
+            </Button>
+          ) : (
+            <Tooltip
+              title={
+                <Button className='my-4' disabled>
+                  Create Server-side Environment Key
+                </Button>
+              }
+              place='right'
+            >
+              {Constants.environmentPermissions('ADMIN')}
+            </Tooltip>
+          )}
         </div>
         {this.state.isLoading && (
           <div className='text-center'>
@@ -203,8 +218,7 @@ class ServerSideSDKKeys extends Component {
                 </div>
                 <Button
                   onClick={() => {
-                    navigator.clipboard.writeText(key)
-                    toast('Copied')
+                    Utils.copyToClipboard(key)
                   }}
                   className='ml-2 btn-with-icon'
                 >
@@ -228,4 +242,15 @@ class ServerSideSDKKeys extends Component {
     )
   }
 }
-export default ServerSideSDKKeys
+
+const ServerSideSDKKeysWrapper = ({ environmentId }) => {
+  const { permission: isAdmin } = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: 'ADMIN',
+  })
+
+  return <ServerSideSDKKeys environmentId={environmentId} isAdmin={isAdmin} />
+}
+
+export default ServerSideSDKKeysWrapper

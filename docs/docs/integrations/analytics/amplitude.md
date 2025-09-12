@@ -6,8 +6,7 @@ hide_title: true
 
 ![Amplitude](/img/integrations/amplitude/amplitude-logo.svg)
 
-You can integrate Flagsmith with Amplitude. You can automate AB tests by connecting the Flagsmith platform with
-Amplitude. The process is as follows:
+You can integrate Flagsmith with [Amplitude](https://www.flagsmith.com/blog/feature-flag-analytics-for-users-of-flagsmith-and-amplitude) and automate AB tests and phased rollouts, gaining more insight into your product analytics. The process is as follows:
 
 ## Integration Setup
 
@@ -35,7 +34,7 @@ Identity:
 
 ```bash
 curl 'https://edge.api.flagsmith.com/api/v1/identities/?identifier=development_user_123456' \
-  -H 'x-environment-key: 8KzETdDeMY7xkqkSkY3Gsg'
+  -H 'X-Environment-Key: 8KzETdDeMY7xkqkSkY3Gsg'
 ```
 
 And then take a look in our Amplitude dashboard, you can see the user and the flag data that has been sent to the

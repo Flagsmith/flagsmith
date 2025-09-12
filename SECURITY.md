@@ -6,6 +6,6 @@ We will assess the risk and, if required, take the following actions:
 
 - Identify the remediation.
 - Implement and deploy a fix to our SaaS platform, Docker images and source code.
-- Create a Github issue, labelled `Security` where appropriate.
+- Create a GitHub issue, labelled `Security` where appropriate.
 
 Thank you for your contribution.

@@ -2,6 +2,11 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
+from common.projects.permissions import (
+    CREATE_FEATURE,
+    DELETE_FEATURE,
+    VIEW_PROJECT,
+)
 
 from features.models import Feature
 from features.permissions import FeaturePermissions
@@ -12,12 +17,7 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import (
-    CREATE_FEATURE,
-    DELETE_FEATURE,
-    VIEW_PROJECT,
-    NestedProjectPermissions,
-)
+from projects.permissions import NestedProjectPermissions
 from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser, UserPermissionGroup
 
@@ -36,7 +36,7 @@ def test_organisation_admin_can_list_features(
     mock_request = mock.MagicMock(data={}, user=admin_user)
 
     # When
-    result = feature_permissions.has_permission(mock_request, mock_view)
+    result = feature_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -57,7 +57,7 @@ def test_project_admin_can_list_features(
     UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
 
     # When
-    result = feature_permissions.has_permission(mock_request, mock_view)
+    result = feature_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -70,7 +70,7 @@ def test_project_user_with_read_access_can_list_features(
 ) -> None:
     # Given
     feature_permissions = FeaturePermissions()
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     mock_view = mock.MagicMock(
         kwargs={"project_pk": project.id},
         detail=False,
@@ -79,30 +79,10 @@ def test_project_user_with_read_access_can_list_features(
     mock_request = mock.MagicMock(data={}, user=staff_user)
 
     # When
-    result = feature_permissions.has_permission(mock_request, mock_view)
+    result = feature_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
-
-
-def test_user_with_no_project_permissions_cannot_list_features(
-    staff_user: FFAdminUser,
-    project: Project,
-) -> None:
-    # Given
-    feature_permissions = FeaturePermissions()
-    mock_view = mock.MagicMock(
-        kwargs={"project_pk": project.id},
-        detail=False,
-        action="list",
-    )
-    mock_request = mock.MagicMock(data={}, user=staff_user)
-
-    # When
-    result = feature_permissions.has_permission(mock_request, mock_view)
-
-    # Then
-    assert result is False
 
 
 def test_organisation_admin_can_create_feature(
@@ -121,7 +101,7 @@ def test_organisation_admin_can_create_feature(
     )
 
     # When
-    result = feature_permissions.has_permission(mock_request, mock_view)
+    result = feature_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -153,7 +133,7 @@ def test_project_admin_can_create_feature(
     )
 
     # When
-    result = feature_permissions.has_permission(mock_request, mock_view)
+    result = feature_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -186,7 +166,7 @@ def test_project_user_with_create_feature_permission_can_create_feature(
     )
 
     # When
-    result = feature_permissions.has_permission(mock_request, mock_view)
+    result = feature_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -208,7 +188,7 @@ def test_project_user_without_create_feature_permission_cannot_create_feature(
     )
 
     # When
-    result = feature_permissions.has_permission(mock_request, mock_view)
+    result = feature_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is False
@@ -227,7 +207,7 @@ def test_organisation_admin_can_view_feature(
     )
     mock_request = mock.MagicMock(data={}, user=admin_user)
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -249,7 +229,7 @@ def test_project_admin_can_view_feature(
     UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -262,7 +242,7 @@ def test_project_user_with_view_project_permission_can_view_feature(
     feature: Feature,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     feature_permissions = FeaturePermissions()
     mock_view = mock.MagicMock(
         kwargs={},
@@ -272,7 +252,7 @@ def test_project_user_with_view_project_permission_can_view_feature(
     mock_request = mock.MagicMock(data={}, user=staff_user)
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -292,7 +272,7 @@ def test_project_user_without_view_project_permission_cannot_view_feature(
     mock_request = mock.MagicMock(data={}, user=staff_user)
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is False
@@ -314,7 +294,7 @@ def test_organisation_admin_can_edit_feature(
     mock_request = mock.MagicMock(data={}, user=admin_user)
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -334,7 +314,7 @@ def test_project_admin_can_edit_feature(
     mock_request = mock.MagicMock(user=staff_user)
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -353,10 +333,10 @@ def test_project_user_cannot_edit_feature(
     mock_request = mock.MagicMock(user=staff_user)
 
     # User can only view the project, not edit features.
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is False
@@ -372,7 +352,7 @@ def test_organisation_admin_can_delete_feature(
     mock_request = mock.MagicMock(user=admin_user)
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -390,7 +370,7 @@ def test_project_admin_can_delete_feature(
     mock_request = mock.MagicMock(user=staff_user)
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -402,14 +382,14 @@ def test_project_user_with_delete_feature_permission_can_delete_feature(
     feature: Feature,
 ) -> None:
     # Given
-    with_project_permissions([DELETE_FEATURE])
+    with_project_permissions([DELETE_FEATURE])  # type: ignore[call-arg]
 
     feature_permissions = FeaturePermissions()
     mock_view = mock.MagicMock(detail=True, action="destroy")
     mock_request = mock.MagicMock(user=staff_user)
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -425,7 +405,7 @@ def test_project_user_without_delete_feature_permission_cannot_delete_feature(
     mock_request = mock.MagicMock(user=staff_user)
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is False
@@ -441,7 +421,7 @@ def test_organisation_admin_can_update_feature_segments(
     mock_request = mock.MagicMock(user=admin_user)
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -459,7 +439,7 @@ def test_project_admin_can_update_feature_segments(
     mock_request = mock.MagicMock(user=staff_user)
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -475,7 +455,7 @@ def test_project_user_cannot_update_feature_segments(
     mock_request = mock.MagicMock(user=staff_user)
 
     # When
-    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)
+    result = feature_permissions.has_object_permission(mock_request, mock_view, feature)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is False
@@ -490,7 +470,7 @@ def test_project_user_cannot_update_feature_segments(
         ({"create": CREATE_FEATURE}, "create", CREATE_FEATURE, True),
     ),
 )
-def test_nested_project_permissions_has_permission(
+def test_nested_project_permissions_has_permission(  # type: ignore[no-untyped-def]
     action_permission_map,
     action,
     user_permission,
@@ -517,7 +497,7 @@ def test_nested_project_permissions_has_permission(
     view = MagicMock(action=action, kwargs={"project_pk": project.id})
 
     # When
-    result = permission_class.has_permission(request, view)
+    result = permission_class.has_permission(request, view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result == expected_result
@@ -532,7 +512,7 @@ def test_nested_project_permissions_has_permission(
         ({"update": CREATE_FEATURE}, "update", CREATE_FEATURE, True),
     ),
 )
-def test_nested_project_permissions_has_object_permission(
+def test_nested_project_permissions_has_object_permission(  # type: ignore[no-untyped-def]
     action_permission_map,
     action,
     user_permission,
@@ -561,7 +541,7 @@ def test_nested_project_permissions_has_object_permission(
     obj = MagicMock(project=project)
 
     # When
-    result = permission_class.has_object_permission(request, view, obj)
+    result = permission_class.has_object_permission(request, view, obj)  # type: ignore[no-untyped-call]
 
     # Then
     assert result == expected_result

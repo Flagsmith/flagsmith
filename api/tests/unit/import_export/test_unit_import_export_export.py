@@ -1,15 +1,21 @@
 import json
 import re
+import typing
 import uuid
+from decimal import Decimal
 
 import boto3
-from core.constants import STRING
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.serializers.json import DjangoJSONEncoder
 from flag_engine.segments.constants import ALL_RULE, EQUAL
-from moto import mock_s3
+from moto import mock_s3  # type: ignore[import-untyped]
+from mypy_boto3_dynamodb.service_resource import Table
+from pyfakefs.fake_filesystem import FakeFilesystem
+from pytest_mock import MockerFixture
 
+from core.constants import STRING
+from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
@@ -17,6 +23,7 @@ from features.multivariate.models import MultivariateFeatureOption
 from features.workflows.core.models import ChangeRequest
 from import_export.export import (
     S3OrganisationExporter,
+    export_edge_identities,
     export_environments,
     export_features,
     export_metadata,
@@ -45,7 +52,7 @@ from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 
 
-def test_export_organisation(db):
+def test_export_organisation(db):  # type: ignore[no-untyped-def]
     # Given
     # an organisation
     organisation_name = "test org"
@@ -68,7 +75,7 @@ def test_export_organisation(db):
     # TODO: test whether the export is importable
 
 
-def test_export_project(organisation):
+def test_export_project(organisation):  # type: ignore[no-untyped-def]
     # Given
     # a project
     project_name = "test project"
@@ -96,7 +103,37 @@ def test_export_project(organisation):
     # TODO: test whether the export is importable
 
 
-def test_export_environments(project):
+def test_export_project__only_live_segments_are_exported(  # type: ignore[no-untyped-def]
+    organisation: Organisation, project: Project
+):
+    # Given
+    # a segment
+    segment = Segment.objects.create(project=project, name="test segment")
+    segment_rule = SegmentRule.objects.create(segment=segment, type=ALL_RULE)
+    segment_condition = Condition.objects.create(
+        rule=segment_rule, operator=EQUAL, property="foo", value="bar"
+    )
+
+    # A segment version that is not live
+    segmet2 = Segment.objects.create(
+        project=project, name="test segment 2", version_of=segment
+    )
+    segment_rule2 = SegmentRule.objects.create(segment=segmet2, type=ALL_RULE)
+    Condition.objects.create(
+        rule=segment_rule2, operator=EQUAL, property="foo", value="bar"
+    )
+    # When
+    export = export_projects(organisation.id)
+
+    # Then
+    # only the project and the live segment should be exported
+    assert len(export) == 4
+    assert export[1]["fields"]["uuid"] == str(segment.uuid)
+    assert export[2]["fields"]["uuid"] == str(segment_rule.uuid)
+    assert export[3]["fields"]["uuid"] == str(segment_condition.uuid)
+
+
+def test_export_environments(project):  # type: ignore[no-untyped-def]
     # Given
     # an environment
     environment_name = "test environment"
@@ -135,7 +172,7 @@ def test_export_environments(project):
     # TODO: test whether the export is importable
 
 
-def test_export_metadata(environment, organisation, settings):
+def test_export_metadata(environment, organisation, settings):  # type: ignore[no-untyped-def]
     # Given
     environment_type = ContentType.objects.get_for_model(environment)
 
@@ -198,7 +235,7 @@ def test_export_metadata(environment, organisation, settings):
     assert metadata.content_object == loaded_environment
 
 
-def test_export_features(project, environment, segment, admin_user):
+def test_export_features(project, environment, segment, admin_user):  # type: ignore[no-untyped-def]
     # Given
     # a standard feature
     standard_feature = Feature.objects.create(project=project, name="standard_feature")
@@ -252,7 +289,7 @@ def test_export_features(project, environment, segment, admin_user):
     # TODO: test whether the export is importable
 
 
-def test_export_features_with_environment_feature_version(
+def test_export_features_with_environment_feature_version(  # type: ignore[no-untyped-def]
     project, environment, segment, admin_user
 ):
     # Given
@@ -278,8 +315,269 @@ def test_export_features_with_environment_feature_version(
     # TODO: test whether the export is importable
 
 
+def test_export_edge_identities(
+    flagsmith_identities_table: Table,
+    project: Project,
+    environment: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: typing.List[MultivariateFeatureOption],
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    project.enable_dynamo_db = True
+    project.save()
+
+    # First, let's create some features(to override)
+    int_feature = Feature.objects.create(
+        project=project, name="int_feature", initial_value=11
+    )
+    float_feature = Feature.objects.create(
+        project=project, name="float_feature", initial_value=11.1
+    )
+    bool_feature = Feature.objects.create(
+        project=project, name="bool_feature", initial_value=True
+    )
+
+    # Let's create another feature that we are not going to override
+    Feature.objects.create(project=project, name="string_feature", initial_value="foo")
+
+    # another mv feature that we will override
+    # using the option id that does not exists
+    second_mv_feature = Feature.objects.create(
+        project=project, name="mv_feature_with_deleted_option", type=MULTIVARIATE
+    )
+
+    # and a feature that we will override with missing attributes
+    feature_to_override_with_missing_attrs = Feature.objects.create(
+        project=project, name="feature_to_override_with_missing_attrs"
+    )
+
+    mv_option = multivariate_options[0]
+
+    identity_identifier = "Development_user_123456"
+    mv_override_fs_uuid = "b7c3d9e9-0bcc-4e60-8264-43e84b00fcbd"
+    int_override_fs_uuid = "c6f9cec7-f27b-4e4f-80ff-5a2dfa3d4d20"
+    float_override_fs_uuid = "b90eafdc-56f3-45ba-965f-e245007f3050"
+    bool_override_fs_uuid = "2dab9fe3-49df-41ec-adc1-30f5dfe0b855"
+
+    identity_document = {
+        "composite_key": f"{environment.api_key}_{identity_identifier}",
+        "created_date": "2024-09-22T07:27:27.770956+00:00",
+        "django_id": None,
+        "environment_api_key": environment.api_key,
+        "identifier": identity_identifier,
+        "identity_features": [
+            {
+                "django_id": None,
+                "enabled": False,
+                "feature": {
+                    "id": multivariate_feature.id,
+                    "name": multivariate_feature.name,
+                    "type": "MULTIVARIATE",
+                },
+                "featurestate_uuid": mv_override_fs_uuid,
+                "feature_segment": None,
+                "feature_state_value": "control",
+                "multivariate_feature_state_values": [
+                    {
+                        "id": None,
+                        "multivariate_feature_option": {
+                            "id": mv_option.id,
+                            "value": mv_option.string_value,
+                        },
+                        "mv_fs_value_uuid": "1897c9df-b8fa-4870-a077-f48eadbf3aac",
+                        "percentage_allocation": 100,
+                    }
+                ],
+            },
+            {
+                "django_id": None,
+                "enabled": True,
+                "feature": {
+                    "id": int_feature.id,
+                    "name": int_feature.name,
+                    "type": "STANDARD",
+                },
+                "featurestate_uuid": int_override_fs_uuid,
+                "feature_segment": None,
+                "feature_state_value": 123,
+                "multivariate_feature_state_values": [],
+            },
+            {
+                "django_id": None,
+                "enabled": True,
+                "feature": {
+                    "id": float_feature.id,
+                    "name": int_feature.name,
+                    "type": "STANDARD",
+                },
+                "featurestate_uuid": float_override_fs_uuid,
+                "feature_segment": None,
+                "feature_state_value": Decimal("123.123"),
+                "multivariate_feature_state_values": [],
+            },
+            {
+                "django_id": None,
+                "enabled": True,
+                "feature": {
+                    "id": bool_feature.id,
+                    "name": int_feature.name,
+                    "type": "STANDARD",
+                },
+                "featurestate_uuid": bool_override_fs_uuid,
+                "feature_segment": None,
+                "feature_state_value": False,
+                "multivariate_feature_state_values": [],
+            },
+            # A feature that does not exists anymore(to make sure we skip it during export)
+            {
+                "django_id": None,
+                "enabled": True,
+                "featurestate_uuid": "53bd193f-da11-40c8-b694-3261f28c720c",
+                "feature": {
+                    "id": 9999,
+                    "name": "feature_that_does_not_exists",
+                    "type": "STANDARD",
+                },
+            },
+            # An mv override with an option that does not exists anymore(to make sure we skip it during export)
+            {
+                "django_id": None,
+                "enabled": False,
+                "feature": {
+                    "id": second_mv_feature.id,
+                    "name": second_mv_feature.name,
+                    "type": "MULTIVARIATE",
+                },
+                "featurestate_uuid": "53bd193f-da11-40c8-b694-3261f28c720d",
+                "feature_segment": None,
+                "feature_state_value": "control",
+                "multivariate_feature_state_values": [
+                    {
+                        "id": None,
+                        "multivariate_feature_option": {
+                            "id": 999999,  # does not exists
+                            "value": mv_option.string_value,
+                        },
+                        "mv_fs_value_uuid": "1897c9df-b8fa-4870-a077-f48eadbf3aac",
+                        "percentage_allocation": 100,
+                    }
+                ],
+            },
+            # An override with missing feature_state_value and multivariate_feature_state_values
+            # that should be handled correctly
+            {
+                "django_id": None,
+                "enabled": False,
+                "feature": {
+                    "id": feature_to_override_with_missing_attrs.id,
+                    "name": feature_to_override_with_missing_attrs.name,
+                    "type": "STANDARD",
+                },
+                "featurestate_uuid": "53ab4fc5-0027-47a4-85b3-825abe2287eb",
+                "feature_segment": None,
+            },
+        ],
+        "identity_traits": [
+            {"trait_key": "int_trait", "trait_value": 123},
+            {"trait_key": "float_trait", "trait_value": Decimal("123.123")},
+            {"trait_key": "str_trait", "trait_value": "some-string"},
+            {"trait_key": "bool_trait", "trait_value": True},
+        ],
+        "identity_uuid": "37ecaac3-70dd-4135-b2ee-9b2e3ffdc028",
+    }
+    flagsmith_identities_table.put_item(Item=identity_document)
+
+    # another identity to test pagination
+    flagsmith_identities_table.put_item(
+        Item={
+            "composite_key": f"{environment.api_key}_identity_one",
+            "environment_api_key": environment.api_key,
+            "identifier": "identity_two",
+            "created_date": "2024-09-22T07:27:27.770956+00:00",
+            "identity_traits": [],
+            "identity_features": [],
+        }
+    )
+
+    # When
+    mocker.patch("edge_api.identities.export.EXPORT_EDGE_IDENTITY_PAGINATION_LIMIT", 1)
+    export_json = export_edge_identities(project.organisation_id)
+
+    # Let's load the data
+    file_path = f"/tmp/{uuid.uuid4()}.json"
+    with open(file_path, "a+") as f:
+        f.write(json.dumps(export_json, cls=DjangoJSONEncoder))
+        f.seek(0)
+
+        call_command("loaddata", f.name, format="json")
+    # Then
+    # the identity was created
+    assert Identity.objects.count() == 2
+    identity = Identity.objects.get(identifier=identity_identifier)
+
+    traits = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
+
+    assert len(traits) == 4
+    int_trait = traits[0]
+    assert int_trait.trait_key == "int_trait"
+    assert int_trait.trait_value == 123
+
+    float_trait = traits[1]
+    assert float_trait.trait_key == "float_trait"
+    assert float_trait.trait_value == 123.123
+
+    str_trait = traits[2]
+    assert str_trait.trait_key == "str_trait"
+    assert str_trait.trait_value == "some-string"
+
+    bool_trait = traits[3]
+    assert bool_trait.trait_key == "bool_trait"
+    assert bool_trait.trait_value is True
+
+    all_feature_states = identity.get_all_feature_states()
+    assert len(all_feature_states) == 7
+
+    actual_mv_override = all_feature_states[0]
+    assert str(actual_mv_override.uuid) == mv_override_fs_uuid
+    assert (
+        actual_mv_override.get_feature_state_value(identity=identity)
+        == mv_option.string_value
+    )
+
+    actual_int_override = all_feature_states[1]
+    assert str(actual_int_override.uuid) == int_override_fs_uuid
+    assert actual_int_override.get_feature_state_value(identity=identity) == 123
+
+    actual_float_override = all_feature_states[2]
+    assert str(actual_float_override.uuid) == float_override_fs_uuid
+    assert actual_float_override.get_feature_state_value(identity=identity) == "123.123"
+
+    actual_bool_override = all_feature_states[3]
+    assert str(actual_bool_override.uuid) == bool_override_fs_uuid
+    assert actual_bool_override.get_feature_state_value(identity=identity) is False
+
+    actual_string_fs = all_feature_states[4]
+    assert actual_string_fs.get_feature_state_value(identity=identity) == "foo"
+    assert actual_string_fs.identity is None
+
+    override_without_mv_option = all_feature_states[5]
+    assert (
+        override_without_mv_option.get_feature_state_value(identity=identity)
+        == "control"
+    )
+    assert override_without_mv_option.identity == identity
+
+    override_with_missing_attributes = all_feature_states[6]
+    assert override_with_missing_attributes.feature_state_value.value is None
+    assert (
+        override_with_missing_attributes.multivariate_feature_state_values.exists()
+        is False
+    )
+
+
 @mock_s3
-def test_organisation_exporter_export_to_s3(organisation):
+def test_organisation_exporter_export_to_s3(organisation):  # type: ignore[no-untyped-def]
     # Given
     bucket_name = "test-bucket"
     file_key = "organisation-exports/org-1.json"
@@ -292,7 +590,7 @@ def test_organisation_exporter_export_to_s3(organisation):
 
     s3_client = boto3.client("s3")
 
-    exporter = S3OrganisationExporter(s3_client=s3_client)
+    exporter = S3OrganisationExporter(s3_client=s3_client)  # type: ignore[no-untyped-call]
 
     # When
     exporter.export_to_s3(organisation.id, bucket_name, file_key)
@@ -300,3 +598,30 @@ def test_organisation_exporter_export_to_s3(organisation):
     # Then
     retrieved_object = s3_client.get_object(Bucket=bucket_name, Key=file_key)
     assert retrieved_object.get("ContentLength", 0) > 0
+
+
+def test_export_dynamo_project(
+    organisation: Organisation, mocker: MockerFixture, fs: FakeFilesystem
+) -> None:
+    # Given - dynamo db project
+    project_name = "test project"
+    project = Project.objects.create(
+        organisation=organisation, name=project_name, enable_dynamo_db=True
+    )
+
+    # When - we export the data
+    data = export_projects(organisation.id)
+
+    # and delete the project
+    project.hard_delete()
+
+    # Next, let's load the data
+    file_path = f"/tmp/{uuid.uuid4()}.json"
+    fs.create_file(file_path, contents=json.dumps(data, cls=DjangoJSONEncoder))
+
+    call_command("loaddata", file_path, format="json")
+
+    # Then
+    assert (
+        Project.objects.filter(uuid=project.uuid, enable_dynamo_db=False).count() == 1
+    )

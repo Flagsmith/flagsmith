@@ -8,11 +8,11 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
-        self.exporter = S3OrganisationExporter()
+        self.exporter = S3OrganisationExporter()  # type: ignore[no-untyped-call]
 
-    def add_arguments(self, parser: CommandParser):
+    def add_arguments(self, parser: CommandParser):  # type: ignore[no-untyped-def]
         parser.add_argument(
             "organisation-id",
             type=int,
@@ -29,7 +29,7 @@ class Command(BaseCommand):
             help="S3 key to export to.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # type: ignore[no-untyped-def]
         organisation_id = options["organisation-id"]
         bucket_name = options["bucket-name"]
         key = options["key"]

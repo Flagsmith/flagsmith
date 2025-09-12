@@ -8,6 +8,7 @@ import { createBrowserHistory } from 'history'
 import ToastMessages from './project/toast'
 import routes from './routes'
 import Utils from 'common/utils/utils'
+import Project from 'common/project'
 import AccountStore from 'common/stores/account-store'
 import data from 'common/data/base/_data'
 
@@ -41,8 +42,31 @@ if (event) {
 }
 
 const isInvite = document.location.href.includes('invite')
-if (res && !isInvite) {
+const isOauth = document.location.href.includes('/oauth')
+if (res && !isInvite && !isOauth) {
   AppActions.setToken(res)
+}
+
+function isPublicURL() {
+  const pathname = document.location.pathname
+
+  const publicPaths = [
+    '/',
+    '/404',
+    '/home',
+    '/password-reset',
+    '/maintenance',
+    '/github-setup',
+    '/oauth',
+    '/register',
+    '/saml',
+    '/signup',
+    '/login',
+  ]
+
+  return publicPaths.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  )
 }
 
 setTimeout(() => {
@@ -51,14 +75,7 @@ setTimeout(() => {
   })
 
   // redirect before login
-  // todo: move to util to decide if url is public
-  if (
-    (document.location.pathname.indexOf('/project/') !== -1 ||
-      document.location.pathname.indexOf('/create') !== -1 ||
-      document.location.pathname.indexOf('/invite') !== -1 ||
-      document.location.pathname.indexOf('/organisation-settings') !== -1) &&
-    !AccountStore.getUser()
-  ) {
+  if (!isPublicURL() && !AccountStore.getUser()) {
     API.setRedirect(
       document.location.pathname + (document.location.search || ''),
     )
@@ -92,13 +109,4 @@ if (!E2E && Project.crispChat && !isWidget) {
     s.async = 1
     d.getElementsByTagName('head')[0].appendChild(s)
   })()
-}
-
-if (!E2E && Project.zendesk && !isWidget) {
-  const script = document.createElement('script')
-  script.type = 'text/javascript'
-  script.id = 'ze-snippet'
-  script.async = true
-  script.src = `https://static.zdassets.com/ekr/snippet.js?key=${Project.zendesk}`
-  document.getElementsByTagName('head')[0].appendChild(script)
 }

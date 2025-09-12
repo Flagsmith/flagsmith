@@ -19,14 +19,14 @@ logger = logging.getLogger(__name__)
 
 
 class GithubUser:
-    def __init__(self, code: str, client_id: str = None, client_secret: str = None):
+    def __init__(self, code: str, client_id: str = None, client_secret: str = None):  # type: ignore[assignment]
         self.client_id = client_id or settings.GITHUB_CLIENT_ID
         self.client_secret = client_secret or settings.GITHUB_CLIENT_SECRET
 
         self.access_token = self._get_access_token(code)
         self.headers = {"Authorization": f"token {self.access_token}"}
 
-    def _get_access_token(self, code) -> str:
+    def _get_access_token(self, code) -> str:  # type: ignore[no-untyped-def]
         data = {
             "code": code,
             "client_id": self.client_id,
@@ -42,16 +42,16 @@ class GithubUser:
             error_message = response_json["error_description"].replace("+", " ")
             raise GithubError(error_message)
 
-        return response_json["access_token"]
+        return response_json["access_token"]  # type: ignore[no-any-return]
 
-    def get_user_info(self) -> dict:
+    def get_user_info(self) -> dict:  # type: ignore[type-arg]
         # TODO: use threads?
         try:
-            return {**self._get_user_name_and_id(), "email": self._get_primary_email()}
+            return {**self._get_user_name_and_id(), "email": self._get_primary_email()}  # type: ignore[no-untyped-call]  # noqa: E501  # noqa: E501
         except RequestException:
             raise GithubError("Failed to communicate with the Github API.")
 
-    def _get_user_name_and_id(self):
+    def _get_user_name_and_id(self):  # type: ignore[no-untyped-def]
         user_response = requests.get(f"{GITHUB_API_URL}/user", headers=self.headers)
         user_response_json = user_response.json()
         full_name = user_response_json.get("name")
@@ -64,7 +64,7 @@ class GithubUser:
             "github_user_id": user_response_json.get("id"),
         }
 
-    def _get_primary_email(self):
+    def _get_primary_email(self):  # type: ignore[no-untyped-def]
         emails_response = requests.get(
             f"{GITHUB_API_URL}/user/emails", headers=self.headers
         )

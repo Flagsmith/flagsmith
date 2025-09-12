@@ -5,7 +5,7 @@ from integrations.integration import identify_integrations
 from integrations.segment.models import SegmentConfiguration
 
 
-def test_identify_integrations_amplitude_called(mocker, environment, identity):
+def test_identify_integrations_amplitude_called(mocker, environment, identity):  # type: ignore[no-untyped-def]
     # Given
     mock_amplitude_wrapper = mocker.patch(
         "integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async"
@@ -13,26 +13,26 @@ def test_identify_integrations_amplitude_called(mocker, environment, identity):
     AmplitudeConfiguration.objects.create(api_key="abc-123", environment=environment)
 
     # When
-    identify_integrations(identity, identity.get_all_feature_states())
+    identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
 
     # Then
     mock_amplitude_wrapper.assert_called()
 
 
-def test_identify_integrations_segment_called(mocker, environment, identity):
+def test_identify_integrations_segment_called(mocker, environment, identity):  # type: ignore[no-untyped-def]
     # Given
     mock_segment_wrapper = mocker.patch(
         "integrations.segment.segment.SegmentWrapper.identify_user_async"
     )
     SegmentConfiguration.objects.create(api_key="abc-123", environment=environment)
     # When
-    identify_integrations(identity, identity.get_all_feature_states())
+    identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
 
     # Then
     mock_segment_wrapper.assert_called()
 
 
-def test_identify_integrations_calls_every_integration_in_identity_integrations_dict(
+def test_identify_integrations_calls_every_integration_in_identity_integrations_dict(  # type: ignore[no-untyped-def]
     mocker, identity
 ):
     # Given
@@ -62,7 +62,7 @@ def test_identify_integrations_calls_every_integration_in_identity_integrations_
     )
 
     # When
-    identify_integrations(identity, identity.get_all_feature_states())
+    identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
 
     # Then
     # Integration a was successfully called
@@ -99,7 +99,7 @@ def test_identify_integrations_calls_every_integration_in_identity_integrations_
     )
 
 
-def test_identify_integrations_does_not_call_deleted_integrations(
+def test_identify_integrations_does_not_call_deleted_integrations(  # type: ignore[no-untyped-def]
     mocker, environment, identity
 ):
     # Given
@@ -111,7 +111,7 @@ def test_identify_integrations_does_not_call_deleted_integrations(
     sc.delete()
 
     # When
-    identify_integrations(identity, identity.get_all_feature_states())
+    identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
 
     # Then
     mock_segment_wrapper.assert_not_called()

@@ -12,6 +12,6 @@ api:
   - changed-files:
       - any-glob-to-any-file: api/**
 
-github:
+infrastructure:
   - changed-files:
-      - any-glob-to-any-file: .github/**
+      - any-glob-to-any-file: infrastructure/**

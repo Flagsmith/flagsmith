@@ -1,15 +1,15 @@
-from unittest import mock
+import uuid
 
 import pytest
+from common.projects.permissions import VIEW_PROJECT
 from django.db.utils import IntegrityError
 
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
 from projects.models import Project
-from projects.permissions import VIEW_PROJECT
 from tests.types import WithProjectPermissionsCallable
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 def test_user_belongs_to_success(
@@ -47,7 +47,7 @@ def test_get_permitted_projects_for_user_returns_only_projects_matching_permissi
     project: Project,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     # When
     projects = staff_user.get_permitted_projects(permission_key=VIEW_PROJECT)
@@ -66,7 +66,7 @@ def test_get_admin_organisations(
     admin_user.add_organisation(non_admin_organisation, OrganisationRole.USER)
 
     # When
-    admin_orgs = admin_user.get_admin_organisations()
+    admin_orgs = admin_user.get_admin_organisations()  # type: ignore[no-untyped-call]
 
     # Then
     assert organisation in admin_orgs
@@ -156,68 +156,23 @@ def test_has_organisation_permission_is_false_when_user_does_not_have_permission
     )
 
 
-@pytest.mark.django_db
-def test_creating_a_user_calls_mailer_lite_subscribe(mocker):
-    # Given
-    mailer_lite_mock = mocker.patch("users.models.mailer_lite")
-    # When
-    user = FFAdminUser.objects.create(
-        email="test@mail.com",
-    )
-    # Then
-    mailer_lite_mock.subscribe.assert_called_with(user)
-
-
-@pytest.mark.django_db
-def test_user_add_organisation_does_not_call_mailer_lite_subscribe_for_unpaid_organisation(
-    mocker,
-):
-    user = FFAdminUser.objects.create(email="test@example.com")
-    organisation = Organisation.objects.create(name="Test Organisation")
-    mailer_lite_mock = mocker.patch("users.models.mailer_lite")
-    mocker.patch(
-        "organisations.models.Organisation.is_paid",
-        new_callable=mock.PropertyMock,
-        return_value=False,
-    )
-    # When
-    user.add_organisation(organisation, OrganisationRole.USER)
-
-    # Then
-    mailer_lite_mock.subscribe.assert_not_called()
-
-
-@pytest.mark.django_db
-def test_user_add_organisation_calls_mailer_lite_subscribe_for_paid_organisation(
-    mocker,
-):
-    mailer_lite_mock = mocker.patch("users.models.mailer_lite")
-    user = FFAdminUser.objects.create(email="test@example.com")
-    organisation = Organisation.objects.create(name="Test Organisation")
-    mocker.patch(
-        "organisations.models.Organisation.is_paid",
-        new_callable=mock.PropertyMock,
-        return_value=True,
-    )
-    # When
-    user.add_organisation(organisation, OrganisationRole.USER)
-
-    # Then
-    mailer_lite_mock.subscribe.assert_called_with(user)
-
-
 def test_user_add_organisation_adds_user_to_the_default_user_permission_group(
-    test_user, organisation, default_user_permission_group, user_permission_group
-):
+    organisation: Organisation,
+    default_user_permission_group: UserPermissionGroup,
+    user_permission_group: UserPermissionGroup,
+) -> None:
+    # Given
+    user = FFAdminUser.objects.create(email=f"test{uuid.uuid4()}@example.com")
+
     # When
-    test_user.add_organisation(organisation, OrganisationRole.USER)
+    user.add_organisation(organisation, OrganisationRole.USER)
 
     # Then
-    assert default_user_permission_group in test_user.permission_groups.all()
-    assert user_permission_group not in test_user.permission_groups.all()
+    assert default_user_permission_group in user.permission_groups.all()
+    assert user_permission_group not in user.permission_groups.all()
 
 
-def test_user_remove_organisation_removes_user_from_the_user_permission_group(
+def test_user_remove_organisation_removes_user_from_the_user_permission_group(  # type: ignore[no-untyped-def]
     user_permission_group, admin_user, organisation, default_user_permission_group
 ):
     # Given - two groups that belongs to the same organisation, but user
@@ -232,7 +187,7 @@ def test_user_remove_organisation_removes_user_from_the_user_permission_group(
 
 
 @pytest.mark.django_db
-def test_delete_user():
+def test_delete_user():  # type: ignore[no-untyped-def]
     # create a couple of users
     email1 = "test1@example.com"
     email2 = "test2@example.com"
@@ -286,32 +241,5 @@ def test_delete_user():
     assert Organisation.objects.filter(name="org1").count() == 1
 
 
-def test_user_create_calls_pipedrive_tracking(mocker, db, settings):
-    # Given
-    mocked_create_pipedrive_lead = mocker.patch("users.signals.create_pipedrive_lead")
-    settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
-
-    # When
-    FFAdminUser.objects.create(email="test@example.com")
-
-    # Then
-    mocked_create_pipedrive_lead.delay.assert_called()
-
-
-def test_user_create_does_not_call_pipedrive_tracking_if_ignored_domain(
-    mocker, db, settings
-):
-    # Given
-    mocked_create_pipedrive_lead = mocker.patch("users.signals.create_pipedrive_lead")
-    settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
-    settings.PIPEDRIVE_IGNORE_DOMAINS = ["example.com"]
-
-    # When
-    FFAdminUser.objects.create(email="test@example.com")
-
-    # Then
-    mocked_create_pipedrive_lead.delay.assert_not_called()
-
-
-def test_user_email_domain_property():
+def test_user_email_domain_property():  # type: ignore[no-untyped-def]
     assert FFAdminUser(email="test@example.com").email_domain == "example.com"

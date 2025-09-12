@@ -5,7 +5,7 @@ from django.db import migrations
 from util.migrations import merge_duplicate_permissions
 
 
-def merge_duplicate_organisation_permissions(apps, schema_editor):
+def merge_duplicate_organisation_permissions(apps, schema_editor):  # type: ignore[no-untyped-def]
     UserOrganisationPermission = apps.get_model(
         "organisation_permissions", "UserOrganisationPermission"
     )

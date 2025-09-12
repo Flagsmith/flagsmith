@@ -4,7 +4,7 @@ from django.db import migrations, models
 from django.db.models import Q
 
 
-def add_default_base_url(apps, schema_editor):
+def add_default_base_url(apps, schema_editor):  # type: ignore[no-untyped-def]
     amplitude_configuration_model = apps.get_model(
         "amplitude", "AmplitudeConfiguration"
     )

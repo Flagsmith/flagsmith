@@ -6,11 +6,8 @@ import typing
 import uuid
 from copy import deepcopy
 
-from core.models import (
-    AbstractBaseExportableModel,
-    SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory,
-)
+from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
     ObjectDoesNotExist,
@@ -18,21 +15,23 @@ from django.core.exceptions import (
 )
 from django.db import models
 from django.db.models import Max, Q, QuerySet
-from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
-from django_lifecycle import (
+from django.utils import formats, timezone
+from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
+    AFTER_DELETE,
+    AFTER_SAVE,
     BEFORE_CREATE,
     BEFORE_SAVE,
     LifecycleModelMixin,
     hook,
 )
-from ordered_model.models import OrderedModelBase
-from simple_history.models import HistoricalRecords
+from ordered_model.models import OrderedModelBase  # type: ignore[import-untyped]
+from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
+    FEATURE_STATE_SCHEDULED_TO_UPDATE_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
     FEATURE_STATE_VALUE_UPDATED_MESSAGE,
     FEATURE_UPDATED_MESSAGE,
@@ -45,6 +44,11 @@ from audit.constants import (
 )
 from audit.related_object_type import RelatedObjectType
 from audit.tasks import create_segment_priorities_changed_audit_log
+from core.models import (
+    AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -72,6 +76,8 @@ from features.value_types import (
     STRING,
 )
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.github.constants import GitHubEventType
+from metadata.models import Metadata
 from projects.models import Project
 from projects.tags.models import Tag
 
@@ -84,17 +90,17 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
 
 
-class Feature(
+class Feature(  # type: ignore[django-manager-missing]
     SoftDeleteExportableModel,
     CustomLifecycleModelMixin,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
 ):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     project = models.ForeignKey(
         Project,
         related_name="features",
-        help_text=_(
+        help_text=(
             "Changing the project selected will remove previous Feature States for the previously "
             "associated projects Environments that are related to this Feature. New default "
             "Feature States will be created for the new selected projects Environments for this "
@@ -105,7 +111,7 @@ class Feature(
         on_delete=models.DO_NOTHING,
     )
     initial_value = models.CharField(
-        max_length=20000, null=True, default=None, blank=True
+        max_length=settings.FEATURE_VALUE_LIMIT, null=True, default=None, blank=True
     )
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
@@ -124,18 +130,54 @@ class Feature(
     history_record_class_path = "features.models.HistoricalFeature"
     related_object_type = RelatedObjectType.FEATURE
 
-    objects = FeatureManager()
+    objects = FeatureManager()  # type: ignore[misc]
+
+    metadata = GenericRelation(Metadata)
 
     class Meta:
         # Note: uniqueness index is added in explicit SQL in the migrations (See 0005, 0050)
         # TODO: after upgrade to Django 4.0 use UniqueConstraint()
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
+    @hook(AFTER_SAVE)  # type: ignore[misc]
+    def create_github_comment(self) -> None:
+        from integrations.github.github import call_github_task
+
+        if (
+            self.external_resources.exists()
+            and self.project.github_project.exists()
+            and self.project.organisation.github_config.exists()
+            and self.deleted_at
+        ):
+            call_github_task(
+                organisation_id=self.project.organisation_id,  # type: ignore[arg-type]
+                type=GitHubEventType.FLAG_DELETED.value,
+                feature=self,
+                segment_name=None,
+                url=None,
+                feature_states=None,
+            )
+
     @hook(AFTER_CREATE)
-    def create_feature_states(self):
+    def create_feature_states(self):  # type: ignore[no-untyped-def]
         FeatureState.create_initial_feature_states_for_feature(feature=self)
 
-    def validate_unique(self, *args, **kwargs):
+    @hook(AFTER_SAVE)  # type: ignore[misc]
+    def delete_identity_overrides(self) -> None:
+        # Note that we have to use conditional logic on self.deleted_at inside
+        # the hook method because the django-lifecycle logic for when / was / is_not
+        # doesn't work due to it relying on a method called initial_value, which
+        # we already define as a field on the model class.
+        if self.deleted_at and self.project.enable_dynamo_db:
+            from edge_api.identities.tasks import (
+                delete_environments_v2_identity_overrides_by_feature,
+            )
+
+            delete_environments_v2_identity_overrides_by_feature.delay(
+                kwargs={"feature_id": self.id}
+            )
+
+    def validate_unique(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
         Checks unique constraints on the model and raises ``ValidationError``
         if any failed.
@@ -157,23 +199,23 @@ class Feature(
                 }
             )
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Project %s - Feature %s" % (self.project.name, self.name)
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return FEATURE_CREATED_MESSAGE % self.name
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return FEATURE_DELETED_MESSAGE % self.name
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return FEATURE_UPDATED_MESSAGE % self.name
 
     def _get_project(self) -> typing.Optional["Project"]:
         return self.project
 
 
-def get_next_segment_priority(feature):
+def get_next_segment_priority(feature):  # type: ignore[no-untyped-def]
     feature_segments = FeatureSegment.objects.filter(feature=feature).order_by(
         "-priority"
     )
@@ -184,9 +226,10 @@ def get_next_segment_priority(feature):
 
 
 class FeatureSegment(
+    LifecycleModelMixin,  # type: ignore[misc]
     AbstractBaseExportableModel,
-    OrderedModelBase,
-    abstract_base_auditable_model_factory(["uuid"]),
+    OrderedModelBase,  # type: ignore[misc]
+    abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
 ):
     history_record_class_path = "features.models.HistoricalFeatureSegment"
     related_object_type = RelatedObjectType.FEATURE
@@ -236,7 +279,7 @@ class FeatureSegment(
     order_field_name = "priority"
     order_with_respect_to = ("feature", "environment", "environment_feature_version")
 
-    objects = FeatureSegmentManager()
+    objects = FeatureSegmentManager()  # type: ignore[misc]
 
     class Meta:
         unique_together = (
@@ -247,7 +290,7 @@ class FeatureSegment(
         )
         ordering = ("priority",)
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return (
             "FeatureSegment for "
             + self.feature.name
@@ -255,7 +298,7 @@ class FeatureSegment(
             + str(self.priority)
         )
 
-    def __lt__(self, other):
+    def __lt__(self, other):  # type: ignore[no-untyped-def]
         """
         Kind of counter intuitive but since priority 1 is highest, we want to check if priority is GREATER than the
         priority of the other feature segment.
@@ -265,7 +308,7 @@ class FeatureSegment(
     def clone(
         self,
         environment: "Environment",
-        environment_feature_version: "EnvironmentFeatureVersion" = None,
+        environment_feature_version: "EnvironmentFeatureVersion" = None,  # type: ignore[assignment]
     ) -> "FeatureSegment":
         clone = deepcopy(self)
         clone.id = None
@@ -276,7 +319,7 @@ class FeatureSegment(
         return clone
 
     # noinspection PyTypeChecker
-    def get_value(self):
+    def get_value(self):  # type: ignore[no-untyped-def]
         return get_correctly_typed_value(self.value_type, self.value)
 
     @classmethod
@@ -302,7 +345,7 @@ class FeatureSegment(
             feature_segments
         )
 
-        def sort_function(id_priority_pair):
+        def sort_function(id_priority_pair):  # type: ignore[no-untyped-def]
             priority = id_priority_pair[1]
             return priority
 
@@ -310,7 +353,7 @@ class FeatureSegment(
             existing_feature_segment_id_priority_pairs, key=sort_function
         ) == sorted(new_feature_segment_id_priorities, key=sort_function):
             # no changes needed - do nothing (but return existing feature segments)
-            return feature_segments
+            return feature_segments  # type: ignore[no-any-return]
 
         id_priority_dict = dict(new_feature_segment_id_priorities)
 
@@ -338,13 +381,13 @@ class FeatureSegment(
 
         # since the `to` method updates the priority in place, we don't need to refresh
         # the objects from the database.
-        return feature_segments
+        return feature_segments  # type: ignore[no-any-return]
 
     @staticmethod
     def to_id_priority_tuple_pairs(
-        feature_segments: typing.Union[
+        feature_segments: typing.Union[  # type: ignore[type-arg]
             typing.Iterable["FeatureSegment"], typing.Iterable[dict]
-        ]
+        ],
     ) -> typing.List[typing.Tuple[int, int]]:
         """
         Helper method to convert a collection of FeatureSegment objects or dictionaries to a list of 2-tuples
@@ -359,10 +402,15 @@ class FeatureSegment(
 
         return id_priority_pairs
 
-    def get_audit_log_related_object_id(self, history_instance) -> int:
+    def get_audit_log_related_object_id(self, history_instance) -> int:  # type: ignore[no-untyped-def]
         return self.feature_id
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_skip_create_audit_log(self) -> bool:
+        # Don't create audit logs when deleting feature segments using versioning
+        # v2 as we rely on the version history instead.
+        return self.environment_feature_version_id is not None
+
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
             self.feature.name,
             self.segment.name,
@@ -371,11 +419,29 @@ class FeatureSegment(
     def _get_environment(self) -> "Environment":
         return self.environment
 
+    @hook(AFTER_DELETE)  # type: ignore[misc]
+    def create_github_comment(self) -> None:
+        from integrations.github.github import call_github_task
+
+        if (
+            self.feature.external_resources.exists()
+            and self.feature.project.github_project.exists()
+            and self.feature.project.organisation.github_config.exists()
+        ):
+            call_github_task(
+                self.feature.project.organisation_id,  # type: ignore[arg-type]
+                GitHubEventType.SEGMENT_OVERRIDE_DELETED.value,
+                self.feature,
+                self.segment.name,
+                None,
+                None,
+            )
+
 
 class FeatureState(
     SoftDeleteExportableModel,
-    LifecycleModelMixin,
-    abstract_base_auditable_model_factory(
+    LifecycleModelMixin,  # type: ignore[misc]
+    abstract_base_auditable_model_factory(  # type: ignore[misc]
         historical_records_excluded_fields=["uuid"],
         change_details_excluded_fields=["live_from", "version"],
         show_change_details_for_create=True,
@@ -424,7 +490,7 @@ class FeatureState(
         related_name="feature_states",
     )
 
-    objects = FeatureStateManager()
+    objects = FeatureStateManager()  # type: ignore[misc]
 
     environment_feature_version = models.ForeignKey(
         "feature_versioning.EnvironmentFeatureVersion",
@@ -475,14 +541,22 @@ class FeatureState(
                 other.identity_id
                 or (
                     other.feature_segment_id
-                    and self.feature_segment < other.feature_segment
+                    and self.feature_segment < other.feature_segment  # type: ignore[operator]
                 )
             )
 
         if self.type == other.type:
-            if self.environment.use_v2_feature_versioning:
-                return (
-                    self.environment_feature_version > other.environment_feature_version
+            if self.environment.use_v2_feature_versioning:  # type: ignore[union-attr]
+                if (
+                    self.environment_feature_version_id is None
+                    or other.environment_feature_version_id is None
+                ):
+                    raise ValueError(
+                        "Cannot compare feature states as they are missing environment_feature_version."
+                    )
+
+                return (  # type: ignore[no-any-return]
+                    self.environment_feature_version > other.environment_feature_version  # type: ignore[operator]
                 )
             else:
                 # we use live_from here as a priority over the version since
@@ -506,16 +580,16 @@ class FeatureState(
         # it has a feature_segment or an identity
         return not (other.feature_segment_id or other.identity_id)
 
-    def __str__(self):
+    def __str__(self) -> str:
         s = f"Feature {self.feature.name} - Enabled: {self.enabled}"
         if self.environment is not None:
             s = f"{self.environment} - {s}"
-        elif self.identity is not None:
+        if self.identity is not None:
             s = f"Identity {self.identity.identifier} - {s}"
         return s
 
     @property
-    def previous_feature_state_value(self):
+    def previous_feature_state_value(self):  # type: ignore[no-untyped-def]
         try:
             history_instance = self.feature_state_value.history.first()
             return (
@@ -543,8 +617,11 @@ class FeatureState(
 
     @property
     def is_live(self) -> bool:
-        if self.environment.use_v2_feature_versioning:
-            return self.environment_feature_version.is_live
+        if self.environment.use_v2_feature_versioning:  # type: ignore[union-attr]
+            return (
+                self.environment_feature_version_id is not None
+                and self.environment_feature_version.is_live  # type: ignore[union-attr]
+            )
         else:
             return (
                 self.version is not None
@@ -554,15 +631,15 @@ class FeatureState(
 
     @property
     def is_scheduled(self) -> bool:
-        return self.live_from and self.live_from > timezone.now()
+        return bool(self.live_from and self.live_from > timezone.now())
 
     def clone(
         self,
         env: "Environment",
-        live_from: datetime.datetime = None,
+        live_from: datetime.datetime = None,  # type: ignore[assignment]
         as_draft: bool = False,
-        version: int = None,
-        environment_feature_version: "EnvironmentFeatureVersion" = None,
+        version: int = None,  # type: ignore[assignment]
+        environment_feature_version: "EnvironmentFeatureVersion" = None,  # type: ignore[assignment]
     ) -> "FeatureState":
         # Cloning the Identity is not allowed because they are closely tied
         # to the environment
@@ -586,7 +663,9 @@ class FeatureState(
             )
 
         clone.environment = env
-        clone.version = None if as_draft else version or self.version
+        clone.version = (
+            None if as_draft or environment_feature_version else version or self.version
+        )
         clone.live_from = live_from
         clone.environment_feature_version = environment_feature_version
         clone.save()
@@ -602,7 +681,7 @@ class FeatureState(
 
         return clone
 
-    def generate_feature_state_value_data(self, value):
+    def generate_feature_state_value_data(self, value):  # type: ignore[no-untyped-def]
         """
         Takes the value of a feature state to generate a feature state value and returns dictionary
         to use for passing into feature state value serializer
@@ -618,10 +697,11 @@ class FeatureState(
         }
 
     def get_feature_state_value_by_hash_key(
-        self, identity_hash_key: typing.Union[str, int] = None
+        self,
+        identity_hash_key: typing.Union[str, int] = None,  # type: ignore[assignment]
     ) -> typing.Any:
         feature_state_value = (
-            self.get_multivariate_feature_state_value(identity_hash_key)
+            self.get_multivariate_feature_state_value(identity_hash_key)  # type: ignore[arg-type]
             if self.feature.type == MULTIVARIATE and identity_hash_key
             else getattr(self, "feature_state_value", None)
         )
@@ -631,7 +711,7 @@ class FeatureState(
         # hasattr as we want to return None if no feature state value exists.
         return feature_state_value and feature_state_value.value
 
-    def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:
+    def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:  # type: ignore[assignment]
         identity_hash_key = (
             identity.get_hash_key(
                 identity.environment.use_identity_composite_key_for_hashing
@@ -639,9 +719,9 @@ class FeatureState(
             if identity
             else None
         )
-        return self.get_feature_state_value_by_hash_key(identity_hash_key)
+        return self.get_feature_state_value_by_hash_key(identity_hash_key)  # type: ignore[arg-type]
 
-    def get_feature_state_value_defaults(self) -> dict:
+    def get_feature_state_value_defaults(self) -> dict[str, typing.Any]:
         if (
             self.feature.initial_value is None
             or self.feature.project.prevent_flag_defaults
@@ -649,14 +729,14 @@ class FeatureState(
             return {}
 
         value = self.feature.initial_value
-        type = get_value_type(value)
+        type_ = get_value_type(value)
         parse_func = {
             BOOLEAN: get_boolean_from_string,
             INTEGER: get_integer_from_string,
-        }.get(type, lambda v: v)
-        key_name = self.get_feature_state_key_name(type)
+        }.get(type_, lambda v: v)
+        key_name = self.get_feature_state_key_name(type_)
 
-        return {"type": type, key_name: parse_func(value)}
+        return {"type": type_, key_name: parse_func(value)}
 
     def get_multivariate_feature_state_value(
         self, identity_hash_key: str
@@ -686,13 +766,14 @@ class FeatureState(
         # if none of the percentage allocations match the percentage value we got for
         # the identity, then we just return the default feature state value (or None
         # if there isn't one - although this should never happen)
-        return getattr(self, "feature_state_value", None)
+        return getattr(self, "feature_state_value", None)  # type: ignore[return-value]
 
     @hook(BEFORE_CREATE)
     @hook(BEFORE_SAVE, when="deleted", is_not=True)
-    def check_for_duplicate_feature_state(self):
+    def check_for_duplicate_feature_state(self):  # type: ignore[no-untyped-def]
         if self.version is None:
             return
+
         filter_ = Q(
             environment=self.environment,
             feature=self.feature,
@@ -702,7 +783,7 @@ class FeatureState(
         if self.id:
             filter_ &= ~Q(id=self.id)
 
-        if self.environment.use_v2_feature_versioning:
+        if self.environment.use_v2_feature_versioning:  # type: ignore[union-attr]
             filter_ = filter_ & Q(
                 environment_feature_version=self.environment_feature_version
             )
@@ -716,20 +797,20 @@ class FeatureState(
             )
 
     @hook(BEFORE_CREATE)
-    def set_live_from(self):
+    def set_live_from(self):  # type: ignore[no-untyped-def]
         """
         Set the live_from date on newly created, version 1 feature states to maintain
         the previous behaviour.
         """
         if (
-            self.environment.use_v2_feature_versioning is False
+            self.environment.use_v2_feature_versioning is False  # type: ignore[union-attr]
             and self.version is not None
             and self.live_from is None
         ):
             self.live_from = timezone.now()
 
     @hook(AFTER_CREATE)
-    def create_feature_state_value(self):
+    def create_feature_state_value(self):  # type: ignore[no-untyped-def]
         # note: this is only performed after create since feature state values are
         # updated separately, and hence if this is performed after each save,
         # it overwrites the FSV with the initial value again
@@ -739,7 +820,7 @@ class FeatureState(
         )
 
     @hook(AFTER_CREATE)
-    def create_multivariate_feature_state_values(self):
+    def create_multivariate_feature_state_values(self):  # type: ignore[no-untyped-def]
         if not (self.feature_segment or self.identity):
             # we only want to create the multivariate feature state values for
             # feature states related to an environment only, i.e. when a new
@@ -755,15 +836,15 @@ class FeatureState(
             MultivariateFeatureStateValue.objects.bulk_create(mv_feature_state_values)
 
     @staticmethod
-    def get_feature_state_key_name(fsv_type) -> str:
-        return {
+    def get_feature_state_key_name(fsv_type) -> str:  # type: ignore[no-untyped-def]
+        return {  # type: ignore[return-value]
             INTEGER: "integer_value",
             BOOLEAN: "boolean_value",
             STRING: "string_value",
         }.get(fsv_type)
 
     @staticmethod
-    def get_feature_state_value_type(value) -> str:
+    def get_feature_state_value_type(value) -> str:  # type: ignore[no-untyped-def]
         fsv_type = type(value).__name__
         accepted_types = (STRING, INTEGER, BOOLEAN)
 
@@ -805,7 +886,7 @@ class FeatureState(
         cls.objects.create(**kwargs)
 
     @classmethod
-    def get_next_version_number(
+    def get_next_version_number(  # type: ignore[no-untyped-def]
         cls,
         environment_id: int,
         feature_id: int,
@@ -837,7 +918,7 @@ class FeatureState(
 
     @property
     def belongs_to_uncommited_change_request(self) -> bool:
-        return self.change_request_id and not self.change_request.committed_at
+        return self.change_request_id and not self.change_request.committed_at  # type: ignore[return-value,union-attr]  # noqa: E501
 
     def get_skip_create_audit_log(self) -> bool:
         if self.belongs_to_uncommited_change_request:
@@ -853,31 +934,38 @@ class FeatureState(
 
         return False
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         if (
             history_instance.history_type == "+"
             and (self.identity_id or self.feature_segment_id)
-            and self.enabled == self.get_environment_default().enabled
+            and self.enabled == self.get_environment_default().enabled  # type: ignore[union-attr]
         ):
             # Don't create an Audit Log for overrides that are created which don't differ
             # from the environment default. This likely means that an override was created
             # for a remote config value, and hence there will be an AuditLog message
             # created for the FeatureStateValue model change.
-            return
+            return  # type: ignore[return-value]
 
         if self.identity_id:
             return audit_helpers.get_identity_override_created_audit_message(self)
         elif self.feature_segment_id:
             return audit_helpers.get_segment_override_created_audit_message(self)
 
-        if self.environment.created_date > self.feature.created_date:
+        if self.environment.created_date > self.feature.created_date:  # type: ignore[union-attr]
             # Don't create an audit log record for feature states created when
             # creating an environment
-            return
+            return  # type: ignore[return-value]
 
         return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
+        if self.change_request and self.is_scheduled:
+            live_from: datetime.datetime = timezone.localtime(self.live_from)
+            return FEATURE_STATE_SCHEDULED_TO_UPDATE_MESSAGE % (
+                self.feature.name,
+                self.change_request.title,
+                formats.date_format(live_from, settings.DATETIME_FORMAT),
+            )
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,
@@ -890,12 +978,12 @@ class FeatureState(
             )
         return FEATURE_STATE_UPDATED_MESSAGE % self.feature.name
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         try:
             if self.identity_id:
                 return IDENTITY_FEATURE_STATE_DELETED_MESSAGE % (
                     self.feature.name,
-                    self.identity.identifier,
+                    self.identity.identifier,  # type: ignore[union-attr]
                 )
             elif self.feature_segment_id:
                 return None  # handled by FeatureSegment
@@ -907,7 +995,7 @@ class FeatureState(
             # Account for cascade deletes
             return None
 
-    def get_extra_audit_log_kwargs(self, history_instance) -> dict:
+    def get_extra_audit_log_kwargs(self, history_instance) -> dict:  # type: ignore[no-untyped-def,type-arg]
         kwargs = super().get_extra_audit_log_kwargs(history_instance)
 
         if (
@@ -917,13 +1005,13 @@ class FeatureState(
         ):
             kwargs["skip_signals_and_hooks"] = "send_environments_to_dynamodb"
 
-        return kwargs
+        return kwargs  # type: ignore[no-any-return]
 
     def get_environment_default(self) -> typing.Optional["FeatureState"]:
         if self.feature_segment_id or self.identity_id:
             return (
                 self.__class__.objects.get_live_feature_states(
-                    environment=self.environment,
+                    environment=self.environment,  # type: ignore[arg-type]
                     feature_id=self.feature_id,
                     feature_segment_id__isnull=True,
                     identity_id__isnull=True,
@@ -947,11 +1035,58 @@ class FeatureState(
             and self.version > other.version
         ) or (self.version is not None and other.version is None)
 
+    @staticmethod
+    def copy_identity_feature_states(
+        target_identity: "Identity", source_identity: "Identity"
+    ) -> None:
+        target_feature_states: dict[int, FeatureState] = (
+            target_identity.get_overridden_feature_states()
+        )
+        source_feature_states: dict[int, FeatureState] = (
+            source_identity.get_overridden_feature_states()
+        )
+
+        # Delete own feature states not in source_identity
+        feature_states_to_delete = list(
+            target_feature_states.keys() - source_feature_states.keys()
+        )
+        for feature_state_id in feature_states_to_delete:
+            target_feature_states[feature_state_id].delete()
+
+        # Clone source_identity's feature states to target_identity
+        for source_feature_id, source_feature_state in source_feature_states.items():
+            # Get target feature_state if exists in target identity or create new one
+            target_feature_state: FeatureState = target_feature_states.get(
+                source_feature_id
+            ) or FeatureState.objects.create(
+                environment=target_identity.environment,
+                identity=target_identity,
+                feature=source_feature_state.feature,
+            )
+
+            # Copy enabled value from source feature_state
+            target_feature_state.enabled = source_feature_states[
+                source_feature_id
+            ].enabled
+
+            if source_feature_state.feature.type == MULTIVARIATE:
+                mv_values = [
+                    mv_value.clone(feature_state=target_feature_state, persist=False)
+                    for mv_value in source_feature_state.multivariate_feature_state_values.all()
+                ]
+                MultivariateFeatureStateValue.objects.bulk_create(mv_values)
+
+            target_feature_state.feature_state_value.copy_from(
+                source_feature_state.feature_state_value
+            )
+
+            target_feature_state.save()
+
 
 class FeatureStateValue(
     AbstractBaseFeatureValueModel,
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
 ):
     related_object_type = RelatedObjectType.FEATURE_STATE
     history_record_class_path = "features.models.HistoricalFeatureStateValue"
@@ -962,7 +1097,7 @@ class FeatureStateValue(
         FeatureState, related_name="feature_state_value", on_delete=models.CASCADE
     )
 
-    objects = FeatureStateValueManager()
+    objects = FeatureStateValueManager()  # type: ignore[misc]
 
     def clone(self, feature_state: FeatureState) -> "FeatureStateValue":
         clone = deepcopy(self)
@@ -972,10 +1107,34 @@ class FeatureStateValue(
         clone.save()
         return clone
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def copy_from(self, source_feature_state_value: "FeatureStateValue"):  # type: ignore[no-untyped-def]
+        # Copy feature state type and values from given feature state value.
+        self.type = source_feature_state_value.type
+        self.boolean_value = source_feature_state_value.boolean_value
+        self.integer_value = source_feature_state_value.integer_value
+        self.string_value = source_feature_state_value.string_value
+        self.save()
+
+    def get_skip_create_audit_log(self) -> bool:
+        try:
+            if self.feature_state.deleted_at:
+                return True
+
+            return self.feature_state.get_skip_create_audit_log()
+
+        except FeatureState.DoesNotExist:
+            return True
+
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         fs = self.feature_state
 
-        changes = history_instance.diff_against(history_instance.prev_record).changes
+        # NOTE: We have some feature state values that were created before we started
+        # tracking history, resulting in no prev_record.
+        changes = (
+            history_instance.diff_against(history_instance.prev_record).changes
+            if history_instance.prev_record
+            else []
+        )
         if (
             len(changes) == 1
             and changes[0].field == "string_value"
@@ -986,20 +1145,20 @@ class FeatureStateValue(
             # existing segment overrides which change the string value between null and empty string
             # since this change has no significant impact on the platform, we simply check for it here
             # and ignore it.
-            return
+            return  # type: ignore[return-value]
 
-        if fs.change_request_id and not fs.change_request.committed_at:
-            return
+        if fs.change_request_id and not fs.change_request.committed_at:  # type: ignore[union-attr]
+            return  # type: ignore[return-value]
 
         feature = fs.feature
 
         if fs.identity_id:
             return IDENTITY_FEATURE_STATE_VALUE_UPDATED_MESSAGE % (
                 feature.name,
-                fs.identity.identifier,
+                fs.identity.identifier,  # type: ignore[union-attr]
             )
         elif fs.feature_segment_id:
-            segment = fs.feature_segment.segment
+            segment = fs.feature_segment.segment  # type: ignore[union-attr]
             return SEGMENT_FEATURE_STATE_VALUE_UPDATED_MESSAGE % (
                 feature.name,
                 segment.name,

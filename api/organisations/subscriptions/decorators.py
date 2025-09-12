@@ -6,7 +6,7 @@ from organisations.models import Subscription
 from organisations.subscriptions.exceptions import InvalidSubscriptionPlanError
 
 
-def require_plan(
+def require_plan(  # type: ignore[no-untyped-def]
     valid_plan_ids: typing.Iterable[str],
     subscription_retriever: typing.Callable[[Request], Subscription],
 ):
@@ -17,8 +17,8 @@ def require_plan(
     the correct subscription.
     """
 
-    def decorator(func):
-        def wrapper(*args, **kwargs):
+    def decorator(func):  # type: ignore[no-untyped-def]
+        def wrapper(*args, **kwargs):  # type: ignore[no-untyped-def]
             if not (args and isinstance(args[0], Request)):
                 raise ValueError(
                     "require_plan decorator must be used on methods / functions whose "
@@ -26,7 +26,7 @@ def require_plan(
                 )
 
             sub = subscription_retriever(args[0])
-            if not sub or sub.plan not in valid_plan_ids:
+            if not sub or sub.plan not in valid_plan_ids:  # type: ignore[operator]
                 raise InvalidSubscriptionPlanError(
                     f"Resource not available on plan {sub.plan}"
                 )

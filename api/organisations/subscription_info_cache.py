@@ -1,9 +1,12 @@
 import typing
+from datetime import timedelta
+
+from django.conf import settings
+from django.utils import timezone
 
 from app_analytics.influxdb_wrapper import get_top_organisations
-from django.conf import settings
 
-from .chargebee import get_subscription_metadata_from_id
+from .chargebee import get_subscription_metadata_from_id  # type: ignore[attr-defined]
 from .models import Organisation, OrganisationSubscriptionInformationCache
 from .subscriptions.constants import CHARGEBEE, SubscriptionCacheEntity
 
@@ -12,7 +15,7 @@ OrganisationSubscriptionInformationCacheDict = typing.Dict[
 ]
 
 
-def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, ...]):
+def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, ...]):  # type: ignore[no-untyped-def]
     """
     Update the cache objects for an update_cache_entity in the database.
     """
@@ -70,18 +73,37 @@ def _update_caches_with_influx_data(
     if not settings.INFLUXDB_TOKEN:
         return
 
-    for date_range, limit in (("30d", ""), ("7d", ""), ("24h", "100")):
-        key = f"api_calls_{date_range}"
-        org_calls = get_top_organisations(date_range, limit)
+    for _date_start, limit in (("-30d", ""), ("-7d", ""), ("-24h", "100")):
+        key = f"api_calls_{_date_start[1:]}"
+
+        now = timezone.now()
+        if _date_start.endswith("d"):
+            date_start = now - timedelta(days=int(_date_start[1:-1]))
+        elif _date_start.endswith("h"):
+            date_start = now - timedelta(hours=int(_date_start[1:-1]))
+        else:
+            assert False, "Expecting either days (d) or hours (h)"  # pragma: no cover
+
+        org_calls = get_top_organisations(date_start, limit)
+
+        covered_orgs = set()
+
         for org_id, calls in org_calls.items():
             subscription_info_cache = organisation_info_cache_dict.get(org_id)
+            covered_orgs.add(org_id)
+
             if not subscription_info_cache:
                 # I don't think this is a valid case but worth checking / handling
                 continue
             setattr(subscription_info_cache, key, calls)
 
+        for org_id in organisation_info_cache_dict:
+            if org_id not in covered_orgs:
+                subscription_info_cache = organisation_info_cache_dict.get(org_id)
+                setattr(subscription_info_cache, key, 0)
 
-def _update_caches_with_chargebee_data(
+
+def _update_caches_with_chargebee_data(  # type: ignore[no-untyped-def]
     organisations: typing.Iterable[Organisation],
     organisation_info_cache_dict: OrganisationSubscriptionInformationCacheDict,
 ):

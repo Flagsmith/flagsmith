@@ -52,19 +52,35 @@
     }
   }
 }
+
+.tabs-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  margin: 0 !important;
+}
+
 .tabs-nav {
+  .tab-nav-full {
+    flex: 1 !important; 
+  }
+
   position: relative;
   display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   top: 2px;
   button,
   button.btn,
   button.btn-primary {
     border-radius: 0;
     box-shadow: none;
-    flex: 1;
+    flex: 0 0 auto;
     background-color: transparent;
-    color: $text-icon-dark;
+    color: $body-color;
     &:hover {
       background-color: transparent;
       box-shadow: none;
@@ -72,7 +88,7 @@
     &.btn:active {
       box-shadow: none;
       background: transparent;
-      color: $text-icon-dark;
+      color: $body-color;
     }
     min-height: 34px;
     font-weight: $tab-btn-font-weight;
@@ -98,6 +114,7 @@
     }
   }
 }
+
 
 .tabs {
   & .pill {
@@ -145,9 +162,21 @@
     width: 16px;
     height: 16px;
     line-height: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  &.btn-no-focus {
+    &:focus {
+      box-shadow: none !important;
+      outline: none !important;
+      background-color: transparent !important;
+    }
   }
 }
+
 .pill .btn-tab .unread {
-  margin-left: $spacer/2;
+  margin-left: calc($spacer / 2);
   position: static;
 }

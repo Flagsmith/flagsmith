@@ -4,6 +4,6 @@ from integrations.segment.serializers import SegmentConfigurationSerializer
 
 
 class SegmentConfigurationViewSet(EnvironmentIntegrationCommonViewSet):
-    serializer_class = SegmentConfigurationSerializer
+    serializer_class = SegmentConfigurationSerializer  # type: ignore[assignment]
     pagination_class = None  # set here to ensure documentation is correct
-    model_class = SegmentConfiguration
+    model_class = SegmentConfiguration  # type: ignore[assignment]

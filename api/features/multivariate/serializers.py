@@ -3,13 +3,10 @@ from django.db.models import Sum
 from rest_framework import serializers
 
 from features.models import Feature
-from features.multivariate.models import (
-    MultivariateFeatureOption,
-    MultivariateFeatureStateValue,
-)
+from features.multivariate.models import MultivariateFeatureOption
 
 
-class NestedMultivariateFeatureOptionSerializer(serializers.ModelSerializer):
+class NestedMultivariateFeatureOptionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = MultivariateFeatureOption
 
@@ -27,9 +24,9 @@ class NestedMultivariateFeatureOptionSerializer(serializers.ModelSerializer):
 
 class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSerializer):
     class Meta(NestedMultivariateFeatureOptionSerializer.Meta):
-        fields = NestedMultivariateFeatureOptionSerializer.Meta.fields + ("feature",)
+        fields = NestedMultivariateFeatureOptionSerializer.Meta.fields + ("feature",)  # type: ignore[assignment]
 
-    def validate(self, attrs):
+    def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
         total_sibling_percentage_allocation = (
             self._get_siblings(attrs["feature"]).aggregate(
@@ -48,19 +45,9 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
 
         return attrs
 
-    def _get_siblings(self, feature: Feature):
+    def _get_siblings(self, feature: Feature):  # type: ignore[no-untyped-def]
         siblings = feature.multivariate_options.all()
         if self.instance:
-            siblings = siblings.exclude(id=self.instance.id)
+            siblings = siblings.exclude(id=self.instance.id)  # type: ignore[union-attr]
 
         return siblings
-
-
-class MultivariateFeatureStateValueSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MultivariateFeatureStateValue
-        fields = (
-            "id",
-            "multivariate_feature_option",
-            "percentage_allocation",
-        )

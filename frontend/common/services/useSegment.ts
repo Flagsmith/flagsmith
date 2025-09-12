@@ -8,6 +8,16 @@ export const segmentService = service
   .enhanceEndpoints({ addTagTypes: ['Segment'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      cloneSegment: builder.mutation<Res['segment'], Req['cloneSegment']>({
+        invalidatesTags: (q, e, arg) => [
+          { id: `LIST${arg.projectId}`, type: 'Segment' },
+        ],
+        query: (query: Req['cloneSegment']) => ({
+          body: { name: query.name },
+          method: 'POST',
+          url: `projects/${query.projectId}/segments/${query.segmentId}/clone/`,
+        }),
+      }),
       createSegment: builder.mutation<Res['segment'], Req['createSegment']>({
         invalidatesTags: (q, e, arg) => [
           { id: `LIST${arg.projectId}`, type: 'Segment' },
@@ -118,6 +128,7 @@ export async function getSegment(
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useCloneSegmentMutation,
   useCreateSegmentMutation,
   useDeleteSegmentMutation,
   useGetSegmentQuery,

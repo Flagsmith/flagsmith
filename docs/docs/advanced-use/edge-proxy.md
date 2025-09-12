@@ -2,28 +2,28 @@
 title: Edge Proxy
 ---
 
-The Flagsmith Edge Proxy allows you to run an instance of the Flagsmith Engine close to your servers. If you are running
-Flagsmith within a server-side environment and you want to have very low latency flags, you have two options:
+The Flagsmith Edge Proxy is a service that you host yourself, that allows you to run an instance of the Flagsmith Engine
+close to your servers. If you are running Flagsmith within a server-side environment and you want to have very low
+latency flags, you have two options:
 
-1. Run the Edge Proxy and connect to it from your server-side SDKs
-2. Run your server-side SDKs in [Local Evaluation Mode](/clients/overview#local-evaluation).
+1. Run the Edge Proxy within in your own infrastructure and connect to it from your server-side SDKs
+2. Run your server-side SDKs in [Local Evaluation Mode](/clients#local-evaluation).
 
 The main benefit to running the Edge Proxy is that you reduce your polling requests against the Flagsmith API itself.
 
-The main benefit to running server side SDKs in [Local Evaluation Mode](/clients/overview#local-evaluation) is that you
-get the lowest possible latency.
+The main benefit to running server side SDKs in [Local Evaluation Mode](/clients#local-evaluation) is that you get the
+lowest possible latency.
 
 ## How does it work
 
 :::info
 
-The Edge Proxy has the same [caveats as running our SDK in Local Evaluation mode.](/clients/overview#local-evaluation).
+The Edge Proxy has the same [caveats as running our SDK in Local Evaluation mode.](/clients/#local-evaluation).
 
 :::
 
 You can think of the Edge Proxy as a copy of our Python Server Side SDK, running in
-[Local Evaluation Mode](/clients/overview#local-evaluation), with an API interface that is compatible with the Flagsmith
-SDK API.
+[Local Evaluation Mode](/clients#local-evaluation), with an API interface that is compatible with the Flagsmith SDK API.
 
 The Edge Proxy runs as a lightweight Docker container. It connects to the Flagsmith API (either powered by us at
 api.flagsmith.com or self hosted by you) to get Environment Flags and Segment rules. You can then point the Flagsmith

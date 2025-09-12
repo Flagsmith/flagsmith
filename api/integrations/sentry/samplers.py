@@ -14,7 +14,7 @@ SDK_ENDPOINTS = {
 }
 
 
-def traces_sampler(ctx):
+def traces_sampler(ctx):  # type: ignore[no-untyped-def]
     with suppress(KeyError):
         path_info = ctx["wsgi_environ"]["PATH_INFO"]
         path_info = path_info[:-1] if path_info.endswith("/") else path_info

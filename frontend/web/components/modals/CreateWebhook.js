@@ -11,12 +11,8 @@ const exampleJSON = Constants.exampleWebhook
 const CreateWebhook = class extends Component {
   static displayName = 'CreateWebhook'
 
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
-  constructor(props, context) {
-    super(props, context)
+  constructor(props) {
+    super(props)
     this.state = {
       enabled: this.props.isEdit ? this.props.webhook.enabled : true,
       error: false,

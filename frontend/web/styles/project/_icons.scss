@@ -3,9 +3,17 @@
         color: $header-color;
     }
     &--tooltip {
-        font-size: 16px;
+        font-size: $font-size-base;
     }
     &--new-tooltip {
         font-size: 19px;
+    }
+}
+svg.text-body path{
+    fill: $body-color;
+}
+.dark {
+    svg.text-body path{
+        fill: $body-color-dark;
     }
 }

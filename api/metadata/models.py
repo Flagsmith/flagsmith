@@ -1,27 +1,21 @@
 from urllib.parse import urlparse
 
-from core.models import AbstractBaseExportableModel
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
+from core.models import AbstractBaseExportableModel
 from organisations.models import Organisation
-from projects.models import Project
 
 from .fields import GenericObjectID
 
 FIELD_VALUE_MAX_LENGTH = 2000
 
-METADATA_SUPPORTED_MODELS = ["environment"]
-
 # A map of model name to a function that takes the object id and returns the organisation_id
 SUPPORTED_REQUIREMENTS_MAPPING = {
-    "environment": {
-        "organisation": lambda org_id: org_id,
-        "project": lambda project_id: Project.objects.get(
-            id=project_id
-        ).organisation_id,
-    }
+    "environment": ["organisation", "project"],
+    "feature": ["organisation", "project"],
+    "segment": ["organisation", "project"],
 }
 
 
@@ -46,31 +40,31 @@ class MetadataField(AbstractBaseExportableModel):
     def is_field_value_valid(self, field_value: str) -> bool:
         if len(field_value) > FIELD_VALUE_MAX_LENGTH:
             return False
-        return self.__getattribute__(f"validate_{self.type}")(field_value)
+        return self.__getattribute__(f"validate_{self.type}")(field_value)  # type: ignore[no-any-return]
 
-    def validate_int(self, field_value: str):
+    def validate_int(self, field_value: str):  # type: ignore[no-untyped-def]
         try:
             int(field_value)
         except ValueError:
             return False
         return True
 
-    def validate_bool(self, field_value: str):
+    def validate_bool(self, field_value: str):  # type: ignore[no-untyped-def]
         if field_value.lower() in ["true", "false"]:
             return True
         return False
 
-    def validate_url(self, field_value: str):
+    def validate_url(self, field_value: str):  # type: ignore[no-untyped-def]
         try:
             result = urlparse(field_value)
             return all([result.scheme, result.netloc])
         except ValueError:
             return False
 
-    def validate_str(self, field_value: str):
+    def validate_str(self, field_value: str):  # type: ignore[no-untyped-def]
         return True
 
-    def validate_multiline_str(self, field_value: str):
+    def validate_multiline_str(self, field_value: str):  # type: ignore[no-untyped-def]
         return True
 
     class Meta:
@@ -120,3 +114,13 @@ class Metadata(AbstractBaseExportableModel):
 
     class Meta:
         unique_together = ("model_field", "content_type", "object_id")
+
+    def deep_clone_for_new_entity(self, cloned_entity: models.Model) -> "Metadata":
+        content_type = ContentType.objects.get_for_model(cloned_entity)
+        metadata: Metadata = Metadata.objects.create(
+            model_field=self.model_field,
+            content_type=content_type,
+            object_id=cloned_entity.pk,
+            field_value=self.field_value,
+        )
+        return metadata

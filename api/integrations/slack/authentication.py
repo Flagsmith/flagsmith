@@ -13,7 +13,7 @@ class OauthInitAuthentication(BaseAuthentication):
     Custom authentication class to use signed user_id present in query params
     """
 
-    def authenticate(self, request):
+    def authenticate(self, request):  # type: ignore[no-untyped-def]
         signer = TimestampSigner()
         with suppress(BadSignature, ObjectDoesNotExist):
             signature = request.GET.get("signature")

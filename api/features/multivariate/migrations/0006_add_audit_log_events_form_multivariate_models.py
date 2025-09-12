@@ -4,7 +4,7 @@ from django.conf import settings
 import django.core.validators
 from django.db import migrations, models
 import django.db.models.deletion
-import simple_history.models
+import simple_history.models  # type: ignore[import-untyped]
 
 
 class Migration(migrations.Migration):

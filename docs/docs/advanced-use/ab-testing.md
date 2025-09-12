@@ -15,8 +15,8 @@ to put users into a particular AB testing bucket. These buckets will control the
 tested. The analytics platform will receive a stream of event data derived from the behaviour of the user. Combining
 these two concepts allows you to deliver seamless AB test.
 
-We have [integrations](integrations/overview.md) with a number of analytics platforms. If we don't integrate with the
-platform you are using, you can still manually send the test data to the downstream platform manually.
+We have [integrations](/integrations) with a number of analytics platforms. If we don't integrate with the platform you
+are using, you can still manually send the test data to the downstream platform manually.
 
 ## Overview - Testing a new Paypal button
 

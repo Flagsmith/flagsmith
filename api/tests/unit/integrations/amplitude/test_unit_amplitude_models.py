@@ -1,7 +1,7 @@
 from integrations.amplitude.models import AmplitudeConfiguration
 
 
-def test_amplitude_configuration_save_writes_environment_to_dynamodb(
+def test_amplitude_configuration_save_writes_environment_to_dynamodb(  # type: ignore[no-untyped-def]
     environment, mocker
 ):
     """
@@ -19,12 +19,12 @@ def test_amplitude_configuration_save_writes_environment_to_dynamodb(
     amplitude_config.save()
 
     # Then
-    mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
+    mock_environment_model_class.write_environment_documents.assert_called_once_with(
         environment_id=environment.id
     )
 
 
-def test_amplitude_configuration_delete_writes_environment_to_dynamodb(
+def test_amplitude_configuration_delete_writes_environment_to_dynamodb(  # type: ignore[no-untyped-def]
     environment, mocker
 ):
     """
@@ -43,12 +43,12 @@ def test_amplitude_configuration_delete_writes_environment_to_dynamodb(
     amplitude_config.delete()
 
     # Then
-    mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
+    mock_environment_model_class.write_environment_documents.assert_called_once_with(
         environment_id=environment.id
     )
 
 
-def test_amplitude_configuration_update_clears_environment_cache(environment, mocker):
+def test_amplitude_configuration_update_clears_environment_cache(environment, mocker):  # type: ignore[no-untyped-def]
     # Given
     mock_environment_cache = mocker.patch("environments.models.environment_cache")
     amplitude_config = AmplitudeConfiguration.objects.create(
@@ -60,4 +60,4 @@ def test_amplitude_configuration_update_clears_environment_cache(environment, mo
     amplitude_config.save()
 
     # Then
-    mock_environment_cache.delete.assert_called_once_with(environment.api_key)
+    mock_environment_cache.delete_many.assert_called_once_with([environment.api_key])

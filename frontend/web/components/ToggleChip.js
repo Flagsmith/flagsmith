@@ -1,19 +1,20 @@
 import React from 'react'
 import cx from 'classnames'
-import color from 'color'
 import Icon from './Icon'
+import Utils from 'common/utils/utils'
 
 export default function (props) {
+  const colour = Utils.colour(props.color)
   return (
     <Row
       style={
         props.color
           ? {
               backgroundColor: props.children
-                ? color(props.color).fade(0.92)
-                : color(props.color).fade(0.76),
-              border: `1px solid ${color(props.color).fade(0.76)}`,
-              color: color(props.color).darken(0.1),
+                ? colour.fade(0.92)
+                : colour.fade(0.76),
+              border: `1px solid ${colour.fade(0.76)}`,
+              color: colour.darken(0.1),
             }
           : null
       }
@@ -26,9 +27,7 @@ export default function (props) {
           border:
             props.active || !props.children
               ? 'none'
-              : `1px solid ${color(props.color ? props.color : '#6837FC').fade(
-                  0.76,
-                )}`,
+              : `1px solid ${colour.fade(0.76)}`,
           marginRight: props.children ? '0.5rem' : '0',
         }}
         className='icon-check'

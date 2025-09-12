@@ -7,7 +7,7 @@ from integrations.slack.exceptions import SlackChannelJoinError
 from integrations.slack.slack import SlackChannel, SlackWrapper
 
 
-def test_get_channels_data_response_structure(mocker, mocked_slack_internal_client):
+def test_get_channels_data_response_structure(mocker, mocked_slack_internal_client):  # type: ignore[no-untyped-def]
     # Given
     api_token = "test_token"
     cursor = "dGVhbTpDMDI3MEpNRldNVg=="
@@ -47,7 +47,7 @@ def test_get_channels_data_response_structure(mocker, mocked_slack_internal_clie
     )
 
 
-def test_client_makes_correct_calls(mocker):
+def test_client_makes_correct_calls(mocker):  # type: ignore[no-untyped-def]
     # Given
     api_token = "random_token"
 
@@ -61,33 +61,33 @@ def test_client_makes_correct_calls(mocker):
     mocked_web_client.assert_called_with(token=api_token)
 
 
-def test_join_channel_makes_correct_call(mocker, mocked_slack_internal_client):
+def test_join_channel_makes_correct_call(mocker, mocked_slack_internal_client):  # type: ignore[no-untyped-def]
     # Given
     channel = "channel_1"
     api_token = "random_token"
 
     # When
-    SlackWrapper(api_token=api_token, channel_id=channel).join_channel()
+    SlackWrapper(api_token=api_token, channel_id=channel).join_channel()  # type: ignore[no-untyped-call]
 
     # Then
     mocked_slack_internal_client.conversations_join.assert_called_with(channel=channel)
 
 
-def test_join_channel_raises_slack_channel_join_error_on_slack_api_error(
+def test_join_channel_raises_slack_channel_join_error_on_slack_api_error(  # type: ignore[no-untyped-def]
     mocker, mocked_slack_internal_client
 ):
     # Given
     channel = "channel_1"
     api_token = "random_token"
-    mocked_slack_internal_client.conversations_join.side_effect = SlackApiError(
+    mocked_slack_internal_client.conversations_join.side_effect = SlackApiError(  # type: ignore[no-untyped-call]
         message="server_error", response={"error": "some_error_code"}
     )
     # Then
     with pytest.raises(SlackChannelJoinError):
-        SlackWrapper(api_token=api_token, channel_id=channel).join_channel()
+        SlackWrapper(api_token=api_token, channel_id=channel).join_channel()  # type: ignore[no-untyped-call]
 
 
-def test_get_bot_token_makes_correct_calls(
+def test_get_bot_token_makes_correct_calls(  # type: ignore[no-untyped-def]
     mocker, settings, mocked_slack_internal_client
 ):
     # Given
@@ -114,7 +114,7 @@ def test_get_bot_token_makes_correct_calls(
     )
 
 
-def test_slack_initialized_correctly(mocker, mocked_slack_internal_client):
+def test_slack_initialized_correctly(mocker, mocked_slack_internal_client):  # type: ignore[no-untyped-def]
     # Given
     api_token = "test_token"
     channel_id = "channel_id_1"
@@ -127,11 +127,11 @@ def test_slack_initialized_correctly(mocker, mocked_slack_internal_client):
     assert slack_wrapper._client == mocked_slack_internal_client
 
 
-def test_track_event_makes_correct_call(mocked_slack_internal_client):
+def test_track_event_makes_correct_call(mocked_slack_internal_client):  # type: ignore[no-untyped-def]
     # Given
     api_token = "test_token"
     channel_id = "channel_id_1"
-    event = {"blocks": []}
+    event = {"blocks": []}  # type: ignore[var-annotated]
 
     slack_wrapper = SlackWrapper(api_token, channel_id)
 
@@ -144,7 +144,7 @@ def test_track_event_makes_correct_call(mocked_slack_internal_client):
     )
 
 
-def test_slack_generate_event_data_with_correct_values(django_user_model):
+def test_slack_generate_event_data_with_correct_values(django_user_model):  # type: ignore[no-untyped-def]
     # Given
     log = "some log data"
 

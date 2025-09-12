@@ -2,7 +2,7 @@ import json
 
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -48,7 +48,7 @@ def test_get_flags_is_not_throttled_by_user_throttle(
         assert response.status_code == status.HTTP_200_OK
 
 
-def test_get_environment_document_is_not_throttled_by_user_throttle(
+def test_get_environment_document_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped-def]
     server_side_sdk_client: APIClient,
     environment: int,
     environment_api_key: str,
@@ -67,7 +67,7 @@ def test_get_environment_document_is_not_throttled_by_user_throttle(
         assert response.status_code == status.HTTP_200_OK
 
 
-def test_get_identities_is_not_throttled_by_user_throttle(
+def test_get_identities_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped-def]
     environment: int,
     sdk_client: APIClient,
     mocker: MockerFixture,
@@ -88,7 +88,7 @@ def test_get_identities_is_not_throttled_by_user_throttle(
         assert response.status_code == status.HTTP_200_OK
 
 
-def test_set_trait_for_an_identity_is_not_throttled_by_user_throttle(
+def test_set_trait_for_an_identity_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped-def]
     environment: int,
     server_side_sdk_client: APIClient,
     identity: int,
@@ -114,7 +114,7 @@ def test_set_trait_for_an_identity_is_not_throttled_by_user_throttle(
         assert res.status_code == status.HTTP_200_OK
 
 
-def test_sdk_analytics_is_not_throttled_by_user_throttle(
+def test_sdk_analytics_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped-def]
     mocker: MockerFixture, environment: int, sdk_client: APIClient
 ):
     # Given
@@ -128,7 +128,7 @@ def test_sdk_analytics_is_not_throttled_by_user_throttle(
         assert response.status_code == status.HTTP_200_OK
 
 
-def test_self_hosted_telemetry_view_is_not_throttled_by_user_throttle(
+def test_self_hosted_telemetry_view_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
 ):
     # Given

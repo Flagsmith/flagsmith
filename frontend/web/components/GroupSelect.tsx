@@ -10,8 +10,8 @@ export type GroupSelectType = {
   groups: UserGroup[] | UserGroupSummary[] | undefined
   value: number[] | undefined
   isOpen: boolean
-  size: string
-  onAdd: (id: number, isUser: boolean) => void
+  size?: 'sm'
+  onAdd: (id: number, isUser: boolean, name?: string) => void
   onRemove: (id: number, isUser: boolean) => void
   onToggle: () => void
 }
@@ -33,7 +33,7 @@ const GroupSelect: FC<GroupSelectType> = ({
       if (!search) return true
       return `${v.name}`.toLowerCase().includes(search)
     })
-  const modalClassName = `inline-modal--tags${size}`
+  const modalClassName = size ? `inline-modal--tags-${size}` : ''
   return (
     <InlineModal
       title='Groups'
@@ -52,18 +52,19 @@ const GroupSelect: FC<GroupSelectType> = ({
       <div style={{ maxHeight: 200, overflowY: 'auto' }}>
         {grouplist &&
           grouplist.map((v) => (
-            <div className='assignees-list-item clickable' key={v.id}>
-              <Row
-                onClick={() => {
-                  const isRemove = value?.includes(v.id)
-                  if (isRemove && onRemove) {
-                    onRemove(v.id, false)
-                  } else if (!isRemove && onAdd) {
-                    onAdd(v.id, false)
-                  }
-                }}
-                space
-              >
+            <div
+              onClick={() => {
+                const isRemove = value?.includes(v.id)
+                if (isRemove && onRemove) {
+                  onRemove(v.id, false)
+                } else if (!isRemove && onAdd) {
+                  onAdd(v.id, false, v.name)
+                }
+              }}
+              className='assignees-list-item clickable'
+              key={v.id}
+            >
+              <Row space>
                 <Flex
                   className={value?.includes(v.id) ? 'font-weight-bold' : ''}
                 >

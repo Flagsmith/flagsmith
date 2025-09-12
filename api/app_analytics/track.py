@@ -1,14 +1,16 @@
 import logging
 import uuid
+from urllib.parse import quote
 
 import requests
-from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from django.conf import settings
 from django.core.cache import caches
-from six.moves.urllib.parse import quote  # python 2/3 compatible urllib import
 
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
+from app_analytics.mappers import map_labels_to_influx_record_values
+from app_analytics.models import Resource
+from app_analytics.types import Label, Labels, TrackFeatureEvaluationsByEnvironmentData
 from environments.models import Environment
-from task_processor.decorators import register_task_handler
 from util.util import postpone
 
 logger = logging.getLogger(__name__)
@@ -20,32 +22,18 @@ GOOGLE_ANALYTICS_COLLECT_URL = GOOGLE_ANALYTICS_BASE_URL + "/collect"
 GOOGLE_ANALYTICS_BATCH_URL = GOOGLE_ANALYTICS_BASE_URL + "/batch"
 DEFAULT_DATA = "v=1&tid=" + settings.GOOGLE_ANALYTICS_KEY
 
-# dictionary of resources to their corresponding actions
-# when tracking events in GA / Influx
-TRACKED_RESOURCE_ACTIONS = {
-    "flags": "flags",
-    "identities": "identity_flags",
-    "traits": "traits",
-    "environment-document": "environment_document",
-}
-
 
 @postpone
-def track_request_googleanalytics_async(request):
-    return track_request_googleanalytics(request)
+def track_request_googleanalytics_async(request):  # type: ignore[no-untyped-def]
+    return track_request_googleanalytics(request)  # type: ignore[no-untyped-call]
 
 
-@postpone
-def track_request_influxdb_async(request):
-    return track_request_influxdb(request)
-
-
-def get_resource_from_uri(request_uri):
+def get_resource_from_uri(request_uri: str) -> Resource | None:
     """
     Split the uri so we can determine the resource that is being requested
     (note that because it starts with a /, the first item in the list will be a blank string)
 
-    :param request: (HttpRequest) the request being made
+    :param request_uri: (str) django.http.HttpRequest.path
     """
     split_uri = request_uri.split("/")[1:]
     if not (len(split_uri) >= 3 and split_uri[0] == "api"):
@@ -54,10 +42,10 @@ def get_resource_from_uri(request_uri):
         return None
 
     # uri will be in the form /api/v1/<resource>/...
-    return split_uri[2]
+    return Resource.get_from_name(split_uri[2])
 
 
-def track_request_googleanalytics(request):
+def track_request_googleanalytics(request):  # type: ignore[no-untyped-def]
     """
     Utility function to track a request to the API with the specified URI
 
@@ -69,17 +57,17 @@ def track_request_googleanalytics(request):
 
     resource = get_resource_from_uri(request.path)
 
-    if resource in TRACKED_RESOURCE_ACTIONS:
+    if resource and resource.is_tracked:
         environment = Environment.get_from_cache(
             request.headers.get("X-Environment-Key")
         )
         if environment is None:
             return
 
-        track_event(environment.project.organisation.get_unique_slug(), resource)
+        track_event(environment.project.organisation.get_unique_slug(), resource)  # type: ignore[no-untyped-call]
 
 
-def track_event(category, action, label="", value=""):
+def track_event(category, action, label="", value=""):  # type: ignore[no-untyped-def]
     data = (
         DEFAULT_DATA
         + "&t=event"
@@ -95,40 +83,39 @@ def track_event(category, action, label="", value=""):
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
 
 
-def track_request_influxdb(request):
+def track_request_influxdb(
+    resource: Resource,
+    host: str,
+    environment: "Environment",
+    count: int,
+    labels: Labels,
+) -> None:
     """
     Sends API event data to InfluxDB
 
     :param request: (HttpRequest) the request being made
     """
-    resource = get_resource_from_uri(request.path)
-
-    if resource and resource in TRACKED_RESOURCE_ACTIONS:
-        environment = Environment.get_from_cache(
-            request.headers.get("X-Environment-Key")
-        )
-        if environment is None:
-            return
-
-        tags = {
-            "resource": resource,
+    if resource.is_tracked:
+        tags: dict[str, str | int | float] = {
+            "resource": resource.resource_name,
             "organisation": environment.project.organisation.get_unique_slug(),
             "organisation_id": environment.project.organisation_id,
             "project": environment.project.name,
             "project_id": environment.project_id,
             "environment": environment.name,
             "environment_id": environment.id,
-            "host": request.get_host(),
+            "host": host,
+            **map_labels_to_influx_record_values(labels),
         }
 
-        influxdb = InfluxDBWrapper("api_call")
-        influxdb.add_data_point("request_count", 1, tags=tags)
+        influxdb = InfluxDBWrapper("api_call")  # type: ignore[no-untyped-call]
+        influxdb.add_data_point("request_count", count, tags=tags)
         influxdb.write()
 
 
-@register_task_handler()
 def track_feature_evaluation_influxdb(
-    environment_id: int, feature_evaluations: dict[str, int]
+    environment_id: int,
+    feature_evaluations: list[TrackFeatureEvaluationsByEnvironmentData],
 ) -> None:
     """
     Sends Feature analytics event data to InfluxDB
@@ -136,16 +123,23 @@ def track_feature_evaluation_influxdb(
     :param environment_id: (int) the id of the environment the feature is being evaluated within
     :param feature_evaluations: (dict) A collection of key id / evaluation counts
     """
-    influxdb = InfluxDBWrapper("feature_evaluation")
+    influxdb = InfluxDBWrapper("feature_evaluation")  # type: ignore[no-untyped-call]
 
-    for feature_name, evaluation_count in feature_evaluations.items():
-        tags = {"feature_id": feature_name, "environment_id": environment_id}
-        influxdb.add_data_point("request_count", evaluation_count, tags=tags)
+    for feature_evaluation in feature_evaluations:
+        tags: dict[str | Label, str | int] = {
+            "feature_id": feature_evaluation["feature_name"],
+            "environment_id": environment_id,
+            **map_labels_to_influx_record_values(feature_evaluation["labels"]),
+        }
+        influxdb.add_data_point(
+            "request_count",
+            feature_evaluation["evaluation_count"],
+            tags=tags,
+        )
 
     influxdb.write()
 
 
-@register_task_handler()
 def track_feature_evaluation_influxdb_v2(
     environment_id: int, feature_evaluations: list[dict[str, int | str | bool]]
 ) -> None:
@@ -155,7 +149,7 @@ def track_feature_evaluation_influxdb_v2(
     :param environment_id: (int) the id of the environment the feature is being evaluated within
     :param feature_evaluations: (list) A collection of feature evaluations including feature name / evaluation counts.
     """
-    influxdb = InfluxDBWrapper("feature_evaluation")
+    influxdb = InfluxDBWrapper("feature_evaluation")  # type: ignore[no-untyped-call]
 
     for feature_evaluation in feature_evaluations:
         feature_name = feature_evaluation["feature_name"]

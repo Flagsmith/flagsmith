@@ -3,7 +3,7 @@
 from django.db import migrations
 
 
-def create_default_subscription(apps, schema_editor):
+def create_default_subscription(apps, schema_editor):  # type: ignore[no-untyped-def]
     Organisation = apps.get_model("organisations", "Organisation")
     Subscription = apps.get_model("organisations", "Subscription")
 

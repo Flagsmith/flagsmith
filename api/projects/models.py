@@ -3,12 +3,11 @@ from __future__ import unicode_literals
 
 import re
 
-from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
 from django.db.models import Count
-from django_lifecycle import (
+from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
@@ -17,6 +16,7 @@ from django_lifecycle import (
     hook,
 )
 
+from core.models import SoftDeleteExportableModel
 from environments.dynamodb import DynamoProjectMetadata
 from organisations.models import Organisation
 from permissions.models import (
@@ -25,23 +25,24 @@ from permissions.models import (
     PermissionModel,
 )
 from projects.managers import ProjectManager
+from projects.services import get_project_segments_from_cache
 from projects.tasks import (
     handle_cascade_delete,
     migrate_project_environments_to_v2,
     write_environments_to_dynamodb,
 )
 
-project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
-class IdentityOverridesV2MigrationStatus(models.TextChoices):
+class EdgeV2MigrationStatus(models.TextChoices):
     NOT_STARTED = "NOT_STARTED", "Not Started"
     IN_PROGRESS = "IN_PROGRESS", "In Progress"
     COMPLETE = "COMPLETE", "Complete"
+    INCOMPLETE = "INCOMPLETE", "Incomplete (identity overrides skipped)"
 
 
-class Project(LifecycleModelMixin, SoftDeleteExportableModel):
+class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[django-manager-missing,misc]
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     organisation = models.ForeignKey(
@@ -49,7 +50,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     )
     hide_disabled_flags = models.BooleanField(
         default=False,
-        help_text="If true will exclude flags from SDK which are " "disabled",
+        help_text="If true will exclude flags from SDK which are disabled",
     )
     enable_dynamo_db = models.BooleanField(
         default=False,
@@ -82,31 +83,44 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         default=100,
         help_text="Max segments overrides allowed for any (one) environment within this project",
     )
-    identity_overrides_v2_migration_status = models.CharField(
+    edge_v2_migration_status = models.CharField(
         max_length=50,
-        choices=IdentityOverridesV2MigrationStatus.choices,
+        choices=EdgeV2MigrationStatus.choices,
         # Note that the default is actually set dynamically by a lifecycle hook on create
         # since we need to know whether edge is enabled or not.
-        default=IdentityOverridesV2MigrationStatus.NOT_STARTED,
+        default=EdgeV2MigrationStatus.NOT_STARTED,
+        db_column="identity_overrides_v2_migration_status",
+        help_text="[Edge V2 migration] Project migration status. Set to `IN_PROGRESS` to trigger migration start.",
+    )
+    edge_v2_migration_read_capacity_budget = models.IntegerField(
+        null=True,
+        blank=True,
+        default=None,
+        help_text=(
+            "[Edge V2 migration] Read capacity budget override. If project migration was finished with "
+            "`INCOMPLETE` status, you can set it to a higher value than `EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET` "
+            "setting before restarting the migration."
+        ),
     )
     stale_flags_limit_days = models.IntegerField(
         default=30,
         help_text="Number of days without modification in any environment before a flag is considered stale.",
     )
+    minimum_change_request_approvals = models.IntegerField(blank=True, null=True)
 
-    objects = ProjectManager()
+    objects = ProjectManager()  # type: ignore[misc]
 
     class Meta:
         ordering = ["id"]
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Project %s" % self.name
 
     @property
     def is_too_large(self) -> bool:
         return (
             self.features.count() > self.max_features_allowed
-            or self.segments.count() > self.max_segments_allowed
+            or self.live_segment_count() > self.max_segments_allowed
             or self.environments.annotate(
                 segment_override_count=Count("feature_segments")
             )
@@ -114,61 +128,56 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             .exists()
         )
 
-    def get_segments_from_cache(self):
-        segments = project_segments_cache.get(self.id)
+    # The following should be instance methods on `EdgeV2MigrationStatus`,
+    # but the field value is coerced to `str` in some code paths
+    # even when using `django-enum`:
+    @property
+    def edge_v2_environments_migrated(self) -> bool:
+        return self.edge_v2_migration_status in (
+            EdgeV2MigrationStatus.COMPLETE,
+            EdgeV2MigrationStatus.INCOMPLETE,
+        )
 
-        if not segments:
-            # This is optimised to account for rules nested one levels deep (since we
-            # don't support anything above that from the UI at the moment). Anything
-            # past that will require additional queries / thought on how to optimise.
-            segments = self.segments.all().prefetch_related(
-                "rules",
-                "rules__conditions",
-                "rules__rules",
-                "rules__rules__conditions",
-                "rules__rules__rules",
-            )
-            project_segments_cache.set(
-                self.id, segments, timeout=settings.CACHE_PROJECT_SEGMENTS_SECONDS
-            )
+    @property
+    def edge_v2_identity_overrides_migrated(self) -> bool:
+        return self.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
 
-        return segments
+    def get_segments_from_cache(self):  # type: ignore[no-untyped-def]
+        return get_project_segments_from_cache(self.id)
 
     @hook(BEFORE_CREATE)
-    def set_enable_dynamo_db(self):
+    def set_enable_dynamo_db(self):  # type: ignore[no-untyped-def]
         self.enable_dynamo_db = self.enable_dynamo_db or settings.EDGE_ENABLED
 
     @hook(BEFORE_CREATE)
-    def set_identity_overrides_v2_migration_status(self):
+    def set_edge_v2_migration_status(self):  # type: ignore[no-untyped-def]
         if settings.EDGE_ENABLED:
-            self.identity_overrides_v2_migration_status = (
-                IdentityOverridesV2MigrationStatus.COMPLETE
-            )
+            self.edge_v2_migration_status = EdgeV2MigrationStatus.COMPLETE
 
     @hook(AFTER_SAVE)
-    def clear_environments_cache(self):
+    def clear_environments_cache(self):  # type: ignore[no-untyped-def]
         environment_cache.delete_many(
             list(self.environments.values_list("api_key", flat=True))
         )
 
-    @hook(
+    @hook(  # type: ignore[misc]
         AFTER_SAVE,
-        when="identity_overrides_v2_migration_status",
+        when="edge_v2_migration_status",
         has_changed=True,
-        is_now=IdentityOverridesV2MigrationStatus.IN_PROGRESS,
+        is_now=EdgeV2MigrationStatus.IN_PROGRESS,
     )
     def trigger_environments_v2_migration(self) -> None:
         migrate_project_environments_to_v2.delay(kwargs={"project_id": self.id})
 
     @hook(AFTER_UPDATE)
-    def write_to_dynamo(self):
+    def write_to_dynamo(self):  # type: ignore[no-untyped-def]
         write_environments_to_dynamodb.delay(kwargs={"project_id": self.id})
 
     @hook(AFTER_DELETE)
-    def clean_up_dynamo(self):
-        DynamoProjectMetadata(self.id).delete()
+    def clean_up_dynamo(self):  # type: ignore[no-untyped-def]
+        DynamoProjectMetadata(self.id).delete()  # type: ignore[no-untyped-call]
 
-    @hook(AFTER_DELETE)
+    @hook(AFTER_DELETE)  # type: ignore[misc]
     def handle_cascade_delete(self) -> None:
         handle_cascade_delete.delay(kwargs={"project_id": self.id})
 
@@ -178,6 +187,11 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             settings.EDGE_RELEASE_DATETIME
             and self.created_date >= settings.EDGE_RELEASE_DATETIME
         )
+
+    def live_segment_count(self) -> int:
+        from segments.models import Segment
+
+        return Segment.live_objects.filter(project=self).count()  # type: ignore[no-any-return]
 
     def is_feature_name_valid(self, feature_name: str) -> bool:
         """
@@ -194,14 +208,11 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @property
     def show_edge_identity_overrides_for_feature(self) -> bool:
-        return (
-            self.identity_overrides_v2_migration_status
-            == IdentityOverridesV2MigrationStatus.COMPLETE
-        )
+        return self.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
 
 
-class ProjectPermissionManager(models.Manager):
-    def get_queryset(self):
+class ProjectPermissionManager(models.Manager):  # type: ignore[type-arg]
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         return (
             super(ProjectPermissionManager, self)
             .get_queryset()
@@ -213,7 +224,7 @@ class ProjectPermissionModel(PermissionModel):
     class Meta:
         proxy = True
 
-    objects = ProjectPermissionManager()
+    objects = ProjectPermissionManager()  # type: ignore[misc]
 
 
 class UserPermissionGroupProjectPermission(AbstractBasePermissionModel):

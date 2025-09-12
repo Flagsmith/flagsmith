@@ -1,0 +1,19 @@
+@import '../variables';
+
+.button-dropdown {
+    display: inline-flex;
+    vertical-align: middle;
+
+    .button-dropdown-default {
+        border-bottom-right-radius: 0;
+        border-top-right-radius: 0;
+    }
+
+    .button-dropdown-toggle {
+        border-bottom-left-radius: 0;
+        border-top-left-radius: 0;
+
+        padding-left: 2px;
+        padding-right: 2px;
+    }
+}

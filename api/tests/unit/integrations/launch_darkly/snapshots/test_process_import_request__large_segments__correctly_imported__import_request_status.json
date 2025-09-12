@@ -1,0 +1,11 @@
+{
+  "error_messages": [
+    "Targeting key 'user-...63a49' exceeds the limit of 1000 characters, skipping for segment 'Large User List (Override for test)'",
+    "Segment condition value '.*1a6...\\.com' for property 'email' exceeds the limit of 1000 characters, skipping for segment 'Large Dynamic List (Override for test)'",
+    "Targeting key 'user-...63a49' exceeds the limit of 1000 characters, skipping for segment 'Large User List (Override for production)'",
+    "Segment condition value '.*1a6...\\.com' for property 'email' exceeds the limit of 1000 characters, skipping for segment 'Large Dynamic List (Override for production)'"
+  ],
+  "requested_environment_count": 2,
+  "requested_flag_count": 9,
+  "result": "incomplete"
+}

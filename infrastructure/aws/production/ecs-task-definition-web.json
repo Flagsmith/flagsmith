@@ -20,6 +20,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "LOG_LEVEL",
+                    "value": "INFO"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
@@ -112,10 +116,6 @@
                     "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
                 },
                 {
-                    "name": "MAILERLITE_NEW_USER_GROUP_ID",
-                    "value": "110227625"
-                },
-                {
                     "name": "OAUTH_CLIENT_ID",
                     "value": "232959427810-br6ltnrgouktp0ngsbs04o14ueb9rch0.apps.googleusercontent.com"
                 },
@@ -133,11 +133,11 @@
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.00003"
+                    "value": "0.000003"
                 },
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.01"
+                    "value": "0.002"
                 },
                 {
                     "name": "SLACK_CLIENT_ID",
@@ -156,6 +156,18 @@
                     "value": "60"
                 },
                 {
+                    "name": "FEATURE_EVALUATION_CACHE_SECONDS",
+                    "value": "300"
+                },
+                {
+                    "name": "USE_CACHE_FOR_USAGE_DATA",
+                    "value": "True"
+                },
+                {
+                    "name": "API_USAGE_CACHE_SECONDS",
+                    "value": "300"
+                },
+                {
                     "name": "EDGE_RELEASE_DATETIME",
                     "value": "2022-06-07T10:00:00Z"
                 },
@@ -172,19 +184,23 @@
                     "value": "https://origin.realtime.flagsmith.com"
                 },
                 {
-                    "name": "ENABLE_PIPEDRIVE_LEAD_TRACKING",
+                    "name": "ENABLE_HUBSPOT_LEAD_TRACKING",
                     "value": "True"
                 },
                 {
-                    "name": "AUTO_SEAT_UPGRADE_PLANS",
-                    "value": "scale-up-12-months-v2-gbp,scale-up-12-months-v2-eur,scale-up-12-months-v2,scale-up-quarterly-v2-semiannual,scale-up-quarterly-v2,scale-up-v2,scale-up-24-months-v2"
+                    "name": "GITHUB_APP_ID",
+                    "value": "811209"
                 },
                 {
-                    "name": "PIPEDRIVE_IGNORE_DOMAINS",
-                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
+                    "value": "False"
                 },
                 {
-                    "name": "ENABLE_HUBSPOT_LEAD_TRACKING",
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
+                    "value": "https://edge.api.flagsmith.com/api/v1/"
+                },
+                {
+                    "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
                     "value": "True"
                 }
             ],
@@ -240,6 +256,22 @@
                 {
                     "name": "SSE_AUTHENTICATION_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SSE_AUTHENTICATION_TOKEN::"
+                },
+                {
+                    "name": "GITHUB_WEBHOOK_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:GITHUB_WEBHOOK_SECRET::"
+                },
+                {
+                    "name": "GITHUB_PEM",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:GITHUB_PEM-E1Ot8p"
+                },
+                {
+                    "name": "HUBSPOT_ACCESS_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:HUBSPOT_ACCESS_TOKEN::"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
                 }
             ],
             "logConfiguration": {

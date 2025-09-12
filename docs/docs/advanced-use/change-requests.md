@@ -17,8 +17,7 @@ team member. They work in a similar way to Pull Requests in git.
 ## Setting up Change Requests
 
 Change Requests are configured at the Environment level. To enable Change Requests, go to the Environment Settings Page,
-Enable 4 Eyes Change Request Approvals, and select how many approvals you would like for each Change Request to be
-applied.
+Enable the Change Request setting, and select how many approvals you would like for each Change Request to be applied.
 
 ## Creating a Change Request
 
@@ -35,7 +34,7 @@ You will need to provide:
 
 - The title of the Change Request
 - Optionally a description of the reason for the Change Request
-- Any number of assignees. These people will receive an email alerting them of the Change Request
+- Assigness - specify either individual users or members of a group. These users will receive an email alerting them of the Change Request
 
 ## Approving a Change Request
 

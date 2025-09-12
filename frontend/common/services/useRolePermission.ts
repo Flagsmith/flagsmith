@@ -121,14 +121,11 @@ export async function getRoleProjectPermissions(
     typeof rolePermissionService.endpoints.getRoleProjectPermissions.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     rolePermissionService.endpoints.getRoleProjectPermissions.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(rolePermissionService.util.getRunningQueriesThunk()),
   )
 }
 
@@ -139,14 +136,11 @@ export async function getRoleEnvironmentPermissions(
     typeof rolePermissionService.endpoints.getRoleEnvironmentPermissions.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     rolePermissionService.endpoints.getRoleEnvironmentPermissions.initiate(
       data,
       options,
     ),
-  )
-  return Promise.all(
-    store.dispatch(rolePermissionService.util.getRunningQueriesThunk()),
   )
 }
 

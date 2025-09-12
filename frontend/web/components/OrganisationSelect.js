@@ -8,6 +8,15 @@ const OrganisationSelect = class extends Component {
     this.state = {}
   }
 
+  componentDidMount() {
+    if (localStorage.lastEnv) {
+      const orgId = JSON.parse(localStorage.lastEnv).orgId
+      if (this.props.firstOrganisation && orgId) {
+        this.props.onChange(orgId)
+      }
+    }
+  }
+
   render() {
     return (
       <AccountProvider>
@@ -20,7 +29,6 @@ const OrganisationSelect = class extends Component {
                   value: AccountStore.getOrganisation().id,
                 }}
                 onChange={({ value }) => {
-                  API.setCookie('organisation', `${value}`)
                   this.props.onChange && this.props.onChange(value)
                 }}
                 options={
@@ -33,7 +41,6 @@ const OrganisationSelect = class extends Component {
                 className='select-lg react-select'
               />
             </div>
-
             {user &&
               user.organisations &&
               user.organisations.map((organisation) => (

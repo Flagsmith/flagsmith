@@ -22,7 +22,7 @@ from util.mappers.engine import (
     map_identity_to_engine,
 )
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from flag_engine.identities.models import IdentityModel
 
     from environments.identities.models import Identity
@@ -40,6 +40,8 @@ __all__ = (
 DocumentValue: TypeAlias = Union[Dict[str, "DocumentValue"], str, bool, None, Decimal]
 Document: TypeAlias = Dict[str, DocumentValue]
 
+_NULLABLE_IDENTITY_KEY_ATTRIBUTES = {"dashboard_alias"}
+
 
 def map_environment_to_environment_document(
     environment: "Environment",
@@ -48,6 +50,7 @@ def map_environment_to_environment_document(
         field_name: _map_value_to_document_value(value)
         for field_name, value in map_environment_to_engine(
             environment,
+            with_integrations=True,
         )
     }
 
@@ -80,6 +83,7 @@ def map_engine_identity_to_identity_document(
     response = {
         field_name: _map_value_to_document_value(value)
         for field_name, value in engine_identity
+        if (value is not None or field_name not in _NULLABLE_IDENTITY_KEY_ATTRIBUTES)
     }
     response["composite_key"] = engine_identity.composite_key
     return response
@@ -207,6 +211,6 @@ def _map_value_to_document_value(value: Any) -> DocumentValue:
             encoder = DOCUMENT_VALUE_ENCODERS_BY_TYPE[base]
         except KeyError:
             continue
-        return encoder(value)
+        return encoder(value)  # type: ignore[operator,no-any-return]
     else:
         return str(value)

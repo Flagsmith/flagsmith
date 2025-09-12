@@ -6,13 +6,21 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-task-processor",
-            "entryPoint": [
-                "python",
-                "manage.py",
-                "runprocessor",
-                "--sleepintervalms",
-                "700"
+            "command": ["run-task-processor"],
+            "portMappings": [
+                {
+                    "containerPort": 8000,
+                    "hostPort": 8000,
+                    "protocol": "tcp"
+                }
             ],
+            "healthCheck": {
+                "command": ["CMD-SHELL", "flagsmith healthcheck tcp"],
+                "interval": 10,
+                "timeout": 2,
+                "retries": 5,
+                "startPeriod": 5
+            },
             "essential": true,
             "environment": [
                 {
@@ -26,6 +34,10 @@
                 {
                     "name": "AWS_DEFAULT_REGION",
                     "value": "eu-west-2"
+                },
+                {
+                    "name": "DJANGO_ALLOWED_HOSTS",
+                    "value": "*"
                 },
                 {
                     "name": "DJANGO_SETTINGS_MODULE",
@@ -92,24 +104,8 @@
                     "value": "https://origin.realtime-staging.flagsmith.com"
                 },
                 {
-                    "name": "PIPEDRIVE_BASE_API_URL",
-                    "value": "https://testing-sandbox.pipedrive.com/api/v1"
-                },
-                {
-                    "name": "PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY",
-                    "value": "1eb559f404db4ca931cf6b45b99a69f592dee321"
-                },
-                {
-                    "name": "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY",
-                    "value": "3f142ca82a69c31c2f592b372bd1bb41dfe3407e"
-                },
-                {
-                    "name": "PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY",
-                    "value": "0f23057d26ce75557ac093e9abd96d7744d0d0da"
-                },
-                {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",
-                    "value": "True"
+                    "value": "False"
                 },
                 {
                     "name": "TASK_DELETE_RETENTION_DAYS",
@@ -142,16 +138,36 @@
                 {
                     "name": "ENABLE_API_USAGE_ALERTING",
                     "value": "True"
+                },
+                {
+                    "name": "GITHUB_APP_ID",
+                    "value": "811209"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
+                    "value": "https://edge.api.flagsmith.com/api/v1/"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
+                    "value": "False"
+                },
+                {
+                    "name": "PROMETHEUS_ENABLED",
+                    "value": "True"
+                },
+                {
+                    "name": "TASK_PROCESSOR_SLEEP_INTERVAL_MS",
+                    "value": "1000"
+                },
+                {
+                    "name": "TASK_PROCESSOR_NUM_THREADS",
+                    "value": "12"
                 }
             ],
             "secrets": [
                 {
                     "name": "CHARGEBEE_API_KEY",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:CHARGEBEE_API_KEY::"
-                },
-                {
-                    "name": "ANALYTICS_DATABASE_URL",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:ANALYTICS_DATABASE_URL::"
                 },
                 {
                     "name": "DATABASE_URL",
@@ -186,12 +202,16 @@
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SSE_AUTHENTICATION_TOKEN::"
                 },
                 {
-                    "name": "PIPEDRIVE_API_TOKEN",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:PIPEDRIVE_API_TOKEN::"
-                },
-                {
                     "name": "INFLUXDB_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:INFLUXDB_TOKEN::"
+                },
+                {
+                    "name": "GITHUB_PEM",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:GITHUB_PEM-Bfoaql"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
                 }
             ],
             "logConfiguration": {
@@ -204,9 +224,7 @@
             }
         }
     ],
-    "requiresCompatibilities": [
-        "FARGATE"
-    ],
+    "requiresCompatibilities": ["FARGATE"],
     "cpu": "1024",
     "memory": "2048"
 }

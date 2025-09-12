@@ -58,8 +58,7 @@ Our device has now appeared in this topic, and we can use the topic to start sen
 
 ### Adding Teams of Users with Segments
 
-We can now make use of [Flagsmith Segments](/basic-features/managing-segments.md) to add all our team to this beta FCM
-group.
+We can now make use of [Flagsmith Segments](/basic-features/segments.md) to add all our team to this beta FCM group.
 
 Create a Segment, add a rule that will include our team (in our case we match against the domain name of an email
 Trait), and override the `fcm_marketing_beta` Flag with this Segment.

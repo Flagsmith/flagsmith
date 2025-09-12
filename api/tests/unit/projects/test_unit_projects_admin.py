@@ -17,7 +17,7 @@ if typing.TYPE_CHECKING:
     from organisations.models import Organisation
 
 
-def test_project_admin_delete_all_segments(organisation: "Organisation"):
+def test_project_admin_delete_all_segments(organisation: "Organisation"):  # type: ignore[no-untyped-def]
     # Given
     project_1 = Project.objects.create(name="project_1", organisation=organisation)
     project_2 = Project.objects.create(name="project_2", organisation=organisation)
@@ -66,7 +66,7 @@ def test_project_admin_delete_all_segments(organisation: "Organisation"):
 @pytest.mark.parametrize(
     "is_superuser, expected_result", ((True, True), (False, False))
 )
-def test_project_admin_has_delete_all_segments_permission(
+def test_project_admin_has_delete_all_segments_permission(  # type: ignore[no-untyped-def]
     is_superuser: bool, expected_result: bool, django_user_model: type["AbstractUser"]
 ):
     # Given

@@ -33,10 +33,13 @@
   }
 }
 .modal-caption {
-  color: $text-icon-dark;
+  color: $body-color;
 }
-
-$side-width: 660px;
+.inline-modal-right {
+  left: auto;
+  right: 0;
+}
+$side-width: 750px;
 .dark {
   .inline-modal {
     background: $modal-bg-dark;
@@ -58,77 +61,89 @@ $side-width: 660px;
   }
 }
 
-.side-modal {
-  overflow-y: hidden !important;
-  opacity: 1 !important;
-  z-index: 10000000;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-
-  .modal-body {
-    padding: 0;
-    height: calc(100% - 60px);
-    overflow-y: auto;
-  }
-
-  .modal-dialog {
-    box-shadow: rgba(75, 75, 75, 0.11) 0px 1px 6px 0px,
-      rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
-    transition: transform 0.2s ease-out;
-    transform: translate(100%, 0%) !important;
-    position: absolute;
-    max-width: 1000px;
-    width: $side-width !important;
-    height: 100% !important;
-    max-height: 100% !important;
-    margin: 0;
-    right: 0;
-    left: auto;
-  }
-
-  &.show {
-    .modal-dialog {
-      transform: translate(0%, 0%) !important;
-    }
-  }
-
-  &__footer {
-    position: fixed;
-    bottom: 0;
+@include media-breakpoint-up(md) {
+  .side-modal {
+    overflow-y: hidden !important;
+    opacity: 1 !important;
+    z-index: 10000000;
     left: 0;
     right: 0;
-    padding: 20px;
-    height: 130px;
-  }
+    top: 0;
+    bottom: 0;
 
-  .modal-content {
-    border-radius: 0;
-    width: 100%;
-    height: 100%;
-  }
-  &.create-feature-modal {
     .modal-body {
-      overflow-y: hidden;
-    }
-    &.overflow-y-auto {
-      .modal-body {
-        overflow-y: auto;
-      }
-    }
-    .tabs {
-      .tab-item {
-        padding-top: 24px;
-        padding-bottom: 24px;
-        overflow-y: auto;
-        height: calc(100vh - 110px);
-      }
-    }
-    .create-feature-tab {
-      margin-top: 16px;
+      padding: 0;
+      height: calc(100% - 60px);
       overflow-y: auto;
-      height: calc(100vh - 80px);
+    }
+
+    .modal-dialog {
+      box-shadow: rgba(75, 75, 75, 0.11) 0px 1px 6px 0px,
+      rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
+      transition: transform 0.2s ease-out;
+      transform: translate(100%, 0%) !important;
+      position: absolute;
+      max-width: 1000px;
+      width: $side-width !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      margin: 0;
+      right: 0;
+      left: auto;
+    }
+
+    &.show {
+      .modal-dialog {
+        transform: translate(0%, 0%) !important;
+      }
+    }
+
+    &__footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      height: 130px;
+    }
+
+    .modal-content {
+      border-radius: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    &.create-feature-modal {
+      .modal-body {
+        overflow-y: hidden;
+      }
+
+      &.overflow-y-auto {
+        overflow-y: hidden;
+
+        .modal-body {
+          overflow-y: auto;
+        }
+      }
+
+      .tabs {
+        .tab-item {
+          padding-top: 24px;
+          padding-bottom: 24px;
+          overflow-y: auto;
+          height: calc(100vh - 110px);
+
+          &.p-0 {
+            height: auto;
+          }
+        }
+      }
+
+      .create-feature-tab {
+        margin-top: 16px;
+        overflow-y: auto;
+        height: calc(100vh - 80px);
+      }
     }
   }
 }
@@ -143,7 +158,7 @@ $side-width: 660px;
   position: absolute;
   background: $body-bg;
   border-radius: $border-radius;
-  z-index: 1;
+  z-index: 200000000000;
   box-shadow: rgba(75, 75, 75, 0.11) 0px 1px 6px 0px,
     rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
   border: 1px solid $input-border-color;
@@ -157,7 +172,7 @@ $side-width: 660px;
   .assignees-list-item {
     color: $bg-dark100;
     font-weight: 500;
-    padding: 16px 0;
+    padding: 8px 0;
     border-bottom: 1px solid $basic-alpha-16;
   }
   &.right {
@@ -196,7 +211,28 @@ $side-width: 660px;
     max-height: 350px;
   }
 }
-
+@include media-breakpoint-down(lg) {
+  .inline-modal__list {
+    max-height: none;
+  }
+  .inline-modal, .inline-modal.table-filter {
+    position: fixed;
+    overflow-y: auto;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100000000000;
+    margin: 0;
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+  }
+  .table-filter-list {
+    max-height: none !important;
+  }
+}
 .modal-back-btn {
   margin-right: 12px;
 }
@@ -236,11 +272,31 @@ $side-width: 660px;
   .tabs-nav {
     margin: 0 1.5rem;
     margin-top: 1rem;
+    @include customScroll();
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+  
+  /* Hide scrollbar completely */
+  &::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+  
+  scrollbar-width: none;
+    -ms-overflow-style: none;
   }
   .tab-item {
     padding: 0 1.5rem;
   }
 
+  .tab-dropdown-item {
+    &:hover {
+      border-radius: 4px !important;
+      transition: background-color 0.15s ease !important;
+      background-color: #6610f210 !important;
+      color: black !important;
+    }
+  }
   .tab-nav-hr {
     margin: 0 1.5rem;
   }
@@ -249,8 +305,7 @@ $side-width: 660px;
   .tabs-nav button.btn,
   .tabs-nav button.btn-primary {
     font-size: $font-sm;
-    line-height: $line-height-sm;
-    padding: 0 16px;
+    padding: 0 14px;
   }
 }
 
@@ -268,6 +323,11 @@ $side-width: 660px;
     opacity: 0;
     pointer-events: none;
   }
+
+  #toast {
+    transform: translate(-50%);
+  }
+
 }
 .table-filter-list {
   overflow-y: auto;
@@ -279,9 +339,6 @@ $side-width: 660px;
 .table-filter-item {
   display: block;
   border-bottom: 1px solid $input-border-color;
-  &:first-of-type {
-    border-top: 1px solid $input-border-color;
-  }
   &:last-of-type {
     border-bottom: none;
   }
@@ -290,5 +347,37 @@ $side-width: 660px;
 
   .table-filter-item {
     border-color: $white-alpha-8;
+  }
+}
+
+@include media-breakpoint-down(md) {
+  .modal-dialog {
+    margin:0;
+    .modal-content {
+      border-radius:0;
+      height: 100vh;
+    }
+  }
+}
+
+.modal-full-screen {
+  .modal-dialog {
+    max-width: 75vw;
+  }
+  hr {
+    display: none;
+  }
+  .modal-header {
+    display: none;
+  }
+  .modal-content {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    .modal-body {
+      background: transparent;
+      padding: 0;
+    }
   }
 }

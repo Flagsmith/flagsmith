@@ -12,7 +12,7 @@ import Button from 'components/base/forms/Button'
 import ModalHR from './ModalHR'
 
 type ConfirmToggleFeatureType = {
-  environmentFlag: FeatureState
+  environmentFlag?: FeatureState
   projectFlag: ProjectFlag
   environmentId: string
   identity?: string

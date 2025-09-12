@@ -1,33 +1,41 @@
 import json
 import urllib
+from typing import Any
 from unittest import mock
 
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER, STRING
+import pytest
+from common.environments.permissions import (
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from django.test import override_settings
 from django.urls import reverse
-from django.utils import timezone
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from pytest_django import DjangoAssertNumQueries
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.test import APIClient
 
+from core.constants import (
+    FLAGSMITH_UPDATED_AT_HEADER,
+    SDK_ENVIRONMENT_KEY_HEADER,
+    STRING,
+)
+from environments.identities import views
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from environments.identities.views import IdentityViewSet
 from environments.models import Environment, EnvironmentAPIKey
-from environments.permissions.constants import (
-    MANAGE_IDENTITIES,
-    VIEW_IDENTITIES,
-)
+from environments.permissions.models import UserEnvironmentPermission
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import Feature, FeatureSegment, FeatureState
 from integrations.amplitude.models import AmplitudeConfiguration
 from organisations.models import Organisation
-from projects.models import Project
+from permissions.models import PermissionModel
+from projects.models import Project, UserProjectPermission
 from segments.models import Condition, Segment, SegmentRule
 
 
@@ -336,6 +344,54 @@ def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_
     assert len(response.data["flags"]) == 2
 
 
+def test_get_flags_for_identities_with_cache(
+    environment: Environment,
+    feature: Feature,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    use_local_mem_cache_for_cache_middleware: None,
+    project_two_feature: Feature,
+    project_two_environment: Environment,
+) -> None:
+    # Given
+    base_url = reverse("api-v1:sdk-identities")
+    url = base_url + "?identifier=some-identifier"
+
+    # Create clients for two separate environments
+    environment_one_client = APIClient(
+        headers={SDK_ENVIRONMENT_KEY_HEADER: environment.api_key}
+    )
+    project_two_environment_client = APIClient(
+        headers={SDK_ENVIRONMENT_KEY_HEADER: project_two_environment.api_key}
+    )
+
+    # Fetch flags for both environments once to warm the cache
+    environment_one_response = environment_one_client.get(url)
+    assert environment_one_response.status_code == status.HTTP_200_OK
+
+    project_two_environment_response = project_two_environment_client.get(url)
+    assert project_two_environment_response.status_code == status.HTTP_200_OK
+
+    #  When
+    with django_assert_num_queries(0):
+        for _ in range(10):
+            environment_one_response = environment_one_client.get(url)
+            assert environment_one_response.status_code == status.HTTP_200_OK
+
+            project_two_environment_response = project_two_environment_client.get(url)
+            assert project_two_environment_response.status_code == status.HTTP_200_OK
+
+            # Then
+            # Each response must return the correct feature for its environment
+            assert (
+                environment_one_response.json()["flags"][0]["feature"]["id"]
+                == feature.id
+            )
+            assert (
+                project_two_environment_response.json()["flags"][0]["feature"]["id"]
+                == project_two_feature.id
+            )
+
+
 @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
 def test_identities_endpoint_get_all_feature_amplitude_called(
     mock_amplitude_wrapper: mock.MagicMock,
@@ -386,7 +442,7 @@ def test_identities_endpoint_returns_traits(
 
     # Then
     assert response.data["traits"] is not None
-    assert response.data["traits"][0].get("trait_value") == trait.get_trait_value()
+    assert response.data["traits"][0].get("trait_value") == trait.get_trait_value()  # type: ignore[no-untyped-call]
 
     # and amplitude identify users should not be called
     mock_amplitude_wrapper.assert_not_called()
@@ -547,7 +603,9 @@ def test_identities_endpoint_returns_value_for_segment_if_rule_type_percentage_s
     )
     Condition.objects.create(
         operator=PERCENTAGE_SPLIT,
-        value=(identity_percentage_value + (1 - identity_percentage_value) / 2) * 100.0,
+        value=int(
+            (identity_percentage_value + (1 - identity_percentage_value) / 2) * 100.0
+        ),
         rule=segment_rule,
     )
     feature_segment = FeatureSegment.objects.create(
@@ -598,7 +656,7 @@ def test_identities_endpoint_returns_default_value_if_rule_type_percentage_split
     )
     Condition.objects.create(
         operator=PERCENTAGE_SPLIT,
-        value=identity_percentage_value / 2,
+        value=int(identity_percentage_value / 2),
         rule=segment_rule,
     )
     feature_segment = FeatureSegment.objects.create(
@@ -650,7 +708,7 @@ def test_post_identify_with_new_identity_work_with_null_trait_value(
     assert identity.identity_traits.count() == 0
 
 
-def test_post_identify_deletes_a_trait_if_trait_value_is_none(
+def test_post_identify_deletes_a_trait_if_trait_value_is_none(  # type: ignore[no-untyped-def]
     identity: Identity,
     environment: Environment,
     api_client: APIClient,
@@ -830,11 +888,10 @@ def test_get_identities_calls_forward_identity_request_with_correct_arguments(
     assert kwargs["kwargs"]["query_params"] == {"identifier": identity.identifier}
 
 
-def test_post_identities_with_traits_fails_if_client_cannot_set_traits(
+def test_post_identities_returns_empty_traits_if_client_cannot_set_traits(
     identity: Identity,
     environment: Environment,
     api_client: APIClient,
-    feature: Feature,
 ) -> None:
     # Given
     url = reverse("api-v1:sdk-identities")
@@ -854,7 +911,9 @@ def test_post_identities_with_traits_fails_if_client_cannot_set_traits(
 
     # Then
     assert Trait.objects.count() == 0
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["traits"] == []
+    assert response.json()["identifier"] == identity.identifier
 
 
 def test_post_identities_with_traits_success_if_client_cannot_set_traits_server_key(
@@ -886,8 +945,8 @@ def test_post_identities_with_traits_success_if_client_cannot_set_traits_server_
 
     assert Trait.objects.count() == 1
     trait = Trait.objects.first()
-    assert trait.trait_key == trait_key
-    assert trait.trait_value == trait_value
+    assert trait.trait_key == trait_key  # type: ignore[union-attr]
+    assert trait.trait_value == trait_value  # type: ignore[union-attr]
 
 
 def test_post_identities_request_includes_updated_at_header(
@@ -933,41 +992,7 @@ def test_get_identities_request_includes_updated_at_header(
     )
 
 
-def test_get_identities_nplus1(
-    identity: Identity,
-    environment: Environment,
-    api_client: APIClient,
-    feature: Feature,
-    django_assert_num_queries: DjangoAssertNumQueries,
-) -> None:
-    """
-    Specific test to reproduce N+1 issue found after deployment of
-    v2 feature versioning.
-    """
-
-    url = "%s?identifier=%s" % (
-        reverse("api-v1:sdk-identities"),
-        identity.identifier,
-    )
-
-    # Let's get a baseline with only a single version of a flag.
-    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-    with django_assert_num_queries(6):
-        api_client.get(url)
-
-    # Now let's create some new versions of the same flag
-    # and verify that the query count doesn't increase.
-    v1_flag = FeatureState.objects.get(environment=environment, feature=feature)
-    now = timezone.now()
-    for i in range(2, 13):
-        v1_flag.clone(env=environment, version=i, live_from=now)
-
-    # Now it is lower.
-    with django_assert_num_queries(5):
-        api_client.get(url)
-
-
-def test_get_identities_with_hide_sensitive_data_with_feature_name(
+def test_get_identities_with_hide_sensitive_data_with_feature_name(  # type: ignore[no-untyped-def]
     environment, feature, identity, api_client
 ):
     # Given
@@ -999,7 +1024,7 @@ def test_get_identities_with_hide_sensitive_data_with_feature_name(
         assert flag["feature"][field] is None
 
 
-def test_get_identities_with_hide_sensitive_data(
+def test_get_identities_with_hide_sensitive_data(  # type: ignore[no-untyped-def]
     environment, feature, identity, api_client
 ):
     # Given
@@ -1033,7 +1058,24 @@ def test_get_identities_with_hide_sensitive_data(
     assert response.json()["traits"] == []
 
 
-def test_post_identities_with_hide_sensitive_data(
+def test_get_identities__transient__no_persistence(
+    environment: Environment,
+    api_client: APIClient,
+) -> None:
+    # Given
+    identifier = "transient"
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    url = reverse("api-v1:sdk-identities") + f"?identifier={identifier}&transient=true"
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert not Identity.objects.filter(identifier=identifier).count()
+
+
+def test_post_identities_with_hide_sensitive_data(  # type: ignore[no-untyped-def]
     environment, feature, identity, api_client
 ):
     # Given
@@ -1126,16 +1168,149 @@ def test_post_identities__server_key_only_feature__server_key_auth__return_expec
     assert response.json()["flags"]
 
 
+@pytest.mark.parametrize(
+    "identity_data",
+    [
+        pytest.param(
+            {"identifier": "transient", "transient": True},
+            id="new-identifier-transient-true",
+        ),
+        pytest.param({"identifier": ""}, id="blank-identifier"),
+        pytest.param({"identifier": None}, id="null-identifier"),
+        pytest.param({}, id="missing_identifier"),
+    ],
+)
+def test_post_identities__transient__no_persistence(
+    environment: Environment,
+    api_client: APIClient,
+    identity_data: dict[str, Any],
+) -> None:
+    # Given
+    trait_key = "trait_key"
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    url = reverse("api-v1:sdk-identities")
+    data = {
+        **identity_data,
+        "traits": [{"trait_key": trait_key, "trait_value": "bar"}],
+    }
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert not Identity.objects.exists()
+    assert not Trait.objects.filter(trait_key=trait_key).exists()
+
+
+@pytest.mark.parametrize(
+    "trait_transiency_data",
+    [
+        pytest.param({"transient": True}, id="trait-transient-true"),
+        pytest.param({"transient": False}, id="trait-transient-false"),
+        pytest.param({}, id="trait-default"),
+    ],
+)
+def test_post_identities__existing__transient__no_persistence(
+    environment: Environment,
+    identity: Identity,
+    trait: Trait,
+    identity_featurestate: FeatureState,
+    api_client: APIClient,
+    trait_transiency_data: dict[str, Any],
+) -> None:
+    # Given
+    feature_state_value = "identity override"
+    identity_featurestate.feature_state_value.string_value = feature_state_value
+    identity_featurestate.feature_state_value.save()
+
+    trait_key = "trait_key"
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    url = reverse("api-v1:sdk-identities")
+    data = {
+        "identifier": identity.identifier,
+        "transient": True,
+        "traits": [
+            {"trait_key": trait_key, "trait_value": "bar", **trait_transiency_data}
+        ],
+    }
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+
+    # identity overrides are correctly loaded
+    assert response_json["flags"][0]["feature_state_value"] == feature_state_value
+
+    # previously persisted traits not provided in the request
+    # are not marked as transient in the response
+    assert response_json["traits"][0]["trait_key"] == trait.trait_key
+    assert not response_json["traits"][0].get("transient")
+
+    # every trait provided in the request for a transient identity
+    # is marked as transient
+    assert response_json["traits"][1]["trait_key"] == trait_key
+    assert response_json["traits"][1]["transient"]
+
+    assert (
+        persisted_trait := Trait.objects.filter(
+            identity=identity, trait_key=trait.trait_key
+        ).first()
+    )
+    assert persisted_trait.trait_value == trait.trait_value
+    assert not Trait.objects.filter(identity=identity, trait_key=trait_key).exists()
+
+
+def test_post_identities__transient_traits__no_persistence(
+    environment: Environment,
+    api_client: APIClient,
+) -> None:
+    # Given
+    identifier = "transient"
+    transient_trait_key = "trait_key"
+    non_transient_trait_key = "other"
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    url = reverse("api-v1:sdk-identities")
+    data = {
+        "identifier": identifier,
+        "traits": [
+            {"trait_key": transient_trait_key, "trait_value": "bar", "transient": True},
+            {"trait_key": non_transient_trait_key, "trait_value": "value"},
+        ],
+    }
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert Identity.objects.filter(identifier=identifier).exists()
+    assert Trait.objects.filter(trait_key=non_transient_trait_key).exists()
+    assert not Trait.objects.filter(trait_key=transient_trait_key).exists()
+
+
 def test_user_with_view_identities_permission_can_retrieve_identity(
-    environment,
-    identity,
-    test_user_client,
-    view_environment_permission,
-    view_identities_permission,
-    view_project_permission,
-    user_environment_permission,
-    user_project_permission,
-):
+    environment: Environment,
+    identity: Identity,
+    staff_client: APIClient,
+    view_environment_permission: PermissionModel,
+    view_identities_permission: PermissionModel,
+    view_project_permission: PermissionModel,
+    user_environment_permission: UserEnvironmentPermission,
+    user_project_permission: UserProjectPermission,
+) -> None:
     # Given
 
     user_environment_permission.permissions.add(
@@ -1149,22 +1324,22 @@ def test_user_with_view_identities_permission_can_retrieve_identity(
     )
 
     # When
-    response = test_user_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
 
 
 def test_user_with_view_environment_permission_can_not_list_identities(
-    environment,
-    identity,
-    test_user_client,
-    view_environment_permission,
-    manage_identities_permission,
-    view_project_permission,
-    user_environment_permission,
-    user_project_permission,
-):
+    environment: Environment,
+    identity: Identity,
+    staff_client: APIClient,
+    view_environment_permission: PermissionModel,
+    manage_identities_permission: PermissionModel,
+    view_project_permission: PermissionModel,
+    user_environment_permission: UserEnvironmentPermission,
+    user_project_permission: UserProjectPermission,
+) -> None:
     # Given
 
     user_environment_permission.permissions.add(view_environment_permission)
@@ -1176,18 +1351,18 @@ def test_user_with_view_environment_permission_can_not_list_identities(
     )
 
     # When
-    response = test_user_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_identity_view_set_get_permissions():
+def test_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]
     # Given
-    view_set = IdentityViewSet()
+    view_set = views.IdentityViewSet()
 
     # When
-    permissions = view_set.get_permissions()
+    permissions = view_set.get_permissions()  # type: ignore[no-untyped-call]
 
     # Then
     assert isinstance(permissions[0], IsAuthenticated)
@@ -1201,3 +1376,85 @@ def test_identity_view_set_get_permissions():
         "partial_update": MANAGE_IDENTITIES,
         "destroy": MANAGE_IDENTITIES,
     }
+
+
+# NOTE: DEPRECATED
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "num_queries"],
+    [
+        pytest.param(False, True, 12, id="default_database,new_identity"),
+        pytest.param(False, False, 7, id="default_database,existing_identity"),
+        pytest.param(True, True, 12, id="replica_database,new_identity"),
+        pytest.param(True, False, 9, id="replica_database,existing_identity"),
+    ],
+)
+def test_SDKIdentitiesDeprecated__given_identifier__retrieves_identity(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    feature_state: FeatureState,
+    identity: Identity,
+    is_new_identity: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    trait: Trait,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "jamesbond" if is_new_identity else identity.identifier
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = api_client.get(f"/api/v1/identities/{identifier}/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "flags": [mocker.ANY],
+        "segments": [],
+        "traits": [mocker.ANY] * (not is_new_identity),
+    }
+
+
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "is_transient", "num_queries"],
+    [
+        pytest.param(False, True, False, 10, id="default_db,new_identity"),
+        pytest.param(False, False, False, 6, id="default_db,old_identity"),
+        pytest.param(True, True, False, 10, id="replica_db,new_identity"),
+        pytest.param(True, False, False, 8, id="replica_db,old_identity"),
+        pytest.param(False, True, True, 4, id="default_db,new_identity,transient"),
+        pytest.param(False, False, True, 4, id="default_db,old_identity,transient"),
+        pytest.param(True, True, True, 4, id="replica_db,new_identity,transient"),
+        pytest.param(True, False, True, 4, id="replica_db,old_identity,transient"),
+    ],
+)
+def test_SDKIdentities_retrieves_identity_feature_states(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    feature_state: FeatureState,
+    identity: Identity,
+    is_new_identity: bool,
+    is_transient: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    trait: Trait,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "jamesbond" if is_new_identity else identity.identifier
+
+    # When
+    with django_assert_num_queries(num_queries):
+        transient = "&transient=true" if is_transient else ""
+        response = api_client.get(
+            f"/api/v1/identities/?identifier={identifier}{transient}"
+        )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK

@@ -16,11 +16,11 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class WebhookWrapper(AbstractBaseIdentityIntegrationWrapper):
+class WebhookWrapper(AbstractBaseIdentityIntegrationWrapper):  # type: ignore[type-arg]
     def __init__(self, config: WebhookConfiguration):
         self.config = config
 
-    def _identify_user(self, data: typing.Mapping) -> None:
+    def _identify_user(self, data: typing.Mapping) -> None:  # type: ignore[type-arg]
         response = call_integration_webhook(self.config, data)
         if response:
             logger.debug(
@@ -31,8 +31,8 @@ class WebhookWrapper(AbstractBaseIdentityIntegrationWrapper):
         self,
         identity: "Identity",
         feature_states: typing.List["FeatureState"],
-        trait_models: typing.List["Trait"] = None,
-    ) -> dict:
+        trait_models: typing.List["Trait"] = None,  # type: ignore[assignment]
+    ) -> dict:  # type: ignore[type-arg]
         serialized_flags = IntegrationFeatureStateSerializer(
             feature_states, many=True, context={"identity": identity}
         )

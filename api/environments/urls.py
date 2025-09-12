@@ -1,6 +1,5 @@
-from django.conf.urls import include, url
-from django.urls import path
-from rest_framework_nested import routers
+from django.urls import include, path, re_path
+from rest_framework_nested import routers  # type: ignore[import-untyped]
 
 from edge_api.identities.views import (
     EdgeIdentityFeatureStateViewSet,
@@ -15,10 +14,12 @@ from features.views import (
 )
 from integrations.amplitude.views import AmplitudeConfigurationViewSet
 from integrations.dynatrace.views import DynatraceConfigurationViewSet
+from integrations.grafana.views import GrafanaProjectConfigurationViewSet
 from integrations.heap.views import HeapConfigurationViewSet
 from integrations.mixpanel.views import MixpanelConfigurationViewSet
 from integrations.rudderstack.views import RudderstackConfigurationViewSet
 from integrations.segment.views import SegmentConfigurationViewSet
+from integrations.sentry.views import SentryChangeTrackingConfigurationViewSet
 from integrations.slack.views import (
     SlackEnvironmentViewSet,
     SlackGetChannelsViewSet,
@@ -31,7 +32,12 @@ from .permissions.views import (
     UserEnvironmentPermissionsViewSet,
     UserPermissionGroupEnvironmentPermissionsViewSet,
 )
-from .views import EnvironmentAPIKeyViewSet, EnvironmentViewSet, WebhookViewSet
+from .views import (
+    EnvironmentAPIKeyViewSet,
+    EnvironmentMetricsViewSet,
+    EnvironmentViewSet,
+    WebhookViewSet,
+)
 
 router = routers.DefaultRouter()
 router.register(r"", EnvironmentViewSet, basename="environment")
@@ -45,6 +51,9 @@ environments_router.register(
 )
 environments_router.register(
     r"webhooks", WebhookViewSet, basename="environment-webhooks"
+)
+environments_router.register(
+    r"metrics", EnvironmentMetricsViewSet, basename="environment-metrics"
 )
 environments_router.register(
     r"featurestates",
@@ -82,9 +91,19 @@ environments_router.register(
     basename="integrations-dynatrace",
 )
 environments_router.register(
+    r"integrations/grafana",
+    GrafanaProjectConfigurationViewSet,
+    basename="integrations-grafana",
+)
+environments_router.register(
     r"integrations/mixpanel",
     MixpanelConfigurationViewSet,
     basename="integrations-mixpanel",
+)
+environments_router.register(
+    r"integrations/sentry",
+    SentryChangeTrackingConfigurationViewSet,
+    basename="integrations-sentry",
 )
 environments_router.register(
     r"integrations/slack", SlackEnvironmentViewSet, basename="integrations-slack"
@@ -129,10 +148,10 @@ environments_router.register(r"api-keys", EnvironmentAPIKeyViewSet, basename="ap
 app_name = "environments"
 
 urlpatterns = [
-    url(r"^", include(router.urls)),
-    url(r"^", include(environments_router.urls)),
-    url(r"^", include(identity_router.urls)),
-    url(r"^", include(edge_identity_router.urls)),
+    re_path(r"^", include(router.urls)),
+    re_path(r"^", include(environments_router.urls)),
+    re_path(r"^", include(identity_router.urls)),
+    re_path(r"^", include(edge_identity_router.urls)),
     path(
         "environments/<str:environment_api_key>/edge-identities-featurestates",
         EdgeIdentityWithIdentifierFeatureStateView.as_view(),

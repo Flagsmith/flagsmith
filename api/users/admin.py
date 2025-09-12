@@ -7,7 +7,7 @@ from .forms import CustomUserAdminForm
 from .models import FFAdminUser
 
 
-class UserOrganisationInline(admin.TabularInline):
+class UserOrganisationInline(admin.TabularInline):  # type: ignore[type-arg]
     model = UserOrganisation
     extra = 0
     show_change_link = False
@@ -16,7 +16,7 @@ class UserOrganisationInline(admin.TabularInline):
 
 
 @admin.register(FFAdminUser)
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(UserAdmin):  # type: ignore[type-arg]
     model = FFAdminUser
     form = CustomUserAdminForm
 
@@ -44,6 +44,7 @@ class CustomUserAdmin(UserAdmin):
         "is_staff",
         "is_active",
         "date_joined",
+        "uuid",
     )
 
     list_filter = (
@@ -57,6 +58,7 @@ class CustomUserAdmin(UserAdmin):
         "username",
         "first_name",
         "last_name",
+        "uuid",
     )
 
     inlines = [UserOrganisationInline]

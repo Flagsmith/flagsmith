@@ -1,196 +1,108 @@
-from pytest_django.fixtures import SettingsWrapper
-from pytest_mock import MockerFixture
+import pytest
+from django.db import models
 
-from app.routers import (
-    PrimaryReplicaRouter,
-    ReplicaReadStrategy,
-    connection_check,
+from app import routers
+
+
+@pytest.mark.parametrize(
+    ["given_app_label", "expected_db"],
+    [
+        ("app_analytics", "analytics"),
+        ("another_app", None),
+    ],
 )
-from users.models import FFAdminUser
-
-
-def test_connection_check_to_default_database(db: None, reset_cache: None) -> None:
-    # When
-    connection_check_works = connection_check("default")
-
-    # Then
-    assert connection_check_works is True
-
-
-def test_replica_router_db_for_read_with_one_offline_replica(
-    db: None,
-    settings: SettingsWrapper,
-    mocker: MockerFixture,
-    reset_cache: None,
+def test_AnalyticsRouter_db_for_read__returns_analytics_db_for_analytics_models(
+    given_app_label: str,
+    expected_db: str | None,
 ) -> None:
     # Given
-    settings.NUM_DB_REPLICAS = 4
+    class AnalyticsModel(models.Model):
+        class Meta:
+            app_label = given_app_label
 
-    # Set unused cross regional db for testing non-inclusion.
-    settings.NUM_CROSS_REGION_DB_REPLICAS = 2
-    settings.REPLICA_READ_STRATEGY = ReplicaReadStrategy.DISTRIBUTED
-
-    conn_patch = mocker.MagicMock()
-    conn_patch.is_usable.side_effect = (False, True)
-    create_connection_patch = mocker.patch(
-        "app.routers.connections.create_connection", return_value=conn_patch
-    )
-
-    router = PrimaryReplicaRouter()
+    router = routers.AnalyticsRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)
+    db = router.db_for_read(AnalyticsModel)
 
     # Then
-    # Read strategy DISTRIBUTED is random, so just this is a check
-    # against loading the primary or one of the cross region replicas
-    assert result.startswith("replica_")
-
-    # Check that the number of replica call counts is as expected.
-    conn_call_count = 2
-    assert create_connection_patch.call_count == conn_call_count
-    assert conn_patch.is_usable.call_count == conn_call_count
+    assert db == expected_db
 
 
-def test_replica_router_db_for_read_with_local_offline_replicas(
-    db: None,
-    settings: SettingsWrapper,
-    mocker: MockerFixture,
-    reset_cache: None,
+@pytest.mark.parametrize(
+    ["model_app_label", "expected_db"],
+    [
+        ("app_analytics", "analytics"),
+        ("another_app", None),
+    ],
+)
+def test_AnalyticsRouter_db_for_write__returns_analytics_db_for_analytics_models(
+    model_app_label: str,
+    expected_db: str | None,
 ) -> None:
     # Given
-    settings.NUM_DB_REPLICAS = 4
+    class MyModel(models.Model):
+        class Meta:
+            app_label = model_app_label
 
-    # Use cross regional db for fallback after replicas.
-    settings.NUM_CROSS_REGION_DB_REPLICAS = 2
-    settings.REPLICA_READ_STRATEGY = ReplicaReadStrategy.DISTRIBUTED
-
-    conn_patch = mocker.MagicMock()
-
-    # All four replicas go offline and so does one of the cross
-    # regional replica as well, before finally the last cross
-    # region replica is finally connected to.
-    conn_patch.is_usable.side_effect = (
-        False,
-        False,
-        False,
-        False,
-        False,
-        True,
-    )
-    create_connection_patch = mocker.patch(
-        "app.routers.connections.create_connection", return_value=conn_patch
-    )
-
-    router = PrimaryReplicaRouter()
+    router = routers.AnalyticsRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)
+    db = router.db_for_write(MyModel)
 
     # Then
-    # Read strategy DISTRIBUTED is random, so just this is a check
-    # against loading the primary or one of the cross region replicas
-    assert result.startswith("cross_region_replica_")
-
-    # Check that the number of replica call counts is as expected.
-    conn_call_count = 6
-    assert create_connection_patch.call_count == conn_call_count
-    assert conn_patch.is_usable.call_count == conn_call_count
+    assert db == expected_db
 
 
-def test_replica_router_db_for_read_with_all_offline_replicas(
-    db: None,
-    settings: SettingsWrapper,
-    mocker: MockerFixture,
-    reset_cache: None,
+@pytest.mark.parametrize(
+    ["model1_app_label", "model2_app_label", "expected"],
+    [
+        ("app_analytics", "app_analytics", True),
+        ("app_analytics", "another_app", None),
+    ],
+)
+def test_AnalyticsRouter_allow_relation__allows_relations_between_analytics_models(
+    model1_app_label: str,
+    model2_app_label: str,
+    expected: bool | None,
 ) -> None:
     # Given
-    settings.NUM_DB_REPLICAS = 4
-    settings.NUM_CROSS_REGION_DB_REPLICAS = 2
-    settings.REPLICA_READ_STRATEGY = ReplicaReadStrategy.DISTRIBUTED
+    class MyModel1(models.Model):
+        class Meta:
+            app_label = model1_app_label
 
-    conn_patch = mocker.MagicMock()
+    class MyModel2(models.Model):
+        class Meta:
+            app_label = model2_app_label
 
-    # All replicas go offline.
-    conn_patch.is_usable.return_value = False
-    create_connection_patch = mocker.patch(
-        "app.routers.connections.create_connection", return_value=conn_patch
-    )
-
-    router = PrimaryReplicaRouter()
+    router = routers.AnalyticsRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)
+    result = router.allow_relation(MyModel1(), MyModel2())
 
     # Then
-    # Fallback to primary database if all replicas are offline.
-    assert result == "default"
-
-    # Check that the number of replica call counts is as expected.
-    conn_call_count = 6
-    assert create_connection_patch.call_count == conn_call_count
-    assert conn_patch.is_usable.call_count == conn_call_count
+    assert result == expected
 
 
-def test_replica_router_db_with_sequential_read(
-    db: None,
-    settings: SettingsWrapper,
-    mocker: MockerFixture,
-    reset_cache: None,
+@pytest.mark.parametrize(
+    ["db_name", "app_label", "expected"],
+    [
+        ("analytics", "app_analytics", True),
+        ("another_db", "app_analytics", None),
+        ("default", "app_analytics", None),
+        ("analytics", "another_app", False),
+    ],
+)
+def test_AnalyticsRouter_allow_migrate__allows_migrations_on_analytics_db(
+    db_name: str,
+    app_label: str,
+    expected: bool | None,
 ) -> None:
     # Given
-    settings.NUM_DB_REPLICAS = 100
-    settings.NUM_CROSS_REGION_DB_REPLICAS = 2
-    settings.REPLICA_READ_STRATEGY = ReplicaReadStrategy.SEQUENTIAL
-
-    conn_patch = mocker.MagicMock()
-
-    # First replica is offline, so must fall back to second one.
-    conn_patch.is_usable.side_effect = (False, True)
-    create_connection_patch = mocker.patch(
-        "app.routers.connections.create_connection", return_value=conn_patch
-    )
-
-    router = PrimaryReplicaRouter()
+    router = routers.AnalyticsRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)
+    result = router.allow_migrate(db_name, app_label)
 
     # Then
-    # Fallback from first replica to second one.
-    assert result == "replica_2"
-
-    # Check that the number of replica call counts is as expected.
-    conn_call_count = 2
-    assert create_connection_patch.call_count == conn_call_count
-    assert conn_patch.is_usable.call_count == conn_call_count
-
-
-def test_replica_router_db_no_replicas(
-    db: None,
-    settings: SettingsWrapper,
-    mocker: MockerFixture,
-    reset_cache: None,
-) -> None:
-    # Given
-    settings.NUM_DB_REPLICAS = 0
-    settings.NUM_CROSS_REGION_DB_REPLICAS = 0
-
-    conn_patch = mocker.MagicMock()
-
-    # All replicas should be ignored.
-    create_connection_patch = mocker.patch(
-        "app.routers.connections.create_connection", return_value=conn_patch
-    )
-
-    router = PrimaryReplicaRouter()
-
-    # When
-    result = router.db_for_read(FFAdminUser)
-
-    # Then
-    # Should always use primary database.
-    assert result == "default"
-    conn_call_count = 0
-    assert create_connection_patch.call_count == conn_call_count
-    assert conn_patch.is_usable.call_count == conn_call_count
+    assert result is expected

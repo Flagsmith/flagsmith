@@ -4,7 +4,7 @@ from segments.models import Segment
 
 
 @pytest.fixture()
-def segments(project):
+def segments(project):  # type: ignore[no-untyped-def]
     segments = []
     for i in range(3):
         segments.append(

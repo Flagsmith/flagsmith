@@ -1,9 +1,13 @@
+import hashlib
 import json
+from typing import Any, Generator
 from unittest import mock
 
 import pytest
 from django.urls import reverse
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from features.feature_types import MULTIVARIATE
 from tests.integration.helpers import (
@@ -33,7 +37,7 @@ total_variance_percentage = (
     ),
 )
 @mock.patch("features.models.get_hashed_percentage_for_object_ids")
-def test_get_feature_states_for_identity(
+def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]
     mock_get_hashed_percentage_value,
     hashed_percentage,
     expected_mv_value,
@@ -67,14 +71,14 @@ def test_get_feature_states_for_identity(
     create_mv_option_with_api(
         admin_client,
         project,
-        multivariate_feature_id,
+        multivariate_feature_id,  # type: ignore[arg-type]
         variant_1_percentage_allocation,
         variant_1_value,
     )
     create_mv_option_with_api(
         admin_client,
         project,
-        multivariate_feature_id,
+        multivariate_feature_id,  # type: ignore[arg-type]
         variant_2_percentage_allocation,
         variant_2_value,
     )
@@ -143,7 +147,7 @@ def test_get_feature_states_for_identity(
     assert values_dict[multivariate_feature_id] == variant_2_value
 
 
-def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_states(
+def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_states(  # type: ignore[no-untyped-def]  # noqa: E501
     sdk_client,
     admin_client,
     project,
@@ -164,25 +168,29 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
         create_mv_option_with_api(
             admin_client,
             project,
-            feature_id,
+            feature_id,  # type: ignore[arg-type]
             variant_1_percentage_allocation,
             variant_1_value,
         )
         create_mv_option_with_api(
             admin_client,
             project,
-            feature_id,
+            feature_id,  # type: ignore[arg-type]
             variant_2_percentage_allocation,
             variant_2_value,
         )
 
-    # When we make a request to get the flags for the identity, 6 queries are made
-    # TODO: can we reduce the number of queries?!
     base_url = reverse("api-v1:sdk-identities")
     url = f"{base_url}?identifier={identity_identifier}"
 
-    with django_assert_num_queries(6):
+    with django_assert_num_queries(6) as captured:
         first_identity_response = sdk_client.get(url)
+    expected_queries = [
+        query
+        for query in captured.captured_queries
+        if 'FROM "multivariate_multivariatefeaturestatevalue"' in query["sql"]
+    ]
+    assert len(expected_queries) == 1
 
     # Now, if we add another feature
     feature_id = create_feature_with_api(
@@ -195,21 +203,26 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
     create_mv_option_with_api(
         admin_client,
         project,
-        feature_id,
+        feature_id,  # type: ignore[arg-type]
         variant_1_percentage_allocation,
         variant_1_value,
     )
     create_mv_option_with_api(
         admin_client,
         project,
-        feature_id,
+        feature_id,  # type: ignore[arg-type]
         variant_2_percentage_allocation,
         variant_2_value,
     )
 
-    # Then one fewer db queries are made (since the environment is now cached)
-    with django_assert_num_queries(5):
+    with django_assert_num_queries(5) as captured:
         second_identity_response = sdk_client.get(url)
+    expected_queries = [
+        query
+        for query in captured.captured_queries
+        if 'FROM "multivariate_multivariatefeaturestatevalue"' in query["sql"]
+    ]
+    assert len(expected_queries) == 1
 
     # Finally, we check that the requests were successful and we got the correct number
     # of flags in each case
@@ -221,3 +234,359 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
 
     second_identity_response_json = second_identity_response.json()
     assert len(second_identity_response_json["flags"]) == 3
+
+
+@pytest.fixture
+def existing_identity_identifier_data(
+    identity_identifier: str,
+    identity: int,
+) -> dict[str, Any]:
+    return {"identifier": identity_identifier}
+
+
+@pytest.fixture
+def transient_identifier(
+    segment_condition_property: str,
+    segment_condition_value: str,
+) -> Generator[str, None, None]:
+    return hashlib.sha256(  # type: ignore[return-value]
+        f"avalue_a{segment_condition_property}{segment_condition_value}".encode()
+    ).hexdigest()
+
+
+@pytest.mark.parametrize(
+    "transient_data",
+    [
+        pytest.param({"transient": True}, id="with-transient-true"),
+        pytest.param({"transient": False}, id="with-transient-false"),
+        pytest.param({}, id="missing-transient"),
+    ],
+)
+@pytest.mark.parametrize(
+    "identifier_data,expected_identifier",
+    [
+        pytest.param(
+            lazy_fixture("existing_identity_identifier_data"),
+            lazy_fixture("identity_identifier"),
+            id="existing-identifier",
+        ),
+        pytest.param({"identifier": "unseen"}, "unseen", id="new-identifier"),
+        pytest.param(
+            {"identifier": ""},
+            lazy_fixture("transient_identifier"),
+            id="blank-identifier",
+        ),
+        pytest.param(
+            {"identifier": None},
+            lazy_fixture("transient_identifier"),
+            id="null-identifier",
+        ),
+        pytest.param({}, lazy_fixture("transient_identifier"), id="missing-identifier"),
+    ],
+)
+def test_get_feature_states_for_identity__segment_match_expected(
+    sdk_client: APIClient,
+    feature: int,
+    segment: int,
+    segment_condition_property: str,
+    segment_condition_value: str,
+    segment_featurestate: int,
+    identifier_data: dict[str, Any],
+    transient_data: dict[str, Any],
+    expected_identifier: str,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-identities")
+
+    # When
+    # flags are requested for a new transient identity
+    # that matches the segment
+    response = sdk_client.post(
+        url,
+        data=json.dumps(
+            {
+                **identifier_data,
+                **transient_data,
+                "traits": [
+                    {
+                        "trait_key": segment_condition_property,
+                        "trait_value": segment_condition_value,
+                    },
+                    {"trait_key": "a", "trait_value": "value_a"},
+                    {"trait_key": "c", "trait_value": None},
+                ],
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["identifier"] == expected_identifier
+    assert (
+        flag_data := next(
+            (
+                flag
+                for flag in response_json["flags"]
+                if flag["feature"]["id"] == feature
+            ),
+            None,
+        )
+    )
+    assert flag_data["enabled"] is True
+    assert flag_data["feature_state_value"] == "segment override"
+
+
+def test_get_feature_states_for_identity__empty_traits__random_identifier_expected(
+    sdk_client: APIClient,
+    environment: int,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-identities")
+
+    # When
+    response_1 = sdk_client.post(
+        url,
+        data=json.dumps({"traits": []}),
+        content_type="application/json",
+    )
+    response_2 = sdk_client.post(
+        url,
+        data=json.dumps({"traits": []}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response_1.json()["identifier"] != response_2.json()["identifier"]
+
+
+def test_get_feature_states_for_identity__transient_trait__segment_match_expected(
+    sdk_client: APIClient,
+    feature: int,
+    segment: int,
+    segment_condition_property: str,
+    segment_condition_value: str,
+    segment_featurestate: int,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-identities")
+
+    # When
+    # flags are requested for a new identity
+    # that matches the segment
+    # with a transient trait
+    response = sdk_client.post(
+        url,
+        data=json.dumps(
+            {
+                "identifier": "unseen",
+                "traits": [
+                    {
+                        "trait_key": segment_condition_property,
+                        "trait_value": segment_condition_value,
+                        "transient": True,
+                    },
+                    {
+                        "trait_key": "persistent",
+                        "trait_value": "trait value",
+                    },
+                ],
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["traits"] == [
+        {
+            "id": mock.ANY,
+            "trait_key": segment_condition_property,
+            "trait_value": segment_condition_value,
+            "transient": True,
+        },
+        {
+            "id": mock.ANY,
+            "trait_key": "persistent",
+            "trait_value": "trait value",
+            "transient": False,
+        },
+    ]
+    assert (
+        flag_data := next(
+            (
+                flag
+                for flag in response_json["flags"]
+                if flag["feature"]["id"] == feature
+            ),
+            None,
+        )
+    )
+    assert flag_data["enabled"] is True
+    assert flag_data["feature_state_value"] == "segment override"
+
+
+def test_get_feature_states_for_identity__transient_trait__existing_identity__return_expected(
+    sdk_client: APIClient,
+    identity_identifier: str,
+    identity: int,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-identities")
+
+    # When
+    # flags are requested for an existing identity
+    # with a transient trait
+    response = sdk_client.post(
+        url,
+        data=json.dumps(
+            {
+                "identifier": identity_identifier,
+                "traits": [
+                    {
+                        "trait_key": "transient",
+                        "trait_value": "trait value",
+                        "transient": True,
+                    },
+                    {
+                        "trait_key": "persistent",
+                        "trait_value": "trait value",
+                    },
+                ],
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["traits"] == [
+        {
+            "id": mock.ANY,
+            "trait_key": "persistent",
+            "trait_value": "trait value",
+            "transient": False,
+        },
+        {
+            "id": mock.ANY,
+            "trait_key": "transient",
+            "trait_value": "trait value",
+            "transient": True,
+        },
+    ]
+
+
+def test_get_feature_states_for_identity__transient_identifier__empty_segment__return_expected(
+    admin_client: APIClient,
+    sdk_client: APIClient,
+    default_feature_value: str,
+    identity_identifier: str,
+    feature: int,
+    environment: int,
+    identity: int,
+    project: id,  # type: ignore[valid-type]
+) -> None:
+    # Given
+    # a %0 segment that matches no identity
+    response = admin_client.post(
+        reverse("api-v1:projects:project-segments-list", args=[project]),
+        data=json.dumps(
+            {
+                "name": "empty-segment",
+                "project": project,
+                "rules": [
+                    {
+                        "type": "ALL",
+                        "rules": [
+                            {
+                                "type": "ANY",
+                                "rules": [],
+                                "conditions": [
+                                    {
+                                        "property": "$.identity.key",
+                                        "operator": "PERCENTAGE_SPLIT",
+                                        "value": 0,
+                                    }
+                                ],
+                            }
+                        ],
+                        "conditions": [],
+                    }
+                ],
+            }
+        ),
+        content_type="application/json",
+    )
+    segment_id = response.json()["id"]
+
+    # and a segment override for the %0 segment
+    response = admin_client.post(
+        reverse("api-v1:features:feature-segment-list"),
+        data=json.dumps(
+            {
+                "feature": feature,
+                "segment": segment_id,
+                "environment": environment,
+            }
+        ),
+        content_type="application/json",
+    )
+    feature_segment_id = response.json()["id"]
+
+    admin_client.post(
+        reverse("api-v1:features:featurestates-list"),
+        data=json.dumps(
+            {
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "segment override",
+                },
+                "feature": feature,
+                "environment": environment,
+                "feature_segment": feature_segment_id,
+            }
+        ),
+        content_type="application/json",
+    )
+
+    url = reverse("api-v1:sdk-identities")
+
+    # When
+    # flags are requested for a transient identifier
+    response = sdk_client.post(
+        url,
+        data=json.dumps(
+            {
+                "identifier": "",
+                "traits": [
+                    {
+                        "trait_key": "transient",
+                        "trait_value": "trait value",
+                    },
+                ],
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+
+    assert (
+        flag_data := next(
+            (
+                flag
+                for flag in response_json["flags"]
+                if flag["feature"]["id"] == feature
+            ),
+            None,
+        )
+    )
+    # flag is not being overridden by the segment
+    assert flag_data["enabled"] is False
+    assert flag_data["feature_state_value"] == default_feature_value

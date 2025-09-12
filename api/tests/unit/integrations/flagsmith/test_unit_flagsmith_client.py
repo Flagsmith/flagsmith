@@ -11,18 +11,18 @@ from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
 
 
 @pytest.fixture(autouse=True)
-def reset_globals(mocker: MockerFixture) -> None:
+def reset_globals(mocker: MockerFixture) -> None:  # type: ignore[misc]
     mocker.patch("integrations.flagsmith.client._flagsmith_clients", {})
     yield
 
 
 @pytest.fixture()
 def mock_local_file_handler(mocker: MockerFixture) -> None:
-    return mocker.MagicMock(spec=LocalFileHandler)
+    return mocker.MagicMock(spec=LocalFileHandler)  # type: ignore[no-any-return]
 
 
 @pytest.fixture()
-def mock_local_file_handler_class(
+def mock_local_file_handler_class(  # type: ignore[no-untyped-def]
     mocker: MockerFixture, mock_local_file_handler: MagicMock
 ):
     return mocker.patch(
@@ -31,7 +31,7 @@ def mock_local_file_handler_class(
     )
 
 
-def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_disabled(
+def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_disabled(  # type: ignore[no-untyped-def]  # noqa: E501
     settings: SettingsWrapper,
     mocker: MockerFixture,
     mock_local_file_handler,
@@ -64,7 +64,7 @@ def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_di
     mock_local_file_handler_class.assert_called_once_with(ENVIRONMENT_JSON_PATH)
 
 
-def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_enabled(
+def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_enabled(  # type: ignore[no-untyped-def]
     settings: SettingsWrapper,
     mocker: MockerFixture,
     mock_local_file_handler,
@@ -90,7 +90,7 @@ def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_en
     mock_local_file_handler_class.assert_called_once_with(ENVIRONMENT_JSON_PATH)
 
 
-def test_get_client_raises_value_error_if_missing_args(
+def test_get_client_raises_value_error_if_missing_args(  # type: ignore[no-untyped-def]
     settings: SettingsWrapper, mock_local_file_handler_class
 ):
     # Given

@@ -5,7 +5,7 @@ from django.core.management.base import CommandError
 from environments.dynamodb.migrator import IdentityMigrator
 
 
-def test_calling_migrate_to_edge_calls_migrate_identities_with_correct_arguments(
+def test_calling_migrate_to_edge_calls_migrate_identities_with_correct_arguments(  # type: ignore[no-untyped-def]
     mocker,
 ):
     # Given
@@ -24,7 +24,7 @@ def test_calling_migrate_to_edge_calls_migrate_identities_with_correct_arguments
     mocked_identity_migrator.return_value.migrate.assert_called_with()
 
 
-def test_calling_migrate_to_edge_raises_command_error_if_identities_are_already_migrated(
+def test_calling_migrate_to_edge_raises_command_error_if_identities_are_already_migrated(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker,
 ):
     # Given

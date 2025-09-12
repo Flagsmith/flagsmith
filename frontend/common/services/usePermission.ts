@@ -13,16 +13,25 @@ export const permissionService = service
         query: ({ id, level }: Req['getPermission']) => ({
           url: `${level}s/${id}/my-permissions/`,
         }),
-        transformResponse(baseQueryReturnValue: {
-          admin: boolean
-          permissions: string[]
-        }) {
+        transformResponse(
+          baseQueryReturnValue: {
+            admin: boolean
+            permissions: string[]
+            tag_based_permissions?: Res['permission']['tag_based_permissions']
+          },
+          _,
+        ) {
           const res: Res['permission'] = {
             ADMIN: baseQueryReturnValue.admin,
+          }
+          if (baseQueryReturnValue.tag_based_permissions) {
+            res.tag_based_permissions =
+              baseQueryReturnValue.tag_based_permissions
           }
           baseQueryReturnValue.permissions.forEach((v) => {
             res[v] = true
           })
+
           return res
         },
       }),

@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import { filter as loFilter } from 'lodash'
 import { useHasPermission } from 'common/providers/Permission'
 import Utils from 'common/utils/utils'
@@ -31,21 +31,45 @@ const AddEditTags: FC<AddEditTagsType> = ({
   readOnly,
   value,
 }) => {
-  const { data: projectTags, isLoading: tagsLoading } = useGetTagsQuery({
+  const { data, isLoading: tagsLoading } = useGetTagsQuery({
     projectId,
   })
+
+  const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
+
+  const unhealthyTagId = useMemo(() => {
+    return data?.find((tag) => tag?.type === 'UNHEALTHY')?.id
+  }, [data])
+
+  const projectTags = useMemo(() => {
+    if (!isFeatureHealthEnabled) {
+      return data
+    }
+
+    return data?.filter(
+      (projectTag) => !['UNHEALTHY'].includes(projectTag.type),
+    )
+  }, [data, isFeatureHealthEnabled])
+
   const [filter, setFilter] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [tag, setTag] = useState<TTag>()
   const [tab, setTab] = useState<'SELECT' | 'CREATE' | 'EDIT'>('SELECT')
   const [deleteTag] = useDeleteTagMutation()
   const [createTag] = useCreateTagMutation()
-  const { permission: projectAdminPermission } = useHasPermission({
+  const permissionType = 'MANAGE_TAGS'
+
+  const { permission: createEditTagPermission } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'ADMIN',
+    permission: permissionType,
   })
 
+  useEffect(() => {
+    if (!isOpen) {
+      setTab('SELECT')
+    }
+  }, [isOpen])
   const selectTag = (tag: TTag) => {
     const _value = value || []
     const isSelected = _value?.includes(tag.id)
@@ -96,6 +120,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
         tag.label.toLowerCase().includes(filter),
       )
     }
+
     return projectTags || []
   }, [filter, projectTags])
 
@@ -126,6 +151,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
       <Row className='inline-tags mt-2'>
         <TagValues
           hideNames={false}
+          hideTags={unhealthyTagId ? [unhealthyTagId] : undefined}
           projectId={projectId}
           onAdd={readOnly ? undefined : toggle}
           value={value}
@@ -161,12 +187,14 @@ const AddEditTags: FC<AddEditTagsType> = ({
             !readOnly && (
               <div className='text-right'>
                 {Utils.renderWithPermission(
-                  projectAdminPermission,
-                  Constants.projectPermissions('Admin'),
+                  createEditTagPermission,
+                  Constants.projectPermissions(
+                    permissionType === 'ADMIN' ? 'Admin' : 'Manage Tags',
+                  ),
                   <div className='text-center'>
                     <Button
                       className=''
-                      disabled={!projectAdminPermission}
+                      disabled={!createEditTagPermission}
                       onClick={() => {
                         setTab('CREATE')
                         setFilter('')
@@ -200,22 +228,28 @@ const AddEditTags: FC<AddEditTagsType> = ({
                           tag={tag}
                         />
                       </Flex>
-                      {!readOnly && !!projectAdminPermission && (
-                        <>
-                          <div
-                            onClick={() => editTag(tag)}
-                            className='clickable'
-                          >
-                            <Icon name='setting' fill='#9DA4AE' />
-                          </div>
-                          <div
-                            onClick={() => confirmDeleteTag(tag)}
-                            className='ml-3 clickable'
-                          >
-                            <Icon name='trash-2' fill='#9DA4AE' />
-                          </div>
-                        </>
-                      )}
+                      {!readOnly &&
+                        !!createEditTagPermission &&
+                        !tag.is_system_tag && (
+                          <>
+                            <div
+                              onClick={() => editTag(tag)}
+                              className={
+                                !readOnly
+                                  ? 'clickable'
+                                  : 'opacity-0 pointer-events-none'
+                              }
+                            >
+                              <Icon name='setting' fill='#9DA4AE' />
+                            </div>
+                            <div
+                              onClick={() => confirmDeleteTag(tag)}
+                              className='ml-3 clickable'
+                            >
+                              <Icon name='trash-2' fill='#9DA4AE' />
+                            </div>
+                          </>
+                        )}
                     </Row>
                   </div>
                 ))}

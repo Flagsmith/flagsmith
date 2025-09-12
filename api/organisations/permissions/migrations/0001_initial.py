@@ -7,7 +7,7 @@ from organisations.models import OrganisationRole
 from organisations.permissions.permissions import CREATE_PROJECT
 
 
-def add_create_project_permission_to_existing_users(apps, schema_editor):
+def add_create_project_permission_to_existing_users(apps, schema_editor):  # type: ignore[no-untyped-def]
     user_organisation_permission_model_class = apps.get_model(
         "organisation_permissions", "UserOrganisationPermission"
     )
@@ -38,7 +38,7 @@ def add_create_project_permission_to_existing_users(apps, schema_editor):
     through_model_class.objects.bulk_create(through_models)
 
 
-def reverse(apps, schema_editor):
+def reverse(apps, schema_editor):  # type: ignore[no-untyped-def]
     pass
 
 

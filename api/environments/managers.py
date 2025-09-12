@@ -1,39 +1,31 @@
 from django.db.models import Prefetch
-from softdelete.models import SoftDeleteManager
+from softdelete.models import SoftDeleteManager  # type: ignore[import-untyped]
 
 from features.models import FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from segments.models import Segment
 
 
-class EnvironmentManager(SoftDeleteManager):
-    def filter_for_document_builder(self, *args, **kwargs):
+class EnvironmentManager(SoftDeleteManager):  # type: ignore[misc]
+    def filter_for_document_builder(  # type: ignore[no-untyped-def]
+        self,
+        *args,
+        extra_select_related: list[str] | None = None,
+        extra_prefetch_related: list[Prefetch | str] | None = None,
+        **kwargs,
+    ):
         return (
             super()
             .select_related(
                 "project",
                 "project__organisation",
-                "amplitude_config",
-                "dynatrace_config",
-                "heap_config",
-                "mixpanel_config",
-                "rudderstack_config",
-                "segment_config",
-                "webhook_config",
+                *extra_select_related or (),
             )
             .prefetch_related(
                 Prefetch(
-                    "feature_states",
-                    queryset=FeatureState.objects.select_related(
-                        "feature", "feature_state_value"
-                    ),
+                    "project__segments",
+                    queryset=Segment.live_objects.all(),
                 ),
-                Prefetch(
-                    "feature_states__multivariate_feature_state_values",
-                    queryset=MultivariateFeatureStateValue.objects.select_related(
-                        "multivariate_feature_option"
-                    ),
-                ),
-                "project__segments",
                 "project__segments__rules",
                 "project__segments__rules__rules",
                 "project__segments__rules__conditions",
@@ -55,12 +47,13 @@ class EnvironmentManager(SoftDeleteManager):
                         "multivariate_feature_option"
                     ),
                 ),
+                *extra_prefetch_related or (),
             )
             .filter(*args, **kwargs)
         )
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         return super().get_queryset().select_related("project", "project__organisation")
 
-    def get_by_natural_key(self, api_key):
+    def get_by_natural_key(self, api_key):  # type: ignore[no-untyped-def]
         return self.get(api_key=api_key)

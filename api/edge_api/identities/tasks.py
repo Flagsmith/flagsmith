@@ -2,15 +2,26 @@ import logging
 import typing
 
 from django.utils import timezone
+from task_processor.decorators import (
+    register_task_handler,
+)
+from task_processor.models import TaskPriority
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from edge_api.identities.edge_request_forwarder import (
+    forward_identity_request as forward_identity_request_service,
+)
+from edge_api.identities.edge_request_forwarder import (
+    forward_trait_request as forward_trait_request_service,
+)
+from edge_api.identities.edge_request_forwarder import (
+    forward_trait_requests as forward_trait_requests_service,
+)
 from edge_api.identities.types import IdentityChangeset
 from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureState
-from task_processor.decorators import register_task_handler
-from task_processor.models import TaskPriority
 from users.models import FFAdminUser
 from util.mappers import map_identity_changeset_to_identity_override_changeset
 from webhooks.webhooks import WebhookEventType, call_environment_webhooks
@@ -19,17 +30,18 @@ logger = logging.getLogger(__name__)
 
 
 @register_task_handler()
-def call_environment_webhook_for_feature_state_change(
+def call_environment_webhook_for_feature_state_change(  # type: ignore[no-untyped-def]
     feature_id: int,
     environment_api_key: str,
-    identity_id: typing.Union[id, str],
+    identity_id: typing.Union[id, str],  # type: ignore[valid-type]
     identity_identifier: str,
-    changed_by_user_id: int,
     timestamp: str,
-    new_enabled_state: bool = None,
-    new_value: typing.Union[bool, int, str] = None,
-    previous_enabled_state: bool = None,
-    previous_value: typing.Union[bool, int, str] = None,
+    changed_by_user_id: int = None,  # type: ignore[assignment] # deprecated(use changed_by)
+    changed_by: str = None,  # type: ignore[assignment]
+    new_enabled_state: bool = None,  # type: ignore[assignment]
+    new_value: typing.Union[bool, int, str] = None,  # type: ignore[assignment]
+    previous_enabled_state: bool = None,  # type: ignore[assignment]
+    previous_value: typing.Union[bool, int, str] = None,  # type: ignore[assignment]
 ):
     environment = Environment.objects.get(api_key=environment_api_key)
     if not environment.webhooks.filter(enabled=True).exists():
@@ -40,16 +52,17 @@ def call_environment_webhook_for_feature_state_change(
         return
 
     feature = Feature.objects.get(id=feature_id)
-    changed_by = FFAdminUser.objects.get(id=changed_by_user_id)
+    if changed_by_user_id:
+        changed_by = FFAdminUser.objects.get(id=changed_by_user_id).email
 
     data = {
-        "changed_by": changed_by.email,
+        "changed_by": changed_by,
         "timestamp": timestamp,
         "new_state": None,
     }
 
     if previous_enabled_state is not None:
-        data["previous_state"] = Webhook.generate_webhook_feature_state_data(
+        data["previous_state"] = Webhook.generate_webhook_feature_state_data(  # type: ignore[assignment]
             feature=feature,
             environment=environment,
             identity_id=identity_id,
@@ -59,7 +72,7 @@ def call_environment_webhook_for_feature_state_change(
         )
 
     if new_enabled_state is not None:
-        data["new_state"] = Webhook.generate_webhook_feature_state_data(
+        data["new_state"] = Webhook.generate_webhook_feature_state_data(  # type: ignore[assignment]
             feature=feature,
             environment=environment,
             identity_id=identity_id,
@@ -78,7 +91,7 @@ def call_environment_webhook_for_feature_state_change(
 
 
 @register_task_handler(priority=TaskPriority.HIGH)
-def sync_identity_document_features(identity_uuid: str):
+def sync_identity_document_features(identity_uuid: str):  # type: ignore[no-untyped-def]
     from .models import EdgeIdentity
 
     identity = EdgeIdentity.from_identity_document(
@@ -157,3 +170,30 @@ def update_flagsmith_environments_v2_identity_overrides(
         identifier=identifier,
     )
     dynamodb_wrapper_v2.update_identity_overrides(identity_override_changeset)
+
+
+@register_task_handler()
+def delete_environments_v2_identity_overrides_by_feature(feature_id: int) -> None:
+    dynamodb_wrapper_v2 = DynamoEnvironmentV2Wrapper()
+
+    feature = Feature.objects.all_with_deleted().get(id=feature_id)
+    for environment in feature.project.environments.all():
+        dynamodb_wrapper_v2.delete_identity_overrides(
+            environment_id=environment.id, feature_id=feature_id
+        )
+
+
+forward_identity_request = register_task_handler(
+    queue_size=2000,
+    priority=TaskPriority.LOW,
+)(forward_identity_request_service)
+
+forward_trait_request = register_task_handler(
+    queue_size=2000,
+    priority=TaskPriority.LOW,
+)(forward_trait_request_service)
+
+forward_trait_requests = register_task_handler(
+    queue_size=1000,
+    priority=TaskPriority.LOW,
+)(forward_trait_requests_service)

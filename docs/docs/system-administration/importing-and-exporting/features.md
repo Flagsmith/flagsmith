@@ -5,8 +5,25 @@ sidebar_position: 110
 
 The import and export of feature data associated with a given environment is possible on Flagsmith. The feature data
 that's exported includes multivariate features, but does not include other data that's associated with tags, owners,
-group owners, etc. It's useful for transfering features between any running instances of Flagsmith, even when only a
+group owners, etc. It's useful for transferring features between any running instances of Flagsmith, even when only a
 subset of features (e.g., importing features of a given tag) are needed.
+
+## What is exported?
+
+We **will** export the following data:
+
+- Flags
+- Flag States (both boolean and text values)
+- Multivariate values and weights
+
+We **will not** export the following data:
+
+- Feature-based Segments
+- Segment overrides
+- Flag [custom fields](/advanced-use/custom-fields.md)
+- Flag Schedules
+- Tags associated with Flags
+- Individual and group owners associated with Flags
 
 ## Exporting
 

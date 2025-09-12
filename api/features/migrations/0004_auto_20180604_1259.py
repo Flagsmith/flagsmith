@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from django.db import migrations
 
 
-def delete_existing_non_unique_features(apps, schema_editor):
+def delete_existing_non_unique_features(apps, schema_editor):  # type: ignore[no-untyped-def]
     feature_model = apps.get_model("features", "Feature")
     for feature in feature_model.objects.all():
         clashing_features = feature_model.objects.filter(name__iexact=feature.name,
@@ -19,7 +19,7 @@ def delete_existing_non_unique_features(apps, schema_editor):
                 i += 1
 
 
-def reverse_migration(apps, schema_editor):
+def reverse_migration(apps, schema_editor):  # type: ignore[no-untyped-def]
     pass
 
 

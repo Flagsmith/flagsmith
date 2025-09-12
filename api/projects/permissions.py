@@ -1,5 +1,6 @@
 import typing
 
+from common.projects.permissions import VIEW_PROJECT
 from django.db.models import Model
 from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.permissions import BasePermission, IsAuthenticated
@@ -8,31 +9,9 @@ from organisations.models import Organisation
 from organisations.permissions.permissions import CREATE_PROJECT
 from projects.models import Project
 
-VIEW_AUDIT_LOG = "VIEW_AUDIT_LOG"
-
-# Maintain a list of permissions here
-VIEW_PROJECT = "VIEW_PROJECT"
-CREATE_ENVIRONMENT = "CREATE_ENVIRONMENT"
-DELETE_FEATURE = "DELETE_FEATURE"
-CREATE_FEATURE = "CREATE_FEATURE"
-EDIT_FEATURE = "EDIT_FEATURE"
-MANAGE_SEGMENTS = "MANAGE_SEGMENTS"
-
-TAG_SUPPORTED_PERMISSIONS = [DELETE_FEATURE]
-
-PROJECT_PERMISSIONS = [
-    (VIEW_PROJECT, "View permission for the given project."),
-    (CREATE_ENVIRONMENT, "Ability to create an environment in the given project."),
-    (DELETE_FEATURE, "Ability to delete features in the given project."),
-    (CREATE_FEATURE, "Ability to create features in the given project."),
-    (EDIT_FEATURE, "Ability to edit features in the given project."),
-    (MANAGE_SEGMENTS, "Ability to manage segments in the given project."),
-    (VIEW_AUDIT_LOG, "Allows the user to view the audit logs for this organisation."),
-]
-
 
 class ProjectPermissions(IsAuthenticated):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         """Check if user has permission to list / create project"""
         if not super().has_permission(request, view):
             return False
@@ -48,12 +27,14 @@ class ProjectPermissions(IsAuthenticated):
             subscription_metadata = (
                 organisation.subscription.get_subscription_metadata()
             )
+
             total_projects_created = Project.objects.filter(
                 organisation=organisation
             ).count()
             if (
                 subscription_metadata.projects
                 and total_projects_created >= subscription_metadata.projects
+                and getattr(request, "is_e2e", False) is not True
             ):
                 return False
             if organisation.restrict_project_create_to_admin:
@@ -67,7 +48,7 @@ class ProjectPermissions(IsAuthenticated):
         # move on to object specific permissions
         return view.detail
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         """Check if user has permission to view / edit / delete project"""
         if request.user.is_project_admin(obj):
             return True
@@ -77,23 +58,20 @@ class ProjectPermissions(IsAuthenticated):
         ):
             return True
 
-        if view.action in ("update", "destroy") and request.user.is_project_admin(obj):
-            return True
-
-        if view.action == "user_permissions":
+        if view.action in ["user_permissions", "detailed_permissions"]:
             return True
 
         return False
 
 
 class IsProjectAdmin(BasePermission):
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         *args,
         project_pk_view_kwarg_attribute_name: str = "project_pk",
         get_project_from_object_callable: typing.Callable[
             [Model], Project
-        ] = lambda o: o.project,
+        ] = lambda o: o.project,  # type: ignore[attr-defined]
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -101,18 +79,18 @@ class IsProjectAdmin(BasePermission):
         self._view_kwarg_name = project_pk_view_kwarg_attribute_name
         self._get_project_from_object_callable = get_project_from_object_callable
 
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         return request.user.is_project_admin(self._get_project(view)) or view.detail
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         return request.user.is_project_admin(
             self._get_project_from_object_callable(obj)
         )
 
-    def _get_project(self, view) -> Project:
+    def _get_project(self, view) -> Project:  # type: ignore[no-untyped-def]
         try:
             project_pk = view.kwargs[self._view_kwarg_name]
-            return Project.objects.get(id=project_pk)
+            return Project.objects.get(id=project_pk)  # type: ignore[no-any-return]
         except KeyError:
             raise APIException(
                 "`IsProjectAdmin` incorrectly configured. No project pk found."
@@ -122,13 +100,13 @@ class IsProjectAdmin(BasePermission):
 
 
 class NestedProjectPermissions(IsAuthenticated):
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         *args,
-        action_permission_map: typing.Dict[str, str] = None,
+        action_permission_map: typing.Dict[str, str] = None,  # type: ignore[assignment]
         get_project_from_object_callable: typing.Callable[
             [Model], Project
-        ] = lambda o: o.project,
+        ] = lambda o: o.project,  # type: ignore[attr-defined]
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -137,7 +115,7 @@ class NestedProjectPermissions(IsAuthenticated):
 
         self.get_project_from_object_callable = get_project_from_object_callable
 
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         if not super().has_permission(request, view):
             return False
 
@@ -152,9 +130,12 @@ class NestedProjectPermissions(IsAuthenticated):
                 self.action_permission_map[view.action], project
             )
 
+        if view.action == "create":
+            return request.user.is_project_admin(project)
+
         return view.detail
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         if view.action in self.action_permission_map:
             return request.user.has_project_permission(
                 self.action_permission_map[view.action],

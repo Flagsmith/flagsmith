@@ -1,3 +1,6 @@
+import $ from 'jquery'
+global.jQuery = $
+global.$ = $
 import Promise from 'promise-polyfill'
 import 'whatwg-fetch'
 import {

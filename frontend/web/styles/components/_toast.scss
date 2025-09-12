@@ -1,23 +1,55 @@
 @import '../variables';
 
-#toast {
-  display: inline-block;
-  position: fixed;
-  right: 15px;
-  top: 15px;
-  z-index: 1000000000;
+@keyframes toast-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
 
-  button {
-    box-shadow: none;
-    color: black;
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
+@keyframes toast-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+#toast {
+  display: inline-block;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000000000;
+}
+
 .toast-message {
-	top: 0;
-	right: 15px;
-	width: 250px;
-	background: $success-solid-alert;
-	font-weight: 500;
-	border: 1px solid $success;
+  width: 250px;
+  min-height: 50px;
+  background: $success-solid-alert;
+  font-weight: 500;
+  border: 1px solid $success;
+  animation: toast-in 0.3s ease-out;
+
+  &.show {
+    display: flex !important;
+  }
+
+  &.removing-out {
+    animation: toast-out 0.3s ease-out forwards;
+  }
+
+  @media screen and (min-width: 768px) {
+    width: 320px;
+  }
 }

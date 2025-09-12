@@ -51,7 +51,7 @@ Environment:
 ```json
 {
  "data": {
-  "changed_by": "Ben Rometsch",
+  "changed_by": "user@domain.com"(or the name of the Organisation API Key),
   "new_state": {
    "enabled": true,
    "environment": {

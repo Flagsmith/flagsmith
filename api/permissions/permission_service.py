@@ -1,12 +1,13 @@
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List, Set, Union
 
+from django.conf import settings
 from django.db.models import Q, QuerySet
 
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 
-from .rbac_wrapper import (
+from .rbac_wrapper import (  # type: ignore[attr-defined]
     get_permitted_environments_for_master_api_key_using_roles,
     get_permitted_projects_for_master_api_key_using_roles,
     get_role_permission_filter,
@@ -52,14 +53,16 @@ def is_master_api_key_environment_admin(
     master_api_key: "MasterAPIKey", environment: Environment
 ) -> bool:
     if master_api_key.is_admin:
-        return master_api_key.organisation_id == environment.project.organisation_id
+        return master_api_key.organisation_id == environment.project.organisation_id  # type: ignore[no-any-return]
     return is_master_api_key_project_admin(
         master_api_key, environment.project
     ) or is_master_api_key_object_admin(master_api_key, environment)
 
 
 def get_permitted_projects_for_user(
-    user: "FFAdminUser", permission_key: str, tag_ids: List[int] = None
+    user: "FFAdminUser",
+    permission_key: str,
+    tag_ids: List[int] = None,  # type: ignore[assignment]
 ) -> QuerySet[Project]:
     """
     Get all projects that the user has the given permissions for.
@@ -76,20 +79,38 @@ def get_permitted_projects_for_user(
         - If `tag_ids` is a list of tag IDs, only project with one of those tags will
         be returned
     """
-    base_filter = get_base_permission_filter(
-        user, Project, permission_key, tag_ids=tag_ids
+    project_ids_from_base_filter = get_object_id_from_base_permission_filter(
+        user,
+        Project,  # type: ignore[arg-type]
+        permission_key,
+        tag_ids=tag_ids,
     )
 
-    organisation_filter = Q(
+    # The user has access to any projects belonging to organisations
+    # they are an admin of
+    admin_organisations_filter = Q(
         organisation__userorganisation__user=user,
         organisation__userorganisation__role=OrganisationRole.ADMIN.name,
     )
-    filter_ = base_filter | organisation_filter
-    return Project.objects.filter(filter_).distinct()
+    project_ids_from_admin_organisations = Project.objects.filter(
+        admin_organisations_filter
+    ).values_list("id", flat=True)
+
+    project_ids = project_ids_from_base_filter | set(
+        project_ids_from_admin_organisations
+    )
+    queryset = Project.objects.filter(id__in=project_ids)
+
+    # Final check to ensure that the user is a member of the organisation
+    queryset = queryset.filter(organisation__users=user)
+
+    return queryset
 
 
 def get_permitted_projects_for_master_api_key(
-    master_api_key: "MasterAPIKey", permission_key: str, tag_ids: List[int] = None
+    master_api_key: "MasterAPIKey",
+    permission_key: str,
+    tag_ids: List[int] = None,  # type: ignore[assignment]
 ) -> QuerySet[Project]:
     if master_api_key.is_admin:
         return Project.objects.filter(organisation_id=master_api_key.organisation_id)
@@ -103,7 +124,7 @@ def get_permitted_environments_for_user(
     user: "FFAdminUser",
     project: Project,
     permission_key: str,
-    tag_ids: List[int] = None,
+    tag_ids: List[int] = None,  # type: ignore[assignment]
     prefetch_metadata: bool = False,
 ) -> QuerySet[Environment]:
     """
@@ -129,35 +150,48 @@ def get_permitted_environments_for_user(
             return queryset.prefetch_related("metadata")
         return queryset
 
-    base_filter = get_base_permission_filter(
-        user, Environment, permission_key, tag_ids=tag_ids
+    environment_ids_from_base_filter = get_object_id_from_base_permission_filter(
+        user,
+        Environment,  # type: ignore[arg-type]
+        permission_key,
+        tag_ids=tag_ids,
     )
-    filter_ = base_filter & Q(project=project)
+    queryset = Environment.objects.filter(
+        id__in=environment_ids_from_base_filter, project=project
+    )
 
-    queryset = Environment.objects.filter(filter_)
     if prefetch_metadata:
         queryset = queryset.prefetch_related("metadata")
+
+    # Final check to ensure the user is a member of the organisation
+    queryset = queryset.filter(project__organisation__users=user)
 
     # Description is defered due to Oracle support where a
     # query can't have a where clause if description is in
     # the select parameters. This leads to an N+1 query for
     # lists of environments when description is included, as
     # each environment object re-queries the DB seperately.
-    return queryset.distinct().defer("description")
+    return queryset.defer("description")
 
 
 def get_permitted_environments_for_master_api_key(
     master_api_key: "MasterAPIKey",
     project: Project,
     permission_key: str,
-    tag_ids: List[int] = None,
+    tag_ids: List[int] = None,  # type: ignore[assignment]
+    prefetch_metadata: bool = False,
 ) -> QuerySet[Environment]:
     if is_master_api_key_project_admin(master_api_key, project):
-        return project.environments.all()
+        queryset = project.environments.all()
+    else:
+        queryset = get_permitted_environments_for_master_api_key_using_roles(
+            master_api_key, project, permission_key, tag_ids
+        )
 
-    return get_permitted_environments_for_master_api_key_using_roles(
-        master_api_key, project, permission_key, tag_ids
-    )
+    if prefetch_metadata:
+        queryset = queryset.prefetch_related("metadata")
+
+    return queryset
 
 
 def user_has_organisation_permission(
@@ -170,11 +204,19 @@ def user_has_organisation_permission(
     # compared to project and environment `get_base_permission_filter`
     # with allow_admin=True will not work for organisation
     base_filter = get_base_permission_filter(
-        user, Organisation, permission_key, allow_admin=False
+        user,
+        Organisation,  # type: ignore[arg-type]
+        permission_key,
+        allow_admin=False,
     )
     filter_ = base_filter & Q(id=organisation.id)
 
-    return Organisation.objects.filter(filter_).exists()
+    queryset = Organisation.objects.filter(filter_)
+
+    # Final check to verify that user belongs to organisation
+    queryset = queryset.filter(users=user)
+
+    return queryset.exists()  # type: ignore[no-any-return]
 
 
 def master_api_key_has_organisation_permission(
@@ -192,15 +234,23 @@ def _is_user_object_admin(
     user: "FFAdminUser", object_: Union[Project, Environment]
 ) -> bool:
     ModelClass = type(object_)
-    base_filter = get_base_permission_filter(user, ModelClass)
+    base_filter = get_base_permission_filter(user, ModelClass)  # type: ignore[arg-type]
     filter_ = base_filter & Q(id=object_.id)
+
+    if ModelClass is Project:
+        filter_ = filter_ & Q(organisation__users=user)
+    elif ModelClass is Environment:
+        filter_ = filter_ & Q(project__organisation__users=user)
+    else:  # pragma: no cover
+        raise ValueError(f"Unexpected object type {type(object_)}")
+
     return ModelClass.objects.filter(filter_).exists()
 
 
-def get_base_permission_filter(
+def get_base_permission_filter(  # type: ignore[no-untyped-def]
     user: "FFAdminUser",
-    for_model: Union[Organisation, Project, Environment] = None,
-    permission_key: str = None,
+    for_model: Union[Organisation, Project, Environment] = None,  # type: ignore[assignment]
+    permission_key: str = None,  # type: ignore[assignment]
     allow_admin: bool = True,
     tag_ids=None,
 ) -> Q:
@@ -211,11 +261,41 @@ def get_base_permission_filter(
         user, for_model, permission_key, allow_admin, tag_ids
     )
 
-    return user_filter | group_filter | role_filter
+    return user_filter | group_filter | role_filter  # type: ignore[no-any-return]
+
+
+def get_object_id_from_base_permission_filter(  # type: ignore[no-untyped-def]
+    user: "FFAdminUser",
+    for_model: Union[Organisation, Project, Environment] = None,  # type: ignore[assignment]
+    permission_key: str = None,  # type: ignore[assignment]
+    allow_admin: bool = True,
+    tag_ids=None,
+) -> Set[int]:
+    object_ids = set()
+    user_filter = get_user_permission_filter(user, permission_key, allow_admin)
+    object_ids.update(
+        list(for_model.objects.filter(user_filter).values_list("id", flat=True))
+    )
+
+    group_filter = get_group_permission_filter(user, permission_key, allow_admin)
+
+    object_ids.update(
+        list(for_model.objects.filter(group_filter).values_list("id", flat=True))
+    )
+    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
+        role_filter = get_role_permission_filter(
+            user, for_model, permission_key, allow_admin, tag_ids
+        )
+        object_ids.update(
+            list(for_model.objects.filter(role_filter).values_list("id", flat=True))
+        )
+    return object_ids
 
 
 def get_user_permission_filter(
-    user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
+    user: "FFAdminUser",
+    permission_key: str = None,  # type: ignore[assignment]
+    allow_admin: bool = True,
 ) -> Q:
     base_filter = Q(userpermission__user=user)
     permission_filter = Q(userpermission__admin=True) if allow_admin else Q()
@@ -229,7 +309,9 @@ def get_user_permission_filter(
 
 
 def get_group_permission_filter(
-    user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True
+    user: "FFAdminUser",
+    permission_key: str = None,  # type: ignore[assignment]
+    allow_admin: bool = True,
 ) -> Q:
     base_filter = Q(grouppermission__group__users=user)
     permission_filter = Q(grouppermission__admin=True) if allow_admin else Q()

@@ -1,15 +1,17 @@
-import typing
+from itertools import chain
 
 from django.db import models
 from django.db.models import Prefetch, Q
-from django.utils import timezone
-from flag_engine.segments.evaluator import evaluate_identity_in_segment
+from flag_engine.context.mappers import map_environment_identity_to_context
+from flag_engine.segments.evaluator import is_context_in_segment
 
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
 from environments.models import Environment
+from environments.sdk.types import SDKTraitData
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from features.versioning.versioning_service import get_environment_flags_list
 from segments.models import Segment
 from util.mappers.engine import (
     map_identity_to_engine,
@@ -39,11 +41,11 @@ class Identity(models.Model):
         # we can provide them the SQL to add it manually in a small window of downtime.
         index_together = (("environment", "created_date"),)
 
-    def natural_key(self):
+    def natural_key(self):  # type: ignore[no-untyped-def]
         return self.identifier, self.environment.api_key
 
     @property
-    def composite_key(self):
+    def composite_key(self):  # type: ignore[no-untyped-def]
         return f"{self.environment.api_key}_{self.identifier}"
 
     def get_hash_key(self, use_identity_composite_key_for_hashing: bool = False) -> str:
@@ -55,6 +57,7 @@ class Identity(models.Model):
 
     def get_all_feature_states(
         self,
+        feature_name: str | None = None,
         traits: list[Trait] | None = None,
         additional_filters: Q | None = None,
     ) -> list[FeatureState]:
@@ -74,7 +77,12 @@ class Identity(models.Model):
 
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
-        overridden_for_identity_query = Q(identity=self)
+        if self.id:
+            overridden_for_identity_query = Q(identity=self)
+        else:
+            # skip identity overrides for transient identities
+            overridden_for_identity_query = Q()
+
         overridden_for_segment_query = Q(
             feature_segment__segment__in=segments,
             feature_segment__environment=self.environment,
@@ -88,40 +96,22 @@ class Identity(models.Model):
             | environment_default_query
         )
 
-        if self.environment.use_v2_feature_versioning:
-            full_query &= Q(
-                Q(identity=self)  # identity overrides are not versioned
-                | Q(
-                    environment_feature_version__live_from__isnull=False,
-                    environment_feature_version__live_from__lte=timezone.now(),
-                ),
-            )
-        else:
-            full_query &= Q(live_from__lte=timezone.now(), version__isnull=False)
-
         if additional_filters:
             full_query &= additional_filters
 
-        select_related_args = [
-            "environment",
-            "feature",
-            "feature_state_value",
-            "feature_segment",
-            "feature_segment__segment",
-            "identity",
-        ]
-
-        all_flags = (
-            FeatureState.objects.select_related(*select_related_args)
-            .prefetch_related(
+        all_flags = get_environment_flags_list(
+            environment=self.environment,
+            feature_name=feature_name,
+            additional_filters=full_query,
+            additional_select_related_args=["feature_segment__segment", "identity"],
+            additional_prefetch_related_args=[
                 Prefetch(
                     "multivariate_feature_state_values",
                     queryset=MultivariateFeatureStateValue.objects.select_related(
                         "multivariate_feature_option"
                     ),
                 )
-            )
-            .filter(full_query)
+            ],
         )
 
         # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
@@ -141,9 +131,20 @@ class Identity(models.Model):
 
         return list(identity_flags.values())
 
+    def get_overridden_feature_states(self) -> dict[int, FeatureState]:
+        """
+        Get all overridden feature states for an identity.
+
+        :return: dict[int, FeatureState] - Key: feature ID. Value: Overridden feature_state.
+        """
+
+        return {fs.feature_id: fs for fs in self.identity_features.all()}
+
     def get_segments(
-        self, traits: typing.List[Trait] = None, overrides_only: bool = False
-    ) -> typing.List[Segment]:
+        self,
+        traits: list[Trait] | None = None,
+        overrides_only: bool = False,
+    ) -> list[Segment]:
         """
         Get the list of segments this identity is a part of.
 
@@ -152,7 +153,9 @@ class Identity(models.Model):
         :return: List of matching segments
         """
         matching_segments = []
-        traits = self.identity_traits.all() if traits is None else traits
+        db_traits = (
+            self.identity_traits.all() if (traits is None and self.id) else traits or []
+        )
 
         if overrides_only:
             all_segments = self.environment.get_segments_from_cache()
@@ -164,28 +167,37 @@ class Identity(models.Model):
             with_overrides=False,
             with_traits=False,
         )
-        engine_traits = map_traits_to_engine(traits)
+        engine_traits = map_traits_to_engine(db_traits)
 
         for segment in all_segments:
             engine_segment = map_segment_to_engine(segment)
 
-            if evaluate_identity_in_segment(
+            context = map_environment_identity_to_context(
+                environment=self.environment,
                 identity=engine_identity,
-                segment=engine_segment,
                 override_traits=engine_traits,
+            )
+
+            if is_context_in_segment(
+                context=context,
+                segment=engine_segment,
             ):
                 matching_segments.append(segment)
 
         return matching_segments
 
-    def get_all_user_traits(self):
+    def get_all_user_traits(self):  # type: ignore[no-untyped-def]
         # this is pointless, we should probably replace all uses with the below code
         return self.identity_traits.all()
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Account %s" % self.identifier
 
-    def generate_traits(self, trait_data_items, persist=False):
+    def generate_traits(
+        self,
+        trait_data_items: list[SDKTraitData],
+        persist: bool = False,
+    ) -> list[Trait]:
         """
         Given a list of trait data items, validated by TraitSerializerFull, generate
         a list of TraitModel objects for the given identity.
@@ -195,28 +207,34 @@ class Identity(models.Model):
         :return: list of TraitModels
         """
         trait_models = []
+        trait_models_to_persist = []
 
-        # Remove traits having Null(None) values
-        trait_data_items = filter(
-            lambda trait: trait["trait_value"] is not None, trait_data_items
-        )
         for trait_data_item in trait_data_items:
+            # exclude traits with null values
+            if (trait_value := trait_data_item["trait_value"]) is None:
+                continue
+
             trait_key = trait_data_item["trait_key"]
-            trait_value = trait_data_item["trait_value"]
-            trait_models.append(
-                Trait(
-                    trait_key=trait_key,
-                    identity=self,
-                    **Trait.generate_trait_value_data(trait_value),
-                )
+            trait = Trait(
+                trait_key=trait_key,
+                identity=self,
+                **Trait.generate_trait_value_data(trait_value),
             )
+            if trait_data_item.get("transient"):
+                trait.transient = True
+            else:
+                trait_models_to_persist.append(trait)
+            trait_models.append(trait)
 
         if persist:
-            Trait.objects.bulk_create(trait_models)
+            Trait.objects.bulk_create(trait_models_to_persist)
 
         return trait_models
 
-    def update_traits(self, trait_data_items):
+    def update_traits(
+        self,
+        trait_data_items: list[SDKTraitData],
+    ) -> list[Trait]:
         """
         Given a list of traits, update any that already exist and create any new ones.
         Return the full list of traits for the given identity after these changes.
@@ -226,21 +244,31 @@ class Identity(models.Model):
         """
         current_traits = {t.trait_key: t for t in self.identity_traits.all()}
 
-        keys_to_delete = []
+        keys_to_delete = set()
         new_traits = []
         updated_traits = []
+        transient_traits = []
 
         for trait_data_item in trait_data_items:
             trait_key = trait_data_item["trait_key"]
             trait_value = trait_data_item["trait_value"]
+            transient = trait_data_item.get("transient")
+
+            if transient:
+                trait = Trait(
+                    **Trait.generate_trait_value_data(trait_value),
+                    trait_key=trait_key,
+                    identity=self,
+                )
+                trait.transient = True
+                transient_traits.append(trait)
+                continue
 
             if trait_value is None:
                 # build a list of trait keys to delete having been nulled by the
                 # input data
-                keys_to_delete.append(trait_key)
+                keys_to_delete.add(trait_key)
                 continue
-
-            trait_value_data = Trait.generate_trait_value_data(trait_value)
 
             if trait_key in current_traits:
                 current_trait = current_traits[trait_key]
@@ -248,16 +276,27 @@ class Identity(models.Model):
                 if current_trait.trait_value == trait_value:
                     continue
 
-                for attr, value in trait_value_data.items():
+                for attr, value in Trait.generate_trait_value_data(trait_value).items():
                     setattr(current_trait, attr, value)
                 updated_traits.append(current_trait)
-            else:
-                new_traits.append(
-                    Trait(**trait_value_data, trait_key=trait_key, identity=self)
+                continue
+
+            new_traits.append(
+                Trait(
+                    **Trait.generate_trait_value_data(trait_value),
+                    trait_key=trait_key,
+                    identity=self,
                 )
+            )
 
         # delete the traits that had their keys set to None
+        # (except the transient ones)
         if keys_to_delete:
+            current_traits = {
+                trait_key: trait
+                for trait_key, trait in current_traits.items()
+                if trait_key not in keys_to_delete
+            }
             self.identity_traits.filter(trait_key__in=keys_to_delete).delete()
 
         Trait.objects.bulk_update(updated_traits, fields=Trait.BULK_UPDATE_FIELDS)
@@ -268,6 +307,16 @@ class Identity(models.Model):
         # See: https://github.com/Flagsmith/flagsmith/issues/370
         Trait.objects.bulk_create(new_traits, ignore_conflicts=True)
 
-        # return the full list of traits for this identity by refreshing from the db
-        # TODO: handle this in the above logic to avoid a second hit to the DB
-        return self.identity_traits.all()
+        # return the full list of traits for this identity
+        # override persisted traits by transient traits in case of key collisions
+        return [
+            *{
+                trait.trait_key: trait
+                for trait in chain(
+                    current_traits.values(),
+                    updated_traits,
+                    new_traits,
+                    transient_traits,
+                )
+            }.values()
+        ]

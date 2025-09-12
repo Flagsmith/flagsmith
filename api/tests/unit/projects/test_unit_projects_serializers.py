@@ -10,7 +10,7 @@ from projects.serializers import (
 )
 
 
-def test_ProjectListSerializer_get_migration_status_returns_migration_not_applicable_if_not_configured(
+def test_ProjectListSerializer_get_migration_status_returns_migration_not_applicable_if_not_configured(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, project, settings
 ):
     # Given
@@ -29,7 +29,7 @@ def test_ProjectListSerializer_get_migration_status_returns_migration_not_applic
     mocked_identity_migrator.assert_not_called()
 
 
-def test_ProjectListSerializer_get_migration_status_returns_migration_completed_for_new_projects(
+def test_ProjectListSerializer_get_migration_status_returns_migration_completed_for_new_projects(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, project, settings
 ):
     # Given
@@ -49,7 +49,7 @@ def test_ProjectListSerializer_get_migration_status_returns_migration_completed_
     mocked_identity_migrator.assert_not_called()
 
 
-def test_ProjectListSerializer_get_migration_status_calls_migrator_with_correct_arguments_for_old_projects(
+def test_ProjectListSerializer_get_migration_status_calls_migrator_with_correct_arguments_for_old_projects(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, project, settings
 ):
     # Given
@@ -81,7 +81,7 @@ def test_ProjectListSerializer_get_migration_status_calls_migrator_with_correct_
         (ProjectIdentityMigrationStatus.NOT_APPLICABLE.value, False),
     ],
 )
-def test_ProjectListSerializer_get_use_edge_identities(
+def test_ProjectListSerializer_get_use_edge_identities(  # type: ignore[no-untyped-def]
     project, migration_status, expected
 ):
     # Given
@@ -100,7 +100,7 @@ def test_ProjectListSerializer_get_use_edge_identities(
         (ProjectIdentityMigrationStatus.NOT_APPLICABLE.value, False),
     ],
 )
-def test_ProjectRetrieveSerializer_get_use_edge_identities(
+def test_ProjectRetrieveSerializer_get_use_edge_identities(  # type: ignore[no-untyped-def]
     project, migration_status, expected
 ):
     # Given

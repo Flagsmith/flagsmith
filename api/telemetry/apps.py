@@ -7,7 +7,7 @@ from django.db.models.signals import post_migrate
 logger = logging.getLogger(__name__)
 
 
-def send_telemetry_callback(sender, **kwargs):
+def send_telemetry_callback(sender, **kwargs):  # type: ignore[no-untyped-def]
     if settings.ENABLE_TELEMETRY:
         try:
             from .telemetry import SelfHostedTelemetryWrapper
@@ -24,5 +24,5 @@ def send_telemetry_callback(sender, **kwargs):
 class TelemetryConfig(AppConfig):
     name = "telemetry"
 
-    def ready(self):
+    def ready(self):  # type: ignore[no-untyped-def]
         post_migrate.connect(send_telemetry_callback, sender=self)

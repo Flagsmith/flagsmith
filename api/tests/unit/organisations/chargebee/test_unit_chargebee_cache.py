@@ -1,11 +1,11 @@
-from chargebee.list_result import ListResult
-from chargebee.models import Addon, Plan
+from chargebee.list_result import ListResult  # type: ignore[import-untyped]
+from chargebee.models import Addon, Plan  # type: ignore[import-untyped]
 
 from organisations.chargebee.cache import ChargebeeCache, get_item_generator
 from organisations.chargebee.metadata import ChargebeeItem
 
 
-def test_get_item_generator_fetches_all_items(mocker):
+def test_get_item_generator_fetches_all_items(mocker):  # type: ignore[no-untyped-def]
     # Given
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.cache.chargebee", autospec=True
@@ -49,7 +49,7 @@ def test_get_item_generator_fetches_all_items(mocker):
     assert kwargs == {}
 
 
-def test_chargebee_cache(mocker, db):
+def test_chargebee_cache(mocker, db):  # type: ignore[no-untyped-def]
     # Given
 
     # a plan
@@ -57,6 +57,7 @@ def test_chargebee_cache(mocker, db):
         "seats": 10,
         "api_calls": 100,
         "projects": 10,
+        "some_unknown_key": 1,  # should be ignored
     }
     plan_id = "plan_id"
     plan_items = [
@@ -69,6 +70,7 @@ def test_chargebee_cache(mocker, db):
         "seats": 1,
         "api_calls": 10,
         "projects": 1,
+        "some_unknown_key": 1,  # should be ignored
     }
     addon_id = "addon_id"
     addon_items = [
@@ -83,15 +85,17 @@ def test_chargebee_cache(mocker, db):
     )
 
     # When
-    cache = ChargebeeCache()
+    cache = ChargebeeCache()  # type: ignore[no-untyped-call]
 
     # Then
     assert len(cache.plans) == 1
     assert cache.plans[plan_id].seats == plan_metadata["seats"]
     assert cache.plans[plan_id].api_calls == plan_metadata["api_calls"]
     assert cache.plans[plan_id].projects == plan_metadata["projects"]
+    assert not hasattr(cache.plans[plan_id], "some_unknown_key")
 
     assert len(cache.addons) == 1
     assert cache.addons[addon_id].seats == addon_metadata["seats"]
     assert cache.addons[addon_id].api_calls == addon_metadata["api_calls"]
     assert cache.addons[addon_id].projects == addon_metadata["projects"]
+    assert not hasattr(cache.addons[addon_id], "some_unknown_key")

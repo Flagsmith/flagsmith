@@ -16,3 +16,8 @@ This will result in identities receiving different variations and being evaluate
 split operator) when evaluated against the remote API. Evaluations in local evaluation mode will not be affected.
 
 :::
+
+## Custom fields
+
+Optional or required custom fields can be defined when creating or updating environments.
+[Learn more](/advanced-use/custom-fields.md)

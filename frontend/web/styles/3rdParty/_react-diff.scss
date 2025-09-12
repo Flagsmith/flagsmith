@@ -15,6 +15,16 @@
 .react-diff-1989f1g-code-fold-gutter {
   background-color: $black-alpha-8 !important;
 }
+.react-diff-same {
+  font-size: 13px;
+  background-color: rgba(0, 0, 0, 0.08);
+  .react-diff-marker {
+    opacity: 0;
+  }
+  pre {
+    padding-left: 2px;
+  }
+}
 .react-diff-marker {
   background-color: $black-alpha-8;
   width: 31px;
@@ -22,6 +32,9 @@
   justify-content: center;
   display: flex;
   align-items: center;
+  >* {
+    margin: 0;
+  }
   &.react-diff-marker--added {
     background-color: $success-alfa-16 !important;
 
@@ -47,6 +60,8 @@
   display: flex;
   flex:1;
   line-height: 28px;
+  font-family: $font-family-code;
+  font-size: 13px !important;
 }
 .react-diff-42iver-word-diff {
   padding:0 !important;
@@ -66,7 +81,7 @@
 .react-diff-1n5o7vh-diff-container pre {
   font-family: $font-family-monospace;
   font-size: $font-caption !important;
-  color: $body-text !important;
+  color: $body-color !important;
 }
 .react-diff-1fxlvce-diff-removed {
   background-color: $danger-alfa-8 !important;
@@ -77,6 +92,6 @@
 
 .dark {
   .react-diff-1n5o7vh-diff-container pre {
-    color: $body-text-dark !important;
+    color: $body-color-dark !important;
   }
 }

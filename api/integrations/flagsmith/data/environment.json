@@ -1,6 +1,85 @@
 {
   "api_key": "masked",
-  "feature_states": [],
+  "feature_states": [
+    {
+      "django_id": 585364,
+      "enabled": false,
+      "feature": {
+        "id": 91559,
+        "name": "api_usage_alerting",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "cc446405-e6c8-497c-a2a1-d5a6e6e0c56d",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 772178,
+      "enabled": true,
+      "feature": {
+        "id": 96656,
+        "name": "api_limiting_stop_serving_flags",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "1e5de9b6-52df-4a7b-a9cc-e56ee654b019",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 772176,
+      "enabled": true,
+      "feature": {
+        "id": 96657,
+        "name": "api_limiting_block_access_to_admin",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "b5f95449-c333-482e-8864-cd32fc11c795",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 882483,
+      "enabled": true,
+      "feature": {
+        "id": 98035,
+        "name": "api_usage_overage_charges",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "558369e9-d083-44c5-96f7-240c115b12b6",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 933832,
+      "enabled": false,
+      "feature": {
+        "id": 148935,
+        "name": "enable_feature_versioning_for_new_environments",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "1d584003-a0cc-46dd-aeea-30f392a4da80",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 907926,
+      "enabled": false,
+      "feature": {
+        "id": 149200,
+        "name": "sdk_metrics_labels",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "",
+      "featurestate_uuid": "b6aacfaf-5b02-4b58-9156-f018ffa85c2d",
+      "multivariate_feature_state_values": []
+    }
+  ],
   "id": 0,
   "name": "Production",
   "project": {

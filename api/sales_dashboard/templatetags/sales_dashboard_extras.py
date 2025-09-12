@@ -3,13 +3,13 @@ import typing
 from django.template.defaulttags import register
 
 
-@register.filter
-def get_item(dictionary: dict, key: typing.Any) -> typing.Any:
+@register.filter  # type: ignore[misc]
+def get_item(dictionary: dict, key: typing.Any) -> typing.Any:  # type: ignore[type-arg]
     return isinstance(dictionary, dict) and dictionary.get(key)
 
 
 @register.simple_tag
-def query_transform(request, **kwargs):
+def query_transform(request, **kwargs):  # type: ignore[no-untyped-def]
     """
     Merges the existing query params with any new ones passed as kwargs.
 

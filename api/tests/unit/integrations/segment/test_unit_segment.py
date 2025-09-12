@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 
 from environments.identities.models import Identity
@@ -7,20 +9,28 @@ from integrations.segment.models import SegmentConfiguration
 from integrations.segment.segment import SegmentWrapper
 
 
-def test_segment_initialized_correctly():
+def test_segment_initialized_correctly():  # type: ignore[no-untyped-def]
     # Given
     api_key = "123key"
-    config = SegmentConfiguration(api_key=api_key)
+    base_url = "https://api.segment.io/"
+    config = SegmentConfiguration(api_key=api_key, base_url=base_url)
 
-    # When initialized
+    # When
     segment_wrapper = SegmentWrapper(config)
 
     # Then
     assert segment_wrapper.analytics.write_key == api_key
+    assert segment_wrapper.analytics.host == base_url
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "feature_state_with_value,expected_property_value",
+    [(False, False), (True, True), ("foo", "foo"), (1, 1), (0, 0)],
+    indirect=["feature_state_with_value"],
+)
 def test_segment_when_generate_user_data_with_correct_values_then_success(
+    expected_property_value: typing.Any,
     environment: Environment,
     feature_state: FeatureState,
     feature_state_with_value: FeatureState,
@@ -39,7 +49,7 @@ def test_segment_when_generate_user_data_with_correct_values_then_success(
     # Then
     feature_properties = {
         feature_state.feature.name: feature_state.enabled,
-        feature_state_with_value.feature.name: "foo",  # hardcoded here from the feature_state_with_value fixture
+        feature_state_with_value.feature.name: expected_property_value,
     }
 
     expected_user_data = {

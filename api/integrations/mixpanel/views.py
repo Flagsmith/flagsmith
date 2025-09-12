@@ -4,5 +4,5 @@ from integrations.mixpanel.serializers import MixpanelConfigurationSerializer
 
 
 class MixpanelConfigurationViewSet(EnvironmentIntegrationCommonViewSet):
-    serializer_class = MixpanelConfigurationSerializer
-    model_class = MixpanelConfiguration
+    serializer_class = MixpanelConfigurationSerializer  # type: ignore[assignment]
+    model_class = MixpanelConfiguration  # type: ignore[assignment]

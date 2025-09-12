@@ -126,15 +126,20 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         return Response(status=status.HTTP_200_OK)
 
     if subscription["status"] in ("non_renewing", "cancelled"):
+        cancellation_date = subscription.get("current_term_end")
+        if cancellation_date is not None:
+            cancellation_date = datetime.fromtimestamp(cancellation_date).replace(
+                tzinfo=timezone.utc  # type: ignore[attr-defined]
+            )
+        else:
+            cancellation_date = timezone.now()
         existing_subscription.prepare_for_cancel(
-            datetime.fromtimestamp(subscription.get("current_term_end")).replace(
-                tzinfo=timezone.utc
-            ),
+            cancellation_date,
             update_chargebee=False,
         )
         return Response(status=status.HTTP_200_OK)
 
-    if subscription["status"] != "active":
+    if subscription["status"] not in ("active", "in_trial"):
         # Nothing to do, so return early.
         return Response(status=status.HTTP_200_OK)
 
@@ -152,6 +157,8 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         "organisation_id": existing_subscription.organisation_id,
         "allowed_projects": subscription_metadata.projects,
         "chargebee_email": subscription_metadata.chargebee_email,
+        "feature_history_visibility_days": subscription_metadata.feature_history_visibility_days,
+        "audit_log_visibility_days": subscription_metadata.audit_log_visibility_days,
     }
 
     if "current_term_end" in subscription:
@@ -161,7 +168,9 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         else:
             osic_defaults["current_billing_term_ends_at"] = datetime.fromtimestamp(
                 current_term_end
-            ).replace(tzinfo=timezone.utc)
+            ).replace(
+                tzinfo=timezone.utc  # type: ignore[attr-defined]
+            )
 
     if "current_term_start" in subscription:
         current_term_start = subscription["current_term_start"]
@@ -170,7 +179,9 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         else:
             osic_defaults["current_billing_term_starts_at"] = datetime.fromtimestamp(
                 current_term_start
-            ).replace(tzinfo=timezone.utc)
+            ).replace(
+                tzinfo=timezone.utc  # type: ignore[attr-defined]
+            )
 
     OrganisationSubscriptionInformationCache.objects.update_or_create(
         organisation_id=existing_subscription.organisation_id,

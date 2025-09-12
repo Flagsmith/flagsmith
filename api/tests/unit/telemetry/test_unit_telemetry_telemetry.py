@@ -2,14 +2,14 @@ import json
 from unittest import mock
 
 import responses
-from telemetry.telemetry import SelfHostedTelemetryWrapper
 
+from telemetry.telemetry import SelfHostedTelemetryWrapper
 from tests.unit.telemetry.helpers import get_example_telemetry_data
 
 
 @responses.activate
 @mock.patch("telemetry.telemetry.TelemetryData")
-def test_self_hosted_telemetry_wrapper_send_heartbeat(MockTelemetryData):
+def test_self_hosted_telemetry_wrapper_send_heartbeat(MockTelemetryData):  # type: ignore[no-untyped-def]
     # Given
     # we mock the response from the API
     responses.add(
@@ -33,6 +33,6 @@ def test_self_hosted_telemetry_wrapper_send_heartbeat(MockTelemetryData):
     # Then a request is made to the API with the expected data
     assert len(responses.calls) == 1
     assert (
-        responses.calls[0].request.url == SelfHostedTelemetryWrapper.TELEMETRY_API_URI
+        responses.calls[0].request.url == SelfHostedTelemetryWrapper.TELEMETRY_API_URI  # type: ignore[union-attr]
     )
-    assert responses.calls[0].request.body.decode("utf-8") == json.dumps(data)
+    assert responses.calls[0].request.body.decode("utf-8") == json.dumps(data)  # type: ignore[union-attr]

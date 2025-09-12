@@ -12,6 +12,15 @@ export const environmentService = service
           url: `environments/${query.id}/`,
         }),
       }),
+      getEnvironmentMetrics: builder.query<
+        Res['environmentMetrics'],
+        Req['getEnvironmentMetrics']
+      >({
+        providesTags: () => [{ id: 'METRICS', type: 'Environment' }],
+        query: (query: Req['getEnvironmentMetrics']) => ({
+          url: `environments/${query.id}/metrics/`,
+        }),
+      }),
       getEnvironments: builder.query<
         Res['environments'],
         Req['getEnvironments']
@@ -19,6 +28,20 @@ export const environmentService = service
         providesTags: [{ id: 'LIST', type: 'Environment' }],
         query: (data) => ({
           url: `environments/?project=${data.projectId}`,
+        }),
+      }),
+      updateEnvironment: builder.mutation<
+        Res['environment'],
+        Req['updateEnvironment']
+      >({
+        invalidatesTags: (res) => [
+          { id: 'LIST', type: 'Environment' },
+          { id: res?.id, type: 'Environment' },
+        ],
+        query: (query: Req['updateEnvironment']) => ({
+          body: query.body,
+          method: 'PUT',
+          url: `environments/${query.id}/`,
         }),
       }),
       // END OF ENDPOINTS
@@ -32,11 +55,8 @@ export async function getEnvironments(
     typeof environmentService.endpoints.getEnvironments.initiate
   >[1],
 ) {
-  store.dispatch(
+  return store.dispatch(
     environmentService.endpoints.getEnvironments.initiate(data, options),
-  )
-  return Promise.all(
-    store.dispatch(environmentService.util.getRunningQueriesThunk()),
   )
 }
 export async function getEnvironment(
@@ -50,11 +70,24 @@ export async function getEnvironment(
     environmentService.endpoints.getEnvironment.initiate(data, options),
   )
 }
+export async function updateEnvironment(
+  store: any,
+  data: Req['updateEnvironment'],
+  options?: Parameters<
+    typeof environmentService.endpoints.updateEnvironment.initiate
+  >[1],
+) {
+  return store.dispatch(
+    environmentService.endpoints.updateEnvironment.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useGetEnvironmentMetricsQuery,
   useGetEnvironmentQuery,
   useGetEnvironmentsQuery,
+  useUpdateEnvironmentMutation,
   // END OF EXPORTS
 } = environmentService
 

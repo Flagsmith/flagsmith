@@ -3,7 +3,7 @@ from environments.models import Environment
 from integrations.new_relic.new_relic import EVENTS_API_URI, NewRelicWrapper
 
 
-def test_new_relic_initialized_correctly():
+def test_new_relic_initialized_correctly():  # type: ignore[no-untyped-def]
     # Given
     api_key = "123key"
     app_id = "123id"
@@ -17,7 +17,7 @@ def test_new_relic_initialized_correctly():
     assert new_relic.url == expected_url
 
 
-def test_new_relic_when_generate_event_data_with_correct_values_then_success(
+def test_new_relic_when_generate_event_data_with_correct_values_then_success(  # type: ignore[no-untyped-def]
     django_user_model,
 ):
     # Given
@@ -40,11 +40,11 @@ def test_new_relic_when_generate_event_data_with_correct_values_then_success(
 
     assert event_data.get("deployment") is not None
     event_deployment_data = event_data.get("deployment")
-    assert event_deployment_data["revision"] == f"env:{environment.name}"
-    assert event_deployment_data["changelog"] == expected_event_text
+    assert event_deployment_data["revision"] == f"env:{environment.name}"  # type: ignore[index]
+    assert event_deployment_data["changelog"] == expected_event_text  # type: ignore[index]
 
 
-def test_new_relic_when_generate_event_data_with_missing_author_then_success():
+def test_new_relic_when_generate_event_data_with_missing_author_then_success():  # type: ignore[no-untyped-def]
     # Given
     log = "some log data"
 
@@ -65,11 +65,11 @@ def test_new_relic_when_generate_event_data_with_missing_author_then_success():
     assert event_data.get("deployment") is not None
     event_deployment_data = event_data.get("deployment")
 
-    assert event_deployment_data["revision"] == f"env:{environment.name}"
-    assert event_deployment_data["changelog"] == expected_event_text
+    assert event_deployment_data["revision"] == f"env:{environment.name}"  # type: ignore[index]
+    assert event_deployment_data["changelog"] == expected_event_text  # type: ignore[index]
 
 
-def test_new_relic_when_generate_event_data_with_missing_env_then_success(
+def test_new_relic_when_generate_event_data_with_missing_env_then_success(  # type: ignore[no-untyped-def]
     django_user_model,
 ):
     # Given
@@ -92,5 +92,5 @@ def test_new_relic_when_generate_event_data_with_missing_env_then_success(
     assert event_data.get("deployment") is not None
     event_deployment_data = event_data.get("deployment")
 
-    assert event_deployment_data["revision"] == "env:unknown"
-    assert event_deployment_data["changelog"] == expected_event_text
+    assert event_deployment_data["revision"] == "env:unknown"  # type: ignore[index]
+    assert event_deployment_data["changelog"] == expected_event_text  # type: ignore[index]

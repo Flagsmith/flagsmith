@@ -11,18 +11,12 @@ re-renders.
 Example applications for a variety of React, React Native and Next.js can be found here:
 
 - [Usage with React](https://github.com/Flagsmith/flagsmith-js-examples/tree/main/react)
-- [Usage with React Native](https://github.com/Flagsmith/flagsmith-js-examples/tree/main/react)
+- [Usage with React Native](https://github.com/Flagsmith/flagsmith-js-examples/tree/main/reactnative)
 - [Usage with Next.js](https://github.com/Flagsmith/flagsmith-js-examples/tree/main/nextjs)
 
 ## Installation
 
 ### NPM
-
-:::tip
-
-We also have flagsmith-es if you'd prefer to use [ES](https://262.ecma-international.org/6.0/) modules.
-
-:::
 
 ```bash
 npm i flagsmith --save
@@ -32,19 +26,14 @@ npm i flagsmith --save
 
 :::tip
 
-The ReactNative SDK shares the exact same implementation of Flagsmith, however, the defaults for some underlying
-libraries (e.g. AsyncStorage) use React Native compatible implementations.
+The React Native SDK shares the exact same implementation of Flagsmith, however, requires an implementation of
+AsyncStorage to be provided (e.g. @react-native-community/async-storage) in order to utilise analytics and caching. See
+[here](/clients/javascript#initialisation-options).
 
 :::
 
 ```bash
 npm i react-native-flagsmith --save
-```
-
-### Via JavaScript CDN
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/flagsmith/index.js"></script>
 ```
 
 ## Basic Usage

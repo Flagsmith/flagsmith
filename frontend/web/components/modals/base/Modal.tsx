@@ -12,6 +12,7 @@ import ModalDefault, { interceptClose, setInterceptClose } from './ModalDefault'
 import { getStore } from 'common/store'
 import { Provider } from 'react-redux'
 import { OpenConfirm } from '../../../../global'
+import Utils from 'common/utils/utils'
 
 export const ModalHeader = _ModalHeader
 export const ModalFooter = _ModalFooter
@@ -92,6 +93,7 @@ export const openModal = (global.openModal = (
     unmountComponentAtNode(document.getElementById('modal')!)
   render(
     <_ModalDefault
+      key={Utils.GUID()}
       isOpen
       className={className}
       onClosed={onClose}

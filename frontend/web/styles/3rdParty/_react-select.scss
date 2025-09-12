@@ -1,9 +1,40 @@
-@import '../new/variables-new';
+@import '../variables';
 
 .react-select .react-select {
   input[type='text'] {
     border: none;
   }
+
+
+  &__menu-list {
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none; 
+    }
+  }
+
+  &.clearable-dropdown .react-select {
+    &__indicator-separator {
+      display: block;
+      opacity: 0.5;
+    }
+    &__indicator {
+      color: $text-icon-light-grey;
+      padding: 0px 6px 0px 8px;
+      cursor: pointer;
+      &:hover {
+        color: $text-icon-light-grey;
+      }
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
   &__indicator-separator {
     display: none;
   }
@@ -28,7 +59,7 @@
     }
   }
   &__value-container {
-    padding: 12px 0px 12px 16px;
+    padding: 10px 0px 10px 16px;
     div {
       margin: 0;
       padding: 0;
@@ -45,6 +76,20 @@
     }
     &--is-disabled {
       color: $text-icon-light-grey;
+    }
+  }
+
+  &.react-select__extensible {
+    .react-select__control {
+      height: auto;
+      min-height: 44px;
+    }
+    .react-select__value-container {
+      flex-wrap: wrap;
+      gap: 4px;
+      padding-bottom: 6px;
+      padding-top: 6px;
+      overflow: hidden;
     }
   }
   &__control {
@@ -83,10 +128,11 @@
 }
 .select-xsm .react-select {
   &__control {
+    min-height: $input-height-xsm;
     height: $input-height-xsm;
   }
   &__value-container {
-    padding: 6px 0px 6px 12px;
+    padding: 4px 0px 4px 12px;
   }
   &__single-value {
     line-height: $line-height-sm;
@@ -149,12 +195,12 @@
 .react-select {
   font-weight: 500;
   line-height: $input-line-height;
-  color: $text-icon-dark;
+  color: $body-color;
   &.select-xsm {
     font-size: $font-size-sm;
   }
   &__option {
-    color: $body-text !important;
+    color: $body-color !important;
     background: white !important;
     padding: 9px 16px;
     cursor: pointer;
@@ -177,7 +223,7 @@
   }
 }
 .dark {
-  .react-select .react-select {
+  .react-select .react-select,.react-select {
     input[type='text'] {
       color: white !important;
       border: none !important;

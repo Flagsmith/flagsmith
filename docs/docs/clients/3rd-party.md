@@ -11,7 +11,7 @@ here please get in touch!
 
 ## Vue
 
-[Flagsmith client for Vue applications](https://github.com/mstfymrtc/flagsmith-vue-client).
+[Flagsmith client for Vue applications](https://github.com/jhoermann/flagsmith-vue).
 
 ## Clojure
 

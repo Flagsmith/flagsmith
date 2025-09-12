@@ -2,8 +2,8 @@ import React, { FC, useState } from 'react'
 import Constants from 'common/constants'
 import CodeHelp from './CodeHelp'
 import Icon from './Icon'
-import Tabs from './base/forms/Tabs'
-import TabItem from './base/forms/TabItem'
+import Tabs from './navigation/TabMenu/Tabs'
+import TabItem from './navigation/TabMenu/TabItem'
 import InfoMessage from './InfoMessage'
 import { useGetServersideEnvironmentKeysQuery } from 'common/services/useServersideEnvironmentKey'
 import { useHasPermission } from 'common/providers/Permission'
@@ -66,10 +66,13 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
             </a>{' '}
             and allowing offline capabilities.
           </div>
-          <Tabs uncontrolled theme='pill'>
+          <Tabs uncontrolled theme='pill' history={history}>
             <TabItem tabLabel={'Client-side'}>
               <div className='mt-3'>
-                <InfoMessage className='mb-2'>
+                <InfoMessage
+                  collapseId={'server-side-only-flags'}
+                  className='mb-2'
+                >
                   <div>
                     This will not return any features marked as{' '}
                     <a
@@ -98,7 +101,7 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
                     snippets={Constants.codeHelp.OFFLINE_LOCAL(data?.[0]?.key)}
                   />
                 ) : (
-                  <InfoMessage>
+                  <InfoMessage collapseId={'local-evaluation-mode'}>
                     In order to setup local evaluation mode you need at least 1
                     API key, this can be created in{' '}
                     {envAdmin ? (

@@ -29,13 +29,10 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       pin,
     })
   },
-  createEnv(name, projectId, cloneId, description) {
+  createEnv(data) {
     Dispatcher.handleViewAction({
       actionType: Actions.CREATE_ENV,
-      cloneId,
-      description,
-      name,
-      projectId,
+      ...data,
     })
   },
   createFlag(projectId, environmentId, flag, segmentOverrides) {
@@ -45,13 +42,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       flag,
       projectId,
       segmentOverrides,
-    })
-  },
-  createGroup(orgId, data) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.CREATE_GROUP,
-      data,
-      orgId,
     })
   },
   createOrganisation(name) {
@@ -78,14 +68,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_ENVIRONMENT,
       env,
-    })
-  },
-  deleteIdentityTrait(envId, identity, id) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.DELETE_IDENTITY_TRAIT,
-      envId,
-      id,
-      identity,
     })
   },
   deleteInvite(id) {
@@ -198,12 +180,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       project,
     })
   },
-  editTrait(params) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.EDIT_TRAIT,
-      ...params,
-    })
-  },
   editUserFlag(params) {
     Dispatcher.handleViewAction({
       actionType: Actions.EDIT_USER_FLAG,
@@ -221,15 +197,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       environmentId,
       id,
       projectId,
-    })
-  },
-  getChangeRequests(environment, data, page) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_CHANGE_REQUESTS,
-      committed: data.committed,
-      environment,
-      live_from_after: data.live_from_after,
-      page,
     })
   },
   getFeatureUsage(projectId, environmentId, flag, period) {
@@ -263,24 +230,11 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       sort,
     })
   },
-  getGroups(orgId) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_GROUPS,
-      orgId,
-    })
-  },
   getIdentity(envId, id) {
     Dispatcher.handleViewAction({
       actionType: Actions.GET_IDENTITY,
       envId,
       id,
-    })
-  },
-  getIdentitySegments(projectId, id) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_IDENTITY_SEGMENTS,
-      id,
-      projectId,
     })
   },
   getOrganisation(organisationId) {
@@ -299,12 +253,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     Dispatcher.handleViewAction({
       actionType: Actions.INVALIDATE_INVITE_LINK,
       link,
-    })
-  },
-  inviteUsers(invites) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.INVITE_USERS,
-      invites,
     })
   },
   migrateProject(projectId) {
@@ -373,7 +321,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     force,
     search,
     sort,
-    page,
     filter,
     pageSize,
   ) {
@@ -382,7 +329,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       environmentId,
       filter,
       force,
-      page,
       pageSize,
       projectId,
       search,
@@ -422,13 +368,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     Dispatcher.handleViewAction({
       actionType: Actions.UPDATE_CHANGE_REQUEST,
       changeRequest,
-    })
-  },
-  updateGroup(orgId, data) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.UPDATE_GROUP,
-      data,
-      orgId,
     })
   },
   updateSubscription(hostedPageId) {

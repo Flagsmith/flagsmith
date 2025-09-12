@@ -25,15 +25,66 @@ import {
   viewFeature,
   waitAndRefresh,
   waitForElementVisible,
-  createOrganisationAndProject,
-} from '../helpers.cafe';
+  cloneSegment,
+  setSegmentRule,
+  assertInputValue,
+  clickSegmentByName,
+} from '../helpers.cafe'
 import { E2E_USER, PASSWORD } from '../config'
 
-export const testSegment1 = async () => {
+// Keep the last rule simple to facilitate update testing
+const segmentRules =  [
+  // rule 2 =18 || =17
+  {
+    name: 'age',
+    operator: 'EQUAL',
+    ors: [
+      {
+        name: 'age',
+        operator: 'EQUAL',
+        value: 17,
+      },
+    ],
+    value: 18,
+  },
+  //rule 2 >17 or <10
+  {
+    name: 'age',
+    operator: 'GREATER_THAN',
+    ors: [
+      {
+        name: 'age',
+        operator: 'LESS_THAN',
+        value: 10,
+      },
+    ],
+    value: 17,
+  },
+  // rule 3 !=20
+  {
+    name: 'age',
+    operator: 'NOT_EQUAL',
+    value: 20,
+  },
+  // Rule 4 <= 18
+  {
+    name: 'age',
+    operator: 'LESS_THAN_INCLUSIVE',
+    value: 18,
+  },
+  // Rule 5 >= 18
+  {
+    name: 'age',
+    operator: 'GREATER_THAN_INCLUSIVE',
+    value: 18,
+  },
+]
+
+export const testSegment1 = async (flagsmith: any) => {
+  const isCloneSegmentEnabled = await flagsmith.hasFeature('clone_segment')
   log('Login')
   await login(E2E_USER, PASSWORD)
   await click('#project-select-1')
-
   log('Create Feature')
 
   await createRemoteConfig(0, 'mv_flag', 'big', null, null, [
@@ -41,57 +92,31 @@ export const testSegment1 = async () => {
     { value: 'small', weight: 0 },
   ])
 
-  log('Segment age rules')
   await gotoSegments()
+  
+  log('Segment age rules')
   // (=== 18 || === 19) && (> 17 || < 19) && (!=20) && (<=18) && (>=18)
   // Rule 1- Age === 18 || Age === 19
 
-  await createSegment(0, '18_or_19', [
-    // rule 2 =18 || =17
-    {
-      name: 'age',
-      operator: 'EQUAL',
-      ors: [
-        {
-          name: 'age',
-          operator: 'EQUAL',
-          value: 17,
-        },
-      ],
-      value: 18,
-    },
-    // rule 2 >17 or <10
-    {
-      name: 'age',
-      operator: 'GREATER_THAN',
-      ors: [
-        {
-          name: 'age',
-          operator: 'LESS_THAN',
-          value: 10,
-        },
-      ],
-      value: 17,
-    },
-    // rule 3 !=20
-    {
-      name: 'age',
-      operator: 'NOT_EQUAL',
-      value: 20,
-    },
-    // Rule 4 <= 18
-    {
-      name: 'age',
-      operator: 'LESS_THAN_INCLUSIVE',
-      value: 18,
-    },
-    // Rule 5 >= 18
-    {
-      name: 'age',
-      operator: 'GREATER_THAN_INCLUSIVE',
-      value: 18,
-    },
-  ])
+  log('Update segment')
+  await gotoSegments()
+  const lastRule = segmentRules[segmentRules.length - 1]
+  await createSegment(0, 'segment_to_update', [lastRule])
+  await click(byId('segment-0-name'))
+  await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
+  await click(byId('update-segment'))
+  await closeModal()
+  await gotoSegments()
+  await click(byId('segment-0-name'))
+  await assertInputValue(byId(`rule-${0}-value-0`), `${lastRule.value + 1}`)
+  await closeModal()
+  await deleteSegment(0, 'segment_to_update', !isCloneSegmentEnabled)
+  await waitAndRefresh()
+
+  log('Create segment')
+  await createSegment(0, '18_or_19', segmentRules)
+  await closeModal()
+
 
   log('Add segment trait for user')
   await gotoTraits()
@@ -125,9 +150,16 @@ export const testSegment1 = async () => {
   await waitAndRefresh()
   await assertTextContent(byId('user-feature-value-0'), '"medium"')
 
+  if (isCloneSegmentEnabled) {
+    log('Clone segment')
+    await gotoSegments()
+    await cloneSegment(0, '0cloned-segment')
+    await deleteSegment(0, '0cloned-segment', !isCloneSegmentEnabled)
+  }
+
   log('Delete segment')
   await gotoSegments()
-  await deleteSegment(0, '18_or_19')
+  await deleteSegment(0, '18_or_19', !isCloneSegmentEnabled)
   await gotoFeatures()
   await deleteFeature(0, 'mv_flag')
 }
@@ -168,13 +200,13 @@ export const testSegment2 = async () => {
 
   log('Set segment overrides features')
   await viewFeature(0)
-  await addSegmentOverrideConfig(0, 3, 2)
-  await addSegmentOverrideConfig(1, 2, 1)
-  await addSegmentOverrideConfig(2, 1, 0)
+  await addSegmentOverrideConfig(0, 1, 0)
+  await addSegmentOverrideConfig(1, 2, 0)
+  await addSegmentOverrideConfig(2, 3, 0)
   await saveFeatureSegments()
   await viewFeature(1)
-  await addSegmentOverride(0, true, 2)
-  await addSegmentOverride(1, false, 1)
+  await addSegmentOverride(0, true, 0)
+  await addSegmentOverride(1, false, 0)
   await addSegmentOverride(2, true, 0)
   await saveFeatureSegments()
 

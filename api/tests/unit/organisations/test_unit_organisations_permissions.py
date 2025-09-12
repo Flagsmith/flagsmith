@@ -10,7 +10,7 @@ from organisations.permissions.permissions import (
 @pytest.mark.parametrize(
     "has_organisation_permission, expected_result", ((True, True), (False, False))
 )
-def test_has_organisation_permission(
+def test_has_organisation_permission(  # type: ignore[no-untyped-def]
     mocker, organisation, has_organisation_permission, expected_result
 ):
     # Given
@@ -24,7 +24,7 @@ def test_has_organisation_permission(
     mock_view.kwargs = {"organisation_pk": organisation.id}
 
     # When
-    result = permission_class.has_permission(mock_request, mock_view)
+    result = permission_class.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is expected_result
@@ -33,7 +33,7 @@ def test_has_organisation_permission(
     )
 
 
-def test_user_organisation_permissions_has_permission_allows_organisation_members_to_list_groups(
+def test_user_organisation_permissions_has_permission_allows_organisation_members_to_list_groups(  # type: ignore[no-untyped-def]  # noqa: E501
     organisation_one, organisation_one_user, mocker
 ):
     # Given
@@ -45,13 +45,13 @@ def test_user_organisation_permissions_has_permission_allows_organisation_member
     )
 
     # When
-    result = permissions.has_permission(mock_request, mock_view)
+    result = permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
 
 
-def test_user_organisation_permissions_has_permission_permits_users_with_manage_groups(
+def test_user_organisation_permissions_has_permission_permits_users_with_manage_groups(  # type: ignore[no-untyped-def]  # noqa: E501
     organisation, mocker
 ):
     # Given
@@ -66,13 +66,13 @@ def test_user_organisation_permissions_has_permission_permits_users_with_manage_
     )
 
     # When
-    result = permissions.has_permission(mock_request, mock_view)
+    result = permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
 
 
-def test_user_organisation_permissions_has_object_permission_permits_users_with_manage_groups(
+def test_user_organisation_permissions_has_object_permission_permits_users_with_manage_groups(  # type: ignore[no-untyped-def]  # noqa: E501
     organisation, mocker
 ):
     # Given
@@ -87,13 +87,13 @@ def test_user_organisation_permissions_has_object_permission_permits_users_with_
     )
 
     # When
-    result = permissions.has_object_permission(mock_request, mock_view, organisation)
+    result = permissions.has_object_permission(mock_request, mock_view, organisation)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
 
 
-def test_user_permission_group_permissions_has_object_permission_permits_group_admin(
+def test_user_permission_group_permissions_has_object_permission_permits_group_admin(  # type: ignore[no-untyped-def]
     organisation, user_permission_group, admin_user, mocker
 ):
     # Given
@@ -104,7 +104,7 @@ def test_user_permission_group_permissions_has_object_permission_permits_group_a
     mock_view = mocker.MagicMock()
 
     # When
-    result = permissions.has_object_permission(
+    result = permissions.has_object_permission(  # type: ignore[no-untyped-call]
         request=mock_request, view=mock_view, obj=user_permission_group
     )
 

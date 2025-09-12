@@ -1,4 +1,8 @@
 import Constants from 'common/constants'
+import { projectService } from 'common/services/useProject'
+import { getStore } from 'common/store'
+import sortBy from 'lodash/sortBy'
+import { getSubscriptionMetadata } from 'common/services/useSubscriptionMetadata'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -27,29 +31,39 @@ const controller = {
       API.trackEvent(Constants.events.CREATE_FIRST_PROJECT)
     }
     API.trackEvent(Constants.events.CREATE_PROJECT)
+    const defaultEnvironmentNames = Utils.getFlagsmithHasFeature(
+      'default_environment_names_for_new_project',
+    )
+      ? JSON.parse(
+          Utils.getFlagsmithValue('default_environment_names_for_new_project'),
+        )
+      : ['Development', 'Production']
     data
-      .post(`${Project.api}projects/`, { name, organisation: store.id })
+      .post(
+        `${Project.api}projects/`,
+        { name, organisation: store.id },
+        E2E ? { 'X-E2E-Test-Auth-Token': Project.e2eToken } : {},
+      )
       .then((project) => {
-        Promise.all([
-          data
-            .post(`${Project.api}environments/`, {
-              name: 'Development',
-              project: project.id,
-            })
-            .then((res) => createSampleUser(res, 'development', project)),
-          data
-            .post(`${Project.api}environments/`, {
-              name: 'Production',
-              project: project.id,
-            })
-            .then((res) => createSampleUser(res, 'production', project)),
-        ]).then((res) => {
+        Promise.all(
+          defaultEnvironmentNames.map((envName) => {
+            return data
+              .post(`${Project.api}environments/`, {
+                name: envName,
+                project: project.id,
+              })
+              .then((res) => createSampleUser(res, envName, project))
+          }),
+        ).then((res) => {
+          window.lintrk?.('track', { conversion_id: 16798346 })
           project.environments = res
           store.model.projects = store.model.projects.concat(project)
+          getStore().dispatch(projectService.util.invalidateTags(['Project']))
           store.savedId = {
             environmentId: res[0].api_key,
             projectId: project.id,
           }
+          AppActions.refreshOrganisation()
           store.saved()
         })
       })
@@ -86,6 +100,7 @@ const controller = {
       AsyncStorage.removeItem('lastEnv')
       store.trigger('removed')
       store.saved()
+      getStore().dispatch(projectService.util.invalidateTags(['Project']))
     })
   },
   deleteUser: (id) => {
@@ -117,7 +132,7 @@ const controller = {
       })
   },
   getOrganisation: (id, force) => {
-    if (id !== store.id || force) {
+    if (`${id}` !== `${store.id}` || force) {
       store.id = id
       store.loading()
 
@@ -129,16 +144,14 @@ const controller = {
           AccountStore.getOrganisationRole(id) === 'ADMIN'
             ? [
                 data.get(`${Project.api}organisations/${id}/invites/`),
-                data
-                  .get(
-                    `${Project.api}organisations/${id}/get-subscription-metadata/`,
-                  )
-                  .catch(() => null),
+                getSubscriptionMetadata(getStore(), { id }).then(
+                  (res) => res.data,
+                ),
               ]
             : [],
         ),
       ).then((res) => {
-        if (id === store.id) {
+        if (`${id}` === `${store.id}`) {
           // eslint-disable-next-line prefer-const
           let [_projects, users, invites, subscriptionMeta] = res
           let projects = _.sortBy(_projects, 'name')
@@ -147,7 +160,15 @@ const controller = {
             ...store.model,
             invites: invites && invites.results,
             subscriptionMeta,
-            users,
+            users: sortBy(users, (user) => {
+              const isYou = user.id === AccountStore.getUser().id
+              if (isYou) {
+                return ``
+              }
+              return `${user.first_name || ''} ${
+                user.last_name || ''
+              }`.toLowerCase()
+            }),
           }
 
           if (Project.hideInviteLinks) {
@@ -233,35 +254,6 @@ const controller = {
           }),
       )
   },
-  inviteUsers: (invites) => {
-    store.saving()
-    data
-      .post(`${Project.api}organisations/${store.id}/invite/`, {
-        frontend_base_url: `${document.location.origin}/email-invite/`,
-        invites: invites.map((invite) => {
-          API.trackEvent(Constants.events.INVITE)
-          return {
-            email: invite.emailAddress,
-            role: invite.role.value,
-          }
-        }),
-      })
-      .then((res) => {
-        store.model.invites = store.model.invites || []
-        store.model.invites = store.model.invites.concat(res)
-        store.saved()
-        toast('Invite(s) sent successfully')
-      })
-      .catch((e) => {
-        store.saved()
-        toast(
-          `Failed to send invite(s). ${
-            e && e.error ? e.error : 'Please try again later'
-          }`,
-          'danger',
-        )
-      })
-  },
   resendInvite: (id) => {
     data
       .post(`${Project.api}organisations/${store.id}/invites/${id}/resend/`)
@@ -337,9 +329,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     case Actions.DELETE_PROJECT:
       controller.deleteProject(action.id)
       break
-    case Actions.INVITE_USERS:
-      controller.inviteUsers(action.invites)
-      break
     case Actions.DELETE_INVITE:
       controller.deleteInvite(action.id)
       break
@@ -356,6 +345,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.invalidateInviteLink(action.link)
       break
     case Actions.LOGOUT:
+      store.model = null
       store.id = null
       break
     default:

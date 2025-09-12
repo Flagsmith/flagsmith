@@ -7,7 +7,7 @@ from organisations.models import Organisation
 
 
 class MetadataFieldPermissions(IsAuthenticated):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         if not super().has_permission(request, view):
             return False
 
@@ -23,7 +23,7 @@ class MetadataFieldPermissions(IsAuthenticated):
 
         return False
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         if view.action in ("retrieve"):
             return request.user.belongs_to(obj.organisation.id)
 
@@ -38,7 +38,7 @@ class MetadataFieldPermissions(IsAuthenticated):
 
 
 class MetadataModelFieldPermissions(IsAuthenticated):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         if not super().has_permission(request, view):
             return False
 
@@ -67,7 +67,7 @@ class MetadataModelFieldPermissions(IsAuthenticated):
 
         return False
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         if view.action in ("retrieve"):
             return request.user.belongs_to(obj.field.organisation.id)
 

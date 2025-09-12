@@ -1,24 +1,56 @@
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+import time
+from typing import TYPE_CHECKING
+
+import pytest
 from django.urls import reverse
-from flag_engine.segments.constants import EQUAL
+from django.utils import timezone
+from django.utils.http import http_date
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from features.feature_types import MULTIVARIATE
-from features.models import Feature, FeatureSegment, FeatureState
+from features.models import (  # type: ignore[attr-defined]
+    STRING,
+    Feature,
+    FeatureSegment,
+    FeatureState,
+    FeatureStateValue,
+)
 from features.multivariate.models import MultivariateFeatureOption
-from segments.models import Condition, Segment, SegmentRule
+from features.versioning.tasks import enable_v2_versioning
+from projects.models import Project
+from segments.models import Segment
+
+if TYPE_CHECKING:
+    from pytest_django import DjangoAssertNumQueries
+
+    from organisations.models import Organisation
 
 
+@pytest.mark.parametrize(
+    "use_v2_feature_versioning, total_queries", [(True, 12), (False, 11)]
+)
 def test_get_environment_document(
-    organisation_one, organisation_one_project_one, django_assert_num_queries
-):
+    organisation_one: "Organisation",
+    organisation_two: "Organisation",
+    organisation_one_project_one: "Project",
+    django_assert_num_queries: "DjangoAssertNumQueries",
+    use_v2_feature_versioning: bool,
+    total_queries: int,
+) -> None:
     # Given
     project = organisation_one_project_one
 
-    # an environment
-    environment = Environment.objects.create(name="Test Environment", project=project)
+    environment = Environment.objects.create(
+        name="Test Environment",
+        project=project,
+    )
+    if use_v2_feature_versioning:
+        enable_v2_versioning(environment.id)
+
     api_key = EnvironmentAPIKey.objects.create(environment=environment)
     client = APIClient()
     client.credentials(HTTP_X_ENVIRONMENT_KEY=api_key.key)
@@ -27,24 +59,9 @@ def test_get_environment_document(
     feature = Feature.objects.create(name="test_feature", project=project)
     for i in range(10):
         segment = Segment.objects.create(project=project)
-        segment_rule = SegmentRule.objects.create(
-            segment=segment, type=SegmentRule.ALL_RULE
-        )
-        Condition.objects.create(
-            operator=EQUAL,
-            property=f"property_{i}",
-            value=f"value_{i}",
-            rule=segment_rule,
-        )
-        nested_rule = SegmentRule.objects.create(
-            segment=segment, rule=segment_rule, type=SegmentRule.ALL_RULE
-        )
-        Condition.objects.create(
-            operator=EQUAL,
-            property=f"nested_prop_{i}",
-            value=f"nested_value_{i}",
-            rule=nested_rule,
-        )
+
+        # Segment revisions should not be included in the document
+        segment.clone(is_revision=True, name=f"revision_segment_{i}")
 
         # Let's create segment override for each segment too
         feature_segment = FeatureSegment.objects.create(
@@ -57,7 +74,22 @@ def test_get_environment_document(
             enabled=True,
         )
 
-    for i in range(10):
+        # Add identity overrides
+        identity = Identity.objects.create(
+            environment=environment,
+            identifier=f"identity_{i}",
+        )
+        identity_feature_state = FeatureState.objects.create(
+            identity=identity,
+            feature=feature,
+            environment=environment,
+        )
+        FeatureStateValue.objects.filter(feature_state=identity_feature_state).update(
+            string_value="overridden",
+            type=STRING,
+        )
+
+        # Add a multivariate feature
         mv_feature = Feature.objects.create(
             name=f"mv_feature_{i}", project=project, type=MULTIVARIATE
         )
@@ -76,20 +108,23 @@ def test_get_environment_document(
     url = reverse("api-v1:environment-document")
 
     # When
-    with django_assert_num_queries(13):
+    with django_assert_num_queries(total_queries):
         response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()
+    assert len(response.data["project"]["segments"]) == 10
+    assert len(response.data["feature_states"]) == 11
+    assert len(response.data["identity_overrides"]) == 10
     assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
         environment.updated_at.timestamp()
     )
 
 
 def test_get_environment_document_fails_with_invalid_key(
-    organisation_one, organisation_one_project_one
-):
+    organisation_one: "Organisation",
+    organisation_one_project_one: "Project",
+) -> None:
     # Given
     project = organisation_one_project_one
 
@@ -110,3 +145,62 @@ def test_get_environment_document_fails_with_invalid_key(
     # We get a 403 since only the server side API keys are able to access the
     # environment document
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_environment_document_if_modified_since(
+    organisation_one: "Organisation",
+    organisation_one_project_one: "Project",
+) -> None:
+    # Given
+    project = organisation_one_project_one
+    environment = Environment.objects.create(name="Test Environment", project=project)
+    api_key = EnvironmentAPIKey.objects.create(environment=environment).key
+
+    client = APIClient()
+    client.credentials(HTTP_X_ENVIRONMENT_KEY=api_key)
+    url = reverse("api-v1:environment-document")
+
+    # When - first request
+    response1 = client.get(url)
+
+    # Then - first request should return 200 and include Last-Modified header
+    assert response1.status_code == status.HTTP_200_OK
+    last_modified = response1.headers["Last-Modified"]
+    assert last_modified == http_date(environment.updated_at.timestamp())
+
+    # When - second request with If-Modified-Since header
+    client.credentials(
+        HTTP_X_ENVIRONMENT_KEY=api_key,
+        HTTP_IF_MODIFIED_SINCE=last_modified,
+    )
+    response2 = client.get(url)
+
+    # Then - second request should return 304 Not Modified
+    assert response2.status_code == status.HTTP_304_NOT_MODIFIED
+    assert len(response2.content) == 0
+
+    # sleep for 1s since If-Modified-Since is only accurate to the nearest second
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/If-Modified-Since
+    time.sleep(1)
+
+    # When - environment is updated
+    environment.updated_at = timezone.now()
+    environment.save()
+
+    # Then - request with same If-Modified-Since header should return 200
+    response3 = client.get(url)
+    assert response3.status_code == status.HTTP_200_OK
+    assert response3.headers["Last-Modified"] == http_date(
+        environment.updated_at.timestamp()
+    )
+
+    # When - request without If-Modified-Since header
+    client.credentials(
+        HTTP_X_ENVIRONMENT_KEY=api_key,
+        HTTP_IF_MODIFIED_SINCE="",
+    )
+    response4 = client.get(url)
+
+    # Then - actual environment is returned with a 200
+    assert response4.status_code == status.HTTP_200_OK
+    assert len(response4.content) > 0

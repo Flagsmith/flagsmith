@@ -1,26 +1,35 @@
-from django.db import transaction
+from decimal import Decimal
 
-from task_processor.decorators import register_task_handler
+from django.conf import settings
+from django.db import transaction
+from task_processor.decorators import (
+    register_task_handler,
+)
 
 
 @register_task_handler()
 def write_environments_to_dynamodb(project_id: int) -> None:
     from environments.models import Environment
 
-    Environment.write_environments_to_dynamodb(project_id=project_id)
+    Environment.write_environment_documents(project_id=project_id)
 
 
 @register_task_handler()
 def migrate_project_environments_to_v2(project_id: int) -> None:
     from environments.dynamodb.services import migrate_environments_to_v2
-    from projects.models import IdentityOverridesV2MigrationStatus, Project
+    from projects.models import Project
 
     with transaction.atomic():
         project = Project.objects.select_for_update().get(id=project_id)
-        if migrate_environments_to_v2(project_id=project_id):
-            project.identity_overrides_v2_migration_status = (
-                IdentityOverridesV2MigrationStatus.COMPLETE
-            )
+
+        if (capacity_budget := project.edge_v2_migration_read_capacity_budget) is None:
+            capacity_budget = settings.EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET
+
+        if result := migrate_environments_to_v2(
+            project_id=project_id,
+            capacity_budget=Decimal(capacity_budget),
+        ):
+            project.edge_v2_migration_status = result.status
             project.save()
 
 

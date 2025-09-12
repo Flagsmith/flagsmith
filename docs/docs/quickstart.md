@@ -3,6 +3,8 @@ sidebar_position: 2
 sidebar_label: Quick Start
 ---
 
+import CodeBlock from '@theme/CodeBlock'; import { JsVersion } from '@site/src/components/SdkVersions.js';
+
 # Flagsmith Quick Start Guide
 
 Let's get up and running in 5 minutes. We're going to run through the following steps:
@@ -66,11 +68,9 @@ The page looks like this:
 
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_8.png"/></div>
 
-As per our [Javascript Docs](clients/client-side/javascript.md), we will import the SDK inline into our web page:
+For the purposes of this quickstart tutorial, we will import the SDK inline into our web page:
 
-```html
-<script src="https://cdn.jsdelivr.net/npm/flagsmith/index.js"></script>
-```
+<CodeBlock>{ `<script src="https://cdn.jsdelivr.net/npm/flagsmith@`}<JsVersion />{`/index.js"></script>` } </CodeBlock>
 
 ## 3. Connect to the Flagsmith API
 
@@ -121,13 +121,13 @@ the state of the flag and set the display visibility based on the result.
 
 Our entire webpage now reads like this:
 
-```html
-<!doctype html>
+<CodeBlock>{ `<!doctype html>
+
 <html lang="en">
  <head>
   <meta charset="utf-8" />
   <title>Flagsmith Quickstart Guide</title>
-  <script src="https://cdn.jsdelivr.net/npm/flagsmith/index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flagsmith@`}<JsVersion />{`/index.js"></script>
   <script>
    flagsmith.init({
     environmentID: 'ZfmJTbLQZrhZVHkVhXbsNi',
@@ -146,8 +146,8 @@ Our entire webpage now reads like this:
    <input type="submit" value="Flagsmith Quickstart Button!" />
   </div>
  </body>
-</html>
-```
+</html>`}
+</CodeBlock>
 
 If we go back and refresh our browser, you will see that the button has now disappeared.
 
@@ -166,6 +166,6 @@ This was a pretty quick demo, but it covers the core concepts involved in integr
 From here, some areas of the documentation you might want to check out are:
 
 - A deeper overview of the application - [Features](basic-features/managing-features.md),
-  [Identities](basic-features/managing-identities.md) and [Segments](basic-features/managing-segments.md).
+  [Identities](basic-features/managing-identities.md) and [Segments](basic-features/segments.md).
 - More details about our [API and SDKs](clients/rest.md).
-- How you can [run Flagsmith yourself](deployment/overview.md) or use our [Hosted API](https://flagsmith.com/).
+- How you can [run Flagsmith yourself](/deployment) or use our [Hosted API](https://flagsmith.com/).

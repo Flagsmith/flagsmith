@@ -17,17 +17,17 @@ def generate_change_dict(
 
     change_dict = {"change_type": change_type}
     if new:
-        change_dict["new"] = _get_overridden_feature_state_dict(
+        change_dict["new"] = _get_overridden_feature_state_dict(  # type: ignore[assignment]
             identity_id=identity_id,
             feature_state=new,
         )
     if old:
-        change_dict["old"] = _get_overridden_feature_state_dict(
+        change_dict["old"] = _get_overridden_feature_state_dict(  # type: ignore[assignment]
             identity_id=identity_id,
             feature_state=old,
         )
 
-    return change_dict
+    return change_dict  # type: ignore[return-value]
 
 
 def _get_overridden_feature_state_dict(

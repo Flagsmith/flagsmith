@@ -17,6 +17,7 @@ export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
   > = {
     baseQuery: fetchBaseQuery({
       baseUrl: Project.api,
+      credentials: Project.cookieAuthEnabled ? 'include' : undefined,
       prepareHeaders: async (headers, { endpoint, getState }) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const state = getState() as StoreStateType
@@ -29,7 +30,7 @@ export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
         ) {
           try {
             const token = _data.token
-            if (token) {
+            if (token && !Project.cookieAuthEnabled) {
               headers.set('Authorization', `Token ${token}`)
             }
           } catch (e) {}

@@ -6,18 +6,16 @@ import {
 } from 'common/services/useLaunchDarklyProjectImport'
 import AppLoader from 'components/AppLoader'
 import InfoMessage from 'components/InfoMessage'
-import Tabs from 'components/base/forms/Tabs'
+import Tabs from 'components/navigation/TabMenu/Tabs'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
-import TabItem from 'components/base/forms/TabItem'
-import { createFeatureExport } from 'common/services/useFeatureExport'
-import { getStore } from 'common/store'
+import TabItem from 'components/navigation/TabMenu/TabItem'
 import FeatureImport from './FeatureImport'
 import AccountStore from 'common/stores/account-store'
 import Constants from 'common/constants'
-
+import { useHistory } from 'react-router-dom'
 type ImportPageType = {
   projectId: string
   environmentId: string
@@ -29,7 +27,7 @@ const ImportPage: FC<ImportPageType> = ({
   projectId,
   projectName,
 }) => {
-  const [tab, setTab] = useState(0)
+  const history = useHistory()
   const [LDKey, setLDKey] = useState<string>('')
   const [importId, setImportId] = useState<number>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -37,10 +35,6 @@ const ImportPage: FC<ImportPageType> = ({
   const [projects, setProjects] = useState<{ key: string; name: string }[]>([])
   const [createLaunchDarklyProjectImport, { data, isSuccess }] =
     useCreateLaunchDarklyProjectImportMutation()
-
-  const hasFlagsmithImport = Utils.getFlagsmithHasFeature(
-    'flagsmith_import_export',
-  )
 
   const {
     data: status,
@@ -161,13 +155,10 @@ const ImportPage: FC<ImportPageType> = ({
               <PanelSearch
                 id='projects-list'
                 className='no-pad panel-projects'
-                listClassName='row mt-n2 gy-4'
+                listClassName='row mt-n2 gy-3'
                 title='LaunchDarkly Projects'
                 items={projects}
-                renderRow={(
-                  { key, name }: { key: string; name: string },
-                  i: number,
-                ) => {
+                renderRow={({ key, name }, i) => {
                   return (
                     <>
                       <Button
@@ -232,20 +223,16 @@ const ImportPage: FC<ImportPageType> = ({
         </div>
       )}
       <div className='mt-4'>
-        {Utils.getFlagsmithHasFeature('flagsmith_import_export') ? (
-          <Tabs value={tab} onChange={setTab} theme='pill'>
-            <TabItem tabLabel={'Flagsmith'}>
-              <div className='mt-4'>
-                <FeatureImport projectId={projectId} />
-              </div>
-            </TabItem>
-            <TabItem tabLabel={'LaunchDarkly'}>
-              <div className='mt-4'>{launchDarklyImport}</div>
-            </TabItem>
-          </Tabs>
-        ) : (
-          launchDarklyImport
-        )}
+        <Tabs urlParam={'import'} theme='pill' history={history}>
+          <TabItem tabLabel={'Flagsmith'}>
+            <div className='mt-4'>
+              <FeatureImport projectId={projectId} />
+            </div>
+          </TabItem>
+          <TabItem tabLabel={'LaunchDarkly'}>
+            <div className='mt-4'>{launchDarklyImport}</div>
+          </TabItem>
+        </Tabs>
       </div>
     </>
   )

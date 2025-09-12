@@ -7,7 +7,7 @@ from organisations.subscriptions.decorators import require_plan
 from organisations.subscriptions.exceptions import InvalidSubscriptionPlanError
 
 
-def test_require_plan_raises_exception_if_plan_invalid():
+def test_require_plan_raises_exception_if_plan_invalid():  # type: ignore[no-untyped-def]
     # Given
     valid_plan_id = "plan-id"
     invalid_plan_id = "invalid-plan-id"
@@ -15,8 +15,8 @@ def test_require_plan_raises_exception_if_plan_invalid():
     mock_request = MagicMock(spec=Request)
     mock_subscription = MagicMock(plan=invalid_plan_id)
 
-    @require_plan([valid_plan_id], lambda v: mock_subscription)
-    def test_function(request: Request):
+    @require_plan([valid_plan_id], lambda v: mock_subscription)  # type: ignore[misc]
+    def test_function(request: Request):  # type: ignore[no-untyped-def]
         return "foo"
 
     # When
@@ -27,15 +27,15 @@ def test_require_plan_raises_exception_if_plan_invalid():
     # Exception is raised
 
 
-def test_require_plan_does_not_raise_exception_if_plan_valid(rf):
+def test_require_plan_does_not_raise_exception_if_plan_valid(rf):  # type: ignore[no-untyped-def]
     # Given
     valid_plan_id = "plan-id"
 
     mock_request = MagicMock(spec=Request)
     mock_subscription = MagicMock(plan=valid_plan_id)
 
-    @require_plan([valid_plan_id], lambda v: mock_subscription)
-    def test_function(request: Request):
+    @require_plan([valid_plan_id], lambda v: mock_subscription)  # type: ignore[misc]
+    def test_function(request: Request):  # type: ignore[no-untyped-def]
         return "foo"
 
     # When

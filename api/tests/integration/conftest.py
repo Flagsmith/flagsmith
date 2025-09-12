@@ -2,40 +2,44 @@ import json
 import uuid
 
 import pytest
+from django.core.cache import BaseCache
+from django.core.cache.backends.locmem import LocMemCache
 from django.test import Client as DjangoClient
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from app.utils import create_hash
+from environments.enums import EnvironmentDocumentCacheMode
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
 
 
 @pytest.fixture()
-def mv_option_value():
+def mv_option_value():  # type: ignore[no-untyped-def]
     return "test_mv_value"
 
 
 @pytest.fixture()
-def django_client():
+def django_client():  # type: ignore[no-untyped-def]
     return DjangoClient()
 
 
 @pytest.fixture()
-def api_client():
+def api_client():  # type: ignore[no-untyped-def]
     return APIClient()
 
 
 @pytest.fixture()
-def admin_client(api_client, admin_user):
+def admin_client(api_client, admin_user):  # type: ignore[no-untyped-def]
     api_client.force_authenticate(user=admin_user)
     return api_client
 
 
 @pytest.fixture()
-def organisation(admin_client):
+def organisation(admin_client):  # type: ignore[no-untyped-def]
     organisation_data = {"name": "Test org"}
     url = reverse("api-v1:organisations:organisation-list")
     response = admin_client.post(url, data=organisation_data)
@@ -43,7 +47,7 @@ def organisation(admin_client):
 
 
 @pytest.fixture()
-def project(admin_client, organisation):
+def project(admin_client, organisation):  # type: ignore[no-untyped-def]
     project_data = {"name": "Test Project", "organisation": organisation}
     url = reverse("api-v1:projects:project-list")
     response = admin_client.post(url, data=project_data)
@@ -51,16 +55,18 @@ def project(admin_client, organisation):
 
 
 @pytest.fixture()
-def organisation_with_persist_trait_data_disabled(organisation):
+def organisation_with_persist_trait_data_disabled(organisation):  # type: ignore[no-untyped-def]
     Organisation.objects.filter(id=organisation).update(persist_trait_data=False)
 
 
 @pytest.fixture()
-def dynamo_enabled_project(admin_client, organisation):
+def dynamo_enabled_project(  # type: ignore[no-untyped-def]
+    admin_client: APIClient, organisation: Organisation, settings: SettingsWrapper
+):
+    settings.EDGE_ENABLED = True
     project_data = {
-        "name": "Test Project",
+        "name": "Dynamo Enabled Project",
         "organisation": organisation,
-        "enable_dynamo_db": True,
     }
     url = reverse("api-v1:projects:project-list")
     response = admin_client.post(url, data=project_data)
@@ -68,7 +74,7 @@ def dynamo_enabled_project(admin_client, organisation):
 
 
 @pytest.fixture()
-def environment_api_key():
+def environment_api_key():  # type: ignore[no-untyped-def]
     return create_hash()
 
 
@@ -95,12 +101,14 @@ def environment(
     url = reverse("api-v1:environments:environment-list")
 
     response = admin_client.post(url, data=environment_data)
-    return response.json()["id"]
+    return response.json()["id"]  # type: ignore[no-any-return]
 
 
 @pytest.fixture()
 def dynamo_enabled_environment(
-    admin_client, dynamo_enabled_project, environment_api_key
+    admin_client: APIClient,
+    dynamo_enabled_project: int,
+    environment_api_key: str,
 ) -> int:
     environment_data = {
         "name": "Test Environment",
@@ -110,16 +118,16 @@ def dynamo_enabled_environment(
     url = reverse("api-v1:environments:environment-list")
 
     response = admin_client.post(url, data=environment_data)
-    return response.json()["id"]
+    return response.json()["id"]  # type: ignore[no-any-return]
 
 
 @pytest.fixture()
-def identity_identifier():
+def identity_identifier():  # type: ignore[no-untyped-def]
     return str(uuid.uuid4())
 
 
 @pytest.fixture()
-def identity(admin_client, identity_identifier, environment, environment_api_key):
+def identity(admin_client, identity_identifier, environment, environment_api_key):  # type: ignore[no-untyped-def]
     identity_data = {"identifier": identity_identifier}
     url = reverse(
         "api-v1:environments:environment-identities-list", args=[environment_api_key]
@@ -129,7 +137,7 @@ def identity(admin_client, identity_identifier, environment, environment_api_key
 
 
 @pytest.fixture()
-def identity_with_traits_matching_segment(
+def identity_with_traits_matching_segment(  # type: ignore[no-untyped-def]
     admin_client: APIClient,
     environment_api_key,
     identity: int,
@@ -152,7 +160,7 @@ def identity_with_traits_matching_segment(
 
 
 @pytest.fixture()
-def sdk_client(environment_api_key):
+def sdk_client(environment_api_key: str) -> APIClient:
     client = APIClient()
     client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_api_key)
     return client
@@ -162,7 +170,7 @@ def sdk_client(environment_api_key):
 def server_side_sdk_client(
     admin_client: APIClient, environment: int, environment_api_key: str
 ) -> APIClient:
-    url = reverse("api-v1:environments:api-keys-list", args={environment_api_key})
+    url = reverse("api-v1:environments:api-keys-list", args={environment_api_key})  # type: ignore[arg-type]
     response = admin_client.post(url, data={"name": "Some key"})
 
     client = APIClient()
@@ -171,27 +179,27 @@ def server_side_sdk_client(
 
 
 @pytest.fixture()
-def default_feature_value():
+def default_feature_value():  # type: ignore[no-untyped-def]
     return "default_value"
 
 
 @pytest.fixture()
-def feature_name():
+def feature_name():  # type: ignore[no-untyped-def]
     return "feature_1"
 
 
 @pytest.fixture()
-def feature_2_name():
+def feature_2_name():  # type: ignore[no-untyped-def]
     return "feature_2"
 
 
 @pytest.fixture()
-def mv_feature_name():
+def mv_feature_name():  # type: ignore[no-untyped-def]
     return "mv_feature"
 
 
 @pytest.fixture()
-def feature(admin_client, project, default_feature_value, feature_name):
+def feature(admin_client, project, default_feature_value, feature_name):  # type: ignore[no-untyped-def]
     data = {
         "name": feature_name,
         "initial_value": default_feature_value,
@@ -204,7 +212,7 @@ def feature(admin_client, project, default_feature_value, feature_name):
 
 
 @pytest.fixture()
-def mv_feature(admin_client, project, default_feature_value, mv_feature_name):
+def mv_feature(admin_client, project, default_feature_value, mv_feature_name):  # type: ignore[no-untyped-def]
     data = {
         "name": mv_feature_name,
         "initial_value": default_feature_value,
@@ -218,7 +226,7 @@ def mv_feature(admin_client, project, default_feature_value, mv_feature_name):
 
 
 @pytest.fixture()
-def mv_feature_option_value():
+def mv_feature_option_value():  # type: ignore[no-untyped-def]
     return "foo"
 
 
@@ -239,11 +247,11 @@ def mv_feature_option(
     response = admin_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )
-    return response.json()["id"]
+    return response.json()["id"]  # type: ignore[no-any-return]
 
 
 @pytest.fixture()
-def feature_2(admin_client, project, default_feature_value, feature_2_name):
+def feature_2(admin_client, project, default_feature_value, feature_2_name):  # type: ignore[no-untyped-def]
     data = {
         "name": feature_2_name,
         "initial_value": default_feature_value,
@@ -256,29 +264,29 @@ def feature_2(admin_client, project, default_feature_value, feature_2_name):
 
 
 @pytest.fixture()
-def mv_option_50_percent(project, admin_client, feature, mv_option_value):
+def mv_option_50_percent(project, admin_client, feature, mv_option_value):  # type: ignore[no-untyped-def]
     return create_mv_option_with_api(
         admin_client, project, feature, 50, mv_option_value
     )
 
 
 @pytest.fixture()
-def segment_name():
+def segment_name():  # type: ignore[no-untyped-def]
     return "Test Segment"
 
 
 @pytest.fixture()
-def segment_condition_property():
+def segment_condition_property():  # type: ignore[no-untyped-def]
     return "foo"
 
 
 @pytest.fixture()
-def segment_condition_value():
+def segment_condition_value():  # type: ignore[no-untyped-def]
     return "bar"
 
 
 @pytest.fixture()
-def segment(
+def segment(  # type: ignore[no-untyped-def]
     admin_client,
     project,
     segment_name,
@@ -317,7 +325,7 @@ def segment(
 
 
 @pytest.fixture()
-def feature_segment(admin_client, segment, feature, environment):
+def feature_segment(admin_client, segment, feature, environment):  # type: ignore[no-untyped-def]
     data = {
         "feature": feature,
         "segment": segment,
@@ -340,6 +348,8 @@ def segment_featurestate(
     feature_segment: int,
 ) -> int:
     data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "segment override"},
         "feature": feature,
         "environment": environment,
         "feature_segment": feature_segment,
@@ -348,11 +358,11 @@ def segment_featurestate(
     response = admin_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )
-    return response.json()["id"]
+    return response.json()["id"]  # type: ignore[no-any-return]
 
 
 @pytest.fixture()
-def identity_traits():
+def identity_traits():  # type: ignore[no-untyped-def]
     return [
         {"trait_value": "trait_value_1", "trait_key": "trait_key_1"},
         {"trait_value": "trait_value_2", "trait_key": "trait_key_2"},
@@ -361,7 +371,7 @@ def identity_traits():
 
 
 @pytest.fixture()
-def identity_document(
+def identity_document(  # type: ignore[no-untyped-def]
     environment_api_key,
     feature_name,
     feature,
@@ -371,6 +381,9 @@ def identity_document(
     mv_feature_name,
     mv_feature,
 ):
+    _identifier = "User1-Test"  # use a mixture of cases and symbols to make sure we're testing all cases
+    _dashboard_alias = "dashboard-alias"
+
     _environment_feature_state_1_document = {
         "featurestate_uuid": "ad71c644-71df-4e83-9cb5-cd2cd0160200",
         "multivariate_feature_state_values": [],
@@ -427,14 +440,15 @@ def identity_document(
         "feature_segment": None,
     }
     return {
-        "composite_key": f"{environment_api_key}_user_1_test",
+        "composite_key": f"{environment_api_key}_{_identifier}",
+        "dashboard_alias": _dashboard_alias,
         "identity_traits": identity_traits,
         "identity_features": [
             _environment_feature_state_1_document,
             _environment_feature_state_2_document,
             _mv_feature_state_document,
         ],
-        "identifier": "user_1_test",
+        "identifier": _identifier,
         "created_date": "2021-09-21T10:12:42.230257+00:00",
         "environment_api_key": environment_api_key,
         "identity_uuid": "59efa2a7-6a45-46d6-b953-a7073a90eacf",
@@ -443,7 +457,7 @@ def identity_document(
 
 
 @pytest.fixture()
-def identity_document_without_fs(environment_api_key, identity_traits):
+def identity_document_without_fs(environment_api_key, identity_traits):  # type: ignore[no-untyped-def]
     return {
         "composite_key": f"{environment_api_key}_user_1_test",
         "identity_traits": identity_traits,
@@ -453,11 +467,12 @@ def identity_document_without_fs(environment_api_key, identity_traits):
         "environment_api_key": environment_api_key,
         "identity_uuid": "59efa2a7-6a45-46d6-b953-a7073a90eacf",
         "django_id": None,
+        "dashboard_alias": None,
     }
 
 
 @pytest.fixture()
-def admin_master_api_key(organisation: int, admin_client: APIClient) -> dict:
+def admin_master_api_key(organisation: int, admin_client: APIClient) -> dict:  # type: ignore[type-arg]
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-list",
         args=[organisation],
@@ -465,16 +480,16 @@ def admin_master_api_key(organisation: int, admin_client: APIClient) -> dict:
     data = {"name": "test_key", "organisation": organisation}
     response = admin_client.post(url, data=data)
 
-    return response.json()
+    return response.json()  # type: ignore[no-any-return]
 
 
 @pytest.fixture()
-def admin_master_api_key_prefix(admin_master_api_key: dict) -> str:
-    return admin_master_api_key["prefix"]
+def admin_master_api_key_prefix(admin_master_api_key: dict) -> str:  # type: ignore[type-arg]
+    return admin_master_api_key["prefix"]  # type: ignore[no-any-return]
 
 
 @pytest.fixture()
-def admin_master_api_key_client(admin_master_api_key: dict) -> APIClient:
+def admin_master_api_key_client(admin_master_api_key: dict) -> APIClient:  # type: ignore[type-arg]
     # Can not use `api_client` fixture here because:
     # https://docs.pytest.org/en/6.2.x/fixture.html#fixtures-can-be-requested-more-than-once-per-test-return-values-are-cached
     api_client = APIClient()
@@ -483,7 +498,7 @@ def admin_master_api_key_client(admin_master_api_key: dict) -> APIClient:
 
 
 @pytest.fixture()
-def non_admin_client(organisation, django_user_model, api_client):
+def non_admin_client(organisation, django_user_model, api_client):  # type: ignore[no-untyped-def]
     user = django_user_model.objects.create(username="non_admin_user")
     user.add_organisation(Organisation.objects.get(id=organisation))
     api_client.force_authenticate(user=user)
@@ -491,7 +506,7 @@ def non_admin_client(organisation, django_user_model, api_client):
 
 
 @pytest.fixture()
-def feature_state(admin_client, environment, feature):
+def feature_state(admin_client, environment, feature):  # type: ignore[no-untyped-def]
     base_url = reverse("api-v1:features:featurestates-list")
     url = f"{base_url}?environment={environment}?feature={feature}"
 
@@ -500,7 +515,7 @@ def feature_state(admin_client, environment, feature):
 
 
 @pytest.fixture()
-def identity_featurestate(admin_client, environment, feature, identity):
+def identity_featurestate(admin_client, environment, feature, identity):  # type: ignore[no-untyped-def]
     url = reverse("api-v1:features:featurestates-list")
     data = {
         "enabled": True,
@@ -513,3 +528,15 @@ def identity_featurestate(admin_client, environment, feature, identity):
         url, data=json.dumps(data), content_type="application/json"
     )
     return response.json()["id"]
+
+
+@pytest.fixture()
+def persistent_environment_document_cache(
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+    environment: int,
+) -> BaseCache:
+    settings.CACHE_ENVIRONMENT_DOCUMENT_MODE = EnvironmentDocumentCacheMode.PERSISTENT
+    cache = LocMemCache(name="environment_document", params={})
+    mocker.patch("environments.models.environment_document_cache", cache)
+    return cache

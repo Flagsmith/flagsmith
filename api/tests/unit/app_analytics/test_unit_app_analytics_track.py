@@ -1,10 +1,15 @@
 from unittest import mock
 
 import pytest
+from pytest_mock import MockerFixture
+
+from app_analytics.models import Resource
 from app_analytics.track import (
+    track_feature_evaluation_influxdb,
     track_request_googleanalytics,
     track_request_influxdb,
 )
+from app_analytics.types import TrackFeatureEvaluationsByEnvironmentData
 
 
 @pytest.mark.parametrize(
@@ -19,7 +24,7 @@ from app_analytics.track import (
 )
 @mock.patch("app_analytics.track.requests")
 @mock.patch("app_analytics.track.Environment")
-def test_track_request_googleanalytics(
+def test_track_request_googleanalytics(  # type: ignore[no-untyped-def]
     MockEnvironment, mock_requests, request_uri, expected_ga_requests
 ):
     """
@@ -36,96 +41,137 @@ def test_track_request_googleanalytics(
     request.headers = {"X-Environment-Key": environment_api_key}
 
     # When
-    track_request_googleanalytics(request)
+    track_request_googleanalytics(request)  # type: ignore[no-untyped-call]
 
     # Then
     assert mock_requests.post.call_count == expected_ga_requests
 
 
 @pytest.mark.parametrize(
-    "request_uri, expected_resource",
+    "expected_resource,expected_influxdb_tag",
     (
-        ("/api/v1/flags/", "flags"),
-        ("/api/v1/identities/", "identities"),
-        ("/api/v1/traits/", "traits"),
-        ("/api/v1/environment-document/", "environment-document"),
+        (Resource.FLAGS, "flags"),
+        (Resource.IDENTITIES, "identities"),
+        (Resource.TRAITS, "traits"),
+        (Resource.ENVIRONMENT_DOCUMENT, "environment-document"),
     ),
 )
-@mock.patch("app_analytics.track.InfluxDBWrapper")
-@mock.patch("app_analytics.track.Environment")
-def test_track_request_sends_data_to_influxdb_for_tracked_uris(
-    MockEnvironment, MockInfluxDBWrapper, request_uri, expected_resource
+def test_track_request_sends_data_to_influxdb_for_tracked_uris(  # type: ignore[no-untyped-def]
+    mocker: MockerFixture,
+    expected_resource: Resource,
+    expected_influxdb_tag: str,
 ):
     """
     Verify that the correct number of calls are made to InfluxDB for the various uris.
     """
     # Given
-    request = mock.MagicMock()
-    request.path = request_uri
-    environment_api_key = "test"
-    request.headers = {"X-Environment-Key": environment_api_key}
-
-    mock_influxdb = mock.MagicMock()
-    MockInfluxDBWrapper.return_value = mock_influxdb
+    mock_influxdb = mocker.patch("app_analytics.track.InfluxDBWrapper")
+    mock_environment = mocker.MagicMock()
 
     # When
-    track_request_influxdb(request)
+    track_request_influxdb(
+        resource=expected_resource,
+        host="testserver",
+        environment=mock_environment,
+        count=1,
+        labels={},
+    )
 
     # Then
-    call_list = MockInfluxDBWrapper.call_args_list
-    assert len(call_list) == 1
+    mock_influxdb.return_value.add_data_point.assert_called_once()
     assert (
-        mock_influxdb.add_data_point.call_args_list[0][1]["tags"]["resource"]
-        == expected_resource
+        mock_influxdb.return_value.add_data_point.call_args_list[0][1]["tags"][
+            "resource"
+        ]
+        == expected_influxdb_tag
     )
 
 
-@mock.patch("app_analytics.track.InfluxDBWrapper")
-@mock.patch("app_analytics.track.Environment")
 def test_track_request_sends_host_data_to_influxdb(
-    MockEnvironment, MockInfluxDBWrapper, rf
-):
+    mocker: MockerFixture,
+) -> None:
     """
     Verify that host is part of the data send to influxDB
     """
     # Given
-    environment_api_key = "test"
-    headers = {"X-Environment-Key": environment_api_key}
-
-    request = rf.get("/api/v1/flags/", headers=headers)
-
-    mock_influxdb = mock.MagicMock()
-    MockInfluxDBWrapper.return_value = mock_influxdb
+    mock_influxdb = mocker.patch("app_analytics.track.InfluxDBWrapper")
+    mock_environment = mocker.MagicMock()
 
     # When
-    track_request_influxdb(request)
+    track_request_influxdb(
+        resource=Resource.FLAGS,
+        host="testserver",
+        environment=mock_environment,
+        count=1,
+        labels={},
+    )
 
     # Then
     assert (
-        mock_influxdb.add_data_point.call_args_list[0][1]["tags"]["host"]
+        mock_influxdb.return_value.add_data_point.call_args_list[0][1]["tags"]["host"]
         == "testserver"
     )
 
 
-@mock.patch("app_analytics.track.InfluxDBWrapper")
-@mock.patch("app_analytics.track.Environment")
-def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
-    MockEnvironment, MockInfluxDBWrapper
-):
-    """
-    Verify that the correct number of calls are made to InfluxDB for the various uris.
-    """
+def test_track_feature_evaluation_influxdb(mocker: MockerFixture) -> None:
     # Given
-    request = mock.MagicMock()
-    request.path = "/health"
-    environment_api_key = "test"
-    request.headers = {"X-Environment-Key": environment_api_key}
+    influx_db_wrapper_class_mock = mocker.patch("app_analytics.track.InfluxDBWrapper")
+    influx_db_wrapper_mock = influx_db_wrapper_class_mock.return_value
 
-    mock_influxdb = mock.MagicMock()
-    MockInfluxDBWrapper.return_value = mock_influxdb
+    data = [
+        TrackFeatureEvaluationsByEnvironmentData(
+            feature_name="foo",
+            labels={},
+            evaluation_count=12,
+        ),
+        TrackFeatureEvaluationsByEnvironmentData(
+            feature_name="bar",
+            labels={},
+            evaluation_count=19,
+        ),
+        TrackFeatureEvaluationsByEnvironmentData(
+            feature_name="baz",
+            labels={
+                "client_application_name": "test-app",
+                "user_agent": "flagsmith-js-sdk/9.3.1",
+            },
+            evaluation_count=44,
+        ),
+    ]
+    environment_id = 1
 
     # When
-    track_request_influxdb(request)
+    track_feature_evaluation_influxdb(
+        environment_id=environment_id, feature_evaluations=data
+    )
 
     # Then
-    MockInfluxDBWrapper.assert_not_called()
+    assert influx_db_wrapper_mock.add_data_point.call_args_list == [
+        mocker.call(
+            "request_count",
+            12,
+            tags={
+                "environment_id": environment_id,
+                "feature_id": "foo",
+            },
+        ),
+        mocker.call(
+            "request_count",
+            19,
+            tags={
+                "environment_id": environment_id,
+                "feature_id": "bar",
+            },
+        ),
+        mocker.call(
+            "request_count",
+            44,
+            tags={
+                "environment_id": environment_id,
+                "feature_id": "baz",
+                "client_application_name": "test-app",
+                "user_agent": 50001,
+            },
+        ),
+    ]
+    influx_db_wrapper_mock.write.assert_called_once()

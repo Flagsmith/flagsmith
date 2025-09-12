@@ -13,7 +13,7 @@ found in the following section entitled 'Databases'.
 cd api
 make install
 make django-migrate
-make serve
+make serve-with-task-processor  # Or `make serve` for API + synchronous tasks (limited functionality)
 ```
 
 You can now visit `http://<your-server-domain:8000>/api/v1/users/config/init/` to create an initial Superuser and
@@ -175,6 +175,7 @@ the below variables will be ignored.
   `'djoser.permissions.CurrentUserOrAdmin'` Defaults to `'rest_framework.permissions.AllowAny'`.
 - `ALLOW_REGISTRATION_WITHOUT_INVITE`: Determines whether users can register without an invite. Defaults to True. Set to
   False or 0 to disable. Note that if disabled, new users must be invited via email.
+- `PREVENT_SIGNUP`: Determines whether to prevent new signups.
 - `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
 - `SENTRY_SDK_DSN`: If using Sentry, set the project DSN here.
 - `SENTRY_TRACE_SAMPLE_RATE`: Float. If using Sentry, sets the trace sample rate. Defaults to 1.0.
@@ -187,23 +188,23 @@ the below variables will be ignored.
 - `ENABLE_ADMIN_ACCESS_USER_PASS`: Boolean. Set this flag to enable login to admin panel using username and password.
 - `USE_X_FORWARDED_HOST`: Boolean. Default `False`. Specifies whether to use the X-Forwarded-Host header in preference
   to the Host header. This should only be enabled if a proxy which sets this header is in use.
-  [More Info](https://docs.djangoproject.com/en/4.0/ref/settings/#std:setting-USE_X_FORWARDED_HOST).
+  [More Info](https://docs.djangoproject.com/en/4.2/ref/settings/#std:setting-USE_X_FORWARDED_HOST).
 - `SECURE_PROXY_SSL_HEADER_NAME`: String. The name of the header looked for by Django's
-  [`SECURE_PROXY_SSL_HEADER`](https://docs.djangoproject.com/en/4.0/ref/settings/#secure-proxy-ssl-header). Defaults to
+  [`SECURE_PROXY_SSL_HEADER`](https://docs.djangoproject.com/en/4.2/ref/settings/#secure-proxy-ssl-header). Defaults to
   `HTTP_X_FORWARDED_PROTO`.
 - `SECURE_PROXY_SSL_HEADER_VALUE`: String. The value of the header looked for by Django's
-  [`SECURE_PROXY_SSL_HEADER`](https://docs.djangoproject.com/en/4.0/ref/settings/#secure-proxy-ssl-header). Defaults to
+  [`SECURE_PROXY_SSL_HEADER`](https://docs.djangoproject.com/en/4.2/ref/settings/#secure-proxy-ssl-header). Defaults to
   `https`.
 - `DJANGO_SECURE_REDIRECT_EXEMPT`: List. Passthrough of Django's
-  [`SECURE_REDIRECT_EXEMPT`](https://docs.djangoproject.com/en/4.0/ref/settings/#secure-redirect-exempt). Defaults to an
+  [`SECURE_REDIRECT_EXEMPT`](https://docs.djangoproject.com/en/4.2/ref/settings/#secure-redirect-exempt). Defaults to an
   empty list `[]`.
 - `DJANGO_SECURE_REFERRER_POLICY`: String. Passthrough of Django's
-  [`SECURE_REFERRER_POLICY`](https://docs.djangoproject.com/en/4.0/ref/settings/#secure-referrer-policy). Defaults to
+  [`SECURE_REFERRER_POLICY`](https://docs.djangoproject.com/en/4.2/ref/settings/#secure-referrer-policy). Defaults to
   `same-origin`.
 - `DJANGO_SECURE_SSL_HOST`: String. Passthrough of Django's
-  [`SECURE_SSL_HOST`](https://docs.djangoproject.com/en/4.0/ref/settings/#secure-ssl-host). Defaults to `None`.
+  [`SECURE_SSL_HOST`](https://docs.djangoproject.com/en/4.2/ref/settings/#secure-ssl-host). Defaults to `None`.
 - `DJANGO_SECURE_SSL_REDIRECT`: Boolean. Passthrough of Django's
-  [`SECURE_SSL_REDIRECT`](https://docs.djangoproject.com/en/4.0/ref/settings/#secure-ssl-redirect). Defaults to `False`.
+  [`SECURE_SSL_REDIRECT`](https://docs.djangoproject.com/en/4.2/ref/settings/#secure-ssl-redirect). Defaults to `False`.
 - [`APPLICATION_INSIGHTS_CONNECTION_STRING`](https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview).
   String. Connection string to set up Flagsmith to send telemetry to Azure Application Insights.
 - [`OPENCENSUS_SAMPLING_RATE`](https://opencensus.io/tracing/sampling/probabilistic/): Float. The tracer sample rate.
@@ -221,9 +222,15 @@ the below variables will be ignored.
   and hence should not be modified for already running instances of flagsmith. It should only be used for new
   installations, and should not be modified. WARNING: setting this to a higher limit may prevent imports to our SaaS
   platform if required in the future.
+- `SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED`: Forces segment rule condition ordering by primary key, ascending. Default is `False` (no guaranteed order). **Warning**: changing this setting might affect evaluation for existing segments.
 - `ENABLE_API_USAGE_TRACKING`: Enable tracking of all API requests in Postgres / Influx. Default is True. Setting to
   False will mean that the Usage tab in the Organisation Settings will not show any data. Useful when using Postgres for
   analytics in high traffic environments to limit the size of database.
+- `USE_CACHE_FOR_USAGE_DATA`: If enabled, this will use in-process caching to track usage data. Defaults to true.
+- `API_USAGE_CACHE_SECONDS`: Controls how frequently the usage cache is flushed. Defaults to 60 seconds
+- `PROMETHEUS_ENABLED`: Enables the Prometheus `/metrics` endpoint. Default is False.
+- `PROMETHEUS_HISTOGRAM_BUCKETS`: Allows to specify your bucket sizes for Prometheus histograms, e.g., `"0.5,0.6,1.0,Inf"`. Defaults to Python Prometheus client default histogram sizes.
+- `REQUIRE_AUTHENTICATION_FOR_API_DOCS`: If set to True, users must authenticate with basic authentication to access API docs (using a Flagsmith account).
 
 #### Security Environment Variables
 
@@ -237,7 +244,7 @@ the below variables will be ignored.
 - `AXES_FAILURE_LIMIT`: The integer number of login attempts allowed before a record is created for the failed logins.
   Defaults to `10`.
 
-#### Email Environment Variables
+#### Email Environment Variables {#email}
 
 :::note
 
@@ -360,6 +367,14 @@ services:
 If not running our application via docker, you can find gunicorn's documentation on statsd instrumentation
 [here](https://docs.gunicorn.org/en/stable/instrumentation.html)
 
+### GitHub Integration Environment Variables
+
+- `GITHUB_PEM`: In the 'Private keys' section of your GitHub App, you can create a PEM file within your GitHub App and
+  then paste it here.
+- `GITHUB_APP_ID`: You can find the App ID in the 'About' section -> 'App ID' of your GitHub app.
+- `GITHUB_WEBHOOK_SECRET`: You should choose the same random string of text with high entropy that you put in your
+  GitHub App.
+
 ## Caching
 
 The application makes use of caching in a couple of locations:
@@ -375,6 +390,8 @@ The application makes use of caching in a couple of locations:
 4. Flags and Identities endpoint caching - the application provides the ability to cache the responses to the GET /flags
    and GET /identities endpoints. The application exposes the configuration to allow the caching to be handled in a
    manner chosen by the developer. The configuration options are explained in more detail below.
+5. Environment document - when making heavy use of the environment document, it is often wise to utilise caching to
+   reduce the load on the database. Details are provided below. 
 
 ### Flags & Identities endpoint caching
 
@@ -384,8 +401,8 @@ variables:
 | Environment Variable                                               | Description                                                                                                                    | Example value                                          | Default                                       |
 | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------------------- |
 | <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_SECONDS</code>  | Number of seconds to cache the response to `GET /api/v1/flags`                                                                 | `60`                                                   | `0`                                           |
-| <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_BACKEND</code>  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/3.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.dummy.DummyCache` |
-| <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_LOCATION</code> | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/3.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `get_flags_endpoint_cache`                    |
+| <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_BACKEND</code>  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.dummy.DummyCache` |
+| <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_LOCATION</code> | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `get_flags_endpoint_cache`                    |
 
 An example configuration to cache both flags and identities requests for 30 seconds in a memcached instance hosted at
 `memcached-container`:
@@ -408,8 +425,65 @@ cache will be cleared automatically by certain actions in the platform when the 
 | Environment Variable         | Description                                                                                                                    | Example value                                          | Default                                       |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------------------- |
 | `ENVIRONMENT_CACHE_SECONDS`  | Number of seconds to cache the environment for                                                                                 | `60`                                                   | `86400` ( = 24h)                              |
-| `ENVIRONMENT_CACHE_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/3.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.dummy.DummyCache` |
-| `ENVIRONMENT_CACHE_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/3.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `environment-objects`                         |
+| `ENVIRONMENT_CACHE_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.dummy.DummyCache` |
+| `ENVIRONMENT_CACHE_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `environment-objects`                         |
+
+
+### Environment document caching
+
+When configuring the environment document caching, there are 2 options: persistent or expiring. The expiring cache
+will expire after a configurable period. The benefit of this option is that it can be used with all cache 
+backends, including those without a centralised storage mechanism. Bear in mind that this will mean, however, that 
+changes will take up to the configured timeout to be reflected in your Flagsmith clients. The persistent cache instead 
+makes use of an automated process to rebuild the cache whenever a change is made.
+
+:::warning
+
+Persistent cache should only be used with cache backends that offer a centralised cache. It should not be used with 
+e.g. LocMemCache. 
+
+:::
+
+:::info
+
+When using a persistent cache, a change can take a few seconds to update the cache. This can also be optimised by 
+increasing the performance of your task processor. 
+
+:::
+
+
+| Environment Variable                  | Description                                                                                                                                                                                       | Example value                                          | Default                                       |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------- |
+| `CACHE_ENVIRONMENT_DOCUMENT_MODE`     | The caching mode. One of `PERSISTENT` or `EXPIRING`. Note that although the default is `EXPIRING` there is no caching by default due to the default value of `CACHE_ENVIRONMENT_DOCUMENT_SECONDS` | `PERSISTENT`                                           | `EXPIRING`                                    |
+| `CACHE_ENVIRONMENT_DOCUMENT_SECONDS`  | Number of seconds to cache the environment for (only relevant when `CACHE_ENVIRONMENT_DOCUMENT_MODE=EXPIRING`)                                                                                    | `60`                                                   | `0` ( = don't cache)                          |
+| `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                                                                    | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.db.DatabaseCache` |
+| `CACHE_ENVIRONMENT_DOCUMENT_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                                                                                        | `127.0.0.1:11211`                                      | `environment-documents`                       |
+| `CACHE_ENVIRONMENT_DOCUMENT_OPTIONS`  | JSON object representing any additional options required by the specific cache backend. See [here](https://docs.djangoproject.com/en/4.2/topics/cache/#cache-arguments) for further information.  | `{"PASSWORD": "securepassword"}`                       | {}                                            |
+
+
+
+#### Example 1. Expiring local memory cache with 60 second timeout
+
+The following environment variables provide an example for specifying a cache local to each API instance that 
+expires after 60 seconds. This can be useful in deployments with just a few environments, where there is flexibility 
+on how long a change to the flags should take to propagate to the clients. 
+
+```
+CACHE_ENVIRONMENT_DOCUMENT_SECONDS: "60"
+CACHE_ENVIRONMENT_DOCUMENT_BACKEND:  "django.core.cache.backends.locmem.LocMemCache"
+```
+
+#### Example 2. Persistent redis cache
+
+The following environment variables provide an example for specifying a cache, stored in redis, that is automatically
+updated whenever a flag is changed. 
+
+```
+CACHE_ENVIRONMENT_DOCUMENT_MODE: "PERSISTENT"
+CACHE_ENVIRONMENT_DOCUMENT_BACKEND: "django_redis.cache.RedisCache"
+CACHE_ENVIRONMENT_DOCUMENT_LOCATION: "redis://127.0.0.1:6379/1"
+CACHE_ENVIRONMENT_DOCUMENT_OPTIONS: "{\"PASSWORD\": \"myredispassword\"}"
+```
 
 ## Unified Front End and Back End Build
 
@@ -438,6 +512,85 @@ Webpack compiles a front end build, sourcing `api/app/templates/index.html`. It 
 
 The Django `collectstatic` command then copies all the additional static assets that Django needs, including
 `api/app/templates/webpack/index.html`, into `api/static`.
+
+## Rolling back to a previous version of Flagsmith
+
+:::warning
+
+These steps may result in data loss in the scenario where new models or fields have been added to the database. We
+recommend taking a full backup of the database before completing the rollback.
+
+:::
+
+If you need to roll back to a previous version of Flagsmith you will need to ensure that the database is also rolled
+back to the correct state. In order to do this, you will need to unapply all the migrations that happened in between the
+version that you want to roll back to, and the one that you are rolling back from. The following steps explain how to do
+that.
+
+1. Identify the date and time that you deployed the version that you want to roll back to.
+
+:::tip
+
+If you are unsure on when you completed the previous deployment, then you can use the `django_migrations` table as a
+guide. If you query the table, using the following query then you should see the migrations that have been applied (in
+descending order), grouped in batches corresponding to each deployment.
+
+```sql
+SELECT *
+FROM django_migrations
+ORDER BY applied DESC
+```
+
+:::
+
+2. Run the following command inside a Flagsmith API container running the _current_ version of Flagsmith
+
+```bash
+python manage.py rollbackmigrationsafter "<datetime from step 1>"
+```
+
+3. Roll back the Flagsmith API to the desired version.
+
+### Steps pre v2.151.0
+
+If you are rolling back from a version earlier than v2.151.0, you will need to replace step 2 above with the following 2
+steps.
+
+1. Replace the datetime in the query below with a datetime after the deployment of the version you want to roll back to,
+   and before any subsequent deployments. Execute the subsequent query against the Flagsmith database.
+
+```sql {14} showLineNumbers
+select
+    concat('python manage.py migrate ',
+    app,
+    ' ',
+    case
+        when substring(name, 1, 4)::integer = 1 then 'zero'
+        else lpad((substring(name, 1, 4)::integer - 1)::text, 4, '0')
+        end
+    ) as "python_commands"
+from django_migrations
+where id in (
+    select min(id)
+    from django_migrations
+    where applied >= 'yyyy-MM-dd HH:mm:ss'
+    group by app
+);
+```
+
+Example output:
+
+```
+                python_commands
+-----------------------------------------------
+ python manage.py migrate multivariate 0007
+ python manage.py migrate segment 0004
+ python manage.py migrate environments 0034
+ python manage.py migrate features 0064
+ python manage.py migrate token_blacklist zero
+```
+
+2. Run the generated commands inside a Flagsmith API container running the _current_ version of Flagsmith
 
 ## Information for Developers working on the project
 

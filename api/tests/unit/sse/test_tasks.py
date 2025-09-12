@@ -17,7 +17,7 @@ from sse.tasks import (
 )
 
 
-def test_send_environment_update_message_for_project_make_correct_request(
+def test_send_environment_update_message_for_project_make_correct_request(  # type: ignore[no-untyped-def]
     mocker,
     settings,
     realtime_enabled_project,
@@ -36,27 +36,30 @@ def test_send_environment_update_message_for_project_make_correct_request(
     send_environment_update_message_for_project(realtime_enabled_project.id)
 
     # Then
-    mocked_requests.post.has_calls(
-        mocker.call(
-            f"{base_url}/sse/environments/{realtime_enabled_project_environment_one.api_key}/queue-change",
-            headers={"Authorization": f"Token {token}"},
-            json={
-                "updated_at": realtime_enabled_project_environment_one.updated_at.isoformat()
-            },
-            timeout=2,
-        ),
-        mocker.call(
-            f"{base_url}/sse/environments/{realtime_enabled_project_environment_two.api_key}/queue-change",
-            headers={"Authorization": f"Token {token}"},
-            json={
-                "updated_at": realtime_enabled_project_environment_two.updated_at.isoformat()
-            },
-            timeout=2,
-        ),
+    mocked_requests.post.assert_has_calls(
+        calls=[
+            mocker.call(
+                f"{base_url}/sse/environments/{realtime_enabled_project_environment_one.api_key}/queue-change",
+                headers={"Authorization": f"Token {token}"},
+                json={
+                    "updated_at": realtime_enabled_project_environment_one.updated_at.isoformat()
+                },
+                timeout=2,
+            ),
+            mocker.call(
+                f"{base_url}/sse/environments/{realtime_enabled_project_environment_two.api_key}/queue-change",
+                headers={"Authorization": f"Token {token}"},
+                json={
+                    "updated_at": realtime_enabled_project_environment_two.updated_at.isoformat()
+                },
+                timeout=2,
+            ),
+        ],
+        any_order=True,
     )
 
 
-def test_send_environment_update_message_make_correct_request(mocker, settings):
+def test_send_environment_update_message_make_correct_request(mocker, settings):  # type: ignore[no-untyped-def]
     # Given
     base_url = "http://localhost:8000"
     token = "token"
@@ -79,16 +82,16 @@ def test_send_environment_update_message_make_correct_request(mocker, settings):
     )
 
 
-def test_auth_header_raises_exception_if_token_not_set(settings):
+def test_auth_header_raises_exception_if_token_not_set(settings):  # type: ignore[no-untyped-def]
     # Given
     settings.SSE_AUTHENTICATION_TOKEN = None
 
     # When
     with pytest.raises(SSEAuthTokenNotSet):
-        get_auth_header()
+        get_auth_header()  # type: ignore[no-untyped-call]
 
 
-def test_track_sse_usage(
+def test_track_sse_usage(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
     environment: Environment,
     django_assert_num_queries: DjangoAssertNumQueries,

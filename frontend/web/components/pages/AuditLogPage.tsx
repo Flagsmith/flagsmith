@@ -1,46 +1,44 @@
-import React, { FC, useState } from 'react' // we need this to make JSX compile
+import React, { FC, useEffect, useState } from 'react' // we need this to make JSX compile
 import ConfigProvider from 'common/providers/ConfigProvider'
-import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
-import { RouterChildContext } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import AuditLog from 'components/AuditLog'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import PageTitle from 'components/PageTitle'
 import Tag from 'components/tags/Tag'
+import { featureDescriptions } from 'components/PlanBasedAccess'
+import { useRouteContext } from 'components/providers/RouteContext'
 
-type AuditLogType = {
-  router: RouterChildContext['router']
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
-  }
+interface RouteParams {
+  environmentId: string
+  projectId: string
 }
 
-const AuditLogPage: FC<AuditLogType> = (props) => {
-  const projectId = props.match.params.projectId
+const AuditLogPage: FC = () => {
+  const history = useHistory()
+  const { projectId } = useRouteContext()
 
   const [environment, setEnvironment] = useState(Utils.fromParam().env)
-
-  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
-  if (!hasRbacPermission) {
-    return (
-      <div>
-        <div className='text-center'>
-          To access this feature please upgrade your account to scaleup or
-          higher.
-        </div>
-      </div>
-    )
-  }
+  useEffect(() => {
+    const currentParams = Utils.fromParam()
+    if (currentParams.env !== environment) {
+      history.replace(
+        `${document.location.pathname}?${Utils.toParam({
+          env: environment,
+          page: currentParams.page,
+          search: currentParams.search,
+        })}`,
+      )
+    }
+  }, [environment, history])
   return (
     <div className='app-container container'>
-      <PageTitle title={'Audit Log'}>
-        View all activity that occured generically across the project and
-        specific to this environment.
-      </PageTitle>
+      {Utils.getPlansPermission('AUDIT') && (
+        <PageTitle title={featureDescriptions.AUDIT.title}>
+          {featureDescriptions.AUDIT.description}
+        </PageTitle>
+      )}
       <div>
         <div>
           <FormGroup>
@@ -49,10 +47,20 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
                 <FormGroup>
                   <AuditLog
                     onSearchChange={(search: string) => {
-                      props.router.history.replace(
+                      history.replace(
                         `${document.location.pathname}?${Utils.toParam({
                           env: environment,
+                          page: Utils.fromParam().page,
                           search,
+                        })}`,
+                      )
+                    }}
+                    onPageChange={(page: number) => {
+                      history.replace(
+                        `${document.location.pathname}?${Utils.toParam({
+                          env: environment,
+                          page,
+                          search: Utils.fromParam().search,
                         })}`,
                       )
                     }}

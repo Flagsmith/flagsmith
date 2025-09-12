@@ -20,19 +20,20 @@ Split% Segment.
 
 :::
 
-You can achieve staged rollouts by creating a [Segment](/basic-features/managing-segments.md) and adding a rule defined
-with the "% Split" condition. Specifying a "% Split" value between 1 and 100 then defines what percentage of your user
-base are included within this Segment.
+You can achieve staged rollouts by creating a [Segment](/basic-features/segments.md) and adding a rule defined with the
+"% Split" condition. Specifying a "% Split" value between 1 and 100 then defines what percentage of your user base are
+included within this Segment.
 
 Once you have created the Segment, you can then go ahead and connect it up to a Feature Flag as per regular
-[Segments](/basic-features/managing-segments.md).
+[Segments](/basic-features/segments.md).
 
 Note that you can include the "% Split" rule alongside other Segment rules if you wish.
 
 ## How does it work
 
-Each Identity and Segment has a unique identifier. These two pieces of data are merged then hashed, and a floating point
-value between 0.0 and 1.0 is generated from this hash. This value is then evaluated against the "% Split" rule.
+Flagsmith merges the Segment unique identifier and a context value chosen for the `% Split` rule — usually an identifier
+or a trait — then hashes the result. A floating point value between 0.0 and 1.0 is generated from this hash. This value
+is then evaluated against the threshold set for the `% Split` rule.
 
 ### An Example
 

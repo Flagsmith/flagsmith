@@ -1,8 +1,6 @@
 import React from 'react'
+import hljs from 'highlight.js'
 
-if (typeof hljs !== 'undefined') {
-  hljs.initHighlightingOnLoad()
-}
 function escapeHtml(unsafe) {
   if (!unsafe || !unsafe.__html) return unsafe
   return {
@@ -102,6 +100,7 @@ class Highlight extends React.Component {
 
   onBlur = () => {
     this.setState({ focus: false })
+    this.props.onBlur?.()
   }
 
   render() {
@@ -146,6 +145,7 @@ class Highlight extends React.Component {
     return (
       <div className={this.state.expandable ? 'expandable' : ''}>
         <pre
+          className='mb-2'
           style={{
             ...(this.props.style || {}),
             height:
@@ -174,8 +174,9 @@ class Highlight extends React.Component {
           />
         </pre>
         {this.state.expandable && (
-          <div className='expand text-center mt-2'>
+          <div className='expand text-center mb-2'>
             <Button
+              className='h-auto'
               theme='text'
               onClick={() => this.setState({ expanded: !this.state.expanded })}
             >

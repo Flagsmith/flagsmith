@@ -17,7 +17,7 @@ class DataDogWrapper(AbstractBaseEventIntegrationWrapper):
         self,
         base_url: str,
         api_key: str,
-        session: requests.Session = None,
+        session: requests.Session = None,  # type: ignore[assignment]
         use_custom_source: bool = False,
     ) -> None:
         self.base_url = base_url
@@ -30,7 +30,7 @@ class DataDogWrapper(AbstractBaseEventIntegrationWrapper):
         self.session = session or requests.Session()
 
     @staticmethod
-    def generate_event_data(audit_log_record: AuditLog) -> dict:
+    def generate_event_data(audit_log_record: AuditLog) -> dict:  # type: ignore[type-arg]
         log = audit_log_record.log
         environment_name = audit_log_record.environment_name
         email = audit_log_record.author_identifier
@@ -41,7 +41,7 @@ class DataDogWrapper(AbstractBaseEventIntegrationWrapper):
             "tags": [f"env:{environment_name}"],
         }
 
-    def _track_event(self, event: dict) -> None:
+    def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]
         if self.use_custom_source:
             event["source_type_name"] = FLAGSMITH_SOURCE_TYPE_NAME
 

@@ -1,4 +1,3 @@
-from django.contrib.admin.views.decorators import staff_member_required
 from django.urls import path
 
 from . import views
@@ -7,7 +6,7 @@ app_name = "sales_dashboard"
 
 
 urlpatterns = [
-    path("", staff_member_required(views.OrganisationList.as_view()), name="index"),
+    path("", views.OrganisationList.as_view(), name="index"),
     path(
         "organisations/<int:organisation_id>",
         views.organisation_info,
@@ -39,9 +38,9 @@ urlpatterns = [
         name="update_max_api_calls",
     ),
     path(
-        "email-usage/",
-        staff_member_required(views.EmailUsage.as_view()),
-        name="email-usage",
+        "usage/",
+        views.UsageReport.as_view(),
+        name="usage",
     ),
     path(
         "organisations/<int:organisation_id>/download_org_data",

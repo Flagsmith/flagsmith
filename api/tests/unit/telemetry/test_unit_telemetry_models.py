@@ -1,4 +1,5 @@
 from django.test import override_settings
+
 from telemetry.models import TelemetryData
 
 env = "test"
@@ -6,7 +7,7 @@ debug_enabled = True
 
 
 @override_settings(ENV=env, DEBUG=debug_enabled)
-def test_get_install_stats(
+def test_get_install_stats(  # type: ignore[no-untyped-def]
     organisation_one,
     organisation_two,
     organisation_one_project_one,

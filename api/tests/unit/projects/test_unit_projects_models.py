@@ -7,7 +7,8 @@ from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 
 from organisations.models import Organisation
-from projects.models import IdentityOverridesV2MigrationStatus, Project
+from projects.models import EdgeV2MigrationStatus, Project
+from segments.models import Segment
 
 now = timezone.now()
 tomorrow = now + timedelta(days=1)
@@ -15,13 +16,13 @@ yesterday = now - timedelta(days=1)
 
 
 @pytest.mark.django_db()
-def test_get_segments_from_cache(project, monkeypatch):
+def test_get_segments_from_cache(project, monkeypatch):  # type: ignore[no-untyped-def]
     # Given
     mock_project_segments_cache = mock.MagicMock()
     mock_project_segments_cache.get.return_value = None
 
     monkeypatch.setattr(
-        "projects.models.project_segments_cache", mock_project_segments_cache
+        "projects.services.project_segments_cache", mock_project_segments_cache
     )
 
     # When
@@ -35,13 +36,13 @@ def test_get_segments_from_cache(project, monkeypatch):
 
 
 @pytest.mark.django_db()
-def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):
+def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):  # type: ignore[no-untyped-def]
     # Given
     mock_project_segments_cache = mock.MagicMock()
     mock_project_segments_cache.get.return_value = project.segments.all()
 
     monkeypatch.setattr(
-        "projects.models.project_segments_cache", mock_project_segments_cache
+        "projects.services.project_segments_cache", mock_project_segments_cache
     )
 
     # When
@@ -55,11 +56,39 @@ def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):
     mock_project_segments_cache.set.assert_not_called()
 
 
+def test_get_segments_from_cache_set_to_empty_list(
+    project: Project,
+    segment: Segment,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    mock_project_segments_cache = mock.MagicMock()
+    mock_project_segments_cache.get.return_value = []
+
+    monkeypatch.setattr(
+        "projects.services.project_segments_cache", mock_project_segments_cache
+    )
+
+    # When
+    segments = project.get_segments_from_cache()  # type: ignore[no-untyped-call]
+
+    # Then
+    # Since we're calling the live_objects manager in the method,
+    # only one copy of the segment should be returned, not the
+    # other versioned copy of the segment.
+    assert segments.count() == 1
+    assert segments.first() == segment
+
+    # And correct calls to cache are made
+    mock_project_segments_cache.get.assert_called_once_with(project.id)
+    mock_project_segments_cache.set.assert_called_once()
+
+
 @pytest.mark.parametrize(
     "edge_enabled, expected_enable_dynamo_db_value",
     ((True, True), (False, False)),
 )
-def test_create_project_sets_enable_dynamo_db(
+def test_create_project_sets_enable_dynamo_db(  # type: ignore[no-untyped-def]
     db, edge_enabled, expected_enable_dynamo_db_value, settings, organisation
 ):
     # Given
@@ -76,7 +105,7 @@ def test_create_project_sets_enable_dynamo_db(
     "edge_release_datetime, expected",
     ((yesterday, True), (tomorrow, False), (None, False)),
 )
-def test_is_edge_project_by_default(
+def test_is_edge_project_by_default(  # type: ignore[no-untyped-def]
     settings, organisation, edge_release_datetime, expected
 ):
     # Given
@@ -98,7 +127,7 @@ def test_is_edge_project_by_default(
         ("^[a-z]+$", "InvalidFeature", False),
     ),
 )
-def test_is_feature_name_valid(feature_name_regex, feature_name, expected_result):
+def test_is_feature_name_valid(feature_name_regex, feature_name, expected_result):  # type: ignore[no-untyped-def]
     assert (
         Project(
             name="test", feature_name_regex=feature_name_regex
@@ -107,7 +136,7 @@ def test_is_feature_name_valid(feature_name_regex, feature_name, expected_result
     )
 
 
-def test_updating_project_clears_environment_caches(environment, project, mocker):
+def test_updating_project_clears_environment_caches(environment, project, mocker):  # type: ignore[no-untyped-def]
     # Given
     mock_environment_cache = mocker.patch("projects.models.environment_cache")
 
@@ -119,7 +148,7 @@ def test_updating_project_clears_environment_caches(environment, project, mocker
     mock_environment_cache.delete_many.assert_called_once_with([environment.api_key])
 
 
-def test_environments_are_updated_in_dynamodb_when_project_id_updated(
+def test_environments_are_updated_in_dynamodb_when_project_id_updated(  # type: ignore[no-untyped-def]
     dynamo_enabled_project,
     dynamo_enabled_project_environment_one,
     dynamo_enabled_project_environment_two,
@@ -139,26 +168,27 @@ def test_environments_are_updated_in_dynamodb_when_project_id_updated(
 
 
 @pytest.mark.parametrize(
-    "identity_overrides_v2_migration_status, expected_value",
+    "edge_v2_migration_status, expected_value",
     (
-        (IdentityOverridesV2MigrationStatus.NOT_STARTED, False),
-        (IdentityOverridesV2MigrationStatus.IN_PROGRESS, False),
-        (IdentityOverridesV2MigrationStatus.COMPLETE, True),
+        (EdgeV2MigrationStatus.NOT_STARTED, False),
+        (EdgeV2MigrationStatus.IN_PROGRESS, False),
+        (EdgeV2MigrationStatus.COMPLETE, True),
+        (EdgeV2MigrationStatus.INCOMPLETE, False),
     ),
 )
-def test_show_edge_identity_overrides_for_feature(
-    identity_overrides_v2_migration_status: IdentityOverridesV2MigrationStatus,
+def test_show_edge_identity_overrides_for_feature(  # type: ignore[no-untyped-def]
+    edge_v2_migration_status: EdgeV2MigrationStatus,
     expected_value: bool,
 ):
     assert (
         Project(
-            identity_overrides_v2_migration_status=identity_overrides_v2_migration_status
+            edge_v2_migration_status=edge_v2_migration_status
         ).show_edge_identity_overrides_for_feature
         == expected_value
     )
 
 
-def test_create_project_sets_identity_overrides_v2_migration_status_if_edge_enabled(
+def test_create_project_sets_edge_v2_migration_status_if_edge_enabled(
     settings: SettingsWrapper, organisation: Organisation
 ) -> None:
     # Given
@@ -168,7 +198,4 @@ def test_create_project_sets_identity_overrides_v2_migration_status_if_edge_enab
     project = Project.objects.create(name="test", organisation=organisation)
 
     # Then
-    assert (
-        project.identity_overrides_v2_migration_status
-        == IdentityOverridesV2MigrationStatus.COMPLETE
-    )
+    assert project.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE

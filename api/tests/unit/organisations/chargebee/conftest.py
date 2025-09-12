@@ -19,7 +19,7 @@ ChargebeeCacheMocker = typing.Callable[
 
 
 @pytest.fixture
-def chargebee_object_metadata():
+def chargebee_object_metadata():  # type: ignore[no-untyped-def]
     return ChargebeeObjMetadata(seats=10, api_calls=100, projects=10)
 
 
@@ -39,7 +39,7 @@ def mock_subscription_response(
         subscription_id=subscription_id,
         plan_id=plan_id,
         customer_email=customer_email,
-        addons=None,
+        addons=None,  # type: ignore[arg-type]
     )
     mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
 
@@ -89,8 +89,8 @@ def chargebee_cache_mocker(
     mocker: MockerFixture,
 ) -> ChargebeeCacheMocker:
     def mock_chargebee_cache(
-        plans_data: dict[str, ChargebeeObjMetadata] = None,
-        addons_data: dict[str, ChargebeeObjMetadata] = None,
+        plans_data: dict[str, ChargebeeObjMetadata] = None,  # type: ignore[assignment]
+        addons_data: dict[str, ChargebeeObjMetadata] = None,  # type: ignore[assignment]
     ) -> None:
         mocked_chargebee_cache = mocker.patch(
             "organisations.chargebee.chargebee.ChargebeeCache", autospec=True
@@ -98,4 +98,4 @@ def chargebee_cache_mocker(
         mocked_chargebee_cache.return_value.plans = plans_data or {}
         mocked_chargebee_cache.return_value.addons = addons_data or {}
 
-    return mock_chargebee_cache
+    return mock_chargebee_cache  # type: ignore[return-value]

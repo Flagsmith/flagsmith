@@ -12,6 +12,7 @@ const convertFeatureState = (featureState: FeatureState) => {
     feature_state_value: Utils.valueToFeatureState(
       featureState.feature_state_value,
     ),
+    live_from: featureState.live_from,
     multivariate_feature_state_values:
       featureState.multivariate_feature_state_values?.map((v) => ({
         id: v.id,

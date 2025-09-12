@@ -6,7 +6,7 @@ from rest_framework import status
 from users.models import FFAdminUser
 
 
-def test_returns_404_when_user_exists(admin_user, django_client):
+def test_returns_404_when_user_exists(admin_user, django_client):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:users:config-init")
 
@@ -20,7 +20,7 @@ def test_returns_404_when_user_exists(admin_user, django_client):
 
 
 @pytest.mark.django_db()
-def test_returns_200_when_no_user_exists(django_client):
+def test_returns_200_when_no_user_exists(django_client):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:users:config-init")
 
@@ -31,7 +31,7 @@ def test_returns_200_when_no_user_exists(django_client):
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_valid_request_creates_admin_and_updates_site(db, django_client):
+def test_valid_request_creates_admin_and_updates_site(db, django_client):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:users:config-init")
     form_data = {
@@ -51,7 +51,7 @@ def test_valid_request_creates_admin_and_updates_site(db, django_client):
     assert Site.objects.filter(name=form_data.get("site_name")).count() == 1
 
 
-def test_invalid_form_does_not_change_anything(db, django_client):
+def test_invalid_form_does_not_change_anything(db, django_client):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:users:config-init")
     form_data = {

@@ -1,9 +1,7 @@
 import React, { FC, useCallback, useEffect, useState } from 'react'
-import TableFilter from './TableFilter'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
-import { exact } from 'prop-types'
-import useThrottle from 'common/useThrottle'
+import useDebounce from 'common/useDebounce'
 
 type TableFilterType = {
   exact?: boolean
@@ -13,7 +11,7 @@ type TableFilterType = {
 
 const TableSearchFilter: FC<TableFilterType> = ({ exact, onChange, value }) => {
   const [localValue, setLocalValue] = useState(value)
-  const searchItems = useThrottle(
+  const searchItems = useDebounce(
     useCallback((search: string) => {
       if (value !== search) {
         onChange(search)
@@ -23,9 +21,14 @@ const TableSearchFilter: FC<TableFilterType> = ({ exact, onChange, value }) => {
     }, []),
     100,
   )
+
   useEffect(() => {
     searchItems(localValue)
   }, [localValue])
+
+  useEffect(() => {
+    setLocalValue(value || '')
+  }, [value])
   return (
     <>
       <Input

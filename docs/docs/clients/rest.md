@@ -15,7 +15,8 @@ settings page which will help you access these variables.
 
 :::info
 
-Our Admin API has a [Rate Limit](/system-administration/system-limits#rate-limit) that you need to be aware of.
+Our Admin API has a [Rate Limit](/system-administration/system-limits#admin-api-rate-limit) that you need to be aware
+of.
 
 :::
 
@@ -52,6 +53,8 @@ administrative area.
 
 For SaaS customers, the URL to hit for this API is [`https://edge.api.flagsmith.com/`](/advanced-use/edge-api).
 
+Our Edge API specification is detailed [here](/edge-api/overview).
+
 ### Private Admin API Endpoints
 
 You can also do things like create new flags, environments, toggle flags or indeed anything that is possible from the
@@ -68,8 +71,8 @@ For example, to create a new Environment:
 
 ```bash
 curl 'https://api.flagsmith.com/api/v1/environments/' \
-    -H 'content-type: application/json' \
-    -H 'authorization: Api-Key <API TOKEN FROM ORGANISATION PAGE>' \
+    -H 'Content-Type: application/json' \
+    -H 'Authorization: Api-Key <API TOKEN FROM ORGANISATION PAGE>' \
     --data-binary '{"name":"New Environment","project":"<Project ID>"}'
 ```
 
@@ -85,7 +88,7 @@ These are the two main endpoints that you need to consume the SDK aspect of the 
 ### Get Environment Flags
 
 ```bash
-curl 'https://edge.api.flagsmith.com/api/v1/flags/' -H 'X-Environment-Key: <Your Env Key>'
+curl 'https://edge.api.flagsmith.com/api/v1/flags/' -H 'X-Environment-Key: <Your client-side SDK key>'
 ```
 
 ### Send Identity with Traits and receive Flags
@@ -98,7 +101,7 @@ This command will perform the entire SDK Identity workflow in a single call:
 
 ```bash
 curl --request POST 'https://edge.api.flagsmith.com/api/v1/identities/' \
---header 'X-Environment-Key: <Your Env Key>' \
+--header 'X-Environment-Key: <Your client-side SDK key>' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "identifier":"identifier_5",
@@ -115,7 +118,7 @@ curl --request POST 'https://edge.api.flagsmith.com/api/v1/identities/' \
 }'
 ```
 
-## JSON View
+## JSON View {#json}
 
 You can enable the JSON view in your Account Settings page. This will then give you access to relevant object meta data
 in the Flag area of the dashboard.
@@ -258,6 +261,120 @@ create_feature_state_response = session.post(create_segment_override_url, json=f
 assert create_feature_state_response.status_code == 201
 ```
 
+### Create identity overrides
+
+Creating identity overrides varies depending on if you are using Flagsmith SaaS or a different Flagsmith environment.
+
+<details>
+
+<summary>Flagsmith SaaS</summary>
+
+Creating an identity override requires the following information:
+
+* Client-side API key of the environment to create the override in
+* Identifier to create the override for
+* Name of the feature to create the override for
+* Desired feature state
+
+To create an identity override, use the
+[Update Edge Identity Feature State endpoint](https://api.flagsmith.com/api/v1/docs/#/operations-api-api_v1_environments_edge-identities_list).
+For example, the following request would enable the feature named `custom_background_colour` with a value of `blue`
+for the identity `my_user_id`:
+
+```
+curl --request PUT \
+  --url https://api.flagsmith.com/api/v1/environments/environments/YOUR_ENVIRONMENT_API_KEY/edge-identities-featurestates \
+  --header 'Accept: application/json' \
+  --header 'Authorization: Token YOUR_ADMIN_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{"enabled":true,"feature":"custom_background_colour","feature_state_value":"blue", "identifier":"my_user_id"}'
+```
+
+This will create the override if it doesn't exist, or update it if it does (upsert).
+
+</details>
+
+<details>
+
+<summary>Self-hosted and private cloud</summary>
+
+Creating an identity override in non-SaaS environments requires additional information compared to Flagsmith SaaS:
+
+* Internal ID of the feature to override
+* Internal ID of the target identity
+* ID of the identity feature state to update, if an override already exists
+
+Make sure you have [JSON View](#json) enabled.
+
+To obtain the feature's internal ID, open the feature in the Flagsmith dashboard, and expand the "JSON Data: Feature"
+section. The feature's internal ID is the `id` field of this JSON object.
+
+To obtain the internal IDs of the target identity, browse to the target identity from the Identities section in the
+Flagsmith dashboard. The identity's internal ID is displayed in the URL, which is `1234` in this example:
+
+```
+https://flagsmith.example.com/project/5/environment/AbCxYz/users/my_identifier/1234
+```
+
+To obtain the ID of the identity feature state, from the same page on the Flagsmith dashboard, expand the "JSON 
+Data: Identity Feature States" section. If you don't see this section, you can create an identity override for this 
+feature and identity combination by calling the
+[Create Identity Feature State](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_environments_featurestates_create)
+endpoint. For example, this request would set the feature with ID `10` to enabled, with a value of `"blue"`:
+
+```
+curl --request POST 'https://flagsmith.example.com/api/v1/environments/AbCXyZ/identities/1234/featurestates/' \
+     --header 'Accept: application/json' \
+     --header 'Authorization: Token YOUR_ADMIN_API_KEY'
+     --data '{"enabled":true,"feature":10,"feature_state_value":"blue"}'
+```
+
+If you do have an identity feature state already, its ID is the `id` field of the object having the 
+same internal feature ID you had previously found. In this example, if your internal feature ID was `10`, the 
+identity feature state ID would be `200`:
+
+```json
+[
+  {
+     // highlight-next-line
+    "id": 200,
+    "feature_state_value": null,
+    "multivariate_feature_state_values": [],
+    "identity": {
+      "id": 1234,
+      "identifier": "my_user_id"
+    },
+    "enabled": true,
+    "feature": 10
+  },
+  {
+    "id": 300,
+    "feature_state_value": null,
+    "multivariate_feature_state_values": [],
+    "identity": {
+      "id": 1234,
+      "identifier": "my_user_id"
+    },
+    "enabled": false,
+    "feature": 20
+  }
+]
+```
+
+To update this identity override, call the
+[Update Identity Feature State](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_environments_featurestates_update)
+endpoint. For example, this request would enable the feature with internal ID `10` for the identity with internal ID 
+`1234`, assuming there was previously an override with an ID of `200`:
+
+```
+curl --request PUT 'https://flagsmith.example.com/api/v1/environments/AbCXyZ/identities/1234/featurestates/200' \
+     --header 'Accept: application/json' \
+     --header 'Authorization: Token YOUR_ADMIN_API_KEY'
+     --data '{"enabled":true,"feature":10}'
+```
+
+</details>
+
 ### Update a segment's rules
 
 ```python
@@ -377,23 +494,41 @@ assert delete_identity_response.status_code == 204
 
 ### Bulk Uploading Identities and Traits
 
-You can achieve this with a `POST` to the `identities` endpoint:
+You can achieve this with a `POST` to the `bulk-identities` endpoint:
 
 ```bash
-curl -X "POST" "https://edge.api.flagsmith.com/api/v1/identities/?identifier=<identity_id>" \
-     -H 'X-Environment-Key: <Your Environment Key>' \
-     -H 'Content-Type: application/json; charset=utf-8' \
+curl -i -X POST "https://edge.api.flagsmith.com/api/v1/bulk-identities" \
+     -H "X-Environment-Key: ${FLAGSMITH_ENVIRONMENT_KEY}" \
+     -H 'Content-Type: application/json' \
      -d $'{
-  "traits":   "traits": [
-    {
-      "trait_key": "this_key",
-      "trait_value": "this_value"
-    },
-    {
-      "trait_key": "this_key2",
-      "trait_value": "this_value2"
-    }
-  ],
-  "identifier": "<identity_id>"
-}'
+      "data": [
+        {
+          "identifier": "my_identifier_1",
+          "traits": [
+            {
+              "trait_key": "my_key_name",
+              "trait_value": "set from POST /bulk-identities"
+            }
+          ]
+        },
+        {
+            "identifier": "my_identifier_2",
+            "traits": [
+                {
+                    "trait_key": "some_other_key_name",
+                    "trait_value": "if this identity does not exist, it will be created by this request"
+                }
+            ]
+        },
+        {
+            "identifier": "my_identifier_3",
+            "traits": [
+                {
+                    "trait_key": "this_trait_will_be_deleted",
+                    "trait_value": null
+                }
+            ]
+        }
+      ]
+    }'
 ```

@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 import EnvironmentSelect from './EnvironmentSelect'
 import data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
-import FeatureRow from './FeatureRow'
+import FeatureRow from './feature-summary/FeatureRow'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
@@ -12,6 +12,8 @@ import Icon from './Icon'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
 import Tooltip from './Tooltip'
+import { withRouter } from 'react-router-dom'
+import { getDarkMode } from 'project/darkMode'
 
 const featureNameWidth = 300
 
@@ -19,10 +21,6 @@ class CompareEnvironments extends Component {
   static displayName = 'CompareEnvironments'
 
   static propTypes = {}
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
 
   constructor(props) {
     super(props)
@@ -175,11 +173,9 @@ class CompareEnvironments extends Component {
 
             <div className='mx-3'>
               <Icon
-                name='arrow-left'
+                name='arrow-right'
                 width={20}
-                fill={
-                  Utils.getFlagsmithHasFeature('dark_mode') ? '#fff' : '#1A2634'
-                }
+                fill={getDarkMode() ? '#fff' : '#1A2634'}
               />
             </div>
 
@@ -227,7 +223,7 @@ class CompareEnvironments extends Component {
                             </div>
                             <Button
                               onClick={() => {
-                                Utils.copyFeatureName(p.projectFlagLeft.name)
+                                Utils.copyToClipboard(p.projectFlagLeft.name)
                               }}
                               theme='icon'
                               className='ms-2 me-2'
@@ -242,6 +238,7 @@ class CompareEnvironments extends Component {
                     </div>
                     <Permission
                       level='environment'
+                      tags={p.projectFlagLeft.tags}
                       permission={Utils.getManageFeaturePermission(
                         Utils.changeRequestsEnabled(
                           environmentLeft.minimum_change_request_approvals,
@@ -254,6 +251,7 @@ class CompareEnvironments extends Component {
                           condensed
                           isCompareEnv
                           fadeEnabled={fadeEnabled}
+                          history={this.props.history}
                           fadeValue={fadeValue}
                           environmentFlags={this.state.environmentLeftFlags}
                           projectFlags={this.state.projectFlagsLeft}
@@ -270,6 +268,7 @@ class CompareEnvironments extends Component {
                     </Permission>
                     <Permission
                       level='environment'
+                      tags={p.projectFlagLeft.tags}
                       permission={Utils.getManageFeaturePermission(
                         Utils.changeRequestsEnabled(
                           environmentRight.minimum_change_request_approvals,
@@ -283,6 +282,7 @@ class CompareEnvironments extends Component {
                           isCompareEnv
                           fadeEnabled={fadeEnabled}
                           fadeValue={fadeValue}
+                          history={this.props.history}
                           environmentFlags={this.state.environmentRightFlags}
                           projectFlags={this.state.projectFlagsRight}
                           permission={permission}
@@ -299,6 +299,7 @@ class CompareEnvironments extends Component {
                   </Row>
                 )
               }
+
               return (
                 <div>
                   {this.state.isLoading && (
@@ -446,4 +447,4 @@ class CompareEnvironments extends Component {
   }
 }
 
-module.exports = ConfigProvider(CompareEnvironments)
+module.exports = withRouter(ConfigProvider(CompareEnvironments))

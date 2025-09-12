@@ -1,31 +1,32 @@
 import React, { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { Props } from 'react-select/lib/Select'
 
-export type EnvironmentSelectType = {
-  projectId: string
+export type EnvironmentSelectType = Partial<Omit<Props, 'value'>> & {
+  projectId: number
   value?: string
+  label?: string
   onChange: (value: string) => void
   showAll?: boolean
   readOnly?: boolean
   idField?: 'id' | 'api_key'
   ignore?: string[]
+  dataTest?: (value: { label: string }) => string
 }
 
 const EnvironmentSelect: FC<EnvironmentSelectType> = ({
   idField = 'api_key',
   ignore,
+  label,
   onChange,
   projectId,
   readOnly,
   showAll,
   value,
+  ...rest
 }) => {
   const { data } = useGetEnvironmentsQuery({ projectId: `${projectId}` })
-  const foundValue = useMemo(
-    () =>
-      data?.results?.find((environment) => `${environment[idField]}` === value),
-    [value, data, idField],
-  )
+
   const environments = useMemo(() => {
     return (data?.results || [])
       ?.map((v) => ({
@@ -39,17 +40,28 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
         return true
       })
   }, [data?.results, ignore, idField])
+
+  const foundValue = useMemo(
+    () =>
+      environments.find((environment) => `${environment.value}` === `${value}`),
+    [value, environments],
+  )
+
   if (readOnly) {
-    return <div className='mb-2'>{foundValue?.name}</div>
+    return <div className='mb-2'>{foundValue?.label}</div>
   }
   return (
     <div>
       <Select
+        {...rest}
+        className='react-select select-xsm'
         value={
           foundValue
-            ? { label: foundValue.name, value: `${foundValue.id}` }
+            ? foundValue
             : {
-                label: showAll ? 'All Environments' : 'Select an Environment',
+                label:
+                  label ||
+                  (showAll ? 'All Environments' : 'Select an Environment'),
                 value: '',
               }
         }

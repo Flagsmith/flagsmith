@@ -4,14 +4,14 @@ from organisations.invites.models import Invite, InviteLink
 from users.serializers import UserListSerializer
 
 
-class InviteLinkSerializer(serializers.ModelSerializer):
+class InviteLinkSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = InviteLink
         fields = ("id", "hash", "date_created", "role", "expires_at")
         read_only_fields = ("id", "hash", "date_created")
 
 
-class InviteListSerializer(serializers.ModelSerializer):
+class InviteListSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     invited_by = UserListSerializer()
 
     class Meta:

@@ -4,5 +4,5 @@ from integrations.datadog.serializers import DataDogConfigurationSerializer
 
 
 class DataDogConfigurationViewSet(ProjectIntegrationBaseViewSet):
-    serializer_class = DataDogConfigurationSerializer
-    model_class = DataDogConfiguration
+    serializer_class = DataDogConfigurationSerializer  # type: ignore[assignment]
+    model_class = DataDogConfiguration  # type: ignore[assignment]

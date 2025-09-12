@@ -1,34 +1,34 @@
 import { PureComponent } from 'react'
-import Select from 'react-select'
+import Select, { components } from 'react-select'
 import Button from 'components/base/forms/Button'
-import RemoveIcon from 'components/RemoveIcon'
 import Paging from 'components/Paging'
 import ToggleChip from 'components/ToggleChip'
 import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
 import PanelSearch from 'components/PanelSearch'
+import CodeHelp from 'components/CodeHelp'
 import AccountStore from 'common/stores/account-store'
 import Tooltip from 'components/Tooltip'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import AccountProvider from 'common/providers/AccountProvider'
+import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Panel from 'components/base/grid/Panel'
+import { checkmarkCircle } from 'ionicons/icons'
+import { IonIcon } from '@ionic/react'
 
 window.AppActions = require('../../common/dispatcher/app-actions')
 window.Actions = require('../../common/dispatcher/action-constants')
 window.ES6Component = require('../../common/ES6Component')
 
-window.IdentityProvider = require('../../common/providers/IdentityProvider')
-window.IdentityProvider = require('../../common/providers/IdentityProvider')
 window.AccountProvider = AccountProvider
 window.AccountStore = AccountStore
 window.FeatureListProvider = require('../../common/providers/FeatureListProvider')
-window.OrganisationProvider = require('../../common/providers/OrganisationProvider')
+window.OrganisationProvider = OrganisationProvider
 window.ProjectProvider = ProjectProvider
 
 window.Paging = Paging
 
 // Useful components
-window.Gif = require('../components/base/Gif')
 window.Row = require('../components/base/grid/Row')
 window.Flex = require('../components/base/grid/Flex')
 window.Column = require('../components/base/grid/Column')
@@ -40,7 +40,7 @@ window.Panel = Panel
 window.FormGroup = require('../components/base/grid/FormGroup')
 
 window.PanelSearch = PanelSearch
-window.CodeHelp = require('../components/CodeHelp')
+window.CodeHelp = CodeHelp
 
 // Useful for components used all the time within a project
 window.Loader = class extends PureComponent {
@@ -81,9 +81,40 @@ window.Loader = class extends PureComponent {
 window.Tooltip = Tooltip
 
 global.ToggleChip = ToggleChip
-global.RemoveIcon = RemoveIcon
+
+// Custom Option component to show the tick mark next to selected option in the dropdown
+const Option = (props) => {
+  return (
+    <components.Option {...props}>
+      <div
+        className={`d-flex justify-content-between align-items-center ${
+          props.data.isDisabled ? 'text-muted cursor-not-allowed' : ''
+        }`}
+      >
+        <div>
+          {props.data.label}
+          <div className='text-small'>{props.data.description}</div>
+        </div>
+        {props.isSelected && (
+          <IonIcon icon={checkmarkCircle} className='text-primary' />
+        )}
+      </div>
+    </components.Option>
+  )
+}
+
 global.Select = class extends PureComponent {
   static displayName = 'Select'
+
+  componentDidUpdate() {
+    if (
+      this.props.autoSelect &&
+      this.props.options?.length &&
+      !this.props.value
+    ) {
+      this.props.onChange(this.props.options[0])
+    }
+  }
 
   render() {
     const props = this.props
@@ -104,18 +135,30 @@ global.Select = class extends PureComponent {
             <a
               key={index}
               onClick={() => props.onChange(option)}
-              data-test={`${props['data-test']}-option-${index}`}
+              data-test={
+                this.props.dataTest
+                  ? this.props.dataTest(option)
+                  : `${props['data-test']}-option-${index}`
+              }
             >
-              .
+              {option.label}
             </a>
           ))}
       </div>
     ) : (
-      <Select
-        className={`react-select ${props.size ? props.size : ''}`}
-        classNamePrefix='react-select'
-        {...props}
-      />
+      <div
+        className={props.className}
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
+      >
+        <Select
+          className={`react-select ${props.size ? props.size : ''}`}
+          classNamePrefix='react-select'
+          {...props}
+          components={{ Option, ...(props.components || {}) }}
+        />
+      </div>
     )
   }
 }

@@ -1,4 +1,4 @@
-def get_example_telemetry_data(
+def get_example_telemetry_data(  # type: ignore[no-untyped-def]
     organisations: int = 1,
     projects: int = 1,
     environments: int = 1,

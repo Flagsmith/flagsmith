@@ -2,30 +2,31 @@
 from __future__ import unicode_literals
 
 import logging
+from datetime import timedelta
+
+from dateutil.relativedelta import relativedelta
+from django.utils import timezone
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from rest_framework import status, viewsets
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.decorators import action, api_view, authentication_classes
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.generics import ListAPIView, get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 
 from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
     get_multiple_event_list_for_organisation,
 )
 from core.helpers import get_current_site_url
-from dateutil.relativedelta import relativedelta
-from django.utils import timezone
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status, viewsets
-from rest_framework.authentication import BasicAuthentication
-from rest_framework.decorators import action, api_view, authentication_classes
-from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.request import Request
-from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
-
 from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
-    OranisationAPIUsageNotification,
     Organisation,
+    OrganisationAPIUsageNotification,
     OrganisationRole,
     OrganisationWebhook,
 )
@@ -49,11 +50,12 @@ from organisations.serializers import (
 from permissions.permissions_calculator import get_organisation_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
+    UserDetailedPermissionsSerializer,
     UserObjectPermissionsSerializer,
 )
 from projects.serializers import ProjectListSerializer
+from users.models import FFAdminUser
 from users.serializers import UserIdSerializer
-from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
 from .serializers import OrganisationAPIUsageNotificationSerializer
@@ -61,10 +63,10 @@ from .serializers import OrganisationAPIUsageNotificationSerializer
 logger = logging.getLogger(__name__)
 
 
-class OrganisationViewSet(viewsets.ModelViewSet):
+class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = (IsAuthenticated, OrganisationPermission)
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action == "remove_users":
             return UserIdSerializer
         elif self.action == "invite":
@@ -85,18 +87,18 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return SubscriptionDetailsSerializer
         return OrganisationSerializerFull
 
-    def get_serializer_context(self):
+    def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super(OrganisationViewSet, self).get_serializer_context()
         if self.action in ("remove_users", "invite", "update_subscription"):
             context["organisation"] = self.kwargs.get("pk")
         return context
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Organisation.objects.none()
-        return self.request.user.organisations.all()
+        return self.request.user.organisations.all()  # type: ignore[union-attr]
 
-    def get_throttles(self):
+    def get_throttles(self):  # type: ignore[no-untyped-def]
         if self.action == "invite":
             # since there is no way to set the throttle scope on an action,
             # we set it for each request here.
@@ -104,10 +106,11 @@ class OrganisationViewSet(viewsets.ModelViewSet):
             return [ScopedRateThrottle()]
         return super(OrganisationViewSet, self).get_throttles()
 
-    def create(self, request, **kwargs):
+    def create(self, request, **kwargs):  # type: ignore[no-untyped-def]
         """
         Override create method to add new organisation to authenticated user
         """
+
         user = request.user
         serializer = OrganisationSerializerFull(data=request.data)
         if serializer.is_valid():
@@ -118,14 +121,25 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(
+        detail=False,
+        url_path=r"get-by-uuid/(?P<uuid>[0-9a-f-]+)",
+        methods=["get"],
+    )
+    def get_by_uuid(self, request, uuid):  # type: ignore[no-untyped-def]
+        qs = self.get_queryset()  # type: ignore[no-untyped-call]
+        organisation = get_object_or_404(qs, uuid=uuid)
+        serializer = self.get_serializer(organisation)
+        return Response(serializer.data)
+
     @action(detail=True, permission_classes=[IsAuthenticated])
-    def projects(self, request, pk):
+    def projects(self, request, pk):  # type: ignore[no-untyped-def]
         organisation = self.get_object()
         projects = organisation.projects.all()
         return Response(ProjectListSerializer(projects, many=True).data)
 
     @action(detail=True, methods=["POST"])
-    def invite(self, request, pk):
+    def invite(self, request, pk):  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -134,7 +148,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data.get("invites"), status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["POST"], url_path="remove-users")
-    def remove_users(self, request, pk):
+    def remove_users(self, request, pk):  # type: ignore[no-untyped-def]
         """
         Takes a list of users and removes them from the organisation provided in the url
         """
@@ -145,13 +159,13 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         deprecated=True,
-        operation_description="Please use ​​/api​/v1​/organisations​/{organisation_pk}​/usage-data​/total-count​/",
+        operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/total-count/",
     )
     @action(
         detail=True,
         methods=["GET"],
     )
-    def usage(self, request, pk):
+    def usage(self, request, pk):  # type: ignore[no-untyped-def]
         organisation = self.get_object()
         try:
             events = get_events_for_organisation(organisation.id)
@@ -167,7 +181,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["POST"], url_path="update-subscription")
     @swagger_auto_schema(responses={200: OrganisationSerializerFull})
-    def update_subscription(self, request, pk):
+    def update_subscription(self, request, pk):  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -181,14 +195,17 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         methods=["GET"],
         url_path="get-subscription-metadata",
     )
-    def get_subscription_metadata(self, request, pk):
+    def get_subscription_metadata(self, request, pk):  # type: ignore[no-untyped-def]
         organisation = self.get_object()
         subscription_details = organisation.subscription.get_subscription_metadata()
-        serializer = self.get_serializer(instance=subscription_details)
+        serializer = self.get_serializer(
+            instance=subscription_details,
+            context={"subscription": organisation.subscription},
+        )
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="portal-url")
-    def get_portal_url(self, request, pk):
+    def get_portal_url(self, request, pk):  # type: ignore[no-untyped-def]
         organisation = self.get_object()
         if not organisation.has_paid_subscription():
             raise OrganisationHasNoPaidSubscription()
@@ -204,7 +221,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         url_path="get-hosted-page-url-for-subscription-upgrade",
     )
-    def get_hosted_page_url_for_subscription_upgrade(self, request, pk):
+    def get_hosted_page_url_for_subscription_upgrade(self, request, pk):  # type: ignore[no-untyped-def]
         organisation = self.get_object()
         if not organisation.has_paid_subscription():
             raise OrganisationHasNoPaidSubscription()
@@ -220,11 +237,11 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         deprecated=True,
-        operation_description="Please use ​​/api​/v1​/organisations​/{organisation_pk}​/usage-data​/",
+        operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/",
         query_serializer=InfluxDataQuerySerializer(),
     )
     @action(detail=True, methods=["GET"], url_path="influx-data")
-    def get_influx_data(self, request, pk):
+    def get_influx_data(self, request, pk):  # type: ignore[no-untyped-def]
         filters = InfluxDataQuerySerializer(data=request.query_params)
         filters.is_valid(raise_exception=True)
         serializer = self.get_serializer(
@@ -238,13 +255,13 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=["GET"])
-    def permissions(self, request):
+    def permissions(self, request):  # type: ignore[no-untyped-def]
         organisation_permissions = OrganisationPermissionModel.objects.all()
         serializer = self.get_serializer(instance=organisation_permissions, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="my-permissions")
-    def my_permissions(self, request, pk):
+    def my_permissions(self, request, pk):  # type: ignore[no-untyped-def]
         org = self.get_object()
 
         permission_data = get_organisation_permission_data(
@@ -253,6 +270,33 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         )
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
 
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        responses={200: UserDetailedPermissionsSerializer},
+    )  # type: ignore[misc]
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path=r"user-detailed-permissions/(?P<user_id>\d+)",
+        url_name="user-detailed-permissions",
+    )
+    def detailed_permissions(self, request: Request, pk: str, user_id: str) -> Response:
+        organisation = self.get_object()
+        user = request.user
+        user_id_int = int(user_id)
+
+        if request.user.id != user_id_int:
+            if not request.user.is_organisation_admin(organisation):  # type: ignore[union-attr]
+                # Only organisation admin can get permissions of other users
+                raise PermissionDenied()
+
+            user = get_object_or_404(FFAdminUser, id=user_id_int)
+
+        permission_data = get_organisation_permission_data(organisation, user)  # type: ignore[arg-type]
+        serializer = UserDetailedPermissionsSerializer(
+            permission_data.to_detailed_permissions_data()
+        )
         return Response(serializer.data)
 
 
@@ -286,13 +330,13 @@ def chargebee_webhook(request: Request) -> Response:
     return webhook_handlers.process_subscription(request)
 
 
-class OrganisationWebhookViewSet(viewsets.ModelViewSet, TriggerSampleWebhookMixin):
+class OrganisationWebhookViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = OrganisationWebhookSerializer
     permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
 
     webhook_type = WebhookType.ORGANISATION
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return OrganisationWebhook.objects.none()
 
@@ -303,31 +347,35 @@ class OrganisationWebhookViewSet(viewsets.ModelViewSet, TriggerSampleWebhookMixi
             organisation_id=self.kwargs["organisation_pk"]
         )
 
-    def perform_update(self, serializer):
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         organisation_id = self.kwargs["organisation_pk"]
         serializer.save(organisation_id=organisation_id)
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         organisation_id = self.kwargs["organisation_pk"]
         serializer.save(organisation_id=organisation_id)
 
 
-class OrganisationAPIUsageNotificationView(ListAPIView):
+class OrganisationAPIUsageNotificationView(ListAPIView):  # type: ignore[type-arg]
     serializer_class = OrganisationAPIUsageNotificationSerializer
     permission_classes = [OrganisationAPIUsageNotificationPermission]
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         organisation = Organisation.objects.get(id=self.kwargs["organisation_pk"])
         if not hasattr(organisation, "subscription_information_cache"):
-            return OranisationAPIUsageNotification.objects.none()
+            return OrganisationAPIUsageNotification.objects.none()
         subscription_cache = organisation.subscription_information_cache
         billing_starts_at = subscription_cache.current_billing_term_starts_at
         now = timezone.now()
 
+        # Handle case where billing dates are not set (most often in a free plan)
+        # by defaulting to something as a reasonable default.
+        billing_starts_at = billing_starts_at or now - timedelta(days=30)
+
         month_delta = relativedelta(now, billing_starts_at).months
         period_starts_at = relativedelta(months=month_delta) + billing_starts_at
 
-        queryset = OranisationAPIUsageNotification.objects.filter(
+        queryset = OrganisationAPIUsageNotification.objects.filter(
             organisation_id=organisation.id,
             notified_at__gt=period_starts_at,
         )

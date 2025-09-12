@@ -1,15 +1,20 @@
-from core.models import _AbstractBaseAuditableModel
+import logging
+
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
-from simple_history.models import HistoricalRecords
+from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
+from task_processor.task_run_method import TaskRunMethod
 
 from audit import tasks
-from task_processor.task_run_method import TaskRunMethod
+from core.models import AbstractBaseAuditableModel
 from users.models import FFAdminUser
 
+logger = logging.getLogger(__name__)
 
-def create_audit_log_from_historical_record(
-    instance: _AbstractBaseAuditableModel,
+
+def create_audit_log_from_historical_record(  # type: ignore[no-untyped-def]
+    instance: AbstractBaseAuditableModel,
     history_user: FFAdminUser,
     history_instance,
     **kwargs,
@@ -25,12 +30,25 @@ def create_audit_log_from_historical_record(
     # or delay the execution of this task
     # We prefer to delay the execution of the task because of it's low surface area
     delay_until = (
-        timezone.now() + timezone.timedelta(seconds=1)
+        timezone.now() + timezone.timedelta(seconds=1)  # type: ignore[attr-defined]
         if settings.TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR
         else None
     )
+    if instance.get_skip_create_audit_log():
+        return
 
-    environment, project = history_instance.instance.get_environment_and_project()
+    try:
+        environment, project = instance.get_environment_and_project()
+    except ObjectDoesNotExist:
+        logger.warning(
+            "Unable to create audit log for %s %s. "
+            "Parent model does not exist - this likely means it was hard deleted.",
+            instance.related_object_type,
+            getattr(instance, "id", "uuid"),
+            exc_info=True,
+        )
+        return
+
     if project != history_instance.instance and (
         (project and project.deleted_at)
         or (environment and environment.project.deleted_at)
@@ -48,7 +66,7 @@ def create_audit_log_from_historical_record(
     )
 
 
-def add_master_api_key(sender, **kwargs):
+def add_master_api_key(sender, **kwargs):  # type: ignore[no-untyped-def]
     try:
         history_instance = kwargs["history_instance"]
         master_api_key = HistoricalRecords.thread.request.user.key

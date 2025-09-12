@@ -1,14 +1,22 @@
+from django.conf import settings
+from django.urls import include, path, re_path
+from rest_framework_nested import routers  # type: ignore[import-untyped]
+
+from api_keys.views import MasterAPIKeyViewSet
 from app_analytics.views import (
     get_usage_data_total_count_view,
     get_usage_data_view,
 )
-from django.conf import settings
-from django.conf.urls import include, url
-from django.urls import path
-from rest_framework_nested import routers
-
-from api_keys.views import MasterAPIKeyViewSet
 from audit.views import OrganisationAuditLogViewSet
+from integrations.github.views import (
+    GithubConfigurationViewSet,
+    GithubRepositoryViewSet,
+    fetch_issues,
+    fetch_pull_requests,
+    fetch_repo_contributors,
+    fetch_repositories,
+)
+from integrations.grafana.views import GrafanaOrganisationConfigurationViewSet
 from metadata.views import MetaDataModelFieldViewSet
 from organisations.views import (
     OrganisationAPIUsageNotificationView,
@@ -70,12 +78,35 @@ organisations_router.register(
     "audit", OrganisationAuditLogViewSet, basename="audit-log"
 )
 
+organisations_router.register(
+    r"integrations/grafana",
+    GrafanaOrganisationConfigurationViewSet,
+    basename="integrations-grafana",
+)
+
+organisations_router.register(
+    r"integrations/github",
+    GithubConfigurationViewSet,
+    basename="integrations-github",
+)
+
+nested_github_router = routers.NestedSimpleRouter(
+    organisations_router, r"integrations/github", lookup="github"
+)
+
+nested_github_router.register(
+    "repositories",
+    GithubRepositoryViewSet,
+    basename="repositories",
+)
+
 app_name = "organisations"
 
 
 urlpatterns = [
-    url(r"^", include(router.urls)),
-    url(r"^", include(organisations_router.urls)),
+    re_path(r"^", include(router.urls)),
+    re_path(r"^", include(organisations_router.urls)),
+    re_path(r"^", include(nested_github_router.urls)),
     path(
         "<int:organisation_pk>/usage-data/",
         get_usage_data_view,
@@ -97,14 +128,50 @@ urlpatterns = [
         name="remove-user-group-admin",
     ),
     path(
+        "<int:organisation_pk>/github/issues/",
+        fetch_issues,
+        name="get-github-issues",
+    ),
+    path(
+        "<int:organisation_pk>/github/repo-contributors/",
+        fetch_repo_contributors,
+        name="get-github-repo-contributors",
+    ),
+    path(
+        "<int:organisation_pk>/github/pulls/",
+        fetch_pull_requests,
+        name="get-github-pulls",
+    ),
+    path(
+        "<int:organisation_pk>/github/repositories/",
+        fetch_repositories,
+        name="get-github-installation-repos",
+    ),
+    path(
         "<int:organisation_pk>/api-usage-notification/",
         OrganisationAPIUsageNotificationView.as_view(),
         name="organisation-api-usage-notification",
     ),
 ]
 
+if settings.LICENSING_INSTALLED:  # pragma: no cover
+    from licensing.views import (  # type: ignore[import-not-found]
+        create_or_update_licence,
+    )
+
+    urlpatterns.extend(
+        [
+            path(
+                "<int:organisation_id>/licence",
+                create_or_update_licence,
+                name="create-or-update-licence",
+            ),
+        ]
+    )
+
+
 if settings.IS_RBAC_INSTALLED:
-    from rbac.views import (
+    from rbac.views import (  # type: ignore[import-not-found,unused-ignore]
         GroupRoleViewSet,
         MasterAPIKeyRoleViewSet,
         RoleEnvironmentPermissionsViewSet,
@@ -172,10 +239,10 @@ if settings.IS_RBAC_INSTALLED:
     )
     urlpatterns.extend(
         [
-            url(r"^", include(organisations_router.urls)),
-            url(r"^", include(nested_roles_router.urls)),
-            url(r"^", include(nested_user_roles_routes.urls)),
-            url(r"^", include(nested_api_key_roles_routes.urls)),
-            url(r"^", include(nested_group_roles_routes.urls)),
+            re_path(r"^", include(organisations_router.urls)),
+            re_path(r"^", include(nested_roles_router.urls)),
+            re_path(r"^", include(nested_user_roles_routes.urls)),
+            re_path(r"^", include(nested_api_key_roles_routes.urls)),
+            re_path(r"^", include(nested_group_roles_routes.urls)),
         ]
     )

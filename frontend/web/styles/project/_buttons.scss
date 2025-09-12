@@ -1,5 +1,4 @@
 @import '../variables';
-@import '../new/variables-new';
 
 .btn,
 button.btn {
@@ -40,6 +39,19 @@ button.btn {
     &.btn:active {
       color: white;
       background-color: $btn-danger-active;
+    }
+  }
+
+  &-success {
+    color: white;
+    &:hover,
+    &:focus {
+      color: white;
+      background-color: $btn-success-hover;
+    }
+    &.btn:active {
+      color: white;
+      background-color: $btn-success-active;
     }
   }
 
@@ -84,18 +96,33 @@ button.btn {
   }
 
   &-secondary {
-    color: $text-icon-dark;
-    background-color: $btn-secondary-bg;
+    color: $body-color;
+    background-color: $btn-secondary-bg !important;
 
     &:hover,
     &:focus {
-      background-color: $btn-secondary-hover-bg;
-      color: $text-icon-dark;
+      background-color: $btn-secondary-hover-bg !important;
+      color: $body-color;
     }
 
     &.btn:active {
-      background-color: $btn-secondary-active-bg;
-      color: $text-icon-dark;
+      background-color: $btn-secondary-active-bg !important;
+      color: $body-color;
+    }
+  }
+  &-tertiary {
+    color: $primary900 !important;
+    background-color: $btn-tertiary-bg;
+    box-shadow: 0 10px 20px rgba(247, 213, 110, .2);
+    &:hover,
+    &:focus {
+      background-color: $btn-tertiary-hover-bg;
+      color: $body-color;
+    }
+
+    &.btn:active {
+      background-color: $btn-tertiary-active-bg;
+      color: $body-color;
     }
   }
   &-success {
@@ -147,7 +174,7 @@ button.btn {
     &:hover,&:focus {
       background-color: $bg-light300;
       path {
-        fill: $body-text;
+        fill: $body-color;
       }
     }
   }
@@ -157,6 +184,14 @@ button.btn {
     }
   }
   &-with-icon {
+    &.btn-xs{
+      padding: 0;
+      height: 28px;
+      width: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
     padding: 0 14px;
     background-color: $basic-alpha-8;
     border-radius: $border-radius;
@@ -174,7 +209,7 @@ button.btn {
       background-color: $basic-alpha-8 !important;
       svg {
         path {
-          fill: $text-icon-dark;
+          fill: $body-color;
         }
       }
     }
@@ -202,9 +237,9 @@ button.btn {
   &--with-icon {
     background: none !important;
     &.primary {
-      color: $bt-brand-primary-dark-desaturated-lighter;
+      color: $primary;
       path {
-        fill: $bt-brand-primary-dark-desaturated-lighter;
+        fill: $primary;
       }
     }
     box-shadow: none;
@@ -215,9 +250,9 @@ button.btn {
     &:hover,
     &:focus {
       background: none !important;
-      color: darken($bt-brand-secondary, 10) !important;
+      color: darken($success, 10) !important;
       path {
-        fill: darken($bt-brand-secondary, 10) !important;
+        fill: darken($success, 10) !important;
       }
       box-shadow: none !important;
     }
@@ -236,7 +271,7 @@ button.btn {
   }
   &-project {
     background-color: $bg-light200;
-    color: $text-icon-dark;
+    color: $body-color;
     padding: 0px 8px;
     width: 100%;
     height: 76px;
@@ -245,7 +280,7 @@ button.btn {
       background-color: transparent;
       border: 1px dashed $basic-alpha-24;
       &:disabled {
-        color: $body-text;
+        color: $body-color;
       }
       &:hover {
         background-color: transparent;
@@ -267,7 +302,7 @@ button.btn {
     &.btn:active,
     &.btn:focus {
       background-color: $bg-light200;
-      color: $text-icon-dark;
+      color: $body-color;
       & .btn-project-letter {
         background-color: $primary;
       }
@@ -292,20 +327,24 @@ button.btn {
   }
   &-lg {
     line-height: $btn-line-height-lg;
+    height: $btn-line-height-lg;
   }
 
   &-sm {
     line-height: $btn-line-height-sm;
+    height: $btn-line-height-sm;
   }
   &-xsm {
     padding: 0 12px;
     line-height: $btn-line-height-xsm;
+    height: $btn-line-height-xsm;
     font-size: $font-caption-sm;
     border-radius: $border-radius-sm;
   }
 }
 
 .btn-link {
+  display: inline-block;
   text-decoration: none !important;
   vertical-align: baseline;
   font-family: $font-family;
@@ -330,7 +369,7 @@ button.btn {
     background: transparent;
   }
   &.dark-link {
-    color: $text-icon-dark;
+    color: $body-color;
     font-weight: bold;
   }
   &.btn-with-icon {
@@ -393,27 +432,27 @@ $add-btn-size: 34px;
       background-color: $primary;
     }
     &.btn-icon {
-      color: $body-text-dark;
+      color: $body-color-dark;
       path {
         fill: $text-muted;
       }
       &:hover,&:focus {
         background-color: $bg-dark300;
         path {
-          fill: $body-text-dark;
+          fill: $body-color-dark;
         }
       }
     }
     &.btn-secondary {
       color: white;
-      background-color: $btn-secondary-bg-dark;
+      background-color: $btn-secondary-bg-dark !important;
       &:hover,
       &:focus {
-        background-color: $btn-secondary-hover-bg-dark;
+        background-color: $btn-secondary-hover-bg-dark !important;
       }
       &:active {
         color: white;
-        background-color: $btn-secondary-active-bg-dark;
+        background-color: $btn-secondary-active-bg-dark !important;
       }
     }
     &.btn-success {
@@ -458,9 +497,9 @@ $add-btn-size: 34px;
       &:hover,
       &:focus {
         background: none !important;
-        color: $dark-highlight3 !important;
+        color: $bg-light200 !important;
         path {
-          fill: $dark-highlight3 !important;
+          fill: $bg-light200 !important;
         }
       }
     }

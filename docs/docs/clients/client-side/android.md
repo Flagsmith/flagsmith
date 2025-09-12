@@ -5,35 +5,25 @@ description: Manage your Feature Flags and Remote Config in your Android applica
 slug: /clients/android
 ---
 
+import CodeBlock from '@theme/CodeBlock'; import { AndroidVersion } from '@site/src/components/SdkVersions.js';
+
 This SDK can be used for Android applications written in Kotlin. The source code for the client is available on
-[Github](https://github.com/Flagsmith/flagsmith-kotlin-android-client/).
+[GitHub](https://github.com/Flagsmith/flagsmith-kotlin-android-client/).
 
 ## Installation
 
-### Gradle - App
-
-In your project path `app/build.gradle` add a new dependence
-
-```groovy
-//flagsmith
-implementation 'com.github.Flagsmith:flagsmith-kotlin-android-client:1.5.0'
-```
-
-You should be able to find the latest version in the
-[releases section](https://github.com/Flagsmith/flagsmith-kotlin-android-client/releases) of the GitHub repository.
-
-### Gradle - Project
-
-In the new Gradle version 7+ update your `settings.gradle` file to include JitPack if you haven't already
+### Gradle
 
 ```groovy
 repositories {
     google()
     mavenCentral()
-
-    maven { url "https://jitpack.io" }
 }
 ```
+
+In your project path `app/build.gradle` add a new dependency:
+
+<CodeBlock>{`implementation("com.flagsmith:flagsmith-kotlin-android-client:`}<AndroidVersion />"{`)`}</CodeBlock>
 
 ## Basic Usage
 
@@ -80,6 +70,38 @@ Now you are all set to retrieve feature flags from your project. To list and pri
 
 ```kotlin
 flagsmith.getFeatureFlags { result ->
+    result.fold(
+        onSuccess = { flagList ->
+            Log.i("Flagsmith", "Current flags:")
+            flagList.forEach { Log.i("Flagsmith", "- ${it.feature.name} - enabled: ${it.enabled} value: ${it.featureStateValue ?: "not set"}") }
+        },
+        onFailure = { err ->
+            Log.e("Flagsmith", "Error getting feature flags", err)
+        })
+}
+```
+
+### Get Flags for an identity
+
+To get feature flags for a specific identity:
+
+```kotlin
+flagsmith.getFeatureFlags(identity = "test-user@gmail.com") { result ->
+    result.fold(
+        onSuccess = { flagList ->
+            Log.i("Flagsmith", "Current flags:")
+            flagList.forEach { Log.i("Flagsmith", "- ${it.feature.name} - enabled: ${it.enabled} value: ${it.featureStateValue ?: "not set"}") }
+        },
+        onFailure = { err ->
+            Log.e("Flagsmith", "Error getting feature flags", err)
+        })
+}
+```
+
+You can also get flags for an identity and set the traits at the same time:
+
+```kotlin
+flagsmith.getFeatureFlags(identity = "test-user@gmail.com", traits = listOf(Trait(key = "set-from-client", value = "12345"))) { result ->
     result.fold(
         onSuccess = { flagList ->
             Log.i("Flagsmith", "Current flags:")
@@ -207,6 +229,6 @@ realtime flag updates in your hosted environment you'll also need to pass the ev
         flagsmith = Flagsmith(
             environmentKey = Helper.environmentDevelopmentKey,
             context = context,
-            baseUrl = "https://hostedflagsmith.company.com/"),
-            eventSourceUrl = "https://api.hostedflagsmith.company.com/"
+            baseUrl = "https://flagsmith.example.com/api/v1/"),
+            eventSourceUrl = "https://realtime.flagsmith.example.com/"
 ```

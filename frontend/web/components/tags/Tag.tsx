@@ -1,94 +1,121 @@
 import React, { FC } from 'react'
-import color from 'color'
 import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
 import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
-import Format from 'common/utils/format'
+import TagContent from './TagContent'
+import Constants from 'common/constants'
+import { getDarkMode } from 'project/darkMode'
 
 type TagType = {
   className?: string
-  deselectedColor?: string
   hideNames?: boolean
   onClick?: (tag: TTag) => void
   selected?: boolean
   tag: Partial<TTag>
-  isTruncated?: boolean
   isDot?: boolean
+}
+
+export const getTagColor = (tag: Partial<TTag>, selected?: boolean) => {
+  if (getDarkMode() && tag.color === '#344562') {
+    return '#9DA4AE'
+  }
+  if (tag.type === 'UNHEALTHY') {
+    return Constants.featureHealth.unhealthyColor
+  }
+  if (selected) {
+    return tag.color
+  }
+  return tag.color
+}
+
+export const TagWrapper = ({
+  children,
+  className,
+  disabled,
+  onClick,
+  tag,
+  tagColor,
+}: any) => {
+  return (
+    <div
+      onClick={() => {
+        if (!disabled) {
+          onClick?.(tag as TTag)
+        }
+      }}
+      style={{
+        backgroundColor: `${tagColor.fade(0.92)}`,
+        border: `1px solid ${tagColor.fade(0.76)}`,
+        color: `${tagColor.darken(0.1)}`,
+      }}
+      className={cx('chip', className)}
+    >
+      {children}
+    </div>
+  )
 }
 
 const Tag: FC<TagType> = ({
   className,
-  deselectedColor,
   hideNames,
   isDot,
-  isTruncated,
   onClick,
   selected,
   tag,
 }) => {
-  const getColor = () => {
-    if (Utils.getFlagsmithHasFeature('dark_mode') && tag.color === '#344562') {
-      return '#9DA4AE'
-    }
-    if (selected) {
-      return tag.color
-    }
-    return deselectedColor || tag.color
-  }
-
+  const tagColor = Utils.colour(getTagColor(tag, selected))
   if (isDot) {
     return (
       <div
         className={'tag--dot'}
-        style={{ backgroundColor: `${color(getColor()).darken(0.1)}` }}
+        style={{
+          backgroundColor: `${tagColor.darken(0.1)}`,
+        }}
       />
     )
   }
+
+  const disabled = Utils.tagDisabled(tag)
+
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
-        color={getColor()}
+        color={tagColor}
         active={selected}
-        onClick={onClick ? () => onClick(tag as TTag) : null}
+        onClick={() => {
+          if (!disabled) {
+            onClick?.(tag as TTag)
+          }
+        }}
       >
-        {tag.label}
+        {!!tag.label && <TagContent tag={tag} />}
       </ToggleChip>
     )
   }
 
-  return isTruncated && `${tag.label}`.length > 12 ? (
-    <Tooltip
-      plainText
-      title={
-        <div
-          onClick={() => onClick?.(tag as TTag)}
-          style={{
-            backgroundColor: `${color(getColor()).fade(0.92)}`,
-            border: `1px solid ${color(getColor()).fade(0.76)}`,
-            color: `${color(getColor()).darken(0.1)}`,
-          }}
-          className={cx('chip', className)}
-        >
-          {Format.truncateText(`${tag.label}`, 12)}
-        </div>
-      }
+  // Hide unhealthy tags if feature is disabled
+  if (
+    !Utils.getFlagsmithHasFeature('feature_health') &&
+    tag.type === 'UNHEALTHY'
+  ) {
+    return null
+  }
+
+  return (
+    <TagWrapper
+      tagColor={tagColor}
+      className={className}
+      disabled={disabled}
+      hideNames={hideNames}
+      isDot={isDot}
+      onClick={onClick}
+      selected={selected}
+      tag={tag}
     >
-      {tag.label}
-    </Tooltip>
-  ) : (
-    <div
-      onClick={() => onClick?.(tag as TTag)}
-      style={{
-        backgroundColor: `${color(getColor()).fade(0.92)}`,
-        border: `1px solid ${color(getColor()).fade(0.76)}`,
-        color: `${color(getColor()).darken(0.1)}`,
-      }}
-      className={cx('chip', className)}
-    >
-      {tag.label}
-    </div>
+      <TagContent tag={tag} />
+    </TagWrapper>
   )
 }
 

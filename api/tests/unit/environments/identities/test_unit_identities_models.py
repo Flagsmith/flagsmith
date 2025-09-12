@@ -1,5 +1,4 @@
 import pytest
-from core.constants import FLOAT
 from django.utils import timezone
 from flag_engine.segments.constants import (
     EQUAL,
@@ -10,6 +9,7 @@ from flag_engine.segments.constants import (
 )
 from pytest_django import DjangoAssertNumQueries
 
+from core.constants import FLOAT
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -159,10 +159,10 @@ def test_get_all_traits_for_identity(environment: Environment) -> None:
     )
 
     # Identity one should have 3
-    traits_identity_one = identity.get_all_user_traits()
+    traits_identity_one = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
     assert len(traits_identity_one) == 3
 
-    traits_identity_two = identity2.get_all_user_traits()
+    traits_identity_two = identity2.get_all_user_traits()  # type: ignore[no-untyped-call]
     assert len(traits_identity_two) == 1
 
 
@@ -604,17 +604,21 @@ def test_generate_traits_with_persistence(environment: Environment) -> None:
         generate_trait_data_item("string_trait", "string_value"),
         generate_trait_data_item("integer_trait", 1),
         generate_trait_data_item("boolean_value", True),
+        generate_trait_data_item("transient_trait", "string_value", transient=True),
     ]
 
     # When
     trait_models = identity.generate_traits(trait_data_items, persist=True)
 
     # Then
-    # the response from the method has 3 traits
-    assert len(trait_models) == 3
+    # the response from the method has 4 traits
+    assert len(trait_models) == 4
 
-    # and the database matches it
+    # and 3 were persisted
     assert Trait.objects.filter(identity=identity).count() == 3
+    assert not Trait.objects.filter(
+        identity=identity, trait_key="transient_trait"
+    ).exists()
 
 
 def test_generate_traits_without_persistence(environment: Environment) -> None:
@@ -662,19 +666,32 @@ def test_update_traits(environment: Environment) -> None:
     new_trait_1_value = 5
     trait_3_key = "trait_3"
     trait_3_value = 3
+
+    # and one transient trait that is evaluated against but not persisted
+    transient_trait_key = "transient"
+    transient_trait_value = "not persisted"
+
     trait_data_items = [
         generate_trait_data_item(
             trait_key=trait_1.trait_key, trait_value=new_trait_1_value
         ),
         generate_trait_data_item(trait_key=trait_3_key, trait_value=trait_3_value),
+        generate_trait_data_item(
+            trait_key=transient_trait_key,
+            trait_value=transient_trait_value,
+            transient=True,
+        ),
     ]
 
     # When
     updated_traits = identity.update_traits(trait_data_items)
 
     # Then
-    # 3 traits are returned
-    assert len(updated_traits) == 3
+    # 3 traits are persisted
+    assert identity.identity_traits.count() == 3
+
+    # 4 traits are returned
+    assert len(updated_traits) == 4
 
     # and the first trait has it's value updated correctly
     updated_trait_1 = get_trait_from_list_by_key(trait_1_key, updated_traits)
@@ -687,6 +704,10 @@ def test_update_traits(environment: Environment) -> None:
     # and the third trait is created correctly
     updated_trait_3 = get_trait_from_list_by_key(trait_3_key, updated_traits)
     assert updated_trait_3.trait_value == trait_3_value
+
+    # and the transient trait is returned among others
+    transient_trait = get_trait_from_list_by_key(transient_trait_key, updated_traits)
+    assert transient_trait.trait_value == transient_trait_value
 
 
 def test_update_traits_deletes_when_nulled_out(environment: Environment) -> None:
@@ -849,7 +870,7 @@ def test_get_all_feature_states_does_not_return_null_versions(
     assert identity_feature_states[0].id == version_1_feature_state.id
 
 
-def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change(
+def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change(  # type: ignore[no-untyped-def]
     identity, django_assert_num_queries, trait
 ):
     # Given
@@ -877,7 +898,7 @@ def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change
         (None, False, True),
     ),
 )
-def test_get_all_feature_hide_disabled_flags(
+def test_get_all_feature_hide_disabled_flags(  # type: ignore[no-untyped-def]
     project,
     environment,
     identity,
@@ -925,7 +946,7 @@ def test_get_all_feature_hide_disabled_flags(
     assert bool(identity_flags) == disabled_flag_returned
 
 
-def test_identity_get_all_feature_states_gets_latest_committed_version(environment):
+def test_identity_get_all_feature_states_gets_latest_committed_version(environment):  # type: ignore[no-untyped-def]
     # Given
     identity = Identity.objects.create(identifier="identity", environment=environment)
 
@@ -972,7 +993,7 @@ def test_identity_get_all_feature_states_gets_latest_committed_version(environme
     assert identity_feature_state.get_feature_state_value() == "v2"
 
 
-def test_get_hash_key_with_use_identity_composite_key_for_hashing_enabled(
+def test_get_hash_key_with_use_identity_composite_key_for_hashing_enabled(  # type: ignore[no-untyped-def]
     identity: Identity,
 ):
     assert (
@@ -981,7 +1002,7 @@ def test_get_hash_key_with_use_identity_composite_key_for_hashing_enabled(
     )
 
 
-def test_get_hash_key_with_use_identity_composite_key_for_hashing_disabled(
+def test_get_hash_key_with_use_identity_composite_key_for_hashing_disabled(  # type: ignore[no-untyped-def]
     identity: Identity,
 ):
     assert identity.get_hash_key(use_identity_composite_key_for_hashing=False) == str(
@@ -989,7 +1010,7 @@ def test_get_hash_key_with_use_identity_composite_key_for_hashing_disabled(
     )
 
 
-def test_identity_get_all_feature_states__returns_identity_override__when_v2_feature_versioning_enabled(
+def test_identity_get_all_feature_states__returns_identity_override__when_v2_feature_versioning_enabled(  # type: ignore[no-untyped-def]  # noqa: E501
     identity: Identity, environment_v2_versioning: "Environment", feature: Feature
 ):
     # Given

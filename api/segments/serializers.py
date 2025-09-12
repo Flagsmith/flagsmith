@@ -1,196 +1,213 @@
-import typing
+from typing import Any
 
+import structlog
 from django.conf import settings
-from flag_engine.segments.constants import PERCENTAGE_SPLIT
+from django.db import transaction
+from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import ListSerializer
-from rest_framework_recursive.fields import RecursiveField
 
+from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 
+logger = structlog.get_logger()
 
-class ConditionSerializer(serializers.ModelSerializer):
-    delete = serializers.BooleanField(write_only=True, required=False)
+DictList = list[dict[str, Any]]
+
+
+class ConditionSerializer(serializers.ModelSerializer[Condition]):
+    delete = serializers.BooleanField(
+        write_only=True,
+        required=False,
+    )
 
     class Meta:
         model = Condition
-        fields = ("id", "operator", "property", "value", "description", "delete")
+        fields = [
+            "id",
+            "operator",
+            "property",
+            "value",
+            "description",
+            "delete",
+        ]
 
-    def validate(self, attrs):
-        super(ConditionSerializer, self).validate(attrs)
-        if attrs.get("operator") != PERCENTAGE_SPLIT and not attrs.get("property"):
-            raise ValidationError({"property": ["This field may not be blank."]})
-        return attrs
-
-    def to_internal_value(self, data):
-        # convert value to a string - conversion to correct value type is handled elsewhere
+    def to_internal_value(self, data: dict[str, Any]) -> Any:
+        # Conversion to correct value type is handled elsewhere
         data["value"] = str(data["value"]) if "value" in data else None
-        return super(ConditionSerializer, self).to_internal_value(data)
+        return super().to_internal_value(data)
 
 
-class RuleSerializer(serializers.ModelSerializer):
-    delete = serializers.BooleanField(write_only=True, required=False)
-    conditions = ConditionSerializer(many=True, required=False)
-    rules = ListSerializer(child=RecursiveField(), required=False)
+class _BaseSegmentRuleSerializer(WritableNestedModelSerializer):
+    delete = serializers.BooleanField(
+        write_only=True,
+        required=False,
+    )
+    conditions = ConditionSerializer(
+        many=True,
+        required=False,
+    )
+
+
+class _NestedSegmentRuleSerializer(_BaseSegmentRuleSerializer):
+    class Meta:
+        model = SegmentRule
+        fields = [
+            "id",
+            "type",
+            "conditions",
+            "delete",
+        ]
+
+
+class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
+    rules = _NestedSegmentRuleSerializer(
+        many=True,
+        required=False,
+    )
 
     class Meta:
         model = SegmentRule
-        fields = ("id", "type", "rules", "conditions", "delete")
+        fields = [
+            "id",
+            "type",
+            "rules",
+            "conditions",
+            "delete",
+        ]
 
 
-class SegmentSerializer(serializers.ModelSerializer):
-    rules = RuleSerializer(many=True)
+class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
+    rules = SegmentRuleSerializer(many=True, required=True, allow_empty=False)
+    metadata = MetadataSerializer(required=False, many=True)
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Because WritableNestedModelSerializer uses `initial_data` instead of `data`
+        we need to override the `__init__` method to remove rules and conditions
+        that are marked for deletion.
+        """
+        data = kwargs.get("data")
+        if data and "rules" in data:
+            data["rules"] = self._get_rules_and_conditions_without_deleted(
+                data["rules"]
+            )
+            kwargs["data"] = data
+
+        super().__init__(*args, **kwargs)
 
     class Meta:
         model = Segment
-        fields = "__all__"
+        fields = [
+            "id",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "name",
+            "description",
+            "project",
+            "feature",
+            "version_of",
+            "rules",
+            "metadata",
+        ]
 
-    def validate(self, attrs):
-        if not attrs.get("rules"):
-            raise ValidationError(
-                {"rules": "Segment cannot be created without any rules."}
-            )
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        attrs = super().validate(attrs)
+        project = self.instance.project if self.instance else attrs["project"]  # type: ignore[union-attr]
+        organisation = project.organisation
+
+        self._validate_required_metadata(organisation, attrs.get("metadata", []))
+        self._validate_segment_rules_conditions_limit(attrs["rules"])
+        self._validate_project_segment_limit(project)
         return attrs
 
-    def create(self, validated_data):
-        project = validated_data["project"]
-        self.validate_project_segment_limit(project)
-
-        rules_data = validated_data.pop("rules", [])
-        self.validate_segment_rules_conditions_limit(rules_data)
-
-        # create segment with nested rules and conditions
-        segment = Segment.objects.create(**validated_data)
-        self._update_or_create_segment_rules(
-            rules_data, segment=segment, is_create=True
-        )
+    def create(self, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
+        metadata_data = validated_data.pop("metadata", [])
+        segment = super().create(validated_data)  # type: ignore[no-untyped-call]
+        self._update_metadata(segment, metadata_data)
         return segment
 
-    def update(self, instance, validated_data):
-        # use the initial data since we need the ids included to determine which to update & which to create
-        rules_data = self.initial_data.pop("rules", [])
-        self.validate_segment_rules_conditions_limit(rules_data)
-        self._update_segment_rules(rules_data, segment=instance)
-        # remove rules from validated data to prevent error trying to create segment with nested rules
-        del validated_data["rules"]
-        return super().update(instance, validated_data)
+    def update(self, segment: Segment, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
+        metadata = validated_data.pop("metadata", [])
+        with transaction.atomic():
+            if not segment.change_request:
+                segment_revision = segment.clone(is_revision=True)
+                logger.info(
+                    "segment-revision-created",
+                    segment_id=segment.id,
+                    revision_id=segment_revision.id,
+                )
+            segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
+        self._update_metadata(segment, metadata)
+        return segment
 
-    def validate_project_segment_limit(self, project: Project) -> None:
-        if project.segments.count() >= project.max_segments_allowed:
+    def _get_rules_and_conditions_without_deleted(
+        self, rules_data: DictList
+    ) -> DictList:
+        """
+        Remove rules and conditions marked for deletion from input
+
+        NOTE: This is to support previous API design, in which any nested rules
+        or conditions including both an `"id"` field and `"delete": true` were
+        later soft-deleted in the database.
+
+        TODO: Deprecate this in favor of not sending unwanted rules and
+        conditions in the input.
+        """
+        return [
+            {
+                **rule_data,
+                "conditions": [
+                    condition_data
+                    for condition_data in rule_data.get("conditions", [])
+                    if not condition_data.get("delete")
+                ],
+                "rules": self._get_rules_and_conditions_without_deleted(
+                    rule_data.get("rules", [])
+                ),
+            }
+            for rule_data in rules_data
+            if not rule_data.get("delete")
+        ]
+
+    def _validate_project_segment_limit(self, project: Project) -> None:
+        segment_count = Segment.live_objects.filter(project=project).count()
+        if segment_count >= project.max_segments_allowed:
             raise ValidationError(
                 {
                     "project": "The project has reached the maximum allowed segments limit."
                 }
             )
 
-    def validate_segment_rules_conditions_limit(
-        self, rules_data: dict[str, object]
-    ) -> None:
+    def _validate_segment_rules_conditions_limit(self, rules_data: DictList) -> None:
         if self.instance and getattr(self.instance, "whitelisted_segment", None):
             return
 
-        count = self._calculate_condition_count(rules_data)
+        def _count_conditions(rules_data: DictList) -> int:
+            return sum(
+                len(rule.get("conditions", []))
+                + _count_conditions(rule.get("rules", []))
+                for rule in rules_data
+            )
 
-        if count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
+        condition_count = _count_conditions(rules_data)
+        if condition_count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
             raise ValidationError(
                 {
-                    "segment": f"The segment has {count} conditions, which exceeds the maximum "
-                    f"condition count of {settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
+                    "segment": f"The segment has {condition_count} conditions, which exceeds the maximum condition count of {settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
                 }
             )
 
-    def _calculate_condition_count(
-        self,
-        rules_data: dict[str, object],
-    ) -> None:
-        count: int = 0
 
-        for rule_data in rules_data:
-            child_rules = rule_data.get("rules", [])
-            if child_rules:
-                count += self._calculate_condition_count(child_rules)
-            conditions = rule_data.get("conditions", [])
-            for condition in conditions:
-                if condition.get("delete", False) is True:
-                    continue
-                count += 1
-        return count
-
-    def _update_segment_rules(self, rules_data, segment=None):
-        """
-        Since we don't have a unique identifier for the rules / conditions for the update, we assume that the client
-        passes up the new configuration for the rules of the segment and simply wipe the old ones and create new ones
-        """
-        # traverse the rules / conditions tree - if no ids are provided, then maintain the previous behaviour (clear
-        # existing rules and create the ones that were sent)
-        # note: we do this to preserve backwards compatibility after adding logic to include the id in requests
-        if not Segment.id_exists_in_rules_data(rules_data):
-            segment.rules.set([])
-
-        self._update_or_create_segment_rules(rules_data, segment=segment)
-
-    def _update_or_create_segment_rules(
-        self, rules_data, segment=None, rule=None, is_create: bool = False
-    ):
-        if all(x is None for x in {segment, rule}):
-            raise RuntimeError("Can't create rule without parent segment or rule")
-
-        for rule_data in rules_data:
-            child_rules = rule_data.pop("rules", [])
-            conditions = rule_data.pop("conditions", [])
-
-            child_rule = self._update_or_create_segment_rule(
-                rule_data, segment=segment, rule=rule
-            )
-            if not child_rule:
-                # child rule was deleted
-                continue
-
-            self._update_or_create_conditions(
-                conditions, child_rule, is_create=is_create
-            )
-
-            self._update_or_create_segment_rules(
-                child_rules, rule=child_rule, is_create=is_create
-            )
-
-    @staticmethod
-    def _update_or_create_segment_rule(
-        rule_data: dict, segment: Segment = None, rule: SegmentRule = None
-    ) -> typing.Optional[SegmentRule]:
-        rule_id = rule_data.pop("id", None)
-        if rule_data.get("delete"):
-            SegmentRule.objects.filter(id=rule_id).delete()
-            return
-
-        segment_rule, _ = SegmentRule.objects.update_or_create(
-            id=rule_id, defaults={"segment": segment, "rule": rule, **rule_data}
-        )
-        return segment_rule
-
-    @staticmethod
-    def _update_or_create_conditions(conditions_data, rule, is_create: bool = False):
-        for condition in conditions_data:
-            condition_id = condition.pop("id", None)
-            if condition.get("delete"):
-                Condition.objects.filter(id=condition_id).delete()
-                continue
-
-            Condition.objects.update_or_create(
-                id=condition_id,
-                defaults={**condition, "created_with_segment": is_create, "rule": rule},
-            )
-
-
-class SegmentSerializerBasic(serializers.ModelSerializer):
+class SegmentSerializerBasic(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = Segment
         fields = ("id", "name", "description")
 
 
-class SegmentListQuerySerializer(serializers.Serializer):
+class SegmentListQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     q = serializers.CharField(
         required=False,
         help_text="Search term to find segment with given term in their name",
@@ -200,3 +217,9 @@ class SegmentListQuerySerializer(serializers.Serializer):
         help_text="Optionally provide the id of an identity to get only the segments they match",
     )
     include_feature_specific = serializers.BooleanField(required=False, default=True)
+
+
+class CloneSegmentSerializer(serializers.ModelSerializer[Segment]):
+    class Meta:
+        model = Segment
+        fields = ("name",)

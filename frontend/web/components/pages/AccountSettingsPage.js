@@ -1,13 +1,13 @@
 // import propTypes from 'prop-types';
-import React, { Component } from 'react'
+import React, { Component, ReactNode } from 'react'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
 import _data from 'common/data/base/_data'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import TwoFactor from 'components/TwoFactor'
 import Token from 'components/Token'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
 import JSONReference from 'components/JSONReference'
 import { updateAccount } from 'common/services/useAccount'
 import { getStore } from 'common/store'
@@ -15,11 +15,15 @@ import ChangeEmailAddress from 'components/modals/ChangeEmailAddress'
 import ConfirmDeleteAccount from 'components/modals/ConfirmDeleteAccount'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
-import { Link } from 'react-router-dom'
+import { withRouter } from 'react-router-dom'
 import InfoMessage from 'components/InfoMessage'
+import Setting from 'components/Setting'
+import AccountProvider from 'common/providers/AccountProvider'
+import DarkModeSwitch from 'components/DarkModeSwitch'
+import SettingTitle from 'components/SettingTitle'
 
-class TheComponent extends Component {
-  static displayName = 'TheComponent'
+class AccountSettingsPage extends Component {
+  static displayName = 'AccountSettingsPage'
 
   static propTypes = {}
 
@@ -56,12 +60,14 @@ class TheComponent extends Component {
     })
   }
 
-  confirmDeleteAccount = (lastUserOrganisations, id) => {
+  confirmDeleteAccount = (lastUserOrganisations, id, email, auth_type) => {
     openModal(
       'Are you sure?',
       <ConfirmDeleteAccount
         userId={id}
         lastUserOrganisations={lastUserOrganisations}
+        email={email}
+        auth_type={auth_type}
       />,
       'p-0',
     )
@@ -126,6 +132,7 @@ class TheComponent extends Component {
   render() {
     const {
       state: {
+        auth_type,
         current_password,
         email,
         error,
@@ -148,7 +155,6 @@ class TheComponent extends Component {
         {({}) => {
           const { isSaving } = this.state
           const forced2Factor = AccountStore.forced2Factor()
-          const has2fPermission = Utils.getPlansPermission('2FA')
 
           return forced2Factor ? (
             <div className='app-container container'>
@@ -171,19 +177,21 @@ class TheComponent extends Component {
                     Log Out
                   </Button>
                 }
-                title={'Account'}
+                title={'Account Settings'}
               />
-              <Tabs uncontrolled className='mt-0'>
+              <Tabs uncontrolled className='mt-0' history={this.props.history}>
                 <TabItem tabLabel='General'>
-                  <div className='mt-4'>
-                    <h5 className='mb-5'>General Settings</h5>
+                  <div className='mt-4 col-md-8'>
+                    <SettingTitle>Account Information</SettingTitle>
                     <JSONReference
                       showNamesButton
                       title={'User'}
                       json={AccountStore.getUser()}
                     />
-                    <div className='col-md-6'>
-                      <form className='mb-0' onSubmit={this.save}>
+                    <form className='mb-0' onSubmit={this.save}>
+                      {!['LDAP', 'SAML'].includes(
+                        AccountStore.model.auth_type,
+                      ) && (
                         <div>
                           <InputGroup
                             className='mt-2'
@@ -203,7 +211,7 @@ class TheComponent extends Component {
                             type='text'
                             name='Email Address'
                           />
-                          <div className='text-right mt-5'>
+                          <div className='text-right'>
                             <Button
                               onClick={() =>
                                 openModal(
@@ -226,95 +234,92 @@ class TheComponent extends Component {
                             </Button>
                           </div>
                         </div>
-                        <InputGroup
-                          className='mt-2 mb-4'
-                          title='First Name'
-                          data-test='firstName'
-                          inputProps={{
-                            className: 'full-width',
-                            name: 'groupName',
-                          }}
-                          value={first_name}
-                          onChange={(e) =>
-                            this.setState({
-                              first_name: Utils.safeParseEventValue(e),
-                            })
-                          }
-                          isValid={first_name && first_name.length}
-                          type='text'
-                          name='First Name*'
-                        />
-                        <InputGroup
-                          className='mb-5'
-                          title='Last Name'
-                          data-test='lastName'
-                          inputProps={{
-                            className: 'full-width',
-                            name: 'groupName',
-                          }}
-                          value={last_name}
-                          onChange={(e) =>
-                            this.setState({
-                              last_name: Utils.safeParseEventValue(e),
-                            })
-                          }
-                          isValid={last_name && last_name.length}
-                          type='text'
-                          name='Last Name*'
-                        />
-                        {error && <ErrorMessage>{error}</ErrorMessage>}
-                        <div className='text-right mt-2'>
-                          <Button
-                            type='submit'
-                            disabled={isSaving || !first_name || !last_name}
-                          >
-                            Save Details
-                          </Button>
-                        </div>
-                      </form>
-                    </div>
-                    <hr className='py-0 my-4' />
-                    <div className='col-md-6'>
-                      <Row>
-                        <Switch
-                          onChange={(v) => {
-                            flagsmith.setTrait('json_inspect', v).then(() => {
-                              toast('Updated')
-                            })
-                          }}
-                          checked={flagsmith.getTrait('json_inspect')}
-                          className='mr-3'
-                        />
-                        <h5 className='mb-0'>Show JSON References</h5>
-                      </Row>
-                      <p className='fs-small lh-sm mt-2'>
-                        Enabling this will allow you to inspect the JSON of
-                        entities such as features within the platform.
-                      </p>
-                    </div>
-                    <hr className='py-0 my-4' />
-                    <div className='col-md-6'>
-                      <Row className='mt-4' space>
-                        <div className='col-md-7 pl-0'>
-                          <h5>Delete Account</h5>
-                          <p className='fs-small lh-sm mb-0'>
-                            Your account data will be permanently deleted.
-                          </p>
-                        </div>
+                      )}
+                      <InputGroup
+                        className='mt-2'
+                        title='First Name'
+                        data-test='firstName'
+                        inputProps={{
+                          className: 'full-width',
+                          name: 'groupName',
+                        }}
+                        value={first_name}
+                        onChange={(e) =>
+                          this.setState({
+                            first_name: Utils.safeParseEventValue(e),
+                          })
+                        }
+                        isValid={first_name && first_name.length}
+                        type='text'
+                        name='First Name*'
+                      />
+                      <InputGroup
+                        className='mb-5'
+                        title='Last Name'
+                        data-test='lastName'
+                        inputProps={{
+                          className: 'full-width',
+                          name: 'groupName',
+                        }}
+                        value={last_name}
+                        onChange={(e) =>
+                          this.setState({
+                            last_name: Utils.safeParseEventValue(e),
+                          })
+                        }
+                        isValid={last_name && last_name.length}
+                        type='text'
+                        name='Last Name*'
+                      />
+                      {error && <ErrorMessage>{error}</ErrorMessage>}
+                      <div className='text-right'>
                         <Button
-                          id='delete-user-btn'
-                          data-test='delete-user-btn'
-                          onClick={() =>
-                            this.confirmDeleteAccount(lastUserOrganisations, id)
-                          }
-                          className='btn-with-icon btn-remove'
+                          type='submit'
+                          disabled={isSaving || !first_name || !last_name}
                         >
-                          <Icon name='trash-2' width={20} fill='#EF4D56' />
+                          Save Details
                         </Button>
-                      </Row>
-                    </div>
+                      </div>
+                    </form>
+                    <SettingTitle>Appearance</SettingTitle>
+                    <DarkModeSwitch />
+                    <SettingTitle>Developer</SettingTitle>
+                    <Setting
+                      onChange={(v) => {
+                        flagsmith.setTrait('json_inspect', v).then(() => {
+                          toast('Updated JSON References setting')
+                        })
+                      }}
+                      checked={flagsmith.getTrait('json_inspect')}
+                      title={'Show JSON References'}
+                      description={`Enabling this will allow you to inspect the JSON of entities such as features within the platform.`}
+                    />
+                    <SettingTitle danger>Delete Account</SettingTitle>
+                    <Row className='' space>
+                      <div className='pl-0'>
+                        <p className='fs-small lh-sm mb-0'>
+                          Your account data will be permanently deleted.
+                        </p>
+                      </div>
+                      <Button
+                        id='delete-user-btn'
+                        data-test='delete-user-btn'
+                        onClick={() =>
+                          this.confirmDeleteAccount(
+                            lastUserOrganisations,
+                            id,
+                            email,
+                            auth_type,
+                          )
+                        }
+                        theme='danger'
+                      >
+                        Delete Account
+                      </Button>
+                    </Row>
                   </div>
                 </TabItem>
+
                 <TabItem tabLabel='API Keys'>
                   <div className='mt-6'>
                     <div className='col-md-6'>
@@ -380,6 +385,7 @@ class TheComponent extends Component {
                             }
                             type='password'
                             name='Current Password*'
+                            autocomplete='current-password'
                           />
                           <InputGroup
                             className='mt-4'
@@ -397,6 +403,7 @@ class TheComponent extends Component {
                             }
                             isValid={new_password1 && new_password1.length}
                             type='password'
+                            autocomplete='new-password'
                             name='New Password*'
                           />
                           <InputGroup
@@ -415,6 +422,7 @@ class TheComponent extends Component {
                             }
                             isValid={new_password2 && new_password2.length}
                             type='password'
+                            autocomplete='new-password'
                             name='Confirm New Password*'
                           />
                           {passwordError && (
@@ -439,25 +447,7 @@ class TheComponent extends Component {
                     )}
                     <hr className='py-0 my-4' />
                     <div className='col-md-6 col-sm-12'>
-                      <h5 className='mb-1'>Two-Factor Authentication</h5>
-                      <p className='fs-small lh-sm mb-4'>
-                        Increase your account's security by enabling Two-Factor
-                        Authentication (2FA).
-                      </p>
-                    </div>
-                    <div className='col-md-6 col-sm-12'>
-                      {has2fPermission ? (
-                        <TwoFactor />
-                      ) : (
-                        <div className='text-right'>
-                          <Link
-                            to='/organisation-settings'
-                            className='btn btn-primary text-center ml-auto mt-2 mb-2'
-                          >
-                            Manage payment plan
-                          </Link>
-                        </div>
-                      )}
+                      <Setting component={<TwoFactor />} feature='2FA' />
                     </div>
                   </div>
                 </TabItem>
@@ -470,4 +460,4 @@ class TheComponent extends Component {
   }
 }
 
-export default ConfigProvider(TheComponent)
+export default withRouter(ConfigProvider(AccountSettingsPage))

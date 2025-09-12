@@ -17,7 +17,7 @@ from .wrappers import (
 
 
 class IdentityMigrator:
-    def __init__(self, project_id):
+    def __init__(self, project_id):  # type: ignore[no-untyped-def]
         self.project_metadata = DynamoProjectMetadata.get_or_new(project_id)
 
     @property
@@ -36,16 +36,16 @@ class IdentityMigrator:
             ProjectIdentityMigrationStatus.MIGRATION_SCHEDULED,
         )
 
-    def trigger_migration(self):
+    def trigger_migration(self):  # type: ignore[no-untyped-def]
         # Note: since we mark the project as `migration in progress` before we start the migration,
         # there is a small chance for the project of being stuck in `migration in progress`
         # if the migration event is lost or the task fails.
         # Since the probability of this happening is low, we don't worry about it.
         send_migration_event(self.project_metadata.id)
-        self.project_metadata.trigger_identity_migration()
+        self.project_metadata.trigger_identity_migration()  # type: ignore[no-untyped-call]
 
-    def migrate(self):
-        self.project_metadata.start_identity_migration()
+    def migrate(self):  # type: ignore[no-untyped-def]
+        self.project_metadata.start_identity_migration()  # type: ignore[no-untyped-call]
 
         project_id = self.project_metadata.id
 
@@ -80,5 +80,5 @@ class IdentityMigrator:
                 ),
             )
         )
-        identity_wrapper.write_identities(iterator_with_prefetch(identities))
-        self.project_metadata.finish_identity_migration()
+        identity_wrapper.write_identities(iterator_with_prefetch(identities))  # type: ignore[no-untyped-call]
+        self.project_metadata.finish_identity_migration()  # type: ignore[no-untyped-call]

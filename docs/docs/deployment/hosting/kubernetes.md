@@ -65,9 +65,7 @@ ingress:
  frontend:
   enabled: true
   hosts:
-   - host: flagsmith.[MYDOMAIN]
-     paths:
-      - /
+   - flagsmith.[MYDOMAIN]
 ```
 
 Then, once any out-of-cluster DNS or CDN changes have been applied, access `https://flagsmith.[MYDOMAIN]` in a browser.
@@ -85,9 +83,8 @@ ingress:
  frontend:
   enabled: true
   hosts:
-   - host: flagsmith.[MYDOMAIN]
-     paths:
-      - /
+   - flagsmith.[MYDOMAIN]
+
  api:
   enabled: true
   hosts:
@@ -95,6 +92,8 @@ ingress:
      paths:
       - /api/
       - /health/
+      - /admin/
+      - /static/admin/
 
 frontend:
  extraEnv:
@@ -116,9 +115,7 @@ ingress:
  frontend:
   enabled: true
   hosts:
-   - host: flagsmith.local
-     paths:
-      - /
+   - flagsmith.local
 ```
 
 and apply. This will create two ingress resources.
@@ -201,7 +198,7 @@ should be provided as:
 
 :::caution
 
-It's important to define a [`secretKey`](https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-SECRET_KEY)
+It's important to define a [`secretKey`](https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-SECRET_KEY)
 value in your helm chart when running in Kubernetes. Use a password manager to generate a random hash and set this so
 that all the API nodes are running with an identical `DJANGO_SECRET_KEY`.
 
@@ -224,17 +221,26 @@ api:
 
 By default, no resource limits or requests are set.
 
-TODO: recommend some defaults
+Our recommended limits are 1vCPU and 2GB RAM for all of our pods, but this might vary depending on your usage pattern 
+and hosting environment. 
 
 ### Replicas
 
-By default, 1 replica of each of the frontend and api is used.
+By default, 1 replica of each of the frontend, API, and task processor is used. We recommend tailoring these to your 
+requirements based on expected load, and your hosting environment. As the API will be the most heavily used service, we 
+would recommend adding more replicas to your API than the other services. A standard configuration, with some built in 
+fault tolerance, might look something like: 
 
-TODO: recommend some defaults.
+```yaml
+frontend:
+  replicacount: 2
 
-TODO: consider some autoscaling options.
+api:
+  replicacount: 4
 
-TODO: create a pod-disruption-budget
+taskProcessor:
+  replicacount: 2
+```
 
 ### Deployment strategy
 
@@ -281,7 +287,7 @@ By default, Flagsmith uses Postgres to store time series data. You can alternati
 - SDK API traffic
 - SDK Flag Evaluations
 
-[You need to perform some additional steps to configure InfluxDB.](/deployment/overview#time-series-data-via-influxdb).
+[You need to perform some additional steps to configure InfluxDB.](/deployment#time-series-data-via-influxdb).
 
 ### Task Processor
 
@@ -381,15 +387,15 @@ The following table lists the configurable parameters of the chart and their def
 | `taskProcessor.affinity`                           |                                                                           | `{}`                           |
 | `taskProcessor.podSecurityContext`                 |                                                                           | `{}`                           |
 | `taskProcessor.defaultPodSecurityContext.enabled`  | whether to use the default security context                               | `true`                         |
-| `postgresql.enabled`                               | if `true`, creates in-cluster PostgreSQL database                         | `true`                         |
+| `devPostgresql.enabled`                            | if `true`, creates in-cluster PostgreSQL database                         | `true`                         |
 | `postgresql.serviceAccount.enabled`                | creates a serviceaccount for the postgres pod                             | `true`                         |
 | `nameOverride`                                     |                                                                           | `flagsmith-postgres`           |
 | `postgresqlDatabase`                               |                                                                           | `flagsmith`                    |
 | `postgresqlUsername`                               |                                                                           | `postgres`                     |
 | `postgresqlPassword`                               |                                                                           | `flagsmith`                    |
 | `databaseExternal.enabled`                         | use an external database. Specify database URL, or all parts.             | `false`                        |
-| `databaseExternal.url`                             | See [schema](https://github.com/kennethreitz/dj-database-url#url-schema). |                                |
-| `databaseExternal.type`                            | Note: Only postgres supported by default images.                          | `postgres`                     |
+| `databaseExternal.url`                             | See [schema](https://github.com/jazzband/dj-database-url#url-schema). |                                |
+| `databaseExternal.type`                            | Note: Only Postgres is fully supported by default images. [Other databases](https://github.com/jazzband/dj-database-url#supported-databases) not guaranteed to work.                          | `postgres`                     |
 | `databaseExternal.port`                            |                                                                           | 5432                           |
 | `databaseExternal.database`                        | Name of the database within the server                                    |                                |
 | `databaseExternal.username`                        |                                                                           |                                |
@@ -457,8 +463,7 @@ The following table lists the configurable parameters of the chart and their def
 | `ingress.frontend.enabled`                         |                                                                           | `false`                        |
 | `ingress.frontend.ingressClassName`                |                                                                           |                                |
 | `ingress.frontend.annotations`                     |                                                                           | `{}`                           |
-| `ingress.frontend.hosts[].host`                    |                                                                           | `chart-example.local`          |
-| `ingress.frontend.hosts[].paths`                   |                                                                           | `[]`                           |
+| `ingress.frontend.hosts`                           | List of hostnames for frontend ingress                                    | `[chart-example.local]`        |
 | `ingress.frontend.tls`                             |                                                                           | `[]`                           |
 | `ingress.api.enabled`                              |                                                                           | `false`                        |
 | `ingress.api.ingressClassName`                     |                                                                           |                                |
@@ -478,7 +483,7 @@ The following table lists the configurable parameters of the chart and their def
 
 ## Key upgrade notes
 
-- [0.20.0](https://artifacthub.io/packages/helm/flagsmith/flagsmith/0.20.0): upgrades the bundled in-cluster Postgres.
+- [0.37.0](https://artifacthub.io/packages/helm/flagsmith/flagsmith/0.37.0): upgrades the bundled in-cluster Postgres.
   This makes no effort to preserve data in the bundled in-cluster Postgres if it is in use. This also renames the
   bundled in-cluster Postgres to have `dev-postgresql` in the name, to signify that it exists such that the chart can be
   deployed self-contained, but that this Postgres instance is treated as disposable. All Flagsmith installations for

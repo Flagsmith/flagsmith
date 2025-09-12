@@ -11,12 +11,12 @@ from users.services import (
 )
 
 
-class CustomUserAdminForm(UserChangeForm):
+class CustomUserAdminForm(UserChangeForm):  # type: ignore[type-arg]
     username = fields.CharField(required=False, widget=HiddenInput, empty_value=None)
 
     class Meta:
         model = FFAdminUser
-        fields = UserChangeForm.Meta.fields
+        fields = UserChangeForm.Meta.fields  # type: ignore[attr-defined]
 
 
 class InitConfigForm(forms.Form):
@@ -35,7 +35,7 @@ class InitConfigForm(forms.Form):
             admin_email=self.cleaned_data["email"],
         )
 
-    def update_site(self):
+    def update_site(self):  # type: ignore[no-untyped-def]
         Site.objects.filter(id=settings.SITE_ID).update(
             name=self.cleaned_data["site_name"], domain=self.cleaned_data["site_domain"]
         )

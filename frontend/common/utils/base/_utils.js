@@ -400,12 +400,12 @@ emailRegex: /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|
     if (!str && !documentSearch) {
       return {}
     }
-    // eslint-disable-next-line
-        const urlString = (str || documentSearch).replace(/(^\?)/, '');
-    return JSON.parse(
-      `{"${urlString.replace(/&/g, '","').replace(/=/g, '":"')}"}`,
-      (key, value) => (key === '' ? value : decodeURIComponent(value)),
-    )
+    const params = new URLSearchParams(str || documentSearch)
+    const paramsObject = {}
+    for (const [key, value] of params.entries()) {
+      paramsObject[key] = value
+    }
+    return paramsObject
   },
 
   getPaging(currentPage, totalPages, rangeAround) {

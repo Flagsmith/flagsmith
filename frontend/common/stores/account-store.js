@@ -1,9 +1,16 @@
+import { matchPath } from 'react-router-dom'
+
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
 import Constants from 'common/constants'
 import dataRelay from 'data-relay'
 import { sortBy } from 'lodash'
+import Project from 'common/project'
+import { getStore } from 'common/store'
+import { service } from 'common/service'
+import { getBuildVersion } from 'common/services/useBuildVersion'
+import { createOnboardingSupportOptIn } from 'common/services/useOnboardingSupportOptIn'
 
 const controller = {
   acceptInvite: (id) => {
@@ -52,7 +59,7 @@ const controller = {
 
         store.saved()
         if (isLoginPage) {
-          window.location.href = `/organisation-settings`
+          window.location.href = `/organisations`
         }
       })
       .catch((e) => {
@@ -65,8 +72,8 @@ const controller = {
   createOrganisation: (name) => {
     store.saving()
     if (
-      !AccountStore.model.organisations ||
-      !AccountStore.model.organisations.length
+      !AccountStore.model?.organisations ||
+      !AccountStore.model?.organisations.length
     ) {
       API.trackEvent(Constants.events.CREATE_FIRST_ORGANISATION)
     }
@@ -82,23 +89,36 @@ const controller = {
       API.postEvent(`${name}`)
     }
 
-    data.post(`${Project.api}organisations/`, { name }).then((res) => {
-      store.model.organisations = store.model.organisations.concat([
-        { ...res, role: 'ADMIN' },
-      ])
-      AsyncStorage.setItem('user', JSON.stringify(store.model))
-      store.savedId = res.id
-      store.saved()
+    return data
+      .post(`${Project.api}organisations/`, {
+        name,
+      })
+      .then(async (res) => {
+        if (store.model) {
+          store.model.organisations = store.model.organisations.concat([
+            { ...res, role: 'ADMIN' },
+          ])
+          store.organisation =
+            store.model.organisations[store.model.organisations.length - 1]
+          AsyncStorage.setItem('user', JSON.stringify(store.model))
+          store.savedId = res.id
+          store.saved()
+          const relayEventKey = Utils.getFlagsmithValue('relay_events_key')
+          const sendRelayEvent =
+            Utils.getFlagsmithHasFeature('relay_events_key') && !!relayEventKey
+          if (sendRelayEvent) {
+            dataRelay.sendEvent(AccountStore.getUser(), {
+              apiKey: relayEventKey,
+            })
+          }
+        }
 
-      const relayEventKey = Utils.getFlagsmithValue('relay_events_key')
-      const sendRelayEvent =
-        Utils.getFlagsmithHasFeature('relay_events_key') && !!relayEventKey
-      if (sendRelayEvent) {
-        dataRelay.sendEvent(AccountStore.getUser(), {
-          apiKey: relayEventKey,
-        })
-      }
-    })
+        if (Project.linkedinConversionId) {
+          window.lintrk?.('track', {
+            conversion_id: Project.linkedinConversionId,
+          })
+        }
+      })
   },
   deleteOrganisation: () => {
     API.trackEvent(Constants.events.DELETE_ORGANISATION)
@@ -147,7 +167,7 @@ const controller = {
       store.saved()
     })
   },
-  getOrganisations: () =>
+  getOrganisations: (isGettingStarted) =>
     Promise.all([
       data.get(`${Project.api}organisations/`),
       data.get(`${Project.api}auth/users/me/`),
@@ -156,6 +176,7 @@ const controller = {
       .then(([res, userRes, methods]) => {
         controller.setUser({
           ...userRes,
+          isGettingStarted,
           organisations: res.results,
           twoFactorConfirmed: !!methods.length,
           twoFactorEnabled: !!methods.length,
@@ -183,7 +204,7 @@ const controller = {
           return
         }
 
-        data.setToken(res.key)
+        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         return controller.onLogin()
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -199,6 +220,8 @@ const controller = {
           : `${Project.api}auth/oauth/${type}/`,
         {
           ...(_data || {}),
+          hubspotutk: API.getCookie('hubspotutk'),
+          invite_hash: API.getInvite() || undefined,
           sign_up_type: API.getInviteType(),
         },
       )
@@ -214,46 +237,48 @@ const controller = {
           return
         }
 
-        data.setToken(res.key)
+        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         return controller.onLogin()
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
-  onLogin: (skipCaching) => {
-    if (!skipCaching) {
-      API.setCookie('t', data.token)
-    }
-    return controller.getOrganisations()
+  onLogin: (isGettingStarted) => {
+    API.setCookie('t', Project.cookieAuthEnabled ? 'true' : data.token)
+    return controller.getOrganisations(isGettingStarted)
   },
-  register: ({
-    email,
-    first_name,
-    last_name,
-    marketing_consent_given,
-    password,
-  }) => {
+  register: ({ contact_consent_given, organisation_name, ...user }) => {
     store.saving()
-    data
+
+    return data
       .post(`${Project.api}auth/users/`, {
-        email,
-        first_name,
-        last_name,
-        marketing_consent_given,
-        password,
+        ...user,
+        hubspotutk: API.getCookie('hubspotutk'),
+        invite_hash: API.getInvite() || undefined,
         referrer: API.getReferrer() || '',
         sign_up_type: API.getInviteType(),
       })
-      .then((res) => {
-        data.setToken(res.key)
+      .then(async (res) => {
+        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         API.trackEvent(Constants.events.REGISTER)
         if (API.getReferrer()) {
           API.trackEvent(
             Constants.events.REFERRER_REGISTERED(API.getReferrer().utm_source),
           )
         }
-
+        if (organisation_name) {
+          await controller.createOrganisation(organisation_name, true)
+        }
         store.isSaving = false
-        return controller.onLogin()
+
+        if (contact_consent_given) {
+          await createOnboardingSupportOptIn(getStore(), {})
+        }
+        await controller.onLogin(!API.getInvite())
+
+        if (user.superuser) {
+          // Creating a superuser will update the version endpoint
+          await getBuildVersion(getStore(), {}, { forceRefetch: true })
+        }
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
@@ -277,6 +302,7 @@ const controller = {
   },
 
   selectOrganisation: (id) => {
+    API.setCookie('organisation', `${id}`)
     store.organisation = _.find(store.model.organisations, { id })
     store.changed()
   },
@@ -285,7 +311,7 @@ const controller = {
     store.loading()
     store.user = {}
 
-    data.setToken(token)
+    data.setToken(Project.cookieAuthEnabled ? 'true' : token)
     return controller.onLogin()
   },
 
@@ -299,12 +325,18 @@ const controller = {
       if (user && user.organisations) {
         store.organisation = user.organisations[0]
         const cookiedID = API.getCookie('organisation')
-        if (cookiedID) {
+        const pathID = matchPath(document.location.pathname, {
+          path: '/organisation/:organisationId',
+          strict: false,
+        })?.params?.organisationId
+        const orgId = parseInt(pathID || cookiedID) || undefined
+        if (orgId) {
           const foundOrganisation = user.organisations.find(
-            (v) => `${v.id}` === cookiedID,
+            (v) => v.id === orgId,
           )
           if (foundOrganisation) {
             store.organisation = foundOrganisation
+            AppActions.getOrganisation(orgId)
           }
         }
       }
@@ -316,12 +348,21 @@ const controller = {
     } else if (!user) {
       store.ephemeral_token = null
       AsyncStorage.clear()
-      API.setCookie('t', '')
-      data.setToken(null)
-      API.reset().finally(() => {
-        store.model = user
-        store.organisation = null
-        store.trigger('logout')
+      if (!data.token) {
+        return
+      }
+      ;(Project.cookieAuthEnabled
+        ? data.post(`${Project.api}auth/logout/`, {})
+        : Promise.resolve()
+      ).finally(() => {
+        API.setCookie('t', '')
+        data.setToken(null)
+        API.reset().finally(() => {
+          store.model = user
+          store.organisation = null
+          getStore().dispatch(service.util.resetApiState())
+          store.trigger('logout')
+        })
       })
     }
   },
@@ -336,7 +377,7 @@ const controller = {
       .then((res) => {
         store.model = null
         API.trackEvent(Constants.events.LOGIN)
-        data.setToken(res.key)
+        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         store.ephemeral_token = null
         controller.onLogin()
       })
@@ -355,19 +396,15 @@ const controller = {
         { hosted_page_id: hostedPageId },
       )
       .then((res) => {
-        const idx = _.findIndex(store.model.organisations, {
-          id: store.organisation.id,
+        try {
+          if (res && res.subscription && res.subscription.plan) {
+            API.trackEvent(Constants.events.UPGRADE(res.subscription.plan))
+            API.postEvent(res.subscription.plan, 'chargebee')
+          }
+        } catch (e) {}
+        controller.getOrganisations().then(() => {
+          store.saved()
         })
-        if (idx !== -1) {
-          store.model.organisations[idx] = res
-          try {
-            if (res && res.subscription && res.subscription.plan) {
-              API.postEvent(res.subscription.plan, 'chargebee')
-            }
-          } catch (e) {}
-          store.organisation = res
-        }
-        store.saved()
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
@@ -386,7 +423,6 @@ const store = Object.assign({}, BaseStore, {
     }
 
     return (
-      Utils.getFlagsmithHasFeature('force_2fa') &&
       store.getOrganisations() &&
       store.getOrganisations().find((o) => o.force_2fa)
     )

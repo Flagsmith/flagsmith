@@ -1,5 +1,4 @@
 import json
-from os.path import abspath, dirname, join
 from unittest.mock import MagicMock
 
 import pytest
@@ -23,8 +22,11 @@ def ld_token() -> str:
 
 
 @pytest.fixture
-def ld_client_mock(mocker: MockerFixture) -> MagicMock:
-    ld_client_mock = mocker.MagicMock(spec=LaunchDarklyClient)
+def ld_client_mock(
+    request: pytest.FixtureRequest,
+    mocker: MockerFixture,
+) -> MagicMock:
+    ld_client_mock: MagicMock = mocker.MagicMock(spec=LaunchDarklyClient)
 
     for method_name, response_data_path in {
         "get_project": "client_responses/get_project.json",
@@ -32,8 +34,8 @@ def ld_client_mock(mocker: MockerFixture) -> MagicMock:
         "get_flags": "client_responses/get_flags.json",
         "get_segments": "client_responses/get_segments.json",
     }.items():
-        getattr(ld_client_mock, method_name).return_value = json.load(
-            open(join(dirname(abspath(__file__)), response_data_path))
+        getattr(ld_client_mock, method_name).return_value = json.loads(
+            (request.path.parent / response_data_path).read_text()
         )
 
     ld_client_mock.get_flag_count.return_value = 9
@@ -57,13 +59,13 @@ def ld_client_class_mock(
 def import_request(
     ld_client_class_mock: MagicMock,
     project: Project,
-    test_user: FFAdminUser,
+    staff_user: FFAdminUser,
     ld_project_key: str,
     ld_token: str,
 ) -> LaunchDarklyImportRequest:
     return create_import_request(
         project=project,
-        user=test_user,
+        user=staff_user,
         ld_project_key=ld_project_key,
         ld_token=ld_token,
     )

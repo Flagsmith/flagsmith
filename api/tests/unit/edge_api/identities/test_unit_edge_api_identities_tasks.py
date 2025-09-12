@@ -16,7 +16,10 @@ from environments.dynamodb.types import (
     IdentityOverridesV2Changeset,
     IdentityOverrideV2,
 )
+from environments.identities.models import Identity
 from environments.models import Environment, Webhook
+from features.models import Feature
+from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType
 
 
@@ -24,7 +27,7 @@ from webhooks.webhooks import WebhookEventType
     "new_enabled_state, new_value",
     ((True, "foo"), (False, "foo"), (True, None), (False, None)),
 )
-def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
+def test_call_environment_webhook_for_feature_state_change_with_new_state_only(  # type: ignore[no-untyped-def]
     mocker, environment, feature, identity, admin_user, new_value, new_enabled_state
 ):
     # Given
@@ -48,7 +51,7 @@ def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
         environment_api_key=environment.api_key,
         identity_id=identity.id,
         identity_identifier=identity.identifier,
-        changed_by_user_id=admin_user.id,
+        changed_by=str(admin_user),
         timestamp=now_isoformat,
         new_enabled_state=new_enabled_state,
         new_value=new_value,
@@ -75,9 +78,66 @@ def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
     assert data["timestamp"] == now_isoformat
 
 
-def test_call_environment_webhook_for_feature_state_change_with_previous_state_only(
+def test_call_environment_webhook_for_feature_state_change_with_previous_state_only(  # type: ignore[no-untyped-def]
     mocker, environment, feature, identity, admin_user
 ):
+    # Given
+    mock_call_environment_webhooks = mocker.patch(
+        "edge_api.identities.tasks.call_environment_webhooks"
+    )
+    Webhook.objects.create(environment=environment, url="https://foo.com/webhook")
+
+    mock_feature_state_data = mocker.MagicMock()
+    mock_generate_webhook_feature_state_data = mocker.patch.object(
+        Webhook,
+        "generate_webhook_feature_state_data",
+        return_value=mock_feature_state_data,
+    )
+
+    now_isoformat = timezone.now().isoformat()
+    previous_enabled_state = True
+    previous_value = "foo"
+
+    # When
+    call_environment_webhook_for_feature_state_change(
+        feature_id=feature.id,
+        environment_api_key=environment.api_key,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        changed_by=str(admin_user),
+        timestamp=now_isoformat,
+        previous_enabled_state=previous_enabled_state,
+        previous_value=previous_value,
+    )
+
+    # Then
+    mock_call_environment_webhooks.assert_called_once()
+    call_args = mock_call_environment_webhooks.call_args
+
+    assert call_args[0][0] == environment.id
+    assert call_args[1]["event_type"] == WebhookEventType.FLAG_DELETED.value
+
+    mock_generate_webhook_feature_state_data.assert_called_once_with(
+        feature=feature,
+        environment=environment,
+        identity_id=identity.id,
+        identity_identifier=identity.identifier,
+        enabled=previous_enabled_state,
+        value=previous_value,
+    )
+    data = call_args[0][1]
+    assert data["previous_state"] == mock_feature_state_data
+    assert data["changed_by"] == admin_user.email
+    assert data["timestamp"] == now_isoformat
+
+
+def test_call_environment_webhook_for_feature_state_change_with_changed_by_user_id(
+    mocker: MockerFixture,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    admin_user: FFAdminUser,
+) -> None:
     # Given
     mock_call_environment_webhooks = mocker.patch(
         "edge_api.identities.tasks.call_environment_webhooks"
@@ -109,11 +169,6 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
 
     # Then
     mock_call_environment_webhooks.assert_called_once()
-    call_args = mock_call_environment_webhooks.call_args
-
-    assert call_args[0][0] == environment.id
-    assert call_args[1]["event_type"] == WebhookEventType.FLAG_DELETED.value
-
     mock_generate_webhook_feature_state_data.assert_called_once_with(
         feature=feature,
         environment=environment,
@@ -122,10 +177,6 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
         enabled=previous_enabled_state,
         value=previous_value,
     )
-    data = call_args[0][1]
-    assert data["previous_state"] == mock_feature_state_data
-    assert data["changed_by"] == admin_user.email
-    assert data["timestamp"] == now_isoformat
 
 
 @pytest.mark.parametrize(
@@ -138,7 +189,7 @@ def test_call_environment_webhook_for_feature_state_change_with_previous_state_o
         (False, None, True, None),
     ),
 )
-def test_call_environment_webhook_for_feature_state_change_with_both_states(
+def test_call_environment_webhook_for_feature_state_change_with_both_states(  # type: ignore[no-untyped-def]
     mocker,
     environment,
     feature,
@@ -170,7 +221,7 @@ def test_call_environment_webhook_for_feature_state_change_with_both_states(
         environment_api_key=environment.api_key,
         identity_id=identity.id,
         identity_identifier=identity.identifier,
-        changed_by_user_id=admin_user.id,
+        changed_by=str(admin_user),
         timestamp=now_isoformat,
         previous_enabled_state=previous_enabled_state,
         previous_value=previous_value,
@@ -213,7 +264,7 @@ def test_call_environment_webhook_for_feature_state_change_with_both_states(
     assert data["timestamp"] == now_isoformat
 
 
-def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_webhooks(
+def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_webhooks(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, environment, feature, identity, admin_user
 ):
     # Given
@@ -231,7 +282,7 @@ def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_we
         environment_api_key=environment.api_key,
         identity_id=identity.id,
         identity_identifier=identity.identifier,
-        changed_by_user_id=admin_user.id,
+        changed_by=str(admin_user),
         timestamp=now_isoformat,
         new_enabled_state=True,
         new_value="foo",
@@ -241,7 +292,7 @@ def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_we
     mock_call_environment_webhooks.assert_not_called()
 
 
-def test_sync_identity_document_features_removes_deleted_features(
+def test_sync_identity_document_features_removes_deleted_features(  # type: ignore[no-untyped-def]
     edge_identity_dynamo_wrapper_mock,
     identity_document_without_fs,
     environment,
@@ -257,6 +308,7 @@ def test_sync_identity_document_features_removes_deleted_features(
             "feature_state_value": "feature_1_value",
             "featurestate_uuid": "4a8fbe06-d4cd-4686-a184-d924844bb422",
             "django_id": 1,
+            "dashboard_alias": None,
             "feature": {
                 "name": "feature_that_does_not_exists",
                 "type": "STANDARD",
@@ -323,7 +375,7 @@ def test_sync_identity_document_features_removes_deleted_features(
         ),
     ),
 )
-def test_generate_audit_log_records(
+def test_generate_audit_log_records(  # type: ignore[no-untyped-def]
     changes, identifier, expected_log_message, db, environment, admin_user
 ):
     # Given
@@ -463,7 +515,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
     update_flagsmith_environments_v2_identity_overrides(
         environment_api_key=environment.api_key,
         identity_uuid=identity_uuid,
-        changes=changes,
+        changes=changes,  # type: ignore[arg-type]
         identifier=identifier,
     )
 
@@ -484,13 +536,13 @@ def test_update_flagsmith_environments_v2_identity_overrides__no_overrides__call
     dynamodb_wrapper_v2_mock = dynamodb_wrapper_v2_cls_mock.return_value
     identity_uuid = "a35a02f2-fefd-4932-8f5c-e84a0bf542c7"
     identifier = "identity1"
-    changes = {"feature_overrides": []}
+    changes = {"feature_overrides": []}  # type: ignore[var-annotated]
 
     # When
     update_flagsmith_environments_v2_identity_overrides(
         environment_api_key=environment.api_key,
         identity_uuid=identity_uuid,
-        changes=changes,
+        changes=changes,  # type: ignore[arg-type]
         identifier=identifier,
     )
 

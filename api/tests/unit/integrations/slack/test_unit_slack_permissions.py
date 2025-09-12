@@ -1,12 +1,16 @@
 from unittest import mock
 
+from django.test import RequestFactory
+
+from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from integrations.slack.permissions import OauthInitPermission
+from users.models import FFAdminUser
 
 mock_view = mock.MagicMock()
 
 
-def test_oauth_init_permission_with_non_environment_admin_user(
+def test_oauth_init_permission_with_non_environment_admin_user(  # type: ignore[no-untyped-def]
     environment, django_user_model, rf
 ):
     # Given
@@ -18,21 +22,20 @@ def test_oauth_init_permission_with_non_environment_admin_user(
     # When
     oauth_init_permission = OauthInitPermission()
     # Then
-    assert oauth_init_permission.has_permission(mock_request, mock_view) is False
+    assert oauth_init_permission.has_permission(mock_request, mock_view) is False  # type: ignore[no-untyped-call]
 
 
 def test_oauth_init_permission_with_environment_admin_user(
-    environment, django_user_model, rf
-):
+    environment: Environment, staff_user: FFAdminUser, rf: RequestFactory
+) -> None:
     # Given
     mock_request = rf.get("/url")
-    user = django_user_model.objects.create(username="test_user")
     mock_view.kwargs = {"environment_api_key": environment.api_key}
-    mock_request.user = user
+    mock_request.user = staff_user
     UserEnvironmentPermission.objects.create(
-        user=user, admin=True, environment=environment
+        user=staff_user, admin=True, environment=environment
     )
     # When
     oauth_init_permission = OauthInitPermission()
     # Then
-    assert oauth_init_permission.has_permission(mock_request, mock_view) is True
+    assert oauth_init_permission.has_permission(mock_request, mock_view) is True  # type: ignore[no-untyped-call]

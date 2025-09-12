@@ -1,6 +1,6 @@
-import { FC, useCallback, useEffect, useMemo } from 'react'
+import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { RouterChildContext } from 'react-router'
+import { useHistory, useLocation } from 'react-router-dom'
 
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
@@ -13,100 +13,86 @@ import { Project } from 'common/types/responses'
 import Button from './base/forms/Button'
 import PanelSearch from './PanelSearch'
 import Icon from './Icon'
-
-const CreateProjectModal = require('components/modals/CreateProject')
+import AppActions from 'common/dispatcher/app-actions'
+import CreateProjectModal from './modals/CreateProject'
 
 type SegmentsPageType = {
-  router: RouterChildContext['router']
-  organisationId: string | null
+  organisationId: number | null
 }
 
-const ProjectManageWidget: FC<SegmentsPageType> = ({
-  organisationId,
-  router,
-}) => {
+const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
+  const history = useHistory()
+  const location = useLocation()
   const isAdmin = AccountStore.isAdmin()
-
+  const create = Utils.fromParam()?.create
   const { data: organisations } = useGetOrganisationsQuery({})
+
   const organisation = useMemo(
-    () => organisations?.results?.find((v) => `${v.id}` === organisationId),
+    // TODO: FIX organisationId is not a number
+    () => organisations?.results?.find((v) => v.id === organisationId),
     [organisations, organisationId],
   )
 
   const { permission: canCreateProject } = useHasPermission({
-    id: organisationId as string,
+    id: organisationId,
     level: 'organisation',
     permission: Utils.getCreateProjectPermission(organisation),
   })
 
+  useEffect(() => {
+    if (create && canCreateProject && organisation) {
+      handleCreateProjectClick()
+    }
+    //eslint-disable-next-line
+  }, [organisationId, organisation, canCreateProject, create])
   const handleCreateProjectClick = useCallback(() => {
     openModal(
       'Create Project',
-      <CreateProjectModal
-        onSave={({
-          environmentId,
-          projectId,
-        }: {
-          environmentId: string
-          projectId: string
-        }) => {
-          router.history.push(
-            `/project/${projectId}/environment/${environmentId}/features?new=true`,
-          )
-        }}
-      />,
+      <CreateProjectModal history={history} />,
       'p-0 side-modal',
     )
-  }, [router.history])
+  }, [history])
 
   useEffect(() => {
-    const { state } = router.route.location as { state: { create?: boolean } }
+    const { state } = location as { state: { create?: boolean } }
     if (state && state.create) {
       handleCreateProjectClick()
     }
-  }, [handleCreateProjectClick, router.route.location])
-
+  }, [handleCreateProjectClick, location])
+  useEffect(() => {
+    if (organisationId) {
+      AppActions.getOrganisation(organisationId)
+    }
+  }, [organisationId])
   return (
     <OrganisationProvider
+      id={organisationId}
       onRemoveProject={() => {
         toast('Your project has been removed')
       }}
     >
-      {({
-        isLoading,
-        projects,
-      }: {
-        isLoading: boolean
-        projects: Project[]
-      }) => (
+      {({ isLoading, projects }) => (
         <div data-test='project-manage-widget' id='project-manage-widget'>
           <div>
             {(projects && projects.length) || isLoading ? (
               <div className='flex-row pl-0 pr-0'></div>
-            ) : isAdmin ? (
-              <div className='container-mw-700 mb-4'>
-                <h5 className='mb-2'>
-                  Great! Now you can create your first project.
-                </h5>
-                <p className='fs-small lh-sm mb-0'>
-                  When you create a project we'll also generate a{' '}
-                  <strong>development</strong> and <strong>production</strong>{' '}
-                  environment for you.
-                </p>
-                <p className='fs-small lh-sm mb-0'>
-                  You can create features for your project, then enable and
-                  configure them per environment.
-                </p>
-              </div>
             ) : (
-              <div className='container-mw-700 mb-4'>
-                <p className='fs-small lh-sm mb-0'>
-                  You do not have access to any projects within this
-                  Organisation. If this is unexpected please contact a member of
-                  the Project who has Administrator privileges. Users can be
-                  added to Projects from the Project settings menu.
-                </p>
-              </div>
+              isAdmin && (
+                <div className='container-mw-700 mb-4'>
+                  <h5 className='mb-2'>
+                    Great! Now you can create your first project.
+                  </h5>
+                  <p className='fs-small lh-sm mb-0'>
+                    When you create a project we'll also generate a{' '}
+                    <strong>development</strong> and <strong>production</strong>{' '}
+                    environment for you.
+                  </p>
+                  <p className='fs-small lh-sm mb-0'>
+                    You can create features for your project, then enable and
+                    configure them per environment.
+                  </p>
+                </div>
+              )
             )}
             {(isLoading || !projects) && (
               <div className='centered-container'>
@@ -119,13 +105,16 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                   <PanelSearch
                     id='projects-list'
                     className='no-pad panel-projects'
-                    listClassName='row mt-n2 gy-4'
-                    title='Your projects'
+                    listClassName='row mt-n2 gy-3'
+                    title='Projects'
+                    header={
+                      <div className='fs-small mb-2 lh-sm'>
+                        Projects let you create and manage a set of features and
+                        configure them between multiple app environments.
+                      </div>
+                    }
                     items={projects}
-                    renderRow={(
-                      { environments, id, name }: Project,
-                      i: number,
-                    ) => {
+                    renderRow={({ environments, id, name }, i) => {
                       return (
                         <>
                           {i === 0 && (
@@ -161,6 +150,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                           <Link
                             key={id}
                             id={`project-select-${i}`}
+                            data-test={`project-${Utils.toKebabCase(name)}`}
                             to={`/project/${id}/environment/${
                               environments && environments[0]
                                 ? `${environments[0].api_key}/features`
@@ -190,6 +180,20 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                     }}
                     renderNoResults={
                       <div>
+                        {!canCreateProject && (
+                          <>
+                            <h5 className='mt-4 mb-2'>Projects</h5>
+                            <div className='container-mw-700 mb-4'>
+                              <p className='fs-small lh-sm mb-0'>
+                                You do not have access to any projects within
+                                this Organisation. If this is unexpected please
+                                contact a member of the Project who has
+                                Administrator privileges. Users can be added to
+                                Projects from the Project settings menu.
+                              </p>
+                            </div>
+                          </>
+                        )}
                         {Utils.renderWithPermission(
                           canCreateProject,
                           Constants.organisationPermissions(

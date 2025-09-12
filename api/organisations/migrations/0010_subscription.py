@@ -6,7 +6,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
-def prefill_subscription_data(apps, schema_editor):
+def prefill_subscription_data(apps, schema_editor):  # type: ignore[no-untyped-def]
     Organisation = apps.get_model('organisations', 'Organisation')
     Subscription = apps.get_model('organisations', 'Subscription')
 
@@ -18,7 +18,7 @@ def prefill_subscription_data(apps, schema_editor):
         subscription.save()
 
 
-def reverse(apps, schema_editor):
+def reverse(apps, schema_editor):  # type: ignore[no-untyped-def]
     pass
 
 

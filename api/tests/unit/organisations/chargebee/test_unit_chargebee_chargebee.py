@@ -3,10 +3,15 @@ from unittest import mock
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from chargebee import APIError
+from chargebee import APIError  # type: ignore[import-untyped]
+from chargebee.api_error import (  # type: ignore[import-untyped]
+    APIError as ChargebeeAPIError,
+)
+from pytest_mock import MockerFixture
 from pytz import UTC
 
-from organisations.chargebee import (
+from organisations.chargebee import (  # type: ignore[attr-defined]
+    add_100k_api_calls,
     add_single_seat,
     extract_subscription_metadata,
     get_customer_id_from_subscription_id,
@@ -19,28 +24,33 @@ from organisations.chargebee import (
     get_subscription_metadata_from_id,
 )
 from organisations.chargebee.chargebee import cancel_subscription
-from organisations.chargebee.constants import ADDITIONAL_SEAT_ADDON_ID
+from organisations.chargebee.constants import (
+    ADDITIONAL_API_SCALE_UP_ADDON_ID,
+    ADDITIONAL_SEAT_ADDON_ID,
+)
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.exceptions import (
     CannotCancelChargebeeSubscription,
+    UpgradeAPIUsageError,
+    UpgradeAPIUsagePaymentFailure,
     UpgradeSeatsError,
 )
 
 
 class MockChargeBeePlanResponse:
-    def __init__(self, max_seats=0, max_api_calls=50000):
+    def __init__(self, max_seats=0, max_api_calls=50000):  # type: ignore[no-untyped-def]
         self.max_seats = max_seats
         self.max_api_calls = 50000
-        self.plan = MockChargeBeePlan(max_seats, max_api_calls)
+        self.plan = MockChargeBeePlan(max_seats, max_api_calls)  # type: ignore[no-untyped-call]
 
 
 class MockChargeBeePlan:
-    def __init__(self, max_seats=0, max_api_calls=50000):
+    def __init__(self, max_seats=0, max_api_calls=50000):  # type: ignore[no-untyped-def]
         self.meta_data = {"seats": max_seats, "api_calls": max_api_calls}
 
 
 class MockChargeBeeHostedPageResponse:
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         subscription_id="subscription-id",
         plan_id="plan-id",
@@ -48,7 +58,7 @@ class MockChargeBeeHostedPageResponse:
         customer_id="customer-id",
         customer_email="test@example.com",
     ):
-        self.hosted_page = MockChargeBeeHostedPage(
+        self.hosted_page = MockChargeBeeHostedPage(  # type: ignore[no-untyped-call]
             subscription_id=subscription_id,
             plan_id=plan_id,
             created_at=created_at,
@@ -58,7 +68,7 @@ class MockChargeBeeHostedPageResponse:
 
 
 class MockChargeBeeHostedPage:
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         subscription_id,
         plan_id,
@@ -68,7 +78,7 @@ class MockChargeBeeHostedPage:
         hosted_page_id="some-id",
     ):
         self.id = hosted_page_id
-        self.content = MockChargeBeeHostedPageContent(
+        self.content = MockChargeBeeHostedPageContent(  # type: ignore[no-untyped-call]
             subscription_id=subscription_id,
             plan_id=plan_id,
             created_at=created_at,
@@ -78,13 +88,13 @@ class MockChargeBeeHostedPage:
 
 
 class MockChargeBeeHostedPageContent:
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def]
         self, subscription_id, plan_id, created_at, customer_id, customer_email
     ):
         self.subscription = MockChargeBeeSubscription(
             subscription_id=subscription_id, plan_id=plan_id, created_at=created_at
         )
-        self.customer = MockChargeBeeCustomer(customer_id, customer_email)
+        self.customer = MockChargeBeeCustomer(customer_id, customer_email)  # type: ignore[no-untyped-call]
 
 
 class MockChargeBeeAddOn:
@@ -98,15 +108,15 @@ class MockChargeBeeSubscriptionResponse:
         self,
         subscription_id: str = "subscription-id",
         plan_id: str = "plan-id",
-        created_at: datetime = None,
+        created_at: datetime = None,  # type: ignore[assignment]
         customer_id: str = "customer-id",
         customer_email: str = "test@example.com",
-        addons: list[MockChargeBeeAddOn] = None,
+        addons: list[MockChargeBeeAddOn] = None,  # type: ignore[assignment]
     ):
         self.subscription = MockChargeBeeSubscription(
             subscription_id, plan_id, created_at or datetime.now(), addons
         )
-        self.customer = MockChargeBeeCustomer(customer_id, customer_email)
+        self.customer = MockChargeBeeCustomer(customer_id, customer_email)  # type: ignore[no-untyped-call]
 
 
 class MockChargeBeeSubscription:
@@ -115,7 +125,7 @@ class MockChargeBeeSubscription:
         subscription_id: str,
         plan_id: str,
         created_at: datetime,
-        addons: list[MockChargeBeeAddOn] = None,
+        addons: list[MockChargeBeeAddOn] = None,  # type: ignore[assignment]
     ):
         self.id = subscription_id
         self.plan_id = plan_id
@@ -124,18 +134,18 @@ class MockChargeBeeSubscription:
 
 
 class MockChargeBeeCustomer:
-    def __init__(self, customer_id, customer_email):
+    def __init__(self, customer_id, customer_email):  # type: ignore[no-untyped-def]
         self.id = customer_id
         self.email = customer_email
 
 
 class MockChargeBeePortalSessionResponse:
-    def __init__(self, access_url="https://test.portal.url"):
-        self.portal_session = MockChargeBeePortalSession(access_url)
+    def __init__(self, access_url="https://test.portal.url"):  # type: ignore[no-untyped-def]
+        self.portal_session = MockChargeBeePortalSession(access_url)  # type: ignore[no-untyped-call]
 
 
 class MockChargeBeePortalSession:
-    def __init__(self, access_url):
+    def __init__(self, access_url):  # type: ignore[no-untyped-def]
         self.access_url = access_url
 
 
@@ -180,12 +190,12 @@ def test_chargebee_get_plan_meta_data_returns_correct_metadata() -> None:
 
     monkeypatch.setattr("organisations.chargebee.chargebee.chargebee", mock_cb)
 
-    mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(
+    mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(  # type: ignore[no-untyped-call]
         expected_max_seats, expected_max_api_calls
     )
 
     # When
-    plan_meta_data = get_plan_meta_data(plan_id)
+    plan_meta_data = get_plan_meta_data(plan_id)  # type: ignore[no-untyped-call]
 
     # Then
     assert plan_meta_data == {
@@ -209,16 +219,16 @@ def test_chargebee_get_subscription_data_from_hosted_page_returns_expected_value
 
     monkeypatch.setattr("organisations.chargebee.chargebee.chargebee", mock_cb)
 
-    mock_cb.HostedPage.retrieve.return_value = MockChargeBeeHostedPageResponse(
+    mock_cb.HostedPage.retrieve.return_value = MockChargeBeeHostedPageResponse(  # type: ignore[no-untyped-call]
         subscription_id=subscription_id,
         plan_id=plan_id,
         created_at=created_at,
         customer_id=customer_id,
     )
-    mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(expected_max_seats)
+    mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(expected_max_seats)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # When
-    subscription_data = get_subscription_data_from_hosted_page("hosted_page_id")
+    subscription_data = get_subscription_data_from_hosted_page("hosted_page_id")  # type: ignore[no-untyped-call]
 
     # Then
     assert subscription_data["subscription_id"] == subscription_id
@@ -236,12 +246,12 @@ def test_get_chargebee_portal_url() -> None:
 
     monkeypatch.setattr("organisations.chargebee.chargebee.chargebee", mock_cb)
 
-    mock_cb.PortalSession.create.return_value = MockChargeBeePortalSessionResponse(
+    mock_cb.PortalSession.create.return_value = MockChargeBeePortalSessionResponse(  # type: ignore[no-untyped-call]
         access_url
     )
 
     # When
-    portal_url = get_portal_url("some-customer-id", "https://redirect.url.com")
+    portal_url = get_portal_url("some-customer-id", "https://redirect.url.com")  # type: ignore[no-untyped-call]
 
     # Then
     assert portal_url == access_url
@@ -259,7 +269,7 @@ def test_chargebee_get_customer_id_from_subscription() -> None:
     )
 
     # When
-    customer_id = get_customer_id_from_subscription_id("subscription-id")
+    customer_id = get_customer_id_from_subscription_id("subscription-id")  # type: ignore[no-untyped-call]
 
     # Then
     assert customer_id == expected_customer_id
@@ -324,7 +334,7 @@ def test_extract_subscription_metadata(
     # so we have 1 plan + 2 addons.
     assert subscription_metadata.seats == chargebee_object_metadata.seats * 3
     assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 3
-    assert subscription_metadata.projects == chargebee_object_metadata.projects * 3
+    assert subscription_metadata.projects == chargebee_object_metadata.projects * 3  # type: ignore[operator]
     assert subscription_metadata.chargebee_email == customer_email
 
 
@@ -372,13 +382,13 @@ def test_get_subscription_metadata_from_id(
     # Then
     # Values here are multiplied by 2 because the both the plan and the addon included in
     # the mock_subscription_response_with_addons fixture contain the same values.
-    assert subscription_metadata.seats == chargebee_object_metadata.seats * 2
-    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2
-    assert subscription_metadata.projects == chargebee_object_metadata.projects * 2
-    assert subscription_metadata.chargebee_email == customer_email
+    assert subscription_metadata.seats == chargebee_object_metadata.seats * 2  # type: ignore[union-attr]
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2  # type: ignore[union-attr]
+    assert subscription_metadata.projects == chargebee_object_metadata.projects * 2  # type: ignore[union-attr,operator]  # noqa: E501
+    assert subscription_metadata.chargebee_email == customer_email  # type: ignore[union-attr]
 
 
-def test_cancel_subscription(mocker) -> None:
+def test_cancel_subscription(mocker) -> None:  # type: ignore[no-untyped-def]
     # Given
     mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
     subscription_id = "sub-id"
@@ -392,7 +402,7 @@ def test_cancel_subscription(mocker) -> None:
     )
 
 
-def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(
+def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(  # type: ignore[no-untyped-def]
     mocker, caplog
 ) -> None:
     # Given
@@ -424,7 +434,7 @@ def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(
     )
 
 
-def test_get_subscription_metadata_from_id_returns_null_if_chargebee_error(
+def test_get_subscription_metadata_from_id_returns_null_if_chargebee_error(  # type: ignore[no-untyped-def]
     mocker, chargebee_object_metadata
 ) -> None:
     # Given
@@ -446,7 +456,7 @@ def test_get_subscription_metadata_from_id_returns_null_if_chargebee_error(
     "subscription_id",
     [None, "", " "],
 )
-def test_get_subscription_metadata_from_id_returns_none_for_invalid_subscription_id(
+def test_get_subscription_metadata_from_id_returns_none_for_invalid_subscription_id(  # type: ignore[no-untyped-def]
     mocker, chargebee_object_metadata, subscription_id
 ) -> None:
     # Given
@@ -465,19 +475,19 @@ def test_get_subscription_metadata_from_id_returns_valid_metadata_if_addons_is_n
     chargebee_object_metadata: ChargebeeObjMetadata,
 ) -> None:
     # Given
-    mock_subscription_response.addons = None
+    mock_subscription_response.addons = None  # type: ignore[attr-defined]
     subscription_id = mock_subscription_response.subscription.id
 
     # When
     subscription_metadata = get_subscription_metadata_from_id(subscription_id)
 
     # Then
-    assert subscription_metadata.seats == chargebee_object_metadata.seats
-    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls
-    assert subscription_metadata.projects == chargebee_object_metadata.projects
+    assert subscription_metadata.seats == chargebee_object_metadata.seats  # type: ignore[union-attr]
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls  # type: ignore[union-attr]
+    assert subscription_metadata.projects == chargebee_object_metadata.projects  # type: ignore[union-attr]
 
 
-def test_add_single_seat_with_existing_addon(mocker) -> None:
+def test_add_single_seat_with_existing_addon(mocker) -> None:  # type: ignore[no-untyped-def]
     # Given
     plan_id = "plan-id"
     addon_id = ADDITIONAL_SEAT_ADDON_ID
@@ -513,7 +523,7 @@ def test_add_single_seat_with_existing_addon(mocker) -> None:
     )
 
 
-def test_add_single_seat_without_existing_addon(mocker) -> None:
+def test_add_single_seat_without_existing_addon(mocker) -> None:  # type: ignore[no-untyped-def]
     # Given
     subscription_id = "subscription-id"
 
@@ -544,7 +554,7 @@ def test_add_single_seat_without_existing_addon(mocker) -> None:
     )
 
 
-def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(
+def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(  # type: ignore[no-untyped-def]
     mocker, caplog
 ) -> None:
     # Given
@@ -595,3 +605,74 @@ def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(
         == "Failed to add additional seat to CB subscription for subscription id: %s"
         % subscription_id
     )
+
+
+def test_add_100k_api_calls_when_count_is_empty(mocker: MockerFixture) -> None:
+    # Given
+    subscription_mock = mocker.patch("chargebee.Subscription.update")
+
+    # When
+    result = add_100k_api_calls(  # type: ignore[func-returns-value]
+        addon_id=ADDITIONAL_API_SCALE_UP_ADDON_ID,
+        subscription_id="subscription23",
+        count=0,
+        invoice_immediately=True,
+    )
+
+    # Then
+    assert result is None
+    subscription_mock.assert_not_called()
+
+
+def test_add_100k_api_calls_when_chargebee_api_error_has_error_code(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    chargebee_mock = mocker.patch("organisations.chargebee.chargebee.chargebee")
+    chargebee_response_data = {
+        "message": "Subscription cannot be created as the payment collection failed. Gateway Error: Card declined.",
+        "type": "payment",
+        "api_error_code": "payment_processing_failed",
+        "param": "item_id",
+        "error_code": "DeprecatedField",
+    }
+
+    chargebee_mock.Subscription.update.side_effect = ChargebeeAPIError(
+        http_code=400, json_obj=chargebee_response_data
+    )
+
+    # When / Then
+    with pytest.raises(UpgradeAPIUsagePaymentFailure):
+        add_100k_api_calls(
+            addon_id=ADDITIONAL_API_SCALE_UP_ADDON_ID,
+            subscription_id="subscription23",
+            count=1,
+            invoice_immediately=True,
+        )
+
+
+def test_add_100k_api_calls_when_chargebee_api_error_has_no_error_code(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    chargebee_mock = mocker.patch("organisations.chargebee.chargebee.chargebee")
+    chargebee_response_data = {
+        "message": "Some massive data failure",
+        "api_error_code": "halt_and_catch_fire",
+        "type": "failure",
+        "param": "item_id",
+        "error_code": "DeprecatedField",
+    }
+
+    chargebee_mock.Subscription.update.side_effect = ChargebeeAPIError(
+        http_code=400, json_obj=chargebee_response_data
+    )
+
+    # When / Then
+    with pytest.raises(UpgradeAPIUsageError):
+        add_100k_api_calls(
+            addon_id=ADDITIONAL_API_SCALE_UP_ADDON_ID,
+            subscription_id="subscription23",
+            count=1,
+            invoice_immediately=True,
+        )

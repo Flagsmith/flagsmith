@@ -1,18 +1,46 @@
+import copy
 import json
 import typing
+import uuid
+from unittest import mock
 
 import pytest
-from core.constants import BOOLEAN, INTEGER, STRING
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture
+from flag_engine.features.models import (
+    FeatureModel,
+    FeatureStateModel,
+    MultivariateFeatureOptionModel,
+    MultivariateFeatureStateValueList,
+    MultivariateFeatureStateValueModel,
+)
+from mypy_boto3_dynamodb.service_resource import Table
+from mypy_boto3_dynamodb.type_defs import TableAttributeValueTypeDef
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.test import APIClient
 
+from core.constants import BOOLEAN, INTEGER, STRING
+from edge_api.identities.models import (  # type: ignore[attr-defined]
+    EdgeIdentity,
+    IdentityFeaturesList,
+    IdentityModel,
+)
+from environments.dynamodb import (
+    DynamoEnvironmentV2Wrapper,
+    DynamoEnvironmentWrapper,
+    DynamoIdentityWrapper,
+)
+from environments.models import Environment
+from features.models import Feature
+from features.multivariate.models import MultivariateFeatureOption
+from projects.models import Project
 from tests.integration.helpers import create_mv_option_with_api
+from util.mappers.engine import map_feature_to_engine
 
 
-def test_edge_identities_feature_states_list_does_not_call_sync_identity_document_features_if_not_needed(
+def test_edge_identities_feature_states_list_does_not_call_sync_identity_document_features_if_not_needed(  # type: ignore[no-untyped-def]  # noqa: E501
     admin_client,
     environment,
     environment_api_key,
@@ -43,7 +71,7 @@ def test_edge_identities_feature_states_list_does_not_call_sync_identity_documen
     sync_identity_document_features.delay.assert_not_called()
 
 
-def test_edge_identities_feature_states_list_calls_sync_identity_document_features_if_identity_have_deleted_feature(
+def test_edge_identities_feature_states_list_calls_sync_identity_document_features_if_identity_have_deleted_feature(  # type: ignore[no-untyped-def]  # noqa: E501
     admin_client,
     environment,
     environment_api_key,
@@ -98,7 +126,7 @@ def test_edge_identities_feature_states_list_calls_sync_identity_document_featur
     sync_identity_document_features.delay.assert_called_once_with(args=(identity_uuid,))
 
 
-def test_edge_identities_feature_states_list_can_be_filtered_using_feature_id(
+def test_edge_identities_feature_states_list_can_be_filtered_using_feature_id(  # type: ignore[no-untyped-def]
     admin_client,
     environment,
     environment_api_key,
@@ -128,7 +156,7 @@ def test_edge_identities_feature_states_list_can_be_filtered_using_feature_id(
     assert response.json()[0]["feature"] == feature
 
 
-def test_edge_identities_feature_states_list_returns_404_if_identity_does_not_exists(
+def test_edge_identities_feature_states_list_returns_404_if_identity_does_not_exists(  # type: ignore[no-untyped-def]
     admin_client,
     environment,
     environment_api_key,
@@ -148,7 +176,7 @@ def test_edge_identities_feature_states_list_returns_404_if_identity_does_not_ex
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_edge_identities_featurestate_detail(
+def test_edge_identities_featurestate_detail(  # type: ignore[no-untyped-def]
     admin_client,
     environment,
     environment_api_key,
@@ -176,7 +204,7 @@ def test_edge_identities_featurestate_detail(
     assert response.json()["featurestate_uuid"] == featurestate_uuid
 
 
-def test_edge_identities_featurestate_detail_calls_sync_identity_if_deleted_feature_exists(
+def test_edge_identities_featurestate_detail_calls_sync_identity_if_deleted_feature_exists(  # type: ignore[no-untyped-def]  # noqa: E501
     admin_client,
     environment,
     environment_api_key,
@@ -224,7 +252,7 @@ def test_edge_identities_featurestate_detail_calls_sync_identity_if_deleted_feat
     sync_identity_document_features.delay.assert_called_once_with(args=(identity_uuid,))
 
 
-def test_edge_identities_featurestate_delete(
+def test_edge_identities_featurestate_delete(  # type: ignore[no-untyped-def]
     dynamodb_wrapper_v2,
     admin_client,
     environment,
@@ -264,7 +292,7 @@ def test_edge_identities_featurestate_delete(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_edge_identities_featurestate_delete_returns_404_if_featurestate_does_not_exists(
+def test_edge_identities_featurestate_delete_returns_404_if_featurestate_does_not_exists(  # type: ignore[no-untyped-def]  # noqa: E501
     admin_client,
     environment,
     environment_api_key,
@@ -288,7 +316,7 @@ def test_edge_identities_featurestate_delete_returns_404_if_featurestate_does_no
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_edge_identities_create_featurestate_returns_400_if_feature_state_already_exists(
+def test_edge_identities_create_featurestate_returns_400_if_feature_state_already_exists(  # type: ignore[no-untyped-def]  # noqa: E501
     admin_client,
     environment,
     environment_api_key,
@@ -326,16 +354,16 @@ def test_edge_identities_create_featurestate_returns_400_if_feature_state_alread
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_edge_identities_create_featurestate(
-    dynamodb_wrapper_v2,
-    admin_client,
-    environment,
-    environment_api_key,
-    identity_document_without_fs,
-    edge_identity_dynamo_wrapper_mock,
-    feature,
-    feature_name,
-    webhook_mock,
+def test_edge_identities_create_featurestate(  # type: ignore[no-untyped-def]
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    admin_client_new: APIClient,
+    environment: int,
+    environment_api_key: str,
+    identity_document_without_fs: dict,  # type: ignore[type-arg]
+    edge_identity_dynamo_wrapper_mock: mock.MagicMock,
+    feature: int,
+    feature_name: str,
+    webhook_mock: mock.MagicMock,
 ):
     # Given
     edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
@@ -357,7 +385,7 @@ def test_edge_identities_create_featurestate(
     }
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -390,7 +418,7 @@ def test_edge_identities_create_featurestate(
     assert actual_feature_state["featurestate_uuid"] is not None
 
 
-def test_edge_identities_create_mv_featurestate(
+def test_edge_identities_create_mv_featurestate(  # type: ignore[no-untyped-def]
     dynamodb_wrapper_v2,
     admin_client,
     environment,
@@ -470,20 +498,17 @@ def test_edge_identities_create_mv_featurestate(
     assert actual_feature_state["featurestate_uuid"] is not None
 
 
-def test_edge_identities_update_featurestate(
-    dynamodb_wrapper_v2,
-    admin_client,
-    environment,
-    environment_api_key,
-    identity_document,
-    edge_identity_dynamo_wrapper_mock,
-    feature,
-    webhook_mock,
+def test_edge_identities_update_featurestate(  # type: ignore[no-untyped-def]
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    admin_client: APIClient,
+    environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, typing.Any],
+    feature: Feature,
+    webhook_mock: mock.MagicMock,
+    flagsmith_identities_table: Table,
 ):
     # Given
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
-        identity_document
-    )
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][0]["featurestate_uuid"]
     url = reverse(
@@ -501,40 +526,43 @@ def test_edge_identities_update_featurestate(
         "identity_uuid": identity_uuid,
     }
 
+    flagsmith_identities_table.put_item(Item=identity_document)
+
     # When
     response = admin_client.put(
         url, data=json.dumps(data), content_type="application/json"
     )
+
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == expected_feature_state_value
     assert response.json()["enabled"] == data["enabled"]
 
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
-        identity_uuid
-    )
-    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
-    assert name == "put_item"
-
     # Next, let's verify that the document that we put
     # have correct updates
 
     # First, let's create the copy of the original document
-    expected_identity_document = identity_document
+    expected_identity_document = copy.deepcopy(identity_document)
+
     # Next, let's modify the fs value that we updated
-    expected_identity_document["identity_features"][0][
-        "feature_state_value"
-    ] = expected_feature_state_value
+    expected_identity_document["identity_features"][0]["feature_state_value"] = (
+        expected_feature_state_value
+    )
 
     # Next, let's update the enabled
     expected_identity_document["identity_features"][0]["enabled"] = expected_fs_enabled
 
     # Finally, let's compare them
-    assert args[0] == expected_identity_document
+    assert (
+        flagsmith_identities_table.get_item(
+            Key={"composite_key": identity_document["composite_key"]}
+        )["Item"]
+        == expected_identity_document
+    )
 
 
-def test_edge_identities_patch_returns_405(
+def test_edge_identities_patch_returns_405(  # type: ignore[no-untyped-def]
     admin_client,
     environment,
     environment_api_key,
@@ -559,22 +587,19 @@ def test_edge_identities_patch_returns_405(
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
-def test_edge_identities_update_mv_featurestate(
-    dynamodb_wrapper_v2,
-    admin_client,
-    environment,
-    environment_api_key,
-    identity_document,
-    edge_identity_dynamo_wrapper_mock,
-    feature,
-    mv_option_50_percent,
-    mv_option_value,
-    webhook_mock,
+def test_edge_identities_update_mv_featurestate(  # type: ignore[no-untyped-def]
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    admin_client: APIClient,
+    environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, typing.Any],
+    feature: Feature,
+    mv_option_50_percent: MultivariateFeatureOption,
+    mv_option_value: str,
+    webhook_mock: mock.MagicMock,
+    flagsmith_identities_table: Table,
 ):
     # Given
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
-        identity_document
-    )
     identity_uuid = identity_document["identity_uuid"]
     featurestate_uuid = identity_document["identity_features"][2]["featurestate_uuid"]
     url = reverse(
@@ -599,6 +624,8 @@ def test_edge_identities_update_mv_featurestate(
         "feature_state_value": expected_feature_state_value,
     }
 
+    flagsmith_identities_table.put_item(Item=identity_document)
+
     # When
     response = admin_client.put(
         url, data=json.dumps(data), content_type="application/json"
@@ -611,21 +638,16 @@ def test_edge_identities_update_mv_featurestate(
         == new_mv_allocation
     )
 
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
-        identity_uuid
-    )
-    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
-    assert name == "put_item"
-
     # Next, let's verify that the document that we put
     # have correct updates
 
     # First, let's create the copy of the original document
-    expected_identity_document = identity_document
+    expected_identity_document = copy.deepcopy(identity_document)
+
     # Next, let's modify the fs value that we updated
-    expected_identity_document["identity_features"][2][
-        "feature_state_value"
-    ] = expected_feature_state_value
+    expected_identity_document["identity_features"][2]["feature_state_value"] = (
+        expected_feature_state_value
+    )
     # Next, let's update the enabled
     expected_identity_document["identity_features"][2]["enabled"] = expected_fs_enabled
 
@@ -641,18 +663,20 @@ def test_edge_identities_update_mv_featurestate(
                 "id": mv_option_50_percent,
                 "value": mv_option_value,
             },
+            "mv_fs_value_uuid": mock.ANY,
         }
     ]
-    # Remove the uuid before comparing because it was generated by the engine
-    # and we can't patch it
-    args[0]["identity_features"][2]["multivariate_feature_state_values"][0].pop(
-        "mv_fs_value_uuid"
-    )
+
     # Finally, let's compare them
-    assert args[0] == expected_identity_document
+    assert (
+        flagsmith_identities_table.get_item(
+            Key={"composite_key": identity_document["composite_key"]}
+        )["Item"]
+        == expected_identity_document
+    )
 
 
-def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
+def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(  # type: ignore[no-untyped-def]
     admin_client,
     project,
     environment,
@@ -706,7 +730,7 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(
 @pytest.mark.parametrize(
     "lazy_feature", [(lazy_fixture("feature")), (lazy_fixture("feature_name"))]
 )
-def test_edge_identities_with_identifier_create_featurestate(
+def test_edge_identities_with_identifier_create_featurestate(  # type: ignore[no-untyped-def]
     dynamodb_wrapper_v2,
     admin_client,
     environment,
@@ -772,7 +796,7 @@ def test_edge_identities_with_identifier_create_featurestate(
 @pytest.mark.parametrize(
     "lazy_feature", [(lazy_fixture("feature")), (lazy_fixture("feature_name"))]
 )
-def test_edge_identities_with_identifier_delete_featurestate(
+def test_edge_identities_with_identifier_delete_featurestate(  # type: ignore[no-untyped-def]
     dynamodb_wrapper_v2,
     admin_client,
     environment,
@@ -814,19 +838,76 @@ def test_edge_identities_with_identifier_delete_featurestate(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_edge_identities_with_identifier_update_featurestate(
-    dynamodb_wrapper_v2,
-    admin_client,
-    environment,
-    environment_api_key,
-    identity_document,
-    edge_identity_dynamo_wrapper_mock,
-    feature,
-    webhook_mock,
+def test_edge_identities_with_identifier_update_featurestate(  # type: ignore[no-untyped-def]
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    admin_client: APIClient,
+    environment: Environment,
+    environment_api_key: str,
+    identity_document: dict[str, typing.Any],
+    feature: Feature,
+    webhook_mock: mock.MagicMock,
+    flagsmith_identities_table: Table,
 ):
     # Given
-    edge_identity_dynamo_wrapper_mock.get_item.return_value = identity_document
     identifier = identity_document["identifier"]
+    url = reverse(
+        "api-v1:environments:edge-identities-with-identifier-featurestates",
+        args=[environment_api_key],
+    )
+    expected_feature_state_value = "new_feature_state_value"
+    expected_fs_enabled = True
+    data = {
+        "multivariate_feature_state_values": [],
+        "enabled": expected_fs_enabled,
+        "feature": feature,
+        "feature_state_value": expected_feature_state_value,
+        "identifier": identifier,
+    }
+
+    flagsmith_identities_table.put_item(Item=identity_document)
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["feature"] == feature
+    assert response.json()["feature_state_value"] == expected_feature_state_value
+    assert response.json()["enabled"] == data["enabled"]
+
+    # Next, let's verify that the document that we put
+    # have correct updates
+
+    # First, let's modify the fs value that we updated
+    identity_document["identity_features"][0]["feature_state_value"] = (
+        expected_feature_state_value
+    )
+
+    # Next, let's update the enabled
+    identity_document["identity_features"][0]["enabled"] = expected_fs_enabled
+
+    # Finally, let's compare them
+    assert (
+        flagsmith_identities_table.get_item(
+            Key={"composite_key": identity_document["composite_key"]}
+        )["Item"]
+        == identity_document
+    )
+
+
+def test_put_identity_override_creates_identity_if_not_found(
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    webhook_mock: mock.MagicMock,
+    flagsmith_identities_table: Table,
+) -> None:
+    # Given
+    identifier = "some_new_identity"
     url = reverse(
         "api-v1:environments:edge-identities-with-identifier-featurestates",
         args=[environment_api_key],
@@ -845,30 +926,33 @@ def test_edge_identities_with_identifier_update_featurestate(
     response = admin_client.put(
         url, data=json.dumps(data), content_type="application/json"
     )
+
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["feature"] == feature
     assert response.json()["feature_state_value"] == expected_feature_state_value
     assert response.json()["enabled"] == data["enabled"]
-    edge_identity_dynamo_wrapper_mock.get_item.assert_called_with(
-        f"{environment_api_key}_{identifier}"
+
+    # Let's verify that the identity was added to the table
+    identity = flagsmith_identities_table.get_item(
+        Key={"composite_key": f"{environment_api_key}_{identifier}"}
+    )["Item"]
+    assert identity["identifier"] == identifier
+
+    # and that they have the relevant override
+    identity_features_data = typing.cast(
+        list[typing.Mapping[str, TableAttributeValueTypeDef]],
+        identity["identity_features"],
     )
-    name, args, _ = edge_identity_dynamo_wrapper_mock.mock_calls[1]
-    assert name == "put_item"
-
-    # Next, let's verify that the document that we put
-    # have correct updates
-
-    # First, let's modify the fs value that we updated
-    identity_document["identity_features"][0][
-        "feature_state_value"
-    ] = expected_feature_state_value
-
-    # Next, let's update the enabled
-    identity_document["identity_features"][0]["enabled"] = expected_fs_enabled
-
-    # Finally, let's compare them
-    assert args[0] == identity_document
+    feature_state_data = identity_features_data[0]
+    feature_data = typing.cast(
+        typing.Mapping[str, TableAttributeValueTypeDef],
+        feature_state_data["feature"],
+    )
+    assert len(identity_features_data) == 1
+    assert feature_data["id"] == feature
+    assert feature_state_data["enabled"] == expected_fs_enabled
+    assert feature_state_data["feature_state_value"] == expected_feature_state_value
 
 
 @pytest.mark.parametrize(
@@ -879,7 +963,7 @@ def test_edge_identities_with_identifier_update_featurestate(
         ("bool", True),
     ),
 )
-def test_get_all_feature_states_for_an_identity(
+def test_get_all_feature_states_for_an_identity(  # type: ignore[no-untyped-def]
     admin_client,
     environment,
     environment_api_key,
@@ -899,7 +983,7 @@ def test_get_all_feature_states_for_an_identity(
     # for the segment and identity override requests.
     segment_ids_responses = [[], [segment], [segment]]
 
-    def get_segment_ids_side_effect(*args, **kwargs):
+    def get_segment_ids_side_effect(*args, **kwargs):  # type: ignore[no-untyped-def]
         nonlocal segment_ids_responses
         return segment_ids_responses.pop(0)
 
@@ -988,7 +1072,7 @@ def test_get_all_feature_states_for_an_identity(
     assert third_response_json[0]["segment"] is None
 
 
-def _create_segment_override(
+def _create_segment_override(  # type: ignore[no-untyped-def]
     client: APIClient,
     environment_id: int,
     feature_id: int,
@@ -1012,7 +1096,7 @@ def _create_segment_override(
     data = {
         "feature": feature_id,
         "feature_segment": feature_segment_id,
-        "feature_state_value": {
+        "feature_state_value": {  # type: ignore[dict-item]
             "type": segment_override_type,
             "string_value": (
                 segment_override_value if segment_override_type == STRING else None
@@ -1033,3 +1117,192 @@ def _create_segment_override(
         content_type="application/json",
     )
     assert create_segment_override_response.status_code == status.HTTP_201_CREATED
+
+
+def test_edge_identity_clone_flag_states_from(
+    admin_client: APIClient,
+    mocker: MockerFixture,
+    dynamo_enabled_environment: int,
+    dynamo_enabled_project: int,
+    environment_api_key: str,
+    flagsmith_identities_table: Table,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    dynamo_environment_wrapper: DynamoEnvironmentWrapper,
+) -> None:
+    mocker.patch(
+        "environments.dynamodb.services.DynamoIdentityWrapper",
+        autospec=True,
+        return_value=dynamodb_identity_wrapper,
+    )
+    mocker.patch(
+        "environments.dynamodb.services.DynamoEnvironmentV2Wrapper",
+        autospec=True,
+        return_value=dynamodb_wrapper_v2,
+    )
+    mocker.patch(
+        "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper",
+        autospec=True,
+        return_value=dynamo_environment_wrapper,
+    )
+
+    def create_identity(identifier: str) -> EdgeIdentity:
+        identity_model = IdentityModel(
+            identifier=identifier,
+            environment_api_key=environment_api_key,
+            identity_features=IdentityFeaturesList(),
+            identity_uuid=uuid.uuid4(),
+        )
+        return EdgeIdentity(engine_identity_model=identity_model)
+
+    def features_for_identity_clone_flag_states_from(
+        project: Project,
+    ) -> tuple[Feature, ...]:
+        features: list[Feature] = []
+        for i in range(1, 4):
+            features.append(
+                Feature.objects.create(
+                    name=f"feature_{i}", project=project, default_enabled=True
+                )
+            )
+        return tuple(features)
+
+    # Given
+    project: Project = Project.objects.get(id=dynamo_enabled_project)
+
+    feature_1, feature_2, feature_3 = features_for_identity_clone_flag_states_from(
+        project
+    )
+
+    mv_feature = Feature.objects.create(
+        type="MULTIVARIATE",
+        name="mv_feature",
+        initial_value="foo",
+        project=project,
+    )
+
+    mv_variant_1 = MultivariateFeatureOption.objects.create(
+        feature=mv_feature,
+        default_percentage_allocation=0,
+        type=STRING,
+        string_value="bar",
+    )
+
+    feature_model_1: FeatureModel = map_feature_to_engine(feature=feature_1)
+    feature_model_2: FeatureModel = map_feature_to_engine(feature=feature_2)
+    feature_model_3: FeatureModel = map_feature_to_engine(feature=feature_3)
+    mv_feature_model: FeatureModel = map_feature_to_engine(feature=mv_feature)
+
+    source_identity: EdgeIdentity = create_identity(identifier="source_identity")
+    target_identity: EdgeIdentity = create_identity(identifier="target_identity")
+
+    source_feature_state_1_value = "Source Identity for feature value 1"
+    source_feature_state_1 = FeatureStateModel(  # type: ignore[call-arg]
+        feature=feature_model_1,
+        environment_id=dynamo_enabled_environment,
+        enabled=True,
+        feature_state_value=source_feature_state_1_value,
+    )
+
+    source_feature_state_2_value = "Source Identity for feature value 2"
+    source_feature_state_2 = FeatureStateModel(  # type: ignore[call-arg]
+        feature=feature_model_2,
+        environment_id=dynamo_enabled_environment,
+        enabled=True,
+        feature_state_value=source_feature_state_2_value,
+    )
+
+    source_mv_feature_state = FeatureStateModel(  # type: ignore[call-arg]
+        feature=mv_feature_model,
+        environment_id=dynamo_enabled_environment,
+        enabled=True,
+        multivariate_feature_state_values=MultivariateFeatureStateValueList(),
+    )
+    source_mv_feature_state.multivariate_feature_state_values.append(
+        MultivariateFeatureStateValueModel(
+            multivariate_feature_option=MultivariateFeatureOptionModel(
+                value=mv_variant_1.value
+            ),
+            percentage_allocation=100,
+        )
+    )
+
+    target_feature_state_2_value = "Target Identity value for feature 2"
+    target_feature_state_2 = FeatureStateModel(  # type: ignore[call-arg]
+        feature=feature_model_2,
+        environment_id=dynamo_enabled_environment,
+        enabled=False,
+        feature_state_value=target_feature_state_2_value,
+    )
+
+    target_feature_state_3 = FeatureStateModel(  # type: ignore[call-arg]
+        feature=feature_model_3,
+        environment_id=dynamo_enabled_environment,
+        enabled=False,
+    )
+
+    # Add feature states for features 1 and 2 to source identity
+    source_identity.add_feature_override(feature_state=source_feature_state_1)
+    source_identity.add_feature_override(feature_state=source_feature_state_2)
+    source_identity.add_feature_override(feature_state=source_mv_feature_state)
+
+    # Add feature states for features 2 and 3 to target identity.
+    target_identity.add_feature_override(feature_state=target_feature_state_2)
+    target_identity.add_feature_override(feature_state=target_feature_state_3)
+
+    # Save identities to table
+    target_identity_document = target_identity.to_document()
+    source_identity_document = source_identity.to_document()
+
+    flagsmith_identities_table.put_item(Item=target_identity_document)
+    flagsmith_identities_table.put_item(Item=source_identity_document)
+
+    clone_from_given_identity_url: str = reverse(
+        viewname="api-v1:environments:edge-identity-featurestates-clone-from-given-identity",
+        args=(environment_api_key, target_identity.identity_uuid),
+    )
+
+    # When
+
+    clone_identity_feature_states_response = admin_client.post(
+        path=clone_from_given_identity_url,
+        data=json.dumps(
+            obj={"source_identity_uuid": str(object=source_identity.identity_uuid)}
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+
+    assert clone_identity_feature_states_response.status_code == status.HTTP_200_OK
+
+    response = clone_identity_feature_states_response.json()
+
+    # Target identity contains only the 2 cloned overridden features states and 1 environment feature state
+    assert len(response) == 4
+
+    assert response[0]["feature"]["id"] == feature_1.id
+    assert response[0]["enabled"] == source_feature_state_1.enabled
+    assert response[0]["feature_state_value"] == source_feature_state_1_value
+    assert response[0]["overridden_by"] == "IDENTITY"
+
+    assert response[1]["feature"]["id"] == feature_2.id
+    assert response[1]["enabled"] == source_feature_state_2.enabled
+    assert response[1]["feature_state_value"] == source_feature_state_2_value
+    assert response[1]["overridden_by"] == "IDENTITY"
+
+    assert response[2]["feature"]["id"] == feature_3.id
+    assert response[2]["enabled"] == feature_3.default_enabled
+    assert response[2]["feature_state_value"] == feature_3.initial_value
+    assert response[2]["overridden_by"] is None
+
+    assert response[3]["feature"]["id"] == mv_feature.id
+    assert response[3]["enabled"] == source_mv_feature_state.enabled
+    assert response[3]["feature_state_value"] == mv_variant_1.value
+    assert (
+        response[3]["multivariate_feature_state_values"][0][
+            "multivariate_feature_option"
+        ]["value"]
+        == mv_variant_1.value
+    )
+    assert response[3]["overridden_by"] == "IDENTITY"

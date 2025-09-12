@@ -11,4 +11,4 @@ class PydanticJSONEncoder(JSONEncoder):
 
 
 class PydanticJSONRenderer(JSONRenderer):
-    encoder_class: Type[JSONEncoder] = PydanticJSONEncoder
+    encoder_class: Type[JSONEncoder] = PydanticJSONEncoder  # type: ignore[misc]

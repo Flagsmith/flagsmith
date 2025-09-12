@@ -2,22 +2,16 @@ import json
 import logging
 
 from django.conf import settings
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.request import Request
 
-from . import utils
-
 logger = logging.getLogger(__name__)
 
 
-def version_info(request: Request) -> JsonResponse:
-    return JsonResponse(utils.get_version_info())
-
-
 @csrf_exempt
-def index(request):
+def index(request: Request) -> HttpResponse:
     if request.method != "GET":
         logger.warning(
             "Invalid request made to %s with method %s", request.path, request.method
@@ -28,7 +22,7 @@ def index(request):
     return HttpResponse(template.render(request=request))
 
 
-def project_overrides(request):
+def project_overrides(request: Request) -> HttpResponse:
     """
     Build and return the dictionary of front-end relevant environment variables for configuration.
     It gets loaded as a script tag in the head of the browser when the frontend application starts up.
@@ -37,24 +31,26 @@ def project_overrides(request):
         "amplitude": "AMPLITUDE_API_KEY",
         "api": "API_URL",
         "assetURL": "ASSET_URL",
+        "cookieAuthEnabled": "COOKIE_AUTH_ENABLED",
+        "cookieSameSite": "COOKIE_SAME_SITE",
         "crispChat": "CRISP_CHAT_API_KEY",
         "disableAnalytics": "DISABLE_ANALYTICS_FEATURES",
         "flagsmith": "FLAGSMITH_ON_FLAGSMITH_API_KEY",
         "flagsmithAnalytics": "FLAGSMITH_ANALYTICS",
-        "flagsmithRealtime": "ENABLE_FLAGSMITH_REALTIME",
         "flagsmithClientAPI": "FLAGSMITH_ON_FLAGSMITH_API_URL",
-        "ga": "GOOGLE_ANALYTICS_API_KEY",
+        "flagsmithRealtime": "ENABLE_FLAGSMITH_REALTIME",
         "fpr": "FIRST_PROMOTER_ID",
+        "ga": "GOOGLE_ANALYTICS_API_KEY",
+        "githubAppURL": "GITHUB_APP_URL",
         "headway": "HEADWAY_API_KEY",
         "hideInviteLinks": "DISABLE_INVITE_LINKS",
-        "linkedin_api_key": "LINKEDIN_API_KEY",
+        "linkedinPartnerTracking": "LINKEDIN_PARTNER_TRACKING",
         "maintenance": "MAINTENANCE_MODE",
-        "mixpanel": "MIXPANEL_API_KEY",
         "preventEmailPassword": "PREVENT_EMAIL_PASSWORD",
         "preventSignup": "PREVENT_SIGNUP",
+        "reo": "REO_API_KEY",
         "sentry": "SENTRY_API_KEY",
         "useSecureCookies": "USE_SECURE_COOKIES",
-        "cookieSameSite": "COOKIE_SAME_SITE",
     }
 
     override_data = {

@@ -1,27 +1,17 @@
 import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
 import TableFilter from './TableFilter'
-import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
-import { useGetTagsQuery } from 'common/services/useTag'
-import Tag from 'components/tags/Tag'
-import TableFilterItem from './TableFilterItem'
-import Constants from 'common/constants'
-import { TagStrategy } from 'common/types/responses'
-import { AsyncStorage } from 'polyfill-react-native'
 import InputGroup from 'components/base/forms/InputGroup'
-import useSearchThrottle from 'common/useSearchThrottle'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 
 type TableFilterType = {
   value: {
     enabled: boolean | null
     valueSearch: string | null
   }
-  enabled: boolean | null
-  isLoading: boolean
+  isLoading?: boolean
   onChange: (value: TableFilterType['value']) => void
   className?: string
-  useLocalStorage?: boolean
-  projectId: string
 }
 
 const enabledOptions = [
@@ -42,40 +32,10 @@ const TableTagFilter: FC<TableFilterType> = ({
   className,
   isLoading,
   onChange,
-  projectId,
-  useLocalStorage,
   value,
 }) => {
-  const checkedLocalStorage = useRef(false)
-  const { searchInput, setSearchInput } = useSearchThrottle(
-    value.valueSearch || '',
-    () => {
-      onChange({
-        enabled: value.enabled,
-        valueSearch: searchInput,
-      })
-    },
-  )
-  useEffect(() => {
-    if (checkedLocalStorage.current && useLocalStorage) {
-      AsyncStorage.setItem(`${projectId}-value`, JSON.stringify(value))
-    }
-  }, [value, projectId, useLocalStorage])
-  useEffect(() => {
-    const checkLocalStorage = async function () {
-      if (useLocalStorage && !checkedLocalStorage.current) {
-        checkedLocalStorage.current = true
-        const storedValue = await AsyncStorage.getItem(`${projectId}-value`)
-        if (storedValue) {
-          try {
-            const storedValueObject = JSON.parse(storedValue)
-            onChange(storedValueObject)
-          } catch (e) {}
-        }
-      }
-    }
-    checkLocalStorage()
-  }, [useLocalStorage, projectId])
+  const { searchInput, setSearchInput } = useDebouncedSearch('')
+
   return (
     <div className={isLoading ? 'disabled' : ''}>
       <TableFilter
@@ -101,8 +61,6 @@ const TableTagFilter: FC<TableFilterType> = ({
                   styles={{
                     control: (base) => ({
                       ...base,
-                      '&:hover': { borderColor: '$bt-brand-secondary' },
-                      border: '1px solid $bt-brand-secondary',
                       height: 18,
                     }),
                   }}

@@ -6,7 +6,7 @@ from integrations.webhook.models import WebhookConfiguration
 from integrations.webhook.serializers import WebhookConfigurationSerializer
 
 
-def test_base_environment_integration_model_serializer_save_updates_existing_if_soft_deleted(
+def test_base_environment_integration_model_serializer_save_updates_existing_if_soft_deleted(  # type: ignore[no-untyped-def]  # noqa: E501
     environment,
 ):
     """
@@ -39,7 +39,7 @@ def test_base_environment_integration_model_serializer_save_updates_existing_if_
     assert updated_webhook_config.deleted_at is None
 
 
-def test_base_project_integration_model_serializer_save_updates_existing_if_soft_deleted(
+def test_base_project_integration_model_serializer_save_updates_existing_if_soft_deleted(  # type: ignore[no-untyped-def]  # noqa: E501
     project,
 ):
     """

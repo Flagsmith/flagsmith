@@ -1,10 +1,8 @@
 import React, { FC, useEffect, useState } from 'react'
 import Utils, { planNames } from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
-import Button from './base/forms/Button'
 import { IonIcon } from '@ionic/react'
-import { starOutline } from 'ionicons/icons'
-import Icon from './Icon'
+import { logoGithub } from 'ionicons/icons'
 
 type GithubStarType = {}
 
@@ -12,19 +10,27 @@ const GithubStar: FC<GithubStarType> = ({}) => {
   const organisation = AccountStore.getOrganisation()
   const plan = organisation?.subscription?.plan || ''
   const planName = Utils.getPlanName(plan)
-  const [stars, setStars] = useState()
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const [stars, setStars] = useState<number | null>(null)
+
+  const formatStars = (count: number): string => {
+    if (count >= 1000) {
+      const formattedCount = Math.ceil(count / 100) * 100 // Round up to nearest 100
+      return `${(formattedCount / 1000).toFixed(1)}k` // Format as 'x.xk'
+    }
+    return count.toString()
+  }
+
   useEffect(() => {
     if (planName !== planNames.enterprise) {
-      fetch(`https://api.github.com/repos/flagsmith/flagsmith`)
-          .then(function (res) {
-            return res.json()
-          })
-          .then(function (res) {
+      fetch('https://api.github.com/repos/flagsmith/flagsmith')
+        .then((res) => res.json())
+        .then((res) => {
+          if (res.stargazers_count) {
             setStars(res.stargazers_count)
-          })
+          }
+        })
+        .catch(() => {})
     }
-
   }, [planName])
 
   if (planName === planNames.enterprise) {
@@ -32,20 +38,23 @@ const GithubStar: FC<GithubStarType> = ({}) => {
   }
 
   return (
-    <>
-      <a
-        style={{ width: 90 }}
-        target='_blank'
-        href='https://github.com/flagsmith/flagsmith'
-        className='btn btn-sm btn-with-icon text-body me-2'
-        rel='noreferrer'
+    <a
+      target='_blank'
+      href='https://github.com/flagsmith/flagsmith'
+      className='d-flex text-body'
+      rel='noreferrer'
+    >
+      <div
+        className={
+          stars !== null
+            ? 'd-flex flex-row justify-content-center align-items-center'
+            : ''
+        }
       >
-        <div className='d-flex flex-row justify-content-center align-items-center'>
-          <Icon name='github' width={20} fill='#9DA4AE' />
-          <div className='ms-1'>{stars}</div>
-        </div>
-      </a>
-    </>
+        <IonIcon style={{ fontSize: 16 }} icon={logoGithub} />
+        {stars !== null && <div className='ms-1'>{formatStars(stars)}</div>}
+      </div>
+    </a>
   )
 }
 

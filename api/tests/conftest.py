@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.fixtures import SettingsWrapper
@@ -8,11 +10,14 @@ from environments.dynamodb import (
     DynamoIdentityWrapper,
 )
 from environments.models import Environment
-from util.mappers import map_environment_to_environment_document
+from util.mappers import (
+    map_environment_to_environment_document,
+    map_environment_to_environment_v2_document,
+)
 
 
 @pytest.fixture()
-def edge_identity_dynamo_wrapper_mock(mocker):
+def edge_identity_dynamo_wrapper_mock(mocker):  # type: ignore[no-untyped-def]
     return mocker.patch(
         "edge_api.identities.models.EdgeIdentity.dynamo_wrapper",
     )
@@ -75,22 +80,31 @@ def dynamodb_wrapper_v2(
 @pytest.fixture()
 def dynamo_enabled_project_environment_one_document(
     flagsmith_environment_table: Table,
+    flagsmith_environments_v2_table: Table,
     dynamo_enabled_project_environment_one: Environment,
-) -> dict:
+) -> dict[str, typing.Any]:
     environment_dict = map_environment_to_environment_document(
         dynamo_enabled_project_environment_one
     )
-
     flagsmith_environment_table.put_item(
         Item=environment_dict,
     )
+
+    flagsmith_environments_v2_table.put_item(
+        Item=map_environment_to_environment_v2_document(
+            dynamo_enabled_project_environment_one
+        )
+    )
+
     return environment_dict
 
 
 @pytest.fixture()
 def dynamo_environment_wrapper(
     flagsmith_environment_table: Table,
+    settings: SettingsWrapper,
 ) -> DynamoEnvironmentWrapper:
+    settings.ENVIRONMENTS_TABLE_NAME_DYNAMO = flagsmith_environment_table.name
     wrapper = DynamoEnvironmentWrapper()
     wrapper.table_name = flagsmith_environment_table.name
     return wrapper

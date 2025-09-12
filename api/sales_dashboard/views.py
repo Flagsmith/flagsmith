@@ -1,13 +1,13 @@
 import json
+from datetime import timedelta
 
-from app_analytics.influxdb_wrapper import (
-    get_event_list_for_organisation,
-    get_events_for_organisation,
-)
+import pytz
+import re2 as re  # type: ignore[import-untyped]
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Q, Value
+from django.db.models.functions import Greatest
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -16,26 +16,36 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404
 from django.template import loader
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
-from django.views.generic import ListView
-from django.views.generic.edit import FormView
+from django.views.generic import ListView, TemplateView
 
+from app_analytics.influxdb_wrapper import (
+    get_event_list_for_organisation,
+    get_events_for_organisation,
+)
+from core.helpers import get_current_site_url
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
+from environments.models import Environment
+from features.models import Feature
 from import_export.export import full_export
 from organisations.chargebee.tasks import update_chargebee_cache
 from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
+    UserOrganisation,
 )
 from organisations.tasks import (
     update_organisation_subscription_information_cache,
     update_organisation_subscription_information_influx_cache,
 )
+from projects.models import Project
+from users.models import FFAdminUser
 
 from .forms import (
-    EmailUsageForm,
     EndTrialForm,
     MaxAPICallsForm,
     MaxSeatsForm,
@@ -46,26 +56,40 @@ OBJECTS_PER_PAGE = 50
 DEFAULT_ORGANISATION_SORT = "subscription_information_cache__api_calls_30d"
 DEFAULT_ORGANISATION_SORT_DIRECTION = "DESC"
 
+email_regex = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
+domain_regex = re.compile(r"^[a-z0-9.-]+\.[a-z]{2,}$")
 
-class OrganisationList(ListView):
+
+@method_decorator(
+    name="get",
+    decorator=staff_member_required(),
+)
+class OrganisationList(ListView):  # type: ignore[type-arg]
     model = Organisation
     paginate_by = OBJECTS_PER_PAGE
     template_name = "sales_dashboard/home.html"
 
-    def get_queryset(self):
-        queryset = Organisation.objects.annotate(
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        if self.request.GET.get("include_deleted") == "on" or self.request.GET.get(
+            "search"
+        ):
+            queryset = Organisation.objects.all_with_deleted()
+        else:
+            queryset = Organisation.objects.all()
+
+        queryset = queryset.annotate(
             num_projects=Count("projects", distinct=True),
             num_users=Count("users", distinct=True),
             num_features=Count("projects__features", distinct=True),
+            overage=Greatest(
+                Value(0),
+                F("subscription_information_cache__api_calls_30d")
+                - F("subscription_information_cache__allowed_30d_api_calls"),
+            ),
         ).select_related("subscription", "subscription_information_cache")
 
-        if self.request.GET.get("search"):
-            search_term = self.request.GET["search"]
-            queryset = queryset.filter(
-                Q(name__icontains=search_term)
-                | Q(users__email__icontains=search_term)
-                | Q(subscription__subscription_id=search_term)
-            )
+        if search_term := self.request.GET.get("search"):
+            queryset = queryset.filter(self._build_search_query(search_term))
 
         if self.request.GET.get("filter_plan"):
             filter_plan = self.request.GET["filter_plan"]
@@ -84,20 +108,21 @@ class OrganisationList(ListView):
 
         return queryset
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs):  # type: ignore[no-untyped-def]
         data = super().get_context_data(**kwargs)
 
         data["search"] = self.request.GET.get("search", "")
         data["filter_plan"] = self.request.GET.get("filter_plan")
         data["sort_field"] = self.request.GET.get("sort_field")
         data["sort_direction"] = self.request.GET.get("sort_direction")
+        data["include_deleted"] = self.request.GET.get("include_deleted", "off") == "on"
 
         # Use the most recent "influx_updated_at" in
         # OrganisationSubscriptionInformationCache object to determine
         # when the caches were last updated.
         try:
             subscription_information_caches_influx_updated_at = (
-                OrganisationSubscriptionInformationCache.objects.order_by(
+                OrganisationSubscriptionInformationCache.objects.order_by(  # type: ignore[union-attr]
                     F("influx_updated_at").desc(nulls_last=True)
                 )
                 .first()
@@ -113,11 +138,36 @@ class OrganisationList(ListView):
 
         return data
 
+    def _build_search_query(self, search_term: str) -> Q:
+        search_term = search_term.lower()
+        if email_regex.match(search_term) and (
+            user := FFAdminUser.objects.filter(email__iexact=search_term).first()
+        ):
+            return Q(id__in=user.organisations.values_list("id", flat=True))
+        else:
+            query = Q()
+
+            if domain_regex.match(search_term):
+                matching_users = FFAdminUser.objects.filter(
+                    email__iendswith=search_term
+                )
+                org_ids = UserOrganisation.objects.filter(
+                    user__in=matching_users
+                ).values_list("organisation_id", flat=True)
+                query = query & Q(id__in=org_ids)
+
+            return (
+                query
+                | Q(name__icontains=search_term)
+                | Q(subscription__subscription_id__iexact=search_term)
+            )
+
 
 @staff_member_required
-def organisation_info(request, organisation_id):
+def organisation_info(request: HttpRequest, organisation_id: int) -> HttpResponse:
     organisation = get_object_or_404(
-        Organisation.objects.select_related("subscription"), pk=organisation_id
+        Organisation.objects.all_with_deleted().select_related("subscription"),
+        pk=organisation_id,
     )
     template = loader.get_template("sales_dashboard/organisation.html")
     subscription_metadata = organisation.subscription.get_subscription_metadata()
@@ -129,7 +179,7 @@ def organisation_info(request, organisation_id):
             environment__project=project
         ).count()
         if settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
-            identity_migration_status_dict[project.id] = IdentityMigrator(
+            identity_migration_status_dict[project.id] = IdentityMigrator(  # type: ignore[no-untyped-call]
                 project.id
             ).migration_status.name
 
@@ -148,8 +198,11 @@ def organisation_info(request, organisation_id):
         date_range = request.GET.get("date_range", "180d")
         context["date_range"] = date_range
 
+        assert date_range.endswith("d")
+        now = timezone.now()
+        date_start = now - timedelta(days=int(date_range[:-1]))
         event_list, labels = get_event_list_for_organisation(
-            organisation_id, date_range
+            organisation_id, date_start
         )
         context["event_list"] = event_list
         context["traits"] = mark_safe(json.dumps(event_list["traits"]))
@@ -159,32 +212,37 @@ def organisation_info(request, organisation_id):
             json.dumps(event_list["environment-document"])
         )
         context["labels"] = mark_safe(json.dumps(labels))
+
+        date_starts = {}
+        date_starts["24h"] = now - timedelta(days=1)
+        date_starts["7d"] = now - timedelta(days=7)
+        date_starts["30d"] = now - timedelta(days=30)
         context["api_calls"] = {
             # TODO: this could probably be reduced to a single influx request
             #  rather than 3
-            range_: get_events_for_organisation(organisation_id, date_range=range_)
-            for range_ in ("24h", "7d", "30d")
+            period: get_events_for_organisation(organisation_id, date_start=_date_start)
+            for period, _date_start in date_starts.items()
         }
 
     return HttpResponse(template.render(context, request))
 
 
 @staff_member_required
-def update_seats(request, organisation_id):
+def update_seats(request, organisation_id):  # type: ignore[no-untyped-def]
     max_seats_form = MaxSeatsForm(request.POST)
     if max_seats_form.is_valid():
         organisation = get_object_or_404(Organisation, pk=organisation_id)
-        max_seats_form.save(organisation)
+        max_seats_form.save(organisation)  # type: ignore[no-untyped-call]
 
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
 @staff_member_required
-def update_max_api_calls(request, organisation_id):
+def update_max_api_calls(request, organisation_id):  # type: ignore[no-untyped-def]
     max_api_calls_form = MaxAPICallsForm(request.POST)
     if max_api_calls_form.is_valid():
         organisation = get_object_or_404(Organisation, pk=organisation_id)
-        max_api_calls_form.save(organisation)
+        max_api_calls_form.save(organisation)  # type: ignore[no-untyped-call]
 
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
@@ -222,32 +280,43 @@ def organisation_end_trial(request: HttpRequest, organisation_id: int) -> HttpRe
 
 
 @staff_member_required
-def migrate_identities_to_edge(request, project_id):
+def migrate_identities_to_edge(request, project_id):  # type: ignore[no-untyped-def]
     if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
         return HttpResponseBadRequest("DynamoDB is not enabled")
 
-    identity_migrator = IdentityMigrator(project_id)
+    identity_migrator = IdentityMigrator(project_id)  # type: ignore[no-untyped-call]
     if not identity_migrator.can_migrate:
         return HttpResponseBadRequest(
             "Migration is either already done or is in progress"
         )
-    identity_migrator.trigger_migration()
+    identity_migrator.trigger_migration()  # type: ignore[no-untyped-call]
 
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
-class EmailUsage(FormView):
-    form_class = EmailUsageForm
-    template_name = "sales_dashboard/email-usage.html"
-    success_url = reverse_lazy("sales_dashboard:index")
+@method_decorator(
+    name="get",
+    decorator=staff_member_required(),
+)
+class UsageReport(TemplateView):  # pragma: no cover
+    template_name = "sales_dashboard/usage.html"
 
-    def form_valid(self, form):
-        form.save()
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):  # type: ignore[no-untyped-def]
+        context = super().get_context_data(**kwargs)
+        context["stats"] = {
+            "site_url": get_current_site_url(),
+            "total_organisations": Organisation.objects.all().count(),
+            "total_projects": Project.objects.all().count(),
+            "total_environments": Environment.objects.all().count(),
+            "total_features": Feature.objects.all().count(),
+            "total_seats": FFAdminUser.objects.all().count(),
+            "report_date": timezone.now().astimezone(pytz.UTC),
+        }
+        return context
 
 
-@staff_member_required()
-def download_org_data(request, organisation_id):
+@staff_member_required()  # type: ignore[misc]
+def download_org_data(request, organisation_id):  # type: ignore[no-untyped-def]
     data = full_export(organisation_id)
     response = HttpResponse(
         json.dumps(data, cls=DjangoJSONEncoder), content_type="application/json"
@@ -258,19 +327,19 @@ def download_org_data(request, organisation_id):
     return response
 
 
-@staff_member_required()
-def trigger_update_organisation_subscription_information_influx_cache(request):
+@staff_member_required()  # type: ignore[misc]
+def trigger_update_organisation_subscription_information_influx_cache(request):  # type: ignore[no-untyped-def]
     update_organisation_subscription_information_influx_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
-@staff_member_required()
-def trigger_update_organisation_subscription_information_cache(request):
+@staff_member_required()  # type: ignore[misc]
+def trigger_update_organisation_subscription_information_cache(request):  # type: ignore[no-untyped-def]
     update_organisation_subscription_information_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
-@staff_member_required()
-def trigger_update_chargebee_caches(request):
+@staff_member_required()  # type: ignore[misc]
+def trigger_update_chargebee_caches(request):  # type: ignore[no-untyped-def]
     update_chargebee_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))

@@ -1,5 +1,9 @@
 import { RequestLogger, Selector, t } from 'testcafe'
-import { FlagsmithValue } from '../common/types/responses';
+import Project from '../common/project';
+import fetch from 'node-fetch';
+import flagsmith from 'flagsmith/isomorphic';
+import { IFlagsmith, FlagsmithValue } from 'flagsmith/types';
+import { delay } from 'lodash';
 
 export const LONG_TIMEOUT = 40000
 
@@ -12,6 +16,17 @@ export type Rule = {
   operator: string
   value: string | number | boolean
   ors?: Rule[]
+}
+
+// Allows to check if an element is present - can be used to identify active feature flag state
+export const isElementExists = async (selector: string) => {
+  return Selector(byId(selector)).exists
+}
+
+const initProm = flagsmith.init({fetch,environmentID:Project.flagsmith,api:Project.flagsmithClientAPI})
+export const getFlagsmith = async function() {
+  await initProm
+  return flagsmith as IFlagsmith
 }
 export const setText = async (selector: string, text: string) => {
   logUsingLastSection(`Set text ${selector} : ${text}`)
@@ -35,6 +50,31 @@ export const waitForElementVisible = async (selector: string) => {
     .ok(`waitForElementVisible(${selector})`, { timeout: LONG_TIMEOUT })
 }
 
+export const waitForElementNotClickable = async (selector: string) => {
+  logUsingLastSection(`Waiting element visible ${selector}`)
+  await t
+    .expect(Selector(selector).visible)
+    .ok(`waitForElementVisible(${selector})`, { timeout: LONG_TIMEOUT })
+  await t.expect(Selector(selector).hasAttribute('disabled')).ok()
+}
+
+export const waitForElementClickable = async (selector: string) => {
+  logUsingLastSection(`Waiting element visible ${selector}`)
+  await t
+    .expect(Selector(selector).visible)
+    .ok(`waitForElementVisible(${selector})`, { timeout: LONG_TIMEOUT })
+  await t.expect(Selector(selector).hasAttribute('disabled')).notOk()
+}
+
+export const clickSegmentByName = async (name: string) => {
+   const el = Selector('[data-test^="segment-"][data-test$="-name"]').withText(
+      name,
+   )
+   await t.scrollIntoView(el)
+   await t.expect(el.visible).ok(`segment "${name}" not visible`, { timeout: LONG_TIMEOUT })
+   await t.click(el)
+  }
+  
 export const logResults = async (requests: LoggedRequest[], t) => {
   if (!t.testRun?.errs?.length) {
     log('Finished without errors')
@@ -47,7 +87,8 @@ export const logResults = async (requests: LoggedRequest[], t) => {
       requests.filter((v) => {
         if (
           v.request?.url?.includes('get-subscription-metadata') ||
-          v.request?.url?.includes('analytics/flags')
+          v.request?.url?.includes('analytics/flags') ||
+          v.request?.url?.includes('/usage-data?')
         ) {
           return false
         }
@@ -88,8 +129,20 @@ export const click = async (selector: string) => {
     .click(selector)
 }
 
+export const clickByText = async (text: string, element = 'button') => {
+  logUsingLastSection(`Click by text ${text} ${element}`)
+  const selector = Selector(element).withText(text)
+  await t
+    .scrollIntoView(selector)
+    .expect(Selector(selector).hasAttribute('disabled'))
+    .notOk('ready for testing', { timeout: 5000 })
+    .hover(selector)
+    .click(selector)
+}
+
 export const gotoSegments = async () => {
   await click('#segments-link')
+  await waitForElementVisible(byId('show-create-segment-btn'))
 }
 
 export const getLogger = () =>
@@ -102,7 +155,33 @@ export const getLogger = () =>
     stringifyResponseBody: true,
   })
 
+export const createRole = async (
+  roleName: string,
+  index: number,
+  users: number[],
+) => {
+  await click(byId('tab-item-roles'))
+  await click(byId('create-role'))
+  await setText(byId('role-name'), roleName)
+  await click(byId('save-role'))
+  await click(byId(`role-${index}`))
+  await click(byId('members-tab'))
+  await click(byId('assigned-users'))
+  for (const userId of users) {
+    await click(byId(`assignees-list-item-${userId}`))
+  }
+  await closeModal()
+}
+
+export const editRoleMembers = async (index: number) => {
+  await click(byId('tab-item-roles'))
+  await click(byId('create-role'))
+  await setText(byId('role-name'), roleName)
+  await click(byId('save-role'))
+}
+
 export const gotoTraits = async () => {
+  await click('#features-link')
   await click('#users-link')
   await click(byId('user-item-0'))
   await waitForElementVisible('#add-trait')
@@ -174,8 +253,8 @@ export const addSegmentOverrideConfig = async (
   await click(byId(`select-segment-option-${selectionIndex}`))
 
   await waitForElementVisible(byId(`segment-override-value-${index}`))
-  await setText(byId(`segment-override-value-${0}`), `${value}`)
-  await click(byId('segment-override-toggle-0'))
+  await setText(byId(`segment-override-value-${index}`), `${value}`)
+  await click(byId(`segment-override-toggle-${index}`))
 }
 
 export const addSegmentOverride = async (
@@ -188,7 +267,7 @@ export const addSegmentOverride = async (
   await click(byId(`select-segment-option-${selectionIndex}`))
   await waitForElementVisible(byId(`segment-override-value-${index}`))
   if (value) {
-    await click(`${byId(`segment-override-${0}`)} [role="switch"]`)
+    await click(`${byId(`segment-override-${index}`)} [role="switch"]`)
   }
   if (mvs) {
     await Promise.all(
@@ -218,7 +297,16 @@ export const saveFeatureSegments = async () => {
   await waitForElementNotExist('#create-feature-modal')
 }
 
+export const createEnvironment = async (name: string) => {
+  await setText('[name="envName"]', name)
+  await click('#create-env-btn')
+  await waitForElementVisible(
+    byId(`switch-environment-${name.toLowerCase()}-active`),
+  )
+}
+
 export const goToUser = async (index: number) => {
+  await click('#features-link')
   await click('#users-link')
   await click(byId(`user-item-${index}`))
 }
@@ -236,14 +324,33 @@ export const setSegmentOverrideIndex = async (
   await setText(byId(`sort-${index}`), `${newIndex}`)
 }
 
+export const assertInputValue = (selector: string, v: string) =>
+  t.expect(Selector(selector).value).eql(v)
 export const assertTextContent = (selector: string, v: string) =>
   t.expect(Selector(selector).textContent).eql(v)
 export const assertTextContentContains = (selector: string, v: string) =>
   t.expect(Selector(selector).textContent).contains(v)
 export const getText = (selector: string) => Selector(selector).innerText
 
-export const deleteSegment = async (index: number, name: string) => {
-  await click(byId(`remove-segment-btn-${index}`))
+export const cloneSegment = async (index: number, name: string) => {
+  await click(byId(`segment-action-${index}`))
+  await click(byId(`segment-clone-${index}`))
+  await setText('[name="clone-segment-name"]', name)
+  await click('#confirm-clone-segment-btn')
+  await waitForElementVisible(byId(`segment-${index + 1}-name`))
+}
+
+export const deleteSegment = async (
+  index: number,
+  name: string,
+  legacyDelete = true,
+) => {
+  if (legacyDelete) {
+    await click(byId(`remove-segment-btn-${index}`))
+  } else {
+    await click(byId(`segment-action-${index}`))
+    await click(byId(`segment-remove-${index}`))
+  }
   await setText('[name="confirm-segment-name"]', name)
   await click('#confirm-remove-segment-btn')
   await waitForElementNotExist(`remove-segment-btn-${index}`)
@@ -255,47 +362,57 @@ export const login = async (email: string, password: string) => {
   await click('#login-btn')
   await waitForElementVisible('#project-manage-widget')
 }
-export const logout = async (t) => {
+export const logout = async () => {
   await click('#account-settings-link')
   await click('#logout-link')
   await waitForElementVisible('#login-page')
+  await t.wait(500)
 }
 
-export const goToFeatureVersions = async (featureIndex:number) =>{
-  await gotoFeatures()
-  await click(byId(`feature-action-${featureIndex}`))
-  await click(byId(`feature-history-${featureIndex}`))
+export const goToFeatureVersions = async (featureIndex: number) => {
+  await gotoFeature(featureIndex)
+  if (await isElementExists('change-history')) {
+    await click(byId('change-history'))
+  } else {
+    await click(byId('tabs-overflow-button'))
+    await click(byId('change-history'))
+  }
 }
 
 export const compareVersion = async (
-    featureIndex:number,
-    versionIndex:number,
-    compareOption: 'LIVE'|'PREVIOUS'|null,
-    oldEnabled:boolean,
-    newEnabled:boolean,
-    oldValue?:FlagsmithValue,
-    newValue?:FlagsmithValue
-) =>{
+  featureIndex: number,
+  versionIndex: number,
+  compareOption: 'LIVE' | 'PREVIOUS' | null,
+  oldEnabled: boolean,
+  newEnabled: boolean,
+  oldValue?: FlagsmithValue,
+  newValue?: FlagsmithValue,
+) => {
   await goToFeatureVersions(featureIndex)
   await click(byId(`history-item-${versionIndex}-compare`))
-  if(compareOption==='LIVE') {
+  if (compareOption === 'LIVE') {
     await click(byId(`history-item-${versionIndex}-compare-live`))
-  } else if(compareOption==='PREVIOUS') {
+  } else if (compareOption === 'PREVIOUS') {
     await click(byId(`history-item-${versionIndex}-compare-previous`))
   }
 
   await assertTextContent(byId(`old-enabled`), `${oldEnabled}`)
   await assertTextContent(byId(`new-enabled`), `${newEnabled}`)
-  if(oldValue) {
+  if (oldValue) {
     await assertTextContent(byId(`old-value`), `${oldValue}`)
   }
-  if(newValue) {
+  if (newValue) {
     await assertTextContent(byId(`old-value`), `${oldValue}`)
   }
+  await closeModal()
 }
-export const assertNumberOfVersions = async (index:number, versions:number) =>{
+export const assertNumberOfVersions = async (
+  index: number,
+  versions: number,
+) => {
   await goToFeatureVersions(index)
-  await waitForElementVisible(byId(`history-item-${versions-2}-compare`))
+  await waitForElementVisible(byId(`history-item-${versions - 2}-compare`))
+  await closeModal()
 }
 
 export const createRemoteConfig = async (
@@ -326,10 +443,15 @@ export const createRemoteConfig = async (
   await click(byId('create-feature-btn'))
   await waitForElementVisible(byId(`feature-value-${index}`))
   await assertTextContent(byId(`feature-value-${index}`), expectedValue)
+  await closeModal()
 }
 
-export const createOrganisationAndProject = async (organisationName:string,projectName:string) =>{
+export const createOrganisationAndProject = async (
+  organisationName: string,
+  projectName: string,
+) => {
   log('Create Organisation')
+  await click(byId('home-link'))
   await click(byId('create-organisation-btn'))
   await setText('[name="orgName"]', organisationName)
   await click('#create-org-btn')
@@ -356,13 +478,12 @@ export const editRemoteConfig = async (
     await click(byId('toggle-feature-button'))
   }
   await Promise.all(
-      mvs.map(async (v, i) => {
-        await setText(byId(`featureVariationValue${i}`), v.value)
-        await setText(byId(`featureVariationWeight${v.value}`), `${v.weight}`)
-      }),
+    mvs.map(async (v, i) => {
+      await setText(byId(`featureVariationWeight${v.value}`), `${v.weight}`)
+    }),
   )
   await click(byId('update-feature-btn'))
-  if(value) {
+  if (value) {
     await waitForElementVisible(byId(`feature-value-${index}`))
     await assertTextContent(byId(`feature-value-${index}`), expectedValue)
   }
@@ -389,18 +510,27 @@ export const createFeature = async (
   }
   await click(byId('create-feature-btn'))
   await waitForElementVisible(byId(`feature-item-${index}`))
+  await closeModal()
 }
 
 export const deleteFeature = async (index: number, name: string) => {
   await click(byId(`feature-action-${index}`))
-  await waitForElementVisible(byId(`remove-feature-btn-${index}`))
-  await click(byId(`remove-feature-btn-${index}`))
+  await waitForElementVisible(byId(`feature-remove-${index}`))
+  await click(byId(`feature-remove-${index}`))
   await setText('[name="confirm-feature-name"]', name)
   await click('#confirm-remove-feature-btn')
-  await waitForElementNotExist(`remove-feature-btn-${index}`)
+  await waitForElementNotExist(`feature-remove-${index}`)
 }
 
 export const toggleFeature = async (index: number, toValue: boolean) => {
+  await click(byId(`feature-switch-${index}${toValue ? '-off' : 'on'}`))
+  await click('#confirm-toggle-feature-btn')
+  await waitForElementVisible(
+    byId(`feature-switch-${index}${toValue ? '-on' : 'off'}`),
+  )
+}
+
+export const setUserPermissions = async (index: number, toValue: boolean) => {
   await click(byId(`feature-switch-${index}${toValue ? '-off' : 'on'}`))
   await click('#confirm-toggle-feature-btn')
   await waitForElementVisible(
@@ -428,7 +558,6 @@ export const createSegment = async (
   rules?: Rule[],
 ) => {
   await click(byId('show-create-segment-btn'))
-  await click(byId('add-rule'))
   await setText(byId('segmentID'), id)
   for (let x = 0; x < rules.length; x++) {
     const rule = rules[x]
@@ -453,12 +582,74 @@ export const createSegment = async (
   await click(byId('create-segment'))
   await waitForElementVisible(byId(`segment-${index}-name`))
   await assertTextContent(byId(`segment-${index}-name`), id)
+  await closeModal()
 }
 
 export const waitAndRefresh = async (waitFor = 3000) => {
   logUsingLastSection(`Waiting for ${waitFor}ms, then refreshing.`)
   await t.wait(waitFor)
   await t.eval(() => location.reload())
+}
+
+export const refreshUntilElementVisible = async (
+  selector: string,
+  maxRetries = 20,
+) => {
+  const element = Selector(selector)
+  const isElementVisible = async () =>
+    (await element.exists) && (await element.visible)
+  let retries = 0
+  while (retries < maxRetries && !(await isElementVisible())) {
+    await t.eval(() => location.reload()) // Reload the page
+    await t.wait(3000)
+    retries++
+  }
+  return t.scrollIntoView(element)
+}
+
+const permissionsMap = {
+  'CREATE_PROJECT': 'organisation',
+  'MANAGE_USERS': 'organisation',
+  'MANAGE_USER_GROUPS': 'organisation',
+  'VIEW_PROJECT': 'project',
+  'CREATE_ENVIRONMENT': 'project',
+  'DELETE_FEATURE': 'project',
+  'CREATE_FEATURE': 'project',
+  'MANAGE_SEGMENTS': 'project',
+  'VIEW_AUDIT_LOG': 'project',
+  'VIEW_ENVIRONMENT': 'environment',
+  'UPDATE_FEATURE_STATE': 'environment',
+  'MANAGE_IDENTITIES': 'environment',
+  'CREATE_CHANGE_REQUEST': 'environment',
+  'APPROVE_CHANGE_REQUEST': 'environment',
+  'VIEW_IDENTITIES': 'environment',
+  'MANAGE_SEGMENT_OVERRIDES': 'environment',
+  'MANAGE_TAGS': 'project',
+} as const
+
+export const setUserPermission = async (
+  email: string,
+  permission: keyof typeof permissionsMap | 'ADMIN',
+  entityName: string | null,
+  entityLevel?: 'project' | 'environment' | 'organisation',
+  parentName?: string,
+) => {
+  await click(byId('users-and-permissions'))
+  await click(byId(`user-${email}`))
+  const level = permissionsMap[permission] || entityLevel
+  await click(byId(`${level}-permissions-tab`))
+  if (parentName) {
+    await clickByText(parentName, 'a')
+  }
+  if (entityName) {
+    await click(byId(`permissions-${entityName.toLowerCase()}`))
+  }
+  if (permission === 'ADMIN') {
+    await click(byId(`admin-switch-${level}`))
+  } else {
+    await click(byId(`permission-switch-${permission}`))
+  }
+  await closeModal()
 }
 
 export default {}

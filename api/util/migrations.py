@@ -25,7 +25,7 @@ PermissionModelType = Union[
 ]
 
 
-def merge_duplicate_permissions(
+def merge_duplicate_permissions(  # type: ignore[no-untyped-def]
     PermissionModel: PermissionModelType, duplicate_for: List[str]
 ):
     # find all duplicate permissions
@@ -43,7 +43,7 @@ def merge_duplicate_permissions(
         merged_permission = duplicate_permissions[0]
         for duplicate_permission in duplicate_permissions[1:]:
             if getattr(duplicate_permission, "admin", False):
-                merged_permission.admin = True
+                merged_permission.admin = True  # type: ignore[union-attr]
                 merged_permission.save()
 
             for permission in duplicate_permission.permissions.all():

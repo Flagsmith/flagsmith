@@ -17,11 +17,11 @@ class TelemetryData:
     users: int
 
     @property
-    def debug_enabled(self):
+    def debug_enabled(self):  # type: ignore[no-untyped-def]
         return settings.DEBUG
 
     @property
-    def env(self):
+    def env(self):  # type: ignore[no-untyped-def]
         return settings.ENV
 
     @classmethod

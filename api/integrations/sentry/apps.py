@@ -9,7 +9,7 @@ from .samplers import traces_sampler
 class SentryConfig(AppConfig):
     name = "integrations.sentry"
 
-    def ready(self):
+    def ready(self):  # type: ignore[no-untyped-def]
         if settings.SENTRY_SDK_DSN:
             sentry_sdk.init(
                 dsn=settings.SENTRY_SDK_DSN,

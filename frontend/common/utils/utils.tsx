@@ -2,6 +2,8 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
+  AccountModel,
+  ContentType,
   FeatureState,
   FeatureStateValue,
   FlagsmithValue,
@@ -11,6 +13,9 @@ import {
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
+  Tag,
+  PConfidence,
+  UserPermissions,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
 import { ReactNode } from 'react'
@@ -18,9 +23,39 @@ import _ from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
-import Format from './format'
+import { defaultFlags } from 'common/stores/default-flags'
+import Color from 'color'
+import { selectBuildVersion } from 'common/services/useBuildVersion'
+import { getStore } from 'common/store'
+import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
+import { TimeUnit } from 'components/release-pipelines/constants'
+import getUserDisplayName from './getUserDisplayName'
 
 const semver = require('semver')
+
+export type PaidFeature =
+  | 'FLAG_OWNERS'
+  | 'RBAC'
+  | 'AUDIT'
+  | 'FORCE_2FA'
+  | '4_EYES'
+  | '4_EYES_PROJECT'
+  | 'STALE_FLAGS'
+  | 'VERSIONING_DAYS'
+  | 'AUDIT_DAYS'
+  | 'AUTO_SEATS'
+  | 'METADATA'
+  | 'REALTIME'
+  | 'SAML'
+  | 'SCHEDULE_FLAGS'
+  | 'CREATE_ADDITIONAL_PROJECT'
+  | '2FA'
+  | 'RELEASE_PIPELINES'
+
+export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
+
+// Define a type for plan categories
+type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
 
 export const planNames = {
   enterprise: 'Enterprise',
@@ -34,7 +69,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     img.src = src
     document.body.appendChild(img)
   },
-
   calculateControl(
     multivariateOptions: MultivariateOption[],
     variations?: MultivariateFeatureStateValue[],
@@ -56,7 +90,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     })
     return 100 - total
   },
-
   calculateRemainingLimitsPercentage(
     total: number | undefined,
     max: number | undefined,
@@ -74,15 +107,55 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 0
   },
 
+  canCreateOrganisation() {
+    return (
+      !Utils.getFlagsmithHasFeature('disable_create_org') &&
+      (!Project.superUserCreateOnly ||
+        (Project.superUserCreateOnly && AccountStore.isSuper()))
+    )
+  },
+
+  capitalize(str: string) {
+    if (!str) return ''
+    return str.charAt(0).toUpperCase() + str.slice(1)
+  },
+
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
   },
 
-  copyFeatureName: (featureName: string) => {
-    navigator.clipboard.writeText(featureName)
-    toast('Copied to clipboard')
+  colour(
+    c: string,
+    fallback = Constants.defaultTagColor,
+  ): InstanceType<typeof Color> {
+    let res: Color
+    try {
+      res = Color(c)
+    } catch (_) {
+      res = Color(fallback)
+    }
+    return res
   },
 
+  convertToPConfidence(value: number) {
+    if (value > 0.05) return 'LOW' as PConfidence
+    if (value >= 0.01) return 'REASONABLE' as PConfidence
+    if (value > 0.002) return 'HIGH' as PConfidence
+    return 'VERY_HIGH' as PConfidence
+  },
+  copyToClipboard: async (
+    value: string,
+    successMessage?: string,
+    errorMessage?: string,
+  ) => {
+    try {
+      await navigator.clipboard.writeText(value)
+      toast(successMessage ?? 'Copied to clipboard')
+    } catch (error) {
+      toast(errorMessage ?? 'Failed to copy to clipboard')
+      throw error
+    }
+  },
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
       type === 'segment overrides' ? 'environment' : 'project'
@@ -96,7 +169,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       />
     ) : null
   },
-
   escapeHtml(html: string) {
     const text = document.createTextNode(html)
     const p = document.createElement('p')
@@ -108,17 +180,19 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return null
     }
 
-    if (typeof featureState.integer_value === 'number') {
-      return Utils.getTypedValue(featureState.integer_value)
+    //@ts-ignore value_type is the type key on core traits
+    switch (featureState.value_type || featureState.type) {
+      case 'bool':
+        return featureState.boolean_value
+      case 'float':
+        return featureState.float_value
+      case 'int':
+        return featureState.integer_value
+      default:
+        return featureState.string_value
     }
-    if (typeof featureState.float_value === 'number') {
-      return Utils.getTypedValue(featureState.float_value)
-    }
-
-    return Utils.getTypedValue(
-      featureState.string_value || featureState.boolean_value,
-    )
   },
+
   findOperator(
     operator: SegmentCondition['operator'],
     value: string,
@@ -135,8 +209,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     return conditions.find((v) => v.value === operator)
   },
-  getApproveChangeRequestPermission() {
-    return 'APPROVE_CHANGE_REQUEST'
+  /** Checks whether the specified flag exists, which is different from the flag being enabled or not. This is used to
+   *  only add behaviour to Flagsmith-on-Flagsmith flags that have been explicitly created by customers.
+   */
+  flagsmithFeatureExists(flag: string) {
+    return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
+  },
+  getContentType(contentTypes: ContentType[], model: string, type: string) {
+    return contentTypes.find((c: ContentType) => c[model] === type) || null
   },
   getCreateProjectPermission(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
@@ -149,6 +229,58 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return 'Administrator'
     }
     return 'Create Project'
+  },
+  getExistingWaitForTime: (
+    waitFor: string | undefined,
+  ):
+    | {
+        amountOfTime: number
+        timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit]
+      }
+    | undefined => {
+    if (!waitFor) {
+      return
+    }
+
+    const timeParts = waitFor.split(':')
+
+    if (timeParts.length != 3) return
+
+    const [hours, minutes, seconds] = timeParts
+
+    const amountOfMinutes = Number(minutes)
+    const amountOfHours = Number(hours)
+    const amountOfSeconds = Number(seconds)
+
+    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+      return
+    }
+
+    // Days
+    if (
+      amountOfHours % 24 === 0 &&
+      amountOfMinutes === 0 &&
+      amountOfSeconds === 0
+    ) {
+      return {
+        amountOfTime: amountOfHours / 24,
+        timeUnit: TimeUnit.DAY,
+      }
+    }
+
+    // Hours
+    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+      return {
+        amountOfTime: amountOfHours,
+        timeUnit: TimeUnit.HOUR,
+      }
+    }
+
+    // Minutes
+    return {
+      amountOfTime: amountOfMinutes,
+      timeUnit: TimeUnit.MINUTE,
+    }
   },
   getFeatureStatesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
@@ -168,7 +300,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         description: projectFlag.description,
         enabled: false,
         feature_state_value: projectFlag.initial_value,
-        hide_from_client: false,
         is_archived: projectFlag.is_archived,
         is_server_key_only: projectFlag.is_server_key_only,
         multivariate_options: projectFlag.multivariate_options,
@@ -182,7 +313,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         description: projectFlag.description,
         enabled: identityFlag.enabled,
         feature_state_value: identityFlag.feature_state_value,
-        hide_from_client: environmentFlag.hide_from_client,
         is_archived: projectFlag.is_archived,
         is_server_key_only: projectFlag.is_server_key_only,
         multivariate_options: projectFlag.multivariate_options,
@@ -194,7 +324,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       description: projectFlag.description,
       enabled: environmentFlag.enabled,
       feature_state_value: environmentFlag.feature_state_value,
-      hide_from_client: environmentFlag.hide_from_client,
       is_archived: projectFlag.is_archived,
       is_server_key_only: projectFlag.is_server_key_only,
       multivariate_options: projectFlag.multivariate_options.map((v) => {
@@ -215,6 +344,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       type: projectFlag.type,
     }
   },
+
   getFlagsmithHasFeature(key: string) {
     return flagsmith.hasFeature(key)
   },
@@ -224,12 +354,19 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
   },
+
   getIdentitiesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (project && project.use_edge_identities) {
       return 'edge-identities'
     }
     return 'identities'
+  },
+  getIntegrationData() {
+    return Utils.getFlagsmithJSONValue(
+      'integration_data',
+      defaultFlags.integration_data,
+    )
   },
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
@@ -251,43 +388,47 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'Update Feature State'
   },
+
   getManageUserPermission() {
     return 'MANAGE_IDENTITIES'
   },
   getManageUserPermissionDescription() {
     return 'Manage Identities'
   },
-  getPermissionList(
-    isAdmin: boolean,
-    permissions: string[] | undefined | null,
-    numberToTruncate = 3,
-  ): {
-    items: string[]
-    truncatedItems: string[]
-  } {
-    if (isAdmin) {
-      return {
-        items: ['Administrator'],
-        truncatedItems: [],
+
+  getNextPlan: (skipFree?: boolean) => {
+    const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
+    if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
+      return planNames.enterprise
+    }
+    switch (currentPlan) {
+      case planNames.free: {
+        return skipFree ? planNames.startup : planNames.scaleUp
+      }
+      case planNames.startup: {
+        return planNames.startup
+      }
+      default: {
+        return planNames.enterprise
       }
     }
-    if (!permissions) return { items: [], truncatedItems: [] }
-
-    const items =
-      permissions && permissions.length
-        ? permissions
-            .slice(0, numberToTruncate)
-            .map((item) => `${Format.enumeration.get(item)}`)
-        : []
-
-    return {
-      items,
-      truncatedItems: (permissions || [])
-        .slice(numberToTruncate)
-        .map((item) => `${Format.enumeration.get(item)}`),
+  },
+  getOrganisationHomePage(id?: string) {
+    const orgId = id || AccountStore.getOrganisation()?.id
+    if (!orgId) {
+      return `/organisations`
     }
+    return `/organisation/${orgId}/projects`
+  },
+
+  getOrganisationIdFromUrl(match: any) {
+    const organisationId = match?.params?.organisationId
+    return organisationId ? parseInt(organisationId) : null
   },
   getPlanName: (plan: string) => {
+    if (plan && plan.includes('free')) {
+      return planNames.free
+    }
     if (plan && plan.includes('scale-up')) {
       return planNames.scaleUp
     }
@@ -297,70 +438,32 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('start-up')) {
       return planNames.startup
     }
-    if (
-      global.flagsmithVersion?.backend.is_enterprise ||
-      (plan && plan.includes('enterprise'))
-    ) {
+    if (Utils.isEnterpriseImage() || (plan && plan.includes('enterprise'))) {
       return planNames.enterprise
     }
     return planNames.free
   },
-  getPlanPermission: (plan: string, permission: string) => {
-    let valid = true
+  getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
-
     if (!plan || planName === planNames.free) {
       return false
     }
     const isScaleupOrGreater = planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
-
-    switch (permission) {
-      case 'FLAG_OWNERS': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'CREATE_ADDITIONAL_PROJECT': {
-        valid = true // startup or greater
-        break
-      }
-      case '2FA': {
-        valid = true // startup or greater
-        break
-      }
-      case 'RBAC': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'AUDIT': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'AUTO_SEATS': {
-        valid = isScaleupOrGreater && !isEnterprise
-        break
-      }
-      case 'FORCE_2FA': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'SCHEDULE_FLAGS': {
-        valid = true // startup or greater
-        break
-      }
-      case '4_EYES': {
-        valid = isScaleupOrGreater
-        break
-      }
-      default:
-        valid = true
-        break
+    if (feature === 'AUTO_SEATS') {
+      return isScaleupOrGreater && !isEnterprise
     }
-    return valid
-  },
 
-  getPlansPermission: (permission: string) => {
-    const isOrgPermission = permission !== '2FA'
+    const requiredPlan = Utils.getRequiredPlan(feature)
+    if (requiredPlan === 'enterprise') {
+      return isEnterprise
+    } else if (requiredPlan === 'scale-up') {
+      return isScaleupOrGreater
+    }
+    return true
+  },
+  getPlansPermission: (feature: PaidFeature) => {
+    const isOrgPermission = feature !== '2FA'
     const plans = isOrgPermission
       ? AccountStore.getActiveOrgPlan()
         ? [AccountStore.getActiveOrgPlan()]
@@ -371,13 +474,52 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return false
     }
     const found = _.find(
-      plans.map((plan: string) => Utils.getPlanPermission(plan, permission)),
+      plans.map((plan: string) => Utils.getPlanPermission(plan, feature)),
       (perm) => !!perm,
     )
     return !!found
   },
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
+  },
+
+  getRequiredPlan: (feature: PaidFeature) => {
+    let plan
+    switch (feature) {
+      case 'FLAG_OWNERS':
+      case 'RBAC':
+      case 'AUDIT':
+      case 'FORCE_2FA':
+      case '4_EYES_PROJECT':
+      case '4_EYES': {
+        plan = 'scale-up'
+        break
+      }
+      case 'STALE_FLAGS':
+      case 'REALTIME':
+      case 'METADATA':
+      case 'RELEASE_PIPELINES':
+      case 'SAML': {
+        plan = 'enterprise'
+        break
+      }
+
+      case 'SCHEDULE_FLAGS':
+      case 'CREATE_ADDITIONAL_PROJECT':
+      case '2FA':
+      case 'FORCE_2FA': {
+        plan = 'start-up' // startup or greater
+        break
+      }
+      default: {
+        plan = null
+        break
+      }
+    }
+    if (plan && !Utils.isSaas()) {
+      plan = 'enterprise'
+    }
+    return plan as Plan
   },
 
   getSDKEndpoint(_project: ProjectType) {
@@ -389,6 +531,13 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return Project.api
   },
 
+  getSegmentOperators() {
+    return Utils.getFlagsmithJSONValue(
+      'segment_operators',
+      defaultFlags.segment_operators,
+    )
+  },
+
   getShouldHideIdentityOverridesTab(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (!Utils.getIsEdge()) {
@@ -396,19 +545,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
 
     return !!(
-      !Utils.getFlagsmithHasFeature('show_edge_identity_overrides') ||
-      (project &&
-        project.use_edge_identities &&
-        !project.show_edge_identity_overrides_for_feature)
+      project &&
+      project.use_edge_identities &&
+      !project.show_edge_identity_overrides_for_feature
     )
-  },
-
-  getShouldSendIdentityToTraits(_project: ProjectType) {
-    const project = _project || ProjectStore.model
-    if (project && project.use_edge_identities) {
-      return false
-    }
-    return true
   },
 
   getShouldUpdateTraitOnDelete(_project: ProjectType) {
@@ -423,23 +563,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return Constants.tagColors[index % (Constants.tagColors.length - 1)]
   },
 
-  getTraitEndpoint(environmentId: string, userId: string) {
-    const model = ProjectStore.model as null | ProjectType
-
-    if (model?.use_edge_identities) {
-      return `${Project.api}environments/${environmentId}/edge-identities/${userId}/list-traits/`
-    }
-    return `${Project.api}environments/${environmentId}/identities/${userId}/traits/`
-  },
-
-  getTraitEndpointMethod(id?: number) {
-    if ((ProjectStore.model as ProjectType | null)?.use_edge_identities) {
-      return 'put'
-    }
-    return id ? 'put' : 'post'
-  },
-
-  getTypedValue(str: FlagsmithValue, boolToString?: boolean) {
+  getTypedValue(
+    str: FlagsmithValue,
+    boolToString?: boolean,
+    testWithTrim?: boolean,
+  ) {
     if (typeof str === 'undefined') {
       return ''
     }
@@ -447,45 +575,54 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return str
     }
 
-    const isNum = /^\d+$/.test(str)
+    const typedValue = testWithTrim ? str.trim() : str
+    // Check if the value is sensible number, returns false if it has leading 0s
+    const isNum = /^-?(0|[1-9]\d*)$/.test(typedValue)
 
-    if (isNum && parseInt(str) > Number.MAX_SAFE_INTEGER) {
+    if (isNum && parseInt(typedValue) > Number.MAX_SAFE_INTEGER) {
       return `${str}`
     }
 
-    if (str === 'true') {
+    if (typedValue === 'true') {
       if (boolToString) return 'true'
       return true
     }
-    if (str === 'false') {
+    if (typedValue === 'false') {
       if (boolToString) return 'false'
       return false
     }
 
     if (isNum) {
       if (str.indexOf('.') !== -1) {
-        return parseFloat(str)
+        return parseFloat(typedValue)
       }
-      return parseInt(str)
+      return parseInt(typedValue)
     }
 
     return str
   },
-
-  getUpdateTraitEndpoint(environmentId: string, userId: string, id?: string) {
-    if ((ProjectStore.model as ProjectType | null)?.use_edge_identities) {
-      return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`
-    }
-    return `${
-      Project.api
-    }environments/${environmentId}/identities/${userId}/traits/${
-      id ? `${id}/` : ''
-    }`
+  getUtmsFromUrl(): UtmsType {
+    const params = Utils.fromParam() as Record<string, string>
+    return TRACKED_UTMS.reduce((utms, key) => {
+      if (params[key]) {
+        utms[key] = params[key]
+      }
+      return utms
+    }, {} as UtmsType)
   },
-
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
+
+  hasEntityPermission(key: string, entityPermissions: UserPermissions) {
+    if (entityPermissions?.admin) return true
+    return !!entityPermissions?.permissions?.find(
+      (permission) => permission.permission_key === key,
+    )
+  },
+  //todo: Remove when migrating to RTK
+  isEnterpriseImage: () =>
+    selectBuildVersion(getStore().getState())?.backend.is_enterprise,
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -496,8 +633,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
+  isSaas: () => selectBuildVersion(getStore().getState())?.backend?.is_saas,
+
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
+  },
+  isValidURL(value: any) {
+    const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i
+    return regex.test(value)
   },
   loadScriptPromise(url: string) {
     return new Promise((resolve) => {
@@ -514,24 +657,18 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       head.appendChild(script)
     })
   },
+
   numberWithCommas(x: number) {
     if (typeof x !== 'number') return ''
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   },
 
   openChat() {
-    // @ts-ignore
     if (typeof $crisp !== 'undefined') {
-      // @ts-ignore
       $crisp.push(['do', 'chat:open'])
     }
-    // @ts-ignore
-    if (window.zE) {
-      // @ts-ignore
-      zE('messenger', 'open')
-    }
+    Utils.setupCrisp()
   },
-
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
@@ -544,22 +681,106 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       </Tooltip>
     )
   },
+
   sanitiseDiffString: (value: FlagsmithValue) => {
     if (value === undefined || value == null) {
       return ''
     }
     return `${value}`
   },
+
+  setupCrisp() {
+    const user = AccountStore.model as AccountModel
+    if (typeof $crisp === 'undefined' || !user) {
+      return
+    }
+    $crisp.push([
+      'set',
+      'session:data',
+      [[['hosting', Utils.isSaas() ? 'SaaS' : 'Self-Hosted']]],
+    ])
+    const organisation = AccountStore.getOrganisation() as Organisation
+    const formatOrganisation = (o: Organisation) => {
+      const plan = AccountStore.getActiveOrgPlan()
+      return `${o.name} (${plan}) #${o.id}`
+    }
+    const otherOrgs = user?.organisations.filter(
+      (v) => v.id !== organisation?.id,
+    )
+    if (window.$crisp) {
+      $crisp.push(['set', 'user:email', user.email])
+      $crisp.push(['set', 'user:nickname', `${getUserDisplayName(user)}`])
+      if (otherOrgs.length) {
+        $crisp.push([
+          'set',
+          'session:data',
+          [[['other-orgs', `${otherOrgs?.length} other organisations`]]],
+        ])
+      }
+      $crisp.push([
+        'set',
+        'session:data',
+        [
+          [
+            ['user-id', `${user.id}`],
+            [
+              'date-joined',
+              `${moment(user.date_joined).format('Do MMM YYYY')}`,
+            ],
+          ],
+        ],
+      ])
+      if (organisation) {
+        $crisp.push(['set', 'user:company', formatOrganisation(organisation)])
+        $crisp.push([
+          'set',
+          'session:data',
+          [[['seats', organisation.num_seats]]],
+        ])
+      }
+    }
+  },
+  tagDisabled: (tag: Tag | undefined) => {
+    const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
+    return tag?.type === 'STALE' && !hasStaleFlagsPermission
+  },
+
+  toKebabCase: (string: string) =>
+    string
+      .replace(/([a-z])([A-Z])/g, '$1-$2')
+      .replace(/[\s_]+/g, '-')
+      .toLowerCase(),
+
+  toSelectedValue: (
+    value: string,
+    options: { label: string; value: string }[],
+    defaultValue?: string,
+  ) => {
+    return options?.find((option) => option.value === value) ?? defaultValue
+  },
+
+  validateMetadataType(type: string, value: any) {
+    switch (type) {
+      case 'int': {
+        return Utils.isValidNumber(value)
+      }
+      case 'url': {
+        return Utils.isValidURL(value)
+      }
+      case 'bool': {
+        return value === 'true' || value === 'false'
+      }
+      default:
+        return true
+    }
+  },
   validateRule(rule: SegmentCondition) {
     if (!rule) return false
-
     if (rule.delete) {
       return true
     }
 
-    const operators = Utils.getFlagsmithValue('segment_operators')
-      ? JSON.parse(Utils.getFlagsmithValue('segment_operators'))
-      : []
+    const operators = Utils.getSegmentOperators()
     const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
 
     if (operatorObj?.type === 'number') {
@@ -609,8 +830,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         )
     }
   },
-  valueToFeatureState(value: FlagsmithValue) {
-    const val = Utils.getTypedValue(value)
+
+  valueToFeatureState(value: FlagsmithValue, trimSpaces = true) {
+    const val = Utils.getTypedValue(value, undefined, trimSpaces)
 
     if (typeof val === 'boolean') {
       return {
@@ -637,7 +859,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       type: 'unicode',
     }
   },
-
   valueToTrait(value: FlagsmithValue) {
     const val = Utils.getTypedValue(value)
 

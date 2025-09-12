@@ -2,14 +2,17 @@ import React, { FC, useEffect, useMemo, useState } from 'react'
 import IdentitySelect, { IdentitySelectType } from './IdentitySelect'
 import Utils from 'common/utils/utils'
 import EnvironmentSelect from './EnvironmentSelect'
-import { useGetIdentityFeatureStatesQuery } from 'common/services/useIdentityFeatureState'
+import {
+  useCreateCloneIdentityFeatureStatesMutation,
+  useGetIdentityFeatureStatesAllQuery,
+} from 'common/services/useIdentityFeatureState'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import Tag from './tags/Tag'
 import PanelSearch from './PanelSearch'
-import { ProjectFlag, Res } from 'common/types/responses'
+import { IdentityFeatureState } from 'common/types/responses'
 import Icon from './Icon'
 import Switch from './Switch'
-import FeatureValue from './FeatureValue'
+import FeatureValue from './feature-summary/FeatureValue'
 import { sortBy } from 'lodash'
 import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
@@ -17,6 +20,9 @@ import Button from './base/forms/Button'
 import ProjectStore from 'common/stores/project-store'
 import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
+import Tooltip from './Tooltip'
+import PageTitle from './PageTitle'
+import { getDarkMode } from 'project/darkMode'
 
 type CompareIdentitiesType = {
   projectId: string
@@ -27,8 +33,8 @@ const featureNameWidth = 300
 
 const calculateFeatureDifference = (
   projectFlagId: number,
-  leftUser: Res['identityFeatureStates'] | undefined,
-  rightUser: Res['identityFeatureStates'] | undefined,
+  leftUser: IdentityFeatureState[] | undefined,
+  rightUser: IdentityFeatureState[] | undefined,
 ) => {
   const featureStateLeft = leftUser?.find((v) => v.feature.id === projectFlagId)
   const featureStateRight = rightUser?.find(
@@ -53,7 +59,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
 }) => {
   const [leftId, setLeftId] = useState<IdentitySelectType['value']>()
   const [rightId, setRightId] = useState<IdentitySelectType['value']>()
-  const { data: projectFlags } = useGetProjectFlagsQuery({
+  const { data: projectFlags, refetch } = useGetProjectFlagsQuery({
     environment: ProjectStore.getEnvironmentIdFromKey(_environmentId),
     project: projectId,
   })
@@ -66,14 +72,16 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     permission: Utils.getViewIdentitiesPermission(),
   })
 
-  const { data: leftUser } = useGetIdentityFeatureStatesQuery(
+  const { data: leftUser } = useGetIdentityFeatureStatesAllQuery(
     { environment: environmentId, user: `${leftId?.value}` },
     { skip: !leftId },
   )
-  const { data: rightUser } = useGetIdentityFeatureStatesQuery(
+  const { data: rightUser } = useGetIdentityFeatureStatesAllQuery(
     { environment: environmentId, user: `${rightId?.value}` },
     { skip: !rightId },
   )
+  const [createCloneIdentityFeatureStates] =
+    useCreateCloneIdentityFeatureStatesMutation()
 
   useEffect(() => {
     // Clear users whenever environment or project is changed
@@ -120,6 +128,45 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     )
   }
 
+  const cloneIdentityValues = (
+    leftIdentityName: string,
+    rightIdentityName: string,
+    leftIdentityId: string,
+    rightIdentityId: string,
+    environmentId: string,
+  ) => {
+    const body =
+      Utils.getFeatureStatesEndpoint() === 'featurestates'
+        ? { source_identity_id: leftIdentityId }
+        : { source_identity_uuid: leftIdentityId }
+
+    return openConfirm({
+      body: (
+        <div>
+          {'This will copy any Identity overrides from '}{' '}
+          <strong>{leftIdentityName}</strong> {'to '}
+          <strong>{`${rightIdentityName}.`}</strong>{' '}
+          {'Any existing Identity overrides on '}
+          <strong>{`${rightIdentityName}`}</strong> {'will be lost.'}
+          <br />
+        </div>
+      ),
+      destructive: true,
+      onYes: () => {
+        createCloneIdentityFeatureStates({
+          body: body,
+          environment_id: environmentId,
+          identity_id: rightIdentityId,
+        }).then(() => {
+          toast('Identity overrides successfully cloned!')
+          refetch()
+        })
+      },
+      title: 'Clone Identity overrides',
+      yesText: 'Confirm',
+    })
+  }
+
   return (
     <div>
       <div className='col-md-8'>
@@ -158,11 +205,9 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
           </div>
           <div className='mx-3'>
             <Icon
-              name='arrow-left'
+              name='arrow-right'
               width={20}
-              fill={
-                Utils.getFlagsmithHasFeature('dark_mode') ? '#fff' : '#1A2634'
-              }
+              fill={getDarkMode() ? '#fff' : '#1A2634'}
             />
           </div>
           <div style={{ width: selectWidth }}>
@@ -179,9 +224,39 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
 
       {isReady && (
         <>
+          <PageTitle
+            title={'Changed Flags'}
+            className='mt-3'
+            cta={
+              <>
+                <>
+                  <Tooltip
+                    title={
+                      <Button
+                        disabled={!leftId || !rightId || !environmentId}
+                        onClick={() => {
+                          cloneIdentityValues(
+                            leftId?.label,
+                            rightId?.label,
+                            leftId?.value,
+                            rightId?.value,
+                            environmentId,
+                          )
+                        }}
+                        className='ms-2 me-2'
+                      >
+                        {'Clone Features states'}
+                      </Button>
+                    }
+                  >
+                    {`Clone the Features states from ${leftId?.label} to ${rightId?.label}`}
+                  </Tooltip>
+                </>
+              </>
+            }
+          ></PageTitle>
           <PanelSearch
             className='no-pad mt-4'
-            title={'Changed Flags'}
             searchPanel={
               <Row className='mb-2'>
                 <Tag
@@ -195,7 +270,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
               </Row>
             }
             items={filteredItems}
-            renderRow={(data: ProjectFlag) => {
+            renderRow={(data) => {
               const { description, id, name } = data
               const {
                 enabledDifferent,
@@ -225,7 +300,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                         </Tooltip>
                       </span>
                       <Button
-                        onClick={() => Utils.copyFeatureName(name)}
+                        onClick={() => Utils.copyToClipboard(name)}
                         theme='icon'
                         className='ms-2 me-2'
                       >
@@ -236,6 +311,9 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                       />
                       <IdentityOverridesIcon
                         count={data.num_identity_overrides}
+                        showPlusIndicator={
+                          data.is_num_identity_overrides_complete === false
+                        }
                       />
                     </Row>
                   </div>
@@ -246,9 +324,10 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                   >
                     <Switch checked={featureStateLeft?.enabled} />
                   </div>
-                  <Flex
+                  <div
                     onClick={goUserLeft}
                     className={`table-column ${!valueDifferent && 'faded'}`}
+                    style={{ width: '220px' }}
                   >
                     {featureStateLeft && (
                       <FeatureValue
@@ -256,7 +335,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                         value={featureStateLeft?.feature_state_value}
                       />
                     )}
-                  </Flex>
+                  </div>
                   <div
                     onClick={goUserRight}
                     className={`table-column ${!enabledDifferent && 'faded'}`}
@@ -264,9 +343,10 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                   >
                     <Switch checked={featureStateRight?.enabled} />
                   </div>
-                  <Flex
+                  <div
                     onClick={goUserRight}
-                    className={`table-column ${!valueDifferent && 'faded'}`}
+                    className={`table-column  ${!valueDifferent && 'faded'}`}
+                    style={{ width: '220px' }}
                   >
                     {featureStateRight && (
                       <FeatureValue
@@ -274,7 +354,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                         value={featureStateRight?.feature_state_value}
                       />
                     )}
-                  </Flex>
+                  </div>
                 </Flex>
               )
             }}

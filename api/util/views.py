@@ -4,6 +4,6 @@ from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
 
 
-class SDKAPIView(GenericAPIView):
+class SDKAPIView(GenericAPIView):  # type: ignore[type-arg]
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)

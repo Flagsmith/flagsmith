@@ -7,18 +7,18 @@ from integrations.slack.slack import ChannelsDataResponse, SlackChannel
 
 
 @pytest.fixture
-def slack_bot_token():
+def slack_bot_token():  # type: ignore[no-untyped-def]
     return "bot_token_test"
 
 
 @pytest.fixture
-def slack_channels_data_response():
+def slack_channels_data_response():  # type: ignore[no-untyped-def]
     channels = [SlackChannel("name1", "id1"), SlackChannel("name2", "id2")]
     return ChannelsDataResponse(channels=channels, cursor="test_cursor")
 
 
 @pytest.fixture
-def slack_project_config(
+def slack_project_config(  # type: ignore[no-untyped-def]
     mocker, django_client, environment, environment_api_key, slack_bot_token
 ):
     url = reverse(
@@ -38,7 +38,7 @@ def slack_project_config(
 
 
 @pytest.fixture
-def slack_environment_config(
+def slack_environment_config(  # type: ignore[no-untyped-def]
     mocker, admin_client, environment, environment_api_key, slack_project_config
 ):
     url = reverse(
@@ -56,5 +56,5 @@ def slack_environment_config(
 
 
 @pytest.fixture
-def mocked_slack_wrapper(mocker):
+def mocked_slack_wrapper(mocker):  # type: ignore[no-untyped-def]
     return mocker.patch("integrations.slack.views.SlackWrapper")
