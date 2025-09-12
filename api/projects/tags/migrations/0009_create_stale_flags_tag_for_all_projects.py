@@ -9,7 +9,7 @@ def create_tag(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
     if not settings.WORKFLOWS_LOGIC_INSTALLED:
         return
 
-    from workflows_logic.stale_flags.constants import (
+    from workflows_logic.stale_flags.constants import (  # type: ignore[import-not-found]
         STALE_FLAGS_TAG_LABEL,
         STALE_FLAGS_TAG_COLOR,
         STALE_FLAGS_TAG_TYPE,
@@ -36,7 +36,7 @@ def create_tag(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tags', '0005_add_tag_fields_for_stale_flags_logic'),
+        ('tags', '0008_alter_tag_type'),
     ]
 
     operations = [
