@@ -2,7 +2,6 @@
 title: Flagsmith React SDK
 sidebar_label: Next.js and SSR
 description: Manage your Feature Flags and Remote Config with NextJS and SSR.
-slug: /clients/next-ssr
 ---
 
 The JavaScript Library contains a bundled isomorphic library, allowing you to fetch flags in the server and hydrate your
@@ -34,15 +33,15 @@ settings page.
 
 ## Comparing SSR and client-side Flagsmith usage
 
-The SDK is initialised and used in the same way as the [JavaScript](/clients/javascript) and [React](/clients/react)
+The SDK is initialised and used in the same way as the [JavaScript](/flagsmith-integration/client-side-sdks/javascript) and [React](/flagsmith-integration/client-side-sdks/react)
 SDK. The main difference is that Flagsmith should be imported from `flagsmith/isomorphic`.
 
 The main flow with Next.js and any JavaScript-based SSR can be as follows:
 
 1. Fetch the flags on the server, optionally passing an identity to
-   [`flagsmith.init({})`](/clients/javascript#initialisation-options)
-2. Pass the resulting state to the client with [`flagsmith.getState()`](/clients/javascript#available-functions)
-3. Initialise flagsmith on the client with [`flagsmith.setState(state)`](/clients/javascript#available-functions)
+   [`flagsmith.init({})`](/flagsmith-integration/client-side-sdks/javascript#initialisation-options)
+2. Pass the resulting state to the client with [`flagsmith.getState()`](/flagsmith-integration/client-side-sdks/javascript#available-functions)
+3. Initialise flagsmith on the client with [`flagsmith.setState(state)`](/flagsmith-integration/client-side-sdks/javascript#available-functions)
 
 ### Example: Initialising the SDK with Next.js
 
@@ -154,7 +153,7 @@ export function MyComponent() {
 }
 ```
 
-From this point on, the SDK usage is the same as the [React SDK Guide](/clients/react)
+From this point on, the SDK usage is the same as the [React SDK Guide](/flagsmith-integration/client-side-sdks/react)
 
 ### Example: Flagsmith with Next.js middleware
 
@@ -223,4 +222,4 @@ Step 3: Optionally force the client to fetch a fresh set of flags
 flagsmith.getFlags();
 ```
 
-From that point the SDK usage is the same as the [JavaScript SDK Guide](/clients/javascript)
+From that point the SDK usage is the same as the [JavaScript SDK Guide](/flagsmith-integration/client-side-sdks/javascript)

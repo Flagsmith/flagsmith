@@ -2,7 +2,6 @@
 title: Flagsmith Android/Kotlin SDK
 sidebar_label: Android / Kotlin
 description: Manage your Feature Flags and Remote Config in your Android applications.
-slug: /clients/android
 ---
 
 import CodeBlock from '@theme/CodeBlock'; import { AndroidVersion } from '@site/src/components/SdkVersions.js';
@@ -142,7 +141,7 @@ flagsmith.setTrait(Trait(key = "set-from-client", value = "12345"), identity = "
 ### Get all Traits
 
 To retrieve a trait for a particular identity as explained here
-[Traits](../../basic-features/managing-identities.md#identity-traits)
+[Traits](/flagsmith-concepts/identities#identity-traits)
 
 ```kotlin
 flagsmith.getTraits(identity = "test@test.com") { result ->

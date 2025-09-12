@@ -6,7 +6,7 @@ sidebar_position: 30
 
 If you are a Flagsmith SaaS customer, you are using our Edge API by default.
 
-[The Flagsmith Architecture](/clients#remote-evaluation) is based around a server-side flag engine. This comes with a
+[The Flagsmith Architecture](/flagsmith-integration/integration-overview) is based around a server-side flag engine. This comes with a
 number of benefits, but it can increase latency, especially when the calls are being made from a location that is far
 from the EU; the location of our current API. It also provides a single point of failure in the event of an AWS
 region-wide outage.
@@ -124,7 +124,7 @@ flag.feature_segment
 
 ## Architecture
 
-You can see our SaaS architecture [here](/system-administration/architecture.md#saas).
+You can see our SaaS architecture [here](/flagsmith-concepts/platform-architecture).
 
 ## How It Works
 

@@ -1,7 +1,7 @@
 ---
 title: "One-Click Installers"
 description: "A dedicated page for the Deploy to options (DigitalOcean, Render, Railway) and guides for Fly.io and Caprover."
-sidebar_position: 40
+sidebar_position: 4
 ---
 
 This guide provides instructions for deploying Flagsmith using one-click installers for various cloud platforms. These options offer a quick and straightforward way to get your Flagsmith instance up and running.

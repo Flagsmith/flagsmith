@@ -19,7 +19,7 @@ Staged rollouts **_only_** come into effect if you are getting the flags for a p
 Before you begin, make sure you have:
 
 - A feature flag created in your project.
-- Your application's [Flagsmith SDK](../../clients/index.md) integrated and configured.
+- Your application's [Flagsmith SDK](/flagsmith-integration/integration-overview) integrated and configured.
 - **Identifying users in your application:** You must identify users so that percentage rollouts are evaluated per user. For example:
 
   ```javascript
@@ -75,5 +75,5 @@ For every segment/identity combination, a value between 0 and 1 is generated. Du
 
 ## What's next
 
-- Read the [segments documentation](../../basic-features/segments.md) to understand how segments work and how to combine them with percentage splits.
+- Read the [segments documentation](/flagsmith-concepts/segments) to understand how segments work and how to combine them with percentage splits.
 - See how to [roll out features by user attribute](./rollout-by-attribute.md) for targeted releases.

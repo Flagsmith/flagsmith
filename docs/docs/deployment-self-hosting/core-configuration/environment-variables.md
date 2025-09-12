@@ -38,7 +38,7 @@ This page provides a comprehensive reference for all the environment variables y
 ## Frontend Environment Variables
 
 - `FLAGSMITH_API_URL`: The API to hit for requests. E.g. `https://edge.api.flagsmith.com/api/v1/`
-- `FLAGSMITH_ON_FLAGSMITH_API_KEY`: The Flagsmith environment key we use to manage features - [Flagsmith runs on Flagsmith](/deployment#running-flagsmith-on-flagsmith).
+- `FLAGSMITH_ON_FLAGSMITH_API_KEY`: The Flagsmith environment key we use to manage features - [Flagsmith runs on Flagsmith](/deployment-self-hosting/core-configuration/running-flagsmith-on-flagsmith).
 - `FLAGSMITH_ON_FLAGSMITH_API_URL`: The API URL which the Flagsmith client should communicate with. Flagsmith runs on Flagsmith. E.g. `https://edge.api.flagsmith.com/api/v1/`. If you are self-hosting and using your own Flagsmith instance to manage its own features, you would generally point this to the same domain name as your own Flagsmith instance.
 - `DISABLE_ANALYTICS_FEATURES`: Disables any in-app analytics-related features: API Usage charts, flag analytics. E.g. `DISABLE_ANALYTICS_FEATURES=1`.
 - `ENABLE_FLAG_EVALUATION_ANALYTICS`: Determines if the Flagsmith SDK should send usage analytics. If you want to enable Flag Analytics, set this. E.g. `ENABLE_FLAG_EVALUATION_ANALYTICS=1`.
