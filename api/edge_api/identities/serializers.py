@@ -18,6 +18,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from environments.dynamodb.types import IdentityOverrideV2
+from environments.identities.constants import identifier_regex_validator
 from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
@@ -52,7 +53,11 @@ class LowerCaseCharField(serializers.CharField):
 
 class EdgeIdentitySerializer(serializers.Serializer):  # type: ignore[type-arg]
     identity_uuid = serializers.CharField(read_only=True)
-    identifier = serializers.CharField(required=True, max_length=2000)
+    identifier = serializers.CharField(
+        required=True,
+        max_length=2000,
+        validators=[identifier_regex_validator],
+    )
     dashboard_alias = LowerCaseCharField(
         required=False,
         max_length=100,

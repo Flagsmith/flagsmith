@@ -2,6 +2,7 @@ import json
 import urllib
 from typing import Any
 from unittest import mock
+from urllib.parse import quote
 
 import pytest
 from common.environments.permissions import (
@@ -1431,7 +1432,7 @@ def test_SDKIdentitiesDeprecated__given_identifier__retrieves_identity(
         pytest.param(True, False, True, 4, id="replica_db,old_identity,transient"),
     ],
 )
-def test_SDKIdentities_retrieves_identity_feature_states(
+def test_SDKIdentities__retrieves_identity_feature_states(
     api_client: APIClient,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
@@ -1458,3 +1459,105 @@ def test_SDKIdentities_retrieves_identity_feature_states(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.parametrize(
+    ["transient_value", "expected_status"],
+    [
+        ("true", status.HTTP_200_OK),
+        ("false", status.HTTP_200_OK),
+        ("1", status.HTTP_200_OK),
+        ("0", status.HTTP_200_OK),
+        ("yes", status.HTTP_200_OK),
+        ("no", status.HTTP_200_OK),
+        ("foo", status.HTTP_400_BAD_REQUEST),
+        ("123", status.HTTP_400_BAD_REQUEST),
+    ],
+)
+def test_SDKIdentities__given_transient_value__responds_accordingly(
+    api_client: APIClient,
+    environment: Environment,
+    transient_value: str,
+    expected_status: int,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(
+        f"/api/v1/identities/?identifier=jamesbond&transient={transient_value}"
+    )
+
+    # Then
+    assert response.status_code == expected_status
+
+
+@pytest.mark.valid_identity_identifiers
+def test_SDKIdentities__identifier_sanitization__accepts_valid_identifiers(
+    api_client: APIClient,
+    environment: Environment,
+    identifier: str,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(f"/api/v1/identities/?identifier={quote(identifier)}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["identifier"] == identifier
+
+
+@pytest.mark.invalid_identity_identifiers
+def test_SDKIdentities__identifier_sanitization__rejects_invalid_identifiers(
+    api_client: APIClient,
+    environment: Environment,
+    identifier: str,
+    identifier_error_message: str,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(f"/api/v1/identities/?identifier={quote(identifier)}")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"identifier": [identifier_error_message]}
+
+
+@pytest.mark.valid_identity_identifiers
+def test_IdentityViewSet_create__accepts_valid_identifiers(
+    admin_client: APIClient,
+    environment: Environment,
+    identifier: str,
+) -> None:
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment.api_key}/identities/",
+        data={"identifier": identifier},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["identifier"] == identifier
+    assert Identity.objects.filter(identifier=identifier).exists()
+
+
+@pytest.mark.invalid_identity_identifiers
+def test_IdentityViewSet_create__rejects_invalid_identifiers(
+    admin_client: APIClient,
+    environment: Environment,
+    identifier: str,
+    identifier_error_message: str,
+) -> None:
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment.api_key}/identities/",
+        data={"identifier": identifier},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"identifier": [identifier_error_message]}

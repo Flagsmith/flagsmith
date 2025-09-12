@@ -5,6 +5,7 @@ from django.db.models import Prefetch, Q
 from flag_engine.context.mappers import map_environment_identity_to_context
 from flag_engine.segments.evaluator import is_context_in_segment
 
+from environments.identities.constants import identifier_regex_validator
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -21,7 +22,10 @@ from util.mappers.engine import (
 
 
 class Identity(models.Model):
-    identifier = models.CharField(max_length=2000)
+    identifier = models.CharField(
+        max_length=2000,
+        validators=[identifier_regex_validator],
+    )
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     environment = models.ForeignKey(
         Environment, related_name="identities", on_delete=models.CASCADE

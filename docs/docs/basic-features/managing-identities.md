@@ -23,6 +23,9 @@ We strongly recommend using an unguessable, unidentifiable Identity Key, such as
 [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier), when identifying your users, to prevent
 unintentionally leaking Identity trait data.
 
+Identifiers can be at most 2000 characters long, and may only contain _unicode_
+letters, numbers, and the symbols `! # $ % & * + / = ? ^ _ `` { } | ~ @ . -`.
+
 :::
 
 ## Identity Overrides

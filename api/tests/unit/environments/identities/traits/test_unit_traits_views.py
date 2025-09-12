@@ -1,6 +1,7 @@
 import json
 from unittest import mock
 
+import pytest
 from common.environments.permissions import (
     MANAGE_IDENTITIES,
     VIEW_IDENTITIES,
@@ -1052,3 +1053,123 @@ def test_edge_identity_view_set_get_permissions():  # type: ignore[no-untyped-de
         "partial_update": MANAGE_IDENTITIES,
         "destroy": MANAGE_IDENTITIES,
     }
+
+
+@pytest.mark.valid_identity_identifiers
+def test_SDKTraits_create__identifier_sanitization__accepts_valid_identifiers(
+    api_client: APIClient,
+    environment: Environment,
+    identifier: str,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.post(
+        "/api/v1/traits/",
+        data={
+            "identity": {"identifier": identifier},
+            "trait_key": "color",
+            "trait_value": "green",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "identity": {"identifier": identifier},
+        "trait_key": "color",
+        "trait_value": "green",
+    }
+
+
+@pytest.mark.invalid_identity_identifiers
+def test_SDKTraits_create__identifier_sanitization__rejects_invalid_identifiers(
+    api_client: APIClient,
+    environment: Environment,
+    identifier: str,
+    identifier_error_message: str,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.post(
+        "/api/v1/traits/",
+        data={
+            "identity": {"identifier": identifier},
+            "trait_key": "color",
+            "trait_value": "green",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "identity": {"identifier": [identifier_error_message]},
+    }
+
+
+@pytest.mark.valid_identity_identifiers
+def test_SDKTraits_bulk_create__identifier_sanitization__accepts_valid_identifiers(
+    api_client: APIClient,
+    environment: Environment,
+    identifier: str,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.put(
+        "/api/v1/traits/bulk/",
+        data=[
+            {
+                "identity": {"identifier": identifier},
+                "trait_key": "color",
+                "trait_value": "green",
+            }
+        ],
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "identity": {"identifier": identifier},
+            "trait_key": "color",
+            "trait_value": "green",
+        }
+    ]
+
+
+@pytest.mark.invalid_identity_identifiers
+def test_SDKTraits_bulk_create__identifier_sanitization__rejects_invalid_identifiers(
+    api_client: APIClient,
+    environment: Environment,
+    identifier: str,
+    identifier_error_message: str,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.put(
+        "/api/v1/traits/bulk/",
+        data=[
+            {
+                "identity": {"identifier": identifier},
+                "trait_key": "color",
+                "trait_value": "green",
+            }
+        ],
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == [
+        {"identity": {"identifier": [identifier_error_message]}},
+    ]
