@@ -171,6 +171,7 @@
             "type": "object"
         },
         "SegmentCondition": {
+            "existingJavaType": "com.flagsmith.flagengine.SegmentCondition",
             "anyOf": [
                 {
                     "description": "Represents a condition within a segment rule for feature flag evaluation.",
@@ -291,6 +292,7 @@
             "description": "Environment context required for evaluation."
         },
         "identity": {
+            "existingJavaType": "com.flagsmith.flagengine.IdentityContext",
             "anyOf": [
                 {
                     "$ref": "#/$defs/IdentityContext"
