@@ -68,6 +68,7 @@
     "description": "Evaluation result object containing the used context, flag evaluation results, and segments used in the evaluation.",
     "properties": {
         "context": {
+            "existingJavaType": "com.flagsmith.flagengine.EvaluationContext",
             "$ref": "https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-context.json"
         },
         "flags": {
