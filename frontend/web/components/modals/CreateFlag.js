@@ -1874,7 +1874,7 @@ const CreateFlag = class extends Component {
                                         tabLabelString='Links'
                                         tabLabel={
                                           <Row className='justify-content-center'>
-                                            Links{' '}
+                                            Links
                                           </Row>
                                         }
                                       >
