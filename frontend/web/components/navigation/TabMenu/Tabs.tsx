@@ -94,7 +94,7 @@ const Tabs: React.FC<TabsProps> = ({
   const { isMeasuring, visibleCount } = useOverflowVisibleCount({
     extraWidth: overflowButtonWidth,
     force: false,
-    gap: 2,
+    gap: 0,
     itemCount: tabChildren.length,
     itemsContainerRef,
     outerContainerRef,
