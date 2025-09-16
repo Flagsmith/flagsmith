@@ -49,7 +49,12 @@
                 "value": {
                     "description": "A default environment value for the feature. If the feature is multivariate, this will be the control value.",
                     "title": "Value",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
+                    ]
                 },
                 "variants": {
                     "description": "An array of environment default values associated with the feature. Contains a single value for standard features, or multiple values for multivariate features.",
@@ -81,7 +86,12 @@
                 "value": {
                     "description": "The value of the feature.",
                     "title": "Value",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
+                    ]
                 },
                 "weight": {
                     "description": "The weight of the feature value variant, as a percentage number (i.e. 100.0).",
