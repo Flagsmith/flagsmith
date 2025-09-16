@@ -637,7 +637,7 @@ type LoadingCreateSegmentType = {
   readOnly?: boolean
   onSegmentRetrieved?: (segment: Segment) => void
   onComplete?: (segment: Segment) => void
-  projectId: string
+  projectId: string | number
   segment?: number
 }
 
