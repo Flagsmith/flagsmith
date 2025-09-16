@@ -488,7 +488,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </Row>
             }
           >
-            <div className='my-4 col-lg-8 offset-2'>
+            <div className='my-4 col-lg-8'>
               <CreateSegmentRulesTabForm
                 is4Eyes={is4Eyes}
                 onCreateChangeRequest={onCreateChangeRequest}
