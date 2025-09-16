@@ -1,3 +1,5 @@
+import { WithoutId } from './requests'
+
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
@@ -40,12 +42,14 @@ export type ChangeRequestSummary = {
   updated_at: string
   description: string
   user: number
+  title: string
   committed_at: string | null
   committed_by: number | null
   deleted_at: string | null
   live_from: string | null
 }
 export type SegmentCondition = {
+  id?: number
   delete?: boolean
   description?: string
   operator: string
@@ -59,11 +63,12 @@ export type SegmentConditionsError = {
 }
 
 export type SegmentRule = {
-  type: string
+  id?: number
+  type: 'ALL' | 'ANY' | 'NONE'
   rules: SegmentRule[]
-
   delete?: boolean
   conditions: SegmentCondition[]
+  version_of: number | undefined
 }
 export type Segment = {
   id: number
@@ -75,6 +80,18 @@ export type Segment = {
   feature?: number
   metadata: Metadata[] | []
 }
+export type ProjectChangeRequest = Omit<
+  ChangeRequest,
+  | 'environment_feature_versions'
+  | 'feature_states'
+  | 'change_sets'
+  | 'environment'
+> & {
+  segments: (WithoutId<Segment> & {
+    version_of?: number
+  })[]
+}
+
 export type Environment = {
   id: number
   name: string
@@ -84,7 +101,7 @@ export type Environment = {
   banner_text?: string | null
   banner_colour?: string
   project: number
-  minimum_change_request_approvals?: number | null
+  minimum_change_request_approvals: number | null
   allow_client_traits: boolean
   hide_sensitive_data: boolean
   total_segment_overrides?: number
@@ -106,6 +123,7 @@ export type Project = {
   hide_disabled_flags: boolean
   enable_dynamo_db: boolean
   migration_status: string
+  minimum_change_request_approvals: number | null
   use_edge_identities: boolean
   show_edge_identity_overrides_for_feature: boolean
   prevent_flag_defaults: boolean
@@ -242,6 +260,7 @@ export type GettingStartedTask = {
   completed_at?: string
 }
 export type Onboarding = {
+  hosting_preferences: ('public_saas' | 'private_saas' | 'self_hosted')[]
   tools: {
     completed: boolean
     integrations: string[]
@@ -499,6 +518,12 @@ export type ProjectFlag = {
   tags: number[]
   type: string
   uuid: string
+  code_references_counts: {
+    repository_url: string
+    count: number
+    last_successful_repository_scanned_at: string
+    last_feature_found_at: string
+  }[]
 }
 
 export type FeatureListProviderData = {
@@ -610,9 +635,9 @@ export type ChangeRequest = {
   committed_by: number | null
   deleted_at: null
   approvals: {
-    id: number
+    id?: number
     user: number
-    approved_at: null | string
+    approved_at?: null | string
   }[]
   change_sets?: ChangeSet[]
   is_approved: boolean
@@ -620,6 +645,7 @@ export type ChangeRequest = {
   group_assignments: { group: number }[]
   environment_feature_versions: {
     uuid: string
+    live_from: string | null
     feature_states: FeatureState[]
   }[]
 
@@ -829,7 +855,7 @@ export interface ReleasePipeline {
 }
 
 export interface SingleReleasePipeline extends ReleasePipeline {
-  stages: PipelineStage[]
+  stages: PipelineDetailStage[]
   completed_features: number[]
 }
 
@@ -848,16 +874,37 @@ export type StageTrigger = {
 export enum StageActionType {
   TOGGLE_FEATURE = 'TOGGLE_FEATURE',
   TOGGLE_FEATURE_FOR_SEGMENT = 'TOGGLE_FEATURE_FOR_SEGMENT',
+  PHASED_ROLLOUT = 'PHASED_ROLLOUT',
 }
 
-export type StageActionBody = { enabled: boolean; segment_id?: number }
+export type StageActionBody = {
+  enabled: boolean
+  segment_id?: number
+  initial_split?: number
+  increase_by?: number
+  increase_every?: string
+}
 export interface StageAction {
   id: number
   action_type: StageActionType
   action_body: StageActionBody
 }
 
-export type PipelineStage = {
+export type Features = {
+  [id: number]: {
+    created_at?: string
+    phased_rollout_state?: {
+      current_split: number
+      increase_by: number
+      increase_every: string
+      initial_split: number
+      is_rollout_complete: boolean
+      last_updated_at: string
+    }
+  }
+}
+
+export interface BasePipelineStage {
   id: number
   name: string
   pipeline: number
@@ -865,7 +912,49 @@ export type PipelineStage = {
   order: number
   trigger: StageTrigger
   actions: StageAction[]
+}
+
+export interface PipelineStage extends BasePipelineStage {
   features: number[]
+}
+
+export interface PipelineDetailStage extends BasePipelineStage {
+  features: Features
+}
+
+export interface CodeReference {
+  file_path: string
+  line_number: number
+  permalink: string
+  vcs_revision: string
+}
+
+export enum VCSProvider {
+  GITHUB = 'github',
+  GITLAB = 'gitlab',
+  BITBUCKET = 'bitbucket',
+}
+
+export type FeatureCodeReferences = {
+  last_feature_found_at: string
+  vcs_provider: VCSProvider
+  last_successful_repository_scanned_at: string
+  repository_url: string
+  code_references: CodeReference[]
+}
+
+export interface AggregateUsageDataItem {
+  day: string
+  environment_document: number | null
+  flags: number | null
+  identities: number | null
+  traits: number | null
+}
+
+export interface UsageEventsList extends AggregateUsageDataItem {
+  labels: {
+    user_agent: string | null
+  }
 }
 
 export type Res = {
@@ -887,13 +976,7 @@ export type Res = {
       traits: number
       total: number
     }
-    events_list: {
-      environment_document: number | null
-      flags: number | null
-      identities: number | null
-      traits: number | null
-      name: string
-    }[]
+    events_list: UsageEventsList[]
   }
   identity: { id: string } //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
@@ -1000,6 +1083,9 @@ export type Res = {
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
   identitySegments: PagedResponse<Segment>
   organisationWebhooks: PagedResponse<Webhook>
+  projectChangeRequests: PagedResponse<ChangeRequestSummary>
+  projectChangeRequest: ProjectChangeRequest
+  actionChangeRequest: {}
   identityTrait: { id: string }
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>
@@ -1020,6 +1106,6 @@ export type Res = {
   releasePipelines: PagedResponse<ReleasePipeline>
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
-  pipelineStage: PipelineStage
+  featureCodeReferences: FeatureCodeReferences[]
   // END OF TYPES
 }

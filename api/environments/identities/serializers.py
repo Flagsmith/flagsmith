@@ -64,9 +64,12 @@ class SDKIdentitiesResponseSerializer(serializers.Serializer):  # type: ignore[t
     traits = serializers.ListSerializer(child=_TraitSerializer())  # type: ignore[var-annotated]
 
 
-class SDKIdentitiesQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
-    identifier = serializers.CharField(required=True)
+class SDKIdentitiesQuerySerializer(serializers.ModelSerializer[Identity]):
     transient = serializers.BooleanField(default=False)
+
+    class Meta:
+        model = Identity
+        fields = ("identifier", "transient")
 
 
 class IdentityAllFeatureStatesFeatureSerializer(serializers.Serializer):  # type: ignore[type-arg]

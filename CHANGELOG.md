@@ -1,5 +1,177 @@
 # Changelog
 
+## [2.196.0](https://github.com/Flagsmith/flagsmith/compare/v2.195.0...v2.196.0) (2025-09-10)
+
+
+### Features
+
+* always show feature health tab ([#5987](https://github.com/Flagsmith/flagsmith/issues/5987)) ([71d48b4](https://github.com/Flagsmith/flagsmith/commit/71d48b4da4c761167900db583b4d7f6abb169672))
+* organisation sdk metrics charts ([#5996](https://github.com/Flagsmith/flagsmith/issues/5996)) ([642527f](https://github.com/Flagsmith/flagsmith/commit/642527fb0773b9c3567a433ae92a32ada57aec79))
+* Segment change requests ([#4852](https://github.com/Flagsmith/flagsmith/issues/4852)) ([d8e6c2c](https://github.com/Flagsmith/flagsmith/commit/d8e6c2c639b81b623f6d66eb763b2e184a080358))
+
+
+### Bug Fixes
+
+* added-dropdown-opening-step-inversioning-tests ([#6022](https://github.com/Flagsmith/flagsmith/issues/6022)) ([55e6c68](https://github.com/Flagsmith/flagsmith/commit/55e6c689027ab6846752acdb742322fdb230d004))
+* catch-error-on-segment-creation-or-update ([#6013](https://github.com/Flagsmith/flagsmith/issues/6013)) ([b07d231](https://github.com/Flagsmith/flagsmith/commit/b07d23130aa541850c4a549a4ebe51521727b30f))
+* CORS errors when sending tracked headers other than `Flagsmith-SDK-User-Agent` ([#6017](https://github.com/Flagsmith/flagsmith/issues/6017)) ([8a066a8](https://github.com/Flagsmith/flagsmith/commit/8a066a88e196b3a837a98f8607286d4871333f9f))
+* **DB replication:** Prevent replica lag issues in SDK views ([#6009](https://github.com/Flagsmith/flagsmith/issues/6009)) ([4f67003](https://github.com/Flagsmith/flagsmith/commit/4f67003fe8059583bc75452305c8d06bdbd61858))
+
+
+### Dependency Updates
+
+* bump django from 4.2.22 to 4.2.24 in /api ([#6043](https://github.com/Flagsmith/flagsmith/issues/6043)) ([a809f7c](https://github.com/Flagsmith/flagsmith/commit/a809f7c23da96bc67720785df245a39a77d9c3d4))
+
+## [2.195.0](https://github.com/Flagsmith/flagsmith/compare/v2.194.0...v2.195.0) (2025-09-02)
+
+
+### Features
+
+* SDK user agents allow list, store numeric IDs in InfluxDB ([#6000](https://github.com/Flagsmith/flagsmith/issues/6000)) ([ed049b4](https://github.com/Flagsmith/flagsmith/commit/ed049b4f600f8e9a018fc74ed2d2fc881dd155a5))
+
+
+### Bug Fixes
+
+* CORS errors due to flagsmith-js-sdk header changes ([#6010](https://github.com/Flagsmith/flagsmith/issues/6010)) ([332a2df](https://github.com/Flagsmith/flagsmith/commit/332a2df5624ea7bcceeea73b97428a86d081e26e))
+* **Maintenance:** Fix Poetry install ([#5999](https://github.com/Flagsmith/flagsmith/issues/5999)) ([47e0cdc](https://github.com/Flagsmith/flagsmith/commit/47e0cdc565681fea5e3308b17ccd648e1a6579c9))
+* **SAML:** Prevent SAML users from creating organizations ([#5994](https://github.com/Flagsmith/flagsmith/issues/5994)) ([771bb28](https://github.com/Flagsmith/flagsmith/commit/771bb28e6ffeaefe3ad9ea0793e1dd069fdf8c7b))
+
+## [2.194.0](https://github.com/Flagsmith/flagsmith/compare/v2.193.0...v2.194.0) (2025-08-27)
+
+
+### Features
+
+* wait for trigger summary ui update ([#5956](https://github.com/Flagsmith/flagsmith/issues/5956)) ([7c972a6](https://github.com/Flagsmith/flagsmith/commit/7c972a6fbd6e3927976199320dc38beffbfdbb46))
+
+
+### Bug Fixes
+
+* correctly-pass-description-value ([#5985](https://github.com/Flagsmith/flagsmith/issues/5985)) ([7ba62a4](https://github.com/Flagsmith/flagsmith/commit/7ba62a45e0adccd488291e9aad4bd8f135bafca6))
+* **GitHub PoC:** added-no-wrap-to-code-reference-item ([#5989](https://github.com/Flagsmith/flagsmith/issues/5989)) ([d28f688](https://github.com/Flagsmith/flagsmith/commit/d28f6884f0f6c0f81bd8ee6ef7392020bce40ea2))
+* **GitHub PoC:** Fix permalinks ([#5988](https://github.com/Flagsmith/flagsmith/issues/5988)) ([cf05b7a](https://github.com/Flagsmith/flagsmith/commit/cf05b7a5598bd5f45c426b0179fcabc304511334))
+
+## [2.193.0](https://github.com/Flagsmith/flagsmith/compare/v2.192.4...v2.193.0) (2025-08-26)
+
+
+### Features
+
+* Force segment rule ordering in production ([#5982](https://github.com/Flagsmith/flagsmith/issues/5982)) ([8c10f78](https://github.com/Flagsmith/flagsmith/commit/8c10f78c78af67a5fc1e9438145771720ef10267))
+
+
+### Bug Fixes
+
+* use-correct-count-in-tooltip ([#5981](https://github.com/Flagsmith/flagsmith/issues/5981)) ([e3adfc3](https://github.com/Flagsmith/flagsmith/commit/e3adfc31e456bc50fcec450617567df041631832))
+
+## [2.192.4](https://github.com/Flagsmith/flagsmith/compare/v2.192.3...v2.192.4) (2025-08-25)
+
+
+### Bug Fixes
+
+* **GitHub PoC:** Fix API authentication ([#5979](https://github.com/Flagsmith/flagsmith/issues/5979)) ([70a652b](https://github.com/Flagsmith/flagsmith/commit/70a652b2fa7beb6f374003d669566a6e294ceb10))
+* remove extra close modal call ([#5972](https://github.com/Flagsmith/flagsmith/issues/5972)) ([43793f0](https://github.com/Flagsmith/flagsmith/commit/43793f074c20d51483f473f3b44a010235efc02e))
+* reverted-tests ([#5966](https://github.com/Flagsmith/flagsmith/issues/5966)) ([1c20aa5](https://github.com/Flagsmith/flagsmith/commit/1c20aa5a8825793dca8f52f439a85c85de14e64d))
+* slack-upload ([#5969](https://github.com/Flagsmith/flagsmith/issues/5969)) ([cba8fa0](https://github.com/Flagsmith/flagsmith/commit/cba8fa0ce19a048aa0fb081c2c540826fb168215))
+* **usage-notifications:** construct the variable outside of template ([#5964](https://github.com/Flagsmith/flagsmith/issues/5964)) ([a576eef](https://github.com/Flagsmith/flagsmith/commit/a576eef5120f9b38cb3d3b4182aad7b0dc6a5404))
+
+## [2.192.3](https://github.com/Flagsmith/flagsmith/compare/v2.192.2...v2.192.3) (2025-08-21)
+
+
+### Bug Fixes
+
+* disable test update segment ([#5962](https://github.com/Flagsmith/flagsmith/issues/5962)) ([e40105e](https://github.com/Flagsmith/flagsmith/commit/e40105eebbc5fb58eb4476cb72f15e692cbbe0ae))
+* extracted-update-segment-test ([#5951](https://github.com/Flagsmith/flagsmith/issues/5951)) ([bac797a](https://github.com/Flagsmith/flagsmith/commit/bac797ad01e043b0056ab4a84e3d427f0d4921a9))
+* removed-focus-timeout ([#5954](https://github.com/Flagsmith/flagsmith/issues/5954)) ([4da2999](https://github.com/Flagsmith/flagsmith/commit/4da2999a2152725875c9fd656cf96e485bd07ad6))
+* **segment-update:** handle rules/conditons without id correctly ([#5953](https://github.com/Flagsmith/flagsmith/issues/5953)) ([ad1d568](https://github.com/Flagsmith/flagsmith/commit/ad1d56862a76635c37b6c705b4777cea9a44f8fd))
+* stop-using-index-to-access-update-segment ([#5960](https://github.com/Flagsmith/flagsmith/issues/5960)) ([1dbf0c2](https://github.com/Flagsmith/flagsmith/commit/1dbf0c2a7c8c9ea112c2f86e4444729d6c493005))
+
+## [2.192.2](https://github.com/Flagsmith/flagsmith/compare/v2.192.1...v2.192.2) (2025-08-20)
+
+
+### Bug Fixes
+
+* **infra:** use ConfiguredOrderManager as a base class instead ([#5948](https://github.com/Flagsmith/flagsmith/issues/5948)) ([0dcd073](https://github.com/Flagsmith/flagsmith/commit/0dcd0739b82c67ad7d700ed43ac0150f670b04ef))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* split out rules and conditions ordering vars and enable conditions ordering in production ([#5946](https://github.com/Flagsmith/flagsmith/issues/5946)) ([c8c3afd](https://github.com/Flagsmith/flagsmith/commit/c8c3afdd6607839f5b40f48108c38e65dfafac7e))
+
+## [2.192.1](https://github.com/Flagsmith/flagsmith/compare/v2.192.0...v2.192.1) (2025-08-20)
+
+
+### Bug Fixes
+
+* revert "fix: check-split-length-before-accessing-with-index" ([#5943](https://github.com/Flagsmith/flagsmith/issues/5943)) ([023a547](https://github.com/Flagsmith/flagsmith/commit/023a547c2c015dfd6572b463bea67710771979a8))
+
+## [2.192.0](https://github.com/Flagsmith/flagsmith/compare/v2.191.0...v2.192.0) (2025-08-20)
+
+
+### Features
+
+* add environment variable to protect API docs with authentication ([#5941](https://github.com/Flagsmith/flagsmith/issues/5941)) ([6b8ef8f](https://github.com/Flagsmith/flagsmith/commit/6b8ef8f75582805752049bfd766847f3ac8e428c))
+* frontend GitHub code references ([#5939](https://github.com/Flagsmith/flagsmith/issues/5939)) ([ca7ef13](https://github.com/Flagsmith/flagsmith/commit/ca7ef13437edb22a37de05843e6db569d01d6d80))
+* **github-poc:** Retrieve feature code references ([#5931](https://github.com/Flagsmith/flagsmith/issues/5931)) ([16a6c76](https://github.com/Flagsmith/flagsmith/commit/16a6c76ba2b69ca660f36b1e1cd44c1527d86b1e))
+* **github-poc:** Submit feature flag code references ([#5928](https://github.com/Flagsmith/flagsmith/issues/5928)) ([21cb9b9](https://github.com/Flagsmith/flagsmith/commit/21cb9b959cbaff0bc3c33c38ea63ce75faf97223))
+* phased rollout ([#5890](https://github.com/Flagsmith/flagsmith/issues/5890)) ([d52c452](https://github.com/Flagsmith/flagsmith/commit/d52c4529097329b238c5e69e2a5fa44cdcf7faa5))
+* release pipelines beta ([#5930](https://github.com/Flagsmith/flagsmith/issues/5930)) ([2e22046](https://github.com/Flagsmith/flagsmith/commit/2e22046a877a5fe5fc49a6bafb0fb4239c064891))
+
+
+### Bug Fixes
+
+* check-split-length-before-accessing-with-index ([#5848](https://github.com/Flagsmith/flagsmith/issues/5848)) ([e5740aa](https://github.com/Flagsmith/flagsmith/commit/e5740aa4323b31aaee7dfea7d0bb6c80019af57d))
+* **cr/audit-log:** Add history record to fs went live by audit log ([#5934](https://github.com/Flagsmith/flagsmith/issues/5934)) ([1e984ee](https://github.com/Flagsmith/flagsmith/commit/1e984ee1df48b7d373ac1422fbd81b17112f145b))
+* disable update mv value without create feature ([#5916](https://github.com/Flagsmith/flagsmith/issues/5916)) ([9ec8e05](https://github.com/Flagsmith/flagsmith/commit/9ec8e05a0876a233826ca44c6337816957e27066))
+* **env-update:** make is_creating read only ([#5942](https://github.com/Flagsmith/flagsmith/issues/5942)) ([cbea78e](https://github.com/Flagsmith/flagsmith/commit/cbea78e8a1aa8a88cc2f976c1b929abb18508f0f))
+* order release pipelines by created at ([#5929](https://github.com/Flagsmith/flagsmith/issues/5929)) ([047758e](https://github.com/Flagsmith/flagsmith/commit/047758ec1fc08cd4d079f1c6588bb6d42fb4a423))
+* **release-pipelines:** make email more redable ([#5936](https://github.com/Flagsmith/flagsmith/issues/5936)) ([ff031c8](https://github.com/Flagsmith/flagsmith/commit/ff031c835d1b44155ccba18445d31c573a96415b))
+* Update node version in gh action ([#5926](https://github.com/Flagsmith/flagsmith/issues/5926)) ([7598110](https://github.com/Flagsmith/flagsmith/commit/75981103bdc52693d7e922b047bba809d56e5165))
+* update-path-of-nvmrc ([#5927](https://github.com/Flagsmith/flagsmith/issues/5927)) ([3a46748](https://github.com/Flagsmith/flagsmith/commit/3a4674899520908a41677931205089c8bacc4e1e))
+
+## [2.191.0](https://github.com/Flagsmith/flagsmith/compare/v2.190.1...v2.191.0) (2025-08-13)
+
+
+### Features
+
+* adds phased rollout action ([#5897](https://github.com/Flagsmith/flagsmith/issues/5897)) ([799d0ce](https://github.com/Flagsmith/flagsmith/commit/799d0ce7a36f0617f0bd53250150444949c1c3a7))
+* filter by email in user select inputs ([#5917](https://github.com/Flagsmith/flagsmith/issues/5917)) ([1796467](https://github.com/Flagsmith/flagsmith/commit/1796467079587f8784f506e65bf226d50a4d5a08))
+* Responsive features page ([#5809](https://github.com/Flagsmith/flagsmith/issues/5809)) ([3018bec](https://github.com/Flagsmith/flagsmith/commit/3018becc56569eeb669c6364bbdce8315ca1f814))
+* use dropdown for values with context environment ([#5832](https://github.com/Flagsmith/flagsmith/issues/5832)) ([6153206](https://github.com/Flagsmith/flagsmith/commit/6153206f65a5441291b40edbc04339f1cc9cf319))
+
+
+### Bug Fixes
+
+* `SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED` does not affect rules ([#5866](https://github.com/Flagsmith/flagsmith/issues/5866)) ([9d8e2d6](https://github.com/Flagsmith/flagsmith/commit/9d8e2d6fbfe5b8d73700327779c37142b66312ed))
+* Organisation usage charts are not correctly showing environment-document requests ([#5924](https://github.com/Flagsmith/flagsmith/issues/5924)) ([7a797b2](https://github.com/Flagsmith/flagsmith/commit/7a797b25a90c7fb9489074e262ee05912e48a281))
+
+
+### Dependency Updates
+
+* bump saml ([#5910](https://github.com/Flagsmith/flagsmith/issues/5910)) ([475f744](https://github.com/Flagsmith/flagsmith/commit/475f744a50df7a2cbedd07b0a3d73cd1fe7c2531))
+
+## [2.190.1](https://github.com/Flagsmith/flagsmith/compare/v2.190.0...v2.190.1) (2025-08-07)
+
+
+### Bug Fixes
+
+* Bring API docs back ([#5908](https://github.com/Flagsmith/flagsmith/issues/5908)) ([92ba39a](https://github.com/Flagsmith/flagsmith/commit/92ba39adb368aee26b8b44e42cc9b38cd0c05c8b))
+
+## [2.190.0](https://github.com/Flagsmith/flagsmith/compare/v2.189.0...v2.190.0) (2025-08-07)
+
+
+### Features
+
+* add save and publish pipeline ([#5827](https://github.com/Flagsmith/flagsmith/issues/5827)) ([e59b3c6](https://github.com/Flagsmith/flagsmith/commit/e59b3c610d4b20fb1a0b0ef066ab7523b85fcc70))
+* added-hosted-preferences-to-onboarding-data ([#5883](https://github.com/Flagsmith/flagsmith/issues/5883)) ([5598da0](https://github.com/Flagsmith/flagsmith/commit/5598da06c393687af149e55757cf6cd5b1add00f))
+* hosting preferences ([#5806](https://github.com/Flagsmith/flagsmith/issues/5806)) ([464c217](https://github.com/Flagsmith/flagsmith/commit/464c21708e2bff63d60535e6ba1b9c7fbedb9599))
+
+
+### Bug Fixes
+
+* filter unhealthy events ([#5884](https://github.com/Flagsmith/flagsmith/issues/5884)) ([5ac9098](https://github.com/Flagsmith/flagsmith/commit/5ac90981f8fc3b648976dafbba5786dd7ced9d6d))
+* Segment updates deleting rules ([#5902](https://github.com/Flagsmith/flagsmith/issues/5902)) ([ad90f59](https://github.com/Flagsmith/flagsmith/commit/ad90f599c105e9f81080f07175afc5ff6d6adde4))
+* split-operator-to-remove-append ([#5871](https://github.com/Flagsmith/flagsmith/issues/5871)) ([df27bb1](https://github.com/Flagsmith/flagsmith/commit/df27bb1ab0a49f037dc83fe97f76324bb9c34859))
+* **tests:** Improper `skip_if_no_analytics_db` marker behaviour ([#5876](https://github.com/Flagsmith/flagsmith/issues/5876)) ([de61b8b](https://github.com/Flagsmith/flagsmith/commit/de61b8b4ccdaab13bd03634942c620bebd1772ca))
+
 ## [2.189.0](https://github.com/Flagsmith/flagsmith/compare/v2.188.1...v2.189.0) (2025-07-31)
 
 

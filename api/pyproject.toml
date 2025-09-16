@@ -57,13 +57,16 @@ unfixable = []
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
 exclude_also = [
-  'if TYPE_CHECKING:',
-  'if typing.TYPE_CHECKING:',
   '@(abc\\.)?abstractmethod',
 ]
 
 [tool.coverage.run]
-omit = ["scripts/*", "manage.py", "e2etests/*"]
+omit = [
+  "app/settings/common.py",
+  "manage.py",
+  "e2etests/*",
+  "scripts/*",
+]
 
 [tool.pytest.ini_options]
 addopts = [
@@ -100,7 +103,7 @@ enabled = true
 
 [tool.poetry.dependencies]
 python = ">3.11,<3.13"
-django = "~4.2.22"
+django = "~4.2.24"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
 backoff = "~2.2.1"
@@ -133,7 +136,7 @@ environs = "^14.1.1"
 django-lifecycle = "~1.2.4"
 drf-writable-nested = "~0.6.2"
 django-filter = "~2.4.0"
-flagsmith-flag-engine = "^5.4.3"
+flagsmith-flag-engine = "^6.0.2"
 boto3 = "~1.35.95"
 slack-sdk = "~3.9.0"
 asgiref = "~3.8.1"
@@ -153,21 +156,20 @@ django-ses = "~3.5.0"
 django-axes = "~5.32.0"
 pydantic = "^2.3.0"
 pyngo = "~2.2.1"
-flagsmith = "^3.6.0"
+flagsmith = "^3.10.0"
 python-gnupg = "^0.5.1"
 django-redis = "^5.4.0"
 pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-common = "^1.15.0"
+flagsmith-common = "^2.2.0"
 django-stubs = "^5.1.3"
 tzdata = "^2024.1"
-djangorestframework-simplejwt = "^5.3.1"
+djangorestframework-simplejwt = "^5.5.1"
 structlog = "^24.4.0"
 prometheus-client = "^0.21.1"
 django_cockroachdb = "~4.2"
-fastuaparser = "^0.1.4"
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -191,7 +193,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.7.8" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.0.0" }
 
 [tool.poetry.group.licensing]
 optional = true
@@ -209,7 +211,7 @@ flagsmith-split-testing = { git = "https://github.com/flagsmith/flagsmith-split-
 optional = true
 
 [tool.poetry.group.release-pipelines.dependencies]
-flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.2.1" }
+flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.4.1" }
 
 
 [tool.poetry.group.dev.dependencies]

@@ -365,12 +365,6 @@ const font_size = flagsmith.getValue('font_size', { fallback: 12 });
 
 ## Datadog RUM JavaScript SDK Integration
 
-:::caution
-
-This feature is still in beta with Datadog. Contact your Datadog representative before enabling the integration below.
-
-:::
-
 The Flagsmith JavaScript SDK can be configured so that feature enabled state and remote config can be stored as
 [Datadog RUM feature flags](https://docs.datadoghq.com/real_user_monitoring/guide/setup-feature-flag-data-collection/?tab=npm#analyze-your-feature-flag-performance-in-rum)
 and user traits can be stored as

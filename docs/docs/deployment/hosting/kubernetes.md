@@ -221,17 +221,26 @@ api:
 
 By default, no resource limits or requests are set.
 
-TODO: recommend some defaults
+Our recommended limits are 1vCPU and 2GB RAM for all of our pods, but this might vary depending on your usage pattern 
+and hosting environment. 
 
 ### Replicas
 
-By default, 1 replica of each of the frontend and api is used.
+By default, 1 replica of each of the frontend, API, and task processor is used. We recommend tailoring these to your 
+requirements based on expected load, and your hosting environment. As the API will be the most heavily used service, we 
+would recommend adding more replicas to your API than the other services. A standard configuration, with some built in 
+fault tolerance, might look something like: 
 
-TODO: recommend some defaults.
+```yaml
+frontend:
+  replicacount: 2
 
-TODO: consider some autoscaling options.
+api:
+  replicacount: 4
 
-TODO: create a pod-disruption-budget
+taskProcessor:
+  replicacount: 2
+```
 
 ### Deployment strategy
 

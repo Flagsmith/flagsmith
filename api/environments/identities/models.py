@@ -1,4 +1,3 @@
-import typing
 from itertools import chain
 
 from django.db import models
@@ -6,6 +5,7 @@ from django.db.models import Prefetch, Q
 from flag_engine.context.mappers import map_environment_identity_to_context
 from flag_engine.segments.evaluator import is_context_in_segment
 
+from environments.identities.constants import identifier_regex_validator
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -22,7 +22,10 @@ from util.mappers.engine import (
 
 
 class Identity(models.Model):
-    identifier = models.CharField(max_length=2000)
+    identifier = models.CharField(
+        max_length=2000,
+        validators=[identifier_regex_validator],
+    )
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     environment = models.ForeignKey(
         Environment, related_name="identities", on_delete=models.CASCADE
@@ -58,6 +61,7 @@ class Identity(models.Model):
 
     def get_all_feature_states(
         self,
+        feature_name: str | None = None,
         traits: list[Trait] | None = None,
         additional_filters: Q | None = None,
     ) -> list[FeatureState]:
@@ -73,7 +77,7 @@ class Identity(models.Model):
         :return: (list) flags for an identity with the correct values based on
             identity / segment priorities
         """
-        segments = self.get_segments(traits=traits, overrides_only=True)  # type: ignore[arg-type]
+        segments = self.get_segments(traits=traits, overrides_only=True)
 
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
@@ -101,6 +105,7 @@ class Identity(models.Model):
 
         all_flags = get_environment_flags_list(
             environment=self.environment,
+            feature_name=feature_name,
             additional_filters=full_query,
             additional_select_related_args=["feature_segment__segment", "identity"],
             additional_prefetch_related_args=[
@@ -141,9 +146,9 @@ class Identity(models.Model):
 
     def get_segments(
         self,
-        traits: typing.List[Trait] = None,  # type: ignore[assignment]
+        traits: list[Trait] | None = None,
         overrides_only: bool = False,
-    ) -> typing.List[Segment]:
+    ) -> list[Segment]:
         """
         Get the list of segments this identity is a part of.
 
@@ -152,7 +157,7 @@ class Identity(models.Model):
         :return: List of matching segments
         """
         matching_segments = []
-        traits = (
+        db_traits = (
             self.identity_traits.all() if (traits is None and self.id) else traits or []
         )
 
@@ -166,7 +171,7 @@ class Identity(models.Model):
             with_overrides=False,
             with_traits=False,
         )
-        engine_traits = map_traits_to_engine(traits)
+        engine_traits = map_traits_to_engine(db_traits)
 
         for segment in all_segments:
             engine_segment = map_segment_to_engine(segment)

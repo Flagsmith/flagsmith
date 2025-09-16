@@ -81,7 +81,6 @@ from projects.models import (
 )
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
-from segments.services import SegmentCloneService
 from tests.test_helpers import fix_issue_3869
 from tests.types import (
     AdminClientAuthType,
@@ -266,8 +265,10 @@ def staff_client(staff_user):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def organisation(db, admin_user, staff_user):  # type: ignore[no-untyped-def]
-    org = Organisation.objects.create(name="Test Org")
+def organisation(
+    db: None, admin_user: FFAdminUser, staff_user: FFAdminUser
+) -> Organisation:
+    org: Organisation = Organisation.objects.create(name="Test Org")
     admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
     staff_user.add_organisation(org, role=OrganisationRole.USER)
     return org
@@ -376,13 +377,9 @@ def project(organisation):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def segment(project: Project):  # type: ignore[no-untyped-def]
-    _segment = Segment.objects.create(name="segment", project=project)
-    # Deep clone the segment to ensure that any bugs around
-    # versioning get bubbled up through the test suite.
-    SegmentCloneService(_segment).deep_clone()
-
-    return _segment
+def segment(project: Project) -> Segment:
+    segment: Segment = Segment.objects.create(name="segment", project=project)
+    return segment
 
 
 @pytest.fixture()

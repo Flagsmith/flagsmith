@@ -482,7 +482,6 @@ def test_handle_api_usage_notifications_below_100(
         context={
             "organisation": organisation,
             "matched_threshold": 90,
-            "url": get_current_site_url(),
             "usage_url": f"{get_current_site_url()}/organisation/{organisation.id}/usage",
         },
     )
@@ -496,7 +495,6 @@ def test_handle_api_usage_notifications_below_100(
         context={
             "organisation": organisation,
             "matched_threshold": 90,
-            "url": get_current_site_url(),
             "usage_url": f"{get_current_site_url()}/organisation/{organisation.id}/usage",
         },
     )
@@ -633,7 +631,6 @@ def test_handle_api_usage_notifications_above_100(
         context={
             "organisation": organisation,
             "matched_threshold": 100,
-            "url": get_current_site_url(),
             "usage_url": f"{get_current_site_url()}/organisation/{organisation.id}/usage",
         },
     )
@@ -641,13 +638,11 @@ def test_handle_api_usage_notifications_above_100(
     assert len(email.alternatives) == 1
     assert len(email.alternatives[0]) == 2
     assert email.alternatives[0][1] == "text/html"
-
     assert email.alternatives[0][0] == render_to_string(
         "organisations/api_usage_notification_limit.html",
         context={
             "organisation": organisation,
             "matched_threshold": 100,
-            "url": get_current_site_url(),
             "usage_url": f"{get_current_site_url()}/organisation/{organisation.id}/usage",
         },
     )
@@ -1677,8 +1672,8 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
         organisation5,
         organisation6,
     ]:
-        admin_user.add_organisation(org, role=OrganisationRole.ADMIN)  # type: ignore[no-untyped-call]
-        staff_user.add_organisation(org, role=OrganisationRole.USER)  # type: ignore[no-untyped-call]
+        admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
+        staff_user.add_organisation(org, role=OrganisationRole.USER)
 
     organisation5.subscription.plan = "scale-up-v2"
     organisation5.subscription.payment_method = CHARGEBEE
@@ -1803,13 +1798,21 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     assert email1.subject == "Flagsmith API use has been blocked due to overuse"
     assert email1.body == render_to_string(
         "organisations/api_flags_blocked_notification.txt",
-        context={"organisation": organisation, "url": get_current_site_url()},
+        context={
+            "organisation": organisation,
+            "url": get_current_site_url(),
+            "usage_url": f"{get_current_site_url()}/organisation/{organisation.id}/usage",
+        },
     )
     email2 = mailoutbox[1]
     assert email2.subject == "Flagsmith API use has been blocked due to overuse"
     assert email2.body == render_to_string(
         "organisations/api_flags_blocked_notification.txt",
-        context={"organisation": organisation2, "url": get_current_site_url()},
+        context={
+            "organisation": organisation2,
+            "url": get_current_site_url(),
+            "usage_url": f"{get_current_site_url()}/organisation/{organisation2.id}/usage",
+        },
     )
 
     assert len(email2.alternatives) == 1
@@ -1822,6 +1825,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
             "organisation": organisation2,
             "grace_period": False,
             "url": get_current_site_url(),
+            "usage_url": f"{get_current_site_url()}/organisation/{organisation2.id}/usage",
         },
     )
     assert email2.from_email == "noreply@flagsmith.com"
@@ -1838,6 +1842,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
         context={
             "organisation": organisation6,
             "grace_period": False,
+            "usage_url": f"{get_current_site_url()}/organisation/{organisation6.id}/usage",
             "url": get_current_site_url(),
         },
     )

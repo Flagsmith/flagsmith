@@ -1,6 +1,7 @@
 import typing
 from collections import namedtuple
 
+from common.core.utils import is_database_replica_setup, using_database_replica
 from common.environments.permissions import (
     MANAGE_IDENTITIES,
     VIEW_IDENTITIES,
@@ -14,6 +15,7 @@ from django.views.decorators.vary import vary_on_headers
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
@@ -33,10 +35,7 @@ from environments.sdk.serializers import (
     IdentitySerializerWithTraitsAndSegments,
 )
 from features.serializers import SDKFeatureStateSerializer
-from integrations.integration import (
-    IDENTITY_INTEGRATIONS,
-    identify_integrations,
-)
+from integrations.integration import identify_integrations
 from util.views import SDKAPIView
 
 
@@ -114,26 +113,20 @@ class SDKIdentitiesDeprecated(SDKAPIView):
     # identifier is in a path parameter
     def get(self, request, identifier, *args, **kwargs):  # type: ignore[no-untyped-def]
         # if we have identifier fetch, or create if does not exist
-        if identifier:
-            identity, _ = Identity.objects.get_or_create_for_sdk(
-                identifier=identifier,
-                environment=request.environment,
-                integrations=IDENTITY_INTEGRATIONS,
-            )
-        else:
-            return Response(
-                {"detail": "Missing identifier"}, status=status.HTTP_400_BAD_REQUEST
+        identity, is_new_identity = Identity.objects.get_or_create_for_sdk(
+            identifier=identifier,
+            environment=request.environment,
+        )
+
+        # New identities may take a while to replicate — otherwise use a replica
+        if not is_new_identity and is_database_replica_setup():
+            identity = (
+                using_database_replica(Identity.objects)
+                .with_context()
+                .get(id=identity.id)
             )
 
-        if identity:
-            traits_data = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
-            # traits_data = self.get_serializer(identity.get_all_user_traits(), many=True)
-            # return Response(traits.data, status=status.HTTP_200_OK)
-        else:
-            return Response(
-                {"detail": "Given identifier not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        traits_data = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
 
         # We need object type to pass into our IdentitySerializerTraitFlags
         IdentityFlagsWithTraitsAndSegments = namedtuple(  # type: ignore[name-match]
@@ -157,7 +150,7 @@ class SDKIdentities(SDKAPIView):
     pagination_class = None  # set here to ensure documentation is correct
     throttle_classes = []
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={200: SDKIdentitiesResponseSerializer()},
         query_serializer=SDKIdentitiesQuerySerializer(),
         operation_id="identify_user",
@@ -169,25 +162,34 @@ class SDKIdentities(SDKAPIView):
             cache=settings.GET_IDENTITIES_ENDPOINT_CACHE_NAME,
         )
     )
-    def get(self, request):  # type: ignore[no-untyped-def]
-        identifier = request.query_params.get("identifier")
-        if not identifier:
-            return Response(
-                {"detail": "Missing identifier"}
-            )  # TODO: add 400 status - will this break the clients?
+    def get(self, request: Request) -> Response:
+        query_serializer = SDKIdentitiesQuerySerializer(data=request.query_params)
+        if not query_serializer.is_valid():
+            return Response(query_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        if request.query_params.get("transient"):
+        identifier = query_serializer.validated_data["identifier"]
+
+        if query_serializer.validated_data["transient"]:
             identity = Identity(
                 created_date=timezone.now(),
                 identifier=identifier,
                 environment=request.environment,
             )
+            is_new_identity = True
         else:
-            identity, _ = Identity.objects.get_or_create_for_sdk(
+            identity, is_new_identity = Identity.objects.get_or_create_for_sdk(
                 identifier=identifier,
                 environment=request.environment,
-                integrations=IDENTITY_INTEGRATIONS,
             )
+
+        # New identities may take a while to replicate — otherwise use a replica
+        if not is_new_identity and is_database_replica_setup():
+            identity = (
+                using_database_replica(Identity.objects)
+                .with_context()
+                .get(id=identity.id)
+            )
+
         self.identity = identity
 
         if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:

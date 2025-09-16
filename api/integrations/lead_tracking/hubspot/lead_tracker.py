@@ -162,13 +162,13 @@ class HubspotLeadTracker(LeadTracker):
             return None
         org_hubspot_id: str = company["id"]
 
-        properties = company.get("properties", {})
-        existing_name = properties.get("name")
-        if existing_name != organisation.name:
-            self.client.update_company(
-                name=organisation.name,
-                hubspot_company_id=org_hubspot_id,
-            )
+        # Update the company in Hubspot with the name of the created
+        # organisation in Flagsmith, and its numeric ID.
+        self.client.update_company(
+            name=organisation.name,
+            hubspot_company_id=org_hubspot_id,
+            flagsmith_organisation_id=organisation.id,
+        )
 
         # Store the organisation data in the database since we are
         # unable to look them up via a unique identifier.

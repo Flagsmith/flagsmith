@@ -1,7 +1,12 @@
 from unittest import mock
 
+from django.test import RequestFactory
+from rest_framework.request import Request
+
+from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import OrganisationRole
+from users.models import FFAdminUser
 from webhooks.permissions import TriggerSampleWebhookPermission
 
 
@@ -57,16 +62,17 @@ def test_has_permission_returns_false_for_env_webhook_if_user_is_not_an_admin(  
     assert permission_class.has_permission(mock_request, mock_view) is False  # type: ignore[no-untyped-call]
 
 
-def test_has_permission_returns_true_for_env_webhook_if_user_is_an_admin(  # type: ignore[no-untyped-def]
-    environment, django_user_model, rf
-):
+def test_has_permission_returns_true_for_env_webhook_if_user_is_an_admin(
+    environment: Environment,
+    staff_user: FFAdminUser,
+    rf: RequestFactory,
+) -> None:
     # Given
-    user = django_user_model.objects.create(username="test_user")
     UserEnvironmentPermission.objects.create(
-        user=user, admin=True, environment=environment
+        user=staff_user, admin=True, environment=environment
     )
     mock_request = rf.get("/url")
-    mock_request.user = user
+    mock_request.user = staff_user
 
     mock_view = mock.MagicMock(
         basename="environments-webhooks",
@@ -122,16 +128,17 @@ def test_has_permission_returns_true_for_webhook_test_if_user_is_an_organisation
     assert permission_class.has_permission(mock_request, mock_view) is True  # type: ignore[no-untyped-call]
 
 
-def test_has_permission_returns_true_for_webhook_test_if_user_is_an_environment_admin(  # type: ignore[no-untyped-def]
-    environment, django_user_model, rf
-):
+def test_has_permission_returns_true_for_webhook_test_if_user_is_an_environment_admin(
+    environment: Environment,
+    staff_user: FFAdminUser,
+    user_environment_permission: UserEnvironmentPermission,
+) -> None:
     # Given
-    user = django_user_model.objects.create(username="test_user")
-    UserEnvironmentPermission.objects.create(
-        user=user, admin=True, environment=environment
-    )
-    mock_request = rf.post("/v1/webhooks/test")
-    mock_request.user = user
+    user_environment_permission.admin = True
+    user_environment_permission.save()
+
+    mock_request = mock.MagicMock(spec=Request)
+    mock_request.user = staff_user
     mock_request.data = {
         "webhook_url": "http://test.webhook.com",
         "secret": "some-secret",

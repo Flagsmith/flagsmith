@@ -1,8 +1,8 @@
 import React, { FC, useState } from 'react'
 import JSONReference from 'components/JSONReference'
 import Button from 'components/base/forms/Button'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -389,7 +389,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                 <Button
                                   theme='text'
                                   target='_blank'
-                                  href='https://docs.flagsmith.com/advanced-use/permissions'
+                                  href='https://docs.flagsmith.com/system-administration/rbac'
                                   className='fw-normal'
                                 >
                                   Learn about User Roles.

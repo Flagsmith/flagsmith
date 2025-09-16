@@ -287,6 +287,18 @@
     padding-left: 2rem !important;
 }
 
+@include media-breakpoint-down(md) {
+    .px-md-5 {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+}
+
+.px-12 {
+    padding-left: 6rem;
+    padding-right: 6rem;
+}
+
 .m-n1 {
     margin: -0.25rem !important;
 }

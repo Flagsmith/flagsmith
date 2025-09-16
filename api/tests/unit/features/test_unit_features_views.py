@@ -42,6 +42,7 @@ from environments.dynamodb import (
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
+from features import views
 from features.dataclasses import EnvironmentFeatureOverridesData
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
@@ -51,6 +52,7 @@ from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import MetadataModelField
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
+from projects.code_references.models import FeatureFlagCodeReferencesScan
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
@@ -706,6 +708,218 @@ def test_get_flags_for_environment_response(
     )
 
 
+@pytest.mark.parametrize("cache_flags_seconds", [0, 30])
+def test_SDKFeatureStates_get__responds_200_with_feature_list(
+    api_client: APIClient,
+    cache_flags_seconds: int,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    settings.CACHE_FLAGS_SECONDS = cache_flags_seconds
+
+    # When
+    response = api_client.get("/api/v1/flags/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "id": feature_state.id,
+            "enabled": feature_state.enabled,
+            "environment": environment.id,
+            "feature": mocker.ANY,
+            "feature_segment": None,
+            "feature_state_value": None,
+            "identity": None,
+        },
+    ]
+    assert response.json()[0]["feature"]["name"] == feature.name
+
+
+# NOTE: DEPRECATED
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "num_queries"],
+    [
+        pytest.param(False, True, 9, id="default_database,new_identity"),
+        pytest.param(False, False, 8, id="default_database,existing_identity"),
+        pytest.param(True, True, 9, id="replica_database,new_identity"),
+        pytest.param(True, False, 7, id="replica_database,existing_identity"),
+    ],
+)
+def test_SDKFeatureStates_get__given_identifier__responds_200_with_feature_list(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    is_new_identity: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "morpheus" if is_new_identity else identity.identifier
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = api_client.get(f"/api/v1/flags/{identifier}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "id": mocker.ANY if is_new_identity else feature_state.id,
+            "enabled": not is_new_identity,
+            "environment": environment.id,
+            "feature": mocker.ANY,
+            "feature_segment": None,
+            "feature_state_value": None,
+            "identity": None if is_new_identity else identity.id,
+        },
+    ]
+    assert response.json()[0]["feature"]["name"] == feature.name
+    assert Identity.objects.filter(identifier=identifier).exists()
+
+
+# NOTE: DEPRECATED
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "num_queries"],
+    [
+        pytest.param(False, True, 9, id="default_database,new_identity"),
+        pytest.param(False, False, 8, id="default_database,existing_identity"),
+        pytest.param(True, True, 9, id="replica_database,new_identity"),
+        pytest.param(True, False, 7, id="replica_database,existing_identity"),
+    ],
+)
+def test_SDKFeatureStates_get__given_identifier_and_feature__both_exist__responds_200_with_feature(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    is_new_identity: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "morpheus" if is_new_identity else identity.identifier
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = api_client.get(f"/api/v1/flags/{identifier}?feature={feature.name}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "id": mocker.ANY if is_new_identity else feature_state.id,
+        "enabled": not is_new_identity,
+        "environment": environment.id,
+        "feature": mocker.ANY,
+        "feature_segment": None,
+        "feature_state_value": None,
+        "identity": None if is_new_identity else identity.id,
+    }
+    assert response.json()["feature"]["name"] == feature.name
+    assert Identity.objects.filter(identifier=identifier).exists()
+
+
+# NOTE: DEPRECATED
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "num_queries"],
+    [
+        pytest.param(False, True, 8, id="default_database,new_identity"),
+        pytest.param(False, False, 7, id="default_database,existing_identity"),
+        pytest.param(True, True, 8, id="replica_database,new_identity"),
+        pytest.param(True, False, 6, id="replica_database,existing_identity"),
+    ],
+)
+def test_SDKFeatureStates_get__given_identifier_and_feature__feature_does_not_exist__responds_404(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    identity: Identity,
+    is_new_identity: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "morpheus" if is_new_identity else identity.identifier
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = api_client.get(f"/api/v1/flags/{identifier}?feature=turbo_mode")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert Identity.objects.filter(identifier=identifier).exists()
+
+
+def test_SDKFeatureStates_get__given_feature__exists__responds_200_with_feature(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(f"/api/v1/flags/?feature={feature.name}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "id": feature_state.id,
+        "enabled": feature.default_enabled,
+        "environment": environment.id,
+        "feature": mocker.ANY,
+        "feature_segment": None,
+        "feature_state_value": None,
+        "identity": None,
+    }
+
+
+def test_SDKFeatureStates_get__given_feature__doesnt_exist__responds_404(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/?feature=turbo_mode")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 @pytest.mark.parametrize(
     "environment_value, project_value, disabled_flag_returned",
     (
@@ -1050,6 +1264,7 @@ def test_create_segment_override_staff(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     manage_segment_overrides_permission: PermissionModel,
+    user_environment_permission: UserEnvironmentPermission,
 ) -> None:
     # Given
     url = reverse(
@@ -1065,9 +1280,6 @@ def test_create_segment_override_staff(
         "enabled": enabled,
         "feature_segment": {"segment": segment.id},
     }
-    user_environment_permission = UserEnvironmentPermission.objects.create(
-        user=staff_user, admin=False, environment=environment
-    )
     user_environment_permission.permissions.add(manage_segment_overrides_permission)
 
     response = staff_client.post(
@@ -1159,7 +1371,7 @@ def test_list_feature_states_from_simple_view_set(
     # add another organisation with a project, environment and feature (which should be
     # excluded)
     another_organisation = Organisation.objects.create(name="another_organisation")
-    admin_user.add_organisation(another_organisation)  # type: ignore[no-untyped-call]
+    admin_user.add_organisation(another_organisation)
     another_project = Project.objects.create(
         name="another_project", organisation=another_organisation
     )
@@ -3341,6 +3553,92 @@ def test_list_features_with_filter_by_search_value_boolean(
 
     assert len(response.data["results"]) == 1
     assert response.data["results"][0]["name"] == feature2.name
+
+
+def test_FeatureViewSet_list__includes_code_references_counts(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    environment: Environment,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    with freeze_time("2099-01-01T10:00:00-0300"):
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://github.flagsmith.com/backend/",
+            revision="backend-1",
+            code_references=[
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/file.py",
+                    "line_number": 42,
+                },
+            ],
+        )
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://gitlab.flagsmith.com/frontend/",
+            revision="frontend-1",
+            code_references=[
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/file.js",
+                    "line_number": 23,
+                },
+            ],
+        )
+    with freeze_time("2099-01-02T11:00:00-0300"):
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://github.flagsmith.com/backend/",
+            revision="backend-2",
+            code_references=[
+                {
+                    "feature_name": f"Another {feature.name}",
+                    "file_path": "path/to/another/file.py",
+                    "line_number": 11,
+                },
+            ],
+        )
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://gitlab.flagsmith.com/frontend/",
+            revision="frontend-2",
+            code_references=[
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/file.js",
+                    "line_number": 23,
+                },
+                {
+                    "feature_name": feature.name,
+                    "file_path": "path/to/another/file.js",
+                    "line_number": 50,
+                },
+            ],
+        )
+
+    # When
+    response = staff_client.get(f"/api/v1/projects/{project.pk}/features/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["results"][0]["code_references_counts"] == [
+        {
+            "repository_url": "https://github.flagsmith.com/backend/",
+            "count": 0,
+            "last_successful_repository_scanned_at": "2099-01-02T14:00:00+00:00",
+            "last_feature_found_at": "2099-01-01T13:00:00+00:00",
+        },
+        {
+            "repository_url": "https://gitlab.flagsmith.com/frontend/",
+            "count": 2,
+            "last_successful_repository_scanned_at": "2099-01-02T14:00:00+00:00",
+            "last_feature_found_at": "2099-01-02T14:00:00+00:00",
+        },
+    ]
 
 
 def test_simple_feature_state_returns_only_latest_versions(
