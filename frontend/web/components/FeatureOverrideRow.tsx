@@ -13,7 +13,7 @@ import Button from './base/forms/Button'
 import Icon from './Icon'
 import TagValues from './tags/TagValues'
 import SegmentsIcon from './svg/SegmentsIcon'
-import FeatureValue from './FeatureValue'
+import FeatureValue from './feature-summary/FeatureValue'
 import Switch from './Switch'
 const width = [200, 48, 78]
 
