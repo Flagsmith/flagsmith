@@ -20,13 +20,13 @@
                 "value": {
                     "description": "Feature flag value.",
                     "title": "Value",
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "object",
+                        "array",
+                        "null"
                     ]
                 },
                 "reason": {
