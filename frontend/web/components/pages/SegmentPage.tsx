@@ -13,6 +13,8 @@ import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import { useHasPermission } from 'common/providers/Permission'
 import { handleRemoveSegment } from 'components/segments/SegmentRow/SegmentRow'
+import { removeIdentity } from './UsersPage'
+import Icon from 'components/Icon'
 
 type SegmentPageType = {}
 
@@ -57,8 +59,13 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
         cta={
           manageSegmentsPermission && (
             <Row>
-              <Button onClick={onRemoveSegment} theme='secondary'>
-                Delete
+              <Button
+                data-test='remove-segment-btn'
+                className='btn btn-with-icon'
+                type='button'
+                onClick={onRemoveSegment}
+              >
+                <Icon name='trash-2' width={20} fill='#656D7B' />
               </Button>
             </Row>
           )
