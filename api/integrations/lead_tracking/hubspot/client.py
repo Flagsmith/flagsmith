@@ -222,12 +222,15 @@ class HubspotClient:
         hubspot_company_id: str,
         name: str | None = None,
         active_subscription: str | None = None,
+        flagsmith_organisation_id: int | None = None,
     ) -> dict[str, Any]:
         properties = {}
         if name is not None:
             properties["name"] = name
         if active_subscription is not None:
             properties["active_subscription"] = active_subscription
+        if flagsmith_organisation_id is not None:
+            properties["orgid_unique"] = str(flagsmith_organisation_id)
 
         simple_public_object_input = SimplePublicObjectInput(properties=properties)
 

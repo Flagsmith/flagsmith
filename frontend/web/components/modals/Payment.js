@@ -166,7 +166,7 @@ const Payment = class extends Component {
                         {!viewOnly ? (
                           <>
                             <PaymentButton
-                              data-cb-plan-id={Project.plans.startup.annual}
+                              data-cb-plan-id={Project.plans?.startup?.annual}
                               className={classNames(
                                 'btn btn-primary btn-lg full-width mt-3',
                                 { 'd-none': !this.state.yearly },
@@ -178,7 +178,7 @@ const Payment = class extends Component {
                                 : '14 Day Free Trial'}
                             </PaymentButton>
                             <PaymentButton
-                              data-cb-plan-id={Project.plans.startup.monthly}
+                              data-cb-plan-id={Project.plans?.startup?.monthly}
                               className={classNames(
                                 'btn btn-primary btn-lg full-width mt-3',
                                 { 'd-none': this.state.yearly },

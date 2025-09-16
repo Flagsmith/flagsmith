@@ -15,7 +15,7 @@
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 772178,
+      "django_id": 966786,
       "enabled": true,
       "feature": {
         "id": 96656,
@@ -24,11 +24,11 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "1e5de9b6-52df-4a7b-a9cc-e56ee654b019",
+      "featurestate_uuid": "c849b8fa-7eb3-4ada-a2ef-92abc8acb015",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 772176,
+      "django_id": 966788,
       "enabled": true,
       "feature": {
         "id": 96657,
@@ -37,7 +37,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "b5f95449-c333-482e-8864-cd32fc11c795",
+      "featurestate_uuid": "077c46f8-b5c4-40b8-bd03-5916f00381bf",
       "multivariate_feature_state_values": []
     },
     {
@@ -54,7 +54,7 @@
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 905678,
+      "django_id": 933832,
       "enabled": false,
       "feature": {
         "id": 148935,
@@ -63,7 +63,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "f632c3f8-6f49-45c5-9977-762d9880e7f7",
+      "featurestate_uuid": "1d584003-a0cc-46dd-aeea-30f392a4da80",
       "multivariate_feature_state_values": []
     },
     {

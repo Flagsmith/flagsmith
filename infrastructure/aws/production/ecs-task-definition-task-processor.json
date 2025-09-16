@@ -6,7 +6,9 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-task-processor",
-            "command": ["run-task-processor"],
+            "command": [
+                "run-task-processor"
+            ],
             "essential": true,
             "environment": [
                 {
@@ -156,6 +158,10 @@
                 {
                     "name": "TASK_PROCESSOR_NUM_THREADS",
                     "value": "12"
+                },
+                {
+                    "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
+                    "value": "True"
                 }
             ],
             "secrets": [
@@ -230,7 +236,9 @@
             }
         }
     ],
-    "requiresCompatibilities": ["FARGATE"],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
     "cpu": "1024",
     "memory": "2048"
 }

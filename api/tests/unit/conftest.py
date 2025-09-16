@@ -12,8 +12,44 @@ from features.models import Feature
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.tags.models import Tag
+from segments.models import Segment
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
+
+
+def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
+    if metafunc.definition.get_closest_marker("valid_identity_identifiers"):
+        metafunc.parametrize(
+            "identifier",
+            [
+                "bond...jamesbond",
+                "ゴジラ",
+                "ElChapulínColorado",
+                "dalek#6453@skaro.gov",
+                "agáta={^_^}=",
+                "_ツ_/-handless-shrug",
+                "who+am+i?",
+                "i_100%_dont_know!",
+                "~neo|simulation`0065192*75`",
+                "KacperGustyr$Flagsmat",
+            ],
+        )
+
+    if metafunc.definition.get_closest_marker("invalid_identity_identifiers"):
+        error_message = "Identifier can only contain unicode letters, numbers, and the symbols: ! # $ % & * + / = ? ^ _ ` { } | ~ @ . -"
+        metafunc.parametrize(
+            ["identifier", "identifier_error_message"],
+            [
+                ("", "This field may not be blank."),
+                (" ", "This field may not be blank."),
+                ("or really anything with a whitespace", error_message),
+                ("<script>alert(1)</script>", error_message),
+                ("'; DROP TABLE users;--", error_message),
+                ("'single-quotes'", error_message),
+                ('"double-quotes"', error_message),
+                ("figaro" * 334, "Ensure this field has no more than 2000 characters."),
+            ],
+        )
 
 
 @pytest.fixture()
@@ -253,3 +289,13 @@ def use_local_mem_cache_for_cache_middleware(mocker: MockerFixture) -> None:
         self.cache_alias = "default"  # force use of in-memory test cache
 
     mocker.patch.object(CacheMiddleware, "__init__", custom_init)
+
+
+@pytest.fixture()
+def system_segment(project: Project) -> Segment:
+    segment: Segment = Segment.objects.create(
+        project=project,
+        name="System Segment",
+        is_system_segment=True,
+    )
+    return segment

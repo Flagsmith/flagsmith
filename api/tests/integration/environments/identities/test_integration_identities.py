@@ -180,13 +180,17 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
             variant_2_value,
         )
 
-    # When we make a request to get the flags for the identity, 6 queries are made
-    # TODO: can we reduce the number of queries?!
     base_url = reverse("api-v1:sdk-identities")
     url = f"{base_url}?identifier={identity_identifier}"
 
-    with django_assert_num_queries(6):
+    with django_assert_num_queries(6) as captured:
         first_identity_response = sdk_client.get(url)
+    expected_queries = [
+        query
+        for query in captured.captured_queries
+        if 'FROM "multivariate_multivariatefeaturestatevalue"' in query["sql"]
+    ]
+    assert len(expected_queries) == 1
 
     # Now, if we add another feature
     feature_id = create_feature_with_api(
@@ -211,9 +215,14 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
         variant_2_value,
     )
 
-    # Then one fewer db queries are made (since the environment is now cached)
-    with django_assert_num_queries(5):
+    with django_assert_num_queries(5) as captured:
         second_identity_response = sdk_client.get(url)
+    expected_queries = [
+        query
+        for query in captured.captured_queries
+        if 'FROM "multivariate_multivariatefeaturestatevalue"' in query["sql"]
+    ]
+    assert len(expected_queries) == 1
 
     # Finally, we check that the requests were successful and we got the correct number
     # of flags in each case
@@ -497,6 +506,7 @@ def test_get_feature_states_for_identity__transient_identifier__empty_segment__r
                                 "rules": [],
                                 "conditions": [
                                     {
+                                        "property": "$.identity.key",
                                         "operator": "PERCENTAGE_SPLIT",
                                         "value": 0,
                                     }

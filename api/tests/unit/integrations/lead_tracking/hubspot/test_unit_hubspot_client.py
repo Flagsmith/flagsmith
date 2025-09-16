@@ -286,13 +286,34 @@ def test_associate_contact_to_company_succeeds(hubspot_client: HubspotClient) ->
 @pytest.mark.parametrize(
     "kwargs, expected_properties",
     [
-        ({"name": "Test Organisation"}, {"name": "Test Organisation"}),
         (
-            {"name": "Test Organisation", "active_subscription": "scaleup"},
-            {"name": "Test Organisation", "active_subscription": "scaleup"},
+            {"name": "Test Organisation", "flagsmith_organisation_id": 1},
+            {"name": "Test Organisation", "orgid_unique": "1"},
         ),
-        ({"active_subscription": "scaleup"}, {"active_subscription": "scaleup"}),
-        ({"name": None, "active_subscription": None}, {}),
+        (
+            {
+                "name": "Test Organisation",
+                "active_subscription": "scaleup",
+                "flagsmith_organisation_id": 1,
+            },
+            {
+                "name": "Test Organisation",
+                "active_subscription": "scaleup",
+                "orgid_unique": "1",
+            },
+        ),
+        (
+            {"active_subscription": "scaleup", "flagsmith_organisation_id": 1},
+            {"active_subscription": "scaleup", "orgid_unique": "1"},
+        ),
+        (
+            {
+                "name": None,
+                "active_subscription": None,
+                "flagsmith_organisation_id": None,
+            },
+            {},
+        ),
     ],
 )
 def test_update_company_calls_hubspot_api(

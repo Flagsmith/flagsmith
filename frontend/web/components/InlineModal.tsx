@@ -1,4 +1,4 @@
-import React, { useRef, FC } from 'react'
+import React, { useRef, FC, useEffect } from 'react'
 import ModalClose from './modals/base/ModalClose'
 import ModalHR from './modals/ModalHR'
 import Icon from './Icon'
@@ -34,6 +34,16 @@ const InlineModal: FC<InlineModalProps> = ({
 }) => {
   const modalRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('inline-modal-open')
+    } else {
+      document.body.classList.remove('inline-modal-open')
+    }
+    return () => {
+      document.body.classList.remove('inline-modal-open')
+    }
+  }, [isOpen])
   useOutsideClick(modalRef, () => {
     if (isOpen) {
       onClose()
@@ -44,6 +54,9 @@ const InlineModal: FC<InlineModalProps> = ({
     <div className={relativeToParent ? '' : 'relative'}>
       {isOpen && (
         <div ref={modalRef} className={classNames('inline-modal', className)}>
+          <div className='d-flex py-2 d-lg-none justify-content-end px-4'>
+            <ModalClose onClick={onClose} />
+          </div>
           {(!!title || !hideClose) && (
             <>
               <div className='inline-modal__title'>
