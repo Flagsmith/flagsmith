@@ -39,7 +39,6 @@
                 "feature_key",
                 "name",
                 "enabled",
-                "feature"
             ],
             "title": "FlagResult",
             "type": "object"
