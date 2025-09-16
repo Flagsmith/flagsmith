@@ -9,6 +9,16 @@
             "command": [
                 "run-task-processor"
             ],
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "flagsmith healthcheck tcp"
+                ],
+                "interval": 10,
+                "timeout": 2,
+                "retries": 5,
+                "startPeriod": 5
+            },
             "essential": true,
             "environment": [
                 {
