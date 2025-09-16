@@ -69,7 +69,7 @@
     "properties": {
         "context": {
             "existingJavaType": "com.flagsmith.flagengine.EvaluationContext",
-            "$ref": "https://raw.githubusercontent.com/Flagsmith/flagsmith/chore/evaluation-context-object-values/sdk/evaluation-context.json"
+            "$ref": "https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-context.json"
         },
         "flags": {
             "description": "List of feature flags evaluated for the context.",
