@@ -5,7 +5,6 @@ from flag_engine.features.models import FeatureStateModel
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from environments.identities.constants import identifier_regex_validator
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.serializers import EnvironmentSerializerFull
