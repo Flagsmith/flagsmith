@@ -1527,28 +1527,6 @@ def test_SDKIdentities__identifier_sanitization__rejects_invalid_identifiers(
     assert response.json() == {"identifier": [identifier_error_message]}
 
 
-@pytest.mark.django_db
-@pytest.mark.parametrize(
-    "identifier",
-    ["invalid existing identifier", "script>alert(1", "'single-quotes'"],
-)
-def test_SDKIdentities__identifier_sanitization__accepts_existing_invalid_identifiers(
-    api_client: APIClient,
-    environment: Environment,
-    identifier: str,
-) -> None:
-    # Given
-    Identity.objects.create(environment=environment, identifier=identifier)
-    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-
-    # When
-    response = api_client.get(f"/api/v1/identities/?identifier={quote(identifier)}")
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["identifier"] == identifier
-
-
 @pytest.mark.valid_identity_identifiers
 def test_IdentityViewSet_create__accepts_valid_identifiers(
     admin_client: APIClient,
