@@ -24,8 +24,6 @@
                         "string",
                         "number",
                         "boolean",
-                        "object",
-                        "array",
                         "null"
                     ]
                 },
@@ -68,6 +66,7 @@
     "properties": {
         "context": {
             "existingJavaType": "com.flagsmith.flagengine.EvaluationContext",
+            "goType": "evalcontext.EvaluationContext",
             "$ref": "https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-context.json"
         },
         "flags": {

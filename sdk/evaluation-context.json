@@ -53,8 +53,6 @@
                         "string",
                         "number",
                         "boolean",
-                        "object",
-                        "array",
                         "null"
                     ]
                 },
@@ -92,8 +90,6 @@
                         "string",
                         "number",
                         "boolean",
-                        "object",
-                        "array",
                         "null"
                     ]
                 },
