@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.196.2](https://github.com/Flagsmith/flagsmith/compare/v2.196.1...v2.196.2) (2025-09-17)
+
+
+### Bug Fixes
+
+* get-identities-checks-existing-invalid-identifiers ([#6083](https://github.com/Flagsmith/flagsmith/issues/6083)) ([ea58867](https://github.com/Flagsmith/flagsmith/commit/ea588673257cac1516188880eb4f28d8294a9b81))
+
 ## [2.196.1](https://github.com/Flagsmith/flagsmith/compare/v2.196.0...v2.196.1) (2025-09-17)
 
 
