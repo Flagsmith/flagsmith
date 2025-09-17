@@ -23,6 +23,7 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
             "identifier",
             [
                 "bond...jamesbond",
+                "identity with spaces",
                 "ゴジラ",
                 "ElChapulínColorado",
                 "dalek#6453@skaro.gov",
@@ -36,13 +37,12 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
         )
 
     if metafunc.definition.get_closest_marker("invalid_identity_identifiers"):
-        error_message = "Identifier can only contain unicode letters, numbers, and the symbols: ! # $ % & * + / = ? ^ _ ` { } | ~ @ . -"
+        error_message = "Identifier can only contain unicode letters, numbers, spaces and the symbols: ! # $ % & * + / = ? ^ _ ` { } | ~ @ . -"
         metafunc.parametrize(
             ["identifier", "identifier_error_message"],
             [
                 ("", "This field may not be blank."),
                 (" ", "This field may not be blank."),
-                ("or really anything with a whitespace", error_message),
                 ("<script>alert(1)</script>", error_message),
                 ("'; DROP TABLE users;--", error_message),
                 ("'single-quotes'", error_message),
