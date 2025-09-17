@@ -5,6 +5,7 @@ from flag_engine.features.models import FeatureStateModel
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from environments.identities.constants import identifier_regex_validator
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.serializers import EnvironmentSerializerFull
@@ -66,10 +67,27 @@ class SDKIdentitiesResponseSerializer(serializers.Serializer):  # type: ignore[t
 
 class SDKIdentitiesQuerySerializer(serializers.ModelSerializer[Identity]):
     transient = serializers.BooleanField(default=False)
+    identifier = serializers.CharField(required=True, max_length=2000)
 
     class Meta:
         model = Identity
         fields = ("identifier", "transient")
+
+    def validate_identifier(self, value: str) -> str:
+        try:
+            identifier_regex_validator(value)
+            return value
+        except ValidationError:
+            request = self.context.get("request")
+            environment = getattr(request, "environment", None)
+            if (
+                environment
+                and Identity.objects.filter(
+                    environment=environment, identifier=value
+                ).exists()
+            ):
+                return value
+            raise ValidationError(identifier_regex_validator.message)
 
 
 class IdentityAllFeatureStatesFeatureSerializer(serializers.Serializer):  # type: ignore[type-arg]
