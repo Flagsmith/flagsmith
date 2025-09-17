@@ -20,6 +20,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
+from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, TemplateView
 
 from app_analytics.influxdb_wrapper import (
@@ -60,6 +61,10 @@ email_regex = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
 domain_regex = re.compile(r"^[a-z0-9.-]+\.[a-z]{2,}$")
 
 
+@method_decorator(
+    name="get",
+    decorator=cache_page(timeout=300),
+)
 @method_decorator(
     name="get",
     decorator=staff_member_required(),
