@@ -1,5 +1,6 @@
 import typing
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from drf_yasg.utils import swagger_serializer_method  # type: ignore[import-untyped]
 from flag_engine.features.models import FeatureStateModel
 from rest_framework import serializers
@@ -77,7 +78,7 @@ class SDKIdentitiesQuerySerializer(serializers.ModelSerializer[Identity]):
         try:
             identifier_regex_validator(value)
             return value
-        except ValidationError:
+        except DjangoValidationError:
             request = self.context.get("request")
             environment = getattr(request, "environment", None)
             if (
