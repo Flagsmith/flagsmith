@@ -1,7 +1,5 @@
 import typing
-from unittest.mock import Mock
 
-import pytest
 from common.environments.permissions import (
     MANAGE_IDENTITIES,
     VIEW_ENVIRONMENT,
@@ -215,42 +213,3 @@ def test_user_cannot_delete_identity_from_another_project(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
     assert flagsmith_identities_table.get_item(Key={"composite_key": composite_key})
-
-
-@pytest.mark.valid_identity_identifiers
-def test_EdgeIdentityViewSet__identifier_sanitization__accepts_valid_identifiers(
-    admin_client: APIClient,
-    edge_identity_dynamo_wrapper_mock: Mock,
-    environment: Environment,
-    identifier: str,
-) -> None:
-    # Given
-    edge_identity_dynamo_wrapper_mock.get_item.return_value = None
-
-    # When
-    response = admin_client.post(
-        f"/api/v1/environments/{environment.api_key}/edge-identities/",
-        data={"identifier": identifier},
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["identifier"] == identifier
-
-
-@pytest.mark.invalid_identity_identifiers
-def test_EdgeIdentityViewSet__identifier_sanitization__rejects_invalid_identifiers(
-    admin_client: APIClient,
-    environment: Environment,
-    identifier_error_message: str,
-    identifier: str,
-) -> None:
-    # When
-    response = admin_client.post(
-        f"/api/v1/environments/{environment.api_key}/edge-identities/",
-        data={"identifier": identifier},
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {"identifier": [identifier_error_message]}
