@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.196.3](https://github.com/Flagsmith/flagsmith/compare/v2.196.2...v2.196.3) (2025-09-18)
+
+
+### Bug Fixes
+
+* **Identities:** Revert identifier sanitization ([#6085](https://github.com/Flagsmith/flagsmith/issues/6085)) ([1743806](https://github.com/Flagsmith/flagsmith/commit/1743806bad7ba5eaf36ee59aacb67805c1d99147))
+
 ## [2.196.2](https://github.com/Flagsmith/flagsmith/compare/v2.196.1...v2.196.2) (2025-09-17)
 
 
