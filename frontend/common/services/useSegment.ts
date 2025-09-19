@@ -3,6 +3,8 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 import transformCorePaging from 'common/transformCorePaging'
+import API from 'project/api'
+import Constants from 'common/constants'
 
 export const segmentService = service
   .enhanceEndpoints({ addTagTypes: ['Segment'] })
@@ -27,6 +29,10 @@ export const segmentService = service
           method: 'POST',
           url: `projects/${query.projectId}/segments/`,
         }),
+        transformResponse: (res) => {
+          API.trackEvent(Constants.events.CREATE_SEGMENT)
+          return res
+        },
       }),
       deleteSegment: builder.mutation<Res['segment'], Req['deleteSegment']>({
         invalidatesTags: (q, e, arg) => [

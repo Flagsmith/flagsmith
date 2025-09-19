@@ -23,6 +23,7 @@ import { useGetIdentitiesQuery } from 'common/services/useIdentity'
 import {
   useCreateSegmentMutation,
   useGetSegmentQuery,
+  useGetSegmentsQuery,
   useUpdateSegmentMutation,
 } from 'common/services/useSegment'
 import Utils from 'common/utils/utils'
@@ -46,6 +47,7 @@ import ExistingProjectChangeRequestAlert from 'components/ExistingProjectChangeR
 import CreateSegmentRulesTabForm from './CreateSegmentRulesTabForm'
 import CreateSegmentUsersTabContent from './CreateSegmentUsersTabContent'
 import useDebouncedSearch from 'common/useDebouncedSearch'
+import API from 'project/api'
 
 type PageType = {
   number: number
@@ -135,6 +137,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
       },
     ],
   }
+  const { data: segments } = useGetSegmentsQuery({
+    include_feature_specific: true,
+    projectId,
+  })
   const [segment, setSegment] = useState(_segment || defaultSegment)
   const [description, setDescription] = useState(segment.description)
   const [name, setName] = useState<Segment['name']>(segment.name)
@@ -247,10 +253,13 @@ const CreateSegment: FC<CreateSegmentType> = ({
             },
           }).unwrap()
         } else {
-          await createSegment({
+          const res = await createSegment({
             projectId,
             segment: segmentData,
           }).unwrap()
+          if (!segments?.results?.length) {
+            API.trackEvent(Constants.events.CREATE_FIRST_SEGMENT)
+          }
         }
       }
     } catch (error: any) {

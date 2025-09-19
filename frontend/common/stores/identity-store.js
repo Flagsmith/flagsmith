@@ -14,7 +14,7 @@ const controller = {
     payload,
   }) {
     store.saving()
-    API.trackEvent(Constants.events.TOGGLE_USER_FEATURE)
+    API.trackEvent(Constants.events.EDIT_USER_FEATURE)
 
     const prom = data.put(
       `${
@@ -132,7 +132,7 @@ const controller = {
     projectFlag,
   }) {
     store.saving()
-    API.trackEvent(Constants.events.TOGGLE_USER_FEATURE)
+    API.trackEvent(Constants.events.EDIT_USER_FEATURE)
     const prom =
       identityFlag.identity || identityFlag.identity_uuid
         ? data.put(

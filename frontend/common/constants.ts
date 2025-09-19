@@ -339,11 +339,6 @@ const Constants = {
       'event': 'User feature removed',
     },
     'RESEND_INVITE': { 'category': 'Invite', 'event': 'Invite resent' },
-    'TOGGLE_FEATURE': { 'category': 'Features', 'event': 'Feature toggled' },
-    'TOGGLE_USER_FEATURE': {
-      'category': 'User Features',
-      'event': 'User feature toggled',
-    },
     'TRY_IT': { 'category': 'TryIt', 'event': 'Try it clicked' },
     'UPDATE_USER_ROLE': {
       'category': 'Organisation',
