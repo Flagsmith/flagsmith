@@ -24,11 +24,40 @@ interface SegmentRowProps {
     MutationDefinition<Req['deleteSegment'], any, 'Segment', Segment, 'service'>
   >
 }
-
+export const handleRemoveSegment = (
+  projectId: string,
+  segment: Segment,
+  removeSegmentQuery: SegmentRowProps['removeSegment'],
+  onComplete?: () => void,
+) => {
+  const removeSegmentCallback = async () => {
+    try {
+      await removeSegmentQuery({ id: segment.id, projectId })
+      toast(
+        <div>
+          Removed Segment: <strong>{segment.name}</strong>
+        </div>,
+      )
+      onComplete?.()
+    } catch (error) {
+      toast(
+        <div>
+          Error removing segment: <strong>{segment.name}</strong>
+        </div>,
+        'danger',
+      )
+    }
+  }
+  openModal(
+    'Remove Segment',
+    <ConfirmRemoveSegment segment={segment} cb={removeSegmentCallback} />,
+    'p-0',
+  )
+}
 export const SegmentRow: FC<SegmentRowProps> = ({
   index,
   projectId,
-  removeSegment,
+  removeSegment: removeSegmentCallback,
   segment,
 }) => {
   const history = useHistory()
@@ -40,27 +69,13 @@ export const SegmentRow: FC<SegmentRowProps> = ({
     permission: 'MANAGE_SEGMENTS',
   })
 
+  const onRemoveSegmentClick = () => {
+    handleRemoveSegment(projectId, segment, removeSegmentCallback)
+  }
+
   const [cloneSegment, { isLoading: isCloning }] = useCloneSegmentMutation()
 
   const isCloningEnabled = Utils.getFlagsmithHasFeature('clone_segment')
-
-  const removeSegmentCallback = async () => {
-    try {
-      await removeSegment({ id, projectId })
-      toast(
-        <div>
-          Removed Segment: <strong>{segment.name}</strong>
-        </div>,
-      )
-    } catch (error) {
-      toast(
-        <div>
-          Error removing segment: <strong>{segment.name}</strong>
-        </div>,
-        'danger',
-      )
-    }
-  }
 
   const cloneSegmentCallback = async (name: string) => {
     try {
@@ -79,14 +94,6 @@ export const SegmentRow: FC<SegmentRowProps> = ({
         'danger',
       )
     }
-  }
-
-  const handleRemoveSegment = () => {
-    openModal(
-      'Remove Segment',
-      <ConfirmRemoveSegment segment={segment} cb={removeSegmentCallback} />,
-      'p-0',
-    )
   }
 
   const handleCloneSegment = () => {
@@ -109,10 +116,7 @@ export const SegmentRow: FC<SegmentRowProps> = ({
           manageSegmentsPermission
             ? () =>
                 history.push(
-                  `${document.location.pathname}?${Utils.toParam({
-                    ...Utils.fromParam(),
-                    id,
-                  })}`,
+                  `${document.location.pathname.replace(/\/$/, '')}/${id}`,
                 )
             : undefined
         }
@@ -133,14 +137,14 @@ export const SegmentRow: FC<SegmentRowProps> = ({
             index={index}
             isRemoveDisabled={!manageSegmentsPermission}
             isCloneDisabled={!manageSegmentsPermission}
-            onRemove={handleRemoveSegment}
+            onRemove={onRemoveSegmentClick}
             onClone={handleCloneSegment}
           />
         ) : (
           <Button
             disabled={!manageSegmentsPermission}
             data-test={`remove-segment-btn-${index}`}
-            onClick={handleRemoveSegment}
+            onClick={onRemoveSegmentClick}
             className='btn btn-with-icon'
           >
             <Icon name='trash-2' width={20} fill='#656D7B' />

@@ -28,8 +28,8 @@ import {
   cloneSegment,
   setSegmentRule,
   assertInputValue,
-  clickSegmentByName,
-} from '../helpers.cafe'
+  clickSegmentByName, deleteSegmentFromPage,
+} from '../helpers.cafe';
 import { E2E_USER, PASSWORD } from '../config'
 
 // Keep the last rule simple to facilitate update testing
@@ -93,7 +93,7 @@ export const testSegment1 = async (flagsmith: any) => {
   ])
 
   await gotoSegments()
-  
+
   log('Segment age rules')
   // (=== 18 || === 19) && (> 17 || < 19) && (!=20) && (<=18) && (>=18)
   // Rule 1- Age === 18 || Age === 19
@@ -105,17 +105,14 @@ export const testSegment1 = async (flagsmith: any) => {
   await click(byId('segment-0-name'))
   await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
   await click(byId('update-segment'))
-  await closeModal()
+  log('Check segment rule value')
   await gotoSegments()
   await click(byId('segment-0-name'))
   await assertInputValue(byId(`rule-${0}-value-0`), `${lastRule.value + 1}`)
-  await closeModal()
-  await deleteSegment(0, 'segment_to_update', !isCloneSegmentEnabled)
-  await waitAndRefresh()
+  await deleteSegmentFromPage('segment_to_update')
 
   log('Create segment')
   await createSegment(0, '18_or_19', segmentRules)
-  await closeModal()
 
 
   log('Add segment trait for user')
