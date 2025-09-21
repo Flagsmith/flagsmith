@@ -47,6 +47,8 @@ import GettingStartedPage from './components/pages/GettingStartedPage'
 import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
 import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
+import { OrganisationReportingPage, ProjectReportingPage } from './components/reporting'
+
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
@@ -85,10 +87,12 @@ export const routes = {
   'organisation-settings': '/organisation/:organisationId/settings',
   'organisation-settings-redirect': '/organisation-settings',
   'organisation-usage': '/organisation/:organisationId/usage',
+  'organisation-reporting': '/organisation/:organisationId/reporting',
   'organisations': '/organisations',
   'password-reset': '/password-reset/confirm/:uid/:token/',
   'permissions': '/project/:projectId/permissions',
   'project-redirect': '/project/:projectId',
+  'project-insights': '/project/:projectId/insights',
   'project-settings': '/project/:projectId/settings',
   'project-settings-in-environment':
     '/project/:projectId/environment/:environmentId/project-settings',
@@ -222,6 +226,11 @@ export default (
         component={ProjectSettingsPage}
       />
       <ParameterizedRoute
+        path={routes['project-insights']}
+        exact
+        component={ProjectReportingPage}
+      />
+      <ParameterizedRoute
         path={routes.permissions}
         exact
         component={ProjectSettingsPage}
@@ -245,6 +254,11 @@ export default (
         path={routes['organisation-usage']}
         exact
         component={OrganisationUsagePage}
+      />
+      <ParameterizedRoute
+        path={routes['organisation-reporting']}
+        exact
+        component={OrganisationReportingPage}
       />
       <Route
         path={routes['organisation-settings-redirect']}

@@ -36,10 +36,19 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
       {!Project.disableAnalytics && AccountStore.isAdmin() && (
         <NavSubLink
           icon={statsChart}
-          id='permissions-link'
+          id='usage-link'
           to={`/organisation/${AccountStore.getOrganisation().id}/usage`}
         >
           Usage
+        </NavSubLink>
+      )}
+      {AccountStore.isAdmin() && (
+        <NavSubLink
+          icon={<Icon name='bar-chart' />}
+          id='reporting-link'
+          to={`/organisation/${AccountStore.getOrganisation().id}/reporting`}
+        >
+          Reporting
         </NavSubLink>
       )}
       {AccountStore.isAdmin() && (

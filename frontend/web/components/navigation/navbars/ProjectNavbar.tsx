@@ -74,15 +74,10 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       {projectMetricsTooltipEnabled && (
         <NavSubLink
           icon={barChart}
-          to={`/project/${projectId}/reporting`}
-          id='reporting-link'
-          disabled
-          tooltip={
-            Utils.getFlagsmithValue('project_metrics_tooltip') ||
-            'Coming soon - fallback'
-          }
+          to={`/project/${projectId}/insights`}
+          id='project-insights-link'
         >
-          Reporting
+          Project Insights
         </NavSubLink>
       )}
       <NavSubLink
