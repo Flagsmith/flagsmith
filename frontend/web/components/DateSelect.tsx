@@ -7,6 +7,10 @@ export interface DateSelectProps
   value?: DatePickerProps['value']
   className?: string
   isValid?: boolean
+  showTimeSelect?: boolean
+  allowPastDates?: boolean
+  placeholder?: string
+  disabled?: boolean
   onChange?: (
     date: Date | null,
     event?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>,
@@ -16,10 +20,14 @@ export interface DateSelectProps
 const DateSelect: FC<DateSelectProps> = ({
   className,
   dateFormat,
-  isValid,
+  isValid = true,
   onChange,
   selected,
   value,
+  showTimeSelect = true,
+  allowPastDates = false,
+  placeholder = 'Select date',
+  disabled = false,
 }) => {
   const [isMonthPicker, setIsMonthPicker] = useState(false)
   const [isYearPicker, setIsYearPicker] = useState(false)
@@ -43,6 +51,7 @@ const DateSelect: FC<DateSelectProps> = ({
         }) => (
           <Row className={'justify-content-between react-datepicker-header'}>
             <span
+            
               onClick={() => {
                 if (isYearPicker) {
                   decreaseYear()
@@ -87,7 +96,7 @@ const DateSelect: FC<DateSelectProps> = ({
             </span>
           </Row>
         )}
-        minDate={new Date()}
+        minDate={allowPastDates ? undefined : new Date()}
         onChange={(date, e): DatePickerProps['onChange'] => {
           if (date === null) {
             setIsMonthPicker(false)
@@ -96,12 +105,15 @@ const DateSelect: FC<DateSelectProps> = ({
             return
           }
 
-          const today = new Date()
-          if (date < today) {
-            setIsMonthPicker(false)
-            setIsYearPicker(false)
-            onChange?.(new Date())
-            return
+          // Only enforce future dates if allowPastDates is false
+          if (!allowPastDates) {
+            const today = new Date()
+            if (date < today) {
+              setIsMonthPicker(false)
+              setIsYearPicker(false)
+              onChange?.(new Date())
+              return
+            }
           }
 
           onChange?.(date)
@@ -116,7 +128,7 @@ const DateSelect: FC<DateSelectProps> = ({
           }
         }}
         formatWeekDay={(nameOfDay) => nameOfDay.substr(0, 1)}
-        showTimeSelect={!isMonthPicker && !isYearPicker}
+        showTimeSelect={showTimeSelect && !isMonthPicker && !isYearPicker}
         showMonthYearPicker={isMonthPicker}
         showYearPicker={isYearPicker}
         calendarStartDay={1}
@@ -124,6 +136,8 @@ const DateSelect: FC<DateSelectProps> = ({
         selected={selected}
         value={value}
         timeFormat='HH:mm'
+        placeholderText={placeholder}
+        disabled={disabled}
         onInputClick={() => setIsOpen(true)}
         onClickOutside={(e) => {
           if (e) {
