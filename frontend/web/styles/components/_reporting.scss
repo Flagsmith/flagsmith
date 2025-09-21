@@ -1,0 +1,302 @@
+// Reporting Components Styles
+// Using existing SCSS variables from _variables.scss
+
+// Card Backgrounds
+.reporting-card-bg {
+  background-color: $bg-light200;
+}
+
+.reporting-card-bg-info {
+  background-color: $bg-light300;
+}
+
+.reporting-card-bg-primary {
+  background-color: $primary;
+  color: white;
+}
+
+.reporting-card-bg-secondary {
+  background-color: $secondary;
+  color: $body-color;
+}
+
+// Text Colors
+.reporting-text-primary {
+  color: $primary;
+  font-weight: 700;
+}
+
+.reporting-text-body {
+  color: $body-color;
+  font-weight: 600;
+}
+
+.reporting-text-muted {
+  color: $text-icon-grey;
+  font-weight: 500;
+}
+
+.reporting-text-light-muted {
+  color: $text-icon-light-grey;
+}
+
+// Typography
+.reporting-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: $body-color;
+}
+
+.reporting-subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: $primary;
+}
+
+.reporting-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: $text-icon-grey;
+}
+
+.reporting-label-small {
+  font-size: 12px;
+  font-weight: 500;
+  color: $text-icon-grey;
+}
+
+.reporting-description {
+  font-size: 14px;
+  color: $text-icon-grey;
+}
+
+.reporting-description-small {
+  font-size: 12px;
+  color: $text-icon-grey;
+}
+
+// Metric Card Styles
+.reporting-metric-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: $body-color;
+  line-height: 1.3;
+}
+
+.reporting-metric-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: $primary;
+  line-height: 1.1;
+}
+
+// Progress Bar
+.reporting-progress-bg {
+  background-color: $bg-light500;
+}
+
+// Chart Colors
+.reporting-chart-primary {
+  fill: $primary;
+}
+
+.reporting-chart-secondary {
+  fill: $primary400;
+}
+
+.reporting-chart-tertiary {
+  fill: lighten($primary, 15%);
+}
+
+.reporting-chart-quaternary {
+  fill: lighten($primary, 25%);
+}
+
+// Chart Legend
+.reporting-chart-legend-item {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.reporting-chart-legend-primary {
+  background-color: $primary;
+}
+
+.reporting-chart-legend-secondary {
+  background-color: $primary400;
+}
+
+.reporting-chart-legend-tertiary {
+  background-color: lighten($primary, 15%);
+}
+
+.reporting-chart-legend-quaternary {
+  background-color: lighten($primary, 25%);
+}
+
+.reporting-chart-legend-text {
+  font-size: 12px;
+  color: $text-icon-grey;
+  font-weight: 500;
+}
+
+// Activity Summary
+.reporting-activity-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: $body-color;
+}
+
+.reporting-activity-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: $primary;
+}
+
+// Icon Colors
+.reporting-icon-primary {
+  fill: $primary;
+}
+
+.reporting-icon-muted {
+  fill: $text-icon-light-grey;
+}
+
+// Border Colors
+.reporting-border-light {
+  border: 1px solid $bg-light500;
+}
+
+// Chart Axes
+.reporting-chart-axis {
+  fill: $text-icon-grey;
+  font-size: 12px;
+}
+
+// Form Elements
+.reporting-form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: $text-icon-grey;
+}
+
+.reporting-form-label-small {
+  font-size: 12px;
+  font-weight: 500;
+  color: $text-icon-grey;
+}
+
+.reporting-form-disabled {
+  color: $text-icon-light-grey;
+}
+
+.reporting-form-disabled-opacity {
+  opacity: 0.5;
+}
+
+
+// Layout & Spacing
+.reporting-margin-reset {
+  margin: 0;
+}
+
+// Section Headers
+.reporting-section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.reporting-section-description {
+  font-size: 14px;
+}
+
+// Chart Legend Items
+.reporting-chart-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.reporting-chart-legend-text {
+  font-size: 12px;
+  color: $text-icon-grey;
+  font-weight: 500;
+}
+
+// Activity Summary Trends
+.reporting-trend-text {
+  font-size: 11px;
+}
+
+// Chart Container
+.reporting-chart-container {
+  border: 1px solid $bg-light500;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.reporting-chart-label {
+  font-size: 14px;
+  color: $body-color;
+}
+
+.reporting-chart-entry-name {
+  font-size: 13px;
+  color: $text-icon-grey;
+}
+
+.reporting-chart-entry-value {
+  font-size: 13px;
+  color: $body-color;
+}
+
+// Chart Theme Colors
+.reporting-chart-grid {
+  stroke: $bg-light300;
+}
+
+.reporting-chart-axis-text {
+  fill: $text-icon-grey;
+}
+
+.reporting-chart-axis-line {
+  stroke: $bg-light300;
+}
+
+.reporting-chart-tick-text {
+  fill: $body-color;
+}
+
+// Empty State Component
+.empty-state {
+  margin-top: var(--empty-state-margin-top, 8rem);
+}
+
+.empty-state-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: $body-color;
+}
+
+.empty-state-description {
+  font-size: 14px;
+}
+
+// Dark mode overrides for charts
+.dark {
+  .reporting-chart-grid {
+    stroke: $bg-dark300;
+  }
+
+  .reporting-chart-axis-text {
+    fill: $text-icon-light-grey;
+  }
+
+  .reporting-chart-axis-line {
+    stroke: $bg-dark300;
+  }
+
+  .reporting-chart-tick-text {
+    fill: $text-icon-light;
+  }
+}
