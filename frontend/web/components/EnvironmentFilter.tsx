@@ -6,6 +6,7 @@ export type EnvironmentFilterType = {
   value?: string
   onChange: (value: string) => void
   showAll?: boolean
+  disabled?: boolean
 }
 
 const EnvironmentFilter: FC<EnvironmentFilterType> = ({
@@ -13,6 +14,7 @@ const EnvironmentFilter: FC<EnvironmentFilterType> = ({
   projectId,
   showAll,
   value,
+  disabled = false,
 }) => {
   const { data } = useGetEnvironmentsQuery({ projectId })
   const foundValue = useMemo(
@@ -25,7 +27,9 @@ const EnvironmentFilter: FC<EnvironmentFilterType> = ({
         foundValue
           ? { label: foundValue.name, value: `${foundValue.id}` }
           : {
-              label: showAll ? 'All Environments' : 'Select a Environment',
+              label: disabled 
+                ? 'Select a project first' 
+                : (showAll ? 'All Environments' : 'Select a Environment'),
               value: '',
             }
       }
@@ -41,6 +45,7 @@ const EnvironmentFilter: FC<EnvironmentFilterType> = ({
       onChange={(value: { value: string; label: string }) =>
         onChange(value?.value || '')
       }
+      isDisabled={disabled}
     />
   )
 }

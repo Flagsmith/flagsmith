@@ -613,7 +613,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
-
+  getViewReportsPermission() {
+    return 'VIEW_REPORTS'
+  },
   hasEntityPermission(key: string, entityPermissions: UserPermissions) {
     if (entityPermissions?.admin) return true
     return !!entityPermissions?.permissions?.find(
