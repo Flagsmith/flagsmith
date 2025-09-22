@@ -2,7 +2,7 @@
 *                @flagsmith/flagsmith-engineering
 
 # Specific rules based on directory
-/api/            @flagsmith/back-end
-/frontend/       @flagsmith/front-end
-/infrastructure/ @flagsmith/infrastructure
+/api/            @flagsmith/flagsmith-back-end
+/frontend/       @flagsmith/flagsmith-front-end
+/infrastructure/ @flagsmith/flagsmith-infrastructure
 /docs/           @flagsmith/flagsmith-docs
