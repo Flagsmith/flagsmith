@@ -154,6 +154,10 @@
                     "value": "False"
                 },
                 {
+                    "name": "PROMETHEUS_ENABLED",
+                    "value": "True"
+                },
+                {
                     "name": "ENABLE_API_USAGE_ALERTING",
                     "value": "True"
                 },
