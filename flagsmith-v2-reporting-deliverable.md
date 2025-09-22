@@ -20,13 +20,13 @@ This document outlines the design and implementation approach for Flagsmith's V2
 
 ### Current State
 - V1 analytics focuses on API usage (flags, identities, traits)
-- Engineering teams lack visibility into feature management program effectiveness  
+- Engineering teams lack visibility into organization-wide feature management effectiveness  
 - No organization-level feature management metrics
 - Users primarily work at project level but need org-wide insights
-- **Discovery**: Project Settings > Usage tab shows minimal reporting pattern exists but lacks program-level insights
+- **Discovery**: Project Settings > Usage tab shows minimal reporting pattern exists but lacks organization-level insights
 
 ### User Need
-> *"Engineering teams using Flagsmith for their feature management programs want to be able to see information on the success of the program."*
+> *"Engineering teams using Flagsmith for organization-wide feature management want to be able to see information on the success of their feature management initiatives."*
 
 ### Key Challenge: Discoverability
 **Problem:** Organization-level features are typically hidden in "Organization Settings", but reporting is an active feature users need to easily access.
@@ -42,10 +42,8 @@ These basic metrics indicate opportunity to consolidate into comprehensive repor
 ### Success Criteria
 - Organization-level dashboard with project/environment filtering
 - Multiple discoverable entry points (org nav + project context)
-- Smart defaults based on user context
-- Provide feature management KPIs using available platform data
 - Support filtering by time period, project, and environment
-- **Build on existing patterns**: Expand Project Settings > Usage tab approach rather than create new patterns
+- **Consolidate existing patterns**: Replace scattered reporting (Usage tab, Features Summary) with unified dashboard
 - **Future Enhancement**: Advanced filtering by tags, user groups, and individual users for detailed analysis
 
 ---
@@ -64,9 +62,9 @@ These basic metrics indicate opportunity to consolidate into comprehensive repor
 - **User Value:** Limited - only shows counts vs limits
 
 **Migration Strategy:**
-- **Phase 1:** Keep existing Usage tab and Features Summary, add reporting as new "Project Insights" tab
+- **Phase 1:** Deploy comprehensive reporting dashboard alongside existing patterns
 - **Phase 2:** Enhance reporting with comprehensive metrics and usage limit context
-- **Phase 3:** Consolidate scattered metrics - replace Usage tab and Features Summary with unified reporting dashboard
+- **Phase 3:** Deprecate and remove scattered reporting patterns (Usage tab, Features Summary) in favor of unified dashboard
 
 ### Data Sources Analysis
 
@@ -97,6 +95,7 @@ Time-Series Metrics (Filterable by Project/Environment):
 
 **Existing Systems to Leverage:**
 - **Organization Navigation**: `OrganisationNavbar.tsx` with Usage, Settings, etc.
+- **Project Navigation**: `ProjectNavbar.tsx` with a "Reporting" nav with "Coming soon" tooltip
 - **Organization Usage**: `OrganisationUsagePage` and `useGetOrganisationUsageQuery` patterns
 - **Environment Metrics**: `EnvironmentMetricsViewSet` pattern for metrics structure
 - **Permissions**: Organization-level permission system in place
