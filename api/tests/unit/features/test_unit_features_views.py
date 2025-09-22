@@ -1096,9 +1096,7 @@ def test_get_flags__server_key_only_feature__cache_isolation_between_client_and_
     server_client = APIClient(
         headers={SDK_ENVIRONMENT_KEY_HEADER: environment_api_key.key}
     )
-    client_client = APIClient(
-        headers={SDK_ENVIRONMENT_KEY_HEADER: environment.api_key}
-    )
+    client_client = APIClient(headers={SDK_ENVIRONMENT_KEY_HEADER: environment.api_key})
 
     # When - First request with SERVER key (populates cache)
     server_response = server_client.get(url)
