@@ -1076,6 +1076,49 @@ def test_get_flags__server_key_only_feature__server_key_auth__return_expected(
     assert response.json()
 
 
+def test_get_flags__server_key_only_feature__cache_isolation_between_client_and_server_keys(
+    environment: Environment,
+    environment_api_key: EnvironmentAPIKey,
+    feature: Feature,
+    settings: SettingsWrapper,
+    use_local_mem_cache_for_cache_middleware: None,
+) -> None:
+    # Given
+    feature.is_server_key_only = True
+    feature.save()
+
+    # Enable caching
+    settings.CACHE_FLAGS_SECONDS = 30
+
+    url = reverse("api-v1:flags")
+
+    # Create clients for server and client keys
+    server_client = APIClient(
+        headers={SDK_ENVIRONMENT_KEY_HEADER: environment_api_key.key}
+    )
+    client_client = APIClient(
+        headers={SDK_ENVIRONMENT_KEY_HEADER: environment.api_key}
+    )
+
+    # When - First request with SERVER key (populates cache)
+    server_response = server_client.get(url)
+
+    # Then - Server should see the server-only feature
+    assert server_response.status_code == status.HTTP_200_OK
+    server_flags = server_response.json()
+    server_feature_names = [flag["feature"]["name"] for flag in server_flags]
+    assert feature.name in server_feature_names
+
+    # When - Second request with CLIENT key (should not get server-only from cache)
+    client_response = client_client.get(url)
+
+    # Then - Client should NOT see the server-only feature
+    assert client_response.status_code == status.HTTP_200_OK
+    client_flags = client_response.json()
+    client_feature_names = [flag["feature"]["name"] for flag in client_flags]
+    assert feature.name not in client_feature_names
+
+
 def test_get_feature_states_by_uuid(
     admin_client_new: APIClient,
     environment: Environment,
