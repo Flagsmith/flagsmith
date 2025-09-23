@@ -343,6 +343,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   useEffect(() => {
     if (createSuccess && createSegmentData) {
       setSegment(createSegmentData)
+      toast('Created segment')
       onComplete?.(createSegmentData)
     }
     //eslint-disable-next-line
@@ -350,6 +351,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   useEffect(() => {
     if (updateSuccess && updateSegmentData) {
       setSegment(updateSegmentData)
+      toast('Updated segment')
       onComplete?.(updateSegmentData)
     }
     //eslint-disable-next-line
