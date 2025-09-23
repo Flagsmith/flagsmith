@@ -20,7 +20,6 @@ import Utils from 'common/utils/utils'
 import ProjectStore from 'common/stores/project-store'
 import PageTitle from 'components/PageTitle'
 import Switch from 'components/Switch'
-import { setModalTitle } from 'components/modals/base/ModalDefault'
 import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
 
@@ -58,7 +57,7 @@ const SegmentsPage: FC = () => {
     projectId,
     q: search,
   })
-  const [removeSegment, { isLoading: isRemoving }] = useDeleteSegmentMutation()
+  const [_, { isLoading: isRemoving }] = useDeleteSegmentMutation()
 
   const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
     ProjectStore.getTotalSegments(),
@@ -208,7 +207,6 @@ const SegmentsPage: FC = () => {
                         segment={segment}
                         index={index}
                         projectId={projectId}
-                        removeSegment={removeSegment}
                       />,
                     )
                   }}

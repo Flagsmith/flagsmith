@@ -5,59 +5,23 @@ import { useHasPermission } from 'common/providers/Permission'
 
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
-import ConfirmRemoveSegment from 'components/modals/ConfirmRemoveSegment'
 
 import { Segment } from 'common/types/responses'
-import { MutationDefinition } from '@reduxjs/toolkit/dist/query/endpointDefinitions'
-import { MutationTrigger } from '@reduxjs/toolkit/dist/query/react/buildHooks'
 import SegmentAction from './components/SegmentAction'
 import ConfirmCloneSegment from 'components/modals/ConfirmCloneSegment'
 import { useCloneSegmentMutation } from 'common/services/useSegment'
-import { Req } from 'common/types/requests'
 import Button from 'components/base/forms/Button'
+import { handleRemoveSegment } from 'components/modals/ConfirmRemoveSegment'
 
 interface SegmentRowProps {
   segment: Segment
   index: number
   projectId: string
-  removeSegment: MutationTrigger<
-    MutationDefinition<Req['deleteSegment'], any, 'Segment', Segment, 'service'>
-  >
 }
-export const handleRemoveSegment = (
-  projectId: string,
-  segment: Segment,
-  removeSegmentQuery: SegmentRowProps['removeSegment'],
-  onComplete?: () => void,
-) => {
-  const removeSegmentCallback = async () => {
-    try {
-      await removeSegmentQuery({ id: segment.id, projectId })
-      toast(
-        <div>
-          Removed Segment: <strong>{segment.name}</strong>
-        </div>,
-      )
-      onComplete?.()
-    } catch (error) {
-      toast(
-        <div>
-          Error removing segment: <strong>{segment.name}</strong>
-        </div>,
-        'danger',
-      )
-    }
-  }
-  openModal(
-    'Remove Segment',
-    <ConfirmRemoveSegment segment={segment} cb={removeSegmentCallback} />,
-    'p-0',
-  )
-}
+
 export const SegmentRow: FC<SegmentRowProps> = ({
   index,
   projectId,
-  removeSegment: removeSegmentCallback,
   segment,
 }) => {
   const history = useHistory()
@@ -70,7 +34,7 @@ export const SegmentRow: FC<SegmentRowProps> = ({
   })
 
   const onRemoveSegmentClick = () => {
-    handleRemoveSegment(projectId, segment, removeSegmentCallback)
+    handleRemoveSegment(projectId, segment)
   }
 
   const [cloneSegment, { isLoading: isCloning }] = useCloneSegmentMutation()
