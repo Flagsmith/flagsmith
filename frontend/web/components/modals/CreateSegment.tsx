@@ -516,7 +516,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           <TabItem tabLabel='Features'>
-            <div className='my-4'>
+            <div className='my-4 col-lg-8'>
               <AssociatedSegmentOverrides
                 onUnsavedChange={() => {
                   setValueChanged(true)
@@ -529,18 +529,20 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>
-            <CreateSegmentUsersTabContent
-              projectId={projectId}
-              environmentId={environmentId}
-              setEnvironmentId={setEnvironmentId}
-              identitiesLoading={identitiesLoading}
-              identities={identities!}
-              page={page}
-              setPage={setPage}
-              name={name}
-              searchInput={searchInput}
-              setSearchInput={setSearchInput}
-            />
+            <div className='my-4 col-lg-8'>
+              <CreateSegmentUsersTabContent
+                projectId={projectId}
+                environmentId={environmentId}
+                setEnvironmentId={setEnvironmentId}
+                identitiesLoading={identitiesLoading}
+                identities={identities!}
+                page={page}
+                setPage={setPage}
+                name={name}
+                searchInput={searchInput}
+                setSearchInput={setSearchInput}
+              />
+            </div>
           </TabItem>
           {metadataEnable && segmentContentType?.id && (
             <TabItem
@@ -554,7 +556,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 </Row>
               }
             >
-              <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
+              <div className='my-4 col-lg-8'>{MetadataTab}</div>
             </TabItem>
           )}
         </Tabs>
