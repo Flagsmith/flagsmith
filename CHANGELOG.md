@@ -1,5 +1,43 @@
 # Changelog
 
+## [2.196.3](https://github.com/Flagsmith/flagsmith/compare/v2.196.2...v2.196.3) (2025-09-18)
+
+
+### Bug Fixes
+
+* **Identities:** Revert identifier sanitization ([#6085](https://github.com/Flagsmith/flagsmith/issues/6085)) ([1743806](https://github.com/Flagsmith/flagsmith/commit/1743806bad7ba5eaf36ee59aacb67805c1d99147))
+
+## [2.196.2](https://github.com/Flagsmith/flagsmith/compare/v2.196.1...v2.196.2) (2025-09-17)
+
+
+### Bug Fixes
+
+* get-identities-checks-existing-invalid-identifiers ([#6083](https://github.com/Flagsmith/flagsmith/issues/6083)) ([ea58867](https://github.com/Flagsmith/flagsmith/commit/ea588673257cac1516188880eb4f28d8294a9b81))
+
+## [2.196.1](https://github.com/Flagsmith/flagsmith/compare/v2.196.0...v2.196.1) (2025-09-17)
+
+
+### Bug Fixes
+
+* **hubspot:** restore logic for updating `orgid_unique` property ([#6044](https://github.com/Flagsmith/flagsmith/issues/6044)) ([d519430](https://github.com/Flagsmith/flagsmith/commit/d519430b113d77f3ca11086885aa1d9f1e85597a))
+* **Identities:** Sanitize identifiers ([#6024](https://github.com/Flagsmith/flagsmith/issues/6024)) ([dfb41c6](https://github.com/Flagsmith/flagsmith/commit/dfb41c6e4beadac17adb9f08cd2b8abc02d2d872))
+* removed-gap-in-overflow-hook-invocation ([#6062](https://github.com/Flagsmith/flagsmith/issues/6062)) ([d307b1c](https://github.com/Flagsmith/flagsmith/commit/d307b1c3ec660a9e1b736e1ff5448fad493a175c))
+* Save environment on toggle change requests ([#6074](https://github.com/Flagsmith/flagsmith/issues/6074)) ([8f6aa22](https://github.com/Flagsmith/flagsmith/commit/8f6aa22d1d91949d58d2942a9f7f90c2f2502dd0))
+* **sdk/schema:** fix schema for Go  ([#6080](https://github.com/Flagsmith/flagsmith/issues/6080)) ([017a683](https://github.com/Flagsmith/flagsmith/commit/017a683149a3bc6fe02ea29a8c40f723947bd03f))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* ECS health checks for prod ([#6078](https://github.com/Flagsmith/flagsmith/issues/6078)) ([7fd096a](https://github.com/Flagsmith/flagsmith/commit/7fd096a04911b95a4ffc6bca431f16c077c596e1))
+
+
+### Dependency Updates
+
+* bump axios from 1.11.0 to 1.12.0 in /frontend ([#6060](https://github.com/Flagsmith/flagsmith/issues/6060)) ([10a9767](https://github.com/Flagsmith/flagsmith/commit/10a9767cc798e5c6cbd008dd47cbbe235842e4e6))
+* bump djangorestframework-simplejwt from 5.3.1 to 5.5.1 in /api ([#6020](https://github.com/Flagsmith/flagsmith/issues/6020)) ([0a606d2](https://github.com/Flagsmith/flagsmith/commit/0a606d24e7f07734ef4530b6fcaf4ad111a8bbc4))
+* bump sha.js from 2.4.11 to 2.4.12 in /docs ([#5961](https://github.com/Flagsmith/flagsmith/issues/5961)) ([20e0dd7](https://github.com/Flagsmith/flagsmith/commit/20e0dd7e70f5fb53b3f280f6a22797db7af2cb60))
+* update licensing & cryptography ([#6077](https://github.com/Flagsmith/flagsmith/issues/6077)) ([75246b1](https://github.com/Flagsmith/flagsmith/commit/75246b1589e289d67303f4b52bbe60b7fbc62d58))
+
 ## [2.196.0](https://github.com/Flagsmith/flagsmith/compare/v2.195.0...v2.196.0) (2025-09-10)
 
 
