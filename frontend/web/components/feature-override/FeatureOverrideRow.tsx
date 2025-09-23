@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { FC, ReactNode } from 'react'
+import React, { FC, ReactNode, useMemo } from 'react'
 import {
   FeatureState,
   IdentityFeatureState,
@@ -17,15 +17,12 @@ import Utils from 'common/utils/utils'
 import featureValuesEqual from 'common/featureValuesEqual'
 import { getViewMode } from 'common/useViewMode'
 
-const width = [200, 48, 78]
+const COLUMN_WIDTHS = [200, 48, 78]
 
-type FeatureOverrideRowType = {
+type FeatureOverrideRowProps = {
   dataTest: string
   onClick: () => void
-  hasOverride?: boolean
   onToggle?: () => void
-  hasUserOverride?: boolean
-  hasSegmentOverride?: boolean
   cta?: ReactNode
   valueDataTest?: string
   toggleDataTest?: string
@@ -33,10 +30,12 @@ type FeatureOverrideRowType = {
   editPermission: boolean
   editPermissionDescription: string
   environmentFeatureState: FeatureState
-  overrideFeatureState: FeatureState | IdentityFeatureState | null | undefined
+  overrideFeatureState?: FeatureState | IdentityFeatureState | null
+  hasUserOverride?: boolean
+  hasSegmentOverride?: boolean
 }
 
-const FeatureOverrideRow: FC<FeatureOverrideRowType> = ({
+const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   cta,
   dataTest,
   editPermission,
@@ -51,46 +50,56 @@ const FeatureOverrideRow: FC<FeatureOverrideRowType> = ({
   toggleDataTest,
   valueDataTest,
 }) => {
-  if (!environmentFeatureState || !projectFlag) {
-    return null
-  }
-  const name = projectFlag.name
-  const projectId = projectFlag.project
-  const featureId = projectFlag.id
-  const isCompact = getViewMode() === 'compact'
+  const viewMode = getViewMode()
+  const isCompact = viewMode === 'compact'
+  const showDefaultsHint = viewMode === 'default' && !hasUserOverride
+
+  const { description, id: featureId, name, project: projectId } = projectFlag
   const flagEnabled = environmentFeatureState.enabled
   const flagValue = environmentFeatureState.feature_state_value
-  const actualEnabled = overrideFeatureState?.enabled
-  const actualValue = overrideFeatureState?.feature_state_value
-  const description = projectFlag.description
-  const flagEnabledDifferent =
-    !!overrideFeatureState && actualEnabled !== flagEnabled
-  const flagValueDifferent =
-    !!overrideFeatureState && !featureValuesEqual(actualValue, flagValue)
-  const hasOverride = flagEnabledDifferent || flagValueDifferent
+  const actualEnabled = overrideFeatureState?.enabled ?? flagEnabled
+  const actualValue = overrideFeatureState?.feature_state_value ?? flagValue
 
-  const showMultivariateOverride =
-    !hasUserOverride &&
-    !!flagValueDifferent &&
-    !!projectFlag?.multivariate_options?.find(
-      (v: any) => Utils.featureStateToValue(v) === actualValue,
+  const { hasAnyOverride, hasEnabledDiff, hasValueDiff } = useMemo(() => {
+    const enabledDiff = overrideFeatureState
+      ? actualEnabled !== flagEnabled
+      : false
+    const valueDiff = overrideFeatureState
+      ? !featureValuesEqual(actualValue, flagValue)
+      : false
+    return {
+      hasAnyOverride: enabledDiff || valueDiff || hasUserOverride,
+      hasEnabledDiff: enabledDiff,
+      hasValueDiff: valueDiff,
+    }
+  }, [
+    overrideFeatureState,
+    actualEnabled,
+    actualValue,
+    flagEnabled,
+    flagValue,
+    hasUserOverride,
+  ])
+
+  const showMultivariateOverride = useMemo(() => {
+    if (hasUserOverride || !hasValueDiff) return false
+    return !!projectFlag?.multivariate_options?.some(
+      (opt: any) => Utils.featureStateToValue(opt) === actualValue,
     )
+  }, [hasUserOverride, hasValueDiff, projectFlag, actualValue])
 
-  const showSegmentOverride =
+  const showSegment =
     hasSegmentOverride && !hasUserOverride && !showMultivariateOverride
+  const stopPropagation = (e: React.MouseEvent) => e.stopPropagation()
+  if (!environmentFeatureState || !projectFlag) return null
+
   return (
     <div
-      className={classNames(
-        `flex-row space list-item clickable py-2`,
-        {
-          'bg-primary-opacity-5':
-            !!overrideFeatureState && (hasOverride || hasSegmentOverride),
-        },
-        {
-          'list-item-xs':
-            isCompact && !flagEnabledDifferent && !flagValueDifferent,
-        },
-      )}
+      className={classNames('flex-row space list-item clickable py-2', {
+        'bg-primary-opacity-5':
+          !!overrideFeatureState && (hasAnyOverride || hasSegmentOverride),
+        'list-item-xs': isCompact && !hasEnabledDiff && !hasValueDiff,
+      })}
       key={featureId}
       data-test={dataTest}
       onClick={onClick}
@@ -102,21 +111,22 @@ const FeatureOverrideRow: FC<FeatureOverrideRowType> = ({
               <Tooltip title={<FeatureName name={name} />}>
                 {description}
               </Tooltip>
-              <TagValues projectId={`${projectId}`} value={projectFlag!.tags} />
+              <TagValues projectId={`${projectId}`} value={projectFlag.tags} />
             </div>
+
             {hasUserOverride && <IdentityOverrideDescription />}
             {showMultivariateOverride && (
               <MultivariateOverrideDescription controlValue={flagValue} />
             )}
-            {showSegmentOverride && (
+            {showSegment && (
               <SegmentOverrideDescription
-                showEnabledOverride={flagEnabledDifferent}
-                showValueOverride={!flagEnabledDifferent}
+                showEnabledOverride={hasEnabledDiff}
+                showValueOverride={!hasEnabledDiff}
                 controlEnabled={flagEnabled}
                 controlValue={flagValue}
               />
             )}
-            {getViewMode() === 'default' && !hasUserOverride && (
+            {showDefaultsHint && (
               <div className='list-item-subtitle'>
                 Using environment defaults
               </div>
@@ -124,13 +134,15 @@ const FeatureOverrideRow: FC<FeatureOverrideRowType> = ({
           </Flex>
         </div>
       </Flex>
-      <div className='table-column' style={{ width: width[0] }}>
-        <FeatureValue data-test={valueDataTest} value={actualValue!} />
+
+      <div className='table-column' style={{ width: COLUMN_WIDTHS[0] }}>
+        <FeatureValue data-test={valueDataTest} value={actualValue} />
       </div>
+
       <div
         className='table-column'
-        style={{ width: width[1] }}
-        onClick={(e) => e.stopPropagation()}
+        style={{ width: COLUMN_WIDTHS[1] }}
+        onClick={stopPropagation}
       >
         {Utils.renderWithPermission(
           editPermission,
@@ -138,15 +150,16 @@ const FeatureOverrideRow: FC<FeatureOverrideRowType> = ({
           <Switch
             disabled={!editPermission}
             data-test={toggleDataTest}
-            checked={actualEnabled}
+            checked={!!actualEnabled}
             onChange={onToggle}
           />,
         )}
       </div>
+
       <div
         className='table-column p-0'
-        style={{ width: width[2] }}
-        onClick={(e) => e.stopPropagation()}
+        style={{ width: COLUMN_WIDTHS[2] }}
+        onClick={stopPropagation}
       >
         {cta}
       </div>
