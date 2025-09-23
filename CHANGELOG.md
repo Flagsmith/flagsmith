@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.196.4](https://github.com/Flagsmith/flagsmith/compare/v2.196.3...v2.196.4) (2025-09-23)
+
+
+### Bug Fixes
+
+* **features:** fix cache isolation for server-only features ([#6092](https://github.com/Flagsmith/flagsmith/issues/6092)) ([1980800](https://github.com/Flagsmith/flagsmith/commit/1980800391e2f1d6edb5fa617fd961d94d56ecfc))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Enable Prometheus in production ([#6088](https://github.com/Flagsmith/flagsmith/issues/6088)) ([9b2f5e6](https://github.com/Flagsmith/flagsmith/commit/9b2f5e607e990fae3d393248fd889ee176fbb307))
+
 ## [2.196.3](https://github.com/Flagsmith/flagsmith/compare/v2.196.2...v2.196.3) (2025-09-18)
 
 
