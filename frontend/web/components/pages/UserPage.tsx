@@ -677,7 +677,7 @@ const UserPage: FC = () => {
                                           actualFlags![name],
                                           () =>
                                             toggleFlag({
-                                              environmentFeatureState:
+                                              environmentFlag:
                                                 actualFlags![name],
                                               environmentId,
                                               identity: id,
