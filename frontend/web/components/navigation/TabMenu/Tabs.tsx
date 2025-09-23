@@ -1,4 +1,5 @@
 import React, {
+  ReactNode,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -24,9 +25,7 @@ interface TabItemProps {
 }
 
 interface TabsProps {
-  children:
-    | React.ReactElement<TabItemProps>
-    | React.ReactElement<TabItemProps>[]
+  children: ReactNode | ReactNode[]
   onChange?: (index: number) => void
   theme?: 'tab' | 'pill'
   uncontrolled?: boolean
