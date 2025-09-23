@@ -12,9 +12,8 @@ import Breadcrumb from 'components/Breadcrumb'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import { useHasPermission } from 'common/providers/Permission'
-import { handleRemoveSegment } from 'components/segments/SegmentRow/SegmentRow'
-import { removeIdentity } from './UsersPage'
 import Icon from 'components/Icon'
+import { handleRemoveSegment } from 'components/modals/ConfirmRemoveSegment'
 
 type SegmentPageType = {}
 
@@ -33,9 +32,8 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
     permission: 'MANAGE_SEGMENTS',
   })
 
-  const [removeSegment] = useDeleteSegmentMutation()
   const onRemoveSegment = () => {
-    handleRemoveSegment(projectId, segment!, removeSegment, () => {
+    handleRemoveSegment(projectId, segment!, () => {
       history.replace(`/project/${projectId}/segments`)
     })
   }
