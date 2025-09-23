@@ -47,6 +47,7 @@ import GettingStartedPage from './components/pages/GettingStartedPage'
 import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
 import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
+import SegmentPage from './components/pages/SegmentPage'
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
@@ -103,6 +104,7 @@ export const routes = {
   'scheduled-changes':
     '/project/:projectId/environment/:environmentId/scheduled-changes',
   'sdk-keys': '/project/:projectId/environment/:environmentId/sdk-keys',
+  'segment': '/project/:projectId/segments/:id',
   'segments': '/project/:projectId/segments',
   'signup': '/signup',
   'split-tests': '/project/:projectId/environment/:environmentId/split-tests',
@@ -231,6 +233,7 @@ export default (
         exact
         component={SegmentsPage}
       />
+      <ParameterizedRoute path={routes.segment} exact component={SegmentPage} />
       <ParameterizedRoute
         path={routes['organisation-settings']}
         exact
