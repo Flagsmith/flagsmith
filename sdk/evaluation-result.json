@@ -20,13 +20,11 @@
                 "value": {
                     "description": "Feature flag value.",
                     "title": "Value",
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                     ]
                 },
                 "reason": {
@@ -68,6 +66,7 @@
     "properties": {
         "context": {
             "existingJavaType": "com.flagsmith.flagengine.EvaluationContext",
+            "goType": "evalcontext.EvaluationContext",
             "$ref": "https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-context.json"
         },
         "flags": {

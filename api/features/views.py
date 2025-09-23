@@ -859,7 +859,9 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         from_replica: bool = False,
     ) -> list[typing.Any]:
         data: list[typing.Any]
-        data = flags_cache.get(environment.api_key)
+        # Include request origin in cache key to isolate client vs server requests
+        cache_key = f"{environment.api_key}:{self.request.originated_from.value}"
+        data = flags_cache.get(cache_key)
         if not data:
             data = self.get_serializer(
                 get_environment_flags_list(
@@ -869,7 +871,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
                 ),
                 many=True,
             ).data
-            flags_cache.set(environment.api_key, data, settings.CACHE_FLAGS_SECONDS)
+            flags_cache.set(cache_key, data, settings.CACHE_FLAGS_SECONDS)
 
         return data
 

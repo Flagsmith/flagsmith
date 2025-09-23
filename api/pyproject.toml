@@ -199,7 +199,7 @@ workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", ta
 optional = true
 
 [tool.poetry.group.licensing.dependencies]
-licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.1.0" }
+licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.1.1" }
 
 [tool.poetry.group.split-testing]
 optional = true
