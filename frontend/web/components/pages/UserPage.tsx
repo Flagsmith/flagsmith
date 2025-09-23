@@ -56,7 +56,7 @@ import ClearFilters from 'components/ClearFilters'
 import IdentityTraits from 'components/IdentityTraits'
 import { useGetIdentitySegmentsQuery } from 'common/services/useIdentitySegment'
 import useDebouncedSearch from 'common/useDebouncedSearch'
-import FeatureOverrideRow from 'components/FeatureOverrideRow'
+import FeatureOverrideRow from 'components/feature-override/FeatureOverrideRow'
 import featureValuesEqual from 'common/featureValuesEqual'
 
 interface RouteParams {

@@ -1,8 +1,8 @@
-import { FeatureStateValue, FlagsmithValue } from './types/responses'
+import { FlagsmithValue } from './types/responses'
 
 export default function featureValuesEqual(
-  actualValue: FlagsmithValue,
-  flagValue: FlagsmithValue,
+  actualValue: FlagsmithValue | undefined,
+  flagValue: FlagsmithValue | undefined,
 ) {
   const nullFalseyA =
     actualValue == null ||
