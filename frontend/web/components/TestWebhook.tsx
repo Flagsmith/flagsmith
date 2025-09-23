@@ -1,5 +1,5 @@
 // import propTypes from 'prop-types';
-import React, { FC, useState } from 'react' // we need this to make JSX compile
+import React, { FC, useState } from 'react'
 import ErrorMessage from './messages/ErrorMessage'
 import SuccessMessage from './messages/SuccessMessage'
 import data from 'common/data/base/_data'
