@@ -77,6 +77,7 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
 
       <CreateSegment
         segment={parseInt(id)}
+        readOnly={!manageSegmentsPermission}
         projectId={projectId}
         environmentId={environmentId!}
       />
