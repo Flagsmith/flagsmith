@@ -43,7 +43,10 @@ const OrganisationUsersTableRow: React.FC<OrganisationUsersTableRowProps> = ({
       onClick={onEditClick}
       key={id}
     >
-      <Flex className='table-column px-3 font-weight-medium'>
+      <Flex
+        className='table-column px-3 font-weight-medium'
+        style={{ width: widths[0] }}
+      >
         {`${first_name} ${last_name}`} {isActiveUser && '(You)'}
         <div className='list-item-subtitle mt-1'>{email}</div>
       </Flex>

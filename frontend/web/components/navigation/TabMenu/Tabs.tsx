@@ -15,15 +15,6 @@ import classNames from 'classnames'
 import DropdownMenu from 'components/base/DropdownMenu'
 import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
 
-interface TabItemProps {
-  tabLabel: React.ReactNode
-  tabLabelString?: string
-  'data-test'?: string
-  id?: string
-  className?: string
-  children: React.ReactNode
-}
-
 interface TabsProps {
   children: ReactNode | ReactNode[]
   onChange?: (index: number) => void
@@ -100,8 +91,9 @@ const Tabs: React.FC<TabsProps> = ({
   })
 
   const visible = useMemo(
-    () => tabChildren.slice(0, visibleCount),
-    [tabChildren, visibleCount],
+    // Disable overflow for pill tabs
+    () => (theme === 'pill' ? tabChildren : tabChildren.slice(0, visibleCount)),
+    [tabChildren, visibleCount, theme],
   )
   const overflow = useMemo(
     () => tabChildren.slice(visibleCount),
@@ -137,7 +129,7 @@ const Tabs: React.FC<TabsProps> = ({
         ref={outerContainerRef}
         className={`${
           hideNav ? '' : 'tabs-nav'
-        } ${theme} justify-content-between align-items-center`}
+        } ${theme} justify-content-between align-items-center ${className}`}
       >
         <div
           ref={itemsContainerRef}
