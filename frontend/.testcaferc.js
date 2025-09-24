@@ -1,4 +1,7 @@
 const isDev = process.env.E2E_DEV;
+const environment = process.env.ENV || 'dev';
+const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
+
 module.exports = {
     "browsers": "firefox:headless",
     "port1": 8080,
@@ -13,7 +16,7 @@ module.exports = {
     "videoOptions": {
         "singleFile": true,
         "failedOnly": true,
-        "pathPattern": "./test-report-${FILE_INDEX}.mp4"
+        "pathPattern": `${environment}-${timestamp}-test-${FILE_INDEX}.mp4`
     },
     "videoEncodingOptions": {
         "r": 20,
