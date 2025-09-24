@@ -96,7 +96,7 @@ within your server infrastructure.
 
 :::info
 
-**Edge API only:** When using identity overrides in local evaluation:
+**[Edge API](advanced-use/edge-api.md) only**: When using identity overrides in local evaluation:
 
 - Keep overrides count under 500.
 - Make sure your environment settings enable it.
@@ -356,7 +356,7 @@ are all computed locally.
 - [Analytics-based Integrations](/integrations#analytics-platforms) do not run.
   [Flag Analytics](/advanced-use/flag-analytics) do still work, if enabled within the
   [SDK setup](/clients/server-side#configuring-the-sdk).
-- **Edge API only**: Currently, Flagsmith SDKs support up to ~500 identity overrides, depending on flag value sizes and segment count, when used with
+- **[Edge API](advanced-use/edge-api.md) only**: Currently, Flagsmith SDKs support up to ~500 identity overrides, depending on flag value sizes and segment count, when used with
   Edge API. If you store more than 1MB of environment document data, you will need to query the Edge API endpoint directly and use
   pagination:
 
