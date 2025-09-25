@@ -57,7 +57,7 @@
                     ]
                 },
                 "variants": {
-                    "description": "An array of environment default values associated with the feature. Contains a single value for standard features, or multiple values for multivariate features.",
+                    "description": "An array of environment default values associated with the feature. Empty for standard features, or contains multiple values for multivariate features.",
                     "items": {
                         "$ref": "#/$defs/FeatureValue"
                     },
