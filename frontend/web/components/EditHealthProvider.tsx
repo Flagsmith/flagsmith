@@ -12,7 +12,6 @@ import {
   useGetHealthProvidersQuery,
 } from 'common/services/useHealthProvider'
 import { components } from 'react-select'
-import InfoMessage from './InfoMessage'
 import InteractiveDemo from './InteractiveDemo'
 import FeatureHealthProviderDocumentationNote from './feature-health/components/FeatureHealthProviderDocumentationNote'
 
