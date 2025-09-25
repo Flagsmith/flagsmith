@@ -17,7 +17,7 @@ const FeatureAnalytics: React.FC<FeatureAnalyticsProps> = ({ usageData }) => {
       <FormGroup>
         {!!usageData && <h5 className='mb-2'>Flag events for last 30 days</h5>}
         {!usageData && (
-          <div className='text-center'>
+          <div className=' text-center'>
             <Loader />
           </div>
         )}
