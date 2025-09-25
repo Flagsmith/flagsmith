@@ -1,6 +1,5 @@
 import React from 'react'
 import AccountStore from 'common/stores/account-store'
-import Button from 'components/base/forms/Button'
 
 interface EmptyFeatureHealthProvidersProps {
   projectId: number
@@ -10,18 +9,6 @@ const EmptyFeatureHealthProviders: React.FC<
   EmptyFeatureHealthProvidersProps
 > = ({ projectId }) => {
   const isAdmin = AccountStore.isAdmin()
-
-  const learnMoreButton = (
-    <Button
-      theme='text'
-      href='https://docs.flagsmith.com/advanced-use/feature-health'
-      target='_blank'
-      rel='noreferrer'
-      className='fw-normal ml-1'
-    >
-      Learn more.
-    </Button>
-  )
 
   return (
     <>
@@ -41,14 +28,31 @@ const EmptyFeatureHealthProviders: React.FC<
               >
                 project settings
               </a>{' '}
-              to start monitoring your feature health.{''}
-              {learnMoreButton}
+              to start monitoring your feature health, or read about the
+              functionality{' '}
+              <a
+                target='_blank'
+                rel='noreferrer'
+                className='fw-normal btn-link'
+                href='https://docs.flagsmith.com/advanced-use/feature-health'
+              >
+                here
+              </a>
+              .
             </p>
           ) : (
             <p>
               Contact your Flagsmith administrators to configure a feature
-              health provider.
-              {learnMoreButton}
+              health provider, or read about the functionality{' '}
+              <a
+                target='_blank'
+                rel='noreferrer'
+                className='fw-normal btn-link'
+                href='https://docs.flagsmith.com/advanced-use/feature-health'
+              >
+                here
+              </a>
+              .
             </p>
           )}
         </div>
