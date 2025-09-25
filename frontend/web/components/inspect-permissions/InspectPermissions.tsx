@@ -50,7 +50,7 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
         uncontrolled={uncontrolled}
         value={value}
         onChange={onChange}
-        theme='pill m-0'
+        theme='pill'
         isRoles={true}
       >
         <TabItem
