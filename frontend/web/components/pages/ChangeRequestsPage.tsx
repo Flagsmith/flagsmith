@@ -161,7 +161,6 @@ export const ChangeRequestsInner: FC<ChangeRequestsInnerType> = ({
         <Flex>
           <div>
             {changeRequestsDisabled && <p>{ChangeRequestsDisabledMessage}</p>}
-
             <Tabs urlParam={'tab'}>
               <TabItem
                 tabLabelString='Open'
@@ -186,7 +185,6 @@ export const ChangeRequestsInner: FC<ChangeRequestsInnerType> = ({
                   users={users}
                 />
               </TabItem>
-
               <TabItem
                 tabLabelString='Closed'
                 tabLabel={

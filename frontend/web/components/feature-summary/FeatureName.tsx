@@ -19,7 +19,7 @@ const FeatureName: FC<FeatureNameType> = ({ name }) => {
         wordBreak: 'break-all',
       }}
     >
-      <span>{name}</span>
+      <span className='dark:text-red-500'>{name}</span>
       <Button onClick={copyFeature} theme='icon' className='ms-2 me-2'>
         <Icon name='copy' />
       </Button>
