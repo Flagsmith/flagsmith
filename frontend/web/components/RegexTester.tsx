@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react' // we need this to make JSX compile
+import React, { FC, useEffect, useState } from 'react'
 import Utils from 'common/utils/utils'
 import Button from './base/forms/Button'
 

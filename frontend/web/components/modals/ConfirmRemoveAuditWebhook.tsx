@@ -3,7 +3,7 @@ import AccountStore from 'common/stores/account-store'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
-import ModalHR from './ModalHR' // we need this to make JSX compile
+import ModalHR from './ModalHR'
 
 type ConfirmRemoveAuditWebhookType = {
   url: string

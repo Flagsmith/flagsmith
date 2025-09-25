@@ -1,4 +1,4 @@
-import React, { FC } from 'react' // we need this to make JSX compile
+import React, { FC } from 'react'
 import { TokenResponse, useGoogleLogin } from '@react-oauth/google'
 import Button from './base/forms/Button'
 

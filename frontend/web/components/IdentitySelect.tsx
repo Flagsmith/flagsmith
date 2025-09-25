@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from 'react'
-import { Identity, Res } from 'common/types/responses' // we need this to make JSX compile
+import { Identity, Res } from 'common/types/responses'
 import { filter, find } from 'lodash'
 import { useGetIdentitiesQuery } from 'common/services/useIdentity'
 import useInfiniteScroll from 'common/useInfiniteScroll'

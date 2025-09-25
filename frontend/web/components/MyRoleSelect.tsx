@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { useGetRolesQuery } from 'common/services/useRole'
 import RolesSelect, { RoleSelectType } from './RolesSelect'
-import { PermissionLevel } from 'common/types/requests' // we need this to make JSX compile
+import { PermissionLevel } from 'common/types/requests'
 
 type MyRoleSelectType = Omit<RoleSelectType, 'roles'> & {
   orgId: string | number
