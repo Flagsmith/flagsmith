@@ -51,6 +51,7 @@ const Tabs: React.FC<TabsProps> = ({
   const [internalValue, setInternalValue] = useState(0)
   const routerHistory = useHistory() || history
 
+  const disableOverflow = theme === 'pill'
   let value = uncontrolled ? internalValue : propValue
   if (urlParam) {
     const tabParam = Utils.fromParam()[urlParam]
@@ -73,6 +74,7 @@ const Tabs: React.FC<TabsProps> = ({
   const [overflowButtonWidth, setOverflowButtonWidth] = useState(54) // fallback
 
   useLayoutEffect(() => {
+    if (disableOverflow) return
     if (overflowButtonRef.current) {
       const width = overflowButtonRef.current.offsetWidth
       const marginLeft =
@@ -80,7 +82,8 @@ const Tabs: React.FC<TabsProps> = ({
         0
       setOverflowButtonWidth(width + marginLeft)
     }
-  }, [])
+  }, [disableOverflow])
+
   const { isMeasuring, visibleCount } = useOverflowVisibleCount({
     extraWidth: overflowButtonWidth,
     force: false,
@@ -92,12 +95,12 @@ const Tabs: React.FC<TabsProps> = ({
 
   const visible = useMemo(
     // Disable overflow for pill tabs
-    () => (theme === 'pill' ? tabChildren : tabChildren.slice(0, visibleCount)),
-    [tabChildren, visibleCount, theme],
+    () => (disableOverflow ? tabChildren : tabChildren.slice(0, visibleCount)),
+    [tabChildren, visibleCount, disableOverflow],
   )
   const overflow = useMemo(
-    () => tabChildren.slice(visibleCount),
-    [tabChildren, visibleCount],
+    () => (disableOverflow ? [] : tabChildren.slice(visibleCount)),
+    [tabChildren, visibleCount, disableOverflow],
   )
   const canGrow = !isMeasuring && visibleCount === tabChildren.length
 
