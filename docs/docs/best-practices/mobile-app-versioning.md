@@ -1,7 +1,7 @@
 ---
 title: Mobile App Versioning
 sidebar_label: Mobile App Versioning
-sidebar_position: 70
+sidebar_position: 7
 ---
 
 ## The Problem
@@ -23,7 +23,7 @@ It sounds obvious, but if you don't wrap features in feature flags, you lose the
 
 ### 2. Start telling Flagsmith about the Device and Application Version
 
-Using [Identities and Traits](/basic-features/managing-identities.md), make sure you are transmitting data about your device type and version to Flagsmith. We recommend using the following Traits:
+Using [Identities and Traits](/flagsmith-concepts/identities), make sure you are transmitting data about your device type and version to Flagsmith. We recommend using the following Traits:
 
 - Platform (iOS or Android)
 - Platform Version (e.g. Android 11, iOS 14)
@@ -43,11 +43,11 @@ This is generally the hardest part of the process. Work to isolate and define th
 
 :::tip
 
-We can make use of [Semver Aware Operators](/basic-features/segments?operators=semver) to drive these Segment rules.
+We can make use of [Semver Aware Operators](/flagsmith-concepts/segments/segment-rule-operators) to drive these Segment rules.
 
 :::
 
-From your work in #3, create a [Segment](/basic-features/segments.md) in Flagsmith that captures the defined set of users from #3. Let's say we just shipped version `5.4.1`, but we have figured out that the bug actually showed up in version `5.4.0`. Also, this issue is only affecting iOS devices; Android users don't have the problem. So our Segment would contain 2 rules and read something like:
+From your work in #3, create a [Segment](/flagsmith-concepts/segments) in Flagsmith that captures the defined set of users from #3. Let's say we just shipped version `5.4.1`, but we have figured out that the bug actually showed up in version `5.4.0`. Also, this issue is only affecting iOS devices; Android users don't have the problem. So our Segment would contain 2 rules and read something like:
 
 - Trait `platform` _equals_ `iOS`
 - Trait `version` _semver_ {'>='} `5.4.0` **AND** _semver_ {'<='} `5.4.1`
@@ -74,8 +74,8 @@ It’s a good idea to keep this Segment and the override in place for a while. N
 
 Looking to go further? Here are some handy resources and related guides:
 
-- [Efficient API Usage](../best-practices/efficient-api-usage.md): Tips for reducing API calls and making your mobile app more efficient.
-- [Defensive Coding & Designing for Failure](../best-practices/defensive-coding.md): Learn how to make your app resilient when things go wrong.
-- [Integration Approaches](../best-practices/integration-approaches.md): Explore different ways to integrate Flagsmith into your mobile projects.
-- [When to use Feature Flags](../best-practices/when-to-use-flags.md): Discover more scenarios where feature flags can save your bacon.
-- [Segments](../basic-features/segments.md): Deep dive into how Segments work and how to get the most out of them.
+- [Efficient API Usage](/best-practices/efficient-api-usage): Tips for reducing API calls and making your mobile app more efficient.
+- [Defensive Coding & Designing for Failure](/best-practices/defensive-coding): Learn how to make your app resilient when things go wrong.
+- [Integration Approaches](/best-practices/integration-approaches): Explore different ways to integrate Flagsmith into your mobile projects.
+- [When to use Feature Flags](/best-practices/when-to-use-flags): Discover more scenarios where feature flags can save your bacon.
+- [Segments](/flagsmith-concepts/segments): Deep dive into how Segments work and how to get the most out of them.

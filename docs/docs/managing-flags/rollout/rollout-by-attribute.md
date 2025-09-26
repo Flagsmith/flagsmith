@@ -10,7 +10,7 @@ This guide explains how to enable a feature for specific users based on their at
 
 - A Flagsmith project and environment.
 - A feature flag created in your project.
-- Your application's [Flagsmith SDK](../../clients/index.md) integrated and configured.
+- Your application's [Flagsmith SDK](/flagsmith-integration/integration-overview) integrated and configured.
 
 ## Steps
 
@@ -53,6 +53,6 @@ Done! Now you can test with users who match (and don’t match) the segment to e
 
 ## What's next
 
-- Read the [segments documentation](../../basic-features/segments.md) to understand how they work and their relationship with overrides.
+- Read the [segments documentation](/flagsmith-concepts/segments) to understand how they work and their relationship with overrides.
 - See the [staged feature rollouts guide](./rollout-by-percentage.md) to combine attribute rules with percentage-based rollouts for gradual releases.
-- Understand [managing identities](../../basic-features/managing-identities.md) to ensure consistent user identification and attribute management across your application.
+- Understand [managing identities](/flagsmith-concepts/identities) to ensure consistent user identification and attribute management across your application.

@@ -18,4 +18,4 @@ curl 'https://api.flagsmith.com/api/v1/environments/' \
 -   `Content-Type`: `application/json`
 -   `--data-binary`: The JSON payload containing the details of the environment you want to create. You'll need to provide the `name` for the new environment and the `project` ID it belongs to.
 
-For more complex examples and different languages, please refer to the full code examples in the [original REST API documentation](../../../clients/rest/#code-examples). 
+For more complex examples and different languages, please refer to the full code examples in the [Flags API documentation](../flags-api/code-examples). 
