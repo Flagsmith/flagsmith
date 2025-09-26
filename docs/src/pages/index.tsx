@@ -18,6 +18,8 @@ import {
     documentText,
     map,
     gitBranch,
+    construct,
+    cog,
 } from 'ionicons/icons';
 import styles from './index.module.css';
 
@@ -79,16 +81,16 @@ export default function Home() {
             icon={flag} 
           />
           <Card 
-            title="A/B Testing & Experiments" 
-            description="Run experiments and A/B tests" 
-            link="/experimentation/ab-testing"
-            icon={analytics} 
+            title="Platform Architecture" 
+            description="How Flagsmith works and components" 
+            link="/flagsmith-concepts/platform-architecture"
+            icon={construct} 
           />
           <Card 
-            title="Flag Analytics & Monitoring" 
-            description="Track usage and performance metrics" 
-            link="/experimentation/flag-analytics"
-            icon={layers} 
+            title="Basic Flag Management" 
+            description="Create, edit, and manage your first flags" 
+            link="/managing-flags/core-management"
+            icon={cog} 
           />
         </Section>
 
@@ -134,7 +136,7 @@ export default function Home() {
           />
           <Card 
             title="Self-hosting & Deployment" 
-            description="Hosting options and setup" 
+            description="Hosting options and set up" 
             link="/deployment-self-hosting/"
             icon={cloudUpload} 
           />
@@ -157,7 +159,7 @@ export default function Home() {
             title="Contribute to Flagsmith" 
             description="How to file issues, PRs, and contribute" 
             link="/project-and-community/contributing/"
-            icon={gitMerge} 
+            icon={gitBranch} 
           />
         </Section>
       </main>
