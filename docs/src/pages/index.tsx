@@ -6,8 +6,8 @@ import { IonIcon } from '@ionic/react';
 import { 
     play,
     flag,
-    cog,
-    gitCompare,
+    analytics,
+    layers,
     gitMerge,
     phonePortrait,
     server,
@@ -79,16 +79,16 @@ export default function Home() {
             icon={flag} 
           />
           <Card 
-            title="Advanced Capabilities" 
-            description="Testing, monitoring, analytics, experiments" 
+            title="A/B Testing & Experiments" 
+            description="Run experiments and A/B tests" 
             link="/experimentation/ab-testing"
-            icon={cog} 
+            icon={analytics} 
           />
           <Card 
-            title="Compare Plans" 
-            description="Overview of Flagsmith plans" 
-            link="https://flagsmith.com/pricing"
-            icon={gitCompare} 
+            title="Flag Analytics & Monitoring" 
+            description="Track usage and performance metrics" 
+            link="/experimentation/flag-analytics"
+            icon={layers} 
           />
         </Section>
 
@@ -122,16 +122,16 @@ export default function Home() {
         <Section title="Configuration & Deployment" id="configuration">
           <Card 
             title="Integrations" 
-            description="Third-party integrations (Segment, Datadog)" 
-            link="/third-party-integrations/analytics/segment/"
+            description="Integrations with third-party observability, analytics and other platforms" 
+            link="/third-party-integrations"
             icon={extensionPuzzle} 
           />
           <Card 
-            title="System Settings" 
-            description="Admin settings and multi-tenancy" 
-            link="/administration-and-security/platform-configuration/environment-settings/"
+            title="Platform Administration" 
+            description="Authentication, permissions and platform configuration" 
+            link="/administration-and-security/"
             icon={settings} 
-          /> {/*Placeholder until this section has a index*/}
+          />
           <Card 
             title="Self-hosting & Deployment" 
             description="Hosting options and setup" 
