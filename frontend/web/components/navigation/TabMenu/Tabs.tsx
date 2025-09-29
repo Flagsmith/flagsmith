@@ -15,15 +15,6 @@ import classNames from 'classnames'
 import DropdownMenu from 'components/base/DropdownMenu'
 import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
 
-interface TabItemProps {
-  tabLabel: React.ReactNode
-  tabLabelString?: string
-  'data-test'?: string
-  id?: string
-  className?: string
-  children: React.ReactNode
-}
-
 interface TabsProps {
   children: ReactNode | ReactNode[]
   onChange?: (index: number) => void
@@ -60,6 +51,7 @@ const Tabs: React.FC<TabsProps> = ({
   const [internalValue, setInternalValue] = useState(0)
   const routerHistory = useHistory() || history
 
+  const disableOverflow = theme === 'pill'
   let value = uncontrolled ? internalValue : propValue
   if (urlParam) {
     const tabParam = Utils.fromParam()[urlParam]
@@ -82,6 +74,7 @@ const Tabs: React.FC<TabsProps> = ({
   const [overflowButtonWidth, setOverflowButtonWidth] = useState(54) // fallback
 
   useLayoutEffect(() => {
+    if (disableOverflow) return
     if (overflowButtonRef.current) {
       const width = overflowButtonRef.current.offsetWidth
       const marginLeft =
@@ -89,7 +82,8 @@ const Tabs: React.FC<TabsProps> = ({
         0
       setOverflowButtonWidth(width + marginLeft)
     }
-  }, [])
+  }, [disableOverflow])
+
   const { isMeasuring, visibleCount } = useOverflowVisibleCount({
     extraWidth: overflowButtonWidth,
     force: false,
@@ -100,12 +94,13 @@ const Tabs: React.FC<TabsProps> = ({
   })
 
   const visible = useMemo(
-    () => tabChildren.slice(0, visibleCount),
-    [tabChildren, visibleCount],
+    // Disable overflow for pill tabs
+    () => (disableOverflow ? tabChildren : tabChildren.slice(0, visibleCount)),
+    [tabChildren, visibleCount, disableOverflow],
   )
   const overflow = useMemo(
-    () => tabChildren.slice(visibleCount),
-    [tabChildren, visibleCount],
+    () => (disableOverflow ? [] : tabChildren.slice(visibleCount)),
+    [tabChildren, visibleCount, disableOverflow],
   )
   const canGrow = !isMeasuring && visibleCount === tabChildren.length
 
@@ -137,7 +132,7 @@ const Tabs: React.FC<TabsProps> = ({
         ref={outerContainerRef}
         className={`${
           hideNav ? '' : 'tabs-nav'
-        } ${theme} justify-content-between align-items-center`}
+        } ${theme} justify-content-between align-items-center ${className}`}
       >
         <div
           ref={itemsContainerRef}
