@@ -1,6 +1,6 @@
 import React, { FC, ReactNode } from 'react'
 import ModalClose from './ModalClose'
-import ModalHR from 'components/modals/ModalHR' // we need this to make JSX compile
+import ModalHR from 'components/modals/ModalHR'
 
 type ModalHeaderType = {
   children: ReactNode
