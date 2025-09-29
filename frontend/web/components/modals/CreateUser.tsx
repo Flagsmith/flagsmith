@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react'
 import ChipInput from 'components/ChipInput'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
-import { useCreateIdentitiesMutation } from 'common/services/useIdentity' // we need this to make JSX compile
+import { useCreateIdentitiesMutation } from 'common/services/useIdentity'
 import Utils from 'common/utils/utils'
 
 type CreateUserType = {

@@ -1,4 +1,4 @@
-import React, { FC, ReactNode, useEffect, useRef, useState } from 'react' // we need this to make JSX compile
+import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
 import Utils from 'common/utils/utils'
 import { AuditLogItem, Environment } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'

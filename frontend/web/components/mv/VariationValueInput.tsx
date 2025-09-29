@@ -1,5 +1,5 @@
 import React from 'react'
-import ValueEditor from 'components/ValueEditor' // we need this to make JSX compile
+import ValueEditor from 'components/ValueEditor'
 import Constants from 'common/constants'
 import Icon from 'components/Icon'
 import InputGroup from 'components/base/forms/InputGroup'

@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import Button, { ButtonType } from './base/forms/Button'
-import Icon from './Icon' // we need this to make JSX compile
+import Icon from './Icon'
 
 type ViewDocsType = ButtonType & {}
 

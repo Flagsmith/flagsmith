@@ -1,5 +1,5 @@
 import { FC, PropsWithChildren, ReactNode } from 'react'
-import classNames from 'classnames' // we need this to make JSX compile
+import classNames from 'classnames'
 
 type PageTitleType = PropsWithChildren<{
   title: ReactNode

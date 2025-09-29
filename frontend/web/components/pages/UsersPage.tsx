@@ -12,8 +12,8 @@ import useDebouncedSearch from 'common/useDebouncedSearch'
 import { Req } from 'common/types/requests'
 import CreateUserModal from 'components/modals/CreateUser'
 import PanelSearch from 'components/PanelSearch'
-import Button from 'components/base/forms/Button' // we need this to make JSX compile
-import JSONReference from 'components/JSONReference' // we need this to make JSX compile
+import Button from 'components/base/forms/Button'
+import JSONReference from 'components/JSONReference'
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'

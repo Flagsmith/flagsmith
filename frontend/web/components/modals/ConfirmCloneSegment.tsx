@@ -1,7 +1,7 @@
 import React, { FC, FormEvent, useState } from 'react'
 import { Segment } from 'common/types/responses'
 import InputGroup from 'components/base/forms/InputGroup'
-import Utils from 'common/utils/utils' // we need this to make JSX compile
+import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import ModalHR from './ModalHR'
 import Format from 'common/utils/format'

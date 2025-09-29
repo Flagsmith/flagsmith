@@ -2,7 +2,7 @@ import React, { FC } from 'react'
 import GroupSelect, { GroupSelectType } from './GroupSelect'
 import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
 import { IonIcon } from '@ionic/react'
-import { close } from 'ionicons/icons' // we need this to make JSX compile
+import { close } from 'ionicons/icons'
 
 type ConnectedGroupSelectType = GroupSelectType & {
   orgId: string

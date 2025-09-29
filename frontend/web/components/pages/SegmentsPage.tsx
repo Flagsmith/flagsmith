@@ -1,4 +1,4 @@
-import React, { FC, ReactNode, useEffect, useState } from 'react' // we need this to make JSX compile
+import React, { FC, ReactNode, useEffect, useState } from 'react'
 import { useHistory, useRouteMatch } from 'react-router-dom'
 import { sortBy } from 'lodash'
 

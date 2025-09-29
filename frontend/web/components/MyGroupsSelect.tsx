@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
-import GroupSelect, { GroupSelectType } from './GroupSelect' // we need this to make JSX compile
+import GroupSelect, { GroupSelectType } from './GroupSelect'
 
 type MyGroupsSelectType = Omit<GroupSelectType, 'groups'> & {
   orgId: string | number

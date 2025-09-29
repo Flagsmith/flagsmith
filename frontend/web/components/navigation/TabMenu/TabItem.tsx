@@ -1,4 +1,4 @@
-import { FC, ReactNode } from 'react' // we need this to make JSX compile
+import { FC, ReactNode } from 'react'
 
 type TabItemType = {
   tabLabelString?: string
