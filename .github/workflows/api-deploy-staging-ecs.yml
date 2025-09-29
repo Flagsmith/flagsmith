@@ -1,13 +1,14 @@
 name: API Deploy to Staging ECS
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - api/**
-      - .github/**
-      - infrastructure/aws/staging/**
+#  Temporarily disabled while penetration testing is happening (w/c 29/09/2025).
+#  push:
+#    branches:
+#      - main
+#    paths:
+#      - api/**
+#      - .github/**
+#      - infrastructure/aws/staging/**
   workflow_dispatch:
 
 jobs:
