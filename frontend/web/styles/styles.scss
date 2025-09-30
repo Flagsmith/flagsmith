@@ -1,9 +1,53 @@
+@tailwind base;
+@import "tailwind.css";
 @import "variables";
 @import "3rdParty/index";
 @import "components/index";
 @import "flexbox/index";
 @import "project/index";
 @import "project/segments";
+
+:root {
+  --text-primary: theme('colors.red.600');
+  --primary-font: OpenSans, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+.dark {
+  --text-primary: theme('colors.yellow.600');
+}
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: var(--primary-font);
+    font-size: 14px;
+    // font-weight: 400;
+    line-height: 1.5;
+    color: var(--bs-dark);
+    background-color: var(--bs-white);
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+  a {
+    font-weight: 500;
+  }
+  p {
+    color: var(--text-primary) !important;
+  }
+}
+
+// Add these new rules
+.tabs {
+  hr {
+    border-color: var(--tab-border);
+  }
+  
+  .pill {
+    background: var(--tab-pill-bg);
+    color: var(--tab-text) !important;
+    border-color: var(--tab-border);
+  }
+}
 
 .butter-bar {
   margin-top: 8px;

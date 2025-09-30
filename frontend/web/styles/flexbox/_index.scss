@@ -2,7 +2,7 @@
 
 .flex {
   @include flexbox();
-  @include flex-direction(column)
+  // @include flex-direction(column)
 }
 
 .flex-row {
