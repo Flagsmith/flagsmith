@@ -10,11 +10,11 @@ import {
   MultivariateFeatureStateValue,
   MultivariateOption,
   Organisation,
+  PConfidence,
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
   Tag,
-  PConfidence,
   UserPermissions,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
