@@ -5,8 +5,6 @@ import keyBy from 'lodash/keyBy'
 
 import { getStore } from 'common/store'
 import { getTags } from 'common/services/useTag'
-import { getViewMode, setViewMode } from 'common/useViewMode'
-import { removeUserOverride } from 'components/RemoveUserOverride'
 import {
   FeatureState,
   Identity,
@@ -36,28 +34,15 @@ import JSONReference from 'components/JSONReference'
 import PageTitle from 'components/PageTitle'
 import Panel from 'components/base/grid/Panel'
 import PanelSearch from 'components/PanelSearch'
-import Permission, { useHasPermission } from 'common/providers/Permission'
-// @ts-ignore
-import Project from 'common/project'
-import TableFilterOptions from 'components/tables/TableFilterOptions'
-import TableGroupsFilter from 'components/tables/TableGroupsFilter'
-import TableOwnerFilter from 'components/tables/TableOwnerFilter'
-import TableSearchFilter from 'components/tables/TableSearchFilter'
-import TableSortFilter, { SortValue } from 'components/tables/TableSortFilter'
-import TableTagFilter from 'components/tables/TableTagFilter'
-import TableValueFilter from 'components/tables/TableValueFilter'
 import TryIt from 'components/TryIt'
 import Utils from 'common/utils/utils'
-// @ts-ignore
 import _data from 'common/data/base/_data'
 import { removeIdentity } from './UsersPage'
-import { isEqual } from 'lodash'
-import ClearFilters from 'components/ClearFilters'
 import IdentityTraits from 'components/IdentityTraits'
 import { useGetIdentitySegmentsQuery } from 'common/services/useIdentitySegment'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import FeatureOverrideRow from 'components/feature-override/FeatureOverrideRow'
-import featureValuesEqual from 'common/featureValuesEqual'
+import FeatureFilters from 'components/feature-page/FeatureFilters'
 
 interface RouteParams {
   environmentId: string
@@ -75,7 +60,7 @@ type FeatureFilter = {
   tags: (number | string)[]
   value_search: string | null
   search: string | null
-  sort: SortValue
+  sort: any
 }
 
 const getFiltersFromParams = (params: Record<string, string | undefined>) =>
@@ -99,15 +84,35 @@ const getFiltersFromParams = (params: Record<string, string | undefined>) =>
     sort: {
       label: Format.camelCase(params.sortBy || 'Name'),
       sortBy: params.sortBy || 'name',
-      sortOrder: params.sortOrder || 'asc',
+      sortOrder: (params.sortOrder as 'asc' | 'desc') || 'asc',
     },
-    tag_strategy: params.tag_strategy || 'INTERSECTION',
+    tag_strategy: (params.tag_strategy as TagStrategy) || 'INTERSECTION',
     tags:
       typeof params.tags === 'string'
         ? params.tags.split(',').map((v: string) => parseInt(v))
         : [],
-    value_search: params.value_search || '',
+    value_search: (params.value_search as string) || '',
   } as FeatureFilter)
+
+const sortToHeader = (s: any) => {
+  if (!s) return { label: 'Name', sortBy: 'name', sortOrder: 'asc' as const }
+  if ('sortBy' in s) return s
+  return {
+    label: s.label || 'Name',
+    sortBy: s.value || 'name',
+    sortOrder: (s.order as 'asc' | 'desc') || 'asc',
+  }
+}
+
+const headerToSort = (s: {
+  label: string
+  sortBy: string
+  sortOrder: 'asc' | 'desc'
+}) => ({
+  label: s.label,
+  order: s.sortOrder,
+  value: s.sortBy,
+})
 
 const UserPage: FC = () => {
   const match = useRouteMatch<RouteParams>()
@@ -139,21 +144,14 @@ const UserPage: FC = () => {
       { skip: !projectId },
     )
   const getFilter = useCallback(
-    (filter) => ({
-      ...filter,
-      group_owners: filter.group_owners.length
-        ? filter.group_owners
-        : undefined,
-      owners: filter.owners.length ? filter.owners : undefined,
-      search: (filter.search || '').trim(),
-      tags: filter.tags.length ? filter.tags.join(',') : undefined,
+    (f: FeatureFilter) => ({
+      ...f,
+      group_owners: f.group_owners.length ? f.group_owners : undefined,
+      owners: f.owners.length ? f.owners : undefined,
+      search: (f.search || '').trim(),
+      tags: f.tags.length ? f.tags.join(',') : undefined,
     }),
     [],
-  )
-
-  const hasFilters = !isEqual(
-    getFilter({ ...filter, search: filter.search || null }),
-    getFilter(getFiltersFromParams({})),
   )
 
   useEffect(() => {
@@ -163,7 +161,7 @@ const UserPage: FC = () => {
       environmentId,
       true,
       search,
-      sort,
+      sortToHeader(sort),
       rest,
     )
   }, [filter, getFilter, environmentId, projectId])
@@ -343,133 +341,38 @@ const UserPage: FC = () => {
                             </>
                           )}
                           header={
-                            <Row className='table-header'>
-                              <div className='table-column flex-row flex-fill'>
-                                <TableSearchFilter
-                                  onChange={(e) => {
-                                    FeatureListStore.isLoading = true
-                                    setFilter({
-                                      ...filter,
-                                      search: Utils.safeParseEventValue(e),
-                                    })
-                                  }}
-                                  value={filter.search}
-                                />
-                                <Row className='flex-fill justify-content-end'>
-                                  {hasFilters && (
-                                    <ClearFilters onClick={clearFilters} />
-                                  )}
-                                  <TableTagFilter
-                                    projectId={projectId!}
-                                    className='me-4'
-                                    value={filter.tags}
-                                    tagStrategy={filter.tag_strategy}
-                                    onChangeStrategy={(tag_strategy) => {
-                                      setFilter({
-                                        ...filter,
-                                        tag_strategy,
-                                      })
-                                    }}
-                                    isLoading={FeatureListStore.isLoading}
-                                    onToggleArchived={(value) => {
-                                      if (value !== filter.is_archived) {
-                                        FeatureListStore.isLoading = true
-                                        setFilter({
-                                          ...filter,
-                                          is_archived: !filter.is_archived,
-                                        })
-                                      }
-                                    }}
-                                    showArchived={filter.is_archived}
-                                    onChange={(newTags) => {
-                                      FeatureListStore.isLoading = true
-                                      setFilter({
-                                        ...filter,
-                                        tags:
-                                          newTags.includes('') &&
-                                          newTags.length > 1
-                                            ? ['']
-                                            : newTags,
-                                      })
-                                    }}
-                                  />
-                                  <TableValueFilter
-                                    className='me-4'
-                                    value={{
-                                      enabled: filter.is_enabled,
-                                      valueSearch: filter.value_search,
-                                    }}
-                                    onChange={({ enabled, valueSearch }) => {
-                                      setFilter({
-                                        ...filter,
-                                        is_enabled: enabled,
-                                        value_search: valueSearch,
-                                      })
-                                    }}
-                                  />
-                                  <TableOwnerFilter
-                                    className={'me-4'}
-                                    value={filter.owners}
-                                    onChange={(owners) => {
-                                      FeatureListStore.isLoading = true
-                                      setFilter({
-                                        ...filter,
-                                        owners,
-                                      })
-                                    }}
-                                  />
-                                  <TableGroupsFilter
-                                    className={'me-4'}
-                                    orgId={AccountStore.getOrganisation()?.id}
-                                    value={filter.group_owners}
-                                    onChange={(group_owners) => {
-                                      FeatureListStore.isLoading = true
-                                      setFilter({
-                                        ...filter,
-                                        group_owners,
-                                      })
-                                    }}
-                                  />
-                                  <TableFilterOptions
-                                    title={'View'}
-                                    className={'me-4'}
-                                    value={getViewMode()}
-                                    onChange={setViewMode as any}
-                                    options={[
-                                      {
-                                        label: 'Default',
-                                        value: 'default',
-                                      },
-                                      {
-                                        label: 'Compact',
-                                        value: 'compact',
-                                      },
-                                    ]}
-                                  />
-                                  <TableSortFilter
-                                    value={filter.sort}
-                                    isLoading={FeatureListStore.isLoading}
-                                    options={[
-                                      {
-                                        label: 'Name',
-                                        value: 'name',
-                                      },
-                                      {
-                                        label: 'Created Date',
-                                        value: 'created_date',
-                                      },
-                                    ]}
-                                    onChange={(sort) => {
-                                      FeatureListStore.isLoading = true
-                                      setFilter({
-                                        ...filter,
-                                        sort,
-                                      })
-                                    }}
-                                  />
-                                </Row>
-                              </div>
-                            </Row>
+                            <FeatureFilters
+                              value={{
+                                group_owners: filter.group_owners,
+                                is_enabled: filter.is_enabled,
+                                owners: filter.owners,
+                                search: filter.search,
+                                showArchived: filter.is_archived,
+                                sort: sortToHeader(filter.sort),
+                                tag_strategy: filter.tag_strategy,
+                                tags: filter.tags,
+                                value_search: filter.value_search || '',
+                              }}
+                              projectId={projectId!}
+                              orgId={AccountStore.getOrganisation()?.id}
+                              isLoading={FeatureListStore.isLoading}
+                              onChange={(next) => {
+                                FeatureListStore.isLoading = true
+                                setFilter({
+                                  ...filter,
+                                  group_owners: next.group_owners as number[],
+                                  is_archived: next.showArchived,
+                                  is_enabled: next.is_enabled,
+                                  owners: next.owners as number[],
+                                  search: next.search,
+                                  sort: headerToSort(next.sort),
+                                  tag_strategy:
+                                    next.tag_strategy as TagStrategy,
+                                  tags: next.tags as (number | string)[],
+                                  value_search: next.value_search,
+                                })
+                              }}
+                            />
                           }
                           isLoading={FeatureListStore.isLoading}
                           items={projectFlags}
@@ -510,14 +413,13 @@ const UserPage: FC = () => {
                           }}
                           renderSearchWithNoResults
                           paging={FeatureListStore.paging}
-                          search={filter.search}
                           nextPage={() =>
                             AppActions.getFeatures(
                               projectId,
                               environmentId,
                               true,
                               filter.search,
-                              filter.sort,
+                              sortToHeader(filter.sort),
                               FeatureListStore.paging.next,
                               getFilter(filter),
                             )
@@ -528,7 +430,7 @@ const UserPage: FC = () => {
                               environmentId,
                               true,
                               filter.search,
-                              filter.sort,
+                              sortToHeader(filter.sort),
                               FeatureListStore.paging.previous,
                               getFilter(filter),
                             )
@@ -539,7 +441,7 @@ const UserPage: FC = () => {
                               environmentId,
                               true,
                               filter.search,
-                              filter.sort,
+                              sortToHeader(filter.sort),
                               pageNumber,
                               getFilter(filter),
                             )
