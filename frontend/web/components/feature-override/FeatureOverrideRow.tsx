@@ -52,7 +52,6 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
 }) => {
   const viewMode = getViewMode()
   const isCompact = viewMode === 'compact'
-  const showDefaultsHint = viewMode === 'default' && !hasUserOverride
 
   const { description, id: featureId, name, project: projectId } = projectFlag
   const flagEnabled = environmentFeatureState.enabled
@@ -81,6 +80,8 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     hasUserOverride,
   ])
 
+  const showDefaultsHint = viewMode === 'default' && !hasAnyOverride
+
   const showMultivariateOverride = useMemo(() => {
     if (hasUserOverride || !hasValueDiff) return false
     return !!projectFlag?.multivariate_options?.some(
@@ -88,7 +89,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     )
   }, [hasUserOverride, hasValueDiff, projectFlag, actualValue])
 
-  const showSegment =
+  const showSegmentOverride =
     hasSegmentOverride && !hasUserOverride && !showMultivariateOverride
   const stopPropagation = (e: React.MouseEvent) => e.stopPropagation()
   if (!environmentFeatureState || !projectFlag) return null
@@ -96,9 +97,8 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   return (
     <div
       className={classNames('flex-row space list-item clickable py-2', {
-        'bg-primary-opacity-5':
-          !!overrideFeatureState && (hasAnyOverride || hasSegmentOverride),
-        'list-item-xs': isCompact && !hasEnabledDiff && !hasValueDiff,
+        'bg-primary-opacity-5': hasAnyOverride,
+        'list-item-xs': isCompact && !hasAnyOverride,
       })}
       key={featureId}
       data-test={dataTest}
@@ -118,7 +118,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
             {showMultivariateOverride && (
               <MultivariateOverrideDescription controlValue={flagValue} />
             )}
-            {showSegment && (
+            {showSegmentOverride && (
               <SegmentOverrideDescription
                 showEnabledOverride={hasEnabledDiff}
                 showValueOverride={!hasEnabledDiff}
