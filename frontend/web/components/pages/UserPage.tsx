@@ -488,7 +488,7 @@ const UserPage: FC = () => {
                               !!projectFlag && (
                                 <FeatureOverrideRow
                                   identity={id}
-                                  identifier={identity?.identifier}
+                                  identifier={identity?.identity?.identifier}
                                   identityName={identityName}
                                   shouldPreselect={name === preselect}
                                   toggleDataTest={`user-feature-switch-${i}${
