@@ -16,9 +16,7 @@ from hubspot.crm.contacts import (  # type: ignore[import-untyped]
 )
 
 from integrations.lead_tracking.hubspot.constants import (
-    HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
     HUBSPOT_FORM_ID_SAAS,
-    HUBSPOT_FORM_ID_SELF_HOSTED,
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
 )

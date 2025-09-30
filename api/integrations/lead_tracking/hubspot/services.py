@@ -6,7 +6,6 @@ from rest_framework.request import Request
 
 from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.constants import (
-    HUBSPOT_ACTIVE_SUBSCRIPTION_SELF_HOSTED,
     HUBSPOT_COOKIE_NAME,
     HUBSPOT_FORM_ID_SELF_HOSTED,
 )

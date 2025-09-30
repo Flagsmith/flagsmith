@@ -5,15 +5,11 @@ import typing
 import pytest
 import responses
 from hubspot.crm.associations.v4 import AssociationSpec  # type: ignore[import-untyped]
-from hubspot.crm.companies import (  # type: ignore[import-untyped]
-    SimplePublicObjectInputForCreate,
-)
 from pytest_mock import MockerFixture
 from rest_framework import status
 
 from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.constants import (
-    HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
     HUBSPOT_FORM_ID_SAAS,
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
