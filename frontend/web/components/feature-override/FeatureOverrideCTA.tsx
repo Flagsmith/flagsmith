@@ -33,6 +33,9 @@ const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
     Utils.getOverridePermission(level)
   switch (level) {
     case 'identity': {
+      if (!hasUserOverride) {
+        return null
+      }
       return (
         hasUserOverride && (
           <>
@@ -63,7 +66,6 @@ const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
     default:
       return null
   }
-  return <></>
 }
 
 export default FeatureOverrideCTA

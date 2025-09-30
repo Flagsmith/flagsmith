@@ -1,6 +1,7 @@
 import classNames from 'classnames'
-import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { FC, useEffect, useMemo, useRef } from 'react'
 import {
+  Environment,
   FeatureState,
   IdentityFeatureState,
   ProjectFlag,
@@ -66,8 +67,10 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   const viewMode = getViewMode()
   const isCompact = viewMode === 'compact'
   const history = useHistory()
-  const environmentId = ProjectStore.getEnvironmentById(
-    environmentFeatureState.environment,
+  const environmentId = (
+    ProjectStore.getEnvironmentById(
+      environmentFeatureState.environment,
+    ) as unknown as Environment
   )?.api_key
   const { description, id: featureId, name, project: projectId } = projectFlag
   const flagEnabled = environmentFeatureState.enabled
@@ -81,7 +84,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
         'Toggle Feature',
         <ConfirmToggleFeature
           identity={identity}
-          identityName={decodeURIComponent(identity)}
+          identityName={decodeURIComponent(identity!)}
           environmentId={environmentId}
           projectFlag={projectFlag}
           environmentFlag={environmentFlag}
@@ -104,7 +107,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     )
   }
 
-  const onClick = useCallback(() => {
+  const onClick = () => {
     if (
       !projectFlag ||
       !environmentId ||
@@ -148,14 +151,8 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
         history.replace(document.location.pathname)
       },
     )
-  }, [
-    projectId,
-    overrideFeatureState,
-    projectFlag,
-    environmentFeatureState,
-    history,
-    environmentId,
-  ])
+  }
+
   useEffect(() => {
     if (shouldPreselect && !hasPreselected.current) {
       hasPreselected.current = true
