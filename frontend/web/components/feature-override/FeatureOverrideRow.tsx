@@ -198,7 +198,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   }, [hasUserOverride, hasValueDiff, projectFlag, actualValue])
 
   const showSegmentOverride =
-    hasUserOverride && !hasUserOverride && !showMultivariateOverride
+    hasAnyOverride && !hasUserOverride && !showMultivariateOverride
   const stopPropagation = (e: React.MouseEvent) => e.stopPropagation()
   if (!environmentFeatureState || !projectFlag) return null
 

@@ -8,6 +8,7 @@ import {
   IdentityFeatureState,
   ProjectFlag,
 } from 'common/types/responses'
+import { useHasPermission } from 'common/providers/Permission'
 
 type FeatureOverrideCTAType = {
   level: 'identity' | 'segment'
@@ -31,6 +32,11 @@ const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
 }) => {
   const { permission, permissionDescription } =
     Utils.getOverridePermission(level)
+  const { permission: hasPermission } = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission,
+  })
   switch (level) {
     case 'identity': {
       if (!hasUserOverride) {
@@ -40,12 +46,12 @@ const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
         hasUserOverride && (
           <>
             {Utils.renderWithPermission(
-              permission,
+              hasPermission,
               permissionDescription,
               <Button
                 theme='text'
                 size='xSmall'
-                disabled={!permission}
+                disabled={!hasPermission}
                 onClick={() => {
                   removeUserOverride({
                     environmentId,
