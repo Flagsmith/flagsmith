@@ -170,7 +170,7 @@ const Tabs: React.FC<TabsProps> = ({
         </div>
         {overflow.length > 0 && !isMeasuring && (
           <div
-            className='d-flex align-items-center justify-content-center ms-2 flex-shrink-0'
+            className='d-flex align-items-center justify-content-center ms-2 flex-shrink-0 btn btn-secondary'
             style={{
               backgroundColor: 'var(--bs-light300)',
               borderRadius: 6,

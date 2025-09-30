@@ -1,6 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./web/**/*.{js,ts,jsx,tsx}', './common/**/*.{js,ts,jsx,tsx}'],
+  content: [
+    './web/components/**/*.{js,ts,jsx,tsx}',
+    './web/pages/**/*.{js,ts,jsx,tsx}',
+    './common/components/**/*.{js,ts,jsx,tsx}',
+  ],
   corePlugins: {
     preflight: false, // This allows to fix the headers by avoiding the default tailwind reset
   },
@@ -42,12 +46,12 @@ module.exports = {
           'primary-16': 'rgba(149, 108, 255, 0.16)',
           'primary-24': 'rgba(149, 108, 255, 0.24)',
           'primary-32': 'rgba(149, 108, 255, 0.32)',
-          'white-16': 'rgba(255, 255, 255, 0.16)',
           'primary-8': 'rgba(149, 108, 255, 0.08)',
+          'white-16': 'rgba(255, 255, 255, 0.16)',
           'white-24': 'rgba(255, 255, 255, 0.24)',
           'white-32': 'rgba(255, 255, 255, 0.32)',
-          'white-8': 'rgba(255, 255, 255, 0.08)',
           'white-48': 'rgba(255, 255, 255, 0.48)',
+          'white-8': 'rgba(255, 255, 255, 0.08)',
         },
 
         // Background colors
@@ -133,6 +137,7 @@ module.exports = {
 
         // Text colors
         text: {
+          DEFAULT: '#FF0000',
           'icon-grey': '#656d7b',
           'icon-light': '#ffffff',
           'icon-light-grey': 'rgba(157, 164, 174, 1)',
