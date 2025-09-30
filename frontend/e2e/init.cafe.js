@@ -96,28 +96,28 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
     await logResults(logger.requests, t)
   })
 
-// test('Segment-part-1', async () => await testSegment1(flagsmith)).meta({ category: 'oss' })
+test('Segment-part-1', async () => await testSegment1(flagsmith)).meta({ category: 'oss' })
 
 test('Segment-part-2', testSegment2).meta({ autoLogout: true, category: 'oss' })
 
-// test('Segment-part-3', testSegment3).meta({ autoLogout: true, category: 'oss' })
-//
-// test('Flag', flagTests).meta({ autoLogout: true, category: 'oss' })
-//
-// test('Signup', initialiseTests).meta({ autoLogout: true, category: 'oss' })
-//
-// test('Invite', inviteTest).meta({ category: 'oss' })
-//
-// test('Environment', environmentTest).meta({ autoLogout: true, category: 'oss' })
-//
-// test('Project', projectTest).meta({ autoLogout: true, category: 'oss' })
-//
-// test('Versioning', versioningTests).meta({ autoLogout: true, category: 'oss' })
-//
-// test('Organisation-permission', organisationPermissionTest).meta({ autoLogout: true, category: 'enterprise' })
-//
-// test('Project-permission', projectPermissionTest).meta({ autoLogout: true, category: 'enterprise' })
-//
-// test('Environment-permission', environmentPermissionTest).meta({ autoLogout: true, category: 'enterprise' })
-//
-// test('Roles', rolesTest).meta({ autoLogout: true, category: 'enterprise' })
+test('Segment-part-3', testSegment3).meta({ autoLogout: true, category: 'oss' })
+
+test('Flag', flagTests).meta({ autoLogout: true, category: 'oss' })
+
+test('Signup', initialiseTests).meta({ autoLogout: true, category: 'oss' })
+
+test('Invite', inviteTest).meta({ category: 'oss' })
+
+test('Environment', environmentTest).meta({ autoLogout: true, category: 'oss' })
+
+test('Project', projectTest).meta({ autoLogout: true, category: 'oss' })
+
+test('Versioning', versioningTests).meta({ autoLogout: true, category: 'oss' })
+
+test('Organisation-permission', organisationPermissionTest).meta({ autoLogout: true, category: 'enterprise' })
+
+test('Project-permission', projectPermissionTest).meta({ autoLogout: true, category: 'enterprise' })
+
+test('Environment-permission', environmentPermissionTest).meta({ autoLogout: true, category: 'enterprise' })
+
+test('Roles', rolesTest).meta({ autoLogout: true, category: 'enterprise' })
