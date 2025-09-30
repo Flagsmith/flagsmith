@@ -36,7 +36,7 @@ import JSONReference from 'components/JSONReference'
 import PageTitle from 'components/PageTitle'
 import Panel from 'components/base/grid/Panel'
 import PanelSearch from 'components/PanelSearch'
-import Permission from 'common/providers/Permission'
+import Permission, { useHasPermission } from 'common/providers/Permission'
 // @ts-ignore
 import Project from 'common/project'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
@@ -203,68 +203,9 @@ const UserPage: FC = () => {
     )
   }
 
-  const confirmToggle = (projectFlag: any, environmentFlag: any, cb: any) => {
-    openModal(
-      'Toggle Feature',
-      <ConfirmToggleFeature
-        identity={id}
-        identityName={decodeURIComponent(identity)}
-        environmentId={environmentId}
-        projectFlag={projectFlag}
-        environmentFlag={environmentFlag}
-        cb={cb}
-      />,
-      'p-0',
-    )
-  }
-  const editFeature = (
-    projectFlag: ProjectFlag,
-    environmentFlag: FeatureState,
-    identityFlag: IdentityFeatureState,
-    multivariate_feature_state_values: IdentityFeatureState['multivariate_feature_state_values'],
-  ) => {
-    history.replace(`${document.location.pathname}?flag=${projectFlag.name}`)
-    API.trackEvent(Constants.events.VIEW_USER_FEATURE)
-    openModal(
-      <span>
-        <Row>
-          Edit User Feature:{' '}
-          <span className='standard-case'>{projectFlag.name}</span>
-          <Button
-            onClick={() => {
-              Utils.copyToClipboard(projectFlag.name)
-            }}
-            theme='icon'
-            className='ms-2'
-          >
-            <Icon name='copy' />
-          </Button>
-        </Row>
-      </span>,
-      <CreateFlagModal
-        history={history}
-        identity={id}
-        identityName={decodeURIComponent(identity)}
-        environmentId={environmentId}
-        projectId={projectId}
-        projectFlag={projectFlag}
-        identityFlag={{
-          ...identityFlag,
-          multivariate_feature_state_values,
-        }}
-        environmentFlag={environmentFlag}
-      />,
-      'side-modal create-feature-modal overflow-y-auto',
-      () => {
-        history.replace(document.location.pathname)
-      },
-    )
-  }
-
   const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data
   const isEdge = Utils.getIsEdge()
   const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
-
   const clearFilters = () => {
     history.replace(`${document.location.pathname}`)
     setFilter(getFiltersFromParams({}))
@@ -274,29 +215,28 @@ const UserPage: FC = () => {
     <div className='app-container container'>
       <div>
         <IdentityProvider onSave={onSave}>
-          {(
-            {
-              environmentFlags,
-              identity,
-              identityFlags,
-              isLoading,
-              projectFlags,
-              traits,
-            }: {
-              environmentFlags: FeatureState[]
-              identity: { identity: Identity; identifier: string }
-              identityFlags: IdentityFeatureState[]
-              isLoading: boolean
-              projectFlags: ProjectFlag[]
-              traits: IdentityTrait[]
-            },
-            { toggleFlag }: any,
-          ) =>
-            isLoading &&
-            !filter.tags.length &&
-            !filter.is_archived &&
-            typeof filter.search !== 'string' &&
-            (!identityFlags || !actualFlags || !projectFlags) ? (
+          {({
+            environmentFlags,
+            identity,
+            identityFlags,
+            isLoading,
+            projectFlags,
+          }: {
+            environmentFlags: FeatureState[]
+            identity: { identity: Identity; identifier: string }
+            identityFlags: IdentityFeatureState[]
+            isLoading: boolean
+            projectFlags: ProjectFlag[]
+            traits: IdentityTrait[]
+          }) => {
+            const identityName =
+              (identity && identity.identity.identifier) || id
+
+            return isLoading &&
+              !filter.tags.length &&
+              !filter.is_archived &&
+              typeof filter.search !== 'string' &&
+              (!identityFlags || !actualFlags || !projectFlags) ? (
               <div className='text-center'>
                 <Loader />
               </div>
@@ -306,11 +246,7 @@ const UserPage: FC = () => {
                   title={
                     <div className='d-flex align-items-center justify-content-between'>
                       <div>
-                        <IdentifierString
-                          value={
-                            (identity && identity.identity.identifier) || id
-                          }
-                        />
+                        <IdentifierString value={identityName} />
                         {showAliases && (
                           <h6 className='d-flex align-items-center gap-1'>
                             <Tooltip
@@ -339,7 +275,7 @@ const UserPage: FC = () => {
                         onClick={() => {
                           removeIdentity(
                             id,
-                            (identity && identity.identity.identifier) || id,
+                            identityName,
                             environmentId,
                             () => {
                               history.replace(
@@ -538,162 +474,37 @@ const UserPage: FC = () => {
                           isLoading={FeatureListStore.isLoading}
                           items={projectFlags}
                           renderRow={({ id: featureId, name, tags }, i) => {
+                            const identityFlag = identityFlags[featureId] || {}
+                            const actualEnabled =
+                              actualFlags && actualFlags[name]?.enabled
+                            const environmentFlag =
+                              (environmentFlags &&
+                                environmentFlags[featureId]) ||
+                              {}
+                            const projectFlag = projectFlags?.find(
+                              (p: any) => p.id === environmentFlag.feature,
+                            )
                             return (
-                              <Permission
-                                level='environment'
-                                permission={Utils.getManageFeaturePermission(
-                                  false,
-                                )}
-                                id={environmentId}
-                                tags={tags}
-                              >
-                                {({ permission }) => {
-                                  const identityFlag =
-                                    identityFlags[featureId] || {}
-                                  const environmentFlag =
-                                    (environmentFlags &&
-                                      environmentFlags[featureId]) ||
-                                    {}
-                                  const hasUserOverride =
-                                    identityFlag.identity ||
-                                    identityFlag.identity_uuid
-                                  const flagEnabled = hasUserOverride
-                                    ? identityFlag.enabled
-                                    : environmentFlag.enabled
-                                  const flagValue = hasUserOverride
-                                    ? identityFlag.feature_state_value
-                                    : environmentFlag.feature_state_value
-                                  const actualEnabled =
-                                    actualFlags && actualFlags[name]?.enabled
-                                  const actualValue =
-                                    actualFlags &&
-                                    actualFlags[name]?.feature_state_value
-                                  const flagEnabledDifferent = hasUserOverride
-                                    ? false
-                                    : actualEnabled !== flagEnabled
-                                  const flagValueDifferent = hasUserOverride
-                                    ? false
-                                    : !featureValuesEqual(
-                                        actualValue,
-                                        flagValue,
-                                      )
-                                  const projectFlag = projectFlags?.find(
-                                    (p: any) =>
-                                      p.id === environmentFlag.feature,
-                                  )
-                                  const isMultiVariateOverride =
-                                    flagValueDifferent &&
-                                    projectFlag?.multivariate_options?.find(
-                                      (v: any) =>
-                                        Utils.featureStateToValue(v) ===
-                                        actualValue,
-                                    )
-
-                                  const hasSegmentOverride =
-                                    (flagEnabledDifferent ||
-                                      flagValueDifferent) &&
-                                    !hasUserOverride &&
-                                    !isMultiVariateOverride
-
-                                  const onClick = () => {
-                                    if (permission) {
-                                      editFeature(
-                                        projectFlag!,
-                                        environmentFlags[featureId],
-                                        identityFlags[featureId] ||
-                                          actualFlags![name],
-                                        identityFlags[featureId]
-                                          ?.multivariate_feature_state_values,
-                                      )
-                                    }
+                              !!projectFlag && (
+                                <FeatureOverrideRow
+                                  identity={id}
+                                  identityName={identityName}
+                                  shouldPreselect={name === preselect}
+                                  toggleDataTest={`user-feature-switch-${i}${
+                                    actualEnabled ? '-on' : '-off'
+                                  }`}
+                                  level='identity'
+                                  valueDataTest={`user-feature-value-${i}`}
+                                  projectFlag={projectFlag}
+                                  dataTest={`user-feature-${i}`}
+                                  overrideFeatureState={
+                                    identityFlag || actualFlags?.[name]
                                   }
-
-                                  if (name === preselect && actualFlags) {
-                                    setPreselect(null)
-                                    onClick()
+                                  environmentFeatureState={
+                                    environmentFlags[featureId]
                                   }
-
-                                  return (
-                                    <FeatureOverrideRow
-                                      toggleDataTest={`user-feature-switch-${i}${
-                                        actualEnabled ? '-on' : '-off'
-                                      }`}
-                                      valueDataTest={`user-feature-value-${i}`}
-                                      projectFlag={projectFlag}
-                                      editPermission={permission}
-                                      editPermissionDescription={Constants.environmentPermissions(
-                                        Utils.getManageFeaturePermissionDescription(
-                                          false,
-                                          true,
-                                        ),
-                                      )}
-                                      onClick={onClick}
-                                      dataTest={`user-feature-${i}`}
-                                      overrideFeatureState={actualFlags?.[name]}
-                                      cta={
-                                        hasUserOverride && (
-                                          <>
-                                            {Utils.renderWithPermission(
-                                              permission,
-                                              Constants.environmentPermissions(
-                                                Utils.getManageFeaturePermissionDescription(
-                                                  false,
-                                                  true,
-                                                ),
-                                              ),
-                                              <Button
-                                                theme='text'
-                                                size='xSmall'
-                                                disabled={!permission}
-                                                onClick={() => {
-                                                  removeUserOverride({
-                                                    environmentId,
-                                                    identifier:
-                                                      identity.identity
-                                                        .identifier,
-                                                    identity: id,
-                                                    identityFlag,
-                                                    projectFlag: projectFlag!,
-                                                  })
-                                                }}
-                                              >
-                                                <Icon
-                                                  name='refresh'
-                                                  fill='#6837FC'
-                                                  width={16}
-                                                />{' '}
-                                                Reset
-                                              </Button>,
-                                            )}
-                                          </>
-                                        )
-                                      }
-                                      environmentFeatureState={
-                                        environmentFlags[featureId]
-                                      }
-                                      onToggle={() =>
-                                        confirmToggle(
-                                          projectFlag,
-                                          actualFlags![name],
-                                          () =>
-                                            toggleFlag({
-                                              environmentFlag:
-                                                actualFlags![name],
-                                              environmentId,
-                                              identity: id,
-                                              identityFlag,
-                                              projectFlag: {
-                                                id: featureId,
-                                              },
-                                            }),
-                                        )
-                                      }
-                                      hasUserOverride={!!hasUserOverride}
-                                      hasSegmentOverride={hasSegmentOverride}
-                                    />
-                                  )
-                                }}
-                              </Permission>
+                                />
+                              )
                             )
                           }}
                           renderSearchWithNoResults
@@ -830,7 +641,7 @@ const UserPage: FC = () => {
                         title='Managing user traits and segments'
                         snippets={Constants.codeHelp.USER_TRAITS(
                           environmentId,
-                          identity?.identifier,
+                          identityName,
                         )}
                       />
                     </FormGroup>
@@ -838,14 +649,14 @@ const UserPage: FC = () => {
                       <TryIt
                         title='Check to see what features and traits are coming back for this user'
                         environmentId={environmentId}
-                        userId={identity?.identity?.identifier || id}
+                        userId={identityName}
                       />
                     </FormGroup>
                   </div>
                 </div>
               </>
             )
-          }
+          }}
         </IdentityProvider>
       </div>
     </div>

@@ -1,10 +1,12 @@
 import classNames from 'classnames'
-import React, { FC, ReactNode, useMemo } from 'react'
+import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   FeatureState,
   IdentityFeatureState,
   ProjectFlag,
 } from 'common/types/responses'
+import AppActions from 'common/dispatcher/app-actions'
+
 import FeatureName from 'components/feature-summary/FeatureName'
 import FeatureValue from 'components/feature-summary/FeatureValue'
 import IdentityOverrideDescription from './IdentityOverrideDescription'
@@ -16,48 +18,148 @@ import Tooltip from 'components/Tooltip'
 import Utils from 'common/utils/utils'
 import featureValuesEqual from 'common/featureValuesEqual'
 import { getViewMode } from 'common/useViewMode'
+import { useHasPermission } from 'common/providers/Permission'
+// import FeatureOverrideCTA from './FeatureOverrideCTA'
+import API from 'project/api'
+import Constants from 'common/constants'
+import Button from 'components/base/forms/Button'
+import Icon from 'components/Icon'
+import CreateFlagModal from 'components/modals/CreateFlag'
+import { useHistory } from 'react-router-dom'
+import ProjectStore from 'common/stores/project-store'
+import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
+import FeatureOverrideCTA from './FeatureOverrideCTA'
 
 const COLUMN_WIDTHS = [200, 48, 78]
 
 type FeatureOverrideRowProps = {
+  shouldPreselect?: boolean
+  level: 'identity' | 'segment'
   dataTest: string
-  onClick: () => void
-  onToggle?: () => void
-  cta?: ReactNode
+  identity?: string
+  identityName?: string
   valueDataTest?: string
   toggleDataTest?: string
   projectFlag: ProjectFlag
-  editPermission: boolean
-  editPermissionDescription: string
   environmentFeatureState: FeatureState
   overrideFeatureState?: FeatureState | IdentityFeatureState | null
-  hasUserOverride?: boolean
-  hasSegmentOverride?: boolean
 }
 
 const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
-  cta,
   dataTest,
-  editPermission,
-  editPermissionDescription,
   environmentFeatureState,
-  hasSegmentOverride,
-  hasUserOverride,
-  onClick,
-  onToggle,
+  identity,
+  identityName,
+  level,
   overrideFeatureState,
   projectFlag,
+  shouldPreselect,
   toggleDataTest,
   valueDataTest,
 }) => {
+  const hasUserOverride =
+    !!overrideFeatureState?.identity ||
+    !!(overrideFeatureState as IdentityFeatureState).identity_uuid
+  const hasPreselected = useRef(false)
   const viewMode = getViewMode()
   const isCompact = viewMode === 'compact'
-
+  const history = useHistory()
+  const environmentId = ProjectStore.getEnvironmentById(
+    environmentFeatureState.environment,
+  )?.api_key
   const { description, id: featureId, name, project: projectId } = projectFlag
   const flagEnabled = environmentFeatureState.enabled
   const flagValue = environmentFeatureState.feature_state_value
   const actualEnabled = overrideFeatureState?.enabled ?? flagEnabled
   const actualValue = overrideFeatureState?.feature_state_value ?? flagValue
+
+  const onToggle = () => {
+    const confirmToggle = (projectFlag: any, environmentFlag: any, cb: any) => {
+      openModal(
+        'Toggle Feature',
+        <ConfirmToggleFeature
+          identity={identity}
+          identityName={decodeURIComponent(identity)}
+          environmentId={environmentId}
+          projectFlag={projectFlag}
+          environmentFlag={environmentFlag}
+          cb={cb}
+        />,
+        'p-0',
+      )
+    }
+
+    confirmToggle(projectFlag, overrideFeatureState, () =>
+      AppActions.toggleUserFlag({
+        environmentFlag: environmentFeatureState,
+        environmentId,
+        identity,
+        identityFlag: overrideFeatureState,
+        projectFlag: {
+          id: featureId,
+        },
+      }),
+    )
+  }
+
+  const onClick = useCallback(() => {
+    if (
+      !projectFlag ||
+      !environmentId ||
+      !environmentFeatureState ||
+      !overrideFeatureState
+    )
+      return
+
+    history.replace(`${document.location.pathname}?flag=${projectFlag.name}`)
+    API.trackEvent(Constants.events.VIEW_USER_FEATURE)
+    openModal(
+      <span>
+        <Row>
+          Edit User Feature:{' '}
+          <span className='standard-case'>{projectFlag.name}</span>
+          <Button
+            onClick={() => {
+              Utils.copyToClipboard(projectFlag.name)
+            }}
+            theme='icon'
+            className='ms-2'
+          >
+            <Icon name='copy' />
+          </Button>
+        </Row>
+      </span>,
+      <CreateFlagModal
+        history={history}
+        identity={identity}
+        identityName={identityName}
+        environmentId={environmentId}
+        projectId={projectId}
+        projectFlag={projectFlag}
+        identityFlag={{
+          ...overrideFeatureState,
+        }}
+        environmentFlag={environmentFeatureState}
+      />,
+      'side-modal create-feature-modal overflow-y-auto',
+      () => {
+        history.replace(document.location.pathname)
+      },
+    )
+  }, [
+    projectId,
+    overrideFeatureState,
+    projectFlag,
+    environmentFeatureState,
+    history,
+    environmentId,
+  ])
+  useEffect(() => {
+    if (shouldPreselect && !hasPreselected.current) {
+      hasPreselected.current = true
+      onClick()
+    }
+  }, [shouldPreselect, onClick])
 
   const { hasAnyOverride, hasEnabledDiff, hasValueDiff } = useMemo(() => {
     const enabledDiff = overrideFeatureState
@@ -80,6 +182,14 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     hasUserOverride,
   ])
 
+  const { permission, permissionDescription } =
+    Utils.getOverridePermission(level)
+  const editPermission = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission,
+    tags: projectFlag.tags,
+  })
   const showDefaultsHint = viewMode === 'default' && !hasAnyOverride
 
   const showMultivariateOverride = useMemo(() => {
@@ -90,7 +200,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   }, [hasUserOverride, hasValueDiff, projectFlag, actualValue])
 
   const showSegmentOverride =
-    hasSegmentOverride && !hasUserOverride && !showMultivariateOverride
+    hasUserOverride && !hasUserOverride && !showMultivariateOverride
   const stopPropagation = (e: React.MouseEvent) => e.stopPropagation()
   if (!environmentFeatureState || !projectFlag) return null
 
@@ -146,7 +256,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
       >
         {Utils.renderWithPermission(
           editPermission,
-          editPermissionDescription,
+          permissionDescription,
           <Switch
             disabled={!editPermission}
             data-test={toggleDataTest}
@@ -161,7 +271,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
         style={{ width: COLUMN_WIDTHS[2] }}
         onClick={stopPropagation}
       >
-        {cta}
+        <FeatureOverrideCTA level={level} />
       </div>
     </div>
   )
