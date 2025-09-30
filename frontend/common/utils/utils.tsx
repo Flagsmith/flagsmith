@@ -10,15 +10,15 @@ import {
   MultivariateFeatureStateValue,
   MultivariateOption,
   Organisation,
+  PConfidence,
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
   Tag,
-  PConfidence,
   UserPermissions,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
-import { ReactNode, useMemo } from 'react'
+import { ReactNode } from 'react'
 import _ from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
@@ -30,7 +30,6 @@ import { getStore } from 'common/store'
 import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
 import { TimeUnit } from 'components/release-pipelines/constants'
 import getUserDisplayName from './getUserDisplayName'
-import { useHasPermission } from 'common/providers/Permission'
 
 const semver = require('semver')
 
