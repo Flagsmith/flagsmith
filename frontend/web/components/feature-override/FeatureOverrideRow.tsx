@@ -182,7 +182,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
 
   const { permission, permissionDescription } =
     Utils.getOverridePermission(level)
-  const editPermission = useHasPermission({
+  const { permission: editPermission } = useHasPermission({
     id: environmentId,
     level: 'environment',
     permission,
