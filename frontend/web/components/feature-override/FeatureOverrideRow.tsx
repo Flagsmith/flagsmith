@@ -83,7 +83,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
         'Toggle Feature',
         <ConfirmToggleFeature
           identity={identity}
-          identityName={decodeURIComponent(identity!)}
+          identityName={identityName}
           environmentId={environmentId}
           projectFlag={projectFlag}
           environmentFlag={environmentFlag}
