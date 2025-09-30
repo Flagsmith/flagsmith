@@ -183,7 +183,7 @@ const HomePage: React.FC = () => {
   const oauthClasses = 'col-12 col-xl-4'
   const onboarding =
     !versionLoading && version?.backend?.self_hosted_data?.has_users === false
-  if (true) {
+  if (onboarding) {
     return <OnboardingPage />
   }
 
