@@ -37,6 +37,7 @@ type FeatureOverrideRowProps = {
   level: 'identity' | 'segment'
   dataTest: string
   identity?: string
+  identifier?: string
   identityName?: string
   valueDataTest?: string
   toggleDataTest?: string
@@ -48,6 +49,7 @@ type FeatureOverrideRowProps = {
 const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   dataTest,
   environmentFeatureState,
+  identifier,
   identity,
   identityName,
   level,
@@ -271,7 +273,16 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
         style={{ width: COLUMN_WIDTHS[2] }}
         onClick={stopPropagation}
       >
-        <FeatureOverrideCTA level={level} />
+        <FeatureOverrideCTA
+          identifier={identifier}
+          identity={identity}
+          environmentId={environmentId}
+          projectFlag={projectFlag}
+          environmentFeatureState={environmentFeatureState}
+          hasUserOverride={hasUserOverride}
+          overrideFeatureState={overrideFeatureState}
+          level={level}
+        />
       </div>
     </div>
   )

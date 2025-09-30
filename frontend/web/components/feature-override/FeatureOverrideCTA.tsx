@@ -3,15 +3,31 @@ import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import Icon from 'components/Icon'
+import {
+  FeatureState,
+  IdentityFeatureState,
+  ProjectFlag,
+} from 'common/types/responses'
 
 type FeatureOverrideCTAType = {
   level: 'identity' | 'segment'
   hasUserOverride: boolean
+  projectFlag: ProjectFlag
+  environmentId: string
+  identity?: string
+  identifier?: string
+  environmentFeatureState: FeatureState
+  overrideFeatureState?: FeatureState | IdentityFeatureState | null
 }
 
 const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
+  environmentId,
   hasUserOverride,
+  identifier,
+  identity,
   level,
+  overrideFeatureState,
+  projectFlag,
 }) => {
   const { permission, permissionDescription } =
     Utils.getOverridePermission(level)
@@ -30,9 +46,9 @@ const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
                 onClick={() => {
                   removeUserOverride({
                     environmentId,
-                    identifier: identity.identity.identifier,
-                    identity: id,
-                    identityFlag,
+                    identifier: identifier!,
+                    identity: identity!,
+                    identityFlag: overrideFeatureState as IdentityFeatureState,
                     projectFlag: projectFlag!,
                   })
                 }}
@@ -44,6 +60,8 @@ const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
         )
       )
     }
+    default:
+      return null
   }
   return <></>
 }
