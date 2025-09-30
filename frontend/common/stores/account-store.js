@@ -248,11 +248,6 @@ const controller = {
   },
   register: async ({ contact_consent_given, organisation_name, ...user }) => {
     store.saving()
-    if (contact_consent_given) {
-      await createOnboardingSupportOptIn(getStore(), {
-        hubspotutk: API.getCookie('hubspotutk'),
-      })
-    }
     return data
       .post(`${Project.api}auth/users/`, {
         ...user,
