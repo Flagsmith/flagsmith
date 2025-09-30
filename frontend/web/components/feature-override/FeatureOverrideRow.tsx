@@ -61,7 +61,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
 }) => {
   const hasUserOverride =
     !!overrideFeatureState?.identity ||
-    !!(overrideFeatureState as IdentityFeatureState).identity_uuid
+    !!(overrideFeatureState as IdentityFeatureState)?.identity_uuid
   const hasPreselected = useRef(false)
   const viewMode = getViewMode()
   const isCompact = viewMode === 'compact'
