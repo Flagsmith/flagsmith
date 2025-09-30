@@ -377,7 +377,7 @@ const UserPage: FC = () => {
                           isLoading={FeatureListStore.isLoading}
                           items={projectFlags}
                           renderRow={({ id: featureId, name, tags }, i) => {
-                            const identityFlag = identityFlags[featureId] || {}
+                            const identityFlag = identityFlags[featureId]
                             const actualEnabled =
                               actualFlags && actualFlags[name]?.enabled
                             const environmentFlag =
@@ -402,7 +402,15 @@ const UserPage: FC = () => {
                                   projectFlag={projectFlag}
                                   dataTest={`user-feature-${i}`}
                                   overrideFeatureState={
-                                    identityFlag || actualFlags?.[name]
+                                    identityFlag
+                                      ? {
+                                          ...identityFlag,
+                                          //resolves multivariate value if one is set
+                                          feature_state_value:
+                                            actualFlags?.[name]
+                                              ?.feature_state_value,
+                                        }
+                                      : actualFlags?.[name]
                                   }
                                   environmentFeatureState={
                                     environmentFlags[featureId]
