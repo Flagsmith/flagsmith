@@ -499,7 +499,13 @@ const UserPage: FC = () => {
                                   projectFlag={projectFlag}
                                   dataTest={`user-feature-${i}`}
                                   overrideFeatureState={
-                                    identityFlag || actualFlags?.[name]
+                                    {
+                                      ...identityFlag,
+                                      //resolves multivariate value if one is set
+                                      feature_state_value:
+                                        actualFlags?.[name]
+                                          ?.feature_state_value,
+                                    } || actualFlags?.[name]
                                   }
                                   environmentFeatureState={
                                     environmentFlags[featureId]
