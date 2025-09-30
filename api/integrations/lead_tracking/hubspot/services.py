@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from django.conf import settings
 from rest_framework.request import Request
@@ -7,6 +8,7 @@ from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_ACTIVE_SUBSCRIPTION_SELF_HOSTED,
     HUBSPOT_COOKIE_NAME,
+    HUBSPOT_FORM_ID_SELF_HOSTED,
 )
 from integrations.lead_tracking.hubspot.tasks import (
     create_hubspot_contact_for_user,
@@ -67,18 +69,18 @@ def register_hubspot_tracker(
 
 
 def create_self_hosted_onboarding_lead(
-    email: str, first_name: str, last_name: str, organisation_name: str
+    email: str,
+    first_name: str,
+    last_name: str,
+    hubspotutk: str = "",
 ) -> None:
-    email_domain = email.split("@")[1]
     hubspot_client = HubspotClient()
-    company = hubspot_client.get_company_by_domain(email_domain)
-    if not company:
-        company = hubspot_client.create_company(
-            name=organisation_name,
-            domain=email_domain,
-            active_subscription=HUBSPOT_ACTIVE_SUBSCRIPTION_SELF_HOSTED,
-        )
+    user = FFAdminUser(email=email, first_name=first_name, last_name=last_name)
+    create_lead_form_kwargs: dict[str, Any] = {
+        "user": user,
+        "form_id": HUBSPOT_FORM_ID_SELF_HOSTED,
+    }
+    if hubspotutk:
+        create_lead_form_kwargs.update(hubspot_cookie=hubspotutk)
 
-    company_id = company["id"]
-
-    hubspot_client.create_self_hosted_contact(email, first_name, last_name, company_id)
+    hubspot_client.create_lead_form(**create_lead_form_kwargs)

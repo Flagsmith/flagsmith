@@ -246,9 +246,13 @@ const controller = {
     API.setCookie('t', Project.cookieAuthEnabled ? 'true' : data.token)
     return controller.getOrganisations(isGettingStarted)
   },
-  register: ({ contact_consent_given, organisation_name, ...user }) => {
+  register: async ({ contact_consent_given, organisation_name, ...user }) => {
     store.saving()
-
+    if (contact_consent_given) {
+      await createOnboardingSupportOptIn(getStore(), {
+        hubspotutk: API.getCookie('hubspotutk'),
+      })
+    }
     return data
       .post(`${Project.api}auth/users/`, {
         ...user,
@@ -271,7 +275,10 @@ const controller = {
         store.isSaving = false
 
         if (contact_consent_given) {
-          await createOnboardingSupportOptIn(getStore(), {})
+          await createOnboardingSupportOptIn(
+            { ...getStore(), hubspotutk: API.getCookie('hubspotutk') },
+            {},
+          )
         }
         await controller.onLogin(!API.getInvite())
 

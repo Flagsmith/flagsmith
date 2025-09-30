@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-from drf_yasg.utils import no_body, swagger_auto_schema  # type: ignore[import-untyped]
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import GenericAPIView
@@ -13,7 +13,10 @@ from api.serializers import ErrorSerializer
 from integrations.lead_tracking.hubspot.tasks import (
     create_self_hosted_onboarding_lead_task,
 )
-from onboarding.serializers import SelfHostedOnboardingSupportSerializer
+from onboarding.serializers import (
+    SelfHostedOnboardingSupportRequestSerializer,
+    SelfHostedOnboardingSupportSerializer,
+)
 from onboarding.tasks import send_onboarding_request_to_saas_flagsmith_task
 from onboarding.throttling import OnboardingRequestThrottle
 from users.models import FFAdminUser
@@ -23,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 @swagger_auto_schema(
     method="post",
-    request_body=no_body,
+    request_body=SelfHostedOnboardingSupportRequestSerializer,
     responses={204: "No Content", 400: ErrorSerializer()},
 )  # type: ignore[misc]
 @api_view(["POST"])
@@ -42,7 +45,7 @@ def send_onboarding_request_to_saas_flagsmith_view(request: Request) -> Response
             "first_name": admin_user.first_name,
             "last_name": admin_user.last_name,
             "email": admin_user.email,
-            "organisation_name": organisation.name,
+            "hubspotutk": request.data.get("hubspotutk"),
         }
     )
     return Response(status=status.HTTP_204_NO_CONTENT)

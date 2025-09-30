@@ -14,7 +14,7 @@ from rest_framework import status
 from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
-    HUBSPOT_FORM_ID,
+    HUBSPOT_FORM_ID_SAAS,
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
 )
@@ -53,7 +53,7 @@ def test_create_lead_form(
     expected_context: dict[str, str],
 ) -> None:
     # Given
-    url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID}"
+    url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID_SAAS}"
     responses.add(
         method="POST",
         url=url,
@@ -132,7 +132,7 @@ def test_create_lead_form_error(
     logger.addHandler(inspecting_handler)
 
     hubspot_cookie = "test_hubspot_cookie"
-    url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID}"
+    url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID_SAAS}"
     responses.add(
         method="POST",
         url=url,
@@ -219,44 +219,6 @@ def test_create_company_without_organisation_information(
         "domain": domain,
         "name": name,
     }
-
-
-def test_create_self_hosted_contact(hubspot_client: HubspotClient) -> None:
-    # Given
-    email = "user@flagsmith.com"
-    first_name = "test"
-    last_name = "user"
-    hubspot_company_id = "111"
-
-    properties = {
-        "email": email,
-        "firstname": first_name,
-        "lastname": last_name,
-        "api_lead_source": HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
-    }
-
-    # When
-    hubspot_client.create_self_hosted_contact(
-        email, first_name, last_name, hubspot_company_id
-    )
-
-    # Then
-    hubspot_client.client.crm.contacts.basic_api.create.assert_called_once_with(
-        simple_public_object_input_for_create=SimplePublicObjectInputForCreate(
-            properties=properties,
-            associations=[
-                {
-                    "types": [
-                        {
-                            "associationCategory": "HUBSPOT_DEFINED",
-                            "associationTypeId": 1,
-                        }
-                    ],
-                    "to": {"id": hubspot_company_id},
-                }
-            ],
-        )
-    )
 
 
 def test_associate_contact_to_company_succeeds(hubspot_client: HubspotClient) -> None:

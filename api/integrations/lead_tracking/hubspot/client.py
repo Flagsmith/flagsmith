@@ -17,7 +17,8 @@ from hubspot.crm.contacts import (  # type: ignore[import-untyped]
 
 from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
-    HUBSPOT_FORM_ID,
+    HUBSPOT_FORM_ID_SAAS,
+    HUBSPOT_FORM_ID_SELF_HOSTED,
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
 )
@@ -61,6 +62,7 @@ class HubspotClient:
         user: "FFAdminUser",
         hubspot_cookie: str | None = None,
         utm_data: dict[str, str] | None = None,
+        form_id: str = HUBSPOT_FORM_ID_SAAS,
     ) -> dict[str, Any]:
         utm_data = utm_data or {}
         logger.info(
@@ -105,7 +107,7 @@ class HubspotClient:
         headers = {
             "Content-Type": "application/json",
         }
-        url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID}"
+        url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{form_id}"
 
         response = requests.post(url, headers=headers, data=json.dumps(payload))
 
@@ -130,38 +132,6 @@ class HubspotClient:
             to_object_id=company_id,
             association_spec=association_spec,
         )
-
-    def create_self_hosted_contact(
-        self, email: str, first_name: str, last_name: str, hubspot_company_id: str
-    ) -> None:
-        properties = {
-            "email": email,
-            "firstname": first_name,
-            "lastname": last_name,
-            "api_lead_source": HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
-        }
-
-        create_params = {
-            "simple_public_object_input_for_create": SimplePublicObjectInputForCreate(
-                properties=properties,
-            )
-        }
-
-        if hubspot_company_id:
-            create_params["simple_public_object_input_for_create"].associations = [
-                {
-                    "types": [
-                        {
-                            "associationCategory": "HUBSPOT_DEFINED",
-                            "associationTypeId": 1,
-                        }
-                    ],
-                    "to": {"id": hubspot_company_id},
-                }
-            ]
-
-        response = self.client.crm.contacts.basic_api.create(**create_params)
-        return response.to_dict()  # type: ignore[no-any-return]
 
     def get_company_by_domain(self, domain: str) -> dict[str, Any] | None:
         """
