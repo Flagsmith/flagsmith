@@ -18,7 +18,7 @@ import {
   UserPermissions,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
-import { ReactNode } from 'react'
+import { ReactNode, useMemo } from 'react'
 import _ from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
@@ -30,6 +30,7 @@ import { getStore } from 'common/store'
 import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
 import { TimeUnit } from 'components/release-pipelines/constants'
 import getUserDisplayName from './getUserDisplayName'
+import { useHasPermission } from 'common/providers/Permission'
 
 const semver = require('semver')
 
@@ -424,6 +425,22 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getOrganisationIdFromUrl(match: any) {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
+  },
+  getOverridePermission: (level: 'identity' | 'segment') => {
+    switch (level) {
+      case 'identity':
+        return {
+          permission: Utils.getManageFeaturePermission(false),
+          permissionDescription:
+            Utils.getManageFeaturePermissionDescription(false),
+        }
+      default:
+        return {
+          permission: Utils.getManageFeaturePermission(false),
+          permissionDescription:
+            Utils.getManageFeaturePermissionDescription(false),
+        }
+    }
   },
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
