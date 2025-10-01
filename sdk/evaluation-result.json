@@ -36,7 +36,9 @@
             "required": [
                 "feature_key",
                 "name",
-                "enabled"
+                "enabled",
+                "value",
+                "reason"
             ],
             "title": "FlagResult",
             "type": "object"
