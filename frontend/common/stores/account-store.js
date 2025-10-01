@@ -246,7 +246,7 @@ const controller = {
     API.setCookie('t', Project.cookieAuthEnabled ? 'true' : data.token)
     return controller.getOrganisations(isGettingStarted)
   },
-  register: async ({ contact_consent_given, organisation_name, ...user }) => {
+  register: ({ contact_consent_given, organisation_name, ...user }) => {
     store.saving()
     return data
       .post(`${Project.api}auth/users/`, {
