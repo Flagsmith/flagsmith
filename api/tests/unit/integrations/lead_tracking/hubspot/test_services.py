@@ -1,3 +1,4 @@
+import pytest
 from pytest_mock import MockerFixture
 
 from integrations.lead_tracking.hubspot.constants import (
@@ -8,8 +9,13 @@ from integrations.lead_tracking.hubspot.services import (
 )
 
 
+@pytest.mark.parametrize(
+    "hubspotutk, expected_hubspot_cookie", [("", False), ("test_cookie", True)]
+)
 def test_create_self_hosted_onboarding_lead_with_existing_company(
     mocker: MockerFixture,
+    hubspotutk: str,
+    expected_hubspot_cookie: str,
 ) -> None:
     # Given
     mocked_hubspot_client = mocker.patch(
@@ -18,23 +24,19 @@ def test_create_self_hosted_onboarding_lead_with_existing_company(
     email = "user@flagsmith.com"
     first_name = "user"
     last_name = "test"
-    hubspotutk = "test_cookie"
 
     # When
     create_self_hosted_onboarding_lead(email, first_name, last_name, hubspotutk)
 
     # Then
-    mocked_hubspot_client().create_lead_form.assert_called_once_with(
-        user=mocker.ANY,  # FFAdminUser instance
-        form_id=HUBSPOT_FORM_ID_SELF_HOSTED,
-        hubspot_cookie=hubspotutk,
-    )
+    mocked_hubspot_client().create_lead_form.assert_called_once()
 
-    # Verify the user object
     call_args = mocked_hubspot_client().create_lead_form.call_args
     user = call_args.kwargs["user"]
     form_id = call_args.kwargs["form_id"]
+
     assert user.email == email
     assert user.first_name == first_name
     assert user.last_name == last_name
     assert form_id == HUBSPOT_FORM_ID_SELF_HOSTED
+    assert ("hubspot_cookie" in call_args.kwargs) is bool(hubspotutk)
