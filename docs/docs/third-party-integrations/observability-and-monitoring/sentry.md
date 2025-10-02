@@ -15,7 +15,7 @@ Integrate Flagsmith with Sentry to enable feature flag
 Along with _Change Tracking_, Sentry also offers
 [Evaluation Tracking](https://docs.sentry.io/product/issues/issue-details/feature-flags/#evaluation-tracking).
 Integrating with _Evaluation Tracking_ is currently only possible via our
-[OpenFeature provider](/flagsmith-integration/openfeature).
+[OpenFeature provider](/integrating-with-flagsmith/openfeature).
 
 :::
 

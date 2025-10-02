@@ -18,7 +18,7 @@
         },
         {
             "source": "/ab-testing/",
-            "destination": "/advanced-use/ab-testing"
+            "destination": "/managing-flags/experimentation-ab-testing"
         },
         {
             "source": "/permissions/",
@@ -42,7 +42,19 @@
         },
         {
             "source": "/flag-analytics/",
-            "destination": "/advanced-use/flag-analytics"
+            "destination": "/managing-flags/flag-analytics"
+        },
+        {
+            "source": "/experimentation/ab-testing/",
+            "destination": "/managing-flags/experimentation-ab-testing"
+        },
+        {
+            "source": "/experimentation/flag-analytics/",
+            "destination": "/managing-flags/flag-analytics"
+        },
+        {
+            "source": "/flagsmith-integration/",
+            "destination": "/integrating-with-flagsmith/"
         },
         {
             "source": "/staged-feature-rollouts/",

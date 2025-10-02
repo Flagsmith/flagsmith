@@ -10,7 +10,7 @@ This guide explains how to enable a feature for specific users based on their at
 
 - A Flagsmith project and environment.
 - A feature flag created in your project.
-- Your application's [Flagsmith SDK](/flagsmith-integration/integration-overview) integrated and configured.
+- Your application's [Flagsmith SDK](/integrating-with-flagsmith/integration-overview) integrated and configured.
 
 ## Steps
 

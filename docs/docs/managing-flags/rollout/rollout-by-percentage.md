@@ -19,7 +19,7 @@ Staged rollouts **_only_** come into effect if you are getting the flags for a p
 Before you begin, make sure you have:
 
 - A feature flag created in your project.
-- Your application's [Flagsmith SDK](/flagsmith-integration/integration-overview) integrated and configured.
+- Your application's [Flagsmith SDK](/integrating-with-flagsmith/integration-overview) integrated and configured.
 - **Identifying users in your application:** You must identify users so that percentage rollouts are evaluated per user. For example:
 
   ```javascript

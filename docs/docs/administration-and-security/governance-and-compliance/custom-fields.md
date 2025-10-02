@@ -69,7 +69,7 @@ Custom fields are mainly intended to be read by humans visiting the Flagsmith da
 
 Custom field values associated with features belong to the features themselves, and not an environment's feature state; you cannot override custom field values in different environments, segments or identities. They are not returned to applications that consume flags.
 
-Custom field values are added directly to the `metadata` field of the entity they are defined in, which can be read using the [Flagsmith Admin API](/flagsmith-integration/flagsmith-api-overview/admin-api). For example, to fetch a feature's custom fields, use the [endpoint to fetch a feature by ID](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_projects_features_read):
+Custom field values are added directly to the `metadata` field of the entity they are defined in, which can be read using the [Flagsmith Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api). For example, to fetch a feature's custom fields, use the [endpoint to fetch a feature by ID](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_projects_features_read):
 
 ```shell
 curl "https://api.flagsmith.com/api/v1/projects/YOUR_PROJECT_ID/features/YOUR_FEATURE_ID/" \

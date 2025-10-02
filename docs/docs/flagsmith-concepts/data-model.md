@@ -20,7 +20,7 @@ Organisations allow you and other team members to manage projects and their feat
 
 ### Projects
 
-Projects contain one or more environments that share a single set of features. Organisations can have any number of projects.
+Projects contain one or more environments that share a single set of features. Organisations can have any number of projects. Paid/paying organisations can have unlimited number of projects.
 
 ### Environments
 
@@ -39,9 +39,10 @@ For more information, see [Identities](/flagsmith-concepts/identities).
 ### Traits
 
 You can store any number of traits against an identity. Traits are key-value pairs that can store any type of data. Some examples of traits that you might store against an identity include:
+
 - The number of times the user has logged in.
 - Whether they have accepted the application terms and conditions.
-Their theme preference (eg. dark mode)
+- Their theme preference (eg. dark mode).
 - Whether they have performed certain actions within your application.
 
 For more information, see [Traits](/flagsmith-concepts/identities#identity-traits).

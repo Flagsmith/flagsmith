@@ -7,7 +7,7 @@ Flagsmith will track API calls made by the SDKS and store them in its data-store
 1. Get Flags
 2. Get Identity Flags
 3. Set Identity Traits
-4. Get [Environment Document](/flagsmith-integration/integration-overview) (for local evaluation SDKs)
+4. Get [Environment Document](/integrating-with-flagsmith/integration-overview) (for local evaluation SDKs)
 
 ![API Usage](/img/api-usage.png)
 

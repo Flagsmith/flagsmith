@@ -75,7 +75,7 @@ the end of your billing period.
 
 ### Admin API Rate Limit
 
-Requests made to [Admin API endpoints](/flagsmith-integration/flagsmith-api-overview/admin-api) (i.e., non-SDK endpoints) are subject
+Requests made to [Admin API endpoints](/integrating-with-flagsmith/flagsmith-api-overview/admin-api) (i.e., non-SDK endpoints) are subject
 to a default rate limit of 500 requests per minute.
 
 If you are self-hosting, you have the flexibility to modify this limit by adjusting the value of the environment

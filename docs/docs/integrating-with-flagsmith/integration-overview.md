@@ -24,7 +24,7 @@ Server-side SDKs run in your trusted back-end environment. They are ideal for co
 - **Pros:** Secure environment, full access to all targeting rules, can be used to control critical application logic.
 - **Cons:** May require an additional API call from the front-end to the back-end to get the flag state if it's needed in the UI.
 
-You can read more about the differences in our [SDKs Overview documentation](/flagsmith-integration/integration-overview).
+You can read more about the differences in our [SDKs Overview documentation](/integrating-with-flagsmith/integration-overview).
 
 ## Identities and Traits
 

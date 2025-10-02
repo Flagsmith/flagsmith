@@ -45,7 +45,7 @@ sequenceDiagram
 
 Your application subscribes to real-time flag updates by opening a long-lived [server-sent events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) connection to Flagsmith, which is specific to its current environment.
 
-When the environment is updated in some way, either via the Flagsmith dashboard or the [Admin API](/flagsmith-integration/flagsmith-api-overview/admin-api), all clients connected to that environment's real-time stream will receive a message containing the latest update's timestamp. If your application's latest flags are older than the received timestamp, it requests the latest flags from Flagsmith. When your application receives the latest flags, you must propagate the latest flag state throughout your application as necessary.
+When the environment is updated in some way, either via the Flagsmith dashboard or the [Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api), all clients connected to that environment's real-time stream will receive a message containing the latest update's timestamp. If your application's latest flags are older than the received timestamp, it requests the latest flags from Flagsmith. When your application receives the latest flags, you must propagate the latest flag state throughout your application as necessary.
 
 ## Limitations
 
@@ -54,7 +54,7 @@ Real-time flag update events only contain a timestamp indicating when any flag i
 Only changes made to environments or projects result in flag update events. For example, the following operations will cause updates to be sent:
 
 - Manually toggling a flag on or off, or changing its value.
-- A [scheduled Change Request](/managing-flags/manage-flags/scheduled-flags) for a feature goes live.
+- A [scheduled Change Request](/managing-flags/scheduled-flags) for a feature goes live.
 - Creating or updating segment overrides for a feature.
 - Changing a segment definition.
 

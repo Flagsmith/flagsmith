@@ -166,7 +166,7 @@ From here, some areas of the documentation you might want to check out are:
 
 - A deeper overview of the application - [Features](/managing-flags/core-management),
   [Identities](/flagsmith-concepts/identities) and [Segments](/flagsmith-concepts/segments).
-- More details about our [API and SDKs](/flagsmith-integration/integration-overview).
+- More details about our [API and SDKs](/integrating-with-flagsmith/integration-overview).
 - How you can [run Flagsmith yourself](/deployment-self-hosting/) or use our [Hosted API](https://flagsmith.com/).
 
 ## Next Steps
@@ -176,11 +176,11 @@ From here, some areas of the documentation you might want to check out are:
 
 ### Best Practices for Using Flags in Code
 - [When to use feature flags](/best-practices/when-to-use-flags): Understand the core concepts and workflows for using feature flags effectively.
-- [Using flags in frontend and backend code](/flagsmith-integration/integration-overview): Practical guidance and examples for both client and server-side usage.
+- [Using flags in frontend and backend code](/integrating-with-flagsmith/integration-overview): Practical guidance and examples for both client and server-side usage.
 - [How to test your application using flags](/experimentation/ab-testing): Strategies for testing and rolling out features safely.
 
 ### Supported SDKs
-- [SDKs & Integrations](/flagsmith-integration/integration-overview): Explore all supported SDKs for integrating Flagsmith with your technology stack.
+- [SDKs & Integrations](/integrating-with-flagsmith/integration-overview): Explore all supported SDKs for integrating Flagsmith with your technology stack.
 
 ### Automation & API Access
 - [REST API Reference](/edge-api/): Learn how to manage flags programmatically and automate flag changes.

@@ -64,6 +64,9 @@
   border-radius: 8px;
   transition: all 0.2s ease;
   border: 1px solid var(--ifm-color-primary-lightest);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 [data-theme='light'] .card {
@@ -80,7 +83,13 @@
 .card:hover {
   transform: translateY(-4px);
   box-shadow: 0px 8px 16px rgba(35, 41, 54, 0.1);
-  background: var(--card-bg-hover)
+  background: var(--card-bg-hover);
+}
+
+.card:hover h3,
+.card:hover p,
+.card:hover span {
+  color: white !important;
 }
 
 /* Card title and text styles */
@@ -97,6 +106,7 @@
   line-height: 1.5;
   color: var(--ifm-color-emphasis-700);
   margin-bottom: 1rem;
+  flex-grow: 1;
 }
 
 /* Card link styles */

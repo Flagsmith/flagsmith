@@ -2,7 +2,7 @@
 title: Authentication
 description: Customise how your users log in to the Flagsmith dashboard
 sidebar_label: Overview
-sidebar_position: 1
+sidebar_position: 10
 ---
 
 Flagsmith supports a variety of authentication methods for logging into the dashboard:

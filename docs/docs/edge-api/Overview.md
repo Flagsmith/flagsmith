@@ -13,7 +13,7 @@ find within the Flagsmith administrative area.
 
 ## Core API
 
-Please note that the Edge API is specifically to be used with our [SDKs](/flagsmith-integration/integration-overview). If you want to drive aspects of
-Flagsmith programmatically, you need to use our private [Core API](/flagsmith-integration/flagsmith-api-overview/admin-api).
+Please note that the Edge API is specifically to be used with our [SDKs](/integrating-with-flagsmith/integration-overview). If you want to drive aspects of
+Flagsmith programmatically, you need to use our private [Core API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api).
 
 You can find the full spec to our Core API [here](https://api.flagsmith.com/api/v1/docs/).

@@ -59,7 +59,7 @@ Identities are persisted within the Flagsmith platform, along with any traits th
 
 This can be useful if, at runtime, your application does not have all the relevant trait data available for that particular identity; any traits provided will be combined with the traits stored within Flagsmith before the evaluation engine runs.
 
-There are some [exceptions to this rule](/flagsmith-integration/server-side) with Server-side SDKs running in local evaluation mode.
+There are some [exceptions to this rule](/integrating-with-flagsmith/server-side) with Server-side SDKs running in local evaluation mode.
 
 :::info
 
@@ -92,10 +92,10 @@ You can remove a trait by sending `null` as the trait value.
 
 Trait values can be stored as one of four different data types:
 
-- Boolean
-- String (max length 2000 bytes)
-- Int (32 bit signed)
-- Float (typically has a range of around 1E-307 to 1E+308 with a precision of at least 15 digits)
+- Boolean.
+- String (max length 2000 bytes).
+- Int (32 bit signed).
+- Float (typically has a range of around 1E-307 to 1E+308 with a precision of at least 15 digits).
 
 If you need to store 64 bit integers or very high precision floats we suggest storing them as strings and then doing the type conversion within the SDK.
 
@@ -105,5 +105,5 @@ Identities are lazily created within Flagsmith. There might be instances where y
 
 For more information, see:
 
-- [Managing identities](/flagsmith-concepts/identities)
+- [Managing identities](/flagsmith-concepts/identities).
 

@@ -1,4 +1,5 @@
 ---
+title: Docker
 sidebar_label: Docker
 description: Getting Started with Flagsmith on Docker
 sidebar_position: 1

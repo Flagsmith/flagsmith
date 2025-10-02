@@ -17,7 +17,7 @@ There are several ways of importing or exporting Flagsmith data:
   between Flagsmith projects.
 * [Organisation import/export](organisations-import-export). Export an entire 
   Flagsmith organisation and copy it to a different Flagsmith instance.
-* Use the [Admin API](/flagsmith-integration/flagsmith-api-overview/admin-api) to manually manage your Flagsmith data.
+* Use the [Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api) to manually manage your Flagsmith data.
 
 ## Import from third-party services
 

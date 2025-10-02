@@ -1,7 +1,7 @@
 ---
 title: A/B Testing
 sidebar_label: A/B Testing
-sidebar_position: 10
+sidebar_position: 6
 ---
 
 A/B testing enables you to experiment with design and functionality variants of your application. The data generated will allow you to make modifications to your app, safe in the knowledge that it will have a net positive effect.

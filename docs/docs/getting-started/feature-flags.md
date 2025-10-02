@@ -10,9 +10,9 @@ Feature Flags are a development methodology that allow you to ship code and feat
 
 - **Decouple deployment from release:** Ship code to production with features hidden behind flags, then enable them for users when ready.
 
-- **Staged rollouts:** Gradually enable features for a subset of users, reducing risk and allowing for real-world testing. [Learn more](/managing-flags/rollout/rollout-by-percentage)
+- **Staged rollouts:** Gradually enable features for a subset of users, reducing risk and allowing for real-world testing. [Learn more](/managing-flags/rollout/rollout-by-percentage).
 
-- **A/B testing and experimentation:** Test multiple variants of a feature and measure impact. [Learn more](/experimentation/ab-testing)
+- **A/B testing and experimentation:** Test multiple variants of a feature and measure impact. [Learn more](/experimentation/ab-testing).
 
 - **Remote configuration:** Change app behaviour or configuration in real time, without redeploying.
 
@@ -26,7 +26,7 @@ Feature Flags are a development methodology that allow you to ship code and feat
 
 ### Workflow
 
-1. You are about to start work on a new feature. Let's imagine you are going to implement a sharing button with your application.
+1. You are about to start working on a new feature. Let's imagine you are going to implement a sharing button with your application.
 
 2. Create a new feature flag in Flagsmith, calling it "sharing_button". Set it to enabled on your development environment, and disabled on your production environment.
 

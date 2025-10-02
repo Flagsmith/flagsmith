@@ -26,7 +26,7 @@ The Flag Analytics data will be visible in the Dashboard between 30 minutes and 
 
 :::
 
-Flag analytics are disabled by default in our SDKs. You need to explicitly enable it when you initialize the Flagsmith client. Please refer to the corresponding SDK documentation for more details. For the Javascript family SDKs please refer to [Initialisation options](/flagsmith-integration/client-side-sdks/javascript#initialisation-options).
+Flag analytics are disabled by default in our SDKs. You need to explicitly enable it when you initialize the Flagsmith client. Please refer to the corresponding SDK documentation for more details. For the Javascript family SDKs please refer to [Initialisation options](/integrating-with-flagsmith/client-side-sdks/javascript#initialisation-options).
 
 ## How does it work?
 

@@ -10,7 +10,7 @@ There may be use-cases where you want to prevent client-side SDKs from setting t
 setting `plan=silver` as a trait, and then enabling/disabling features based on that plan, a malicious user could, with
 a client-side SDK, update their trait to `plan=gold` and unlock features they have not paid for.
 
-You can prevent this by disabling the "Persist traits when using client-side SDK keys" option. This option defaults to "On". Turning it "Off" will not allow client-side SDKs to write traits to Flagsmith. In order to write traits, you will need to use a [server-side SDK and server-side Key](/flagsmith-integration/integration-overview).
+You can prevent this by disabling the "Persist traits when using client-side SDK keys" option. This option defaults to "On". Turning it "Off" will not allow client-side SDKs to write traits to Flagsmith. In order to write traits, you will need to use a [server-side SDK and server-side Key](/integrating-with-flagsmith/integration-overview).
 
 This is a per-Environment setting.
 

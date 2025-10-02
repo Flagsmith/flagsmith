@@ -25,18 +25,20 @@ import styles from './index.module.css';
 
 function Card({ title, description, link, icon }) {
   return (
-    <div className={styles.card}>
-      <div className="card-header flex-column">
-        {icon && (
-          <div className="icon-container">
-            <IonIcon icon={icon} className="card-icon" />
-          </div>
-        )}
-        <h3>{title}</h3>
+    <Link to={link} className={styles.cardLink}>
+      <div className={styles.card}>
+        <div className="card-header flex-column">
+          {icon && (
+            <div className="icon-container">
+              <IonIcon icon={icon} className="card-icon" />
+            </div>
+          )}
+          <h3>{title}</h3>
+        </div>
+        <p>{description}</p>
+        <span>Learn more →</span>
       </div>
-      <p>{description}</p>
-      <Link to={link}>Learn more →</Link>
-    </div>
+    </Link>
   );
 }
 
@@ -94,29 +96,29 @@ export default function Home() {
           />
         </Section>
 
-        <Section title="Flagsmith Integration" id="integration">
+        <Section title="Integrating with Flagsmith" id="integration">
           <Card 
             title="OpenFeature Compatibility" 
             description="Use Flagsmith with OpenFeature" 
-            link="/flagsmith-integration/openfeature/"
+            link="/integrating-with-flagsmith/openfeature/"
             icon={gitMerge} 
           />
           <Card 
             title="Client-Side SDKs" 
             description="Web, React Native, etc." 
-            link="/flagsmith-integration/integration-overview/"
+            link="/integrating-with-flagsmith/client-side-sdks/"
             icon={phonePortrait} 
           />
           <Card 
             title="Server-Side SDKs" 
             description="Node, Python, Java, etc." 
-            link="/flagsmith-integration/server-side"
+            link="/integrating-with-flagsmith/server-side"
             icon={server} 
           />
           <Card 
             title="Flagsmith API" 
             description="REST API reference and usage examples" 
-            link="/flagsmith-integration/flagsmith-api-overview/"
+            link="/edge-api/"
             icon={codeWorking} 
           />
         </Section>

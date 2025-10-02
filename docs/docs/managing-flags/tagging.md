@@ -43,9 +43,9 @@ You can quickly find and manage feature flags by using the **tag filter** in the
 
 Tags with the following names will prevent users from being able to delete tagged feature flags via the dashboard:
 
-- `protected`
-- `donotdelete`
-- `permanent`
+- `protected`.
+- `donotdelete`.
+- `permanent`.
 
 :::
 

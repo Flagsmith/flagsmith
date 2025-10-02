@@ -31,7 +31,7 @@ The following screenshot shows an example usage graph from the Flagsmith dashboa
 
 When your application is integrated with Flagsmith, it makes requests to the Flagsmith API to perform actions such as
 retrieving the current state of its flags. Some of these actions count towards your limit of billable API requests. The
-billable API requests that your application makes depend mainly on which [flag evaluation mode](/flagsmith-integration/integration-overview) it uses.
+billable API requests that your application makes depend mainly on which [flag evaluation mode](/integrating-with-flagsmith/integration-overview) it uses.
 
 **Remote Evaluation** is the default for all applications. Applications using Remote Evaluation call the Flagsmith API
   when they need to fetch the flags for the current environment or user.
@@ -45,7 +45,7 @@ default) to fetch the flags for the current environment and all users in one API
 
 The following requests are not billable:
 
-- [Admin API](/flagsmith-integration/flagsmith-api-overview/admin-api) requests.
+- [Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api) requests.
 - Requests made by Flagsmith SDKs to track [Flag Analytics](/experimentation/flag-analytics).
 - Connecting to a [real-time flag updates](/performance/real-time-flags) stream.
 
@@ -117,11 +117,11 @@ application. For example, when a user visits a certain part of your application 
 a mobile application is brought to the foreground.
 * Consider using an Edge Proxy as your source of flags instead of calling the Flagsmith API directly.
 * If you have a suitable backend, consider evaluating flags server-side instead. This enables other usage patterns that
-result in fewer API calls, such as [Local Evaluation](/flagsmith-integration/integration-overview#local-evaluation-mode) and custom cache implementations.
+result in fewer API calls, such as [Local Evaluation](/integrating-with-flagsmith/integration-overview#local-evaluation-mode) and custom cache implementations.
 
 For server-side applications:
 
-* Consider using [Local Evaluation](/flagsmith-integration/integration-overview#local-evaluation-mode), or deploying [Edge Proxies](/performance/edge-proxy).
+* Consider using [Local Evaluation](/integrating-with-flagsmith/integration-overview#local-evaluation-mode), or deploying [Edge Proxies](/performance/edge-proxy).
 * Reduce the polling rate for Edge Proxies and any SDKs using Local Evaluation.
 * If your use case allows for it, use the Flagsmith SDK in Offline Mode.
 
