@@ -25,7 +25,7 @@ To create a new feature flag:
 
 :::tip
 
-By clicking the **Create A/B/n Test** button, you can define values for A/B testing. To learn more about this operation, refer to the [A/B Testing guide](/experimentation/ab-testing).
+By clicking the **Create A/B/n Test** button, you can define values for A/B testing. To learn more about this operation, refer to the [A/B Testing guide](/managing-flags/experimentation-ab-testing).
 
 :::
 

@@ -177,7 +177,7 @@ From here, some areas of the documentation you might want to check out are:
 ### Best Practices for Using Flags in Code
 - [When to use feature flags](/best-practices/when-to-use-flags): Understand the core concepts and workflows for using feature flags effectively.
 - [Using flags in frontend and backend code](/integrating-with-flagsmith/integration-overview): Practical guidance and examples for both client and server-side usage.
-- [How to test your application using flags](/experimentation/ab-testing): Strategies for testing and rolling out features safely.
+- [How to test your application using flags](/managing-flags/experimentation-ab-testing): Strategies for testing and rolling out features safely.
 
 ### Supported SDKs
 - [SDKs & Integrations](/integrating-with-flagsmith/integration-overview): Explore all supported SDKs for integrating Flagsmith with your technology stack.

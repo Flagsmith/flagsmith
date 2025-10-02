@@ -13,4 +13,4 @@ Flagsmith will track API calls made by the SDKS and store them in its data-store
 
 ## Flag Usage
 
-Flagsmith also tracks Flag Evaluations with [Flag Analytics](/experimentation/flag-analytics).
+Flagsmith also tracks Flag Evaluations with [Flag Analytics](/managing-flags/flag-analytics).

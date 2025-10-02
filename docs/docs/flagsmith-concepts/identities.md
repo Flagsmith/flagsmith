@@ -4,7 +4,7 @@ sidebar_label: Identities
 sidebar_position: 4
 ---
 
-Feature flags are great, but they can be a very blunt tool, only allowing you to enable or disable flags across your entire user base. In order to target users more precisely, and to be able to perform [staged feature roll-outs](/managing-flags/rollout/rollout-by-percentage) or [A/B and multivariate tests](/experimentation/ab-testing), you need to _identify your users_.
+Feature flags are great, but they can be a very blunt tool, only allowing you to enable or disable flags across your entire user base. In order to target users more precisely, and to be able to perform [staged feature roll-outs](/managing-flags/rollout/rollout-by-percentage) or [A/B and multivariate tests](/managing-flags/experimentation-ab-testing), you need to _identify your users_.
 
 Identities are created within Flagsmith automatically the first time they are identified from your client SDKs. Generally, you would make a call to identify a user with a unique string or identifier whenever they log into your application or site. The SDK will then send an API message to the Flagsmith API, with the relevant identity information.
 

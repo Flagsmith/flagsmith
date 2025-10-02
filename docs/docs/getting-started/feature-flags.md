@@ -12,7 +12,7 @@ Feature Flags are a development methodology that allow you to ship code and feat
 
 - **Staged rollouts:** Gradually enable features for a subset of users, reducing risk and allowing for real-world testing. [Learn more](/managing-flags/rollout/rollout-by-percentage).
 
-- **A/B testing and experimentation:** Test multiple variants of a feature and measure impact. [Learn more](/experimentation/ab-testing).
+- **A/B testing and experimentation:** Test multiple variants of a feature and measure impact. [Learn more](/managing-flags/experimentation-ab-testing).
 
 - **Remote configuration:** Change app behaviour or configuration in real time, without redeploying.
 

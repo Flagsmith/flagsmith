@@ -32,7 +32,7 @@ Once that's done, there is no reason to have the flag existing either in Flagsmi
 
 ### Experimentation
 
-You can use Multi-variate flags to drive [A/B and multivariate tests](/experimentation/ab-testing). Once your experiment is complete, there is typically no need for the flag to remain, and hence it can be removed.
+You can use Multi-variate flags to drive [A/B and multivariate tests](/managing-flags/experimentation-ab-testing). Once your experiment is complete, there is typically no need for the flag to remain, and hence it can be removed.
 
 ## Long-Lived Flags
 
@@ -75,5 +75,5 @@ With Flagsmith, you can:
 ## Further Reading
 
 - For a deeper dive into the different types of feature flag lifecycles, check out the [Feature Flags Lifecycles guide](/best-practices/flag-lifecycle).
-- Learn more about [A/B and multivariate testing](/experimentation/ab-testing) to see how experimentation can be managed with Flagsmith.
+- Learn more about [A/B and multivariate testing](/managing-flags/experimentation-ab-testing) to see how experimentation can be managed with Flagsmith.
 - Explore how [Segments](/flagsmith-concepts/segments) can help you target features to specific groups of users.

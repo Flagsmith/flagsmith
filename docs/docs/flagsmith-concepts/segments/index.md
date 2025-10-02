@@ -17,7 +17,7 @@ Segments and segment overrides can be used to implement many scenarios. For exam
 
 - Test features in production before they are released by overriding them only for internal users or a QA team.
 - Deliver features only to "power users" who have logged in a certain number of times, have used specific functionality within your application, or any combination of factors.
-- Force a group of users into a specific [A/B test](/experimentation/ab-testing) variation by overriding weightings on [multivariate flags](/managing-flags/core-management).
+- Force a group of users into a specific [A/B test](/managing-flags/experimentation-ab-testing) variation by overriding weightings on [multivariate flags](/managing-flags/core-management).
 - Override behaviour based on the [application version number](/best-practices/mobile-app-versioning), e.g. by using the SemVer rule operators.
 - Control features based on the time of day, date, weekday, etc. by passing it as a trait when evaluating flags for an identity.
 
