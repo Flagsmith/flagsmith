@@ -53,7 +53,7 @@ def test_send_onboarding_request_to_saas_flagsmith_view(
     url = reverse("api-v1:onboarding:send-onboarding-request")
 
     # When
-    response = admin_client_original.post(url)
+    response = admin_client_original.post(url, data={"hubspotutk": "test"})
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -63,7 +63,7 @@ def test_send_onboarding_request_to_saas_flagsmith_view(
             "first_name": admin_user.first_name,
             "last_name": admin_user.last_name,
             "email": admin_user.email,
-            "organisation_name": organisation.name,
+            "hubspotutk": "test",
         },
         timeout=30,
     )
@@ -103,10 +103,10 @@ def test_receive_support_request_from_self_hosted_view(
     )
 
     data = {
-        "organisation_name": "org-1",
         "first_name": "user",
         "last_name": "test",
         "email": "user@flagsmith.com",
+        "hubspotutk": "test",
     }
     url = reverse("api-v1:onboarding:receive-onboarding-request")
 
@@ -132,10 +132,10 @@ def test_receive_support_request_throttling(
     )
 
     data = {
-        "organisation_name": "org-1",
         "first_name": "user",
         "last_name": "test",
         "email": "user@flagsmith.com",
+        "hubspotutk": "test-utk",
     }
     url = reverse("api-v1:onboarding:receive-onboarding-request")
 
