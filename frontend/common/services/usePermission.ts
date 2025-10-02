@@ -46,12 +46,10 @@ export async function getPermission(
     typeof permissionService.endpoints.getPermission.initiate
   >[1],
 ) {
-  store.dispatch(
+  const result = await store.dispatch(
     permissionService.endpoints.getPermission.initiate(data, options),
   )
-  return Promise.all(
-    store.dispatch(permissionService.util.getRunningQueriesThunk()),
-  )
+  return result.data || []
 }
 // END OF FUNCTION_EXPORTS
 
