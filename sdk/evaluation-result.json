@@ -36,7 +36,9 @@
             "required": [
                 "feature_key",
                 "name",
-                "enabled"
+                "enabled",
+                "value",
+                "reason"
             ],
             "title": "FlagResult",
             "type": "object"
@@ -64,18 +66,13 @@
     },
     "description": "Evaluation result object containing the used context, flag evaluation results, and segments used in the evaluation.",
     "properties": {
-        "context": {
-            "existingJavaType": "com.flagsmith.flagengine.EvaluationContext",
-            "goType": "evalcontext.EvaluationContext",
-            "$ref": "https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-context.json"
-        },
         "flags": {
-            "description": "List of feature flags evaluated for the context.",
-            "items": {
+            "description": "Feature flags evaluated for the context, mapped by feature names.",
+            "additionalProperties": {
                 "$ref": "#/$defs/FlagResult"
             },
             "title": "Flags",
-            "type": "array"
+            "type": "object"
         },
         "segments": {
             "description": "List of segments which the provided context belongs to.",
@@ -87,7 +84,6 @@
         }
     },
     "required": [
-        "context",
         "flags",
         "segments"
     ],
