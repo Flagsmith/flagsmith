@@ -49,7 +49,10 @@ export async function getPermission(
   const result = await store.dispatch(
     permissionService.endpoints.getPermission.initiate(data, options),
   )
-  return result.data || []
+
+  return (
+    result.data || { admin: false, permissions: [], tag_based_permissions: [] }
+  )
 }
 // END OF FUNCTION_EXPORTS
 

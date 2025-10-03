@@ -236,7 +236,9 @@ const CreateFlag = class extends Component {
           },
           { forceRefetch },
         ).then((permissions) => {
-          if (permissions?.length || AccountStore.isAdmin()) {
+          const hasViewIdentitiesPermission =
+            permissions[Utils.getViewIdentitiesPermission()]
+          if (hasViewIdentitiesPermission || AccountStore.isAdmin()) {
             data
               .get(
                 `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
