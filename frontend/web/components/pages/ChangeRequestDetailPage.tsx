@@ -630,7 +630,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
         <Flex>
           {!!approvedBy?.length && (
             <div className='text-right mb-2 mr-2 font-weight-medium'>
-              Feature Approved by {approvedBy.join(', ')}
+              Approved by {approvedBy.join(', ')}
             </div>
           )}
           {approvedBy.length < minApprovals && (
