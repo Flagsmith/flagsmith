@@ -18,7 +18,7 @@ We **will not** export the following data:
 
 - Feature-based Segments
 - Segment overrides
-- Flag [custom fields](/advanced-use/custom-fields.md)
+- Flag [custom fields](/administration-and-security/governance-and-compliance/custom-fields)
 - Flag Schedules
 - Tags associated with Flags
 - Individual and group owners associated with Flags
