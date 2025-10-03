@@ -32,7 +32,7 @@ type FeatureDiffType = {
   conflicts?: FeatureConflict[] | undefined
   disableSegments?: boolean
 }
-
+const enabledWidth = 110
 const DiffFeature: FC<FeatureDiffType> = ({
   conflicts,
   disableSegments,
@@ -133,36 +133,49 @@ const DiffFeature: FC<FeatureDiffType> = ({
               )}
               <div className='panel-content'>
                 <div className='search-list mt-2'>
-                  <div className='flex-row table-header'>
+                  <div className='flex-row gap-5 table-header'>
+                    <div
+                      style={{ width: enabledWidth }}
+                      className='table-column flex-row text-center'
+                    >
+                      Enabled
+                    </div>
                     {!hideValue && (
                       <div className='table-column flex-row flex flex-1'>
                         Value
                       </div>
                     )}
-                    <div className='table-column flex-row text-center'>
-                      Enabled
-                    </div>
                   </div>
-                  <div className='flex-row pt-4 list-item list-item-sm'>
+                  <div className='flex-row pt-4 gap-5 list-item list-item-sm'>
+                    <div
+                      style={{ width: enabledWidth }}
+                      className='table-column text-center'
+                    >
+                      <div className='d-flex flex-row'>
+                        <DiffEnabled
+                          data-test={'version-enabled'}
+                          oldValue={diff.oldEnabled}
+                          newValue={diff.newEnabled}
+                        />
+                      </div>
+                    </div>
                     {!hideValue && (
                       <div className='table-column flex flex-1 overflow-hidden'>
                         <div>
-                          <DiffString
-                            data-test={'version-value'}
-                            oldValue={diff.oldValue}
-                            newValue={diff.newValue}
-                          />
+                          {!!diff.oldValue || diff.newValue ? (
+                            <DiffString
+                              data-test={'version-value'}
+                              oldValue={diff.oldValue}
+                              newValue={diff.newValue}
+                            />
+                          ) : (
+                            <div className='text-muted'>
+                              This feature has no remote configuration.
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
-
-                    <div className='table-column text-center'>
-                      <DiffEnabled
-                        data-test={'version-enabled'}
-                        oldValue={diff.oldEnabled}
-                        newValue={diff.newEnabled}
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
