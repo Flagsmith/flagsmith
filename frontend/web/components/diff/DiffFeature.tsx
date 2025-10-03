@@ -162,17 +162,11 @@ const DiffFeature: FC<FeatureDiffType> = ({
                     {!hideValue && (
                       <div className='table-column flex flex-1 overflow-hidden'>
                         <div>
-                          {!!diff.oldValue || diff.newValue ? (
-                            <DiffString
-                              data-test={'version-value'}
-                              oldValue={diff.oldValue}
-                              newValue={diff.newValue}
-                            />
-                          ) : (
-                            <div className='text-muted'>
-                              This feature has no remote configuration.
-                            </div>
-                          )}
+                          <DiffString
+                            data-test={'version-value'}
+                            oldValue={diff.oldValue}
+                            newValue={diff.newValue}
+                          />
                         </div>
                       </div>
                     )}
