@@ -84,13 +84,13 @@
   transform: translateY(-4px);
   box-shadow: 0px 8px 16px rgba(35, 41, 54, 0.1);
   background: var(--card-bg-hover);
+  color: white;
+  p {
+    color: white;
+  }
 }
 
-.card:hover h3,
-.card:hover p,
-.card:hover span {
-  color: white !important;
-}
+
 
 /* Card title and text styles */
 .card h3 {
@@ -157,7 +157,7 @@
 
 .get>.menu__link::before {
   content: "get";
-  background-color: var(--ifm-color-primary);
+  background-color: #2e8555;
 }
 
 .put>.menu__link::before {
@@ -213,8 +213,6 @@
   text-align: left;
 }
 
-
-
 /* Icon styles */
 .card-icon {
   font-size: 30px !important; /* Increased from 24px */
@@ -258,21 +256,6 @@ main.container {
 
 
 
-/* OpenAPI plugin card hover styles - only for actual cards */
-.openapi-card:hover,
-.openapi-card:hover *,
-[class*="openapi"] .card:hover,
-[class*="openapi"] .card:hover *,
-.openapi__card:hover,
-.openapi__card:hover *,
-/* Only target cards that are actually clickable/navigational */
-a.card:hover,
-a.card:hover *,
-/* Target sidebar menu links only */
-.theme-doc-sidebar-container .menu__link:hover,
-.theme-doc-sidebar-container .menu__link:hover * {
-  color: white !important;
-}
 
 
 /* Section background alternation for dark mode */
