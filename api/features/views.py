@@ -917,7 +917,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
 
 @swagger_auto_schema(  # type: ignore[misc]
     method="GET",
-    responses={200: FeatureMVOptionsValuesResponseSerializer()},
+    responses={200: FeatureMVOptionsValuesResponseSerializer(many=True)},
 )
 @api_view(["GET"])
 @authentication_classes(
@@ -946,7 +946,7 @@ def get_multivariate_options(request: Request, feature_id: int) -> Response:
 
     payload = {
         "feature_state": fs,
-        "options": list(feature.multivariate_options.all()),
+        "options": feature.multivariate_options.all(),
     }
     data = FeatureMVOptionsValuesResponseSerializer(payload).data
     return Response(data)

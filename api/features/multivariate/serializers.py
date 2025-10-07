@@ -32,16 +32,12 @@ class MultivariateOptionValuesSerializer(serializers.ModelSerializer):  # type: 
         model = MultivariateFeatureOption
         fields = ("value",)
 
-
-def get_value(
-    self: serializers.ModelSerializer[MultivariateFeatureOption],
-    obj: MultivariateFeatureOption,
-) -> str | int | bool | None:
-    if obj.type == BOOLEAN:
-        return obj.boolean_value
-    if obj.type == INTEGER:
-        return obj.integer_value
-    return obj.string_value
+    def get_value(self, obj) -> str | int | bool | None:  # type: ignore[no-untyped-def]
+        if obj.type == BOOLEAN:
+            return bool(obj.boolean_value)
+        if obj.type == INTEGER:
+            return int(obj.integer_value)
+        return str(obj.string_value)
 
 
 class FeatureMVOptionsValuesResponseSerializer(serializers.Serializer):  # type: ignore[type-arg]
