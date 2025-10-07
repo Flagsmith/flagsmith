@@ -36,6 +36,7 @@ type FeatureOverrideRowProps = {
   shouldPreselect?: boolean
   level: 'identity' | 'segment'
   dataTest: string
+  environmentId: string
   identity?: string
   identifier?: string
   identityName?: string
@@ -49,6 +50,7 @@ type FeatureOverrideRowProps = {
 const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   dataTest,
   environmentFeatureState,
+  environmentId,
   identifier,
   identity,
   identityName,
@@ -66,11 +68,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   const viewMode = getViewMode()
   const isCompact = viewMode === 'compact'
   const history = useHistory()
-  const environmentId = (
-    ProjectStore.getEnvironmentById(
-      environmentFeatureState.environment,
-    ) as unknown as Environment
-  )?.api_key
+
   const { description, id: featureId, name, project: projectId } = projectFlag
   const flagEnabled = environmentFeatureState.enabled
   const flagValue = environmentFeatureState.feature_state_value

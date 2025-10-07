@@ -118,7 +118,6 @@ const UserPage: FC = () => {
 
   const environmentId = match?.params?.environmentId
   const id = match?.params?.id
-  const identity = match?.params?.identity
   const { projectId } = useRouteContext()
 
   const [filter, setFilter] = useState(defaultState)
@@ -488,6 +487,7 @@ const UserPage: FC = () => {
                               !!projectFlag && (
                                 <FeatureOverrideRow
                                   identity={id}
+                                  environmentId={environmentId}
                                   identifier={identity?.identity?.identifier}
                                   identityName={identityName}
                                   shouldPreselect={name === preselect}
