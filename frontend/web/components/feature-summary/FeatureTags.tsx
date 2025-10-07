@@ -42,9 +42,9 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
     'git_code_references',
   )
   const hasScannedCodeReferences =
-    projectFlag?.code_references_counts.length > 0
+    projectFlag?.code_references_counts?.length > 0
   const codeReferencesCounts =
-    projectFlag?.code_references_counts.reduce(
+    projectFlag?.code_references_counts?.reduce(
       (acc, curr) => acc + curr.count,
       0,
     ) || 0
