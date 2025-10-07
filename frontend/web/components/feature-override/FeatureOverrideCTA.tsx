@@ -9,6 +9,7 @@ import {
   ProjectFlag,
 } from 'common/types/responses'
 import { useHasPermission } from 'common/providers/Permission'
+import Constants from 'common/constants'
 
 type FeatureOverrideCTAType = {
   level: 'identity' | 'segment'
@@ -43,30 +44,28 @@ const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
         return null
       }
       return (
-        hasUserOverride && (
-          <>
-            {Utils.renderWithPermission(
-              hasPermission,
-              permissionDescription,
-              <Button
-                theme='text'
-                size='xSmall'
-                disabled={!hasPermission}
-                onClick={() => {
-                  removeUserOverride({
-                    environmentId,
-                    identifier: identifier!,
-                    identity: identity!,
-                    identityFlag: overrideFeatureState as IdentityFeatureState,
-                    projectFlag: projectFlag!,
-                  })
-                }}
-              >
-                <Icon name='refresh' fill='#6837FC' width={16} /> Reset
-              </Button>,
-            )}
-          </>
-        )
+        <>
+          {Utils.renderWithPermission(
+            hasPermission,
+            Constants.environmentPermissions(permissionDescription),
+            <Button
+              theme='text'
+              size='xSmall'
+              disabled={!hasPermission}
+              onClick={() => {
+                removeUserOverride({
+                  environmentId,
+                  identifier: identifier!,
+                  identity: identity!,
+                  identityFlag: overrideFeatureState as IdentityFeatureState,
+                  projectFlag: projectFlag!,
+                })
+              }}
+            >
+              <Icon name='refresh' fill='#6837FC' width={16} /> Reset
+            </Button>,
+          )}
+        </>
       )
     }
     default:
