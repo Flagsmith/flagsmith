@@ -41,12 +41,13 @@ The maximum size of each individual trait value is **_2000 bytes_**. You cannot 
 
 Let's say you are working on a mobile app, and you want to control a feature based on the version of the application that the identity is using. When you integrate the Flagsmith SDK, you would pass the application version number to the Flagsmith platform as a trait key/value pair:
 
-```java
-String identifier = "user_512356"
-Map<String, Object> traits = new HashMap<String, Object>();
-traits.put("app_version", YourApplication.getVersion());
+```javascript
+const identifier = "user_512356";
+const traits = {
+  app_version: YourApplication.getVersion()
+};
 
-Flags flags = flagsmith.getIdentityFlags(identifier, traits);
+const flags = flagsmith.getIdentityFlags(identifier, traits);
 ```
 
 Here we are setting the trait key `app_version` with the value of `YourApplication.getVersion()`.You can now create a [segment](./segments) that is based on the application version and manage features based on the application version.
