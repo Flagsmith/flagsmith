@@ -22,7 +22,7 @@ def test_get_user_info(mock_requests):  # type: ignore[no-untyped-def]
     mock_response.json.return_value = mock_google_response_data
 
     # When
-    response = get_user_info(access_token)  # type: ignore[no-untyped-call]
+    response = get_user_info(access_token)
 
     # Then
     mock_requests.get.assert_called_with(USER_INFO_URL, headers=expected_headers)
@@ -35,7 +35,7 @@ def test_get_user_info(mock_requests):  # type: ignore[no-untyped-def]
 
 
 @mock.patch("custom_auth.oauth.google.requests")
-def test_get_user_info_non_200_status_code(mock_requests):  # type: ignore[no-untyped-def]
+def test_get_user_info_non_200_status_code(mock_requests: mock.MagicMock) -> None:
     # Given
     access_token = "access-token"
     mock_response = mock.MagicMock(status_code=400)
@@ -43,6 +43,6 @@ def test_get_user_info_non_200_status_code(mock_requests):  # type: ignore[no-un
 
     # When
     with pytest.raises(GoogleError):
-        get_user_info(access_token)  # type: ignore[no-untyped-call]
+        get_user_info(access_token)
 
     # Then - exception raised

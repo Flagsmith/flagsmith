@@ -107,7 +107,7 @@ def test_get_user_name_and_id_with_github_oauth(mock_requests: mock.MagicMock) -
         client_id=client_id,
         client_secret=client_secret,
     )
-    user_name_and_id = github_user._get_user_name_and_id()  # type: ignore[no-untyped-call]
+    user_name_and_id = github_user._get_user_name_and_id()
 
     # Then
     assert user_name_and_id == {
@@ -118,7 +118,8 @@ def test_get_user_name_and_id_with_github_oauth(mock_requests: mock.MagicMock) -
 
 
 @mock.patch("custom_auth.oauth.github.requests")
-def test_get_primary_email_with_github_oauth(mock_requests: mock.MagicMock) -> None:
+def test_get_user_emails_with_github_oauth(mock_requests: mock.MagicMock) -> None:
+    # TODO: this test could be improved after updating from _get_primary_email to _get_user_emails
     # Given
     # mock the post to get the access token
     mock_requests.post.return_value = mock.MagicMock(
@@ -152,7 +153,14 @@ def test_get_primary_email_with_github_oauth(mock_requests: mock.MagicMock) -> N
         client_id=client_id,
         client_secret=client_secret,
     )
-    primary_email = github_user._get_primary_email()  # type: ignore[no-untyped-call]
+    emails = github_user._get_user_emails()
 
     # Then
-    assert primary_email == verified_emails[3]["email"]
+    assert emails == [
+        {
+            "email": email_data["email"],
+            "verified": email_data["verified"],
+            "primary": email_data["primary"],
+        }
+        for email_data in verified_emails
+    ]

@@ -1,4 +1,5 @@
 import logging
+from typing import TypedDict
 
 import requests
 from django.conf import settings
@@ -9,6 +10,7 @@ from custom_auth.oauth.helpers.github_helpers import (
     convert_response_data_to_dictionary,
     get_first_and_last_name,
 )
+from custom_auth.oauth.types import BaseUserInfo, UserInfo
 
 GITHUB_API_URL = "https://api.github.com"
 GITHUB_OAUTH_URL = "https://github.com/login/oauth"
@@ -16,6 +18,12 @@ GITHUB_OAUTH_URL = "https://github.com/login/oauth"
 NON_200_ERROR_MESSAGE = "Github returned {} status code when getting an access token."
 
 logger = logging.getLogger(__name__)
+
+
+class GithubEmail(TypedDict):
+    email: str
+    primary: bool
+    verified: bool
 
 
 class GithubUser:
@@ -44,14 +52,41 @@ class GithubUser:
 
         return response_json["access_token"]  # type: ignore[no-any-return]
 
-    def get_user_info(self) -> dict:  # type: ignore[type-arg]
+    def get_user_info(self) -> UserInfo:
         # TODO: use threads?
         try:
-            return {**self._get_user_name_and_id(), "email": self._get_primary_email()}  # type: ignore[no-untyped-call]  # noqa: E501  # noqa: E501
+            base_user_info = self._get_user_name_and_id()
+            emails = self._get_user_emails()
+
+            primary_email = None
+            alternative_email_addresses = []
+
+            for email in emails:
+                if not email["verified"]:
+                    continue
+
+                if email["primary"]:
+                    primary_email = email["email"]
+                else:
+                    alternative_email_addresses.append(email["email"])
+
+            if not primary_email:
+                raise GithubError(
+                    "User does not have a verified email address with Github."
+                )
+
+            return {
+                "first_name": base_user_info["first_name"],
+                "last_name": base_user_info["last_name"],
+                "github_user_id": base_user_info["github_user_id"],
+                "email": primary_email,
+                "alternative_email_addresses": alternative_email_addresses,
+            }
+
         except RequestException:
             raise GithubError("Failed to communicate with the Github API.")
 
-    def _get_user_name_and_id(self):  # type: ignore[no-untyped-def]
+    def _get_user_name_and_id(self) -> BaseUserInfo:
         user_response = requests.get(f"{GITHUB_API_URL}/user", headers=self.headers)
         user_response_json = user_response.json()
         full_name = user_response_json.get("name")
@@ -64,24 +99,17 @@ class GithubUser:
             "github_user_id": user_response_json.get("id"),
         }
 
-    def _get_primary_email(self):  # type: ignore[no-untyped-def]
+    def _get_user_emails(self) -> list[GithubEmail]:
         emails_response = requests.get(
             f"{GITHUB_API_URL}/user/emails", headers=self.headers
         )
-
-        # response from github should be a list of dictionaries, this will find the first entry that is both verified
-        # and marked as primary (there should only be one).
-        primary_email_data = next(
-            filter(
-                lambda email_data: email_data["primary"] and email_data["verified"],
-                emails_response.json(),
-            ),
-            None,
-        )
-
-        if not primary_email_data:
-            raise GithubError(
-                "User does not have a verified email address with Github."
+        emails = []
+        for email in emails_response.json():
+            emails.append(
+                GithubEmail(
+                    email=email["email"],
+                    primary=email["primary"],
+                    verified=email["verified"],
+                )
             )
-
-        return primary_email_data["email"]
+        return emails

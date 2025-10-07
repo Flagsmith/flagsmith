@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import Literal
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -17,6 +18,7 @@ from users.serializers import UTMDataSerializer
 from ..serializers import InviteLinkValidationMixin
 from .github import GithubUser
 from .google import get_user_info
+from .types import UserInfo
 
 GOOGLE_URL = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&"
 UserModel = get_user_model()
@@ -41,7 +43,7 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  
     marketing_consent_given = serializers.BooleanField(required=False, allow_null=True)
     utm_data = UTMDataSerializer(required=False, allow_null=True)
     auth_type: AuthType | None = None
-    user_model_id_attribute: str = "id"
+    user_model_id_attribute: Literal["github_user_id", "google_user_id"]
 
     class Meta:
         abstract = True
@@ -65,8 +67,8 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  
         )
         return Token.objects.get_or_create(user=user)[0]
 
-    def _get_user(self, user_data: dict):  # type: ignore[type-arg,no-untyped-def]
-        email: str = user_data.pop("email")
+    def _get_user(self, user_data: UserInfo) -> FFAdminUser:
+        email: str = user_data["email"]
 
         # There are a number of scenarios that we're catering for in this
         # query:
@@ -81,7 +83,7 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  
         #     Since it's difficult for us to know which user account they are
         #     using as their primary, we order by the method they are currently
         #     authenticating with and grab the first one in the list.
-        existing_user = (
+        existing_user: FFAdminUser | None = (
             UserModel.objects.filter(email__iexact=email)
             .order_by(
                 F(self.user_model_id_attribute).desc(nulls_last=True),
@@ -89,13 +91,17 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  
             .first()
         )
 
+        # TODO: work out what to do with user_data["alternate_emails"].
+        #  - Should we store in our database?
+        #  - Should we send to hubspot?
+
         if not existing_user:
             sign_up_type = self.validated_data.get("sign_up_type")
             self._validate_registration_invite(
                 email=email, sign_up_type=self.validated_data.get("sign_up_type")
             )
 
-            user = FFAdminUser.objects.create(
+            user: FFAdminUser = FFAdminUser.objects.create(
                 **user_data, email=email.lower(), sign_up_type=sign_up_type
             )
 
@@ -134,14 +140,14 @@ class GoogleLoginSerializer(OAuthLoginSerializer):
     auth_type = AuthType.GOOGLE
     user_model_id_attribute = "google_user_id"
 
-    def get_user_info(self):  # type: ignore[no-untyped-def]
-        return get_user_info(self.validated_data["access_token"])  # type: ignore[no-untyped-call]
+    def get_user_info(self) -> UserInfo:
+        return get_user_info(self.validated_data["access_token"])
 
 
 class GithubLoginSerializer(OAuthLoginSerializer):
     auth_type = AuthType.GITHUB
     user_model_id_attribute = "github_user_id"
 
-    def get_user_info(self):  # type: ignore[no-untyped-def]
+    def get_user_info(self) -> UserInfo:
         github_user = GithubUser(code=self.validated_data["access_token"])
         return github_user.get_user_info()

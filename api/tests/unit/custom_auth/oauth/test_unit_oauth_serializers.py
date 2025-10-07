@@ -102,7 +102,7 @@ def test_get_user_info_with_google_login(
 
     # When
     serializer.is_valid()
-    serializer.get_user_info()  # type: ignore[no-untyped-call]
+    serializer.get_user_info()
 
     # Then
     mock_get_user_info.assert_called_with(access_token)
@@ -125,7 +125,7 @@ def test_get_user_info_with_github_login(
 
     # When
     serializer.is_valid()
-    serializer.get_user_info()  # type: ignore[no-untyped-call]
+    serializer.get_user_info()
 
     # Then
     mock_github_user_serializer.assert_called_with(code=access_token)

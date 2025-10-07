@@ -3,12 +3,13 @@ from requests import RequestException
 from rest_framework import status
 
 from custom_auth.oauth.exceptions import GoogleError
+from custom_auth.oauth.types import UserInfo
 
 USER_INFO_URL = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&"
 NON_200_ERROR_MESSAGE = "Google returned {} status code when getting an access token."
 
 
-def get_user_info(access_token):  # type: ignore[no-untyped-def]
+def get_user_info(access_token: str) -> UserInfo:
     try:
         headers = {"Authorization": f"Bearer {access_token}"}
         response = requests.get(USER_INFO_URL, headers=headers)
