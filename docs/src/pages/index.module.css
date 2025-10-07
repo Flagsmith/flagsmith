@@ -156,16 +156,7 @@
   text-decoration: none;
 }
 
-.cardLink {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
 
-.cardLink:hover {
-  text-decoration: none;
-  color: inherit;
-}
 
 .card-icon {
   font-size: 24px !important;

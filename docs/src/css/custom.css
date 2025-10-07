@@ -227,34 +227,11 @@ main.container {
   padding-bottom: 5rem;
 }
 
-/* Fix missing CURL icon in OpenAPI code examples */
-.language-tabs .language-tab[data-language="curl"]::before {
-  content: "📡";
-  display: inline-block;
-  margin-right: 8px;
-  font-size: 16px;
+/* Badge colors specifically for API content area */
+.openapi__heading ~ * .badge--primary {
+  background-color: #2e8555 !important;
+  border-color: #2e8555 !important;
 }
-
-/* Alternative approach for CURL icon */
-.language-tabs .language-tab[data-language="curl"] {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000000'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: left center;
-  background-size: 16px 16px;
-  padding-left: 24px;
-}
-
-/* More specific targeting for OpenAPI tabs */
-.openapi-tabs .language-tab[data-language="curl"]::before,
-.code-block .language-tab[data-language="curl"]::before {
-  content: "🌐";
-  display: inline-block;
-  margin-right: 8px;
-  font-size: 14px;
-}
-
-
-
 
 
 
