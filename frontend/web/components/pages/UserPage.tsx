@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { useHistory, useRouteMatch } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 import keyBy from 'lodash/keyBy'
@@ -19,13 +19,10 @@ import AppActions from 'common/dispatcher/app-actions'
 import Button from 'components/base/forms/Button'
 import CodeHelp from 'components/CodeHelp'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import Constants from 'common/constants'
-import CreateFlagModal from 'components/modals/CreateFlag'
 import CreateSegmentModal from 'components/modals/CreateSegment'
 import EditIdentity from 'components/EditIdentity'
 import FeatureListStore from 'common/stores/feature-list-store'
-import Format from 'common/utils/format'
 import Icon from 'components/Icon'
 import IdentifierString from 'components/IdentifierString'
 import IdentityProvider from 'common/providers/IdentityProvider'
@@ -42,7 +39,13 @@ import IdentityTraits from 'components/IdentityTraits'
 import { useGetIdentitySegmentsQuery } from 'common/services/useIdentitySegment'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import FeatureOverrideRow from 'components/feature-override/FeatureOverrideRow'
-import FeatureFilters from 'components/feature-page/FeatureFilters'
+import FeatureFilters, {
+  FiltersValue,
+  getFiltersFromURLParams,
+  getServerFilter,
+  getURLParamsFromFilters,
+} from 'components/feature-page/FeatureFilters'
+import Project from 'common/project'
 
 interface RouteParams {
   environmentId: string
@@ -51,84 +54,19 @@ interface RouteParams {
   identity: string
 }
 
-type FeatureFilter = {
-  group_owners: number[]
-  is_archived: boolean
-  is_enabled: boolean | null
-  owners: number[]
-  tag_strategy: TagStrategy
-  tags: (number | string)[]
-  value_search: string | null
-  search: string | null
-  sort: any
-}
-
-const getFiltersFromParams = (params: Record<string, string | undefined>) =>
-  ({
-    group_owners:
-      typeof params.group_owners === 'string'
-        ? params.group_owners.split(',').map((v: string) => parseInt(v))
-        : [],
-    is_archived: params.is_archived === 'true',
-    is_enabled:
-      params.is_enabled === 'true'
-        ? true
-        : params.is_enabled === 'false'
-        ? false
-        : null,
-    owners:
-      typeof params.owners === 'string'
-        ? params.owners.split(',').map((v: string) => parseInt(v))
-        : [],
-    search: params.search || null,
-    sort: {
-      label: Format.camelCase(params.sortBy || 'Name'),
-      sortBy: params.sortBy || 'name',
-      sortOrder: (params.sortOrder as 'asc' | 'desc') || 'asc',
-    },
-    tag_strategy: (params.tag_strategy as TagStrategy) || 'INTERSECTION',
-    tags:
-      typeof params.tags === 'string'
-        ? params.tags.split(',').map((v: string) => parseInt(v))
-        : [],
-    value_search: (params.value_search as string) || '',
-  } as FeatureFilter)
-
-const sortToHeader = (s: any) => {
-  if (!s) return { label: 'Name', sortBy: 'name', sortOrder: 'asc' as const }
-  if ('sortBy' in s) return s
-  return {
-    label: s.label || 'Name',
-    sortBy: s.value || 'name',
-    sortOrder: (s.order as 'asc' | 'desc') || 'asc',
-  }
-}
-
-const headerToSort = (s: {
-  label: string
-  sortBy: string
-  sortOrder: 'asc' | 'desc'
-}) => ({
-  label: s.label,
-  order: s.sortOrder,
-  value: s.sortBy,
-})
-
 const UserPage: FC = () => {
   const match = useRouteMatch<RouteParams>()
   const history = useHistory()
-
   const params = Utils.fromParam()
-  const defaultState = getFiltersFromParams(params)
-
+  const defaultState = getFiltersFromURLParams(params)
   const environmentId = match?.params?.environmentId
   const id = match?.params?.id
   const { projectId } = useRouteContext()
 
-  const [filter, setFilter] = useState(defaultState)
+  const [filter, setFilter] = useState<FiltersValue>(defaultState)
   const [actualFlags, setActualFlags] =
     useState<Record<string, IdentityFeatureState>>()
-  const [preselect, setPreselect] = useState(Utils.fromParam().flag)
+  const [preselect] = useState(Utils.fromParam().flag)
   const [segmentsPage, setSegmentsPage] = useState(1)
   const { search, searchInput, setSearchInput } = useDebouncedSearch('')
   const { data: segments, isFetching: isFetchingSegments } =
@@ -142,28 +80,18 @@ const UserPage: FC = () => {
       },
       { skip: !projectId },
     )
-  const getFilter = useCallback(
-    (f: FeatureFilter) => ({
-      ...f,
-      group_owners: f.group_owners.length ? f.group_owners : undefined,
-      owners: f.owners.length ? f.owners : undefined,
-      search: (f.search || '').trim(),
-      tags: f.tags.length ? f.tags.join(',') : undefined,
-    }),
-    [],
-  )
 
   useEffect(() => {
-    const { search, sort, ...rest } = getFilter(filter)
+    const { search, sort } = filter
     AppActions.searchFeatures(
       projectId,
       environmentId,
       true,
       search,
-      sortToHeader(sort),
-      rest,
+      sort,
+      getServerFilter(filter),
     )
-  }, [filter, getFilter, environmentId, projectId])
+  }, [filter, environmentId, projectId])
 
   useEffect(() => {
     AppActions.getIdentity(environmentId, id)
@@ -203,10 +131,22 @@ const UserPage: FC = () => {
   const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data
   const isEdge = Utils.getIsEdge()
   const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
-  const clearFilters = () => {
-    history.replace(`${document.location.pathname}`)
-    setFilter(getFiltersFromParams({}))
-  }
+
+  const fetchPage = React.useCallback(
+    (pageNumber: number) => {
+      const { search, sort } = filter
+      AppActions.getFeatures(
+        projectId,
+        environmentId,
+        true,
+        search,
+        sort,
+        pageNumber,
+        getServerFilter(filter),
+      )
+    },
+    [environmentId, projectId, filter],
+  )
 
   return (
     <div className='app-container container'>
@@ -228,7 +168,6 @@ const UserPage: FC = () => {
           }) => {
             const identityName =
               (identity && identity.identity.identifier) || id
-
             return isLoading &&
               !filter.tags.length &&
               !filter.is_archived &&
@@ -294,167 +233,135 @@ const UserPage: FC = () => {
                   <div className='col-md-12'>
                     <FormGroup>
                       <FormGroup>
-                        <PanelSearch
-                          id='user-features-list'
-                          className='no-pad overflow-visible'
-                          itemHeight={70}
-                          title={
-                            <div>
-                              Features
-                              <div className='fw-normal mt-2 fs-medium'>
-                                <InfoMessage collapseId={'identity-priority'}>
-                                  Overriding features here will take priority
-                                  over any segment override. Any features that
-                                  are not overridden for this user will fallback
-                                  to any segment overrides or the environment
-                                  defaults.
-                                </InfoMessage>
+                        {typeof projectFlags?.length !== 'number' ? (
+                          <div className='centered-container'>
+                            <Loader />
+                          </div>
+                        ) : (
+                          <PanelSearch
+                            id='user-features-list'
+                            className='no-pad overflow-visible'
+                            itemHeight={70}
+                            title={
+                              <div>
+                                Features
+                                <div className='fw-normal mt-2 fs-medium'>
+                                  <InfoMessage collapseId={'identity-priority'}>
+                                    Overriding features here will take priority
+                                    over any segment override. Any features that
+                                    are not overridden for this user will
+                                    fallback to any segment overrides or the
+                                    environment defaults.
+                                  </InfoMessage>
+                                </div>
                               </div>
-                            </div>
-                          }
-                          renderFooter={() => (
-                            <>
-                              <JSONReference
-                                showNamesButton
-                                className='mt-4 mx-2'
-                                title={'Features'}
-                                json={
-                                  projectFlags && Object.values(projectFlags)
-                                }
-                              />
-                              <JSONReference
-                                className='mx-2'
-                                title={'Environment Feature States'}
-                                json={
-                                  environmentFlags &&
-                                  Object.values(environmentFlags)
-                                }
-                              />
-                              <JSONReference
-                                className='mx-2'
-                                title={'Identity Feature States'}
-                                json={
-                                  identityFlags && Object.values(identityFlags)
-                                }
-                              />
-                            </>
-                          )}
-                          header={
-                            <FeatureFilters
-                              value={{
-                                group_owners: filter.group_owners,
-                                is_enabled: filter.is_enabled,
-                                owners: filter.owners,
-                                search: filter.search,
-                                showArchived: filter.is_archived,
-                                sort: sortToHeader(filter.sort),
-                                tag_strategy: filter.tag_strategy,
-                                tags: filter.tags,
-                                value_search: filter.value_search || '',
-                              }}
-                              projectId={projectId!}
-                              orgId={AccountStore.getOrganisation()?.id}
-                              isLoading={FeatureListStore.isLoading}
-                              onChange={(next) => {
-                                FeatureListStore.isLoading = true
-                                setFilter({
-                                  ...filter,
-                                  group_owners: next.group_owners as number[],
-                                  is_archived: next.showArchived,
-                                  is_enabled: next.is_enabled,
-                                  owners: next.owners as number[],
-                                  search: next.search,
-                                  sort: headerToSort(next.sort),
-                                  tag_strategy:
-                                    next.tag_strategy as TagStrategy,
-                                  tags: next.tags as (number | string)[],
-                                  value_search: next.value_search,
-                                })
-                              }}
-                            />
-                          }
-                          isLoading={FeatureListStore.isLoading}
-                          items={projectFlags}
-                          renderRow={({ id: featureId, name, tags }, i) => {
-                            const identityFlag = identityFlags[featureId]
-                            const actualEnabled =
-                              actualFlags && actualFlags[name]?.enabled
-                            const environmentFlag =
-                              (environmentFlags &&
-                                environmentFlags[featureId]) ||
-                              {}
-                            const projectFlag = projectFlags?.find(
-                              (p: any) => p.id === environmentFlag.feature,
-                            )
-                            return (
-                              !!projectFlag && (
-                                <FeatureOverrideRow
-                                  identity={id}
-                                  environmentId={environmentId}
-                                  identifier={identity?.identity?.identifier}
-                                  identityName={identityName}
-                                  shouldPreselect={name === preselect}
-                                  toggleDataTest={`user-feature-switch-${i}${
-                                    actualEnabled ? '-on' : '-off'
-                                  }`}
-                                  level='identity'
-                                  valueDataTest={`user-feature-value-${i}`}
-                                  projectFlag={projectFlag}
-                                  dataTest={`user-feature-${i}`}
-                                  overrideFeatureState={
-                                    identityFlag
-                                      ? {
-                                          ...identityFlag,
-                                          //resolves multivariate value if one is set
-                                          feature_state_value:
-                                            actualFlags?.[name]
-                                              ?.feature_state_value,
-                                        }
-                                      : actualFlags?.[name]
-                                  }
-                                  environmentFeatureState={
-                                    environmentFlags[featureId]
+                            }
+                            renderFooter={() => (
+                              <>
+                                <JSONReference
+                                  showNamesButton
+                                  className='mt-4 mx-2'
+                                  title={'Features'}
+                                  json={
+                                    projectFlags && Object.values(projectFlags)
                                   }
                                 />
+                                <JSONReference
+                                  className='mx-2'
+                                  title={'Environment Feature States'}
+                                  json={
+                                    environmentFlags &&
+                                    Object.values(environmentFlags)
+                                  }
+                                />
+                                <JSONReference
+                                  className='mx-2'
+                                  title={'Identity Feature States'}
+                                  json={
+                                    identityFlags &&
+                                    Object.values(identityFlags)
+                                  }
+                                />
+                              </>
+                            )}
+                            header={
+                              <FeatureFilters
+                                value={filter}
+                                projectId={projectId!}
+                                orgId={AccountStore.getOrganisation()?.id}
+                                isLoading={FeatureListStore.isLoading}
+                                onChange={(next) => {
+                                  FeatureListStore.isLoading = true
+                                  history.replace(
+                                    `${
+                                      document.location.pathname
+                                    }?${Utils.toParam(
+                                      getURLParamsFromFilters(next),
+                                    )}`,
+                                  )
+                                  setFilter(next)
+                                }}
+                              />
+                            }
+                            isLoading={FeatureListStore.isLoading}
+                            items={projectFlags}
+                            renderRow={({ id: featureId, name, tags }, i) => {
+                              const identityFlag = identityFlags[featureId]
+                              const actualEnabled =
+                                actualFlags && actualFlags[name]?.enabled
+                              const environmentFlag =
+                                (environmentFlags &&
+                                  environmentFlags[featureId]) ||
+                                {}
+                              const projectFlag = projectFlags?.find(
+                                (p: any) => p.id === environmentFlag.feature,
                               )
-                            )
-                          }}
-                          renderSearchWithNoResults
-                          paging={FeatureListStore.paging}
-                          nextPage={() =>
-                            AppActions.getFeatures(
-                              projectId,
-                              environmentId,
-                              true,
-                              filter.search,
-                              sortToHeader(filter.sort),
-                              FeatureListStore.paging.next,
-                              getFilter(filter),
-                            )
-                          }
-                          prevPage={() =>
-                            AppActions.getFeatures(
-                              projectId,
-                              environmentId,
-                              true,
-                              filter.search,
-                              sortToHeader(filter.sort),
-                              FeatureListStore.paging.previous,
-                              getFilter(filter),
-                            )
-                          }
-                          goToPage={(pageNumber: number) =>
-                            AppActions.getFeatures(
-                              projectId,
-                              environmentId,
-                              true,
-                              filter.search,
-                              sortToHeader(filter.sort),
-                              pageNumber,
-                              getFilter(filter),
-                            )
-                          }
-                        />
+                              return (
+                                !!projectFlag && (
+                                  <FeatureOverrideRow
+                                    identity={id}
+                                    environmentId={environmentId}
+                                    identifier={identity?.identity?.identifier}
+                                    identityName={identityName}
+                                    shouldPreselect={name === preselect}
+                                    toggleDataTest={`user-feature-switch-${i}${
+                                      actualEnabled ? '-on' : '-off'
+                                    }`}
+                                    level='identity'
+                                    valueDataTest={`user-feature-value-${i}`}
+                                    projectFlag={projectFlag}
+                                    dataTest={`user-feature-${i}`}
+                                    overrideFeatureState={
+                                      identityFlag
+                                        ? {
+                                            ...identityFlag,
+                                            //resolves multivariate value if one is set
+                                            feature_state_value:
+                                              actualFlags?.[name]
+                                                ?.feature_state_value,
+                                          }
+                                        : actualFlags?.[name]
+                                    }
+                                    environmentFeatureState={
+                                      environmentFlags[featureId]
+                                    }
+                                  />
+                                )
+                              )
+                            }}
+                            renderSearchWithNoResults
+                            paging={FeatureListStore.paging}
+                            nextPage={() =>
+                              fetchPage(FeatureListStore.paging.next)
+                            }
+                            prevPage={() =>
+                              fetchPage(FeatureListStore.paging.previous)
+                            }
+                            goToPage={(pageNumber: number) =>
+                              fetchPage(pageNumber)
+                            }
+                          />
+                        )}
                       </FormGroup>
                       {!preventAddTrait && (
                         <IdentityTraits

@@ -6,28 +6,25 @@ import TableValueFilter from 'components/tables/TableValueFilter'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
-import TableSortFilter from 'components/tables/TableSortFilter'
+import TableSortFilter, { SortValue } from 'components/tables/TableSortFilter'
 import { getViewMode, setViewMode, ViewMode } from 'common/useViewMode'
 import { isEqual } from 'lodash'
 import Utils from 'common/utils/utils'
 import { TagStrategy } from 'common/types/responses'
+import Format from 'common/utils/format'
 
-type SortState = {
-  label: string
-  sortBy: string
-  sortOrder: 'asc' | 'desc' | null
-}
-
-type FiltersValue = {
+export type FiltersValue = {
   search: string | null
+  releasePipelines: number[]
+  page: number
   tag_strategy: TagStrategy
   tags: (number | string)[]
-  showArchived: boolean
+  is_archived: boolean
   value_search: string | null
   is_enabled: boolean | null
   owners: number[]
   group_owners: number[]
-  sort: SortState
+  sort: SortValue
 }
 
 type Props = {
@@ -40,21 +37,102 @@ type Props = {
 
 const DEFAULTS: FiltersValue = {
   group_owners: [],
+  is_archived: false,
   is_enabled: null,
   owners: [],
+  page: 1,
+  releasePipelines: [],
   search: '',
-  showArchived: false,
   sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
   tag_strategy: 'INTERSECTION',
   tags: [],
   value_search: '',
 }
 
+const sortToHeader = (s: any) => {
+  if (!s) return { label: 'Name', sortBy: 'name', sortOrder: 'asc' as const }
+  if ('sortBy' in s) return s
+  return {
+    label: s.label || 'Name',
+    sortBy: s.value || 'name',
+    sortOrder: (s.order as 'asc' | 'desc') || 'asc',
+  }
+}
+
+// Converts filters to url params, excluding ones that are already default
+export function getURLParamsFromFilters(f: FiltersValue) {
+  const existing = Utils.fromParam() as Record<string, string | undefined>
+
+  return {
+    ...existing,
+    group_owners: f.group_owners?.length ? f.group_owners.join(',') : undefined,
+    is_archived: f.is_archived ? 'true' : undefined,
+    is_enabled:
+      f.is_enabled === null ? undefined : f.is_enabled ? 'true' : 'false',
+    owners: f.owners?.length ? f.owners.join(',') : undefined,
+    page: f.page !== DEFAULTS.page ? String(f.page) : undefined,
+    search: f.search || undefined,
+    tag_strategy:
+      f.tag_strategy !== DEFAULTS.tag_strategy
+        ? String(f.tag_strategy)
+        : undefined,
+    tags: f.tags?.length ? f.tags.join(',') : undefined,
+    value_search: f.value_search || undefined,
+  }
+}
+// Gets expected filters from URL parameters
+export const getFiltersFromURLParams = (
+  params: Record<string, string | undefined>,
+) => {
+  return {
+    group_owners:
+      typeof params.group_owners === 'string'
+        ? params.group_owners.split(',').map((v) => parseInt(v))
+        : [],
+    is_archived: params.is_archived === 'true',
+    is_enabled:
+      params.is_enabled === 'true'
+        ? true
+        : params.is_enabled === 'false'
+        ? false
+        : null,
+    owners:
+      typeof params.owners === 'string'
+        ? params.owners.split(',').map((v) => parseInt(v))
+        : [],
+    page: params.page ? parseInt(params.page) - 1 : 1,
+    releasePipelines: [],
+    search: params.search || '',
+    sort: {
+      label: Format.camelCase(params.sortBy || 'Name'),
+      sortBy: params.sortBy || 'name',
+      sortOrder: params.sortOrder || 'asc',
+    },
+    tag_strategy: params.tag_strategy || 'INTERSECTION',
+    tags:
+      typeof params.tags === 'string'
+        ? params.tags.split(',').map((v) => parseInt(v))
+        : [],
+    value_search:
+      typeof params.value_search === 'string' ? params.value_search : '',
+  } as FiltersValue
+}
+
+//Converts filter to api expected properties
+export const getServerFilter = (f: FiltersValue) => ({
+  ...f,
+  group_owners: f.group_owners?.length ? f.group_owners : undefined,
+  owners: f.owners.length ? f.owners : undefined,
+  search: (f.search || '').trim(),
+  sort: sortToHeader(f.sort),
+  tags: f.tags.length ? f.tags.join(',') : undefined,
+})
+
+//Detect if the filter is default
 const isDefault = (v: FiltersValue) =>
   isEqual(
     {
       ...v,
-      search: v.search || '',
     },
     DEFAULTS,
   )
@@ -69,7 +147,6 @@ const FeatureFilters: React.FC<Props> = ({
   const set = (partial: Partial<FiltersValue>) =>
     onChange({ ...value, ...partial })
   const clearAll = () => onChange({ ...DEFAULTS })
-
   return (
     <div className='table-header d-flex align-items-center'>
       <div className='table-column flex-row flex-fill'>
@@ -86,8 +163,8 @@ const FeatureFilters: React.FC<Props> = ({
             tagStrategy={value.tag_strategy}
             onChangeStrategy={(tag_strategy) => set({ tag_strategy })}
             value={value.tags}
-            onToggleArchived={(next) => set({ showArchived: next })}
-            showArchived={value.showArchived}
+            onToggleArchived={(next) => set({ is_archived: next })}
+            showArchived={value.is_archived}
             onChange={(tags) => {
               if (tags.includes('') && tags.length > 1) {
                 if (!(value.tags || []).includes('')) set({ tags: [''] })
