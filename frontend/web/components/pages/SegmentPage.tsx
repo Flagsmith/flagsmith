@@ -14,6 +14,9 @@ import Button from 'components/base/forms/Button'
 import { useHasPermission } from 'common/providers/Permission'
 import Icon from 'components/Icon'
 import { handleRemoveSegment } from 'components/modals/ConfirmRemoveSegment'
+import { IonIcon } from '@ionic/react'
+import { caretDown } from 'ionicons/icons'
+import SegmentSelect from 'components/SegmentSelect'
 
 type SegmentPageType = {}
 
@@ -51,34 +54,28 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
             url: `/project/${projectId}/segments/`,
           },
         ]}
-        currentPage={segment?.name}
-      />
-      <PageTitle
-        cta={
-          manageSegmentsPermission && (
-            <Row>
-              <Button
-                data-test='remove-segment-btn'
-                className='btn btn-with-icon'
-                type='button'
-                onClick={onRemoveSegment}
-              >
-                <Icon name='trash-2' width={20} fill='#656D7B' />
-              </Button>
-            </Row>
-          )
+        currentPage={
+          <span style={{ width: 180 }} className='d-inline-block'>
+            <SegmentSelect
+              onChange={(v) =>
+                history.replace(`/project/${projectId}/segments/${v.value}`)
+              }
+              className='react-select select-xsm'
+              value={parseInt(id)}
+              projectId={projectId}
+            />
+          </span>
         }
-        title={segment?.name}
-      >
-        {segment?.description}
-      </PageTitle>
-
-      <CreateSegment
-        segment={parseInt(id)}
-        readOnly={!manageSegmentsPermission}
-        projectId={projectId}
-        environmentId={environmentId!}
       />
+
+      <div className='mt-3'>
+        <CreateSegment
+          segment={parseInt(id)}
+          readOnly={!manageSegmentsPermission}
+          projectId={projectId}
+          environmentId={environmentId!}
+        />
+      </div>
     </div>
   )
 }

@@ -111,7 +111,7 @@ export const getFiltersFromURLParams = (
     tag_strategy: params.tag_strategy || 'INTERSECTION',
     tags:
       typeof params.tags === 'string'
-        ? params.tags.split(',').map((v) => parseInt(v))
+        ? params.tags.split(',').map((v) => (v ? parseInt(v) : v))
         : [],
     value_search:
       typeof params.value_search === 'string' ? params.value_search : '',

@@ -8,24 +8,27 @@ type BreadcrumbType = {
 
 const Breadcrumb: FC<BreadcrumbType> = ({ currentPage, items }) => {
   return (
-    <nav aria-label='breadcrumb'>
-      <ol className='breadcrumb my-2 py-1'>
-        {items?.map((item) => (
-          <li key={item.url} className='breadcrumb-item h6 fs-lg lh-sm'>
-            <Link className='text-primary' to={item.url}>
-              {item.title}
-            </Link>
-          </li>
-        ))}
-        <li
-          className='breadcrumb-item active h6 text-muted lh-sm '
+    <div className='d-flex align-items-center my-2 py-1'>
+      {items?.map((item) => (
+        <>
+          <Link className='text-primary h6 mb-0' to={item.url}>
+            {item.title}
+          </Link>
+          <div className='text-muted mx-2 h6 mb-0'>/</div>
+        </>
+      ))}
+      {typeof currentPage === 'string' ? (
+        <div
+          className='active h6 text-muted lh-sm '
           aria-current='page'
           style={{ opacity: 0.6 }}
         >
           {currentPage}
-        </li>
-      </ol>
-    </nav>
+        </div>
+      ) : (
+        currentPage
+      )}
+    </div>
   )
 }
 

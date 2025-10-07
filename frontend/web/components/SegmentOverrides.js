@@ -580,7 +580,7 @@ class TheComponent extends Component {
                   data-test='select-segment'
                   placeholder='Create a Segment Override...'
                   filter={filter}
-                  value={this.state.selectedSegment}
+                  value={this.state.selectedSegment?.value}
                   onChange={(selectedSegment) =>
                     this.setState({ selectedSegment }, this.addItem)
                   }

@@ -26,7 +26,6 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import { useHistory } from 'react-router-dom'
-import ProjectStore from 'common/stores/project-store'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import FeatureOverrideCTA from './FeatureOverrideCTA'
 
@@ -226,6 +225,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
             )}
             {showSegmentOverride && (
               <SegmentOverrideDescription
+                level={level}
                 showEnabledOverride={hasEnabledDiff}
                 showValueOverride={!hasEnabledDiff}
                 controlEnabled={flagEnabled}
