@@ -227,6 +227,9 @@ const FeaturesPage = class extends Component {
   render() {
     const { environmentId, projectId } = this.props.match.params
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
+    const environmentMetricsEnabled = Utils.getFlagsmithHasFeature(
+      'environment_metrics',
+    )
 
     const environment = ProjectStore.getEnvironment(environmentId)
     const params = Utils.fromParam()
@@ -310,11 +313,13 @@ const FeaturesPage = class extends Component {
                             'features',
                             featureLimitAlert.percentage,
                           )}
-                        <EnvironmentMetricsList
-                          environmentApiKey={environment?.api_key}
-                          forceRefetch={this.state.forceMetricsRefetch}
-                          projectId={projectId}
-                        />
+                        {environmentMetricsEnabled && (
+                          <EnvironmentMetricsList
+                            environmentApiKey={environment?.api_key}
+                            forceRefetch={this.state.forceMetricsRefetch}
+                            projectId={projectId}
+                          />
+                        )}
                         <PageTitle
                           title={'Features'}
                           cta={
