@@ -15,7 +15,12 @@ from django.views.decorators.vary import vary_on_headers
 from drf_yasg import openapi  # type: ignore[import-untyped]
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import mixins, serializers, status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import (
+    action,
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -23,6 +28,10 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from .multivariate.serializers import (
+    FeatureMVOptionsValuesResponseSerializer,
+    NestedMultivariateFeatureOptionSerializer,
+)
 from app.pagination import CustomPagination
 from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
@@ -905,6 +914,43 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         feature_states = identity.get_all_feature_states()
         flags = self.get_serializer(feature_states, many=True)
         return Response(flags.data, status=status.HTTP_200_OK)
+
+
+@swagger_auto_schema(  # type: ignore[misc]
+    method="GET",
+    responses={200: FeatureMVOptionsValuesResponseSerializer()},
+)
+@api_view(["GET"])
+@authentication_classes(
+    [
+        EnvironmentKeyAuthentication,
+    ]
+)
+@permission_classes([EnvironmentKeyPermissions])
+def get_multivariate_options(request: Request, feature_id: int) -> Response:
+    environment = request.environment
+    feature = get_object_or_404(Feature, id=feature_id, project=environment.project)
+    fs = (
+        FeatureState.objects.get_live_feature_states(
+            environment=environment,
+            additional_filters=Q(
+                identity__isnull=True,
+                feature_segment__isnull=True,
+                feature_id=feature.id,
+            ),
+        )
+        .filter(feature__is_archived=False)
+        .select_related("feature_state_value")
+        .order_by("-environment_feature_version__created_at")  # latest published
+        .first()
+    )
+
+    payload = {
+        "feature_state": fs,
+        "options": list(feature.multivariate_options.all()),
+    }
+    data = FeatureMVOptionsValuesResponseSerializer(payload).data
+    return Response(data)
 
 
 def organisation_has_got_feature(request, organisation):  # type: ignore[no-untyped-def]

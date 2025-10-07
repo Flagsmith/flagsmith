@@ -1,8 +1,10 @@
+import typing
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from rest_framework import serializers
 
-from features.models import Feature
+from core.constants import BOOLEAN, INTEGER
+from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 
 
@@ -20,6 +22,32 @@ class NestedMultivariateFeatureOptionSerializer(serializers.ModelSerializer):  #
             "default_percentage_allocation",
         )
         read_only_fields = ("uuid",)
+
+
+class MultivariateOptionValuesSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    value = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MultivariateFeatureOption
+        fields = ("value",)
+
+    def get_value(self, option) -> typing.Union[str, int, bool]:
+        if option.type == BOOLEAN:
+            return option.boolean_value
+        if option.type == INTEGER:
+            return option.integer_value
+        return option.string_value
+
+
+class FeatureMVOptionsValuesResponseSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    control_value = serializers.SerializerMethodField()
+    options = MultivariateOptionValuesSerializer(many=True)
+
+    def get_control_value(self, obj) -> str | int | bool | None:
+        fs: FeatureState | None = obj.get("feature_state")
+        if not fs:
+            return None
+        return fs.get_feature_state_value()
 
 
 class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSerializer):
