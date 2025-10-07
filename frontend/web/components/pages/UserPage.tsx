@@ -169,9 +169,6 @@ const UserPage: FC = () => {
             const identityName =
               (identity && identity.identity.identifier) || id
             return isLoading &&
-              !filter.tags.length &&
-              !filter.is_archived &&
-              typeof filter.search !== 'string' &&
               (!identityFlags || !actualFlags || !projectFlags) ? (
               <div className='text-center'>
                 <Loader />
@@ -233,135 +230,128 @@ const UserPage: FC = () => {
                   <div className='col-md-12'>
                     <FormGroup>
                       <FormGroup>
-                        {typeof projectFlags?.length !== 'number' ? (
-                          <div className='centered-container'>
-                            <Loader />
-                          </div>
-                        ) : (
-                          <PanelSearch
-                            id='user-features-list'
-                            className='no-pad overflow-visible'
-                            itemHeight={70}
-                            title={
-                              <div>
-                                Features
-                                <div className='fw-normal mt-2 fs-medium'>
-                                  <InfoMessage collapseId={'identity-priority'}>
-                                    Overriding features here will take priority
-                                    over any segment override. Any features that
-                                    are not overridden for this user will
-                                    fallback to any segment overrides or the
-                                    environment defaults.
-                                  </InfoMessage>
-                                </div>
+                        <PanelSearch
+                          id='user-features-list'
+                          className='no-pad overflow-visible'
+                          itemHeight={70}
+                          title={
+                            <div>
+                              Features
+                              <div className='fw-normal mt-2 fs-medium'>
+                                <InfoMessage collapseId={'identity-priority'}>
+                                  Overriding features here will take priority
+                                  over any segment override. Any features that
+                                  are not overridden for this user will fallback
+                                  to any segment overrides or the environment
+                                  defaults.
+                                </InfoMessage>
                               </div>
-                            }
-                            renderFooter={() => (
-                              <>
-                                <JSONReference
-                                  showNamesButton
-                                  className='mt-4 mx-2'
-                                  title={'Features'}
-                                  json={
-                                    projectFlags && Object.values(projectFlags)
-                                  }
-                                />
-                                <JSONReference
-                                  className='mx-2'
-                                  title={'Environment Feature States'}
-                                  json={
-                                    environmentFlags &&
-                                    Object.values(environmentFlags)
-                                  }
-                                />
-                                <JSONReference
-                                  className='mx-2'
-                                  title={'Identity Feature States'}
-                                  json={
-                                    identityFlags &&
-                                    Object.values(identityFlags)
-                                  }
-                                />
-                              </>
-                            )}
-                            header={
-                              <FeatureFilters
-                                value={filter}
-                                projectId={projectId!}
-                                orgId={AccountStore.getOrganisation()?.id}
-                                isLoading={FeatureListStore.isLoading}
-                                onChange={(next) => {
-                                  FeatureListStore.isLoading = true
-                                  history.replace(
-                                    `${
-                                      document.location.pathname
-                                    }?${Utils.toParam(
-                                      getURLParamsFromFilters(next),
-                                    )}`,
-                                  )
-                                  setFilter(next)
-                                }}
+                            </div>
+                          }
+                          renderFooter={() => (
+                            <>
+                              <JSONReference
+                                showNamesButton
+                                className='mt-4 mx-2'
+                                title={'Features'}
+                                json={
+                                  projectFlags && Object.values(projectFlags)
+                                }
                               />
-                            }
-                            isLoading={FeatureListStore.isLoading}
-                            items={projectFlags}
-                            renderRow={({ id: featureId, name, tags }, i) => {
-                              const identityFlag = identityFlags[featureId]
-                              const actualEnabled =
-                                actualFlags && actualFlags[name]?.enabled
-                              const environmentFlag =
-                                (environmentFlags &&
-                                  environmentFlags[featureId]) ||
-                                {}
-                              const projectFlag = projectFlags?.find(
-                                (p: any) => p.id === environmentFlag.feature,
-                              )
-                              return (
-                                !!projectFlag && (
-                                  <FeatureOverrideRow
-                                    identity={id}
-                                    environmentId={environmentId}
-                                    identifier={identity?.identity?.identifier}
-                                    identityName={identityName}
-                                    shouldPreselect={name === preselect}
-                                    toggleDataTest={`user-feature-switch-${i}${
-                                      actualEnabled ? '-on' : '-off'
-                                    }`}
-                                    level='identity'
-                                    valueDataTest={`user-feature-value-${i}`}
-                                    projectFlag={projectFlag}
-                                    dataTest={`user-feature-${i}`}
-                                    overrideFeatureState={
-                                      identityFlag
-                                        ? {
-                                            ...identityFlag,
-                                            //resolves multivariate value if one is set
-                                            feature_state_value:
-                                              actualFlags?.[name]
-                                                ?.feature_state_value,
-                                          }
-                                        : actualFlags?.[name]
-                                    }
-                                    environmentFeatureState={
-                                      environmentFlags[featureId]
-                                    }
-                                  />
+                              <JSONReference
+                                className='mx-2'
+                                title={'Environment Feature States'}
+                                json={
+                                  environmentFlags &&
+                                  Object.values(environmentFlags)
+                                }
+                              />
+                              <JSONReference
+                                className='mx-2'
+                                title={'Identity Feature States'}
+                                json={
+                                  identityFlags && Object.values(identityFlags)
+                                }
+                              />
+                            </>
+                          )}
+                          header={
+                            <FeatureFilters
+                              value={filter}
+                              projectId={projectId!}
+                              orgId={AccountStore.getOrganisation()?.id}
+                              isLoading={FeatureListStore.isLoading}
+                              onChange={(next) => {
+                                FeatureListStore.isLoading = true
+                                history.replace(
+                                  `${
+                                    document.location.pathname
+                                  }?${Utils.toParam(
+                                    getURLParamsFromFilters(next),
+                                  )}`,
                                 )
+                                setFilter(next)
+                              }}
+                            />
+                          }
+                          isLoading={FeatureListStore.isLoading}
+                          items={projectFlags}
+                          renderRow={({ id: featureId, name, tags }, i) => {
+                            const identityFlag = identityFlags[featureId]
+                            const actualEnabled =
+                              actualFlags && actualFlags[name]?.enabled
+                            const environmentFlag =
+                              (environmentFlags &&
+                                environmentFlags[featureId]) ||
+                              {}
+                            const projectFlag = projectFlags?.find(
+                              (p: any) => p.id === environmentFlag.feature,
+                            )
+                            return (
+                              !!projectFlag && (
+                                <FeatureOverrideRow
+                                  identity={id}
+                                  environmentId={environmentId}
+                                  identifier={identity?.identity?.identifier}
+                                  identityName={identityName}
+                                  shouldPreselect={name === preselect}
+                                  toggleDataTest={`user-feature-switch-${i}${
+                                    actualEnabled ? '-on' : '-off'
+                                  }`}
+                                  level='identity'
+                                  valueDataTest={`user-feature-value-${i}`}
+                                  projectFlag={projectFlag}
+                                  dataTest={`user-feature-${i}`}
+                                  overrideFeatureState={
+                                    identityFlag
+                                      ? {
+                                          ...identityFlag,
+                                          //resolves multivariate value if one is set
+                                          feature_state_value:
+                                            actualFlags?.[name]
+                                              ?.feature_state_value,
+                                        }
+                                      : actualFlags?.[name]
+                                  }
+                                  environmentFeatureState={
+                                    environmentFlags[featureId]
+                                  }
+                                />
                               )
-                            }}
-                            renderSearchWithNoResults
-                            paging={FeatureListStore.paging}
-                            nextPage={() =>
-                              fetchPage(FeatureListStore.paging.next)
-                            }
-                            prevPage={() =>
-                              fetchPage(FeatureListStore.paging.previous)
-                            }
-                            goToPage={(pageNumber: number) =>
-                              fetchPage(pageNumber)
-                            }
-                          />
-                        )}
+                            )
+                          }}
+                          renderSearchWithNoResults
+                          paging={FeatureListStore.paging}
+                          nextPage={() =>
+                            fetchPage(FeatureListStore.paging.next)
+                          }
+                          prevPage={() =>
+                            fetchPage(FeatureListStore.paging.previous)
+                          }
+                          goToPage={(pageNumber: number) =>
+                            fetchPage(pageNumber)
+                          }
+                        />
                       </FormGroup>
                       {!preventAddTrait && (
                         <IdentityTraits
