@@ -206,6 +206,10 @@ const FeaturesPage = class extends Component {
               maxFeaturesAllowed,
             )
 
+            if (FeatureListStore.hasLoaded && !this.state.loadedOnce) {
+              this.state.loadedOnce = true
+            }
+
             return (
               <div className='features-page'>
                 {(isLoading || !this.state.loadedOnce) &&
