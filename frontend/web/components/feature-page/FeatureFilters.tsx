@@ -50,13 +50,13 @@ const DEFAULTS: FiltersValue = {
 }
 
 const sortToHeader = (s: any) => {
-  if (!s) return { label: 'Name', sortBy: 'name', sortOrder: 'asc' as const }
+  if (!s) return DEFAULTS.sort
   if ('sortBy' in s) return s
   return {
-    label: s.label || 'Name',
-    sortBy: s.value || 'name',
-    sortOrder: (s.order as 'asc' | 'desc') || 'asc',
-  }
+    label: s.label || DEFAULTS.sort.label,
+    sortBy: s.value || DEFAULTS.sort.sortBy,
+    sortOrder: DEFAULTS.sort.sortOrder,
+  } as FiltersValue['sort']
 }
 
 // Converts filters to url params, excluding ones that are already default
