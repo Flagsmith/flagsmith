@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.197.0](https://github.com/Flagsmith/flagsmith/compare/v2.196.4...v2.197.0) (2025-09-29)
+
+
+### Features
+
+* Add segment page ([#5895](https://github.com/Flagsmith/flagsmith/issues/5895)) ([1656c62](https://github.com/Flagsmith/flagsmith/commit/1656c62351a1bdcea0f6bb07dcc4a13862af00ae))
+* show-redirections-links-in-feature-health-tab ([#6103](https://github.com/Flagsmith/flagsmith/issues/6103)) ([5f1a8c0](https://github.com/Flagsmith/flagsmith/commit/5f1a8c082ab24627d3b265ad6206f8df1800e683))
+
+
+### Bug Fixes
+
+* added-dark-mode-for-overflow-dropdown ([#6106](https://github.com/Flagsmith/flagsmith/issues/6106)) ([efb8aef](https://github.com/Flagsmith/flagsmith/commit/efb8aef9059473014e922335ba73a22febd7773d))
+* Datadog integration not respecting `use_custom_source` ([#6113](https://github.com/Flagsmith/flagsmith/issues/6113)) ([57f0e97](https://github.com/Flagsmith/flagsmith/commit/57f0e971b1564f9a073840f82cb6cb4f6276f58a))
+* removed-duplicate-key-force-2fa-on-scale-up-plan ([#6097](https://github.com/Flagsmith/flagsmith/issues/6097)) ([94f8b14](https://github.com/Flagsmith/flagsmith/commit/94f8b147d7179974aa4006695e48e27cf84c097b))
+* segment diff tab UI ([#6095](https://github.com/Flagsmith/flagsmith/issues/6095)) ([739c4a6](https://github.com/Flagsmith/flagsmith/commit/739c4a6631f28064a436a71c0989f28d23c9e76b))
+
 ## [2.196.4](https://github.com/Flagsmith/flagsmith/compare/v2.196.3...v2.196.4) (2025-09-23)
 
 

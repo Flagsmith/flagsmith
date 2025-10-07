@@ -151,6 +151,12 @@
   display: block;
 }
 
+.dark {
+  .btn-tab {
+    color: white !important;
+  }
+}
+
 .btn-tab {
   position: relative;
   .unread {
