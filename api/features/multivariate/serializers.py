@@ -1,4 +1,5 @@
 import typing
+
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from rest_framework import serializers
@@ -31,23 +32,28 @@ class MultivariateOptionValuesSerializer(serializers.ModelSerializer):  # type: 
         model = MultivariateFeatureOption
         fields = ("value",)
 
-    def get_value(self, option) -> typing.Union[str, int, bool]:
-        if option.type == BOOLEAN:
-            return option.boolean_value
-        if option.type == INTEGER:
-            return option.integer_value
-        return option.string_value
+
+def get_value(
+    self: serializers.ModelSerializer[MultivariateFeatureOption],
+    obj: MultivariateFeatureOption,
+) -> str | int | bool | None:
+    if obj.type == BOOLEAN:
+        return obj.boolean_value
+    if obj.type == INTEGER:
+        return obj.integer_value
+    return obj.string_value
 
 
 class FeatureMVOptionsValuesResponseSerializer(serializers.Serializer):  # type: ignore[type-arg]
     control_value = serializers.SerializerMethodField()
     options = MultivariateOptionValuesSerializer(many=True)
 
-    def get_control_value(self, obj) -> str | int | bool | None:
+    def get_control_value(self, obj: dict[str, typing.Any]) -> str | int | bool | None:
         fs: FeatureState | None = obj.get("feature_state")
         if not fs:
             return None
-        return fs.get_feature_state_value()
+        value: str | int | bool | None = fs.get_feature_state_value()
+        return value
 
 
 class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSerializer):
