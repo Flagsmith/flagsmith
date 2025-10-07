@@ -1107,5 +1107,11 @@ export type Res = {
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
   featureCodeReferences: FeatureCodeReferences[]
+  segmentFeatureStates: {
+    results: {
+      featureState: FeatureState
+      segmentOverride: FeatureState | null
+    }[]
+  }
   // END OF TYPES
 }
