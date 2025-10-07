@@ -11,7 +11,6 @@ import {
   IdentityFeatureState,
   IdentityTrait,
   ProjectFlag,
-  TagStrategy,
 } from 'common/types/responses'
 import API from 'project/api'
 import AccountStore from 'common/stores/account-store'
