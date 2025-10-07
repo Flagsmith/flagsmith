@@ -28,10 +28,6 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from .multivariate.serializers import (
-    FeatureMVOptionsValuesResponseSerializer,
-    NestedMultivariateFeatureOptionSerializer,
-)
 from app.pagination import CustomPagination
 from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
@@ -59,6 +55,9 @@ from webhooks.webhooks import WebhookEventType
 from .constants import INTERSECTION, UNION
 from .features_service import get_overrides_data
 from .models import Feature, FeatureState
+from .multivariate.serializers import (
+    FeatureMVOptionsValuesResponseSerializer,
+)
 from .permissions import (
     CreateSegmentOverridePermissions,
     EnvironmentFeatureStatePermissions,
