@@ -1,5 +1,5 @@
 import { FC, useEffect } from 'react'
-import ErrorMessage from 'components/ErrorMessage' // we need this to make JSX compile
+import ErrorMessage from 'components/ErrorMessage'
 
 type BrokenPageType = {}
 

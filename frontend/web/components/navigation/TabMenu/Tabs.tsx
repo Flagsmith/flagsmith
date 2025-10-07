@@ -1,4 +1,5 @@
 import React, {
+  ReactNode,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -14,19 +15,8 @@ import classNames from 'classnames'
 import DropdownMenu from 'components/base/DropdownMenu'
 import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
 
-interface TabItemProps {
-  tabLabel: React.ReactNode
-  tabLabelString?: string
-  'data-test'?: string
-  id?: string
-  className?: string
-  children: React.ReactNode
-}
-
 interface TabsProps {
-  children:
-    | React.ReactElement<TabItemProps>
-    | React.ReactElement<TabItemProps>[]
+  children: ReactNode | ReactNode[]
   onChange?: (index: number) => void
   theme?: 'tab' | 'pill'
   uncontrolled?: boolean
@@ -61,6 +51,7 @@ const Tabs: React.FC<TabsProps> = ({
   const [internalValue, setInternalValue] = useState(0)
   const routerHistory = useHistory() || history
 
+  const disableOverflow = theme === 'pill'
   let value = uncontrolled ? internalValue : propValue
   if (urlParam) {
     const tabParam = Utils.fromParam()[urlParam]
@@ -83,6 +74,7 @@ const Tabs: React.FC<TabsProps> = ({
   const [overflowButtonWidth, setOverflowButtonWidth] = useState(54) // fallback
 
   useLayoutEffect(() => {
+    if (disableOverflow) return
     if (overflowButtonRef.current) {
       const width = overflowButtonRef.current.offsetWidth
       const marginLeft =
@@ -90,7 +82,8 @@ const Tabs: React.FC<TabsProps> = ({
         0
       setOverflowButtonWidth(width + marginLeft)
     }
-  }, [])
+  }, [disableOverflow])
+
   const { isMeasuring, visibleCount } = useOverflowVisibleCount({
     extraWidth: overflowButtonWidth,
     force: false,
@@ -101,12 +94,13 @@ const Tabs: React.FC<TabsProps> = ({
   })
 
   const visible = useMemo(
-    () => tabChildren.slice(0, visibleCount),
-    [tabChildren, visibleCount],
+    // Disable overflow for pill tabs
+    () => (disableOverflow ? tabChildren : tabChildren.slice(0, visibleCount)),
+    [tabChildren, visibleCount, disableOverflow],
   )
   const overflow = useMemo(
-    () => tabChildren.slice(visibleCount),
-    [tabChildren, visibleCount],
+    () => (disableOverflow ? [] : tabChildren.slice(visibleCount)),
+    [tabChildren, visibleCount, disableOverflow],
   )
   const canGrow = !isMeasuring && visibleCount === tabChildren.length
 
@@ -138,7 +132,7 @@ const Tabs: React.FC<TabsProps> = ({
         ref={outerContainerRef}
         className={`${
           hideNav ? '' : 'tabs-nav'
-        } ${theme} justify-content-between align-items-center`}
+        } ${theme} justify-content-between align-items-center ${className}`}
       >
         <div
           ref={itemsContainerRef}
@@ -171,7 +165,7 @@ const Tabs: React.FC<TabsProps> = ({
         </div>
         {overflow.length > 0 && !isMeasuring && (
           <div
-            className='d-flex align-items-center justify-content-center ms-2 flex-shrink-0'
+            className='d-flex align-items-center justify-content-center ms-2 flex-shrink-0 btn btn-secondary'
             style={{
               backgroundColor: 'var(--bs-light300)',
               borderRadius: 6,

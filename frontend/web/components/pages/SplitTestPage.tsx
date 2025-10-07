@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react' // we need this to make JSX compile
+import React, { FC, useState } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import { SplitTestResult } from 'common/types/responses'
