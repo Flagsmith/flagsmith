@@ -5311,7 +5311,7 @@ test = ["pytest"]
 
 [[package]]
 name = "workflows-logic"
-version = "3.0.0"
+version = "3.1.0"
 description = "Workflows logic plugin for Flagsmith application."
 optional = false
 python-versions = ">=3.11,<4.0"
@@ -5328,8 +5328,8 @@ flagsmith-flag-engine = "*"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "v3.0.0"
-resolved_reference = "ceb01dfedd46a5e1eca17efb0b1fbdde3d967a57"
+reference = "v3.1.0"
+resolved_reference = "2b3fc424bd3df438d0c09ebda3fb2eed163c3ff7"
 
 [[package]]
 name = "wrapt"
@@ -5451,4 +5451,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "25781657c31ede1ed5fdfeb143e90e12cd45cc3e45f0c153ba03cecb654d82d4"
+content-hash = "fc7b2a97ce78c85974f80928dad3afdac911b138cc1f5a1b40ad4081f2c79b5f"
