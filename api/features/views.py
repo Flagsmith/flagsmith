@@ -940,7 +940,6 @@ def get_multivariate_options(request: Request, feature_id: int) -> Response:
         )
         .filter(feature__is_archived=False)
         .select_related("feature_state_value")
-        .order_by("-environment_feature_version__created_at")  # latest published
         .first()
     )
 
