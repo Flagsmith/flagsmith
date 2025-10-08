@@ -126,3 +126,22 @@ def test_feature_mv_options_values_response_serializer_with_feature_state(
     # Then
     assert serializer.data["control_value"] == "control"
     assert len(serializer.data["options"]) == 3
+
+
+def test_feature_mv_options_values_response_serializer_without_feature_state(
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    options = list(multivariate_feature.multivariate_options.all())
+
+    payload = {
+        "feature_state": None,
+        "options": options,
+    }
+
+    # When
+    serializer = FeatureMVOptionsValuesResponseSerializer(payload)
+
+    # Then
+    assert serializer.data["control_value"] is None
+    assert len(serializer.data["options"]) == 3
