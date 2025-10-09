@@ -323,7 +323,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
         project_id: `${projectId}`,
       })
 
-      closeModal()
       toast('Created change request')
     } catch (error) {
       console.error('Failed to create change request:', error)
