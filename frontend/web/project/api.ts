@@ -224,6 +224,7 @@ const API = {
 
       API.trackTraits({
         email: String(id),
+        hosting_preferences: user.onboarding?.hosting_preferences || [],
         integrations: user.onboarding?.tools?.integrations || [],
         name: { first: user.first_name, last: user.last_name },
         organisation: selectedOrgName,
