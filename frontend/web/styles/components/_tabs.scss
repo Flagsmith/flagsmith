@@ -65,7 +65,7 @@
 
 .tabs-nav {
   .tab-nav-full {
-    flex: 1 !important; 
+    flex: 1 !important;
   }
 
   position: relative;
@@ -160,9 +160,6 @@
 .btn-tab {
   position: relative;
   .unread {
-    position: absolute;
-    right: 0;
-    top: 9px;
     padding-left: 0 !important;
     padding-right: 0 !important;
     width: 16px;
