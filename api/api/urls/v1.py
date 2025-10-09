@@ -9,7 +9,7 @@ from environments.identities.traits.views import SDKTraits
 from environments.identities.views import SDKIdentities
 from environments.sdk.views import SDKEnvironmentAPIView
 from features.feature_health.views import feature_health_webhook
-from features.views import SDKFeatureStates
+from features.views import SDKFeatureStates, get_multivariate_options
 from integrations.github.views import github_webhook
 from organisations.views import chargebee_webhook
 
@@ -65,6 +65,11 @@ urlpatterns = [
     re_path(r"^onboarding/", include("onboarding.urls", namespace="onboarding")),
     # Client SDK urls
     re_path(r"^flags/$", SDKFeatureStates.as_view(), name="flags"),
+    re_path(
+        r"^flags/(?P<feature_id>[0-9]+)/multivariate-options/$",
+        get_multivariate_options,
+        name="get-multivariate-options",
+    ),
     re_path(r"^identities/$", SDKIdentities.as_view(), name="sdk-identities"),
     re_path(r"^traits/", include(traits_router.urls), name="traits"),
     re_path(r"^analytics/flags/$", SDKAnalyticsFlags.as_view(), name="analytics-flags"),

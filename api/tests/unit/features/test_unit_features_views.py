@@ -4031,3 +4031,47 @@ def test_delete_feature_deletes_any_related_identity_overrides(
         )["Count"]
         == 0
     )
+
+
+def test_get_multivariate_options_responds_200_with_control_value_and_options(
+    api_client: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    mv_options = list(multivariate_feature.multivariate_options.all())
+    expected_option_values = [opt.string_value for opt in mv_options]
+
+    # When
+    response = api_client.get(
+        f"/api/v1/flags/{multivariate_feature.id}/multivariate-options/"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["control_value"] == "control"
+    assert len(data["options"]) == 3
+
+    actual_option_values = [opt["value"] for opt in data["options"]]
+    for expected_value in expected_option_values:
+        assert expected_value in actual_option_values
+
+
+def test_get_multivariate_options_feature_not_found_responds_404(
+    api_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    non_existent_feature_id = 99999
+
+    # When
+    response = api_client.get(
+        f"/api/v1/flags/{non_existent_feature_id}/multivariate-options/"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
