@@ -5,13 +5,15 @@ from typing import Callable
 from django.db import models
 from django.db.models import Q
 
-from edge_api.identities.models import EdgeIdentity
+from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.models import Environment
 from features.models import Feature
 from metrics.constants import DEFAULT_METRIC_DEFINITIONS, WORKFLOW_METRIC_DEFINITIONS
 from metrics.types import EnvMetricsName, EnvMetricsPayload, MetricDefinition
 
 logger = logging.getLogger(__name__)
+
+ddb_environment_v2_wrapper = DynamoEnvironmentV2Wrapper()
 
 
 class EnvironmentMetricsService:
@@ -83,13 +85,7 @@ class EnvironmentMetricsService:
         }
 
     def _get_active_identity_edge_overrides_count(self) -> int:
-        override_feature_id_counts = (
-            EdgeIdentity.dynamo_wrapper.get_identity_override_feature_counts(
-                self.environment.api_key
-            )
-        )
-
-        valid_feature_ids = set(
+        environment_feature_ids = list(
             Feature.objects.filter(
                 project=self.environment.project,
                 is_archived=False,
@@ -97,11 +93,14 @@ class EnvironmentMetricsService:
             ).values_list("id", flat=True)
         )
 
-        return sum(
-            count
-            for feature_id, count in override_feature_id_counts.items()
-            if feature_id in valid_feature_ids
+        overrides_query_response = (
+            ddb_environment_v2_wrapper.get_identity_overrides_by_environment_id(
+                environment_id=self.environment.id,
+                feature_ids=environment_feature_ids,
+            )
         )
+
+        return sum(len(page.items) for page in overrides_query_response)  # type: ignore[arg-type,misc]
 
     def _get_feature_metrics(
         self,
