@@ -51,7 +51,7 @@ Versions are compared as defined by the [Semantic Versioning specification](http
 </TabItem>
 <TabItem value="percent" label="Percentage Split">
 
-Percentage Split is the only operator that does not require a trait. You can use it to drive [A/B tests](/managing-flags/experimentation-ab-testing) and [staged feature rollouts](/managing-flags/rollout/rollout-by-percentage).
+Percentage Split is the only operator that does not require a trait. You can use it to drive [A/B tests](/experimentation-ab-testing) and [staged feature rollouts](/managing-flags/rollout/rollout-by-percentage).
 
 Percentage Split deterministically assigns a "bucket" to each identity solely based on its ID and not any traits, meaning that Segment overrides that use Percentage Split will always result in the same feature value for a given identity.
 

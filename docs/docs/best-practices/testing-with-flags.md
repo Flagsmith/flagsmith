@@ -33,4 +33,4 @@ For example, you could test:
 
 Flagsmith allows you to define different variations for a feature and control the percentage of users that see each one. This, combined with an analytics tool, allows you to make data-driven decisions about your product.
 
-You can learn more in our guide to [A/B Testing](/managing-flags/experimentation-ab-testing). 
+You can learn more in our guide to [A/B Testing](/experimentation-ab-testing). 

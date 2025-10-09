@@ -6,7 +6,7 @@ sidebar_position: 3
 
 This glossary provides concise definitions for some of the key concepts within Flagsmith:
 
-- [**A/B Testing**](/managing-flags/experimentation-ab-testing): A method of testing different feature variants with different user groups, often implemented using multivariate flags and percentage splits.
+- [**A/B Testing**](/experimentation-ab-testing): A method of testing different feature variants with different user groups, often implemented using multivariate flags and percentage splits.
 
 - [**Core API**](/edge-api/overview): Flagsmith's private API for programmatic control of the platform.
 

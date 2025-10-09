@@ -58,7 +58,7 @@ look like this:
    production environment (1 API request).
 2. The user logs in to their account. Now that we know the user's identity, their device calls Flagsmith to get the
    flags for this specific user, taking into account their
-   [A/B tests or progressive rollouts](/managing-flags/experimentation-ab-testing), [segments](/flagsmith-concepts/segments) and user-specific
+   [A/B tests or progressive rollouts](/experimentation-ab-testing), [segments](/flagsmith-concepts/segments) and user-specific
    flags (1 API request). Any user data sent by your application is stored by Flagsmith as traits.
 3. The user performs some action that should update their stored data in Flagsmith. The device calls Flagsmith to update
    this user's traits and receives their latest flags in return (1 API request).
