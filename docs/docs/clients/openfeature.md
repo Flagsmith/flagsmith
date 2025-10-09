@@ -17,7 +17,8 @@ OpenFeature is being actively worked on; we encourage anyone interested Feature 
 
 ## Flagsmith [OpenFeature](https://www.flagsmith.com/openfeature) Providers
 
-We currently offer [OpenFeature Providers](https://docs.openfeature.dev/docs/reference/concepts/provider) for the following languages:
+We currently offer [OpenFeature Providers](https://docs.openfeature.dev/docs/reference/concepts/provider) for the
+following languages:
 
 - [Go](https://github.com/open-feature/go-sdk-contrib/tree/main/providers/flagsmith)
 - [Java](https://github.com/open-feature/java-sdk-contrib/tree/main/providers/flagsmith)
@@ -33,4 +34,3 @@ We plan on implementing providers for the following languages as soon as we can:
 - PHP
 - Kotlin
 - Swift
-- Node.js
