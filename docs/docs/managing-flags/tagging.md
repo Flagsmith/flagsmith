@@ -43,9 +43,9 @@ You can quickly find and manage feature flags by using the **tag filter** in the
 
 Tags with the following names will prevent users from being able to delete tagged feature flags via the dashboard:
 
-- `protected`
-- `donotdelete`
-- `permanent`
+- `protected`.
+- `donotdelete`.
+- `permanent`.
 
 :::
 
@@ -61,6 +61,6 @@ Tags with the following names will prevent users from being able to delete tagge
 
 ## What's Next
 
-- Learn how to configure [tag-based permissions for roles](../system-administration/rbac.md).
-- See more advanced [feature flag management](../advanced-use/flag-management.md) techniques.
+- Learn how to configure [tag-based permissions for roles](/administration-and-security/access-control/rbac).
+- See more advanced [feature flag management](/managing-flags/core-management) techniques.
 

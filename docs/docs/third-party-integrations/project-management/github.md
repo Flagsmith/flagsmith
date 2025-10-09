@@ -67,9 +67,7 @@ E.g. `https://flagsmith-api.example.com/api/v1/github-webhook/`
 
 ### Configuring Flagsmith
 
-You must set the [API Env variables](/deployment/hosting/locally-api.md#github-integration-environment-variables) and
-the [Frontend Env variables](/deployment/hosting/locally-frontend.md#github-integration-environment-variables) to use
-your own GitHub App.
+You must set the appropriate environment variables for your GitHub App configuration. Refer to the [environment variables documentation](/deployment-self-hosting/core-configuration/environment-variables) for more details.
 
 In the 'Webhook' section:
 

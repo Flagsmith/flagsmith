@@ -2,7 +2,7 @@
 title: Authentication
 description: Customise how your users log in to the Flagsmith dashboard
 sidebar_label: Overview
-sidebar_position: 1
+sidebar_position: 10
 ---
 
 Flagsmith supports a variety of authentication methods for logging into the dashboard:
@@ -37,7 +37,7 @@ and authentication methods you want to allow for your users, and when would be a
 restrictions.
 
 If you are self-hosting Flagsmith, you can restrict authentication methods per email domain from
-[Django Admin](/deployment/configuration/django-admin):
+[Django Admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin):
 
 1. On the Django Admin sidebar, click on "Domain auth methods".
 2. Click "Add domain auth methods".
@@ -50,7 +50,7 @@ If you are self-hosting Flagsmith, you can restrict authentication methods per e
 If you are self-hosting Flagsmith, you can disable password authentication by setting the `PREVENT_EMAIL_PASSWORD` 
 environment variable on the Flagsmith API. This will also hide the username and password fields from the login screen.
 Note that this does not disable password authentication for
-[Django Admin](/deployment/configuration/django-admin#email-and-password).
+[Django Admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin#email-and-password).
 
 If you have a private cloud Flagsmith instance, contact Flagsmith support to disable password authentication once 
 you have successfully set up an alternative authentication method.

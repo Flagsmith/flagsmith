@@ -59,8 +59,8 @@ Flagsmith supports several operations for targeting and rollouts.
 
 ## Learn More
 
-- [Managing Identities](/basic-features/managing-identities.md)
-- [Segments & Segment Targeting](/basic-features/segments.md)
-- [Staged Feature Rollouts](/guides-and-examples/staged-feature-rollouts.md)
-- [A/B and Multivariate Testing](/advanced-use/ab-testing.md)
-- [Managing Features & Multivariate Flags](/basic-features/managing-features.md)
+- [Managing Identities](/flagsmith-concepts/identities)
+- [Segments & Segment Targeting](/flagsmith-concepts/segments)
+- [Staged Feature Rollouts](/managing-flags/rollout/rollout-by-percentage)
+- [A/B and Multivariate Testing](/experimentation-ab-testing)
+- [Managing Features & Multivariate Flags](/managing-flags/core-management)
