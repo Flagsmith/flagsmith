@@ -171,11 +171,18 @@
                     "title": "Overrides",
                     "type": "array"
                 },
-                "virtual": {
-                    "description": "Indicates whether the segment is virtual (i.e., not stored in Flagsmith but provided at evaluation time).",
-                    "title": "Virtual",
-                    "type": "boolean",
-                    "default": false
+                "metadata": {
+                    "description": "Additional metadata associated with the segment.",
+                    "additionalProperties": {
+                        "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
+                        ]
+                    },
+                    "title": "Metadata",
+                    "type": "object"
                 }
             },
             "required": [
