@@ -123,6 +123,7 @@
                 },
                 "traits": {
                     "additionalProperties": {
+                        "existingJavaType": "Object",
                         "type": [
                             "string",
                             "number",
