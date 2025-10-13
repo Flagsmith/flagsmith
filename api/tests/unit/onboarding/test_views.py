@@ -135,7 +135,7 @@ def test_receive_support_request_throttling(
         "first_name": "user",
         "last_name": "test",
         "email": "user@flagsmith.com",
-        "hubspotutk": "test-utk",
+        "hubspot_cookie": "test-utk",
     }
     url = reverse("api-v1:onboarding:receive-onboarding-request")
 

@@ -270,10 +270,9 @@ const controller = {
         store.isSaving = false
 
         if (contact_consent_given) {
-          await createOnboardingSupportOptIn(
-            { ...getStore(), hubspotutk: API.getCookie('hubspotutk') },
-            {},
-          )
+          await createOnboardingSupportOptIn(getStore(), {
+            hubspot_utk: API.getCookie('hubspotutk'),
+          })
         }
         await controller.onLogin(!API.getInvite())
 
