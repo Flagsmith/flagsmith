@@ -11,7 +11,7 @@ from rest_framework.test import APIRequestFactory
 from task_processor.task_run_method import TaskRunMethod
 
 from integrations.lead_tracking.hubspot.constants import (
-    HUBSPOT_FORM_ID,
+    HUBSPOT_FORM_ID_SAAS,
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
 )
@@ -78,7 +78,7 @@ def test_create_hubspot_contact_with_lead_form_and_get_hubspot_id(
     HubspotTracker.objects.create(user=user, hubspot_cookie=tracker_cookie)
     responses.add(
         responses.POST,
-        f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID}",
+        f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID_SAAS}",
         json={},
         status=200,
         match=[responses.matchers.header_matcher({"Content-Type": "application/json"})],
@@ -208,7 +208,9 @@ def test_create_organisation_lead_creates_contact_when_not_found_but_not_company
     assert hubspot_lead.hubspot_id == HUBSPOT_USER_ID
 
     assert mock_client.get_contact.call_count == 2
-    mock_client.create_lead_form.assert_called_once_with(user=user)
+    mock_client.create_lead_form.assert_called_once_with(
+        user=user, form_id=HUBSPOT_FORM_ID_SAAS
+    )
     mock_client.create_company.assert_not_called()  # We rely on Hubspot creating contacts
     mock_client.associate_contact_to_company.assert_not_called()
 
@@ -245,7 +247,9 @@ def test_create_organisation_lead_creates_contact_for_existing_org(
     assert HubspotLead.objects.filter(user=user, hubspot_id=HUBSPOT_USER_ID).exists()
     mock_client.create_company.assert_not_called()
     assert mock_client.get_contact.call_count == 2
-    mock_client.create_lead_form.assert_called_once_with(user=user)
+    mock_client.create_lead_form.assert_called_once_with(
+        user=user, form_id=HUBSPOT_FORM_ID_SAAS
+    )
     mock_client.associate_contact_to_company.assert_called_once_with(
         contact_id=HUBSPOT_USER_ID,
         company_id=HUBSPOT_COMPANY_ID,

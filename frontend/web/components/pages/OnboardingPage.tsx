@@ -12,7 +12,7 @@ type OnboardingPageProps = {
   onComplete?: () => void
 }
 
-const OnboardingPage: FC<OnboardingPageProps> = ({ onComplete }) => {
+const OnboardingPage: FC<OnboardingPageProps> = () => {
   const { data: version } = useGetBuildVersionQuery({})
   const [step, setStep] = useState(0)
   const [requirementsMet, setRequirementsMet] = useState(false)

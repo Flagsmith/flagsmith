@@ -248,7 +248,6 @@ const controller = {
   },
   register: ({ contact_consent_given, organisation_name, ...user }) => {
     store.saving()
-
     return data
       .post(`${Project.api}auth/users/`, {
         ...user,
@@ -271,7 +270,9 @@ const controller = {
         store.isSaving = false
 
         if (contact_consent_given) {
-          await createOnboardingSupportOptIn(getStore(), {})
+          await createOnboardingSupportOptIn(getStore(), {
+            hubspot_utk: API.getCookie('hubspotutk'),
+          })
         }
         await controller.onLogin(!API.getInvite())
 
