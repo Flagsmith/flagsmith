@@ -15,7 +15,7 @@ from integrations.lead_tracking.hubspot.services import (
 def test_create_self_hosted_onboarding_lead_with_existing_company(
     mocker: MockerFixture,
     hubspot_cookie: str,
-    expected_hubspot_cookie: str,
+    expected_hubspot_cookie: bool,
 ) -> None:
     # Given
     mocked_hubspot_client = mocker.patch(

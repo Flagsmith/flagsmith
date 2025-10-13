@@ -14,8 +14,8 @@ from integrations.lead_tracking.hubspot.tasks import (
     create_self_hosted_onboarding_lead_task,
 )
 from onboarding.serializers import (
-    SelfHostedOnboardingSupportSendRequestSerializer,
     SelfHostedOnboardingReceiveSupportSerializer,
+    SelfHostedOnboardingSupportSendRequestSerializer,
 )
 from onboarding.tasks import send_onboarding_request_to_saas_flagsmith_task
 from onboarding.throttling import OnboardingRequestThrottle
