@@ -71,7 +71,7 @@ def create_self_hosted_onboarding_lead(
     email: str,
     first_name: str,
     last_name: str,
-    hubspotutk: str = "",
+    hubspot_cookie: str = "",
 ) -> None:
     hubspot_client = HubspotClient()
     user = FFAdminUser(email=email, first_name=first_name, last_name=last_name)
@@ -79,7 +79,7 @@ def create_self_hosted_onboarding_lead(
         "user": user,
         "form_id": HUBSPOT_FORM_ID_SELF_HOSTED,
     }
-    if hubspotutk:
-        create_lead_form_kwargs.update(hubspot_cookie=hubspotutk)
+    if hubspot_cookie:
+        create_lead_form_kwargs.update(hubspot_cookie=hubspot_cookie)
 
     hubspot_client.create_lead_form(**create_lead_form_kwargs)

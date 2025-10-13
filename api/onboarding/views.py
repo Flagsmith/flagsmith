@@ -14,8 +14,8 @@ from integrations.lead_tracking.hubspot.tasks import (
     create_self_hosted_onboarding_lead_task,
 )
 from onboarding.serializers import (
-    SelfHostedOnboardingSupportRequestSerializer,
-    SelfHostedOnboardingSupportSerializer,
+    SelfHostedOnboardingSupportSendRequestSerializer,
+    SelfHostedOnboardingReceiveSupportSerializer,
 )
 from onboarding.tasks import send_onboarding_request_to_saas_flagsmith_task
 from onboarding.throttling import OnboardingRequestThrottle
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 @swagger_auto_schema(
     method="post",
-    request_body=SelfHostedOnboardingSupportRequestSerializer,
+    request_body=SelfHostedOnboardingSupportSendRequestSerializer,
     responses={204: "No Content", 400: ErrorSerializer()},
 )  # type: ignore[misc]
 @api_view(["POST"])
@@ -45,20 +45,20 @@ def send_onboarding_request_to_saas_flagsmith_view(request: Request) -> Response
             "first_name": admin_user.first_name,
             "last_name": admin_user.last_name,
             "email": admin_user.email,
-            "hubspotutk": request.data.get("hubspotutk"),
+            "hubspot_cookie": request.data.get("hubspotutk"),
         }
     )
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ReceiveSupportRequestFromSelfHosted(GenericAPIView):  # type: ignore[type-arg]
-    serializer_class = SelfHostedOnboardingSupportSerializer
+    serializer_class = SelfHostedOnboardingReceiveSupportSerializer
     authentication_classes = ()
     permission_classes = ()
     throttle_classes = [OnboardingRequestThrottle]
 
     @swagger_auto_schema(
-        request_body=SelfHostedOnboardingSupportSerializer,
+        request_body=SelfHostedOnboardingReceiveSupportSerializer,
         responses={204: "No Content", 400: ErrorSerializer()},
     )  # type: ignore[misc]
     def post(self, request: Request) -> Response:

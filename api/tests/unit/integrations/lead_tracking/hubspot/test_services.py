@@ -10,11 +10,11 @@ from integrations.lead_tracking.hubspot.services import (
 
 
 @pytest.mark.parametrize(
-    "hubspotutk, expected_hubspot_cookie", [("", False), ("test_cookie", True)]
+    "hubspot_cookie, expected_hubspot_cookie", [("", False), ("test_cookie", True)]
 )
 def test_create_self_hosted_onboarding_lead_with_existing_company(
     mocker: MockerFixture,
-    hubspotutk: str,
+    hubspot_cookie: str,
     expected_hubspot_cookie: str,
 ) -> None:
     # Given
@@ -26,7 +26,7 @@ def test_create_self_hosted_onboarding_lead_with_existing_company(
     last_name = "test"
 
     # When
-    create_self_hosted_onboarding_lead(email, first_name, last_name, hubspotutk)
+    create_self_hosted_onboarding_lead(email, first_name, last_name, hubspot_cookie)
 
     # Then
     mocked_hubspot_client().create_lead_form.assert_called_once()
@@ -39,4 +39,4 @@ def test_create_self_hosted_onboarding_lead_with_existing_company(
     assert user.first_name == first_name
     assert user.last_name == last_name
     assert form_id == HUBSPOT_FORM_ID_SELF_HOSTED
-    assert ("hubspot_cookie" in call_args.kwargs) is bool(hubspotutk)
+    assert ("hubspot_cookie" in call_args.kwargs) is expected_hubspot_cookie

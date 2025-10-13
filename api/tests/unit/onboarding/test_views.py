@@ -63,7 +63,7 @@ def test_send_onboarding_request_to_saas_flagsmith_view(
             "first_name": admin_user.first_name,
             "last_name": admin_user.last_name,
             "email": admin_user.email,
-            "hubspotutk": "test",
+            "hubspot_cookie": "test",
         },
         timeout=30,
     )
@@ -106,7 +106,7 @@ def test_receive_support_request_from_self_hosted_view(
         "first_name": "user",
         "last_name": "test",
         "email": "user@flagsmith.com",
-        "hubspotutk": "test",
+        "hubspot_cookie": "test",
     }
     url = reverse("api-v1:onboarding:receive-onboarding-request")
 
