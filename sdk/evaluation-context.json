@@ -83,6 +83,11 @@
         "FeatureValue": {
             "description": "Represents a multivariate value for a feature flag.",
             "properties": {
+                "key": {
+                    "description": "Sorting key, used to determine the variant order. Set to an internal feature value state identifier or a UUID, depending on Flagsmith implementation.",
+                    "title": "Key",
+                    "type": "string"
+                },
                 "value": {
                     "description": "The value of the feature.",
                     "title": "Value",
@@ -100,6 +105,7 @@
                 }
             },
             "required": [
+                "key",
                 "value",
                 "weight"
             ],
@@ -173,15 +179,6 @@
                 },
                 "metadata": {
                     "description": "Additional metadata associated with the segment.",
-                    "additionalProperties": {
-                        "type": [
-                            "string",
-                            "number",
-                            "boolean",
-                            "null"
-                        ]
-                    },
-                    "title": "Metadata",
                     "type": "object"
                 }
             },
