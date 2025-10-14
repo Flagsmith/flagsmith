@@ -4,6 +4,14 @@
 
 **Important**: This codebase IS Flagsmith itself - the feature flag platform. The frontend uses the Flagsmith JavaScript SDK internally for "dogfooding" (using our own product to control feature releases).
 
+## Default Project Context
+
+**ALWAYS use the Flagsmith Website project unless the user explicitly specifies a different project.**
+
+When working with feature flags, releases, or any feature flag operations:
+- Default project: "Flagsmith Website"
+- Only use a different project if the user explicitly mentions it by name or ID
+
 ## Configuration
 
 - **Flagsmith SDK**: Imported as `flagsmith` npm package
