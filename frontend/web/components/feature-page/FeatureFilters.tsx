@@ -128,9 +128,7 @@ export const getServerFilter = (f: FiltersValue) => ({
 //Detect if the filter is default
 const isDefault = (v: FiltersValue) =>
   isEqual(
-    {
-      ...v,
-    },
+v,
     DEFAULTS,
   )
 
