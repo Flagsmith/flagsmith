@@ -180,6 +180,7 @@
                 "metadata": {
                     "existingJavaType": "java.util.Map<String,Object>",
                     "description": "Additional metadata associated with the segment.",
+                    "title": "Metadata",
                     "type": "object"
                 }
             },
