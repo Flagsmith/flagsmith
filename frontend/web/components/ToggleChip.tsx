@@ -3,12 +3,11 @@ import cx from 'classnames'
 import Icon from './Icon'
 import Utils from 'common/utils/utils'
 
-type ToggleChipProps = {
+export type ToggleChipProps = {
   color?: string
   active?: boolean
   onClick?: () => void
   className?: string
-  size?: 'xSmall' | 'small' | 'medium' | 'large'
   children?: ReactNode
 }
 
@@ -18,7 +17,6 @@ const ToggleChip: FC<ToggleChipProps> = ({
   className,
   color,
   onClick,
-  size,
 }) => {
   const colour = Utils.colour(color)
   return (
@@ -33,22 +31,17 @@ const ToggleChip: FC<ToggleChipProps> = ({
           : undefined
       }
       onClick={onClick}
-      className={cx(
-        'chip no-wrap mr-1 mt-0 clickable',
-        size && `chip--${size}`,
-        className,
-      )}
+      className={cx('chip no-wrap mr-1 mt-0 clickable', className)}
     >
       <span
         style={{
           backgroundColor: active ? 'white' : 'transparent',
           border:
             active || !children ? 'none' : `1px solid ${colour.fade(0.76)}`,
-          marginRight: children ? '0.5rem' : '0',
         }}
-        className='icon-check'
+        className={cx('icon-check', children ? 'mr-2' : null)}
       >
-        {active && <Icon width={14} name='checkmark-square' fill={color} />}
+        {active && <Icon name='checkmark-square' fill={color} />}
       </span>
       {children}
     </Row>

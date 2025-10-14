@@ -90,7 +90,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
                 )
               }
             }}
-            className='mb-2 mr-2 fs-caption'
+            className='mb-2 chip--xs'
           />
         ))}
       </Row>

@@ -103,6 +103,7 @@ const Tag: FC<TagType> = ({
   ) {
     return null
   }
+
   return (
     <TagWrapper
       tagColor={tagColor}
