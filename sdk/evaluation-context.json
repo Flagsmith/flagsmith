@@ -97,11 +97,17 @@
                     "description": "The weight of the feature value variant, as a percentage number (i.e. 100.0).",
                     "title": "Weight",
                     "type": "number"
+                },
+                "priority": {
+                    "description": "Priority of the feature flag variant. Lower values indicate a higher priority when multiple variants apply to the same context key.",
+                    "title": "Priority",
+                    "type": "number"
                 }
             },
             "required": [
                 "value",
-                "weight"
+                "weight",
+                "priority"
             ],
             "title": "FeatureValue",
             "type": "object"
@@ -172,15 +178,8 @@
                     "type": "array"
                 },
                 "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
                     "description": "Additional metadata associated with the segment.",
-                    "additionalProperties": {
-                        "type": [
-                            "string",
-                            "number",
-                            "boolean",
-                            "null"
-                        ]
-                    },
                     "title": "Metadata",
                     "type": "object"
                 }
