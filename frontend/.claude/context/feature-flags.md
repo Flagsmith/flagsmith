@@ -15,23 +15,62 @@ When working with feature flags, releases, or any feature flag operations:
 ## Configuration
 
 - **Flagsmith SDK**: Imported as `flagsmith` npm package
-- **Environment ID**: Configured in `common/project.js`
+- **Environment ID**: `4vfqhypYjcPoGGu8ByrBaj` (configured in `common/project.js`)
+- **API Endpoint**: `https://edge.api.flagsmith.com/api/v1/`
 - **Self-hosted**: Points to own API backend in `../api/`
 - Uses Flagsmith to control its own feature rollouts
 
+### Flagsmith Organization Details
+- **Organization ID**: 13 (Flagsmith)
+- **Main Project ID**: 12 (Flagsmith Website)
+- **Main Project Name**: "Flagsmith Website"
+
+### Environments
+
+| Environment | ID | API Key | Description |
+|-------------|-----|---------|-------------|
+| **Production** | 22 | `4vfqhypYjcPoGGu8ByrBaj` | Live production environment (default in `common/project.js`) |
+| **Staging** | 1848 | `ENktaJnfLVbLifybz34JmX` | Staging/testing environment |
+| **Demo** | 20524 | `Ueo6zkrS8kt4LzuaJF9NFJ` | Demo environment |
+| **Self hosted defaults** | 21938 | `MXSepNNQEacBBzxAU7RagJ` | Defaults for self-hosted instances |
+| **Demo2** | 59277 | `DarXioFcqTNy53CeyvsqP4` | Second demo environment |
+
+## Querying Feature Flags by Environment
+
+To quickly check feature flag values for any environment:
+
+```bash
+# Production flags
+curl -H "X-Environment-Key: 4vfqhypYjcPoGGu8ByrBaj" \
+  "https://edge.api.flagsmith.com/api/v1/flags/" | grep -A 5 "flag_name"
+
+# Staging flags
+curl -H "X-Environment-Key: ENktaJnfLVbLifybz34JmX" \
+  "https://edge.api.flagsmith.com/api/v1/flags/" | grep -A 5 "flag_name"
+
+# Get all flags (no filter)
+curl -H "X-Environment-Key: 4vfqhypYjcPoGGu8ByrBaj" \
+  "https://edge.api.flagsmith.com/api/v1/flags/"
+```
+
+**Note**: The frontend in `common/project.js` is configured to use **Production** (`4vfqhypYjcPoGGu8ByrBaj`) by default.
+
 ## Usage Pattern
 
-**NOTE**: This codebase does NOT use `useFlags` hook. Check the actual implementation in the codebase for the correct pattern.
+The Flagsmith frontend uses utility methods to access feature flags:
 
-The Flagsmith frontend likely uses one of these patterns:
-1. Global `flagsmith` instance accessed directly
-2. Custom provider/context for feature flags
-3. Direct API calls to feature states
+```typescript
+// Check if feature is enabled
+Utils.getFlagsmithHasFeature('feature_name')
 
-To find the correct pattern, search for:
-```bash
-grep -r "flagsmith" common/ web/ --include="*.ts" --include="*.tsx" --include="*.js"
+// Get feature value
+Utils.getFlagsmithValue('feature_name')
+
+// Get JSON feature value with default
+Utils.getFlagsmithJSONValue('feature_name', defaultValue)
 ```
+
+See `common/utils/utils.ts` for implementation details.
 
 ## Common Patterns in Feature Flag Platforms
 
