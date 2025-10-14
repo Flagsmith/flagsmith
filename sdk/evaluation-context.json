@@ -83,11 +83,6 @@
         "FeatureValue": {
             "description": "Represents a multivariate value for a feature flag.",
             "properties": {
-                "key": {
-                    "description": "Sorting key, used to calculate variants consistently.",
-                    "title": "Key",
-                    "type": "string"
-                },
                 "value": {
                     "description": "The value of the feature.",
                     "title": "Value",
@@ -102,12 +97,17 @@
                     "description": "The weight of the feature value variant, as a percentage number (i.e. 100.0).",
                     "title": "Weight",
                     "type": "number"
+                },
+                "priority": {
+                    "description": "Priority of the feature flag variant. Lower values indicate a higher priority when multiple variants apply to the same context key.",
+                    "title": "Priority",
+                    "type": "number"
                 }
             },
             "required": [
-                "key",
                 "value",
-                "weight"
+                "weight",
+                "priority"
             ],
             "title": "FeatureValue",
             "type": "object"
