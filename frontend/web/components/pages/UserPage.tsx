@@ -203,8 +203,7 @@ const UserPage: FC = () => {
   }
 
   const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data
-  const isEdge = Utils.getIsEdge()
-  const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
+  const showAliases = Utils.getIsEdge()
   const clearFilters = () => {
     history.replace(`${document.location.pathname}`)
     setFilter(getFiltersFromParams({}))

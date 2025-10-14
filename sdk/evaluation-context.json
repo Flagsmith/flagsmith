@@ -170,6 +170,19 @@
                     },
                     "title": "Overrides",
                     "type": "array"
+                },
+                "metadata": {
+                    "description": "Additional metadata associated with the segment.",
+                    "additionalProperties": {
+                        "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
+                        ]
+                    },
+                    "title": "Metadata",
+                    "type": "object"
                 }
             },
             "required": [
