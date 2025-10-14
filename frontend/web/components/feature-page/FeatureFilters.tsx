@@ -15,7 +15,6 @@ import Format from 'common/utils/format'
 
 export type FiltersValue = {
   search: string | null
-  releasePipelines: number[]
   page: number
   tag_strategy: TagStrategy
   tags: (number | string)[]
@@ -41,7 +40,6 @@ const DEFAULTS: FiltersValue = {
   is_enabled: null,
   owners: [],
   page: 1,
-  releasePipelines: [],
   search: '',
   sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
   tag_strategy: 'INTERSECTION',
@@ -101,7 +99,6 @@ export const getFiltersFromURLParams = (
         ? params.owners.split(',').map((v) => parseInt(v))
         : [],
     page: params.page ? parseInt(params.page) - 1 : 1,
-    releasePipelines: [],
     search: params.search || '',
     sort: {
       label: Format.camelCase(params.sortBy || 'Name'),
