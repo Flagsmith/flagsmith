@@ -423,8 +423,8 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
     case 'checkmark-square': {
       return (
         <svg
-          width='20'
-          height='20'
+          width={width || '20'}
+          height={width || '20'}
           viewBox='3 3 18 18'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'

@@ -82,6 +82,7 @@ const Tag: FC<TagType> = ({
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
+        className={className}
         color={tagColor}
         active={selected}
         onClick={() => {
@@ -102,7 +103,6 @@ const Tag: FC<TagType> = ({
   ) {
     return null
   }
-
   return (
     <TagWrapper
       tagColor={tagColor}

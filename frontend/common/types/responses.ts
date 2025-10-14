@@ -1107,5 +1107,9 @@ export type Res = {
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
   featureCodeReferences: FeatureCodeReferences[]
+  featureAnalytics: {
+    day: string
+    [environmentId: string]: string | number
+  }[]
   // END OF TYPES
 }
