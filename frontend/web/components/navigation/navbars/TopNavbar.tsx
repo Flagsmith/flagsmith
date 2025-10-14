@@ -24,18 +24,16 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
           <div className='me-3'>
             <GithubStar />
           </div>
-          {Utils.getFlagsmithHasFeature('welcome_page') && (
-            <NavLink
-              activeClassName='active'
-              to={'/getting-started'}
-              className='d-flex gap-1 d-none d-md-flex text-end lh-1 align-items-center'
-            >
-              <span>
-                <Icon name='rocket' width={20} fill='#9DA4AE' />
-              </span>
-              <span className='d-none d-md-block'>Getting Started</span>
-            </NavLink>
-          )}
+          <NavLink
+            activeClassName='active'
+            to={'/getting-started'}
+            className='d-flex gap-1 d-none d-md-flex text-end lh-1 align-items-center'
+          >
+            <span>
+              <Icon name='rocket' width={20} fill='#9DA4AE' />
+            </span>
+            <span className='d-none d-md-block'>Getting Started</span>
+          </NavLink>
           <a
             className='d-flex gap-1 ps-3 text-end lh-1 align-items-center'
             href={'https://docs.flagsmith.com'}

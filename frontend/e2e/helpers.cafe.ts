@@ -349,14 +349,9 @@ export const deleteSegmentFromPage = async (name:string) => {
 export const deleteSegment = async (
   index: number,
   name: string,
-  legacyDelete = true,
 ) => {
-  if (legacyDelete) {
-    await click(byId(`remove-segment-btn-${index}`))
-  } else {
-    await click(byId(`segment-action-${index}`))
-    await click(byId(`segment-remove-${index}`))
-  }
+  await click(byId(`segment-action-${index}`))
+  await click(byId(`segment-remove-${index}`))
   await setText('[name="confirm-segment-name"]', name)
   await click('#confirm-remove-segment-btn')
   await waitForElementNotExist(`remove-segment-btn-${index}`)

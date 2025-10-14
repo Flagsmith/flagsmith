@@ -39,8 +39,6 @@ export const SegmentRow: FC<SegmentRowProps> = ({
 
   const [cloneSegment, { isLoading: isCloning }] = useCloneSegmentMutation()
 
-  const isCloningEnabled = Utils.getFlagsmithHasFeature('clone_segment')
-
   const cloneSegmentCallback = async (name: string) => {
     try {
       await cloneSegment({ name, projectId, segmentId: segment.id }).unwrap()
@@ -96,24 +94,13 @@ export const SegmentRow: FC<SegmentRowProps> = ({
         </div>
       </Flex>
       <div className='table-column'>
-        {isCloningEnabled ? (
-          <SegmentAction
-            index={index}
-            isRemoveDisabled={!manageSegmentsPermission}
-            isCloneDisabled={!manageSegmentsPermission}
-            onRemove={onRemoveSegmentClick}
-            onClone={handleCloneSegment}
-          />
-        ) : (
-          <Button
-            disabled={!manageSegmentsPermission}
-            data-test={`remove-segment-btn-${index}`}
-            onClick={onRemoveSegmentClick}
-            className='btn btn-with-icon'
-          >
-            <Icon name='trash-2' width={20} fill='#656D7B' />
-          </Button>
-        )}
+        <SegmentAction
+          index={index}
+          isRemoveDisabled={!manageSegmentsPermission}
+          isCloneDisabled={!manageSegmentsPermission}
+          onRemove={onRemoveSegmentClick}
+          onClone={handleCloneSegment}
+        />
       </div>
     </Row>
   )

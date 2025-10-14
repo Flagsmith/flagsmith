@@ -72,8 +72,6 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
     : operatorObj?.valuePlaceholder || 'Value'
 
   // TODO: Move this to the parent component in next iteration
-  const isContextPropertyEnabled =
-    Utils.getFlagsmithHasFeature('context_values')
 
   const ALLOWED_CONTEXT_VALUES: OptionType[] = [
     {
@@ -89,7 +87,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
       label: RuleContextLabels.ENVIRONMENT_NAME,
       value: RuleContextValues.ENVIRONMENT_NAME,
     },
-  ]?.filter((option) => !!option.enabled || isContextPropertyEnabled)
+  ]?.filter((option) => !!option.enabled)
 
   const isValueFromContext = !!ALLOWED_CONTEXT_VALUES.find(
     (option) => option.value === rule.property,
@@ -99,8 +97,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
     ['EQUAL', 'NOT_EQUAL'].includes(rule.operator) &&
     rule.property === RuleContextValues.ENVIRONMENT_NAME
 
-  const showEvaluationContextWarning =
-    isLastRule && isValueFromContext && isContextPropertyEnabled
+  const showEvaluationContextWarning = isLastRule && isValueFromContext
   const isSkippingEvaluationContextWarning =
     operator === 'PERCENTAGE_SPLIT' &&
     rule.property === RuleContextValues.IDENTITY_KEY

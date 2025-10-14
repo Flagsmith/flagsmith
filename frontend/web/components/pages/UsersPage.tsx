@@ -78,7 +78,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
 
   const { search, searchInput, setSearchInput } = useDebouncedSearch('')
   const isEdge = Utils.getIsEdge()
-  const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
+  const showAliases = isEdge
 
   const [searchType, setSearchType] = useState<'id' | 'alias'>(
     showAliases
