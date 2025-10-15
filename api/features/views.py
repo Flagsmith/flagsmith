@@ -68,6 +68,7 @@ from .permissions import (
 from .serializers import (  # type: ignore[attr-defined]
     CreateFeatureSerializer,
     CustomCreateSegmentOverrideFeatureStateSerializer,
+    EnvironmentFeatureStatesQuerySerializer,
     FeatureEvaluationDataSerializer,
     FeatureGroupOwnerInputSerializer,
     FeatureInfluxDataSerializer,
@@ -485,6 +486,13 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 type=openapi.TYPE_STRING,
             ),
             openapi.Parameter(
+                "segment",
+                openapi.IN_QUERY,
+                "ID of the segment to filter segment overrides by.",
+                required=False,
+                type=openapi.TYPE_INTEGER,
+            ),
+            openapi.Parameter(
                 "anyIdentity",
                 openapi.IN_QUERY,
                 "Pass any value to get results that have an identity override. "
@@ -663,7 +671,23 @@ class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [EnvironmentFeatureStatePermissions]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        queryset = super().get_queryset().filter(feature_segment=None)  # type: ignore[no-untyped-call]
+        queryset = super().get_queryset()  # type: ignore[no-untyped-call]
+
+        # Validate query parameters using serializer
+        query_serializer = EnvironmentFeatureStatesQuerySerializer(
+            data=self.request.query_params
+        )
+        query_serializer.is_valid(raise_exception=True)
+        query_data = query_serializer.validated_data
+
+        # Filter by segment if provided
+        if segment_id := query_data.get("segment"):
+            return queryset.filter(
+                feature_segment__segment_id=segment_id, identity=None
+            )
+
+        # Default: filter out segment overrides
+        queryset = queryset.filter(feature_segment=None)
         if "anyIdentity" in self.request.query_params:
             # TODO: deprecate anyIdentity query parameter
             return queryset.exclude(identity=None)

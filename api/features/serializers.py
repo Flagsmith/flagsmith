@@ -639,6 +639,13 @@ class SDKFeatureStatesQuerySerializer(serializers.Serializer):  # type: ignore[t
     )
 
 
+class EnvironmentFeatureStatesQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+    segment = serializers.IntegerField(
+        required=False,
+        help_text="ID of the segment to filter segment overrides by.",
+    )
+
+
 class CustomCreateSegmentOverrideFeatureStateSerializer(
     CreateSegmentOverrideFeatureStateSerializer
 ):
