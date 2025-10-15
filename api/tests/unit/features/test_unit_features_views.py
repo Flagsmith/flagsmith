@@ -1684,6 +1684,25 @@ def test_environment_feature_states_filter_by_segment_only_returns_live_versions
     assert response_json["results"][0]["id"] == segment_override_v2.id
     assert segment_override_v1.id not in [r["id"] for r in response_json["results"]]
 
+
+def test_environment_feature_states_filter_by_segment_with_invalid_segment_id_returns_400(
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:environments:environment-featurestates-list",
+        args=[environment.api_key],
+    )
+    url = f"{base_url}?segment=invalid"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "segment" in response.json()
+
     # Feature tests
 
 
