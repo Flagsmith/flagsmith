@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Callable
+from typing import Any, Callable
 
 from django.db import models
 from django.db.models import Q
@@ -85,7 +85,7 @@ class EnvironmentMetricsService:
         }
 
     def _get_active_identity_edge_overrides_count(self) -> int:
-        environment_feature_ids = list(
+        environment_feature_ids = set(
             Feature.objects.filter(
                 project=self.environment.project,
                 is_archived=False,
@@ -93,14 +93,21 @@ class EnvironmentMetricsService:
             ).values_list("id", flat=True)
         )
 
-        overrides_query_response = (
+        all_overrides = (
             ddb_environment_v2_wrapper.get_identity_overrides_by_environment_id(
                 environment_id=self.environment.id,
-                feature_ids=environment_feature_ids,
+                feature_id=None,
+                feature_ids=None,
             )
         )
 
-        return sum(len(page.items) for page in overrides_query_response)  # type: ignore[arg-type,misc]
+        count = 0
+        for override in all_overrides:
+            feature = override.get("feature_state", {}).get("feature", {})  # type: ignore[union-attr]
+            if feature.get("id") in environment_feature_ids:
+                count += 1
+
+        return count
 
     def _get_feature_metrics(
         self,

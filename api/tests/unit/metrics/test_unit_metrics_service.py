@@ -2,9 +2,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from environments.dynamodb.wrappers.environment_wrapper import (
-    IdentityOverridesQueryResponse,
-)
 from environments.models import Environment
 from features.models import Feature
 from metrics.metrics_service import EnvironmentMetricsService
@@ -100,11 +97,14 @@ def test_dynamo_identity_metric_used(
         lambda: MagicMock(count=identity_count_mock),
     )
 
-    mock_override_response = IdentityOverridesQueryResponse(
-        items=[{"identity_uuid": "test-uuid"}] * 99,
-        is_num_identity_overrides_complete=True,
-    )
-    dynamo_mock = MagicMock(return_value=[mock_override_response])
+    mock_overrides = [
+        {
+            "feature_state": {"feature": {"id": feature.id}},
+            "identity_uuid": f"uuid-{i}",
+        }
+        for i in range(99)
+    ]
+    dynamo_mock = MagicMock(return_value=mock_overrides)
     monkeypatch.setattr(
         "environments.dynamodb.wrappers.environment_wrapper.DynamoEnvironmentV2Wrapper.get_identity_overrides_by_environment_id",
         dynamo_mock,
@@ -125,7 +125,8 @@ def test_dynamo_identity_metric_used(
     if uses_dynamo:
         dynamo_mock.assert_called_once_with(
             environment_id=environment.id,
-            feature_ids=[feature.id],
+            feature_id=None,
+            feature_ids=None,
         )
         identity_count_mock.assert_not_called()
     else:
