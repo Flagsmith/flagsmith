@@ -1684,7 +1684,6 @@ def test_environment_feature_states_filter_by_segment_only_returns_live_versions
     assert response_json["results"][0]["id"] == segment_override_v2.id
     assert segment_override_v1.id not in [r["id"] for r in response_json["results"]]
 
-
     # Feature tests
 
 

@@ -676,8 +676,7 @@ class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
         if "segment" in self.request.query_params:
             segment_id = self.request.query_params["segment"]
             return queryset.filter(
-                feature_segment__segment_id=segment_id,
-                identity=None
+                feature_segment__segment_id=segment_id, identity=None
             )
 
         # Default: filter out segment overrides
