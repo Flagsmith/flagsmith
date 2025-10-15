@@ -485,6 +485,13 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 type=openapi.TYPE_STRING,
             ),
             openapi.Parameter(
+                "segment",
+                openapi.IN_QUERY,
+                "ID of the segment to filter segment overrides by.",
+                required=False,
+                type=openapi.TYPE_INTEGER,
+            ),
+            openapi.Parameter(
                 "anyIdentity",
                 openapi.IN_QUERY,
                 "Pass any value to get results that have an identity override. "
@@ -663,7 +670,18 @@ class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [EnvironmentFeatureStatePermissions]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        queryset = super().get_queryset().filter(feature_segment=None)  # type: ignore[no-untyped-call]
+        queryset = super().get_queryset()  # type: ignore[no-untyped-call]
+
+        # Filter by segment if provided
+        if "segment" in self.request.query_params:
+            segment_id = self.request.query_params["segment"]
+            return queryset.filter(
+                feature_segment__segment_id=segment_id,
+                identity=None
+            )
+
+        # Default: filter out segment overrides
+        queryset = queryset.filter(feature_segment=None)
         if "anyIdentity" in self.request.query_params:
             # TODO: deprecate anyIdentity query parameter
             return queryset.exclude(identity=None)

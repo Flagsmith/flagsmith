@@ -1595,6 +1595,96 @@ def test_environment_feature_states_does_not_return_null_versions(
     assert len(response_json["results"]) == 1
     assert response_json["results"][0]["id"] == feature_state.id
 
+
+def test_environment_feature_states_filter_by_segment(
+    environment: Environment,
+    project: Project,
+    feature: Feature,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    segment = Segment.objects.create(name="test_segment", project=project)
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment,
+        priority=0,
+    )
+    segment_override = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        enabled=True,
+    )
+    base_state = FeatureState.objects.get(
+        environment=environment, feature=feature, identity=None, feature_segment=None
+    )
+
+    base_url = reverse(
+        "api-v1:environments:environment-featurestates-list",
+        args=[environment.api_key],
+    )
+    url = f"{base_url}?segment={segment.id}"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["id"] == segment_override.id
+    assert response_json["results"][0]["feature_segment"] == feature_segment.id
+    # Ensure base state is not included
+    assert base_state.id not in [r["id"] for r in response_json["results"]]
+
+
+def test_environment_feature_states_filter_by_segment_only_returns_live_versions(
+    environment: Environment,
+    project: Project,
+    feature: Feature,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    segment = Segment.objects.create(name="test_segment", project=project)
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment,
+        priority=0,
+    )
+
+    # Create v1 segment override (old version)
+    segment_override_v1 = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        enabled=False,
+    )
+
+    # Create v2 segment override (live version)
+    segment_override_v2 = segment_override_v1.clone(
+        env=environment, live_from=timezone.now(), version=2
+    )
+
+    base_url = reverse(
+        "api-v1:environments:environment-featurestates-list",
+        args=[environment.api_key],
+    )
+    url = f"{base_url}?segment={segment.id}"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 1
+    # Should only return the latest live version
+    assert response_json["results"][0]["id"] == segment_override_v2.id
+    assert segment_override_v1.id not in [r["id"] for r in response_json["results"]]
+
+
     # Feature tests
 
 
