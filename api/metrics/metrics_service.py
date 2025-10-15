@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, Callable
+from typing import Callable
 
 from django.db import models
 from django.db.models import Q
