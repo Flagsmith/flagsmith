@@ -68,6 +68,12 @@
                     "description": "Priority of the feature context. Lower values indicate a higher priority when multiple contexts apply to the same feature.",
                     "title": "Priority",
                     "type": "number"
+                },
+                "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
+                    "description": "Additional metadata associated with the feature.",
+                    "title": "Metadata",
+                    "type": "object"
                 }
             },
             "required": [
