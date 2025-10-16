@@ -97,16 +97,13 @@ def test_dynamo_identity_metric_used(
         lambda: MagicMock(count=identity_count_mock),
     )
 
-    mock_overrides = [
-        {
-            "feature_state": {"feature": {"id": feature.id}},
-            "identity_uuid": f"uuid-{i}",
-        }
-        for i in range(99)
-    ]
+    mock_override = MagicMock()
+    mock_override.feature_state.feature.id = feature.id
+    mock_overrides = [mock_override] * 99
+
     dynamo_mock = MagicMock(return_value=mock_overrides)
     monkeypatch.setattr(
-        "environments.dynamodb.wrappers.environment_wrapper.DynamoEnvironmentV2Wrapper.get_identity_overrides_by_environment_id",
+        "edge_api.identities.edge_identity_service.get_edge_identity_overrides",
         dynamo_mock,
     )
 
@@ -126,7 +123,6 @@ def test_dynamo_identity_metric_used(
         dynamo_mock.assert_called_once_with(
             environment_id=environment.id,
             feature_id=None,
-            feature_ids=None,
         )
         identity_count_mock.assert_not_called()
     else:

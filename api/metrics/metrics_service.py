@@ -5,15 +5,13 @@ from typing import Any, Callable
 from django.db import models
 from django.db.models import Q
 
-from environments.dynamodb import DynamoEnvironmentV2Wrapper
+from edge_api.identities import edge_identity_service
 from environments.models import Environment
 from features.models import Feature
 from metrics.constants import DEFAULT_METRIC_DEFINITIONS, WORKFLOW_METRIC_DEFINITIONS
 from metrics.types import EnvMetricsName, EnvMetricsPayload, MetricDefinition
 
 logger = logging.getLogger(__name__)
-
-ddb_environment_v2_wrapper = DynamoEnvironmentV2Wrapper()
 
 
 class EnvironmentMetricsService:
@@ -93,18 +91,14 @@ class EnvironmentMetricsService:
             ).values_list("id", flat=True)
         )
 
-        all_overrides = (
-            ddb_environment_v2_wrapper.get_identity_overrides_by_environment_id(
-                environment_id=self.environment.id,
-                feature_id=None,
-                feature_ids=None,
-            )
+        all_overrides = edge_identity_service.get_edge_identity_overrides(
+            environment_id=self.environment.id,
+            feature_id=None,
         )
 
         count = 0
         for override in all_overrides:
-            feature = override.get("feature_state", {}).get("feature", {})  # type: ignore[union-attr]
-            if feature.get("id") in environment_feature_ids:
+            if override.feature_state.feature.id in environment_feature_ids:
                 count += 1
 
         return count
