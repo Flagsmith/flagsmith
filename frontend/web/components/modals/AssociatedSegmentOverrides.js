@@ -380,7 +380,7 @@ export default class SegmentOverridesInner extends Component {
                           className='ml-2'
                           onClick={this.openPriorities}
                         >
-                          Edit
+                          View
                         </a>
                       </div>
                     }
