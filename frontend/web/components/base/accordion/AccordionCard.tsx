@@ -32,15 +32,17 @@ const AccordionCard: FC<AccordionCardProps> = ({
         className='d-flex flex-row justify-content-between font-weight-medium'
       >
         <div className='d-flex flex-row align-items-center gap-1'>
-          <div>{title}</div>{' '}
+          {title}
           {isLoading && <Loader width='15px' height='15px' />}
         </div>
-        <IconButton size='small'>
-          <IonIcon
-            className='fs-small me-2 text-muted'
-            icon={open ? chevronUp : chevronDown}
-          />
-        </IconButton>
+        {!isLoading && (
+          <IconButton size='small'>
+            <IonIcon
+              className='fs-small me-2 text-muted'
+              icon={open ? chevronUp : chevronDown}
+            />
+          </IconButton>
+        )}
       </div>
       <Collapse in={open}>
         <div className='mt-2 mb-2'>{children}</div>
