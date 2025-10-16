@@ -480,9 +480,7 @@ class Environment(
             )
         )
 
-        change_requests: QuerySet["ChangeRequest"] = qs.filter(
-            id__in=qs.filter(scheduled_q).values_list("id", flat=True)
-        )
+        change_requests: QuerySet["ChangeRequest"] = qs.filter(scheduled_q).distinct()
         return change_requests
 
     @staticmethod

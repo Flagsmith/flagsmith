@@ -72,6 +72,7 @@ def test_environment_metrics_service_builds_expected_metrics(
 
 
 @pytest.mark.parametrize("uses_dynamo, expected_value", [(True, 99), (False, 1)])
+@pytest.mark.django_db
 def test_dynamo_identity_metric_used(
     monkeypatch: pytest.MonkeyPatch,
     environment: Environment,
@@ -83,8 +84,7 @@ def test_dynamo_identity_metric_used(
     monkeypatch.setattr(
         environment, "get_segment_metrics_queryset", lambda: MagicMock(count=lambda: 1)
     )
-    Feature.objects.create(
-        id=10,
+    feature = Feature.objects.create(
         project=environment.project,
         name="feature-10",
         is_archived=False,
@@ -97,14 +97,20 @@ def test_dynamo_identity_metric_used(
         lambda: MagicMock(count=identity_count_mock),
     )
 
-    dynamo_mock = MagicMock(return_value={10: 99})
+    mock_override = MagicMock()
+    mock_override.feature_state.feature.id = feature.id
+    mock_overrides = [mock_override] * 99
+
+    dynamo_mock = MagicMock(return_value=mock_overrides)
     monkeypatch.setattr(
-        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper.get_identity_override_feature_counts",
+        "edge_api.identities.edge_identity_service.get_edge_identity_overrides",
         dynamo_mock,
     )
+
     # When
     metrics_service = EnvironmentMetricsService(environment)
     metrics = metrics_service.get_metrics_payload()
+
     # Then
     assert metrics_service.uses_dynamo == uses_dynamo
     assert any(
@@ -114,7 +120,10 @@ def test_dynamo_identity_metric_used(
     )
 
     if uses_dynamo:
-        dynamo_mock.assert_called_once()
+        dynamo_mock.assert_called_once_with(
+            environment_id=environment.id,
+            feature_id=None,
+        )
         identity_count_mock.assert_not_called()
     else:
         identity_count_mock.assert_called_once()
