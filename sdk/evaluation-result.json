@@ -31,6 +31,12 @@
                     "description": "Reason for the feature flag evaluation.",
                     "title": "Reason",
                     "type": "string"
+                },
+                "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
+                    "description": "Additional metadata associated with the feature.",
+                    "title": "Metadata",
+                    "type": "object"
                 }
             },
             "required": [
