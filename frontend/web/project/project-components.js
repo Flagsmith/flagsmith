@@ -47,6 +47,7 @@ window.Loader = class extends PureComponent {
   static displayName = 'Loader'
 
   render() {
+    const { fill = '#6633ff', height = '40px', width = '40px' } = this.props
     return (
       <svg
         className='loader'
@@ -54,13 +55,13 @@ window.Loader = class extends PureComponent {
         id='loader-1'
         x='0px'
         y='0px'
-        width='40px'
-        height='40px'
+        width={width}
+        height={height}
         viewBox='0 0 50 50'
         style={{ enableBackground: '0 0 50 50' }}
       >
         <path
-          fill='#6633ff'
+          fill={fill}
           d='M25.251,6.461c-10.318,0-18.683,8.365-18.683,18.683h4.068c0-8.071,6.543-14.615,14.615-14.615V6.461z'
         >
           <animateTransform
