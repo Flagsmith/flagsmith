@@ -4075,3 +4075,96 @@ def test_get_multivariate_options_feature_not_found_responds_404(
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
+    admin_client_new: APIClient,
+    project: Project,
+    optional_b_feature_metadata_field: MetadataModelField,
+) -> None:
+    """
+    Test that creating multiple features with metadata keeps metadata properly isolated.
+    This is a regression test for the bug where creating a second feature would remove
+    metadata from the first feature if the frontend sent the first feature's metadata ID.
+    """
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # Create first feature with metadata
+    first_feature_data = {
+        "name": "First Feature",
+        "description": "First feature description",
+        "metadata": [
+            {
+                "model_field": optional_b_feature_metadata_field.id,
+                "field_value": "100",
+            },
+        ],
+    }
+
+    # When - Create first feature
+    first_response = admin_client_new.post(
+        url, data=json.dumps(first_feature_data), content_type="application/json"
+    )
+
+    # Then - First feature should be created successfully
+    assert first_response.status_code == status.HTTP_201_CREATED
+    first_feature_id = first_response.json()["id"]
+    first_metadata = first_response.json()["metadata"]
+    assert len(first_metadata) == 1
+    assert first_metadata[0]["field_value"] == "100"
+    first_metadata_id = first_metadata[0]["id"]
+
+    # Given - Create second feature
+    # Simulating the frontend bug where metadata ID from first feature is sent
+    second_feature_data = {
+        "name": "Second Feature",
+        "description": "Second feature description",
+        "metadata": [
+            {
+                "id": first_metadata_id,  # Frontend mistakenly sends existing metadata ID
+                "model_field": optional_b_feature_metadata_field.id,
+                "field_value": "200",
+            },
+        ],
+    }
+
+    # When - Create second feature
+    second_response = admin_client_new.post(
+        url, data=json.dumps(second_feature_data), content_type="application/json"
+    )
+
+    # Then - Second feature should be created successfully
+    assert second_response.status_code == status.HTTP_201_CREATED
+    second_feature_id = second_response.json()["id"]
+    second_metadata = second_response.json()["metadata"]
+    assert len(second_metadata) == 1
+    assert second_metadata[0]["field_value"] == "200"
+    # The metadata ID should be different (new metadata instance created)
+    assert second_metadata[0]["id"] != first_metadata_id
+
+    # When - Retrieve first feature to verify metadata is still there
+    first_feature_url = reverse(
+        "api-v1:projects:project-features-detail", args=[project.id, first_feature_id]
+    )
+    first_feature_check = admin_client_new.get(first_feature_url)
+
+    # Then - First feature should still have its metadata
+    assert first_feature_check.status_code == status.HTTP_200_OK
+    first_feature_metadata_after = first_feature_check.json()["metadata"]
+    assert len(first_feature_metadata_after) == 1
+    assert first_feature_metadata_after[0]["field_value"] == "100"
+    assert first_feature_metadata_after[0]["id"] == first_metadata_id
+
+    # When - Retrieve second feature to verify metadata
+    second_feature_url = reverse(
+        "api-v1:projects:project-features-detail",
+        args=[project.id, second_feature_id],
+    )
+    second_feature_check = admin_client_new.get(second_feature_url)
+
+    # Then - Second feature should have its own metadata
+    assert second_feature_check.status_code == status.HTTP_200_OK
+    second_feature_metadata_after = second_feature_check.json()["metadata"]
+    assert len(second_feature_metadata_after) == 1
+    assert second_feature_metadata_after[0]["field_value"] == "200"

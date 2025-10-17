@@ -1523,6 +1523,103 @@ def test_create_segment_with_optional_metadata_returns_201(
     assert response.json()["metadata"][0]["field_value"] == str(field_value)
 
 
+def test_create_multiple_segments_with_metadata_keeps_metadata_isolated(
+    project: Project,
+    admin_client_new: APIClient,
+    optional_b_segment_metadata_field: MetadataModelField,
+) -> None:
+    """
+    Test that creating multiple segments with metadata keeps metadata properly isolated.
+    This is a regression test for the bug where creating a second segment would remove
+    metadata from the first segment if the frontend sent the first segment's metadata ID.
+    """
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+
+    # Create first segment with metadata
+    first_segment_data = {
+        "name": "First Segment",
+        "description": "First segment description",
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "metadata": [
+            {
+                "model_field": optional_b_segment_metadata_field.id,
+                "field_value": "100",
+            },
+        ],
+    }
+
+    # When - Create first segment
+    first_response = admin_client_new.post(
+        url, data=json.dumps(first_segment_data), content_type="application/json"
+    )
+
+    # Then - First segment should be created successfully
+    assert first_response.status_code == status.HTTP_201_CREATED
+    first_segment_id = first_response.json()["id"]
+    first_metadata = first_response.json()["metadata"]
+    assert len(first_metadata) == 1
+    assert first_metadata[0]["field_value"] == "100"
+    first_metadata_id = first_metadata[0]["id"]
+
+    # Given - Create second segment
+    # Simulating the frontend bug where metadata ID from first segment is sent
+    second_segment_data = {
+        "name": "Second Segment",
+        "description": "Second segment description",
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "metadata": [
+            {
+                "id": first_metadata_id,  # Frontend mistakenly sends existing metadata ID
+                "model_field": optional_b_segment_metadata_field.id,
+                "field_value": "200",
+            },
+        ],
+    }
+
+    # When - Create second segment
+    second_response = admin_client_new.post(
+        url, data=json.dumps(second_segment_data), content_type="application/json"
+    )
+
+    # Then - Second segment should be created successfully
+    assert second_response.status_code == status.HTTP_201_CREATED
+    second_segment_id = second_response.json()["id"]
+    second_metadata = second_response.json()["metadata"]
+    assert len(second_metadata) == 1
+    assert second_metadata[0]["field_value"] == "200"
+    # The metadata ID should be different (new metadata instance created)
+    assert second_metadata[0]["id"] != first_metadata_id
+
+    # When - Retrieve first segment to verify metadata is still there
+    first_segment_url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, first_segment_id]
+    )
+    first_segment_check = admin_client_new.get(first_segment_url)
+
+    # Then - First segment should still have its metadata
+    assert first_segment_check.status_code == status.HTTP_200_OK
+    first_segment_metadata_after = first_segment_check.json()["metadata"]
+    assert len(first_segment_metadata_after) == 1
+    assert first_segment_metadata_after[0]["field_value"] == "100"
+    assert first_segment_metadata_after[0]["id"] == first_metadata_id
+
+    # When - Retrieve second segment to verify metadata
+    second_segment_url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, second_segment_id]
+    )
+    second_segment_check = admin_client_new.get(second_segment_url)
+
+    # Then - Second segment should have its own metadata
+    assert second_segment_check.status_code == status.HTTP_200_OK
+    second_segment_metadata_after = second_segment_check.json()["metadata"]
+    assert len(second_segment_metadata_after) == 1
+    assert second_segment_metadata_after[0]["field_value"] == "200"
+    assert second_segment_metadata_after[0]["id"] != first_metadata_id
+
+
 def test_update_segment_evades_max_conditions_when_whitelisted(
     project: Project,
     admin_client: APIClient,
