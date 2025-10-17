@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 
 import django.core.exceptions
+from app_analytics.serializers import LabelsQuerySerializerMixin, LabelsSerializer
 from common.features.multivariate.serializers import (
     MultivariateFeatureStateValueSerializer,
 )
@@ -13,10 +14,6 @@ from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
 )
 from drf_yasg.utils import swagger_serializer_method  # type: ignore[import-untyped]
-from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied
-
-from app_analytics.serializers import LabelsQuerySerializerMixin, LabelsSerializer
 from environments.identities.models import Identity
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
@@ -28,6 +25,8 @@ from projects.code_references.serializers import (
     FeatureFlagCodeReferencesRepositoryCountSerializer,
 )
 from projects.models import Project
+from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 from users.serializers import (
     UserIdsSerializer,
     UserListSerializer,

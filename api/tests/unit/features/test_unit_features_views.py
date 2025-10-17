@@ -6,6 +6,13 @@ from unittest import mock
 
 import pytest
 import pytz
+from app_analytics.dataclasses import FeatureEvaluationData
+from audit.constants import (
+    FEATURE_DELETED_MESSAGE,
+    IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
+    IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
+)
+from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
 from common.environments.permissions import (
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
@@ -15,26 +22,11 @@ from common.projects.permissions import (
     CREATE_FEATURE,
     VIEW_PROJECT,
 )
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
 from django.conf import settings
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
-from freezegun import freeze_time
-from pytest_django import DjangoAssertNumQueries
-from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
-from pytest_mock import MockerFixture
-from rest_framework import status
-from rest_framework.test import APIClient
-
-from app_analytics.dataclasses import FeatureEvaluationData
-from audit.constants import (
-    FEATURE_DELETED_MESSAGE,
-    IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
-    IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
-)
-from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
 from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoIdentityWrapper,
@@ -49,17 +41,20 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.models import EnvironmentFeatureVersion
+from freezegun import freeze_time
 from metadata.models import MetadataModelField
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.code_references.models import FeatureFlagCodeReferencesScan
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
+from pytest_django import DjangoAssertNumQueries
+from pytest_django.fixtures import SettingsWrapper
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_mock import MockerFixture
+from rest_framework import status
+from rest_framework.test import APIClient
 from segments.models import Segment
-from tests.types import (
-    WithEnvironmentPermissionsCallable,
-    WithProjectPermissionsCallable,
-)
 from users.models import FFAdminUser, UserPermissionGroup
 from util.mappers import (
     map_engine_feature_state_to_identity_override,
@@ -68,6 +63,11 @@ from util.mappers import (
     map_identity_to_engine,
 )
 from webhooks.webhooks import WebhookEventType
+
+from tests.types import (
+    WithEnvironmentPermissionsCallable,
+    WithProjectPermissionsCallable,
+)
 
 if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.service_resource import Table
@@ -4085,9 +4085,9 @@ def test_create_feature_with_metadata_does_not_remove_metadata_from_existing_fea
     """
     Test that creating a new feature with metadata doesn't remove
     metadata from previously created features.
-    
+
     Regression test for issue #6170
-    
+
     Steps:
     1. Create first feature with metadata
     2. Create second feature with metadata
@@ -4095,7 +4095,7 @@ def test_create_feature_with_metadata_does_not_remove_metadata_from_existing_fea
     """
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    
+
     # Step 1: Create first feature with metadata
     first_feature_data = {
         "name": "First Feature",
@@ -4107,7 +4107,7 @@ def test_create_feature_with_metadata_does_not_remove_metadata_from_existing_fea
             },
         ],
     }
-    
+
     first_response = admin_client.post(
         url, data=json.dumps(first_feature_data), content_type="application/json"
     )
@@ -4115,7 +4115,7 @@ def test_create_feature_with_metadata_does_not_remove_metadata_from_existing_fea
     first_feature_id = first_response.json()["id"]
     assert len(first_response.json()["metadata"]) == 1
     assert first_response.json()["metadata"][0]["field_value"] == "first_value"
-    
+
     # Step 2: Create second feature with metadata
     second_feature_data = {
         "name": "Second Feature",
@@ -4127,21 +4127,20 @@ def test_create_feature_with_metadata_does_not_remove_metadata_from_existing_fea
             },
         ],
     }
-    
+
     second_response = admin_client.post(
         url, data=json.dumps(second_feature_data), content_type="application/json"
     )
     assert second_response.status_code == status.HTTP_201_CREATED
     assert len(second_response.json()["metadata"]) == 1
     assert second_response.json()["metadata"][0]["field_value"] == "second_value"
-    
+
     # Step 3: Retrieve first feature and verify metadata is still present
     first_feature_url = reverse(
-        "api-v1:projects:project-features-detail", 
-        args=[project.id, first_feature_id]
+        "api-v1:projects:project-features-detail", args=[project.id, first_feature_id]
     )
     retrieve_response = admin_client.get(first_feature_url)
-    
+
     assert retrieve_response.status_code == status.HTTP_200_OK
     # The first feature's metadata should still be present
     assert len(retrieve_response.json()["metadata"]) == 1, (
