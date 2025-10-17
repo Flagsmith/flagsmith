@@ -4075,3 +4075,76 @@ def test_get_multivariate_options_feature_not_found_responds_404(
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_create_feature_with_metadata_does_not_remove_metadata_from_existing_features(
+    project: Project,
+    admin_client: APIClient,
+    optional_b_feature_metadata_field: MetadataModelField,
+) -> None:
+    """
+    Test that creating a new feature with metadata doesn't remove
+    metadata from previously created features.
+    
+    Regression test for issue #6170
+    
+    Steps:
+    1. Create first feature with metadata
+    2. Create second feature with metadata
+    3. Retrieve first feature and verify metadata is still present
+    """
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    
+    # Step 1: Create first feature with metadata
+    first_feature_data = {
+        "name": "First Feature",
+        "description": "First feature description",
+        "metadata": [
+            {
+                "model_field": optional_b_feature_metadata_field.id,
+                "field_value": "first_value",
+            },
+        ],
+    }
+    
+    first_response = admin_client.post(
+        url, data=json.dumps(first_feature_data), content_type="application/json"
+    )
+    assert first_response.status_code == status.HTTP_201_CREATED
+    first_feature_id = first_response.json()["id"]
+    assert len(first_response.json()["metadata"]) == 1
+    assert first_response.json()["metadata"][0]["field_value"] == "first_value"
+    
+    # Step 2: Create second feature with metadata
+    second_feature_data = {
+        "name": "Second Feature",
+        "description": "Second feature description",
+        "metadata": [
+            {
+                "model_field": optional_b_feature_metadata_field.id,
+                "field_value": "second_value",
+            },
+        ],
+    }
+    
+    second_response = admin_client.post(
+        url, data=json.dumps(second_feature_data), content_type="application/json"
+    )
+    assert second_response.status_code == status.HTTP_201_CREATED
+    assert len(second_response.json()["metadata"]) == 1
+    assert second_response.json()["metadata"][0]["field_value"] == "second_value"
+    
+    # Step 3: Retrieve first feature and verify metadata is still present
+    first_feature_url = reverse(
+        "api-v1:projects:project-features-detail", 
+        args=[project.id, first_feature_id]
+    )
+    retrieve_response = admin_client.get(first_feature_url)
+    
+    assert retrieve_response.status_code == status.HTTP_200_OK
+    # The first feature's metadata should still be present
+    assert len(retrieve_response.json()["metadata"]) == 1, (
+        "First feature metadata was removed after creating second feature"
+    )
+    assert retrieve_response.json()["metadata"][0]["field_value"] == "first_value"
