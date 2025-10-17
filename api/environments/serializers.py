@@ -91,6 +91,12 @@ class EnvironmentSerializerWithMetadata(
         self._validate_required_metadata(organisation, attrs.get("metadata", []))
         return attrs
 
+    def create(self, validated_data: dict[str, Any]) -> Environment:
+        metadata_data = validated_data.pop("metadata", [])
+        environment = super().create(validated_data)  # type: ignore[no-untyped-call]
+        self._update_metadata(environment, metadata_data)
+        return environment  # type: ignore[no-any-return]
+
     def update(
         self, environment: Environment, validated_data: dict[str, Any]
     ) -> Environment:
