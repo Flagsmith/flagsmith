@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.198.1](https://github.com/Flagsmith/flagsmith/compare/v2.198.0...v2.198.1) (2025-10-17)
+
+
+### Bug Fixes
+
+* prevent metadata loss due to bad request ([#6172](https://github.com/Flagsmith/flagsmith/issues/6172)) ([91dc078](https://github.com/Flagsmith/flagsmith/commit/91dc078f955695ec95b4d3a6e95b6b8e7c736ff8))
+
 ## [2.198.0](https://github.com/Flagsmith/flagsmith/compare/v2.197.0...v2.198.0) (2025-10-14)
 
 
