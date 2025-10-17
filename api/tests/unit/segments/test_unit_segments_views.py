@@ -1531,7 +1531,7 @@ def test_create_multiple_segments_with_metadata_keeps_metadata_isolated(
     """
     Test that creating multiple segments with metadata keeps metadata properly isolated.
     This is a regression test for the bug where creating a second segment would remove
-    metadata from the first segment if the frontend sent the first segment's metadata ID.
+    metadata from the first segment if the user sent the first segment's metadata ID.
     """
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
@@ -1564,7 +1564,6 @@ def test_create_multiple_segments_with_metadata_keeps_metadata_isolated(
     first_metadata_id = first_metadata[0]["id"]
 
     # Given - Create second segment
-    # Simulating the frontend bug where metadata ID from first segment is sent
     second_segment_data = {
         "name": "Second Segment",
         "description": "Second segment description",
@@ -1572,7 +1571,7 @@ def test_create_multiple_segments_with_metadata_keeps_metadata_isolated(
         "rules": [{"type": "ALL", "rules": [], "conditions": []}],
         "metadata": [
             {
-                "id": first_metadata_id,  # Frontend mistakenly sends existing metadata ID
+                "id": first_metadata_id,  # user mistakenly sends existing metadata ID
                 "model_field": optional_b_segment_metadata_field.id,
                 "field_value": "200",
             },

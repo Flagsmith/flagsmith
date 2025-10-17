@@ -922,7 +922,7 @@ def test_create_multiple_environments_with_metadata_keeps_metadata_isolated(
     """
     Test that creating multiple environments with metadata keeps metadata properly isolated.
     This is a regression test for the bug where creating a second environment would remove
-    metadata from the first environment if the frontend sent the first environment's metadata ID.
+    metadata from the first environment if the user sent the first environment's metadata ID.
     """
     # Given
     url = reverse("api-v1:environments:environment-list")
@@ -954,14 +954,13 @@ def test_create_multiple_environments_with_metadata_keeps_metadata_isolated(
     first_metadata_id = first_metadata[0]["id"]
 
     # Given - Create second environment
-    # Simulating the frontend bug where metadata ID from first environment is sent
     second_environment_data = {
         "name": "Second Environment",
         "project": project.id,
         "description": "Second environment description",
         "metadata": [
             {
-                "id": first_metadata_id,  # Frontend mistakenly sends existing metadata ID
+                "id": first_metadata_id,  # user mistakenly sends existing metadata ID
                 "model_field": optional_b_environment_metadata_field.id,
                 "field_value": "200",
             },

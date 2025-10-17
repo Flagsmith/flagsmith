@@ -4085,7 +4085,7 @@ def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
     """
     Test that creating multiple features with metadata keeps metadata properly isolated.
     This is a regression test for the bug where creating a second feature would remove
-    metadata from the first feature if the frontend sent the first feature's metadata ID.
+    metadata from the first feature if the user sent the first feature's metadata ID.
     """
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
@@ -4116,13 +4116,12 @@ def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
     first_metadata_id = first_metadata[0]["id"]
 
     # Given - Create second feature
-    # Simulating the frontend bug where metadata ID from first feature is sent
     second_feature_data = {
         "name": "Second Feature",
         "description": "Second feature description",
         "metadata": [
             {
-                "id": first_metadata_id,  # Frontend mistakenly sends existing metadata ID
+                "id": first_metadata_id,  # user mistakenly sends existing metadata ID
                 "model_field": optional_b_feature_metadata_field.id,
                 "field_value": "200",
             },
