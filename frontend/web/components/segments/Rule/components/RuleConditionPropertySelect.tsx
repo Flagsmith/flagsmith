@@ -32,23 +32,17 @@ const RuleConditionPropertySelect = ({
   setRuleProperty,
 }: RuleConditionPropertySelectProps) => {
   const [localCurrentValue, setLocalCurrentValue] = useState(propertyValue)
-  const isContextPropertyEnabled =
-    Utils.getFlagsmithHasFeature('context_values')
 
   // TODO: Clean this up when enabled
   useEffect(() => {
-    const isPropInvalidWithSplit =
-      !propertyValue ||
-      (!isContextPropertyEnabled &&
-        propertyValue !== RuleContextValues.IDENTITY_KEY)
-    if (operator === 'PERCENTAGE_SPLIT' && isPropInvalidWithSplit) {
+    if (operator === 'PERCENTAGE_SPLIT' && !propertyValue) {
       setRuleProperty(ruleIndex, 'property', {
         value: RuleContextValues.IDENTITY_KEY,
       })
     }
     setLocalCurrentValue(propertyValue)
     //eslint-disable-next-line
-  }, [propertyValue, operator, ruleIndex, isContextPropertyEnabled])
+    }, [propertyValue, operator, ruleIndex])
 
   // Filter invalid context values from flagsmith and format them as options
   const contextOptions = allowedContextValues?.map(

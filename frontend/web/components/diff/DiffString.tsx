@@ -34,7 +34,7 @@ const DiffString: FC<DiffType> = ({
 
   if (oldValue === newValue) {
     if (oldValue === null || oldValue === '') {
-      return null
+      return <div className='text-muted'>No Value.</div>
     }
     return (
       <div className='react-diff react-diff-same overflow-auto react-diff-line d-flex align-items-center'>
