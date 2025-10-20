@@ -66,13 +66,13 @@
                 },
                 "priority": {
                     "description": "Priority of the feature context. Lower values indicate a higher priority when multiple contexts apply to the same feature.",
-                    "title": "Priority",
+                    "title": "FeaturePriority",
                     "type": "number"
                 },
                 "metadata": {
                     "existingJavaType": "java.util.Map<String,Object>",
                     "description": "Additional metadata associated with the feature.",
-                    "title": "Metadata",
+                    "title": "FeatureMetadata",
                     "type": "object"
                 }
             },
@@ -106,7 +106,7 @@
                 },
                 "priority": {
                     "description": "Priority of the feature flag variant. Lower values indicate a higher priority when multiple variants apply to the same context key.",
-                    "title": "Priority",
+                    "title": "VariantPriority",
                     "type": "number"
                 }
             },
@@ -186,7 +186,7 @@
                 "metadata": {
                     "existingJavaType": "java.util.Map<String,Object>",
                     "description": "Additional metadata associated with the segment.",
-                    "title": "Metadata",
+                    "title": "SegmentMetadata",
                     "type": "object"
                 }
             },

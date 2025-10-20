@@ -35,7 +35,7 @@
                 "metadata": {
                     "existingJavaType": "java.util.Map<String,Object>",
                     "description": "Additional metadata associated with the feature.",
-                    "title": "Metadata",
+                    "title": "FeatureMetadata",
                     "type": "object"
                 }
             },
@@ -64,7 +64,7 @@
                 "metadata": {
                     "existingJavaType": "java.util.Map<String,Object>",
                     "description": "Additional metadata associated with the segment.",
-                    "title": "Metadata",
+                    "title": "SegmentMetadata",
                     "type": "object"
                 }
             },
