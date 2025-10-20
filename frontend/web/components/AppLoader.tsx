@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { FC } from 'react'
 
-export default function AppLoader() {
+const AppLoader: FC = () => {
   return (
     <div
       style={{
@@ -14,3 +14,5 @@ export default function AppLoader() {
     </div>
   )
 }
+
+export default AppLoader
