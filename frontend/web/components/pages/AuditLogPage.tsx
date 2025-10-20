@@ -9,11 +9,7 @@ import PageTitle from 'components/PageTitle'
 import Tag from 'components/tags/Tag'
 import { featureDescriptions } from 'components/PlanBasedAccess'
 import { useRouteContext } from 'components/providers/RouteContext'
-
-interface RouteParams {
-  environmentId: string
-  projectId: string
-}
+import EnvironmentTagSelect from 'components/EnvironmentTagSelect'
 
 const AuditLogPage: FC = () => {
   const history = useHistory()
@@ -68,32 +64,13 @@ const AuditLogPage: FC = () => {
                     environmentId={environment}
                     projectId={projectId}
                     searchPanel={
-                      <ProjectProvider>
-                        {({ project }: { project: Project }) => (
-                          <Row className='mb-2'>
-                            {project &&
-                              project.environments &&
-                              project.environments.map((env, i) => (
-                                <Tag
-                                  tag={{
-                                    color: Utils.getTagColour(i),
-                                    label: env.name,
-                                  }}
-                                  key={env.id}
-                                  selected={`${environment}` === `${env.id}`}
-                                  onClick={() => {
-                                    setEnvironment(
-                                      `${environment}` === `${env.id}`
-                                        ? undefined
-                                        : env.id,
-                                    )
-                                  }}
-                                  className='mr-2 mb-2'
-                                />
-                              ))}
-                          </Row>
-                        )}
-                      </ProjectProvider>
+                      <EnvironmentTagSelect
+                        allowEmpty
+                        value={environment}
+                        onChange={setEnvironment}
+                        idField='id'
+                        projectId={projectId}
+                      />
                     }
                   />
                 </FormGroup>
