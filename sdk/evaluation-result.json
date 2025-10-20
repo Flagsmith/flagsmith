@@ -51,11 +51,6 @@
         },
         "SegmentResult": {
             "properties": {
-                "key": {
-                    "description": "Unique segment identifier.",
-                    "title": "Key",
-                    "type": "string"
-                },
                 "name": {
                     "description": "Segment name.",
                     "title": "Name",
