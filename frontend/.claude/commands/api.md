@@ -1,19 +1,13 @@
 ---
-description: Generate a new RTK Query API service using the SSG CLI
+description: Generate a new RTK Query API service
 ---
 
-Use `npx ssg` to generate a new API service. Follow these steps:
+IMPORTANT: Before starting, always run `/api-types-sync` to ensure frontend types are in sync with the backend.
 
-1. Check backend code in `../api/` Django backend for endpoint details
-   - Use `/backend <search>` to search for the endpoint
-   - Look for URL patterns, views, and serializers
-2. Run `npx ssg` and follow the interactive prompts
-   - Choose operation type (get, create, update, delete, crud)
-   - Enter the resource name (e.g., "Feature", "Environment")
-3. Define request/response types in `common/types/requests.ts` and `responses.ts`
-   - Add to the `Req` type for requests
-   - Add to the `Res` type for responses
-4. Verify the generated service URL matches the backend endpoint (usually `/api/v1/...`)
-5. Use the generated hooks in components: `useGetXQuery()`, `useCreateXMutation()`
+Generate a new API service. Follow these steps:
+
+1. Run `/api-types-sync` to sync types with the backend (compares with latest backend in main)
+2. Go through the process mentioned in `.claude/context/api-integration.md`
+3. If I haven't specified, attempt to find where I'd want to create this component in the frontend
 
 Context file: `.claude/context/api-integration.md`

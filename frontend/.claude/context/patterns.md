@@ -16,6 +16,31 @@ import { Button } from '../../base/forms/Button'
 import { validateForm } from '../../../utils/forms/validateForm'
 ```
 
+## Web Component Patterns
+
+This codebase is primarily web-focused (React + Webpack).
+
+### Modals
+
+Use the modal system from `components/base/Modal`:
+
+```typescript
+import { openModal, openConfirm } from 'components/base/Modal'
+
+// Open a custom modal
+openModal('Modal Title', <ModalContent />)
+
+// Open a confirmation dialog
+openConfirm(
+  'Confirm Action',
+  'Are you sure?',
+  async (closeModal) => {
+    // Perform action
+    closeModal()
+  }
+)
+```
+
 ## API Service Patterns
 
 ### Query vs Mutation Rule
@@ -60,61 +85,29 @@ getInvoiceDownload: builder.query<Res['invoiceDownload'], Req['getInvoiceDownloa
 
 ## Pagination Pattern
 
-Use `useInfiniteScroll` hook for paginated lists:
-
-```typescript
-import useInfiniteScroll from 'common/useInfiniteScroll'
-import { useGetFeaturesQuery } from 'common/services/useFeature'
-
-const FeatureList = ({ projectId }: Props) => {
-  const {
-    data,
-    isLoading,
-    isFetching,
-    loadMore,
-    refresh,
-    searchItems,
-  } = useInfiniteScroll(
-    useGetFeaturesQuery,
-    { projectId, page_size: 20 },
-  )
-
-  return (
-    <div>
-      {data?.results?.map(feature => (
-        <FeatureRow key={feature.id} {...feature} />
-      ))}
-      {data?.next && (
-        <Button onClick={loadMore} disabled={isFetching}>
-          Load More
-        </Button>
-      )}
-    </div>
-  )
-}
-```
+Check existing components for pagination patterns. The codebase may use custom pagination logic or libraries like react-virtualized.
 
 ## Error Handling
 
 ### RTK Query Error Pattern
 
 ```typescript
-const [createFeature, { isLoading, error }] = useCreateFeatureMutation()
+const [createMail, { isLoading, error }] = useCreateMailMutation()
 
 const handleSubmit = async () => {
   try {
-    const result = await createFeature(data).unwrap()
+    const result = await createMail(data).unwrap()
     // Success - result contains the response
-    toast('Feature created successfully')
+    toast.success('Mail created successfully')
   } catch (err) {
     // Error handling
     if ('status' in err) {
       // FetchBaseQueryError
       const errMsg = 'error' in err ? err.error : JSON.stringify(err.data)
-      toast(errMsg, 'danger')
+      toast.error(errMsg)
     } else {
       // SerializedError
-      toast(err.message || 'An error occurred', 'danger')
+      toast.error(err.message || 'An error occurred')
     }
   }
 }
@@ -123,7 +116,7 @@ const handleSubmit = async () => {
 ### Query Refetching
 
 ```typescript
-const { data, refetch } = useGetFeatureQuery({ id: '123' })
+const { data, refetch } = useGetMailQuery({ id: '123' })
 
 // Refetch on demand
 const handleRefresh = () => {
@@ -139,11 +132,11 @@ const handleRefresh = () => {
 
 ```typescript
 import { getStore } from 'common/store'
-import { featureService } from 'common/services/useFeature'
+import { entityService } from 'common/services/useEntity'
 
-export const clearFeatureCache = () => {
+export const clearEntityCache = () => {
   getStore().dispatch(
-    featureService.util.invalidateTags([{ type: 'Feature', id: 'LIST' }])
+    entityService.util.invalidateTags([{ type: 'Entity', id: 'LIST' }])
   )
 }
 ```
@@ -154,8 +147,8 @@ Cache invalidation is handled automatically through RTK Query tags:
 
 ```typescript
 // Mutation invalidates the list
-createFeature: builder.mutation<Res['feature'], Req['createFeature']>({
-  invalidatesTags: [{ type: 'Feature', id: 'LIST' }],
+createEntity: builder.mutation<Res['entity'], Req['createEntity']>({
+  invalidatesTags: [{ type: 'Entity', id: 'LIST' }],
   // This will automatically refetch any active queries with matching tags
 }),
 ```
@@ -169,44 +162,32 @@ All API types go in `common/types/`:
 ```typescript
 // common/types/requests.ts
 export type Req = {
-  getFeatures: PagedRequest<{
-    project: number
-    q?: string
-  }>
-  createFeature: {
-    project: number
+  getEntity: {
+    id: string
+  }
+  createEntity: {
     name: string
-    type: 'FLAG' | 'CONFIG'
   }
   // END OF TYPES
 }
 
 // common/types/responses.ts
 export type Res = {
-  features: PagedResponse<Feature>
-  feature: Feature
+  entity: Entity
+  entities: Entity[]
   // END OF TYPES
 }
 ```
 
 ### Shared Types
 
-For types used across requests AND responses, keep them in their respective files but document the shared usage:
+**Shared types:**
 
-```typescript
-// common/types/requests.ts
-export type Address = {
-  address_line_1: string
-  address_line_2: string | null
-  postal_code: string
-  city: string
-  country: string
-}
-```
+Types used across multiple request/response types should be defined separately and imported.
 
-## SSG CLI Usage
+## SSG CLI Usage (Optional)
 
-Always use `npx ssg` to generate new API services:
+You can use `npx ssg` to generate new API services:
 
 ```bash
 # Interactive mode
@@ -225,20 +206,18 @@ The CLI will:
 - Generate appropriate hooks (Query or Mutation)
 - Use correct import paths (no relative imports)
 
-## Pre-commit Checks
+**Note**: Manual service creation is also acceptable - follow patterns from existing services.
 
-Before committing, run:
+## Linting
+
+Always run ESLint on files you modify:
 
 ```bash
-npm run check:staged
+npx eslint --fix <file>
 ```
 
-This runs:
-1. TypeScript type checking on staged files
-2. ESLint with auto-fix on staged files
+Or run it on all files:
 
-Or use the slash command:
-
-```
-/check-staged
+```bash
+npm run lint:fix
 ```

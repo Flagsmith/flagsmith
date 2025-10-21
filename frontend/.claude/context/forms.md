@@ -1,168 +1,103 @@
-# Form Patterns
+# Form Patterns (Custom Components)
 
-## Standard Pattern for ALL Forms
+**IMPORTANT**: This codebase does NOT use Formik or Yup. Forms are built with custom form components.
 
-**NOTE**: This codebase does NOT use Formik or Yup. Use custom form components from global scope.
-
-```javascript
-import React, { Component } from 'react'
-
-class MyForm extends Component {
-  constructor() {
-    super()
-    this.state = {
-      name: '',
-      isLoading: false,
-      error: null,
-    }
-  }
-
-  handleSubmit = (e) => {
-    Utils.preventDefault(e)
-    if (this.state.isLoading) return
-
-    // Basic validation
-    if (!this.state.name) {
-      this.setState({ error: 'Name is required' })
-      return
-    }
-
-    this.setState({ isLoading: true, error: null })
-
-    // Make API call
-    data.post(`${Project.api}endpoint/`, { name: this.state.name })
-      .then(() => {
-        toast('Success!')
-        closeModal()
-      })
-      .catch((error) => {
-        this.setState({ error: error.message, isLoading: false })
-      })
-  }
-
-  render() {
-    return (
-      <form onSubmit={this.handleSubmit}>
-        <InputGroup
-          inputProps={{ className: 'full-width' }}
-          title="Name"
-          value={this.state.name}
-          onChange={(e) => this.setState({ name: Utils.safeParseEventValue(e) })}
-        />
-        {this.state.error && <ErrorMessage error={this.state.error} />}
-        <Button type="submit" disabled={this.state.isLoading}>
-          Submit
-        </Button>
-      </form>
-    )
-  }
-}
-```
-
-## Functional Component Pattern (Modern)
-
-```javascript
-import { FC, useState } from 'react'
-
-const MyForm: FC = () => {
-  const [name, setName] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const handleSubmit = (e: React.FormEvent) => {
-    Utils.preventDefault(e)
-    if (isLoading) return
-
-    if (!name) {
-      setError('Name is required')
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-
-    data.post(`${Project.api}endpoint/`, { name })
-      .then(() => {
-        toast('Success!')
-        closeModal()
-      })
-      .catch((err) => {
-        setError(err.message)
-        setIsLoading(false)
-      })
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <InputGroup
-        inputProps={{ className: 'full-width' }}
-        title="Name"
-        value={name}
-        onChange={(e) => setName(Utils.safeParseEventValue(e))}
-      />
-      {error && <ErrorMessage error={error} />}
-      <Button type="submit" disabled={isLoading}>
-        Submit
-      </Button>
-    </form>
-  )
-}
-```
-
-## Form Components (Global Scope)
-
-These components are available globally (defined in global.d.ts):
-
-- **InputGroup**: Standard input wrapper with label
-  - `title` - Label text
-  - `value` - Input value
-  - `onChange` - Change handler
-  - `inputProps` - Additional input attributes
-- **Input**: Basic input element
-- **Select**: Dropdown select (uses react-select)
-- **Switch**: Toggle switch component
-- **Button**: Standard button with theme support
-
-## RTK Query Mutations Pattern
+## Standard Pattern for Forms
 
 ```typescript
-import { useCreateFeatureMutation } from 'common/services/useFeature'
+import { FC, FormEvent, useState } from 'react'
+import InputGroup from 'components/base/forms/InputGroup'
+import Button from 'components/base/forms/Button'
+import Utils from 'common/utils/utils'
+
+type FormData = {
+  name: string
+  email: string
+}
 
 const MyForm: FC = () => {
-  const [name, setName] = useState('')
-  const [createFeature, { isLoading, error }] = useCreateFeatureMutation()
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    email: '',
+  })
+  const [error, setError] = useState<any>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    Utils.preventDefault(e)
+  const setFieldValue = (key: keyof FormData, value: any) => {
+    setFormData((prev) => ({ ...prev, [key]: value }))
+  }
 
-    try {
-      await createFeature({ name, project_id: projectId }).unwrap()
-      toast('Feature created!')
-      closeModal()
-    } catch (err) {
-      toast('Error creating feature')
+  const isValid = !!formData.name && Utils.isValidEmail(formData.email)
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    if (isValid) {
+      // Make API call
     }
   }
 
   return (
     <form onSubmit={handleSubmit}>
       <InputGroup
-        title="Feature Name"
-        value={name}
-        onChange={(e) => setName(Utils.safeParseEventValue(e))}
+        title='Name'
+        isValid={!!formData.name && !error?.name}
+        inputProps={{
+          error: error?.name,
+          name: 'name',
+        }}
+        value={formData.name}
+        onChange={(e: FormEvent) => setFieldValue('name', e)}
       />
-      {error && <ErrorMessage error={error} />}
-      <Button type="submit" disabled={isLoading}>
-        Create
-      </Button>
+      <InputGroup
+        title='Email'
+        type='email'
+        isValid={Utils.isValidEmail(formData.email) && !error?.email}
+        inputProps={{
+          error: error?.email,
+          name: 'email',
+        }}
+        value={formData.email}
+        onChange={(e: FormEvent) => setFieldValue('email', e)}
+      />
+      <Button type="submit" disabled={!isValid}>Submit</Button>
     </form>
   )
 }
 ```
 
-## Examples
+## Form Components (in `web/components/base/forms/`)
 
-Reference existing forms in the codebase:
-- `web/components/SamlForm.js` - Class component form
-- `web/components/modals/CreateSegmentRulesTabForm.tsx` - Complex form with state
-- Search for `InputGroup` usage in `/web/components/` for more examples
+- **InputGroup**: Main form field wrapper
+  - Props: `title`, `value`, `onChange`, `isValid`, `inputProps`, `type`
+  - `inputProps` can contain `error`, `name`, `className`, etc.
+- **Button**: Standard button component
+- **Select**: Dropdown select component
+- **Switch**, **Toggle**: Boolean inputs
+
+## Validation Patterns
+
+- **Custom validation**: Use inline checks with `Utils` helpers
+  - `Utils.isValidEmail(email)`
+  - Custom business logic
+- **isValid prop**: Controls visual feedback (green checkmark, etc.)
+- **Error handling**: Pass `error` via `inputProps` for field-level errors
+
+## Example with RTK Query Mutation
+
+```typescript
+const [createEntity, { isLoading, error: apiError }] = useCreateEntityMutation()
+
+const handleSubmit = async (e: FormEvent) => {
+  e.preventDefault()
+  if (!isValid) return
+
+  try {
+    await createEntity(formData).unwrap()
+    // Success - show toast, redirect, etc.
+  } catch (err) {
+    // Handle error
+    setError(err)
+  }
+}
+```
+
+**Reference**: See actual forms in `web/components/onboarding/` for real examples
