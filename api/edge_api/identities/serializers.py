@@ -2,6 +2,7 @@ import copy
 import typing
 
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_field
 from flag_engine.features.models import FeatureModel as EngineFeatureModel
 from flag_engine.features.models import FeatureStateModel as EngineFeatureStateModel
 from flag_engine.features.models import (
@@ -15,7 +16,6 @@ from flag_engine.utils.exceptions import DuplicateFeatureState
 from pydantic import ValidationError as PydanticValidationError
 from pyngo import drf_error_details
 from rest_framework import serializers
-from drf_spectacular.utils import extend_schema_field
 from rest_framework.exceptions import ValidationError
 
 from environments.dynamodb.types import IdentityOverrideV2

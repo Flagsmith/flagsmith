@@ -24,7 +24,9 @@ class DocsView(APIView):  # pragma: no cover
         # Maintain backwards-compat with /docs/?format=openapi returning raw schema
         if request.GET.get("format") == "openapi":
             return SpectacularAPIView.as_view()(request, *args, **kwargs)
-        return SpectacularSwaggerView.as_view(url_name="api-v1:schema")(request, *args, **kwargs)
+        return SpectacularSwaggerView.as_view(url_name="api-v1:schema")(
+            request, *args, **kwargs
+        )
 
 
 urlpatterns = [
