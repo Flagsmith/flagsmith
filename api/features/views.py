@@ -195,7 +195,6 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             )
             self._feature_states = {fs.feature_id: fs for fs in feature_states}
 
-            # Fetch segment feature states if segment parameter is provided
             if segment_id := query_data.get("segment"):
                 segment_query = Q(
                     feature_id__in=self.feature_ids,
@@ -506,13 +505,6 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 type=openapi.TYPE_STRING,
             ),
             openapi.Parameter(
-                "segment",
-                openapi.IN_QUERY,
-                "ID of the segment to filter segment overrides by.",
-                required=False,
-                type=openapi.TYPE_INTEGER,
-            ),
-            openapi.Parameter(
                 "anyIdentity",
                 openapi.IN_QUERY,
                 "Pass any value to get results that have an identity override. "
@@ -693,18 +685,6 @@ class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
     def get_queryset(self):  # type: ignore[no-untyped-def]
         queryset = super().get_queryset()  # type: ignore[no-untyped-call]
 
-        if "segment" in self.request.query_params:
-            query_serializer = EnvironmentFeatureStatesQuerySerializer(
-                data=self.request.query_params
-            )
-            if query_serializer.is_valid(raise_exception=False):
-                segment_id = query_serializer.validated_data.get("segment")
-                return queryset.filter(
-                    feature_segment__segment_id=segment_id, identity=None
-                )
-            return queryset.none()
-
-        queryset = queryset.filter(feature_segment=None)
         if "anyIdentity" in self.request.query_params:
             # TODO: deprecate anyIdentity query parameter
             return queryset.exclude(identity=None)
