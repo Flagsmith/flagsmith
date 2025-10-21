@@ -1,0 +1,958 @@
+{
+  "_metadata": {
+    "lastSync": "2025-10-21T08:53:14Z",
+    "lastBackendCommit": "efedbdc003ec6d5b802e272c9ad1ee5c1e37d3c6",
+    "fullyValidated": false,
+    "criticalTypesValidated": []
+  },
+  "response_types": {
+    "account": {
+      "type": "account",
+      "serializer": "custom_auth/serializers.py:CustomUserDelete",
+      "endpoint": "auth/users/me/",
+      "method": "DELETE"
+    },
+    "auditLogs": {
+      "type": "auditLogs",
+      "serializer": "audit/serializers.py:AuditLogSerializer",
+      "endpoint": "projects/:project/audit/",
+      "method": "GET"
+    },
+    "auditLogItem": {
+      "type": "auditLogItem",
+      "serializer": "audit/serializers.py:AuditLogSerializer",
+      "endpoint": "projects/:projectId/audit/:id/",
+      "method": "GET"
+    },
+    "availablePermissions": {
+      "type": "availablePermissions",
+      "serializer": "permissions/serializers.py:PermissionModelSerializer",
+      "endpoint": ":level/permissions/",
+      "method": "GET"
+    },
+    "enableFeatureVersioning": {
+      "type": "enableFeatureVersioning",
+      "serializer": "features/versioning/serializers.py:EnableV2VersioningSerializer",
+      "endpoint": "environments/:environmentId/enable-v2-versioning/",
+      "method": "POST"
+    },
+    "featureExport": {
+      "type": "featureExport",
+      "serializer": "features/import_export/serializers.py:CreateFeatureExportSerializer",
+      "endpoint": "features/create-feature-export/",
+      "method": "POST"
+    },
+    "featureExports": {
+      "type": "featureExports",
+      "serializer": "features/import_export/serializers.py:FeatureExportSerializer",
+      "endpoint": "projects/:projectId/feature-exports/",
+      "method": "GET"
+    },
+    "featureImports": {
+      "type": "featureImports",
+      "serializer": "features/import_export/serializers.py:FeatureImportSerializer",
+      "endpoint": "projects/:projectId/feature-imports/",
+      "method": "GET"
+    },
+    "flagsmithProjectImport": {
+      "type": "flagsmithProjectImport",
+      "serializer": "features/import_export/serializers.py:FlagsmithImportSerializer",
+      "endpoint": "features/feature-import/:environment_id",
+      "method": "POST"
+    },
+    "launchDarklyProjectImport": {
+      "type": "launchDarklyProjectImport",
+      "serializer": "integrations/launch_darkly/serializers.py:LaunchDarklyImportRequestSerializer",
+      "endpoint": "projects/:project_id/imports/launch-darkly/",
+      "method": "POST"
+    },
+    "launchDarklyProjectsImport": {
+      "type": "launchDarklyProjectsImport",
+      "serializer": "integrations/launch_darkly/serializers.py:LaunchDarklyImportRequestSerializer",
+      "endpoint": "projects/:project_id/imports/launch-darkly/",
+      "method": "GET"
+    },
+    "createSegmentOverride": {
+      "type": "createSegmentOverride",
+      "serializer": "features/serializers.py:CreateSegmentOverrideSerializer",
+      "endpoint": "environments/:environmentId/features/:featureId/create-segment-override/",
+      "method": "POST"
+    },
+    "serversideEnvironmentKeys": {
+      "type": "serversideEnvironmentKeys",
+      "serializer": "environments/serializers.py:EnvironmentAPIKeySerializer",
+      "endpoint": "environments/:environmentId/api-keys/",
+      "method": "POST"
+    },
+    "userEmail": {
+      "type": "userEmail",
+      "serializer": "users/serializers.py:UserEmailSerializer (from djoser)",
+      "endpoint": "auth/users/set_email/",
+      "method": "POST"
+    },
+    "userGroupPermissions": {
+      "type": "userGroupPermissions",
+      "serializer": "projects/serializers.py:ListUserPermissionGroupProjectPermissionSerializer",
+      "endpoint": "projects/:project_id/user-group-permissions/",
+      "method": "GET"
+    },
+    "createRolePermissionGroup": {
+      "type": "createRolePermissionGroup",
+      "serializer": "rbac/serializers.py:GroupRoleSerializer",
+      "endpoint": "organisations/:organisation_id/roles/:role_id/groups/",
+      "method": "POST"
+    },
+    "rolePermissionGroup": {
+      "type": "rolePermissionGroup",
+      "serializer": "rbac/serializers.py:GroupRoleSerializer",
+      "endpoint": "organisations/:organisation_id/roles/:role_id/groups/:group_id/",
+      "method": "DELETE"
+    },
+    "createRolesPermissionUsers": {
+      "type": "createRolesPermissionUsers",
+      "serializer": "rbac/serializers.py:UserRoleSerializer",
+      "endpoint": "organisations/:organisation_id/roles/:role_id/users/",
+      "method": "POST"
+    },
+    "rolesPermissionUsers": {
+      "type": "rolesPermissionUsers",
+      "serializer": "rbac/serializers.py:UserRoleSerializer",
+      "endpoint": "organisations/:organisation_id/roles/:role_id/users/:user_id/",
+      "method": "DELETE"
+    },
+    "externalResource": {
+      "type": "externalResource",
+      "serializer": "features/feature_external_resources/serializers.py:FeatureExternalResourceSerializer",
+      "endpoint": "projects/:project_id/features/:feature_id/feature-external-resources/",
+      "method": "POST"
+    },
+    "githubIntegrations": {
+      "type": "githubIntegrations",
+      "serializer": "integrations/github/serializers.py:GithubConfigurationSerializer",
+      "endpoint": "organisations/:organisation_id/integrations/github/",
+      "method": "POST"
+    },
+    "cloneidentityFeatureStates": {
+      "type": "cloneidentityFeatureStates",
+      "serializer": "features/serializers.py:CloneIdentityFeatureStatesSerializer",
+      "endpoint": "environments/:environment_id/identities/:identity_id/featurestates/clone-from-given-identity/",
+      "method": "POST"
+    },
+    "identityFeatureStates": {
+      "type": "identityFeatureStates",
+      "serializer": "features/serializers.py:FeatureStateSerializerWithIdentity",
+      "endpoint": "environments/:environment/identities/:user/featurestates/all/",
+      "method": "GET"
+    },
+    "groupSummaries": {
+      "type": "groupSummaries",
+      "serializer": "users/serializers.py:UserPermissionGroupSummarySerializer",
+      "endpoint": "organisations/:orgId/groups/summaries/",
+      "method": "GET"
+    },
+    "groupWithRole": {
+      "type": "groupWithRole",
+      "serializer": "rbac/serializers.py:RoleSerializer",
+      "endpoint": "organisations/:org_id/groups/:group_id/roles/:role_id/",
+      "method": "DELETE"
+    },
+    "masterAPIKeyWithMasterAPIKeyRoles": {
+      "type": "masterAPIKeyWithMasterAPIKeyRoles",
+      "serializer": "rbac/serializers.py:RoleSerializer",
+      "endpoint": "organisations/:org_id/master-api-keys/:prefix/roles/:role_id/detach-roles-from-master-api-key/",
+      "method": "DELETE"
+    },
+    "roleMasterApiKey": {
+      "type": "roleMasterApiKey",
+      "serializer": "rbac/serializers.py:MasterAPIKeyRoleSerializer",
+      "endpoint": "organisations/:org_id/roles/:role_id/master-api-keys/",
+      "method": "POST"
+    },
+    "userWithRoles": {
+      "type": "userWithRoles",
+      "serializer": "rbac/serializers.py:RoleSerializer",
+      "endpoint": "organisations/:org_id/users/:user_id/roles/",
+      "method": "GET"
+    },
+    "versionFeatureState": {
+      "type": "versionFeatureState",
+      "serializer": "features/versioning/serializers.py:CustomEnvironmentFeatureVersionFeatureStateSerializer",
+      "endpoint": "environments/:environmentId/features/:featureId/versions/:sha/featurestates/",
+      "method": "POST"
+    },
+    "segmentPriorities": {
+      "type": "segmentPriorities",
+      "serializer": "features/feature_segments/serializers.py:UpdateSegmentPrioritiesSerializer",
+      "endpoint": "features/feature-segments/update-priorities/",
+      "method": "POST"
+    },
+    "organisations": {
+      "type": "organisations",
+      "serializer": "organisations/serializers.py:OrganisationSerializerFull",
+      "endpoint": "organisations/",
+      "method": "GET"
+    },
+    "users": {
+      "type": "users",
+      "serializer": "users/serializers.py:FFAdminUserSerializer",
+      "endpoint": "organisations/:organisationId/users/",
+      "method": "GET"
+    },
+    "featureSegment": {
+      "type": "featureSegment",
+      "serializer": "features/feature_segments/serializers.py:FeatureSegmentSerializer",
+      "endpoint": "features/feature-segments/:id/",
+      "method": "DELETE"
+    },
+    "githubRepos": {
+      "type": "githubRepos",
+      "serializer": "integrations/github/serializers.py:GithubRepositorySerializer",
+      "endpoint": "organisations/:organisation_id/github/repositories/",
+      "method": "GET"
+    },
+    "githubResources": {
+      "type": "githubResources",
+      "serializer": "integrations/github/serializers.py:*Serializer (varies)",
+      "endpoint": "organisations/:organisation_id/github/:github_resource/",
+      "method": "GET"
+    },
+    "group": {
+      "type": "group",
+      "serializer": "users/serializers.py:UserPermissionGroupSerializer",
+      "endpoint": "organisations/:orgId/groups/",
+      "method": "POST"
+    },
+    "groupAdmin": {
+      "type": "groupAdmin",
+      "serializer": "users/serializers.py:UserPermissionGroupSerializer",
+      "endpoint": "organisations/:orgId/groups/:group/users/:user/make-admin",
+      "method": "POST"
+    },
+    "groups": {
+      "type": "groups",
+      "serializer": "users/serializers.py:UserPermissionGroupSerializer",
+      "endpoint": "organisations/:orgId/groups/:id/",
+      "method": "DELETE"
+    },
+    "metadataField": {
+      "type": "metadataField",
+      "serializer": "metadata/serializers.py:MetadataFieldSerializer",
+      "endpoint": "metadata/fields/",
+      "method": "POST"
+    },
+    "metadataList": {
+      "type": "metadataList",
+      "serializer": "metadata/serializers.py:MetadataFieldSerializer",
+      "endpoint": "metadata/fields/",
+      "method": "GET"
+    },
+    "metadataModelField": {
+      "type": "metadataModelField",
+      "serializer": "metadata/serializers.py:MetaDataModelFieldSerializer",
+      "endpoint": "organisations/:organisation_id/metadata-model-fields/",
+      "method": "POST"
+    },
+    "metadataModelFieldList": {
+      "type": "metadataModelFieldList",
+      "serializer": "metadata/serializers.py:MetaDataModelFieldSerializer",
+      "endpoint": "organisations/:organisation_id/metadata-model-fields/",
+      "method": "GET"
+    },
+    "projectFlag": {
+      "type": "projectFlag",
+      "serializer": "features/serializers.py:ListFeatureSerializer",
+      "endpoint": "projects/:project_id/features/",
+      "method": "POST"
+    },
+    "projectFlags": {
+      "type": "projectFlags",
+      "serializer": "features/serializers.py:ListFeatureSerializer",
+      "endpoint": "projects/:project/features/",
+      "method": "GET"
+    },
+    "supportedContentType": {
+      "type": "supportedContentType",
+      "serializer": "metadata/serializers.py:SupportedContentTypeSerializer",
+      "endpoint": "organisations/:organisation_id/metadata-model-fields/supported-content-types/",
+      "method": "GET"
+    },
+    "organisationWebhooks": {
+      "type": "organisationWebhooks",
+      "serializer": "organisations/serializers.py:OrganisationWebhookSerializer",
+      "endpoint": "organisations/:organisationId/webhooks/",
+      "method": "POST"
+    },
+    "conversionEvents": {
+      "type": "conversionEvents",
+      "serializer": "split_testing/serializers.py:ConversionEventTypeSerializer",
+      "endpoint": "conversion-event-types/",
+      "method": "GET"
+    },
+    "featureStates": {
+      "type": "featureStates",
+      "serializer": "features/serializers.py:FeatureStateSerializer",
+      "endpoint": "features/featurestates/",
+      "method": "GET"
+    },
+    "githubRepository": {
+      "type": "githubRepository",
+      "serializer": "integrations/github/serializers.py:GithubRepositorySerializer",
+      "endpoint": "organisations/:organisation_id/integrations/github/:github_id/repositories/",
+      "method": "POST"
+    },
+    "healthProvider": {
+      "type": "healthProvider",
+      "serializer": "features/feature_health/serializers.py:FeatureHealthProviderSerializer",
+      "endpoint": "projects/:projectId/feature-health/providers/",
+      "method": "POST"
+    },
+    "healthProviders": {
+      "type": "healthProviders",
+      "serializer": "features/feature_health/serializers.py:FeatureHealthProviderSerializer",
+      "endpoint": "projects/:projectId/feature-health/providers/",
+      "method": "GET"
+    },
+    "identitySegments": {
+      "type": "identitySegments",
+      "serializer": "",
+      "endpoint": "/projects/:projectId/segments/",
+      "method": "GET"
+    },
+    "identityTrait": {
+      "type": "identityTrait",
+      "serializer": "",
+      "endpoint": "/environments/:environmentId/identities/:identity/traits/",
+      "method": "POST"
+    },
+    "identityTraits": {
+      "type": "identityTraits",
+      "serializer": "",
+      "endpoint": "/environments/:environmentId/identities/:identity/traits/",
+      "method": "GET"
+    },
+    "createdUserInvite": {
+      "type": "createdUserInvite",
+      "serializer": "organisations/invites/serializers.py:MultiInvitesSerializer",
+      "endpoint": "organisations/:organisationId/invite/",
+      "method": "POST"
+    },
+    "userInvites": {
+      "type": "userInvites",
+      "serializer": "organisations/invites/serializers.py:InviteSerializer",
+      "endpoint": "organisations/:organisationId/invites/",
+      "method": "GET"
+    },
+    "myGroups": {
+      "type": "myGroups",
+      "serializer": "",
+      "endpoint": "/organisations/:orgId/groups/my-groups/",
+      "method": "GET"
+    },
+    "onboarding": {
+      "type": "onboarding",
+      "serializer": "users/serializers.py:PatchOnboardingSerializer",
+      "endpoint": "auth/users/me/onboarding/",
+      "method": "PATCH"
+    },
+    "onboardingSupportOptIn": {
+      "type": "onboardingSupportOptIn",
+      "serializer": "onboarding/serializers.py:OnboardingSupportOptInSerializer",
+      "endpoint": "onboarding/request/send/",
+      "method": "POST"
+    },
+    "organisationLicence": {
+      "type": "organisationLicence",
+      "serializer": "licensing/serializers.py:LicenceSerializer",
+      "endpoint": "organisations/:id/licence",
+      "method": "PUT"
+    },
+    "organisationUsage": {
+      "type": "organisationUsage",
+      "serializer": "app_analytics/serializers.py:UsageDataSerializer",
+      "endpoint": "organisations/:organisationId/usage-data/",
+      "method": "GET"
+    },
+    "project": {
+      "type": "project",
+      "serializer": "projects/serializers.py:ProjectRetrieveSerializer",
+      "endpoint": "projects/:id/",
+      "method": "GET"
+    },
+    "projects": {
+      "type": "projects",
+      "serializer": "projects/serializers.py:ProjectListSerializer",
+      "endpoint": "projects/",
+      "method": "GET"
+    },
+    "role": {
+      "type": "role",
+      "serializer": "rbac/serializers.py:RoleSerializer",
+      "endpoint": "organisations/:organisation_id/roles/",
+      "method": "POST"
+    },
+    "roles": {
+      "type": "roles",
+      "serializer": "rbac/serializers.py:RoleSerializer",
+      "endpoint": "organisations/:organisation_id/roles/",
+      "method": "GET"
+    },
+    "rolePermission": {
+      "type": "rolePermission",
+      "serializer": "rbac/serializers.py:RolePermissionSerializer",
+      "endpoint": "organisations/:organisation_id/roles/:role_id/:level-permissions/",
+      "method": "POST"
+    },
+    "samlAttributeMapping": {
+      "type": "samlAttributeMapping",
+      "serializer": "saml/serializers.py:SAMLAttributeMappingSerializer",
+      "endpoint": "auth/saml/attribute-mapping/",
+      "method": "POST"
+    },
+    "samlConfiguration": {
+      "type": "samlConfiguration",
+      "serializer": "saml/serializers.py:SAMLConfigurationSerializer",
+      "endpoint": "auth/saml/configuration/",
+      "method": "POST"
+    },
+    "samlMetadata": {
+      "type": "samlMetadata",
+      "serializer": "saml/serializers.py:SAMLMetadataSerializer",
+      "endpoint": "auth/saml/:name/metadata/",
+      "method": "GET"
+    },
+    "samlConfigurations": {
+      "type": "samlConfigurations",
+      "serializer": "saml/serializers.py:SAMLConfigurationSerializer",
+      "endpoint": "auth/saml/configuration/",
+      "method": "GET"
+    },
+    "splitTest": {
+      "type": "splitTest",
+      "serializer": "",
+      "endpoint": "split-testing/",
+      "method": "GET"
+    },
+    "subscriptionMetadata": {
+      "type": "subscriptionMetadata",
+      "serializer": "organisations/serializers.py:SubscriptionDetailsSerializer",
+      "endpoint": "organisations/:id/get-subscription-metadata/",
+      "method": "GET"
+    },
+    "tag": {
+      "type": "tag",
+      "serializer": "projects/tags/serializers.py:TagSerializer",
+      "endpoint": "projects/:projectId/tags/",
+      "method": "POST"
+    },
+    "tags": {
+      "type": "tags",
+      "serializer": "projects/tags/serializers.py:TagSerializer",
+      "endpoint": "projects/:projectId/tags/",
+      "method": "GET"
+    },
+    "userPermissions": {
+      "type": "userPermissions",
+      "serializer": "permissions/serializers.py:UserObjectPermissionsSerializer",
+      "endpoint": ":level/:id/user-detailed-permissions/:userId/",
+      "method": "GET"
+    },
+    "webhook": {
+      "type": "webhook",
+      "serializer": "webhooks/serializers.py:WebhookSerializer",
+      "endpoint": "environments/:environmentId/webhooks/",
+      "method": "POST"
+    },
+    "webhooks": {
+      "type": "webhooks",
+      "serializer": "webhooks/serializers.py:WebhookSerializer",
+      "endpoint": "environments/:environmentId/webhooks/",
+      "method": "GET"
+    },
+    "profile": {
+      "type": "profile",
+      "serializer": "users/serializers.py:FFAdminUserSerializer (from djoser)",
+      "endpoint": "auth/users/me/",
+      "method": "GET"
+    },
+    "releasePipeline": {
+      "type": "releasePipeline",
+      "serializer": "release_pipelines_logic/serializers.py:AddFeatureSerializer",
+      "endpoint": "projects/:projectId/release-pipelines/:pipelineId/add-feature/",
+      "method": "POST"
+    },
+    "releasePipelines": {
+      "type": "releasePipelines",
+      "serializer": "release_pipelines_logic/serializers.py:ReleasePipelineSerializer",
+      "endpoint": "projects/:projectId/release-pipelines/:pipelineId/",
+      "method": "DELETE"
+    },
+    "pipelineStages": {
+      "type": "pipelineStages",
+      "serializer": "release_pipelines_logic/serializers.py:PipelineStageSerializer",
+      "endpoint": "projects/:projectId/release-pipelines/:pipelineId/publish-pipeline/",
+      "method": "POST"
+    },
+    "healthEvents": {
+      "type": "healthEvents",
+      "serializer": "features/feature_health/serializers.py:FeatureHealthEventSerializer",
+      "endpoint": "projects/:projectId/feature-health/events/:eventId/dismiss/",
+      "method": "POST"
+    },
+    "changeRequests": {
+      "type": "changeRequests",
+      "serializer": "workflows_logic/serializers.py:ChangeRequestSerializer",
+      "endpoint": "environments/:environmentId/list-change-requests/",
+      "method": "GET"
+    },
+    "featureCodeReferences": {
+      "type": "featureCodeReferences",
+      "serializer": "projects/code_references/serializers.py:CodeReferenceSerializer",
+      "endpoint": "projects/:projectId/features/:featureId/code-references/",
+      "method": "GET"
+    },
+    "featureVersion": {
+      "type": "featureVersion",
+      "serializer": "features/versioning/serializers.py:EnvironmentFeatureVersionCreateSerializer",
+      "endpoint": "environments/:environmentId/features/:featureId/versions/",
+      "method": "POST"
+    },
+    "featureVersions": {
+      "type": "featureVersions",
+      "serializer": "features/versioning/serializers.py:EnvironmentFeatureVersionSerializer",
+      "endpoint": "environments/:environmentId/features/:featureId/versions/",
+      "method": "GET"
+    },
+    "projectChangeRequest": {
+      "type": "projectChangeRequest",
+      "serializer": "workflows_logic/serializers.py:ChangeRequestActionSerializer",
+      "endpoint": "projects/:project_id/change-requests/:id/:actionType/",
+      "method": "POST"
+    },
+    "projectChangeRequests": {
+      "type": "projectChangeRequests",
+      "serializer": "workflows_logic/serializers.py:ProjectChangeRequestSerializer",
+      "endpoint": "projects/:project_id/change-requests/",
+      "method": "GET"
+    },
+    "segment": {
+      "type": "segment",
+      "serializer": "segments/serializers.py:SegmentSerializer",
+      "endpoint": "projects/:projectId/segments/:segmentId/clone/",
+      "method": "POST"
+    },
+    "segments": {
+      "type": "segments",
+      "serializer": "segments/serializers.py:SegmentSerializer",
+      "endpoint": "projects/:projectId/segments/",
+      "method": "GET"
+    },
+    "permission": {
+      "type": "permission",
+      "serializer": "permissions/serializers.py:MyPermissionSerializer",
+      "endpoint": ":level/:id/my-permissions/",
+      "method": "GET"
+    },
+    "environment": {
+      "type": "environment",
+      "serializer": "environments/serializers.py:EnvironmentRetrieveSerializer",
+      "endpoint": "environments/:id/",
+      "method": "GET"
+    },
+    "environmentMetrics": {
+      "type": "environmentMetrics",
+      "serializer": "environments/serializers.py:EnvironmentMetricsSerializer",
+      "endpoint": "environments/:id/metrics/",
+      "method": "GET"
+    },
+    "environments": {
+      "type": "environments",
+      "serializer": "environments/serializers.py:EnvironmentSerializer",
+      "endpoint": "environments/",
+      "method": "GET"
+    },
+    "identity": {
+      "type": "identity",
+      "serializer": "environments/identities/serializers.py:IdentitySerializer",
+      "endpoint": "environments/:environmentId/identities/",
+      "method": "POST"
+    },
+    "identities": {
+      "type": "identities",
+      "serializer": "environments/identities/serializers.py:IdentitySerializer",
+      "endpoint": "environments/:environmentId/identities/",
+      "method": "GET"
+    }
+  },
+  "request_types": {
+    "updateAccount": {
+      "serializer": "users/serializers.py:FFAdminUserSerializer (from djoser)",
+      "endpoint": "auth/users/me/",
+      "method": "PUT"
+    },
+    "enableFeatureVersioning": {
+      "serializer": "features/versioning/serializers.py:EnableV2VersioningSerializer",
+      "endpoint": "environments/:environmentId/enable-v2-versioning/",
+      "method": "POST"
+    },
+    "createFeatureExport": {
+      "serializer": "features/import_export/serializers.py:CreateFeatureExportSerializer",
+      "endpoint": "features/create-feature-export/",
+      "method": "POST"
+    },
+    "createFlagsmithProjectImport": {
+      "serializer": "features/import_export/serializers.py:FlagsmithImportSerializer",
+      "endpoint": "features/feature-import/:environment_id",
+      "method": "POST"
+    },
+    "createLaunchDarklyProjectImport": {
+      "serializer": "integrations/launch_darkly/serializers.py:LaunchDarklyImportRequestSerializer",
+      "endpoint": "projects/:project_id/imports/launch-darkly/",
+      "method": "POST"
+    },
+    "createSegmentOverride": {
+      "serializer": "features/serializers.py:CreateSegmentOverrideSerializer",
+      "endpoint": "environments/:environmentId/features/:featureId/create-segment-override/",
+      "method": "POST"
+    },
+    "createServersideEnvironmentKeys": {
+      "serializer": "environments/serializers.py:EnvironmentAPIKeySerializer",
+      "endpoint": "environments/:environmentId/api-keys/",
+      "method": "POST"
+    },
+    "updateUserEmail": {
+      "serializer": "users/serializers.py:UserEmailSerializer (from djoser)",
+      "endpoint": "auth/users/set_email/",
+      "method": "POST"
+    },
+    "createRolePermissionGroup": {
+      "serializer": "rbac/serializers.py:GroupRoleSerializer",
+      "endpoint": "organisations/:organisation_id/roles/:role_id/groups/",
+      "method": "POST"
+    },
+    "updateRolePermissionGroup": {
+      "serializer": "rbac/serializers.py:GroupRoleSerializer",
+      "endpoint": "organisations/:id/roles/:role_id/groups/",
+      "method": "PUT"
+    },
+    "createRolesPermissionUsers": {
+      "serializer": "rbac/serializers.py:UserRoleSerializer",
+      "endpoint": "organisations/:organisation_id/roles/:role_id/users/",
+      "method": "POST"
+    },
+    "createExternalResource": {
+      "serializer": "features/feature_external_resources/serializers.py:FeatureExternalResourceSerializer",
+      "endpoint": "projects/:project_id/features/:feature_id/feature-external-resources/",
+      "method": "POST"
+    },
+    "createGithubIntegration": {
+      "serializer": "integrations/github/serializers.py:GithubConfigurationSerializer",
+      "endpoint": "organisations/:organisation_id/integrations/github/",
+      "method": "POST"
+    },
+    "updateGithubIntegration": {
+      "serializer": "integrations/github/serializers.py:GithubConfigurationSerializer",
+      "endpoint": "organisations/:organisation_id/integrations/github/:github_integration_id/",
+      "method": "PUT"
+    },
+    "createCloneIdentityFeatureStates": {
+      "serializer": "features/serializers.py:CloneIdentityFeatureStatesSerializer",
+      "endpoint": "environments/:environment_id/identities/:identity_id/featurestates/clone-from-given-identity/",
+      "method": "POST"
+    },
+    "updateMasterAPIKeyWithMasterAPIKeyRoles": {
+      "serializer": "api_keys/serializers.py:MasterAPIKeySerializer",
+      "endpoint": "organisations/:org_id/master-api-keys/:prefix/",
+      "method": "PUT"
+    },
+    "createRoleMasterApiKey": {
+      "serializer": "rbac/serializers.py:MasterAPIKeyRoleSerializer",
+      "endpoint": "organisations/:org_id/roles/:role_id/master-api-keys/",
+      "method": "POST"
+    },
+    "updateRoleMasterApiKey": {
+      "serializer": "rbac/serializers.py:MasterAPIKeyRoleSerializer",
+      "endpoint": "organisations/:org_id/roles/:role_id/master-api-keys/:id/",
+      "method": "PUT"
+    },
+    "createVersionFeatureState": {
+      "serializer": "features/versioning/serializers.py:CustomEnvironmentFeatureVersionFeatureStateSerializer",
+      "endpoint": "environments/:environmentId/features/:featureId/versions/:sha/featurestates/",
+      "method": "POST"
+    },
+    "updateVersionFeatureState": {
+      "serializer": "features/versioning/serializers.py:CustomEnvironmentFeatureVersionFeatureStateSerializer",
+      "endpoint": "environments/:environmentId/features/:featureId/versions/:sha/featurestates/:id/",
+      "method": "PUT"
+    },
+    "updateSegmentPriorities": {
+      "serializer": "features/feature_segments/serializers.py:UpdateSegmentPrioritiesSerializer",
+      "endpoint": "features/feature-segments/update-priorities/",
+      "method": "POST"
+    },
+    "createGroup": {
+      "serializer": "users/serializers.py:UserPermissionGroupSerializer",
+      "endpoint": "organisations/:orgId/groups/",
+      "method": "POST"
+    },
+    "createGroupAdmin": {
+      "serializer": "users/serializers.py:UserPermissionGroupSerializer",
+      "endpoint": "organisations/:orgId/groups/:group/users/:user/make-admin",
+      "method": "POST"
+    },
+    "deleteGroupAdmin": {
+      "serializer": "users/serializers.py:UserPermissionGroupSerializer",
+      "endpoint": "organisations/:orgId/groups/:group/users/:user/remove-admin",
+      "method": "POST"
+    },
+    "updateGroup": {
+      "serializer": "users/serializers.py:UserPermissionGroupSerializer",
+      "endpoint": "organisations/:orgId/groups/:id/",
+      "method": "PUT"
+    },
+    "createMetadataField": {
+      "serializer": "metadata/serializers.py:MetadataFieldSerializer",
+      "endpoint": "metadata/fields/",
+      "method": "POST"
+    },
+    "updateMetadataField": {
+      "serializer": "metadata/serializers.py:MetadataFieldSerializer",
+      "endpoint": "metadata/fields/:id/",
+      "method": "PUT"
+    },
+    "createMetadataModelField": {
+      "serializer": "metadata/serializers.py:MetaDataModelFieldSerializer",
+      "endpoint": "organisations/:organisation_id/metadata-model-fields/",
+      "method": "POST"
+    },
+    "updateMetadataModelField": {
+      "serializer": "metadata/serializers.py:MetaDataModelFieldSerializer",
+      "endpoint": "organisations/:organisation_id/metadata-model-fields/:id/",
+      "method": "PUT"
+    },
+    "createProjectFlag": {
+      "serializer": "features/serializers.py:ListFeatureSerializer",
+      "endpoint": "projects/:project_id/features/",
+      "method": "POST"
+    },
+    "updateProjectFlag": {
+      "serializer": "features/serializers.py:UpdateFeatureSerializer",
+      "endpoint": "projects/:project_id/features/:feature_id/",
+      "method": "PUT"
+    },
+    "createAuditLogWebhooks": {
+      "serializer": "organisations/serializers.py:OrganisationWebhookSerializer",
+      "endpoint": "organisations/:organisationId/webhooks/",
+      "method": "POST"
+    },
+    "updateAuditLogWebhooks": {
+      "serializer": "organisations/serializers.py:OrganisationWebhookSerializer",
+      "endpoint": "organisations/:organisationId/webhooks/:id/",
+      "method": "PUT"
+    },
+    "createGithubRepository": {
+      "serializer": "integrations/github/serializers.py:GithubRepositorySerializer",
+      "endpoint": "organisations/:organisation_id/integrations/github/:github_id/repositories/",
+      "method": "POST"
+    },
+    "updateGithubRepository": {
+      "serializer": "integrations/github/serializers.py:GithubRepositorySerializer",
+      "endpoint": "organisations/:organisation_id/integrations/github/:github_id/repositories/:id/",
+      "method": "PUT"
+    },
+    "createHealthProvider": {
+      "serializer": "features/feature_health/serializers.py:FeatureHealthProviderSerializer",
+      "endpoint": "projects/:projectId/feature-health/providers/",
+      "method": "POST"
+    },
+    "createIdentityTrait": {
+      "serializer": "",
+      "endpoint": "/environments/:environmentId/identities/:identity/traits/",
+      "method": "POST"
+    },
+    "updateIdentityTrait": {
+      "serializer": "",
+      "endpoint": "/environments/:environmentId/identities/:identity/traits/:id/",
+      "method": "PUT"
+    },
+    "createUserInvite": {
+      "serializer": "organisations/invites/serializers.py:MultiInvitesSerializer",
+      "endpoint": "organisations/:organisationId/invite/",
+      "method": "POST"
+    },
+    "resendUserInvite": {
+      "serializer": "organisations/invites/serializers.py:InviteSerializer",
+      "endpoint": "organisations/:organisationId/invites/:inviteId/resend/",
+      "method": "POST"
+    },
+    "updateOnboarding": {
+      "serializer": "users/serializers.py:PatchOnboardingSerializer",
+      "endpoint": "auth/users/me/onboarding/",
+      "method": "PATCH"
+    },
+    "createOnboardingSupportOptIn": {
+      "serializer": "onboarding/serializers.py:OnboardingSupportOptInSerializer",
+      "endpoint": "onboarding/request/send/",
+      "method": "POST"
+    },
+    "uploadOrganisationLicence": {
+      "serializer": "licensing/serializers.py:LicenceSerializer",
+      "endpoint": "organisations/:id/licence",
+      "method": "PUT"
+    },
+    "createRole": {
+      "serializer": "rbac/serializers.py:RoleSerializer",
+      "endpoint": "organisations/:organisation_id/roles/",
+      "method": "POST"
+    },
+    "updateRole": {
+      "serializer": "rbac/serializers.py:RoleSerializer",
+      "endpoint": "organisations/:organisation_id/roles/:role_id/",
+      "method": "PUT"
+    },
+    "createRolePermission": {
+      "serializer": "rbac/serializers.py:RolePermissionSerializer",
+      "endpoint": "organisations/:organisation_id/roles/:role_id/:level-permissions/",
+      "method": "POST"
+    },
+    "updateRolePermission": {
+      "serializer": "rbac/serializers.py:RolePermissionSerializer",
+      "endpoint": "organisations/:organisation_id/roles/:role_id/:level-permissions/:id/",
+      "method": "PUT"
+    },
+    "createSamlAttributeMapping": {
+      "serializer": "saml/serializers.py:SAMLAttributeMappingSerializer",
+      "endpoint": "auth/saml/attribute-mapping/",
+      "method": "POST"
+    },
+    "updateSamlAttributeMapping": {
+      "serializer": "saml/serializers.py:SAMLAttributeMappingSerializer",
+      "endpoint": "auth/saml/attribute-mapping/:attribute_id/",
+      "method": "PUT"
+    },
+    "createSamlConfiguration": {
+      "serializer": "saml/serializers.py:SAMLConfigurationSerializer",
+      "endpoint": "auth/saml/configuration/",
+      "method": "POST"
+    },
+    "updateSamlConfiguration": {
+      "serializer": "saml/serializers.py:SAMLConfigurationSerializer",
+      "endpoint": "auth/saml/configuration/:name/",
+      "method": "PUT"
+    },
+    "createTag": {
+      "serializer": "projects/tags/serializers.py:TagSerializer",
+      "endpoint": "projects/:projectId/tags/",
+      "method": "POST"
+    },
+    "updateTag": {
+      "serializer": "projects/tags/serializers.py:TagSerializer",
+      "endpoint": "projects/:projectId/tags/:id/",
+      "method": "PUT"
+    },
+    "createWebhook": {
+      "serializer": "webhooks/serializers.py:WebhookSerializer",
+      "endpoint": "environments/:environmentId/webhooks/",
+      "method": "POST"
+    },
+    "testWebhook": {
+      "serializer": "webhooks/serializers.py:TestWebhookSerializer",
+      "endpoint": "webhooks/test/",
+      "method": "POST"
+    },
+    "updateWebhook": {
+      "serializer": "webhooks/serializers.py:WebhookSerializer",
+      "endpoint": "environments/:environmentId/webhooks/:id/",
+      "method": "PUT"
+    },
+    "addFeatureToReleasePipeline": {
+      "serializer": "release_pipelines_logic/serializers.py:AddFeatureSerializer",
+      "endpoint": "projects/:projectId/release-pipelines/:pipelineId/add-feature/",
+      "method": "POST"
+    },
+    "cloneReleasePipeline": {
+      "serializer": "release_pipelines_logic/serializers.py:ReleasePipelineSerializer",
+      "endpoint": "projects/:projectId/release-pipelines/:pipelineId/clone/",
+      "method": "POST"
+    },
+    "createReleasePipeline": {
+      "serializer": "release_pipelines_logic/serializers.py:ReleasePipelineSerializer",
+      "endpoint": "projects/:project/release-pipelines/",
+      "method": "POST"
+    },
+    "publishReleasePipeline": {
+      "serializer": "release_pipelines_logic/serializers.py:PipelineStageSerializer",
+      "endpoint": "projects/:projectId/release-pipelines/:pipelineId/publish-pipeline/",
+      "method": "POST"
+    },
+    "removeFeatureFromReleasePipeline": {
+      "serializer": "release_pipelines_logic/serializers.py:RemoveFeatureSerializer",
+      "endpoint": "projects/:projectId/release-pipelines/:pipelineId/remove-feature/",
+      "method": "POST"
+    },
+    "updateReleasePipeline": {
+      "serializer": "release_pipelines_logic/serializers.py:ReleasePipelineSerializer",
+      "endpoint": "projects/:project/release-pipelines/:id/",
+      "method": "PUT"
+    },
+    "dismissHealthEvent": {
+      "serializer": "features/feature_health/serializers.py:FeatureHealthEventSerializer",
+      "endpoint": "projects/:projectId/feature-health/events/:eventId/dismiss/",
+      "method": "POST"
+    },
+    "createFeatureVersion": {
+      "serializer": "features/versioning/serializers.py:EnvironmentFeatureVersionCreateSerializer",
+      "endpoint": "environments/:environmentId/features/:featureId/versions/",
+      "method": "POST"
+    },
+    "publishFeatureVersion": {
+      "serializer": "features/versioning/serializers.py:EnvironmentFeatureVersionPublishSerializer",
+      "endpoint": "environments/:environmentId/features/:featureId/versions/:sha/publish/",
+      "method": "POST"
+    },
+    "actionProjectChangeRequest": {
+      "serializer": "workflows_logic/serializers.py:ChangeRequestActionSerializer",
+      "endpoint": "projects/:project_id/change-requests/:id/:actionType/",
+      "method": "POST"
+    },
+    "createProjectChangeRequest": {
+      "serializer": "workflows_logic/serializers.py:ProjectChangeRequestSerializer",
+      "endpoint": "projects/:project_id/change-requests/",
+      "method": "POST"
+    },
+    "updateProjectChangeRequest": {
+      "serializer": "workflows_logic/serializers.py:ProjectChangeRequestSerializer",
+      "endpoint": "projects/:project_id/change-requests/:id/",
+      "method": "PUT"
+    },
+    "cloneSegment": {
+      "serializer": "segments/serializers.py:SegmentSerializer",
+      "endpoint": "projects/:projectId/segments/:segmentId/clone/",
+      "method": "POST"
+    },
+    "createSegment": {
+      "serializer": "segments/serializers.py:SegmentSerializer",
+      "endpoint": "projects/:projectId/segments/",
+      "method": "POST"
+    },
+    "updateSegment": {
+      "serializer": "segments/serializers.py:SegmentSerializer",
+      "endpoint": "projects/:projectId/segments/:id/",
+      "method": "PUT"
+    },
+    "updateEnvironment": {
+      "serializer": "environments/serializers.py:CreateUpdateEnvironmentSerializer",
+      "endpoint": "environments/:id/",
+      "method": "PUT"
+    },
+    "createIdentities": {
+      "serializer": "environments/identities/serializers.py:IdentitySerializer",
+      "endpoint": "environments/:environmentId/identities/",
+      "method": "POST"
+    },
+    "updateIdentity": {
+      "serializer": "environments/identities/serializers.py:IdentitySerializer",
+      "endpoint": "environments/:environmentId/identities/:id/",
+      "method": "PUT"
+    }
+  }
+}
