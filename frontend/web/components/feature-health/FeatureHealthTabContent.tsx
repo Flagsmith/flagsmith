@@ -33,12 +33,13 @@ const FeatureHealthTabContent: React.FC<FeatureHealthTabContentProps> = ({
   }
 
   const hasFeatureHealthConfigured = providers && providers?.length > 0
-
+  const featureHealthEvents =
+    healthEvents?.filter((event) => event.feature === featureId) || []
   return (
     <div>
       {hasFeatureHealthConfigured ? (
         <FeatureHealthEventsList
-          featureHealthEvents={healthEvents || []}
+          featureHealthEvents={featureHealthEvents}
           projectId={projectId}
           environmentId={environmentId}
           featureId={featureId}
