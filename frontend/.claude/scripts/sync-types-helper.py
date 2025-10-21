@@ -32,9 +32,9 @@ def save_cache(cache: Dict) -> None:
         f.write("\n")
 
 
-
-
-def get_changed_serializers(old_commit: str, new_commit: str, api_path: str) -> List[str]:
+def get_changed_serializers(
+    old_commit: str, new_commit: str, api_path: str
+) -> List[str]:
     """Get list of serializer files changed between commits."""
     import subprocess
 
@@ -52,7 +52,9 @@ def get_changed_serializers(old_commit: str, new_commit: str, api_path: str) -> 
     return [f for f in files if "serializers.py" in f]
 
 
-def find_types_using_serializer(cache: Dict, serializer_path: str, serializer_name: str) -> List[str]:
+def find_types_using_serializer(
+    cache: Dict, serializer_path: str, serializer_name: str
+) -> List[str]:
     """Find all type keys that use a specific serializer."""
     search_string = f"{serializer_path}:{serializer_name}"
     types = []
@@ -67,8 +69,6 @@ def find_types_using_serializer(cache: Dict, serializer_path: str, serializer_na
     return types
 
 
-
-
 def update_metadata(stats: Dict) -> None:
     """Update cache metadata with sync statistics."""
     cache = load_cache()
@@ -80,7 +80,9 @@ def update_metadata(stats: Dict) -> None:
     save_cache(cache)
 
 
-def get_types_needing_sync(serializer_files: List[str], api_path: str, type_category: str = "response") -> List[Dict]:
+def get_types_needing_sync(
+    serializer_files: List[str], api_path: str, type_category: str = "response"
+) -> List[Dict]:
     """
     Get list of types that need syncing based on changed serializer files.
 
@@ -108,12 +110,14 @@ def get_types_needing_sync(serializer_files: List[str], api_path: str, type_cate
             serializer = type_data.get("serializer", "")
             if file_path in serializer and ":" in serializer:
                 serializer_class = serializer.split(":")[-1].strip()
-                types_to_check.append({
-                    "key": type_key,
-                    "serializer_file": file_path,
-                    "serializer_class": serializer_class,
-                    "type_name": type_data.get("type", ""),
-                })
+                types_to_check.append(
+                    {
+                        "key": type_key,
+                        "serializer_file": file_path,
+                        "serializer_class": serializer_class,
+                        "type_name": type_data.get("type", ""),
+                    }
+                )
 
     return types_to_check
 
@@ -152,12 +156,14 @@ def filter_syncable_types(cache: Dict, type_category: str = "response") -> List[
         if "serializers.py:" in serializer and ":" in serializer:
             parts = serializer.split(":")
             if len(parts) == 2:
-                syncable.append({
-                    "key": type_key,
-                    "serializer_file": parts[0],
-                    "serializer_class": parts[1].strip(),
-                    "type_name": type_data.get("type", ""),
-                })
+                syncable.append(
+                    {
+                        "key": type_key,
+                        "serializer_file": parts[0],
+                        "serializer_class": parts[1].strip(),
+                        "type_name": type_data.get("type", ""),
+                    }
+                )
 
     return syncable
 
@@ -208,8 +214,18 @@ if __name__ == "__main__":
 
     else:
         print("Usage:")
-        print("  changed-serializers OLD NEW PATH           - Get changed serializer files")
-        print("  types-to-sync [response|request] FILE... PATH - Get types needing sync")
-        print("  update-metadata                            - Update metadata (JSON via stdin)")
-        print("  syncable-types [response|request]          - Get all syncable type info")
-        print("  get-last-commit                            - Get last backend commit from cache")
+        print(
+            "  changed-serializers OLD NEW PATH           - Get changed serializer files"
+        )
+        print(
+            "  types-to-sync [response|request] FILE... PATH - Get types needing sync"
+        )
+        print(
+            "  update-metadata                            - Update metadata (JSON via stdin)"
+        )
+        print(
+            "  syncable-types [response|request]          - Get all syncable type info"
+        )
+        print(
+            "  get-last-commit                            - Get last backend commit from cache"
+        )
