@@ -15,6 +15,7 @@ from flag_engine.utils.exceptions import DuplicateFeatureState
 from pydantic import ValidationError as PydanticValidationError
 from pyngo import drf_error_details
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 from rest_framework.exceptions import ValidationError
 
 from environments.dynamodb.types import IdentityOverrideV2
@@ -140,6 +141,7 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):  # type: ignore[typ
         return FeatureStateValue(**feature_state_value_dict).value
 
 
+@extend_schema_field({"oneOf": [{"type": "integer"}, {"type": "string"}]})
 class EdgeFeatureField(serializers.Field):  # type: ignore[type-arg]
     def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         help_text = "ID(integer) or name(string) of the feature"
@@ -164,8 +166,7 @@ class EdgeFeatureField(serializers.Field):  # type: ignore[type-arg]
             )
         )
 
-    class Meta:
-        swagger_schema_fields = {"type": "integer/string"}
+    # drf-spectacular handles schema via the decorator above
 
 
 class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):  # type: ignore[type-arg]

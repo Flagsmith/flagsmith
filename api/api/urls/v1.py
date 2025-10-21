@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.urls import include, path, re_path
-from drf_yasg import openapi  # type: ignore[import-untyped]
-from drf_yasg.views import get_schema_view  # type: ignore[import-untyped]
-from rest_framework import authentication, permissions, routers
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework import routers
+from rest_framework.views import APIView
 
 from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from environments.identities.traits.views import SDKTraits
@@ -13,29 +13,19 @@ from features.views import SDKFeatureStates, get_multivariate_options
 from integrations.github.views import github_webhook
 from organisations.views import chargebee_webhook
 
-schema_view_permission_class = (  # pragma: no cover
-    permissions.IsAuthenticated
-    if settings.REQUIRE_AUTHENTICATION_FOR_API_DOCS
-    else permissions.AllowAny
-)
-
-schema_view = get_schema_view(
-    openapi.Info(
-        title="Flagsmith API",
-        default_version="v1",
-        description="",
-        license=openapi.License(name="BSD License"),
-        contact=openapi.Contact(email="support@flagsmith.com"),
-    ),
-    public=True,
-    permission_classes=[schema_view_permission_class],
-    authentication_classes=[authentication.BasicAuthentication],
-)
-
 traits_router = routers.DefaultRouter()
 traits_router.register(r"", SDKTraits, basename="sdk-traits")
 
 app_name = "v1"
+
+
+class DocsView(APIView):  # pragma: no cover
+    def get(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        # Maintain backwards-compat with /docs/?format=openapi returning raw schema
+        if request.GET.get("format") == "openapi":
+            return SpectacularAPIView.as_view()(request, *args, **kwargs)
+        return SpectacularSwaggerView.as_view(url_name="api-v1:schema")(request, *args, **kwargs)
+
 
 urlpatterns = [
     re_path(r"^organisations/", include("organisations.urls"), name="organisations"),
@@ -81,16 +71,15 @@ urlpatterns = [
     ),
     re_path("", include("features.versioning.urls", namespace="versioning")),
     # API documentation
+    # Keep old name for tests expecting reverse("api-v1:schema-json", ...)
     re_path(
         r"^swagger(?P<format>\.json|\.yaml)$",
-        schema_view.without_ui(cache_timeout=0),
+        SpectacularAPIView.as_view(),
         name="schema-json",
     ),
-    re_path(
-        r"^docs/$",
-        schema_view.with_ui("swagger", cache_timeout=0),
-        name="schema-swagger-ui",
-    ),
+    # New endpoints
+    path("schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("docs/", DocsView.as_view(), name="schema-swagger-ui"),
     # Test webhook url
     re_path(r"^webhooks/", include("webhooks.urls", namespace="webhooks")),
     path("", include("projects.code_references.urls", namespace="code_references")),

@@ -120,7 +120,7 @@ INSTALLED_APPS = [
     "app",
     "e2etests",
     "simple_history",
-    "drf_yasg",
+    "drf_spectacular",
     "audit",
     "permissions",
     "projects.code_references",
@@ -326,6 +326,7 @@ REST_FRAMEWORK = {
         "util.renderers.PydanticJSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 MIDDLEWARE = [
     "common.core.middleware.APIResponseVersionHeaderMiddleware",
@@ -538,25 +539,42 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_PORT = env("EMAIL_PORT", default=587)
     EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
-SWAGGER_SETTINGS = {
-    "DEEP_LINKING": True,
-    "DEFAULT_AUTO_SCHEMA_CLASS": "api.openapi.PydanticResponseCapableSwaggerAutoSchema",
-    "SHOW_REQUEST_HEADERS": True,
-    "SECURITY_DEFINITIONS": {
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Flagsmith API",
+    "VERSION": "v1",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SECURITY": [
+        {"Private": []},
+        {"Public": []},
+    ],
+    "AUTHENTICATION_WHITELIST": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    "SECURITY_SCHEMES": {
         "Private": {
             "type": "apiKey",
             "in": "header",
             "name": "Authorization",
-            "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",  # noqa
+            "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",
         },
         "Public": {
             "type": "apiKey",
             "in": "header",
             "name": "X-Environment-Key",
-            "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",  # noqa
+            "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",
         },
     },
 }
+
+if REQUIRE_AUTHENTICATION_FOR_API_DOCS:
+    SPECTACULAR_SETTINGS["SERVE_PERMISSIONS"] = (
+        "rest_framework.permissions.IsAuthenticated",
+    )
+    SPECTACULAR_SETTINGS["SERVE_AUTHENTICATION"] = (
+        "rest_framework.authentication.SessionAuthentication",
+    )
 
 
 LOGIN_URL = "/admin/login/"
