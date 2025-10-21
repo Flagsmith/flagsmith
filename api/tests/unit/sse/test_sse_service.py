@@ -1,5 +1,6 @@
 import boto3
 import pytest
+from botocore.exceptions import ClientError
 from django.conf import settings
 from moto import mock_s3  # type: ignore[import-untyped]
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
@@ -160,3 +161,65 @@ def test_stream_access_logs(mocker: MockerFixture, aws_credentials: None) -> Non
 
     # And, bucket is now empty
     assert "Contents" not in s3_client.list_objects(Bucket=bucket_name)
+
+
+def test_stream_access_logs_handles_deleted_files(
+    mocker: MockerFixture, aws_credentials: None
+) -> None:
+    # Given - Mock bucket with objects where first raises NoSuchKey
+    mock_obj_1 = mocker.MagicMock()
+    mock_obj_1.key = "file1"
+    mock_obj_1.get.side_effect = ClientError(
+        {"Error": {"Code": "NoSuchKey"}}, "GetObject"
+    )
+
+    mock_obj_2 = mocker.MagicMock()
+    mock_obj_2.key = "file2"
+    mock_obj_2.get.return_value = {"Body": mocker.MagicMock(read=lambda: b"data2")}
+
+    mock_bucket = mocker.MagicMock()
+    mock_bucket.objects.all.return_value = [mock_obj_1, mock_obj_2]
+
+    mocker.patch(
+        "sse.sse_service.boto3.resource"
+    ).return_value.Bucket.return_value = mock_bucket
+    mocker.patch(
+        "sse.sse_service.gnupg.GPG"
+    ).return_value.decrypt.return_value = mocker.MagicMock(
+        data=b"2023-11-27T06:42:47+0000,test_key"
+    )
+    mocked_logger = mocker.patch("sse.sse_service.logger")
+
+    # When
+    logs = list(stream_access_logs())
+
+    # Then - Should skip first file with warning and process second
+    assert len(logs) == 1
+    mocked_logger.warning.assert_called_once_with(
+        "Log file %s has already been deleted, skipping", "file1"
+    )
+
+
+def test_stream_access_logs_reraises_non_nosuchkey_errors(
+    mocker: MockerFixture, aws_credentials: None
+) -> None:
+    # Given - Mock bucket with object that raises AccessDenied error
+    mock_obj = mocker.MagicMock()
+    mock_obj.key = "file1"
+    mock_obj.get.side_effect = ClientError(
+        {"Error": {"Code": "AccessDenied"}}, "GetObject"
+    )
+
+    mock_bucket = mocker.MagicMock()
+    mock_bucket.objects.all.return_value = [mock_obj]
+
+    mocker.patch(
+        "sse.sse_service.boto3.resource"
+    ).return_value.Bucket.return_value = mock_bucket
+    mocker.patch("sse.sse_service.gnupg.GPG")
+
+    # When/Then - Should re-raise the ClientError
+    with pytest.raises(ClientError) as exc_info:
+        list(stream_access_logs())
+
+    assert exc_info.value.response["Error"]["Code"] == "AccessDenied"
