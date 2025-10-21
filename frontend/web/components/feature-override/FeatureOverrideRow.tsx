@@ -112,9 +112,13 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     )
       return
     const tab = level === 'segment' ? 'segment-overrides' : 'value'
-    history.replace(
-      `${document.location.pathname}?flag=${projectFlag.name}&tab=${tab}`,
-    )
+    const params = Utils.fromParam()
+    const newParams = Utils.toParam({
+      ...params,
+      flag: projectFlag.name,
+      tab,
+    })
+    history.replace(`${document.location.pathname}?${newParams}`)
     API.trackEvent(Constants.events.VIEW_USER_FEATURE)
     openModal(
       <span>
@@ -146,7 +150,12 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
       />,
       'side-modal create-feature-modal overflow-y-auto',
       () => {
-        history.replace(document.location.pathname)
+        const params = Utils.fromParam()
+        const newParams = Utils.toParam({
+          ...params,
+          flag: undefined,
+        })
+        history.replace(`${document.location.pathname}?${newParams}`)
       },
     )
   }
