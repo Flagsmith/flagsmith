@@ -10,7 +10,7 @@ import { TagStrategy } from 'common/types/responses'
 import TagContent from 'components/tags/TagContent'
 
 type TableFilterType = {
-  projectId: string
+  projectId: string | number
   value: (number | string)[] | undefined
   isLoading: boolean
   onChange: (value: (number | string)[], isAutomatedChange?: boolean) => void
@@ -33,7 +33,10 @@ const TableTagFilter: FC<TableFilterType> = ({
   value,
 }) => {
   const [filter, setFilter] = useState('')
-  const { data } = useGetTagsQuery({ projectId })
+  const { data } = useGetTagsQuery(
+    { projectId: `${projectId}` },
+    { skip: !projectId },
+  )
 
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
   const flagGatedTags = useMemo(() => {
