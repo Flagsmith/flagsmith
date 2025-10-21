@@ -67,7 +67,6 @@
             },
             "required": [
                 "key",
-                "feature_key",
                 "name",
                 "enabled",
                 "value"

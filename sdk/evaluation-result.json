@@ -2,11 +2,6 @@
     "$defs": {
         "FlagResult": {
             "properties": {
-                "feature_key": {
-                    "description": "Unique feature identifier.",
-                    "title": "Feature Key",
-                    "type": "string"
-                },
                 "name": {
                     "description": "Feature name.",
                     "title": "Name",
@@ -40,7 +35,6 @@
                 }
             },
             "required": [
-                "feature_key",
                 "name",
                 "enabled",
                 "value",
@@ -64,7 +58,6 @@
                 }
             },
             "required": [
-                "key",
                 "name"
             ],
             "title": "SegmentResult",
