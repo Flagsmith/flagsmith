@@ -4073,3 +4073,63 @@ def test_get_multivariate_options_feature_not_found_responds_404(
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.parametrize(
+    "get_segment_id,expected_feature_state_value",
+    [
+        (lambda segment: segment.id, "segment_value"),
+        (lambda segment: segment.id + 9999, None),
+    ],
+)
+def test_list_features_segment_query_param(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    segment: Segment,
+    get_segment_id: typing.Callable[[Segment], int],
+    expected_feature_state_value: str | None,
+) -> None:
+    # Given
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment,
+    )
+    segment_override = FeatureState.objects.create(
+        feature=feature,
+        feature_segment=feature_segment,
+        environment=environment,
+        enabled=True,
+    )
+    segment_override.feature_state_value.string_value = "segment_value"
+    segment_override.feature_state_value.save()
+
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    target_segment_id = get_segment_id(segment)
+    url = f"{base_url}?environment={environment.id}&segment={target_segment_id}"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    feature_data = next(
+        filter(lambda r: r["id"] == feature.id, response_json["results"])
+    )
+
+    assert "environment_feature_state" in feature_data
+    assert "segment_feature_state" in feature_data
+
+    if expected_feature_state_value is None:
+        assert feature_data["segment_feature_state"] is None
+    else:
+        assert feature_data["segment_feature_state"] is not None
+        assert feature_data["segment_feature_state"]["id"] == segment_override.id
+        assert (
+            feature_data["segment_feature_state"]["feature_state_value"]
+            == expected_feature_state_value
+        )
+        assert feature_data["segment_feature_state"]["enabled"] is True
