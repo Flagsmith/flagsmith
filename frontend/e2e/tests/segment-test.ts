@@ -81,7 +81,6 @@ const segmentRules =  [
 ]
 
 export const testSegment1 = async (flagsmith: any) => {
-  const isCloneSegmentEnabled = await flagsmith.hasFeature('clone_segment')
   log('Login')
   await login(E2E_USER, PASSWORD)
   await click('#project-select-1')
@@ -147,16 +146,14 @@ export const testSegment1 = async (flagsmith: any) => {
   await waitAndRefresh()
   await assertTextContent(byId('user-feature-value-0'), '"medium"')
 
-  if (isCloneSegmentEnabled) {
-    log('Clone segment')
-    await gotoSegments()
-    await cloneSegment(0, '0cloned-segment')
-    await deleteSegment(0, '0cloned-segment', !isCloneSegmentEnabled)
-  }
+  log('Clone segment')
+  await gotoSegments()
+  await cloneSegment(0, '0cloned-segment')
+  await deleteSegment(0, '0cloned-segment')
 
   log('Delete segment')
   await gotoSegments()
-  await deleteSegment(0, '18_or_19', !isCloneSegmentEnabled)
+  await deleteSegment(0, '18_or_19')
   await gotoFeatures()
   await deleteFeature(0, 'mv_flag')
 }

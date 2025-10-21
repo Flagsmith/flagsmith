@@ -15,7 +15,6 @@ import Format from 'common/utils/format'
 
 export type FiltersValue = {
   search: string | null
-  releasePipelines: number[]
   page: number
   tag_strategy: TagStrategy
   tags: (number | string)[]
@@ -41,22 +40,11 @@ const DEFAULTS: FiltersValue = {
   is_enabled: null,
   owners: [],
   page: 1,
-  releasePipelines: [],
   search: '',
   sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
   tag_strategy: 'INTERSECTION',
   tags: [],
   value_search: '',
-}
-
-const sortToHeader = (s: any) => {
-  if (!s) return DEFAULTS.sort
-  if ('sortBy' in s) return s
-  return {
-    label: s.label || DEFAULTS.sort.label,
-    sortBy: s.value || DEFAULTS.sort.sortBy,
-    sortOrder: DEFAULTS.sort.sortOrder,
-  } as FiltersValue['sort']
 }
 
 // Converts filters to url params, excluding ones that are already default
@@ -101,7 +89,6 @@ export const getFiltersFromURLParams = (
         ? params.owners.split(',').map((v) => parseInt(v))
         : [],
     page: params.page ? parseInt(params.page) - 1 : 1,
-    releasePipelines: [],
     search: params.search || '',
     sort: {
       label: Format.camelCase(params.sortBy || 'Name'),
@@ -124,18 +111,12 @@ export const getServerFilter = (f: FiltersValue) => ({
   group_owners: f.group_owners?.length ? f.group_owners : undefined,
   owners: f.owners.length ? f.owners : undefined,
   search: (f.search || '').trim(),
-  sort: sortToHeader(f.sort),
+  sort: f.sort,
   tags: f.tags.length ? f.tags.join(',') : undefined,
 })
 
 //Detect if the filter is default
-const isDefault = (v: FiltersValue) =>
-  isEqual(
-    {
-      ...v,
-    },
-    DEFAULTS,
-  )
+const isDefault = (v: FiltersValue) => isEqual(v, DEFAULTS)
 
 const FeatureFilters: React.FC<Props> = ({
   isLoading,
