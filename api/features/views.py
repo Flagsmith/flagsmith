@@ -68,7 +68,6 @@ from .permissions import (
 from .serializers import (  # type: ignore[attr-defined]
     CreateFeatureSerializer,
     CustomCreateSegmentOverrideFeatureStateSerializer,
-    EnvironmentFeatureStatesQuerySerializer,
     FeatureEvaluationDataSerializer,
     FeatureGroupOwnerInputSerializer,
     FeatureInfluxDataSerializer,
