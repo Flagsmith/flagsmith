@@ -46,10 +46,12 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
     useGetProjectFlagsQuery(
       {
         ...getServerFilter(filter),
+        environmentId: environment?.id || 0,
         project: `${projectId}`,
+        segmentId: segmentId,
       },
       {
-        skip: !projectId,
+        skip: !projectId || !environment || !segmentId,
       },
     )
 
@@ -62,16 +64,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
     },
   )
 
-  const { data: featureStates } = useGetSegmentFeatureStatesQuery(
-    {
-      environmentId: (environment || { id: 1 }).id,
-      features: projectFlags?.results?.map((v) => v.id),
-      segmentId: segmentId!,
-    },
-    { skip: !segmentId || !environment?.id },
-  )
-
-  const isLoading = !projectFlags || !featureStates || !environment
+  const isLoading = !projectFlags || !environment
 
   useEffect(() => {
     if (!environment && !!environments?.results?.[0]) {
@@ -119,11 +112,6 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
                 title={'Features'}
                 json={projectFlags}
               />
-              <JSONReference
-                className='mx-2'
-                title={'Feature States'}
-                json={featureStates}
-              />
             </>
           )}
           header={
@@ -146,20 +134,18 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
           isLoading={projectFlagsLoading}
           items={projectFlags.results}
           renderRow={(projectFlag, i) => {
-            const overrideFeatureState = featureStates.results.find(
-              (v) => v.featureState.feature === projectFlag.id,
-            )
             return (
-              !!projectFlag &&
-              !!overrideFeatureState && (
+              !!projectFlag && (
                 <FeatureOverrideRow
                   environmentId={environment.api_key}
                   level='segment'
                   valueDataTest={`user-feature-value-${i}`}
                   projectFlag={projectFlag}
                   dataTest={`user-feature-${i}`}
-                  overrideFeatureState={overrideFeatureState.segmentOverride}
-                  environmentFeatureState={overrideFeatureState.featureState}
+                  overrideFeatureState={projectFlag.segment_feature_state}
+                  environmentFeatureState={
+                    projectFlag.environment_feature_state!
+                  }
                 />
               )
             )

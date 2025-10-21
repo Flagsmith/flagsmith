@@ -323,7 +323,8 @@ export type Req = {
   }
   getProjectFlags: {
     project: string
-    environmentId?: string
+    environmentId?: number
+    segmentId?: number
     search?: string | null
     releasePipelines?: number[]
     page?: number
@@ -635,7 +636,6 @@ export type Req = {
   getFeatureStates: {
     environment?: number
     feature?: number
-    segment?: number
   }
   getFeatureSegment: { id: string }
   getSamlConfiguration: { name: string }
@@ -794,10 +794,6 @@ export type Req = {
     projectId: number
     pipelineId: number
     name: string
-  }
-  getSegmentFeatureStates: {
-    environmentId: number
-    segmentId: number
   }
   // END OF TYPES
 }

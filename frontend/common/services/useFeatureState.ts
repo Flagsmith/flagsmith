@@ -4,8 +4,6 @@ import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 import { getFeatureSegment } from './useFeatureSegment'
 import { getStore } from 'common/store'
-import { recursiveServiceFetch } from 'common/recursiveServiceFetch'
-
 export const addFeatureSegmentsToFeatureStates = async (v) => {
   if (typeof v.feature_segment !== 'number') {
     return v
@@ -51,63 +49,6 @@ export const featureStateService = service
           }
         },
       }),
-      getSegmentFeatureStates: builder.query<
-        Res['segmentFeatureStates'],
-        Req['getSegmentFeatureStates']
-      >({
-        providesTags: (res, _, req) => [
-          {
-            id: `${req.segmentId}${req.environmentId}`,
-            type: 'FeatureState',
-          },
-        ],
-        queryFn: async (query, { dispatch }, _, baseQuery) => {
-          try {
-            const allFeatureStates = await recursiveServiceFetch<FeatureState>(
-              baseQuery,
-              `features/featurestates/?environment=${query.environmentId}`,
-              query,
-            )
-            const segmentFeatureStates =
-              await recursiveServiceFetch<FeatureState>(
-                baseQuery,
-                `features/featurestates/?environment=${query.environmentId}&segment=${query.segmentId}`,
-                query,
-              )
-            const environmentFeatureStates = allFeatureStates?.results?.filter(
-              (v) => !v.identity && !v.feature_segment,
-            )
-            return {
-              data: {
-                results: environmentFeatureStates?.map((featureState) => {
-                  const segmentOverride = segmentFeatureStates.results.find(
-                    (v) =>
-                      v.feature === featureState.feature && !!v.feature_segment,
-                  )
-                  return {
-                    featureState: {
-                      ...featureState,
-                      feature_state_value: Utils.featureStateToValue(
-                        featureState.feature_state_value,
-                      ),
-                    } as FeatureState,
-                    segmentOverride: segmentOverride
-                      ? ({
-                          ...segmentOverride,
-                          feature_state_value: Utils.featureStateToValue(
-                            segmentOverride.feature_state_value,
-                          ),
-                        } as FeatureState)
-                      : undefined,
-                  }
-                }),
-              } as Res['segmentFeatureStates'],
-            }
-          } catch (error) {
-            return { error }
-          }
-        },
-      }),
       // END OF ENDPOINTS
     }),
   })
@@ -123,26 +64,10 @@ export async function getFeatureStates(
     featureStateService.endpoints.getFeatureStates.initiate(data, options),
   )
 }
-
-export async function getSegmentFeatureStates(
-  store: any,
-  data: Req['getSegmentFeatureStates'],
-  options?: Parameters<
-    typeof featureStateService.endpoints.getSegmentFeatureStates.initiate
-  >[1],
-) {
-  return store.dispatch(
-    featureStateService.endpoints.getSegmentFeatureStates.initiate(
-      data,
-      options,
-    ),
-  )
-}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useGetFeatureStatesQuery,
-  useGetSegmentFeatureStatesQuery,
   // END OF EXPORTS
 } = featureStateService
 
