@@ -1595,8 +1595,6 @@ def test_environment_feature_states_does_not_return_null_versions(
     assert len(response_json["results"]) == 1
     assert response_json["results"][0]["id"] == feature_state.id
 
-    # Feature tests
-
 
 def test_create_feature_default_is_archived_is_false(
     admin_client_new: APIClient, project: Project

@@ -182,17 +182,32 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             page = self.paginate_queryset(queryset)
             self.environment = Environment.objects.get(id=environment_id)
             self.feature_ids = [feature.id for feature in page]
-            q = Q(
+            feature_states_query = Q(
                 feature_id__in=self.feature_ids,
                 identity__isnull=True,
                 feature_segment__isnull=True,
             )
             feature_states = get_environment_flags_list(
                 environment=self.environment,
-                additional_filters=q,
+                additional_filters=feature_states_query,
                 additional_select_related_args=["feature_state_value", "feature"],
             )
             self._feature_states = {fs.feature_id: fs for fs in feature_states}
+
+            if segment_id := query_data.get("segment"):
+                segment_query = Q(
+                    feature_id__in=self.feature_ids,
+                    identity__isnull=True,
+                    feature_segment__segment_id=segment_id,
+                )
+                segment_feature_states = get_environment_flags_list(
+                    environment=self.environment,
+                    additional_filters=segment_query,
+                    additional_select_related_args=["feature_state_value", "feature"],
+                )
+                self._segment_feature_states = {
+                    fs.feature_id: fs for fs in segment_feature_states
+                }
 
         return queryset
 
@@ -225,9 +240,13 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             return context
 
         feature_states = getattr(self, "_feature_states", {})
+        segment_feature_states = getattr(self, "_segment_feature_states", {})
         project = get_object_or_404(Project.objects.all(), pk=self.kwargs["project_pk"])
         context.update(
-            project=project, user=self.request.user, feature_states=feature_states
+            project=project,
+            user=self.request.user,
+            feature_states=feature_states,
+            segment_feature_states=segment_feature_states,
         )
 
         if self.action == "list" and "environment" in self.request.query_params:
@@ -663,7 +682,8 @@ class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [EnvironmentFeatureStatePermissions]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        queryset = super().get_queryset().filter(feature_segment=None)  # type: ignore[no-untyped-call]
+        queryset = super().get_queryset()  # type: ignore[no-untyped-call]
+
         if "anyIdentity" in self.request.query_params:
             # TODO: deprecate anyIdentity query parameter
             return queryset.exclude(identity=None)
