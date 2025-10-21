@@ -845,6 +845,11 @@ const controller = {
             }
           })
         }
+        if (!store.model) {
+          // Now that we use RTK, sometimes this is called prior to the feature-list-store being used
+          // todo: this is resolved in https://github.com/Flagsmith/flagsmith/pull/6150
+          store.model = {}
+        }
         store.model.usageData = _.sortBy(result, (v) =>
           moment(v.day, 'YYYY-MM-DD').valueOf(),
         ).map((v) => ({

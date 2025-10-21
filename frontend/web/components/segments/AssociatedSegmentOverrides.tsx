@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
-import { useGetSegmentFeatureStatesQuery } from 'common/services/useSegmentFeatureState'
-import EnvironmentFilter from 'components/EnvironmentFilter'
+import { useGetSegmentFeatureStatesQuery } from 'common/services/useFeatureState'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
@@ -11,7 +10,6 @@ import FeatureFilters, {
 } from 'components/feature-page/FeatureFilters'
 import Utils from 'common/utils/utils'
 import PanelSearch from 'components/PanelSearch'
-import InfoMessage from 'components/InfoMessage'
 import JSONReference from 'components/JSONReference'
 import AccountStore from 'common/stores/account-store'
 import FeatureListStore from 'common/stores/feature-list-store'
@@ -65,7 +63,11 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
   )
 
   const { data: featureStates } = useGetSegmentFeatureStatesQuery(
-    { environmentId: (environment || { id: 1 }).id, segmentId: segmentId! },
+    {
+      environmentId: (environment || { id: 1 }).id,
+      features: projectFlags?.results?.map((v) => v.id),
+      segmentId: segmentId!,
+    },
     { skip: !segmentId || !environment?.id },
   )
 

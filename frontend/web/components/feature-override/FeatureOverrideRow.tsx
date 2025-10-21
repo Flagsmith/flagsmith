@@ -29,7 +29,7 @@ import { useHistory } from 'react-router-dom'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import FeatureOverrideCTA from './FeatureOverrideCTA'
 
-const COLUMN_WIDTHS = [200, 48, 78]
+const COLUMN_WIDTHS = [200, 60, 78]
 
 type FeatureOverrideRowProps = {
   shouldPreselect?: boolean
@@ -111,8 +111,10 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
       !overrideFeatureState
     )
       return
-
-    history.replace(`${document.location.pathname}?flag=${projectFlag.name}`)
+    const tab = level === 'segment' ? 'segment-overrides' : 'value'
+    history.replace(
+      `${document.location.pathname}?flag=${projectFlag.name}&tab=${tab}`,
+    )
     API.trackEvent(Constants.events.VIEW_USER_FEATURE)
     openModal(
       <span>
@@ -261,23 +263,24 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
           />,
         )}
       </div>
-
-      <div
-        className='table-column p-0'
-        style={{ width: COLUMN_WIDTHS[2] }}
-        onClick={stopPropagation}
-      >
-        <FeatureOverrideCTA
-          identifier={identifier}
-          identity={identity}
-          environmentId={environmentId}
-          projectFlag={projectFlag}
-          environmentFeatureState={environmentFeatureState}
-          hasUserOverride={hasUserOverride}
-          overrideFeatureState={overrideFeatureState}
-          level={level}
-        />
-      </div>
+      {level === 'identity' && (
+        <div
+          className='table-column p-0'
+          style={{ width: COLUMN_WIDTHS[2] }}
+          onClick={stopPropagation}
+        >
+          <FeatureOverrideCTA
+            identifier={identifier}
+            identity={identity}
+            environmentId={environmentId}
+            projectFlag={projectFlag}
+            environmentFeatureState={environmentFeatureState}
+            hasUserOverride={hasUserOverride}
+            overrideFeatureState={overrideFeatureState}
+            level={level}
+          />
+        </div>
+      )}
     </div>
   )
 }

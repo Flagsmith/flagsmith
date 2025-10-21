@@ -635,6 +635,7 @@ export type Req = {
   getFeatureStates: {
     environment?: number
     feature?: number
+    segment?: number
   }
   getFeatureSegment: { id: string }
   getSamlConfiguration: { name: string }
