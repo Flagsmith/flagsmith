@@ -24,8 +24,10 @@ import {
   StageTrigger,
   StageActionType,
   StageActionBody,
+  TagStrategy,
 } from './responses'
 import { UtmsType } from './utms'
+import { SortValue } from 'components/tables/TableSortFilter'
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -220,7 +222,7 @@ export type Req = {
     projectId: string
   }
   createTag: { projectId: string; tag: Omit<Tag, 'id'> }
-  getSegment: { projectId: string; id: string }
+  getSegment: { projectId: number; id: string }
   updateAccount: Account
   deleteAccount: {
     current_password: string
@@ -321,9 +323,19 @@ export type Req = {
   }
   getProjectFlags: {
     project: string
-    environmentId?: string
-    tags?: string[]
+    environment?: number
+    segment?: number
+    search?: string | null
+    releasePipelines?: number[]
+    page?: number
+    tag_strategy?: TagStrategy
+    tags?: string
     is_archived?: boolean
+    value_search?: string | null
+    is_enabled?: boolean | null
+    owners?: number[]
+    group_owners?: number[]
+    sort?: SortValue
   }
   getProjectFlag: { project: string | number; id: string }
   getRolesPermissionUsers: { organisation_id: number; role_id: number }

@@ -26,11 +26,10 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import { useHistory } from 'react-router-dom'
-import ProjectStore from 'common/stores/project-store'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import FeatureOverrideCTA from './FeatureOverrideCTA'
 
-const COLUMN_WIDTHS = [200, 48, 78]
+const COLUMN_WIDTHS = [200, 60, 78]
 
 type FeatureOverrideRowProps = {
   shouldPreselect?: boolean
@@ -112,8 +111,14 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
       !overrideFeatureState
     )
       return
-
-    history.replace(`${document.location.pathname}?flag=${projectFlag.name}`)
+    const tab = level === 'segment' ? 'segment-overrides' : 'value'
+    const params = Utils.fromParam()
+    const newParams = Utils.toParam({
+      ...params,
+      flag: projectFlag.name,
+      tab,
+    })
+    history.replace(`${document.location.pathname}?${newParams}`)
     API.trackEvent(Constants.events.VIEW_USER_FEATURE)
     openModal(
       <span>
@@ -145,7 +150,12 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
       />,
       'side-modal create-feature-modal overflow-y-auto',
       () => {
-        history.replace(document.location.pathname)
+        const params = Utils.fromParam()
+        const newParams = Utils.toParam({
+          ...params,
+          flag: undefined,
+        })
+        history.replace(`${document.location.pathname}?${newParams}`)
       },
     )
   }
@@ -226,6 +236,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
             )}
             {showSegmentOverride && (
               <SegmentOverrideDescription
+                level={level}
                 showEnabledOverride={hasEnabledDiff}
                 showValueOverride={!hasEnabledDiff}
                 controlEnabled={flagEnabled}
@@ -261,23 +272,24 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
           />,
         )}
       </div>
-
-      <div
-        className='table-column p-0'
-        style={{ width: COLUMN_WIDTHS[2] }}
-        onClick={stopPropagation}
-      >
-        <FeatureOverrideCTA
-          identifier={identifier}
-          identity={identity}
-          environmentId={environmentId}
-          projectFlag={projectFlag}
-          environmentFeatureState={environmentFeatureState}
-          hasUserOverride={hasUserOverride}
-          overrideFeatureState={overrideFeatureState}
-          level={level}
-        />
-      </div>
+      {level === 'identity' && (
+        <div
+          className='table-column p-0'
+          style={{ width: COLUMN_WIDTHS[2] }}
+          onClick={stopPropagation}
+        >
+          <FeatureOverrideCTA
+            identifier={identifier}
+            identity={identity}
+            environmentId={environmentId}
+            projectFlag={projectFlag}
+            environmentFeatureState={environmentFeatureState}
+            hasUserOverride={hasUserOverride}
+            overrideFeatureState={overrideFeatureState}
+            level={level}
+          />
+        </div>
+      )}
     </div>
   )
 }
