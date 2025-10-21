@@ -1685,8 +1685,9 @@ def test_environment_feature_states_filter_by_segment_only_returns_live_versions
     assert segment_override_v1.id not in [r["id"] for r in response_json["results"]]
 
 
-def test_environment_feature_states_filter_by_segment_with_invalid_segment_id_returns_400(
+def test_environment_feature_states_filter_by_segment_with_invalid_segment_id_returns_empty(
     environment: Environment,
+    feature: Feature,
     admin_client_new: APIClient,
 ) -> None:
     # Given
@@ -1700,8 +1701,10 @@ def test_environment_feature_states_filter_by_segment_with_invalid_segment_id_re
     response = admin_client_new.get(url)
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "segment" in response.json()
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 0
+    assert response_json["results"] == []
 
     # Feature tests
 
