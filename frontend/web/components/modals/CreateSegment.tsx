@@ -491,7 +491,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
         <Tabs
           value={tab}
           theme='pill'
-          urlParam='tab'
+          urlParam='segmentTab'
           onChange={(tab: UserTabs) => setTab(tab)}
         >
           <TabItem
