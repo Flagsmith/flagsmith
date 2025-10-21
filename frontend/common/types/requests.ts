@@ -323,8 +323,8 @@ export type Req = {
   }
   getProjectFlags: {
     project: string
-    environmentId?: number
-    segmentId?: number
+    environment?: number
+    segment?: number
     search?: string | null
     releasePipelines?: number[]
     page?: number

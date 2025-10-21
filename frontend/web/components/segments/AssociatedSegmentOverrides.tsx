@@ -30,6 +30,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
 }) => {
   const history = useHistory()
   const [environment, setEnvironment] = useState<Environment>()
+  const [preselect] = useState(Utils.fromParam().flag)
   const [filter, setFilter] = useState(
     getFiltersFromURLParams(Utils.fromParam()),
   )
@@ -46,9 +47,9 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
     useGetProjectFlagsQuery(
       {
         ...getServerFilter(filter),
-        environmentId: environment?.id || 0,
+        environment: environment?.id || 0,
         project: `${projectId}`,
-        segmentId: segmentId,
+        segment: segmentId,
       },
       {
         skip: !projectId || !environment || !segmentId,
@@ -137,12 +138,16 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
             return (
               !!projectFlag && (
                 <FeatureOverrideRow
+                  shouldPreselect={projectFlag.name === preselect}
                   environmentId={environment.api_key}
                   level='segment'
                   valueDataTest={`user-feature-value-${i}`}
                   projectFlag={projectFlag}
                   dataTest={`user-feature-${i}`}
-                  overrideFeatureState={projectFlag.segment_feature_state}
+                  overrideFeatureState={
+                    projectFlag.segment_feature_state ||
+                    projectFlag.environment_feature_state
+                  }
                   environmentFeatureState={
                     projectFlag.environment_feature_state!
                   }
