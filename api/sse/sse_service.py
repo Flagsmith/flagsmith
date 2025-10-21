@@ -6,6 +6,7 @@ from typing import Generator
 
 import boto3
 import gnupg  # type: ignore[import-untyped]
+from botocore.exceptions import ClientError
 from django.conf import settings
 
 from sse import tasks
@@ -61,7 +62,16 @@ def stream_access_logs() -> Generator[SSEAccessLogs, None, None]:
     bucket = boto3.resource("s3").Bucket(settings.AWS_SSE_LOGS_BUCKET_NAME)
 
     for log_file in bucket.objects.all():
-        encrypted_body = log_file.get()["Body"].read()
+        try:
+            encrypted_body = log_file.get()["Body"].read()
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "NoSuchKey":
+                logger.warning(
+                    "Log file %s has already been deleted, skipping", log_file.key
+                )
+                continue
+            raise
+
         decrypted_body = gpg.decrypt(encrypted_body)
 
         reader = csv.reader(StringIO(decrypted_body.data.decode()))
