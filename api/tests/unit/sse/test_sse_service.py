@@ -198,3 +198,28 @@ def test_stream_access_logs_handles_deleted_files(
     mocked_logger.warning.assert_called_once_with(
         "Log file %s has already been deleted, skipping", "file1"
     )
+
+
+def test_stream_access_logs_reraises_non_nosuchkey_errors(
+    mocker: MockerFixture, aws_credentials: None
+) -> None:
+    # Given - Mock bucket with object that raises AccessDenied error
+    mock_obj = mocker.MagicMock()
+    mock_obj.key = "file1"
+    mock_obj.get.side_effect = ClientError(
+        {"Error": {"Code": "AccessDenied"}}, "GetObject"
+    )
+
+    mock_bucket = mocker.MagicMock()
+    mock_bucket.objects.all.return_value = [mock_obj]
+
+    mocker.patch(
+        "sse.sse_service.boto3.resource"
+    ).return_value.Bucket.return_value = mock_bucket
+    mocker.patch("sse.sse_service.gnupg.GPG")
+
+    # When/Then - Should re-raise the ClientError
+    with pytest.raises(ClientError) as exc_info:
+        list(stream_access_logs())
+
+    assert exc_info.value.response["Error"]["Code"] == "AccessDenied"
