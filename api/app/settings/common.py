@@ -568,7 +568,7 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
-if REQUIRE_AUTHENTICATION_FOR_API_DOCS:
+if env.bool("REQUIRE_AUTHENTICATION_FOR_API_DOCS", default=False):
     SPECTACULAR_SETTINGS["SERVE_PERMISSIONS"] = (
         "rest_framework.permissions.IsAuthenticated",
     )
