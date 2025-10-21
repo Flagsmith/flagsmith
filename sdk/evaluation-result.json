@@ -31,6 +31,12 @@
                     "description": "Reason for the feature flag evaluation.",
                     "title": "Reason",
                     "type": "string"
+                },
+                "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
+                    "description": "Additional metadata associated with the feature.",
+                    "title": "FeatureMetadata",
+                    "type": "object"
                 }
             },
             "required": [
@@ -56,16 +62,9 @@
                     "type": "string"
                 },
                 "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
                     "description": "Additional metadata associated with the segment.",
-                    "additionalProperties": {
-                        "type": [
-                            "string",
-                            "number",
-                            "boolean",
-                            "null"
-                        ]
-                    },
-                    "title": "Metadata",
+                    "title": "SegmentMetadata",
                     "type": "object"
                 }
             },
