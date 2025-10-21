@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.198.1](https://github.com/Flagsmith/flagsmith/compare/v2.198.0...v2.198.1) (2025-10-17)
+
+
+### Bug Fixes
+
+* prevent metadata loss due to bad request ([#6172](https://github.com/Flagsmith/flagsmith/issues/6172)) ([91dc078](https://github.com/Flagsmith/flagsmith/commit/91dc078f955695ec95b4d3a6e95b6b8e7c736ff8))
+
+## [2.198.0](https://github.com/Flagsmith/flagsmith/compare/v2.197.0...v2.198.0) (2025-10-14)
+
+
+### Features
+
+* create endpoint to get a flag multivariate options ([#6134](https://github.com/Flagsmith/flagsmith/issues/6134)) ([9c91fc3](https://github.com/Flagsmith/flagsmith/commit/9c91fc3db2cffe6f110f63bd82080732bffb3209))
+* use-create-lead-form-for-self-hosted ([#6117](https://github.com/Flagsmith/flagsmith/issues/6117)) ([547139a](https://github.com/Flagsmith/flagsmith/commit/547139a3b398a8bb3d7ea2006ea5fd0924941aaa))
+
+
+### Bug Fixes
+
+* await-for-request-and-return-results ([#6127](https://github.com/Flagsmith/flagsmith/issues/6127)) ([c12aba7](https://github.com/Flagsmith/flagsmith/commit/c12aba71a63311396b05e1fdcf76baae417460cb))
+* change request styles ([#6129](https://github.com/Flagsmith/flagsmith/issues/6129)) ([d1a3793](https://github.com/Flagsmith/flagsmith/commit/d1a379363fca08d18b089c52ef34ba3a6475ae24))
+* Remove invalid close modal call for create segment change request ([#6115](https://github.com/Flagsmith/flagsmith/issues/6115)) ([2e7f6c9](https://github.com/Flagsmith/flagsmith/commit/2e7f6c9a69361cb380358f49a48f3a40c54a70cd))
+
+
+### Dependency Updates
+
+* bump django from 4.2.24 to 4.2.25 in /api ([#6126](https://github.com/Flagsmith/flagsmith/issues/6126)) ([46804da](https://github.com/Flagsmith/flagsmith/commit/46804da4636652153408141ba0d34cbde90ff13a))
+
 ## [2.197.0](https://github.com/Flagsmith/flagsmith/compare/v2.196.4...v2.197.0) (2025-09-29)
 
 

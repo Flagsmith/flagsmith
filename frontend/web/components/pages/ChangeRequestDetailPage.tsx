@@ -38,9 +38,9 @@ import DiffChangeRequest from 'components/diff/DiffChangeRequest'
 import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import { useHistory } from 'react-router-dom'
 
 type ChangeRequestPageType = {
-  router: RouterChildContext['router']
   match: {
     params: {
       environmentId: string
@@ -50,10 +50,8 @@ type ChangeRequestPageType = {
   }
 }
 
-const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({
-  match,
-  router,
-}) => {
+const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
+  const history = useHistory()
   const { environmentId, id, projectId } = match.params
   const [_, setUpdate] = useState(Date.now())
   const error = ChangeRequestStore.error
@@ -145,7 +143,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({
       destructive: true,
       onYes: () => {
         AppActions.deleteChangeRequest(id, () => {
-          router.history.replace(
+          history.replace(
             `/project/${projectId}/environment/${environmentId}/change-requests`,
           )
         })
@@ -163,7 +161,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({
     openModal(
       'Edit Change Request',
       <CreateFlagModal
-        history={router.history}
+        history={history}
         environmentId={environmentId}
         projectId={projectId}
         changeRequest={changeRequest}
@@ -630,7 +628,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
         <Flex>
           {!!approvedBy?.length && (
             <div className='text-right mb-2 mr-2 font-weight-medium'>
-              Feature Approved by {approvedBy.join(', ')}
+              Approved by {approvedBy.join(', ')}
             </div>
           )}
           {approvedBy.length < minApprovals && (

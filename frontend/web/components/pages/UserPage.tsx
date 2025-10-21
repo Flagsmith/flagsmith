@@ -128,8 +128,7 @@ const UserPage: FC = () => {
   }
 
   const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data
-  const isEdge = Utils.getIsEdge()
-  const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
+  const showAliases = Utils.getIsEdge()
 
   const fetchPage = React.useCallback(
     (pageNumber: number) => {
