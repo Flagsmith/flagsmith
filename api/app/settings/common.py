@@ -120,7 +120,6 @@ INSTALLED_APPS = [
     "app",
     "e2etests",
     "simple_history",
-    "drf_yasg",
     "audit",
     "permissions",
     "projects.code_references",
@@ -163,6 +162,7 @@ INSTALLED_APPS = [
     "softdelete",
     "metadata",
     "app_analytics",
+    "drf_spectacular",
 ]
 
 SILENCED_SYSTEM_CHECKS = ["axes.W002"]
@@ -326,6 +326,7 @@ REST_FRAMEWORK = {
         "util.renderers.PydanticJSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 MIDDLEWARE = [
     "common.core.middleware.APIResponseVersionHeaderMiddleware",
@@ -1465,3 +1466,17 @@ DOCGEN_MODE = env.bool("DOCGEN_MODE", default=False)
 REQUIRE_AUTHENTICATION_FOR_API_DOCS = env.bool(
     "REQUIRE_AUTHENTICATION_FOR_API_DOCS", default=False
 )
+
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Flagsmith API",
+    "VERSION": "v1",
+}
+
+if REQUIRE_AUTHENTICATION_FOR_API_DOCS:
+    SPECTACULAR_SETTINGS["SERVE_PERMISSIONS"] = (
+        "rest_framework.permissions.IsAuthenticated"
+    )
+    SPECTACULAR_SETTINGS["SERVE_AUTHENTICATION"] = (
+        "rest_framework.authentication.SessionAuthentication"
+    )

@@ -129,7 +129,6 @@ chargebee = "^2.7.7"
 python-http-client = "~3.3.7"
 django-health-check = "~3.18.2"
 django-admin-sso = "~5.2.0"
-drf-yasg = "~1.21.6"
 django-debug-toolbar = "~3.2.1"
 sentry-sdk = "~2.8.0"
 environs = "^14.1.1"
@@ -170,6 +169,7 @@ djangorestframework-simplejwt = "^5.5.1"
 structlog = "^24.4.0"
 prometheus-client = "^0.21.1"
 django_cockroachdb = "~4.2"
+drf-spectacular = "^0.28.0"
 
 [tool.poetry.group.auth-controller]
 optional = true
