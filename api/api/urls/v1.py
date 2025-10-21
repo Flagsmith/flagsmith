@@ -1,7 +1,10 @@
+from typing import Any
+
 from django.conf import settings
 from django.urls import include, path, re_path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework import routers
+from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
 from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
@@ -20,6 +23,8 @@ app_name = "v1"
 
 
 class DocsView(APIView):  # pragma: no cover
+    permission_classes = (AllowAny,)
+
     def get(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         # Maintain backwards-compat with /docs/?format=openapi returning raw schema
         if request.GET.get("format") == "openapi":
@@ -27,6 +32,16 @@ class DocsView(APIView):  # pragma: no cover
         return SpectacularSwaggerView.as_view(url_name="api-v1:schema")(
             request, *args, **kwargs
         )
+
+
+def swagger_schema_view(
+    request: Any, *args: Any, **kwargs: Any
+) -> Any:  # pragma: no cover
+    # Normalize format to remove leading dot so both .json and json work
+    fmt = kwargs.get("format")
+    if isinstance(fmt, str) and fmt.startswith("."):
+        kwargs["format"] = fmt[1:]
+    return SpectacularAPIView.as_view()(request, *args, **kwargs)
 
 
 urlpatterns = [
@@ -75,9 +90,7 @@ urlpatterns = [
     # API documentation
     # Keep old name for tests expecting reverse("api-v1:schema-json", ...)
     re_path(
-        r"^swagger(?P<format>\.json|\.yaml)$",
-        SpectacularAPIView.as_view(),
-        name="schema-json",
+        r"^swagger(?P<format>\.json|\.yaml)$", swagger_schema_view, name="schema-json"
     ),
     # New endpoints
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
