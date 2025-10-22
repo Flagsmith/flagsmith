@@ -1,11 +1,12 @@
 ---
 description: Manage your Feature Flags and Remote Config in your REST APIs.
 sidebar_position: 1
+sidebar_label: SDKs
 ---
 
 # SDKs Overview
 
-Flagsmith ships with SDKs for a bunch of different programming languages. We also have a [REST API](rest.md) that you
+Flagsmith ships with SDKs for a bunch of different programming languages. We also have a [REST API](/integrating-with-flagsmith/flagsmith-api-overview) that you
 can use if you want to consume the API directly.
 
 Our SDKs are split into two different groups. These SDKs have different methods of operation due to the differences in
@@ -26,28 +27,28 @@ depending on the SDK you are using.
 Client-side SDKs run in web browsers or on mobile devices. These runtimes execute within _untrusted environments_.
 Anyone using the Javascript SDK in a web browser, for example, can find the Client-side SDK, create a new Identity, look
 at their flags and
-[potentially write Traits to the Identity](/system-administration/security#preventing-client-sdks-from-setting-traits).
+[potentially write Traits to the Identity](/administration-and-security/governance-and-compliance/security#preventing-client-sdks-from-setting-traits).
 
 Client-side SDKs are also limited to the
-[types of data that they have access to](/guides-and-examples/integration-approaches#segment-and-targeting-rules-are-not-leaked-to-the-client).
+[types of data that they have access to](/best-practices/integration-approaches#segment-and-targeting-rules-are-not-leaked-to-the-client).
 
 Client-side Environment keys are designed to be shared publicly, for example in your HTML/JS code that is sent to a web
 browser.
 
-Client-side SDKs hit our [Edge API](../advanced-use/edge-api.md) directly to retrieve their flags.
+Client-side SDKs hit our [Edge API](/deployment-self-hosting/edge-proxy) directly to retrieve their flags.
 
 Read more about our Client-side SDKs for your language/platform:
 
-- [Javascript](/clients/javascript)
-- [Android/Kotlin](/clients/android)
-- [Flutter](/clients/flutter)
-- [iOS/Swift](/clients/ios)
-- [React & React Native](/clients/react)
-- [Next.js, Svelte and SSR](/clients/next-ssr)
+- [Javascript](/integrating-with-flagsmith/sdks/client-side-sdks/javascript)
+- [Android/Kotlin](/integrating-with-flagsmith/sdks/client-side-sdks/android)
+- [iOS/Swift](/integrating-with-flagsmith/sdks/client-side-sdks/ios)
+- [React](/integrating-with-flagsmith/sdks/client-side-sdks/react)
+- [Next.js and SSR](/integrating-with-flagsmith/sdks/client-side-sdks/nextjs-and-ssr)
+- [Flutter](/integrating-with-flagsmith/sdks/client-side-sdks/flutter)
 
 ## Server-side SDKs
 
-[Server-side SDKs](/clients/server-side) run within _trusted environments_ - typically the server infrastructure that
+[Server-side SDKs](/integrating-with-flagsmith/sdks/server-side) run within _trusted environments_ - typically the server infrastructure that
 you have control over. Because of this, you should not share your Server-side Environment keys publicly; they should be
 treated as secret.
 
@@ -82,7 +83,7 @@ the Flag Engine, and the engine runs within your server environment within the F
 ![Local Evaluation Diagram](/img/sdk-local-evaluation.svg)
 
 You have to configure the SDK to run in Local Evaluation mode. See the
-[SDK configuration options](/clients/server-side#configuring-the-sdk) for details on how to do that in your particular language.
+[SDK configuration options](/integrating-with-flagsmith/sdks/server-side#configuring-the-sdk) for details on how to do that in your particular language.
 
 When the SDK is initialised in Local Evaluation mode, it grabs the entire set of details about the Environment from the
 Flagsmith API. For a given Environment, this includes:
@@ -96,7 +97,7 @@ within your server infrastructure.
 
 :::info
 
-**[Edge API](advanced-use/edge-api.md) only**: When using identity overrides in local evaluation:
+**[Edge API](/deployment-self-hosting/edge-proxy) only**: When using identity overrides in local evaluation:
 
 - Keep overrides count under 500.
 - Make sure your environment settings enable it.
@@ -162,7 +163,7 @@ for the relevant language platform for details.
   network request.
 
 If this approach does not work for you (generally for reasons of latency or overly chatty networking) you should
-consider Local Evaluation mode (explained below) or the [Edge Proxy](/advanced-use/edge-proxy).
+consider Local Evaluation mode (explained below) or the [Edge Proxy](/deployment-self-hosting/edge-proxy).
 
 ### Local Evaluation Network Model
 
@@ -298,7 +299,7 @@ situations:
 
 - If you want to work with Flagsmith programatically, for example when creating and deleting Environments as part of a
   CI/CD process.
-- When using the [Terraform Provider](/integrations/terraform).
+- When using the [Terraform Provider](/third-party-integrations/ci-cd/terraform).
 
 These keys are secret and should not be shared.
 
@@ -340,7 +341,7 @@ When running in Local Evaluation mode, our SDKs expect to be run as long-lived p
 Lambda either break this contract or make it much more complicated. As a result, we do not recommend running our SDKs in
 Local Evaluation mode on top of platforms like Lambda where you do not have complete control over process lifetimes.
 
-Our [Edge Proxy](/advanced-use/edge-proxy/) is a good candidate if you need to run local evaluation mode alongside
+Our [Edge Proxy](/deployment-self-hosting/edge-proxy) is a good candidate if you need to run local evaluation mode alongside
 serverless platforms.
 
 :::
@@ -353,10 +354,10 @@ are all computed locally.
 - Identities and their Traits are **not** read from or written to the Flagsmith API, and so are not persisted in the
   datastore. This means that you have to provide the full complement of Traits when requesting the Flags for a
   particular Identity. Our SDKs all provide relevant methods to achieve this.
-- [Analytics-based Integrations](/integrations#analytics-platforms) do not run.
-  [Flag Analytics](/advanced-use/flag-analytics) do still work, if enabled within the
-  [SDK setup](/clients/server-side#configuring-the-sdk).
-- **[Edge API](advanced-use/edge-api.md) only**: Currently, Flagsmith SDKs support up to ~500 identity overrides, depending on flag value sizes and segment count, when used with
+- [Analytics-based Integrations](/third-party-integrations#analytics-platforms) do not run.
+-  [Flag Analytics](/managing-flags/flag-analytics) do still work, if enabled within the
+   [SDK setup](/integrating-with-flagsmith/sdks/server-side#configuring-the-sdk).
+- **[Edge API](/deployment-self-hosting/edge-proxy) only**: Currently, Flagsmith SDKs support up to ~500 identity overrides, depending on flag value sizes and segment count, when used with
   Edge API. If you store more than 1MB of environment document data, you will need to query the Edge API endpoint directly and use
   pagination:
 

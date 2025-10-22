@@ -27,7 +27,7 @@ The most common, most efficient workflow we have found with people using Flagsmi
 
 Every time a trait as set via the SDK, they will make a request to the Flagsmith API with the trait data and receive an updated set of flags.
 
-In order to reduce these calls, we recommend setting the full complement of traits in a single SDK call. There's more info around achieving this in our [Javascript FAQ](/integrating-with-flagsmith/client-side-sdks/javascript).
+In order to reduce these calls, we recommend setting the full complement of traits in a single SDK call. There's more info around achieving this in our [Javascript FAQ](/integrating-with-flagsmith/sdks/client-side-sdks/javascript).
 
 ### Real Time Flag Updates
 

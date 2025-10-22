@@ -60,7 +60,7 @@ Identities are persisted within the Flagsmith platform, along with any traits th
 
 This can be useful if, at runtime, your application does not have all the relevant trait data available for that particular identity; any traits provided will be combined with the traits stored within Flagsmith before the evaluation engine runs.
 
-There are some [exceptions to this rule](/integrating-with-flagsmith/server-side) with Server-side SDKs running in local evaluation mode.
+There are some [exceptions to this rule](/integrating-with-flagsmith/sdks/server-side) with Server-side SDKs running in local evaluation mode.
 
 :::info
 

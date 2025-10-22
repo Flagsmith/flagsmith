@@ -82,7 +82,7 @@
         },
         {
             "source": "/clients/rust/test/integration_test.rs",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/api/",
@@ -218,79 +218,79 @@
         },
         {
             "source": "/clients/python",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/java",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/dotnet",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/node",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/ruby",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/php",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/go",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/rust",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/elixir",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/android",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/android/",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/csharp",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/csharp/",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/dart",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/dart/",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/kotlin",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/kotlin/",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/swift",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/swift/",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/02-3rd-party",
@@ -486,11 +486,11 @@
         },
         {
             "source": "/clients/server-side",
-            "destination": "/integrating-with-flagsmith/server-side"
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
             "source": "/clients/client-side",
-            "destination": "/integrating-with-flagsmith/client-side-sdks/"
+            "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/"
         },
         {
             "source": "/clients/cli",
@@ -590,23 +590,23 @@
         },
         {
             "source": "/clients/flutter/",
-            "destination": "/integrating-with-flagsmith/client-side-sdks/flutter"
+            "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/flutter"
         },
         {
             "source": "/clients/javascript/",
-            "destination": "/integrating-with-flagsmith/client-side-sdks/javascript"
+            "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/javascript"
         },
         {
             "source": "/clients/react",
-            "destination": "/integrating-with-flagsmith/client-side-sdks/react"
+            "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/react"
         },
         {
             "source": "/clients/next-ssr",
-            "destination": "/integrating-with-flagsmith/client-side-sdks/nextjs-and-ssr"
+            "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/nextjs-and-ssr"
         },
         {
             "source": "/clients/ios/",
-            "destination": "/integrating-with-flagsmith/client-side-sdks/"
+            "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/ios"
         },
         {
             "source": "/deployment",
@@ -691,6 +691,14 @@
         {
             "source": "/system-administration/system-limits",
             "destination": "/administration-and-security/governance-and-compliance/system-limits"
+        },
+        {
+            "source": "/clients/",
+            "destination": "/integrating-with-flagsmith/sdks/"
+        },
+        {
+            "source": "/clients/server-side",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         }
     ]
 }

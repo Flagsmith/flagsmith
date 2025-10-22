@@ -106,13 +106,13 @@ export default function Home() {
           <Card 
             title="Client-Side SDKs" 
             description="Web, React Native, etc." 
-            link="/integrating-with-flagsmith/client-side-sdks/"
+            link="/integrating-with-flagsmith/sdks/client-side-sdks/"
             icon={phonePortrait} 
           />
           <Card 
             title="Server-Side SDKs" 
             description="Node, Python, Java, etc." 
-            link="/integrating-with-flagsmith/server-side"
+            link="/integrating-with-flagsmith/sdks/server-side"
             icon={server} 
           />
           <Card 

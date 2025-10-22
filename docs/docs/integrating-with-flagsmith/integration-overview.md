@@ -1,7 +1,7 @@
 ---
 title: Integration Overview
 sidebar_label: Integration Overview
-sidebar_position: 10
+sidebar_position: 1
 ---
 
 Flagsmith is designed to be integrated into your applications in a variety of ways, depending on your architecture and requirements. This guide provides an overview of the different integration options available.
