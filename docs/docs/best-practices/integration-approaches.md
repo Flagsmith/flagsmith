@@ -50,7 +50,7 @@ This approach depends on whether your application has an ability to persist data
 4. On subsequent app launches, check local storage to see if any flags are available. If they are, load them immediately.
 5. Asynchronously call the Flagsmith API to retrieve the up-to-date Flags.
 
-The official [Javascript Client](/integrating-with-flagsmith/client-side-sdks/javascript) offers optional caching built in to the SDK.
+The official [Javascript Client](/integrating-with-flagsmith/sdks/client-side-sdks/javascript) offers optional caching built in to the SDK.
 
 ## Caching Flags on a Server (Flagsmith Client)
 

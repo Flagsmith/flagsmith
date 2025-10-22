@@ -10,12 +10,12 @@ Client-side SDKs are designed to run in browser environments, mobile application
 
 ## Available SDKs
 
-- [JavaScript](/integrating-with-flagsmith/client-side-sdks/javascript) - For web applications
-- [React](/integrating-with-flagsmith/client-side-sdks/react) - For React applications
-- [Next.js and SSR](/integrating-with-flagsmith/client-side-sdks/nextjs-and-ssr) - For Next.js applications with server-side rendering
-- [Android](/integrating-with-flagsmith/client-side-sdks/android) - For Android applications
-- [iOS](/integrating-with-flagsmith/client-side-sdks/ios) - For iOS applications
-- [Flutter](/integrating-with-flagsmith/client-side-sdks/flutter) - For Flutter applications
+- [JavaScript](/integrating-with-flagsmith/sdks/client-side-sdks/javascript) - For web applications
+- [React](/integrating-with-flagsmith/sdks/client-side-sdks/react) - For React applications
+- [Next.js and SSR](/integrating-with-flagsmith/sdks/client-side-sdks/nextjs-and-ssr) - For Next.js applications with server-side rendering
+- [Android](/integrating-with-flagsmith/sdks/client-side-sdks/android) - For Android applications
+- [iOS](/integrating-with-flagsmith/sdks/client-side-sdks/ios) - For iOS applications
+- [Flutter](/integrating-with-flagsmith/sdks/client-side-sdks/flutter) - For Flutter applications
 
 ## Key Features
 

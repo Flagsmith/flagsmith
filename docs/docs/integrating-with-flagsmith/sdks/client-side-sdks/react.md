@@ -27,7 +27,7 @@ npm i flagsmith --save
 
 The React Native SDK shares the exact same implementation of Flagsmith, however, requires an implementation of
 AsyncStorage to be provided (e.g. @react-native-community/async-storage) in order to utilise analytics and caching. See
-[here](/integrating-with-flagsmith/client-side-sdks/javascript#initialisation-options).
+[here](/integrating-with-flagsmith/sdks/client-side-sdks/javascript#initialisation-options).
 
 :::
 
@@ -59,12 +59,12 @@ export function AppRoot() {
 ```
 
 Providing options to the Flagsmith provider will initialise the client, the API reference for these options can be found
-[here](/integrating-with-flagsmith/client-side-sdks/javascript#initialisation-options).
+[here](/integrating-with-flagsmith/sdks/client-side-sdks/javascript#initialisation-options).
 
 :::tip Initialising before rendering the FlagsmithProvider
 
 If you wish to initialise the Flagsmith client before React rendering (e.g. in redux, or SSR) you can do so by calling
-[flagsmith.init](/integrating-with-flagsmith/client-side-sdks/javascript#example-initialising-the-sdk) and provide no options property to the
+[flagsmith.init](/integrating-with-flagsmith/sdks/client-side-sdks/javascript#example-initialising-the-sdk) and provide no options property to the
 FlagsmithProvider component.
 
 :::
@@ -103,7 +103,7 @@ You can find the exact definitions of these types
 | ------------------------ | :------------------------------------------------------------------------------------------------------------: | -------: | ------------: |
 | `flagsmith: IFlagsmith`  |                           Defines the flagsmith instance that the provider will use.                           |  **YES** |          null |
 | `options?: ` IInitConfig |    Initialisation options to use. If you don't provide this you will have to call flagsmith.init elsewhere.    |          |          null |
-| `serverState?: IState`   | Used to pass an initial state, in most cases as a result of SSR flagsmith.getState(). See [Next.js and SSR](/integrating-with-flagsmith/client-side-sdks/nextjs-and-ssr) |          |          null |
+| `serverState?: IState`   | Used to pass an initial state, in most cases as a result of SSR flagsmith.getState(). See [Next.js and SSR](/integrating-with-flagsmith/sdks/client-side-sdks/nextjs-and-ssr) |          |          null |
 
 ### Step 3: Using useFlagsmith to access the Flagsmith instance
 
