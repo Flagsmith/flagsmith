@@ -141,8 +141,7 @@
                 }
             },
             "required": [
-                "identifier",
-                "key"
+                "identifier"
             ],
             "title": "IdentityContext",
             "type": "object"
