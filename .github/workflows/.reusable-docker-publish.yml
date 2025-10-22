@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           sparse-checkout: depot.json
           sparse-checkout-cone-mode: false
