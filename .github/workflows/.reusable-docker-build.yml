@@ -84,7 +84,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Depot CLI
         uses: depot/setup-action@v1

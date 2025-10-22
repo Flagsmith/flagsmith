@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Depot CLI
         uses: depot/setup-action@v1
@@ -73,7 +73,7 @@ jobs:
     runs-on: depot-ubuntu-latest
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Deploy API to ${{ inputs.environment }}
         id: deploy-api
@@ -113,7 +113,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run E2E tests against ${{ inputs.environment }}
         uses: ./.github/actions/e2e-tests
