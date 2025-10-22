@@ -5,7 +5,7 @@ export default function useDebounce(func: any, delay: number) {
 
   const debouncedFunc = function () {
     //eslint-disable-next-line
-        const args = arguments
+    const args = arguments
     if (timeout) {
       clearTimeout(timeout)
     }
