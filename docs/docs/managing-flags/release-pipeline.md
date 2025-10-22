@@ -4,9 +4,10 @@ sidebar_label: Release Pipelines
 sidebar_position: 4
 ---
 
-:::warning
+:::info
 
-Release Pipelines is currenlty in alpha phase and is not available to the public.
+Release Pipelines is currently in a closed beta, please <a class="open-chat" data-crisp-chat-message="Hello, I'm interested in joining the Release Pipelines beta.">contact
+us</a> if you'd like to gain access
 
 :::
 
