@@ -3,6 +3,11 @@
         "EnvironmentContext": {
             "description": "Represents an environment context for feature flag evaluation.",
             "properties": {
+                "key": {
+                    "description": "Unique environment key. May be used for selecting a value for a multivariate feature, or for % split segmentation.",
+                    "title": "Key",
+                    "type": "string"
+                },
                 "name": {
                     "description": "An environment's human-readable name.",
                     "title": "Name",
