@@ -74,10 +74,13 @@ export type Segment = {
   id: number
   rules: SegmentRule[]
   uuid: string
+  created_at: string
+  updated_at: string
   name: string
   description: string
   project: string | number
   feature?: number
+  version_of?: number
   metadata: Metadata[] | []
 }
 export type ProjectChangeRequest = Omit<
@@ -94,6 +97,7 @@ export type ProjectChangeRequest = Omit<
 
 export type Environment = {
   id: number
+  uuid: string
   name: string
   is_creating: boolean
   api_key: string
@@ -377,6 +381,7 @@ export type Subscription = {
 
 export type Organisation = {
   id: number
+  uuid: string
   name: string
   created_date: string
   webhook_notification_email: string | null
@@ -386,6 +391,7 @@ export type Organisation = {
   persist_trait_data: boolean
   block_access_to_admin: boolean
   restrict_project_create_to_admin: boolean
+  force_2fa: boolean
 }
 export type Identity = {
   id: string
@@ -512,7 +518,7 @@ export type ProjectFlag = {
   num_identity_overrides: number | null
   num_segment_overrides: number | null
   owners: User[]
-  owner_groups: UserGroupSummary[]
+  group_owners: UserGroupSummary[]
   metadata: Metadata[] | []
   project: number
   tags: number[]

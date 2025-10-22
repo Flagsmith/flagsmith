@@ -175,6 +175,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           return {
             created_date: createdDate,
             default_enabled: importItem.enabled,
+            group_owners: [],
             id: i,
             initial_value: importItem.value,
             isNew: true,
@@ -184,7 +185,6 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
             name: importItem.name,
             num_identity_overrides: 0,
             num_segment_overrides: 0,
-            owner_groups: [],
             owners: [],
             project: ProjectStore.model!.id,
             tags: [],
