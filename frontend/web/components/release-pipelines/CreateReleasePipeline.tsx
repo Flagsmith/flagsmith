@@ -359,7 +359,7 @@ function CreateReleasePipeline() {
                       handleOnChange(stageData, index)
                     }
                     projectId={Number(projectId)}
-                    showRemoveButton={index > 0}
+                    showRemoveButton={pipelineData.stages.length > 1}
                     onRemove={() => handleRemoveStage(index)}
                   />
                   <div className='flex-1'>

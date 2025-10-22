@@ -13,6 +13,7 @@ from organisations.models import (
 from users.models import FFAdminUser, HubspotLead, HubspotTracker
 
 from .client import HubspotClient
+from .constants import HUBSPOT_FORM_ID_SAAS
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,10 @@ class HubspotLeadTracker(LeadTracker):
 
     def create_user_hubspot_contact(self, user: FFAdminUser) -> str | None:
         tracker = HubspotTracker.objects.filter(user=user).first()
-        create_lead_form_kwargs: dict[str, Any] = {"user": user}
+        create_lead_form_kwargs: dict[str, Any] = {
+            "user": user,
+            "form_id": HUBSPOT_FORM_ID_SAAS,
+        }
         if tracker:
             create_lead_form_kwargs.update(
                 hubspot_cookie=tracker.hubspot_cookie,
@@ -162,13 +166,13 @@ class HubspotLeadTracker(LeadTracker):
             return None
         org_hubspot_id: str = company["id"]
 
-        properties = company.get("properties", {})
-        existing_name = properties.get("name")
-        if existing_name != organisation.name:
-            self.client.update_company(
-                name=organisation.name,
-                hubspot_company_id=org_hubspot_id,
-            )
+        # Update the company in Hubspot with the name of the created
+        # organisation in Flagsmith, and its numeric ID.
+        self.client.update_company(
+            name=organisation.name,
+            hubspot_company_id=org_hubspot_id,
+            flagsmith_organisation_id=organisation.id,
+        )
 
         # Store the organisation data in the database since we are
         # unable to look them up via a unique identifier.

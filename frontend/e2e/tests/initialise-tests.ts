@@ -26,11 +26,7 @@ export default async function () {
     await click(byId("integration-2"))
     await click(byId("submit-integrations"))
   }
-  if(flagsmith.hasFeature("welcome_page")) {
-  await click(byId('create-project')) // Click create project from welcome page
-  } else {
-    await waitForElementVisible(byId('project-manage-widget'))
-  }
+  await click(byId('create-project'))
 
   log('Create Project')
   await click(byId('create-first-project-btn'))

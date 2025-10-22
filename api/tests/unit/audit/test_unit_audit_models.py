@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from pytest_mock import MockerFixture
 
@@ -79,37 +81,81 @@ def test_data_dog_track_event_not_called_on_audit_log_saved_when_wrong(mocker, p
     datadog_mock.track_event_async.assert_not_called()
 
 
-def test_data_dog_track_event_called_on_audit_log_saved_when_correct_type(  # type: ignore[no-untyped-def]
-    project, mocker
-):
+@pytest.mark.parametrize(
+    "use_custom_source, expected_additional_data",
+    [(False, {}), (True, {"source_type_name": "flagsmith"})],
+)
+def test_data_dog_track_event_called_on_audit_log_saved_when_correct_type(
+    project: Project,
+    mocker: MockerFixture,
+    use_custom_source: bool,
+    expected_additional_data: dict[str, str],
+) -> None:
     # Given project configured for Datadog integration
-    datadog_mock = mocker.patch(
-        "integrations.datadog.datadog.DataDogWrapper.track_event_async"
-    )
+    requests_session_mock = mocker.patch(
+        "integrations.datadog.datadog.requests.Session"
+    ).return_value
 
     DataDogConfiguration.objects.create(
-        project=project, base_url='http"//test.com', api_key="123key"
+        project=project,
+        base_url="http://test.com",
+        api_key="123key",
+        use_custom_source=use_custom_source,
     )
 
     # When Audit logs created with correct type
     AuditLog.objects.create(
         project=project,
-        log="Some audit log",
+        log="Some audit log for feature",
         related_object_type=RelatedObjectType.FEATURE.name,
     )
     AuditLog.objects.create(
         project=project,
-        log="Some audit log",
+        log="Some audit log for feature state",
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
     )
     AuditLog.objects.create(
         project=project,
-        log="Some audit log",
+        log="Some audit log for segment",
         related_object_type=RelatedObjectType.SEGMENT.name,
     )
 
     # Then datadog track even triggered for each AuditLog
-    assert 3 == datadog_mock.call_count
+    assert requests_session_mock.post.call_args_list == [
+        mocker.call(
+            "http://test.com/api/v1/events?api_key=123key",
+            data=json.dumps(
+                {
+                    "text": "Some audit log for feature by user system",
+                    "title": "Flagsmith Feature Flag Event",
+                    "tags": ["env:unknown"],
+                    **expected_additional_data,
+                }
+            ),
+        ),
+        mocker.call(
+            "http://test.com/api/v1/events?api_key=123key",
+            data=json.dumps(
+                {
+                    "text": "Some audit log for feature state by user system",
+                    "title": "Flagsmith Feature Flag Event",
+                    "tags": ["env:unknown"],
+                    **expected_additional_data,
+                }
+            ),
+        ),
+        mocker.call(
+            "http://test.com/api/v1/events?api_key=123key",
+            data=json.dumps(
+                {
+                    "text": "Some audit log for segment by user system",
+                    "title": "Flagsmith Feature Flag Event",
+                    "tags": ["env:unknown"],
+                    **expected_additional_data,
+                }
+            ),
+        ),
+    ]
 
 
 def test_audit_log_get_history_record_model_class(mocker):  # type: ignore[no-untyped-def]

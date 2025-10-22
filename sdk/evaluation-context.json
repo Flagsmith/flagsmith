@@ -49,10 +49,15 @@
                 "value": {
                     "description": "A default environment value for the feature. If the feature is multivariate, this will be the control value.",
                     "title": "Value",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
+                    ]
                 },
                 "variants": {
-                    "description": "An array of environment default values associated with the feature. Contains a single value for standard features, or multiple values for multivariate features.",
+                    "description": "An array of environment default values associated with the feature. Empty for standard features, or contains multiple values for multivariate features.",
                     "items": {
                         "$ref": "#/$defs/FeatureValue"
                     },
@@ -61,8 +66,14 @@
                 },
                 "priority": {
                     "description": "Priority of the feature context. Lower values indicate a higher priority when multiple contexts apply to the same feature.",
-                    "title": "Priority",
+                    "title": "FeaturePriority",
                     "type": "number"
+                },
+                "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
+                    "description": "Additional metadata associated with the feature.",
+                    "title": "FeatureMetadata",
+                    "type": "object"
                 }
             },
             "required": [
@@ -81,17 +92,28 @@
                 "value": {
                     "description": "The value of the feature.",
                     "title": "Value",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
+                    ]
                 },
                 "weight": {
                     "description": "The weight of the feature value variant, as a percentage number (i.e. 100.0).",
                     "title": "Weight",
                     "type": "number"
+                },
+                "priority": {
+                    "description": "Priority of the feature flag variant. Lower values indicate a higher priority when multiple variants apply to the same context key.",
+                    "title": "VariantPriority",
+                    "type": "number"
                 }
             },
             "required": [
                 "value",
-                "weight"
+                "weight",
+                "priority"
             ],
             "title": "FeatureValue",
             "type": "object"
@@ -160,6 +182,12 @@
                     },
                     "title": "Overrides",
                     "type": "array"
+                },
+                "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
+                    "description": "Additional metadata associated with the segment.",
+                    "title": "SegmentMetadata",
+                    "type": "object"
                 }
             },
             "required": [
@@ -171,6 +199,7 @@
             "type": "object"
         },
         "SegmentCondition": {
+            "existingJavaType": "com.flagsmith.flagengine.SegmentCondition",
             "anyOf": [
                 {
                     "description": "Represents a condition within a segment rule for feature flag evaluation.",
@@ -291,6 +320,7 @@
             "description": "Environment context required for evaluation."
         },
         "identity": {
+            "existingJavaType": "com.flagsmith.flagengine.IdentityContext",
             "anyOf": [
                 {
                     "$ref": "#/$defs/IdentityContext"
