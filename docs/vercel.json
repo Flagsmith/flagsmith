@@ -543,6 +543,154 @@
         {
             "source": "/guides-and-examples",
             "destination": "/best-practices/"
+        },
+        {
+            "source": "/advanced-use/change-requests",
+            "destination": "/administration-and-security/governance-and-compliance/change-requests"
+        },
+        {
+            "source": "/advanced-use/edge-api",
+            "destination": "/edge-api/"
+        },
+        {
+            "source": "/advanced-use/feature-health",
+            "destination": "/managing-flags/feature-health-metrics"
+        },
+        {
+            "source": "/advanced-use/flag-analytics",
+            "destination": "/managing-flags/flag-analytics"
+        },
+        {
+            "source": "/advanced-use/flag-management",
+            "destination": "/managing-flags/core-management"
+        },
+        {
+            "source": "/advanced-use/real-time-flags",
+            "destination": "/performance/real-time-flags"
+        },
+        {
+            "source": "/advanced-use/release-pipelines/",
+            "destination": "/managing-flags/release-pipelines"
+        },
+        {
+            "source": "/advanced-use/scheduled-flags",
+            "destination": "/managing-flags/scheduled-flags"
+        },
+        {
+            "source": "/basic-features/managing-features",
+            "destination": "/managing-flags/core-management"
+        },
+        {
+            "source": "/basic-features/managing-identities",
+            "destination": "/flagsmith-concepts/identities"
+        },
+        {
+            "source": "/basic-features/segments",
+            "destination": "/flagsmith-concepts/segments/"
+        },
+        {
+            "source": "/clients/flutter/",
+            "destination": "/integrating-with-flagsmith/client-side-sdks/flutter"
+        },
+        {
+            "source": "/clients/javascript/",
+            "destination": "/integrating-with-flagsmith/client-side-sdks/javascript"
+        },
+        {
+            "source": "/clients/react",
+            "destination": "/integrating-with-flagsmith/client-side-sdks/react"
+        },
+        {
+            "source": "/clients/next-ssr",
+            "destination": "/integrating-with-flagsmith/client-side-sdks/nextjs-and-ssr"
+        },
+        {
+            "source": "/clients/ios/",
+            "destination": "/integrating-with-flagsmith/client-side-sdks/"
+        },
+        {
+            "source": "/deployment",
+            "destination": "/deployment-self-hosting/"
+        },
+        {
+            "source": "/deployment/configuration/enterprise-edition",
+            "destination": "/deployment-self-hosting/enterprise-edition"
+        },
+        {
+            "source": "/guides-and-examples/defensive-coding",
+            "destination": "/best-practices/defensive-coding"
+        },
+        {
+            "source": "/integrations/analytics/amplitude",
+            "destination": "/third-party-integrations/analytics/amplitude"
+        },
+        {
+            "source": "/integrations/analytics/heap",
+            "destination": "/third-party-integrations/analytics/heap"
+        },
+        {
+            "source": "/integrations/analytics/mixpanel",
+            "destination": "/third-party-integrations/analytics/mixpanel"
+        },
+        {
+            "source": "/integrations/analytics/rudderstack",
+            "destination": "/third-party-integrations/analytics/rudderstack"
+        },
+        {
+            "source": "/integrations/analytics/segment",
+            "destination": "/third-party-integrations/analytics/segment"
+        },
+        {
+            "source": "/integrations/apm/datadog",
+            "destination": "/third-party-integrations/observability-and-monitoring/datadog"
+        },
+        {
+            "source": "/integrations/apm/dynatrace",
+            "destination": "/third-party-integrations/observability-and-monitoring/dynatrace"
+        },
+        {
+            "source": "/integrations/apm/newrelic",
+            "destination": "/third-party-integrations/observability-and-monitoring/newrelic"
+        },
+        {
+            "source": "/integrations/apm/grafana",
+            "destination": "/third-party-integrations/observability-and-monitoring/grafana"
+        },
+        {
+            "source": "/integrations/project-management/jira",
+            "destination": "/third-party-integrations/project-management/jira"
+        },
+        {
+            "source": "/integrations/webhook",
+            "destination": "/third-party-integrations/webhook"
+        },
+        {
+            "source": "/integrations/terraform",
+            "destination": "/third-party-integrations/ci-cd/terraform"
+        },
+        {
+            "source": "/quickstart/",
+            "destination": "/getting-started/"
+        },
+        {
+            "source": "/system-administration/audit-logs",
+            "destination": "/administration-and-security/governance-and-compliance/audit-logs"
+        },
+        {
+            "source": "/system-administration/authentication/",
+            "destination": "/administration-and-security/access-control/"
+        },
+        {
+            "source": "/system-administration/rbac",
+            "destination": "/administration-and-security/access-control/rbac"
+        },
+        {
+            "source": "/system-administration/security",
+            "destination": "/administration-and-security/governance-and-compliance/security"
+        },
+        {
+            "source": "/system-administration/system-limits",
+            "destination": "/administration-and-security/governance-and-compliance/system-limits"
         }
     ]
 }
