@@ -479,11 +479,12 @@ class Environment(
                 & Q(change_sets__live_from__gt=timezone.now())
             )
         )
-
-        change_requests: QuerySet["ChangeRequest"] = qs.filter(
-            id__in=qs.filter(scheduled_q).values_list("id", flat=True)
+        ids = qs.filter(scheduled_q).values_list("id", flat=True)
+        unique_ids = list(set(ids))
+        change_requests_qs: QuerySet["ChangeRequest"] = ChangeRequest.objects.filter(
+            id__in=unique_ids
         )
-        return change_requests
+        return change_requests_qs
 
     @staticmethod
     def is_bad_key(environment_key: str) -> bool:

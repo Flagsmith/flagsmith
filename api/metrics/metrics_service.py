@@ -5,7 +5,7 @@ from typing import Callable
 from django.db import models
 from django.db.models import Q
 
-from edge_api.identities.models import EdgeIdentity
+from edge_api.identities import edge_identity_service
 from environments.models import Environment
 from features.models import Feature
 from metrics.constants import DEFAULT_METRIC_DEFINITIONS, WORKFLOW_METRIC_DEFINITIONS
@@ -83,13 +83,7 @@ class EnvironmentMetricsService:
         }
 
     def _get_active_identity_edge_overrides_count(self) -> int:
-        override_feature_id_counts = (
-            EdgeIdentity.dynamo_wrapper.get_identity_override_feature_counts(
-                self.environment.api_key
-            )
-        )
-
-        valid_feature_ids = set(
+        environment_feature_ids = set(
             Feature.objects.filter(
                 project=self.environment.project,
                 is_archived=False,
@@ -97,11 +91,17 @@ class EnvironmentMetricsService:
             ).values_list("id", flat=True)
         )
 
-        return sum(
-            count
-            for feature_id, count in override_feature_id_counts.items()
-            if feature_id in valid_feature_ids
+        all_overrides = edge_identity_service.get_edge_identity_overrides(
+            environment_id=self.environment.id,
+            feature_id=None,
         )
+
+        count = 0
+        for override in all_overrides:
+            if override.feature_state.feature.id in environment_feature_ids:
+                count += 1
+
+        return count
 
     def _get_feature_metrics(
         self,
