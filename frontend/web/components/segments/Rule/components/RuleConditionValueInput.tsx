@@ -20,6 +20,7 @@ type RuleConditionValueInputProps = {
   isValid?: boolean
   projectId?: number
   showEnvironmentDropdown?: boolean
+  operator?: string
 }
 
 const TextAreaModal = ({
@@ -92,36 +93,102 @@ const TextAreaModal = ({
 const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
   isValid,
   onChange,
+  operator,
   projectId,
   showEnvironmentDropdown,
   value,
   ...props
 }) => {
-  const hasLeadingWhitespace = typeof value === 'string' && /^\s/.test(value)
-  const hasTrailingWhitespace = typeof value === 'string' && /\s$/.test(value)
-  const isOnlyWhitespace =
-    typeof value === 'string' && value.length >= 1 && value.trim() === ''
-  const hasBothLeadingAndTrailingWhitespace =
-    hasLeadingWhitespace && hasTrailingWhitespace
-  const hasWarning =
-    hasLeadingWhitespace ||
-    hasTrailingWhitespace ||
-    hasBothLeadingAndTrailingWhitespace ||
-    isOnlyWhitespace
+  const checkWhitespaceIssues = () => {
+    if (operator !== 'IN') return null
+    if (typeof value !== 'string') return null
+
+    const LEADING_WHITESPACE = /^\s/
+    const TRAILING_WHITESPACE = /\s$/
+
+    if (value.length >= 1 && value.trim() === '') {
+      return { hasWarning: true, message: 'This value is only whitespaces' }
+    }
+
+    const items = value.split(',')
+    
+    if (items.length > 1) {
+      const counts = items.reduce(
+        (acc, item) => {
+          const hasLeading = LEADING_WHITESPACE.test(item)
+          const hasTrailing = TRAILING_WHITESPACE.test(item)
+          
+          if (hasLeading && hasTrailing) acc.both++
+          else if (hasLeading) acc.leading++
+          else if (hasTrailing) acc.trailing++
+          
+          return acc
+        },
+        { leading: 0, trailing: 0, both: 0 },
+      )
+
+      const totalIssues = counts.both + counts.leading + counts.trailing
+      const hasMultipleIssues = [
+        counts.both > 0,
+        counts.leading > 0,
+        counts.trailing > 0,
+      ].filter(Boolean).length > 1
+
+      if (totalIssues > 0) {
+        if (hasMultipleIssues) {
+          return {
+            hasWarning: true,
+            message: `${totalIssues} item(s) have whitespace issues`,
+          }
+        }
+        
+        if (counts.both > 0) {
+          return {
+            hasWarning: true,
+            message: `${counts.both} item(s) have leading and trailing whitespaces`,
+          }
+        }
+        if (counts.leading > 0) {
+          return {
+            hasWarning: true,
+            message: `${counts.leading} item(s) have leading whitespaces`,
+          }
+        }
+        if (counts.trailing > 0) {
+          return {
+            hasWarning: true,
+            message: `${counts.trailing} item(s) have trailing whitespaces`,
+          }
+        }
+      }
+    }
+
+    const hasLeading = LEADING_WHITESPACE.test(value)
+    const hasTrailing = TRAILING_WHITESPACE.test(value)
+
+    if (hasLeading && hasTrailing) {
+      return {
+        hasWarning: true,
+        message: 'This value starts and ends with whitespaces',
+      }
+    }
+    if (hasLeading) {
+      return { hasWarning: true, message: 'This value starts with whitespaces' }
+    }
+    if (hasTrailing) {
+      return { hasWarning: true, message: 'This value ends with whitespaces' }
+    }
+
+    return null
+  }
+
+  const whitespaceCheck = checkWhitespaceIssues()
+  const hasWarning = whitespaceCheck?.hasWarning || false
   const isLongText = String(value).length >= 10
 
   const validate = () => {
-    if (isOnlyWhitespace) {
-      return 'This value is only whitespaces'
-    }
-    if (hasBothLeadingAndTrailingWhitespace) {
-      return 'This value starts and ends with whitespaces'
-    }
-    if (hasLeadingWhitespace) {
-      return 'This value starts with whitespaces'
-    }
-    if (hasTrailingWhitespace) {
-      return 'This value ends with whitespaces'
+    if (whitespaceCheck?.message) {
+      return whitespaceCheck.message
     }
     if (isLongText) {
       return 'Click to edit text in a larger area'
