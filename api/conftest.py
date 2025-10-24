@@ -557,6 +557,11 @@ def feature(project: Project) -> Feature:
 
 
 @pytest.fixture()
+def feauture_with_dots(project: Project) -> Feature:
+    return Feature.objects.create(name="feature.name", project=project)  # type: ignore[no-any-return]
+
+
+@pytest.fixture()
 def change_request(environment: Environment, admin_user: FFAdminUser) -> ChangeRequest:
     return ChangeRequest.objects.create(  # type: ignore[no-any-return]
         environment=environment, title="Test CR", user_id=admin_user.id
