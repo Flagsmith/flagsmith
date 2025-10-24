@@ -145,7 +145,7 @@ class CreateUpdateEnvironmentSerializer(
             ).get(id=project_id)
 
             return getattr(project.organisation, "subscription", None)
-        elif view.action in ("update", "partial_update"):
+        elif self.instance and view.action in ("update", "partial_update"):
             return getattr(self.instance.project.organisation, "subscription", None)  # type: ignore[union-attr]
 
         return None
