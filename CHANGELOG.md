@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.199.1](https://github.com/Flagsmith/flagsmith/compare/v2.199.0...v2.199.1) (2025-10-24)
+
+
+### Bug Fixes
+
+* metrics endpoint identity overrides ([#6159](https://github.com/Flagsmith/flagsmith/issues/6159)) ([b44cf42](https://github.com/Flagsmith/flagsmith/commit/b44cf4258f3e518e79448805dba08aab1a51e333))
+* Revert "infra: Remove PGP key from SaaS build" ([#6197](https://github.com/Flagsmith/flagsmith/issues/6197)) ([db16264](https://github.com/Flagsmith/flagsmith/commit/db162648b30105ae123bcb2b86be628a7f5535ea))
+* **sse_stream_access_logs:** Add timeout ([#6198](https://github.com/Flagsmith/flagsmith/issues/6198)) ([4d15821](https://github.com/Flagsmith/flagsmith/commit/4d1582119cad72ea817c64bdfd22125d17c7a6a5))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Remove PGP key from SaaS build ([#6194](https://github.com/Flagsmith/flagsmith/issues/6194)) ([9b43a37](https://github.com/Flagsmith/flagsmith/commit/9b43a379de18f0ddf18d7de470f94e9cb8531bf2))
+
+
+### Dependency Updates
+
+* bump flagsmith-workflows to 3.1.0 ([#6140](https://github.com/Flagsmith/flagsmith/issues/6140)) ([33ad626](https://github.com/Flagsmith/flagsmith/commit/33ad6265af25e9887f2c158ccc381db449dabf06))
+
 ## [2.199.0](https://github.com/Flagsmith/flagsmith/compare/v2.198.1...v2.199.0) (2025-10-22)
 
 
