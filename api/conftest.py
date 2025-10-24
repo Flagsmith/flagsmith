@@ -555,6 +555,10 @@ def api_client() -> APIClient:
 def feature(project: Project) -> Feature:
     return Feature.objects.create(name="Test Feature1", project=project)  # type: ignore[no-any-return]
 
+@pytest.fixture()
+def feauture_with_dots(project: Project) -> Feature:
+    return Feature.objects.create(name="feature.name", project=project)  # type: ignore[no-any-return]
+
 
 @pytest.fixture()
 def change_request(environment: Environment, admin_user: FFAdminUser) -> ChangeRequest:
