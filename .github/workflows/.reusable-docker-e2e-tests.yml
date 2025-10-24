@@ -50,7 +50,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Login to Github Container Registry
         if: ${{ env.GCR_TOKEN }}

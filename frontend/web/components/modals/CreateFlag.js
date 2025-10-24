@@ -39,7 +39,7 @@ import FeatureHistory from 'components/FeatureHistory'
 import WarningMessage from 'components/WarningMessage'
 import { getPermission } from 'common/services/usePermission'
 import { getChangeRequests } from 'common/services/useChangeRequest'
-import FeatureHealthTabContent from './FeatureHealthTabContent'
+import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
@@ -236,7 +236,9 @@ const CreateFlag = class extends Component {
           },
           { forceRefetch },
         ).then((permissions) => {
-          if (permissions?.length) {
+          const hasViewIdentitiesPermission =
+            permissions[Utils.getViewIdentitiesPermission()]
+          if (hasViewIdentitiesPermission || AccountStore.isAdmin()) {
             data
               .get(
                 `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
@@ -1755,9 +1757,9 @@ const CreateFlag = class extends Component {
                                                                 e.stopPropagation()
                                                                 removeUserOverride(
                                                                   {
-                                                                    cb: () =>
+                                                                    cb: () => 
                                                                       this.userOverridesPage(
-                                                                        1,
+                                                                        1, true
                                                                       ),
                                                                     environmentId:
                                                                       this.props
@@ -1874,7 +1876,7 @@ const CreateFlag = class extends Component {
                                         tabLabelString='Links'
                                         tabLabel={
                                           <Row className='justify-content-center'>
-                                            Links{' '}
+                                            Links
                                           </Row>
                                         }
                                       >

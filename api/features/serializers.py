@@ -348,6 +348,12 @@ class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerial
         self._validate_required_metadata(organisation, attrs.get("metadata", []))
         return attrs
 
+    def create(self, validated_data: dict[str, Any]) -> Feature:
+        metadata_data = validated_data.pop("metadata", [])
+        feature = super().create(validated_data)
+        self._update_metadata(feature, metadata_data)
+        return feature
+
     def update(self, feature: Feature, validated_data: dict[str, Any]) -> Feature:
         metadata = validated_data.pop("metadata", [])
         feature = super().update(feature, validated_data)

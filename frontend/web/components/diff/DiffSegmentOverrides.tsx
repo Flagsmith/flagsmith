@@ -130,7 +130,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
         <TabItem
           className='p-0'
           tabLabel={
-            <div>
+            <div className='d-flex gap-2'>
               Created <div className='unread'>{created.length}</div>
             </div>
           }
@@ -150,7 +150,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
         <TabItem
           className='p-0'
           tabLabel={
-            <div>
+            <div className='d-flex align-items-center'>
               Deleted <div className='unread'>{deleted.length}</div>
             </div>
           }
@@ -170,7 +170,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
         <TabItem
           className='p-0'
           tabLabel={
-            <div>
+            <div className='d-flex align-items-center'>
               Modified <div className='unread'>{modified.length}</div>
             </div>
           }
@@ -190,7 +190,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
         <TabItem
           className='p-0'
           tabLabel={
-            <div>
+            <div className='d-flex align-items-center'>
               Unchanged <div className='unread'>{unChanged.length}</div>
             </div>
           }

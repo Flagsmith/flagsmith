@@ -914,6 +914,100 @@ def test_update_environment_metadata(  # type: ignore[no-untyped-def]
     ]
 
 
+def test_create_multiple_environments_with_metadata_keeps_metadata_isolated(
+    project: Project,
+    admin_client_new: APIClient,
+    optional_b_environment_metadata_field: MetadataModelField,
+) -> None:
+    """
+    Test that creating multiple environments with metadata keeps metadata properly isolated.
+    This is a regression test for the bug where creating a second environment would remove
+    metadata from the first environment if the user sent the first environment's metadata ID.
+    """
+    # Given
+    url = reverse("api-v1:environments:environment-list")
+
+    # Create first environment with metadata
+    first_environment_data = {
+        "name": "First Environment",
+        "project": project.id,
+        "description": "First environment description",
+        "metadata": [
+            {
+                "model_field": optional_b_environment_metadata_field.id,
+                "field_value": "100",
+            },
+        ],
+    }
+
+    # When - Create first environment
+    first_response = admin_client_new.post(
+        url, data=json.dumps(first_environment_data), content_type="application/json"
+    )
+
+    # Then - First environment should be created successfully
+    assert first_response.status_code == status.HTTP_201_CREATED
+    first_environment_api_key = first_response.json()["api_key"]
+    first_metadata = first_response.json()["metadata"]
+    assert len(first_metadata) == 1
+    assert first_metadata[0]["field_value"] == "100"
+    first_metadata_id = first_metadata[0]["id"]
+
+    # Given - Create second environment
+    second_environment_data = {
+        "name": "Second Environment",
+        "project": project.id,
+        "description": "Second environment description",
+        "metadata": [
+            {
+                "id": first_metadata_id,  # user mistakenly sends existing metadata ID
+                "model_field": optional_b_environment_metadata_field.id,
+                "field_value": "200",
+            },
+        ],
+    }
+
+    # When - Create second environment
+    second_response = admin_client_new.post(
+        url, data=json.dumps(second_environment_data), content_type="application/json"
+    )
+
+    # Then - Second environment should be created successfully
+    assert second_response.status_code == status.HTTP_201_CREATED
+    second_environment_api_key = second_response.json()["api_key"]
+    second_metadata = second_response.json()["metadata"]
+    assert len(second_metadata) == 1
+    assert second_metadata[0]["field_value"] == "200"
+    # The metadata ID should be different (new metadata instance created)
+    assert second_metadata[0]["id"] != first_metadata_id
+
+    # When - Retrieve first environment to verify metadata is still there
+    first_environment_url = reverse(
+        "api-v1:environments:environment-detail", args=[first_environment_api_key]
+    )
+    first_environment_check = admin_client_new.get(first_environment_url)
+
+    # Then - First environment should still have its metadata
+    assert first_environment_check.status_code == status.HTTP_200_OK
+    first_environment_metadata_after = first_environment_check.json()["metadata"]
+    assert len(first_environment_metadata_after) == 1
+    assert first_environment_metadata_after[0]["field_value"] == "100"
+    assert first_environment_metadata_after[0]["id"] == first_metadata_id
+
+    # When - Retrieve second environment to verify metadata
+    second_environment_url = reverse(
+        "api-v1:environments:environment-detail", args=[second_environment_api_key]
+    )
+    second_environment_check = admin_client_new.get(second_environment_url)
+
+    # Then - Second environment should have its own metadata
+    assert second_environment_check.status_code == status.HTTP_200_OK
+    second_environment_metadata_after = second_environment_check.json()["metadata"]
+    assert len(second_environment_metadata_after) == 1
+    assert second_environment_metadata_after[0]["field_value"] == "200"
+    assert second_environment_metadata_after[0]["id"] != first_metadata_id
+
+
 def test_audit_log_entry_created_when_environment_updated(
     environment: Environment, project: Project, admin_client_new: APIClient
 ) -> None:

@@ -82,7 +82,8 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         uncontrolled={uncontrolled}
         value={value}
         onChange={onChange}
-        theme='pill m-0'
+        theme='pill'
+        className='m-0'
         isRoles={true}
       >
         <TabItem

@@ -3,7 +3,7 @@ import { useGetPermissionQuery } from 'common/services/usePermission'
 import { PermissionLevel } from 'common/types/requests'
 import AccountStore from 'common/stores/account-store'
 import intersection from 'lodash/intersection'
-import { cloneDeep } from 'lodash' // we need this to make JSX compile
+import { cloneDeep } from 'lodash'
 
 type PermissionType = {
   id: any

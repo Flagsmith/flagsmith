@@ -89,7 +89,7 @@ const CreateSegmentUsersTabContent: React.FC<
   setSearchInput,
 }) => {
   return (
-    <div className='my-4'>
+    <>
       <InfoMessage collapseId={'random-identity-sample'}>
         This is a random sample of Identities who are either in or out of this
         Segment based on the current Segment rules.
@@ -171,7 +171,7 @@ const CreateSegmentUsersTabContent: React.FC<
           />
         </FormGroup>
       </div>
-    </div>
+    </>
   )
 }
 

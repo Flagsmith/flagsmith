@@ -1,77 +1,42 @@
+import pytest
 from pytest_mock import MockerFixture
 
 from integrations.lead_tracking.hubspot.constants import (
-    HUBSPOT_ACTIVE_SUBSCRIPTION_SELF_HOSTED,
+    HUBSPOT_FORM_ID_SELF_HOSTED,
 )
 from integrations.lead_tracking.hubspot.services import (
     create_self_hosted_onboarding_lead,
 )
 
 
+@pytest.mark.parametrize(
+    "hubspot_cookie, expected_hubspot_cookie", [("", False), ("test_cookie", True)]
+)
 def test_create_self_hosted_onboarding_lead_with_existing_company(
     mocker: MockerFixture,
+    hubspot_cookie: str,
+    expected_hubspot_cookie: bool,
 ) -> None:
     # Given
     mocked_hubspot_client = mocker.patch(
         "integrations.lead_tracking.hubspot.services.HubspotClient", autospec=True
     )
     email = "user@flagsmith.com"
-    organisation_name = "Flagsmith"
     first_name = "user"
     last_name = "test"
 
-    company_domain = "flagsmith.com"
-    company_id = "111"
-
-    mocked_hubspot_client().get_company_by_domain.return_value = {"id": company_id}
-
     # When
-    create_self_hosted_onboarding_lead(email, first_name, last_name, organisation_name)
+    create_self_hosted_onboarding_lead(email, first_name, last_name, hubspot_cookie)
 
     # Then
-    mocked_hubspot_client().get_company_by_domain.assert_called_once_with(
-        company_domain
-    )
+    mocked_hubspot_client().create_lead_form.assert_called_once()
 
-    mocked_hubspot_client().create_company.assert_not_called()
+    call_args = mocked_hubspot_client().create_lead_form.call_args
+    user = call_args.kwargs["user"]
+    form_id = call_args.kwargs["form_id"]
 
-    mocked_hubspot_client().create_self_hosted_contact.assert_called_once_with(
-        email, first_name, last_name, company_id
-    )
-
-
-def test_create_self_hosted_onboarding_lead_with_new_company(
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mocked_hubspot_client = mocker.patch(
-        "integrations.lead_tracking.hubspot.services.HubspotClient", autospec=True
-    )
-    email = "user@flagsmith.com"
-    organisation_name = "Flagsmith"
-    first_name = "user"
-    last_name = "test"
-
-    company_domain = "flagsmith.com"
-    company_id = "111"
-
-    mocked_hubspot_client().get_company_by_domain.return_value = None
-    mocked_hubspot_client().create_company.return_value = {"id": company_id}
-
-    # When
-    create_self_hosted_onboarding_lead(email, first_name, last_name, organisation_name)
-
-    # Then
-    mocked_hubspot_client().get_company_by_domain.assert_called_once_with(
-        company_domain
-    )
-
-    mocked_hubspot_client().create_company.assert_called_once_with(
-        name=organisation_name,
-        domain=company_domain,
-        active_subscription=HUBSPOT_ACTIVE_SUBSCRIPTION_SELF_HOSTED,
-    )
-
-    mocked_hubspot_client().create_self_hosted_contact.assert_called_once_with(
-        email, first_name, last_name, company_id
-    )
+    assert user.email == email
+    assert user.first_name == first_name
+    assert user.last_name == last_name
+    assert form_id == HUBSPOT_FORM_ID_SELF_HOSTED
+    assert ("hubspot_cookie" in call_args.kwargs) is expected_hubspot_cookie

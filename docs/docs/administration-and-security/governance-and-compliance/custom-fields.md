@@ -6,7 +6,7 @@ sidebar_position: 20
 
 :::info
 
-Custom fields are available on [Enterprise plans](/version-comparison.md#enterprise-benefits).
+Custom fields are available on [Enterprise plans](https://flagsmith.com/pricing).
 
 Custom fields were introduced in Flagsmith [2.116.0](https://github.com/Flagsmith/flagsmith/releases/tag/v2.116.0).
 
@@ -18,7 +18,7 @@ This guide explains how to define and manage custom fields in Flagsmith. Custom 
 - Add a link from Flagsmith segments to the corresponding segments in your analytics platform.
 - Add a detailed description to your Flagsmith environments.
 
-You can define **custom fields** that are shown when creating or modifying [**flags**](/basic-features/managing-features.md), [**segments**](/basic-features/segments.md) or [**environments**](/basic-features#environments). Custom fields are defined per [organisation](/basic-features#organisations).
+You can define **custom fields** that are shown when creating or modifying [**flags**](/managing-flags/core-management), [**segments**](/flagsmith-concepts/segments) or [**environments**](/flagsmith-concepts/data-model#environments). Custom fields are defined per [organisation](/flagsmith-concepts/data-model#organisations).
 
 The following screenshot shows a custom field named "Ticket URL" that is displayed to Flagsmith users when editing or creating a feature:
 
@@ -69,7 +69,7 @@ Custom fields are mainly intended to be read by humans visiting the Flagsmith da
 
 Custom field values associated with features belong to the features themselves, and not an environment's feature state; you cannot override custom field values in different environments, segments or identities. They are not returned to applications that consume flags.
 
-Custom field values are added directly to the `metadata` field of the entity they are defined in, which can be read using the [Flagsmith Admin API](/clients/rest#private-admin-api-endpoints). For example, to fetch a feature's custom fields, use the [endpoint to fetch a feature by ID](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_projects_features_read):
+Custom field values are added directly to the `metadata` field of the entity they are defined in, which can be read using the [Flagsmith Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api). For example, to fetch a feature's custom fields, use the [endpoint to fetch a feature by ID](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_projects_features_read):
 
 ```shell
 curl "https://api.flagsmith.com/api/v1/projects/YOUR_PROJECT_ID/features/YOUR_FEATURE_ID/" \

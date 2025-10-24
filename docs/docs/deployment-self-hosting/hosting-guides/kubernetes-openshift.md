@@ -1,7 +1,7 @@
 ---
 title: Kubernetes and OpenShift
 description: "Deploying Flagsmith on Kubernetes and OpenShift using our Helm charts."
-sidebar_position: 50
+sidebar_position: 2
 ---
 
 ## Overview
@@ -209,7 +209,7 @@ If you are using our Helm charts and don't provide a `secretKey`, one will be ge
 
 :::
 
-The chart handles most environment variables required, but see the [API readme](/deployment/hosting/locally-api#environment-variables) for all available configuration options. These can be set using `api.extraEnv`. For example, in the `charts/flagsmith/values.yaml` file:
+The chart handles most environment variables required, but see the [API environment variables](/deployment-self-hosting/core-configuration/environment-variables#api-environment-variables) for all available configuration options. These can be set using `api.extraEnv`. For example, in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 api:
@@ -284,7 +284,7 @@ By default, Flagsmith uses PostgreSQL to store time series data. You can alterna
 - SDK API traffic
 - SDK Flag Evaluations
 
-[You need to perform some additional steps to configure InfluxDB.](/deployment#time-series-data-via-influxdb).
+[You need to perform some additional steps to configure InfluxDB.](/deployment-self-hosting/scaling-and-performance/using-influxdb-for-analytics).
 
 ### Task Processor
 

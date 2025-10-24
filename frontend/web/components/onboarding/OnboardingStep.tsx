@@ -45,9 +45,10 @@ const Step: FC<StepProps> = ({
         'rounded',
         'col-8',
         'offset-2',
+        'py-2',
         'position-relative',
         'border-1',
-        'px-2',
+        'px-4',
         {
           'bg-light200': !(isActive || isComplete),
           'bg-white': isActive || isComplete,

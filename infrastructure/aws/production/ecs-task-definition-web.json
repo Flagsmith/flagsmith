@@ -17,6 +17,16 @@
                     "protocol": "tcp"
                 }
             ],
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "flagsmith healthcheck tcp"
+                ],
+                "interval": 10,
+                "timeout": 2,
+                "retries": 5,
+                "startPeriod": 5
+            },
             "essential": true,
             "environment": [
                 {
@@ -194,6 +204,10 @@
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
                     "value": "False"
+                },
+                {
+                    "name": "PROMETHEUS_ENABLED",
+                    "value": "True"
                 },
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",

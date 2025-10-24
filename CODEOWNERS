@@ -1,8 +1,8 @@
 # Global default rule
-*                @flagsmith/flagsmith-maintainers
+*                @flagsmith/flagsmith-engineering
 
 # Specific rules based on directory
 /api/            @flagsmith/flagsmith-back-end
-/docs/           @flagsmith/flagsmith-docs
 /frontend/       @flagsmith/flagsmith-front-end
-/infrastructure/ @flagsmith/flagsmith-back-end
+/infrastructure/ @flagsmith/flagsmith-infrastructure
+/docs/           @flagsmith/flagsmith-docs

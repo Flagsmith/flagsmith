@@ -4,7 +4,7 @@ import Button from 'components/base/forms/Button'
 import { Environment } from 'common/types/responses'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import InputGroup from 'components/base/forms/InputGroup'
-import Utils from 'common/utils/utils' // we need this to make JSX compile
+import Utils from 'common/utils/utils'
 
 type ConfirmRemoveEnvironmentType = {
   environment: Environment

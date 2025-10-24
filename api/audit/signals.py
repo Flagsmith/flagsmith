@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Callable, Literal, Protocol, Type
+from typing import TYPE_CHECKING, Any, Callable, Literal, Protocol, Type
 
 from django.conf import settings
 from django.db.models.signals import post_save
@@ -22,6 +22,10 @@ from integrations.slack.slack import SlackWrapper
 from organisations.models import OrganisationWebhook
 from webhooks.tasks import call_organisation_webhooks
 from webhooks.webhooks import WebhookEventType
+
+if TYPE_CHECKING:
+    from integrations.datadog.models import DataDogConfiguration
+
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +133,9 @@ def _track_event_async(instance, integration_client):  # type: ignore[no-untyped
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
 def send_audit_log_event_to_datadog(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
-    data_dog_config = _get_integration_config(instance, "data_dog_config")
+    data_dog_config: "DataDogConfiguration | None" = _get_integration_config(
+        instance, "data_dog_config"
+    )
 
     if not data_dog_config:
         return
@@ -137,6 +143,7 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):  # type: ignore
     data_dog = DataDogWrapper(
         base_url=data_dog_config.base_url,  # type: ignore[arg-type]
         api_key=data_dog_config.api_key,
+        use_custom_source=data_dog_config.use_custom_source,
     )
     _track_event_async(instance, data_dog)  # type: ignore[no-untyped-call]
 

@@ -13,7 +13,7 @@ after.
 ## Audit Log Web Hooks
 
 You can also stream your Audit Logs into your own infrastructure using
-[Audit Log Web Hooks](/system-administration/webhooks#audit-log-web-hooks).
+[Audit Log Web Hooks](/third-party-integrations/webhook#audit-log-webhooks).
 
 ## Event Types
 

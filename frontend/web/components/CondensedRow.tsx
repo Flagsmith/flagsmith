@@ -1,4 +1,4 @@
-import { FC, PropsWithChildren } from 'react' // we need this to make JSX compile
+import { FC, PropsWithChildren } from 'react'
 
 type CondensedColumnType = PropsWithChildren<{}>
 

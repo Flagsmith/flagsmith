@@ -1,5 +1,4 @@
 import { FC, PropsWithChildren, ReactNode } from 'react'
-import classNames from 'classnames' // we need this to make JSX compile
 
 type PageTitleType = PropsWithChildren<{
   title: ReactNode
@@ -10,8 +9,8 @@ type PageTitleType = PropsWithChildren<{
 const PageTitle: FC<PageTitleType> = ({ children, className, cta, title }) => {
   return (
     <div className={className || 'mb-4'}>
-      <div className='flex-row flex-column flex-lg-row gap-2 align-items-start align-items-lg-center'>
-        <Flex>
+      <div className='flex-row flex-lg-row gap-2 align-items-start align-items-lg-center justify-content-between'>
+        <div className='flex'>
           <h4 className={children ? 'mb-1' : 'mb-0'}>{title}</h4>
           {children && (
             <Row>
@@ -20,7 +19,7 @@ const PageTitle: FC<PageTitleType> = ({ children, className, cta, title }) => {
               </div>
             </Row>
           )}
-        </Flex>
+        </div>
         {!!cta && <div className='float-right ms-lg-2'>{cta}</div>}
       </div>
       <hr className='mb-0 mt-3' />

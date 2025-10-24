@@ -596,9 +596,12 @@ const EnvironmentSettingsPage: React.FC = () => {
                           value={currentEnv?.minimum_change_request_approvals}
                           onSave={saveEnv}
                           onToggle={(v) =>
-                            updateCurrentEnv({
-                              minimum_change_request_approvals: v,
-                            })
+                            updateCurrentEnv(
+                              {
+                                minimum_change_request_approvals: v,
+                              },
+                              true,
+                            )
                           }
                           onChange={(value) => {
                             updateCurrentEnv({

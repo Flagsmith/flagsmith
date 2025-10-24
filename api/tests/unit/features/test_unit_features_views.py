@@ -1076,6 +1076,47 @@ def test_get_flags__server_key_only_feature__server_key_auth__return_expected(
     assert response.json()
 
 
+def test_get_flags__server_key_only_feature__cache_isolation_between_client_and_server_keys(
+    environment: Environment,
+    environment_api_key: EnvironmentAPIKey,
+    feature: Feature,
+    settings: SettingsWrapper,
+    use_local_mem_cache_for_cache_middleware: None,
+) -> None:
+    # Given
+    feature.is_server_key_only = True
+    feature.save()
+
+    # Enable caching
+    settings.CACHE_FLAGS_SECONDS = 30
+
+    url = reverse("api-v1:flags")
+
+    # Create clients for server and client keys
+    server_client = APIClient(
+        headers={SDK_ENVIRONMENT_KEY_HEADER: environment_api_key.key}
+    )
+    client_client = APIClient(headers={SDK_ENVIRONMENT_KEY_HEADER: environment.api_key})
+
+    # When - First request with SERVER key (populates cache)
+    server_response = server_client.get(url)
+
+    # Then - Server should see the server-only feature
+    assert server_response.status_code == status.HTTP_200_OK
+    server_flags = server_response.json()
+    server_feature_names = [flag["feature"]["name"] for flag in server_flags]
+    assert feature.name in server_feature_names
+
+    # When - Second request with CLIENT key (should not get server-only from cache)
+    client_response = client_client.get(url)
+
+    # Then - Client should NOT see the server-only feature
+    assert client_response.status_code == status.HTTP_200_OK
+    client_flags = client_response.json()
+    client_feature_names = [flag["feature"]["name"] for flag in client_flags]
+    assert feature.name not in client_feature_names
+
+
 def test_get_feature_states_by_uuid(
     admin_client_new: APIClient,
     environment: Environment,
@@ -3990,3 +4031,139 @@ def test_delete_feature_deletes_any_related_identity_overrides(
         )["Count"]
         == 0
     )
+
+
+def test_get_multivariate_options_responds_200_with_control_value_and_options(
+    api_client: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    mv_options = list(multivariate_feature.multivariate_options.all())
+    expected_option_values = [opt.string_value for opt in mv_options]
+
+    # When
+    response = api_client.get(
+        f"/api/v1/flags/{multivariate_feature.id}/multivariate-options/"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["control_value"] == "control"
+    assert len(data["options"]) == 3
+
+    actual_option_values = [opt["value"] for opt in data["options"]]
+    for expected_value in expected_option_values:
+        assert expected_value in actual_option_values
+
+
+def test_get_multivariate_options_feature_not_found_responds_404(
+    api_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    non_existent_feature_id = 99999
+
+    # When
+    response = api_client.get(
+        f"/api/v1/flags/{non_existent_feature_id}/multivariate-options/"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
+    admin_client_new: APIClient,
+    project: Project,
+    optional_b_feature_metadata_field: MetadataModelField,
+) -> None:
+    """
+    Test that creating multiple features with metadata keeps metadata properly isolated.
+    This is a regression test for the bug where creating a second feature would remove
+    metadata from the first feature if the user sent the first feature's metadata ID.
+    """
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # Create first feature with metadata
+    first_feature_data = {
+        "name": "First Feature",
+        "description": "First feature description",
+        "metadata": [
+            {
+                "model_field": optional_b_feature_metadata_field.id,
+                "field_value": "100",
+            },
+        ],
+    }
+
+    # When - Create first feature
+    first_response = admin_client_new.post(
+        url, data=json.dumps(first_feature_data), content_type="application/json"
+    )
+
+    # Then - First feature should be created successfully
+    assert first_response.status_code == status.HTTP_201_CREATED
+    first_feature_id = first_response.json()["id"]
+    first_metadata = first_response.json()["metadata"]
+    assert len(first_metadata) == 1
+    assert first_metadata[0]["field_value"] == "100"
+    first_metadata_id = first_metadata[0]["id"]
+
+    # Given - Create second feature
+    second_feature_data = {
+        "name": "Second Feature",
+        "description": "Second feature description",
+        "metadata": [
+            {
+                "id": first_metadata_id,  # user mistakenly sends existing metadata ID
+                "model_field": optional_b_feature_metadata_field.id,
+                "field_value": "200",
+            },
+        ],
+    }
+
+    # When - Create second feature
+    second_response = admin_client_new.post(
+        url, data=json.dumps(second_feature_data), content_type="application/json"
+    )
+
+    # Then - Second feature should be created successfully
+    assert second_response.status_code == status.HTTP_201_CREATED
+    second_feature_id = second_response.json()["id"]
+    second_metadata = second_response.json()["metadata"]
+    assert len(second_metadata) == 1
+    assert second_metadata[0]["field_value"] == "200"
+    # The metadata ID should be different (new metadata instance created)
+    assert second_metadata[0]["id"] != first_metadata_id
+
+    # When - Retrieve first feature to verify metadata is still there
+    first_feature_url = reverse(
+        "api-v1:projects:project-features-detail", args=[project.id, first_feature_id]
+    )
+    first_feature_check = admin_client_new.get(first_feature_url)
+
+    # Then - First feature should still have its metadata
+    assert first_feature_check.status_code == status.HTTP_200_OK
+    first_feature_metadata_after = first_feature_check.json()["metadata"]
+    assert len(first_feature_metadata_after) == 1
+    assert first_feature_metadata_after[0]["field_value"] == "100"
+    assert first_feature_metadata_after[0]["id"] == first_metadata_id
+
+    # When - Retrieve second feature to verify metadata
+    second_feature_url = reverse(
+        "api-v1:projects:project-features-detail",
+        args=[project.id, second_feature_id],
+    )
+    second_feature_check = admin_client_new.get(second_feature_url)
+
+    # Then - Second feature should have its own metadata
+    assert second_feature_check.status_code == status.HTTP_200_OK
+    second_feature_metadata_after = second_feature_check.json()["metadata"]
+    assert len(second_feature_metadata_after) == 1
+    assert second_feature_metadata_after[0]["field_value"] == "200"

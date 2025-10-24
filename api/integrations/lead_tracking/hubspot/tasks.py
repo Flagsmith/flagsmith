@@ -66,7 +66,7 @@ def update_hubspot_active_subscription(subscription_id: int) -> None:
 
 @register_task_handler()
 def create_self_hosted_onboarding_lead_task(
-    email: str, first_name: str, last_name: str, organisation_name: str
+    email: str, first_name: str, last_name: str, hubspot_cookie: str = ""
 ) -> None:
     # Avoid circular imports.
     from integrations.lead_tracking.hubspot.services import (
@@ -77,5 +77,5 @@ def create_self_hosted_onboarding_lead_task(
         first_name=first_name,
         last_name=last_name,
         email=email,
-        organisation_name=organisation_name,
+        hubspot_cookie=hubspot_cookie,
     )

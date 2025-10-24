@@ -17,6 +17,7 @@ import { useGetSegmentQuery } from 'common/services/useSegment'
 import { useGetProjectQuery } from 'common/services/useProject'
 import DiffSegment from 'components/diff/DiffSegment'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import { useHistory } from 'react-router-dom'
 
 type ProjectChangeRequestPageType = {
   router: RouterChildContext['router']
@@ -30,9 +31,9 @@ type ProjectChangeRequestPageType = {
 
 const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
   match,
-  router,
 }) => {
   const { id, projectId } = match.params
+  const history = useHistory()
   const approvePermission = useHasPermission({
     id: projectId,
     level: 'project',
@@ -122,7 +123,7 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
         }).then((res) => {
           // @ts-ignore
           if (!res.error) {
-            router.history.replace(`/project/${projectId}/change-requests`)
+            history.replace(`/project/${projectId}/change-requests`)
             toast('Deleted change request')
           } else {
             toast('Could not delete change request', 'danger')

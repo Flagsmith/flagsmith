@@ -74,7 +74,7 @@ export const clickSegmentByName = async (name: string) => {
    await t.expect(el.visible).ok(`segment "${name}" not visible`, { timeout: LONG_TIMEOUT })
    await t.click(el)
   }
-  
+
 export const logResults = async (requests: LoggedRequest[], t) => {
   if (!t.testRun?.errs?.length) {
     log('Finished without errors')
@@ -340,17 +340,18 @@ export const cloneSegment = async (index: number, name: string) => {
   await waitForElementVisible(byId(`segment-${index + 1}-name`))
 }
 
+export const deleteSegmentFromPage = async (name:string) => {
+  await click(byId(`remove-segment-btn`))
+  await setText('[name="confirm-segment-name"]', name)
+  await click('#confirm-remove-segment-btn')
+  await waitForElementVisible(byId('show-create-segment-btn'))
+}
 export const deleteSegment = async (
   index: number,
   name: string,
-  legacyDelete = true,
 ) => {
-  if (legacyDelete) {
-    await click(byId(`remove-segment-btn-${index}`))
-  } else {
-    await click(byId(`segment-action-${index}`))
-    await click(byId(`segment-remove-${index}`))
-  }
+  await click(byId(`segment-action-${index}`))
+  await click(byId(`segment-remove-${index}`))
   await setText('[name="confirm-segment-name"]', name)
   await click('#confirm-remove-segment-btn')
   await waitForElementNotExist(`remove-segment-btn-${index}`)
@@ -490,6 +491,7 @@ export const editRemoteConfig = async (
   await closeModal()
 }
 export const closeModal = async () => {
+  log('Close Modal')
   await t.click('body', {
     offsetX: 50,
     offsetY: 50,
@@ -582,7 +584,6 @@ export const createSegment = async (
   await click(byId('create-segment'))
   await waitForElementVisible(byId(`segment-${index}-name`))
   await assertTextContent(byId(`segment-${index}-name`), id)
-  await closeModal()
 }
 
 export const waitAndRefresh = async (waitFor = 3000) => {

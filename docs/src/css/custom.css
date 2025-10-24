@@ -64,6 +64,9 @@
   border-radius: 8px;
   transition: all 0.2s ease;
   border: 1px solid var(--ifm-color-primary-lightest);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 [data-theme='light'] .card {
@@ -80,8 +83,14 @@
 .card:hover {
   transform: translateY(-4px);
   box-shadow: 0px 8px 16px rgba(35, 41, 54, 0.1);
-  background: var(--card-bg-hover)
+  background: var(--card-bg-hover);
+  color: white;
+  p {
+    color: white;
+  }
 }
+
+
 
 /* Card title and text styles */
 .card h3 {
@@ -97,6 +106,7 @@
   line-height: 1.5;
   color: var(--ifm-color-emphasis-700);
   margin-bottom: 1rem;
+  flex-grow: 1;
 }
 
 /* Card link styles */
@@ -147,7 +157,7 @@
 
 .get>.menu__link::before {
   content: "get";
-  background-color: var(--ifm-color-primary);
+  background-color: #2e8555;
 }
 
 .put>.menu__link::before {
@@ -203,8 +213,6 @@
   text-align: left;
 }
 
-
-
 /* Icon styles */
 .card-icon {
   font-size: 30px !important; /* Increased from 24px */
@@ -219,6 +227,11 @@ main.container {
   padding-bottom: 5rem;
 }
 
+/* Badge colors specifically for API content area */
+.openapi__heading ~ * .badge--primary {
+  background-color: #2e8555 !important;
+  border-color: #2e8555 !important;
+}
 
 
 

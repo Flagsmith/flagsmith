@@ -32,9 +32,6 @@ const OrganisationUsersTableRow: React.FC<OrganisationUsersTableRowProps> = ({
   const roleChanged = (id: number, { value: role }: { value: string }) => {
     AppActions.updateUserRole(id, role)
   }
-  const isInspectPermissionsEnabled = Utils.getFlagsmithHasFeature(
-    'inspect_permissions',
-  )
   return (
     <Row
       data-test={`user-${email}`}
@@ -115,9 +112,7 @@ const OrganisationUsersTableRow: React.FC<OrganisationUsersTableRowProps> = ({
           onEdit={onEditClick}
           canRemove={AccountStore.isAdmin()}
           canEdit={AccountStore.isAdmin()}
-          canInspectPermissions={
-            isInspectPermissionsEnabled && AccountStore.isAdmin()
-          }
+          canInspectPermissions={AccountStore.isAdmin()}
           onInspectPermissions={() => {
             inspectPermissions(user, organisation.id)
           }}

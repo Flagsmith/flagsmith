@@ -189,10 +189,7 @@ const App = class extends Component {
             return
           }
 
-          if (
-            Utils.getFlagsmithHasFeature('welcome_page') &&
-            AccountStore.getUser()?.isGettingStarted
-          ) {
+          if (AccountStore.getUser()?.isGettingStarted) {
             this.props.history.replace('/getting-started')
           } else {
             this.props.history.replace(Utils.getOrganisationHomePage())
