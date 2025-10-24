@@ -38,7 +38,7 @@ jobs:
           aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-2
-          mask-aws-account-id: "no"
+          mask-aws-account-id: 'no'
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -62,6 +62,7 @@ jobs:
           build-args: CI_COMMIT_SHA=${{ github.sha }}
           secrets: |
             github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+            "sse_pgp_pkey=${{ secrets.SSE_PGP_PRIVATE_KEY }}"
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
