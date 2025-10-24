@@ -1,7 +1,7 @@
 name: Feature request 🏗️
 description: Suggest a new feature or change for Flagsmith
 projects: ["engineering"]
-type: "enhancement"
+type: enhancement
 
 body:
   - type: markdown
