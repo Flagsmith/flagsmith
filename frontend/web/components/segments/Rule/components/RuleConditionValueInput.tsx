@@ -107,7 +107,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
     const TRAILING_WHITESPACE = /\s$/
 
     if (value.length >= 1 && value.trim() === '') {
-      return { hasWarning: true, message: 'This value is only whitespaces' }
+      return { message: 'This value is only whitespaces' }
     }
 
     const items = value.split(',')
@@ -137,26 +137,22 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
       if (totalIssues > 0) {
         if (hasMultipleIssues) {
           return {
-            hasWarning: true,
             message: `${totalIssues} item(s) have whitespace issues`,
           }
         }
         
         if (counts.both > 0) {
           return {
-            hasWarning: true,
             message: `${counts.both} item(s) have leading and trailing whitespaces`,
           }
         }
         if (counts.leading > 0) {
           return {
-            hasWarning: true,
             message: `${counts.leading} item(s) have leading whitespaces`,
           }
         }
         if (counts.trailing > 0) {
           return {
-            hasWarning: true,
             message: `${counts.trailing} item(s) have trailing whitespaces`,
           }
         }
@@ -168,22 +164,21 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
 
     if (hasLeading && hasTrailing) {
       return {
-        hasWarning: true,
         message: 'This value starts and ends with whitespaces',
       }
     }
     if (hasLeading) {
-      return { hasWarning: true, message: 'This value starts with whitespaces' }
+      return { message: 'This value starts with whitespaces' }
     }
     if (hasTrailing) {
-      return { hasWarning: true, message: 'This value ends with whitespaces' }
+      return { message: 'This value ends with whitespaces' }
     }
 
     return null
   }
 
   const whitespaceCheck = checkWhitespaceIssues()
-  const hasWarning = whitespaceCheck?.hasWarning || false
+  const hasWarning = !!whitespaceCheck
   const isLongText = String(value).length >= 10
 
   const validate = () => {
