@@ -15,7 +15,7 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
   forceRefetch,
   projectId,
 }) => {
-  const { data, refetch } = useGetEnvironmentMetricsQuery({
+  const { data, isLoading, refetch } = useGetEnvironmentMetricsQuery({
     id: environmentApiKey,
   })
 
@@ -30,13 +30,9 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
     }
   }, [forceRefetch, refetch])
 
-  if (!data || data.metrics.length === 0) {
-    return null
-  }
-
   return (
     <div className='mb-3'>
-      <AccordionCard title='Summary'>
+      <AccordionCard title='Summary' isLoading={isLoading}>
         <div className='flex gap-2 mt-4'>
           <div
             className='metrics-grid'

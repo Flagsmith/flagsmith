@@ -15,7 +15,6 @@ export default function useDebouncedSearch(initialValue = '') {
   }, debounceTime)
 
   const handleSearchInput = (value: string) => {
-    console.log(debounceTime)
     setSearchInput(value)
     debouncedSearch(value)
   }

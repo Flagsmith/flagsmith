@@ -3,7 +3,7 @@ import { FlagsmithValue } from 'common/types/responses'
 import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
 import { getViewMode } from 'common/useViewMode'
-import classNames from 'classnames' // we need this to make JSX compile
+import classNames from 'classnames'
 
 type FeatureValueType = {
   value: FlagsmithValue

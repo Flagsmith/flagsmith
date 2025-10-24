@@ -45,11 +45,7 @@ const CreateOrganisationPage: React.FC = () => {
         })
       }
 
-      if (Utils.getFlagsmithHasFeature('welcome_page')) {
-        history.push('/getting-started')
-      } else {
-        history.push(Utils.getOrganisationHomePage(id))
-      }
+      history.push('/getting-started')
     }
     AccountStore.on('change', onChangeAccountStore)
     AccountStore.on('saved', onSave)

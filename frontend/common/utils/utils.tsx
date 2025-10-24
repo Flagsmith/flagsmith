@@ -489,7 +489,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'FLAG_OWNERS':
       case 'RBAC':
       case 'AUDIT':
-      case 'FORCE_2FA':
       case '4_EYES_PROJECT':
       case '4_EYES': {
         plan = 'scale-up'

@@ -15,7 +15,12 @@ from django.views.decorators.vary import vary_on_headers
 from drf_yasg import openapi  # type: ignore[import-untyped]
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import mixins, serializers, status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import (
+    action,
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -50,6 +55,9 @@ from webhooks.webhooks import WebhookEventType
 from .constants import INTERSECTION, UNION
 from .features_service import get_overrides_data
 from .models import Feature, FeatureState
+from .multivariate.serializers import (
+    FeatureMVOptionsValuesResponseSerializer,
+)
 from .permissions import (
     CreateSegmentOverridePermissions,
     EnvironmentFeatureStatePermissions,
@@ -859,7 +867,9 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         from_replica: bool = False,
     ) -> list[typing.Any]:
         data: list[typing.Any]
-        data = flags_cache.get(environment.api_key)
+        # Include request origin in cache key to isolate client vs server requests
+        cache_key = f"{environment.api_key}:{self.request.originated_from.value}"
+        data = flags_cache.get(cache_key)
         if not data:
             data = self.get_serializer(
                 get_environment_flags_list(
@@ -869,7 +879,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
                 ),
                 many=True,
             ).data
-            flags_cache.set(environment.api_key, data, settings.CACHE_FLAGS_SECONDS)
+            flags_cache.set(cache_key, data, settings.CACHE_FLAGS_SECONDS)
 
         return data
 
@@ -903,6 +913,42 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         feature_states = identity.get_all_feature_states()
         flags = self.get_serializer(feature_states, many=True)
         return Response(flags.data, status=status.HTTP_200_OK)
+
+
+@swagger_auto_schema(  # type: ignore[misc]
+    method="GET",
+    responses={200: FeatureMVOptionsValuesResponseSerializer(many=True)},
+)
+@api_view(["GET"])
+@authentication_classes(
+    [
+        EnvironmentKeyAuthentication,
+    ]
+)
+@permission_classes([EnvironmentKeyPermissions])
+def get_multivariate_options(request: Request, feature_id: int) -> Response:
+    environment = request.environment
+    feature = get_object_or_404(Feature, id=feature_id, project=environment.project)
+    fs = (
+        FeatureState.objects.get_live_feature_states(
+            environment=environment,
+            additional_filters=Q(
+                identity__isnull=True,
+                feature_segment__isnull=True,
+                feature_id=feature.id,
+            ),
+        )
+        .filter(feature__is_archived=False)
+        .select_related("feature_state_value")
+        .first()
+    )
+
+    payload = {
+        "feature_state": fs,
+        "options": feature.multivariate_options.all(),
+    }
+    data = FeatureMVOptionsValuesResponseSerializer(payload).data
+    return Response(data)
 
 
 def organisation_has_got_feature(request, organisation):  # type: ignore[no-untyped-def]

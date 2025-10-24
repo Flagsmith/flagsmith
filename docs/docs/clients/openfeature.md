@@ -24,11 +24,7 @@ following languages:
 - [Java](https://github.com/open-feature/java-sdk-contrib/tree/main/providers/flagsmith)
 - [.Net](https://github.com/open-feature/dotnet-sdk-contrib/tree/main/src/OpenFeature.Contrib.Providers.Flagsmith)
 - [JavaScript/Web](https://github.com/open-feature/js-sdk-contrib/tree/main/libs/providers/flagsmith-client)
-
-### Beta Providers
-
-The following OpenFeature Providers are currently being implemented:
-
+- [JavaScript/Server](https://github.com/open-feature/js-sdk-contrib/tree/main/libs/providers/flagsmith)
 - [Python](https://github.com/Flagsmith/flagsmith-openfeature-provider-python)
 
 ### Planned Providers

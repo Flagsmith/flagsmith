@@ -14,6 +14,7 @@ type InfoMessageType = {
   title?: string
   url?: string
   close?: () => void
+  defaultClosed?: boolean
 }
 
 const InfoMessage: FC<InfoMessageType> = ({
@@ -21,6 +22,7 @@ const InfoMessage: FC<InfoMessageType> = ({
   children,
   close,
   collapseId,
+  defaultClosed = false,
   icon,
   isClosable,
   title = 'NOTE',
@@ -33,7 +35,7 @@ const InfoMessage: FC<InfoMessageType> = ({
         localStorage.getItem(`infoMessageCollapsed_${collapseId}`) || 'false',
       )
     }
-    return false
+    return defaultClosed
   })
 
   useEffect(() => {
