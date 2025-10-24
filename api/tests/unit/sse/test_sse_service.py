@@ -223,3 +223,58 @@ def test_stream_access_logs_reraises_non_nosuchkey_errors(
         list(stream_access_logs())
 
     assert exc_info.value.response["Error"]["Code"] == "AccessDenied"
+
+
+def test_stream_access_logs_respects_timeout(
+    mocker: MockerFixture, aws_credentials: None
+) -> None:
+    # Given - Mock bucket with multiple objects
+    mock_obj_1 = mocker.MagicMock()
+    mock_obj_1.key = "file1"
+    mock_obj_1.get.return_value = {"Body": mocker.MagicMock(read=lambda: b"data1")}
+
+    mock_obj_2 = mocker.MagicMock()
+    mock_obj_2.key = "file2"
+    mock_obj_2.get.return_value = {"Body": mocker.MagicMock(read=lambda: b"data2")}
+
+    mock_obj_3 = mocker.MagicMock()
+    mock_obj_3.key = "file3"
+    mock_obj_3.get.return_value = {"Body": mocker.MagicMock(read=lambda: b"data3")}
+
+    mock_bucket = mocker.MagicMock()
+    mock_bucket.objects.all.return_value = [mock_obj_1, mock_obj_2, mock_obj_3]
+
+    mocker.patch(
+        "sse.sse_service.boto3.resource"
+    ).return_value.Bucket.return_value = mock_bucket
+
+    # Mock GPG to return valid log data
+    mocker.patch(
+        "sse.sse_service.gnupg.GPG"
+    ).return_value.decrypt.return_value = mocker.MagicMock(
+        data=b"2023-11-27T06:42:47+0000,test_key"
+    )
+
+    # Mock time.time() to simulate timeout after processing first file
+    mock_time = mocker.patch("sse.sse_service.time.time")
+    mock_time.side_effect = [
+        0,  # start_time
+        0,  # first check (before file 1) - elapsed = 0
+        10,  # second check (before file 2) - elapsed = 10 (exceeds timeout)
+    ]
+
+    mocked_logger = mocker.patch("sse.sse_service.logger")
+
+    # When - Stream with a 5 second timeout
+    logs = list(stream_access_logs(timeout_seconds=5))
+
+    # Then - Should only process first file and stop at timeout
+    assert len(logs) == 1
+    mock_obj_1.delete.assert_called_once()
+    mock_obj_2.delete.assert_not_called()
+    mock_obj_3.delete.assert_not_called()
+
+    mocked_logger.warning.assert_called_once_with(
+        "stream_access_logs timeout reached after %.2f seconds, stopping log processing",
+        10,
+    )
