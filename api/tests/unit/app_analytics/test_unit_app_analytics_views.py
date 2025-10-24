@@ -58,6 +58,7 @@ def test_sdk_analytics_ignores_bad_data(
         labels={},
     )
 
+
 def test_sdk_analytics_ignores_feature_data_with_dots(
     mocker: MockerFixture,
     environment: Environment,
@@ -67,7 +68,7 @@ def test_sdk_analytics_ignores_feature_data_with_dots(
     # Given
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
-    data = { feauture_with_dots.name: 20 }
+    data = {feauture_with_dots.name: 20}
     mocked_feature_eval_cache = mocker.patch(
         "app_analytics.views.feature_evaluation_cache"
     )
