@@ -6,7 +6,7 @@ import Utils from 'common/utils/utils'
 import { getDarkMode } from 'project/darkMode'
 import EnvironmentSelectDropdown from './EnvironmentSelectDropdown'
 import TextAreaModal from './TextAreaModal'
-import { checkWhitespaceIssues } from '../utils/whitespaceValidation'
+import { checkWhitespaceIssues } from '../utils'
 
 type RuleConditionValueInputProps = {
   'data-test'?: string
@@ -62,6 +62,8 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
           <Input
             type='text'
             data-test={props['data-test']}
+            name='rule-condition-value-input'
+            aria-label='Rule condition value input'
             value={value}
             inputClassName={
               showIcon ? `pr-5 ${hasWarning ? 'border-warning' : ''}` : ''
@@ -83,7 +85,11 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
                     onClick={() => {
                       openModal2(
                         'Edit Value',
-                        <TextAreaModal value={value} onChange={onChange} />,
+                        <TextAreaModal 
+                          value={value} 
+                          onChange={onChange} 
+                          operator={operator}
+                        />,
                       )
                     }}
                   >

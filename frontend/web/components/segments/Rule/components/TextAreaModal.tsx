@@ -1,20 +1,25 @@
 import React, { useState, FC } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
+import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
 import ModalHR from 'components/modals/ModalHR'
+import { checkWhitespaceIssues } from '../utils'
 
 type TextAreaModalProps = {
   value: string | number | boolean
   onChange?: (value: string) => void
+  operator?: string
 }
 
-const TextAreaModal: FC<TextAreaModalProps> = ({ onChange, value }) => {
+const TextAreaModal: FC<TextAreaModalProps> = ({ onChange, value, operator }) => {
   const [textAreaValue, setTextAreaValue] = useState(value)
+  const whitespaceCheck = checkWhitespaceIssues(textAreaValue, operator)
+  const hasWarning = !!whitespaceCheck
 
   return (
     <div>
-      <div className='modal-body'>
+      <div className='modal-body d-flex flex-column gap-1'>
         <InputGroup
           id='rule-value-textarea'
           data-test='rule-value-textarea'
@@ -23,10 +28,30 @@ const TextAreaModal: FC<TextAreaModalProps> = ({ onChange, value }) => {
             const value = Utils.safeParseEventValue(e)
             setTextAreaValue(value.replace(/\n/g, ''))
           }}
+          noMargin
+          inputProps={{
+            className: hasWarning ? 'border-warning' : '',
+          }}
           type='text'
           className='w-100'
           textarea
         />
+        <div
+          style={{
+            minHeight: '20px',
+            transition: 'opacity 0.25s ease-in-out',
+            opacity: hasWarning ? 1 : 0,
+          }}
+        >
+          {hasWarning && (
+            <div className='text-warning d-flex align-items-start gap-2'>
+              <span className='d-flex' style={{ alignSelf: 'center' }}>
+                <Icon name='warning' width={16} height={16} />
+              </span>
+              <span>{whitespaceCheck?.message}</span>
+            </div>
+          )}
+        </div>
       </div>
       <ModalHR />
       <div className='modal-footer'>
