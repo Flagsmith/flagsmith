@@ -228,7 +228,7 @@ jobs:
             }
 
       - name: Checkout Target Charts Repository to update yaml
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: flagsmith/flagsmith-charts
           path: chart

@@ -23,6 +23,7 @@ import { useGetIdentitiesQuery } from 'common/services/useIdentity'
 import {
   useCreateSegmentMutation,
   useGetSegmentQuery,
+  useGetSegmentsQuery,
   useUpdateSegmentMutation,
 } from 'common/services/useSegment'
 import Utils from 'common/utils/utils'
@@ -46,6 +47,7 @@ import ExistingProjectChangeRequestAlert from 'components/ExistingProjectChangeR
 import CreateSegmentRulesTabForm from './CreateSegmentRulesTabForm'
 import CreateSegmentUsersTabContent from './CreateSegmentUsersTabContent'
 import useDebouncedSearch from 'common/useDebouncedSearch'
+import API from 'project/api'
 
 type PageType = {
   number: number
@@ -135,6 +137,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
       },
     ],
   }
+  const { data: segments } = useGetSegmentsQuery({
+    include_feature_specific: true,
+    projectId,
+  })
   const [segment, setSegment] = useState(_segment || defaultSegment)
   const [description, setDescription] = useState(segment.description)
   const [name, setName] = useState<Segment['name']>(segment.name)
@@ -247,10 +253,13 @@ const CreateSegment: FC<CreateSegmentType> = ({
             },
           }).unwrap()
         } else {
-          await createSegment({
+          const res = await createSegment({
             projectId,
             segment: segmentData,
           }).unwrap()
+          if (!segments?.results?.length) {
+            API.trackEvent(Constants.events.CREATE_FIRST_SEGMENT)
+          }
         }
       }
     } catch (error: any) {
@@ -314,7 +323,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
         project_id: `${projectId}`,
       })
 
-      closeModal()
       toast('Created change request')
     } catch (error) {
       console.error('Failed to create change request:', error)
@@ -343,6 +351,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   useEffect(() => {
     if (createSuccess && createSegmentData) {
       setSegment(createSegmentData)
+      toast('Created segment')
       onComplete?.(createSegmentData)
     }
     //eslint-disable-next-line
@@ -350,6 +359,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   useEffect(() => {
     if (updateSuccess && updateSegmentData) {
       setSegment(updateSegmentData)
+      toast('Updated segment')
       onComplete?.(updateSegmentData)
     }
     //eslint-disable-next-line
@@ -488,7 +498,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </Row>
             }
           >
-            <div className='my-4'>
+            <div className='my-4 col-lg-8'>
               <CreateSegmentRulesTabForm
                 is4Eyes={is4Eyes}
                 onCreateChangeRequest={onCreateChangeRequest}
@@ -516,7 +526,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           <TabItem tabLabel='Features'>
-            <div className='my-4'>
+            <div className='my-4 col-lg-8'>
               <AssociatedSegmentOverrides
                 onUnsavedChange={() => {
                   setValueChanged(true)
@@ -529,18 +539,20 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>
-            <CreateSegmentUsersTabContent
-              projectId={projectId}
-              environmentId={environmentId}
-              setEnvironmentId={setEnvironmentId}
-              identitiesLoading={identitiesLoading}
-              identities={identities!}
-              page={page}
-              setPage={setPage}
-              name={name}
-              searchInput={searchInput}
-              setSearchInput={setSearchInput}
-            />
+            <div className='my-4 col-lg-8'>
+              <CreateSegmentUsersTabContent
+                projectId={projectId}
+                environmentId={environmentId}
+                setEnvironmentId={setEnvironmentId}
+                identitiesLoading={identitiesLoading}
+                identities={identities!}
+                page={page}
+                setPage={setPage}
+                name={name}
+                searchInput={searchInput}
+                setSearchInput={setSearchInput}
+              />
+            </div>
           </TabItem>
           {metadataEnable && segmentContentType?.id && (
             <TabItem
@@ -554,7 +566,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 </Row>
               }
             >
-              <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
+              <div className='my-4 col-lg-8'>{MetadataTab}</div>
             </TabItem>
           )}
         </Tabs>

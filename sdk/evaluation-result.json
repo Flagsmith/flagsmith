@@ -20,26 +20,31 @@
                 "value": {
                     "description": "Feature flag value.",
                     "title": "Value",
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                     ]
                 },
                 "reason": {
                     "description": "Reason for the feature flag evaluation.",
                     "title": "Reason",
                     "type": "string"
+                },
+                "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
+                    "description": "Additional metadata associated with the feature.",
+                    "title": "FeatureMetadata",
+                    "type": "object"
                 }
             },
             "required": [
                 "feature_key",
                 "name",
                 "enabled",
-                "feature"
+                "value",
+                "reason"
             ],
             "title": "FlagResult",
             "type": "object"
@@ -55,6 +60,12 @@
                     "description": "Segment name.",
                     "title": "Name",
                     "type": "string"
+                },
+                "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
+                    "description": "Additional metadata associated with the segment.",
+                    "title": "SegmentMetadata",
+                    "type": "object"
                 }
             },
             "required": [
@@ -67,16 +78,13 @@
     },
     "description": "Evaluation result object containing the used context, flag evaluation results, and segments used in the evaluation.",
     "properties": {
-        "context": {
-            "$ref": "https://raw.githubusercontent.com/Flagsmith/flagsmith/main/sdk/evaluation-context.json"
-        },
         "flags": {
-            "description": "List of feature flags evaluated for the context.",
-            "items": {
+            "description": "Feature flags evaluated for the context, mapped by feature names.",
+            "additionalProperties": {
                 "$ref": "#/$defs/FlagResult"
             },
             "title": "Flags",
-            "type": "array"
+            "type": "object"
         },
         "segments": {
             "description": "List of segments which the provided context belongs to.",
@@ -88,7 +96,6 @@
         }
     },
     "required": [
-        "context",
         "flags",
         "segments"
     ],

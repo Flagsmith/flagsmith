@@ -2,15 +2,46 @@ import React, { FC, FormEvent, useState } from 'react'
 import { Segment } from 'common/types/responses'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import InputGroup from 'components/base/forms/InputGroup'
-import Utils from 'common/utils/utils' // we need this to make JSX compile
+import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import ModalHR from './ModalHR'
+import { deleteSegment } from 'common/services/useSegment'
+import { getStore } from 'common/store'
 
 type ConfirmRemoveSegmentType = {
   segment: Segment
   cb: () => void
 }
-
+export const handleRemoveSegment = (
+  projectId: string,
+  segment: Segment,
+  onComplete?: () => void,
+) => {
+  const removeSegmentCallback = async () => {
+    try {
+      const res = await deleteSegment(getStore(), { id: segment.id, projectId })
+      if (res.error) throw new Error(res.error)
+      toast(
+        <div>
+          Removed Segment: <strong>{segment.name}</strong>
+        </div>,
+      )
+      onComplete?.()
+    } catch (error) {
+      toast(
+        <div>
+          Error removing segment: <strong>{segment.name}</strong>
+        </div>,
+        'danger',
+      )
+    }
+  }
+  openModal(
+    'Remove Segment',
+    <ConfirmRemoveSegment segment={segment} cb={removeSegmentCallback} />,
+    'p-0',
+  )
+}
 const ConfirmRemoveSegment: FC<ConfirmRemoveSegmentType> = ({
   cb,
   segment,
