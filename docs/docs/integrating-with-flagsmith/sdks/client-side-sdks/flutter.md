@@ -249,12 +249,6 @@ final flagsmithClient = FlagsmithClient(
 
 ## Real-time Flag Updates
 
-:::tip
-
-Real-time Flags are part of our SaaS Scale-Up and Enterprise plans.
-
-:::
-
 Real-time flag updates are disabled by default. You can enable them simply by changing the configuration as follows:
 
 ```dart
@@ -277,6 +271,8 @@ final flagsmithClient = FlagsmithClient(
           reconnctToSSEInterval: 15000,
       ), apiKey: 'YOUR_ENV_API_KEY');
 ```
+
+For further information on real-time flags see the full documentation [here](../../../performance/real-time-flags)
 
 ## Known issues
 

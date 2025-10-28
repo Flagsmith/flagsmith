@@ -4,12 +4,13 @@ sidebar_label: Real-time Flags
 sidebar_position: 20
 ---
 
+:::info
+
+Real-time flag updates require an Enterprise subscription.
+
+:::
+
 When an application fetches its current feature flags, it usually caches the flags for a certain amount of time to make [efficient use](/best-practices/efficient-api-usage) of the Flagsmith API and network resources. In some cases, you may want an application to be notified about feature flag updates without needing to repeatedly call the Flagsmith API. This guide explains how to achieve this by subscribing to real-time flag updates.
-
-## Prerequisites
-
-- Real-time flag updates require an Enterprise subscription.
-- Real-time flag updates are only available on the public SaaS Flagsmith instance. Self-hosted and private cloud Flagsmith installations do not support real-time flag updates.
 
 ## Setup
 
