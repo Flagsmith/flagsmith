@@ -19,7 +19,7 @@
 
 # [Flagsmith](https://flagsmith.com/) is an Open-Source Feature Flagging Tool to Ship Faster & Control Releases 
 
-Change the way your team releases software. Roll out, segment, and optimise—with granular control. Stay secure with on-premise and private cloud hosting.
+Change the way your team releases software. Roll out, segment, and optimise—with granular control. Stay secure with on-premise and private cloud hosting. 
 
 * Feature flags: Release features behind the safety of a feature flag
 * Make changes remotely: Easily toggle individual features on and off, and make changes without deploying new code
