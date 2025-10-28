@@ -75,15 +75,17 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
 
   const ALLOWED_CONTEXT_VALUES: OptionType[] = [
     {
-      disabled: operator === 'PERCENTAGE_SPLIT',
+      disabled: false,
       label: RuleContextLabels.IDENTITY_KEY,
       value: RuleContextValues.IDENTITY_KEY,
     },
     {
+      disabled: operator === 'PERCENTAGE_SPLIT',
       label: RuleContextLabels.IDENTIFIER,
       value: RuleContextValues.IDENTIFIER,
     },
     {
+      disabled: operator === 'PERCENTAGE_SPLIT',
       label: RuleContextLabels.ENVIRONMENT_NAME,
       value: RuleContextValues.ENVIRONMENT_NAME,
     },
