@@ -1757,9 +1757,10 @@ const CreateFlag = class extends Component {
                                                                 e.stopPropagation()
                                                                 removeUserOverride(
                                                                   {
-                                                                    cb: () => 
+                                                                    cb: () =>
                                                                       this.userOverridesPage(
-                                                                        1, true
+                                                                        1,
+                                                                        true,
                                                                       ),
                                                                     environmentId:
                                                                       this.props
