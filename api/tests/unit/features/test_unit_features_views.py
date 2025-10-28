@@ -4075,21 +4075,12 @@ def test_get_multivariate_options_feature_not_found_responds_404(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-@pytest.mark.parametrize(
-    "get_segment_id,expected_feature_state_value",
-    [
-        (lambda segment: segment.id, "segment_value"),
-        (lambda segment: segment.id + 9999, None),
-    ],
-)
-def test_list_features_segment_query_param(
+def test_list_features_segment_query_param_with_valid_segment(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
     environment: Environment,
     segment: Segment,
-    get_segment_id: typing.Callable[[Segment], int],
-    expected_feature_state_value: str | None,
 ) -> None:
     # Given
     feature_segment = FeatureSegment.objects.create(
@@ -4107,8 +4098,7 @@ def test_list_features_segment_query_param(
     segment_override.feature_state_value.save()
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    target_segment_id = get_segment_id(segment)
-    url = f"{base_url}?environment={environment.id}&segment={target_segment_id}"
+    url = f"{base_url}?environment={environment.id}&segment={segment.id}"
 
     # When
     response = admin_client_new.get(url)
@@ -4121,18 +4111,38 @@ def test_list_features_segment_query_param(
     )
 
     assert "environment_feature_state" in feature_data
-    assert "segment_feature_state" in feature_data
+    segment_state = feature_data["segment_feature_state"]
 
-    if expected_feature_state_value is None:
-        assert feature_data["segment_feature_state"] is None
-    else:
-        assert feature_data["segment_feature_state"] is not None
-        assert feature_data["segment_feature_state"]["id"] == segment_override.id
-        assert (
-            feature_data["segment_feature_state"]["feature_state_value"]
-            == expected_feature_state_value
-        )
-        assert feature_data["segment_feature_state"]["enabled"] is True
+    assert segment_state is not None
+    assert segment_state["id"] == segment_override.id
+    assert segment_state["feature_state_value"] == "segment_value"
+    assert segment_state["enabled"] is True
+
+
+def test_list_features_segment_query_param_with_invalid_segment(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    invalid_segment_id = segment.id + 9999
+    url = f"{base_url}?environment={environment.id}&segment={invalid_segment_id}"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    feature_data = next(
+        filter(lambda r: r["id"] == feature.id, response_json["results"])
+    )
+
+    assert "segment_feature_state" in feature_data
+    assert feature_data["segment_feature_state"] is None
 
 
 def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
