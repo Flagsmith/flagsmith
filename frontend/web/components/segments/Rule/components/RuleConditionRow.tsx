@@ -80,12 +80,10 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
       value: RuleContextValues.IDENTITY_KEY,
     },
     {
-      disabled: operator === 'PERCENTAGE_SPLIT',
       label: RuleContextLabels.IDENTIFIER,
       value: RuleContextValues.IDENTIFIER,
     },
     {
-      disabled: operator === 'PERCENTAGE_SPLIT',
       label: RuleContextLabels.ENVIRONMENT_NAME,
       value: RuleContextValues.ENVIRONMENT_NAME,
     },
