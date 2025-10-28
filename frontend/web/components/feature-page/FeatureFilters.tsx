@@ -60,6 +60,8 @@ export function getURLParamsFromFilters(f: FiltersValue) {
     owners: f.owners?.length ? f.owners.join(',') : undefined,
     page: f.page !== DEFAULTS.page ? String(f.page) : undefined,
     search: f.search || undefined,
+    sortBy: f.sort.sortBy,
+    sortOrder: f.sort.sortOrder,
     tag_strategy:
       f.tag_strategy !== DEFAULTS.tag_strategy
         ? String(f.tag_strategy)
@@ -69,7 +71,7 @@ export function getURLParamsFromFilters(f: FiltersValue) {
   }
 }
 // Gets expected filters from URL parameters
-export const getFiltersFromURLParams = (
+export const parseFiltersFromUrlParams = (
   params: Record<string, string | undefined>,
 ) => {
   return {
