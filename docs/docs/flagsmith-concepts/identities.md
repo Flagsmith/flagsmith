@@ -1,10 +1,10 @@
 ---
 title: Identities
 sidebar_label: Identities
-sidebar_position: 30
+sidebar_position: 4
 ---
 
-Feature flags are great, but they can be a very blunt tool, only allowing you to enable or disable flags across your entire user base. In order to target users more precisely, and to be able to perform [staged feature roll-outs](/guides-and-examples/staged-feature-rollouts.md) or [A/B and multivariate tests](/advanced-use/ab-testing.md), you need to _identify your users_.
+Feature flags are great, but they can be a very blunt tool, only allowing you to enable or disable flags across your entire user base. In order to target users more precisely, and to be able to perform [staged feature roll-outs](/managing-flags/rollout/rollout-by-percentage) or [A/B and multivariate tests](/experimentation-ab-testing), you need to _identify your users_.
 
 Identities are created within Flagsmith automatically the first time they are identified from your client SDKs. Generally, you would make a call to identify a user with a unique string or identifier whenever they log into your application or site. The SDK will then send an API message to the Flagsmith API, with the relevant identity information.
 
@@ -41,12 +41,13 @@ The maximum size of each individual trait value is **_2000 bytes_**. You cannot 
 
 Let's say you are working on a mobile app, and you want to control a feature based on the version of the application that the identity is using. When you integrate the Flagsmith SDK, you would pass the application version number to the Flagsmith platform as a trait key/value pair:
 
-```java
-String identifier = "user_512356"
-Map<String, Object> traits = new HashMap<String, Object>();
-traits.put("app_version", YourApplication.getVersion());
+```javascript
+const identifier = "user_512356";
+const traits = {
+  app_version: YourApplication.getVersion()
+}
 
-Flags flags = flagsmith.getIdentityFlags(identifier, traits);
+const flags = flagsmith.getIdentityFlags(identifier, traits);
 ```
 
 Here we are setting the trait key `app_version` with the value of `YourApplication.getVersion()`.You can now create a [segment](./segments) that is based on the application version and manage features based on the application version.
@@ -59,7 +60,7 @@ Identities are persisted within the Flagsmith platform, along with any traits th
 
 This can be useful if, at runtime, your application does not have all the relevant trait data available for that particular identity; any traits provided will be combined with the traits stored within Flagsmith before the evaluation engine runs.
 
-There are some [exceptions to this rule](/clients#server-side-sdks) with Server-side SDKs running in local evaluation mode.
+There are some [exceptions to this rule](/integrating-with-flagsmith/sdks/server-side) with Server-side SDKs running in local evaluation mode.
 
 :::info
 
@@ -80,7 +81,7 @@ Traits are stored natively as either numbers, strings or booleans.
 
 ## Traits Powering Segments
 
-Traits can be used within your application, but they can also be used to power [segments](/basic-features/segments.md).
+Traits can be used within your application, but they can also be used to power [segments](/flagsmith-concepts/segments).
 
 ## Trait Value Data Types
 
@@ -92,18 +93,18 @@ You can remove a trait by sending `null` as the trait value.
 
 Trait values can be stored as one of four different data types:
 
-- Boolean
-- String (max length 2000 bytes)
-- Int (32 bit signed)
-- Float (typically has a range of around 1E-307 to 1E+308 with a precision of at least 15 digits)
+- Boolean.
+- String (max length 2000 bytes).
+- Int (32 bit signed).
+- Float (typically has a range of around 1E-307 to 1E+308 with a precision of at least 15 digits).
 
 If you need to store 64 bit integers or very high precision floats we suggest storing them as strings and then doing the type conversion within the SDK.
 
 ## Bulk Uploading Identities and Traits
 
-Identities are lazily created within Flagsmith. There might be instances where you want to push identity and trait data into the platform outside of a user session. We have a [code example for this](/clients/rest#bulk-uploading-identities-and-traits).
+Identities are lazily created within Flagsmith. There might be instances where you want to push identity and trait data into the platform outside of a user session. We have [bulk upload API endpoints](/edge-api/bulk-insert-identities-update) for this.
 
 For more information, see:
 
-- [Managing identities](/basic-features/managing-identities)
+- [Managing identities](/flagsmith-concepts/identities).
 

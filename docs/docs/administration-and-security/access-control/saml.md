@@ -140,7 +140,7 @@ Once you have confirmed your SAML configuration is working, you can prevent user
 
 When a user clicks on "Single Sign-On" at the Flagsmith login screen, they will be prompted to enter the name of a SAML configuration. If you are self-hosting Flagsmith, you can skip this step and always use a specific SAML configuration by setting up the `sso_idp` [Flagsmith-on-Flagsmith](https://docs.flagsmith.com/deployment#running-flagsmith-on-flagsmith) flag. The text value of this flag should be the name of the SAML configuration to use.
 
-If you are using Flagsmith private cloud, [contact Flagsmith support](/support) once you have created your SAML configuration and validated it works correctly.
+If you are using Flagsmith private cloud, [contact Flagsmith support](https://www.flagsmith.com/contact-us) once you have created your SAML configuration and validated it works correctly.
 
 ## Canonicalization methods
 
@@ -158,4 +158,4 @@ You can configure Flagsmith to ignore the `X-Forwarded-Proto` HTTP header and al
 
 ## Troubleshooting
 
-If you need to [contact Flagsmith support](/support) or an administrator for help with SSO logins, the best way is to record and share a [HAR file](https://support.zendesk.com/hc/en-us/articles/4408828867098-Generating-a-HAR-file-for-troubleshooting) from your web browser where you try to log in to Flagsmith using your SAML identity provider.
+If you need to [contact Flagsmith support](https://www.flagsmith.com/contact-us) or an administrator for help with SSO logins, the best way is to record and share a [HAR file](https://support.zendesk.com/hc/en-us/articles/4408828867098-Generating-a-HAR-file-for-troubleshooting) from your web browser where you try to log in to Flagsmith using your SAML identity provider.

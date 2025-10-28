@@ -177,7 +177,7 @@ following methods:
 
 * From the Flagsmith dashboard, click your organisation name in the top left. The organisation ID is displayed in 
   the URL bar: `https://flagsmith.example.com/organisation/YOUR_ORGANISATION_ID/...`.
-* From [Django Admin](/deployment/configuration/django-admin), browse to the Organisations section in the sidebar. 
+* From [Django Admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin), browse to the Organisations section in the sidebar. 
   Here you can see all of your organisations and their IDs. 
 * If you have an Admin API key, call the
   [List Organisations API endpoint](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_organisations_list). This 
@@ -234,7 +234,7 @@ S3.
 ### Accessing an imported organisation
 
 After you import an organisation, you will need to add your Flagsmith user to it. To do this, edit the imported
-organisation from [Django Admin](/deployment/configuration/django-admin) and add your user to it with Admin permissions:
+organisation from [Django Admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin) and add your user to it with Admin permissions:
 
 ![](django-admin.png)
 

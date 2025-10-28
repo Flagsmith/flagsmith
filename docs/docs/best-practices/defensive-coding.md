@@ -1,7 +1,7 @@
 ---
 title: Defensive Coding and Designing for Failure
 sidebar_label: Defensive Coding
-sidebar_position: 30
+sidebar_position: 4
 ---
 
 Introducing feature flags and remote config to your applications can provide a wealth of benefits, but there are also a few drawbacks. Fortunately, the majority of these can be avoided through [defensive coding](#defensive-coding) and sensible approaches to default flags.
@@ -27,7 +27,7 @@ So with that in mind, here are some rules you can follow to avoid any issues ste
 
 The solution here really depends on which of our SDKs you are using. By default our Client SDKs will not block your main application thread, and are designed to work around an asynchronous callback model.
 
-Where our Server Side SDKs are being used, it really depends on if you are using them in [local or remote evaluation mode](/clients#networking-model). When running in local evaluation mode, once the SDKs have received a response from the API with the Environment related data, they will keep that data in memory. In the event of the SDKs then not receiving an update, they will continue to function.
+Where our Server Side SDKs are being used, it really depends on if you are using them in [local or remote evaluation mode](/integrating-with-flagsmith/integration-overview). When running in local evaluation mode, once the SDKs have received a response from the API with the Environment related data, they will keep that data in memory. In the event of the SDKs then not receiving an update, they will continue to function.
 
 In the event that the SDKs aren't able to contact the API at all, they will time out and resort to [Default flags](#progressively-enhance-your-application-with-default-flags). When running in remote evaluation mode, you will need to decide what the best approach is based on your particular application. Again, [Default flags](#progressively-enhance-your-application-with-default-flags) can help here.
 
@@ -45,7 +45,7 @@ Our Javascript SDK has the capability of caching the last received flags in the 
 
 ### The Edge API
 
-When our SDKs request their flags, they will make requests to our [Edge API](/advanced-use/edge-api.md). This infrastructure is serverless both at the compute and data-store, as well as being replicated across eight AWS regions. We also provide latency based routing and regional fault tolerance.
+When our SDKs request their flags, they will make requests to our [Edge API](/performance/edge-api). This infrastructure is serverless both at the compute and data-store, as well as being replicated across eight AWS regions. We also provide latency based routing and regional fault tolerance.
 
 What this means is that your application will be served by the nearest region to the request. In addition to this, in the event of the failure of an entire AWS region, requests will automatically be routed to the next nearest region.
 
@@ -57,13 +57,13 @@ In addition to this, by default our client-sde SDKs will only make a network cal
 
 ### Server side SDKs and local evaluation mode
 
-If you need sub-millisecond latency for end-to-end flag evaluation, for example in the event that you are running a multi-variate test on a landing page of your website, you can employ one of our Server Side SDKs running in [local evaluation mode](/clients#local-evaluation) mode. This will provide sub-millisecond latency of the entire flag evaluation rules engine, running locally within your server infrastructure, allowing you to run multivariate tests with zero latency impact.
+If you need sub-millisecond latency for end-to-end flag evaluation, for example in the event that you are running a multi-variate test on a landing page of your website, you can employ one of our Server Side SDKs running in [local evaluation mode](/integrating-with-flagsmith/integration-overview) mode. This will provide sub-millisecond latency of the entire flag evaluation rules engine, running locally within your server infrastructure, allowing you to run multivariate tests with zero latency impact.
 
 ### No proxy-server required
 
 We do not require you to run any infrastructure whatsoever to run our platform. There are no relays, proxies, caches or CDNs in between your client request and our API.
 
-We do have an [Edge Proxy](/advanced-use/edge-proxy) if required, but it is entirely optional.
+We do have an [Edge Proxy](/performance/edge-proxy) if required, but it is entirely optional.
 
 ### Bring your own CDN or DNS if you wish
 

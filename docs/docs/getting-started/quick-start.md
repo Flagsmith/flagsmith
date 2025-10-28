@@ -164,24 +164,24 @@ Return to your browser, refresh the page, and the button will reappear.
 This was a pretty quick demo, but it covers the core concepts involved in integrating Flagsmith into your application.
 From here, some areas of the documentation you might want to check out are:
 
-- A deeper overview of the application - [Features](basic-features/managing-features.md),
-  [Identities](basic-features/managing-identities.md) and [Segments](basic-features/segments.md).
-- More details about our [API and SDKs](clients/rest.md).
-- How you can [run Flagsmith yourself](/deployment) or use our [Hosted API](https://flagsmith.com/).
+- A deeper overview of the application - [Features](/managing-flags/core-management),
+  [Identities](/flagsmith-concepts/identities) and [Segments](/flagsmith-concepts/segments).
+- More details about our [API and SDKs](/integrating-with-flagsmith/integration-overview).
+- How you can [run Flagsmith yourself](/deployment-self-hosting/) or use our [Hosted API](https://flagsmith.com/).
 
 ## Next Steps
 
 ### Target Use Cases
-- [Advanced Targeting and Segmentation](../basic-features/segments.md): Learn how to target features to specific users, groups, or segments for advanced rollout strategies.
+- [Advanced Targeting and Segmentation](/flagsmith-concepts/segments): Learn how to target features to specific users, groups, or segments for advanced rollout strategies.
 
 ### Best Practices for Using Flags in Code
-- [When to use feature flags](../basic-features/index.md): Understand the core concepts and workflows for using feature flags effectively.
-- [Using flags in frontend and backend code](../basic-features/managing-features.md): Practical guidance and examples for both client and server-side usage.
-- [How to test your application using flags](../advanced-use/ab-testing.md): Strategies for testing and rolling out features safely.
+- [When to use feature flags](/best-practices/when-to-use-flags): Understand the core concepts and workflows for using feature flags effectively.
+- [Using flags in frontend and backend code](/integrating-with-flagsmith/integration-overview): Practical guidance and examples for both client and server-side usage.
+- [How to test your application using flags](/experimentation-ab-testing): Strategies for testing and rolling out features safely.
 
 ### Supported SDKs
-- [SDKs & Integrations](../clients/): Explore all supported SDKs for integrating Flagsmith with your technology stack.
+- [SDKs & Integrations](/integrating-with-flagsmith/integration-overview): Explore all supported SDKs for integrating Flagsmith with your technology stack.
 
 ### Automation & API Access
-- [REST API Reference](../clients/rest.md): Learn how to manage flags programmatically and automate flag changes.
+- [REST API Reference](/edge-api/): Learn how to manage flags programmatically and automate flag changes.
 

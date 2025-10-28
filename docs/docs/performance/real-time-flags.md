@@ -4,7 +4,7 @@ sidebar_label: Real-time Flags
 sidebar_position: 20
 ---
 
-When an application fetches its current feature flags, it usually caches the flags for a certain amount of time to make [efficient use](/guides-and-examples/efficient-api-usage) of the Flagsmith API and network resources. In some cases, you may want an application to be notified about feature flag updates without needing to repeatedly call the Flagsmith API. This guide explains how to achieve this by subscribing to real-time flag updates.
+When an application fetches its current feature flags, it usually caches the flags for a certain amount of time to make [efficient use](/best-practices/efficient-api-usage) of the Flagsmith API and network resources. In some cases, you may want an application to be notified about feature flag updates without needing to repeatedly call the Flagsmith API. This guide explains how to achieve this by subscribing to real-time flag updates.
 
 ## Prerequisites
 
@@ -23,7 +23,7 @@ By default, applications using a supported Flagsmith SDK do not subscribe to rea
 
 ## How it works
 
-The following sequence diagram shows how a typical application would use real-time flag updates. [Billable API requests](/billing) are highlighted in yellow.
+The following sequence diagram shows how a typical application would use real-time flag updates. [Billable API requests](/administration-and-security/billing-api-usage) are highlighted in yellow.
 
 ```mermaid
 sequenceDiagram
@@ -45,7 +45,7 @@ sequenceDiagram
 
 Your application subscribes to real-time flag updates by opening a long-lived [server-sent events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) connection to Flagsmith, which is specific to its current environment.
 
-When the environment is updated in some way, either via the Flagsmith dashboard or the [Admin API](/clients/rest#private-admin-api-endpoints), all clients connected to that environment's real-time stream will receive a message containing the latest update's timestamp. If your application's latest flags are older than the received timestamp, it requests the latest flags from Flagsmith. When your application receives the latest flags, you must propagate the latest flag state throughout your application as necessary.
+When the environment is updated in some way, either via the Flagsmith dashboard or the [Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api), all clients connected to that environment's real-time stream will receive a message containing the latest update's timestamp. If your application's latest flags are older than the received timestamp, it requests the latest flags from Flagsmith. When your application receives the latest flags, you must propagate the latest flag state throughout your application as necessary.
 
 ## Limitations
 
@@ -54,7 +54,7 @@ Real-time flag update events only contain a timestamp indicating when any flag i
 Only changes made to environments or projects result in flag update events. For example, the following operations will cause updates to be sent:
 
 - Manually toggling a flag on or off, or changing its value.
-- A [scheduled Change Request](/advanced-use/scheduled-flags) for a feature goes live.
+- A [scheduled Change Request](/managing-flags/scheduled-flags) for a feature goes live.
 - Creating or updating segment overrides for a feature.
 - Changing a segment definition.
 
@@ -96,6 +96,6 @@ curl -H 'Accept: text/event-stream' -N -i https://realtime.flagsmith.com/sse/env
 
 ## What's next?
 
-- [Efficient API Usage](/guides-and-examples/efficient-api-usage) – Tips for reducing API calls and making the most of your integration.
+- [Efficient API Usage](/best-practices/efficient-api-usage) – Tips for reducing API calls and making the most of your integration.
 - [Edge Proxy](/performance/edge-proxy) – Run the Flagsmith engine closer to your infrastructure for even lower latency.
-- [Integration Approaches](/guides-and-examples/integration-approaches) – Explore different ways to integrate Flagsmith into your applications.
+- [Integration Approaches](/best-practices/integration-approaches) – Explore different ways to integrate Flagsmith into your applications.

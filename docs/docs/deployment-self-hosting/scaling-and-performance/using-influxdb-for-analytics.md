@@ -54,7 +54,7 @@ data
  |> to(bucket: "default_downsampled_15m")
 ```
 
-Once this task has run, and you have made some flag evaluations with analytics enabled (see documentation [here](/advanced-use/flag-analytics.md) for information on this), you should see data in the 'Analytics' tab against each feature in your dashboard.
+Once this task has run, and you have made some flag evaluations with analytics enabled (see documentation [here](/managing-flags/flag-analytics) for information on this), you should see data in the 'Analytics' tab against each feature in your dashboard.
 
 8. Create another new task with the following query. This will downsample your per-millisecond API request data down to 1-hour blocks for faster queries. Set it to run every 1 hour.
 

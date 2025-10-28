@@ -1,7 +1,7 @@
 ---
 title: Platform Architecture
 sidebar_label: Platform Architecture
-sidebar_position: 20
+sidebar_position: 2
 ---
 
 # Flagsmith Platform Architecture
@@ -55,6 +55,6 @@ Flagsmith can be deployed in three main ways, each with conceptual differences i
 *The diagram above illustrates the Self-Hosted and On-Premises deployment models, where your team manages the infrastructure and has full control over security, compliance, and integrations.*
 
 ## What's next
-- [Deployment Options](/deployment)
-- [Version Comparison](/version-comparison)
-- [Enterprise Edition](/deployment/configuration/enterprise-edition)
+- [Deployment Options](/deployment-self-hosting)
+- [Version Comparison](https://flagsmith.com/pricing)
+- [Enterprise Edition](/deployment-self-hosting/enterprise-edition)

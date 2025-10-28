@@ -25,7 +25,7 @@ To create a new feature flag:
 
 :::tip
 
-By clicking the **Create A/B/n Test** button, you can define values for A/B testing. To learn more about this operation, refer to the [A/B Testing guide](../advanced-use/ab-testing).
+By clicking the **Create A/B/n Test** button, you can define values for A/B testing. To learn more about this operation, refer to the [A/B Testing guide](/experimentation-ab-testing).
 
 :::
 
@@ -45,7 +45,7 @@ If you just want to toggle the feature flag *on* or *off*, use the switch under 
 :::
 
 3. On the **Value** tab, you can set the feature flag to be on or off, as well as edit a value for it. Click **Update Feature Value** to save your changes.
-4. Optionally, create segment-specific feature flags and define **segment overrides**. Refer to the documentation to learn more about [segments](../basic-features/segments.md). Save any changes by clicking the **Update Segment Overrides** button.
+4. Optionally, create segment-specific feature flags and define **segment overrides**. Refer to the documentation to learn more about [segments](/flagsmith-concepts/segments). Save any changes by clicking the **Update Segment Overrides** button.
 5. On the **Settings** tab, you can:
     - Add tags to your feature flag.
     - Assign it to specific *users* and *groups*.
@@ -87,4 +87,4 @@ Deleting a feature flag is permanent and cannot be undone. Make sure your applic
 
 ### Permission Issues
 
-- You may need additional permissions to create, edit, clone, or delete feature flags. If you see permission errors or options are disabled, contact your Flagsmith administrator to review your access rights. For more information, see the [Permissions and Roles](../system-administration/rbac.md) page.
+- You may need additional permissions to create, edit, clone, or delete feature flags. If you see permission errors or options are disabled, contact your Flagsmith administrator to review your access rights. For more information, see the [Permissions and Roles](/administration-and-security/access-control/rbac) page.
