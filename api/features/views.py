@@ -682,7 +682,7 @@ class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [EnvironmentFeatureStatePermissions]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        queryset = super().get_queryset()  # type: ignore[no-untyped-call]
+        queryset = super().get_queryset().filter(feature_segment=None)  # type: ignore[no-untyped-call]
 
         if "anyIdentity" in self.request.query_params:
             # TODO: deprecate anyIdentity query parameter
