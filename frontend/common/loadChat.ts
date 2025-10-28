@@ -116,7 +116,6 @@ export function setupPylon() {
   }
 
   try {
-    // Set Pylon configuration using the documented window.pylon object
     window.pylon = {
       chat_settings: {
         account_id: String(user.id),
@@ -146,19 +145,6 @@ export default async function loadChat(forceDefaultAPIKey?: boolean) {
   try {
     const isWidget = document.location.href.includes('/widget')
     if (isWidget) return
-    // Wait for flagsmith to be initialized
-    await new Promise<void>((resolve) => {
-      if (flagsmith.getAllFlags()) {
-        resolve()
-      } else {
-        const checkInterval = setInterval(() => {
-          if (flagsmith.getAllFlags()) {
-            clearInterval(checkInterval)
-            resolve()
-          }
-        }, 100)
-      }
-    })
 
     const usePylon = flagsmith.hasFeature('pylon_chat')
     const pylonId = forceDefaultAPIKey ? defaultPylonID : Project.pylonAppId
