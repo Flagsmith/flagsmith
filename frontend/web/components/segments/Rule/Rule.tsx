@@ -97,6 +97,12 @@ const Rule: React.FC<RuleProps> = ({
       } else {
         updates.value = updates.value?.toString().split(':')[0]
       }
+    } else if (
+      // If previous operator was PERCENTAGE_SPLIT and property was IDENTITY_KEY, reset property
+      condition?.operator === 'PERCENTAGE_SPLIT' &&
+      condition?.property === RuleContextValues.IDENTITY_KEY
+    ) {
+      updates.property = ''
     }
 
     updateCondition(conditionIndex, updates)

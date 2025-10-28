@@ -1,7 +1,7 @@
 import Icon from 'components/Icon'
 import React from 'react'
 export interface OptionType {
-  enabled?: boolean
+  disabled?: boolean
   label: string
   value: string
 }
