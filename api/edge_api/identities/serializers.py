@@ -2,6 +2,7 @@ import copy
 import typing
 
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_field
 from flag_engine.features.models import FeatureModel as EngineFeatureModel
 from flag_engine.features.models import FeatureStateModel as EngineFeatureStateModel
 from flag_engine.features.models import (
@@ -140,6 +141,7 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):  # type: ignore[typ
         return FeatureStateValue(**feature_state_value_dict).value
 
 
+@extend_schema_field({"oneOf": [{"type": "integer"}, {"type": "string"}]})
 class EdgeFeatureField(serializers.Field):  # type: ignore[type-arg]
     def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         help_text = "ID(integer) or name(string) of the feature"
@@ -164,8 +166,7 @@ class EdgeFeatureField(serializers.Field):  # type: ignore[type-arg]
             )
         )
 
-    class Meta:
-        swagger_schema_fields = {"type": "integer/string"}
+    # drf-spectacular handles schema via the decorator above
 
 
 class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):  # type: ignore[type-arg]
