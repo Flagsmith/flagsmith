@@ -149,6 +149,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           style={{ width: '135px' }}
           projectId={projectId}
           showEnvironmentDropdown={showEnvironmentDropdown}
+          operator={operator}
           onChange={(value: string) => {
             setRuleProperty(ruleIndex, 'value', {
               value:
