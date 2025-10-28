@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
-import loadCrisp from 'common/loadCrisp'
+import { loadCrisp } from 'common/loadChat'
 import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from 'components/Icon'

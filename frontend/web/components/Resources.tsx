@@ -8,7 +8,7 @@ import {
   bookSharp,
 } from 'ionicons/icons'
 import Button from './base/forms/Button'
-import loadCrisp from 'common/loadCrisp'
+import { loadCrisp } from 'common/loadChat'
 import Utils from 'common/utils/utils'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'

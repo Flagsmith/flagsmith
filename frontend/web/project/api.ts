@@ -12,6 +12,7 @@ import { AccountModel, User } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
 import flagsmith from 'flagsmith'
 import Utils from 'common/utils/utils'
+import loadChat from 'common/loadChat'
 
 const API = {
   ajaxHandler(
@@ -69,10 +70,22 @@ const API = {
       })
   },
 
-  alias(id: string, user: Partial<AccountModel> = {}): void {
+  async alias(id: string, user: Partial<AccountModel> = {}): Promise<void> {
     if (Project.excludeAnalytics?.includes(id)) return
 
-    Utils.setupCrisp()
+    await API.flagsmithIdentify()
+
+    // Load and setup chat widget based on feature flag
+    const isWidget = document.location.href.includes('/widget')
+    if (!E2E && !isWidget) {
+      await loadChat()
+      if (flagsmith.hasFeature('pylon_chat')) {
+        Utils.setupPylon()
+      } else {
+        Utils.setupCrisp()
+      }
+    }
+
     if (Project.reo) {
       loadReoScript({ clientID: Project.reo }).then(
         (Reo: typeof ReoInstance) => {
@@ -117,15 +130,14 @@ const API = {
         })
       }
     }
-    API.flagsmithIdentify()
   },
 
-  flagsmithIdentify(): void {
+  flagsmithIdentify: () => {
     //@ts-ignore
     const user = AccountStore.model as unknown as AccountModel
     if (!user) return
 
-    flagsmith
+    return flagsmith
       .identify(`${user.id}`, {
         email: user.email,
         organisations: user.organisations
