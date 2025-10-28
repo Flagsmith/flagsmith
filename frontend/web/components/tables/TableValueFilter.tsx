@@ -34,7 +34,9 @@ const TableTagFilter: FC<TableFilterType> = ({
   onChange,
   value,
 }) => {
-  const { search, searchInput, setSearchInput } = useDebouncedSearch('')
+  const { search, searchInput, setSearchInput } = useDebouncedSearch(
+    value?.valueSearch || '',
+  )
   useEffect(() => {
     if (search !== value.valueSearch) {
       onChange({
