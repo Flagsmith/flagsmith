@@ -1,0 +1,1 @@
+export { checkWhitespaceIssues } from './whitespaceValidation'
