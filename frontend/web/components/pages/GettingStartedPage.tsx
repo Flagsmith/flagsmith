@@ -27,8 +27,8 @@ const GettingStartedPage: FC = () => {
       document.body.classList.remove('full-screen')
     }
   }, [])
-  async function onCrispClick() {
-    loadChat(true)
+  async function onChatClick() {
+    await loadChat(true)
     openChat()
   }
 
@@ -165,7 +165,7 @@ const GettingStartedPage: FC = () => {
           questions{' '}
           <Button
             theme='text'
-            onClick={onCrispClick}
+            onClick={onChatClick}
             className='text-primary gap-2'
             href=''
           >

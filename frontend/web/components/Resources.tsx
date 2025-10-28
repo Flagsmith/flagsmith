@@ -2,7 +2,7 @@ import React, { FC } from 'react'
 import { IonIcon } from '@ionic/react'
 import { document, chatbox, bookSharp } from 'ionicons/icons'
 import Button from './base/forms/Button'
-import loadChat, { loadCrisp, openChat } from 'common/loadChat'
+import loadChat, { openChat } from 'common/loadChat'
 import Utils from 'common/utils/utils'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
@@ -17,8 +17,8 @@ const Resources: FC<ResourcesType> = ({}) => {
   if (!show) {
     return null
   }
-  async function onCrispClick() {
-    loadChat(true)
+  async function onChatClick() {
+    await loadChat(true)
     openChat()
   }
   return (
@@ -33,7 +33,7 @@ const Resources: FC<ResourcesType> = ({}) => {
           <div className='d-flex flex-column gap-2 my-2'>
             <Button
               theme='text'
-              onClick={onCrispClick}
+              onClick={onChatClick}
               className='text-primary d-flex align-items-center gap-2'
               href=''
             >
@@ -42,7 +42,6 @@ const Resources: FC<ResourcesType> = ({}) => {
             </Button>
             <Button
               theme='text'
-              onClick={() => loadCrisp}
               className='text-primary fs-small d-flex align-items-center'
               href='https://docs.flagsmith.com'
             >
