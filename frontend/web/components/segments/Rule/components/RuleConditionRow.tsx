@@ -75,7 +75,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
 
   const ALLOWED_CONTEXT_VALUES: OptionType[] = [
     {
-      enabled: operator === 'PERCENTAGE_SPLIT',
+      disabled: operator === 'PERCENTAGE_SPLIT',
       label: RuleContextLabels.IDENTITY_KEY,
       value: RuleContextValues.IDENTITY_KEY,
     },
@@ -87,7 +87,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
       label: RuleContextLabels.ENVIRONMENT_NAME,
       value: RuleContextValues.ENVIRONMENT_NAME,
     },
-  ]?.filter((option) => !!option.enabled)
+  ]?.filter((option) => !option.disabled)
 
   const isValueFromContext = !!ALLOWED_CONTEXT_VALUES.find(
     (option) => option.value === rule.property,
