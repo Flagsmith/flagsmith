@@ -305,11 +305,11 @@ Flagsmith.shared.cacheConfig.cache = <CUSTOM_CACHE_IMPLEMENTATION>
 
 ### Real Time Updates
 
-By default real-time updates are disabled. When enabled the SDK will listen for changes to flags and update the cache as
+By default, real-time updates are disabled. When enabled the SDK will listen for changes to flags and update the cache as
 needed. If you want to enable real-time updates you can do so by setting the following flag:
 
 ```swift
-Flagsmith.shared.enableRealTimeUpdates = false
+Flagsmith.shared.enableRealTimeUpdates = true
 ```
 
 It's possible to listen to updates in real time from the SDK using the `flagStream` property.
