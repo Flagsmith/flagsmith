@@ -233,3 +233,14 @@ See `pages/dashboard.tsx` for a complete example of:
 - Wrapping entire components with feature flags
 
 See `components/DarkModeHandler.tsx` for an example of trait usage.
+
+## Active Feature Flags
+
+### `pylon_chat`
+- **Project**: Flagsmith Website (ID: 12)
+- **Feature ID**: 168686
+- **Description**: Enable Pylon chat widget instead of Crisp
+- **Location**: `common/loadChat.ts:69`
+- **Usage**: Controls which chat widget loads (Pylon vs Crisp)
+- **Created**: 2025-10-28
+- **Type**: Boolean toggle

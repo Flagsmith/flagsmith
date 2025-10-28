@@ -663,10 +663,15 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   openChat() {
-    if (typeof $crisp !== 'undefined') {
+    const usePylon = flagsmith.hasFeature('pylon_chat')
+
+    if (usePylon && typeof window.Pylon !== 'undefined') {
+      window.Pylon('show')
+      Utils.setupPylon()
+    } else if (typeof $crisp !== 'undefined') {
       $crisp.push(['do', 'chat:open'])
+      Utils.setupCrisp()
     }
-    Utils.setupCrisp()
   },
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
@@ -737,6 +742,33 @@ const Utils = Object.assign({}, require('./base/_utils'), {
           [[['seats', organisation.num_seats]]],
         ])
       }
+    }
+  },
+  setupPylon() {
+    const user = AccountStore.model as AccountModel
+    if (typeof window.Pylon === 'undefined' || !user) {
+      return
+    }
+    const organisation = AccountStore.getOrganisation() as Organisation
+    const plan = AccountStore.getActiveOrgPlan()
+    const otherOrgs = user?.organisations.filter(
+      (v) => v.id !== organisation?.id,
+    )
+
+    try {
+      // Set Pylon configuration using the documented window.pylon object
+      window.pylon = {
+        chat_settings: {
+          account_id: String(user.id),
+          app_id: Project.pylonAppId,
+          email: user.email,
+          name: getUserDisplayName(user),
+          // Store additional metadata as custom fields
+          // Note: Pylon may support custom fields - check their docs for metadata capabilities
+        },
+      }
+    } catch (error) {
+      console.error('Error setting up Pylon:', error)
     }
   },
   tagDisabled: (tag: Tag | undefined) => {

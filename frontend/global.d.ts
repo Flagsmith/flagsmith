@@ -15,6 +15,36 @@ type Crisp = {
   // The push method accepts a CrispCommand array.
   push: (command: CrispCommand) => void
 }
+type PylonConfig = {
+  chat_settings: {
+    app_id: string
+    email: string
+    name: string
+    avatar_url?: string
+    email_hash?: string
+    account_id?: string
+    account_external_id?: string
+  }
+}
+type PylonFunction = {
+  (command: 'show'): void
+  (command: 'hide'): void
+  (command: 'showChatBubble'): void
+  (command: 'hideChatBubble'): void
+  (command: 'onShow', callback: (() => void) | null): void
+  (command: 'onHide', callback: (() => void) | null): void
+  (
+    command: 'onChangeUnreadMessagesCount',
+    callback: ((count: number) => void) | null,
+  ): void
+  (command: 'setNewIssueCustomFields', fields: Record<string, any>): void
+  (command: 'setTicketFormFields', fields: Record<string, any>): void
+  (command: 'showNewMessage', message: string): void
+  (command: 'showTicketForm', slug: string): void
+  (command: 'showKnowledgeBaseArticle', articleId: string): void
+  (...args: any[]): void
+  q?: any[]
+}
 declare namespace UniversalAnalytics {
   interface PageviewFieldsObject {
     hitType: 'pageview' | 'event'
@@ -72,6 +102,8 @@ declare global {
   const Tooltip: FC<TooltipProps>
   interface Window {
     $crisp: Crisp
+    Pylon: PylonFunction
+    pylon: PylonConfig
     engagement: {
       init(apiKey: string, options?: InitOptions): void
       plugin(): unknown

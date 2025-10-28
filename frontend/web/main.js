@@ -98,15 +98,3 @@ ReactDOM.render(<ToastMessages />, document.getElementById('toast'))
 if (E2E) {
   document.body.classList.add('disable-transitions')
 }
-const isWidget = document.location.href.includes('/widget')
-if (!E2E && Project.crispChat && !isWidget) {
-  window.$crisp = []
-  window.CRISP_WEBSITE_ID = Project.crispChat
-  ;(function () {
-    const d = document
-    const s = d.createElement('script')
-    s.src = 'https://client.crisp.chat/l.js'
-    s.async = 1
-    d.getElementsByTagName('head')[0].appendChild(s)
-  })()
-}
