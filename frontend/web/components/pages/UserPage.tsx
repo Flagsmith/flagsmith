@@ -42,7 +42,7 @@ import FeatureFilters, {
   FiltersValue,
   getFiltersFromURLParams,
   getServerFilter,
-  getURLParamsFromFilters,
+  parseFiltersFromUrlParams,
 } from 'components/feature-page/FeatureFilters'
 import Project from 'common/project'
 
@@ -285,7 +285,7 @@ const UserPage: FC = () => {
                                   `${
                                     document.location.pathname
                                   }?${Utils.toParam(
-                                    getURLParamsFromFilters(next),
+                                    parseFiltersFromUrlParams(next),
                                   )}`,
                                 )
                                 setFilter(next)

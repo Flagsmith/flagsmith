@@ -48,7 +48,7 @@ const DEFAULTS: FiltersValue = {
 }
 
 // Converts filters to url params, excluding ones that are already default
-export function getURLParamsFromFilters(f: FiltersValue) {
+export function parseFiltersFromUrlParams(f: FiltersValue) {
   const existing = Utils.fromParam() as Record<string, string | undefined>
 
   return {
@@ -60,6 +60,8 @@ export function getURLParamsFromFilters(f: FiltersValue) {
     owners: f.owners?.length ? f.owners.join(',') : undefined,
     page: f.page !== DEFAULTS.page ? String(f.page) : undefined,
     search: f.search || undefined,
+    sortBy: f.sort.sortBy,
+    sortOrder: f.sort.sortOrder,
     tag_strategy:
       f.tag_strategy !== DEFAULTS.tag_strategy
         ? String(f.tag_strategy)

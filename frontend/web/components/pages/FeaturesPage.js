@@ -20,7 +20,7 @@ import { useRouteContext } from 'components/providers/RouteContext'
 import FeatureFilters, {
   getFiltersFromURLParams,
   getServerFilter,
-  getURLParamsFromFilters,
+  parseFiltersFromUrlParams,
 } from 'components/feature-page/FeatureFilters'
 
 const FeaturesPage = class extends Component {
@@ -116,7 +116,7 @@ const FeaturesPage = class extends Component {
       if (!currentParams.feature) {
         this.props.history.replace(
           `${document.location.pathname}?${Utils.toParam(
-            getURLParamsFromFilters(this.state.filters),
+            parseFiltersFromUrlParams(this.state.filters),
           )}`,
         )
       }
