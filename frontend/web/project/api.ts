@@ -12,7 +12,7 @@ import { AccountModel, User } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
 import flagsmith from 'flagsmith'
 import Utils from 'common/utils/utils'
-import loadChat from 'common/loadChat'
+import loadChat, { setupCrisp, setupPylon } from 'common/loadChat'
 
 const API = {
   ajaxHandler(
@@ -80,9 +80,9 @@ const API = {
     if (!E2E && !isWidget) {
       await loadChat()
       if (flagsmith.hasFeature('pylon_chat')) {
-        Utils.setupPylon()
+        setupPylon()
       } else {
-        Utils.setupCrisp()
+        setupCrisp()
       }
     }
 

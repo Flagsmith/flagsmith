@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
-import { loadCrisp } from 'common/loadChat'
+import loadChat, { openChat } from 'common/loadChat'
 import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from 'components/Icon'
@@ -28,8 +28,8 @@ const GettingStartedPage: FC = () => {
     }
   }, [])
   async function onCrispClick() {
-    loadCrisp('8857f89e-0eb5-4263-ab49-a293872b6c19')
-    Utils.openChat()
+    loadChat(true)
+    openChat()
   }
 
   const organisationId = AccountStore.getOrganisation()?.id

@@ -1,14 +1,8 @@
 import React, { FC } from 'react'
 import { IonIcon } from '@ionic/react'
-import {
-  book,
-  checkmarkCircle,
-  document,
-  chatbox,
-  bookSharp,
-} from 'ionicons/icons'
+import { document, chatbox, bookSharp } from 'ionicons/icons'
 import Button from './base/forms/Button'
-import { loadCrisp } from 'common/loadChat'
+import loadChat, { loadCrisp, openChat } from 'common/loadChat'
 import Utils from 'common/utils/utils'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
@@ -24,8 +18,8 @@ const Resources: FC<ResourcesType> = ({}) => {
     return null
   }
   async function onCrispClick() {
-    loadCrisp('8857f89e-0eb5-4263-ab49-a293872b6c19')
-    Utils.openChat()
+    loadChat(true)
+    openChat()
   }
   return (
     <div>
