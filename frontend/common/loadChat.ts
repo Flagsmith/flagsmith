@@ -11,7 +11,7 @@ import Project from './project'
 const defaultCrispID = '8857f89e-0eb5-4263-ab49-a293872b6c19'
 const defaultPylonID = '028babb7-d93f-4e32-be6a-59db190a084f'
 
-export async function loadCrisp(crispWebsiteId: string) {
+async function loadCrisp(crispWebsiteId: string) {
   // @ts-ignore
   if (window.$crisp) {
     return
@@ -60,7 +60,7 @@ async function loadPylon(pylonAppId: string) {
   })
 }
 
-export function setupCrisp() {
+function setupCrisp() {
   const user = AccountStore.model as AccountModel
   if (typeof $crisp === 'undefined' || !user) {
     return
@@ -109,7 +109,7 @@ export function setupCrisp() {
   }
 }
 
-export function setupPylon() {
+function setupPylon() {
   const user = AccountStore.model as AccountModel
   if (typeof window.Pylon === 'undefined' || !user) {
     return
@@ -126,6 +126,16 @@ export function setupPylon() {
     }
   } catch (error) {
     console.error('Error setting up Pylon:', error)
+  }
+}
+
+export function identifyChatUser() {
+  const usePylon = flagsmith.hasFeature('pylon_chat')
+
+  if (usePylon) {
+    setupPylon()
+  } else {
+    setupCrisp()
   }
 }
 
