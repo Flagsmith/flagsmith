@@ -9,7 +9,7 @@ type TableFilterType = {
   onChange: (value: TableFilterType['value']) => void
   className?: string
   isLoading?: boolean
-  orgId: string | undefined
+  orgId: number | undefined
 }
 
 const TableGroupsFilter: FC<TableFilterType> = ({

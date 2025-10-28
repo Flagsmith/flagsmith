@@ -66,7 +66,7 @@ const Tag: FC<TagType> = ({
   selected,
   tag,
 }) => {
-  const shouldLighten = (color: Color) => getDarkMode() && color.isDark();
+  const shouldLighten = (color: Color) => getDarkMode() && color.isDark()
   const tagColor = Utils.colour(getTagColor(tag, selected))
   if (isDot) {
     return (

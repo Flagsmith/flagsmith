@@ -10,7 +10,7 @@ export type SortType = {
 export type SortValue = {
   sortBy: string
   label: string
-  sortOrder: 'asc' | 'desc' | null
+  sortOrder: 'asc' | 'desc'
 }
 type TableFilterType = {
   options: SortType[]
