@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
 import {
@@ -67,15 +67,15 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
   if (rule.delete) {
     return null
   }
+
   const valuePlaceholder = operatorObj?.hideValue
     ? 'Value (N/A)'
     : operatorObj?.valuePlaceholder || 'Value'
 
   // TODO: Move this to the parent component in next iteration
-
   const ALLOWED_CONTEXT_VALUES: OptionType[] = [
     {
-      enabled: operator === 'PERCENTAGE_SPLIT',
+      disabled: operator !== 'PERCENTAGE_SPLIT',
       label: RuleContextLabels.IDENTITY_KEY,
       value: RuleContextValues.IDENTITY_KEY,
     },
@@ -87,7 +87,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
       label: RuleContextLabels.ENVIRONMENT_NAME,
       value: RuleContextValues.ENVIRONMENT_NAME,
     },
-  ]?.filter((option) => !!option.enabled)
+  ]?.filter((option) => !option.disabled)
 
   const isValueFromContext = !!ALLOWED_CONTEXT_VALUES.find(
     (option) => option.value === rule.property,
@@ -133,9 +133,9 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           <Select
             data-test={`${dataTest}-operator-${ruleIndex}`}
             value={operator && find(operators, { value: operator })}
-            onChange={(value: { value: string }) =>
+            onChange={(value: { value: string }) => {
               setRuleProperty(ruleIndex, 'operator', value)
-            }
+            }}
             options={operators}
             style={{ width: '190px' }}
           />
