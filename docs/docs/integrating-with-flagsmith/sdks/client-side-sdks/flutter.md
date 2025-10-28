@@ -253,8 +253,6 @@ final flagsmithClient = FlagsmithClient(
 
 Real-time Flags are part of our SaaS Scale-Up and Enterprise plans.
 
-Real-time Flags are currently in beta. Please contact us to join the beta!
-
 :::
 
 Real-time flag updates are disabled by default. You can enable them simply by changing the configuration as follows:
