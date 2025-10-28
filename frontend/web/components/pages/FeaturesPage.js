@@ -18,9 +18,9 @@ import EnvironmentMetricsList from 'components/metrics/EnvironmentMetricsList'
 import { withRouter } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 import FeatureFilters, {
-  getFiltersFromURLParams,
-  getServerFilter,
   parseFiltersFromUrlParams,
+  getServerFilter,
+  getURLParamsFromFilters,
 } from 'components/feature-page/FeatureFilters'
 
 const FeaturesPage = class extends Component {
@@ -29,7 +29,7 @@ const FeaturesPage = class extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      filters: getFiltersFromURLParams(Utils.fromParam()),
+      filters: parseFiltersFromUrlParams(Utils.fromParam()),
       forceMetricsRefetch: false,
       loadedOnce: false,
     }
@@ -116,7 +116,7 @@ const FeaturesPage = class extends Component {
       if (!currentParams.feature) {
         this.props.history.replace(
           `${document.location.pathname}?${Utils.toParam(
-            parseFiltersFromUrlParams(this.state.filters),
+            getURLParamsFromFilters(this.state.filters),
           )}`,
         )
       }

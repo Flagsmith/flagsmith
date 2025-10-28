@@ -48,7 +48,7 @@ const DEFAULTS: FiltersValue = {
 }
 
 // Converts filters to url params, excluding ones that are already default
-export function parseFiltersFromUrlParams(f: FiltersValue) {
+export function getURLParamsFromFilters(f: FiltersValue) {
   const existing = Utils.fromParam() as Record<string, string | undefined>
 
   return {
@@ -71,7 +71,7 @@ export function parseFiltersFromUrlParams(f: FiltersValue) {
   }
 }
 // Gets expected filters from URL parameters
-export const getFiltersFromURLParams = (
+export const parseFiltersFromUrlParams = (
   params: Record<string, string | undefined>,
 ) => {
   return {

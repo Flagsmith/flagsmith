@@ -40,9 +40,9 @@ import useDebouncedSearch from 'common/useDebouncedSearch'
 import FeatureOverrideRow from 'components/feature-override/FeatureOverrideRow'
 import FeatureFilters, {
   FiltersValue,
-  getFiltersFromURLParams,
-  getServerFilter,
   parseFiltersFromUrlParams,
+  getServerFilter,
+  getURLParamsFromFilters,
 } from 'components/feature-page/FeatureFilters'
 import Project from 'common/project'
 
@@ -57,7 +57,7 @@ const UserPage: FC = () => {
   const match = useRouteMatch<RouteParams>()
   const history = useHistory()
   const params = Utils.fromParam()
-  const defaultState = getFiltersFromURLParams(params)
+  const defaultState = parseFiltersFromUrlParams(params)
   const environmentId = match?.params?.environmentId
   const id = match?.params?.id
   const { projectId } = useRouteContext()
@@ -285,7 +285,7 @@ const UserPage: FC = () => {
                                   `${
                                     document.location.pathname
                                   }?${Utils.toParam(
-                                    parseFiltersFromUrlParams(next),
+                                    getURLParamsFromFilters(next),
                                   )}`,
                                 )
                                 setFilter(next)
