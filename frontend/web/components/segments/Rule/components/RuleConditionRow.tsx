@@ -12,8 +12,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import RuleConditionPropertySelect from './RuleConditionPropertySelect'
 import RuleConditionValueInput from './RuleConditionValueInput'
 import { RuleContextValues } from 'common/types/rules.types'
-import { useRuleOperator } from 'components/segments/Rule/hooks/useRuleOperator'
-import { useRuleContext } from 'components/segments/Rule/hooks/useRuleContext'
+import { useRuleOperator, useRuleContext } from 'components/segments/Rule/hooks'
 
 interface RuleConditionRowProps {
   rule: SegmentCondition
