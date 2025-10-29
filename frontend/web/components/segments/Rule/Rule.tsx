@@ -13,13 +13,9 @@ import RuleConditionRow from './components/RuleConditionRow'
 import {
   isContextValueValidForOperator,
   shouldAutoSetIdentityKey,
+  splitIfValue,
+  isInvalidPercentageSplit,
 } from './utils'
-
-const splitIfValue = (v: string | null | number, append: string) =>
-  append && typeof v === 'string' ? v.split(append) : [v === null ? '' : v]
-
-const isInvalidPercentageSplit = (value: string | boolean | number) =>
-  `${value}`?.match(/\D/) || (parseInt(value?.toString() || '0') as any) > 100
 
 interface RuleProps {
   index: number
@@ -94,6 +90,7 @@ const Rule: React.FC<RuleProps> = ({
     }
 
     if (!isContextValueValidForOperator(condition.property, operatorValue)) {
+      console.log('condition.property', condition.property)
       updates.property = ''
     }
 

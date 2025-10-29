@@ -4,3 +4,4 @@ export {
   isContextValueValidForOperator,
   shouldAutoSetIdentityKey,
 } from './segmentRules'
+export { splitIfValue, isInvalidPercentageSplit } from './splitOperator'

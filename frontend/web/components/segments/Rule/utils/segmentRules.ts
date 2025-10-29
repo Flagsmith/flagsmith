@@ -32,15 +32,10 @@ export const isContextValueValidForOperator = (
   contextValue: string | undefined,
   operator: string,
 ): boolean => {
-  if (!contextValue) return true
-
-  if (contextValue === RuleContextValues.IDENTITY_KEY) {
+  if (contextValue && contextValue === RuleContextValues.IDENTITY_KEY) {
     return operator === 'PERCENTAGE_SPLIT'
   }
-
-  return Object.values(RuleContextValues).includes(
-    contextValue as RuleContextValues,
-  )
+  return true
 }
 
 export const shouldAutoSetIdentityKey = (
