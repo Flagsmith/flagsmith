@@ -15,7 +15,6 @@ const DEFAULT_ERROR_EVENT = 'problem'
 module.exports = Object.assign({}, EventEmitter.prototype, {
   _maxListeners: Number.MAX_VALUE,
   changed() {
-    // console.log('change', this.id)
     this.trigger(DEFAULT_CHANGE_EVENT)
   },
   error: null,

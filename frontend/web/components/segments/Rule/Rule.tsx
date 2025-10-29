@@ -90,7 +90,6 @@ const Rule: React.FC<RuleProps> = ({
     }
 
     if (!isContextValueValidForOperator(condition.property, operatorValue)) {
-      console.log('condition.property', condition.property)
       updates.property = ''
     }
 
