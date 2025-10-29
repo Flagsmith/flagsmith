@@ -62,7 +62,7 @@ export const removeIdentity = (
         }
       })
     },
-    title: 'Delete User',
+    title: 'Delete Identity',
     yesText: 'Confirm',
   })
 }

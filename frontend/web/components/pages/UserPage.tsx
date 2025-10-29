@@ -62,6 +62,7 @@ import UsersIcon from 'components/svg/UsersIcon'
 import IdentityTraits from 'components/IdentityTraits'
 import { useGetIdentitySegmentsQuery } from 'common/services/useIdentitySegment'
 import useDebouncedSearch from 'common/useDebouncedSearch'
+import SettingTitle from 'components/SettingTitle'
 
 const width = [200, 48, 78]
 
@@ -318,60 +319,37 @@ const UserPage: FC = () => {
               <>
                 <PageTitle
                   title={
-                    <div className='d-flex justify-content-between flex-1 align-items-start gap-5'>
-                      <div className='h5'>
-                        Identifier:{' '}
-                        <span className='fw-normal'>
-                          <IdentifierString
-                            value={
-                              (identity && identity.identity.identifier) || id
+                    <div className='h5'>
+                      Identifier:{' '}
+                      <span className='fw-normal'>
+                        <IdentifierString
+                          value={
+                            (identity && identity.identity.identifier) || id
+                          }
+                        />
+                      </span>
+                      {showAliases && (
+                        <h6 className='d-flex mb-0 align-items-end gap-1'>
+                          <Tooltip
+                            title={
+                              <span className='user-select-none'>Alias: </span>
                             }
-                          />
-                        </span>
-                        {showAliases && (
-                          <h6 className='d-flex mb-0 align-items-end gap-1'>
-                            <Tooltip
-                              title={
-                                <span className='user-select-none'>
-                                  Alias:{' '}
-                                </span>
-                              }
-                            >
-                              Aliases allow you to add searchable names to an
-                              identity
-                            </Tooltip>
-                            {!!identity && (
-                              <EditIdentity
-                                data={identity?.identity}
-                                environmentId={environmentId}
-                              />
-                            )}
-                          </h6>
-                        )}
-                        <div className='text-nowrap fs-regular fw-normal text-muted'>
-                          View and manage feature states and traits for this
-                          user.
-                        </div>
+                          >
+                            Aliases allow you to add searchable names to an
+                            identity
+                          </Tooltip>
+                          {!!identity && (
+                            <EditIdentity
+                              data={identity?.identity}
+                              environmentId={environmentId}
+                            />
+                          )}
+                        </h6>
+                      )}
+                      <div className='text-nowrap fs-regular fw-normal mt-2'>
+                        View and manage feature states and traits for this
+                        identity.
                       </div>
-                      <Button
-                        id='remove-feature'
-                        className='btn btn-with-icon'
-                        type='button'
-                        onClick={() => {
-                          removeIdentity(
-                            id,
-                            (identity && identity.identity.identifier) || id,
-                            environmentId,
-                            () => {
-                              history.replace(
-                                `/project/${projectId}/environment/${environmentId}/users`,
-                              )
-                            },
-                          )
-                        }}
-                      >
-                        <Icon name='trash-2' width={20} fill='#656D7B' />
-                      </Button>
                     </div>
                   }
                 ></PageTitle>
@@ -1037,6 +1015,36 @@ const UserPage: FC = () => {
                         environmentId={environmentId}
                         userId={identity?.identity?.identifier || id}
                       />
+                    </FormGroup>
+                    <FormGroup className='mt-5'>
+                      <SettingTitle danger>Delete Identity</SettingTitle>
+                      <FormGroup className='mt-4'>
+                        <Row space>
+                          <p className='fs-small lh-sm mb-0'>
+                            Identities can be re-added here or via one of our
+                            SDKs
+                          </p>
+                          <Button
+                            id='delete-identity-btn'
+                            onClick={() => {
+                              removeIdentity(
+                                id,
+                                (identity && identity.identity.identifier) ||
+                                  id,
+                                environmentId,
+                                () => {
+                                  history.replace(
+                                    `/project/${projectId}/environment/${environmentId}/users`,
+                                  )
+                                },
+                              )
+                            }}
+                            theme='danger'
+                          >
+                            Delete Identity
+                          </Button>
+                        </Row>
+                      </FormGroup>
                     </FormGroup>
                   </div>
                 </div>
