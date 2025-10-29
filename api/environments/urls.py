@@ -7,6 +7,7 @@ from edge_api.identities.views import (
     EdgeIdentityWithIdentifierFeatureStateView,
     get_edge_identity_overrides,
 )
+from features.feature_states.views import update_flag
 from features.views import (
     EnvironmentFeatureStateViewSet,
     IdentityFeatureStateViewSet,
@@ -166,5 +167,10 @@ urlpatterns = [
         "<str:environment_api_key>/edge-identity-overrides",
         get_edge_identity_overrides,
         name="edge-identity-overrides",
+    ),
+    path(
+        "<int:environment_id>/features/<str:feature_name>/update-flag/",
+        update_flag,
+        name="update-flag",
     ),
 ]

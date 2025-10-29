@@ -4,8 +4,10 @@ from common.core.utils import using_database_replica
 from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 
+from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
 from environments.models import Environment
-from features.models import FeatureState
+from features.models import Feature, FeatureState, FeatureStateValue
+from features.versioning.dataclasses import FlagChangeSet
 from features.versioning.models import EnvironmentFeatureVersion
 
 
@@ -99,6 +101,80 @@ def get_current_live_environment_feature_version(
         .order_by("-live_from")
         .first()
     )
+
+
+def update_flag(
+    environment: Environment, feature: Feature, change_set: FlagChangeSet
+) -> FeatureState:
+    if environment.use_v2_feature_versioning:
+        return _update_flag_for_versioning_v2(environment, feature, change_set)
+    else:
+        return _update_flag_for_versioning_v1(environment, feature, change_set)
+
+
+def _update_flag_for_versioning_v2(
+    environment: Environment, feature: Feature, change_set: FlagChangeSet
+) -> FeatureState:
+    new_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment,
+        feature=feature,
+        created_by=change_set.user,
+        created_by_api_key=change_set.api_key,
+    )
+
+    target_feature_state: FeatureState = new_version.feature_states.get(
+        feature_segment__segment_id=change_set.segment_id,
+    )
+
+    target_feature_state.enabled = change_set.enabled
+    target_feature_state.save()
+
+    _update_feature_state_value(target_feature_state.feature_state_value, change_set)
+
+    new_version.publish(
+        published_by=change_set.user, published_by_api_key=change_set.api_key
+    )
+
+    return target_feature_state
+
+
+def _update_flag_for_versioning_v1(
+    environment: Environment, feature: Feature, change_set: FlagChangeSet
+) -> FeatureState:
+    latest_feature_states = get_environment_flags_dict(
+        environment=environment,
+        feature_name=feature.name,
+        additional_filters=Q(feature_segment__segment_id=change_set.segment_id),
+    )
+    assert len(latest_feature_states) == 1
+
+    target_feature_state = list(latest_feature_states.values())[0]
+    target_feature_state.enabled = change_set.enabled
+    target_feature_state.save()
+
+    _update_feature_state_value(target_feature_state.feature_state_value, change_set)
+
+    return target_feature_state
+
+
+def _update_feature_state_value(
+    fsv: FeatureStateValue, change_set: FlagChangeSet
+) -> None:
+    match change_set.type_:
+        case "string":
+            fsv.string_value = change_set.feature_state_value
+            fsv.type = STRING
+        case "int":
+            fsv.integer_value = int(change_set.feature_state_value)
+            fsv.type = INTEGER
+        case "bool":
+            fsv.boolean_value = change_set.feature_state_value in ("True", "true", "1")
+            fsv.type = BOOLEAN
+        case "float":
+            fsv.float_value = float(change_set.feature_state_value)
+            fsv.type = FLOAT
+
+    fsv.save()
 
 
 def _get_feature_states_queryset(
