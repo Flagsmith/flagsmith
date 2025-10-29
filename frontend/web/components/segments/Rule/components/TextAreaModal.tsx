@@ -4,7 +4,7 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
 import ModalHR from 'components/modals/ModalHR'
-import { checkWhitespaceIssues } from 'components/segments/Rule/utils/whitespaceValidation'
+import { checkWhitespaceIssues } from 'components/segments/Rule/utils'
 
 type TextAreaModalProps = {
   value: string | number | boolean

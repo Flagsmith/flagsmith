@@ -1,7 +1,7 @@
-import { RuleContextValues } from 'common/types/rules.types'
-import { getAllowedContextValuesForDropdown } from 'components/segments/Rule/utils/segmentRules'
+import { OperatorValue, RuleContextValues } from 'common/types/rules.types'
+import { getAllowedContextValuesForDropdown } from 'components/segments/Rule/utils'
 
-export const useRuleContext = (operator: string, property: string) => {
+export const useRuleContext = (operator: OperatorValue, property: string) => {
   const allowedContextValues = getAllowedContextValuesForDropdown(operator)
 
   const isValueFromContext = allowedContextValues.some(
