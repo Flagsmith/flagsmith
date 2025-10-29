@@ -318,15 +318,18 @@ const UserPage: FC = () => {
               <>
                 <PageTitle
                   title={
-                    <div className='d-flex align-items-center justify-content-between'>
-                      <div>
-                        <IdentifierString
-                          value={
-                            (identity && identity.identity.identifier) || id
-                          }
-                        />
+                    <div className='d-flex justify-content-between flex-1 align-items-start gap-5'>
+                      <div className='h5'>
+                        Identifier:{' '}
+                        <span className='fw-normal'>
+                          <IdentifierString
+                            value={
+                              (identity && identity.identity.identifier) || id
+                            }
+                          />
+                        </span>
                         {showAliases && (
-                          <h6 className='d-flex align-items-center gap-1'>
+                          <h6 className='d-flex mb-0 align-items-end gap-1'>
                             <Tooltip
                               title={
                                 <span className='user-select-none'>
@@ -345,6 +348,10 @@ const UserPage: FC = () => {
                             )}
                           </h6>
                         )}
+                        <div className='text-nowrap fs-regular fw-normal text-muted'>
+                          View and manage feature states and traits for this
+                          user.
+                        </div>
                       </div>
                       <Button
                         id='remove-feature'
@@ -367,10 +374,7 @@ const UserPage: FC = () => {
                       </Button>
                     </div>
                   }
-                >
-                  View and manage feature states and traits for this user.
-                  <br />
-                </PageTitle>
+                ></PageTitle>
                 <div className='row'>
                   <div className='col-md-12'>
                     <FormGroup>

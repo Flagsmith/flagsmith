@@ -170,6 +170,14 @@ const UsersPage: FC<{ props: any }> = (props) => {
         <FormGroup>
           <PanelSearch
             renderSearchWithNoResults
+            header={
+              permission && (
+                <Row className='table-header'>
+                  <Flex className='table-column px-3'>Identifier</Flex>
+                  <div className='table-column'></div>
+                </Row>
+              )
+            }
             filterRowContent={
               showAliases && (
                 <div className='ms-2' style={{ width: 100 }}>
