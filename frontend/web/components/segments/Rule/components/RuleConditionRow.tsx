@@ -12,8 +12,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import RuleConditionPropertySelect from './RuleConditionPropertySelect'
 import RuleConditionValueInput from './RuleConditionValueInput'
 import { RuleContextValues } from 'common/types/rules.types'
-import { RuleContextLabels } from 'common/types/rules.types'
-import { OptionType } from 'components/base/select/SearchableSelect'
+import { getAllowedContextValuesForDropdown } from 'components/segments/Rule/utils/segmentRules'
 
 interface RuleConditionRowProps {
   rule: SegmentCondition
@@ -72,24 +71,9 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
     ? 'Value (N/A)'
     : operatorObj?.valuePlaceholder || 'Value'
 
-  // TODO: Move this to the parent component in next iteration
-  const ALLOWED_CONTEXT_VALUES: OptionType[] = [
-    {
-      disabled: operator !== 'PERCENTAGE_SPLIT',
-      label: RuleContextLabels.IDENTITY_KEY,
-      value: RuleContextValues.IDENTITY_KEY,
-    },
-    {
-      label: RuleContextLabels.IDENTIFIER,
-      value: RuleContextValues.IDENTIFIER,
-    },
-    {
-      label: RuleContextLabels.ENVIRONMENT_NAME,
-      value: RuleContextValues.ENVIRONMENT_NAME,
-    },
-  ]?.filter((option) => !option.disabled)
+  const allowedContextValues = getAllowedContextValuesForDropdown(operator)
 
-  const isValueFromContext = !!ALLOWED_CONTEXT_VALUES.find(
+  const isValueFromContext = !!allowedContextValues.find(
     (option) => option.value === rule.property,
   )?.value
 
@@ -124,7 +108,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           setRuleProperty={setRuleProperty}
           propertyValue={rule.property}
           operator={rule.operator}
-          allowedContextValues={ALLOWED_CONTEXT_VALUES || []}
+          allowedContextValues={allowedContextValues}
           isValueFromContext={isValueFromContext}
         />
         {readOnly ? (

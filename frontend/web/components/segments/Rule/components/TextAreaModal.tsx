@@ -4,7 +4,7 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
 import ModalHR from 'components/modals/ModalHR'
-import { checkWhitespaceIssues } from '../utils'
+import { checkWhitespaceIssues } from 'components/segments/Rule/utils/whitespaceValidation'
 
 type TextAreaModalProps = {
   value: string | number | boolean
@@ -12,7 +12,11 @@ type TextAreaModalProps = {
   operator?: string
 }
 
-const TextAreaModal: FC<TextAreaModalProps> = ({ onChange, value, operator }) => {
+const TextAreaModal: FC<TextAreaModalProps> = ({
+  onChange,
+  operator,
+  value,
+}) => {
   const [textAreaValue, setTextAreaValue] = useState(value)
   const whitespaceCheck = checkWhitespaceIssues(textAreaValue, operator)
   const hasWarning = !!whitespaceCheck
@@ -39,8 +43,8 @@ const TextAreaModal: FC<TextAreaModalProps> = ({ onChange, value, operator }) =>
         <div
           style={{
             minHeight: '20px',
-            transition: 'opacity 0.25s ease-in-out',
             opacity: hasWarning ? 1 : 0,
+            transition: 'opacity 0.25s ease-in-out',
           }}
         >
           {hasWarning && (

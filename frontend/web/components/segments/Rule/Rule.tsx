@@ -10,6 +10,10 @@ import {
 } from 'common/types/responses'
 import { RuleContextValues } from 'common/types/rules.types'
 import RuleConditionRow from './components/RuleConditionRow'
+import {
+  isContextValueValidForOperator,
+  shouldAutoSetIdentityKey,
+} from './utils'
 
 const splitIfValue = (v: string | null | number, append: string) =>
   append && typeof v === 'string' ? v.split(append) : [v === null ? '' : v]
@@ -85,11 +89,15 @@ const Rule: React.FC<RuleProps> = ({
       updates.value = cleanValue + (newOperator?.append || '')
     }
 
-    if (operatorValue === 'PERCENTAGE_SPLIT') {
-      if (!condition.property) {
-        updates.property = RuleContextValues.IDENTITY_KEY
-      }
+    if (shouldAutoSetIdentityKey(operatorValue, condition.property)) {
+      updates.property = RuleContextValues.IDENTITY_KEY
+    }
 
+    if (!isContextValueValidForOperator(condition.property, operatorValue)) {
+      updates.property = ''
+    }
+
+    if (operatorValue === 'PERCENTAGE_SPLIT') {
       const invalidPercentageSplit =
         condition?.value && isInvalidPercentageSplit(condition.value)
       if (invalidPercentageSplit) {
@@ -97,12 +105,6 @@ const Rule: React.FC<RuleProps> = ({
       } else {
         updates.value = updates.value?.toString().split(':')[0]
       }
-    } else if (
-      // If previous operator was PERCENTAGE_SPLIT and property was IDENTITY_KEY, reset property
-      condition?.operator === 'PERCENTAGE_SPLIT' &&
-      condition?.property === RuleContextValues.IDENTITY_KEY
-    ) {
-      updates.property = ''
     }
 
     updateCondition(conditionIndex, updates)
