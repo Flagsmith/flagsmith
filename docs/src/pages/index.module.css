@@ -215,18 +215,18 @@
   [data-section="integration"] .cardGrid,
   [data-section="configuration"] .cardGrid,
   [data-section="ecosystem"] .cardGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   [data-section="configuration"] .cardGrid > *:last-child {
-    grid-column: 1;
+    grid-column: 1 / 3;
   }
 }
 
 /* Mobile phones */
 @media (max-width: 996px) {
   section .cardGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .heroInner {
