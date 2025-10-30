@@ -199,10 +199,35 @@
   text-decoration: none;
 }
 
+/* Tablet and medium screens - reduce columns for better fit */
+@media (max-width: 1200px) {
+  [data-section="integration"] .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  [data-section="ecosystem"] .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Smaller tablets */
+@media (max-width: 768px) {
+  [data-section="introduction"] .cardGrid,
+  [data-section="integration"] .cardGrid,
+  [data-section="configuration"] .cardGrid,
+  [data-section="ecosystem"] .cardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  [data-section="configuration"] .cardGrid > *:last-child {
+    grid-column: 1;
+  }
+}
+
+/* Mobile phones */
 @media (max-width: 996px) {
   section .cardGrid {
     grid-template-columns: 1fr;
-    padding: 0 1rem;
   }
 
   .heroInner {
@@ -218,21 +243,24 @@
 
   .card {
     width: 100%;
-    margin: 0 auto;
-  }
-
-  section, 
-  .hero,
-  .cardGrid {
-    width: 100vw;
-    max-width: 100%;
     margin: 0;
-    overflow-x: hidden;
+    box-sizing: border-box;
   }
 
-  :global(body) {
-    overflow-x: hidden;
-    width: 100%;
+  .section {
+    padding: 0 1rem;
+    box-sizing: border-box;
+  }
+
+  .cardGrid {
+    margin: 1rem 0 0 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .cardLink {
+    display: block;
+    box-sizing: border-box;
   }
 }
 

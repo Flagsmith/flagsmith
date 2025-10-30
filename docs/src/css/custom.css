@@ -311,3 +311,169 @@ section > h2 {
   padding: 0 var(--ifm-spacing-horizontal);
   width: 100%;
 }
+
+/* Mobile fixes for proper containment */
+@media (max-width: 996px) {
+  [data-theme='dark'] section:nth-child(4n+1),
+  [data-theme='dark'] section:nth-child(4n+2),
+  [data-theme='dark'] section:nth-child(4n+3),
+  [data-theme='dark'] section:nth-child(4n+4),
+  [data-theme='dark'] section:nth-child(odd),
+  [data-theme='dark'] section:nth-child(even) {
+    width: 100%;
+    left: 0;
+    right: 0;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 2rem 0;
+    box-sizing: border-box;
+  }
+
+  section > div,
+  section > h2 {
+    padding: 0 1rem;
+    box-sizing: border-box;
+  }
+
+  .container {
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Footer mobile padding */
+  .footer {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .footer .container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .footer__links {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .footer__col {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+/* Tablet footer padding */
+@media (max-width: 768px) {
+  .footer {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+
+  /* Global mobile padding for all doc content */
+  .main-wrapper {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  article {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .markdown {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .theme-doc-markdown {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Breadcrumbs padding */
+  .breadcrumbs {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Table of contents padding */
+  .theme-doc-toc-mobile {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .theme-doc-toc-desktop {
+    padding-right: 1rem;
+  }
+
+  /* Navbar padding */
+  .navbar {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .navbar__inner {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Sidebar padding */
+  .theme-doc-sidebar-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Code blocks padding */
+  .prism-code {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+
+  /* Admonitions padding */
+  .admonition {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 576px) {
+  .main-wrapper {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  article {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Ensure all doc content wrapper has padding */
+  .docMainContainer_gTbr,
+  .docItemContainer_Djhp {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Doc item wrapper */
+  .docItemWrapper_XEAS {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Pagination */
+  .pagination-nav {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Tables - allow horizontal scroll but add padding */
+  .table-wrapper {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+}
