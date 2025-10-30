@@ -199,7 +199,7 @@
   text-decoration: none;
 }
 
-/* Tablet and medium screens - reduce columns for better fit */
+/* Tablet and medium screens */
 @media (max-width: 1200px) {
   [data-section="integration"] .cardGrid {
     grid-template-columns: repeat(2, 1fr);
@@ -210,7 +210,6 @@
   }
 }
 
-/* Smaller tablets */
 @media (max-width: 768px) {
   [data-section="introduction"] .cardGrid,
   [data-section="integration"] .cardGrid,
