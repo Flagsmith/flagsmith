@@ -73,6 +73,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     id: environmentId,
     level: 'environment',
     permission: 'APPROVE_CHANGE_REQUEST',
+    tags: projectFlag?.tags,
   })
   const publishPermission = useHasPermission({
     id: environmentId,
