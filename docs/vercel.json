@@ -699,6 +699,10 @@
         {
             "source": "/clients/server-side",
             "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/integrating-with-flagsmith/",
+            "destination": "/integrating-with-flagsmith/integration-overview"
         }
     ]
 }
