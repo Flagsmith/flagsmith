@@ -199,7 +199,6 @@
   text-decoration: none;
 }
 
-/* Tablet and medium screens */
 @media (max-width: 1200px) {
   [data-section="integration"] .cardGrid {
     grid-template-columns: repeat(2, 1fr);
@@ -221,14 +220,17 @@
   [data-section="configuration"] .cardGrid > *:last-child {
     grid-column: 1 / 3;
   }
-}
 
-/* Mobile phones */
-@media (max-width: 996px) {
-  section .cardGrid {
-    grid-template-columns: repeat(2, 1fr);
+  .hero {
+    padding: 2rem 0;
   }
 
+  .section {
+    margin-top: 2rem;
+  }
+}
+
+@media (max-width: 996px) {
   .heroInner {
     flex-direction: column;
     padding: 0 1rem;
@@ -239,38 +241,4 @@
     max-width: 100%;
     width: 100%;
   }
-
-  .card {
-    width: 100%;
-    margin: 0;
-    box-sizing: border-box;
-  }
-
-  .section {
-    padding: 0 1rem;
-    box-sizing: border-box;
-  }
-
-  .cardGrid {
-    margin: 1rem 0 0 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  .cardLink {
-    display: block;
-    box-sizing: border-box;
-  }
 }
-
-@media (max-width: 768px) {
-  .hero {
-    padding: 2rem 0;
-  }
-
-  .section {
-    margin-top: 2rem;
-  }
-}
-
-

@@ -240,7 +240,6 @@ main.container {
   background: var(--ifm-background-surface-color);
   padding: 3rem 0;
   margin: 0;
-  /* full width */
   width: 100vw;
   position: relative;
   left: 50%;
@@ -253,7 +252,6 @@ main.container {
   background: #111111;
   padding: 3rem 0;
   margin: 0;
-  /* full width */
   width: 100vw;
   position: relative;
   left: 50%;
@@ -262,13 +260,11 @@ main.container {
   margin-right: -50vw;
 }
 
-/* Section background alternation for dark mode - alternating every 2 sections */
 [data-theme='dark'] section:nth-child(4n+1),
 [data-theme='dark'] section:nth-child(4n+2) {
   background: #111111;
   padding: 3rem 0;
   margin: 0;
-  /* full width */
   width: 100vw;
   position: relative;
   left: 50%;
@@ -282,7 +278,6 @@ main.container {
   background: var(--ifm-background-surface-color);
   padding: 3rem 0;
   margin: 0;
-  /* full width */
   width: 100vw;
   position: relative;
   left: 50%;
@@ -291,7 +286,6 @@ main.container {
   margin-right: -50vw;
 }
 
-/*  container width inside sections */
 section > div,
 section > h2 {
   margin: 0 auto;
@@ -301,10 +295,9 @@ section > h2 {
 }
 
 section > h2 {
-  padding-left: var(--ifm-spacing-horizontal); /* Using the same padding as div */
+  padding-left: var(--ifm-spacing-horizontal);
 }
 
-/* Ensure consistent container width */
 .container {
   max-width: var(--ifm-container-width);
   margin: 0 auto;
@@ -320,147 +313,9 @@ section > h2 {
   [data-theme='dark'] section:nth-child(odd),
   [data-theme='dark'] section:nth-child(even) {
     width: 100%;
-    left: 0;
-    right: 0;
-    margin-left: 0;
-    margin-right: 0;
-    padding: 2rem 0;
-    box-sizing: border-box;
-  }
-
-  section > div,
-  section > h2 {
-    padding: 0 1rem;
-    box-sizing: border-box;
-  }
-
-  .container {
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  /* Footer padding */
-  .footer {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  .footer .container {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  .footer__links {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  .footer__col {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-}
-
-/* Tablet footer padding */
-@media (max-width: 768px) {
-  .footer {
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
-  }
-
-  .main-wrapper {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  article {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  .markdown {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  .theme-doc-markdown {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .breadcrumbs {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  .theme-doc-toc-mobile {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  .theme-doc-toc-desktop {
-    padding-right: 1rem;
-  }
-
-  .navbar {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  .navbar__inner {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .theme-doc-sidebar-container {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  .prism-code {
-    margin-left: 0.5rem;
-    margin-right: 0.5rem;
-  }
-
-  .admonition {
-    margin-left: 0.5rem;
-    margin-right: 0.5rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .main-wrapper {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  article {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
-
-  .docMainContainer_gTbr,
-  .docItemContainer_Djhp {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .docItemWrapper_XEAS {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  .pagination-nav {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  .table-wrapper {
-    margin-left: 1rem;
-    margin-right: 1rem;
+    left: auto;
+    right: auto;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
