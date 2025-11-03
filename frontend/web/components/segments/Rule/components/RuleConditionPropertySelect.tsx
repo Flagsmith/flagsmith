@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { components } from 'react-select/lib/components'
 import Utils from 'common/utils/utils'
-import { RuleContextValues } from 'common/types/rules.types'
 import Constants from 'common/constants'
-import { GroupLabel } from 'components/base/SearchableDropdown'
-import SearchableDropdown, {
+import { GroupLabel } from 'components/base/select/SearchableSelect'
+import SearchableSelect, {
   OptionType,
-} from 'components/base/SearchableDropdown'
+} from 'components/base/select/SearchableSelect'
 
 interface RuleConditionPropertySelectProps {
   ruleIndex: number
@@ -32,23 +31,10 @@ const RuleConditionPropertySelect = ({
   setRuleProperty,
 }: RuleConditionPropertySelectProps) => {
   const [localCurrentValue, setLocalCurrentValue] = useState(propertyValue)
-  const isContextPropertyEnabled =
-    Utils.getFlagsmithHasFeature('context_values')
 
-  // TODO: Clean this up when enabled
   useEffect(() => {
-    const isPropInvalidWithSplit =
-      !propertyValue ||
-      (!isContextPropertyEnabled &&
-        propertyValue !== RuleContextValues.IDENTITY_KEY)
-    if (operator === 'PERCENTAGE_SPLIT' && isPropInvalidWithSplit) {
-      setRuleProperty(ruleIndex, 'property', {
-        value: RuleContextValues.IDENTITY_KEY,
-      })
-    }
     setLocalCurrentValue(propertyValue)
-    //eslint-disable-next-line
-  }, [propertyValue, operator, ruleIndex, isContextPropertyEnabled])
+  }, [propertyValue])
 
   // Filter invalid context values from flagsmith and format them as options
   const contextOptions = allowedContextValues?.map(
@@ -106,7 +92,7 @@ const RuleConditionPropertySelect = ({
 
   return (
     <>
-      <SearchableDropdown
+      <SearchableSelect
         dataTest={dataTest}
         value={propertyValue}
         isClearable={true}

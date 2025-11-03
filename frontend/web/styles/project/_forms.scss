@@ -1,4 +1,6 @@
-
+.breadcrumb-item {
+    font-weight: 500;
+}
 .or-divider {
     color: $text-muted;
     font-weight: 400;
@@ -119,6 +121,19 @@
 .label-switch {
     color: $body-color;
     font-weight: 500;
+}
+
+.rule-value-icon {
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        transform: scale(1.05);
+    }
+
+    &:active {
+        transform: scale(0.95);
+        transition: all 0.1s ease-in-out;
+    }
 }
 
 .setting {

@@ -9,6 +9,16 @@
             "command": [
                 "run-task-processor"
             ],
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "flagsmith healthcheck tcp"
+                ],
+                "interval": 10,
+                "timeout": 2,
+                "retries": 5,
+                "startPeriod": 5
+            },
             "essential": true,
             "environment": [
                 {
@@ -76,10 +86,6 @@
                     "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
                 },
                 {
-                    "name": "AWS_SSE_LOGS_BUCKET_NAME",
-                    "value": "flagsmith-fastly-logs-production"
-                },
-                {
                     "name": "OAUTH_CLIENT_ID",
                     "value": "232959427810-br6ltnrgouktp0ngsbs04o14ueb9rch0.apps.googleusercontent.com"
                 },
@@ -142,6 +148,10 @@
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
                     "value": "False"
+                },
+                {
+                    "name": "PROMETHEUS_ENABLED",
+                    "value": "True"
                 },
                 {
                     "name": "ENABLE_API_USAGE_ALERTING",

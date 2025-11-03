@@ -208,7 +208,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                               setSegmentEditId(v.segment)
                             } else {
                               window.open(
-                                `${document.location.origin}/project/${this.props.projectId}/segments?id=${v.segment}`,
+                                `${document.location.origin}/project/${this.props.projectId}/segments/${v.segment}`,
                                 '_blank',
                               )
                             }

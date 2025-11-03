@@ -34,12 +34,15 @@ const DiffString: FC<DiffType> = ({
 
   if (oldValue === newValue) {
     if (oldValue === null || oldValue === '') {
-      return null
+      return <div className='text-muted'>No Value.</div>
     }
     return (
-      <div className='react-diff overflow-auto react-diff-line d-flex align-items-center'>
+      <div className='react-diff react-diff-same overflow-auto react-diff-line d-flex align-items-center'>
+        <span className='react-diff-marker'>
+          <pre></pre>
+        </span>
         <pre
-          className='d-inline'
+          className='d-inline mb-0'
           dangerouslySetInnerHTML={{
             __html: Prism.highlight(
               sanitiseDiffString(newValue),

@@ -40,11 +40,14 @@ import { ParameterizedRoute } from './components/base/higher-order/Parameterized
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
 import SplitTestPage from './components/pages/SplitTestPage'
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
+import ProjectChangeRequestsPage from './components/pages/ProjectChangeRequestsPage'
+import ProjectChangeRequestPage from './components/pages/ProjectChangeRequestDetailPage'
 import GettingStartedPage from './components/pages/GettingStartedPage'
 
 import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
 import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
+import SegmentPage from './components/pages/SegmentPage'
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
@@ -53,8 +56,10 @@ export const routes = {
   'broken': '/broken',
   'change-request':
     '/project/:projectId/environment/:environmentId/change-requests/:id',
+  'change-request-project': '/project/:projectId/change-requests/:id',
   'change-requests':
     '/project/:projectId/environment/:environmentId/change-requests',
+  'change-requests-project': '/project/:projectId/change-requests',
   'compare': '/project/:projectId/compare',
   'create-environment': '/project/:projectId/environment/create',
   'create-organisation': '/create',
@@ -99,6 +104,7 @@ export const routes = {
   'scheduled-changes':
     '/project/:projectId/environment/:environmentId/scheduled-changes',
   'sdk-keys': '/project/:projectId/environment/:environmentId/sdk-keys',
+  'segment': '/project/:projectId/segments/:id',
   'segments': '/project/:projectId/segments',
   'signup': '/signup',
   'split-tests': '/project/:projectId/environment/:environmentId/split-tests',
@@ -127,6 +133,16 @@ export default (
         path={routes['change-requests']}
         exact
         component={ChangeRequestsPage}
+      />
+      <ParameterizedRoute
+        path={routes['change-requests-project']}
+        exact
+        component={ProjectChangeRequestsPage}
+      />
+      <ParameterizedRoute
+        path={routes['change-request-project']}
+        exact
+        component={ProjectChangeRequestPage}
       />
       <ParameterizedRoute
         path={routes['scheduled-changes']}
@@ -217,6 +233,7 @@ export default (
         exact
         component={SegmentsPage}
       />
+      <ParameterizedRoute path={routes.segment} exact component={SegmentPage} />
       <ParameterizedRoute
         path={routes['organisation-settings']}
         exact

@@ -7,7 +7,7 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-POETRY_VERSION ?= 2.1.4
+POETRY_VERSION ?= 2.2.1
 
 SAML_REVISION ?= v1.6.5
 RBAC_REVISION ?= v0.11.6
@@ -151,4 +151,8 @@ integrate-private-tests:
 
 .PHONY: generate-docs
 generate-docs:
-	poetry run flagsmith docgen metrics > ../docs/docs/system-administration/metrics.md
+	poetry run flagsmith docgen metrics > ../docs/docs/administration-and-security/platform-configuration/metrics.md
+
+.PHONY: add-known-sdk-version
+add-known-sdk-version:
+	poetry run python scripts/add-known-sdk-version.py $(opts)

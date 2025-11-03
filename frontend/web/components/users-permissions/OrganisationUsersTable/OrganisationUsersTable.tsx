@@ -1,7 +1,7 @@
 import React from 'react'
 import AppActions from 'common/dispatcher/app-actions'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
 import { Organisation, User } from 'common/types/responses'
 import PanelSearch from 'components/PanelSearch'
 import PermissionsTabs from 'components/PermissionsTabs'
@@ -28,7 +28,7 @@ const OrganisationUsersTable: React.FC<OrganisationUsersTableProps> = ({
         ? `${user.first_name} ${user.last_name}`
         : `${user.email}`,
       <div>
-        <Tabs uncontrolled hideNavOnSingleTab>
+        <Tabs uncontrolled hideNavOnSingleTab className='mt-4 ml-3'>
           {user.role !== 'ADMIN' && (
             <TabItem tabLabel='Permissions'>
               <div className='pt-4'>
@@ -55,7 +55,7 @@ const OrganisationUsersTable: React.FC<OrganisationUsersTableProps> = ({
     openModal(
       getUserDisplayName(user),
       <div>
-        <Tabs uncontrolled hideNavOnSingleTab>
+        <Tabs uncontrolled hideNavOnSingleTab className='mt-4 ml-3'>
           <TabItem tabLabel='Permissions'>
             <div className='pt-4'>
               <InspectPermissions

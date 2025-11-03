@@ -4,6 +4,7 @@ import uuid
 from copy import deepcopy
 from typing import TYPE_CHECKING, Literal
 
+from common.core.utils import using_database_replica
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
@@ -478,11 +479,12 @@ class Environment(
                 & Q(change_sets__live_from__gt=timezone.now())
             )
         )
-
-        change_requests: QuerySet["ChangeRequest"] = qs.filter(
-            id__in=qs.filter(scheduled_q).values_list("id", flat=True)
+        ids = qs.filter(scheduled_q).values_list("id", flat=True)
+        unique_ids = list(set(ids))
+        change_requests_qs: QuerySet["ChangeRequest"] = ChangeRequest.objects.filter(
+            id__in=unique_ids
         )
-        return change_requests
+        return change_requests_qs
 
     @staticmethod
     def is_bad_key(environment_key: str) -> bool:
@@ -575,7 +577,8 @@ class Environment(
         cls,
         api_key: str,
     ) -> dict[str, typing.Any]:
-        environment = cls.objects.filter_for_document_builder(
+        manager = using_database_replica(cls.objects)
+        environment = manager.filter_for_document_builder(
             api_key=api_key,
             extra_prefetch_related=[
                 Prefetch(

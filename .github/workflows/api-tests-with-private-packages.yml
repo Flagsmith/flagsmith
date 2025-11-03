@@ -28,20 +28,20 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install Poetry
+        run: make install-poetry
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'poetry'
+          cache: poetry
 
       - name: Install SAML Dependencies
         run: sudo apt-get install -y xmlsec1
 
       - name: Install packages and Tests
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         shell: bash
         run: |
           echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials

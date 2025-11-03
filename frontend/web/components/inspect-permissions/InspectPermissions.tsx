@@ -1,7 +1,7 @@
 import React, { FC, Ref, useMemo, useState } from 'react'
 import { Project, Role, User, UserGroupSummary } from 'common/types/responses'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import ProjectFilter from 'components/ProjectFilter'
@@ -50,7 +50,7 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
         uncontrolled={uncontrolled}
         value={value}
         onChange={onChange}
-        theme='pill m-0'
+        theme='pill'
         isRoles={true}
       >
         <TabItem

@@ -3,18 +3,18 @@ import {
   FeatureConflict,
   FeatureStateWithConflict,
 } from 'common/types/responses'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
 import {
   getFeatureStateDiff,
-  getSegmentDiff,
+  getSegmentOverrideDiff,
   getVariationDiff,
 } from './diff-utils'
 import DiffString from './DiffString'
 import DiffEnabled from './DiffEnabled'
-import DiffSegments from './DiffSegments'
+import DiffSegmentOverrides from './DiffSegmentOverrides'
 import DiffVariations from './DiffVariations'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
@@ -32,7 +32,7 @@ type FeatureDiffType = {
   conflicts?: FeatureConflict[] | undefined
   disableSegments?: boolean
 }
-
+const enabledWidth = 110
 const DiffFeature: FC<FeatureDiffType> = ({
   conflicts,
   disableSegments,
@@ -68,7 +68,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
 
   const segmentDiffs = disableSegments
     ? { diffs: [], totalChanges: 0 }
-    : getSegmentDiff(oldState, newState, segments?.results, conflicts)
+    : getSegmentOverrideDiff(oldState, newState, segments?.results, conflicts)
   const variationDiffs = getVariationDiff(oldEnv, newEnv)
   const totalSegmentChanges = segmentDiffs?.totalChanges
   const totalVariationChanges = variationDiffs?.totalChanges
@@ -133,17 +133,32 @@ const DiffFeature: FC<FeatureDiffType> = ({
               )}
               <div className='panel-content'>
                 <div className='search-list mt-2'>
-                  <div className='flex-row table-header'>
+                  <div className='flex-row gap-5 table-header'>
+                    <div
+                      style={{ width: enabledWidth }}
+                      className='table-column flex-row text-center'
+                    >
+                      Enabled
+                    </div>
                     {!hideValue && (
                       <div className='table-column flex-row flex flex-1'>
                         Value
                       </div>
                     )}
-                    <div className='table-column flex-row text-center'>
-                      Enabled
-                    </div>
                   </div>
-                  <div className='flex-row pt-4 list-item list-item-sm'>
+                  <div className='flex-row pt-4 gap-5 list-item list-item-sm'>
+                    <div
+                      style={{ width: enabledWidth }}
+                      className='table-column text-center'
+                    >
+                      <div className='d-flex flex-row'>
+                        <DiffEnabled
+                          data-test={'version-enabled'}
+                          oldValue={diff.oldEnabled}
+                          newValue={diff.newEnabled}
+                        />
+                      </div>
+                    </div>
                     {!hideValue && (
                       <div className='table-column flex flex-1 overflow-hidden'>
                         <div>
@@ -155,14 +170,6 @@ const DiffFeature: FC<FeatureDiffType> = ({
                         </div>
                       </div>
                     )}
-
-                    <div className='table-column text-center'>
-                      <DiffEnabled
-                        data-test={'version-enabled'}
-                        oldValue={diff.oldEnabled}
-                        newValue={diff.newEnabled}
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
@@ -221,7 +228,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
                     />
                   </div>
                 )}
-                <DiffSegments
+                <DiffSegmentOverrides
                   diffs={segmentDiffs.diffs}
                   projectId={projectId}
                   environmentId={environmentId}

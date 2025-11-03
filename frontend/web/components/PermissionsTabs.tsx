@@ -7,8 +7,8 @@ import {
   User,
   UserGroupSummary,
 } from 'common/types/responses'
-import Tabs from './base/forms/Tabs'
-import TabItem from './base/forms/TabItem'
+import Tabs from './navigation/TabMenu/Tabs'
+import TabItem from './navigation/TabMenu/TabItem'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
 import RolePermissionsList from './RolePermissionsList'
@@ -82,7 +82,8 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         uncontrolled={uncontrolled}
         value={value}
         onChange={onChange}
-        theme='pill m-0'
+        theme='pill'
+        className='m-0'
         isRoles={true}
       >
         <TabItem

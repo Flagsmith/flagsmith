@@ -28,8 +28,8 @@ import {
   cloneSegment,
   setSegmentRule,
   assertInputValue,
-  clickSegmentByName,
-} from '../helpers.cafe'
+  clickSegmentByName, deleteSegmentFromPage,
+} from '../helpers.cafe';
 import { E2E_USER, PASSWORD } from '../config'
 
 // Keep the last rule simple to facilitate update testing
@@ -81,7 +81,6 @@ const segmentRules =  [
 ]
 
 export const testSegment1 = async (flagsmith: any) => {
-  const isCloneSegmentEnabled = await flagsmith.hasFeature('clone_segment')
   log('Login')
   await login(E2E_USER, PASSWORD)
   await click('#project-select-1')
@@ -93,7 +92,7 @@ export const testSegment1 = async (flagsmith: any) => {
   ])
 
   await gotoSegments()
-  
+
   log('Segment age rules')
   // (=== 18 || === 19) && (> 17 || < 19) && (!=20) && (<=18) && (>=18)
   // Rule 1- Age === 18 || Age === 19
@@ -105,17 +104,14 @@ export const testSegment1 = async (flagsmith: any) => {
   await click(byId('segment-0-name'))
   await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
   await click(byId('update-segment'))
-  await closeModal()
+  log('Check segment rule value')
   await gotoSegments()
   await click(byId('segment-0-name'))
   await assertInputValue(byId(`rule-${0}-value-0`), `${lastRule.value + 1}`)
-  await closeModal()
-  await deleteSegment(0, 'segment_to_update', !isCloneSegmentEnabled)
-  await waitAndRefresh()
+  await deleteSegmentFromPage('segment_to_update')
 
   log('Create segment')
   await createSegment(0, '18_or_19', segmentRules)
-  await closeModal()
 
 
   log('Add segment trait for user')
@@ -150,16 +146,14 @@ export const testSegment1 = async (flagsmith: any) => {
   await waitAndRefresh()
   await assertTextContent(byId('user-feature-value-0'), '"medium"')
 
-  if (isCloneSegmentEnabled) {
-    log('Clone segment')
-    await gotoSegments()
-    await cloneSegment(0, '0cloned-segment')
-    await deleteSegment(0, '0cloned-segment', !isCloneSegmentEnabled)
-  }
+  log('Clone segment')
+  await gotoSegments()
+  await cloneSegment(0, '0cloned-segment')
+  await deleteSegment(0, '0cloned-segment')
 
   log('Delete segment')
   await gotoSegments()
-  await deleteSegment(0, '18_or_19', !isCloneSegmentEnabled)
+  await deleteSegment(0, '18_or_19')
   await gotoFeatures()
   await deleteFeature(0, 'mv_flag')
 }

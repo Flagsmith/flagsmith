@@ -52,17 +52,33 @@
     }
   }
 }
+
+.tabs-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  margin: 0 !important;
+}
+
 .tabs-nav {
+  .tab-nav-full {
+    flex: 1 !important;
+  }
+
   position: relative;
   display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   top: 2px;
   button,
   button.btn,
   button.btn-primary {
     border-radius: 0;
     box-shadow: none;
-    flex: 1;
+    flex: 0 0 auto;
     background-color: transparent;
     color: $body-color;
     &:hover {
@@ -99,6 +115,7 @@
   }
 }
 
+
 .tabs {
   & .pill {
     background-color:$pill-bg;
@@ -134,12 +151,15 @@
   display: block;
 }
 
+.dark {
+  .btn-tab {
+    color: white !important;
+  }
+}
+
 .btn-tab {
   position: relative;
   .unread {
-    position: absolute;
-    right: 0;
-    top: 9px;
     padding-left: 0 !important;
     padding-right: 0 !important;
     width: 16px;

@@ -42,6 +42,7 @@ from environments.dynamodb import (
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
+from features import views
 from features.dataclasses import EnvironmentFeatureOverridesData
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
@@ -707,6 +708,218 @@ def test_get_flags_for_environment_response(
     )
 
 
+@pytest.mark.parametrize("cache_flags_seconds", [0, 30])
+def test_SDKFeatureStates_get__responds_200_with_feature_list(
+    api_client: APIClient,
+    cache_flags_seconds: int,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    settings.CACHE_FLAGS_SECONDS = cache_flags_seconds
+
+    # When
+    response = api_client.get("/api/v1/flags/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "id": feature_state.id,
+            "enabled": feature_state.enabled,
+            "environment": environment.id,
+            "feature": mocker.ANY,
+            "feature_segment": None,
+            "feature_state_value": None,
+            "identity": None,
+        },
+    ]
+    assert response.json()[0]["feature"]["name"] == feature.name
+
+
+# NOTE: DEPRECATED
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "num_queries"],
+    [
+        pytest.param(False, True, 9, id="default_database,new_identity"),
+        pytest.param(False, False, 8, id="default_database,existing_identity"),
+        pytest.param(True, True, 9, id="replica_database,new_identity"),
+        pytest.param(True, False, 7, id="replica_database,existing_identity"),
+    ],
+)
+def test_SDKFeatureStates_get__given_identifier__responds_200_with_feature_list(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    is_new_identity: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "morpheus" if is_new_identity else identity.identifier
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = api_client.get(f"/api/v1/flags/{identifier}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "id": mocker.ANY if is_new_identity else feature_state.id,
+            "enabled": not is_new_identity,
+            "environment": environment.id,
+            "feature": mocker.ANY,
+            "feature_segment": None,
+            "feature_state_value": None,
+            "identity": None if is_new_identity else identity.id,
+        },
+    ]
+    assert response.json()[0]["feature"]["name"] == feature.name
+    assert Identity.objects.filter(identifier=identifier).exists()
+
+
+# NOTE: DEPRECATED
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "num_queries"],
+    [
+        pytest.param(False, True, 9, id="default_database,new_identity"),
+        pytest.param(False, False, 8, id="default_database,existing_identity"),
+        pytest.param(True, True, 9, id="replica_database,new_identity"),
+        pytest.param(True, False, 7, id="replica_database,existing_identity"),
+    ],
+)
+def test_SDKFeatureStates_get__given_identifier_and_feature__both_exist__responds_200_with_feature(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    is_new_identity: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "morpheus" if is_new_identity else identity.identifier
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = api_client.get(f"/api/v1/flags/{identifier}?feature={feature.name}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "id": mocker.ANY if is_new_identity else feature_state.id,
+        "enabled": not is_new_identity,
+        "environment": environment.id,
+        "feature": mocker.ANY,
+        "feature_segment": None,
+        "feature_state_value": None,
+        "identity": None if is_new_identity else identity.id,
+    }
+    assert response.json()["feature"]["name"] == feature.name
+    assert Identity.objects.filter(identifier=identifier).exists()
+
+
+# NOTE: DEPRECATED
+@pytest.mark.parametrize(
+    ["use_replica", "is_new_identity", "num_queries"],
+    [
+        pytest.param(False, True, 8, id="default_database,new_identity"),
+        pytest.param(False, False, 7, id="default_database,existing_identity"),
+        pytest.param(True, True, 8, id="replica_database,new_identity"),
+        pytest.param(True, False, 6, id="replica_database,existing_identity"),
+    ],
+)
+def test_SDKFeatureStates_get__given_identifier_and_feature__feature_does_not_exist__responds_404(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    identity: Identity,
+    is_new_identity: bool,
+    mocker: MockerFixture,
+    num_queries: int,
+    use_replica: bool,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    mocker.patch.object(views, "is_database_replica_setup", return_value=use_replica)
+    identifier = "morpheus" if is_new_identity else identity.identifier
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = api_client.get(f"/api/v1/flags/{identifier}?feature=turbo_mode")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert Identity.objects.filter(identifier=identifier).exists()
+
+
+def test_SDKFeatureStates_get__given_feature__exists__responds_200_with_feature(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(f"/api/v1/flags/?feature={feature.name}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "id": feature_state.id,
+        "enabled": feature.default_enabled,
+        "environment": environment.id,
+        "feature": mocker.ANY,
+        "feature_segment": None,
+        "feature_state_value": None,
+        "identity": None,
+    }
+
+
+def test_SDKFeatureStates_get__given_feature__doesnt_exist__responds_404(
+    api_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/?feature=turbo_mode")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 @pytest.mark.parametrize(
     "environment_value, project_value, disabled_flag_returned",
     (
@@ -861,6 +1074,47 @@ def test_get_flags__server_key_only_feature__server_key_auth__return_expected(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()
+
+
+def test_get_flags__server_key_only_feature__cache_isolation_between_client_and_server_keys(
+    environment: Environment,
+    environment_api_key: EnvironmentAPIKey,
+    feature: Feature,
+    settings: SettingsWrapper,
+    use_local_mem_cache_for_cache_middleware: None,
+) -> None:
+    # Given
+    feature.is_server_key_only = True
+    feature.save()
+
+    # Enable caching
+    settings.CACHE_FLAGS_SECONDS = 30
+
+    url = reverse("api-v1:flags")
+
+    # Create clients for server and client keys
+    server_client = APIClient(
+        headers={SDK_ENVIRONMENT_KEY_HEADER: environment_api_key.key}
+    )
+    client_client = APIClient(headers={SDK_ENVIRONMENT_KEY_HEADER: environment.api_key})
+
+    # When - First request with SERVER key (populates cache)
+    server_response = server_client.get(url)
+
+    # Then - Server should see the server-only feature
+    assert server_response.status_code == status.HTTP_200_OK
+    server_flags = server_response.json()
+    server_feature_names = [flag["feature"]["name"] for flag in server_flags]
+    assert feature.name in server_feature_names
+
+    # When - Second request with CLIENT key (should not get server-only from cache)
+    client_response = client_client.get(url)
+
+    # Then - Client should NOT see the server-only feature
+    assert client_response.status_code == status.HTTP_200_OK
+    client_flags = client_response.json()
+    client_feature_names = [flag["feature"]["name"] for flag in client_flags]
+    assert feature.name not in client_feature_names
 
 
 def test_get_feature_states_by_uuid(
@@ -1340,8 +1594,6 @@ def test_environment_feature_states_does_not_return_null_versions(
     response_json = response.json()
     assert len(response_json["results"]) == 1
     assert response_json["results"][0]["id"] == feature_state.id
-
-    # Feature tests
 
 
 def test_create_feature_default_is_archived_is_false(
@@ -3777,3 +4029,209 @@ def test_delete_feature_deletes_any_related_identity_overrides(
         )["Count"]
         == 0
     )
+
+
+def test_get_multivariate_options_responds_200_with_control_value_and_options(
+    api_client: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    mv_options = list(multivariate_feature.multivariate_options.all())
+    expected_option_values = [opt.string_value for opt in mv_options]
+
+    # When
+    response = api_client.get(
+        f"/api/v1/flags/{multivariate_feature.id}/multivariate-options/"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["control_value"] == "control"
+    assert len(data["options"]) == 3
+
+    actual_option_values = [opt["value"] for opt in data["options"]]
+    for expected_value in expected_option_values:
+        assert expected_value in actual_option_values
+
+
+def test_get_multivariate_options_feature_not_found_responds_404(
+    api_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    non_existent_feature_id = 99999
+
+    # When
+    response = api_client.get(
+        f"/api/v1/flags/{non_existent_feature_id}/multivariate-options/"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_list_features_segment_query_param_with_valid_segment(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment,
+    )
+    segment_override = FeatureState.objects.create(
+        feature=feature,
+        feature_segment=feature_segment,
+        environment=environment,
+        enabled=True,
+    )
+    segment_override.feature_state_value.string_value = "segment_value"
+    segment_override.feature_state_value.save()
+
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    url = f"{base_url}?environment={environment.id}&segment={segment.id}"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    feature_data = next(
+        filter(lambda r: r["id"] == feature.id, response_json["results"])
+    )
+
+    assert "environment_feature_state" in feature_data
+    segment_state = feature_data["segment_feature_state"]
+
+    assert segment_state is not None
+    assert segment_state["id"] == segment_override.id
+    assert segment_state["feature_state_value"] == "segment_value"
+    assert segment_state["enabled"] is True
+
+
+def test_list_features_segment_query_param_with_invalid_segment(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    invalid_segment_id = segment.id + 9999
+    url = f"{base_url}?environment={environment.id}&segment={invalid_segment_id}"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    feature_data = next(
+        filter(lambda r: r["id"] == feature.id, response_json["results"])
+    )
+
+    assert "segment_feature_state" in feature_data
+    assert feature_data["segment_feature_state"] is None
+
+
+def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
+    admin_client_new: APIClient,
+    project: Project,
+    optional_b_feature_metadata_field: MetadataModelField,
+) -> None:
+    """
+    Test that creating multiple features with metadata keeps metadata properly isolated.
+    This is a regression test for the bug where creating a second feature would remove
+    metadata from the first feature if the user sent the first feature's metadata ID.
+    """
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # Create first feature with metadata
+    first_feature_data = {
+        "name": "First Feature",
+        "description": "First feature description",
+        "metadata": [
+            {
+                "model_field": optional_b_feature_metadata_field.id,
+                "field_value": "100",
+            },
+        ],
+    }
+
+    # When - Create first feature
+    first_response = admin_client_new.post(
+        url, data=json.dumps(first_feature_data), content_type="application/json"
+    )
+
+    # Then - First feature should be created successfully
+    assert first_response.status_code == status.HTTP_201_CREATED
+    first_feature_id = first_response.json()["id"]
+    first_metadata = first_response.json()["metadata"]
+    assert len(first_metadata) == 1
+    assert first_metadata[0]["field_value"] == "100"
+    first_metadata_id = first_metadata[0]["id"]
+
+    # Given - Create second feature
+    second_feature_data = {
+        "name": "Second Feature",
+        "description": "Second feature description",
+        "metadata": [
+            {
+                "id": first_metadata_id,  # user mistakenly sends existing metadata ID
+                "model_field": optional_b_feature_metadata_field.id,
+                "field_value": "200",
+            },
+        ],
+    }
+
+    # When - Create second feature
+    second_response = admin_client_new.post(
+        url, data=json.dumps(second_feature_data), content_type="application/json"
+    )
+
+    # Then - Second feature should be created successfully
+    assert second_response.status_code == status.HTTP_201_CREATED
+    second_feature_id = second_response.json()["id"]
+    second_metadata = second_response.json()["metadata"]
+    assert len(second_metadata) == 1
+    assert second_metadata[0]["field_value"] == "200"
+    # The metadata ID should be different (new metadata instance created)
+    assert second_metadata[0]["id"] != first_metadata_id
+
+    # When - Retrieve first feature to verify metadata is still there
+    first_feature_url = reverse(
+        "api-v1:projects:project-features-detail", args=[project.id, first_feature_id]
+    )
+    first_feature_check = admin_client_new.get(first_feature_url)
+
+    # Then - First feature should still have its metadata
+    assert first_feature_check.status_code == status.HTTP_200_OK
+    first_feature_metadata_after = first_feature_check.json()["metadata"]
+    assert len(first_feature_metadata_after) == 1
+    assert first_feature_metadata_after[0]["field_value"] == "100"
+    assert first_feature_metadata_after[0]["id"] == first_metadata_id
+
+    # When - Retrieve second feature to verify metadata
+    second_feature_url = reverse(
+        "api-v1:projects:project-features-detail",
+        args=[project.id, second_feature_id],
+    )
+    second_feature_check = admin_client_new.get(second_feature_url)
+
+    # Then - Second feature should have its own metadata
+    assert second_feature_check.status_code == status.HTTP_200_OK
+    second_feature_metadata_after = second_feature_check.json()["metadata"]
+    assert len(second_feature_metadata_after) == 1
+    assert second_feature_metadata_after[0]["field_value"] == "200"
