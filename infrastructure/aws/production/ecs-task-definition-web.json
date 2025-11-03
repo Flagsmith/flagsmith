@@ -126,10 +126,8 @@
                     "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
                 },
                 {
-
                     "name": "AWS_SSE_LOGS_BUCKET_NAME",
                     "value": "flagsmith-fastly-logs-production"
-
                 },
                 {
                     "name": "OAUTH_CLIENT_ID",
