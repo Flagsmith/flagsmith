@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
-import loadCrisp from 'common/loadCrisp'
+import loadChat, { openChat } from 'common/loadChat'
 import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from 'components/Icon'
@@ -27,9 +27,9 @@ const GettingStartedPage: FC = () => {
       document.body.classList.remove('full-screen')
     }
   }, [])
-  async function onCrispClick() {
-    loadCrisp('8857f89e-0eb5-4263-ab49-a293872b6c19')
-    Utils.openChat()
+  async function onChatClick() {
+    await loadChat(true)
+    openChat()
   }
 
   const organisationId = AccountStore.getOrganisation()?.id
@@ -165,7 +165,7 @@ const GettingStartedPage: FC = () => {
           questions{' '}
           <Button
             theme='text'
-            onClick={onCrispClick}
+            onClick={onChatClick}
             className='text-primary gap-2'
             href=''
           >

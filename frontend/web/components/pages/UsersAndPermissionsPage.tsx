@@ -4,6 +4,7 @@ import Button from 'components/base/forms/Button'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Utils from 'common/utils/utils'
+import { openChat } from 'common/loadChat'
 import Constants from 'common/constants'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import InviteUsersModal from 'components/modals/InviteUsers'
@@ -238,7 +239,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                       If you wish to invite any additional
                                       members, please{' '}
                                       {
-                                        <a href='#' onClick={Utils.openChat}>
+                                        <a href='#' onClick={openChat}>
                                           Contact us
                                         </a>
                                       }
