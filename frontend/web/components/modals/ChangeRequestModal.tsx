@@ -15,13 +15,18 @@ import Utils from 'common/utils/utils'
 import { Approval, ChangeRequest, User } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+import Checkbox from 'components/base/forms/Checkbox'
+import ProjectStore from 'common/stores/project-store'
 
 interface ChangeRequestModalProps {
   changeRequest?: ChangeRequest
   onSave: (
-    data: Omit<Req['createChangeRequest'], 'multivariate_options'>,
+    data: Omit<Req['createChangeRequest'], 'multivariate_options'> & {
+      ignore_conflicts?: boolean
+    },
   ) => void
   isScheduledChange?: boolean
+  showIgnoreConflicts?: boolean
   showAssignees?: boolean
 }
 
@@ -30,6 +35,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   isScheduledChange,
   onSave,
   showAssignees,
+  showIgnoreConflicts,
 }) => {
   const [approvals, setApprovals] = useState<Approval[]>([
     ...(changeRequest?.approvals ?? []),
@@ -46,7 +52,9 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   const [showUsers, setShowUsers] = useState(false)
   const [showGroups, setShowGroups] = useState(false)
   const [currDate, setCurrDate] = useState(new Date())
+  const [ignoreConflicts, setIgnoreConflicts] = useState(false)
 
+  console.log(ProjectStore)
   const { data: groups } = useGetMyGroupsQuery({
     orgId: AccountStore.getOrganisation().id,
   })
@@ -89,6 +97,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
     onSave({
       approvals,
       description,
+      ignore_conflicts: ignoreConflicts,
       live_from: liveFrom || undefined,
       title,
     })
@@ -280,6 +289,18 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                 isOpen={showGroups}
                 onToggle={() => setShowGroups(!showGroups)}
                 size='-sm'
+              />
+            )}
+            {!changeRequest && showIgnoreConflicts && (
+              <InputGroup
+                title='Ignore Conflicts'
+                component={
+                  <Checkbox
+                    label='Create this change request even if there is an existing one for the same feature'
+                    checked={ignoreConflicts}
+                    onChange={setIgnoreConflicts}
+                  />
+                }
               />
             )}
             <FormGroup className='text-right mt-2'>
