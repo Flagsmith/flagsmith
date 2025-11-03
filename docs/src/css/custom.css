@@ -240,7 +240,6 @@ main.container {
   background: var(--ifm-background-surface-color);
   padding: 3rem 0;
   margin: 0;
-  /* full width */
   width: 100vw;
   position: relative;
   left: 50%;
@@ -253,7 +252,6 @@ main.container {
   background: #111111;
   padding: 3rem 0;
   margin: 0;
-  /* full width */
   width: 100vw;
   position: relative;
   left: 50%;
@@ -262,13 +260,11 @@ main.container {
   margin-right: -50vw;
 }
 
-/* Section background alternation for dark mode - alternating every 2 sections */
 [data-theme='dark'] section:nth-child(4n+1),
 [data-theme='dark'] section:nth-child(4n+2) {
   background: #111111;
   padding: 3rem 0;
   margin: 0;
-  /* full width */
   width: 100vw;
   position: relative;
   left: 50%;
@@ -282,7 +278,6 @@ main.container {
   background: var(--ifm-background-surface-color);
   padding: 3rem 0;
   margin: 0;
-  /* full width */
   width: 100vw;
   position: relative;
   left: 50%;
@@ -291,7 +286,6 @@ main.container {
   margin-right: -50vw;
 }
 
-/*  container width inside sections */
 section > div,
 section > h2 {
   margin: 0 auto;
@@ -301,13 +295,27 @@ section > h2 {
 }
 
 section > h2 {
-  padding-left: var(--ifm-spacing-horizontal); /* Using the same padding as div */
+  padding-left: var(--ifm-spacing-horizontal);
 }
 
-/* Ensure consistent container width */
 .container {
   max-width: var(--ifm-container-width);
   margin: 0 auto;
   padding: 0 var(--ifm-spacing-horizontal);
   width: 100%;
+}
+
+@media (max-width: 996px) {
+  [data-theme='dark'] section:nth-child(4n+1),
+  [data-theme='dark'] section:nth-child(4n+2),
+  [data-theme='dark'] section:nth-child(4n+3),
+  [data-theme='dark'] section:nth-child(4n+4),
+  [data-theme='dark'] section:nth-child(odd),
+  [data-theme='dark'] section:nth-child(even) {
+    width: 100%;
+    left: auto;
+    right: auto;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
