@@ -6,9 +6,7 @@ sidebar_position: 4
 
 :::info
 
-Release Pipelines is currently in a closed beta, please contact us if you'd like to gain access.
-
-<a class="open-chat button button--primary" data-crisp-chat-message="Hello, I'm interested in joining the Release Pipelines beta.">Contact Us</a>
+Release Pipelines is currently in a closed beta, please contact support@flagsmith.com if you'd like to gain access.
 
 :::
 
