@@ -34,6 +34,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
     "flagsmith-python-sdk": [
         "unknown",
         "5.0.0",
+        "5.0.1",
         "5.0.2",
     ],
     "flagsmith-ruby-sdk": ["unknown"],
