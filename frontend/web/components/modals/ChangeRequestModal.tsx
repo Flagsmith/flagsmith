@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FC, useMemo } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import UserSelect from 'components/UserSelect'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Button from 'components/base/forms/Button'
@@ -16,7 +16,6 @@ import { Approval, ChangeRequest, User } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import Checkbox from 'components/base/forms/Checkbox'
-import ProjectStore from 'common/stores/project-store'
 
 interface ChangeRequestModalProps {
   changeRequest?: ChangeRequest
@@ -54,7 +53,6 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   const [currDate, setCurrDate] = useState(new Date())
   const [ignoreConflicts, setIgnoreConflicts] = useState(false)
 
-  console.log(ProjectStore)
   const { data: groups } = useGetMyGroupsQuery({
     orgId: AccountStore.getOrganisation().id,
   })
