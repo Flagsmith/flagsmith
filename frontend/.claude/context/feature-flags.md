@@ -122,11 +122,10 @@ Common pattern: Add new features behind flags while keeping existing functionali
 
 ```typescript
 import { useState } from 'react'
-import { useFlags } from 'flagsmith/react'
 import { Tabs } from 'components/base/forms/Tabs'
 
 const MyPage = () => {
-  const { new_feature } = useFlags(['new_feature'])
+  const newFeatureEnabled = Utils.getFlagsmithHasFeature('new_feature')
   const [activeTab, setActiveTab] = useState(0)
 
   // Without flag: show only existing component
@@ -134,7 +133,7 @@ const MyPage = () => {
   return (
     <div>
       <h2>Section Title</h2>
-      {new_feature?.enabled ? (
+      {newFeatureEnabled ? (
         <Tabs
           value={activeTab}
           onChange={setActiveTab}
@@ -159,8 +158,7 @@ const MyPage = () => {
 
 ### Table Column with Flag
 ```typescript
-const flags = useFlags(['show_actions'])
-const canShowActions = flags.show_actions?.enabled
+const canShowActions = Utils.getFlagsmithHasFeature('show_actions')
 
 return (
   <table>
@@ -186,15 +184,12 @@ return (
 
 ### Button with Flag
 ```typescript
-const flags = useFlags(['allow_delete'])
-const canDelete = flags.allow_delete?.enabled
+const canDelete = Utils.getFlagsmithHasFeature('allow_delete')
 
 return (
   <>
-    {canDelete && (
-    <Button onClick={handleDelete}>Delete</Button>
-  )}
-</>
+    {canDelete && <Button onClick={handleDelete}>Delete</Button>}
+  </>
 )
 ```
 

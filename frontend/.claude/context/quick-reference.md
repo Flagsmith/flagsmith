@@ -31,12 +31,12 @@
 
 Only use feature flags when explicitly requested by the user.
 
-- [ ] Create flag in Flagsmith (use `/feature-flag` command)
-- [ ] Import `{ useFlags }` from `flagsmith/react`
-- [ ] Call `useFlags(['flag_name'])`
-- [ ] Check `flags.flag_name?.enabled`
+- [ ] Create flag in Flagsmith (use `/feature-flag` command or MCP tools)
+- [ ] In render method or component, call `Utils.getFlagsmithHasFeature('flag_name')`
+- [ ] Store result in a variable (e.g., `const isEnabled = Utils.getFlagsmithHasFeature('flag_name')`)
+- [ ] Use conditional rendering: `{isEnabled && <Component />}`
 - [ ] Provide fallback when flag is disabled
-- [ ] Document flag usage in code
+- [ ] Enable flag manually via Flagsmith UI at https://app.flagsmith.com
 
 ## File Locations
 
@@ -81,7 +81,6 @@ import { ErrorMessage } from 'components/base/Messages'
 
 ### Hooks
 ```typescript
-import { useFlags } from 'flagsmith/react'
 import { useDefaultSubscription } from 'common/services/useDefaultSubscription'
 import { useState } from 'react'
 ```
@@ -169,8 +168,8 @@ if (error) return <ErrorMessage>{error}</ErrorMessage>
 
 ### Feature Flag Check
 ```typescript
-const { flag_name } = useFlags(['flag_name'])
-if (flag_name?.enabled) {
+const isFeatureEnabled = Utils.getFlagsmithHasFeature('flag_name')
+if (isFeatureEnabled) {
   // Show new feature
 }
 ```
@@ -269,8 +268,8 @@ console.log({ data, error, isLoading, isFetching })
 
 ### Check feature flag value
 ```typescript
-const flags = useFlags(['my_flag'])
-console.log('Flag value:', flags.my_flag)
+const isEnabled = Utils.getFlagsmithHasFeature('my_flag')
+console.log('Flag enabled:', isEnabled)
 ```
 
 ### Inspect Redux state
