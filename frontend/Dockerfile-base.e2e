@@ -6,7 +6,7 @@ ENV NODE_VERSION 16.20.1
 # replace shell with bash so we can source files
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
-# Install dependencies and download Firefox 143.0 from Mozilla
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     g++ make libssl-dev python3 python3-setuptools gnupg2 curl wget \
     libgtk-3-0 libdbus-glib-1-2 libxt6 libx11-xcb1 libasound2 \
