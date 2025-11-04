@@ -32,6 +32,8 @@ Configuration files:
   - API Key: `ENktaJnfLVbLifybz34JmX`
   - No approval required for changes
 
+**IMPORTANT: Always use Project ID 12 when creating feature flags for this frontend.**
+
 To find other organization and project IDs, use the MCP tools (see "Managing Feature Flags" section below).
 
 ## Setup
