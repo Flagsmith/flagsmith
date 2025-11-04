@@ -1,6 +1,9 @@
 name: Build E2E Frontend Base Image
 
 on:
+  push:
+    paths:
+      - frontend/Dockerfile-base.e2e
   schedule:
     # Update the E2E Firefox testcafe version on the first of every month
     - cron: 0 0 1 * *
