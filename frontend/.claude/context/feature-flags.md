@@ -32,9 +32,15 @@ Configuration files:
   - API Key: `ENktaJnfLVbLifybz34JmX`
   - No approval required for changes
 
-**IMPORTANT: Always use Project ID 12 when creating feature flags for this frontend.**
+**CRITICAL: ALWAYS USE PROJECT ID 12 WHEN CREATING FEATURE FLAGS FOR THIS FRONTEND.**
 
-To find other organization and project IDs, use the MCP tools (see "Managing Feature Flags" section below).
+**BEFORE CREATING ANY FEATURE FLAG, YOU MUST:**
+1. Read `common/project.js` and verify the `flagsmith` API key
+2. Use `mcp__flagsmith__list_project_environments` with project_id: 12 to confirm the API key matches
+3. **ONLY** create the flag in Project ID 12 (Flagsmith Website)
+4. **NEVER** create flags in multiple projects or guess which project to use
+
+**Creating flags in the wrong project is a critical error that pollutes other projects with incorrect flags.**
 
 ## Setup
 
