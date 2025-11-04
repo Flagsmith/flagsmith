@@ -42,19 +42,14 @@ To find other organization and project IDs, use the MCP tools (see "Managing Fea
 
 ## Usage Pattern
 
-### Functional Components (Standard)
+### Standard Pattern (Recommended)
+
+**This project uses `Utils.getFlagsmithHasFeature()` for all feature flag checks.**
 
 ```typescript
-import { useFlags } from 'flagsmith/react'
-
+// In any component (functional or class)
 const MyComponent = () => {
-  // Request specific FEATURES by name (first parameter)
-  const flags = useFlags(['feature_name'])
-  const isFeatureEnabled = flags.feature_name?.enabled
-
-  // For TRAITS, use the second parameter
-  // const flags = useFlags([], ['trait_name'])
-  // const traitValue = flags.trait_name
+  const isFeatureEnabled = Utils.getFlagsmithHasFeature('feature_name')
 
   return (
     <>
@@ -66,52 +61,56 @@ const MyComponent = () => {
 }
 ```
 
-### Class Components
-
-When adding a flag to a class component, use a wrapper component pattern:
-
 ```typescript
-import { useFlags } from 'flagsmith/react'
-
+// In class components (use in render method)
 class MyClassComponent extends Component {
   render() {
-    // Access flags from props
-    const isEnabled = this.props.flags.feature_name?.enabled
+    const isFeatureEnabled = Utils.getFlagsmithHasFeature('feature_name')
 
     return (
       <>
-        {isEnabled && <div>Feature content here</div>}
+        {isFeatureEnabled && <div>Feature content here</div>}
       </>
     )
   }
 }
+```
 
-// Wrapper component to inject flags as props
-const MyClassComponentWithFlags = (props) => {
+### Alternative: Direct flagsmith Hook (Not Used in This Project)
+
+For reference, the project also supports direct `useFlags` hook, but **Utils.getFlagsmithHasFeature is preferred**:
+
+```typescript
+import { useFlags } from 'flagsmith/react'
+
+const MyComponent = () => {
   const flags = useFlags(['feature_name'])
-  return <MyClassComponent {...props} flags={flags} />
-}
+  const isFeatureEnabled = flags.feature_name?.enabled
 
-export default MyClassComponentWithFlags
+  return (
+    <>
+      {isFeatureEnabled && <div>Feature content here</div>}
+    </>
+  )
+}
 ```
 
 ## Best Practices
 
-1. **Features vs Traits**:
-    - **Features** (first parameter): `useFlags(['feature_name'])` - Returns `{ enabled: boolean, value: any }`
-    - **Traits** (second parameter): `useFlags([], ['trait_name'])` - Returns raw value (string/number/boolean)
-2. **Always check `.enabled` for features**: Use `flags.flag_name?.enabled` to get boolean
+1. **Use Utils.getFlagsmithHasFeature**: This is the standard pattern used throughout the codebase
+2. **Declare flags early in render**: Define flag variables at the top of your render method or component
 3. **Conditional rendering**: Wrap new features in flag checks
 4. **Table columns**: Hide entire columns when flag is disabled (header + cells)
 5. **API calls**: Only make requests if feature flag is enabled
 6. **Naming**: Use snake_case for flag names (e.g., `download_invoices`)
+7. **For feature values**: Use `Utils.getFlagsmithJSONValue('flag_name', defaultValue)` to get JSON values
 
 ## Examples
 
 ### Simple Feature Toggle
 ```typescript
-const flags = useFlags(['new_dashboard'])
-if (flags.new_dashboard?.enabled) {
+const isNewDashboard = Utils.getFlagsmithHasFeature('new_dashboard')
+if (isNewDashboard) {
   return <NewDashboard />
 }
 return <OldDashboard />
