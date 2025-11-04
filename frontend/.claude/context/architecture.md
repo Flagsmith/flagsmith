@@ -1,28 +1,27 @@
 # Architecture & Configuration
 
-## Environment Configuration
+## Environment & Whitelabelling
 
-- Config files: `env/project_<ENV>.js`
-- Available environments: `dev`, `prod`, `staging`, `local`, `selfhosted`, `e2e`
-- Project config: `common/project.js` (imports from env files)
-- Override: `ENV=local npm run dev` or `ENV=staging npm run dev`
+- Config files: `common/env/project_<ENV>_<NAME>.js`
+- `ENV`: `dev` or `prod` (default: `dev`)
+- `NAME`: Brand name like `hoxtonmix-portal` (default: `hoxtonmix-portal`)
+- Override: `API_URL=https://my-api.com/api/v1/ npm run dev`
 
 ## Key Technologies
 
-- React 16.14 + TypeScript + Bootstrap 5.2.2
-- Redux Toolkit + RTK Query (API state management)
-- Flux stores (legacy state management)
-- Webpack 5 + Express dev server
+- Next.js 13.1.5 + TypeScript + Bootstrap 5.3.3
+- Preact (aliased as React for smaller bundle)
+- AWS Amplify (Cognito auth)
 - Sentry (error tracking)
-- Flagsmith (feature flags - this project IS Flagsmith, dogfooding its own platform)
+- Flagsmith (feature flags - see `feature-flags.md` for usage)
 
 ## Additional Rules
 
-- **TypeScript/ESLint**: Build may ignore some errors, but always run linting on modified files
-- **Web-specific code**: Goes in `/web/` directory (not `/common`)
+- **TypeScript/ESLint**: Build ignores errors (`ignoreBuildErrors: true`)
+- **Web-specific utilities**: Go in `/project/` (not `/common`)
 - **Redux Persist**: Whitelist in `common/store.ts`
-- **Imports**: Always use path aliases (`common/*`, `components/*`, `project/*`) - NO relative imports
+- **Layout**: Default in `pages/_app.tsx` (`<Aside>` + `<Nav>`), override with `getLayout` pattern
 
 ## Documentation
 
-Check the main repository README and docs for additional information
+External docs: https://www.notion.so/hoxtonmix/Public-Website-and-Portal-77ae32dba39b42fb869cb18d18a73cf5

@@ -1,103 +1,130 @@
-# Form Patterns (Custom Components)
+# Form Patterns (Yup + Formik)
 
-**IMPORTANT**: This codebase does NOT use Formik or Yup. Forms are built with custom form components.
-
-## Standard Pattern for Forms
+## Standard Pattern for ALL Forms
 
 ```typescript
-import { FC, FormEvent, useState } from 'react'
-import InputGroup from 'components/base/forms/InputGroup'
-import Button from 'components/base/forms/Button'
-import Utils from 'common/utils/utils'
+import { useFormik } from 'formik'
+import * as yup from 'yup'
+import { validateForm } from 'project/utils/forms/validateForm'
 
-type FormData = {
-  name: string
-  email: string
-}
+const schema = yup.object().shape({
+  name: yup.string().required('Name is required'),
+})
 
-const MyForm: FC = () => {
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    email: '',
+const MyForm = () => {
+  const { errors, touched, values, handleChange, handleBlur, handleSubmit, setTouched } = useFormik({
+    initialValues: { name: '' },
+    onSubmit: async (values) => { /* API call */ },
+    validationSchema: schema,
+    validateOnMount: true,
   })
-  const [error, setError] = useState<any>(null)
 
-  const setFieldValue = (key: keyof FormData, value: any) => {
-    setFormData((prev) => ({ ...prev, [key]: value }))
-  }
-
-  const isValid = !!formData.name && Utils.isValidEmail(formData.email)
-
-  const handleSubmit = (e: FormEvent) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
-    if (isValid) {
-      // Make API call
-    }
+    const isValid = await validateForm(errors, setTouched)
+    if (isValid) handleSubmit()
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={onSubmit}>
       <InputGroup
-        title='Name'
-        isValid={!!formData.name && !error?.name}
-        inputProps={{
-          error: error?.name,
-          name: 'name',
-        }}
-        value={formData.name}
-        onChange={(e: FormEvent) => setFieldValue('name', e)}
+        name="name"
+        value={values.name}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        touched={touched.name}
+        error={errors.name}
       />
-      <InputGroup
-        title='Email'
-        type='email'
-        isValid={Utils.isValidEmail(formData.email) && !error?.email}
-        inputProps={{
-          error: error?.email,
-          name: 'email',
-        }}
-        value={formData.email}
-        onChange={(e: FormEvent) => setFieldValue('email', e)}
-      />
-      <Button type="submit" disabled={!isValid}>Submit</Button>
+      <Button type="submit">Submit</Button>
     </form>
   )
 }
 ```
 
-## Form Components (in `web/components/base/forms/`)
+## Form Components (in `components/base/forms/`)
 
-- **InputGroup**: Main form field wrapper
-  - Props: `title`, `value`, `onChange`, `isValid`, `inputProps`, `type`
-  - `inputProps` can contain `error`, `name`, `className`, etc.
-- **Button**: Standard button component
-- **Select**: Dropdown select component
-- **Switch**, **Toggle**: Boolean inputs
+- **InputGroup**: Standard wrapper - pass `touched` and `error` props
+- **DatePicker**, **PhoneInput**, **Select**: Use with `component` prop on InputGroup
+- **Radio**, **Checkbox**, **Switch**: Boolean/choice inputs
 
-## Validation Patterns
+**Reference**: See `/examples/forms/ComprehensiveFormExample.tsx`
 
-- **Custom validation**: Use inline checks with `Utils` helpers
-  - `Utils.isValidEmail(email)`
-  - Custom business logic
-- **isValid prop**: Controls visual feedback (green checkmark, etc.)
-- **Error handling**: Pass `error` via `inputProps` for field-level errors
+## Form Spacing & Layout
 
-## Example with RTK Query Mutation
+### Standard Form Layout Structure
 
-```typescript
-const [createEntity, { isLoading, error: apiError }] = useCreateEntityMutation()
+```tsx
+<div className='card shadow-sm h-100'>
+  <div className='card-body p-4'>
+    <h2 className='h4 mb-4 pb-3 border-bottom'>Form Title</h2>
 
-const handleSubmit = async (e: FormEvent) => {
-  e.preventDefault()
-  if (!isValid) return
-
-  try {
-    await createEntity(formData).unwrap()
-    // Success - show toast, redirect, etc.
-  } catch (err) {
-    // Handle error
-    setError(err)
-  }
-}
+    <div className='d-flex flex-column gap-4'>
+      <InputGroup name='field1' ... />
+      <InputGroup name='field2' ... />
+      <InputGroup name='field3' ... />
+    </div>
+  </div>
+</div>
 ```
 
-**Reference**: See actual forms in `web/components/onboarding/` for real examples
+### Spacing Classes
+
+Use Bootstrap's spacing scale consistently:
+
+- **Between InputGroups**: `d-flex flex-column gap-4` (24px vertical gap)
+- **Section header margin**: `h3 className='mb-4 pb-3 border-bottom'` (24px bottom)
+- **Two-column rows**: `d-flex gap-4 mb-4` with `flex-1` per column
+- **Button rows**: `d-flex justify-content-end gap-2 mt-3` (8px between buttons, 16px top margin)
+- **Error messages**: `mb-5` when standalone (48px)
+
+### Multi-Section Forms
+
+For forms with multiple sections:
+
+```tsx
+<form onSubmit={onSubmit}>
+  <div className='d-flex flex-column gap-5'> {/* 48px between sections */}
+
+    {/* Section 1 */}
+    <div>
+      <h3 className='mb-4'>Section Title</h3>
+      <div className='d-flex flex-column gap-4'>
+        <InputGroup ... />
+        <InputGroup ... />
+      </div>
+    </div>
+
+    {/* Section 2 */}
+    <div>
+      <h3 className='mb-4'>Another Section</h3>
+      <div className='d-flex flex-column gap-4'>
+        <InputGroup ... />
+      </div>
+    </div>
+
+    {/* Actions */}
+    <div className='d-flex justify-content-end gap-2 mt-3'>
+      <Button>Cancel</Button>
+      <Button type='submit'>Submit</Button>
+    </div>
+  </div>
+</form>
+```
+
+### Bootstrap Gap/Margin Scale
+
+- `gap-2` = 0.5rem (8px)
+- `gap-3` = 1rem (16px)
+- `gap-4` = 1.5rem (24px) ← Use for InputGroup spacing
+- `gap-5` = 3rem (48px) ← Use for section separation
+
+- `mb-3` = 1rem (16px)
+- `mb-4` = 1.5rem (24px) ← Use for section headers
+- `mb-5` = 3rem (48px) ← Use for standalone errors/content
+
+### Key Files with Examples
+
+- `/components/examples/forms/ComprehensiveFormExample.tsx` - Full pattern with sections
+- `/components/ChangeAccountInformation.tsx` - Account form spacing
+- `/components/ChangeContact.tsx` - Contact form spacing
+- `/components/whatsapp/CreateEditNumber.tsx` - Modal form pattern

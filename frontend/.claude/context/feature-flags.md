@@ -4,6 +4,14 @@
 
 The project uses Flagsmith for feature flag management. Flags allow you to control feature visibility without deploying code changes.
 
+**IMPORTANT:** Only implement feature flags when explicitly requested by the user. By default, implement features directly without flags. Feature flags add complexity and should only be used when there's a specific need for:
+- Progressive rollouts to specific users
+- A/B testing different implementations
+- Ability to quickly disable a feature in production
+- Gradual feature adoption across user segments
+
+If the user doesn't mention feature flags, implement features directly.
+
 ## Project Configuration
 
 Configuration files:
@@ -64,6 +72,47 @@ if (flags.new_dashboard?.enabled) {
 return <OldDashboard />
 ```
 
+### Progressive Feature Rollout Pattern
+
+Common pattern: Add new features behind flags while keeping existing functionality intact.
+
+```typescript
+import { useState } from 'react'
+import { useFlags } from 'flagsmith/react'
+import { Tabs } from 'components/base/forms/Tabs'
+
+const MyPage = () => {
+  const { new_feature } = useFlags(['new_feature'])
+  const [activeTab, setActiveTab] = useState(0)
+
+  // Without flag: show only existing component
+  // With flag: show tabs with existing + new component
+  return (
+    <div>
+      <h2>Section Title</h2>
+      {new_feature?.enabled ? (
+        <Tabs
+          value={activeTab}
+          onChange={setActiveTab}
+          tabLabels={['Default', 'New Feature']}
+        >
+          <div><ExistingComponent /></div>
+          <div><NewFeatureComponent /></div>
+        </Tabs>
+      ) : (
+        <ExistingComponent />
+      )}
+    </div>
+  )
+}
+```
+
+**Benefits:**
+- Zero risk to existing users when flag is off
+- Easy A/B testing by enabling for specific users
+- Can roll back instantly by disabling flag
+- Clean removal path once feature is validated
+
 ### Table Column with Flag
 ```typescript
 const flags = useFlags(['show_actions'])
@@ -108,6 +157,45 @@ return (
 ## Managing Feature Flags via MCP
 
 This project uses the **flagsmith-admin-api MCP** for feature flag management. All operations are performed through MCP tools instead of manual API calls or web console.
+
+### CRITICAL: When User Says "Create a Feature Flag"
+
+**When the user requests to create a feature flag, you MUST:**
+
+1. ✅ **Actually create the flag in Flagsmith** using `mcp__flagsmith__create_feature`
+2. ✅ **Implement the frontend code** that uses the flag with `useFlags()`
+3. ✅ **Return the flag details** (ID, name, project) to confirm creation
+
+**DO NOT:**
+- ❌ Only implement the code without creating the flag
+- ❌ Assume the flag already exists
+- ❌ Assume the user will create it manually
+
+**This is a two-part task:**
+- **Backend (Flagsmith)**: Create the flag entity in Flagsmith
+- **Frontend (Code)**: Write code that checks the flag with `useFlags()`
+
+Both parts are required when "create a feature flag" is requested.
+
+**Standard Workflow Example:**
+```
+User: "Add a download button, create this under a feature flag download_invoices"
+
+Step 1: Create flag in Flagsmith
+  - Use mcp__flagsmith__list_organizations (if needed)
+  - Use mcp__flagsmith__list_projects_in_organization (find "portal" project)
+  - Use mcp__flagsmith__create_feature with name "download_invoices"
+  - Confirm flag ID and status to user
+
+Step 2: Implement code
+  - Add useFlags(['download_invoices']) to component
+  - Wrap button with flag check: {flags.download_invoices?.enabled && <Button>Download</Button>}
+  - Test that code compiles
+
+Step 3: Report completion
+  - Confirm flag created in Flagsmith (with ID)
+  - Confirm code implementation complete
+```
 
 ### Available MCP Tools
 

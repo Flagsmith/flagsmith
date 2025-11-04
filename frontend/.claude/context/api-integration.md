@@ -1,44 +1,191 @@
 # API Integration Guide
 
-## Workflow
+## Overview
 
-### Preferred: Manual Service Creation
+This project uses **RTK Query** (Redux Toolkit Query) for all API calls. The workflow is optimized for type safety and automatic sync with backend Django serializers.
 
-The `npx ssg` CLI requires interactive input that cannot be automated. Instead, **manually create RTK Query services** following the patterns in existing service files.
+## Quick Start: Adding a New Endpoint (Complete Example)
 
-1. **Check backend code** in `../api` for endpoint details
-    - Search backend directly using Grep or Glob tools
-    - Common locations: `*/views.py`, `*/urls.py`, `*/serializers.py`
-    - Check API documentation or Swagger UI if available in your environment
+This example shows how to add a new endpoint for fetching company invoices (a real implementation from the codebase).
 
-2. **Define types** in `common/types/requests.ts` and `responses.ts`
-    - Add to `Req` type for request parameters
-    - Add to `Res` type for response data
-    - Match backend serializer field names and types
+### Step 1: Check Backend API
 
-3. **Create service file** in `common/services/use{Entity}.ts`
-    - Follow pattern from existing services (e.g., `usePartner.ts`, `useCompany.ts`)
-    - Use `service.enhanceEndpoints()` and `.injectEndpoints()`
-    - Define queries with `builder.query<Res['entity'], Req['getEntity']>()`
-    - Define mutations with `builder.mutation<Res['entity'], Req['createEntity']>()`
-    - Set appropriate `providesTags` and `invalidatesTags` for cache management
-    - Export hooks: `useGetEntityQuery`, `useCreateEntityMutation`, etc.
+```bash
+cd ../hoxtonmix-api
+git fetch
+git log --oneline origin/feat/your-branch -n 10
+git show COMMIT_HASH:apps/customers/urls.py | grep -A 5 "invoice"
+git show COMMIT_HASH:apps/customers/views.py | grep -A 20 "def get_company_invoices"
+```
 
-4. **CRITICAL: Update `.claude/api-type-map.json`** to register the new endpoint
-    - Add entry in `request_types` section with:
-      - `type`: TypeScript type signature (e.g., `{id: string, name: string}`)
-      - `serializer`: Backend serializer path (e.g., `entities/serializers.py:EntitySerializer`)
-      - `endpoint`: API endpoint pattern (e.g., `/api/v1/entities/{id}/`)
-      - `method`: HTTP method (GET, POST, PUT, DELETE)
-      - `service`: Frontend service file path (e.g., `common/services/useEntity.ts`)
-    - Add entry in `response_types` section (if needed)
-    - This enables the `/api-types-sync` command to track type changes
+**Backend endpoint found:** `GET /customers/companies/{company_id}/invoices`
 
-5. **Verify implementation**
-    - Check URL matches backend endpoint exactly
-    - Verify HTTP method (GET, POST, PUT, DELETE)
-    - Ensure request body structure matches backend serializer
-    - Test with actual API calls
+### Step 2: Add Request Type
+
+**File:** `common/types/requests.ts`
+
+```typescript
+export type Req = {
+  // ... existing types
+  getCompanyInvoices: {
+    company_id: string
+  }
+}
+```
+
+### Step 3: Add RTK Query Endpoint
+
+**File:** `common/services/useInvoice.ts`
+
+```typescript
+export const invoiceService = service
+  .enhanceEndpoints({ addTagTypes: ['Invoice'] })
+  .injectEndpoints({
+    endpoints: (builder) => ({
+      // Add new endpoint
+      getCompanyInvoices: builder.query<
+        Res['invoices'],
+        Req['getCompanyInvoices']
+      >({
+        providesTags: [{ id: 'LIST', type: 'Invoice' }],
+        query: (req) => ({
+          url: `customers/companies/${req.company_id}/invoices`,
+        }),
+        transformResponse(res: InvoiceSummary[]) {
+          return res?.map((v) => ({ ...v, date: v.date * 1000 }))
+        },
+      }),
+    }),
+  })
+
+export const {
+  useGetCompanyInvoicesQuery, // Export new hook
+  // END OF EXPORTS
+} = invoiceService
+```
+
+### Step 4: Use in Component
+
+```typescript
+import { useGetCompanyInvoicesQuery } from 'common/services/useInvoice'
+
+const MyComponent = () => {
+  const { subscriptionDetail } = useDefaultSubscription()
+  const companyId = subscriptionDetail?.company_id
+
+  const { data: invoices, error, isLoading } = useGetCompanyInvoicesQuery(
+    { company_id: `${companyId}` },
+    { skip: !companyId } // Skip if no company ID
+  )
+
+  if (isLoading) return <Loader />
+  if (error) return <ErrorMessage>{error}</ErrorMessage>
+
+  return (
+    <div>
+      {invoices?.map(inv => <div key={inv.id}>{inv.id}</div>)}
+    </div>
+  )
+}
+```
+
+### Step 5: Run Linter
+
+```bash
+npx eslint --fix common/types/requests.ts common/services/useInvoice.ts
+```
+
+**Done!** The endpoint is now integrated and ready to use.
+
+## Primary Workflow: Automatic via `/api-types-sync`
+
+**ALWAYS start with `/api-types-sync`** when working with APIs. This command:
+1. Pulls latest backend changes from `../hoxtonmix-api`
+2. Detects new/changed Django serializers
+3. Updates TypeScript types in `common/types/`
+4. **Automatically generates RTK Query services** for new endpoints
+5. Updates `.claude/api-type-map.json` for tracking
+
+### When `/api-types-sync` Auto-Generates Services
+
+The command detects:
+- New serializer classes in `apps/*/serializers.py`
+- Associated views/endpoints in `apps/*/views.py` and `apps/*/urls.py`
+- Creates complete service files with proper RTK Query patterns
+- Registers everything in the type map
+
+### When to Manually Use `/api`
+
+Only use the `/api` command when:
+- Creating a service for an existing backend endpoint that was missed
+- `/api-types-sync` didn't auto-generate (rare edge case)
+- Implementing a frontend-only service (non-backend endpoint)
+
+**In 95% of cases, `/api-types-sync` handles service generation automatically.**
+
+## Manual Service Creation (Rare Cases)
+
+If you need to manually create a service (follow template in `.claude/commands/api.md`):
+
+1. **Identify backend endpoint**
+    - Use `/backend <search-term>` to search backend codebase
+    - Check `apps/*/serializers.py`, `apps/*/views.py`, `apps/*/urls.py`
+    - Or swagger docs: https://staging-api.hoxtonmix.com/api/v3/docs/
+
+2. **Define types** in `common/types/`
+    - Response: `export type EntityName = { field: type }` in `responses.ts`
+    - Add to `Res` type: `entityName: EntityName`
+    - Request: `getEntityName: { param: type }` in `requests.ts`
+
+3. **Create service** `common/services/use{Entity}.ts`
+    - Use `builder.query` for GET, `builder.mutation` for POST/PUT/DELETE
+    - Configure cache tags: `providesTags`, `invalidatesTags`
+    - Export hooks: `useGetEntityQuery`, `useCreateEntityMutation`
+
+4. **Register in type map** `.claude/api-type-map.json`
+    - Add to `response_types` or `request_types` with full metadata
+    - Increment `_metadata.totalTypes`
+
+5. **Run linter**
+    ```bash
+    npx eslint --fix common/services/use*.ts common/types/*.ts
+    ```
+
+## Type Sync Architecture
+
+### `.claude/api-type-map.json`
+
+Cache file mapping frontend → backend for type sync:
+
+```json
+{
+  "_metadata": {
+    "lastBackendCommit": "a73427688...",
+    "totalTypes": 48
+  },
+  "response_types": {
+    "entityName": {
+      "type": "EntityType",
+      "service": "common/services/useEntity.ts",
+      "endpoint": "entities/{id}",
+      "method": "GET",
+      "serializer": "apps/entities/serializers.py:EntitySerializer"
+    }
+  }
+}
+```
+
+### Backend → Frontend Type Mapping
+
+| Django Type | TypeScript |
+|------------|------------|
+| `CharField` | `string` |
+| `IntegerField` | `number` |
+| `BooleanField` | `boolean` |
+| `DateTimeField` | `string` (ISO) |
+| `required=False` | `field?: type` |
+| `many=True` | `Type[]` |
+| Enum/Choices | `'A' \| 'B'` |
 
 ### Example Service Structure
 
@@ -81,15 +228,30 @@ export const {
 
 ## Finding Backend Endpoints
 
+### Quick Reference - Common Customer Portal API Patterns
+
+**Base URL Pattern**: `/api/v3/` (varies by resource)
+
+| Resource | List | Detail | Actions |
+|----------|------|--------|---------|
+| **Mail** | `GET /mailbox/mails` | `GET /mailbox/mails/{id}` | `POST /mailbox/mails/{id}/scan`, `POST /mailbox/mails/{id}/forward` |
+| **Offers** | `GET /offers/` | `GET /offers/{id}/` | N/A |
+| **Account** | `GET /account` | N/A | N/A |
+| **KYC** | `GET /kyc/steps` | `GET /kyc/status` | `POST /kyc/verify`, `GET /kyc/link` |
+| **Subscriptions** | N/A | `GET /customers/companies/{id}/hosted-page` | N/A |
+| **Addresses** | N/A | N/A | `POST /addresses`, `PATCH /addresses/{id}` |
+| **Payment** | N/A | N/A | `POST /topup`, `POST /payment-sources` |
+
 ### Search Strategy
 
-1. **Search backend directly**: Use Grep/Glob tools to search the `../api` directory
-2. **Check URL patterns**: Look in `../api/*/urls.py`
-3. **Check ViewSets**: Look in `../api/*/views.py`
+1. **Use `/backend` slash command**: `/backend <search-term>` searches backend codebase
+2. **Check URL patterns**: Look in `../hoxtonmix-api/apps/<resource>/urls.py`
+    - Common apps: `mailbox`, `customers`, `kyc`, `offers`, `subscriptions`, `checkout`
+3. **Check ViewSets**: Look in `../hoxtonmix-api/apps/<resource>/views.py`
 4. **Common file download pattern**:
     - Backend returns PDF/file with `Content-Disposition: attachment; filename=...`
     - Use `responseHandler` in RTK Query to handle blob downloads
-    - Check existing service files for examples
+    - See `common/services/useMailDownload.ts` for example
 
 ### File Download Pattern
 
@@ -115,7 +277,7 @@ The utility automatically:
 - **Redux Toolkit + RTK Query** for all API calls
 - Store: `common/store.ts` with redux-persist
 - Base service: `common/service.ts`
-- **Use `npx ssg` CLI to generate new services** (optional but helpful)
+  The `npx ssg` CLI requires interactive input that cannot be automated. Instead, **manually create RTK Query services** following the patterns in existing service files.
 - **IMPORTANT**: When implementing API logic, prefer implementing it in the RTK Query service layer (using `transformResponse`, `transformErrorResponse`, etc.) rather than in components. This makes the logic reusable across the application.
 
 ## Error Handling Patterns
@@ -159,8 +321,9 @@ const handleRetry = () => refetch()
 ### 401 Unauthorized Handling
 
 **Automatic logout on 401** is handled in `common/service.ts`:
-- Check the service.ts file for specific 401 handling logic
-- Typically debounced to prevent multiple logout calls
+- All 401 responses (except email confirmation) trigger logout
+- Debounced to prevent multiple logout calls
+- Uses the logout endpoint from the service
 
 ### Backend Error Response Format
 
@@ -179,7 +342,7 @@ if ('data' in err && err.data?.detail) {
 }
 ```
 
-## Platform Patterns
+## Cross-Platform Pattern
 
-- Web and common code are separated in the directory structure
-- Check existing patterns in the codebase for platform-specific implementations
+- Web (`/project/api.ts`) and Mobile (`/mobile/app/api.ts`) implement same interface from `common/api-common.ts`
+- Example: `getApi().loginRedirect()` uses Next.js Router on web, React Native Navigation on mobile

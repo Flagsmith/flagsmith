@@ -1,5 +1,143 @@
 # UI Patterns & Best Practices
 
+## Table Components
+
+### Pattern: Reusable Table Components
+
+**Location:** `components/project/tables/`
+
+Tables should be self-contained components that fetch their own data and handle loading/error states.
+
+**Example:** `InvoiceTable.tsx`
+
+```typescript
+import { useGetInvoicesQuery } from 'common/services/useInvoice'
+import { useDefaultSubscription } from 'common/services/useDefaultSubscription'
+import Loader from 'components/base/Loader'
+import { ErrorMessage } from 'components/base/Messages'
+import ContentContainer from './ContentContainer'
+
+const InvoiceTable: FC = () => {
+  const { defaultSubscriptionId } = useDefaultSubscription()
+  const { data: invoices, error, isLoading } = useGetInvoicesQuery({
+    subscription_id: `${defaultSubscriptionId}`,
+  })
+
+  if (isLoading) {
+    return (
+      <div className='d-flex justify-content-center'>
+        <Loader />
+      </div>
+    )
+  }
+
+  if (error) return <ErrorMessage>{error}</ErrorMessage>
+
+  return (
+    <ContentContainer>
+      <table className='invoice-table'>
+        <thead>
+          <tr>
+            <th>Invoice No.</th>
+            <th className='d-none d-md-table-cell'>Description</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {invoices?.map((invoice) => (
+            <tr key={invoice.id}>
+              <td>{invoice.id}</td>
+              <td className='d-none d-md-table-cell'>{invoice.description}</td>
+              <td>{invoice.total}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </ContentContainer>
+  )
+}
+```
+
+### Responsive Tables
+
+Use Bootstrap classes for responsive behavior:
+- `d-none d-md-table-cell` - Hide column on mobile
+- `d-block d-md-none` - Show on mobile only
+
+## Tabs Component
+
+**Location:** `components/base/forms/Tabs.tsx`
+
+### Basic Usage
+
+```typescript
+import { useState } from 'react'
+import { Tabs } from 'components/base/forms/Tabs'
+
+const MyPage = () => {
+  const [activeTab, setActiveTab] = useState(0)
+
+  return (
+    <Tabs
+      value={activeTab}
+      onChange={setActiveTab}
+      tabLabels={['Tab 1', 'Tab 2', 'Tab 3']}
+    >
+      <div>Tab 1 content</div>
+      <div>Tab 2 content</div>
+      <div>Tab 3 content</div>
+    </Tabs>
+  )
+}
+```
+
+### Tabs with Feature Flag (Optional)
+
+**Note:** Only use feature flags when explicitly requested. By default, implement features directly without flags.
+
+When specifically requested, this pattern shows tabs only when feature flag is enabled:
+
+```typescript
+import { useFlags } from 'flagsmith/react'
+import { Tabs } from 'components/base/forms/Tabs'
+
+const MyPage = () => {
+  const { my_feature_flag } = useFlags(['my_feature_flag'])
+  const [activeTab, setActiveTab] = useState(0)
+
+  return (
+    <div>
+      <h2>My Section</h2>
+      {my_feature_flag?.enabled ? (
+        <Tabs
+          value={activeTab}
+          onChange={setActiveTab}
+          tabLabels={['Default', 'New Feature']}
+        >
+          <div><ExistingComponent /></div>
+          <div><NewComponent /></div>
+        </Tabs>
+      ) : (
+        <ExistingComponent />
+      )}
+    </div>
+  )
+}
+```
+
+See `feature-flags.md` for more details on when and how to use feature flags.
+
+### Uncontrolled Tabs
+
+For simple cases without parent state management:
+
+```typescript
+<Tabs uncontrolled tabLabels={['Tab 1', 'Tab 2']}>
+  <div>Tab 1 content</div>
+  <div>Tab 2 content</div>
+</Tabs>
+```
+
 ## Confirmation Dialogs
 
 **NEVER use `window.confirm`** - Always use the `openConfirm` function from `components/base/Modal`.
@@ -9,115 +147,38 @@
 ```typescript
 import { openConfirm } from 'components/base/Modal'
 
-// Basic confirmation
-openConfirm({
-  title: 'Delete Item',
-  body: 'Are you sure you want to delete this item?',
-  onYes: () => {
-    // Perform delete action
-    deleteItem()
+// Signature: openConfirm(title, body, onYes, onNo?, challenge?)
+openConfirm(
+  'Delete Partner',
+  'Are you sure you want to delete this partner?',
+  async (closeModal) => {
+    const res = await deleteAction()
+    if (!res.error) {
+      toast(null, 'Partner deleted successfully')
+      closeModal() // Always call closeModal to dismiss the dialog
+    }
   },
-})
-
-// With custom button text and destructive styling
-openConfirm({
-  title: 'Discard changes',
-  body: 'Closing this will discard your unsaved changes.',
-  destructive: true,
-  yesText: 'Discard',
-  noText: 'Cancel',
-  onYes: () => {
-    // Discard changes
-    closeWithoutSaving()
-  },
-  onNo: () => {
-    // Optional: Handle cancel action
-    console.log('User cancelled')
-  },
-})
-
-// With JSX body
-openConfirm({
-  title: 'Delete User',
-  body: (
-    <div>
-      {'Are you sure you want to delete '}
-      <strong>{userName}</strong>
-      {' from this organization?'}
-    </div>
-  ),
-  destructive: true,
-  onYes: async () => {
-    // Can be async
-    await deleteUser({ id: userId })
-  },
-})
-```
-
-### Parameters
-
-- **title**: `ReactNode` (required) - Dialog title (can be string or JSX)
-- **body**: `ReactNode` (required) - Dialog content (can be string or JSX)
-- **onYes**: `() => void` (required) - Callback when user confirms (can be async)
-- **onNo**: `() => void` (optional) - Callback when user cancels
-- **destructive**: `boolean` (optional) - Makes the confirm button red/dangerous
-- **yesText**: `string` (optional) - Custom text for confirm button (default: "Confirm")
-- **noText**: `string` (optional) - Custom text for cancel button (default: "Cancel")
-
-### Key Points
-
-- The modal closes automatically after `onYes` or `onNo` is called
-- You do NOT need to manually close the modal
-- Use `destructive: true` for dangerous actions (delete, discard, etc.)
-- Both `onYes` and `onNo` callbacks can be async
-- The `body` can be a string or JSX element for rich content
-- NEVER use `window.confirm` - always use this `openConfirm` function
-
-## Custom Modals
-
-Use `openModal` for displaying custom modal content:
-
-```typescript
-import { openModal } from 'components/base/Modal'
-
-// Basic modal
-openModal('Modal Title', <MyModalContent />)
-
-// With custom class and close callback
-openModal(
-  'Settings',
-  <SettingsForm />,
-  'large-modal', // Optional className
-  () => {
-    // Optional: Called when modal closes
-    console.log('Modal closed')
-  }
 )
 ```
 
 ### Parameters
+- `title: string` - Dialog title
+- `body: ReactNode` - Dialog content (can be JSX)
+- `onYes: (closeModal: () => void) => void` - Callback when user confirms
+- `onNo?: () => void` - Optional callback when user cancels
+- `challenge?: string` - Optional challenge text user must type to confirm
 
-- **title**: `ReactNode` (required) - Modal title
-- **body**: `ReactNode` (optional) - Modal content
-- **className**: `string` (optional) - CSS class for modal styling
-- **onClose**: `() => void` (optional) - Callback when modal closes
-
-### Nested Modals
-
-For modals that need to open on top of other modals (avoid if possible):
-
-```typescript
-import { openModal2 } from 'components/base/Modal'
-
-openModal2('Second Modal', <SecondaryContent />)
-```
+### Key Points
+- The `onYes` callback receives a `closeModal` function
+- Always call `closeModal()` when the action completes successfully
+- Can be async - use `async (closeModal) => { ... }`
 
 ## Backend Integration
 
 ### Always Run API Types Sync Before API Work
 
 When using `/api` to generate new API services, the command automatically runs `/api-types-sync` first to:
-1. Compare latest backend changes in main
+1. Pull latest backend changes (`git pull` in `../hoxtonmix-api`)
 2. Sync frontend types with backend serializers
 3. Ensure types are up-to-date before generating new services
 
