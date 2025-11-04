@@ -6,8 +6,8 @@
 
 ## Structure
 - `/common` - Shared Redux/API (no web/mobile code)
-- `/components` - React components
-- `/pages` - Next.js pages router
+- `/web/components` - React components (includes `/web/components/pages/` for all page components)
+- `/web/components/pages/` - **All page components** (e.g., `FeaturesPage.js`, `ProjectSettingsPage.js`)
 - `/common/types/` - `requests.ts` and `responses.ts` for API types
 - Ignore: `ios/`, `android/`, `.net/`
 

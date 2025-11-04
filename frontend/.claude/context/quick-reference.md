@@ -2,6 +2,21 @@
 
 ## Common Tasks Checklist
 
+### Finding a Page Component
+
+**All page components are in `web/components/pages/`** - no need to search extensively.
+
+Examples:
+- Features page: `web/components/pages/FeaturesPage.js`
+- Project settings: `web/components/pages/ProjectSettingsPage.js`
+- Environment settings: `web/components/pages/EnvironmentSettingsPage.tsx`
+- Users: `web/components/pages/UsersPage.tsx`
+
+To find a page:
+```bash
+ls web/components/pages/ | grep -i <keyword>
+```
+
 ### Adding a New API Endpoint
 
 - [ ] Check backend for endpoint (see `backend-integration.md`)
@@ -40,17 +55,17 @@ Only use feature flags when explicitly requested by the user.
 
 ## File Locations
 
-| Purpose | Location |
-|---------|----------|
-| API Services | `common/services/use*.ts` |
-| Request Types | `common/types/requests.ts` |
-| Response Types | `common/types/responses.ts` |
-| Table Components | `components/project/tables/` |
-| Page Components | `pages/` |
-| Card Components | `components/project/cards/` |
-| Base UI Components | `components/base/` |
-| Feature Flags Context | `.claude/context/feature-flags.md` |
-| Backend API | `../hoxtonmix-api/` |
+| Purpose | Location | Example |
+|---------|----------|---------|
+| API Services | `common/services/use*.ts` | `useEnvironment.ts`, `useFeature.ts` |
+| Request Types | `common/types/requests.ts` | API request interfaces |
+| Response Types | `common/types/responses.ts` | API response interfaces |
+| Table Components | `components/project/tables/` | User tables, data grids |
+| **Page Components** | **`web/components/pages/`** | **`FeaturesPage.js`, `ProjectSettingsPage.js`** |
+| Card Components | `components/project/cards/` | Summary cards, info cards |
+| Base UI Components | `components/base/` | Buttons, forms, inputs |
+| Feature Flags Context | `.claude/context/feature-flags.md` | Flagsmith integration guide |
+| Backend API | `../hoxtonmix-api/` | Django backend |
 
 ## Common Components for Messages
 
