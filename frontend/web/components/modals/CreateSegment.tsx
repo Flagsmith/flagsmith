@@ -498,7 +498,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </Row>
             }
           >
-            <div className='my-4 col-lg-8 mx-auto'>
+            <div className='my-4'>
               <CreateSegmentRulesTabForm
                 is4Eyes={is4Eyes}
                 onCreateChangeRequest={onCreateChangeRequest}
@@ -526,7 +526,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           <TabItem tabLabel='Features'>
-            <div className='my-4 col-lg-8 mx-auto'>
+            <div className='my-4'>
               <AssociatedSegmentOverrides
                 onUnsavedChange={() => {
                   setValueChanged(true)
@@ -539,7 +539,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>
-            <div className='my-4 col-lg-8 mx-auto'>
+            <div className='my-4'>
               <CreateSegmentUsersTabContent
                 projectId={projectId}
                 environmentId={environmentId}
@@ -566,7 +566,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 </Row>
               }
             >
-              <div className='my-4 col-lg-8 mx-auto'>{MetadataTab}</div>
+              <div className='my-4 col-lg-8'>{MetadataTab}</div>
             </TabItem>
           )}
         </Tabs>

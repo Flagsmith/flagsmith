@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import React from 'react'
 import { MultiValueProps } from 'react-select/lib/components/MultiValue'
 
@@ -36,6 +37,7 @@ const CustomMultiValue = ({
         padding: '2px 6px',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
+        maxHeight: '24px'
       }}
     >
       <span
@@ -104,7 +106,10 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   size = 'default',
 }) => {
   return (
-    <div className={`${className} d-flex flex-column gap-2`}>
+    <div className={classNames(
+        className,
+        label ? `d-flex flex-column gap-2` : ''
+      )}>
       {label && <label>{label}</label>}
       <Select
         isMulti
@@ -122,38 +127,25 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
           MultiValue: (props: MultiValueProps<MultiSelectOption>) => (
             <CustomMultiValue
               {...props}
+              className={classNames(props.className, 'h-[24px]')}
               color={colorMap?.get(props.data.value) || '#5D6D7E'}
             />
           ),
-          Option: colorMap
-            ? (props: any) => (
-                <CustomOption
-                  {...props}
-                  color={colorMap.get(props.data.value)}
-                />
-              )
-            : undefined,
+          ...(colorMap ? {Option: (props: any) => <CustomOption
+            {...props}
+            color={colorMap.get(props.data.value)}
+          />} : {}),
         }}
         value={selectedValues.map((value) => ({
           label: options.find((opt) => opt.value === value)?.label || value,
           value,
         }))}
         options={options}
-        className='react-select react-select__extensible cursor-pointer'
+        className='react-select react-select__extensible w-100'
         styles={{
-          container: (base: any) => ({
-            ...base,
-            cursor: 'pointer',
-            maxWidth: '100%',
-            minWidth: '300px',
-            width: 'fit-content',
-          }),
           control: (base: any) => ({
             ...base,
-            height: 'auto',
-            minHeight: '44px',
-            minWidth: '300px',
-            width: 'fit-content',
+            cursor: 'pointer',
           }),
           multiValue: (base: any) => ({
             ...base,

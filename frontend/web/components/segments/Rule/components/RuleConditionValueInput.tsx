@@ -20,6 +20,7 @@ type RuleConditionValueInputProps = {
   projectId?: number
   showEnvironmentDropdown?: boolean
   operator?: string
+  className?: string
 }
 
 const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
@@ -29,6 +30,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
   projectId,
   showEnvironmentDropdown,
   value,
+  className,
   ...props
 }) => {
   const whitespaceCheck = checkWhitespaceIssues(value, operator)
@@ -49,7 +51,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
   const isDarkMode = getDarkMode()
 
   return (
-    <div className='relative'>
+    <div className={`relative ${className}`}>
       {showEnvironmentDropdown && projectId ? (
         <EnvironmentSelectDropdown
           value={value}
@@ -65,6 +67,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
             name='rule-condition-value-input'
             aria-label='Rule condition value input'
             value={value}
+            className="w-100"
             inputClassName={
               showIcon ? `pr-5 ${hasWarning ? 'border-warning' : ''}` : ''
             }
