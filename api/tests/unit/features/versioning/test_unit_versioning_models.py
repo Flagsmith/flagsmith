@@ -683,3 +683,217 @@ def test_version_change_set_get_conflicts_returns_empty_list_if_no_change_sets_s
 
     # Then
     assert conflicts == []
+
+
+def test_get_updated_feature_states_returns_empty_list_when_no_changes(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    # v1 exists from fixture, create v2 with no changes
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # When
+    updated_feature_states = v2.get_updated_feature_states()
+
+    # Then
+    assert updated_feature_states == []
+
+
+def test_get_updated_feature_states_returns_feature_state_when_enabled_changes(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    # Create and publish v1
+    v1 = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+    v1_fs = v1.feature_states.first()
+
+    # Create v2 with changed enabled flag
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    v2_fs = v2.feature_states.first()
+    v2_fs.enabled = not v1_fs.enabled  # Change enabled
+    v2_fs.save()
+
+    # When
+    updated_feature_states = v2.get_updated_feature_states()
+
+    # Then
+    assert len(updated_feature_states) == 1
+    assert updated_feature_states[0].id == v2_fs.id
+    assert updated_feature_states[0].enabled is not v1_fs.enabled
+
+
+def test_get_updated_feature_states_returns_feature_state_when_value_changes(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    # v1 exists from fixture, create v2 with changed value
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    v2_fs = v2.feature_states.first()
+    v2_fs.feature_state_value.type = STRING
+    v2_fs.feature_state_value.string_value = "changed_value"  # Different
+    v2_fs.feature_state_value.save()
+    v2_fs.save()
+
+    # When
+    updated_feature_states = v2.get_updated_feature_states()
+
+    # Then
+    assert len(updated_feature_states) == 1
+    assert updated_feature_states[0].id == v2_fs.id
+    assert updated_feature_states[0].get_feature_state_value() == "changed_value"
+
+
+def test_get_updated_feature_states_returns_new_segment_override(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    staff_user: FFAdminUser,
+    segment: Segment,
+) -> None:
+    # Given
+    # v1 exists from fixture, create v2 with a new segment override
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    feature_segment = FeatureSegment.objects.create(
+        segment=segment,
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=v2,
+    )
+    segment_override = FeatureState.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+        feature_segment=feature_segment,
+        environment_feature_version=v2,
+        enabled=True,
+    )
+
+    # When
+    updated_feature_states = v2.get_updated_feature_states()
+
+    # Then
+    # Should only return the new segment override
+    assert len(updated_feature_states) == 1
+    assert updated_feature_states[0].id == segment_override.id
+    assert updated_feature_states[0].feature_segment == feature_segment
+
+
+def test_get_updated_feature_states_detects_environment_value_change(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    staff_user: FFAdminUser,
+    segment: Segment,
+) -> None:
+    # Given
+    # Create v1 with environment feature state value and segment override
+    v1 = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+    v1_default = v1.feature_states.filter(feature_segment__isnull=True).first()
+    v1_default.feature_state_value.type = STRING
+    v1_default.feature_state_value.string_value = "default_value_v1"
+    v1_default.feature_state_value.save()
+
+    feature_segment_v1 = FeatureSegment.objects.create(
+        segment=segment,
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=v1,
+    )
+    v1_segment_override = FeatureState.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+        feature_segment=feature_segment_v1,
+        environment_feature_version=v1,
+        enabled=True,
+    )
+    v1_segment_override.feature_state_value.type = STRING
+    v1_segment_override.feature_state_value.string_value = "segment_value"
+    v1_segment_override.feature_state_value.save()
+    v1.publish(published_by=staff_user)
+
+    # Create v2 - environment feature state value changes but segment override stays same
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    v2_default = v2.feature_states.filter(feature_segment__isnull=True).first()
+    v2_default.feature_state_value.string_value = "default_value_v2"  # Changed!
+    v2_default.feature_state_value.save()
+
+    # Segment override value stays the same (no changes to segment override)
+
+    # When
+    updated_feature_states = v2.get_updated_feature_states()
+
+    # Then
+    # Should only return the environment feature state(not the segment override)
+    assert len(updated_feature_states) == 1
+    assert updated_feature_states[0].feature_segment is None
+    assert updated_feature_states[0].get_feature_state_value() == "default_value_v2"
+
+
+def test_get_updated_feature_states_detects_segment_override_changes(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    staff_user: FFAdminUser,
+    segment: Segment,
+) -> None:
+    # Given
+    # Create v1 with a segment override
+    v1 = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+    feature_segment_v1 = FeatureSegment.objects.create(
+        segment=segment,
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=v1,
+    )
+    v1_segment_override = FeatureState.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+        feature_segment=feature_segment_v1,
+        environment_feature_version=v1,
+        enabled=False,
+    )
+    v1_segment_override.feature_state_value.type = STRING
+    v1_segment_override.feature_state_value.string_value = "segment_value_v1"
+    v1_segment_override.feature_state_value.save()
+    v1.publish(published_by=staff_user)
+
+    # Create v2 - segment override value changes but environment default stays same
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    # Find the cloned segment override and change its value
+    v2_segment_override = v2.feature_states.filter(
+        feature_segment__segment=segment
+    ).first()
+    v2_segment_override.feature_state_value.string_value = (
+        "segment_value_v2"  # Changed!
+    )
+    v2_segment_override.feature_state_value.save()
+
+    # When
+    updated_feature_states = v2.get_updated_feature_states()
+
+    # Then
+    # Should only return the segment override (not the environment default)
+    assert len(updated_feature_states) == 1
+    assert updated_feature_states[0].feature_segment is not None
+    assert updated_feature_states[0].feature_segment.segment == segment
+    assert updated_feature_states[0].get_feature_state_value() == "segment_value_v2"

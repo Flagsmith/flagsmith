@@ -25,7 +25,8 @@ from features.versioning.versioning_service import (
     get_environment_flags_queryset,
 )
 from users.models import FFAdminUser
-from webhooks.webhooks import WebhookEventType, call_environment_webhooks
+from webhooks.tasks import call_environment_webhooks, call_organisation_webhooks
+from webhooks.webhooks import WebhookEventType
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -131,6 +132,102 @@ def _create_initial_feature_versions(environment: "Environment"):  # type: ignor
         )
 
 
+def _trigger_feature_state_webhooks_for_version(
+    environment_feature_version: EnvironmentFeatureVersion,
+) -> None:
+    """
+    Trigger FLAG_UPDATED webhooks for feature states that have changed in the newly published version.
+
+    This allows webhook consumers to receive granular per-featurestate updates in the same
+    format as non-versioned environments, while NEW_VERSION_PUBLISHED serves as a
+    summary event.
+    """
+    from environments.models import Webhook
+    from webhooks.constants import WEBHOOK_DATETIME_FORMAT
+
+    # Get metadata from the version
+    timestamp = environment_feature_version.published_at.strftime(  # type: ignore[union-attr]
+        WEBHOOK_DATETIME_FORMAT
+    )
+    changed_by = (
+        environment_feature_version.published_by.email
+        if environment_feature_version.published_by
+        else (
+            environment_feature_version.published_by_api_key.name
+            if environment_feature_version.published_by_api_key
+            else ""
+        )
+    )
+
+    # Get only the feature states that have changed
+    changed_feature_states = environment_feature_version.get_updated_feature_states()
+
+    # Get previous version for retrieving previous states
+    previous_version = environment_feature_version.get_previous_version()
+    previous_feature_states_map = {}
+    if previous_version:
+        for fs in previous_version.feature_states.all():
+            segment_id = fs.feature_segment.segment_id if fs.feature_segment else None
+            key = (fs.identity_id, segment_id)
+            previous_feature_states_map[key] = fs
+
+    # Trigger FLAG_UPDATED webhooks for each changed feature state
+    for feature_state in changed_feature_states:
+        # Get the current state data
+        assert feature_state.environment is not None
+        new_state = Webhook.generate_webhook_feature_state_data(
+            feature_state.feature,
+            environment=feature_state.environment,
+            enabled=feature_state.enabled,
+            value=feature_state.get_feature_state_value(),
+            identity_id=feature_state.identity_id,
+            identity_identifier=getattr(feature_state.identity, "identifier", None),
+            feature_segment=feature_state.feature_segment,
+        )
+
+        # Build webhook data
+        data = {
+            "new_state": new_state,
+            "changed_by": changed_by,
+            "timestamp": timestamp,
+        }
+
+        # Add previous state if it exists
+        segment_id = (
+            feature_state.feature_segment.segment_id
+            if feature_state.feature_segment
+            else None
+        )
+        key = (feature_state.identity_id, segment_id)
+        previous_fs = previous_feature_states_map.get(key)
+
+        if previous_fs:
+            assert previous_fs.environment is not None
+            previous_state = Webhook.generate_webhook_feature_state_data(
+                previous_fs.feature,
+                environment=previous_fs.environment,
+                enabled=previous_fs.enabled,
+                value=previous_fs.get_feature_state_value(),
+                identity_id=previous_fs.identity_id,
+                identity_identifier=getattr(previous_fs.identity, "identifier", None),
+                feature_segment=previous_fs.feature_segment,
+            )
+            data["previous_state"] = previous_state
+
+        # Trigger webhooks
+        call_environment_webhooks(
+            environment_id=environment_feature_version.environment_id,
+            data=data,
+            event_type=WebhookEventType.FLAG_UPDATED.value,
+        )
+
+        call_organisation_webhooks(
+            organisation_id=environment_feature_version.environment.project.organisation_id,
+            data=data,
+            event_type=WebhookEventType.FLAG_UPDATED.value,
+        )
+
+
 @register_task_handler()
 def trigger_update_version_webhooks(environment_feature_version_uuid: str) -> None:
     environment_feature_version = EnvironmentFeatureVersion.objects.get(
@@ -140,6 +237,10 @@ def trigger_update_version_webhooks(environment_feature_version_uuid: str) -> No
         logger.exception("Feature version has not been published.")
         return
 
+    # Trigger FLAG_UPDATED webhooks for any feature states that have changed
+    _trigger_feature_state_webhooks_for_version(environment_feature_version)
+
+    # Then trigger the NEW_VERSION_PUBLISHED webhook as a summary event
     data = environment_feature_version_webhook_schema.dump(environment_feature_version)
     call_environment_webhooks(
         environment_id=environment_feature_version.environment_id,
