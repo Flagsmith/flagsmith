@@ -18,7 +18,21 @@ Configuration files:
 - **Staging**: `common/project.js` (look for `flagsmith` property)
 - **Production**: `common/project_prod_*.js` (look for `flagsmith` property)
 
-To find your organization and project IDs, use the MCP tools (see "Managing Feature Flags" section below).
+### Known Flagsmith Configuration
+
+**Flagsmith Organization:** Flagsmith (ID: 13)
+
+**Project: Flagsmith Website (ID: 12)**
+- **Production Environment**
+  - ID: 22
+  - API Key: `4vfqhypYjcPoGGu8ByrBaj`
+  - Requires approval for changes (minimum_change_request_approvals: 1)
+- **Staging Environment**
+  - ID: 1848
+  - API Key: `ENktaJnfLVbLifybz34JmX`
+  - No approval required for changes
+
+To find other organization and project IDs, use the MCP tools (see "Managing Feature Flags" section below).
 
 ## Setup
 
@@ -27,6 +41,8 @@ To find your organization and project IDs, use the MCP tools (see "Managing Feat
 - **User Context**: Flags are user-specific, identified by email
 
 ## Usage Pattern
+
+### Functional Components (Standard)
 
 ```typescript
 import { useFlags } from 'flagsmith/react'
@@ -48,6 +64,35 @@ const MyComponent = () => {
     </>
   )
 }
+```
+
+### Class Components
+
+When adding a flag to a class component, use a wrapper component pattern:
+
+```typescript
+import { useFlags } from 'flagsmith/react'
+
+class MyClassComponent extends Component {
+  render() {
+    // Access flags from props
+    const isEnabled = this.props.flags.feature_name?.enabled
+
+    return (
+      <>
+        {isEnabled && <div>Feature content here</div>}
+      </>
+    )
+  }
+}
+
+// Wrapper component to inject flags as props
+const MyClassComponentWithFlags = (props) => {
+  const flags = useFlags(['feature_name'])
+  return <MyClassComponent {...props} flags={flags} />
+}
+
+export default MyClassComponentWithFlags
 ```
 
 ## Best Practices
@@ -157,6 +202,22 @@ return (
 ## Managing Feature Flags via MCP
 
 This project uses the **flagsmith-admin-api MCP** for feature flag management. All operations are performed through MCP tools instead of manual API calls or web console.
+
+### Known Limitations
+
+**IMPORTANT:** Published feature versions cannot be modified via the Flagsmith API.
+
+- After creating a flag with MCP (`mcp__flagsmith__create_feature`), the flag is created but disabled by default
+- To enable/disable the flag in specific environments, you must use the Flagsmith web UI at https://app.flagsmith.com
+- This is a Flagsmith API limitation, not a tooling issue
+- The MCP can create flags, but enabling/disabling must be done manually via the UI
+
+**Workflow:**
+1. Create flag via MCP → ✅ Automated
+2. Implement code with `useFlags()` → ✅ Automated
+3. Enable flag in staging/production → ❌ Manual (via Flagsmith UI)
+
+When documenting completion, always inform the user that step 3 requires manual action via the web UI.
 
 ### CRITICAL: When User Says "Create a Feature Flag"
 

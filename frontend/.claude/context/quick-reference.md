@@ -52,6 +52,17 @@ Only use feature flags when explicitly requested by the user.
 | Feature Flags Context | `.claude/context/feature-flags.md` |
 | Backend API | `../hoxtonmix-api/` |
 
+## Common Components for Messages
+
+| Component | Location | Usage |
+|-----------|----------|-------|
+| InfoMessage | `components/InfoMessage` | Info alerts/messages |
+| ErrorMessage | `components/base/Messages` | Error states |
+| SuccessMessage | `components/base/Messages` | Success notifications |
+| Loader | `components/base/Loader` | Loading states |
+| Tooltip | `components/Tooltip` | Hover tooltips |
+| Button | `components/base/forms/Button` | Standard buttons |
+
 ## Common Imports
 
 ### RTK Query
