@@ -205,6 +205,23 @@ return (
 
 This project uses the **flagsmith-admin-api MCP** for feature flag management. All operations are performed through MCP tools instead of manual API calls or web console.
 
+### ⚠️ CRITICAL: Project Verification Before Creating Flags
+
+**STOP! Before creating ANY feature flag, follow this mandatory checklist:**
+
+1. ✅ **Verify the correct project**: This frontend ONLY uses Project ID 12 (Flagsmith Website)
+2. ✅ **Read configuration**: Check `common/project.js` to see the Flagsmith API key (`ENktaJnfLVbLifybz34JmX` for staging)
+3. ✅ **Confirm with MCP**: Run `mcp__flagsmith__list_project_environments` with `project_id: 12` to verify
+4. ✅ **Create ONCE**: Only call `mcp__flagsmith__create_feature` ONCE with `project_id: 12`
+
+**NEVER:**
+- ❌ Create flags in multiple projects to "try" which one is correct
+- ❌ Create flags in Project ID 11737 (Flagsmith API) - that's a different project
+- ❌ Guess the project ID without verification
+- ❌ Create duplicate flags
+
+**Why this matters:** Creating flags in the wrong project pollutes other Flagsmith projects with incorrect flags that don't belong there. This is a critical error.
+
 ### Known Limitations
 
 **IMPORTANT:** Published feature versions cannot be modified via the Flagsmith API.
