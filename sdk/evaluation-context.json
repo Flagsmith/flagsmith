@@ -4,10 +4,9 @@
             "description": "Represents an environment context for feature flag evaluation.",
             "properties": {
                 "key": {
-                    "description": "An environment's unique identifier.",
+                    "description": "Unique environment key. May be used for selecting a value for a multivariate feature, or for % split segmentation.",
                     "title": "Key",
-                    "type": "string",
-                    "x-flagsmith-engine-condition-property": "$.environment.key"
+                    "type": "string"
                 },
                 "name": {
                     "description": "An environment's human-readable name.",
@@ -27,13 +26,8 @@
             "description": "Represents a feature context for feature flag evaluation.",
             "properties": {
                 "key": {
-                    "description": "Key used when selecting a value for a multivariate feature. Set to an internal identifier or a UUID, depending on Flagsmith implementation.",
+                    "description": "Unique feature key used when selecting a variant if the feature is multivariate. Set to an internal identifier or a UUID, depending on Flagsmith implementation.",
                     "title": "Key",
-                    "type": "string"
-                },
-                "feature_key": {
-                    "description": "Unique feature identifier.",
-                    "title": "Feature Key",
                     "type": "string"
                 },
                 "name": {
@@ -66,13 +60,18 @@
                 },
                 "priority": {
                     "description": "Priority of the feature context. Lower values indicate a higher priority when multiple contexts apply to the same feature.",
-                    "title": "Priority",
+                    "title": "FeaturePriority",
                     "type": "number"
+                },
+                "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
+                    "description": "Additional metadata associated with the feature.",
+                    "title": "FeatureMetadata",
+                    "type": "object"
                 }
             },
             "required": [
                 "key",
-                "feature_key",
                 "name",
                 "enabled",
                 "value"
@@ -97,11 +96,17 @@
                     "description": "The weight of the feature value variant, as a percentage number (i.e. 100.0).",
                     "title": "Weight",
                     "type": "number"
+                },
+                "priority": {
+                    "description": "Priority of the feature flag variant. Lower values indicate a higher priority when multiple variants apply to the same context key.",
+                    "title": "VariantPriority",
+                    "type": "number"
                 }
             },
             "required": [
                 "value",
-                "weight"
+                "weight",
+                "priority"
             ],
             "title": "FeatureValue",
             "type": "object"
@@ -110,7 +115,7 @@
             "description": "Represents an identity context for feature flag evaluation.",
             "properties": {
                 "identifier": {
-                    "description": "A unique identifier for an identity, used for segment and multivariate feature flag targeting, and displayed in the Flagsmith UI.",
+                    "description": "A unique identifier for an identity as displayed in the Flagsmith UI.",
                     "title": "Identifier",
                     "type": "string",
                     "x-flagsmith-engine-condition-property": "$.identity.identifier"
@@ -136,8 +141,7 @@
                 }
             },
             "required": [
-                "identifier",
-                "key"
+                "identifier"
             ],
             "title": "IdentityContext",
             "type": "object"
@@ -146,7 +150,7 @@
             "description": "Represents a segment context for feature flag evaluation.",
             "properties": {
                 "key": {
-                    "description": "Key used for % split segmentation.",
+                    "description": "Unique segment key used for % split segmentation.",
                     "title": "Key",
                     "type": "string"
                 },
@@ -172,16 +176,9 @@
                     "type": "array"
                 },
                 "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
                     "description": "Additional metadata associated with the segment.",
-                    "additionalProperties": {
-                        "type": [
-                            "string",
-                            "number",
-                            "boolean",
-                            "null"
-                        ]
-                    },
-                    "title": "Metadata",
+                    "title": "SegmentMetadata",
                     "type": "object"
                 }
             },

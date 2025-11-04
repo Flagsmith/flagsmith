@@ -1,13 +1,12 @@
 import React from 'react'
 import Input from 'components/base/forms/Input'
 import Icon from 'components/Icon'
-import InputGroup from 'components/base/forms/InputGroup'
-import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 
 import { getDarkMode } from 'project/darkMode'
-import ModalHR from 'components/modals/ModalHR'
 import EnvironmentSelectDropdown from './EnvironmentSelectDropdown'
+import TextAreaModal from './TextAreaModal'
+import { checkWhitespaceIssues } from 'components/segments/Rule/utils'
 
 type RuleConditionValueInputProps = {
   'data-test'?: string
@@ -20,108 +19,25 @@ type RuleConditionValueInputProps = {
   isValid?: boolean
   projectId?: number
   showEnvironmentDropdown?: boolean
-}
-
-const TextAreaModal = ({
-  disabled,
-  isValid,
-  onChange,
-  placeholder,
-  readOnly,
-  style,
-  value,
-}: RuleConditionValueInputProps) => {
-  const [textAreaValue, setTextAreaValue] = React.useState(value)
-
-  return (
-    <div>
-      <div className='modal-body'>
-        <InputGroup
-          id='rule-value-textarea'
-          data-test='rule-value-textarea'
-          value={textAreaValue}
-          inputProps={{
-            style: style,
-          }}
-          isValid={isValid}
-          onChange={(e: InputEvent) => {
-            const value = Utils.safeParseEventValue(e)
-            setTextAreaValue(value.replace(/\n/g, ''))
-          }}
-          type='text'
-          className='w-100'
-          readOnly={readOnly}
-          placeholder={placeholder}
-          disabled={disabled}
-          textarea
-        />
-      </div>
-      <ModalHR />
-      <div className='modal-footer'>
-        <Button
-          className='mr-2'
-          theme='secondary'
-          id='rule-value-textarea-cancel'
-          data-tests='rule-value-textarea-cancel'
-          onClick={closeModal2}
-        >
-          Cancel
-        </Button>
-        <Button
-          type='button'
-          id='rule-value-textarea-save'
-          data-tests='rule-value-textarea-save'
-          onClick={() => {
-            const event = new InputEvent('input', { bubbles: true })
-            Object.defineProperty(event, 'target', {
-              value: { value: textAreaValue },
-              writable: false,
-            })
-            const value = Utils.getTypedValue(Utils.safeParseEventValue(event))
-            onChange?.(value)
-            closeModal2()
-          }}
-        >
-          Apply
-        </Button>
-      </div>
-    </div>
-  )
+  operator?: string
 }
 
 const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
   isValid,
   onChange,
+  operator,
   projectId,
   showEnvironmentDropdown,
   value,
   ...props
 }) => {
-  const hasLeadingWhitespace = typeof value === 'string' && /^\s/.test(value)
-  const hasTrailingWhitespace = typeof value === 'string' && /\s$/.test(value)
-  const isOnlyWhitespace =
-    typeof value === 'string' && value.length >= 1 && value.trim() === ''
-  const hasBothLeadingAndTrailingWhitespace =
-    hasLeadingWhitespace && hasTrailingWhitespace
-  const hasWarning =
-    hasLeadingWhitespace ||
-    hasTrailingWhitespace ||
-    hasBothLeadingAndTrailingWhitespace ||
-    isOnlyWhitespace
+  const whitespaceCheck = checkWhitespaceIssues(value, operator)
+  const hasWarning = !!whitespaceCheck
   const isLongText = String(value).length >= 10
 
   const validate = () => {
-    if (isOnlyWhitespace) {
-      return 'This value is only whitespaces'
-    }
-    if (hasBothLeadingAndTrailingWhitespace) {
-      return 'This value starts and ends with whitespaces'
-    }
-    if (hasLeadingWhitespace) {
-      return 'This value starts with whitespaces'
-    }
-    if (hasTrailingWhitespace) {
-      return 'This value ends with whitespaces'
+    if (whitespaceCheck?.message) {
+      return whitespaceCheck.message
     }
     if (isLongText) {
       return 'Click to edit text in a larger area'
@@ -146,6 +62,8 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
           <Input
             type='text'
             data-test={props['data-test']}
+            name='rule-condition-value-input'
+            aria-label='Rule condition value input'
             value={value}
             inputClassName={
               showIcon ? `pr-5 ${hasWarning ? 'border-warning' : ''}` : ''
@@ -161,19 +79,16 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
               <Tooltip
                 title={
                   <div
-                    className={`flex ${
+                    className={`rule-value-icon flex ${
                       isDarkMode ? 'bg-white' : 'bg-black'
-                    } bg-opacity-10 rounded-2 p-1 ${
-                      hasWarning ? '' : 'cursor-pointer'
-                    }`}
+                    } bg-opacity-10 rounded-2 p-1 cursor-pointer`}
                     onClick={() => {
-                      if (hasWarning) return
                       openModal2(
                         'Edit Value',
                         <TextAreaModal
                           value={value}
                           onChange={onChange}
-                          isValid={isValid}
+                          operator={operator}
                         />,
                       )
                     }}

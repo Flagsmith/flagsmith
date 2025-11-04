@@ -7,6 +7,7 @@ import Utils from 'common/utils/utils'
 import TagContent from './TagContent'
 import Constants from 'common/constants'
 import { getDarkMode } from 'project/darkMode'
+import Color from 'color'
 
 type TagType = {
   className?: string
@@ -65,6 +66,7 @@ const Tag: FC<TagType> = ({
   selected,
   tag,
 }) => {
+  const shouldLighten = (color: Color) => getDarkMode() && color.isDark()
   const tagColor = Utils.colour(getTagColor(tag, selected))
   if (isDot) {
     return (
@@ -82,7 +84,7 @@ const Tag: FC<TagType> = ({
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
-        color={tagColor}
+        color={shouldLighten(tagColor) ? tagColor.lighten(0.5) : tagColor}
         active={selected}
         onClick={() => {
           if (!disabled) {
@@ -105,7 +107,7 @@ const Tag: FC<TagType> = ({
 
   return (
     <TagWrapper
-      tagColor={tagColor}
+      tagColor={shouldLighten(tagColor) ? tagColor.lighten(0.5) : tagColor}
       className={className}
       disabled={disabled}
       hideNames={hideNames}

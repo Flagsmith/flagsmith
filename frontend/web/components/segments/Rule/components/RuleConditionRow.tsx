@@ -12,8 +12,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import RuleConditionPropertySelect from './RuleConditionPropertySelect'
 import RuleConditionValueInput from './RuleConditionValueInput'
 import { RuleContextValues } from 'common/types/rules.types'
-import { RuleContextLabels } from 'common/types/rules.types'
-import { OptionType } from 'components/base/select/SearchableSelect'
+import { useRuleOperator, useRuleContext } from 'components/segments/Rule/hooks'
 
 interface RuleConditionRowProps {
   rule: SegmentCondition
@@ -57,45 +56,16 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
 
   const isLastRule = ruleIndex === lastIndex
   const hasOr = ruleIndex > 0
-  const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
-  const operator = operatorObj && operatorObj.value
-  const value =
-    typeof rule.value === 'string'
-      ? rule.value.replace((operatorObj && operatorObj.append) || '', '')
-      : rule.value
+
+  const { displayValue, operator, operatorObj, valuePlaceholder } =
+    useRuleOperator(rule, operators)
+
+  const { allowedContextValues, isValueFromContext, showEnvironmentDropdown } =
+    useRuleContext(operator, rule.property)
 
   if (rule.delete) {
     return null
   }
-  const valuePlaceholder = operatorObj?.hideValue
-    ? 'Value (N/A)'
-    : operatorObj?.valuePlaceholder || 'Value'
-
-  // TODO: Move this to the parent component in next iteration
-
-  const ALLOWED_CONTEXT_VALUES: OptionType[] = [
-    {
-      enabled: operator === 'PERCENTAGE_SPLIT',
-      label: RuleContextLabels.IDENTITY_KEY,
-      value: RuleContextValues.IDENTITY_KEY,
-    },
-    {
-      label: RuleContextLabels.IDENTIFIER,
-      value: RuleContextValues.IDENTIFIER,
-    },
-    {
-      label: RuleContextLabels.ENVIRONMENT_NAME,
-      value: RuleContextValues.ENVIRONMENT_NAME,
-    },
-  ]?.filter((option) => !!option.enabled)
-
-  const isValueFromContext = !!ALLOWED_CONTEXT_VALUES.find(
-    (option) => option.value === rule.property,
-  )?.value
-
-  const showEnvironmentDropdown =
-    ['EQUAL', 'NOT_EQUAL'].includes(rule.operator) &&
-    rule.property === RuleContextValues.ENVIRONMENT_NAME
 
   const showEvaluationContextWarning = isLastRule && isValueFromContext
   const isSkippingEvaluationContextWarning =
@@ -124,7 +94,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           setRuleProperty={setRuleProperty}
           propertyValue={rule.property}
           operator={rule.operator}
-          allowedContextValues={ALLOWED_CONTEXT_VALUES || []}
+          allowedContextValues={allowedContextValues}
           isValueFromContext={isValueFromContext}
         />
         {readOnly ? (
@@ -133,9 +103,9 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           <Select
             data-test={`${dataTest}-operator-${ruleIndex}`}
             value={operator && find(operators, { value: operator })}
-            onChange={(value: { value: string }) =>
+            onChange={(value: { value: string }) => {
               setRuleProperty(ruleIndex, 'operator', value)
-            }
+            }}
             options={operators}
             style={{ width: '190px' }}
           />
@@ -143,12 +113,13 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
         <RuleConditionValueInput
           readOnly={readOnly}
           data-test={`${dataTest}-value-${ruleIndex}`}
-          value={value || ''}
+          value={displayValue || ''}
           placeholder={valuePlaceholder}
           disabled={operatorObj && operatorObj.hideValue}
           style={{ width: '135px' }}
           projectId={projectId}
           showEnvironmentDropdown={showEnvironmentDropdown}
+          operator={operator}
           onChange={(value: string) => {
             setRuleProperty(ruleIndex, 'value', {
               value:

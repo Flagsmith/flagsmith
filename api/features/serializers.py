@@ -90,6 +90,10 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
         required=False,
         help_text="Integer ID of the environment to view features in the context of.",
     )
+    segment = serializers.IntegerField(
+        required=False,
+        help_text="Integer ID of the segment to retrieve segment overrides for.",
+    )
     is_enabled = serializers.BooleanField(
         allow_null=True,
         required=False,
@@ -141,6 +145,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
 
     environment_feature_state = serializers.SerializerMethodField()
+    segment_feature_state = serializers.SerializerMethodField()
 
     num_segment_overrides = serializers.SerializerMethodField(
         help_text="Number of segment overrides that exist for the given feature "
@@ -188,6 +193,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             "uuid",
             "project",
             "environment_feature_state",
+            "segment_feature_state",
             "num_segment_overrides",
             "num_identity_overrides",
             "is_num_identity_overrides_complete",
@@ -296,6 +302,17 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         ):
             return FeatureStateSerializerSmall(instance=feature_state).data
 
+    @swagger_serializer_method(  # type: ignore[misc]
+        serializer_or_field=FeatureStateSerializerSmall(allow_null=True)
+    )
+    def get_segment_feature_state(  # type: ignore[return]
+        self, instance: Feature
+    ) -> dict[str, Any] | None:
+        if (segment_feature_states := self.context.get("segment_feature_states")) and (
+            segment_feature_state := segment_feature_states.get(instance.id)
+        ):
+            return FeatureStateSerializerSmall(instance=segment_feature_state).data
+
     def get_num_segment_overrides(self, instance: Feature) -> int:
         try:
             return self.context["overrides_data"][instance.id].num_segment_overrides  # type: ignore[no-any-return]
@@ -347,6 +364,12 @@ class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerial
         organisation = project.organisation
         self._validate_required_metadata(organisation, attrs.get("metadata", []))
         return attrs
+
+    def create(self, validated_data: dict[str, Any]) -> Feature:
+        metadata_data = validated_data.pop("metadata", [])
+        feature = super().create(validated_data)
+        self._update_metadata(feature, metadata_data)
+        return feature
 
     def update(self, feature: Feature, validated_data: dict[str, Any]) -> Feature:
         metadata = validated_data.pop("metadata", [])
@@ -636,6 +659,13 @@ class AssociatedFeaturesQuerySerializer(serializers.Serializer):  # type: ignore
 class SDKFeatureStatesQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     feature = serializers.CharField(
         required=False, help_text="Name of the feature to get the state of"
+    )
+
+
+class EnvironmentFeatureStatesQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+    segment = serializers.IntegerField(
+        required=False,
+        help_text="ID of the segment to filter segment overrides by.",
     )
 
 

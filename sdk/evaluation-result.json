@@ -2,11 +2,6 @@
     "$defs": {
         "FlagResult": {
             "properties": {
-                "feature_key": {
-                    "description": "Unique feature identifier.",
-                    "title": "Feature Key",
-                    "type": "string"
-                },
                 "name": {
                     "description": "Feature name.",
                     "title": "Name",
@@ -31,10 +26,15 @@
                     "description": "Reason for the feature flag evaluation.",
                     "title": "Reason",
                     "type": "string"
+                },
+                "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
+                    "description": "Additional metadata associated with the feature.",
+                    "title": "FeatureMetadata",
+                    "type": "object"
                 }
             },
             "required": [
-                "feature_key",
                 "name",
                 "enabled",
                 "value",
@@ -45,32 +45,19 @@
         },
         "SegmentResult": {
             "properties": {
-                "key": {
-                    "description": "Unique segment identifier.",
-                    "title": "Key",
-                    "type": "string"
-                },
                 "name": {
                     "description": "Segment name.",
                     "title": "Name",
                     "type": "string"
                 },
                 "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
                     "description": "Additional metadata associated with the segment.",
-                    "additionalProperties": {
-                        "type": [
-                            "string",
-                            "number",
-                            "boolean",
-                            "null"
-                        ]
-                    },
-                    "title": "Metadata",
+                    "title": "SegmentMetadata",
                     "type": "object"
                 }
             },
             "required": [
-                "key",
                 "name"
             ],
             "title": "SegmentResult",
