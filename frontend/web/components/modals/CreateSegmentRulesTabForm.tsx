@@ -132,28 +132,26 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
         </div>
       )}
       <div className='d-flex flex-md-row flex-sm-column gap-2'> 
-        <div className='col-md-6'>
+        <div className='d-flex flex-column col-md-6'>
           <label htmlFor='segmentID'>Name*</label>
-          <Flex>
-            <Input
-              data-test='segmentID'
-              name='id'
-              id='segmentID'
-              maxLength={SEGMENT_ID_MAXLENGTH}
-              value={name}
-              onChange={(e: InputEvent) => {
-                setValueChanged(true)
-                setName(
-                  Format.enumeration
-                    .set(Utils.safeParseEventValue(e))
-                    .toLowerCase(),
-                )
-              }}
-              isValid={name && name.length}
-              type='text'
-              placeholder='E.g. power_users'
-            />
-          </Flex>
+          <Input
+            data-test='segmentID'
+            name='id'
+            id='segmentID'
+            maxLength={SEGMENT_ID_MAXLENGTH}
+            value={name}
+            onChange={(e: InputEvent) => {
+              setValueChanged(true)
+              setName(
+                Format.enumeration
+                  .set(Utils.safeParseEventValue(e))
+                  .toLowerCase(),
+              )
+            }}
+            isValid={name && name.length}
+            type='text'
+            placeholder='E.g. power_users'
+          />
         </div>
         {!condensed && (
           <InputGroup

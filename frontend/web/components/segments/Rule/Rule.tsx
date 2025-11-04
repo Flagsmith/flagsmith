@@ -16,6 +16,7 @@ import {
   splitIfValue,
   isInvalidPercentageSplit,
 } from './utils'
+import { useConditionCache } from './hooks/useConditionCache'
 
 interface RuleProps {
   index: number
@@ -41,6 +42,8 @@ const Rule: React.FC<RuleProps> = ({
 }) => {
   const { conditions: rules } = rule
 
+  const { cacheValue, getCachedValue } = useConditionCache()
+
   const updateCondition = (
     conditionIndex: number,
     updates: Partial<SegmentCondition>,
@@ -56,7 +59,15 @@ const Rule: React.FC<RuleProps> = ({
   }
 
   const setConditionProperty = (conditionIndex: number, property: string) => {
-    updateCondition(conditionIndex, { property })
+    const condition = rule.conditions[conditionIndex]
+
+    if (condition.property) {
+      cacheValue(conditionIndex, condition.operator, condition.property, condition.value)
+    }
+
+    const cachedValue = getCachedValue(conditionIndex, condition.operator, property)
+
+    updateCondition(conditionIndex, { property, value: cachedValue })
   }
 
   const setConditionOperator = (
@@ -70,6 +81,10 @@ const Rule: React.FC<RuleProps> = ({
       operators,
     )
     const newOperator = operators.find((op) => op.value === operatorValue)
+
+    if (condition.operator && condition.property) {
+      cacheValue(conditionIndex, condition.operator, condition.property, condition.value)
+    }
 
     // Split the append part of the operator as not handled by backend
     const updates: Partial<SegmentCondition> = {
@@ -101,6 +116,22 @@ const Rule: React.FC<RuleProps> = ({
       } else {
         updates.value = updates.value?.toString().split(':')[0]
       }
+    }
+
+    const finalProperty = updates.property !== undefined ? updates.property : condition.property
+    const finalOperator = operatorValue?.split(':')[0]
+
+    if (finalProperty && !newOperator?.hideValue && operatorValue !== 'PERCENTAGE_SPLIT') {
+      const cachedValue = getCachedValue(conditionIndex, finalOperator, finalProperty)
+
+      if (cachedValue !== '') {
+        // Use cached value if one exists (restore previous input)
+        updates.value = cachedValue
+      } else if (!updates.value) {
+        // No cache and no value set by other logic - clear the input
+        updates.value = ''
+      }
+      // Otherwise: preserve value set by append logic or existing value
     }
 
     updateCondition(conditionIndex, updates)

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React from 'react'
 import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
 import {
@@ -13,8 +13,6 @@ import RuleConditionPropertySelect from './RuleConditionPropertySelect'
 import RuleConditionValueInput from './RuleConditionValueInput'
 import { RuleContextValues } from 'common/types/rules.types'
 import { useRuleOperator, useRuleContext } from 'components/segments/Rule/hooks'
-import MultiSelect from 'components/base/select/MultiSelect'
-import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 
 interface RuleConditionRowProps {
   rule: SegmentCondition
@@ -49,17 +47,12 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
   setRuleProperty,
   showDescription,
 }) => {
-  const [selectedEnvironments, setSelectedEnvironments] = useState<string[]>([])
   const lastIndex = rules.reduce((acc, v, i) => {
     if (!v.delete) {
       return i
     }
     return acc
   }, 0)
-  const { data } = useGetEnvironmentsQuery({ projectId: projectId?.toString() })
-  const environments = data?.results
-
-  const environmentOptions = useMemo(() => environments ? environments?.map(({ name }) => ({ label: name, value: name })) : [],[environments])
 
   const isLastRule = ruleIndex === lastIndex
   const hasOr = ruleIndex > 0
@@ -67,7 +60,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
   const { displayValue, operator, operatorObj, valuePlaceholder } =
     useRuleOperator(rule, operators)
 
-  const { allowedContextValues, isValueFromContext, showEnvironmentDropdown } =
+  const { allowedContextValues, isValueFromContext } =
     useRuleContext(operator, rule.property)
 
   if (rule.delete) {
@@ -79,9 +72,6 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
     operator === 'PERCENTAGE_SPLIT' &&
     rule.property === RuleContextValues.IDENTITY_KEY
 
-
-  console.log('showEnvironmentDropdown', showEnvironmentDropdown)
-  console.log('rule', rule)
   return (
     <div className='rule__row reveal' key={ruleIndex}>
       {hasOr && (
@@ -124,14 +114,6 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
               className="col-10 col-md-3"
             />
           )}
-          {operator === 'IN' && rule.property === RuleContextValues.ENVIRONMENT_NAME ? (
-            <MultiSelect
-              selectedValues={selectedEnvironments}
-              onSelectionChange={(selectedValues: string[]) => setSelectedEnvironments(selectedValues)}
-              options={environmentOptions}
-              className='col-10 col-md-4'
-            />
-          ) : (
           <RuleConditionValueInput
             readOnly={readOnly}
             data-test={`${dataTest}-value-${ruleIndex}`}
@@ -139,8 +121,8 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
             placeholder={valuePlaceholder}
             disabled={operatorObj && operatorObj.hideValue}
             projectId={projectId}
-            showEnvironmentDropdown={showEnvironmentDropdown}
             operator={operator}
+            property={rule.property}
             onChange={(value: string) => {
               setRuleProperty(ruleIndex, 'value', {
                 value:
@@ -152,7 +134,6 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
             isValid={Utils.validateRule(rule) && !ruleErrors?.value}
             className='col-10 col-md-4'
           />
-          )}
         </div>
         <div className='d-flex flex-sm-column flex-md-row gap-2'>
           {isLastRule && !readOnly ? (
