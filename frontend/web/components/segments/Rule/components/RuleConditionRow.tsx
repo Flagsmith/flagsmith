@@ -90,7 +90,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
         <div
           className='d-flex flex-1 flex-row rule align-items-center justify-content-between gap-1 col-md-10'
         >
-          <div className='col-10 col-md-4'>
+          <div className='col-10 col-sm-4 col-md-4'>
             <RuleConditionPropertySelect
               dataTest={`${dataTest}-property-${ruleIndex}`}
               ruleIndex={ruleIndex}
@@ -111,7 +111,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
                 setRuleProperty(ruleIndex, 'operator', value)
               }}
               options={operators}
-              className="col-10 col-md-3"
+              className="col-10 col-sm-3 col-md-3"
             />
           )}
           <RuleConditionValueInput
@@ -132,7 +132,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
               })
             }}
             isValid={Utils.validateRule(rule) && !ruleErrors?.value}
-            className='col-10 col-md-4'
+            className='col-10 col-sm-4 col-md-4'
           />
         </div>
         <div className='d-flex flex-sm-column flex-md-row gap-2'>

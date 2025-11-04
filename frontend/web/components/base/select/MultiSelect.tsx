@@ -155,8 +155,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
           valueContainer: (base: any) => ({
             ...base,
             flexWrap: 'wrap',
-            gap: '4px',
-            overflow: 'visible',
+            gap: '2px',
             paddingBottom: '6px',
             paddingTop: '6px',
           }),
