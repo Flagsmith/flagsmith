@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import classNames from 'classnames'
 import Input from 'components/base/forms/Input'
 import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
@@ -63,6 +64,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
           onSelectionChange={(selectedValues: string[]) => {
             onChange?.(JSON.stringify(selectedValues))
           }}
+          placeholder='Select environments...'
           options={environmentOptions}
           className='w-100'
         />
@@ -101,7 +103,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
   const isDarkMode = getDarkMode()
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={classNames('relative', className)}>
       <Input
         type='text'
         data-test={props['data-test']}
