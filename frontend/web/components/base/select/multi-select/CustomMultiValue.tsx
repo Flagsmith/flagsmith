@@ -32,16 +32,21 @@ export const CustomMultiValue = ({
         >
           {data.label}
         </span>
-        <span
-          onClick={() => removeProps?.onClick?.(data)}
-          style={{
+        <button
+            {...removeProps}
+            style={{
             cursor: 'pointer',
             fontSize: '14px',
             lineHeight: '1',
+            backgroundColor: 'transparent',
+            border: 'none',
+            padding: 0,
+            margin: 0,
+            color: 'white',
           }}
         >
           ×
-        </span>
+        </button>
       </div>
     )
   }
