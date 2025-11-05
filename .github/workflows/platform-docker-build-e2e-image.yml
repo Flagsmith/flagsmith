@@ -4,6 +4,7 @@ on:
   schedule:
     # Update the E2E Firefox testcafe version on the first of every month
     - cron: 0 0 1 * *
+  workflow_dispatch:
 
 jobs:
   build-e2e-docker-image:
