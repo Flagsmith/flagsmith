@@ -1,6 +1,10 @@
 import classNames from 'classnames'
-import React from 'react'
+import React, { FC } from 'react'
 import { MultiValueProps } from 'react-select/lib/components/MultiValue'
+import { OptionProps } from 'react-select/lib/components/Option'
+
+import { CustomMultiValue } from './CustomMultiValue'
+import { CustomOption } from './CustomOption'
 
 export interface MultiSelectOption {
   label: string
@@ -17,84 +21,11 @@ export interface MultiSelectProps {
   className?: string
   disabled?: boolean
   size?: 'small' | 'default' | 'large'
+  hideSelectedOptions?: boolean
+  inline?: boolean
 }
 
-const CustomMultiValue = ({
-  color,
-  data,
-  removeProps,
-}: MultiValueProps<MultiSelectOption> & { color?: string }) => {
-  return (
-    <div
-      className='d-flex align-items-center'
-      style={{
-        backgroundColor: color,
-        borderRadius: '4px',
-        color: 'white',
-        fontSize: '12px',
-        maxWidth: '150px',
-        overflow: 'hidden',
-        padding: '2px 6px',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        maxHeight: '24px'
-      }}
-    >
-      <span
-        className='mr-1'
-        style={{
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {data.label}
-      </span>
-      <span
-        onClick={() => removeProps?.onClick?.(data)}
-        style={{
-          cursor: 'pointer',
-          fontSize: '14px',
-          lineHeight: '1',
-        }}
-      >
-        ×
-      </span>
-    </div>
-  )
-}
-
-const CustomOption = ({
-  children,
-  color,
-  ...props
-}: any & { color?: string }) => {
-  return (
-    <div
-      {...props.innerProps}
-      className={`d-flex align-items-center p-2 ${
-        props.isFocused ? 'bg-light' : ''
-      }`}
-      style={{ cursor: 'pointer' }}
-    >
-      {color && (
-        <div
-          style={{
-            backgroundColor: color,
-            borderRadius: '2px',
-            flexShrink: 0,
-            height: '12px',
-            marginRight: '8px',
-            width: '12px',
-          }}
-        />
-      )}
-      <span>{children}</span>
-    </div>
-  )
-}
-
-const MultiSelect: React.FC<MultiSelectProps> = ({
+export const MultiSelect: FC<MultiSelectProps> = ({
   className = '',
   colorMap,
   disabled = false,
@@ -104,6 +35,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   placeholder = 'Select options...',
   selectedValues,
   size = 'default',
+  hideSelectedOptions = false,
 }) => {
   return (
     <div className={classNames(
@@ -113,13 +45,14 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
       {label && <label>{label}</label>}
       <Select
         isMulti
+        hideSelectedOptions={hideSelectedOptions}
         closeMenuOnSelect={false}
         placeholder={placeholder}
         isDisabled={disabled}
         size={size}
-        onChange={(selectedOptions: any) => {
+        onChange={(selectedOptions: MultiSelectOption[]) => {
           const values = selectedOptions
-            ? selectedOptions.map((opt: any) => opt.value)
+            ? selectedOptions.map((opt: MultiSelectOption) => opt.value)
             : []
           onSelectionChange(values)
         }}
@@ -127,11 +60,10 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
           MultiValue: (props: MultiValueProps<MultiSelectOption>) => (
             <CustomMultiValue
               {...props}
-              className={classNames(props.className, 'h-[24px]')}
               color={colorMap?.get(props.data.value) || '#5D6D7E'}
             />
           ),
-          ...(colorMap ? {Option: (props: any) => <CustomOption
+          ...(colorMap ? {Option: (props: OptionProps<MultiSelectOption>) => <CustomOption
             {...props}
             color={colorMap.get(props.data.value)}
           />} : {}),
@@ -154,15 +86,20 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
           }),
           valueContainer: (base: any) => ({
             ...base,
-            flexWrap: 'wrap',
+            flexWrap: 'nowrap',
             gap: '2px',
             paddingBottom: '6px',
             paddingTop: '6px',
+            flex: 1
+          }),
+          input: (base: any) => ({
+            ...base,
+            margin: 0,
+            paddingBottom: 0,
+            paddingTop: 0,
           }),
         }}
       />
     </div>
   )
 }
-
-export default MultiSelect

@@ -94,7 +94,7 @@
   }
   &__control {
     background: $input-bg;
-    min-height: $input-height;
+    height: $input-height;
     border-radius: $border-radius;
     border: 1px solid $input-border-color;
     &--is-disabled {
