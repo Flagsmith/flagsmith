@@ -131,9 +131,10 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
             Utils.displayLimitAlert('segments', segmentsLimitAlert.percentage)}
         </div>
       )}
-      <div className='d-flex flex-md-row flex-sm-column gap-2'> 
-        <div className='d-flex flex-column col-md-6'>
-          <label htmlFor='segmentID'>Name*</label>
+
+      <div className='mb-3'>
+        <label htmlFor='segmentID'>Name*</label>
+        <Flex>
           <Input
             data-test='segmentID'
             name='id'
@@ -152,27 +153,27 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
             type='text'
             placeholder='E.g. power_users'
           />
-        </div>
-        {!condensed && (
-          <InputGroup
-            className='col-md-6'
-            value={description}
-            inputProps={{
-              className: 'full-width',
-              name: 'featureDesc',
-              readOnly: !!identity || readOnly,
-            }}
-            onChange={(e: InputEvent) => {
-              setValueChanged(true)
-              setDescription(Utils.safeParseEventValue(e))
-            }}
-            isValid={name && name.length}
-            type='text'
-            title='Description'
-            placeholder="e.g. 'People who have spent over $100' "
-          />
-        )}
+        </Flex>
       </div>
+      {!condensed && (
+        <InputGroup
+          className='mb-3'
+          value={description}
+          inputProps={{
+            className: 'full-width',
+            name: 'featureDesc',
+            readOnly: !!identity || readOnly,
+          }}
+          onChange={(e: InputEvent) => {
+            setValueChanged(true)
+            setDescription(Utils.safeParseEventValue(e))
+          }}
+          isValid={name && name.length}
+          type='text'
+          title='Description'
+          placeholder="e.g. 'People who have spent over $100' "
+        />
+      )}
 
       <div className='form-group '>
         <Row className='mb-3'>
