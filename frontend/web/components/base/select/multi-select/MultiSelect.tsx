@@ -5,7 +5,7 @@ import { OptionProps } from 'react-select/lib/components/Option'
 
 import { CustomMultiValue } from './CustomMultiValue'
 import { CustomOption } from './CustomOption'
-import { CustomValueContainer } from './CustomValueContainer'
+import { InlineMultiValue } from './InlineMultiValue'
 
 export interface MultiSelectOption {
   label: string
@@ -60,8 +60,9 @@ export const MultiSelect: FC<MultiSelectProps> = ({
         }}
         components={{
           ...(inline ? {
-            ValueContainer: CustomValueContainer,
-            MultiValue: () => null,
+            MultiValue: (props: MultiValueProps<MultiSelectOption>) => (
+              <InlineMultiValue {...props} />
+            ),
           } : {
             MultiValue: (props: MultiValueProps<MultiSelectOption>) => (
               <CustomMultiValue
