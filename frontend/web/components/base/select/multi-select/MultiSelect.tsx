@@ -5,6 +5,7 @@ import { OptionProps } from 'react-select/lib/components/Option'
 
 import { CustomMultiValue } from './CustomMultiValue'
 import { CustomOption } from './CustomOption'
+import { CustomValueContainer } from './CustomValueContainer'
 
 export interface MultiSelectOption {
   label: string
@@ -36,6 +37,7 @@ export const MultiSelect: FC<MultiSelectProps> = ({
   selectedValues,
   size = 'default',
   hideSelectedOptions = false,
+  inline = false,
 }) => {
   return (
     <div className={classNames(
@@ -57,12 +59,17 @@ export const MultiSelect: FC<MultiSelectProps> = ({
           onSelectionChange(values)
         }}
         components={{
-          MultiValue: (props: MultiValueProps<MultiSelectOption>) => (
-            <CustomMultiValue
-              {...props}
-              color={colorMap?.get(props.data.value) || '#5D6D7E'}
-            />
-          ),
+          ...(inline ? {
+            ValueContainer: CustomValueContainer,
+            MultiValue: () => null,
+          } : {
+            MultiValue: (props: MultiValueProps<MultiSelectOption>) => (
+              <CustomMultiValue
+                {...props}
+                color={colorMap?.get(props.data.value) || '#5D6D7E'}
+              />
+            ),
+          }),
           ...(colorMap ? {Option: (props: OptionProps<MultiSelectOption>) => <CustomOption
             {...props}
             color={colorMap.get(props.data.value)}
@@ -90,13 +97,20 @@ export const MultiSelect: FC<MultiSelectProps> = ({
             gap: '2px',
             paddingBottom: '6px',
             paddingTop: '6px',
-            flex: 1
+            flex: 1,
+            overflow: 'hidden',
           }),
           input: (base: any) => ({
             ...base,
             margin: 0,
             paddingBottom: 0,
             paddingTop: 0,
+          }),
+          singleValue: (base: any) => ({
+            ...base,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }),
         }}
       />
