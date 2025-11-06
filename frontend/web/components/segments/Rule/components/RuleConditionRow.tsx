@@ -89,7 +89,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
         className='d-flex flex-row align-items-center gap-1 flex-nowrap'
       >
         <div
-          className='d-flex flex-1 flex-row rule align-items-center justify-content-between gap-1 col-md-10'
+          className='d-flex flex-1 flex-row rule align-items-center justify-content-between gap-1 col-8 col-md-10'
         >
           <div className='col-10 col-sm-4 col-md-4'>
             <RuleConditionPropertySelect
