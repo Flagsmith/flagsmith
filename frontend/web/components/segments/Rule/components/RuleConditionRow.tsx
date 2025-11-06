@@ -13,6 +13,7 @@ import RuleConditionPropertySelect from './RuleConditionPropertySelect'
 import RuleConditionValueInput from './RuleConditionValueInput'
 import { RuleContextValues } from 'common/types/rules.types'
 import { useRuleOperator, useRuleContext } from 'components/segments/Rule/hooks'
+import classNames from 'classnames'
 
 interface RuleConditionRowProps {
   rule: SegmentCondition
@@ -135,7 +136,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
             className='col-10 col-sm-4 col-md-4'
           />
         </div>
-        <div className='d-flex flex-sm-column flex-md-row gap-2'>
+        <div className={classNames('d-flex flex-sm-column flex-md-row', isLastRule && !readOnly ? 'gap-2' : '')}>
           {isLastRule && !readOnly ? (
             <Button
               theme='outline'

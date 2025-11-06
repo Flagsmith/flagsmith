@@ -16,7 +16,9 @@ export const InlineMultiValue = (props: MultiValueProps<MultiSelectOption>) => {
       : `${selectedOptions.slice(0, -1).map((opt) => opt.label).join(', ')} and ${selectedOptions[selectedOptions.length - 1].label}`
 
     return (
-      <div style={{
+      <div 
+        title={formattedText}
+        style={{
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
