@@ -67,6 +67,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
           placeholder='Select environments...'
           options={environmentOptions}
           className='w-100'
+          hideSelectedOptions={false}
           inline
         />
       </div>

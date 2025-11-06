@@ -36,7 +36,7 @@ export const MultiSelect: FC<MultiSelectProps> = ({
   placeholder = 'Select options...',
   selectedValues,
   size = 'default',
-  hideSelectedOptions = false,
+  hideSelectedOptions = true,
   inline = false,
 }) => {
   return (
@@ -71,10 +71,12 @@ export const MultiSelect: FC<MultiSelectProps> = ({
               />
             ),
           }),
-          ...(colorMap ? {Option: (props: OptionProps<MultiSelectOption>) => <CustomOption
-            {...props}
-            color={colorMap.get(props.data.value)}
-          />} : {}),
+          Option: (props: OptionProps<MultiSelectOption>) => (
+            <CustomOption
+              {...props}
+              color={colorMap?.get(props.data.value)}
+            />
+          ),
         }}
         value={selectedValues.map((value) => ({
           label: options.find((opt) => opt.value === value)?.label || value,
