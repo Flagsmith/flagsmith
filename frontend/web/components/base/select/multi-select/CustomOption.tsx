@@ -1,14 +1,27 @@
 import { OptionProps } from 'react-select/lib/components/Option'
 import { MultiSelectOption } from './MultiSelect'
 import Icon from 'components/Icon'
+import { useEffect, useRef } from 'react'
 
 export const CustomOption = ({
     children,
     color,
     ...props
   }: OptionProps<MultiSelectOption> & { color?: string }) => {
+    const ref = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+      if (props.isFocused && ref.current) {
+        ref.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+        })
+      }
+    }, [props.isFocused])
+
     return (
       <div
+        ref={ref}
         {...props.innerProps}
         role="option"
         aria-selected={props.isSelected}
