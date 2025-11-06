@@ -670,7 +670,7 @@
         },
         {
             "source": "/quickstart/",
-            "destination": "/getting-started/"
+            "destination": "/getting-started/quick-start"
         },
         {
             "source": "/system-administration/audit-logs",
@@ -703,6 +703,10 @@
         {
             "source": "/integrating-with-flagsmith/",
             "destination": "/integrating-with-flagsmith/integration-overview"
+        },
+        {
+            "source": "/basic-features/",
+            "destination": "/flagsmith-concepts/data-model"
         }
     ]
 }
