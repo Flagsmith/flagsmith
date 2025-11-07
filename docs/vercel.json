@@ -5,19 +5,11 @@
             "destination": "/flagsmith-concepts/identities"
         },
         {
-            "source": "/managing-identities",
-            "destination": "/flagsmith-concepts/identities"
-        },
-        {
             "source": "/system-administration/",
             "destination": "/administration-and-security/"
         },
         {
             "source": "/contributing",
-            "destination": "/project-and-community/contributing"
-        },
-        {
-            "source": "/contributing/",
             "destination": "/project-and-community/contributing"
         },
         {
@@ -93,10 +85,6 @@
             "destination": "/flagsmith-concepts/segments/"
         },
         {
-            "source": "/managing-segments/",
-            "destination": "/flagsmith-concepts/segments/"
-        },
-        {
             "source": "/basic-features/managing-segments",
             "destination": "/flagsmith-concepts/segments/"
         },
@@ -121,28 +109,12 @@
             "destination": "/best-practices/integration-approaches"
         },
         {
-            "source": "/advanced-use/integration-approaches",
-            "destination": "/best-practices/integration-approaches"
-        },
-        {
             "source": "/advanced-use/migrating-from-self-hosted-to-cloud",
             "destination": "/administration-and-security/data-management/import-and-export"
         },
         {
-            "source": "/advanced-use/migrating-from-self-hosted-to-cloud/",
-            "destination": "/administration-and-security/data-management/import-and-export"
-        },
-        {
-            "source": "/advanced-use/edge-proxy",
-            "destination": "/deployment-self-hosting/edge-proxy"
-        },
-        {
             "source": "/advanced-use/edge-proxy/",
             "destination": "/deployment-self-hosting/edge-proxy"
-        },
-        {
-            "source": "/advanced-use/custom-fields",
-            "destination": "/administration-and-security/governance-and-compliance/custom-fields"
         },
         {
             "source": "/advanced-use/custom-fields/",
@@ -153,28 +125,12 @@
             "destination": "/best-practices/defensive-coding"
         },
         {
-            "source": "/advanced-use/defensive-coding/",
-            "destination": "/best-practices/defensive-coding"
-        },
-        {
             "source": "/advanced-use/testing-with-flags",
-            "destination": "/best-practices/testing-with-flags"
-        },
-        {
-            "source": "/advanced-use/testing-with-flags/",
             "destination": "/best-practices/testing-with-flags"
         },
         {
             "source": "/advanced-use/when-to-use-flags",
             "destination": "/best-practices/when-to-use-flags"
-        },
-        {
-            "source": "/advanced-use/when-to-use-flags/",
-            "destination": "/best-practices/when-to-use-flags"
-        },
-        {
-            "source": "/advanced-use/flag-lifecycle",
-            "destination": "/best-practices/flag-lifecycle"
         },
         {
             "source": "/advanced-use/flag-lifecycle/",
@@ -185,28 +141,12 @@
             "destination": "/best-practices/efficient-api-usage"
         },
         {
-            "source": "/advanced-use/efficient-api-usage/",
-            "destination": "/best-practices/efficient-api-usage"
-        },
-        {
             "source": "/advanced-use/mobile-app-versioning",
             "destination": "/best-practices/mobile-app-versioning"
         },
         {
-            "source": "/advanced-use/mobile-app-versioning/",
-            "destination": "/best-practices/mobile-app-versioning"
-        },
-        {
-            "source": "/advanced-use/api/",
-            "destination": "/integrating-with-flagsmith/flagsmith-api-overview/"
-        },
-        {
             "source": "/advanced-use/api",
             "destination": "/integrating-with-flagsmith/flagsmith-api-overview/"
-        },
-        {
-            "source": "/advanced-use/audit-logs/",
-            "destination": "/administration-and-security/governance-and-compliance/audit-logs"
         },
         {
             "source": "/advanced-use/audit-logs",
@@ -257,19 +197,7 @@
             "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
-            "source": "/clients/android/",
-            "destination": "/integrating-with-flagsmith/sdks/server-side"
-        },
-        {
-            "source": "/clients/csharp",
-            "destination": "/integrating-with-flagsmith/sdks/server-side"
-        },
-        {
             "source": "/clients/csharp/",
-            "destination": "/integrating-with-flagsmith/sdks/server-side"
-        },
-        {
-            "source": "/clients/dart",
             "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
@@ -281,15 +209,7 @@
             "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
-            "source": "/clients/kotlin/",
-            "destination": "/integrating-with-flagsmith/sdks/server-side"
-        },
-        {
             "source": "/clients/swift",
-            "destination": "/integrating-with-flagsmith/sdks/server-side"
-        },
-        {
-            "source": "/clients/swift/",
             "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
@@ -501,44 +421,20 @@
             "destination": "/third-party-integrations/"
         },
         {
-            "source": "/integrations",
-            "destination": "/third-party-integrations/"
-        },
-        {
-            "source": "/advanced-use/",
-            "destination": "/best-practices/"
-        },
-        {
             "source": "/advanced-use",
             "destination": "/best-practices/"
         },
         {
-            "source": "/basic-features/",
-            "destination": "/flagsmith-concepts/"
-        },
-        {
             "source": "/basic-features",
-            "destination": "/flagsmith-concepts/"
+            "destination": "flagsmith-concepts/data-model"
         },
         {
             "source": "/clients/",
             "destination": "/integrating-with-flagsmith/"
         },
         {
-            "source": "/clients",
-            "destination": "/integrating-with-flagsmith/"
-        },
-        {
-            "source": "/platform/",
-            "destination": "/project-and-community/"
-        },
-        {
             "source": "/platform",
             "destination": "/project-and-community/"
-        },
-        {
-            "source": "/guides-and-examples/",
-            "destination": "/best-practices/"
         },
         {
             "source": "/guides-and-examples",
@@ -670,7 +566,7 @@
         },
         {
             "source": "/quickstart/",
-            "destination": "/getting-started/"
+            "destination": "/getting-started/quick-start"
         },
         {
             "source": "/system-administration/audit-logs",
@@ -703,6 +599,10 @@
         {
             "source": "/integrating-with-flagsmith/",
             "destination": "/integrating-with-flagsmith/integration-overview"
+        },
+        {
+            "source": "/basic-features/",
+            "destination": "/flagsmith-concepts/data-model"
         }
     ]
 }
