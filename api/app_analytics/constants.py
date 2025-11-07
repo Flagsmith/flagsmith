@@ -24,7 +24,9 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "unknown",
         "2.3.0",
     ],
-    "flagsmith-flutter-sdk": ["unknown"],
+    "flagsmith-flutter-sdk": ["unknown",
+        "6.1.0",
+    ],
     "flagsmith-go-sdk": ["unknown"],
     "flagsmith-java-sdk": ["unknown"],
     "flagsmith-js-sdk": [
