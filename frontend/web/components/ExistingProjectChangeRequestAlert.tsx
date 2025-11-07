@@ -14,7 +14,7 @@ const ExistingProjectChangeRequestAlert: FC<
   const { data } = useGetProjectChangeRequestsQuery({
     committed: false,
     project_id: projectId,
-    version_of: segmentId,
+    segment_id: segmentId,
   })
 
   if (data?.results?.length) {
