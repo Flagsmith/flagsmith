@@ -1995,12 +1995,10 @@ name = "flagsmith-common"
 version = "2.2.5"
 description = "Flagsmith's common library"
 optional = false
-python-versions = "<4.0,>=3.11"
+python-versions = ">=3.11,<4.0"
 groups = ["main", "dev", "split-testing", "workflows"]
-files = [
-    {file = "flagsmith_common-2.2.5-py3-none-any.whl", hash = "sha256:42c75237166b33ffcf2e64e638e9dab95e3f6413dfccdd2e259e6539ce3e3c92"},
-    {file = "flagsmith_common-2.2.5.tar.gz", hash = "sha256:aa872dc78d13f2e63a57b3302cb915b1c323c1cd8cd74a088618b7d1875c62bc"},
-]
+files = []
+develop = false
 
 [package.dependencies]
 backoff = ">=2.2.1,<3.0.0"
@@ -2022,6 +2020,12 @@ simplejson = ">=3,<4"
 
 [package.extras]
 test-tools = ["pyfakefs (>=5,<6)", "pytest-django (>=4,<5)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/flagsmith/flagsmith-common"
+reference = "fix/os-dir-permissions"
+resolved_reference = "a45278b1aba12d8f7fb72c43427df7d3b78b2b68"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -5451,4 +5455,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "072ba726a64b4f1e4cea871817c76888cbb8e758fecdcc15149f804dd3844f1a"
+content-hash = "3888d54da0e22a40405a3d9edae3278726941b79a536badc380937dbb6bec224"
