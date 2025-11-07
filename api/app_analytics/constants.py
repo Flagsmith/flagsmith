@@ -20,7 +20,10 @@ NINETY_DAY_PERIOD: PeriodType
 # This allows us to efficiently store usage and evaluation data.
 SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
     "flagsmith-dotnet-sdk": ["unknown"],
-    "flagsmith-elixir-sdk": ["unknown"],
+    "flagsmith-elixir-sdk": [
+        "unknown",
+        "2.3.0",
+    ],
     "flagsmith-flutter-sdk": ["unknown"],
     "flagsmith-go-sdk": ["unknown"],
     "flagsmith-java-sdk": ["unknown"],
