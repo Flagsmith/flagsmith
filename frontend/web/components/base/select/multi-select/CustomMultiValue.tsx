@@ -8,7 +8,7 @@ export const CustomMultiValue = ({
   }: MultiValueProps<MultiSelectOption> & { color?: string }) => {
     return (
       <div
-        className='d-flex align-items-center'
+        className='d-flex align-items-center gap-x-1'
         style={{
           backgroundColor: color,
           borderRadius: '4px',
@@ -23,7 +23,6 @@ export const CustomMultiValue = ({
         }}
       >
         <span
-          className='mr-1'
           style={{
             overflow: 'hidden',
             textOverflow: 'ellipsis',
