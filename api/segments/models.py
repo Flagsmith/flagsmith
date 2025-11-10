@@ -9,7 +9,6 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
-    BEFORE_CREATE,
     LifecycleModelMixin,
     hook,
 )
@@ -30,11 +29,22 @@ from features.models import Feature
 from metadata.models import Metadata
 from projects.models import Project
 
-from .managers import LiveSegmentManager, SegmentManager
-
 ModelT = typing.TypeVar("ModelT", bound=models.Model)
 
 logger = logging.getLogger(__name__)
+
+
+class SegmentManager(SoftDeleteExportableManager):
+    pass
+
+
+class LiveSegmentManager(SoftDeleteExportableManager):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        """
+        Returns only the canonical segments, which will always be
+        the highest version.
+        """
+        return super().get_queryset().filter(id=models.F("version_of"))
 
 
 class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]):
