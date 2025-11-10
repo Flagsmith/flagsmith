@@ -12,7 +12,7 @@
 - Ignore: `ios/`, `android/`, `.net/`
 
 ## Rules
-1. **API Integration**: Use `npx ssg` CLI + check `../hoxtonmix-api` backend
+1. **API Integration**: Use `npx ssg` CLI + check `../api` backend
 2. **Forms**: Yup + Formik + `validateForm` utility (see `/examples/forms/`)
 3. **Imports**: Use `common/`, `components/`, `project/` (NO relative imports)
 4. **State**: Redux Toolkit + RTK Query, store in `common/store.ts`

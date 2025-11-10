@@ -178,8 +178,7 @@ openConfirm(
 ### Always Run API Types Sync Before API Work
 
 When using `/api` to generate new API services, the command automatically runs `/api-types-sync` first to:
-1. Pull latest backend changes (`git pull` in `../hoxtonmix-api`)
-2. Sync frontend types with backend serializers
-3. Ensure types are up-to-date before generating new services
+1. Sync frontend types with backend serializers
+2. Ensure types are up-to-date before generating new services
 
 This prevents type mismatches and ensures consistency.

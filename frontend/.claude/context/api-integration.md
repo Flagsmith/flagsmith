@@ -11,7 +11,7 @@ This example shows how to add a new endpoint for fetching company invoices (a re
 ### Step 1: Check Backend API
 
 ```bash
-cd ../hoxtonmix-api
+cd ../api
 git fetch
 git log --oneline origin/feat/your-branch -n 10
 git show COMMIT_HASH:apps/customers/urls.py | grep -A 5 "invoice"
@@ -100,7 +100,7 @@ npx eslint --fix common/types/requests.ts common/services/useInvoice.ts
 ## Primary Workflow: Automatic via `/api-types-sync`
 
 **ALWAYS start with `/api-types-sync`** when working with APIs. This command:
-1. Pulls latest backend changes from `../hoxtonmix-api`
+1. Pulls latest backend changes from `../api`
 2. Detects new/changed Django serializers
 3. Updates TypeScript types in `common/types/`
 4. **Automatically generates RTK Query services** for new endpoints
@@ -245,9 +245,9 @@ export const {
 ### Search Strategy
 
 1. **Use `/backend` slash command**: `/backend <search-term>` searches backend codebase
-2. **Check URL patterns**: Look in `../hoxtonmix-api/apps/<resource>/urls.py`
+2. **Check URL patterns**: Look in `../api/apps/<resource>/urls.py`
     - Common apps: `mailbox`, `customers`, `kyc`, `offers`, `subscriptions`, `checkout`
-3. **Check ViewSets**: Look in `../hoxtonmix-api/apps/<resource>/views.py`
+3. **Check ViewSets**: Look in `../api/apps/<resource>/views.py`
 4. **Common file download pattern**:
     - Backend returns PDF/file with `Content-Disposition: attachment; filename=...`
     - Use `responseHandler` in RTK Query to handle blob downloads

@@ -65,7 +65,7 @@ Only use feature flags when explicitly requested by the user.
 | Card Components | `components/project/cards/` | Summary cards, info cards |
 | Base UI Components | `components/base/` | Buttons, forms, inputs |
 | Feature Flags Context | `.claude/context/feature-flags.md` | Flagsmith integration guide |
-| Backend API | `../hoxtonmix-api/` | Django backend |
+| Backend API | `../api/` | Flagsmith backend API |
 
 ## Common Components for Messages
 
@@ -109,27 +109,20 @@ import dayjs from 'dayjs'
 ## Backend API Structure
 
 ```
-../hoxtonmix-api/apps/
-├── customers/         # Companies, subscriptions, billing
-├── mailbox/           # Mail scanning and forwarding
-├── kyc/              # KYC verification
-├── offers/           # Offer management
-├── checkout/         # Payments and topups
-└── integrations/     # Third-party services
-    └── chargebee/    # Billing integration
+../api/apps/
+├── projects/          # Projects and features
+├── environments/      # Environment management
+├── features/          # Feature flags
+├── segments/          # User segments
+├── users/            # User management
+├── organisations/    # Organization management
+├── permissions/      # Access control
+└── audit/           # Audit logs
 ```
 
 ## Common Backend Endpoints
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/customers/companies` | GET | List user's companies |
-| `/customers/companies/{id}` | GET | Company details |
-| `/customers/subscriptions/{id}/invoices` | GET | Subscription invoices |
-| `/customers/companies/{id}/invoices` | GET | All company invoices |
-| `/customers/invoices/{id}/download` | GET | Download invoice PDF |
-| `/mailbox/mails` | GET | List mails |
-| `/mailbox/mails/{id}/scan` | POST | Scan mail |
+See `/backend` slash command to search the backend codebase for specific endpoints.
 
 ## RTK Query Patterns
 
@@ -267,7 +260,7 @@ Or use the check command:
 
 Check backend branches:
 ```bash
-cd ../hoxtonmix-api
+cd ../api
 git fetch
 git log --oneline origin/feat/branch-name -n 10
 git show COMMIT_HASH:path/to/file.py

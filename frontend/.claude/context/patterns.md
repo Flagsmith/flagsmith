@@ -9,7 +9,7 @@ This end-to-end example shows how to add tabs with a new API endpoint (real impl
 ### Step 1: Check Backend API
 
 ```bash
-cd ../hoxtonmix-api
+cd ../api
 git fetch
 git show COMMIT_HASH:apps/customers/urls.py | grep "invoice"
 # Found: path("companies/<int:company_id>/invoices", get_company_invoices)

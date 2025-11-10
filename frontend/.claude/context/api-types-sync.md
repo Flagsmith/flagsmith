@@ -1,6 +1,6 @@
 # API Type Synchronization
 
-Frontend TypeScript types in `common/types/responses.ts` mirror backend Django serializers from `../hoxtonmix-api`.
+Frontend TypeScript types in `common/types/responses.ts` mirror backend Django serializers from `../api`.
 
 ## Type Mapping (Django → TypeScript)
 
@@ -128,13 +128,13 @@ This cache enables:
 
 1. Check cache first (`.claude/api-type-map.json`)
 2. Search service files: `grep -r ": TypeName" common/services/`
-3. Search backend: `grep -r "SerializerName" ../hoxtonmix-api/apps/*/views.py`
+3. Search backend: `grep -r "SerializerName" ../api/apps/*/views.py`
 
 **Before syncing:**
 Always update backend repository to latest:
 
 ```bash
-cd ../hoxtonmix-api && git checkout main && git pull origin main && cd -
+cd ../api && git checkout main && git pull origin main && cd -
 ```
 
 ## Enum Dependency Tracking
@@ -174,7 +174,7 @@ The `_metadata.enum_dependencies` section tracks the relationship between Django
 3. **Locate the Django enum definition:**
    ```bash
    # Use the django_enum path
-   cat ../hoxtonmix-api/apps/subscriptions/enums.py | grep -A 10 "class SubscriptionStatus"
+   cat ../api/apps/subscriptions/enums.py | grep -A 10 "class SubscriptionStatus"
    ```
 
 4. **Update all affected types when enum changes:**
@@ -200,13 +200,13 @@ Enum changes require additional tracking:
 **Example workflow using enum dependencies:**
 ```bash
 # 1. Check what changed since last sync
-cd ../hoxtonmix-api && git diff LAST_COMMIT..HEAD --name-only | grep -E "(enums|models)\.py"
+cd ../api && git diff LAST_COMMIT..HEAD --name-only | grep -E "(enums|models)\.py"
 
 # 2. If apps/subscriptions/enums.py changed, check the api-type-map.json:
 cat .claude/api-type-map.json | jq '._metadata.enum_dependencies.mappings.SubscriptionStatus'
 
 # 3. Read the updated enum values:
-cat ../hoxtonmix-api/apps/subscriptions/enums.py | grep -A 10 "class SubscriptionStatus"
+cat ../api/apps/subscriptions/enums.py | grep -A 10 "class SubscriptionStatus"
 
 # 4. Update the TypeScript union type in common/types/responses.ts
 # 5. Check all types listed in used_in_types to ensure they're still correct

@@ -2,7 +2,7 @@
 description: Search the backend codebase for endpoint details
 ---
 
-Search the `../hoxtonmix-api` codebase for the requested endpoint.
+Search the `../api` codebase for the requested endpoint.
 
 Look for:
 1. Route definitions (URL path)

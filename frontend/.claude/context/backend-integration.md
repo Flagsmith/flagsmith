@@ -2,30 +2,32 @@
 
 ## Backend Repository Structure
 
-The backend API is located at `../hoxtonmix-api` (sibling directory to this frontend repo).
+The backend API is located at `../api` (sibling directory to this frontend repo).
 
 ### Key Backend Directories
 
 ```
-../hoxtonmix-api/
+../api/
 ├── apps/
-│   ├── partners/         # Partner, commission, payout management
-│   │   ├── views.py      # API view functions and ViewSets
-│   │   ├── urls.py       # URL routing
-│   │   ├── serializers.py # Django REST Framework serializers
-│   │   └── services.py   # Business logic layer
-│   ├── customers/        # Customer management (referenced by partners)
-└── tests/                # Test files mirror apps/ structure
+│   ├── projects/         # Projects and features
+│   ├── environments/     # Environment management
+│   ├── features/         # Feature flags
+│   ├── segments/         # User segments
+│   ├── organisations/    # Organization management
+│   ├── users/           # User management
+│   ├── permissions/     # Access control
+│   └── audit/          # Audit logs
+└── tests/              # Test files mirror apps/ structure
 ```
 
 ## Finding Backend Endpoints
 
 ### Method 1: Search by Feature Branch
 
-When a feature is on a specific branch (e.g., `feat/invoices-by-company`):
+When a feature is on a specific branch:
 
 ```bash
-cd ../hoxtonmix-api
+cd ../api
 git fetch
 git log --oneline origin/feat/your-branch -n 10
 ```
@@ -49,16 +51,16 @@ git show COMMIT_HASH:apps/customers/views.py | grep -A 20 "def get_company_invoi
 If the feature is already merged or on main:
 
 ```bash
-cd ../hoxtonmix-api
+cd ../api
 
 # Search for URL patterns
-grep -r "path.*partners" apps/*/urls.py
+grep -r "path.*features" apps/*/urls.py
 
 # Search for view functions
-grep -r "def get.*partner" apps/*/views.py
+grep -r "def get.*feature" apps/*/views.py
 
 # Search for serializers
-grep -r "class.*PartnerSerializer" apps/*/serializers.py
+grep -r "class.*FeatureSerializer" apps/*/serializers.py
 ```
 
 ### Method 3: Use `/backend` Command
@@ -66,7 +68,7 @@ grep -r "class.*PartnerSerializer" apps/*/serializers.py
 From the frontend, use the `/backend` slash command:
 
 ```
-/backend partner endpoint
+/backend feature endpoint
 ```
 
 This searches the backend codebase for relevant code.
@@ -78,36 +80,35 @@ This searches the backend codebase for relevant code.
 Django URL patterns define the API routes:
 
 ```python
-# apps/partners/urls.py
+# apps/features/urls.py
 path(
-    "<int:partner_id>",
-    get_partner,
-    name="partner-detail",
+    "<int:feature_id>",
+    get_feature,
+    name="feature-detail",
 ),
 ```
 
-**Maps to:** `GET /api/v3/admin/partners/{partner_id}`
+**Maps to:** `GET /api/v1/features/{feature_id}`
 
 ### 2. View Functions (`views.py`)
 
 Views handle the HTTP request/response:
 
 ```python
-# apps/partners/views.py
+# apps/features/views.py
 @api_view(["GET"])
-@authentication_classes([PartnerJWTAuthentication])
 @permission_classes([IsAuthenticated])
-def get_partner(request, partner_id, *args, **kwargs):
-    partner = request.user
-    partner_data = PartnerService().get_partner(partner, partner_id)
-    return Response(status=status.HTTP_200_OK, data=partner_data)
+def get_feature(request, feature_id, *args, **kwargs):
+    feature = Feature.objects.get(id=feature_id)
+    serializer = FeatureSerializer(feature)
+    return Response(status=status.HTTP_200_OK, data=serializer.data)
 ```
 
 Key things to note:
 - HTTP method: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`
-- Authentication required: `@authentication_classes` (typically `PartnerJWTAuthentication`)
+- Authentication required: Usually JWT or Token based
 - Permissions: `@permission_classes`
-- Path parameters: `partner_id` from URL
+- Path parameters: `feature_id` from URL
 - Return format: Usually `Response(data=...)`
 
 ### 3. Service Layer (`services.py`)
@@ -115,13 +116,9 @@ Key things to note:
 Business logic is in service classes:
 
 ```python
-# apps/partners/services.py
-def get_partner(
-    self, partner: PartnerAuthUser, partner_id: int
-) -> dict:
-    partner_obj = Partner.objects.get(id=partner_id, user=partner)
-
-    return PartnerSerializer(partner_obj).data
+# apps/features/services.py (if exists)
+# Note: Flagsmith backend may not always use a service layer
+# Business logic often lives directly in views or models
 ```
 
 ### 4. Serializers (`serializers.py`)
@@ -129,14 +126,14 @@ def get_partner(
 Serializers define the data structure:
 
 ```python
-# apps/partners/serializers.py
-class PartnerSerializer(serializers.ModelSerializer):
+# apps/features/serializers.py
+class FeatureSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
     name = serializers.CharField()
-    email = serializers.EmailField()
-    commission_rate = serializers.DecimalField(max_digits=5, decimal_places=2)
-    total_earnings = serializers.DecimalField(max_digits=10, decimal_places=2)
-    status = serializers.CharField()
+    description = serializers.CharField()
+    type = serializers.CharField()
+    default_enabled = serializers.BooleanField()
+    created_date = serializers.DateTimeField()
 ```
 
 ## API Response Patterns
@@ -195,7 +192,7 @@ Response: { success: true, partner: {...} }
 ### 1. Run Backend Locally
 
 ```bash
-cd ../hoxtonmix-api
+cd ../api
 # Follow backend README for setup
 python manage.py runserver
 ```
