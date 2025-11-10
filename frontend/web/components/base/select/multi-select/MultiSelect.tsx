@@ -52,11 +52,8 @@ export const MultiSelect: FC<MultiSelectProps> = ({
         placeholder={placeholder}
         isDisabled={disabled}
         size={size}
-        onChange={(selectedOptions: MultiSelectOption[]) => {
-          const values = selectedOptions
-            ? selectedOptions.map((opt: MultiSelectOption) => opt.value)
-            : []
-          onSelectionChange(values)
+        onChange={(selectedOptions: MultiSelectOption[] | null) => {
+          onSelectionChange(selectedOptions ? selectedOptions.map((opt: MultiSelectOption) => opt.value) : [])
         }}
         components={{
           ...(inline ? {
