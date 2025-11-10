@@ -98,6 +98,7 @@ const CreateSegmentUsersTabContent: React.FC<
         <FormGroup>
           <InputGroup
             title='Environment'
+            className="col-4"
             component={
               <EnvironmentSelect
                 projectId={`${projectId}`}

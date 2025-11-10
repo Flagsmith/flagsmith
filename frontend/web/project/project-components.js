@@ -118,7 +118,7 @@ global.Select = class extends PureComponent {
   }
 
   render() {
-    const props = this.props
+    const { className, ...props } = this.props
     return E2E ? (
       <div>
         <input
@@ -148,7 +148,7 @@ global.Select = class extends PureComponent {
       </div>
     ) : (
       <div
-        className={props.className}
+        className={className}
         onClick={(e) => {
           e.stopPropagation()
         }}

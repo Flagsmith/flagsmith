@@ -34,6 +34,8 @@ export type Operator = {
   hideValue?: boolean
   warning?: string
   valuePlaceholder?: string
+  append?: string
+  type?: string
 }
 export type ChangeRequestSummary = {
   id: number
