@@ -26,6 +26,7 @@ from features.versioning.versioning_service import (
     get_updated_feature_states_for_version,
 )
 from users.models import FFAdminUser
+from webhooks import mappers as webhook_mappers
 from webhooks.tasks import call_environment_webhooks, call_organisation_webhooks
 from webhooks.webhooks import WebhookEventType
 
@@ -144,20 +145,15 @@ def _trigger_feature_state_webhooks_for_version(
     summary event.
     """
     from environments.models import Webhook
-    from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
     # Get metadata from the version
-    timestamp = environment_feature_version.published_at.strftime(  # type: ignore[union-attr]
-        WEBHOOK_DATETIME_FORMAT
+    assert environment_feature_version.published_at is not None
+    timestamp = webhook_mappers.datetime_to_webhook_timestamp(
+        environment_feature_version.published_at
     )
-    changed_by = (
-        environment_feature_version.published_by.email
-        if environment_feature_version.published_by
-        else (
-            environment_feature_version.published_by_api_key.name
-            if environment_feature_version.published_by_api_key
-            else ""
-        )
+    changed_by = webhook_mappers.user_or_key_to_changed_by(
+        user=environment_feature_version.published_by,
+        api_key=environment_feature_version.published_by_api_key,
     )
 
     changed_feature_states = get_updated_feature_states_for_version(
