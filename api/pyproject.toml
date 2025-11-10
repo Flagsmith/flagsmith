@@ -56,17 +56,10 @@ unfixable = []
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
-exclude_also = [
-  '@(abc\\.)?abstractmethod',
-]
+exclude_also = ['@(abc\\.)?abstractmethod']
 
 [tool.coverage.run]
-omit = [
-  "app/settings/common.py",
-  "manage.py",
-  "e2etests/*",
-  "scripts/*",
-]
+omit = ["app/settings/common.py", "manage.py", "e2etests/*", "scripts/*"]
 
 [tool.pytest.ini_options]
 addopts = [
@@ -163,7 +156,7 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-common = "^2.2.4"
+flagsmith-common = { git = "https://github.com/flagsmith/flagsmith-common", branch = "fix/use-compatible-mode-when-creating-multiproc-dir" }
 django-stubs = "^5.1.3"
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.5.1"
