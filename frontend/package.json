@@ -23,7 +23,9 @@
     "dev": "cross-env npm run env && npx nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
     "dev:local": "ENV=local cross-env npm run env && npx nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
     "bundle": "npx webpack --config ./webpack/webpack.config.prod.js",
-    "bundledjango": "npx webpack --config ./webpack/webpack.config.django.prod.js"
+    "bundledjango": "npx webpack --config ./webpack/webpack.config.django.prod.js",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "engines": {
     "node": "22.x",
@@ -180,7 +182,12 @@
     "react-refresh": "^0.14.2",
     "ssgrtk": "^0.3.5",
     "testcafe": "^3.2.0",
-    "typescript": "4.6.4"
+    "typescript": "4.9.5",
+    "storybook": "^10.0.5",
+    "@storybook/react-webpack5": "^10.0.5",
+    "@storybook/addon-webpack5-compiler-swc": "^4.0.1",
+    "@storybook/addon-docs": "^10.0.5",
+    "eslint-plugin-storybook": "^10.0.5"
   },
   "lint-staged": {
     "*.{js,tsx,ts}": "suppress-exit-code eslint --fix"
