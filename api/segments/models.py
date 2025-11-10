@@ -135,13 +135,8 @@ class Segment(
     def get_skip_create_audit_log(self) -> bool:
         if self.is_system_segment:
             return True
-        try:
-            if self.version_of_id and self.version_of_id != self.id:
-                return True
-        except Segment.DoesNotExist:
-            return True
-
-        return False
+        is_revision = bool(self.version_of_id and self.version_of_id != self.id)
+        return is_revision
 
     @hook(AFTER_CREATE, when="version_of", is_now=None)
     def set_version_of_to_self_if_none(self):  # type: ignore[no-untyped-def]
