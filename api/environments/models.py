@@ -635,9 +635,9 @@ class Webhook(AbstractBaseExportableWebhookModel):
         environment: Environment,
         enabled: bool,
         value: typing.Union[str, int, bool, type(None)],  # type: ignore[valid-type]
-        identity_id: typing.Union[int, str, None] = None,
-        identity_identifier: typing.Union[str, None] = None,
-        feature_segment: typing.Union[FeatureSegment, None] = None,
+        identity_id: int | str | None = None,
+        identity_identifier: str | None = None,
+        feature_segment: FeatureSegment | None = None,
     ) -> dict:  # type: ignore[type-arg]
         if (identity_id or identity_identifier) and not (
             identity_id and identity_identifier
