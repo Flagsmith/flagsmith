@@ -23,6 +23,7 @@ from features.versioning.schemas import (
 )
 from features.versioning.versioning_service import (
     get_environment_flags_queryset,
+    get_updated_feature_states_for_version,
 )
 from users.models import FFAdminUser
 from webhooks.tasks import call_environment_webhooks, call_organisation_webhooks
@@ -159,8 +160,9 @@ def _trigger_feature_state_webhooks_for_version(
         )
     )
 
-    # Get only the feature states that have changed
-    changed_feature_states = environment_feature_version.get_updated_feature_states()
+    changed_feature_states = get_updated_feature_states_for_version(
+        environment_feature_version
+    )
 
     # Get previous version for retrieving previous states
     previous_version = environment_feature_version.get_previous_version()

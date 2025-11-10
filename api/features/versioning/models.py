@@ -26,7 +26,7 @@ from features.versioning.signals import environment_feature_version_published
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
-    from features.models import Feature, FeatureState
+    from features.models import Feature
     from users.models import FFAdminUser
 
 
@@ -158,46 +158,6 @@ class EnvironmentFeatureVersion(  # type: ignore[django-manager-missing]
             .exclude(uuid=self.uuid)
             .first()
         )
-
-    def get_updated_feature_states(self) -> list["FeatureState"]:
-        """
-        Returns feature states from this version that have been updated compared to the previous version.
-
-        A feature state is considered updated if:
-        - It's a new feature state (didn't exist in previous version)
-        - The enabled flag has changed
-        - The feature state value has changed
-
-        Returns a list of feature states that have been updated.
-        """
-        from features.models import FeatureState
-
-        def get_match_key(fs: FeatureState) -> tuple[int | None, int | None]:
-            segment_id = fs.feature_segment.segment_id if fs.feature_segment else None
-            return (fs.identity_id, segment_id)
-
-        # Build map of previous version's feature states
-        previous_version = self.get_previous_version()
-        previous_feature_states_map = (
-            {get_match_key(fs): fs for fs in previous_version.feature_states.all()}
-            if previous_version
-            else {}
-        )
-
-        # Filter for changed feature states
-        changed_feature_states = []
-        for feature_state in self.feature_states.all():
-            previous_fs = previous_feature_states_map.get(get_match_key(feature_state))
-
-            # New feature state or changed enabled/value
-            if previous_fs is None or (
-                feature_state.enabled != previous_fs.enabled
-                or feature_state.get_feature_state_value()
-                != previous_fs.get_feature_state_value()
-            ):
-                changed_feature_states.append(feature_state)
-
-        return changed_feature_states
 
     def publish(
         self,
