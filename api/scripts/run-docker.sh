@@ -92,6 +92,7 @@ elif [ "$1" = "run-task-processor" ]; then
     migrate
     migrate_analytics_db
     migrate_task_processor_db
+    setupprometheusmultiproc
     run_task_processor
 elif [ "$1" = "migrate-and-serve" ]; then
     migrate
