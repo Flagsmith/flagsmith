@@ -62,7 +62,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
         <MultiSelect
           selectedValues={safeParseArray(value)}
           onSelectionChange={(selectedValues: string[]) => {
-            onChange?.(JSON.stringify(selectedValues))
+            onChange?.(selectedValues.join(','))
           }}
           placeholder='Select environments...'
           options={environmentOptions}

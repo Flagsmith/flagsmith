@@ -5,10 +5,9 @@ export const safeParseArray = (
     return []
   }
 
-  try {
-    const parsed = JSON.parse(value)
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
+  // Parse CSV format: split by comma, trim whitespace, filter empty strings
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
 }
