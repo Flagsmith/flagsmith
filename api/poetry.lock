@@ -2025,7 +2025,7 @@ test-tools = ["pyfakefs (>=5,<6)", "pytest-django (>=4,<5)"]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-common"
 reference = "fix/os-dir-permissions"
-resolved_reference = "c5e983447837966818c97fbc0b5e4cfe1c2e136d"
+resolved_reference = "14022154e4ab8348966694240e06c27f2bc91f3d"
 
 [[package]]
 name = "flagsmith-flag-engine"
