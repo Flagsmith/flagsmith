@@ -9,7 +9,12 @@ waitfordb() {
      python manage.py waitfordb "$@"
   fi
 }
-
+setupprometheusmultiproc() {
+  export PROMETHEUS_MULTIPROC_DIR=${PROMETHEUS_MULTIPROC_DIR:-"/tmp/flagsmith-prometheus"}
+  rm -rf "$PROMETHEUS_MULTIPROC_DIR"
+  mkdir -p "$PROMETHEUS_MULTIPROC_DIR"
+  chmod 0777 "$PROMETHEUS_MULTIPROC_DIR"
+}
 migrate () {
     waitfordb \
       && python manage.py showmigrations --verbosity 2 \
@@ -81,6 +86,7 @@ if [ "$1" = "migrate" ]; then
     migrate_analytics_db
     migrate_task_processor_db
 elif [ "$1" = "serve" ]; then
+    setupprometheusmultiproc
     serve
 elif [ "$1" = "run-task-processor" ]; then
     migrate
@@ -92,6 +98,7 @@ elif [ "$1" = "migrate-and-serve" ]; then
     migrate_analytics_db
     migrate_task_processor_db
     bootstrap
+    setupprometheusmultiproc
     serve
 else
    default "$@"
