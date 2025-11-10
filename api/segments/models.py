@@ -87,8 +87,7 @@ class Segment(
         Feature, on_delete=models.CASCADE, related_name="segments", null=True
     )
 
-    # This defaults to 1 for newly created segments.
-    version = models.IntegerField(null=True)
+    version = models.IntegerField(default=1, null=True)
 
     version_of = models.ForeignKey(
         "self",
@@ -133,11 +132,6 @@ class Segment(
             return True
 
         return False
-
-    @hook(BEFORE_CREATE, when="version_of", is_now=None)
-    def set_default_version_to_one_if_new_segment(self):  # type: ignore[no-untyped-def]
-        if self.version is None:
-            self.version = 1
 
     @hook(AFTER_CREATE, when="version_of", is_now=None)
     def set_version_of_to_self_if_none(self):  # type: ignore[no-untyped-def]
