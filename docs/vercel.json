@@ -1,6 +1,10 @@
 {
     "redirects": [
         {
+          "source": "/version-comparison",
+          "destination": "https://www.flagsmith.com/pricing"
+        },
+        {
             "source": "/managing-identities",
             "destination": "/flagsmith-concepts/identities"
         },
