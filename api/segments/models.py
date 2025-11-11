@@ -8,9 +8,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django_lifecycle import (  # type: ignore[import-untyped]
-    AFTER_CREATE,
     LifecycleModelMixin,
-    hook,
 )
 from flag_engine.segments import constants
 
@@ -34,17 +32,30 @@ ModelT = typing.TypeVar("ModelT", bound=models.Model)
 logger = logging.getLogger(__name__)
 
 
-class SegmentManager(SoftDeleteExportableManager):
-    pass
-
-
 class LiveSegmentManager(SoftDeleteExportableManager):
     def get_queryset(self):  # type: ignore[no-untyped-def]
         """
-        Returns only the canonical segments, which will always be
-        the highest version.
+        Returns only canonical segments (where version_of is NULL).
+        Canonical segments represent the current/live version.
         """
-        return super().get_queryset().filter(id=models.F("version_of"))
+        return super().get_queryset().filter(version_of__isnull=True)
+
+
+class RevisionsManager(SoftDeleteExportableManager):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        """
+        Returns only segment revisions (where version_of is NOT NULL).
+        Revisions are historical versions of segments.
+        """
+        return super().get_queryset().filter(version_of__isnull=False)
+
+
+class AllSegmentsManager(SoftDeleteExportableManager):
+    """
+    Returns all segments (both canonical and revisions).
+    Only filters out soft-deleted segments.
+    """
+    pass
 
 
 class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]):
@@ -121,10 +132,11 @@ class Segment(
     updated_at = models.DateTimeField(null=True, auto_now=True)
     is_system_segment = models.BooleanField(default=False)
 
-    objects = SegmentManager()  # type: ignore[misc]
-
-    # Only serves segments that are the canonical version.
-    live_objects = LiveSegmentManager()
+    # Manager declarations - order matters! First manager is the base_manager used in relations.
+    objects = LiveSegmentManager()  # type: ignore[misc]  # Default: canonical segments only
+    live_objects = objects  # Explicit alias for clarity
+    revisions = RevisionsManager()  # type: ignore[misc]  # Only historical versions
+    all_objects = AllSegmentsManager()  # type: ignore[misc]  # Both canonical and revisions
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
@@ -135,17 +147,8 @@ class Segment(
     def get_skip_create_audit_log(self) -> bool:
         if self.is_system_segment:
             return True
-        is_revision = bool(self.version_of_id and self.version_of_id != self.id)
+        is_revision = self.version_of_id is not None
         return is_revision
-
-    @hook(AFTER_CREATE, when="version_of", is_now=None)
-    def set_version_of_to_self_if_none(self):  # type: ignore[no-untyped-def]
-        """
-        This allows the segment model to reference all versions of
-        itself including itself.
-        """
-        self.version_of = self
-        self.save_without_historical_record()
 
     @transaction.atomic
     def clone(self, is_revision: bool = False, **extra_attrs: typing.Any) -> "Segment":
@@ -164,7 +167,7 @@ class Segment(
         cloned_segment.copy_rules_and_conditions_from(self)
 
         # Handle versioning
-        version_of = self if is_revision else cloned_segment
+        version_of = self if is_revision else None
         cloned_segment.version_of = extra_attrs.get("version_of", version_of)
         cloned_segment.version = self.version if is_revision else 1
         Segment.objects.filter(pk=cloned_segment.pk).update(

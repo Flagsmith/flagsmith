@@ -155,7 +155,7 @@ def test_add_versioning_to_segments_forwards(migrator: Migrator) -> None:
     # Then the version_of attribute is correctly set.
     NewSegment = new_state.apps.get_model("segments", "Segment")
     new_segment = NewSegment.objects.get(id=segment.id)
-    assert new_segment.version_of == new_segment
+    assert new_segment.version_of_id == new_segment.id
 
 
 @pytest.mark.skipif(
