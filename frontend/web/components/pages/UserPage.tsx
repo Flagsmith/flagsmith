@@ -1027,7 +1027,7 @@ const UserPage: FC = () => {
                           integration again. You can also recreate it in the
                           dashboard from the{' '}
                           <Link
-                            href={`/project/${projectId}/environment/${environmentId}/users`}
+                            to={`/project/${projectId}/environment/${environmentId}/users`}
                           >
                             Identities Page
                           </Link>
