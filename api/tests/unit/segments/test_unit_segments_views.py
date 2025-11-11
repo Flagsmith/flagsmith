@@ -207,9 +207,7 @@ def test_segments_limit_ignores_old_segment_versions(
 
     # and create some older versions for the segment fixture
     segment.clone(is_revision=True)
-    # With the NULL-based canonical representation, only revisions are counted here
-    # (the canonical segment has version_of=None).
-    assert Segment.objects.filter(version_of=segment).count() == 1
+    assert Segment.revisions.filter(version_of=segment).count() == 1
     assert Segment.live_objects.count() == 1
 
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
@@ -1060,13 +1058,11 @@ def test_update_segment_versioned_segment(
     assert response.status_code == status.HTTP_200_OK
 
     # Now verify that a new versioned segment has been set.
-    # With the NULL-based canonical representation, canonical segments have
-    # version_of=None, so only revisions are counted here.
-    assert Segment.objects.filter(version_of=segment).count() == 1
+    assert Segment.revisions.filter(version_of=segment).count() == 1
 
     # Now check the previously versioned segment to match former count of conditions.
 
-    versioned_segment = Segment.objects.filter(version_of=segment, version=1).first()
+    versioned_segment = Segment.revisions.filter(version_of=segment, version=1).first()
     assert versioned_segment != segment
     assert versioned_segment.rules.count() == 1
     versioned_rule = versioned_segment.rules.first()
@@ -1097,10 +1093,8 @@ def test_update_segment_versioned_segment_with_thrown_exception(
         rule=nested_rule, property="foo", operator=EQUAL, value="bar"
     )
 
-    # With the NULL-based canonical representation, canonical segments have
-    # version_of=None, so they are not included in this count.
     assert segment.version == 1
-    assert Segment.objects.filter(version_of=segment).count() == 0
+    assert Segment.revisions.filter(version_of=segment).count() == 0
 
     new_condition_property = "foo2"
     new_condition_value = "bar"
@@ -1153,7 +1147,7 @@ def test_update_segment_versioned_segment_with_thrown_exception(
     # Now verify that the version of the segment has not been changed.
     # The transaction should have rolled back, so no revisions should exist.
     assert segment.version == 1
-    assert Segment.objects.filter(version_of=segment).count() == 0
+    assert Segment.revisions.filter(version_of=segment).count() == 0
 
 
 @pytest.mark.parametrize(

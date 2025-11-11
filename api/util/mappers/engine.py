@@ -201,8 +201,8 @@ def map_environment_to_engine(
     organisation: "Organisation" = project.organisation
 
     # Read relationships - grab all the data needed from the ORM here.
-    # Note: project.segments is prefetched with Segment.live_objects which already
-    # filters by version_of__isnull=True, so no need to filter again here.
+    # Note: project.segments uses Segment's base manager (LiveSegmentManager),
+    # which returns only canonical segments.
     project_segments = list(project.segments.all())
 
     project_segment_rules_by_segment_id: Dict[

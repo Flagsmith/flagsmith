@@ -32,17 +32,30 @@ ModelT = typing.TypeVar("ModelT", bound=models.Model)
 logger = logging.getLogger(__name__)
 
 
-class SegmentManager(SoftDeleteExportableManager):
-    pass
-
-
 class LiveSegmentManager(SoftDeleteExportableManager):
     def get_queryset(self):  # type: ignore[no-untyped-def]
         """
-        Returns only the canonical segments, which will always be
-        the highest version.
+        Returns only canonical segments (where version_of is NULL).
+        Canonical segments represent the current/live version.
         """
         return super().get_queryset().filter(version_of__isnull=True)
+
+
+class RevisionsManager(SoftDeleteExportableManager):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        """
+        Returns only segment revisions (where version_of is NOT NULL).
+        Revisions are historical versions of segments.
+        """
+        return super().get_queryset().filter(version_of__isnull=False)
+
+
+class AllSegmentsManager(SoftDeleteExportableManager):
+    """
+    Returns all segments (both canonical and revisions).
+    Only filters out soft-deleted segments.
+    """
+    pass
 
 
 class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]):
@@ -119,10 +132,11 @@ class Segment(
     updated_at = models.DateTimeField(null=True, auto_now=True)
     is_system_segment = models.BooleanField(default=False)
 
-    objects = SegmentManager()  # type: ignore[misc]
-
-    # Only serves segments that are the canonical version.
-    live_objects = LiveSegmentManager()
+    # Manager declarations - order matters! First manager is the base_manager used in relations.
+    objects = LiveSegmentManager()  # type: ignore[misc]  # Default: canonical segments only
+    live_objects = objects  # Explicit alias for clarity
+    revisions = RevisionsManager()  # type: ignore[misc]  # Only historical versions
+    all_objects = AllSegmentsManager()  # type: ignore[misc]  # Both canonical and revisions
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
