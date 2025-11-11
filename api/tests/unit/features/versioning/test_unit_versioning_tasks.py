@@ -157,39 +157,136 @@ def test_disable_v2_versioning(
 
 
 @responses.activate
-def test_trigger_update_version_webhooks(
-    environment_v2_versioning: Environment, feature: Feature
+def test_trigger_update_version_webhooks__with_changes(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    staff_user: FFAdminUser,
 ) -> None:
     # Given
-    version = EnvironmentFeatureVersion.objects.get(
+    v1 = EnvironmentFeatureVersion.objects.get(
         feature=feature, environment=environment_v2_versioning
     )
-    feature_state = version.feature_states.first()
+    v1_fs = v1.feature_states.first()
 
-    webhook_url = "https://example.com/webhook/"
-    Webhook.objects.create(environment=environment_v2_versioning, url=webhook_url)
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    v2_fs = v2.feature_states.first()
+    v2_fs.enabled = not v1_fs.enabled  # Make a change
+    v2_fs.save()
+    v2.publish(published_by=staff_user)
 
-    responses.post(url=webhook_url, status=200)
+    # Setup webhooks
+    from organisations.models import OrganisationWebhook
+
+    environment_webhook_url = "https://example.com/env-webhook/"
+    organisation_webhook_url = "https://example.com/org-webhook/"
+    Webhook.objects.create(
+        environment=environment_v2_versioning, url=environment_webhook_url, enabled=True
+    )
+    OrganisationWebhook.objects.create(
+        organisation=environment_v2_versioning.project.organisation,
+        name="Test Org Webhook",
+        url=organisation_webhook_url,
+        enabled=True,
+    )
+    responses.post(url=environment_webhook_url, status=200)
+    responses.post(url=organisation_webhook_url, status=200)
 
     # When
-    trigger_update_version_webhooks(str(version.uuid))
+    trigger_update_version_webhooks(str(v2.uuid))
 
     # Then
-    assert len(responses.calls) == 1
-    assert responses.calls[0].request.url == webhook_url  # type: ignore[union-attr]
-    assert json.loads(responses.calls[0].request.body) == {  # type: ignore[union-attr]
+    # Should trigger 3 webhook calls: 2 environment (FLAG_UPDATED + NEW_VERSION_PUBLISHED)
+    # and 1 organisation (FLAG_UPDATED only)
+    assert len(responses.calls) == 3
+
+    # Verify FLAG_UPDATED webhook to environment (first call)
+    flag_updated_env_body = json.loads(responses.calls[0].request.body)  # type: ignore[union-attr]
+    assert flag_updated_env_body["event_type"] == WebhookEventType.FLAG_UPDATED.name
+    assert flag_updated_env_body["data"]["new_state"]["enabled"] == v2_fs.enabled
+    assert flag_updated_env_body["data"]["new_state"]["feature"]["id"] == feature.id
+    assert flag_updated_env_body["data"]["new_state"]["feature"]["name"] == feature.name
+    assert (
+        flag_updated_env_body["data"]["new_state"]["feature_state_value"]
+        == v2_fs.get_feature_state_value()
+    )
+    assert flag_updated_env_body["data"]["previous_state"]["enabled"] == v1_fs.enabled
+    assert (
+        flag_updated_env_body["data"]["previous_state"]["feature_state_value"]
+        == v1_fs.get_feature_state_value()
+    )
+    assert flag_updated_env_body["data"]["changed_by"] == staff_user.email
+    assert "timestamp" in flag_updated_env_body["data"]
+
+    # Verify FLAG_UPDATED webhook to organisation (second call)
+    flag_updated_org_body = json.loads(responses.calls[1].request.body)  # type: ignore[union-attr]
+    assert flag_updated_org_body == flag_updated_env_body  # Should be identical
+
+    # Verify NEW_VERSION_PUBLISHED webhook to environment (third call)
+    new_version_body = json.loads(responses.calls[2].request.body)  # type: ignore[union-attr]
+    assert new_version_body == {
+        "event_type": WebhookEventType.NEW_VERSION_PUBLISHED.name,
         "data": {
-            "uuid": str(version.uuid),
+            "uuid": str(v2.uuid),
             "feature": {"id": feature.id, "name": feature.name},
-            "published_by": None,
+            "published_by": {"id": staff_user.id, "email": staff_user.email},
             "feature_states": [
                 {
-                    "enabled": feature_state.enabled,
-                    "value": feature_state.get_feature_state_value(),
+                    "enabled": v2_fs.enabled,
+                    "value": v2_fs.get_feature_state_value(),
                 }
             ],
         },
+    }
+
+
+@responses.activate
+def test_trigger_update_version_webhooks__without_changes(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    v1 = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+    v1.publish(published_by=staff_user)
+
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    v2.publish(published_by=staff_user)
+
+    # Setup webhook
+    environment_webhook_url = "https://example.com/env-webhook/"
+    Webhook.objects.create(
+        environment=environment_v2_versioning, url=environment_webhook_url, enabled=True
+    )
+    responses.post(url=environment_webhook_url, status=200)
+
+    # When
+    trigger_update_version_webhooks(str(v2.uuid))
+
+    # Then
+    # Should trigger only 1 webhook call: NEW_VERSION_PUBLISHED (no FLAG_UPDATED since no changes)
+    assert len(responses.calls) == 1
+
+    # Verify NEW_VERSION_PUBLISHED webhook data
+    new_version_body = json.loads(responses.calls[0].request.body)  # type: ignore[union-attr]
+    assert new_version_body == {
         "event_type": WebhookEventType.NEW_VERSION_PUBLISHED.name,
+        "data": {
+            "uuid": str(v2.uuid),
+            "feature": {"id": feature.id, "name": feature.name},
+            "published_by": {"id": staff_user.id, "email": staff_user.email},
+            "feature_states": [
+                {
+                    "enabled": v2.feature_states.first().enabled,
+                    "value": v2.feature_states.first().get_feature_state_value(),
+                }
+            ],
+        },
     }
 
 
