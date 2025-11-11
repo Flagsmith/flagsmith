@@ -101,6 +101,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
             value={value}
             cta={
               <div className='d-flex align-items-center gap-2'>
+                <label className='mb-0'>View</label>
                 <div style={{ width: 150 }}>
                   <Select
                     size='select-xsm'
