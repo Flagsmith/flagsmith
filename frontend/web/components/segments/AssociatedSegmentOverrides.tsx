@@ -82,16 +82,19 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
               <div style={{ width: 200 }}>
                 <EnvironmentSelect
                   showAll={false}
-                  value={environment?.id}
+                  value={environment?.api_key}
                   projectId={projectId}
-                  onChange={(id, environment) => setEnvironment(environment)}
-                  idField={'id'}
+                  onChange={(id) =>
+                    setEnvironment(
+                      environments?.results?.find((e) => e.api_key === id),
+                    )
+                  }
                 />
               </div>
             </div>
           }
         >
-          This will highlight any feature overriden by the segment{' '}
+          This will highlight any feature overridden by the segment{' '}
           <strong className='text-primary'>{segment?.name}</strong> in the
           chosen environment.
         </PageTitle>
