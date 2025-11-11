@@ -1,7 +1,6 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
-import { sortBy } from 'lodash'
 import moment from 'moment'
 
 export const featureAnalyticsService = service
