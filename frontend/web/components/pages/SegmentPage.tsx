@@ -36,6 +36,11 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
     permission: 'MANAGE_SEGMENTS',
   })
 
+  const onRemoveSegment = () => {
+    handleRemoveSegment(projectId, segment!, () => {
+      history.replace(`/project/${projectId}/segments`)
+    })
+  }
   return (
     <div
       style={{ opacity: ChangeRequestStore.isLoading ? 0.25 : 1 }}
@@ -51,20 +56,30 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
           },
         ]}
         currentPage={
-          <span style={{ width: 180 }} className='d-inline-block'>
-            <SegmentSelect
-              onChange={(v) =>
-                history.replace(
-                  `/project/${projectId}/segments/${v.value}?${Utils.toParam(
-                    Utils.fromParam(),
-                  )}`,
-                )
-              }
-              className='react-select select-xsm'
-              value={parseInt(id)}
-              projectId={projectId}
-            />
-          </span>
+          <div className='d-flex flex-1 align-items-center justify-content-between'>
+            <span style={{ width: 180 }} className='d-inline-block'>
+              <SegmentSelect
+                onChange={(v) =>
+                  history.replace(
+                    `/project/${projectId}/segments/${v.value}?${Utils.toParam(
+                      Utils.fromParam(),
+                    )}`,
+                  )
+                }
+                className='react-select select-xsm'
+                value={parseInt(id)}
+                projectId={projectId}
+              />
+            </span>
+            <Button
+              data-test='remove-segment-btn'
+              className='btn btn-with-icon'
+              type='button'
+              onClick={onRemoveSegment}
+            >
+              <Icon name='trash-2' width={20} fill='#656D7B' />
+            </Button>
+          </div>
         }
       />
 
