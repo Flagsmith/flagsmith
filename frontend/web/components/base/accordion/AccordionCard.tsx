@@ -8,11 +8,13 @@ interface AccordionCardProps {
   title?: string
   className?: string
   defaultOpen?: boolean
+  isLoading?: boolean
 }
 
 const AccordionCard: FC<AccordionCardProps> = ({
   children,
   defaultOpen = false,
+  isLoading = false,
   title = 'Summary',
 }) => {
   const [open, setOpen] = useState(defaultOpen)
@@ -26,16 +28,21 @@ const AccordionCard: FC<AccordionCardProps> = ({
           display: 'flex',
           justifyContent: 'space-between',
         }}
-        onClick={() => setOpen(!open)}
+        onClick={isLoading ? undefined : () => setOpen(!open)}
         className='d-flex flex-row justify-content-between font-weight-medium'
       >
-        {title}
-        <IconButton size='small'>
-          <IonIcon
-            className='fs-small me-2 text-muted'
-            icon={open ? chevronUp : chevronDown}
-          />
-        </IconButton>
+        <div className='d-flex flex-row align-items-center gap-1'>
+          {title}
+          {isLoading && <Loader width='15px' height='15px' />}
+        </div>
+        {!isLoading && (
+          <IconButton size='small'>
+            <IonIcon
+              className='fs-small me-2 text-muted'
+              icon={open ? chevronUp : chevronDown}
+            />
+          </IconButton>
+        )}
       </div>
       <Collapse in={open}>
         <div className='mt-2 mb-2'>{children}</div>

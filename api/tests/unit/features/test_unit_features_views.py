@@ -1595,8 +1595,6 @@ def test_environment_feature_states_does_not_return_null_versions(
     assert len(response_json["results"]) == 1
     assert response_json["results"][0]["id"] == feature_state.id
 
-    # Feature tests
-
 
 def test_create_feature_default_is_archived_is_false(
     admin_client_new: APIClient, project: Project
@@ -4075,3 +4073,165 @@ def test_get_multivariate_options_feature_not_found_responds_404(
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_list_features_segment_query_param_with_valid_segment(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment,
+    )
+    segment_override = FeatureState.objects.create(
+        feature=feature,
+        feature_segment=feature_segment,
+        environment=environment,
+        enabled=True,
+    )
+    segment_override.feature_state_value.string_value = "segment_value"
+    segment_override.feature_state_value.save()
+
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    url = f"{base_url}?environment={environment.id}&segment={segment.id}"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    feature_data = next(
+        filter(lambda r: r["id"] == feature.id, response_json["results"])
+    )
+
+    assert "environment_feature_state" in feature_data
+    segment_state = feature_data["segment_feature_state"]
+
+    assert segment_state is not None
+    assert segment_state["id"] == segment_override.id
+    assert segment_state["feature_state_value"] == "segment_value"
+    assert segment_state["enabled"] is True
+
+
+def test_list_features_segment_query_param_with_invalid_segment(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    invalid_segment_id = segment.id + 9999
+    url = f"{base_url}?environment={environment.id}&segment={invalid_segment_id}"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    feature_data = next(
+        filter(lambda r: r["id"] == feature.id, response_json["results"])
+    )
+
+    assert "segment_feature_state" in feature_data
+    assert feature_data["segment_feature_state"] is None
+
+
+def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
+    admin_client_new: APIClient,
+    project: Project,
+    optional_b_feature_metadata_field: MetadataModelField,
+) -> None:
+    """
+    Test that creating multiple features with metadata keeps metadata properly isolated.
+    This is a regression test for the bug where creating a second feature would remove
+    metadata from the first feature if the user sent the first feature's metadata ID.
+    """
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # Create first feature with metadata
+    first_feature_data = {
+        "name": "First Feature",
+        "description": "First feature description",
+        "metadata": [
+            {
+                "model_field": optional_b_feature_metadata_field.id,
+                "field_value": "100",
+            },
+        ],
+    }
+
+    # When - Create first feature
+    first_response = admin_client_new.post(
+        url, data=json.dumps(first_feature_data), content_type="application/json"
+    )
+
+    # Then - First feature should be created successfully
+    assert first_response.status_code == status.HTTP_201_CREATED
+    first_feature_id = first_response.json()["id"]
+    first_metadata = first_response.json()["metadata"]
+    assert len(first_metadata) == 1
+    assert first_metadata[0]["field_value"] == "100"
+    first_metadata_id = first_metadata[0]["id"]
+
+    # Given - Create second feature
+    second_feature_data = {
+        "name": "Second Feature",
+        "description": "Second feature description",
+        "metadata": [
+            {
+                "id": first_metadata_id,  # user mistakenly sends existing metadata ID
+                "model_field": optional_b_feature_metadata_field.id,
+                "field_value": "200",
+            },
+        ],
+    }
+
+    # When - Create second feature
+    second_response = admin_client_new.post(
+        url, data=json.dumps(second_feature_data), content_type="application/json"
+    )
+
+    # Then - Second feature should be created successfully
+    assert second_response.status_code == status.HTTP_201_CREATED
+    second_feature_id = second_response.json()["id"]
+    second_metadata = second_response.json()["metadata"]
+    assert len(second_metadata) == 1
+    assert second_metadata[0]["field_value"] == "200"
+    # The metadata ID should be different (new metadata instance created)
+    assert second_metadata[0]["id"] != first_metadata_id
+
+    # When - Retrieve first feature to verify metadata is still there
+    first_feature_url = reverse(
+        "api-v1:projects:project-features-detail", args=[project.id, first_feature_id]
+    )
+    first_feature_check = admin_client_new.get(first_feature_url)
+
+    # Then - First feature should still have its metadata
+    assert first_feature_check.status_code == status.HTTP_200_OK
+    first_feature_metadata_after = first_feature_check.json()["metadata"]
+    assert len(first_feature_metadata_after) == 1
+    assert first_feature_metadata_after[0]["field_value"] == "100"
+    assert first_feature_metadata_after[0]["id"] == first_metadata_id
+
+    # When - Retrieve second feature to verify metadata
+    second_feature_url = reverse(
+        "api-v1:projects:project-features-detail",
+        args=[project.id, second_feature_id],
+    )
+    second_feature_check = admin_client_new.get(second_feature_url)
+
+    # Then - Second feature should have its own metadata
+    assert second_feature_check.status_code == status.HTTP_200_OK
+    second_feature_metadata_after = second_feature_check.json()["metadata"]
+    assert len(second_feature_metadata_after) == 1
+    assert second_feature_metadata_after[0]["field_value"] == "200"

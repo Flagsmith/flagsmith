@@ -1743,6 +1743,7 @@ const CreateFlag = class extends Component {
                                                                     cb: () =>
                                                                       this.userOverridesPage(
                                                                         1,
+                                                                        true,
                                                                       ),
                                                                     environmentId:
                                                                       this.props

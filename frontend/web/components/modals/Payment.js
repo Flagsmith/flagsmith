@@ -7,6 +7,7 @@ import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
 import firstpromoter from 'project/firstPromoter'
 import Utils from 'common/utils/utils'
+import { openChat } from 'common/loadChat'
 import AccountProvider from 'common/providers/AccountProvider'
 import classNames from 'classnames'
 import Switch from 'components/Switch'
@@ -296,7 +297,7 @@ const Payment = class extends Component {
                         {!viewOnly ? (
                           <Button
                             onClick={() => {
-                              Utils.openChat()
+                              openChat()
                             }}
                             className='full-width btn-lg btn-tertiary mt-3'
                           >
