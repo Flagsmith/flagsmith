@@ -313,6 +313,10 @@
             "destination": "/administration-and-security/access-control/saml"
         },
         {
+            "source": "/deployment/hosting/locally-edge-proxy",
+            "destination": "/deployment-self-hosting/edge-proxy"
+        },
+        {
             "source": "/integrations/amplitude",
             "destination": "/third-party-integrations/analytics/amplitude"
         },
