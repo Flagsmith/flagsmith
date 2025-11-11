@@ -1109,10 +1109,11 @@ export type Res = {
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
   featureCodeReferences: FeatureCodeReferences[]
-  featureAnalytics: {
+  featureAnalytics: ({
     day: string
-    [environmentId: string]: string | number
-  }[]
+  } & {
+    [environmentId: string]: number
+  })[]
   environmentAnalytics: {
     day: string
     count: number
