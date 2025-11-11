@@ -4,10 +4,10 @@ title: Edge Proxy
 sidebar_position: 3
 ---
 
-The [Edge Proxy](/advanced-use/edge-proxy) runs as a
+The [Edge Proxy](/performance/edge-proxy) runs as a
 [Docker container](https://hub.docker.com/repository/docker/flagsmith/edge-proxy) with no external dependencies.
 It connects to the Flagsmith API to download environment documents, and your Flagsmith client applications connect to it
-using [remote flag evaluation](/clients/#remote-evaluation).
+using [remote flag evaluation](/integrating-with-flagsmith/sdks#remote-evaluation).
 
 The examples below assume you have a configuration file located at `./config.json`. Your Flagsmith client applications
 can then consume the Edge Proxy by setting their API URL to `http://localhost:8000/api/v1/`.
