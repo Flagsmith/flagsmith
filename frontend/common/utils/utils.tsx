@@ -425,6 +425,22 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
   },
+  getOverridePermission: (level: 'identity' | 'segment') => {
+    switch (level) {
+      case 'identity':
+        return {
+          permission: Utils.getManageFeaturePermission(false),
+          permissionDescription:
+            Utils.getManageFeaturePermissionDescription(false),
+        }
+      default:
+        return {
+          permission: Utils.getManageFeaturePermission(false),
+          permissionDescription:
+            Utils.getManageFeaturePermissionDescription(false),
+        }
+    }
+  },
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
       return planNames.free
