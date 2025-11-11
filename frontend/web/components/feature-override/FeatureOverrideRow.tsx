@@ -1,7 +1,6 @@
 import classNames from 'classnames'
 import React, { FC, useEffect, useMemo, useRef } from 'react'
 import {
-  Environment,
   FeatureState,
   IdentityFeatureState,
   ProjectFlag,
