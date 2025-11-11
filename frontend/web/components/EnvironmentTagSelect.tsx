@@ -1,14 +1,10 @@
 import React, { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import { Props } from 'react-select/lib/Select'
 import Tag from './tags/Tag'
 import Utils from 'common/utils/utils'
 import Button from './base/forms/Button'
 
-export type EnvironmentSelectType = Omit<
-  Partial<Props>,
-  'value' | 'onChange'
-> & {
+export type EnvironmentSelectType = {
   projectId: string | number | undefined
   value?: string[] | string | null
   onChange: (value: string[] | string | undefined) => void
@@ -16,6 +12,7 @@ export type EnvironmentSelectType = Omit<
   dataTest?: (value: { label: string }) => string
   multiple?: boolean
   allowEmpty?: boolean
+  ignore?: string[]
 }
 
 const EnvironmentSelect: FC<EnvironmentSelectType> = ({
@@ -78,7 +75,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
                   const newValue = value.filter((v) => v !== env.value)
                   onChange(allowEmpty && newValue.length === 0 ? [] : newValue)
                 } else {
-                  onChange((value || []).concat([env.value]))
+                  onChange(((value as string[]) || []).concat([env.value]))
                 }
               } else {
                 onChange(

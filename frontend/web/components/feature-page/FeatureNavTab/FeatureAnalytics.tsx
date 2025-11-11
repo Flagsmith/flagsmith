@@ -119,7 +119,9 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
                       key={id}
                       dataKey={id}
                       stackId='1'
-                      fill={Color(Utils.getTagColour(index)).alpha(0.75).rgb()}
+                      fill={`${Color(Utils.getTagColour(index))
+                        .alpha(0.75)
+                        .rgb()}`}
                     />
                   )
                 })}
