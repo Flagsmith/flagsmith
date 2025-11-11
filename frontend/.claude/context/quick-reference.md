@@ -186,7 +186,6 @@ if (isFeatureEnabled) {
 
 | Command | Purpose |
 |---------|---------|
-| `/api-types-sync` | Sync types with backend |
 | `/api` | Generate new API service |
 | `/backend <search>` | Search backend codebase |
 | `/feature-flag` | Create feature flag |

@@ -4,24 +4,15 @@
 
 This project uses **RTK Query** (Redux Toolkit Query) for all API calls. The workflow is optimized for type safety and automatic sync with backend Django serializers.
 
+**Finding Backend Endpoints**: See `.claude/context/backend-integration.md` for strategies to locate and understand backend API endpoints.
+
 ## Quick Start: Adding a New Endpoint (Complete Example)
 
 This example shows how to add a new endpoint for fetching company invoices (a real implementation from the codebase).
 
-### Step 1: Check Backend API
+### Step 1: Find Backend Endpoint
 
-```
-../api/apps/
-├── projects/          # Projects and features
-├── environments/      # Environment management
-├── features/          # Feature flags
-├── segments/          # User segments
-├── users/            # User management
-├── organisations/    # Organization management
-├── permissions/      # Access control
-└── audit/           # Audit logs
-```
-
+Use strategies from `backend-integration.md` to locate the endpoint.
 
 **Backend endpoint found:** `GET /organisations/{organisation_id}/invoices`
 
@@ -102,32 +93,6 @@ npx eslint --fix common/types/requests.ts common/services/useInvoice.ts
 
 **Done!** The endpoint is now integrated and ready to use.
 
-## Primary Workflow: Automatic via `/api-types-sync`
-
-**ALWAYS start with `/api-types-sync`** when working with APIs. This command:
-1. Pulls latest backend changes from `../api`
-2. Detects new/changed Django serializers
-3. Updates TypeScript types in `common/types/`
-4. **Automatically generates RTK Query services** for new endpoints
-5. Updates `.claude/api-type-map.json` for tracking
-
-### When `/api-types-sync` Auto-Generates Services
-
-The command detects:
-- New serializer classes in `apps/*/serializers.py`
-- Associated views/endpoints in `apps/*/views.py` and `apps/*/urls.py`
-- Creates complete service files with proper RTK Query patterns
-- Registers everything in the type map
-
-### When to Manually Use `/api`
-
-Only use the `/api` command when:
-- Creating a service for an existing backend endpoint that was missed
-- `/api-types-sync` didn't auto-generate (rare edge case)
-- Implementing a frontend-only service (non-backend endpoint)
-
-**In 95% of cases, `/api-types-sync` handles service generation automatically.**
-
 ## Manual Service Creation (Rare Cases)
 
 If you need to manually create a service (follow template in `.claude/commands/api.md`):
@@ -207,37 +172,7 @@ export const {
 } = entityService
 ```
 
-## Finding Backend Endpoints
-
-### Quick Reference - Common Customer Portal API Patterns
-
-**Base URL Pattern**: `/api/v3/` (varies by resource)
-
-| Resource | List | Detail | Actions |
-|----------|------|--------|---------|
-| **Mail** | `GET /mailbox/mails` | `GET /mailbox/mails/{id}` | `POST /mailbox/mails/{id}/scan`, `POST /mailbox/mails/{id}/forward` |
-| **Offers** | `GET /offers/` | `GET /offers/{id}/` | N/A |
-| **Account** | `GET /account` | N/A | N/A |
-| **KYC** | `GET /kyc/steps` | `GET /kyc/status` | `POST /kyc/verify`, `GET /kyc/link` |
-| **Subscriptions** | N/A | `GET /customers/companies/{id}/hosted-page` | N/A |
-| **Addresses** | N/A | N/A | `POST /addresses`, `PATCH /addresses/{id}` |
-| **Payment** | N/A | N/A | `POST /topup`, `POST /payment-sources` |
-
-### Search Strategy
-
-1. **Search backend directly**: Use Grep/Glob tools to search the `../api` directory
-2. **Check URL patterns**: Look in `../api/*/urls.py`
-3. **Check ViewSets**: Look in `../api/*/views.py`
-4. **Common file download pattern**:
-    - Backend returns PDF/file with `Content-Disposition: attachment; filename=...`
-    - Use `responseHandler` in RTK Query to handle blob downloads
-    - See `common/services/useAuditLog.ts` for example
-
-The utility automatically:
-- Extracts filename from `Content-Disposition` header
-- Creates and triggers download
-- Cleans up blob URLs
-- Returns `{ data: { url } }` format
+See `common/services/useAuditLog.ts` for a complete example.
 
 ## State Management
 
