@@ -33,6 +33,7 @@ type FeatureDiffType = {
   disableSegments?: boolean
 }
 const enabledWidth = 110
+type ViewMode = 'combined' | 'new' | 'old'
 const DiffFeature: FC<FeatureDiffType> = ({
   conflicts,
   disableSegments,
@@ -59,6 +60,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
   const diff = getFeatureStateDiff(oldEnv, newEnv)
   const { conflict: valueConflict, totalChanges } = diff
   const [value, setValue] = useState(0)
+  const [viewMode, setViewMode] = useState<ViewMode>('combined')
 
   const { data: segments } = useGetSegmentsQuery({
     include_feature_specific: true,
@@ -79,6 +81,12 @@ const DiffFeature: FC<FeatureDiffType> = ({
   }, [totalSegmentChanges, totalVariationChanges, totalChanges])
   const hideValue =
     !totalChanges && (diff.newValue === null || diff.newValue === undefined)
+  const viewOptions = [
+    { label: 'Combined Diff', value: 'combined' },
+    { label: 'New Value', value: 'new' },
+    { label: 'Old Value', value: 'old' },
+  ]
+  const selectedOption = viewOptions.find((v) => v.value === viewMode)
   return (
     <div>
       {!feature ? (
@@ -96,6 +104,19 @@ const DiffFeature: FC<FeatureDiffType> = ({
             theme={tabTheme}
             onChange={setValue}
             value={value}
+            cta={
+              <div className='d-flex align-items-center gap-2'>
+                <label className='mb-0'>View</label>
+                <div style={{ width: 150 }}>
+                  <Select
+                    size='select-xsm'
+                    value={selectedOption}
+                    options={viewOptions}
+                    onChange={(option) => setViewMode(option.value as ViewMode)}
+                  />
+                </div>
+              </div>
+            }
           >
             <TabItem
               className={'p-0'}
@@ -154,8 +175,16 @@ const DiffFeature: FC<FeatureDiffType> = ({
                       <div className='d-flex flex-row'>
                         <DiffEnabled
                           data-test={'version-enabled'}
-                          oldValue={diff.oldEnabled}
-                          newValue={diff.newEnabled}
+                          oldValue={
+                            viewMode === 'new'
+                              ? diff.newEnabled
+                              : diff.oldEnabled
+                          }
+                          newValue={
+                            viewMode === 'old'
+                              ? diff.oldEnabled
+                              : diff.newEnabled
+                          }
                         />
                       </div>
                     </div>
@@ -164,8 +193,12 @@ const DiffFeature: FC<FeatureDiffType> = ({
                         <div>
                           <DiffString
                             data-test={'version-value'}
-                            oldValue={diff.oldValue}
-                            newValue={diff.newValue}
+                            oldValue={
+                              viewMode === 'new' ? diff.newValue : diff.oldValue
+                            }
+                            newValue={
+                              viewMode === 'old' ? diff.oldValue : diff.newValue
+                            }
                           />
                         </div>
                       </div>
