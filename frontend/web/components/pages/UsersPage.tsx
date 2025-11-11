@@ -41,9 +41,15 @@ export const removeIdentity = (
   openConfirm({
     body: (
       <div>
-        {'Are you sure you want to delete '}
-        <strong>{identifier}</strong>
-        {'? Identities can be re-added here or via one of our SDKs.'}
+        <div className='mb-2'>
+          {'Are you sure you want to delete '}
+          <strong>{identifier}</strong>?
+        </div>
+        Deleting this identity will delete all of their stored traits, and any
+        identity overrides that you have configured. The identity will be
+        recreated if it is identified when identified via your Flagsmith
+        integration again. You can also recreate it in the dashboard from the{' '}
+        Identities Page.
       </div>
     ),
     destructive: true,

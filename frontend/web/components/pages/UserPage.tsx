@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect, useState } from 'react'
-import { useHistory, useRouteMatch } from 'react-router-dom'
+import { Link, useHistory, useRouteMatch } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 import keyBy from 'lodash/keyBy'
 
@@ -1019,31 +1019,38 @@ const UserPage: FC = () => {
                     <FormGroup className='mt-5'>
                       <SettingTitle danger>Delete Identity</SettingTitle>
                       <FormGroup className='mt-4'>
-                        <Row space>
-                          <p className='fs-small lh-sm mb-0'>
-                            Identities can be re-added here or via one of our
-                            SDKs
-                          </p>
-                          <Button
-                            id='delete-identity-btn'
-                            onClick={() => {
-                              removeIdentity(
-                                id,
-                                (identity && identity.identity.identifier) ||
-                                  id,
-                                environmentId,
-                                () => {
-                                  history.replace(
-                                    `/project/${projectId}/environment/${environmentId}/users`,
-                                  )
-                                },
-                              )
-                            }}
-                            theme='danger'
+                        <p className='fs-small col-lg-8 lh-sm'>
+                          Deleting this identity will delete all of their stored
+                          traits, and any identity overrides that you have
+                          configured. The identity will be recreated if it is
+                          identified when identified via your Flagsmith
+                          integration again. You can also recreate it in the
+                          dashboard from the{' '}
+                          <Link
+                            href={`/project/${projectId}/environment/${environmentId}/users`}
                           >
-                            Delete Identity
-                          </Button>
-                        </Row>
+                            Identities Page
+                          </Link>
+                          .
+                        </p>
+                        <Button
+                          id='delete-identity-btn'
+                          onClick={() => {
+                            removeIdentity(
+                              id,
+                              (identity && identity.identity.identifier) || id,
+                              environmentId,
+                              () => {
+                                history.replace(
+                                  `/project/${projectId}/environment/${environmentId}/users`,
+                                )
+                              },
+                            )
+                          }}
+                          theme='danger'
+                        >
+                          Delete Identity
+                        </Button>
                       </FormGroup>
                     </FormGroup>
                   </div>
