@@ -76,13 +76,26 @@ const Rule: React.FC<RuleProps> = ({
       operator: operatorValue?.split(':')[0],
     }
 
-    if (newOperator?.hideValue) {
-      updates.value = null
+    // Handle append changes first
+    if (prevOperator?.append !== newOperator?.append) {
+      const conditionValue = typeof condition?.value === 'boolean' ? String(condition?.value) : condition?.value
+      const cleanValue = splitIfValue(conditionValue ?? '', prevOperator?.append || '')[0]
+      updates.value = cleanValue + (newOperator?.append || '')
     }
 
-    if (prevOperator?.append !== newOperator?.append) {
-      const cleanValue = splitIfValue(condition?.value, prevOperator?.append)[0]
-      updates.value = cleanValue + (newOperator?.append || '')
+    // Clear value when changing to or from IN operator (after append handling)
+    const isChangingToIn = operatorValue === 'IN'
+    const isChangingFromIn = condition?.operator === 'IN'
+    if (isChangingToIn || isChangingFromIn) {
+      updates.value = ''
+    }
+
+    // Set null for hideValue operators (takes precedence over everything)
+    if (newOperator?.hideValue) {
+      updates.value = null
+    } else if (prevOperator?.hideValue && !updates.hasOwnProperty('value')) {
+      // When changing FROM a hideValue operator, initialize value to empty string
+      updates.value = ''
     }
 
     if (shouldAutoSetIdentityKey(operatorValue, condition.property)) {
