@@ -1,5 +1,4 @@
 import React, { FC, useEffect, useState } from 'react'
-import { useGetSegmentFeatureStatesQuery } from 'common/services/useFeatureState'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'

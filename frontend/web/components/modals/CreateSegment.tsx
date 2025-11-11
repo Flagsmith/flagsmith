@@ -499,7 +499,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           <TabItem
             tabLabelString='General'
             tabLabel={
-              <Row className='justify-content-center'>
+              <Row className='justify-content-center flex-nowrap'>
                 General{' '}
                 {valueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
               </Row>
@@ -560,7 +560,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <TabItem
               tabLabelString='Custom Fields'
               tabLabel={
-                <Row className='justify-content-center'>
+                <Row className='justify-content-center flex-nowrap'>
                   Custom Fields
                   {metadataValueChanged && (
                     <div className='unread ml-2 px-1 pt-2'>{'*'}</div>

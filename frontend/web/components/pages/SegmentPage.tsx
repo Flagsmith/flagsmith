@@ -1,21 +1,15 @@
 import React, { FC } from 'react'
-import {
-  useDeleteSegmentMutation,
-  useGetSegmentQuery,
-} from 'common/services/useSegment'
+import { useGetSegmentQuery } from 'common/services/useSegment'
 import { useHistory, useRouteMatch } from 'react-router-dom'
 import CreateSegment from 'components/modals/CreateSegment'
 import ProjectStore from 'common/stores/project-store'
 import { Environment } from 'common/types/responses'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import Breadcrumb from 'components/Breadcrumb'
-import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import { useHasPermission } from 'common/providers/Permission'
 import Icon from 'components/Icon'
 import { handleRemoveSegment } from 'components/modals/ConfirmRemoveSegment'
-import { IonIcon } from '@ionic/react'
-import { caretDown } from 'ionicons/icons'
 import SegmentSelect from 'components/SegmentSelect'
 import Utils from 'common/utils/utils'
 
