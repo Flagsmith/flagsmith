@@ -22,10 +22,6 @@ lint:
 build:
 	npm run build
 
-.PHONY: build-docker
-build-docker:
-	docker compose build frontend
-
 .PHONY: serve
 serve:
 	npm run dev
@@ -34,3 +30,4 @@ serve:
 test:
 	docker compose run frontend \
 		npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test -- $(opts) \
+		|| (docker compose logs flagsmith-api; exit 1)

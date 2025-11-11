@@ -44,13 +44,11 @@ services:
       context: ../
       dockerfile: frontend/Dockerfile.e2e
     environment:
-      E2E: 'true'
       E2E_TEST_TOKEN_DEV: some-token
       DISABLE_ANALYTICS_FEATURES: 'true'
       FLAGSMITH_API: flagsmith-api:8000/api/v1/
       SLACK_TOKEN: ${SLACK_TOKEN}
       GITHUB_ACTION_URL: ${GITHUB_ACTION_URL}
-      FIREFOX_BIN: /usr/bin/firefox
     ports:
       - 3000:3000
     depends_on:
