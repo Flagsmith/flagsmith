@@ -59,7 +59,7 @@ const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
                   identifier: identifier,
                   identity: identity,
                   identityFlag: overrideFeatureState as IdentityFeatureState,
-                  projectFlag: projectFlag!,
+                  projectFlag: projectFlag,
                 })
               }}
             >
