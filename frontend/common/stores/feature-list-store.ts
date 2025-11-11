@@ -12,6 +12,7 @@ import {
   updateProjectFlag,
 } from 'common/services/useProjectFlag'
 import OrganisationStore from './organisation-store'
+import { SortOrder } from 'common/types/requests'
 import {
   ChangeRequest,
   Environment,
@@ -1019,7 +1020,12 @@ const store = Object.assign({}, BaseStore, {
   },
   id: 'features',
   paging: {},
-  sort: { default: true, label: 'Name', sortBy: 'name', sortOrder: 'ASC' },
+  sort: {
+    default: true,
+    label: 'Name',
+    sortBy: 'name',
+    sortOrder: SortOrder.ASC,
+  },
 })
 
 store.dispatcherIndex = Dispatcher.register(store, (payload) => {

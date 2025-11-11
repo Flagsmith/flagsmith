@@ -132,7 +132,8 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
     (e: React.MouseEvent<HTMLAnchorElement>, sortOption: SortOption) => {
       e.preventDefault()
       if (sortOption.value === sortBy) {
-        const newSortOrder = sortOrder === 'ASC' ? 'DESC' : 'ASC'
+        const newSortOrder =
+          sortOrder === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC
         setSortOrder(newSortOrder)
         onSortChange && onSortChange({ sortBy, sortOrder: newSortOrder })
       } else {
@@ -252,7 +253,9 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                             {currentSort?.value === sortOption.value && (
                               <IonIcon
                                 icon={
-                                  sortOrder === 'ASC' ? chevronUp : chevronDown
+                                  sortOrder === SortOrder.ASC
+                                    ? chevronUp
+                                    : chevronDown
                                 }
                               />
                             )}

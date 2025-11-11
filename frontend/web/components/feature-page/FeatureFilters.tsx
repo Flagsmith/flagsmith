@@ -12,7 +12,7 @@ import { isEqual } from 'lodash'
 import Utils from 'common/utils/utils'
 import { TagStrategy } from 'common/types/responses'
 import Format from 'common/utils/format'
-import { Req } from 'common/types/requests'
+import { Req, SortOrder } from 'common/types/requests'
 
 export type FiltersValue = {
   search: string | null
@@ -42,7 +42,7 @@ const DEFAULTS: FiltersValue = {
   owners: [],
   page: 1,
   search: '',
-  sort: { label: 'Name', sortBy: 'name', sortOrder: 'ASC' },
+  sort: { label: 'Name', sortBy: 'name', sortOrder: SortOrder.ASC },
   tag_strategy: 'INTERSECTION',
   tags: [],
   value_search: '',
@@ -96,7 +96,7 @@ export const parseFiltersFromUrlParams = (
     sort: {
       label: Format.camelCase(params.sortBy || 'Name'),
       sortBy: params.sortBy || 'name',
-      sortOrder: params.sortOrder || 'ASC',
+      sortOrder: params.sortOrder || SortOrder.ASC,
     },
     tag_strategy: params.tag_strategy || 'INTERSECTION',
     tags:

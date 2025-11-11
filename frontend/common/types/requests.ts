@@ -87,7 +87,10 @@ export type RegisterRequest = {
   marketing_consent_given?: boolean
   utm_data?: UtmsType
 }
-export type SortOrder = 'ASC' | 'DESC'
+export enum SortOrder {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
 export interface StageActionRequest {
   action_type: StageActionType | ''
   action_body: StageActionBody

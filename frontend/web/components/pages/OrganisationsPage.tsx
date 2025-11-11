@@ -3,6 +3,7 @@ import Button from 'components/base/forms/Button'
 import AccountProvider from 'common/providers/AccountProvider'
 import CreateOrganisationModal from 'components/modals/CreateOrganisation'
 import { Organisation, User } from 'common/types/responses'
+import { SortOrder } from 'common/types/requests'
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
 import PanelSearch from 'components/PanelSearch'
@@ -39,7 +40,7 @@ const OrganisationsPage: FC = () => {
                 {
                   default: true,
                   label: 'Name',
-                  order: 'ASC',
+                  order: SortOrder.ASC,
                   value: 'name',
                 },
               ]}

@@ -7,6 +7,7 @@ import AppActions from 'common/dispatcher/app-actions'
 import ProjectStore from 'common/stores/project-store'
 import Radio from 'components/base/forms/Radio'
 import { ImportStrategy } from 'common/types/responses'
+import { SortOrder } from 'common/types/requests'
 import JSONUpload from 'components/JSONUpload'
 import PanelSearch from 'components/PanelSearch'
 import {
@@ -73,7 +74,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   const [sort, setSort] = useState<SortValue>({
     label: 'Name',
     sortBy: 'name',
-    sortOrder: 'ASC',
+    sortOrder: SortOrder.ASC,
   })
 
   useEffect(() => {

@@ -10,6 +10,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import { useGetOrganisationsQuery } from 'common/services/useOrganisation'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import { Project } from 'common/types/responses'
+import { SortOrder } from 'common/types/requests'
 import Button from './base/forms/Button'
 import PanelSearch from './PanelSearch'
 import Icon from './Icon'
@@ -229,7 +230,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                       {
                         default: true,
                         label: 'Name',
-                        order: 'ASC',
+                        order: SortOrder.ASC,
                         value: 'name',
                       },
                     ]}
