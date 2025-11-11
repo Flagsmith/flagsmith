@@ -120,7 +120,7 @@ export const getServerFilter = (f: FiltersValue) => ({
 //Detect if the filter is default
 const isDefault = (v: FiltersValue) => isEqual(v, DEFAULTS)
 
-const FeatureFilters: React.FC<Props> = ({
+const FeatureFilters: React.FC<FeatureFiltersProps> = ({
   isLoading,
   onChange,
   orgId,
