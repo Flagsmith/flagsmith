@@ -46,10 +46,7 @@ export const removeIdentity = (
           <strong>{identifier}</strong>?
         </div>
         Deleting this identity will delete all of their stored traits, and any
-        identity overrides that you have configured. The identity will be
-        recreated if it is identified when identified via your Flagsmith
-        integration again. You can also recreate it in the dashboard from the{' '}
-        Identities Page.
+        identity overrides that you have configured.
       </div>
     ),
     destructive: true,
