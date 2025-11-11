@@ -30,20 +30,19 @@ export const MultiSelect: FC<MultiSelectProps> = ({
   className = '',
   colorMap,
   disabled = false,
+  hideSelectedOptions = true,
+  inline = false,
   label,
   onSelectionChange,
   options,
   placeholder = 'Select options...',
   selectedValues,
   size = 'default',
-  hideSelectedOptions = true,
-  inline = false,
 }) => {
   return (
-    <div className={classNames(
-        className,
-        label ? `d-flex flex-column gap-2` : ''
-      )}>
+    <div
+      className={classNames(className, label ? `d-flex flex-column gap-2` : '')}
+    >
       {label && <label>{label}</label>}
       <Select
         isMulti
@@ -53,26 +52,29 @@ export const MultiSelect: FC<MultiSelectProps> = ({
         isDisabled={disabled}
         size={size}
         onChange={(selectedOptions: MultiSelectOption[] | null) => {
-          onSelectionChange(selectedOptions ? selectedOptions.map((opt: MultiSelectOption) => opt.value) : [])
+          onSelectionChange(
+            selectedOptions
+              ? selectedOptions.map((opt: MultiSelectOption) => opt.value)
+              : [],
+          )
         }}
         components={{
-          ...(inline ? {
-            MultiValue: (props: MultiValueProps<MultiSelectOption>) => (
-              <InlineMultiValue {...props} />
-            ),
-          } : {
-            MultiValue: (props: MultiValueProps<MultiSelectOption>) => (
-              <CustomMultiValue
-                {...props}
-                color={colorMap?.get(props.data.value) || '#5D6D7E'}
-              />
-            ),
-          }),
+          ...(inline
+            ? {
+                MultiValue: (props: MultiValueProps<MultiSelectOption>) => (
+                  <InlineMultiValue {...props} />
+                ),
+              }
+            : {
+                MultiValue: (props: MultiValueProps<MultiSelectOption>) => (
+                  <CustomMultiValue
+                    {...props}
+                    color={colorMap?.get(props.data.value) || '#5D6D7E'}
+                  />
+                ),
+              }),
           Option: (props: OptionProps<MultiSelectOption>) => (
-            <CustomOption
-              {...props}
-              color={colorMap?.get(props.data.value)}
-            />
+            <CustomOption {...props} color={colorMap?.get(props.data.value)} />
           ),
         }}
         value={selectedValues.map((value) => ({
@@ -86,31 +88,31 @@ export const MultiSelect: FC<MultiSelectProps> = ({
             ...base,
             cursor: 'pointer',
           }),
-          multiValue: (base: any) => ({
-            ...base,
-            flexShrink: 0,
-            margin: '2px',
-          }),
-          valueContainer: (base: any) => ({
-            ...base,
-            flexWrap: 'nowrap',
-            gap: '2px',
-            paddingBottom: '6px',
-            paddingTop: '6px',
-            flex: 1,
-            overflow: 'hidden',
-          }),
           input: (base: any) => ({
             ...base,
             margin: 0,
             paddingBottom: 0,
             paddingTop: 0,
           }),
+          multiValue: (base: any) => ({
+            ...base,
+            flexShrink: 0,
+            margin: '2px',
+          }),
           singleValue: (base: any) => ({
             ...base,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
+          }),
+          valueContainer: (base: any) => ({
+            ...base,
+            flex: 1,
+            flexWrap: 'nowrap',
+            gap: '2px',
+            overflow: 'hidden',
+            paddingBottom: '6px',
+            paddingTop: '6px',
           }),
         }}
       />

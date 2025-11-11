@@ -1,12 +1,13 @@
 import React, { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { Props } from 'react-select/lib/Select'
+import { Environment } from 'common/types/responses'
 
 export type EnvironmentSelectType = Partial<Omit<Props, 'value'>> & {
   projectId: number
   value?: string
   label?: string
-  onChange: (value: string) => void
+  onChange: (value: string, environment: Environment | null) => void
   showAll?: boolean
   readOnly?: boolean
   idField?: 'id' | 'api_key'
@@ -30,6 +31,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
   const environments = useMemo(() => {
     return (data?.results || [])
       ?.map((v) => ({
+        environment: v,
         label: v.name,
         value: `${v[idField]}`,
       }))
@@ -66,12 +68,14 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
               }
         }
         options={(showAll
-          ? [{ label: 'All Environments', value: '' }]
+          ? [{ environment: null, label: 'All Environments', value: '' }]
           : []
         ).concat(environments)}
-        onChange={(value: { value: string; label: string }) =>
-          onChange(value?.value || '')
-        }
+        onChange={(value: {
+          value: string
+          label: string
+          environment: Environment
+        }) => onChange(value?.value || '', value?.environment)}
       />
     </div>
   )

@@ -27,6 +27,7 @@ export default (WrappedComponent) => {
 
     getOverrides = () => {
       if (this.props.projectFlag) {
+        //todo: migrate to useSegmentFeatureState
         Promise.all([
           data.get(
             `${
