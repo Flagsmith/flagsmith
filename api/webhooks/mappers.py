@@ -13,8 +13,7 @@ def datetime_to_webhook_timestamp(dt: datetime) -> str:
 
 
 def user_or_key_to_changed_by(
-    user: "FFAdminUser | None" = None,
-    api_key: "MasterAPIKey | None" = None,
+    user: "FFAdminUser | None", api_key: "MasterAPIKey | None"
 ) -> str:
     if user:
         return user.email

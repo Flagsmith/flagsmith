@@ -20,7 +20,7 @@ def test_user_or_key_to_changed_by_with_user(
     staff_user: FFAdminUser,
 ) -> None:
     # When
-    result = webhook_mappers.user_or_key_to_changed_by(user=staff_user)
+    result = webhook_mappers.user_or_key_to_changed_by(user=staff_user, api_key=None)
 
     # Then
     assert result == staff_user.email
@@ -30,7 +30,9 @@ def test_user_or_key_to_changed_by_with_api_key(
     master_api_key_object: MasterAPIKey,
 ) -> None:
     # When
-    result = webhook_mappers.user_or_key_to_changed_by(api_key=master_api_key_object)
+    result = webhook_mappers.user_or_key_to_changed_by(
+        user=None, api_key=master_api_key_object
+    )
 
     # Then
     assert result == master_api_key_object.name
@@ -50,14 +52,6 @@ def test_user_or_key_to_changed_by_with_both_user_and_api_key_prefers_user(
 
 
 def test_user_or_key_to_changed_by_with_neither_returns_empty_string() -> None:
-    # When
-    result = webhook_mappers.user_or_key_to_changed_by()
-
-    # Then
-    assert result == ""
-
-
-def test_user_or_key_to_changed_by_with_none_user_and_none_api_key() -> None:
     # When
     result = webhook_mappers.user_or_key_to_changed_by(user=None, api_key=None)
 
