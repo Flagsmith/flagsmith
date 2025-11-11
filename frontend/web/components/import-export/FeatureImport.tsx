@@ -73,7 +73,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   const [sort, setSort] = useState<SortValue>({
     label: 'Name',
     sortBy: 'name',
-    sortOrder: 'asc',
+    sortOrder: 'ASC',
   })
 
   useEffect(() => {

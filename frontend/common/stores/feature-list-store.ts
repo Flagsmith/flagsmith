@@ -1019,7 +1019,7 @@ const store = Object.assign({}, BaseStore, {
   },
   id: 'features',
   paging: {},
-  sort: { default: true, label: 'Name', sortBy: 'name', sortOrder: 'asc' },
+  sort: { default: true, label: 'Name', sortBy: 'name', sortOrder: 'ASC' },
 })
 
 store.dispatcherIndex = Dispatcher.register(store, (payload) => {

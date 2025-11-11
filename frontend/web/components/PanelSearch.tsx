@@ -20,10 +20,11 @@ import Paging from './Paging'
 import _ from 'lodash'
 import Panel from './base/grid/Panel'
 import Utils from 'common/utils/utils'
+import { SortOrder } from 'common/types/requests'
 
 export type SortOption = {
   value: string
-  order: 'asc' | 'desc'
+  order: SortOrder
   default?: boolean
   label: string
 }
@@ -56,7 +57,7 @@ export interface PanelSearchProps<T> {
   className?: string
   onSortChange?: (args: {
     sortBy: string | null
-    sortOrder: 'asc' | 'desc' | null
+    sortOrder: SortOrder | null
   }) => void
   itemHeight?: number
   action?: ReactNode
@@ -90,7 +91,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
   const [sortBy, setSortBy] = useState<string | null>(
     defaultSortingOption ? defaultSortingOption.value : null,
   )
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(
     defaultSortingOption ? defaultSortingOption.order : null,
   )
   const [internalSearch, setInternalSearch] = useState<string>('')
@@ -102,7 +103,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
   const sortItems = useCallback(
     (itemsToSort: T[]): T[] => {
       if (sortBy) {
-        return _.orderBy(itemsToSort, [sortBy], [sortOrder || 'asc'])
+        return _.orderBy(itemsToSort, [sortBy], [sortOrder || 'ASC'])
       }
       return itemsToSort
     },
@@ -127,7 +128,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
     (e: React.MouseEvent<HTMLAnchorElement>, sortOption: SortOption) => {
       e.preventDefault()
       if (sortOption.value === sortBy) {
-        const newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc'
+        const newSortOrder = sortOrder === 'ASC' ? 'DESC' : 'ASC'
         setSortOrder(newSortOrder)
         onSortChange && onSortChange({ sortBy, sortOrder: newSortOrder })
       } else {
@@ -247,7 +248,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                             {currentSort?.value === sortOption.value && (
                               <IonIcon
                                 icon={
-                                  sortOrder === 'asc' ? chevronUp : chevronDown
+                                  sortOrder === 'ASC' ? chevronUp : chevronDown
                                 }
                               />
                             )}

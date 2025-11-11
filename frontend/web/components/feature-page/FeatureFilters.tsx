@@ -12,6 +12,7 @@ import { isEqual } from 'lodash'
 import Utils from 'common/utils/utils'
 import { TagStrategy } from 'common/types/responses'
 import Format from 'common/utils/format'
+import { Req } from 'common/types/requests'
 
 export type FiltersValue = {
   search: string | null
@@ -41,7 +42,7 @@ const DEFAULTS: FiltersValue = {
   owners: [],
   page: 1,
   search: '',
-  sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
+  sort: { label: 'Name', sortBy: 'name', sortOrder: 'ASC' },
   tag_strategy: 'INTERSECTION',
   tags: [],
   value_search: '',
@@ -95,7 +96,7 @@ export const parseFiltersFromUrlParams = (
     sort: {
       label: Format.camelCase(params.sortBy || 'Name'),
       sortBy: params.sortBy || 'name',
-      sortOrder: params.sortOrder || 'asc',
+      sortOrder: params.sortOrder || 'ASC',
     },
     tag_strategy: params.tag_strategy || 'INTERSECTION',
     tags:
@@ -108,14 +109,16 @@ export const parseFiltersFromUrlParams = (
 }
 
 //Converts filter to api expected properties
-export const getServerFilter = (f: FiltersValue) => ({
-  ...f,
-  group_owners: f.group_owners?.length ? f.group_owners : undefined,
-  owners: f.owners.length ? f.owners : undefined,
-  search: (f.search || '').trim(),
-  sort: f.sort,
-  tags: f.tags.length ? f.tags.join(',') : undefined,
-})
+export const getServerFilter = (f: FiltersValue) =>
+  ({
+    ...f,
+    group_owners: f.group_owners?.length ? f.group_owners : undefined,
+    owners: f.owners.length ? f.owners : undefined,
+    search: (f.search || '').trim(),
+    sort_direction: f.sort?.sortOrder,
+    sort_field: f.sort?.sortBy,
+    tags: f.tags.length ? f.tags.join(',') : undefined,
+  } as Omit<Req['getProjectFlags'], 'project'>)
 
 //Detect if the filter is default
 const isDefault = (v: FiltersValue) => isEqual(v, DEFAULTS)

@@ -229,7 +229,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                       {
                         default: true,
                         label: 'Name',
-                        order: 'asc',
+                        order: 'ASC',
                         value: 'name',
                       },
                     ]}

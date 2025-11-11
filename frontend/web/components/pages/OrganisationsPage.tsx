@@ -39,7 +39,7 @@ const OrganisationsPage: FC = () => {
                 {
                   default: true,
                   label: 'Name',
-                  order: 'asc',
+                  order: 'ASC',
                   value: 'name',
                 },
               ]}

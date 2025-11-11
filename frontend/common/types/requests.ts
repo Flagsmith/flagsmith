@@ -87,7 +87,7 @@ export type RegisterRequest = {
   marketing_consent_given?: boolean
   utm_data?: UtmsType
 }
-
+export type SortOrder = 'ASC' | 'DESC'
 export interface StageActionRequest {
   action_type: StageActionType | ''
   action_body: StageActionBody
@@ -335,7 +335,8 @@ export type Req = {
     is_enabled?: boolean | null
     owners?: number[]
     group_owners?: number[]
-    sort?: SortValue
+    sort_field?: string
+    sort_direction?: SortOrder
   }
   getProjectFlag: { project: string | number; id: string }
   getRolesPermissionUsers: { organisation_id: number; role_id: number }

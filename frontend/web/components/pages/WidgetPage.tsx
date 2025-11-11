@@ -124,7 +124,7 @@ const FeatureList = class extends Component<FeatureListType> {
     error: null as null | string,
     search: null as null | string,
     showArchived: false,
-    sort: { label: 'Name', sortBy: 'name', sortOrder: 'asc' },
+    sort: { label: 'Name', sortBy: 'name', sortOrder: 'ASC' },
     tag_strategy: 'INTERSECTION' as TagStrategy,
     tags: [] as string[],
   }
@@ -319,12 +319,12 @@ const FeatureList = class extends Component<FeatureListType> {
                                 {
                                   default: true,
                                   label: 'Name',
-                                  order: 'asc',
+                                  order: 'ASC',
                                   value: 'name',
                                 },
                                 {
                                   label: 'Created Date',
-                                  order: 'asc',
+                                  order: 'ASC',
                                   value: 'created_date',
                                 },
                               ]}

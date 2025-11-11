@@ -4,7 +4,7 @@ import EnvironmentSelect from 'components/EnvironmentSelect'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import FeatureFilters, {
-  getFiltersFromURLParams,
+  parseFiltersFromUrlParams,
   getServerFilter,
   getURLParamsFromFilters,
 } from 'components/feature-page/FeatureFilters'
@@ -32,7 +32,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
   const [environment, setEnvironment] = useState<Environment>()
   const [preselect] = useState(Utils.fromParam().flag)
   const [filter, setFilter] = useState(
-    getFiltersFromURLParams(Utils.fromParam()),
+    parseFiltersFromUrlParams(Utils.fromParam()),
   )
   const { data: segment } = useGetSegmentQuery(
     {
@@ -43,6 +43,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
       skip: !projectId || !segmentId,
     },
   )
+
   const { data: projectFlags, isLoading: projectFlagsLoading } =
     useGetProjectFlagsQuery(
       {

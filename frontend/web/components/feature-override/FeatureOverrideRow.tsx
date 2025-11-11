@@ -219,7 +219,11 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
       data-test={dataTest}
       onClick={onClick}
     >
-      <Flex className='table-column pt-0'>
+      <Flex
+        className={classNames('table-column pt-0', {
+          'pb-0': viewMode === 'compact',
+        })}
+      >
         <div>
           <Flex>
             <div className='d-flex align-items-center'>

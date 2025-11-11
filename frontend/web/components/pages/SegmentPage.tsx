@@ -17,6 +17,7 @@ import { handleRemoveSegment } from 'components/modals/ConfirmRemoveSegment'
 import { IonIcon } from '@ionic/react'
 import { caretDown } from 'ionicons/icons'
 import SegmentSelect from 'components/SegmentSelect'
+import Utils from 'common/utils/utils'
 
 type SegmentPageType = {}
 
@@ -35,11 +36,6 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
     permission: 'MANAGE_SEGMENTS',
   })
 
-  const onRemoveSegment = () => {
-    handleRemoveSegment(projectId, segment!, () => {
-      history.replace(`/project/${projectId}/segments`)
-    })
-  }
   return (
     <div
       style={{ opacity: ChangeRequestStore.isLoading ? 0.25 : 1 }}
@@ -58,7 +54,11 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
           <span style={{ width: 180 }} className='d-inline-block'>
             <SegmentSelect
               onChange={(v) =>
-                history.replace(`/project/${projectId}/segments/${v.value}`)
+                history.replace(
+                  `/project/${projectId}/segments/${v.value}?${Utils.toParam(
+                    Utils.fromParam(),
+                  )}`,
+                )
               }
               className='react-select select-xsm'
               value={parseInt(id)}

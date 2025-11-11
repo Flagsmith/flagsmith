@@ -26,42 +26,6 @@ import FeatureFilters, {
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
 
-  getFiltersFromParams = (params) => {
-    return {
-      group_owners:
-        typeof params.group_owners === 'string'
-          ? params.group_owners.split(',').map((v) => parseInt(v))
-          : [],
-      is_enabled:
-        params.is_enabled === 'true'
-          ? true
-          : params.is_enabled === 'false'
-          ? false
-          : null,
-      loadedOnce: false,
-      owners:
-        typeof params.owners === 'string'
-          ? params.owners.split(',').map((v) => parseInt(v))
-          : [],
-      page: params.page ? parseInt(params.page) - 1 : 1,
-      releasePipelines: [],
-      search: params.search || null,
-      showArchived: params.is_archived === 'true',
-      sort: {
-        label: Format.camelCase(params.sortBy || 'Name'),
-        sortBy: params.sortBy || 'name',
-        sortOrder: params.sortOrder || 'asc',
-      },
-      tag_strategy: params.tag_strategy || 'INTERSECTION',
-      tags:
-        typeof params.tags === 'string'
-          ? params.tags.split(',').map((v) => parseInt(v))
-          : [],
-      value_search:
-        typeof params.value_search === 'string' ? params.value_search : '',
-    }
-  }
-
   constructor(props) {
     super(props)
     this.state = {
@@ -76,10 +40,10 @@ const FeaturesPage = class extends Component {
       this.projectId,
       this.props.match.params.environmentId,
       true,
-      this.state.search,
-      this.state.sort,
-      this.state.page,
-      this.getFilter(),
+      filters.search,
+      filters.sort,
+      filters.page,
+      getServerFilter(filters),
     )
   }
 
