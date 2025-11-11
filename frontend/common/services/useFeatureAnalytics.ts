@@ -3,7 +3,6 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import { sortBy } from 'lodash'
 import moment from 'moment'
-import range from 'lodash/range'
 
 export const featureAnalyticsService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureAnalytics'] })
