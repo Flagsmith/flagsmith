@@ -4,13 +4,7 @@ module.exports = {
     'es6': true,
     'node': true,
   },
-  'extends': [
-    'eslint:recommended',
-    'plugin:react/recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:prettier/recommended',
-    'plugin:@dword-design/import-alias/recommended',
-  ],
+  'extends': ['eslint:recommended', 'plugin:react/recommended', 'plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended', 'plugin:@dword-design/import-alias/recommended', 'plugin:storybook/recommended'],
   'globals': {
     '$': true,
     '$crisp': true,
