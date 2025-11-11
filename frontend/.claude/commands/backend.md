@@ -11,4 +11,4 @@ Look for:
 4. Response structure (what data is returned)
 5. Authentication/authorization requirements
 
-If the endpoint isn't found, check swagger docs: https://staging-api.hoxtonmix.com/api/v3/docs/
+If the endpoint isn't found, check swagger docs: https://staging.flagsmith.com/api/v1/docs/

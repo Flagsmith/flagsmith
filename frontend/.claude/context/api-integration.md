@@ -10,15 +10,20 @@ This example shows how to add a new endpoint for fetching company invoices (a re
 
 ### Step 1: Check Backend API
 
-```bash
-cd ../api
-git fetch
-git log --oneline origin/feat/your-branch -n 10
-git show COMMIT_HASH:apps/customers/urls.py | grep -A 5 "invoice"
-git show COMMIT_HASH:apps/customers/views.py | grep -A 20 "def get_company_invoices"
+```
+../api/apps/
+├── projects/          # Projects and features
+├── environments/      # Environment management
+├── features/          # Feature flags
+├── segments/          # User segments
+├── users/            # User management
+├── organisations/    # Organization management
+├── permissions/      # Access control
+└── audit/           # Audit logs
 ```
 
-**Backend endpoint found:** `GET /customers/companies/{company_id}/invoices`
+
+**Backend endpoint found:** `GET /organisations/{organisation_id}/invoices`
 
 ### Step 2: Add Request Type
 
@@ -28,7 +33,7 @@ git show COMMIT_HASH:apps/customers/views.py | grep -A 20 "def get_company_invoi
 export type Req = {
   // ... existing types
   getCompanyInvoices: {
-    company_id: string
+    organisation_id: string
   }
 }
 ```
@@ -49,7 +54,7 @@ export const invoiceService = service
       >({
         providesTags: [{ id: 'LIST', type: 'Invoice' }],
         query: (req) => ({
-          url: `customers/companies/${req.company_id}/invoices`,
+          url: `organisations/${organisation_id}/invoices`,
         }),
         transformResponse(res: InvoiceSummary[]) {
           return res?.map((v) => ({ ...v, date: v.date * 1000 }))
@@ -74,8 +79,8 @@ const MyComponent = () => {
   const companyId = subscriptionDetail?.company_id
 
   const { data: invoices, error, isLoading } = useGetCompanyInvoicesQuery(
-    { company_id: `${companyId}` },
-    { skip: !companyId } // Skip if no company ID
+    { organisation_id: `${companyId}` },
+    { skip: !organisation_id } // Skip if no company ID
   )
 
   if (isLoading) return <Loader />
@@ -129,8 +134,8 @@ If you need to manually create a service (follow template in `.claude/commands/a
 
 1. **Identify backend endpoint**
     - Use `/backend <search-term>` to search backend codebase
-    - Check `apps/*/serializers.py`, `apps/*/views.py`, `apps/*/urls.py`
-    - Or swagger docs: https://staging-api.hoxtonmix.com/api/v3/docs/
+    - Check `../api/apps/*/serializers.py`, `../api/apps/*/views.py`, `apps/*/urls.py`
+    - Or swagger docs: https://api.flagsmith.com/api/v1/docs/
 
 2. **Define types** in `common/types/`
     - Response: `export type EntityName = { field: type }` in `responses.ts`
@@ -150,30 +155,6 @@ If you need to manually create a service (follow template in `.claude/commands/a
     ```bash
     npx eslint --fix common/services/use*.ts common/types/*.ts
     ```
-
-## Type Sync Architecture
-
-### `.claude/api-type-map.json`
-
-Cache file mapping frontend → backend for type sync:
-
-```json
-{
-  "_metadata": {
-    "lastBackendCommit": "a73427688...",
-    "totalTypes": 48
-  },
-  "response_types": {
-    "entityName": {
-      "type": "EntityType",
-      "service": "common/services/useEntity.ts",
-      "endpoint": "entities/{id}",
-      "method": "GET",
-      "serializer": "apps/entities/serializers.py:EntitySerializer"
-    }
-  }
-}
-```
 
 ### Backend → Frontend Type Mapping
 
@@ -244,27 +225,13 @@ export const {
 
 ### Search Strategy
 
-1. **Use `/backend` slash command**: `/backend <search-term>` searches backend codebase
-2. **Check URL patterns**: Look in `../api/apps/<resource>/urls.py`
-    - Common apps: `mailbox`, `customers`, `kyc`, `offers`, `subscriptions`, `checkout`
-3. **Check ViewSets**: Look in `../api/apps/<resource>/views.py`
+1. **Search backend directly**: Use Grep/Glob tools to search the `../api` directory
+2. **Check URL patterns**: Look in `../api/*/urls.py`
+3. **Check ViewSets**: Look in `../api/*/views.py`
 4. **Common file download pattern**:
     - Backend returns PDF/file with `Content-Disposition: attachment; filename=...`
     - Use `responseHandler` in RTK Query to handle blob downloads
-    - See `common/services/useMailDownload.ts` for example
-
-### File Download Pattern
-
-**Use the reusable utility function:**
-
-```typescript
-import { handleFileDownload } from 'common/utils/fileDownload'
-
-query: (query) => ({
-  url: `resource/${query.id}/pdf`,
-  responseHandler: (response) => handleFileDownload(response, 'invoice.pdf'),
-})
-```
+    - See `common/services/useAuditLog.ts` for example
 
 The utility automatically:
 - Extracts filename from `Content-Disposition` header
@@ -289,8 +256,8 @@ const [createMail, { isLoading, error }] = useCreateMailMutation()
 
 const handleSubmit = async () => {
   try {
-    const result = await createMail(data).unwrap()
-    toast.success('Success!')
+    const result = await createThing(data).unwrap()
+    toast('Success!')
   } catch (err) {
     if ('status' in err) {
       // FetchBaseQueryError - has status, data, error
@@ -298,7 +265,8 @@ const handleSubmit = async () => {
       toast.error(errMsg)
     } else {
       // SerializedError - has message, code, name
-      toast.error(err.message || 'An error occurred')
+        toast(err.message || 'An error occurred', 'danger')
+        toast(err.message || 'An error occurred')
     }
   }
 }
@@ -307,42 +275,11 @@ const handleSubmit = async () => {
 ### RTK Query Queries
 
 ```typescript
-const { data, error, isLoading, refetch } = useGetMailQuery({ id: '123' })
+const { data, error, isLoading, refetch } = useThing({ id: '123' })
 
-// Display error in UI
-if (error) {
-  return <ErrorMessage error={error} />
-}
+// Display error in UI, it won't render if error is undefined
+return <ErrorMessage>{error}</ErrorMessage>
 
 // Retry on error
 const handleRetry = () => refetch()
 ```
-
-### 401 Unauthorized Handling
-
-**Automatic logout on 401** is handled in `common/service.ts`:
-- All 401 responses (except email confirmation) trigger logout
-- Debounced to prevent multiple logout calls
-- Uses the logout endpoint from the service
-
-### Backend Error Response Format
-
-Backend typically returns:
-```json
-{
-  "detail": "Error message here",
-  "code": "ERROR_CODE"
-}
-```
-
-Access in error handling:
-```typescript
-if ('data' in err && err.data?.detail) {
-  toast.error(err.data.detail)
-}
-```
-
-## Cross-Platform Pattern
-
-- Web (`/project/api.ts`) and Mobile (`/mobile/app/api.ts`) implement same interface from `common/api-common.ts`
-- Example: `getApi().loginRedirect()` uses Next.js Router on web, React Native Navigation on mobile

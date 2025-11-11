@@ -100,15 +100,15 @@ When specifically requested, this pattern shows tabs only when feature flag is e
 ```typescript
 import { useFlags } from 'flagsmith/react'
 import { Tabs } from 'components/base/forms/Tabs'
-
+import Utils from 'common/utils/utils'
 const MyPage = () => {
-  const { my_feature_flag } = useFlags(['my_feature_flag'])
+  const my_feature_flag = Utils.getFlagsmithHasFeature('my_feature_flag')
   const [activeTab, setActiveTab] = useState(0)
 
   return (
     <div>
       <h2>My Section</h2>
-      {my_feature_flag?.enabled ? (
+      {my_feature_flag? (
         <Tabs
           value={activeTab}
           onChange={setActiveTab}
@@ -148,17 +148,14 @@ For simple cases without parent state management:
 import { openConfirm } from 'components/base/Modal'
 
 // Signature: openConfirm(title, body, onYes, onNo?, challenge?)
-openConfirm(
-  'Delete Partner',
-  'Are you sure you want to delete this partner?',
-  async (closeModal) => {
-    const res = await deleteAction()
-    if (!res.error) {
-      toast(null, 'Partner deleted successfully')
-      closeModal() // Always call closeModal to dismiss the dialog
-    }
-  },
-)
+openConfirm({
+    body: 'Closing this will discard your unsaved changes.',
+    noText: 'Cancel',
+    onNo: () => resolve(false),
+    onYes: () => resolve(true),
+    title: 'Discard changes',
+    yesText: 'Ok',
+})
 ```
 
 ### Parameters
@@ -172,13 +169,3 @@ openConfirm(
 - The `onYes` callback receives a `closeModal` function
 - Always call `closeModal()` when the action completes successfully
 - Can be async - use `async (closeModal) => { ... }`
-
-## Backend Integration
-
-### Always Run API Types Sync Before API Work
-
-When using `/api` to generate new API services, the command automatically runs `/api-types-sync` first to:
-1. Sync frontend types with backend serializers
-2. Ensure types are up-to-date before generating new services
-
-This prevents type mismatches and ensures consistency.
