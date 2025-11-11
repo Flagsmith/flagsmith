@@ -43,18 +43,21 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
     },
   )
 
-  const { data: projectFlags, isLoading: projectFlagsLoading } =
-    useGetProjectFlagsQuery(
-      {
-        ...getServerFilter(filter),
-        environment: environment?.id || 0,
-        project: `${projectId}`,
-        segment: segmentId,
-      },
-      {
-        skip: !projectId || !environment || !segmentId,
-      },
-    )
+  const {
+    data: projectFlags,
+    isFetching: projectFlagsFetching,
+    isLoading: projectFlagsLoading,
+  } = useGetProjectFlagsQuery(
+    {
+      ...getServerFilter(filter),
+      environment: environment?.id || 0,
+      project: `${projectId}`,
+      segment: segmentId,
+    },
+    {
+      skip: !projectId || !environment || !segmentId,
+    },
+  )
 
   const { data: environments } = useGetEnvironmentsQuery(
     {
@@ -64,8 +67,6 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
       skip: !projectId,
     },
   )
-
-  const isLoading = !projectFlags || !environment
 
   useEffect(() => {
     if (!environment && !!environments?.results?.[0]) {
@@ -99,86 +100,89 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
           chosen environment.
         </PageTitle>
       </div>
-      {isLoading ? (
+      {projectFlagsLoading ? (
         <div className='text-center'>
           <Loader />
         </div>
       ) : (
-        <PanelSearch
-          id='user-features-list'
-          className='no-pad overflow-visible'
-          itemHeight={70}
-          renderFooter={() => (
-            <>
-              <JSONReference
-                showNamesButton
-                className='mt-4 mx-2'
-                title={'Features'}
-                json={projectFlags}
-              />
-            </>
-          )}
-          header={
-            <FeatureFilters
-              value={filter}
-              projectId={projectId!}
-              orgId={AccountStore.getOrganisation()?.id}
-              isLoading={projectFlagsLoading}
-              onChange={(next) => {
-                FeatureListStore.isLoading = true
-                history.replace(
-                  `${document.location.pathname}?${Utils.toParam(
-                    getURLParamsFromFilters(next),
-                  )}`,
-                )
-                setFilter(next)
-              }}
-            />
-          }
-          isLoading={projectFlagsLoading}
-          items={projectFlags.results}
-          renderRow={(projectFlag, i) => {
-            return (
-              !!projectFlag && (
-                <FeatureOverrideRow
-                  shouldPreselect={projectFlag.name === preselect}
-                  environmentId={environment.api_key}
-                  level='segment'
-                  valueDataTest={`user-feature-value-${i}`}
-                  projectFlag={projectFlag}
-                  dataTest={`user-feature-${i}`}
-                  overrideFeatureState={
-                    projectFlag.segment_feature_state ||
-                    projectFlag.environment_feature_state
-                  }
-                  environmentFeatureState={
-                    projectFlag.environment_feature_state!
-                  }
+        !!projectFlags && (
+          <PanelSearch
+            id='user-features-list'
+            className='no-pad overflow-visible'
+            itemHeight={70}
+            renderFooter={() => (
+              <>
+                <JSONReference
+                  showNamesButton
+                  className='mt-4 mx-2'
+                  title={'Features'}
+                  json={projectFlags}
                 />
+              </>
+            )}
+            header={
+              <FeatureFilters
+                value={filter}
+                projectId={projectId!}
+                orgId={AccountStore.getOrganisation()?.id}
+                isLoading={projectFlagsLoading}
+                onChange={(next) => {
+                  FeatureListStore.isLoading = true
+                  history.replace(
+                    `${document.location.pathname}?${Utils.toParam(
+                      getURLParamsFromFilters(next),
+                    )}`,
+                  )
+                  setFilter(next)
+                }}
+              />
+            }
+            isLoading={projectFlagsFetching}
+            items={projectFlags.results}
+            renderRow={(projectFlag, i) => {
+              return (
+                !!projectFlag &&
+                !!environment && (
+                  <FeatureOverrideRow
+                    shouldPreselect={projectFlag.name === preselect}
+                    environmentId={environment.api_key}
+                    level='segment'
+                    valueDataTest={`user-feature-value-${i}`}
+                    projectFlag={projectFlag}
+                    dataTest={`user-feature-${i}`}
+                    overrideFeatureState={
+                      projectFlag.segment_feature_state ||
+                      projectFlag.environment_feature_state
+                    }
+                    environmentFeatureState={
+                      projectFlag.environment_feature_state!
+                    }
+                  />
+                )
               )
-            )
-          }}
-          renderSearchWithNoResults
-          paging={projectFlags}
-          nextPage={() =>
-            setFilter({
-              ...filter,
-              page: filter.page + 1,
-            })
-          }
-          prevPage={() =>
-            setFilter({
-              ...filter,
-              page: filter.page - 1,
-            })
-          }
-          goToPage={(page) => {
-            setFilter({
-              ...filter,
-              page,
-            })
-          }}
-        />
+            }}
+            renderSearchWithNoResults
+            paging={projectFlags}
+            nextPage={() =>
+              setFilter({
+                ...filter,
+                page: filter.page + 1,
+              })
+            }
+            prevPage={() =>
+              setFilter({
+                ...filter,
+                page: filter.page - 1,
+              })
+            }
+            goToPage={(page) => {
+              setFilter({
+                ...filter,
+                page,
+              })
+            }}
+          />
+        )
       )}
     </>
   )
