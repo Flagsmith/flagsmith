@@ -16,7 +16,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
       gap={3}
       key={AccountStore.getOrganisation()?.id}
       containerClassName='px-2 pb-1 pb-md-0 pb-mb-0 bg-faint'
-      className='py-0 d-flex'
+      className='py-0 flex'
     >
       <NavSubLink
         icon={apps}
