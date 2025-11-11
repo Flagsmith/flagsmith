@@ -21,7 +21,7 @@
         "destination": "https://docs.flagsmith.com/deployment-self-hosting/scaling-and-performance/sizing-and-scaling"
         },
         {
-        "source": "/deployment/hosting/kubernetes?ref=awsmfoss.com",
+        "source": "/deployment/hosting/kubernetes",
         "destination": "https://docs.flagsmith.com/deployment-self-hosting/hosting-guides/kubernetes-openshift"
         },
         {
@@ -81,10 +81,6 @@
         "destination": "https://docs.flagsmith.com/flagsmith-concepts/platform-architecture#whats-next"
         },
         {
-        "source": "/advanced-use/staged-feature-rollouts",
-        "destination": "https://docs.flagsmith.com/best-practices/when-to-use-flags#staged-rollouts"
-        },
-        {
             "source": "/managing-identities",
             "destination": "/flagsmith-concepts/identities"
         },
@@ -142,10 +138,6 @@
         },
         {
             "source": "/staged-feature-rollouts",
-            "destination": "/managing-flags/rollout/"
-        },
-        {
-            "source": "/advanced-use/staged-feature-rollouts",
             "destination": "/managing-flags/rollout/"
         },
         {
