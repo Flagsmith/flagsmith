@@ -62,10 +62,10 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
       />
       <Button
         disabled={!data}
-        iconSize={18}
+        iconSize={16}
         theme='text'
         style={{ lineHeight: 'inherit' }}
-        className='text-primary'
+        className='text-primary d-flex align-items-center'
         iconRightColour='primary'
         iconRight={'edit'}
         onClick={handleFocus}
