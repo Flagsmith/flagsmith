@@ -1,13 +1,18 @@
-import React from 'react'
+import React, { useMemo } from 'react'
+import classNames from 'classnames'
 import Input from 'components/base/forms/Input'
 import Icon from 'components/Icon'
-import InputGroup from 'components/base/forms/InputGroup'
-import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 
 import { getDarkMode } from 'project/darkMode'
-import ModalHR from 'components/modals/ModalHR'
 import EnvironmentSelectDropdown from './EnvironmentSelectDropdown'
+import TextAreaModal from './TextAreaModal'
+import { checkWhitespaceIssues } from 'components/segments/Rule/utils'
+import { MultiSelect } from 'components/base/select/multi-select'
+import { safeParseArray } from 'components/segments/Rule/utils/arrayUtils'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { useConditionInputType } from 'components/segments/Rule/hooks/useConditionInputType'
+import { OperatorValue } from 'common/types/rules.types'
 
 type RuleConditionValueInputProps = {
   'data-test'?: string
@@ -19,109 +24,76 @@ type RuleConditionValueInputProps = {
   readOnly?: boolean
   isValid?: boolean
   projectId?: number
-  showEnvironmentDropdown?: boolean
-}
-
-const TextAreaModal = ({
-  disabled,
-  isValid,
-  onChange,
-  placeholder,
-  readOnly,
-  style,
-  value,
-}: RuleConditionValueInputProps) => {
-  const [textAreaValue, setTextAreaValue] = React.useState(value)
-
-  return (
-    <div>
-      <div className='modal-body'>
-        <InputGroup
-          id='rule-value-textarea'
-          data-test='rule-value-textarea'
-          value={textAreaValue}
-          inputProps={{
-            style: style,
-          }}
-          isValid={isValid}
-          onChange={(e: InputEvent) => {
-            const value = Utils.safeParseEventValue(e)
-            setTextAreaValue(value.replace(/\n/g, ''))
-          }}
-          type='text'
-          className='w-100'
-          readOnly={readOnly}
-          placeholder={placeholder}
-          disabled={disabled}
-          textarea
-        />
-      </div>
-      <ModalHR />
-      <div className='modal-footer'>
-        <Button
-          className='mr-2'
-          theme='secondary'
-          id='rule-value-textarea-cancel'
-          data-tests='rule-value-textarea-cancel'
-          onClick={closeModal2}
-        >
-          Cancel
-        </Button>
-        <Button
-          type='button'
-          id='rule-value-textarea-save'
-          data-tests='rule-value-textarea-save'
-          onClick={() => {
-            const event = new InputEvent('input', { bubbles: true })
-            Object.defineProperty(event, 'target', {
-              value: { value: textAreaValue },
-              writable: false,
-            })
-            const value = Utils.getTypedValue(Utils.safeParseEventValue(event))
-            onChange?.(value)
-            closeModal2()
-          }}
-        >
-          Apply
-        </Button>
-      </div>
-    </div>
-  )
+  operator?: OperatorValue
+  property?: string
+  className?: string
 }
 
 const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
   isValid,
   onChange,
+  operator,
+  property,
   projectId,
-  showEnvironmentDropdown,
   value,
+  className,
   ...props
 }) => {
-  const hasLeadingWhitespace = typeof value === 'string' && /^\s/.test(value)
-  const hasTrailingWhitespace = typeof value === 'string' && /\s$/.test(value)
-  const isOnlyWhitespace =
-    typeof value === 'string' && value.length >= 1 && value.trim() === ''
-  const hasBothLeadingAndTrailingWhitespace =
-    hasLeadingWhitespace && hasTrailingWhitespace
-  const hasWarning =
-    hasLeadingWhitespace ||
-    hasTrailingWhitespace ||
-    hasBothLeadingAndTrailingWhitespace ||
-    isOnlyWhitespace
+  const { data } = useGetEnvironmentsQuery(
+    { projectId: projectId?.toString() || '' },
+    { skip: !projectId },
+  )
+  const environmentOptions = useMemo(
+    () =>
+      data?.results
+        ? data.results.map(({ name }) => ({ label: name, value: name }))
+        : [],
+    [data],
+  )
+
+  const { showMultiEnvironmentSelect, showSingleEnvironmentSelect } = useConditionInputType(
+    operator,
+    property,
+  )
+
+  if (showMultiEnvironmentSelect) {
+    return (
+      <div className={className}>
+        <MultiSelect
+          selectedValues={safeParseArray(value)}
+          onSelectionChange={(selectedValues: string[]) => {
+            onChange?.(selectedValues.join(','))
+          }}
+          placeholder='Select environments...'
+          options={environmentOptions}
+          className='w-100'
+          hideSelectedOptions={false}
+          inline
+        />
+      </div>
+    )
+  }
+
+  if (showSingleEnvironmentSelect && projectId) {
+    return (
+      <div className={className}>
+        <EnvironmentSelectDropdown
+          value={value}
+          onChange={(value: string) => onChange?.(value)}
+          projectId={projectId}
+          dataTest={props['data-test']}
+        />
+      </div>
+    )
+  }
+
+  const whitespaceCheck = checkWhitespaceIssues(value, operator)
+  const hasWarning = !!whitespaceCheck
   const isLongText = String(value).length >= 10
 
   const validate = () => {
-    if (isOnlyWhitespace) {
-      return 'This value is only whitespaces'
-    }
-    if (hasBothLeadingAndTrailingWhitespace) {
-      return 'This value starts and ends with whitespaces'
-    }
-    if (hasLeadingWhitespace) {
-      return 'This value starts with whitespaces'
-    }
-    if (hasTrailingWhitespace) {
-      return 'This value ends with whitespaces'
+    if (whitespaceCheck?.message) {
+      return whitespaceCheck.message
     }
     if (isLongText) {
       return 'Click to edit text in a larger area'
@@ -133,71 +105,60 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
   const isDarkMode = getDarkMode()
 
   return (
-    <div className='relative'>
-      {showEnvironmentDropdown && projectId ? (
-        <EnvironmentSelectDropdown
-          value={value}
-          onChange={(value: string) => onChange?.(value)}
-          projectId={projectId}
-          dataTest={props['data-test']}
-        />
-      ) : (
-        <>
-          <Input
-            type='text'
-            data-test={props['data-test']}
-            value={value}
-            inputClassName={
-              showIcon ? `pr-5 ${hasWarning ? 'border-warning' : ''}` : ''
-            }
-            style={{ width: '100%' }}
-            onChange={(e: InputEvent) => {
-              const value = Utils.safeParseEventValue(e)
-              onChange?.(value)
-            }}
-          />
-          {showIcon && (
-            <div style={{ position: 'absolute', right: 5, top: 9 }}>
-              <Tooltip
-                title={
-                  <div
-                    className={`flex ${
-                      isDarkMode ? 'bg-white' : 'bg-black'
-                    } bg-opacity-10 rounded-2 p-1 ${
-                      hasWarning ? '' : 'cursor-pointer'
-                    }`}
-                    onClick={() => {
-                      if (hasWarning) return
-                      openModal2(
-                        'Edit Value',
-                        <TextAreaModal
-                          value={value}
-                          onChange={onChange}
-                          isValid={isValid}
-                        />,
-                      )
-                    }}
-                  >
-                    <Icon
-                      name={hasWarning ? 'warning' : 'expand'}
-                      fill={
-                        hasWarning
-                          ? undefined
-                          : `${isDarkMode ? '#fff' : '#1A2634'}`
-                      }
-                      width={18}
-                      height={18}
-                    />
-                  </div>
-                }
-                place='top'
-                effect='solid'
+    <div className={classNames('relative', className)}>
+      <Input
+        type='text'
+        data-test={props['data-test']}
+        name='rule-condition-value-input'
+        aria-label='Rule condition value input'
+        value={value}
+        className='w-100'
+        inputClassName={
+          showIcon ? `pr-5 ${hasWarning ? 'border-warning' : ''}` : ''
+        }
+        style={{ width: '100%' }}
+        onChange={(e: InputEvent) => {
+          const value = Utils.safeParseEventValue(e)
+          onChange?.(value)
+        }}
+      />
+      {showIcon && (
+        <div style={{ position: 'absolute', right: 5, top: 9 }}>
+          <Tooltip
+            title={
+              <div
+                className={`rule-value-icon flex ${
+                  isDarkMode ? 'bg-white' : 'bg-black'
+                } bg-opacity-10 rounded-2 p-1 cursor-pointer`}
+                onClick={() => {
+                  openModal2(
+                    'Edit Value',
+                    <TextAreaModal
+                      value={value}
+                      onChange={onChange}
+                      operator={operator}
+                    />,
+                  )
+                }}
               >
-                {validate()}
-              </Tooltip>
-            </div>
-          )}
-        </>
+                <Icon
+                  name={hasWarning ? 'warning' : 'expand'}
+                  fill={
+                    hasWarning
+                      ? undefined
+                      : `${isDarkMode ? '#fff' : '#1A2634'}`
+                  }
+                  width={18}
+                  height={18}
+                />
+              </div>
+            }
+            place='top'
+            effect='solid'
+          >
+            {validate()}
+          </Tooltip>
+        </div>
       )}
     </div>
   )

@@ -1,11 +1,13 @@
 import csv
 import logging
+import time
 from functools import wraps
 from io import StringIO
 from typing import Generator
 
 import boto3
 import gnupg  # type: ignore[import-untyped]
+from botocore.exceptions import ClientError
 from django.conf import settings
 
 from sse import tasks
@@ -56,12 +58,34 @@ def send_environment_update_message_for_environment(environment):  # type: ignor
     )
 
 
-def stream_access_logs() -> Generator[SSEAccessLogs, None, None]:
+def stream_access_logs(
+    timeout_seconds: int = 300,
+) -> Generator[SSEAccessLogs, None, None]:
     gpg = gnupg.GPG(gnupghome=GNUPG_HOME)
     bucket = boto3.resource("s3").Bucket(settings.AWS_SSE_LOGS_BUCKET_NAME)
 
+    start_time = time.time()
+
     for log_file in bucket.objects.all():
-        encrypted_body = log_file.get()["Body"].read()
+        # Check if timeout has been reached before processing each file
+        elapsed_time = time.time() - start_time
+        if elapsed_time >= timeout_seconds:
+            logger.warning(
+                "stream_access_logs timeout reached after %.2f seconds, stopping log processing",
+                elapsed_time,
+            )
+            return
+
+        try:
+            encrypted_body = log_file.get()["Body"].read()
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "NoSuchKey":
+                logger.warning(
+                    "Log file %s has already been deleted, skipping", log_file.key
+                )
+                continue
+            raise
+
         decrypted_body = gpg.decrypt(encrypted_body)
 
         reader = csv.reader(StringIO(decrypted_body.data.decode()))
