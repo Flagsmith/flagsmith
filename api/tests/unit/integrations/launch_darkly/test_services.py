@@ -223,14 +223,14 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
         percentage_mv_feature_states_by_env_name["Test"].get_feature_state_value()
         == "variation2"
     )
-    assert list(
+    assert set(
         percentage_mv_feature_states_by_env_name[
             "Test"
         ].multivariate_feature_state_values.values_list(
             "multivariate_feature_option__string_value",
             "percentage_allocation",
         )
-    ) == [("variation1", 100), ("variation2", 0), ("variation3", 0)]
+    ) == {("variation1", 100), ("variation2", 0), ("variation3", 0)}
 
     assert percentage_mv_feature_states_by_env_name["Production"].enabled is True
 
@@ -239,14 +239,14 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
         percentage_mv_feature_states_by_env_name["Production"].get_feature_state_value()
         == "variation3"
     )
-    assert list(
+    assert set(
         percentage_mv_feature_states_by_env_name[
             "Production"
         ].multivariate_feature_state_values.values_list(
             "multivariate_feature_option__string_value",
             "percentage_allocation",
         )
-    ) == [("variation1", 24), ("variation2", 25), ("variation3", 51)]
+    ) == {("variation1", 24), ("variation2", 25), ("variation3", 51)}
 
     # Tags are imported correctly.
     tagged_feature = Feature.objects.get(project=project, name="flag5")
