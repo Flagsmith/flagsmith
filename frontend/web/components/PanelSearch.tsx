@@ -103,7 +103,11 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
   const sortItems = useCallback(
     (itemsToSort: T[]): T[] => {
       if (sortBy) {
-        return _.orderBy(itemsToSort, [sortBy], [sortOrder || 'ASC'])
+        return _.orderBy(
+          itemsToSort,
+          [sortBy],
+          [(sortOrder?.toLowerCase() || 'asc') as 'asc' | 'desc'],
+        )
       }
       return itemsToSort
     },
