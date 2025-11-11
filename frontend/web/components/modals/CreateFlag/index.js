@@ -12,7 +12,7 @@ import TabItem from 'components/navigation/TabMenu/TabItem'
 import SegmentOverrides from 'components/SegmentOverrides'
 import AddEditTags from 'components/tags/AddEditTags'
 import FlagOwners from 'components/FlagOwners'
-import ChangeRequestModal from './ChangeRequestModal'
+import ChangeRequestModal from 'components/modals/ChangeRequestModal'
 import Feature from 'components/Feature'
 import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
@@ -20,9 +20,12 @@ import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import Permission from 'common/providers/Permission'
 import IdentitySelect from 'components/IdentitySelect'
-import { setInterceptClose, setModalTitle } from './base/ModalDefault'
+import {
+  setInterceptClose,
+  setModalTitle,
+} from 'components/modals/base/ModalDefault'
 import Icon from 'components/Icon'
-import ModalHR from './ModalHR'
+import ModalHR from 'components/modals/ModalHR'
 import FeatureValue from 'components/feature-summary/FeatureValue'
 import { getStore } from 'common/store'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
@@ -43,13 +46,13 @@ import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabC
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
-import { FlagValueFooter } from './FlagValueFooter'
+import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
 import FeatureAnalytics from 'components/feature-page/FeatureNavTab/FeatureAnalytics/FeatureAnalytics.container'
 import BetaFlag from 'components/BetaFlag'
 
-const CreateFlag = class extends Component {
+const Index = class extends Component {
   static displayName = 'CreateFlag'
 
   constructor(props, context) {
@@ -1027,9 +1030,6 @@ const CreateFlag = class extends Component {
                 )
               const { featureError, featureWarning } = this.parseError(error)
 
-              const isReleasePipelineEnabled =
-                Utils.getFlagsmithHasFeature('release_pipelines')
-
               return (
                 <Permission
                   level='project'
@@ -1051,12 +1051,10 @@ const CreateFlag = class extends Component {
                           <div id='create-feature-modal'>
                             {isEdit && !identity ? (
                               <>
-                                {isReleasePipelineEnabled && (
-                                  <FeaturePipelineStatus
-                                    projectId={this.props.projectId}
-                                    featureId={projectFlag?.id}
-                                  />
-                                )}
+                                <FeaturePipelineStatus
+                                  projectId={this.props.projectId}
+                                  featureId={projectFlag?.id}
+                                />
                                 <Tabs
                                   onChange={() => this.forceUpdate()}
                                   urlParam='tab'
@@ -1076,95 +1074,7 @@ const CreateFlag = class extends Component {
                                         )}
                                       </Row>
                                     }
-                                  >
-                                    <FormGroup>
-                                      {featureLimitAlert.percentage &&
-                                        Utils.displayLimitAlert(
-                                          'features',
-                                          featureLimitAlert.percentage,
-                                        )}
-
-                                      <FeatureInPipelineGuard
-                                        projectId={this.props.projectId}
-                                        featureId={projectFlag?.id}
-                                        renderFallback={(
-                                          matchingReleasePipeline,
-                                        ) => (
-                                          <>
-                                            <h5>Environment Value </h5>
-                                            <InfoMessage
-                                              title={`Feature in release pipeline`}
-                                            >
-                                              This feature is in{' '}
-                                              <b>
-                                                {matchingReleasePipeline?.name}
-                                              </b>{' '}
-                                              release pipeline and its value
-                                              cannot be changed
-                                            </InfoMessage>
-                                          </>
-                                        )}
-                                      >
-                                        <Tooltip
-                                          title={
-                                            <h5>
-                                              Environment Value{' '}
-                                              <Icon name='info-outlined' />
-                                            </h5>
-                                          }
-                                          place='top'
-                                        >
-                                          {Constants.strings.ENVIRONMENT_OVERRIDE_DESCRIPTION(
-                                            _.find(project.environments, {
-                                              api_key: this.props.environmentId,
-                                            }).name,
-                                          )}
-                                        </Tooltip>
-
-                                        {Value(
-                                          error,
-                                          projectAdmin,
-                                          createFeature,
-                                        )}
-
-                                        {isEdit && (
-                                          <>
-                                            <JSONReference
-                                              showNamesButton
-                                              title={'Feature'}
-                                              json={projectFlag}
-                                            />
-                                            <JSONReference
-                                              title={'Feature state'}
-                                              json={this.props.environmentFlag}
-                                            />
-                                          </>
-                                        )}
-                                        <FlagValueFooter
-                                          is4Eyes={is4Eyes}
-                                          isVersioned={isVersioned}
-                                          projectId={this.props.projectId}
-                                          projectFlag={projectFlag}
-                                          environmentId={
-                                            this.props.environmentId
-                                          }
-                                          environmentName={
-                                            _.find(project.environments, {
-                                              api_key: this.props.environmentId,
-                                            }).name ?? ''
-                                          }
-                                          isSaving={isSaving}
-                                          featureName={this.state.name}
-                                          isInvalid={invalid}
-                                          existingChangeRequest={
-                                            existingChangeRequest
-                                          }
-                                          onSaveFeatureValue={saveFeatureValue}
-                                          identity={identity}
-                                        />
-                                      </FeatureInPipelineGuard>
-                                    </FormGroup>
-                                  </TabItem>
+                                  ></TabItem>
                                   {!existingChangeRequest && (
                                     <TabItem
                                       data-test='segment_overrides'
@@ -2095,7 +2005,7 @@ const CreateFlag = class extends Component {
   }
 }
 
-CreateFlag.propTypes = {}
+Index.propTypes = {}
 
 //This will remount the modal when a feature is created
 const FeatureProvider = (WrappedComponent) => {
@@ -2199,6 +2109,6 @@ const FeatureProvider = (WrappedComponent) => {
   return HOC
 }
 
-const WrappedCreateFlag = ConfigProvider(withSegmentOverrides(CreateFlag))
+const WrappedCreateFlag = ConfigProvider(withSegmentOverrides(Index))
 
 export default FeatureProvider(WrappedCreateFlag)
