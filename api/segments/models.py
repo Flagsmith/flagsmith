@@ -8,9 +8,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django_lifecycle import (  # type: ignore[import-untyped]
-    AFTER_CREATE,
     LifecycleModelMixin,
-    hook,
 )
 from flag_engine.segments import constants
 
@@ -44,7 +42,7 @@ class LiveSegmentManager(SoftDeleteExportableManager):
         Returns only the canonical segments, which will always be
         the highest version.
         """
-        return super().get_queryset().filter(id=models.F("version_of"))
+        return super().get_queryset().filter(version_of__isnull=True)
 
 
 class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]):
@@ -135,17 +133,8 @@ class Segment(
     def get_skip_create_audit_log(self) -> bool:
         if self.is_system_segment:
             return True
-        is_revision = bool(self.version_of_id and self.version_of_id != self.id)
+        is_revision = self.version_of_id is not None
         return is_revision
-
-    @hook(AFTER_CREATE, when="version_of", is_now=None)
-    def set_version_of_to_self_if_none(self):  # type: ignore[no-untyped-def]
-        """
-        This allows the segment model to reference all versions of
-        itself including itself.
-        """
-        self.version_of = self
-        self.save_without_historical_record()
 
     @transaction.atomic
     def clone(self, is_revision: bool = False, **extra_attrs: typing.Any) -> "Segment":
@@ -164,7 +153,7 @@ class Segment(
         cloned_segment.copy_rules_and_conditions_from(self)
 
         # Handle versioning
-        version_of = self if is_revision else cloned_segment
+        version_of = self if is_revision else None
         cloned_segment.version_of = extra_attrs.get("version_of", version_of)
         cloned_segment.version = self.version if is_revision else 1
         Segment.objects.filter(pk=cloned_segment.pk).update(

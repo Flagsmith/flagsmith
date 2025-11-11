@@ -8,7 +8,7 @@ from tempfile import TemporaryFile
 import boto3
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import F, Model, Q
+from django.db.models import Model, Q
 
 from edge_api.identities.export import export_edge_identity_and_overrides
 from environments.identities.models import Identity
@@ -130,28 +130,28 @@ def export_projects(
         *_export_entities(
             _EntityExportConfig(
                 Segment,
-                Q(project__organisation__id=organisation_id, id=F("version_of")),
+                Q(project__organisation__id=organisation_id, version_of__isnull=True),
             ),
             _EntityExportConfig(
                 SegmentRule,
                 Q(
                     segment__project__organisation__id=organisation_id,
-                    segment_id=F("segment__version_of"),
+                    segment__version_of__isnull=True,
                 )
                 | Q(
                     rule__segment__project__organisation__id=organisation_id,
-                    rule__segment_id=F("rule__segment__version_of"),
+                    rule__segment__version_of__isnull=True,
                 ),
             ),
             _EntityExportConfig(
                 Condition,
                 Q(
                     rule__segment__project__organisation__id=organisation_id,
-                    rule__segment_id=F("rule__segment__version_of"),
+                    rule__segment__version_of__isnull=True,
                 )
                 | Q(
                     rule__rule__segment__project__organisation__id=organisation_id,
-                    rule__rule__segment_id=F("rule__rule__segment__version_of"),
+                    rule__rule__segment__version_of__isnull=True,
                 ),
             ),
             _EntityExportConfig(Tag, default_filter),

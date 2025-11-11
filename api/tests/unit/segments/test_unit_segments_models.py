@@ -182,7 +182,7 @@ def test_Segment_clone__can_create_standalone_segment_clone(
     # Then
     assert cloned_segment != segment
     assert cloned_segment.name == "another-segment"
-    assert cloned_segment.version_of == cloned_segment
+    assert cloned_segment.version_of is None
     assert cloned_segment.version == 1
 
 
