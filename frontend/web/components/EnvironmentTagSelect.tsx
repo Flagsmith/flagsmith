@@ -59,7 +59,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
 
   return (
     <div className='d-flex align-items-center mb-2'>
-      <Row className='flex-1 row-gap-1'>
+      <Row className='flex-1 row-gap-1 gap-1'>
         {environments.map((env, i) => (
           <Tag
             tag={{
@@ -95,10 +95,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
         ))}
       </Row>
       {multiple && environments.length > 0 && (
-        <div
-          className='flex-shrink-0 ml-2 text-right'
-          style={{ width: '140px' }}
-        >
+        <div className='flex-shrink-0 text-right' style={{ width: '140px' }}>
           {!allSelected && (
             <Button
               onClick={handleSelectAll}
