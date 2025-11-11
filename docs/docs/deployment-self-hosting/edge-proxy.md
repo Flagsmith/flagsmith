@@ -1,72 +1,314 @@
 ---
+sidebar_label: Edge Proxy
 title: Edge Proxy
 sidebar_position: 3
 ---
 
-The Flagsmith Edge Proxy is a service that you host yourself, which allows you to run an instance of the Flagsmith Engine close to your servers. If you are running Flagsmith within a server-side environment and you want to have very low latency flags, you have two options:
+The [Edge Proxy](/performance/edge-proxy) runs as a
+[Docker container](https://hub.docker.com/repository/docker/flagsmith/edge-proxy) with no external dependencies.
+It connects to the Flagsmith API to download environment documents, and your Flagsmith client applications connect to it
+using [remote flag evaluation](/integrating-with-flagsmith/sdks#remote-evaluation).
 
-1. Run the Edge Proxy within your own infrastructure and connect to it from your server-side SDKs
-2. Run your server-side SDKs in [Local Evaluation Mode](/integrating-with-flagsmith/sdks/server-side#local-evaluation).
+The examples below assume you have a configuration file located at `./config.json`. Your Flagsmith client applications
+can then consume the Edge Proxy by setting their API URL to `http://localhost:8000/api/v1/`.
 
-The main benefit to running the Edge Proxy is that you reduce your polling requests against the Flagsmith API itself.
+<details>
+<summary>Docker CLI</summary>
+```
+docker run \
+    -v ./config.json:/app/config.json \
+    -p 8000:8000 \
+    flagsmith/edge-proxy:latest
+```
+</details>
 
-The main benefit to running server-side SDKs in [Local Evaluation Mode](/integrating-with-flagsmith/sdks/server-side#local-evaluation) is that you get the lowest possible latency.
+<details>
+<summary>Docker Compose</summary>
+```yaml title="compose.yaml"
+services:
+ edge_proxy:
+  image: flagsmith/edge-proxy:latest
+  volumes:
+   - type: bind
+     source: ./config.json
+     target: /app/config.json
+  ports:
+   - '8000:8000'
+```
+</details>
 
-## How Does It Work
+## Configuration
 
-:::info
+The Edge Proxy can be configured with any combination of:
 
-The Edge Proxy has the same [caveats as running our SDK in Local Evaluation mode.](/integrating-with-flagsmith/sdks/server-side#local-evaluation).
+- Environment variables.
+- A JSON configuration file, by default located at `/app/config.json` in the Edge Proxy container.
 
-:::
+Environment variables take priority over their corresponding options defined in the configuration file.
 
-You can think of the Edge Proxy as a copy of our Python Server-Side SDK, running in [Local Evaluation Mode](/integrating-with-flagsmith/sdks/server-side#local-evaluation), with an API interface that is compatible with the Flagsmith SDK API.
+Environment variable names are case-insensitive, and are processed using
+[Pydantic](https://docs.pydantic.dev/2.7/concepts/pydantic_settings/#environment-variable-names).
 
-The Edge Proxy runs as a lightweight Docker container. It connects to the Flagsmith API (either powered by us at api.flagsmith.com or self-hosted by you) to get environment flags and segment rules. You can then point the Flagsmith SDKs to your Edge Proxy; it implements all the current SDK endpoints. This means you can serve a very large number of requests close to your infrastructure and users, at very low latency. Check out the [architecture below](#architecture).
+### Example configuration
 
-The Proxy also acts as a local cache, allowing you to make requests to the Proxy without hitting the core API.
+<details>
 
-## Performance
+<summary>Configuration file</summary>
 
-The Edge Proxy can currently serve ~2,000 requests per second (RPS) at a mean latency of ~7ms on an M1 MacBook Pro with a simple set of flags. Working with more complex environments with many segment rules will bring this RPS number down.
-
-It is stateless and hence close to perfectly scalable when deployed behind a load balancer.
-
-## Managing Traits
-
-There is one caveat with the Edge Proxy. Because it is entirely stateless, it is not able to persist trait data into any sort of data store. This means that you _have_ to provide the full complement of traits when requesting the flags for a particular identity. Our SDKs all provide relevant methods to achieve this. An example using `curl` would read as follows:
-
-```bash
-curl -X "POST" "http://localhost:8000/api/v1/identities/?identifier=do_it_all_in_one_go_identity" \
-     -H 'X-Environment-Key: n9fbf9h3v4fFgH3U3ngWhb' \
-     -H 'Content-Type: application/json; charset=utf-8' \
-     -d $'{
-  "traits": [
-      {
-          "trait_value": 123.5,
-          "trait_key": "my_trait_key"
-      },
-      {
-          "trait_value": true,
-          "trait_key": "my_other_key"
-      }
-  ],
-  "identifier": "do_it_all_in_one_go_identity"
-}'
+```json title="/app/config.json"
+{
+ "environment_key_pairs": [
+  {
+   "server_side_key": "ser.your_server_side_key_1",
+   "client_side_key": "your_client_side_key_1"
+  }
+ ],
+ "api_poll_frequency_seconds": 5,
+ "logging": {
+  "log_level": "DEBUG",
+  "log_format": "json"
+ }
+}
 ```
 
-Note that the Edge Proxy will currently _not_ send the trait data back to the Core API.
+</details>
 
-## Deployment and Configuration
+<details>
 
-Please see the [hosting documentation](/deployment-self-hosting/hosting-guides/docker).
+<summary>Environment variables</summary>
 
-## Architecture
+```ruby
+ENVIRONMENT_KEY_PAIRS='[{"server_side_key":"ser.your_server_side_key_1","client_side_key":"your_client_side_key_1"}]'
+API_POLL_FREQUENCY_SECONDS=5
+LOGGING='{"log_level":"DEBUG","log_format":"json"}'
+```
 
-The standard Flagsmith architecture:
+</details>
 
-![Image](/img/edge-proxy-existing.svg)
+### Basic settings
 
-With the proxy added to the mix:
+#### `environment_key_pairs`
 
-![Image](/img/edge-proxy-proxy.svg)
+Specifies which environments to poll environment documents for. Each environment requires a server-side key and its
+corresponding client-side key.
+
+```json
+"environment_key_pairs": [{
+  "server_side_key": "ser.your_server_side_key",
+  "client_side_key": "your_client_side_environment_key"
+}]
+```
+
+#### `api_url`
+
+If you are self-hosting Flagsmith, set this to your API URL:
+
+```json
+"api_url": "https://flagsmith.example.com/api/v1"
+```
+
+#### `api_poll_frequency_seconds`
+
+How often to poll the Flagsmith API for changes, in seconds. Defaults to 10.
+
+```json
+"api_poll_frequency_seconds": 30
+```
+
+#### `api_poll_timeout_seconds`
+
+The request timeout when trying to retrieve new changes, in seconds. Defaults to 5.
+
+```json
+"api_poll_timeout_seconds": 1
+```
+
+#### `allow_origins`
+
+Set a value for the `Access-Control-Allow-Origin` header. Defaults to `*`.
+
+```json
+"allow_origins": "https://www.example.com"
+```
+
+### Endpoint caches
+
+#### `endpoint_caches`
+
+Enables a LRU cache per endpoint.
+
+Optionally, specify the LRU cache size with `cache_max_size`. Defaults to 128.
+
+```json
+"endpoint_caches": {
+  "flags": {
+    "use_cache": false
+  },
+  "identities": {
+    "use_cache": true,
+    "cache_max_size": 1000,
+  }
+}
+```
+
+### Server settings
+
+#### `server.proxy_headers`
+
+When set to `true`, the Edge Proxy will use the `X-Forwarded-For` and `X-Forwarded-Proto` HTTP headers to determine
+client IP addresses. This is useful if the Edge Proxy is running behind a reverse proxy, and you want the
+[access logs](#logging.override) to show the real IP addresses of your clients.
+
+By default, only the loopback address is trusted. This can be changed with the [`FORWARDED_ALLOW_IPS` environment
+variable](#environment-variables).
+
+```json
+"server": {
+  "proxy_headers": true
+}
+```
+
+```
+SERVER_PROXY_HEADERS=true
+```
+
+### Logging
+
+#### `logging.log_level`
+
+Choose a logging level from `"CRITICAL"`, `"ERROR"`, `"WARNING"`, `"INFO"`, `"DEBUG"`. Defaults to `"INFO"`.
+
+```json
+"logging": {"log_level": "DEBUG"}
+```
+
+#### `logging.log_format`
+
+Choose a logging format between `"generic"` and `"json"`. Defaults to `"generic"`.
+
+```json
+"logging": {"log_format": "json"}
+```
+
+#### `logging.log_event_field_name`
+
+Set a name used for human-readable log entry field when logging events in JSON. Defaults to `"message"`.
+
+```json
+"logging": {"log_event_field_name": "event"}
+```
+
+#### `logging.colour`
+
+Added in [2.13.0](https://github.com/Flagsmith/edge-proxy/releases/tag/v2.13.0).
+
+Set to `false` to disable coloured output. Useful when outputting the log to a file.
+
+#### `logging.override`
+
+Added in [2.13.0](https://github.com/Flagsmith/edge-proxy/releases/tag/v2.13.0).
+
+Accepts
+[Python-compatible logging settings](https://docs.python.org/3/library/logging.config.html#configuration-dictionary-schema)
+in JSON format. You're able to define custom formatters, handlers and logger configurations. For example, to log
+everything a file, one can set up own file handler and assign it to the root logger:
+
+```json
+"logging": {
+  "override": {
+      "handlers": {
+          "file": {
+              "level": "INFO",
+              "class": "logging.FileHandler",
+              "filename": "edge-proxy.log",
+              "formatter": "json"
+          }
+      },
+      "loggers": {
+          "": {
+              "handlers": ["file"],
+              "level": "INFO",
+              "propagate": true
+          }
+      }
+  }
+}
+```
+
+Or, log access logs to file in generic format while logging everything else to stdout in JSON:
+
+```json
+"logging": {
+  "override": {
+      "handlers": {
+          "file": {
+              "level": "INFO",
+              "class": "logging.FileHandler",
+              "filename": "edge-proxy.log",
+              "formatter": "generic"
+          }
+      },
+      "loggers": {
+          "": {
+              "handlers": ["default"],
+              "level": "INFO"
+          },
+          "uvicorn.access": {
+              "handlers": ["file"],
+              "level": "INFO",
+              "propagate": false
+          }
+      }
+  }
+}
+```
+
+When adding logger configurations, you can use the `"default"` handler which writes to stdout and uses formatter
+specified by the [`"logging.log_format"`](#logginglog_format) setting.
+
+### Health checks
+
+The Edge Proxy exposes two health check endpoints:
+
+* `/proxy/health/liveness`: Always responds with a 200 status code. Use this health check to determine if the Edge
+  Proxy is alive and able to respond to requests.
+* `/proxy/health/readiness`: Responds with a 200 status if the Edge Proxy was able to fetch all its configured
+  environment documents within a configurable grace period. This allows the Edge Proxy to continue reporting as healthy
+  even if the Flagsmith API is temporarily unavailable. This health check is also available at `/proxy/health`.
+
+You should point your orchestration health checks to these endpoints.
+
+#### `health_check.environment_update_grace_period_seconds`
+
+Default: `30`.
+
+The number of seconds to allow per environment key pair before the environment data stored by the Edge Proxy is
+considered stale.
+
+When set to `null`, cached environment documents are never considered stale, and health checks will succeed if all
+environments were successfully fetched at some point since the Edge Proxy started.
+
+The effective grace period depends on how many environments the Edge Proxy is configured to serve. It can be calculated
+using the following pseudo-Python code:
+
+```python
+total_grace_period_seconds = api_poll_frequency + (environment_update_grace_period_seconds * len(environment_key_pairs))
+if last_updated_all_environments_at < datetime.now() - timedelta(seconds=total_grace_period_seconds):
+    # Data is stale
+    return 500
+# Data is not stale
+return 200
+```
+
+### Environment variables
+
+Some Edge Proxy settings can only be set using environment variables:
+
+- `WEB_CONCURRENCY` The number of [Uvicorn](https://www.uvicorn.org/) workers. Defaults to `1`, which is 
+  [recommended when running multiple Edge Proxy containers behind a load balancer](https://fastapi.tiangolo.com/deployment/docker/#one-load-balancer-multiple-worker-containers).
+  If running on a single node, set this [based on your number of CPU cores and threads](https://docs.gunicorn.org/en/latest/design.html#how-many-workers).
+- `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, `NO_PROXY`: These variables let you configure an HTTP proxy that the
+  Edge Proxy should use for all its outgoing HTTP requests.
+  [Learn more](https://www.python-httpx.org/environment_variables)
+- `FORWARDED_ALLOW_IPS`: Which IPs to trust for determining client IP addresses when using the `proxy_headers` option.
+  For more details, see the [Uvicorn documentation](https://www.uvicorn.org/settings/#http).
