@@ -52,6 +52,15 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
     }
   }
 
+  // Check if there's any actual data (non-zero counts) across all days and environments
+  const hasData =
+    data &&
+    Array.isArray(data) &&
+    data.length > 0 &&
+    data.some((dayData) =>
+      environmentIds.some((envId) => (dayData[envId] as number) > 0),
+    )
+
   return (
     <>
       <FormGroup className='mb-4'>
@@ -68,7 +77,16 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
             <Loader />
           </div>
         )}
-        {data && Array.isArray(data) && data.length > 0 && (
+        {!isLoading && data && !hasData && (
+          <div
+            style={{ height: 400 }}
+            className='text-center justify-content-center align-items-center text-muted mt-4 d-flex'
+          >
+            No analytics data available for the selected environment
+            {environmentIds?.length > 1 ? 's' : ''}.
+          </div>
+        )}
+        {hasData && (
           <div>
             <ResponsiveContainer height={400} width='100%' className='mt-4'>
               <BarChart data={data}>
