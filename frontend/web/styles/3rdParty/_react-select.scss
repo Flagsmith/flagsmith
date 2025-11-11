@@ -44,6 +44,9 @@
     }
   }
   &__placeholder {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-weight: normal;
     color: $input-placeholder-color;
   }
