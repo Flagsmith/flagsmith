@@ -49,6 +49,7 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
             url: `/project/${projectId}/segments/`,
           },
         ]}
+        isCurrentPageMuted={false}
         currentPage={
           <div className='d-flex flex-1 align-items-center justify-content-between'>
             <span style={{ width: 180 }} className='d-inline-block'>

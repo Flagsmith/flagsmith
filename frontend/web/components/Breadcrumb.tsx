@@ -1,12 +1,17 @@
-import React, { FC } from 'react'
+import React, { FC, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 type BreadcrumbType = {
   items: { title: string; url: string }[]
-  currentPage: string
+  currentPage: ReactNode
+  isCurrentPageMuted?: boolean
 }
 
-const Breadcrumb: FC<BreadcrumbType> = ({ currentPage, items }) => {
+const Breadcrumb: FC<BreadcrumbType> = ({
+  currentPage,
+  isCurrentPageMuted = true,
+  items,
+}) => {
   return (
     <div className='d-flex align-items-center my-2 py-1'>
       {items?.map((item) => (
@@ -17,7 +22,7 @@ const Breadcrumb: FC<BreadcrumbType> = ({ currentPage, items }) => {
           <div className='text-muted mx-2 h6 mb-0'>/</div>
         </>
       ))}
-      {typeof currentPage === 'string' ? (
+      {isCurrentPageMuted ? (
         <div
           className='active h6 text-muted lh-sm '
           aria-current='page'
