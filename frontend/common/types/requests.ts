@@ -783,5 +783,17 @@ export type Req = {
     pipelineId: number
     name: string
   }
+  getFeatureAnalytics: {
+    project_id: string
+    feature_id: string
+    period: number
+    environment_ids: string[]
+  }
+  getEnvironmentAnalytics: {
+    project_id: string
+    feature_id: string
+    period: number
+    environment_id: string
+  }
   // END OF TYPES
 }

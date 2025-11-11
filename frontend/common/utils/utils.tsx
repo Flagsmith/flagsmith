@@ -125,7 +125,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   colour(
-    c: string,
+    c?: string | null,
     fallback = Constants.defaultTagColor,
   ): InstanceType<typeof Color> {
     let res: Color

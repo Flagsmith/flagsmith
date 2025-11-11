@@ -482,11 +482,13 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   return (
     <>
-      {segment.id && <ExistingProjectChangeRequestAlert
-        className='m-2'
-        projectId={`${projectId}`}
-        segmentId={`${segment.id}`}
-      />}
+      {segment.id && (
+        <ExistingProjectChangeRequestAlert
+          className='m-2'
+          projectId={`${projectId}`}
+          segmentId={`${segment.id}`}
+        />
+      )}
       {isEdit && !condensed ? (
         <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
           <TabItem

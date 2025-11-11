@@ -35,7 +35,9 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
         icon={gitBranch}
         id={`features-link`}
         isActive={(_, location) =>
-          location.pathname.startsWith(`/project/${projectId}/environment/${environmentId}`)
+          location.pathname.startsWith(
+            `/project/${projectId}/environment/${environmentId}`,
+          )
         }
         to={`/project/${projectId}/environment/${environmentId}/features`}
       >

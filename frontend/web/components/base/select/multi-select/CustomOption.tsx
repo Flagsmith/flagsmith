@@ -4,58 +4,69 @@ import Icon from 'components/Icon'
 import { useEffect, useRef } from 'react'
 
 export const CustomOption = ({
-    children,
-    color,
-    ...props
-  }: OptionProps<MultiSelectOption> & { color?: string }) => {
-    const ref = useRef<HTMLDivElement>(null)
+  children,
+  color,
+  ...props
+}: OptionProps<MultiSelectOption> & { color?: string }) => {
+  const ref = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-      if (props.isFocused && ref.current) {
-        ref.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-        })
-      }
-    }, [props.isFocused])
+  useEffect(() => {
+    if (props.isFocused && ref.current) {
+      ref.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      })
+    }
+  }, [props.isFocused])
 
-    return (
+  return (
+    <div
+      ref={ref}
+      {...props.innerProps}
+      role='option'
+      aria-selected={props.isSelected}
+      aria-disabled={props.isDisabled}
+      style={{
+        alignItems: 'center',
+        backgroundColor: props.isFocused ? '#f0f0f0' : 'transparent',
+        cursor: props.isDisabled ? 'not-allowed' : 'pointer',
+        display: 'flex',
+        gap: '8px',
+        justifyContent: 'space-between',
+        padding: '8px 12px',
+      }}
+    >
       <div
-        ref={ref}
-        {...props.innerProps}
-        role="option"
-        aria-selected={props.isSelected}
-        aria-disabled={props.isDisabled}
         style={{
-          display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '8px 12px',
-          cursor: props.isDisabled ? 'not-allowed' : 'pointer',
-          backgroundColor: props.isFocused ? '#f0f0f0' : 'transparent',
+          display: 'flex',
+          flex: 1,
           gap: '8px',
+          minWidth: 0,
+          wordWrap: 'break-word',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', flex: 1, wordWrap: 'break-word', minWidth: 0, gap: '8px' }}>
-          {color && (
-            <div
-              aria-hidden="true"
-              style={{
-                backgroundColor: color,
-                borderRadius: '2px',
-                flexShrink: 0,
-                height: '12px',
-                width: '12px',
-              }}
-            />
-          )}
-          <span style={{ flex: 1, wordWrap: 'break-word', minWidth: 0 }}>{children}</span>
-        </div>
-        {props.isSelected && (
-          <div aria-hidden="true">
-            <Icon width={14} name='checkmark-circle' fill='#6837fc' />
-          </div>
+        {color && (
+          <div
+            aria-hidden='true'
+            style={{
+              backgroundColor: color,
+              borderRadius: '2px',
+              flexShrink: 0,
+              height: '12px',
+              width: '12px',
+            }}
+          />
         )}
+        <span style={{ flex: 1, minWidth: 0, wordWrap: 'break-word' }}>
+          {children}
+        </span>
       </div>
-    )
-  }
+      {props.isSelected && (
+        <div aria-hidden='true'>
+          <Icon width={14} name='checkmark-circle' fill='#6837fc' />
+        </div>
+      )}
+    </div>
+  )
+}

@@ -171,7 +171,6 @@ const AuditLog: FC<AuditLogType> = (props) => {
                 color: Utils.getTagColour(colour),
                 label: environment?.name,
               }}
-              className='chip--sm'
             />
           </Link>
         ) : (
