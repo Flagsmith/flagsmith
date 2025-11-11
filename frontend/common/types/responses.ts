@@ -1113,5 +1113,9 @@ export type Res = {
     day: string
     [environmentId: string]: string | number
   }[]
+  environmentAnalytics: {
+    day: string
+    count: number
+  }[]
   // END OF TYPES
 }

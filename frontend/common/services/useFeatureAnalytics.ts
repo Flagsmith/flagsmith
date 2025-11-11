@@ -7,21 +7,42 @@ export const featureAnalyticsService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureAnalytics'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      getEnvironmentAnalytics: builder.query<
+        Res['environmentAnalytics'],
+        Req['getEnvironmentAnalytics']
+      >({
+        providesTags: (result, error, arg) => [
+          {
+            id: `${arg.project_id}-${arg.feature_id}-${arg.environment_id}-${arg.period}`,
+            type: 'FeatureAnalytics',
+          },
+        ],
+        query: (query) => ({
+          url: `projects/${query.project_id}/features/${query.feature_id}/evaluation-data/?period=${query.period}&environment_id=${query.environment_id}`,
+        }),
+      }),
       getFeatureAnalytics: builder.query<
         Res['featureAnalytics'],
         Req['getFeatureAnalytics']
       >({
         providesTags: [{ id: 'LIST', type: 'FeatureAnalytics' }],
-        queryFn: async (query, baseQueryApi, extraOptions, baseQuery) => {
+        queryFn: async (query, baseQueryApi) => {
           const responses = await Promise.all(
             query.environment_ids.map((environment_id) => {
-              return baseQuery({
-                url: `projects/${query.project_id}/features/${query.feature_id}/evaluation-data/?period=${query.period}&environment_id=${environment_id}`,
-              })
+              return baseQueryApi.dispatch(
+                featureAnalyticsService.endpoints.getEnvironmentAnalytics.initiate(
+                  {
+                    environment_id,
+                    feature_id: query.feature_id,
+                    period: query.period,
+                    project_id: query.project_id,
+                  },
+                ),
+              )
             }),
           )
 
-          const error = responses.find((v) => !!v.error)?.error
+          const error = responses.find((v) => v.isError)?.error
           const today = moment().startOf('day')
           const startDate = moment(today).subtract(query.period - 1, 'days')
           const preBuiltData: Res['featureAnalytics'] = []
@@ -42,7 +63,7 @@ export const featureAnalyticsService = service
           responses.forEach((response, i) => {
             const environment_id = query.environment_ids[i]
 
-            response.data.forEach((entry: Res['featureAnalytics'][number]) => {
+            response.data?.forEach((entry) => {
               const date = moment(entry.day).format('Do MMM')
               const dayEntry = preBuiltData.find((d) => d.day === date)
               if (dayEntry) {
@@ -60,6 +81,20 @@ export const featureAnalyticsService = service
     }),
   })
 
+export async function getEnvironmentAnalytics(
+  store: any,
+  data: Req['getEnvironmentAnalytics'],
+  options?: Parameters<
+    typeof featureAnalyticsService.endpoints.getEnvironmentAnalytics.initiate
+  >[1],
+) {
+  return store.dispatch(
+    featureAnalyticsService.endpoints.getEnvironmentAnalytics.initiate(
+      data,
+      options,
+    ),
+  )
+}
 export async function getFeatureAnalytics(
   store: any,
   data: Req['getFeatureAnalytics'],
@@ -77,6 +112,7 @@ export async function getFeatureAnalytics(
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useGetEnvironmentAnalyticsQuery,
   useGetFeatureAnalyticsQuery,
   // END OF EXPORTS
 } = featureAnalyticsService
