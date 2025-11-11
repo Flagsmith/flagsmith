@@ -7,7 +7,7 @@ from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
+from metadata.serializers import MetadataSerializerMixin
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 
@@ -80,7 +80,6 @@ class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
 
 class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     rules = SegmentRuleSerializer(many=True, required=True, allow_empty=False)
-    metadata = MetadataSerializer(required=False, many=True)
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """

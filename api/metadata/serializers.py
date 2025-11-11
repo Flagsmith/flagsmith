@@ -103,10 +103,14 @@ class MetadataSerializer(serializers.ModelSerializer[Metadata]):
         return attrs
 
 
-class MetadataSerializerMixin:
+class MetadataSerializerMixin(serializers.Serializer):  # type: ignore[type-arg]
     """
-    Functionality for serializers that need to handle metadata
+    Mixin for serializers that need to handle metadata
+
+    NOTE: Child serializers should include 'metadata' in their Meta.fields.
     """
+
+    metadata = MetadataSerializer(required=False, many=True)
 
     def _validate_required_metadata(
         self, organisation: Organisation, metadata: list[dict[str, Any]]
