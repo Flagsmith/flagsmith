@@ -38,6 +38,7 @@ const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
     level: 'environment',
     permission,
   })
+  if (!identity || !identifier || !projectFlag) return null
   switch (level) {
     case 'identity': {
       if (!hasUserOverride) {
@@ -55,8 +56,8 @@ const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
               onClick={() => {
                 removeUserOverride({
                   environmentId,
-                  identifier: identifier!,
-                  identity: identity!,
+                  identifier: identifier,
+                  identity: identity,
                   identityFlag: overrideFeatureState as IdentityFeatureState,
                   projectFlag: projectFlag!,
                 })
