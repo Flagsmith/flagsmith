@@ -33,6 +33,7 @@ type FeatureDiffType = {
   disableSegments?: boolean
 }
 const enabledWidth = 110
+type ViewMode = 'combined' | 'new' | 'old'
 const DiffFeature: FC<FeatureDiffType> = ({
   conflicts,
   disableSegments,
@@ -59,9 +60,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
   const diff = getFeatureStateDiff(oldEnv, newEnv)
   const { conflict: valueConflict, totalChanges } = diff
   const [value, setValue] = useState(0)
-  const [viewMode, setViewMode] = useState<'combined' | 'new' | 'old'>(
-    'combined',
-  )
+  const [viewMode, setViewMode] = useState<ViewMode>('combined')
 
   const { data: segments } = useGetSegmentsQuery({
     include_feature_specific: true,
@@ -82,6 +81,12 @@ const DiffFeature: FC<FeatureDiffType> = ({
   }, [totalSegmentChanges, totalVariationChanges, totalChanges])
   const hideValue =
     !totalChanges && (diff.newValue === null || diff.newValue === undefined)
+  const viewOptions = [
+    { label: 'Combined Diff', value: 'combined' },
+    { label: 'New Value', value: 'new' },
+    { label: 'Old Value', value: 'old' },
+  ]
+  const selectedOption = viewOptions.find((v) => v.value === viewMode)
   return (
     <div>
       {!feature ? (
@@ -105,23 +110,9 @@ const DiffFeature: FC<FeatureDiffType> = ({
                 <div style={{ width: 150 }}>
                   <Select
                     size='select-xsm'
-                    value={{
-                      label:
-                        viewMode === 'combined'
-                          ? 'Combined Diff'
-                          : viewMode === 'new'
-                          ? 'New Value'
-                          : 'Old Value',
-                      value: viewMode,
-                    }}
-                    options={[
-                      { label: 'Combined Diff', value: 'combined' },
-                      { label: 'New Value', value: 'new' },
-                      { label: 'Old Value', value: 'old' },
-                    ]}
-                    onChange={(option: { value: 'combined' | 'new' | 'old' }) =>
-                      setViewMode(option.value)
-                    }
+                    value={selectedOption}
+                    options={viewOptions}
+                    onChange={(option) => setViewMode(option.value as ViewMode)}
                   />
                 </div>
               </div>
