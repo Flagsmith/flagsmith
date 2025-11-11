@@ -1,17 +1,28 @@
 import React, { FC, ReactNode } from 'react'
-import { LinkProps, NavLink } from 'react-router-dom'
+import type * as H from 'history'
+import { LinkProps, NavLink, match } from 'react-router-dom'
 import { IonIcon } from '@ionic/react'
 import classNames from 'classnames'
 
 type NavSubLinkType = LinkProps & {
   icon: string | ReactNode
   children: ReactNode
+  isActive?<Params extends { [K in keyof Params]?: string }, S = unknown>(
+    match: match<Params> | null,
+    location: H.Location<S>,
+  ): boolean
 }
 
-const NavSubLink: FC<NavSubLinkType> = ({ children, icon, ...rest }) => {
+const NavSubLink: FC<NavSubLinkType> = ({
+  children,
+  icon,
+  isActive,
+  ...rest
+}) => {
   return (
     <NavLink
       {...rest}
+      isActive={isActive}
       activeClassName='active'
       className={classNames(rest.className, 'py-md-2 py-1 px-1 nav-sub-link')}
     >

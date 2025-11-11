@@ -1595,8 +1595,6 @@ def test_environment_feature_states_does_not_return_null_versions(
     assert len(response_json["results"]) == 1
     assert response_json["results"][0]["id"] == feature_state.id
 
-    # Feature tests
-
 
 def test_create_feature_default_is_archived_is_false(
     admin_client_new: APIClient, project: Project
@@ -4075,6 +4073,76 @@ def test_get_multivariate_options_feature_not_found_responds_404(
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_list_features_segment_query_param_with_valid_segment(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment,
+    )
+    segment_override = FeatureState.objects.create(
+        feature=feature,
+        feature_segment=feature_segment,
+        environment=environment,
+        enabled=True,
+    )
+    segment_override.feature_state_value.string_value = "segment_value"
+    segment_override.feature_state_value.save()
+
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    url = f"{base_url}?environment={environment.id}&segment={segment.id}"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    feature_data = next(
+        filter(lambda r: r["id"] == feature.id, response_json["results"])
+    )
+
+    assert "environment_feature_state" in feature_data
+    segment_state = feature_data["segment_feature_state"]
+
+    assert segment_state is not None
+    assert segment_state["id"] == segment_override.id
+    assert segment_state["feature_state_value"] == "segment_value"
+    assert segment_state["enabled"] is True
+
+
+def test_list_features_segment_query_param_with_invalid_segment(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    invalid_segment_id = segment.id + 9999
+    url = f"{base_url}?environment={environment.id}&segment={invalid_segment_id}"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    feature_data = next(
+        filter(lambda r: r["id"] == feature.id, response_json["results"])
+    )
+
+    assert "segment_feature_state" in feature_data
+    assert feature_data["segment_feature_state"] is None
 
 
 def test_create_multiple_features_with_metadata_keeps_metadata_isolated(

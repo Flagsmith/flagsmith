@@ -92,7 +92,7 @@ jobs:
 
     steps:
       - name: Checkout trivy.yaml
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           sparse-checkout: |
             trivy.yaml

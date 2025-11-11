@@ -3,6 +3,7 @@ from rest_framework import status
 
 from environments.dynamodb.migrator import IdentityMigrator
 from organisations.models import Organisation
+from organisations.subscriptions.constants import ENTERPRISE
 
 
 def test_sales_dashboard_index(  # type: ignore[no-untyped-def]
@@ -15,9 +16,11 @@ def test_sales_dashboard_index(  # type: ignore[no-untyped-def]
     # Given
     url = reverse("sales_dashboard:index")
 
-    # create some organisations so we can ensure there aren't any N+1 issues
+    # create some organisations, so we can ensure there aren't any N+1 issues
     for i in range(10):
-        Organisation.objects.create(name=f"Test organisation {i}")
+        organisation = Organisation.objects.create(name=f"Test organisation {i}")
+        organisation.subscription.plan = ENTERPRISE
+        organisation.subscription.save()
 
     # When
     with django_assert_num_queries(5):

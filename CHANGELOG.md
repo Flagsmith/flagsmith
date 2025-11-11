@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.199.0](https://github.com/Flagsmith/flagsmith/compare/v2.198.1...v2.199.0) (2025-10-22)
+
+
+### Features
+
+* show-card-loading-state-and-prevent-opening-until-data-arrives ([#6165](https://github.com/Flagsmith/flagsmith/issues/6165)) ([1010bce](https://github.com/Flagsmith/flagsmith/commit/1010bceba3a4691f8ac156409e2fb565867dcbe9))
+
+
+### Bug Fixes
+
+* change request navigation ([#6151](https://github.com/Flagsmith/flagsmith/issues/6151)) ([d0cdeb0](https://github.com/Flagsmith/flagsmith/commit/d0cdeb02dfb02fc6774b82330d3bb7b8e8ade91b))
+* filter-events-by-feature ([#6187](https://github.com/Flagsmith/flagsmith/issues/6187)) ([0ca023e](https://github.com/Flagsmith/flagsmith/commit/0ca023e0eda4080ee3915a612712056adcdb5e41))
+* Lighten darker tag colors in dark mode ([#6147](https://github.com/Flagsmith/flagsmith/issues/6147)) ([3fec79c](https://github.com/Flagsmith/flagsmith/commit/3fec79cebc3880ac91b49b7e3b6b1329fc327822))
+* menu tab highlight disappear for other Environments sub-options ([#6169](https://github.com/Flagsmith/flagsmith/issues/6169)) ([228ca04](https://github.com/Flagsmith/flagsmith/commit/228ca04ad678db2aee07cff1b94709d1a027ca3d))
+* remove-extra-log ([#6178](https://github.com/Flagsmith/flagsmith/issues/6178)) ([33a9c1d](https://github.com/Flagsmith/flagsmith/commit/33a9c1d4781ac5bc09e08fc514050e6f01904555))
+* replaced-flex-1-with-justify-between ([#6157](https://github.com/Flagsmith/flagsmith/issues/6157)) ([01de1f8](https://github.com/Flagsmith/flagsmith/commit/01de1f887054b233735f3f59f4dad56ac0b5486e))
+* Show pipeline remove button for all if more than one stage ([#6148](https://github.com/Flagsmith/flagsmith/issues/6148)) ([a0da7e3](https://github.com/Flagsmith/flagsmith/commit/a0da7e3efab252a85772bd857ba670007a3c91f1))
+* **sse/access-logs:** handle deleted object ([#6175](https://github.com/Flagsmith/flagsmith/issues/6175)) ([6905e70](https://github.com/Flagsmith/flagsmith/commit/6905e70e4f900915f7fd5f4453bbe52a27ddeaec))
+* update identity overrides UI state after removing it ([#6149](https://github.com/Flagsmith/flagsmith/issues/6149)) ([ca2b93f](https://github.com/Flagsmith/flagsmith/commit/ca2b93f4edf9a88cb2711b56ed7ef3c6ae5ac6bd))
+
+
+### Dependency Updates
+
+* bump mermaid from 11.4.1 to 11.10.1 in /docs ([#5971](https://github.com/Flagsmith/flagsmith/issues/5971)) ([409bef9](https://github.com/Flagsmith/flagsmith/commit/409bef9f5f3a851f81943cc6f1dc12f31659258d))
+* bump webpack-dev-server, @docusaurus/core, @docusaurus/plugin-google-tag-manager, @docusaurus/preset-classic, @docusaurus/theme-mermaid and @docusaurus/plugin-content-docs in /docs ([#6109](https://github.com/Flagsmith/flagsmith/issues/6109)) ([b4f962e](https://github.com/Flagsmith/flagsmith/commit/b4f962e0612053491776f2cf5abd17d9b79a33fd))
+
 ## [2.198.1](https://github.com/Flagsmith/flagsmith/compare/v2.198.0...v2.198.1) (2025-10-17)
 
 
