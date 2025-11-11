@@ -29,12 +29,14 @@ interface TabsProps {
   isRoles?: boolean
   history?: any
   overflowX?: boolean
+  cta?: ReactNode
 }
 
 const Tabs: React.FC<TabsProps> = ({
   buttonTheme,
   children,
   className = '',
+  cta,
   hideNavOnSingleTab,
   history,
   isRoles,
@@ -132,11 +134,11 @@ const Tabs: React.FC<TabsProps> = ({
         ref={outerContainerRef}
         className={`${
           hideNav ? '' : 'tabs-nav'
-        } ${theme} justify-content-between align-items-center ${className}`}
+        } ${theme} justify-content-between gap-4 d-flex align-items-center ${className}`}
       >
         <div
           ref={itemsContainerRef}
-          className={classNames('d-flex align-items-center w-100', 'gap-2', {
+          className={classNames('d-flex align-items-center flex-1', 'gap-2', {
             'opacity-0': isMeasuring,
           })}
         >
@@ -219,6 +221,7 @@ const Tabs: React.FC<TabsProps> = ({
             />
           </div>
         )}
+        {cta && <div className='flex-shrink-0'>{cta}</div>}
       </div>
       {theme === 'tab' && !hideNav && <ModalHR className='tab-nav-hr' />}
       <div className='tabs-content'>
