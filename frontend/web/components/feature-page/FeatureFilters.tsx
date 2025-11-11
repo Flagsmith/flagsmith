@@ -26,7 +26,7 @@ export type FiltersValue = {
   sort: SortValue
 }
 
-type Props = {
+type FeatureFiltersProps = {
   value: FiltersValue
   onChange: (next: FiltersValue) => void
   projectId: string | number
