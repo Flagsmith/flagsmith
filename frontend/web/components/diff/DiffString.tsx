@@ -19,7 +19,7 @@ const sanitiseDiffString = (value: FlagsmithValue) => {
   return `${value}`
 }
 const DiffString: FC<DiffType> = ({
-  compareMethod = DiffMethod.WORDS,
+  compareMethod = DiffMethod.WORDS_WITH_SPACE,
   newValue,
   oldValue,
 }) => {
