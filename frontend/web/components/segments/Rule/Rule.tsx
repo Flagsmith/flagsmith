@@ -78,8 +78,14 @@ const Rule: React.FC<RuleProps> = ({
 
     // Handle append changes first
     if (prevOperator?.append !== newOperator?.append) {
-      const conditionValue = typeof condition?.value === 'boolean' ? String(condition?.value) : condition?.value
-      const cleanValue = splitIfValue(conditionValue ?? '', prevOperator?.append || '')[0]
+      const conditionValue =
+        typeof condition?.value === 'boolean'
+          ? String(condition?.value)
+          : condition?.value
+      const cleanValue = splitIfValue(
+        conditionValue ?? '',
+        prevOperator?.append || '',
+      )[0]
       updates.value = cleanValue + (newOperator?.append || '')
     }
 
