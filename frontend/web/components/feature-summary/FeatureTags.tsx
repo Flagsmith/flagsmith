@@ -41,13 +41,15 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
   const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
     'git_code_references',
   )
+
   const hasScannedCodeReferences =
-    projectFlag?.code_references_counts.length > 0
-  const codeReferencesCounts =
-    projectFlag?.code_references_counts.reduce(
-      (acc, curr) => acc + curr.count,
-      0,
-    ) || 0
+    isCodeReferencesEnabled && projectFlag?.code_references_counts?.length > 0
+  const codeReferencesCounts = isCodeReferencesEnabled
+    ? projectFlag?.code_references_counts?.reduce(
+        (acc, curr) => acc + curr.count,
+        0,
+      )
+    : 0
 
   return (
     <>
