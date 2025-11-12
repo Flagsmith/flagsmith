@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.201.0](https://github.com/Flagsmith/flagsmith/compare/v2.200.0...v2.201.0) (2025-11-12)
+
+
+### Features
+
+* Add a view mode selector for diffing features ([#6272](https://github.com/Flagsmith/flagsmith/issues/6272)) ([4895346](https://github.com/Flagsmith/flagsmith/commit/48953464e2ee7daa23d7e5d060525c67f5befde9))
+* Improve flag analytics ([#6150](https://github.com/Flagsmith/flagsmith/issues/6150)) ([37f6f92](https://github.com/Flagsmith/flagsmith/commit/37f6f9248fd0a08ade3976edce24d046130ac552))
+
+
+### Bug Fixes
+
+* accessing-length-on-undefined-code-reference-count ([#6280](https://github.com/Flagsmith/flagsmith/issues/6280)) ([2521e15](https://github.com/Flagsmith/flagsmith/commit/2521e15863980fd16975c0956ef527dd4ae96a44))
+* Diff strings considering spaces ([#6271](https://github.com/Flagsmith/flagsmith/issues/6271)) ([8efb108](https://github.com/Flagsmith/flagsmith/commit/8efb10862ee2782bd79699abe1c332130be7bfa7))
+* re-enable sse usage tracking ([#6232](https://github.com/Flagsmith/flagsmith/issues/6232)) ([dd28ed5](https://github.com/Flagsmith/flagsmith/commit/dd28ed5b076b0d8a136f1d7877b00c85450a1534))
+
 ## [2.200.0](https://github.com/Flagsmith/flagsmith/compare/v2.199.0...v2.200.0) (2025-11-11)
 
 
