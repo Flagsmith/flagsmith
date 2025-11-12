@@ -48,7 +48,7 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
     ? projectFlag?.code_references_counts?.reduce(
         (acc, curr) => acc + curr.count,
         0,
-      )
+      ) || 0
     : 0
 
   return (
