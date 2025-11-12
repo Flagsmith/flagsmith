@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.201.1](https://github.com/Flagsmith/flagsmith/compare/v2.201.0...v2.201.1) (2025-11-12)
+
+
+### Bug Fixes
+
+* Ensure `PROMETHEUS_MULTIPROC_DIR` at buildtime ([#6281](https://github.com/Flagsmith/flagsmith/issues/6281)) ([ab1aaf3](https://github.com/Flagsmith/flagsmith/commit/ab1aaf30e070001dc6b9e0471e9ba129f1524e4c))
+
+
+### Dependency Updates
+
+* Bump flagsmith-common from 2.2.4 to 2.2.7 ([ab1aaf3](https://github.com/Flagsmith/flagsmith/commit/ab1aaf30e070001dc6b9e0471e9ba129f1524e4c))
+
 ## [2.201.0](https://github.com/Flagsmith/flagsmith/compare/v2.200.0...v2.201.0) (2025-11-12)
 
 
