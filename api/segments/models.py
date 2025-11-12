@@ -9,7 +9,6 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
-    BEFORE_CREATE,
     LifecycleModelMixin,
     hook,
 )
@@ -30,11 +29,22 @@ from features.models import Feature
 from metadata.models import Metadata
 from projects.models import Project
 
-from .managers import LiveSegmentManager, SegmentManager
-
 ModelT = typing.TypeVar("ModelT", bound=models.Model)
 
 logger = logging.getLogger(__name__)
+
+
+class SegmentManager(SoftDeleteExportableManager):
+    pass
+
+
+class LiveSegmentManager(SoftDeleteExportableManager):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        """
+        Returns only the canonical segments, which will always be
+        the highest version.
+        """
+        return super().get_queryset().filter(id=models.F("version_of"))
 
 
 class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]):
@@ -87,8 +97,7 @@ class Segment(
         Feature, on_delete=models.CASCADE, related_name="segments", null=True
     )
 
-    # This defaults to 1 for newly created segments.
-    version = models.IntegerField(null=True)
+    version = models.IntegerField(default=1, null=True)
 
     version_of = models.ForeignKey(
         "self",
@@ -126,18 +135,8 @@ class Segment(
     def get_skip_create_audit_log(self) -> bool:
         if self.is_system_segment:
             return True
-        try:
-            if self.version_of_id and self.version_of_id != self.id:
-                return True
-        except Segment.DoesNotExist:
-            return True
-
-        return False
-
-    @hook(BEFORE_CREATE, when="version_of", is_now=None)
-    def set_default_version_to_one_if_new_segment(self):  # type: ignore[no-untyped-def]
-        if self.version is None:
-            self.version = 1
+        is_revision = bool(self.version_of_id and self.version_of_id != self.id)
+        return is_revision
 
     @hook(AFTER_CREATE, when="version_of", is_now=None)
     def set_version_of_to_self_if_none(self):  # type: ignore[no-untyped-def]
