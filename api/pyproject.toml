@@ -56,10 +56,17 @@ unfixable = []
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
-exclude_also = ['@(abc\\.)?abstractmethod']
+exclude_also = [
+  '@(abc\\.)?abstractmethod'
+]
 
 [tool.coverage.run]
-omit = ["app/settings/common.py", "manage.py", "e2etests/*", "scripts/*"]
+omit = [
+  "app/settings/common.py",
+  "manage.py",
+  "e2etests/*",
+  "scripts/*"
+]
 
 [tool.pytest.ini_options]
 addopts = [
