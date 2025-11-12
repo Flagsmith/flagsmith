@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.serializers import FeatureStateSerializerFull
-from metadata.serializers import MetadataSerializerMixin
+from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from organisations.models import Subscription
 from organisations.subscriptions.serializers.mixins import (
     ReadOnlyIfNotValidPlanMixin,
@@ -79,6 +79,8 @@ class EnvironmentSerializerWithMetadata(
     DeleteBeforeUpdateWritableNestedModelSerializer,
     EnvironmentSerializerLight,
 ):
+    metadata = MetadataSerializer(required=False, many=True)
+
     class Meta(EnvironmentSerializerLight.Meta):
         fields = EnvironmentSerializerLight.Meta.fields + ("metadata",)  # type: ignore[assignment]
 
