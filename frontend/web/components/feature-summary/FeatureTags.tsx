@@ -79,7 +79,7 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
           }
           place='top'
         >
-          {`Scanned ${codeReferencesCounts?.toString()} times in ${projectFlag?.code_references_counts.length?.toString()} repositories`}
+          {`Scanned ${codeReferencesCounts?.toString()} times in ${projectFlag?.code_references_counts?.length?.toString()} repositories`}
         </Tooltip>
       )}
       {projectFlag.is_server_key_only && (
