@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.201.2](https://github.com/Flagsmith/flagsmith/compare/v2.201.1...v2.201.2) (2025-11-13)
+
+
+### Bug Fixes
+
+* move AWS_SSE_LOGS_BUCKET_NAME to task-processor definition ([#6284](https://github.com/Flagsmith/flagsmith/issues/6284)) ([58e0e79](https://github.com/Flagsmith/flagsmith/commit/58e0e792e48aab8c322dbf22f8b73c8b122917e7))
+
 ## [2.201.1](https://github.com/Flagsmith/flagsmith/compare/v2.201.0...v2.201.1) (2025-11-12)
 
 
