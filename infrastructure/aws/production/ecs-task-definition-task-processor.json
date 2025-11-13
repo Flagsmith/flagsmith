@@ -172,10 +172,6 @@
                 {
                     "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
                     "value": "True"
-                },
-                {
-                    "name": "AWS_SSE_LOGS_BUCKET_NAME",
-                    "value": "flagsmith-fastly-logs-production"
                 }
             ],
             "secrets": [
