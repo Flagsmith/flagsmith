@@ -914,12 +914,14 @@ const CreateFlag = class extends Component {
                       ? 'Update Change Request'
                       : 'New Change Request',
                     <ChangeRequestModal
+                      showIgnoreConflicts={isVersioned}
                       showAssignees={is4Eyes}
                       isScheduledChange={schedule}
                       changeRequest={this.props.changeRequest}
                       onSave={({
                         approvals,
                         description,
+                        ignore_conflicts,
                         live_from,
                         title,
                       }) => {
@@ -949,6 +951,7 @@ const CreateFlag = class extends Component {
                                 id:
                                   this.props.changeRequest &&
                                   this.props.changeRequest.id,
+                                ignore_conflicts,
                                 live_from,
                                 multivariate_options: this.props
                                   .multivariate_options

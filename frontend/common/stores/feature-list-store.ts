@@ -549,7 +549,8 @@ const controller = {
         if (
           !feature_states_to_create.length &&
           !feature_states_to_update.length &&
-          !segment_ids_to_delete_overrides.length
+          !segment_ids_to_delete_overrides.length &&
+          !changeRequest.ignore_conflicts
         ) {
           throw new Error('Change request contains no changes')
         }

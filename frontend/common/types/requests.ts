@@ -620,6 +620,7 @@ export type Req = {
     description: string
     multivariate_options: MultivariateOption[]
     title: string
+    ignore_conflicts?: boolean
   }
   getFeatureStates: {
     environment?: number
