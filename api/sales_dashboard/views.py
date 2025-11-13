@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Count, F, OuterRef, Q, Subquery, Value
-from django.db.models.functions import Greatest
+from django.db.models.functions import Coalesce, Greatest
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -78,23 +78,32 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
             queryset = Organisation.objects.all()
 
         queryset = queryset.annotate(
-            num_projects=Subquery(
-                Project.objects.filter(organisation_id=OuterRef("pk"))
-                .values("organisation_id")
-                .annotate(count=Count("id"))
-                .values("count")[:1]
+            num_projects=Coalesce(
+                Subquery(
+                    Project.objects.filter(organisation_id=OuterRef("pk"))
+                    .values("organisation_id")
+                    .annotate(count=Count("id"))
+                    .values("count")[:1]
+                ),
+                Value(0),
             ),
-            num_users=Subquery(
-                UserOrganisation.objects.filter(organisation_id=OuterRef("pk"))
-                .values("organisation_id")
-                .annotate(count=Count("user_id", distinct=True))
-                .values("count")[:1]
+            num_users=Coalesce(
+                Subquery(
+                    UserOrganisation.objects.filter(organisation_id=OuterRef("pk"))
+                    .values("organisation_id")
+                    .annotate(count=Count("user_id", distinct=True))
+                    .values("count")[:1]
+                ),
+                Value(0),
             ),
-            num_features=Subquery(
-                Feature.objects.filter(project__organisation_id=OuterRef("pk"))
-                .values("project__organisation_id")
-                .annotate(count=Count("id", distinct=True))
-                .values("count")[:1]
+            num_features=Coalesce(
+                Subquery(
+                    Feature.objects.filter(project__organisation_id=OuterRef("pk"))
+                    .values("project__organisation_id")
+                    .annotate(count=Count("id", distinct=True))
+                    .values("count")[:1]
+                ),
+                Value(0),
             ),
             overage=Greatest(
                 Value(0),

@@ -304,3 +304,23 @@ def test_end_trial(
         subscription_information_cache.feature_history_visibility_days
         == DEFAULT_VERSION_LIMIT_DAYS
     )
+
+
+@pytest.mark.django_db
+def test_list_organisations_with_empty_organisation_returns_zero_counts_not_none(
+    rf: RequestFactory,
+) -> None:
+    # Given
+    organisation = Organisation.objects.create(name="Empty Test Org")
+
+    request = rf.get("/sales-dashboard")
+    view = OrganisationList()
+    view.request = request
+
+    # When
+    result = view.get_queryset().get(pk=organisation.id)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result.num_projects == 0
+    assert result.num_users == 0
+    assert result.num_features == 0
