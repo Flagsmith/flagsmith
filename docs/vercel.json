@@ -1,8 +1,84 @@
 {
     "redirects": [
         {
-          "source": "/version-comparison",
-          "destination": "https://www.flagsmith.com/pricing"
+            "source": "/system-administration/importing-and-exporting/launchdarkly",
+            "destination": "https://docs.flagsmith.com/administration-and-security/data-management/import-from-launchdarkly"
+        },
+        {
+            "source": "/advanced-use/staged-feature-rollouts",
+            "destination": "https://docs.flagsmith.com/best-practices/when-to-use-flags#staged-rollouts"
+        },
+        {
+            "source": "/api/bulk-insert-identities-update",
+            "destination": "https://docs.flagsmith.com/edge-api/bulk-insert-identities-update"
+        },
+        {
+            "source": "/clients/3rd-party",
+            "destination": "https://docs.flagsmith.com/integrating-with-flagsmith/sdks/"
+        },
+        {
+            "source": "/deployment/configuration/sizing-and-scaling",
+            "destination": "https://docs.flagsmith.com/deployment-self-hosting/scaling-and-performance/sizing-and-scaling"
+        },
+        {
+            "source": "/deployment/hosting/kubernetes",
+            "destination": "https://docs.flagsmith.com/deployment-self-hosting/hosting-guides/kubernetes-openshift"
+        },
+        {
+            "source": "/enterprise/overview/",
+            "destination": "https://docs.flagsmith.com/deployment-self-hosting/enterprise-edition"
+        },
+        {
+            "source": "/guides-and-examples/efficient-api-usage",
+            "destination": "https://docs.flagsmith.com/best-practices/efficient-api-usage"
+        },
+        {
+            "source": "/guides-and-examples/mobile-app-versioning",
+            "destination": "https://docs.flagsmith.com/best-practices/mobile-app-versioning"
+        },
+        {
+            "source": "/integrations/apm/appdynamics",
+            "destination": "https://docs.flagsmith.com/deployment-self-hosting/scaling-and-performance/monitoring#appdynamics"
+        },
+        {
+            "source": "/integrations/datadog/",
+            "destination": "https://docs.flagsmith.com/third-party-integrations/observability-and-monitoring/datadog"
+        },
+        {
+            "source": "/integrations/importers/launchdarkly",
+            "destination": "https://docs.flagsmith.com/administration-and-security/data-management/import-from-launchdarkly"
+        },
+        {
+            "source": "/integrations/overview/",
+            "destination": "https://docs.flagsmith.com/integrating-with-flagsmith/integration-overview"
+        },
+        {
+            "source": "/integrations/project-management/github",
+            "destination": "https://docs.flagsmith.com/third-party-integrations/project-management/github"
+        },
+        {
+            "source": "/openshift/",
+            "destination": "https://docs.flagsmith.com/deployment-self-hosting/hosting-guides/kubernetes-openshift"
+        },
+        {
+            "source": "/system-administration/architecture",
+            "destination": "https://docs.flagsmith.com/flagsmith-concepts/platform-architecture"
+        },
+        {
+            "source": "/system-administration/authentication/SAML/",
+            "destination": "https://docs.flagsmith.com/administration-and-security/access-control/saml"
+        },
+        {
+            "source": "/system-administration/saml",
+            "destination": "https://docs.flagsmith.com/administration-and-security/access-control/saml"
+        },
+        {
+            "source": "/system-administration/webhooks",
+            "destination": "https://docs.flagsmith.com/third-party-integrations/webhook"
+        },
+        {
+            "source": "/version-comparison",
+            "destination": "https://www.flagsmith.com/pricing#compare-features"
         },
         {
             "source": "/managing-identities",
@@ -62,10 +138,6 @@
         },
         {
             "source": "/staged-feature-rollouts",
-            "destination": "/managing-flags/rollout/"
-        },
-        {
-            "source": "/advanced-use/staged-feature-rollouts",
             "destination": "/managing-flags/rollout/"
         },
         {
