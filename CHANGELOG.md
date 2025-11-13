@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.201.3](https://github.com/Flagsmith/flagsmith/compare/v2.201.2...v2.201.3) (2025-11-13)
+
+
+### Bug Fixes
+
+* remove AWS_SSE_LOGS_BUCKET_NAME from task processor definition ([#6289](https://github.com/Flagsmith/flagsmith/issues/6289)) ([2ddfe67](https://github.com/Flagsmith/flagsmith/commit/2ddfe672cd84344e5d494c4bac99bbcaf94c8c70))
+* Revert: chore(sales-dashboard): add multiselect to plan filter ([#6286](https://github.com/Flagsmith/flagsmith/issues/6286)) ([139af3e](https://github.com/Flagsmith/flagsmith/commit/139af3e502b90aed95b3ad959b94a7211bae9931))
+
 ## [2.201.2](https://github.com/Flagsmith/flagsmith/compare/v2.201.1...v2.201.2) (2025-11-13)
 
 
