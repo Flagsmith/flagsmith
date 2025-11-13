@@ -1,6 +1,10 @@
 {
     "redirects": [
         {
+        "source": "/system-administration/importing-and-exporting/launchdarkly",
+        "destination": "https://docs.flagsmith.com/administration-and-security/data-management/import-from-launchdarkly"
+        },
+        {
         "source": "/advanced-use/staged-feature-rollouts",
         "destination": "https://docs.flagsmith.com/best-practices/when-to-use-flags#staged-rollouts"
         },
@@ -11,10 +15,6 @@
         {
         "source": "/clients/3rd-party",
         "destination": "https://docs.flagsmith.com/integrating-with-flagsmith/sdks/"
-        },
-        {
-        "source": "/clients/server-s",
-        "destination": "https://docs.flagsmith.com/integrating-with-flagsmith/sdks/server-side"
         },
         {
         "source": "/deployment/configuration/sizing-and-scaling",
@@ -54,7 +54,7 @@
         },
         {
         "source": "/integrations/project-management/github",
-        "destination": "https://docs.flagsmith.com/third-party-integrations/#project-management--communication"
+        "destination": "https://docs.flagsmith.com/third-party-integrations/project-management/github"
         },
         {
         "source": "/openshift/",
@@ -78,7 +78,7 @@
         },
         {
         "source": "/version-comparison",
-        "destination": "https://docs.flagsmith.com/flagsmith-concepts/platform-architecture#whats-next"
+        "destination": "https://www.flagsmith.com/pricing#compare-features"
         },
         {
             "source": "/managing-identities",
