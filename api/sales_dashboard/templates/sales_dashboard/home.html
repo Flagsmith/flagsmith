@@ -32,11 +32,11 @@
         <label for="include-deleted" class="mr-1">Include deleted:</label>
         <input type="checkbox" name="include_deleted" id="include-deleted" class="mr-1" {% if include_deleted %}checked{% endif %}>
         <label for="filter-plan">Filter: </label>
-          <select name="filter_plan" id="filter-plan" class="custom-select m-1" multiple>
-            <option value="free" {% if "free" in filter_plan %}selected{% endif %}>Free</option>
-            <option value="start" {% if "start" in filter_plan %}selected{% endif %}>Start Up</option>
-            <option value="scale" {% if "scale" in filter_plan %}selected{% endif %}>Scale Up</option>
-            <option value="enterprise" {% if "enterprise" in filter_plan %}selected{% endif %}>Enterprise</option>
+          <select name="filter_plan" id="filter-plan" class="custom-select m-1">
+            <option value="" {% if not filter_plan %}selected{% endif %}>Filter Plan</option>
+            <option value="free" {% if filter_plan == "free" %}selected{% endif %}>Free</option>
+            <option value="start" {% if filter_plan == "start" %}selected{% endif %}>Start Up</option>
+            <option value="scale" {% if filter_plan == "scale" %}selected{% endif %}>Scale Up</option>
           </select>
           <label for="sort-field">Sort: </label>
           <select name="sort_field" id="sort-field" class="custom-select m-1" value="{{ sort_field }}">

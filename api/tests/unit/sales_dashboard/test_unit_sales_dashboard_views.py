@@ -30,7 +30,6 @@ from users.models import FFAdminUser
 )
 def test_organisation_subscription_get_api_call_overage(
     organisation: Organisation,
-    enterprise_subscription: Subscription,
     allowed_calls_30d: int,
     actual_calls_30d: int,
     expected_overage: int,
@@ -83,7 +82,6 @@ def test_get_organisation_info__get_event_list_for_organisation(
 
 def test_list_organisations_search_by_name(
     organisation: Organisation,
-    enterprise_subscription: Subscription,
     superuser_client: Client,
 ) -> None:
     # Given
@@ -121,7 +119,6 @@ def test_list_organisations_search_by_subscription_id(
 
 def test_list_organisations_search_by_user_email(
     organisation: Organisation,
-    enterprise_subscription: Subscription,
     superuser_client: Client,
     admin_user: FFAdminUser,
 ) -> None:
@@ -160,7 +157,6 @@ def test_list_organisations_search_by_user_email_for_non_existent_user(
 
 def test_list_organisations_search_by_domain(
     organisation: Organisation,
-    enterprise_subscription: Subscription,
     superuser_client: Client,
 ) -> None:
     # Given
