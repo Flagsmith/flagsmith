@@ -31,7 +31,7 @@ If you are using health checks, make sure to use `/health` as the health-check e
 
 ## RDS/Aurora
 
-We run in production on PostgreSQL version `11`; Aurora release `3.x`. When starting for the first time, the application will create that database schema automatically. Schema upgrades will also happen seamlessly during application server upgrades.
+We run in production on PostgreSQL version `15`; Aurora release `3.x`. When starting for the first time, the application will create that database schema automatically. Schema upgrades will also happen seamlessly during application server upgrades.
 
 ## Application Load Balancer
 
