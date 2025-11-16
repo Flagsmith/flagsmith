@@ -41,9 +41,12 @@ export const removeIdentity = (
   openConfirm({
     body: (
       <div>
-        {'Are you sure you want to delete '}
-        <strong>{identifier}</strong>
-        {'? Identities can be re-added here or via one of our SDKs.'}
+        <div className='mb-2'>
+          {'Are you sure you want to delete '}
+          <strong>{identifier}</strong>?
+        </div>
+        Deleting this identity will delete all of their stored traits, and any
+        identity overrides that you have configured.
       </div>
     ),
     destructive: true,
@@ -62,7 +65,7 @@ export const removeIdentity = (
         }
       })
     },
-    title: 'Delete User',
+    title: 'Delete Identity',
     yesText: 'Confirm',
   })
 }
@@ -170,6 +173,14 @@ const UsersPage: FC<{ props: any }> = (props) => {
         <FormGroup>
           <PanelSearch
             renderSearchWithNoResults
+            header={
+              permission && (
+                <Row className='table-header'>
+                  <Flex className='table-column px-3'>Identifier</Flex>
+                  <div className='table-column'></div>
+                </Row>
+              )
+            }
             filterRowContent={
               showAliases && (
                 <div className='ms-2' style={{ width: 100 }}>

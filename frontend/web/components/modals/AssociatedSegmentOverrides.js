@@ -157,7 +157,7 @@ class TheComponent extends Component {
               />
               <div>
                 <InputGroup
-                  className="col-4"
+                  className='col-4'
                   component={
                     <EnvironmentSelect
                       projectId={this.props.projectId}

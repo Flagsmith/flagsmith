@@ -90,7 +90,7 @@ def _get_feature_state_webhook_data(feature_state, previous=False):  # type: ign
         enabled=feature_state.enabled,
         value=feature_state_value,
         identity_id=feature_state.identity_id,
-        identity_identifier=getattr(feature_state.identity, "identifier", None),  # type: ignore[arg-type]
+        identity_identifier=getattr(feature_state.identity, "identifier", None),
         feature_segment=feature_state.feature_segment,
     )
 

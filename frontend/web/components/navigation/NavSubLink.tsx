@@ -1,5 +1,5 @@
 import React, { FC, ReactNode } from 'react'
-import type * as H from 'history';
+import type * as H from 'history'
 import { LinkProps, NavLink, match } from 'react-router-dom'
 import { IonIcon } from '@ionic/react'
 import classNames from 'classnames'
@@ -9,11 +9,16 @@ type NavSubLinkType = LinkProps & {
   children: ReactNode
   isActive?<Params extends { [K in keyof Params]?: string }, S = unknown>(
     match: match<Params> | null,
-    location: H.Location<S>
-  ): boolean;
+    location: H.Location<S>,
+  ): boolean
 }
 
-const NavSubLink: FC<NavSubLinkType> = ({ children, icon, isActive, ...rest }) => {
+const NavSubLink: FC<NavSubLinkType> = ({
+  children,
+  icon,
+  isActive,
+  ...rest
+}) => {
   return (
     <NavLink
       {...rest}

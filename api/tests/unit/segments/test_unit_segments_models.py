@@ -1,6 +1,5 @@
 from collections.abc import Callable
 from typing import Any
-from unittest.mock import PropertyMock
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -29,7 +28,15 @@ def test_Condition_str__returns_readable_representation_of_condition(
     assert result == "Condition for ALL rule for Segment - segment: foo EQUAL bar"
 
 
-def test_Condition_get_skip_create_audit_log__returns_true(
+@pytest.mark.parametrize(
+    "delete",
+    [
+        lambda rule: rule.delete(),
+        lambda rule: rule.hard_delete(),
+    ],
+)
+def test_Condition_get_skip_create_audit_log__rule_deleted__returns_true(
+    delete: Callable[[SegmentRule], None],
     segment_rule: SegmentRule,
 ) -> None:
     # Given
@@ -38,16 +45,45 @@ def test_Condition_get_skip_create_audit_log__returns_true(
         property="foo",
         operator=EQUAL,
         value="bar",
+        created_with_segment=False,
     )
 
     # When
-    result = condition.get_skip_create_audit_log()
+    delete(segment_rule)
 
     # Then
-    assert result is True
+    assert condition.get_skip_create_audit_log() is True
 
 
-def test_manager_returns_only_highest_version_of_segments(
+@pytest.mark.parametrize(
+    "delete",
+    [
+        lambda segment: segment.delete(),
+        lambda segment: segment.hard_delete(),
+    ],
+)
+def test_Condition_get_skip_create_audit_log__segment_deleted__returns_true(
+    delete: Callable[[Segment], None],
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+
+    # When
+    delete(segment)
+
+    # Then
+    assert condition.get_skip_create_audit_log() is True
+
+
+def test_LiveSegmentManager__returns_only_highest_version_of_segments(
     segment: Segment,
 ) -> None:
     # Given
@@ -108,24 +144,7 @@ def test_SegmentRule_get_skip_create_audit_log__returns_true(
     assert result is True
 
 
-def test_segment_get_skip_create_audit_log_when_exception(
-    mocker: MockerFixture,
-    segment: Segment,
-) -> None:
-    # Given
-    patched_segment = mocker.patch.object(
-        Segment, "version_of_id", new_callable=PropertyMock
-    )
-    patched_segment.side_effect = Segment.DoesNotExist("Segment missing")
-
-    # When
-    result = segment.get_skip_create_audit_log()
-
-    # Then
-    assert result is True
-
-
-def test_delete_segment_only_schedules_one_task_for_audit_log_creation(
+def test_Segment_delete__multiple_rules_conditions__schedules_audit_log_task_once(
     mocker: MockerFixture, segment: Segment
 ) -> None:
     # Given
@@ -143,11 +162,11 @@ def test_delete_segment_only_schedules_one_task_for_audit_log_creation(
             )
 
     # When
-    mocked_tasks = mocker.patch("core.signals.tasks")
+    task = mocker.patch("core.signals.tasks.create_audit_log_from_historical_record")
     segment.delete()
 
     # Then
-    assert len(mocked_tasks.mock_calls) == 1
+    assert task.delay.call_count == 1
 
 
 def test_Segment_clone__can_create_standalone_segment_clone(
@@ -264,7 +283,9 @@ def test_Segment_clone__segment_with_rules__returns_new_segment_with_copied_rule
     ]
 
 
-def test_system_segment_get_skip_create_audit_log(system_segment: Segment) -> None:
+def test_Segment_get_skip_create_audit_log__system_segment__returns_true(
+    system_segment: Segment,
+) -> None:
     # When
     result = system_segment.get_skip_create_audit_log()
 

@@ -6,8 +6,8 @@ import re2 as re  # type: ignore[import-untyped]
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Count, F, Q, Value
-from django.db.models.functions import Greatest
+from django.db.models import Count, F, OuterRef, Q, Subquery, Value
+from django.db.models.functions import Coalesce, Greatest
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -55,7 +55,6 @@ from .forms import (
 OBJECTS_PER_PAGE = 50
 DEFAULT_ORGANISATION_SORT = "subscription_information_cache__api_calls_30d"
 DEFAULT_ORGANISATION_SORT_DIRECTION = "DESC"
-DEFAULT_PLAN_FILTER = ["start", "scale", "enterprise"]
 
 email_regex = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
 domain_regex = re.compile(r"^[a-z0-9.-]+\.[a-z]{2,}$")
@@ -79,9 +78,33 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
             queryset = Organisation.objects.all()
 
         queryset = queryset.annotate(
-            num_projects=Count("projects", distinct=True),
-            num_users=Count("users", distinct=True),
-            num_features=Count("projects__features", distinct=True),
+            num_projects=Coalesce(
+                Subquery(
+                    Project.objects.filter(organisation_id=OuterRef("pk"))
+                    .values("organisation_id")
+                    .annotate(count=Count("id"))
+                    .values("count")[:1]
+                ),
+                Value(0),
+            ),
+            num_users=Coalesce(
+                Subquery(
+                    UserOrganisation.objects.filter(organisation_id=OuterRef("pk"))
+                    .values("organisation_id")
+                    .annotate(count=Count("user_id", distinct=True))
+                    .values("count")[:1]
+                ),
+                Value(0),
+            ),
+            num_features=Coalesce(
+                Subquery(
+                    Feature.objects.filter(project__organisation_id=OuterRef("pk"))
+                    .values("project__organisation_id")
+                    .annotate(count=Count("id", distinct=True))
+                    .values("count")[:1]
+                ),
+                Value(0),
+            ),
             overage=Greatest(
                 Value(0),
                 F("subscription_information_cache__api_calls_30d")
@@ -92,13 +115,9 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
         if search_term := self.request.GET.get("search"):
             queryset = queryset.filter(self._build_search_query(search_term))
 
-        plan_filter = Q()
-        for plan in self.request.GET.getlist(
-            "filter_plan", default=DEFAULT_PLAN_FILTER
-        ):
-            plan_filter |= Q(subscription__plan__icontains=plan)
-
-        queryset = queryset.filter(plan_filter)
+        if self.request.GET.get("filter_plan"):
+            filter_plan = self.request.GET["filter_plan"]
+            queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
         sort_field = self.request.GET.get("sort_field") or DEFAULT_ORGANISATION_SORT
         sort_direction = (
@@ -117,9 +136,7 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
         data = super().get_context_data(**kwargs)
 
         data["search"] = self.request.GET.get("search", "")
-        data["filter_plan"] = self.request.GET.getlist(
-            "filter_plan", default=DEFAULT_PLAN_FILTER
-        )
+        data["filter_plan"] = self.request.GET.get("filter_plan")
         data["sort_field"] = self.request.GET.get("sort_field")
         data["sort_direction"] = self.request.GET.get("sort_direction")
         data["include_deleted"] = self.request.GET.get("include_deleted", "off") == "on"
