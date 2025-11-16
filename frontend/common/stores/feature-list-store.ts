@@ -545,15 +545,6 @@ const controller = {
         feature_states_to_update = version.feature_states_to_update
         segment_ids_to_delete_overrides =
           version.segment_ids_to_delete_overrides
-
-        if (
-          !feature_states_to_create.length &&
-          !feature_states_to_update.length &&
-          !segment_ids_to_delete_overrides.length &&
-          !changeRequest.ignore_conflicts
-        ) {
-          throw new Error('Change request contains no changes')
-        }
       }
       const prom = data
         .get(

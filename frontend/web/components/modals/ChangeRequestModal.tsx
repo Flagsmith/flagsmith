@@ -12,10 +12,15 @@ import AccountStore from 'common/stores/account-store'
 import InputGroup from 'components/base/forms/InputGroup'
 import moment from 'moment'
 import Utils from 'common/utils/utils'
-import { Approval, ChangeRequest, User } from 'common/types/responses'
+import {
+  Approval,
+  ChangeRequest,
+  TypedFeatureState,
+  User,
+} from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
-import Checkbox from 'components/base/forms/Checkbox'
+import ChangeRequestConflictCheck from 'components/ChangeRequestConflictCheck'
 
 interface ChangeRequestModalProps {
   changeRequest?: ChangeRequest
@@ -27,12 +32,20 @@ interface ChangeRequestModalProps {
   isScheduledChange?: boolean
   showIgnoreConflicts?: boolean
   showAssignees?: boolean
+  projectId?: string | number
+  environmentId?: string | number
+  featureId?: number
+  featureStates?: TypedFeatureState[]
 }
 
 const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   changeRequest,
+  environmentId,
+  featureId,
+  featureStates,
   isScheduledChange,
   onSave,
+  projectId,
   showAssignees,
   showIgnoreConflicts,
 }) => {
@@ -52,6 +65,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   const [showGroups, setShowGroups] = useState(false)
   const [currDate, setCurrDate] = useState(new Date())
   const [ignoreConflicts, setIgnoreConflicts] = useState(false)
+  const [hasChanges, setHasChanges] = useState(true)
 
   const { data: groups } = useGetMyGroupsQuery({
     orgId: AccountStore.getOrganisation().id,
@@ -112,8 +126,11 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   }
 
   const isValid = useMemo(() => {
+    if (!hasChanges && !ignoreConflicts) {
+      return false
+    }
     return !!title?.length && !!liveFrom
-  }, [title, liveFrom])
+  }, [title, liveFrom, hasChanges, ignoreConflicts])
 
   return (
     <OrganisationProvider>
@@ -166,7 +183,6 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                       className='ml-2'
                       onClick={handleClear}
                       theme='secondary'
-                      size='large'
                     >
                       Clear
                     </Button>
@@ -290,15 +306,15 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
               />
             )}
             {!changeRequest && showIgnoreConflicts && (
-              <InputGroup
-                title='Ignore Conflicts'
-                component={
-                  <Checkbox
-                    label='Create this change request even if there is an existing one for the same feature'
-                    checked={ignoreConflicts}
-                    onChange={setIgnoreConflicts}
-                  />
-                }
+              <ChangeRequestConflictCheck
+                action='create'
+                projectId={projectId!}
+                environmentId={environmentId!}
+                featureId={featureId!}
+                featureStates={featureStates || []}
+                ignoreConflicts={ignoreConflicts}
+                onIgnoreConflictsChange={setIgnoreConflicts}
+                onHasChangesChange={setHasChanges}
               />
             )}
             <FormGroup className='text-right mt-2'>

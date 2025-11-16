@@ -39,6 +39,7 @@ import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useHistory } from 'react-router-dom'
+import { openPublishChangeRequestConfirm } from 'components/PublishChangeRequestModal'
 
 type ChangeRequestPageType = {
   match: {
@@ -197,50 +198,40 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   }
 
   const publishChangeRequest = () => {
+    if (!changeRequest) return
+
     const scheduledDate = getScheduledDate()
     const isScheduled = moment(scheduledDate).valueOf() > moment().valueOf()
-    const featureId =
-      changeRequest &&
-      changeRequest.feature_states[0] &&
-      changeRequest.feature_states[0].feature
+    const featureId = changeRequest.feature_states?.[0]?.feature
     const environment = ProjectStore.getEnvironment(
       environmentId,
     ) as unknown as Environment
-    openConfirm({
-      body: (
-        <div>
-          Are you sure you want to {isScheduled ? 'schedule' : 'publish'} this
-          change request
-          {isScheduled
-            ? ` for ${moment(scheduledDate).format('Do MMM YYYY hh:mma')}`
-            : ''}
-          ? This will adjust the feature for your environment.
-          <NewVersionWarning
-            environmentId={`${environment?.id}`}
-            featureId={featureId!}
-            date={`${changeRequest?.created_at}`}
-          />
-          {!!changeRequest?.conflicts?.length && (
-            <div className='mt-2'>
-              <WarningMessage
-                warningMessage={
-                  <div>
-                    A change request was published since the creation of this
-                    one that also modified this feature. Please review the
-                    changes on this page to make sure they are correct.
-                  </div>
-                }
-              />
-            </div>
-          )}
-        </div>
+
+    openPublishChangeRequestConfirm({
+      changeRequest,
+      children: (
+        <NewVersionWarning
+          environmentId={`${environment?.id}`}
+          featureId={featureId!}
+          date={`${changeRequest.created_at}`}
+        />
       ),
-      onYes: () => {
-        AppActions.actionChangeRequest(id, 'commit', () => {
-          AppActions.refreshFeatures(projectId, environmentId)
-        })
+      environmentId: environment.id,
+      isScheduled,
+      onYes: (ignore_conflicts) => {
+        AppActions.actionChangeRequest(
+          id,
+          'commit',
+          () => {
+            AppActions.refreshFeatures(projectId, environmentId)
+          },
+          ignore_conflicts,
+        )
       },
-      title: `${isScheduled ? 'Schedule' : 'Publish'} Change Request`,
+      projectId,
+      scheduledDate: isScheduled
+        ? moment(scheduledDate).format('Do MMM YYYY hh:mma')
+        : undefined,
     })
   }
 

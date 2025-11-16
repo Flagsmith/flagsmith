@@ -7,12 +7,13 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       id,
     })
   },
-  actionChangeRequest(id, action, cb) {
+  actionChangeRequest(id, action, cb, ignore_conflicts) {
     Dispatcher.handleViewAction({
       action,
       actionType: Actions.ACTION_CHANGE_REQUEST,
       cb,
       id,
+      ignore_conflicts,
     })
   },
   changeUserFlag(identity) {

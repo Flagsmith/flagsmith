@@ -1,15 +1,12 @@
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
-const { flatten } = require('lodash')
 const {
   addFeatureSegmentsToFeatureStates,
 } = require('../services/useFeatureState')
 const { getStore } = require('common/store')
-const { segmentService } = require('common/services/useSegment')
 const { changeRequestService } = require('common/services/useChangeRequest')
-
-const PAGE_SIZE = 20
+const { featureStateService } = require('common/services/useFeatureState')
 const transformChangeRequest = async (changeRequest) => {
   const feature_states = await Promise.all(
     changeRequest.feature_states.map(addFeatureSegmentsToFeatureStates),
@@ -21,10 +18,13 @@ const transformChangeRequest = async (changeRequest) => {
   }
 }
 const controller = {
-  actionChangeRequest: (id, action, cb) => {
+  actionChangeRequest: (id, action, cb, ignore_conflicts) => {
     store.loading()
     data
-      .post(`${Project.api}features/workflows/change-requests/${id}/${action}/`)
+      .post(
+        `${Project.api}features/workflows/change-requests/${id}/${action}/`,
+        { ignore_conflicts },
+      )
       .then(() => {
         data
           .get(`${Project.api}features/workflows/change-requests/${id}/`)
@@ -34,6 +34,9 @@ const controller = {
             store.loaded()
             getStore().dispatch(
               changeRequestService.util.invalidateTags(['ChangeRequest']),
+            )
+            getStore().dispatch(
+              featureStateService.util.invalidateTags(['FeatureState']),
             )
           })
       })
@@ -139,7 +142,12 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.deleteChangeRequest(action.id, action.cb)
       break
     case Actions.ACTION_CHANGE_REQUEST:
-      controller.actionChangeRequest(action.id, action.action, action.cb)
+      controller.actionChangeRequest(
+        action.id,
+        action.action,
+        action.cb,
+        action.ignore_conflicts,
+      )
       break
     default:
       break
