@@ -74,6 +74,10 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   const actualValue = overrideFeatureState?.feature_state_value ?? flagValue
 
   const onToggle = () => {
+    if (level === 'segment') {
+      onClick()
+      return
+    }
     const confirmToggle = (projectFlag: any, environmentFlag: any, cb: any) => {
       openModal(
         'Toggle Feature',
