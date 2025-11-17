@@ -40,8 +40,6 @@ jobs:
           e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
           slack_token: ${{ secrets.SLACK_TOKEN }}
           environment: prod
-        env:
-          FIREFOX_VERSION: 143.0
 
   deploy-production:
     name: Deploy to Vercel Production
