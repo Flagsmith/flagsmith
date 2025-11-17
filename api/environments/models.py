@@ -4,7 +4,6 @@ import uuid
 from copy import deepcopy
 from typing import TYPE_CHECKING, Literal
 
-from common.core.utils import using_database_replica
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
@@ -577,8 +576,7 @@ class Environment(
         cls,
         api_key: str,
     ) -> dict[str, typing.Any]:
-        manager = using_database_replica(cls.objects)
-        environment = manager.filter_for_document_builder(
+        environment = cls.objects.filter_for_document_builder(
             api_key=api_key,
             extra_prefetch_related=[
                 Prefetch(
