@@ -111,6 +111,7 @@ module.exports = {
     'sort-keys-fix',
     'sort-destructure-keys',
     '@typescript-eslint',
+    'unused-imports',
   ],
   'rules': {
     '@dword-design/import-alias/prefer-alias': [
@@ -129,12 +130,17 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-namespace': 'off',
     '@typescript-eslint/no-var-requires': 'off',
+    '@typescript-eslint/no-unused-vars': 'off',
     'default-case': 'error',
     'dot-notation': 'error',
+    'eqeqeq': 'warn',
     'guard-for-in': 'error',
     'no-caller': 'error',
+    'no-console': 'warn',
+    'no-debugger': 'warn',
     'no-empty': 'off',
     'no-empty-pattern': 'off',
+    'no-unused-vars': 'off',
     'no-var': 'error',
     'object-curly-spacing': ['error', 'always'],
     'prefer-template': 'error',
@@ -157,6 +163,14 @@ module.exports = {
     'sort-destructure-keys/sort-destructure-keys': 'warn',
     'sort-keys-fix/sort-keys-fix': 'warn',
     'typescript-eslint/no-empty-interface': 'off',
+    'unused-imports/no-unused-imports': 'error',
+    'unused-imports/no-unused-vars': [
+      'warn',
+      {
+        'argsIgnorePattern': '^_',
+        'varsIgnorePattern': '^_',
+      },
+    ],
   },
   'settings': {
     'react': {
