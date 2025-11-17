@@ -20,7 +20,9 @@ jobs:
     steps:
       - name: Cloning repo
         uses: actions/checkout@v5
-
+      
+      # Temporarily install Firefox 143.0 to avoid test failures as superior versions cause frontend e2e tests to hang
+      # To be removed once upstream issue correctly resolved
       - name: Install Firefox 143.0
         run: |
           sudo apt-get remove -y firefox || true
