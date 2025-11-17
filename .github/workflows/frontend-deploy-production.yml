@@ -21,12 +21,27 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v5
 
+      - name: Install Firefox 143.0
+        run: |
+          sudo apt-get remove -y firefox || true
+          sudo rm -rf /usr/bin/firefox /usr/lib/firefox*
+          
+          ARCH=$(uname -m)
+          wget -O /tmp/firefox.tar.xz "https://ftp.mozilla.org/pub/firefox/releases/143.0/linux-${ARCH}/en-US/firefox-143.0.tar.xz"
+          sudo tar -xJf /tmp/firefox.tar.xz -C /opt
+          sudo ln -s /opt/firefox/firefox /usr/local/bin/firefox
+          rm /tmp/firefox.tar.xz
+          
+          firefox --version
+
       - name: Run E2E tests against production
         uses: ./.github/actions/e2e-tests
         with:
           e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
           slack_token: ${{ secrets.SLACK_TOKEN }}
           environment: prod
+        env:
+          FIREFOX_VERSION: 143.0
 
   deploy-production:
     name: Deploy to Vercel Production
