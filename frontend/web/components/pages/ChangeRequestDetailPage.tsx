@@ -15,7 +15,6 @@ import {
   User,
   UserGroupSummary,
 } from 'common/types/responses'
-import { RouterChildContext } from 'react-router'
 import Utils from 'common/utils/utils'
 import moment from 'moment'
 import ProjectStore from 'common/stores/project-store'
@@ -25,7 +24,6 @@ import { close } from 'ionicons/icons'
 import Constants from 'common/constants'
 import Button from 'components/base/forms/Button'
 import NewVersionWarning from 'components/NewVersionWarning'
-import WarningMessage from 'components/WarningMessage'
 import Breadcrumb from 'components/Breadcrumb'
 import PageTitle from 'components/PageTitle'
 import InfoMessage from 'components/InfoMessage'
@@ -40,6 +38,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useHistory } from 'react-router-dom'
 import { openPublishChangeRequestConfirm } from 'components/PublishChangeRequestModal'
+import { getChangeRequestLiveDate } from 'common/utils/getChangeRequestLiveDate'
 
 type ChangeRequestPageType = {
   match: {
@@ -188,19 +187,10 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     AppActions.actionChangeRequest(id, 'approve')
   }
 
-  const getScheduledDate = () => {
-    if (!changeRequest) return null
-    return changeRequest.environment_feature_versions.length > 0
-      ? moment(changeRequest.environment_feature_versions?.[0]?.live_from)
-      : changeRequest?.change_sets?.[0]?.live_from
-      ? moment(changeRequest?.change_sets?.[0]?.live_from)
-      : moment(changeRequest.feature_states?.[0]?.live_from)
-  }
-
   const publishChangeRequest = () => {
     if (!changeRequest) return
 
-    const scheduledDate = getScheduledDate()
+    const scheduledDate = getChangeRequestLiveDate(changeRequest)
     const isScheduled = moment(scheduledDate).valueOf() > moment().valueOf()
     const featureId = changeRequest.feature_states?.[0]?.feature
     const environment = ProjectStore.getEnvironment(
@@ -266,7 +256,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     changeRequest.feature_states[0] &&
     changeRequest.feature_states[0].feature
 
-  const scheduledDate = getScheduledDate()
+  const scheduledDate = getChangeRequestLiveDate(changeRequest)
   const isScheduled = moment(scheduledDate).valueOf() > moment().valueOf()
 
   const environment = ProjectStore.getEnvironment(
@@ -307,7 +297,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         publishPermissionDescription={Constants.environmentPermissions(
           'Update Feature States',
         )}
-        scheduledDate={getScheduledDate()}
+        scheduledDate={getChangeRequestLiveDate(changeRequest)}
         deleteChangeRequest={deleteChangeRequest}
         editChangeRequest={
           !isVersioned && !changeRequest?.committed_at

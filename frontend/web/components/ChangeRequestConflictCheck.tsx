@@ -20,7 +20,7 @@ interface ChangeRequestConflictCheckProps {
   ignoreConflicts: boolean
   onIgnoreConflictsChange: (value: boolean) => void
   onHasChangesChange?: (hasChanges: boolean) => void
-  liveFrom?: string
+  liveFrom?: string | null
   conflicts?: FeatureConflict[]
 }
 

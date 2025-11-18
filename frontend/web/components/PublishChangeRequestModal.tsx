@@ -1,6 +1,7 @@
 import React, { FC, ReactNode, useState } from 'react'
 import { ChangeRequest, ProjectChangeRequest } from 'common/types/responses'
 import ChangeRequestConflictCheck from './ChangeRequestConflictCheck'
+import { getChangeRequestLiveDate } from 'common/utils/getChangeRequestLiveDate'
 
 interface PublishChangeRequestContentProps {
   changeRequest: ChangeRequest
@@ -61,7 +62,7 @@ export const PublishChangeRequestContent: FC<
         ignoreConflicts={ignoreConflicts}
         onIgnoreConflictsChange={handleIgnoreConflictsChange}
         onHasChangesChange={handleHasChangesChange}
-        liveFrom={featureStates[0]?.live_from}
+        liveFrom={getChangeRequestLiveDate(changeRequest)?.toISOString()}
         conflicts={changeRequest.conflicts}
       />
     </div>
