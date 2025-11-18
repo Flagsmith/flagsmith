@@ -307,7 +307,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
             )}
             {!changeRequest && showIgnoreConflicts && (
               <ChangeRequestConflictCheck
-                action='create'
+                action={isScheduledChange ? 'publish' : 'create'}
                 projectId={projectId!}
                 environmentId={environmentId!}
                 featureId={featureId!}
@@ -315,6 +315,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                 ignoreConflicts={ignoreConflicts}
                 onIgnoreConflictsChange={setIgnoreConflicts}
                 onHasChangesChange={setHasChanges}
+                liveFrom={liveFrom}
               />
             )}
             <FormGroup className='text-right mt-2'>

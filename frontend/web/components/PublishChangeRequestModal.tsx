@@ -61,6 +61,8 @@ export const PublishChangeRequestContent: FC<
         ignoreConflicts={ignoreConflicts}
         onIgnoreConflictsChange={handleIgnoreConflictsChange}
         onHasChangesChange={handleHasChangesChange}
+        liveFrom={featureStates[0]?.live_from}
+        conflicts={changeRequest.conflicts}
       />
     </div>
   )
