@@ -22,7 +22,6 @@ type RuleConditionValueInputProps = {
   onChange?: (value: string) => void
   disabled?: boolean
   readOnly?: boolean
-  isValid?: boolean
   projectId?: number
   operator?: OperatorValue
   property?: string
@@ -30,13 +29,12 @@ type RuleConditionValueInputProps = {
 }
 
 const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
-  isValid,
+  className,
   onChange,
   operator,
-  property,
   projectId,
+  property,
   value,
-  className,
   ...props
 }) => {
   const { data } = useGetEnvironmentsQuery(
@@ -51,10 +49,8 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
     [data],
   )
 
-  const { showMultiEnvironmentSelect, showSingleEnvironmentSelect } = useConditionInputType(
-    operator,
-    property,
-  )
+  const { showMultiEnvironmentSelect, showSingleEnvironmentSelect } =
+    useConditionInputType(operator, property)
 
   if (showMultiEnvironmentSelect) {
     return (

@@ -14,7 +14,6 @@ import {
   UserGroup,
   AttributeName,
   Identity,
-  ChangeRequest,
   ProjectChangeRequest,
   Role,
   RolePermission,
@@ -782,6 +781,18 @@ export type Req = {
     projectId: number
     pipelineId: number
     name: string
+  }
+  getFeatureAnalytics: {
+    project_id: string
+    feature_id: string
+    period: number
+    environment_ids: string[]
+  }
+  getEnvironmentAnalytics: {
+    project_id: string
+    feature_id: string
+    period: number
+    environment_id: string
   }
   // END OF TYPES
 }

@@ -41,13 +41,15 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
   const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
     'git_code_references',
   )
+
   const hasScannedCodeReferences =
-    projectFlag?.code_references_counts?.length > 0
-  const codeReferencesCounts =
-    projectFlag?.code_references_counts?.reduce(
-      (acc, curr) => acc + curr.count,
-      0,
-    ) || 0
+    isCodeReferencesEnabled && projectFlag?.code_references_counts?.length > 0
+  const codeReferencesCounts = isCodeReferencesEnabled
+    ? projectFlag?.code_references_counts?.reduce(
+        (acc, curr) => acc + curr.count,
+        0,
+      ) || 0
+    : 0
 
   return (
     <>
@@ -77,7 +79,7 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
           }
           place='top'
         >
-          {`Scanned ${codeReferencesCounts?.toString()} times in ${projectFlag?.code_references_counts.length?.toString()} repositories`}
+          {`Scanned ${codeReferencesCounts?.toString()} times in ${projectFlag?.code_references_counts?.length?.toString()} repositories`}
         </Tooltip>
       )}
       {projectFlag.is_server_key_only && (

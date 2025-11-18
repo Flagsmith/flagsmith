@@ -37,6 +37,7 @@ import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import FeatureHistory from 'components/FeatureHistory'
 import WarningMessage from 'components/WarningMessage'
+import FeatureAnalytics from 'components/feature-page/FeatureNavTab/FeatureAnalytics'
 import { getPermission } from 'common/services/usePermission'
 import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
@@ -46,7 +47,6 @@ import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineS
 import { FlagValueFooter } from './FlagValueFooter'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
-import FeatureAnalytics from 'components/feature-page/FeatureNavTab/FeatureAnalytics/FeatureAnalytics.container'
 import BetaFlag from 'components/BetaFlag'
 
 const CreateFlag = class extends Component {
@@ -185,13 +185,6 @@ const CreateFlag = class extends Component {
         this.focusTimeout = null
       }, 500)
     }
-    if (
-      !Project.disableAnalytics &&
-      this.props.projectFlag &&
-      this.props.environmentFlag
-    ) {
-      this.getFeatureUsage()
-    }
     if (Utils.getPlansPermission('METADATA')) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
@@ -259,8 +252,9 @@ const CreateFlag = class extends Component {
                   },
                 })
               })
-              .catch((e) => {
-                console.log('Cannot retrieve user overrides')
+              .catch(() => {
+                //eslint-disable-next-line no-console
+                console.error('Cannot retrieve user overrides')
               })
           }
         })
@@ -288,16 +282,6 @@ const CreateFlag = class extends Component {
       })
   }
 
-  getFeatureUsage = () => {
-    if (this.props.environmentFlag) {
-      AppActions.getFeatureUsage(
-        this.props.projectId,
-        this.props.environmentFlag.environment,
-        this.props.projectFlag.id,
-        this.state.period,
-      )
-    }
-  }
   save = (func, isSaving) => {
     const {
       environmentFlag,
@@ -911,7 +895,7 @@ const CreateFlag = class extends Component {
             }}
           >
             {(
-              { error, isSaving, usageData },
+              { error, isSaving },
               {
                 createChangeRequest,
                 createFlag,
@@ -1821,7 +1805,11 @@ const CreateFlag = class extends Component {
                                     <TabItem tabLabel={'Analytics'}>
                                       <div className='mb-4'>
                                         <FeatureAnalytics
-                                          usageData={usageData}
+                                          projectId={`${project.id}`}
+                                          featureId={`${projectFlag.id}`}
+                                          defaultEnvironmentIds={[
+                                            `${environment.id}`,
+                                          ]}
                                         />
                                       </div>
                                     </TabItem>
