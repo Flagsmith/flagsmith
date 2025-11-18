@@ -1256,14 +1256,14 @@ Django = ">=4.2"
 
 [[package]]
 name = "django"
-version = "4.2.25"
+version = "4.2.26"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.8"
 groups = ["main", "auth-controller", "dev", "ldap", "split-testing", "workflows"]
 files = [
-    {file = "django-4.2.25-py3-none-any.whl", hash = "sha256:9584cf26b174b35620e53c2558b09d7eb180a655a3470474f513ff9acb494f8c"},
-    {file = "django-4.2.25.tar.gz", hash = "sha256:2391ab3d78191caaae2c963c19fd70b99e9751008da22a0adcc667c5a4f8d311"},
+    {file = "django-4.2.26-py3-none-any.whl", hash = "sha256:c96e64fc3c359d051a6306871bd26243db1bd02317472a62ffdbe6c3cae14280"},
+    {file = "django-4.2.26.tar.gz", hash = "sha256:9398e487bcb55e3f142cb56d19fbd9a83e15bb03a97edc31f408361ee76d9d7a"},
 ]
 
 [package.dependencies]
@@ -1992,14 +1992,14 @@ resolved_reference = "303954ba54fd2f402c75806b3b9ba7f2d42aa426"
 
 [[package]]
 name = "flagsmith-common"
-version = "2.2.4"
+version = "2.2.7"
 description = "Flagsmith's common library"
 optional = false
 python-versions = "<4.0,>=3.11"
 groups = ["main", "dev", "split-testing", "workflows"]
 files = [
-    {file = "flagsmith_common-2.2.4-py3-none-any.whl", hash = "sha256:cbd460375ff86d9871e2f488771de61321fbc22677296c141934d5d1ccec0c86"},
-    {file = "flagsmith_common-2.2.4.tar.gz", hash = "sha256:6a1d1a7bff47f9b099474e1a75624f4c2176372b0d875decb1a8f7628f2d313c"},
+    {file = "flagsmith_common-2.2.7-py3-none-any.whl", hash = "sha256:aa5dcd311c865c1a6aa8aff1480f37b5cdb403ee058022a403ad2a724f30226e"},
+    {file = "flagsmith_common-2.2.7.tar.gz", hash = "sha256:0ad2094e6934432613f7ca2aa9bcc89f369cb07d122e1d74f86be5afaa1d8445"},
 ]
 
 [package.dependencies]
@@ -5471,4 +5471,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "fd05e8f687fccb32072cd1694f669cd890bd19a6e8a119defbf16ca2247698dc"
+content-hash = "372d344e21a0eab9b93adff1dd250c5f80b310d9e17f9858d007f9bd84962e36"

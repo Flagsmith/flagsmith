@@ -13,6 +13,7 @@ import RuleConditionPropertySelect from './RuleConditionPropertySelect'
 import RuleConditionValueInput from './RuleConditionValueInput'
 import { RuleContextValues } from 'common/types/rules.types'
 import { useRuleOperator, useRuleContext } from 'components/segments/Rule/hooks'
+import classNames from 'classnames'
 
 interface RuleConditionRowProps {
   rule: SegmentCondition
@@ -60,8 +61,10 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
   const { displayValue, operator, operatorObj, valuePlaceholder } =
     useRuleOperator(rule, operators)
 
-  const { allowedContextValues, isValueFromContext, showEnvironmentDropdown } =
-    useRuleContext(operator, rule.property)
+  const { allowedContextValues, isValueFromContext } = useRuleContext(
+    operator,
+    rule.property,
+  )
 
   if (rule.delete) {
     return null
@@ -84,74 +87,82 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           <Flex className='or-divider__line' />
         </Row>
       )}
-      <Row
-        noWrap
-        className='rule align-items-center justify-content-between gap-1'
-      >
-        <RuleConditionPropertySelect
-          dataTest={`${dataTest}-property-${ruleIndex}`}
-          ruleIndex={ruleIndex}
-          setRuleProperty={setRuleProperty}
-          propertyValue={rule.property}
-          operator={rule.operator}
-          allowedContextValues={allowedContextValues}
-          isValueFromContext={isValueFromContext}
-        />
-        {readOnly ? (
-          !!find(operators, { value: operator })?.label
-        ) : (
-          <Select
-            data-test={`${dataTest}-operator-${ruleIndex}`}
-            value={operator && find(operators, { value: operator })}
-            onChange={(value: { value: string }) => {
-              setRuleProperty(ruleIndex, 'operator', value)
+      <div className='d-flex flex-row align-items-center gap-1 flex-nowrap'>
+        <div className='d-flex flex-1 flex-row rule align-items-center justify-content-between gap-1 col-8 col-md-10'>
+          <div className='col-10 col-sm-4 col-md-4'>
+            <RuleConditionPropertySelect
+              dataTest={`${dataTest}-property-${ruleIndex}`}
+              ruleIndex={ruleIndex}
+              setRuleProperty={setRuleProperty}
+              propertyValue={rule.property}
+              operator={rule.operator}
+              allowedContextValues={allowedContextValues}
+              isValueFromContext={isValueFromContext}
+            />
+          </div>
+          {readOnly ? (
+            !!find(operators, { value: operator })?.label
+          ) : (
+            <Select
+              data-test={`${dataTest}-operator-${ruleIndex}`}
+              value={operator && find(operators, { value: operator })}
+              onChange={(value: { value: string }) => {
+                setRuleProperty(ruleIndex, 'operator', value)
+              }}
+              options={operators}
+              className='col-10 col-sm-3 col-md-3'
+            />
+          )}
+          <RuleConditionValueInput
+            readOnly={readOnly}
+            data-test={`${dataTest}-value-${ruleIndex}`}
+            value={displayValue || ''}
+            placeholder={valuePlaceholder}
+            disabled={operatorObj && operatorObj.hideValue}
+            projectId={projectId}
+            operator={operator}
+            property={rule.property}
+            onChange={(value: string) => {
+              setRuleProperty(ruleIndex, 'value', {
+                value:
+                  operatorObj && operatorObj.append
+                    ? `${value}${operatorObj.append}`
+                    : value,
+              })
             }}
-            options={operators}
-            style={{ width: '190px' }}
+            isValid={Utils.validateRule(rule) && !ruleErrors?.value}
+            className='col-10 col-sm-4 col-md-4'
           />
-        )}
-        <RuleConditionValueInput
-          readOnly={readOnly}
-          data-test={`${dataTest}-value-${ruleIndex}`}
-          value={displayValue || ''}
-          placeholder={valuePlaceholder}
-          disabled={operatorObj && operatorObj.hideValue}
-          style={{ width: '135px' }}
-          projectId={projectId}
-          showEnvironmentDropdown={showEnvironmentDropdown}
-          operator={operator}
-          onChange={(value: string) => {
-            setRuleProperty(ruleIndex, 'value', {
-              value:
-                operatorObj && operatorObj.append
-                  ? `${value}${operatorObj.append}`
-                  : value,
-            })
-          }}
-          isValid={Utils.validateRule(rule) && !ruleErrors?.value}
-        />
-        {isLastRule && !readOnly ? (
-          <Button
-            theme='outline'
-            data-test={`${dataTest}-or`}
-            type='button'
-            onClick={addRule}
-          >
-            Or
-          </Button>
-        ) : (
-          <div style={{ width: 64 }} />
-        )}
-        <button
-          data-test={`${dataTest}-remove`}
-          type='button'
-          id='remove-feature'
-          onClick={() => removeRule(ruleIndex)}
-          className='btn btn-with-icon'
+        </div>
+        <div
+          className={classNames(
+            'd-flex flex-sm-column flex-md-row',
+            isLastRule && !readOnly ? 'gap-2' : '',
+          )}
         >
-          <Icon name='trash-2' width={20} fill={'#656D7B'} />
-        </button>
-      </Row>
+          {isLastRule && !readOnly ? (
+            <Button
+              theme='outline'
+              data-test={`${dataTest}-or`}
+              type='button'
+              onClick={addRule}
+            >
+              Or
+            </Button>
+          ) : (
+            <div style={{ width: 64 }} />
+          )}
+          <button
+            data-test={`${dataTest}-remove`}
+            type='button'
+            id='remove-feature'
+            onClick={() => removeRule(ruleIndex)}
+            className='btn btn-with-icon'
+          >
+            <Icon name='trash-2' width={20} fill={'#656D7B'} />
+          </button>
+        </div>
+      </div>
       {showDescription && (
         <Row noWrap className='rule'>
           <textarea

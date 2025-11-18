@@ -12,6 +12,7 @@ import {
   updateProjectFlag,
 } from 'common/services/useProjectFlag'
 import OrganisationStore from './organisation-store'
+import { SortOrder } from 'common/types/requests'
 import {
   ChangeRequest,
   Environment,
@@ -29,7 +30,6 @@ import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
-import { projectService } from 'common/services/useProject'
 import { changeRequestService } from 'common/services/useChangeRequest'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
@@ -168,7 +168,7 @@ const controller = {
         if (onComplete) {
           onComplete(res)
         }
-        if (store.model) {
+        if (store.model?.features) {
           const index = _.findIndex(store.model.features, { id: flag.id })
           store.model.features[index] = controller.parseFlag(flag)
           store.model.lastSaved = new Date().valueOf()
@@ -436,7 +436,7 @@ const controller = {
 
         Promise.all([prom, segmentOverridesRequest])
           .then(([res, segmentRes]) => {
-            if (store.model) {
+            if (store.model?.keyedEnvironmentFeatures) {
               store.model.keyedEnvironmentFeatures[projectFlag.id] = res
               if (segmentRes) {
                 const feature = _.find(
@@ -807,7 +807,7 @@ const controller = {
     }
 
     prom
-      .then((res) => {
+      .then(() => {
         if (store.model) {
           store.model.lastSaved = new Date().valueOf()
         }
@@ -816,42 +816,6 @@ const controller = {
       })
       .catch((e) => {
         API.ajaxHandler(store, e)
-      })
-  },
-  getFeatureUsage(projectId, environmentId, flag, period) {
-    data
-      .get(
-        `${Project.api}projects/${projectId}/features/${flag}/evaluation-data/?period=${period}&environment_id=${environmentId}`,
-      )
-      .then((result) => {
-        const firstResult = result[0]
-        const lastResult = firstResult && result[result.length - 1]
-        const diff = firstResult
-          ? moment(lastResult.day, 'YYYY-MM-DD').diff(
-              moment(firstResult.day, 'YYYY-MM-DD'),
-              'days',
-            )
-          : 0
-        if (firstResult && diff) {
-          _.range(0, diff).map((v) => {
-            const day = moment(firstResult.day)
-              .add(v, 'days')
-              .format('YYYY-MM-DD')
-            if (!result.find((v) => v.day === day)) {
-              result.push({
-                'count': 0,
-                day,
-              })
-            }
-          })
-        }
-        store.model.usageData = _.sortBy(result, (v) =>
-          moment(v.day, 'YYYY-MM-DD').valueOf(),
-        ).map((v) => ({
-          ...v,
-          day: moment(v.day, 'YYYY-MM-DD').format('Do MMM'),
-        }))
-        store.changed()
       })
   },
   getFeatures: (projectId, environmentId, force, page, filter, pageSize) => {
@@ -996,9 +960,6 @@ const store = Object.assign({}, BaseStore, {
   getEnvironmentFlags() {
     return store?.model?.keyedEnvironmentFeatures
   },
-  getFeatureUsage() {
-    return store.model && store.model.usageData
-  },
   getLastSaved() {
     return store.model && store.model.lastSaved
   },
@@ -1014,7 +975,12 @@ const store = Object.assign({}, BaseStore, {
   },
   id: 'features',
   paging: {},
-  sort: { default: true, label: 'Name', sortBy: 'name', sortOrder: 'asc' },
+  sort: {
+    default: true,
+    label: 'Name',
+    sortBy: 'name',
+    sortOrder: SortOrder.ASC,
+  },
 })
 
 store.dispatcherIndex = Dispatcher.register(store, (payload) => {
@@ -1061,14 +1027,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
           store.filter,
         )
       }
-      break
-    case Actions.GET_FEATURE_USAGE:
-      controller.getFeatureUsage(
-        projectId,
-        action.environmentId,
-        action.flag,
-        action.period,
-      )
       break
     case Actions.CREATE_FLAG:
       controller.createFlag(projectId, action.environmentId, action.flag)

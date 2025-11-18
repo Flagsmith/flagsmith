@@ -46,7 +46,7 @@ const DiffVariations: FC<DiffVariationsType> = ({ diffs, projectFlag }) => {
             >
               <DiffString
                 data-test={`version-variation-${i}-weight`}
-                compareMethod={DiffMethod.WORDS}
+                compareMethod={DiffMethod.WORDS_WITH_SPACE}
                 oldValue={`${diff.oldWeight || 0}%`}
                 newValue={`${diff.newWeight || 0}%`}
               />

@@ -1,6 +1,4 @@
 import React, { FC } from 'react'
-// @ts-ignore
-import { diffLines, formatLines } from 'unidiff'
 import Diff, { DiffMethod } from 'react-diff-viewer-continued'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-json'
@@ -13,13 +11,13 @@ type DiffType = {
 }
 
 const sanitiseDiffString = (value: FlagsmithValue) => {
-  if (value === undefined || value == null) {
+  if (value === undefined || value === null) {
     return ''
   }
   return `${value}`
 }
 const DiffString: FC<DiffType> = ({
-  compareMethod = DiffMethod.WORDS,
+  compareMethod = DiffMethod.WORDS_WITH_SPACE,
   newValue,
   oldValue,
 }) => {

@@ -14,7 +14,6 @@ import {
   UserGroup,
   AttributeName,
   Identity,
-  ChangeRequest,
   ProjectChangeRequest,
   Role,
   RolePermission,
@@ -24,6 +23,7 @@ import {
   StageTrigger,
   StageActionType,
   StageActionBody,
+  TagStrategy,
 } from './responses'
 import { UtmsType } from './utms'
 
@@ -85,7 +85,10 @@ export type RegisterRequest = {
   marketing_consent_given?: boolean
   utm_data?: UtmsType
 }
-
+export enum SortOrder {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
 export interface StageActionRequest {
   action_type: StageActionType | ''
   action_body: StageActionBody
@@ -220,7 +223,7 @@ export type Req = {
     projectId: string
   }
   createTag: { projectId: string; tag: Omit<Tag, 'id'> }
-  getSegment: { projectId: string; id: string }
+  getSegment: { projectId: number; id: string }
   updateAccount: Account
   deleteAccount: {
     current_password: string
@@ -321,9 +324,20 @@ export type Req = {
   }
   getProjectFlags: {
     project: string
-    environmentId?: string
-    tags?: string[]
+    environment?: number
+    segment?: number
+    search?: string | null
+    releasePipelines?: number[]
+    page?: number
+    tag_strategy?: TagStrategy
+    tags?: string
     is_archived?: boolean
+    value_search?: string | null
+    is_enabled?: boolean | null
+    owners?: number[]
+    group_owners?: number[]
+    sort_field?: string
+    sort_direction?: SortOrder
   }
   getProjectFlag: { project: string | number; id: string }
   getRolesPermissionUsers: { organisation_id: number; role_id: number }
@@ -655,7 +669,7 @@ export type Req = {
   }
   getProjectChangeRequests: PagedRequest<{
     project_id: string
-    version_of?: string
+    segment_id?: string
     live_from_after?: string
     committed?: boolean
   }>
@@ -782,6 +796,18 @@ export type Req = {
     projectId: number
     pipelineId: number
     name: string
+  }
+  getFeatureAnalytics: {
+    project_id: string
+    feature_id: string
+    period: number
+    environment_ids: string[]
+  }
+  getEnvironmentAnalytics: {
+    project_id: string
+    feature_id: string
+    period: number
+    environment_id: string
   }
   // END OF TYPES
 }

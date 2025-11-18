@@ -34,6 +34,8 @@ export type Operator = {
   hideValue?: boolean
   warning?: string
   valuePlaceholder?: string
+  append?: string
+  type?: string
 }
 export type ChangeRequestSummary = {
   id: number
@@ -502,6 +504,8 @@ export type ProjectFlag = {
   created_date: string
   default_enabled: boolean
   description?: string
+  environment_feature_state?: FeatureState
+  segment_feature_state?: FeatureState
   id: number
   initial_value: FlagsmithValue
   is_archived: boolean
@@ -1107,5 +1111,14 @@ export type Res = {
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
   featureCodeReferences: FeatureCodeReferences[]
+  featureAnalytics: ({
+    day: string
+  } & {
+    [environmentId: string]: number
+  })[]
+  environmentAnalytics: {
+    day: string
+    count: number
+  }[]
   // END OF TYPES
 }

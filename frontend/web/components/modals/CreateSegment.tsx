@@ -27,7 +27,7 @@ import {
   useUpdateSegmentMutation,
 } from 'common/services/useSegment'
 import Utils from 'common/utils/utils'
-import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
+import AssociatedSegmentOverrides from 'components/segments/AssociatedSegmentOverrides'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -180,8 +180,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
       isSuccess: updateSuccess,
     },
   ] = useUpdateSegmentMutation()
-  const [createChangeRequest, { isLoading: isCreatingChangeRequest }] =
-    useCreateProjectChangeRequestMutation({})
+  const [createChangeRequest] = useCreateProjectChangeRequestMutation({})
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
   const [tab, setTab] = useState(UserTabs.RULES)
@@ -253,7 +252,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             },
           }).unwrap()
         } else {
-          const res = await createSegment({
+          await createSegment({
             projectId,
             segment: segmentData,
           }).unwrap()
@@ -284,7 +283,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
         resolve(true)
       }
     })
-  }, [valueChanged, isEdit])
+  }, [valueChanged])
   const onCreateChangeRequest = async (changeRequestData: {
     approvals: []
     description: string
@@ -315,7 +314,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               name,
               project: projectId,
               rules,
-              version_of: segment.id!,
+              version_of: segment.id,
             },
           ],
           title: changeRequestData.title,
@@ -325,7 +324,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
       toast('Created change request')
     } catch (error) {
-      console.error('Failed to create change request:', error)
       toast('Failed to create change request')
     }
   }
@@ -388,7 +386,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             warnings.push(operatorObj.warning)
           }
         })
-        parseRules(v.rules, operators!)
+        parseRules(v.rules, operators || [])
       })
     }
     if (operators) {
@@ -404,7 +402,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
       <div>
         <div className='mb-4'>
           {rules[0].rules.map((rule, i) => {
-            if (rule.delete) {
+            if (rule.delete || !operators) {
               return null
             }
             const displayIndex = rulesToShow.indexOf(rule)
@@ -417,7 +415,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   data-test={`rule-${displayIndex}`}
                   rule={rule}
                   index={i}
-                  operators={operators!}
+                  operators={operators}
                   onChange={(v: SegmentRule) => {
                     setValueChanged(true)
                     updateRule(0, i, v)
@@ -482,23 +480,30 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   return (
     <>
-      <ExistingProjectChangeRequestAlert
-        className='m-2'
-        projectId={`${projectId}`}
-        segmentId={`${segment.id}`}
-      />
+      {segment.id && (
+        <ExistingProjectChangeRequestAlert
+          className='m-2'
+          projectId={`${projectId}`}
+          segmentId={`${segment.id}`}
+        />
+      )}
       {isEdit && !condensed ? (
-        <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
+        <Tabs
+          value={tab}
+          theme='pill'
+          urlParam='segmentTab'
+          onChange={(tab: UserTabs) => setTab(tab)}
+        >
           <TabItem
-            tabLabelString='Rules'
+            tabLabelString='General'
             tabLabel={
-              <Row className='justify-content-center'>
-                Rules{' '}
+              <Row className='justify-content-center flex-nowrap'>
+                General{' '}
                 {valueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
               </Row>
             }
           >
-            <div className='my-4 col-lg-8 mx-auto'>
+            <div className='my-4'>
               <CreateSegmentRulesTabForm
                 is4Eyes={is4Eyes}
                 onCreateChangeRequest={onCreateChangeRequest}
@@ -526,39 +531,36 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           <TabItem tabLabel='Features'>
-            <div className='my-4 col-lg-8 mx-auto'>
+            <div className='my-4'>
               <AssociatedSegmentOverrides
-                onUnsavedChange={() => {
-                  setValueChanged(true)
-                }}
-                feature={segment.feature}
-                projectId={projectId}
-                id={segment.id}
-                environmentId={environmentId}
+                projectId={projectId as number}
+                segmentId={segment.id}
               />
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>
-            <div className='my-4 col-lg-8 mx-auto'>
-              <CreateSegmentUsersTabContent
-                projectId={projectId}
-                environmentId={environmentId}
-                setEnvironmentId={setEnvironmentId}
-                identitiesLoading={identitiesLoading}
-                identities={identities!}
-                page={page}
-                setPage={setPage}
-                name={name}
-                searchInput={searchInput}
-                setSearchInput={setSearchInput}
-              />
+            <div className='my-4'>
+              {!!identities && (
+                <CreateSegmentUsersTabContent
+                  projectId={projectId}
+                  environmentId={environmentId}
+                  setEnvironmentId={setEnvironmentId}
+                  identitiesLoading={identitiesLoading}
+                  identities={identities}
+                  page={page}
+                  setPage={setPage}
+                  name={name}
+                  searchInput={searchInput}
+                  setSearchInput={setSearchInput}
+                />
+              )}
             </div>
           </TabItem>
           {metadataEnable && segmentContentType?.id && (
             <TabItem
               tabLabelString='Custom Fields'
               tabLabel={
-                <Row className='justify-content-center'>
+                <Row className='justify-content-center flex-nowrap'>
                   Custom Fields
                   {metadataValueChanged && (
                     <div className='unread ml-2 px-1 pt-2'>{'*'}</div>
@@ -566,7 +568,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 </Row>
               }
             >
-              <div className='my-4 col-lg-8 mx-auto'>{MetadataTab}</div>
+              <div className='my-4'>{MetadataTab}</div>
             </TabItem>
           )}
         </Tabs>
@@ -649,7 +651,7 @@ type LoadingCreateSegmentType = {
   readOnly?: boolean
   onSegmentRetrieved?: (segment: Segment) => void
   onComplete?: (segment: Segment) => void
-  projectId: string
+  projectId: string | number
   segment?: number
 }
 
@@ -679,6 +681,7 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
     if (segmentData) {
       props.onSegmentRetrieved?.(segmentData)
     }
+    //eslint-disable-next-line
   }, [segmentData])
 
   const isEdge = Utils.getIsEdge()
