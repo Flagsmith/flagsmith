@@ -280,7 +280,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         data-test={`feature-item-${index}`}
         onClick={() => !isReadOnly && editFeature()}
       >
-        <div className='table-column ps-2 px-0 flex-1'>
+        <div className='table-column ps-2 px-0 align-items-center flex-1'>
           <div className='mx-0 flex-1 flex-column'>
             <div className='d-flex align-items-center'>
               <FeatureName name={projectFlag.name} />

@@ -13,12 +13,14 @@ type SegmentSelectType = {
   projectId: string
   'data-test'?: string
   placeholder?: string
+  className?: string
   value: SelectProps['value']
   onChange: SelectProps['onChange']
   filter?: (segments: Segment) => Segment[]
 }
 
 const SegmentSelect: FC<SegmentSelectType> = ({
+  className,
   filter,
   projectId,
   ...rest
@@ -41,12 +43,13 @@ const SegmentSelect: FC<SegmentSelectType> = ({
     <Select
       data-test={rest['data-test']}
       placeholder={rest.placeholder}
-      value={rest.value}
+      value={rest.value ? options.find((v) => v.value === rest.value) : null}
       isDisabled={rest.disabled}
       onChange={rest.onChange}
       onInputChange={(e: any) => {
         searchItems(Utils.safeParseEventValue(e))
       }}
+      className={className}
       components={{
         Menu: ({ ...props }: any) => {
           return (

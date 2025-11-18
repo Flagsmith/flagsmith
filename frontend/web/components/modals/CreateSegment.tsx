@@ -27,7 +27,7 @@ import {
   useUpdateSegmentMutation,
 } from 'common/services/useSegment'
 import Utils from 'common/utils/utils'
-import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
+import AssociatedSegmentOverrides from 'components/segments/AssociatedSegmentOverrides'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -488,12 +488,17 @@ const CreateSegment: FC<CreateSegmentType> = ({
         />
       )}
       {isEdit && !condensed ? (
-        <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
+        <Tabs
+          value={tab}
+          theme='pill'
+          urlParam='segmentTab'
+          onChange={(tab: UserTabs) => setTab(tab)}
+        >
           <TabItem
-            tabLabelString='Rules'
+            tabLabelString='General'
             tabLabel={
-              <Row className='justify-content-center'>
-                Rules{' '}
+              <Row className='justify-content-center flex-nowrap'>
+                General{' '}
                 {valueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
               </Row>
             }
@@ -528,13 +533,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
           <TabItem tabLabel='Features'>
             <div className='my-4'>
               <AssociatedSegmentOverrides
-                onUnsavedChange={() => {
-                  setValueChanged(true)
-                }}
-                feature={segment.feature}
-                projectId={projectId}
-                id={segment.id}
-                environmentId={environmentId}
+                projectId={projectId as number}
+                segmentId={segment.id}
               />
             </div>
           </TabItem>
@@ -560,7 +560,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <TabItem
               tabLabelString='Custom Fields'
               tabLabel={
-                <Row className='justify-content-center'>
+                <Row className='justify-content-center flex-nowrap'>
                   Custom Fields
                   {metadataValueChanged && (
                     <div className='unread ml-2 px-1 pt-2'>{'*'}</div>

@@ -1,6 +1,8 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+import { projectFlagService } from './useProjectFlag'
+import { getStore } from 'common/store'
 
 export const segmentOverrideService = service
   .enhanceEndpoints({ addTagTypes: ['SegmentOverride'] })
@@ -16,6 +18,12 @@ export const segmentOverrideService = service
           method: 'POST',
           url: `environments/${query.environmentId}/features/${query.featureId}/create-segment-override/`,
         }),
+        transformResponse: (res) => {
+          getStore().dispatch(
+            projectFlagService.util.invalidateTags(['ProjectFlag']),
+          )
+          return res
+        },
       }),
       // END OF ENDPOINTS
     }),
