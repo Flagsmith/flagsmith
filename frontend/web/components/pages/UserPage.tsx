@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
-import { useHistory, useRouteMatch } from 'react-router-dom'
+import { Link, useHistory, useRouteMatch } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 import keyBy from 'lodash/keyBy'
 
@@ -22,7 +22,6 @@ import Constants from 'common/constants'
 import CreateSegmentModal from 'components/modals/CreateSegment'
 import EditIdentity from 'components/EditIdentity'
 import FeatureListStore from 'common/stores/feature-list-store'
-import Icon from 'components/Icon'
 import IdentifierString from 'components/IdentifierString'
 import IdentityProvider from 'common/providers/IdentityProvider'
 import InfoMessage from 'components/InfoMessage'
@@ -45,6 +44,7 @@ import FeatureFilters, {
   getURLParamsFromFilters,
 } from 'components/feature-page/FeatureFilters'
 import Project from 'common/project'
+import SettingTitle from 'components/SettingTitle'
 
 interface RouteParams {
   environmentId: string
@@ -115,13 +115,14 @@ const UserPage: FC = () => {
 
   const editSegment = (segment: any) => {
     API.trackEvent(Constants.events.VIEW_SEGMENT)
+    if (!projectId) return
     openModal(
       `Segment - ${segment.name}`,
       <CreateSegmentModal
         segment={segment.id}
         readOnly
         environmentId={environmentId}
-        projectId={projectId!}
+        projectId={projectId}
       />,
       'side-modal create-segment-modal',
     )
@@ -166,7 +167,7 @@ const UserPage: FC = () => {
           }) => {
             const identityName =
               (identity && identity.identity.identifier) || id
-            return isLoading &&
+            return (isLoading || !projectId) &&
               (!identityFlags || !actualFlags || !projectFlags) ? (
               <div className='text-center'>
                 <Loader />
@@ -175,55 +176,40 @@ const UserPage: FC = () => {
               <>
                 <PageTitle
                   title={
-                    <div className='d-flex align-items-center justify-content-between'>
-                      <div>
-                        <IdentifierString value={identityName} />
-                        {showAliases && (
-                          <h6 className='d-flex align-items-center gap-1'>
-                            <Tooltip
-                              title={
-                                <span className='user-select-none'>
-                                  Alias:{' '}
-                                </span>
-                              }
-                            >
-                              Aliases allow you to add searchable names to an
-                              identity
-                            </Tooltip>
-                            {!!identity && (
-                              <EditIdentity
-                                data={identity?.identity}
-                                environmentId={environmentId}
-                              />
-                            )}
-                          </h6>
-                        )}
+                    <div className='h5'>
+                      Identifier:{' '}
+                      <span className='fw-normal'>
+                        <IdentifierString
+                          value={
+                            (identity && identity.identity.identifier) || id
+                          }
+                        />
+                      </span>
+                      {showAliases && (
+                        <h6 className='d-flex mb-0 align-items-end gap-1'>
+                          <Tooltip
+                            title={
+                              <span className='user-select-none'>Alias: </span>
+                            }
+                          >
+                            Aliases allow you to add searchable names to an
+                            identity
+                          </Tooltip>
+                          {!!identity && (
+                            <EditIdentity
+                              data={identity?.identity}
+                              environmentId={environmentId}
+                            />
+                          )}
+                        </h6>
+                      )}
+                      <div className='text-nowrap fs-regular fw-normal mt-2'>
+                        View and manage feature states and traits for this
+                        identity.
                       </div>
-                      <Button
-                        id='remove-feature'
-                        className='btn btn-with-icon'
-                        type='button'
-                        onClick={() => {
-                          removeIdentity(
-                            id,
-                            identityName,
-                            environmentId,
-                            () => {
-                              history.replace(
-                                `/project/${projectId}/environment/${environmentId}/users`,
-                              )
-                            },
-                          )
-                        }}
-                      >
-                        <Icon name='trash-2' width={20} fill='#656D7B' />
-                      </Button>
                     </div>
                   }
-                >
-                  View and manage feature states and traits for this user.
-                  <br />
-                </PageTitle>
+                ></PageTitle>
                 <div className='row'>
                   <div className='col-md-12'>
                     <FormGroup>
@@ -276,7 +262,7 @@ const UserPage: FC = () => {
                           header={
                             <FeatureFilters
                               value={filter}
-                              projectId={projectId!}
+                              projectId={projectId}
                               orgId={AccountStore.getOrganisation()?.id}
                               isLoading={FeatureListStore.isLoading}
                               onChange={(next) => {
@@ -294,7 +280,7 @@ const UserPage: FC = () => {
                           }
                           isLoading={FeatureListStore.isLoading}
                           items={projectFlags}
-                          renderRow={({ id: featureId, name, tags }, i) => {
+                          renderRow={({ id: featureId, name }, i) => {
                             const identityFlag = identityFlags[featureId]
                             const actualEnabled =
                               actualFlags && actualFlags[name]?.enabled
@@ -354,7 +340,7 @@ const UserPage: FC = () => {
                       {!preventAddTrait && (
                         <IdentityTraits
                           environmentId={environmentId}
-                          projectId={projectId!}
+                          projectId={projectId}
                           identityId={id}
                           identityName={identity?.identity?.identifier || id}
                         />
@@ -457,6 +443,43 @@ const UserPage: FC = () => {
                         environmentId={environmentId}
                         userId={identityName}
                       />
+                    </FormGroup>
+                    <FormGroup className='mt-5'>
+                      <SettingTitle danger>Delete Identity</SettingTitle>
+                      <FormGroup className='mt-4'>
+                        <p className='fs-small col-lg-8 lh-sm'>
+                          Deleting this identity will delete all of their stored
+                          traits, and any identity overrides that you have
+                          configured. The identity will be recreated if it is
+                          identified when identified via your Flagsmith
+                          integration again. You can also recreate it in the
+                          dashboard from the{' '}
+                          <Link
+                            to={`/project/${projectId}/environment/${environmentId}/users`}
+                          >
+                            Identities Page
+                          </Link>
+                          .
+                        </p>
+                        <Button
+                          id='delete-identity-btn'
+                          onClick={() => {
+                            removeIdentity(
+                              id,
+                              (identity && identity.identity.identifier) || id,
+                              environmentId,
+                              () => {
+                                history.replace(
+                                  `/project/${projectId}/environment/${environmentId}/users`,
+                                )
+                              },
+                            )
+                          }}
+                          theme='danger'
+                        >
+                          Delete Identity
+                        </Button>
+                      </FormGroup>
                     </FormGroup>
                   </div>
                 </div>

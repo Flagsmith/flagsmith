@@ -14,7 +14,6 @@ import {
   UserGroup,
   AttributeName,
   Identity,
-  ChangeRequest,
   ProjectChangeRequest,
   Role,
   RolePermission,
@@ -27,7 +26,6 @@ import {
   TagStrategy,
 } from './responses'
 import { UtmsType } from './utms'
-import { SortValue } from 'components/tables/TableSortFilter'
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -798,6 +796,18 @@ export type Req = {
     projectId: number
     pipelineId: number
     name: string
+  }
+  getFeatureAnalytics: {
+    project_id: string
+    feature_id: string
+    period: number
+    environment_ids: string[]
+  }
+  getEnvironmentAnalytics: {
+    project_id: string
+    feature_id: string
+    period: number
+    environment_id: string
   }
   // END OF TYPES
 }

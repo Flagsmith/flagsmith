@@ -2,7 +2,6 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
-  AccountModel,
   ContentType,
   FeatureState,
   FeatureStateValue,
@@ -29,7 +28,6 @@ import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
 import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
 import { TimeUnit } from 'components/release-pipelines/constants'
-import getUserDisplayName from './getUserDisplayName'
 
 const semver = require('semver')
 
@@ -125,7 +123,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   colour(
-    c: string,
+    c?: string | null,
     fallback = Constants.defaultTagColor,
   ): InstanceType<typeof Color> {
     let res: Color
@@ -244,7 +242,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     const timeParts = waitFor.split(':')
 
-    if (timeParts.length != 3) return
+    if (timeParts.length !== 3) return
 
     const [hours, minutes, seconds] = timeParts
 
@@ -692,7 +690,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   sanitiseDiffString: (value: FlagsmithValue) => {
-    if (value === undefined || value == null) {
+    if (value === undefined || value === null) {
       return ''
     }
     return `${value}`

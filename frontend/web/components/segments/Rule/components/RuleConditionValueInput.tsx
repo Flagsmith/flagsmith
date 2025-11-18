@@ -22,7 +22,6 @@ type RuleConditionValueInputProps = {
   onChange?: (value: string) => void
   disabled?: boolean
   readOnly?: boolean
-  isValid?: boolean
   projectId?: number
   operator?: OperatorValue
   property?: string
@@ -31,7 +30,6 @@ type RuleConditionValueInputProps = {
 
 const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
   className,
-  isValid,
   onChange,
   operator,
   projectId,

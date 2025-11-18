@@ -30,7 +30,6 @@ import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
-import { projectService } from 'common/services/useProject'
 import { changeRequestService } from 'common/services/useChangeRequest'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
@@ -808,7 +807,7 @@ const controller = {
     }
 
     prom
-      .then((res) => {
+      .then(() => {
         if (store.model) {
           store.model.lastSaved = new Date().valueOf()
         }
@@ -817,47 +816,6 @@ const controller = {
       })
       .catch((e) => {
         API.ajaxHandler(store, e)
-      })
-  },
-  getFeatureUsage(projectId, environmentId, flag, period) {
-    data
-      .get(
-        `${Project.api}projects/${projectId}/features/${flag}/evaluation-data/?period=${period}&environment_id=${environmentId}`,
-      )
-      .then((result) => {
-        const firstResult = result[0]
-        const lastResult = firstResult && result[result.length - 1]
-        const diff = firstResult
-          ? moment(lastResult.day, 'YYYY-MM-DD').diff(
-              moment(firstResult.day, 'YYYY-MM-DD'),
-              'days',
-            )
-          : 0
-        if (firstResult && diff) {
-          _.range(0, diff).map((v) => {
-            const day = moment(firstResult.day)
-              .add(v, 'days')
-              .format('YYYY-MM-DD')
-            if (!result.find((v) => v.day === day)) {
-              result.push({
-                'count': 0,
-                day,
-              })
-            }
-          })
-        }
-        if (!store.model) {
-          // Now that we use RTK, sometimes this is called prior to the feature-list-store being used
-          // todo: this is resolved in https://github.com/Flagsmith/flagsmith/pull/6150
-          store.model = {}
-        }
-        store.model.usageData = _.sortBy(result, (v) =>
-          moment(v.day, 'YYYY-MM-DD').valueOf(),
-        ).map((v) => ({
-          ...v,
-          day: moment(v.day, 'YYYY-MM-DD').format('Do MMM'),
-        }))
-        store.changed()
       })
   },
   getFeatures: (projectId, environmentId, force, page, filter, pageSize) => {
@@ -1002,9 +960,6 @@ const store = Object.assign({}, BaseStore, {
   getEnvironmentFlags() {
     return store?.model?.keyedEnvironmentFeatures
   },
-  getFeatureUsage() {
-    return store.model && store.model.usageData
-  },
   getLastSaved() {
     return store.model && store.model.lastSaved
   },
@@ -1072,14 +1027,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
           store.filter,
         )
       }
-      break
-    case Actions.GET_FEATURE_USAGE:
-      controller.getFeatureUsage(
-        projectId,
-        action.environmentId,
-        action.flag,
-        action.period,
-      )
       break
     case Actions.CREATE_FLAG:
       controller.createFlag(projectId, action.environmentId, action.flag)

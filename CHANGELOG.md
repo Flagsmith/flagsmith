@@ -1,5 +1,87 @@
 # Changelog
 
+## [2.201.3](https://github.com/Flagsmith/flagsmith/compare/v2.201.2...v2.201.3) (2025-11-13)
+
+
+### Bug Fixes
+
+* remove AWS_SSE_LOGS_BUCKET_NAME from task processor definition ([#6289](https://github.com/Flagsmith/flagsmith/issues/6289)) ([2ddfe67](https://github.com/Flagsmith/flagsmith/commit/2ddfe672cd84344e5d494c4bac99bbcaf94c8c70))
+* Revert: chore(sales-dashboard): add multiselect to plan filter ([#6286](https://github.com/Flagsmith/flagsmith/issues/6286)) ([139af3e](https://github.com/Flagsmith/flagsmith/commit/139af3e502b90aed95b3ad959b94a7211bae9931))
+
+## [2.201.2](https://github.com/Flagsmith/flagsmith/compare/v2.201.1...v2.201.2) (2025-11-13)
+
+
+### Bug Fixes
+
+* move AWS_SSE_LOGS_BUCKET_NAME to task-processor definition ([#6284](https://github.com/Flagsmith/flagsmith/issues/6284)) ([58e0e79](https://github.com/Flagsmith/flagsmith/commit/58e0e792e48aab8c322dbf22f8b73c8b122917e7))
+
+## [2.201.1](https://github.com/Flagsmith/flagsmith/compare/v2.201.0...v2.201.1) (2025-11-12)
+
+
+### Bug Fixes
+
+* Ensure `PROMETHEUS_MULTIPROC_DIR` at buildtime ([#6281](https://github.com/Flagsmith/flagsmith/issues/6281)) ([ab1aaf3](https://github.com/Flagsmith/flagsmith/commit/ab1aaf30e070001dc6b9e0471e9ba129f1524e4c))
+
+
+### Dependency Updates
+
+* Bump flagsmith-common from 2.2.4 to 2.2.7 ([ab1aaf3](https://github.com/Flagsmith/flagsmith/commit/ab1aaf30e070001dc6b9e0471e9ba129f1524e4c))
+
+## [2.201.0](https://github.com/Flagsmith/flagsmith/compare/v2.200.0...v2.201.0) (2025-11-12)
+
+
+### Features
+
+* Add a view mode selector for diffing features ([#6272](https://github.com/Flagsmith/flagsmith/issues/6272)) ([4895346](https://github.com/Flagsmith/flagsmith/commit/48953464e2ee7daa23d7e5d060525c67f5befde9))
+* Improve flag analytics ([#6150](https://github.com/Flagsmith/flagsmith/issues/6150)) ([37f6f92](https://github.com/Flagsmith/flagsmith/commit/37f6f9248fd0a08ade3976edce24d046130ac552))
+
+
+### Bug Fixes
+
+* accessing-length-on-undefined-code-reference-count ([#6280](https://github.com/Flagsmith/flagsmith/issues/6280)) ([2521e15](https://github.com/Flagsmith/flagsmith/commit/2521e15863980fd16975c0956ef527dd4ae96a44))
+* Diff strings considering spaces ([#6271](https://github.com/Flagsmith/flagsmith/issues/6271)) ([8efb108](https://github.com/Flagsmith/flagsmith/commit/8efb10862ee2782bd79699abe1c332130be7bfa7))
+* re-enable sse usage tracking ([#6232](https://github.com/Flagsmith/flagsmith/issues/6232)) ([dd28ed5](https://github.com/Flagsmith/flagsmith/commit/dd28ed5b076b0d8a136f1d7877b00c85450a1534))
+
+## [2.200.0](https://github.com/Flagsmith/flagsmith/compare/v2.199.0...v2.200.0) (2025-11-11)
+
+
+### Features
+
+* add pylon chat ([#6214](https://github.com/Flagsmith/flagsmith/issues/6214)) ([7a5f64d](https://github.com/Flagsmith/flagsmith/commit/7a5f64dd4643012c0e9b691316de326c1478f89e))
+* added-query-param-to-get-segment-feature-states ([#6156](https://github.com/Flagsmith/flagsmith/issues/6156)) ([9ad82d5](https://github.com/Flagsmith/flagsmith/commit/9ad82d53818eecb6cda44de9cf61a9d5be3ae46e))
+* context values - implement multi-select dropdown on envs ([#6239](https://github.com/Flagsmith/flagsmith/issues/6239)) ([331cd9e](https://github.com/Flagsmith/flagsmith/commit/331cd9eadf74e62bb5809dd9f279b97df8f54589))
+* trigger FLAG_UPDATED webhooks for v2 versioning environments ([#6240](https://github.com/Flagsmith/flagsmith/issues/6240)) ([94afd46](https://github.com/Flagsmith/flagsmith/commit/94afd46a263172b11b9e212aa23cbe55bc644e20))
+
+
+### Bug Fixes
+
+* added-tags-in-approval-has-permissions ([#6227](https://github.com/Flagsmith/flagsmith/issues/6227)) ([d4229a9](https://github.com/Flagsmith/flagsmith/commit/d4229a9f9a6aec01e201b5c43b13d0d738153b97))
+* metrics endpoint identity overrides ([#6159](https://github.com/Flagsmith/flagsmith/issues/6159)) ([b44cf42](https://github.com/Flagsmith/flagsmith/commit/b44cf4258f3e518e79448805dba08aab1a51e333))
+* Pin firefox version ([#6244](https://github.com/Flagsmith/flagsmith/issues/6244)) ([3f8b260](https://github.com/Flagsmith/flagsmith/commit/3f8b260832b9e964d2f4480394491bc83d35e34f))
+* properly deal with context values dropdown ([#6222](https://github.com/Flagsmith/flagsmith/issues/6222)) ([bca5744](https://github.com/Flagsmith/flagsmith/commit/bca5744614ccaca1b9eeec648748eca741eb8f0e))
+* resolve flaky test due to non-deterministic variation ordering ([#6269](https://github.com/Flagsmith/flagsmith/issues/6269)) ([f8a3381](https://github.com/Flagsmith/flagsmith/commit/f8a3381120649276440987dbe4bb7daf05fa6bc8))
+* Revert "infra: Remove PGP key from SaaS build" ([#6197](https://github.com/Flagsmith/flagsmith/issues/6197)) ([db16264](https://github.com/Flagsmith/flagsmith/commit/db162648b30105ae123bcb2b86be628a7f5535ea))
+* segment change request warning shows on all segments ([#6255](https://github.com/Flagsmith/flagsmith/issues/6255)) ([560a04d](https://github.com/Flagsmith/flagsmith/commit/560a04d0e8c40314e4bac4e0216d4b0360b324bf))
+* show whitespace warnings for IN operator comma-separated values ([#6203](https://github.com/Flagsmith/flagsmith/issues/6203)) ([1b75a10](https://github.com/Flagsmith/flagsmith/commit/1b75a10d0b951c8db30ce4a9322b9eb81ee11288))
+* **sse_stream_access_logs:** Add timeout ([#6198](https://github.com/Flagsmith/flagsmith/issues/6198)) ([4d15821](https://github.com/Flagsmith/flagsmith/commit/4d1582119cad72ea817c64bdfd22125d17c7a6a5))
+* switched-allow-context-values-to-disabled ([#6216](https://github.com/Flagsmith/flagsmith/issues/6216)) ([f95a4f6](https://github.com/Flagsmith/flagsmith/commit/f95a4f6f47b37b2b747a1fc58ff496e82aca3a64))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Remove PGP key from SaaS build ([#6194](https://github.com/Flagsmith/flagsmith/issues/6194)) ([9b43a37](https://github.com/Flagsmith/flagsmith/commit/9b43a379de18f0ddf18d7de470f94e9cb8531bf2))
+
+
+### Dependency Updates
+
+* bump django from 4.2.25 to 4.2.26 in /api ([#6249](https://github.com/Flagsmith/flagsmith/issues/6249)) ([4e474f1](https://github.com/Flagsmith/flagsmith/commit/4e474f1e7615fa40691da102354e7e8498a579b9))
+* Bump flagsmith-common from 2.2.2 to 2.2.3 ([#6235](https://github.com/Flagsmith/flagsmith/issues/6235)) ([7474ba9](https://github.com/Flagsmith/flagsmith/commit/7474ba9961912be68cae6605179b3dc5a7b02605))
+* Bump flagsmith-common from 2.2.3 to 2.2.4 ([#6237](https://github.com/Flagsmith/flagsmith/issues/6237)) ([5926910](https://github.com/Flagsmith/flagsmith/commit/5926910729572f5ff6f330f9c309ae78f5f38f29))
+* bump flagsmith-common to 2.2.2 ([#6225](https://github.com/Flagsmith/flagsmith/issues/6225)) ([786cbd9](https://github.com/Flagsmith/flagsmith/commit/786cbd9d09605a35c3df5044b1fad099ed9eba91))
+* bump flagsmith-workflows to 3.1.0 ([#6140](https://github.com/Flagsmith/flagsmith/issues/6140)) ([33ad626](https://github.com/Flagsmith/flagsmith/commit/33ad6265af25e9887f2c158ccc381db449dabf06))
+* update flagsmith js client dependency ([#6257](https://github.com/Flagsmith/flagsmith/issues/6257)) ([c4b5a4a](https://github.com/Flagsmith/flagsmith/commit/c4b5a4a97bd1416bdd870a0fce5bceac731edb23))
+* update flagsmith-common 2.2.6 ([#6267](https://github.com/Flagsmith/flagsmith/issues/6267)) ([64aa842](https://github.com/Flagsmith/flagsmith/commit/64aa842e6ec7f5ac283ae3bb3171983bfcfe6f77))
+
 ## [2.199.0](https://github.com/Flagsmith/flagsmith/compare/v2.198.1...v2.199.0) (2025-10-22)
 
 

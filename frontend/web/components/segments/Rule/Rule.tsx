@@ -99,7 +99,7 @@ const Rule: React.FC<RuleProps> = ({
     // Set null for hideValue operators (takes precedence over everything)
     if (newOperator?.hideValue) {
       updates.value = null
-    } else if (prevOperator?.hideValue && !updates.hasOwnProperty('value')) {
+    } else if (prevOperator?.hideValue && !('value' in updates)) {
       // When changing FROM a hideValue operator, initialize value to empty string
       updates.value = ''
     }

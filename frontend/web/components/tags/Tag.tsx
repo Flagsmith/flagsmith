@@ -84,6 +84,7 @@ const Tag: FC<TagType> = ({
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
+        className={className}
         color={shouldLighten(tagColor) ? tagColor.lighten(0.5) : tagColor}
         active={selected}
         onClick={() => {

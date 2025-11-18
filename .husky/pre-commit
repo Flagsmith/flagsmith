@@ -1,4 +1,21 @@
-#!/bin/sh
+#!/usr/bin/env bash
 . "$(dirname "$0")/_/husky.sh"
 
-cd ./frontend && npx lint-staged --allow-empty
+# Load nvm for GUI apps (supports both standard and Homebrew installations)
+export NVM_DIR="$HOME/.nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  . "$NVM_DIR/nvm.sh"
+elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
+  . "/opt/homebrew/opt/nvm/nvm.sh"
+fi
+
+# Auto-load Node version from .nvmrc if NVM is available
+if command -v nvm &> /dev/null; then
+  cd ./frontend
+  # Try to use version from .nvmrc, fallback to default if not installed
+  nvm use 2>/dev/null || nvm use default 2>/dev/null || nvm use node 2>/dev/null || true
+else
+  cd ./frontend
+fi
+
+npx lint-staged --allow-empty
