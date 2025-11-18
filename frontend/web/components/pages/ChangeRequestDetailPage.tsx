@@ -18,6 +18,7 @@ import {
 import Utils from 'common/utils/utils'
 import moment from 'moment'
 import ProjectStore from 'common/stores/project-store'
+import { useUpdateChangeRequestMutation } from 'common/services/useChangeRequest'
 import { useHasPermission } from 'common/providers/Permission'
 import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons'
@@ -54,6 +55,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   const history = useHistory()
   const { environmentId, id, projectId } = match.params
   const [_, setUpdate] = useState(Date.now())
+  const [updateChangeRequest] = useUpdateChangeRequestMutation()
   const error = ChangeRequestStore.error
   const changeRequest = (
     ChangeRequestStore.model as Record<string, ChangeRequest> | undefined
@@ -209,14 +211,22 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       environmentId: environment.id,
       isScheduled,
       onYes: (ignore_conflicts) => {
-        AppActions.actionChangeRequest(
-          id,
-          'commit',
-          () => {
+        const commitChangeRequest = () => {
+          AppActions.actionChangeRequest(id, 'commit', () => {
             AppActions.refreshFeatures(projectId, environmentId)
-          },
-          ignore_conflicts,
-        )
+          })
+        }
+
+        if (ignore_conflicts) {
+          updateChangeRequest({
+            ...changeRequest,
+            ignore_conflicts: true,
+          }).then(() => {
+            commitChangeRequest()
+          })
+        } else {
+          commitChangeRequest()
+        }
       },
       projectId,
       scheduledDate: isScheduled

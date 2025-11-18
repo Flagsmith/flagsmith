@@ -18,12 +18,12 @@ const transformChangeRequest = async (changeRequest) => {
   }
 }
 const controller = {
-  actionChangeRequest: (id, action, cb, ignore_conflicts) => {
+  actionChangeRequest: (id, action, cb) => {
     store.loading()
     data
       .post(
         `${Project.api}features/workflows/change-requests/${id}/${action}/`,
-        { ignore_conflicts },
+        {},
       )
       .then(() => {
         data
@@ -142,12 +142,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.deleteChangeRequest(action.id, action.cb)
       break
     case Actions.ACTION_CHANGE_REQUEST:
-      controller.actionChangeRequest(
-        action.id,
-        action.action,
-        action.cb,
-        action.ignore_conflicts,
-      )
+      controller.actionChangeRequest(action.id, action.action, action.cb)
       break
     default:
       break

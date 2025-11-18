@@ -59,11 +59,10 @@ export const PublishChangeRequestContent: FC<
         featureId={featureId}
         changeSets={changeRequest.change_sets}
         featureStates={featureStates}
+        liveFrom={getChangeRequestLiveDate(changeRequest)?.toISOString()}
         ignoreConflicts={ignoreConflicts}
         onIgnoreConflictsChange={handleIgnoreConflictsChange}
         onHasChangesChange={handleHasChangesChange}
-        liveFrom={getChangeRequestLiveDate(changeRequest)?.toISOString()}
-        conflicts={changeRequest.conflicts}
       />
     </div>
   )

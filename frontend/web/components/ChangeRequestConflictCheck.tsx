@@ -1,11 +1,7 @@
 import React, { FC, useEffect, useMemo } from 'react'
 import { useHasFeatureStateChanges } from 'common/hooks/useHasFeatureStateChanges'
 import Checkbox from './base/forms/Checkbox'
-import {
-  ChangeSet,
-  FeatureConflict,
-  FeatureState,
-} from 'common/types/responses'
+import { ChangeSet, FeatureState } from 'common/types/responses'
 import WarningMessage from './WarningMessage'
 import Format from 'common/utils/format'
 import moment from 'moment'
@@ -17,25 +13,20 @@ interface ChangeRequestConflictCheckProps {
   featureId?: number
   featureStates?: FeatureState[]
   changeSets?: ChangeSet[]
+  liveFrom?: string | null
   ignoreConflicts: boolean
   onIgnoreConflictsChange: (value: boolean) => void
   onHasChangesChange?: (hasChanges: boolean) => void
-  liveFrom?: string | null
-  conflicts?: FeatureConflict[]
 }
 
 /**
- * ChangeRequestConflictCheck displays warnings and allows users to bypass them:
- *
- * 1. No Changes Warning: Shown when creating a change request and no feature state changes are detected
- * 2. Publish Conflict Warning: Shown when action is 'publish' AND either:
- *    - The change request has conflicts (changeRequest.conflicts has items), OR
- *    - The scheduled date (liveFrom) is set to a future date
+ * ChangeRequestConflictCheck displays a warning when:
+ * - Creating a change request with no feature state changes
+ * - Publishing a change request that is scheduled in the future
  */
 const ChangeRequestConflictCheck: FC<ChangeRequestConflictCheckProps> = ({
   action,
   changeSets,
-  conflicts,
   environmentId,
   featureId,
   featureStates,
@@ -53,20 +44,13 @@ const ChangeRequestConflictCheck: FC<ChangeRequestConflictCheckProps> = ({
     projectId,
   })
 
-  const isScheduledInFuture = useMemo(() => {
-    return liveFrom ? moment(liveFrom).isAfter(moment()) : false
-  }, [liveFrom])
-
-  const hasConflicts = useMemo(() => {
-    return conflicts && conflicts.length > 0
-  }, [conflicts])
-
   useEffect(() => {
     onHasChangesChange?.(hasChanges)
   }, [hasChanges, onHasChangesChange])
 
-  const shouldShowPublishWarning =
-    action === 'publish' && (hasConflicts || isScheduledInFuture)
+  const isScheduledInFuture = useMemo(() => {
+    return liveFrom ? moment(liveFrom).isAfter(moment()) : false
+  }, [liveFrom])
 
   if (!hasChanges && action === 'create') {
     return (
@@ -85,7 +69,7 @@ const ChangeRequestConflictCheck: FC<ChangeRequestConflictCheckProps> = ({
     )
   }
 
-  if (shouldShowPublishWarning) {
+  if (isScheduledInFuture && action === 'publish') {
     return (
       <div>
         <WarningMessage
@@ -94,7 +78,7 @@ const ChangeRequestConflictCheck: FC<ChangeRequestConflictCheckProps> = ({
           }
         />
         <Checkbox
-          label='Ignore conflicts and publish anyway'
+          label='Publish this change request anyway, ignoring conflicts'
           checked={ignoreConflicts}
           onChange={onIgnoreConflictsChange}
         />

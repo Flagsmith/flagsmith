@@ -29,8 +29,10 @@ import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
-import { projectService } from 'common/services/useProject'
-import { changeRequestService } from 'common/services/useChangeRequest'
+import {
+  changeRequestService,
+  updateChangeRequest,
+} from 'common/services/useChangeRequest'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -641,10 +643,15 @@ const controller = {
               }
 
               prom = (
-                shouldUpdateMv
-                  ? data.put(
-                      `${Project.api}features/workflows/change-requests/${updatedChangeRequest.id}/`,
-                      updatedChangeRequest,
+                shouldUpdateMv || (commit && ignore_conflicts)
+                  ? updateChangeRequest(
+                      getStore(),
+                      commit && ignore_conflicts
+                        ? {
+                            ...updatedChangeRequest,
+                            ignore_conflicts: true,
+                          }
+                        : updatedChangeRequest,
                     )
                   : Promise.resolve()
               ).then(() => {
@@ -655,7 +662,6 @@ const controller = {
                     () => {
                       AppActions.refreshFeatures(projectId, environmentId)
                     },
-                    ignore_conflicts,
                   )
                 } else {
                   getStore().dispatch(

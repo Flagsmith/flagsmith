@@ -312,10 +312,10 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                 environmentId={environmentId!}
                 featureId={featureId!}
                 featureStates={featureStates || []}
+                liveFrom={liveFrom}
                 ignoreConflicts={ignoreConflicts}
                 onIgnoreConflictsChange={setIgnoreConflicts}
                 onHasChangesChange={setHasChanges}
-                liveFrom={liveFrom}
               />
             )}
             <FormGroup className='text-right mt-2'>
