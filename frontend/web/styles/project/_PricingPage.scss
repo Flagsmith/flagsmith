@@ -1,3 +1,16 @@
 .panel-content.p-4 {
-    padding: unset !important;
+  padding: unset !important;
+}
+
+.pricing-features > li {
+  list-style: none;
+}
+
+.pricing-features-item {
+  flex-wrap: nowrap;
+}
+
+.pricing-panel,
+.panel-content {
+  border-radius: 4px;
 }
