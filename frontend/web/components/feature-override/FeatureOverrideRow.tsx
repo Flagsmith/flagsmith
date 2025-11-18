@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import React, { FC, useEffect, useMemo, useRef } from 'react'
+import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   FeatureState,
   IdentityFeatureState,
@@ -78,35 +78,32 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
       onClick()
       return
     }
-    const confirmToggle = (projectFlag: any, environmentFlag: any, cb: any) => {
-      openModal(
-        'Toggle Feature',
-        <ConfirmToggleFeature
-          identity={identity}
-          identityName={identityName}
-          environmentId={environmentId}
-          projectFlag={projectFlag}
-          environmentFlag={environmentFlag}
-          cb={cb}
-        />,
-        'p-0',
-      )
-    }
 
-    confirmToggle(projectFlag, overrideFeatureState, () =>
-      AppActions.toggleUserFlag({
-        environmentFlag: environmentFeatureState,
-        environmentId,
-        identity,
-        identityFlag: overrideFeatureState,
-        projectFlag: {
-          id: featureId,
-        },
-      }),
+    openModal(
+      'Toggle Feature',
+      <ConfirmToggleFeature
+        identity={identity}
+        identityName={identityName}
+        environmentId={environmentId}
+        projectFlag={projectFlag}
+        environmentFlag={overrideFeatureState}
+        cb={() =>
+          AppActions.toggleUserFlag({
+            environmentFlag: environmentFeatureState,
+            environmentId,
+            identity,
+            identityFlag: overrideFeatureState,
+            projectFlag: {
+              id: featureId,
+            },
+          })
+        }
+      />,
+      'p-0',
     )
   }
 
-  const onClick = () => {
+  const onClick = useCallback(() => {
     if (
       !projectFlag ||
       !environmentId ||
@@ -161,7 +158,17 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
         history.replace(`${document.location.pathname}?${newParams}`)
       },
     )
-  }
+  }, [
+    projectFlag,
+    environmentId,
+    environmentFeatureState,
+    overrideFeatureState,
+    level,
+    history,
+    identity,
+    identityName,
+    projectId,
+  ])
 
   useEffect(() => {
     if (shouldPreselect && !hasPreselected.current) {
