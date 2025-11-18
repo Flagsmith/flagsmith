@@ -317,7 +317,7 @@ $side-width: 750px;
 }
 
 .modal-open {
-  #crisp-chatbox {
+  #crisp-chatbox, #pylon-chat-bubble {
     opacity: 0;
     pointer-events: none;
   }
