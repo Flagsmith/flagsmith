@@ -479,7 +479,9 @@ const controller = {
     projectFlag: ProjectFlag,
     environmentFlag: FeatureState,
     segmentOverrides: any,
-    changeRequest: Req['createChangeRequest'],
+    changeRequest: Req['createChangeRequest'] & {
+      ignore_conflicts?: boolean
+    },
     commit: boolean,
   ) => {
     store.saving()
@@ -554,6 +556,7 @@ const controller = {
           const {
             approvals,
             featureStateId,
+            ignore_conflicts,
             multivariate_options,
             ...changeRequestData
           } = changeRequest
@@ -652,6 +655,7 @@ const controller = {
                     () => {
                       AppActions.refreshFeatures(projectId, environmentId)
                     },
+                    ignore_conflicts,
                   )
                 } else {
                   getStore().dispatch(
