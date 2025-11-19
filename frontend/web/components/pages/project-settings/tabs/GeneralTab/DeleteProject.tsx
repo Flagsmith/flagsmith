@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React from 'react'
 import ConfirmRemoveProject from 'components/modals/ConfirmRemoveProject'
 import { Project } from 'common/types/responses'
 import { useDeleteProjectMutation } from 'common/services/useProject'
@@ -9,10 +9,7 @@ type DeleteProjectProps = {
   onDelete: () => void
 }
 
-export const DeleteProject: FC<DeleteProjectProps> = ({
-  onDelete,
-  project,
-}) => {
+export const DeleteProject = ({ onDelete, project }: DeleteProjectProps) => {
   const [deleteProject] = useDeleteProjectMutation()
 
   const confirmRemove = () => {

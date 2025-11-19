@@ -15,7 +15,6 @@ type GeneralTabProps = {
   project: Project
   projectId: number
   environmentId?: string
-  organisationId?: number
 }
 
 export const GeneralTab = ({ project, projectId }: GeneralTabProps) => {

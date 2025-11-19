@@ -1,4 +1,4 @@
-import React, { FC, useRef } from 'react'
+import React, { useRef } from 'react'
 import Setting from 'components/Setting'
 import RegexTester from 'components/RegexTester'
 import Utils from 'common/utils/utils'
@@ -11,13 +11,13 @@ type FeatureNameValidationProps = {
   isSaving: boolean
 }
 
-export const FeatureNameValidation: FC<FeatureNameValidationProps> = ({
+export const FeatureNameValidation = ({
   featureNameRegex,
   isSaving,
   onChange,
   onSave,
   onToggle,
-}) => {
+}: FeatureNameValidationProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const featureRegexEnabled = typeof featureNameRegex === 'string'
 

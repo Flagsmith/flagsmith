@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React from 'react'
 import Icon from 'components/Icon'
 import { Project } from 'common/types/responses'
 import { useMigrateProjectMutation } from 'common/services/useProject'
@@ -8,7 +8,7 @@ type EdgeAPIMigrationProps = {
   project: Project
 }
 
-export const EdgeAPIMigration: FC<EdgeAPIMigrationProps> = ({ project }) => {
+export const EdgeAPIMigration = ({ project }: EdgeAPIMigrationProps) => {
   const [migrateProject, { isLoading: isMigrating }] =
     useMigrateProjectMutation()
 

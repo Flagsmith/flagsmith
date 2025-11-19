@@ -1,23 +1,49 @@
 import EditPermissions from 'components/EditPermissions'
+import InfoMessage from 'components/InfoMessage'
 import React from 'react'
 import { useGetRolesQuery } from 'common/services/useRole'
 import { useGetProjectPermissionsQuery } from 'common/services/useProject'
-import { ProjectSettingsTabProps } from 'components/pages/project-settings/shared/types'
+
+type PermissionsTabProps = {
+  projectId: number
+  organisationId: number
+}
 
 export const PermissionsTab = ({
   organisationId,
   projectId,
-}: ProjectSettingsTabProps) => {
-  const { data: rolesData } = useGetRolesQuery(
-    { organisation_id: organisationId || 0 },
-    { skip: !organisationId },
-  )
+}: PermissionsTabProps) => {
+  const {
+    data: rolesData,
+    error: rolesError,
+    isLoading: rolesLoading,
+  } = useGetRolesQuery({ organisation_id: organisationId })
 
-  const { data: permissionsData, refetch: refetchPermissions } =
-    useGetProjectPermissionsQuery({ projectId: String(projectId) })
+  const {
+    data: permissionsData,
+    error: permissionsError,
+    isLoading: permissionsLoading,
+    refetch: refetchPermissions,
+  } = useGetProjectPermissionsQuery({ projectId: String(projectId) })
 
   const handleSaveUser = () => {
     refetchPermissions()
+  }
+
+  if (rolesLoading || permissionsLoading) {
+    return (
+      <div className='text-center'>
+        <Loader />
+      </div>
+    )
+  }
+
+  if (rolesError || permissionsError) {
+    return (
+      <div className='mt-4'>
+        <InfoMessage>Error loading permissions data</InfoMessage>
+      </div>
+    )
   }
 
   return (

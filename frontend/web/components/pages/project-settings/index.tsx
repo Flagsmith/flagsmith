@@ -17,7 +17,7 @@ import { CustomFieldsTab } from './tabs/CustomFieldsTab'
 import { ImportTab } from './tabs/ImportTab'
 
 const ProjectSettingsPage = () => {
-  const { environmentId, organisationId, projectId } = useRouteContext()
+  const { environmentId, projectId } = useRouteContext()
   const { data: project, isLoading } = useGetProjectQuery(
     { id: String(projectId) },
     { skip: !projectId },
@@ -30,7 +30,10 @@ const ProjectSettingsPage = () => {
   const hasEnvironments = !!project?.environments?.length
   const hasFeatureHealth = Utils.getFlagsmithHasFeature('feature_health')
 
-  if (isLoading || !project || !projectId) {
+  // Derive organisationId from project data
+  const organisationId = project?.organisation
+
+  if (isLoading || !project || !projectId || !organisationId) {
     return (
       <div className='app-container container'>
         <PageTitle title='Project Settings' />
@@ -50,7 +53,6 @@ const ProjectSettingsPage = () => {
             project={project}
             projectId={projectId}
             environmentId={environmentId}
-            organisationId={organisationId}
           />
         </TabItem>
 
@@ -59,7 +61,6 @@ const ProjectSettingsPage = () => {
             project={project}
             projectId={projectId}
             environmentId={environmentId}
-            organisationId={organisationId}
           />
         </TabItem>
 
@@ -85,26 +86,17 @@ const ProjectSettingsPage = () => {
         <TabItem tabLabel='Permissions'>
           <PermissionsTab
             projectId={projectId}
-            environmentId={environmentId}
             organisationId={organisationId}
           />
         </TabItem>
 
         <TabItem tabLabel='Custom Fields'>
-          <CustomFieldsTab
-            projectId={projectId}
-            environmentId={environmentId}
-            organisationId={organisationId}
-          />
+          <CustomFieldsTab organisationId={organisationId} />
         </TabItem>
 
         {hasEnvironments && (
           <TabItem data-test='js-import-page' tabLabel='Import'>
-            <ImportTab
-              projectId={projectId}
-              environmentId={environmentId}
-              organisationId={organisationId}
-            />
+            <ImportTab projectId={projectId} environmentId={environmentId} />
           </TabItem>
         )}
 
