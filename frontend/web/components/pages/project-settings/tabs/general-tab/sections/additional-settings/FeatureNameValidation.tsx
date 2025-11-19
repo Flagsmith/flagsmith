@@ -1,34 +1,75 @@
-import React, { useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Setting from 'components/Setting'
 import RegexTester from 'components/RegexTester'
 import Utils from 'common/utils/utils'
+import { Project } from 'common/types/responses'
+import { useUpdateProjectWithToast } from 'components/pages/project-settings/hooks'
 
 type FeatureNameValidationProps = {
-  featureNameRegex: string | null
-  onToggle: () => void
-  onChange: (regex: string) => void
-  onSave: () => void
-  isSaving: boolean
+  project: Project
 }
 
 export const FeatureNameValidation = ({
-  featureNameRegex,
-  isSaving,
-  onChange,
-  onSave,
-  onToggle,
+  project,
 }: FeatureNameValidationProps) => {
+  const [updateProjectWithToast, { isLoading: isSaving }] =
+    useUpdateProjectWithToast()
+  const [featureNameRegex, setFeatureNameRegex] = useState<string | null>(
+    project.feature_name_regex || null,
+  )
+
   const inputRef = useRef<HTMLInputElement>(null)
   const featureRegexEnabled = typeof featureNameRegex === 'string'
 
-  let regexValid = true
-  if (featureNameRegex) {
+  // Sync local state when project changes
+  useEffect(() => {
+    setFeatureNameRegex(project.feature_name_regex || null)
+  }, [project.feature_name_regex])
+
+  const handleToggle = useCallback(async () => {
+    if (featureNameRegex) {
+      const previousValue = featureNameRegex
+      setFeatureNameRegex(null)
+      await updateProjectWithToast(
+        {
+          feature_name_regex: null,
+          name: project.name,
+        },
+        project.id,
+        {
+          errorMessage:
+            'Failed to update feature validation. Please try again.',
+          onError: () => setFeatureNameRegex(previousValue), // Revert on error
+        },
+      )
+    } else {
+      setFeatureNameRegex('^.+$')
+    }
+  }, [featureNameRegex, project.name, project.id, updateProjectWithToast])
+
+  const handleSave = useCallback(async () => {
+    await updateProjectWithToast(
+      {
+        feature_name_regex: featureNameRegex,
+        name: project.name,
+      },
+      project.id,
+      {
+        errorMessage: 'Failed to save regex. Please try again.',
+        successMessage: 'Feature name regex saved',
+      },
+    )
+  }, [featureNameRegex, project.name, project.id, updateProjectWithToast])
+
+  const regexValid = useMemo(() => {
+    if (!featureNameRegex) return true
     try {
       new RegExp(featureNameRegex)
+      return true
     } catch (e) {
-      regexValid = false
+      return false
     }
-  }
+  }, [featureNameRegex])
 
   const forceSelectionRange = (e: React.MouseEvent | React.KeyboardEvent) => {
     const input = e.currentTarget as HTMLInputElement
@@ -43,11 +84,11 @@ export const FeatureNameValidation = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (regexValid) {
-      onSave()
+      handleSave()
     }
   }
 
-  const handleRegexChange = (e: InputEvent) => {
+  const handleRegexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let newRegex = Utils.safeParseEventValue(e).replace('$', '')
     if (!newRegex.startsWith('^')) {
       newRegex = `^${newRegex}`
@@ -55,7 +96,7 @@ export const FeatureNameValidation = ({
     if (!newRegex.endsWith('$')) {
       newRegex = `${newRegex}$`
     }
-    onChange(newRegex)
+    setFeatureNameRegex(newRegex)
   }
 
   const openRegexTester = () => {
@@ -63,7 +104,7 @@ export const FeatureNameValidation = ({
       <span>RegEx Tester</span>,
       <RegexTester
         regex={featureNameRegex || ''}
-        onChange={(newRegex: string) => onChange(newRegex)}
+        onChange={(newRegex: string) => setFeatureNameRegex(newRegex)}
       />,
     )
   }
@@ -76,7 +117,7 @@ export const FeatureNameValidation = ({
         disabled={isSaving}
         description={`This allows you to define a regular expression that
                           all feature names must adhere to.`}
-        onChange={onToggle}
+        onChange={handleToggle}
         checked={featureRegexEnabled}
       />
       <div
@@ -106,7 +147,11 @@ export const FeatureNameValidation = ({
                     placeholder='Regular Expression'
                   />
                 </Flex>
-                <Button className='ml-2' type='submit' disabled={!regexValid}>
+                <Button
+                  className='ml-2'
+                  type='submit'
+                  disabled={!regexValid || isSaving}
+                >
                   Save
                 </Button>
                 <Button

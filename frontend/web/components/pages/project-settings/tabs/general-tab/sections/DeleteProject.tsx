@@ -1,16 +1,22 @@
-import React from 'react'
+import React, { useCallback } from 'react'
+import { useHistory } from 'react-router-dom'
 import ConfirmRemoveProject from 'components/modals/ConfirmRemoveProject'
 import { Project } from 'common/types/responses'
 import { useDeleteProjectMutation } from 'common/services/useProject'
 import SettingTitle from 'components/SettingTitle'
+import Utils from 'common/utils/utils'
 
 type DeleteProjectProps = {
   project: Project
-  onDelete: () => void
 }
 
-export const DeleteProject = ({ onDelete, project }: DeleteProjectProps) => {
+export const DeleteProject = ({ project }: DeleteProjectProps) => {
+  const history = useHistory()
   const [deleteProject, { isLoading }] = useDeleteProjectMutation()
+
+  const handleDelete = useCallback(() => {
+    history.replace(Utils.getOrganisationHomePage())
+  }, [history])
 
   const confirmRemove = () => {
     openModal(
@@ -19,7 +25,7 @@ export const DeleteProject = ({ onDelete, project }: DeleteProjectProps) => {
         project={project}
         cb={async () => {
           await deleteProject({ id: String(project.id) })
-          onDelete()
+          handleDelete()
         }}
       />,
       'p-0',

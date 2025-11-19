@@ -2,37 +2,51 @@ import React, { useCallback } from 'react'
 import Setting from 'components/Setting'
 import ConfirmHideFlags from 'components/modals/ConfirmHideFlags'
 import { Project } from 'common/types/responses'
-import { useUpdateProjectMutation } from 'common/services/useProject'
+import { useUpdateProjectWithToast } from 'components/pages/project-settings/hooks'
 
 type SDKSettingsTabProps = {
   project: Project
-  projectId?: string | number
-  environmentId?: string
-  organisationId?: number
 }
 
-export const SDKSettingsTab = ({ project, projectId }: SDKSettingsTabProps) => {
-  const [updateProject, { isLoading: isSaving }] = useUpdateProjectMutation()
+export const SDKSettingsTab = ({ project }: SDKSettingsTabProps) => {
+  const [updateProjectWithToast, { isLoading: isSaving }] =
+    useUpdateProjectWithToast()
 
   const handleRealtimeToggle = useCallback(async () => {
-    if (!projectId) return
-    await updateProject({
-      body: {
+    await updateProjectWithToast(
+      {
         enable_realtime_updates: !project.enable_realtime_updates,
+        name: project.name,
       },
-      id: String(projectId),
-    })
-  }, [project.enable_realtime_updates, projectId, updateProject])
+      project.id,
+      {
+        errorMessage: 'Failed to update realtime settings. Please try again.',
+      },
+    )
+  }, [
+    project.name,
+    project.enable_realtime_updates,
+    project.id,
+    updateProjectWithToast,
+  ])
 
   const handleHideDisabledFlagsToggle = useCallback(async () => {
-    if (!projectId) return
-    await updateProject({
-      body: {
+    await updateProjectWithToast(
+      {
         hide_disabled_flags: !project.hide_disabled_flags,
+        name: project.name,
       },
-      id: String(projectId),
-    })
-  }, [project.hide_disabled_flags, projectId, updateProject])
+      project.id,
+      {
+        errorMessage: 'Failed to update hide disabled flags. Please try again.',
+      },
+    )
+  }, [
+    project.name,
+    project.hide_disabled_flags,
+    project.id,
+    updateProjectWithToast,
+  ])
 
   const toggleHideDisabledFlags = () => {
     openModal(
