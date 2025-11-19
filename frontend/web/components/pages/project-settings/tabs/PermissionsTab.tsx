@@ -53,7 +53,7 @@ export const PermissionsTab = ({
       level='project'
       roleTabTitle='Project Permissions'
       roles={rolesData?.results || []}
-      permissions={permissionsData?.results || []}
+      permissions={permissionsData || []}
       onSaveUser={handleSaveUser}
     />
   )
