@@ -21,7 +21,6 @@ export const GeneralTab = ({ project, projectId }: GeneralTabProps) => {
   const history = useHistory()
   const [updateProject, { isLoading: isSaving }] = useUpdateProjectMutation()
 
-  // Local form state
   const [name, setName] = useState(project.name)
   const [staleFlagsLimitDays, setStaleFlagsLimitDays] = useState(
     project.stale_flags_limit_days,

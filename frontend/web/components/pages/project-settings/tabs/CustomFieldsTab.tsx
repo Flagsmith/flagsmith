@@ -7,7 +7,6 @@ type CustomFieldsTabProps = {
 }
 
 export const CustomFieldsTab = ({ organisationId }: CustomFieldsTabProps) => {
-  // Runtime safety check
   if (!organisationId) {
     return (
       <div className='mt-4'>

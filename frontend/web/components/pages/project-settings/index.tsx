@@ -30,7 +30,7 @@ const ProjectSettingsPage = () => {
   const hasEnvironments = !!project?.environments?.length
   const hasFeatureHealth = Utils.getFlagsmithHasFeature('feature_health')
 
-  // Derive organisationId from project data
+  // Derive organisationId from project data (not available in route params)
   const organisationId = project?.organisation
 
   if (isLoading || !project || !projectId || !organisationId) {
