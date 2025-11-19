@@ -458,6 +458,52 @@ def _update_flag_v2_for_versioning_v1(
         "segment_overrides": updated_segments,
     }
 
+def get_updated_feature_states_for_version(
+    version: EnvironmentFeatureVersion,
+) -> list[FeatureState]:
+    """
+    Returns feature states that changed compared to the previous version.
+    """
+
+    def get_match_key(fs: FeatureState) -> tuple[int | None, int | None]:
+        segment_id = fs.feature_segment.segment_id if fs.feature_segment else None
+        return (fs.identity_id, segment_id)
+
+    def multivariate_values_changed(
+        fs: FeatureState, previous_fs: FeatureState
+    ) -> bool:
+        current_mv_values = {
+            mv.multivariate_feature_option_id: mv.percentage_allocation
+            for mv in fs.multivariate_feature_state_values.all()
+        }
+        previous_mv_values = {
+            mv.multivariate_feature_option_id: mv.percentage_allocation
+            for mv in previous_fs.multivariate_feature_state_values.all()
+        }
+        return current_mv_values != previous_mv_values
+
+    previous_version = version.get_previous_version()
+    previous_feature_states_map = (
+        {get_match_key(fs): fs for fs in previous_version.feature_states.all()}
+        if previous_version
+        else {}
+    )
+
+    changed_feature_states = []
+    for feature_state in version.feature_states.all():
+        previous_fs = previous_feature_states_map.get(get_match_key(feature_state))
+
+        if previous_fs is None or (
+            feature_state.enabled != previous_fs.enabled
+            or feature_state.get_feature_state_value()
+            != previous_fs.get_feature_state_value()
+            or multivariate_values_changed(feature_state, previous_fs)
+        ):
+            changed_feature_states.append(feature_state)
+
+    return changed_feature_states
+
+
 
 def _get_feature_states_queryset(
     environment: "Environment",

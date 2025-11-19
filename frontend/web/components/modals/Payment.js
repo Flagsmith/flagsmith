@@ -7,6 +7,7 @@ import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
 import firstpromoter from 'project/firstPromoter'
 import Utils from 'common/utils/utils'
+import { openChat } from 'common/loadChat'
 import AccountProvider from 'common/providers/AccountProvider'
 import classNames from 'classnames'
 import Switch from 'components/Switch'
@@ -151,7 +152,13 @@ const Payment = class extends Component {
                 <Row className='pricing-container align-start'>
                   <Flex className='pricing-panel p-2'>
                     <div className='panel panel-default'>
-                      <div className='panel-content p-3 pt-4'>
+                      <div
+                        className='panel-content p-3 pt-4 d-flex flex-column justify-content-between'
+                        style={{
+                          backgroundColor: 'rgba(39, 171, 149, 0.08)',
+                          minHeight: '250px',
+                        }}
+                      >
                         <Row className='pt-4 justify-content-center'>
                           <Icon name='flash' width={32} />
                           <h4 className='mb-0 ml-2'>Start-Up</h4>
@@ -263,8 +270,14 @@ const Payment = class extends Component {
                   </Flex>
                   <Flex className='pricing-panel bg-primary900 text-white p-2'>
                     <div className='panel panel-default'>
-                      <div className='panel-content p-3 pt-4'>
-                        <span className='featured text-body'>
+                      <div
+                        className='panel-content p-3 pt-4 d-flex flex-column justify-content-between'
+                        style={{
+                          backgroundColor: 'rgba(39, 171, 149, 0.08)',
+                          minHeight: '250px',
+                        }}
+                      >
+                        <span className='featured text-white'>
                           Optional{' '}
                           <a
                             className='text-primary fw-bold'
@@ -290,13 +303,13 @@ const Payment = class extends Component {
                           <h4 className='mb-0 ml-2 text-white'>Enterprise</h4>
                         </Row>
                         <Row className='pt-3 justify-content-center'></Row>
-                        <div className='pricing-type text-secondary pt-1 pb-4'>
+                        <div className='pricing-type text-secondary pt-1 pb-4 text-center'>
                           Maximum security and control
                         </div>
                         {!viewOnly ? (
                           <Button
                             onClick={() => {
-                              Utils.openChat()
+                              openChat()
                             }}
                             className='full-width btn-lg btn-tertiary mt-3'
                           >

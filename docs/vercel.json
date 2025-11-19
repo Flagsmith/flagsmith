@@ -1,340 +1,693 @@
 {
     "redirects": [
         {
-            "source": "/managing-identities/",
-            "destination": "/basic-features/managing-identities"
+            "source": "/system-administration/importing-and-exporting/launchdarkly",
+            "destination": "https://docs.flagsmith.com/administration-and-security/data-management/import-from-launchdarkly"
         },
         {
-            "source": "/system-administration/",
-            "destination": "/system-administration/security"
+            "source": "/advanced-use/staged-feature-rollouts",
+            "destination": "https://docs.flagsmith.com/best-practices/when-to-use-flags#staged-rollouts"
         },
         {
-            "source": "/contributing",
-            "destination": "/platform/contributing"
+            "source": "/api/bulk-insert-identities-update",
+            "destination": "https://docs.flagsmith.com/edge-api/bulk-insert-identities-update"
         },
         {
-            "source": "/overview/",
-            "destination": "/basic-features/overview"
+            "source": "/clients/3rd-party",
+            "destination": "https://docs.flagsmith.com/integrating-with-flagsmith/sdks/"
         },
         {
-            "source": "/ab-testing/",
-            "destination": "/advanced-use/ab-testing"
+            "source": "/deployment/configuration/sizing-and-scaling",
+            "destination": "https://docs.flagsmith.com/deployment-self-hosting/scaling-and-performance/sizing-and-scaling"
         },
         {
-            "source": "/permissions/",
-            "destination": "/system-administration/rbac"
+            "source": "/deployment/hosting/kubernetes",
+            "destination": "https://docs.flagsmith.com/deployment-self-hosting/hosting-guides/kubernetes-openshift"
         },
         {
-            "source": "/audit-logs/",
-            "destination": "/system-administration/security#audit-logs"
+            "source": "/enterprise/overview/",
+            "destination": "https://docs.flagsmith.com/deployment-self-hosting/enterprise-edition"
         },
         {
-            "source": "/managing-features/",
-            "destination": "/basic-features/managing-features"
+            "source": "/guides-and-examples/efficient-api-usage",
+            "destination": "https://docs.flagsmith.com/best-practices/efficient-api-usage"
         },
         {
-            "source": "/deployment-overview/",
-            "destination": "/deployment"
+            "source": "/guides-and-examples/mobile-app-versioning",
+            "destination": "https://docs.flagsmith.com/best-practices/mobile-app-versioning"
         },
         {
-            "source": "/hosted-service/",
-            "destination": "/basic-features/overview"
+            "source": "/integrations/apm/appdynamics",
+            "destination": "https://docs.flagsmith.com/deployment-self-hosting/scaling-and-performance/monitoring#appdynamics"
         },
         {
-            "source": "/flag-analytics/",
-            "destination": "/advanced-use/flag-analytics"
+            "source": "/integrations/datadog/",
+            "destination": "https://docs.flagsmith.com/third-party-integrations/observability-and-monitoring/datadog"
         },
         {
-            "source": "/staged-feature-rollouts/",
-            "destination": "/guides-and-examples/staged-feature-rollouts"
+            "source": "/integrations/importers/launchdarkly",
+            "destination": "https://docs.flagsmith.com/administration-and-security/data-management/import-from-launchdarkly"
         },
         {
-            "source": "/advanced-use/staged-feature-rollouts/",
-            "destination": "/guides-and-examples/staged-feature-rollouts"
+            "source": "/integrations/overview/",
+            "destination": "https://docs.flagsmith.com/integrating-with-flagsmith/integration-overview"
         },
         {
-            "source": "/guides-and-examples/okta-configuration",
-            "destination": "/system-administration/authentication/okta"
+            "source": "/integrations/project-management/github",
+            "destination": "https://docs.flagsmith.com/third-party-integrations/project-management/github"
         },
         {
-            "source": "/self-hosting/",
-            "destination": "/basic-features/overview"
+            "source": "/openshift/",
+            "destination": "https://docs.flagsmith.com/deployment-self-hosting/hosting-guides/kubernetes-openshift"
         },
         {
-            "source": "/clients/rust/test/integration_test.rs",
-            "destination": "/clients/rust"
+            "source": "/system-administration/architecture",
+            "destination": "https://docs.flagsmith.com/flagsmith-concepts/platform-architecture"
         },
         {
-            "source": "/api/",
-            "destination": "/clients/rest"
+            "source": "/system-administration/authentication/SAML/",
+            "destination": "https://docs.flagsmith.com/administration-and-security/access-control/saml"
         },
         {
-            "source": "/managing-segments",
-            "destination": "/basic-features/segments"
+            "source": "/system-administration/saml",
+            "destination": "https://docs.flagsmith.com/administration-and-security/access-control/saml"
         },
         {
-            "source": "/basic-features/managing-segments",
-            "destination": "/basic-features/segments"
+            "source": "/system-administration/webhooks",
+            "destination": "https://docs.flagsmith.com/third-party-integrations/webhook"
         },
         {
-            "source": "/architecture/",
-            "destination": "/basic-features/overview"
-        },
-        {
-            "source": "/releases/",
-            "destination": "/platform/releases"
-        },
-        {
-            "source": "/contributing/",
-            "destination": "/platform/contributing"
-        },
-        {
-            "source": "/kubernetes",
-            "destination": "/deployment/hosting/kubernetes"
+            "source": "/version-comparison",
+            "destination": "https://www.flagsmith.com/pricing#compare-features"
         },
         {
             "source": "/managing-identities",
-            "destination": "/basic-features/managing-identities"
+            "destination": "/flagsmith-concepts/identities"
         },
         {
-            "source": "/integration-approaches/",
-            "destination": "/guides-and-examples/integration-approaches"
+            "source": "/system-administration",
+            "destination": "/administration-and-security/"
         },
         {
-            "source": "/advanced-use/integration-approaches/",
-            "destination": "/guides-and-examples/integration-approaches"
+            "source": "/contributing",
+            "destination": "/project-and-community/contributing"
+        },
+        {
+            "source": "/overview",
+            "destination": "/flagsmith-concepts/platform-architecture"
+        },
+        {
+            "source": "/ab-testing",
+            "destination": "/experimentation-ab-testing"
+        },
+        {
+            "source": "/permissions",
+            "destination": "/administration-and-security/access-control/rbac"
+        },
+        {
+            "source": "/audit-logs",
+            "destination": "/administration-and-security/governance-and-compliance/audit-logs"
+        },
+        {
+            "source": "/managing-features",
+            "destination": "/managing-flags/core-management"
+        },
+        {
+            "source": "/deployment-overview",
+            "destination": "/deployment-self-hosting/"
+        },
+        {
+            "source": "/hosted-service",
+            "destination": "/flagsmith-concepts/platform-architecture"
+        },
+        {
+            "source": "/flag-analytics",
+            "destination": "/managing-flags/flag-analytics"
+        },
+        {
+            "source": "/experimentation/ab-testing",
+            "destination": "/experimentation-ab-testing"
+        },
+        {
+            "source": "/experimentation/flag-analytics",
+            "destination": "/managing-flags/flag-analytics"
+        },
+        {
+            "source": "/flagsmith-integration",
+            "destination": "/integrating-with-flagsmith/"
+        },
+        {
+            "source": "/staged-feature-rollouts",
+            "destination": "/managing-flags/rollout/"
+        },
+        {
+            "source": "/guides-and-examples/okta-configuration",
+            "destination": "/administration-and-security/access-control/okta"
+        },
+        {
+            "source": "/self-hosting",
+            "destination": "/deployment-self-hosting/"
+        },
+        {
+            "source": "/clients/rust/test/integration_test.rs",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/api",
+            "destination": "/integrating-with-flagsmith/flagsmith-api-overview/"
+        },
+        {
+            "source": "/managing-segments",
+            "destination": "/flagsmith-concepts/segments/"
+        },
+        {
+            "source": "/basic-features/managing-segments",
+            "destination": "/flagsmith-concepts/segments/"
+        },
+        {
+            "source": "/architecture",
+            "destination": "/flagsmith-concepts/platform-architecture"
+        },
+        {
+            "source": "/releases",
+            "destination": "/project-and-community/release-notes"
+        },
+        {
+            "source": "/kubernetes",
+            "destination": "/deployment-self-hosting/hosting-guides/kubernetes-openshift"
+        },
+        {
+            "source": "/integration-approaches",
+            "destination": "/best-practices/integration-approaches"
         },
         {
             "source": "/advanced-use/integration-approaches",
-            "destination": "/guides-and-examples/integration-approaches"
+            "destination": "/best-practices/integration-approaches"
         },
         {
             "source": "/advanced-use/migrating-from-self-hosted-to-cloud",
-            "destination": "/deployment/migrating-from-self-hosted-to-cloud"
+            "destination": "/administration-and-security/data-management/import-and-export"
         },
         {
-            "source": "/advanced-use/staged-feature-rollouts/",
-            "destination": "/guides-and-examples/staged-feature-rollouts"
+            "source": "/advanced-use/edge-proxy",
+            "destination": "/deployment-self-hosting/edge-proxy"
         },
         {
-            "source": "/managing-segments/",
-            "destination": "/basic-features/segments"
+            "source": "/advanced-use/custom-fields",
+            "destination": "/administration-and-security/governance-and-compliance/custom-fields"
         },
         {
-            "source": "/clients/02-3rd-party",
-            "destination": "/clients/3rd-party"
+            "source": "/advanced-use/defensive-coding",
+            "destination": "/best-practices/defensive-coding"
         },
         {
-            "source": "/advanced-use/api/",
-            "destination": "/clients/rest"
+            "source": "/advanced-use/testing-with-flags",
+            "destination": "/best-practices/testing-with-flags"
+        },
+        {
+            "source": "/advanced-use/when-to-use-flags",
+            "destination": "/best-practices/when-to-use-flags"
+        },
+        {
+            "source": "/advanced-use/flag-lifecycle",
+            "destination": "/best-practices/flag-lifecycle"
+        },
+        {
+            "source": "/guides-and-examples/flag-lifecycle",
+            "destination": "/best-practices/flag-lifecycle"
+        },
+        {
+            "source": "/advanced-use/efficient-api-usage",
+            "destination": "/best-practices/efficient-api-usage"
+        },
+        {
+            "source": "/advanced-use/mobile-app-versioning",
+            "destination": "/best-practices/mobile-app-versioning"
         },
         {
             "source": "/advanced-use/api",
-            "destination": "/clients/rest"
-        },
-        {
-            "source": "/advanced-use/audit-logs/",
-            "destination": "/system-administration/security#audit-logs"
+            "destination": "/integrating-with-flagsmith/flagsmith-api-overview/"
         },
         {
             "source": "/advanced-use/audit-logs",
-            "destination": "/system-administration/security#audit-logs"
-        },
-        {
-            "source": "/clients/python",
-            "destination": "/clients/server-side"
-        },
-        {
-            "source": "/clients/java",
-            "destination": "/clients/server-side"
-        },
-        {
-            "source": "/clients/dotnet",
-            "destination": "/clients/server-side"
-        },
-        {
-            "source": "/clients/node",
-            "destination": "/clients/server-side"
-        },
-        {
-            "source": "/clients/ruby",
-            "destination": "/clients/server-side"
-        },
-        {
-            "source": "/clients/php",
-            "destination": "/clients/server-side"
-        },
-        {
-            "source": "/clients/go",
-            "destination": "/clients/server-side"
-        },
-        {
-            "source": "/clients/rust",
-            "destination": "/clients/server-side"
-        },
-        {
-            "source": "/clients/elixir",
-            "destination": "/clients/server-side"
-        },
-        {
-            "source": "/deployment/migrating-from-self-hosted-to-cloud",
-            "destination": "/deployment/importing-and-exporting"
-        },
-        {
-            "source": "/deployment/locally-api",
-            "destination": "/deployment/hosting/locally-api"
-        },
-        {
-            "source": "/deployment/locally-frontend",
-            "destination": "/deployment/hosting/locally-frontend"
-        },
-        {
-            "source": "/deployment/docker",
-            "destination": "/deployment/hosting/docker"
-        },
-        {
-            "source": "/deployment/kubernetes",
-            "destination": "/deployment/hosting/kubernetes"
-        },
-        {
-            "source": "/deployment/openshift",
-            "destination": "/deployment/hosting/openshift"
-        },
-        {
-            "source": "/deployment/aws",
-            "destination": "/deployment/hosting/aws"
-        },
-        {
-            "source": "/deployment/google-cloud",
-            "destination": "/deployment/hosting/google-cloud"
-        },
-        {
-            "source": "/deployment/enterprise-edition",
-            "destination": "/deployment/configuration/enterprise-edition"
-        },
-        {
-            "source": "/deployment/authentication",
-            "destination": "/deployment/configuration/authentication"
-        },
-        {
-            "source": "/deployment/sizing-and-scaling",
-            "destination": "/deployment/configuration/sizing-and-scaling"
-        },
-        {
-            "source": "/deployment/troubleshooting",
-            "destination": "/deployment/configuration/troubleshooting"
-        },
-        {
-            "source": "/deployment/django-admin",
-            "destination": "/deployment/configuration/django-admin"
-        },
-        {
-            "source": "/deployment/importing-and-exporting",
-            "destination": "/deployment/configuration/importing-and-exporting"
-        },
-        {
-            "source": "/deployment/task-processor",
-            "destination": "/deployment/configuration/task-processor"
-        },
-        {
-            "source": "/deployment/configuration/authentication/ADFS",
-            "destination": "/system-administration/authentication/ADFS"
-        },
-        {
-            "source": "/deployment/configuration/authentication/LDAP",
-            "destination": "/system-administration/authentication/LDAP"
-        },
-        {
-            "source": "/deployment/configuration/authentication/OAuth",
-            "destination": "/system-administration/authentication/OAuth"
-        },
-        {
-            "source": "/deployment/configuration/authentication/Okta",
-            "destination": "/system-administration/authentication/SAML/Okta"
-        },
-        {
-            "source": "/deployment/configuration/authentication/SAML",
-            "destination": "/system-administration/authentication/SAML"
-        },
-        {
-            "source": "/integrations/amplitude",
-            "destination": "/integrations/analytics/amplitude"
-        },
-        {
-            "source": "/integrations/heap",
-            "destination": "/integrations/analytics/heap"
-        },
-        {
-            "source": "/integrations/mixpanel",
-            "destination": "/integrations/analytics/mixpanel"
-        },
-        {
-            "source": "/integrations/rudderstack",
-            "destination": "/integrations/analytics/rudderstack"
-        },
-        {
-            "source": "/integrations/segment",
-            "destination": "/integrations/analytics/segment"
-        },
-        {
-            "source": "/integrations/appdynamics",
-            "destination": "/integrations/apm/appdynamics"
-        },
-        {
-            "source": "/integrations/datadog",
-            "destination": "/integrations/apm/datadog"
-        },
-        {
-            "source": "/integrations/dynatrace",
-            "destination": "/integrations/apm/dynatrace"
-        },
-        {
-            "source": "/integrations/newrelic",
-            "destination": "/integrations/apm/newrelic"
-        },
-        {
-            "source": "/system-administration/edge-proxy",
-            "destination": "/advanced-use/edge-proxy"
-        },
-        {
-            "source": "/integrations/slack",
-            "destination": "/integrations/project-management/slack"
+            "destination": "/administration-and-security/governance-and-compliance/audit-logs"
         },
         {
             "source": "/advanced-use/openfeature",
-            "destination": "/clients/openfeature"
+            "destination": "/integrating-with-flagsmith/openfeature"
         },
         {
-            "source": "/system-administration/importing-and-exporting/data-migration",
-            "destination": "/system-administration/importing-and-exporting/organisations"
+            "source": "/clients/python",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
-            "source": "/system-administration/metadata",
-            "destination": "/advanced-use/custom-fields"
+            "source": "/clients/java",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
-            "source": "/system-administration/custom-fields",
-            "destination": "/advanced-use/custom-fields"
+            "source": "/clients/dotnet",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/node",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/ruby",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/php",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/go",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/rust",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/elixir",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/android",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/csharp",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/dart",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/kotlin",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/swift",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/02-3rd-party",
+            "destination": "/third-party-integrations/"
         },
         {
             "source": "/clients/overview",
-            "destination": "/clients"
+            "destination": "/integrating-with-flagsmith/"
         },
         {
-            "source": "/basic-features/overview",
-            "destination": "/basic-features"
+            "source": "/deployment/migrating-from-self-hosted-to-cloud",
+            "destination": "/administration-and-security/data-management/import-and-export"
         },
         {
-            "source": "/basic-features/integrations",
-            "destination": "/integrations"
+            "source": "/deployment/locally-api",
+            "destination": "/deployment-self-hosting/hosting-guides/manual-installation"
+        },
+        {
+            "source": "/deployment/locally-frontend",
+            "destination": "/deployment-self-hosting/hosting-guides/manual-installation"
+        },
+        {
+            "source": "/deployment/docker",
+            "destination": "/deployment-self-hosting/hosting-guides/docker"
+        },
+        {
+            "source": "/deployment/kubernetes",
+            "destination": "/deployment-self-hosting/hosting-guides/kubernetes-openshift"
+        },
+        {
+            "source": "/deployment/openshift",
+            "destination": "/deployment-self-hosting/hosting-guides/kubernetes-openshift"
+        },
+        {
+            "source": "/deployment/aws",
+            "destination": "/deployment-self-hosting/hosting-guides/cloud-providers/aws"
+        },
+        {
+            "source": "/deployment/google-cloud",
+            "destination": "/deployment-self-hosting/hosting-guides/cloud-providers/google-cloud"
+        },
+        {
+            "source": "/deployment/enterprise-edition",
+            "destination": "/deployment-self-hosting/enterprise-edition"
+        },
+        {
+            "source": "/deployment/authentication",
+            "destination": "/administration-and-security/access-control/"
+        },
+        {
+            "source": "/deployment/sizing-and-scaling",
+            "destination": "/deployment-self-hosting/scaling-and-performance/sizing-and-scaling"
+        },
+        {
+            "source": "/deployment/troubleshooting",
+            "destination": "/deployment-self-hosting/administration-and-maintenance/troubleshooting"
+        },
+        {
+            "source": "/deployment/django-admin",
+            "destination": "/deployment-self-hosting/administration-and-maintenance/using-the-django-admin"
+        },
+        {
+            "source": "/deployment/importing-and-exporting",
+            "destination": "/administration-and-security/data-management/import-and-export"
+        },
+        {
+            "source": "/deployment/task-processor",
+            "destination": "/deployment-self-hosting/scaling-and-performance/asynchronous-task-processor"
         },
         {
             "source": "/deployment/overview",
-            "destination": "/deployment"
+            "destination": "/deployment-self-hosting/"
+        },
+        {
+            "source": "/deployment/configuration/authentication/ADFS",
+            "destination": "/administration-and-security/access-control/adfs"
+        },
+        {
+            "source": "/deployment/configuration/authentication/LDAP",
+            "destination": "/administration-and-security/access-control/ldap"
+        },
+        {
+            "source": "/deployment/configuration/authentication/OAuth",
+            "destination": "/administration-and-security/access-control/oauth"
+        },
+        {
+            "source": "/deployment/configuration/authentication/Okta",
+            "destination": "/administration-and-security/access-control/okta"
+        },
+        {
+            "source": "/deployment/configuration/authentication/SAML",
+            "destination": "/administration-and-security/access-control/saml"
+        },
+        {
+            "source": "/deployment/hosting/locally-edge-proxy",
+            "destination": "/deployment-self-hosting/edge-proxy"
+        },
+        {
+            "source": "/integrations/amplitude",
+            "destination": "/third-party-integrations/analytics/amplitude"
+        },
+        {
+            "source": "/integrations/heap",
+            "destination": "/third-party-integrations/analytics/heap"
+        },
+        {
+            "source": "/integrations/mixpanel",
+            "destination": "/third-party-integrations/analytics/mixpanel"
+        },
+        {
+            "source": "/integrations/rudderstack",
+            "destination": "/third-party-integrations/analytics/rudderstack"
+        },
+        {
+            "source": "/integrations/segment",
+            "destination": "/third-party-integrations/analytics/segment"
+        },
+        {
+            "source": "/integrations/appdynamics",
+            "destination": "/third-party-integrations/observability-and-monitoring/appdynamics"
+        },
+        {
+            "source": "/integrations/datadog",
+            "destination": "/third-party-integrations/observability-and-monitoring/datadog"
+        },
+        {
+            "source": "/integrations/dynatrace",
+            "destination": "/third-party-integrations/observability-and-monitoring/dynatrace"
+        },
+        {
+            "source": "/integrations/newrelic",
+            "destination": "/third-party-integrations/observability-and-monitoring/newrelic"
+        },
+        {
+            "source": "/system-administration/edge-proxy",
+            "destination": "/deployment-self-hosting/edge-proxy"
+        },
+        {
+            "source": "/integrations/slack",
+            "destination": "/third-party-integrations/project-management/slack"
+        },
+        {
+            "source": "/system-administration/importing-and-exporting/data-migration",
+            "destination": "/administration-and-security/data-management/organisations-import-export"
+        },
+        {
+            "source": "/system-administration/metadata",
+            "destination": "/administration-and-security/governance-and-compliance/custom-fields"
+        },
+        {
+            "source": "/system-administration/custom-fields",
+            "destination": "/administration-and-security/governance-and-compliance/custom-fields"
+        },
+        {
+            "source": "/basic-features/overview",
+            "destination": "/flagsmith-concepts/platform-architecture"
+        },
+        {
+            "source": "/basic-features/integrations",
+            "destination": "/third-party-integrations/"
         },
         {
             "source": "/pricing",
-            "destination": "/billing"
+            "destination": "/administration-and-security/billing-api-usage"
+        },
+        {
+            "source": "/billing",
+            "destination": "/administration-and-security/billing-api-usage"
+        },
+        {
+            "source": "/platform/contributing",
+            "destination": "/project-and-community/contributing"
+        },
+        {
+            "source": "/platform/releases",
+            "destination": "/project-and-community/release-notes"
+        },
+        {
+            "source": "/platform/roadmap",
+            "destination": "/project-and-community/roadmap"
+        },
+        {
+            "source": "/guides-and-examples/integration-approaches",
+            "destination": "/best-practices/integration-approaches"
+        },
+        {
+            "source": "/guides-and-examples/staged-feature-rollouts",
+            "destination": "/managing-flags/rollout/"
+        },
+        {
+            "source": "/clients/rest",
+            "destination": "/integrating-with-flagsmith/flagsmith-api-overview/"
+        },
+        {
+            "source": "/clients/openfeature",
+            "destination": "/integrating-with-flagsmith/openfeature"
+        },
+        {
+            "source": "/clients/server-side",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/client-side",
+            "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/"
+        },
+        {
+            "source": "/clients/cli",
+            "destination": "/integrating-with-flagsmith/CLI"
+        },
+        {
+            "source": "/integrations",
+            "destination": "/third-party-integrations/"
+        },
+        {
+            "source": "/advanced-use",
+            "destination": "/best-practices/"
+        },
+        {
+            "source": "/basic-features",
+            "destination": "flagsmith-concepts/data-model"
+        },
+        {
+            "source": "/clients",
+            "destination": "/integrating-with-flagsmith/"
+        },
+        {
+            "source": "/platform",
+            "destination": "/project-and-community/"
+        },
+        {
+            "source": "/guides-and-examples",
+            "destination": "/best-practices/"
+        },
+        {
+            "source": "/advanced-use/change-requests",
+            "destination": "/administration-and-security/governance-and-compliance/change-requests"
+        },
+        {
+            "source": "/advanced-use/edge-api",
+            "destination": "/edge-api/"
+        },
+        {
+            "source": "/advanced-use/feature-health",
+            "destination": "/managing-flags/feature-health-metrics"
+        },
+        {
+            "source": "/advanced-use/flag-analytics",
+            "destination": "/managing-flags/flag-analytics"
+        },
+        {
+            "source": "/advanced-use/flag-management",
+            "destination": "/managing-flags/core-management"
+        },
+        {
+            "source": "/advanced-use/real-time-flags",
+            "destination": "/performance/real-time-flags"
+        },
+        {
+            "source": "/advanced-use/release-pipelines",
+            "destination": "/managing-flags/release-pipelines"
+        },
+        {
+            "source": "/advanced-use/scheduled-flags",
+            "destination": "/managing-flags/scheduled-flags"
+        },
+        {
+            "source": "/basic-features/managing-features",
+            "destination": "/managing-flags/core-management"
+        },
+        {
+            "source": "/basic-features/managing-identities",
+            "destination": "/flagsmith-concepts/identities"
+        },
+        {
+            "source": "/basic-features/segments",
+            "destination": "/flagsmith-concepts/segments/"
+        },
+        {
+            "source": "/clients/flutter",
+            "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/flutter"
+        },
+        {
+            "source": "/clients/javascript",
+            "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/javascript"
+        },
+        {
+            "source": "/clients/react",
+            "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/react"
+        },
+        {
+            "source": "/clients/next-ssr",
+            "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/nextjs-and-ssr"
+        },
+        {
+            "source": "/clients/ios",
+            "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/ios"
+        },
+        {
+            "source": "/deployment",
+            "destination": "/deployment-self-hosting/"
+        },
+        {
+            "source": "/deployment/configuration/enterprise-edition",
+            "destination": "/deployment-self-hosting/enterprise-edition"
+        },
+        {
+            "source": "/guides-and-examples/defensive-coding",
+            "destination": "/best-practices/defensive-coding"
+        },
+        {
+            "source": "/integrations/analytics/amplitude",
+            "destination": "/third-party-integrations/analytics/amplitude"
+        },
+        {
+            "source": "/integrations/analytics/heap",
+            "destination": "/third-party-integrations/analytics/heap"
+        },
+        {
+            "source": "/integrations/analytics/mixpanel",
+            "destination": "/third-party-integrations/analytics/mixpanel"
+        },
+        {
+            "source": "/integrations/analytics/rudderstack",
+            "destination": "/third-party-integrations/analytics/rudderstack"
+        },
+        {
+            "source": "/integrations/analytics/segment",
+            "destination": "/third-party-integrations/analytics/segment"
+        },
+        {
+            "source": "/integrations/apm/datadog",
+            "destination": "/third-party-integrations/observability-and-monitoring/datadog"
+        },
+        {
+            "source": "/integrations/apm/dynatrace",
+            "destination": "/third-party-integrations/observability-and-monitoring/dynatrace"
+        },
+        {
+            "source": "/integrations/apm/newrelic",
+            "destination": "/third-party-integrations/observability-and-monitoring/newrelic"
+        },
+        {
+            "source": "/integrations/apm/grafana",
+            "destination": "/third-party-integrations/observability-and-monitoring/grafana"
+        },
+        {
+            "source": "/integrations/project-management/jira",
+            "destination": "/third-party-integrations/project-management/jira"
+        },
+        {
+            "source": "/integrations/webhook",
+            "destination": "/third-party-integrations/webhook"
+        },
+        {
+            "source": "/integrations/terraform",
+            "destination": "/third-party-integrations/ci-cd/terraform"
+        },
+        {
+            "source": "/quickstart",
+            "destination": "/getting-started/quick-start"
+        },
+        {
+            "source": "/system-administration/audit-logs",
+            "destination": "/administration-and-security/governance-and-compliance/audit-logs"
+        },
+        {
+            "source": "/system-administration/authentication",
+            "destination": "/administration-and-security/access-control/"
+        },
+        {
+            "source": "/system-administration/rbac",
+            "destination": "/administration-and-security/access-control/rbac"
+        },
+        {
+            "source": "/system-administration/security",
+            "destination": "/administration-and-security/governance-and-compliance/security"
+        },
+        {
+            "source": "/system-administration/system-limits",
+            "destination": "/administration-and-security/governance-and-compliance/system-limits"
+        },
+        {
+            "source": "/clients",
+            "destination": "/integrating-with-flagsmith/sdks/"
+        },
+        {
+            "source": "/clients/server-side",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/integrating-with-flagsmith",
+            "destination": "/integrating-with-flagsmith/integration-overview"
+        },
+        {
+            "source": "/basic-features",
+            "destination": "/flagsmith-concepts/data-model"
         }
-    ]
+    ],
+    "trailingSlash": false
 }

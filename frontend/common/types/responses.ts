@@ -34,6 +34,8 @@ export type Operator = {
   hideValue?: boolean
   warning?: string
   valuePlaceholder?: string
+  append?: string
+  type?: string
 }
 export type ChangeRequestSummary = {
   id: number
@@ -1107,5 +1109,14 @@ export type Res = {
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
   featureCodeReferences: FeatureCodeReferences[]
+  featureAnalytics: ({
+    day: string
+  } & {
+    [environmentId: string]: number
+  })[]
+  environmentAnalytics: {
+    day: string
+    count: number
+  }[]
   // END OF TYPES
 }

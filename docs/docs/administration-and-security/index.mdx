@@ -1,0 +1,167 @@
+---
+title: Administration and Security
+description: Manage access control, compliance, data management, and platform configuration
+---
+
+import Card from '../../src/components/Card';
+import Link from '@docusaurus/Link';
+import { IonIcon } from '@ionic/react';
+import { 
+    key,
+    people,
+    shield,
+    analytics,
+    documentText,
+    lockClosed,
+    cog,
+    server,
+    statsChart,
+    archive,
+    settings,
+    laptop,
+    warning
+} from 'ionicons/icons';
+
+This section provides comprehensive guidance for administrators on managing Flagsmith at an organisational level. From user authentication and role-based access control to platform configuration and compliance monitoring.
+
+## Manage Access Control and Authentication
+
+Configure how users log in and what they can access within your Flagsmith organisation.
+
+<div style={{display: 'grid', gap: '24px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', margin: '1rem 0'}}>
+
+<Card>
+  <div className="card-header flex-column">
+    <div className="icon-container">
+      <IonIcon icon={people} className="card-icon" />
+    </div>
+    <h3><Link to="/administration-and-security/access-control/rbac">User Management & Permissions</Link></h3>
+  </div>
+  <p>Control user roles, groups, and fine-grained permissions</p>
+</Card>
+
+<Card>
+  <div className="card-header flex-column">
+    <div className="icon-container">
+      <IonIcon icon={key} className="card-icon" />
+    </div>
+    <h3><Link to="/administration-and-security/access-control/">Authentication Management</Link></h3>
+  </div>
+  <p>Set up authentication methods including SSO, SAML, LDAP, and 2FA</p>
+</Card>
+
+<Card>
+  <div className="card-header flex-column">
+    <div className="icon-container">
+      <IonIcon icon={shield} className="card-icon" />
+    </div>
+    <h3><Link to="/administration-and-security/access-control/saml">Enterprise SSO</Link></h3>
+  </div>
+  <p>Single sign-on integration with SAML, Okta, LDAP, and Microsoft ADFS</p>
+</Card>
+
+</div>
+
+## Governance and Compliance
+
+Ensure your feature flag practices meet compliance requirements and organisational governance standards.
+
+<div style={{display: 'grid', gap: '24px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', margin: '1rem 0'}}>
+
+<Card>
+  <div className="card-header flex-column">
+    <div className="icon-container">
+      <IonIcon icon={lockClosed} className="card-icon" />
+    </div>
+    <h3><Link to="/administration-and-security/governance-and-compliance/security">Security Controls</Link></h3>
+  </div>
+  <p>Platform security settings and best practices</p>
+</Card>
+
+<Card>
+  <div className="card-header flex-column">
+    <div className="icon-container">
+      <IonIcon icon={analytics} className="card-icon" />
+    </div>
+    <h3><Link to="/administration-and-security/governance-and-compliance/audit-logs">Audit & Compliance</Link></h3>
+  </div>
+  <p>Track changes and access for compliance auditing</p>
+</Card>
+
+<Card>
+  <div className="card-header flex-column">
+    <div className="icon-container">
+      <IonIcon icon={warning} className="card-icon" />
+    </div>
+    <h3><Link to="/administration-and-security/governance-and-compliance/system-limits">System Limits</Link></h3>
+  </div>
+  <p>Understand platform limits and request overrides</p>
+</Card>
+
+</div>
+
+## Data Management
+
+Handle data migration, import/export operations, and backup strategies for your Flagsmith data.
+
+<div style={{display: 'grid', gap: '24px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', margin: '1rem 0'}}>
+
+<Card>
+  <div className="card-header flex-column">
+    <div className="icon-container">
+      <IonIcon icon={statsChart} className="card-icon" />
+    </div>
+    <h3><Link to="/administration-and-security/data-management/bulk-import-and-export">Bulk Import & Export</Link></h3>
+  </div>
+  <p>Mass operations for features, segments, and identities</p>
+</Card>
+
+<Card>
+  <div className="card-header flex-column">
+    <div className="icon-container">
+      <IonIcon icon={server} className="card-icon" />
+    </div>
+    <h3><Link to="/administration-and-security/data-management/organisations-import-export">Organisation Migration</Link></h3>
+  </div>
+  <p>Migrate complete organisations between instances</p>
+</Card>
+
+</div>
+
+## Platform Configuration
+
+Configure environment-specific settings and platform-wide options for your Flagsmith deployment.
+
+<div style={{display: 'grid', gap: '24px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', margin: '1rem 0'}}>
+
+<Card>
+  <div className="card-header flex-column">
+    <div className="icon-container">
+      <IonIcon icon={settings} className="card-icon" />
+    </div>
+    <h3><Link to="/administration-and-security/platform-configuration/environment-settings">Environment Settings</Link></h3>
+  </div>
+  <p>Configure environment-level options and configurations</p>
+</Card>
+
+<Card>
+  <div className="card-header flex-column">
+    <div className="icon-container">
+      <IonIcon icon={analytics} className="card-icon" />
+    </div>
+    <h3><Link to="/administration-and-security/platform-configuration/metrics">Platform Metrics</Link></h3>
+  </div>
+  <p>System monitoring and performance metrics</p>
+</Card>
+
+<Card>
+  <div className="card-header flex-column">
+    <div className="icon-container">
+      <IonIcon icon={statsChart} className="card-icon" />
+    </div>
+    <h3><Link to="/administration-and-security/billing-api-usage">API Usage & Monitoring</Link></h3>
+  </div>
+  <p>Track and analyse API usage and billing</p>
+</Card>
+
+</div>
