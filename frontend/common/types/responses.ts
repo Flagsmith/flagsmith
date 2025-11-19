@@ -1106,7 +1106,7 @@ export type Res = {
   }
   profile: User
   onboarding: {}
-  userPermissions: UserPermissions
+  userPermissions: UserPermission[]
   releasePipelines: PagedResponse<ReleasePipeline>
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
