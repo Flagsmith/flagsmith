@@ -10,7 +10,7 @@ type DeleteProjectProps = {
 }
 
 export const DeleteProject = ({ onDelete, project }: DeleteProjectProps) => {
-  const [deleteProject] = useDeleteProjectMutation()
+  const [deleteProject, { isLoading }] = useDeleteProjectMutation()
 
   const confirmRemove = () => {
     openModal(
@@ -33,8 +33,8 @@ export const DeleteProject = ({ onDelete, project }: DeleteProjectProps) => {
         <p className='fs-small lh-sm mb-0'>
           This project will be permanently deleted.
         </p>
-        <Button onClick={confirmRemove} theme='danger'>
-          Delete Project
+        <Button onClick={confirmRemove} theme='danger' disabled={isLoading}>
+          {isLoading ? 'Deleting...' : 'Delete Project'}
         </Button>
       </Row>
     </FormGroup>
