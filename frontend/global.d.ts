@@ -70,6 +70,17 @@ declare global {
   const closeModal2: () => void
   const toast: (message: string) => void
   const Tooltip: FC<TooltipProps>
+  const API: {
+    trackPage: (title: string) => void
+    trackEvent: (data: {
+      category: string
+      event: string
+      label?: string
+      extra?: Record<string, any>
+    }) => void
+    trackTraits: (traits: Record<string, any>) => void
+    [key: string]: any
+  }
   interface Window {
     $crisp: Crisp
     engagement: {
