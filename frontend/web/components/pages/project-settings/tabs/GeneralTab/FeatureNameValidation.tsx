@@ -79,7 +79,13 @@ export const FeatureNameValidation = ({
         onChange={onToggle}
         checked={featureRegexEnabled}
       />
-      {featureRegexEnabled && (
+      <div
+        style={{
+          height: featureRegexEnabled ? 'auto' : 0,
+          opacity: featureRegexEnabled ? 1 : 0,
+          transition: 'opacity 0.4s ease-in-out, height 0.4s ease-in-out',
+        }}
+      >
         <InputGroup
           title='Feature Name RegEx'
           component={
@@ -116,7 +122,7 @@ export const FeatureNameValidation = ({
             </form>
           }
         />
-      )}
+      </div>
     </FormGroup>
   )
 }
