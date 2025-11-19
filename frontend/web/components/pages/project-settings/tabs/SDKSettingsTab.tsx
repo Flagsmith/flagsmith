@@ -6,14 +6,16 @@ import { useUpdateProjectMutation } from 'common/services/useProject'
 
 type SDKSettingsTabProps = {
   project: Project
-  projectId: number
+  projectId?: string | number
   environmentId?: string
+  organisationId?: number
 }
 
 export const SDKSettingsTab = ({ project, projectId }: SDKSettingsTabProps) => {
   const [updateProject, { isLoading: isSaving }] = useUpdateProjectMutation()
 
   const handleRealtimeToggle = useCallback(async () => {
+    if (!projectId) return
     await updateProject({
       body: {
         enable_realtime_updates: !project.enable_realtime_updates,
@@ -23,6 +25,7 @@ export const SDKSettingsTab = ({ project, projectId }: SDKSettingsTabProps) => {
   }, [project.enable_realtime_updates, projectId, updateProject])
 
   const handleHideDisabledFlagsToggle = useCallback(async () => {
+    if (!projectId) return
     await updateProject({
       body: {
         hide_disabled_flags: !project.hide_disabled_flags,
