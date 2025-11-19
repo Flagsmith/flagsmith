@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.202.0](https://github.com/Flagsmith/flagsmith/compare/v2.201.3...v2.202.0) (2025-11-19)
+
+
+### Features
+
+* add pre-commit lint-staged ([#6276](https://github.com/Flagsmith/flagsmith/issues/6276)) ([1d07e86](https://github.com/Flagsmith/flagsmith/commit/1d07e866d1fc4a6061d2337de41488b6ee1546c4))
+
+
+### Bug Fixes
+
+* add pylon selector to hidden on modal ([#6299](https://github.com/Flagsmith/flagsmith/issues/6299)) ([e643d78](https://github.com/Flagsmith/flagsmith/commit/e643d785fe6fb78e688fbc4a2dd54ed3f18cabea))
+* organisation billing styling issues ([#6283](https://github.com/Flagsmith/flagsmith/issues/6283)) ([4faf9d6](https://github.com/Flagsmith/flagsmith/commit/4faf9d6fa61f636db3f08ac6c747c5f577c07532))
+* remove-firefox-and-install-v143 ([#6295](https://github.com/Flagsmith/flagsmith/issues/6295)) ([d6cbddb](https://github.com/Flagsmith/flagsmith/commit/d6cbddbe4b49b32a64b1cc39eecc3e587377e32d))
+
 ## [2.201.3](https://github.com/Flagsmith/flagsmith/compare/v2.201.2...v2.201.3) (2025-11-13)
 
 
