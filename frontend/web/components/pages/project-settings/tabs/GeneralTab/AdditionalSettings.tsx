@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React from 'react'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
 import Setting from 'components/Setting'
 import { Project } from 'common/types/responses'
@@ -15,7 +15,7 @@ type AdditionalSettingsProps = {
   isSaving: boolean
 }
 
-export const AdditionalSettings: FC<AdditionalSettingsProps> = ({
+export const AdditionalSettings = ({
   isSaving,
   minimumChangeRequestApprovals,
   onCaseSensitivityToggle,
@@ -24,7 +24,7 @@ export const AdditionalSettings: FC<AdditionalSettingsProps> = ({
   onPreventDefaultsToggle,
   onSave,
   project,
-}) => {
+}: AdditionalSettingsProps) => {
   const changeRequestsFeature = Utils.getFlagsmithHasFeature(
     'segment_change_requests',
   )

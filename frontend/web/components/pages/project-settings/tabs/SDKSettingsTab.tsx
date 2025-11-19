@@ -8,7 +8,6 @@ type SDKSettingsTabProps = {
   project: Project
   projectId: number
   environmentId?: string
-  organisationId?: number
 }
 
 export const SDKSettingsTab = ({ project, projectId }: SDKSettingsTabProps) => {

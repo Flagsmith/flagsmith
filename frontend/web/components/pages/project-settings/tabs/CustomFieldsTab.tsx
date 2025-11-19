@@ -1,26 +1,39 @@
+import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
 import React from 'react'
-import { ProjectSettingsTabProps } from 'components/pages/project-settings/shared/types'
 
-export const CustomFieldsTab = ({
-  organisationId,
-}: ProjectSettingsTabProps) => (
-  <div className='mt-4'>
-    <h5>Custom Fields</h5>
+type CustomFieldsTabProps = {
+  organisationId: number
+}
 
-    <WarningMessage
-      warningMessage={
-        <span>
-          Custom fields have been moved to{' '}
-          <a
-            href={`/organisation/${organisationId}/settings?tab=custom-fields`}
-            rel='noreferrer'
-          >
-            Organisation Settings
-          </a>
-          .
-        </span>
-      }
-    />
-  </div>
-)
+export const CustomFieldsTab = ({ organisationId }: CustomFieldsTabProps) => {
+  // Runtime safety check
+  if (!organisationId) {
+    return (
+      <div className='mt-4'>
+        <InfoMessage>Unable to load organisation settings</InfoMessage>
+      </div>
+    )
+  }
+
+  return (
+    <div className='mt-4'>
+      <h5>Custom Fields</h5>
+
+      <WarningMessage
+        warningMessage={
+          <span>
+            Custom fields have been moved to{' '}
+            <a
+              href={`/organisation/${organisationId}/settings?tab=custom-fields`}
+              rel='noreferrer'
+            >
+              Organisation Settings
+            </a>
+            .
+          </span>
+        }
+      />
+    </div>
+  )
+}
