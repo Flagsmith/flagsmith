@@ -10,11 +10,11 @@ import {
   Segment,
   Tag,
   ProjectFlag,
+  Project,
   Environment,
   UserGroup,
   AttributeName,
   Identity,
-  ChangeRequest,
   ProjectChangeRequest,
   Role,
   RolePermission,
@@ -580,6 +580,10 @@ export type Req = {
     id: string
   }
   getProject: { id: string }
+  updateProject: { id: string; body: Partial<Project> }
+  deleteProject: { id: string }
+  migrateProject: { id: string }
+  getProjectPermissions: { projectId: string }
   createGroup: {
     orgId: string
     data: Omit<UserGroup, 'id' | 'users'>
