@@ -458,6 +458,7 @@ def _update_flag_v2_for_versioning_v1(
         "segment_overrides": updated_segments,
     }
 
+
 def get_updated_feature_states_for_version(
     version: EnvironmentFeatureVersion,
 ) -> list[FeatureState]:
@@ -502,7 +503,6 @@ def get_updated_feature_states_for_version(
             changed_feature_states.append(feature_state)
 
     return changed_feature_states
-
 
 
 def _get_feature_states_queryset(
