@@ -1,4 +1,3 @@
-import typing
 from datetime import datetime
 from typing import Any
 
@@ -19,7 +18,6 @@ from rest_framework.exceptions import PermissionDenied
 
 from app_analytics.serializers import LabelsQuerySerializerMixin, LabelsSerializer
 from environments.identities.models import Identity
-from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
@@ -30,7 +28,6 @@ from projects.code_references.serializers import (
     FeatureFlagCodeReferencesRepositoryCountSerializer,
 )
 from projects.models import Project
-from users.models import FFAdminUser
 from users.serializers import (
     UserIdsSerializer,
     UserListSerializer,
@@ -50,8 +47,6 @@ from .feature_segments.serializers import (
 )
 from .models import Feature, FeatureState
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
-from .versioning.dataclasses import FlagChangeSet
-from .versioning.versioning_service import update_flag
 
 
 class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -676,45 +671,3 @@ class CustomCreateSegmentOverrideFeatureStateSerializer(
                 {"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE}
             )
         return super().create(validated_data)  # type: ignore[no-any-return,no-untyped-call]
-
-
-class UpdateFlagSerializer(serializers.Serializer):  # type: ignore[type-arg]
-    enabled = serializers.BooleanField(required=False)
-
-    # TODO: this is introducing _another_ way of handling typing, but it feels closer
-    #  to what we should have done from the start. This might be out of scope for this
-    #  work though.
-    feature_state_value = serializers.CharField(required=False)
-    type = serializers.ChoiceField(
-        choices=["int", "string", "bool", "float"],
-        required=False,
-        default="string",
-    )
-
-    segment_id = serializers.IntegerField(required=False)
-
-    # TODO: multivariate?
-
-    @property
-    def flag_change_set(self) -> FlagChangeSet:
-        validated_data = self.validated_data
-        change_set = FlagChangeSet(
-            enabled=validated_data.get("enabled"),
-            feature_state_value=validated_data.get("feature_state_value"),
-            type_=validated_data.get("type"),
-            segment_id=validated_data.get("segment_id"),
-        )
-
-        request = self.context["request"]
-        if type(request.user) is FFAdminUser:
-            change_set.user = request.user
-        else:
-            change_set.api_key = request.user.key
-
-        return change_set
-
-    def save(self, **kwargs: typing.Any) -> FeatureState:
-        environment: Environment = kwargs["environment"]
-        feature: Feature = kwargs["feature"]
-
-        return update_flag(environment, feature, self.flag_change_set)

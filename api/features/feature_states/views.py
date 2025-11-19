@@ -1,22 +1,139 @@
+from drf_yasg import openapi  # type: ignore[import-untyped]
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from environments.models import Environment
-from features.models import Feature
-from features.serializers import UpdateFlagSerializer
+
+from .serializers import UpdateFlagSerializer, UpdateFlagV2Serializer
 
 
+@swagger_auto_schema(
+    method="post",
+    operation_summary="Update single feature state (V1)",
+    operation_description="""
+    **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
+
+    Updates a single feature state within an environment. You can update either:
+    - The environment default state (when no segment is specified)
+    - A specific segment override (when segment.id is provided)
+
+    **Feature Identification:**
+    - Use `feature.name` OR `feature.id` (mutually exclusive)
+    - Feature must belong to the environment's project
+
+    **Value Format:**
+    - Always use `string_value` field (value is always a string)
+    - The `type` field tells the server how to parse it
+    - Available types: integer, string, boolean, float
+    - Examples:
+      - `{"type": "integer", "string_value": "42"}`
+      - `{"type": "boolean", "string_value": "true"}`
+      - `{"type": "float", "string_value": "3.14"}`
+      - `{"type": "string", "string_value": "hello"}`
+
+    **Segment Priority:**
+    - Optional `segment.priority` field controls ordering
+    - If null/omitted, segment is appended to end
+    - Use specific priority value to reorder
+    """,
+    request_body=UpdateFlagSerializer,
+    responses={
+        204: openapi.Response(
+            description="Feature state updated successfully (no content returned)"
+        )
+    },
+    tags=["Experimental - Feature States"],
+)
 @api_view(http_method_names=["POST"])
-def update_flag(request: Request, environment_id: int, feature_name: str) -> Response:
+def update_flag_v1(request: Request, environment_id: int) -> Response:
+    """
+    V1: Single feature state update endpoint (issue #6279).
+
+    Updates a single feature state (environment default OR one segment override).
+    Feature identification is provided in the request payload.
+    """
     environment = Environment.objects.get(id=environment_id)
-    feature = Feature.objects.get(name=feature_name, project_id=environment.project_id)
 
     serializer = UpdateFlagSerializer(
-        data=request.data, context={"request": request, "view": update_flag}
+        data=request.data,
+        context={
+            "request": request,
+            "view": update_flag_v1,
+            "environment": environment,
+        },
     )
     serializer.is_valid(raise_exception=True)
-    serializer.save(environment=environment, feature=feature)
+    serializer.save(environment=environment)
 
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@swagger_auto_schema(
+    method="post",
+    operation_summary="Update multiple feature states",
+    operation_description="""
+    **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
+
+    Updates multiple feature states in a single request. This endpoint allows
+    you to configure an entire feature (environment default + all segment overrides)
+    in one operation.
+
+    **What You Can Update:**
+    - Environment default state (required)
+    - Multiple segment overrides (optional)
+    - Priority ordering for each segment
+
+    **Feature Identification:**
+    - Use `feature.name` OR `feature.id` (mutually exclusive)
+    - Feature must belong to the environment's project
+
+    **Value Format:**
+    - Always use `string_value` field (value is always a string)
+    - The `type` field tells the server how to parse it
+    - Available types: integer, string, boolean, float
+    - Examples:
+      - `{"type": "string", "string_value": "production"}`
+      - `{"type": "integer", "string_value": "100"}`
+      - `{"type": "boolean", "string_value": "false"}`
+
+    **Segment Overrides:**
+    - Provide array of segment override configurations
+    - Each override must specify: segment_id, enabled, value
+    - Optional priority field controls ordering
+    - Duplicate segment_id values are not allowed
+
+    """,
+    request_body=UpdateFlagV2Serializer,
+    responses={
+        204: openapi.Response(
+            description="Feature states updated successfully (no content returned)"
+        )
+    },
+    tags=["Experimental - Feature States"],
+)
+@api_view(http_method_names=["POST"])
+def update_flag_v2(request: Request, environment_id: int) -> Response:
+    """
+    Update multiple feature states endpoint (issue #6233).
+
+    Updates multiple feature states in a single request:
+    - Environment default state
+    - Multiple segment overrides with priority ordering
+    """
+    environment = Environment.objects.get(id=environment_id)
+
+    serializer = UpdateFlagV2Serializer(
+        data=request.data,
+        context={
+            "request": request,
+            "view": update_flag_v2,
+            "environment": environment,
+        },
+    )
+    serializer.is_valid(raise_exception=True)
+    serializer.save(environment=environment)
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
