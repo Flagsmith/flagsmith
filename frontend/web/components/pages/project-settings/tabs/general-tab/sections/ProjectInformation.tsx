@@ -1,34 +1,54 @@
-import React from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import classNames from 'classnames'
 import Icon from 'components/Icon'
 import Tooltip from 'components/Tooltip'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import Utils from 'common/utils/utils'
+import { Project } from 'common/types/responses'
+import { useUpdateProjectMutation } from 'common/services/useProject'
 
 type ProjectInformationProps = {
-  name: string
-  staleFlagsLimitDays: number | undefined
-  onNameChange: (name: string) => void
-  onStaleFlagsChange: (days: number) => void
-  onSubmit: () => void
-  isSaving: boolean
+  project: Project
 }
 
-export const ProjectInformation = ({
-  isSaving,
-  name,
-  onNameChange,
-  onStaleFlagsChange,
-  onSubmit,
-  staleFlagsLimitDays,
-}: ProjectInformationProps) => {
+export const ProjectInformation = ({ project }: ProjectInformationProps) => {
+  const [updateProject, { isLoading: isSaving }] = useUpdateProjectMutation()
+  const [name, setName] = useState(project.name)
+  const [staleFlagsLimitDays, setStaleFlagsLimitDays] = useState(
+    project.stale_flags_limit_days,
+  )
+
   const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
   const hasVersioning = Utils.getFlagsmithHasFeature('feature_versioning')
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit()
-  }
+  // Sync local state when project changes
+  useEffect(() => {
+    if (project) {
+      setName(project.name)
+      setStaleFlagsLimitDays(project.stale_flags_limit_days)
+    }
+  }, [project])
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      if (!name || isSaving) return
+
+      try {
+        await updateProject({
+          body: {
+            name,
+            stale_flags_limit_days: staleFlagsLimitDays,
+          },
+          id: String(project.id),
+        }).unwrap()
+        toast('Project Saved')
+      } catch (error) {
+        toast('Failed to save project. Please try again.', 'danger')
+      }
+    },
+    [name, staleFlagsLimitDays, project.id, isSaving, updateProject],
+  )
 
   return (
     <FormGroup>
@@ -39,8 +59,8 @@ export const ProjectInformation = ({
               value={name}
               inputClassName='full-width'
               name='proj-name'
-              onChange={(e: InputEvent) =>
-                onNameChange(Utils.safeParseEventValue(e))
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setName(Utils.safeParseEventValue(e))
               }
               isValid={!!name && name.length > 0}
               type='text'
@@ -77,8 +97,8 @@ export const ProjectInformation = ({
                 <Input
                   disabled={!hasStaleFlagsPermission}
                   value={staleFlagsLimitDays}
-                  onChange={(e: InputEvent) =>
-                    onStaleFlagsChange(
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setStaleFlagsLimitDays(
                       parseInt(Utils.safeParseEventValue(e)) || 0,
                     )
                   }
