@@ -27,6 +27,21 @@ import {
 } from './responses'
 import { UtmsType } from './utms'
 
+export type UpdateProjectBody = {
+  name: string
+} & Partial<
+  Pick<
+    Project,
+    | 'hide_disabled_flags'
+    | 'prevent_flag_defaults'
+    | 'enable_realtime_updates'
+    | 'minimum_change_request_approvals'
+    | 'stale_flags_limit_days'
+    | 'only_allow_lower_case_feature_names'
+    | 'feature_name_regex'
+  >
+>
+
 export type PagedRequest<T> = T & {
   page?: number
   page_size?: number
@@ -580,7 +595,7 @@ export type Req = {
     id: string
   }
   getProject: { id: string }
-  updateProject: { id: string; body: Partial<Project> }
+  updateProject: { id: string; body: UpdateProjectBody }
   deleteProject: { id: string }
   migrateProject: { id: string }
   getProjectPermissions: { projectId: string }
