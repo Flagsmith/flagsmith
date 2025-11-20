@@ -51,26 +51,24 @@ export const SDKSettingsTab = ({ project }: SDKSettingsTabProps) => {
   }
 
   return (
-    <div className='col-md-8 m-4'>
-      <div className='d-flex flex-column gap-4'>
-        <div>
-          <Setting
-            feature='REALTIME'
-            disabled={isSaving}
-            onChange={handleRealtimeToggle}
-            checked={project.enable_realtime_updates}
-          />
-        </div>
-        <div>
-          <Setting
-            data-test='js-hide-disabled-flags'
-            disabled={isSaving}
-            onChange={toggleHideDisabledFlags}
-            checked={project.hide_disabled_flags}
-            title='Hide disabled flags from SDKs'
-            description='To prevent letting your users know about your upcoming features and to cut down on payload, enabling this will prevent the API from returning features that are disabled.'
-          />
-        </div>
+    <div className='col-md-8 m-4 d-flex flex-column gap-2'>
+      <div>
+        <Setting
+          feature='REALTIME'
+          disabled={isSaving}
+          onChange={handleRealtimeToggle}
+          checked={project.enable_realtime_updates}
+        />
+      </div>
+      <div>
+        <Setting
+          data-test='js-hide-disabled-flags'
+          disabled={isSaving}
+          onChange={toggleHideDisabledFlags}
+          checked={project.hide_disabled_flags}
+          title='Hide disabled flags from SDKs'
+          description='To prevent letting your users know about your upcoming features and to cut down on payload, enabling this will prevent the API from returning features that are disabled.'
+        />
       </div>
     </div>
   )
