@@ -1,18 +1,19 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import classNames from 'classnames'
 import Icon from 'components/Icon'
 import Tooltip from 'components/Tooltip'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
-import { useUpdateProjectMutation } from 'common/services/useProject'
+import { useUpdateProjectWithToast } from 'components/pages/project-settings/hooks'
 
 type ProjectInformationProps = {
   project: Project
 }
 
 export const ProjectInformation = ({ project }: ProjectInformationProps) => {
-  const [updateProject, { isLoading: isSaving }] = useUpdateProjectMutation()
+  const [updateProjectWithToast, { isLoading: isSaving }] =
+    useUpdateProjectWithToast()
   const [name, setName] = useState(project.name)
   const [staleFlagsLimitDays, setStaleFlagsLimitDays] = useState(
     project.stale_flags_limit_days,
@@ -21,33 +22,24 @@ export const ProjectInformation = ({ project }: ProjectInformationProps) => {
   const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
   const hasVersioning = Utils.getFlagsmithHasFeature('feature_versioning')
 
-  // Sync local state when project changes
-  useEffect(() => {
-    if (project) {
-      setName(project.name)
-      setStaleFlagsLimitDays(project.stale_flags_limit_days)
-    }
-  }, [project])
-
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
       if (!name || isSaving) return
 
-      try {
-        await updateProject({
-          body: {
-            name,
-            stale_flags_limit_days: staleFlagsLimitDays,
-          },
-          id: String(project.id),
-        }).unwrap()
-        toast('Project Saved')
-      } catch (error) {
-        toast('Failed to save project. Please try again.', 'danger')
-      }
+      await updateProjectWithToast(
+        {
+          name,
+          stale_flags_limit_days: staleFlagsLimitDays,
+        },
+        project.id,
+        {
+          errorMessage: 'Failed to save project. Please try again.',
+          successMessage: 'Project Saved',
+        },
+      )
     },
-    [name, staleFlagsLimitDays, project.id, isSaving, updateProject],
+    [name, staleFlagsLimitDays, project.id, isSaving, updateProjectWithToast],
   )
 
   return (
