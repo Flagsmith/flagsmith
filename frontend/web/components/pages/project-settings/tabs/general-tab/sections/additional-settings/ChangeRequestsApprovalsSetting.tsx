@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useState } from 'react'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
@@ -20,7 +20,7 @@ export const ChangeRequestsApprovalsSetting = ({
     'segment_change_requests',
   )
 
-  const saveChangeRequests = useCallback(async () => {
+  const saveChangeRequests = async () => {
     if (isSaving) return
 
     await updateProjectWithToast(
@@ -34,22 +34,13 @@ export const ChangeRequestsApprovalsSetting = ({
         successMessage: 'Project Saved',
       },
     )
-  }, [
-    minimumChangeRequestApprovals,
-    project.name,
-    project.id,
-    isSaving,
-    updateProjectWithToast,
-  ])
+  }
 
-  const handleChangeRequestsToggle = useCallback(
-    (value: number | null) => {
-      setMinimumChangeRequestApprovals(value)
-      // Auto-save on toggle
-      saveChangeRequests()
-    },
-    [saveChangeRequests],
-  )
+  const handleChangeRequestsToggle = (value: number | null) => {
+    setMinimumChangeRequestApprovals(value)
+    // Auto-save on toggle
+    saveChangeRequests()
+  }
 
   if (!changeRequestsFeature) {
     return null

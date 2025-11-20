@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import Setting from 'components/Setting'
 import { Project } from 'common/types/responses'
 import { useUpdateProjectWithToast } from 'components/pages/project-settings/hooks'
@@ -13,7 +13,7 @@ export const CaseSensitivitySetting = ({
   const [updateProjectWithToast, { isLoading: isSaving }] =
     useUpdateProjectWithToast()
 
-  const handleToggle = useCallback(async () => {
+  const handleToggle = async () => {
     await updateProjectWithToast(
       {
         name: project.name,
@@ -22,12 +22,7 @@ export const CaseSensitivitySetting = ({
       },
       project.id,
     )
-  }, [
-    project.name,
-    project.only_allow_lower_case_feature_names,
-    project.id,
-    updateProjectWithToast,
-  ])
+  }
 
   return (
     <Setting

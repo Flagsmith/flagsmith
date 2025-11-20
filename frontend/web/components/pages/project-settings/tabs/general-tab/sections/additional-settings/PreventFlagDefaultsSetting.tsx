@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import Setting from 'components/Setting'
 import { Project } from 'common/types/responses'
 import { useUpdateProjectWithToast } from 'components/pages/project-settings/hooks'
@@ -13,7 +13,7 @@ export const PreventFlagDefaultsSetting = ({
   const [updateProjectWithToast, { isLoading: isSaving }] =
     useUpdateProjectWithToast()
 
-  const handleToggle = useCallback(async () => {
+  const handleToggle = async () => {
     await updateProjectWithToast(
       {
         name: project.name,
@@ -21,12 +21,7 @@ export const PreventFlagDefaultsSetting = ({
       },
       project.id,
     )
-  }, [
-    project.name,
-    project.prevent_flag_defaults,
-    project.id,
-    updateProjectWithToast,
-  ])
+  }
 
   return (
     <Setting

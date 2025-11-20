@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import Setting from 'components/Setting'
 import ConfirmHideFlags from 'components/modals/ConfirmHideFlags'
 import { Project } from 'common/types/responses'
@@ -12,7 +12,7 @@ export const SDKSettingsTab = ({ project }: SDKSettingsTabProps) => {
   const [updateProjectWithToast, { isLoading: isSaving }] =
     useUpdateProjectWithToast()
 
-  const handleRealtimeToggle = useCallback(async () => {
+  const handleRealtimeToggle = async () => {
     await updateProjectWithToast(
       {
         enable_realtime_updates: !project.enable_realtime_updates,
@@ -23,14 +23,9 @@ export const SDKSettingsTab = ({ project }: SDKSettingsTabProps) => {
         errorMessage: 'Failed to update realtime settings. Please try again.',
       },
     )
-  }, [
-    project.name,
-    project.enable_realtime_updates,
-    project.id,
-    updateProjectWithToast,
-  ])
+  }
 
-  const handleHideDisabledFlagsToggle = useCallback(async () => {
+  const handleHideDisabledFlagsToggle = async () => {
     await updateProjectWithToast(
       {
         hide_disabled_flags: !project.hide_disabled_flags,
@@ -41,12 +36,7 @@ export const SDKSettingsTab = ({ project }: SDKSettingsTabProps) => {
         errorMessage: 'Failed to update hide disabled flags. Please try again.',
       },
     )
-  }, [
-    project.name,
-    project.hide_disabled_flags,
-    project.id,
-    updateProjectWithToast,
-  ])
+  }
 
   const toggleHideDisabledFlags = () => {
     openModal(
