@@ -47,6 +47,25 @@ export const projectService = service
           { id: res?.id, type: 'Project' },
           { id: 'LIST', type: 'Project' },
         ],
+        async onQueryStarted({ body, id }, { dispatch, queryFulfilled }) {
+          // Optimistically update the cache before server responds
+          const patchResult = dispatch(
+            projectService.util.updateQueryData(
+              'getProject',
+              { id },
+              (draft) => {
+                Object.assign(draft, body)
+              },
+            ),
+          )
+
+          try {
+            await queryFulfilled
+          } catch {
+            // Automatically rollback on error
+            patchResult.undo()
+          }
+        },
         query: ({ body, id }: Req['updateProject']) => ({
           body,
           method: 'PUT',
