@@ -33,7 +33,6 @@ export const useUpdateProjectWithToast = () => {
           'danger',
         )
         options?.onError?.(error)
-        throw error // Re-throw for components that need custom error handling
       }
     },
     [updateProject],
