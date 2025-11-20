@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 import Setting from 'components/Setting'
 import RegexTester from 'components/RegexTester'
 import Utils from 'common/utils/utils'
@@ -21,14 +21,8 @@ export const FeatureNameValidation = ({
   const inputRef = useRef<HTMLInputElement>(null)
   const featureRegexEnabled = typeof featureNameRegex === 'string'
 
-  // Sync local state when project changes
-  useEffect(() => {
-    setFeatureNameRegex(project.feature_name_regex || null)
-  }, [project.feature_name_regex])
-
   const handleToggle = useCallback(async () => {
     if (featureNameRegex) {
-      const previousValue = featureNameRegex
       setFeatureNameRegex(null)
       await updateProjectWithToast(
         {
@@ -39,7 +33,6 @@ export const FeatureNameValidation = ({
         {
           errorMessage:
             'Failed to update feature validation. Please try again.',
-          onError: () => setFeatureNameRegex(previousValue), // Revert on error
         },
       )
     } else {

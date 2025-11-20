@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
@@ -20,13 +20,6 @@ export const AdditionalSettings = ({ project }: AdditionalSettingsProps) => {
   const changeRequestsFeature = Utils.getFlagsmithHasFeature(
     'segment_change_requests',
   )
-
-  // Sync local state when project changes
-  useEffect(() => {
-    if (project) {
-      setMinimumChangeRequestApprovals(project.minimum_change_request_approvals)
-    }
-  }, [project])
 
   const saveChangeRequests = useCallback(async () => {
     if (isSaving) return
