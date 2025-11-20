@@ -6,6 +6,22 @@ export const organisationService = service
   .enhanceEndpoints({ addTagTypes: ['Organisation'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      deleteOrganisation: builder.mutation<void, Req['deleteOrganisation']>({
+        invalidatesTags: [{ id: 'LIST', type: 'Organisation' }],
+        query: ({ id }: Req['deleteOrganisation']) => ({
+          method: 'DELETE',
+          url: `organisations/${id}/`,
+        }),
+      }),
+      getOrganisation: builder.query<
+        Res['organisation'],
+        Req['getOrganisation']
+      >({
+        providesTags: (res) => [{ id: res?.id, type: 'Organisation' }],
+        query: ({ id }: Req['getOrganisation']) => ({
+          url: `organisations/${id}/`,
+        }),
+      }),
       getOrganisations: builder.query<
         Res['organisations'],
         Req['getOrganisations']
@@ -13,6 +29,39 @@ export const organisationService = service
         providesTags: [{ id: 'LIST', type: 'Organisation' }],
         query: () => ({
           url: `organisations/`,
+        }),
+      }),
+      updateOrganisation: builder.mutation<
+        Res['organisation'],
+        Req['updateOrganisation']
+      >({
+        invalidatesTags: (res) => [
+          { id: res?.id, type: 'Organisation' },
+          { id: 'LIST', type: 'Organisation' },
+        ],
+        async onQueryStarted({ body, id }, { dispatch, queryFulfilled }) {
+          // Optimistic update - immediately update the cache
+          const patchResult = dispatch(
+            organisationService.util.updateQueryData(
+              'getOrganisation',
+              { id },
+              (draft) => {
+                Object.assign(draft, body)
+              },
+            ),
+          )
+
+          try {
+            await queryFulfilled
+          } catch {
+            // Automatic rollback on error
+            patchResult.undo()
+          }
+        },
+        query: ({ body, id }: Req['updateOrganisation']) => ({
+          body,
+          method: 'PUT',
+          url: `organisations/${id}/`,
         }),
       }),
       // END OF ENDPOINTS
@@ -36,7 +85,10 @@ export async function getOrganisations(
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useDeleteOrganisationMutation,
+  useGetOrganisationQuery,
   useGetOrganisationsQuery,
+  useUpdateOrganisationMutation,
   // END OF EXPORTS
 } = organisationService
 
