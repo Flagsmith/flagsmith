@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useState } from 'react'
 import classNames from 'classnames'
 import Icon from 'components/Icon'
 import Tooltip from 'components/Tooltip'
@@ -22,25 +22,22 @@ export const ProjectInformation = ({ project }: ProjectInformationProps) => {
   const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
   const hasVersioning = Utils.getFlagsmithHasFeature('feature_versioning')
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault()
-      if (!name || isSaving) return
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name || isSaving) return
 
-      await updateProjectWithToast(
-        {
-          name,
-          stale_flags_limit_days: staleFlagsLimitDays,
-        },
-        project.id,
-        {
-          errorMessage: 'Failed to save project. Please try again.',
-          successMessage: 'Project Saved',
-        },
-      )
-    },
-    [name, staleFlagsLimitDays, project.id, isSaving, updateProjectWithToast],
-  )
+    await updateProjectWithToast(
+      {
+        name,
+        stale_flags_limit_days: staleFlagsLimitDays,
+      },
+      project.id,
+      {
+        errorMessage: 'Failed to save project. Please try again.',
+        successMessage: 'Project Saved',
+      },
+    )
+  }
 
   return (
     <FormGroup>

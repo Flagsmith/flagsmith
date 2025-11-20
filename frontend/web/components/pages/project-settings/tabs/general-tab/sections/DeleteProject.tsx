@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import { useHistory } from 'react-router-dom'
 import ConfirmRemoveProject from 'components/modals/ConfirmRemoveProject'
 import { Project } from 'common/types/responses'
@@ -14,9 +14,9 @@ export const DeleteProject = ({ project }: DeleteProjectProps) => {
   const history = useHistory()
   const [deleteProject, { isLoading }] = useDeleteProjectMutation()
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = () => {
     history.replace(Utils.getOrganisationHomePage())
-  }, [history])
+  }
 
   const confirmRemove = () => {
     openModal(

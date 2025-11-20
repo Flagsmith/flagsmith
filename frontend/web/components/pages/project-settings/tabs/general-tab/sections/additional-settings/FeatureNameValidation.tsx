@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import Setting from 'components/Setting'
 import RegexTester from 'components/RegexTester'
 import Utils from 'common/utils/utils'
@@ -21,7 +21,7 @@ export const FeatureNameValidation = ({
   const inputRef = useRef<HTMLInputElement>(null)
   const featureRegexEnabled = typeof featureNameRegex === 'string'
 
-  const handleToggle = useCallback(async () => {
+  const handleToggle = async () => {
     if (featureNameRegex) {
       setFeatureNameRegex(null)
       await updateProjectWithToast(
@@ -38,9 +38,9 @@ export const FeatureNameValidation = ({
     } else {
       setFeatureNameRegex('^.+$')
     }
-  }, [featureNameRegex, project.name, project.id, updateProjectWithToast])
+  }
 
-  const handleSave = useCallback(async () => {
+  const handleSave = async () => {
     await updateProjectWithToast(
       {
         feature_name_regex: featureNameRegex,
@@ -52,7 +52,7 @@ export const FeatureNameValidation = ({
         successMessage: 'Feature name regex saved',
       },
     )
-  }, [featureNameRegex, project.name, project.id, updateProjectWithToast])
+  }
 
   const regexValid = useMemo(() => {
     if (!featureNameRegex) return true
