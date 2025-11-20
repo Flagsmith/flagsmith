@@ -65,6 +65,8 @@ declare global {
   const Select: typeof _Select
   const Column: typeof Component
   const Loader: typeof Component
+  const Input: typeof Component
+  const Button: typeof Component
   const E2E: boolean
   const closeModal: () => void
   const closeModal2: () => void

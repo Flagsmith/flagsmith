@@ -53,7 +53,6 @@ export const ProjectInformation = ({ project }: ProjectInformationProps) => {
               }
               isValid={!!name && name.length > 0}
               type='text'
-              title={<label>Project Name</label>}
               placeholder='My Project Name'
             />
           </Flex>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { ReactNode, useEffect } from 'react'
 import PageTitle from 'components/PageTitle'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
@@ -16,10 +16,19 @@ import { PermissionsTab } from './tabs/PermissionsTab'
 import { CustomFieldsTab } from './tabs/CustomFieldsTab'
 import { ImportTab } from './tabs/ImportTab'
 
+type ProjectSettingsTab = {
+  component: ReactNode
+  isVisible: boolean
+  key: string
+  label: ReactNode
+  labelString?: string
+}
+
 const ProjectSettingsPage = () => {
   const { environmentId, projectId } = useRouteContext()
   const {
     data: project,
+    error,
     isLoading,
     isUninitialized,
   } = useGetProjectQuery({ id: String(projectId) }, { skip: !projectId })
@@ -28,7 +37,6 @@ const ProjectSettingsPage = () => {
     API.trackPage(Constants.pages.PROJECT_SETTINGS)
   }, [])
 
-  // Show loader only on initial load (not during refetches from mutations)
   const isInitialLoading = isUninitialized || (isLoading && !project)
 
   if (isInitialLoading) {
@@ -42,24 +50,23 @@ const ProjectSettingsPage = () => {
     )
   }
 
-  const hasEnvironments = !!project?.environments?.length
-  const hasFeatureHealth = Utils.getFlagsmithHasFeature('feature_health')
-
-  // Derive organisationId from project data (not available in route params)
-  const organisationId = project?.organisation
-
-  if (!project || !projectId || !organisationId) {
+  if (error || !project || !projectId || !project?.organisation) {
     return (
       <div className='app-container container'>
         <PageTitle title='Project Settings' />
-        <div className='text-center'>
-          <Loader />
+        <div className='alert alert-danger mt-4 text-center'>
+          Failed to load project settings. Please try again.
         </div>
       </div>
     )
   }
 
-  const tabs = [
+  // Derive data from project after all early returns
+  const hasEnvironments = !!project.environments?.length
+  const hasFeatureHealth = Utils.getFlagsmithHasFeature('feature_health')
+  const organisationId = project.organisation
+
+  const tabs: ProjectSettingsTab[] = [
     {
       component: <GeneralTab project={project} environmentId={environmentId} />,
       isVisible: true,
@@ -122,25 +129,22 @@ const ProjectSettingsPage = () => {
       key: 'export',
       label: 'Export',
     },
-  ]
+  ].filter(({ isVisible }) => isVisible)
 
   return (
     <div className='app-container container'>
       <PageTitle title='Project Settings' />
       <Tabs urlParam='tab' className='mt-0' uncontrolled>
-        {tabs.map(
-          ({ component, isVisible, key, label, labelString }) =>
-            isVisible && (
-              <TabItem
-                key={key}
-                tabLabel={label}
-                data-test={key}
-                tabLabelString={labelString}
-              >
-                {component}
-              </TabItem>
-            ),
-        )}
+        {tabs.map(({ component, key, label, labelString }) => (
+          <TabItem
+            key={key}
+            tabLabel={label}
+            data-test={key}
+            tabLabelString={labelString}
+          >
+            {component}
+          </TabItem>
+        ))}
       </Tabs>
     </div>
   )
