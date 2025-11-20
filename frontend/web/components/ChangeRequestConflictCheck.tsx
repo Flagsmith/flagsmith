@@ -17,6 +17,7 @@ interface ChangeRequestConflictCheckProps {
   ignoreConflicts: boolean
   onIgnoreConflictsChange: (value: boolean) => void
   onHasChangesChange?: (hasChanges: boolean) => void
+  onHasWarningChange?: (hasWarning: boolean) => void
 }
 
 /**
@@ -33,6 +34,7 @@ const ChangeRequestConflictCheck: FC<ChangeRequestConflictCheckProps> = ({
   ignoreConflicts,
   liveFrom,
   onHasChangesChange,
+  onHasWarningChange,
   onIgnoreConflictsChange,
   projectId,
 }) => {
@@ -51,6 +53,17 @@ const ChangeRequestConflictCheck: FC<ChangeRequestConflictCheckProps> = ({
   const isScheduledInFuture = useMemo(() => {
     return liveFrom ? moment(liveFrom).isAfter(moment()) : false
   }, [liveFrom])
+
+  const hasWarning = useMemo(() => {
+    return (
+      (!hasChanges && action === 'create') ||
+      (isScheduledInFuture && action === 'publish')
+    )
+  }, [hasChanges, action, isScheduledInFuture])
+
+  useEffect(() => {
+    onHasWarningChange?.(hasWarning)
+  }, [hasWarning, onHasWarningChange])
 
   if (!hasChanges && action === 'create') {
     return (

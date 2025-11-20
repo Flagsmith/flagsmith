@@ -11,7 +11,7 @@ interface PublishChangeRequestContentProps {
   scheduledDate?: string
   children?: ReactNode
   onIgnoreConflictsChange?: (ignoreConflicts: boolean) => void
-  onHasChangesDetected?: (hasChanges: boolean) => void
+  onHasWarningDetected?: (hasWarning: boolean) => void
 }
 
 export const PublishChangeRequestContent: FC<
@@ -21,7 +21,7 @@ export const PublishChangeRequestContent: FC<
   children,
   environmentId,
   isScheduled,
-  onHasChangesDetected,
+  onHasWarningDetected,
   onIgnoreConflictsChange,
   projectId,
   scheduledDate,
@@ -37,8 +37,8 @@ export const PublishChangeRequestContent: FC<
     onIgnoreConflictsChange?.(value)
   }
 
-  const handleHasChangesChange = (hasChanges: boolean) => {
-    onHasChangesDetected?.(hasChanges)
+  const handleHasWarningChange = (hasWarning: boolean) => {
+    onHasWarningDetected?.(hasWarning)
   }
 
   return (
@@ -62,7 +62,7 @@ export const PublishChangeRequestContent: FC<
         liveFrom={getChangeRequestLiveDate(changeRequest)?.toISOString()}
         ignoreConflicts={ignoreConflicts}
         onIgnoreConflictsChange={handleIgnoreConflictsChange}
-        onHasChangesChange={handleHasChangesChange}
+        onHasWarningChange={handleHasWarningChange}
       />
     </div>
   )
@@ -88,7 +88,7 @@ export const openPublishChangeRequestConfirm = ({
   scheduledDate,
 }: OpenPublishChangeRequestConfirmParams) => {
   let ignoreConflicts: boolean | undefined = undefined
-  let hasChangesValue = true
+  let hasWarning = false
 
   openConfirm({
     body: (
@@ -101,14 +101,16 @@ export const openPublishChangeRequestConfirm = ({
         onIgnoreConflictsChange={(value) => {
           ignoreConflicts = value
         }}
-        onHasChangesDetected={(hasChanges) => {
-          hasChangesValue = hasChanges
+        onHasWarningDetected={(value) => {
+          hasWarning = value
         }}
       >
         {children}
       </PublishChangeRequestContent>
     ),
-    onYes: () => onYes(hasChangesValue ? undefined : ignoreConflicts),
+    onYes: () => {
+      onYes(hasWarning ? ignoreConflicts : undefined)
+    },
     title: 'Publish Change Request',
   })
 }
