@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { FormEvent, useState } from 'react'
 import classNames from 'classnames'
 import Icon from 'components/Icon'
 import Tooltip from 'components/Tooltip'
@@ -22,7 +22,7 @@ export const ProjectInformation = ({ project }: ProjectInformationProps) => {
   const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
   const hasVersioning = Utils.getFlagsmithHasFeature('feature_versioning')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!name || isSaving) return
 
