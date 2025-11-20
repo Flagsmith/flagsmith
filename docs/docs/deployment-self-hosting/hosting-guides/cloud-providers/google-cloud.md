@@ -23,4 +23,4 @@ If you are using health checks, make sure to use `/health` as the health-check e
 
 ## Cloud SQL/PostgreSQL
 
-We support PostgreSQL versions `11+`. Our SaaS platform runs in production on PostgreSQL version `11`. When starting for the first time, the application will create that database schema automatically. Schema upgrades will also happen seamlessly during application server upgrades.
+We support PostgreSQL versions `12+`. Our SaaS platform runs in production on PostgreSQL version `15`. When starting for the first time, the application will create that database schema automatically. Schema upgrades will also happen seamlessly during application server upgrades.
