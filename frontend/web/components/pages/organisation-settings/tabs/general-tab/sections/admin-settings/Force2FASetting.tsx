@@ -15,6 +15,7 @@ export const Force2FASetting = ({ organisation }: Force2FASettingProps) => {
     await updateOrganisationWithToast(
       {
         force_2fa: !organisation.force_2fa,
+        name: organisation.name,
       },
       organisation.id,
     )
