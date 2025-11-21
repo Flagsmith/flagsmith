@@ -27,6 +27,17 @@ export const changeRequestService = service
         }),
         transformResponse: (res, _, req) => transformCorePaging(req, res),
       }),
+      updateChangeRequest: builder.mutation<
+        Res['updateChangeRequest'],
+        Req['updateChangeRequest']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'ChangeRequest' }],
+        query: (changeRequest) => ({
+          body: changeRequest,
+          method: 'PUT',
+          url: `features/workflows/change-requests/${changeRequest.id}/`,
+        }),
+      }),
       // END OF ENDPOINTS
     }),
   })
@@ -42,10 +53,22 @@ export async function getChangeRequests(
     changeRequestService.endpoints.getChangeRequests.initiate(data, options),
   )
 }
+export async function updateChangeRequest(
+  store: any,
+  data: Req['updateChangeRequest'],
+  options?: Parameters<
+    typeof changeRequestService.endpoints.updateChangeRequest.initiate
+  >[1],
+) {
+  return store.dispatch(
+    changeRequestService.endpoints.updateChangeRequest.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useGetChangeRequestsQuery,
+  useUpdateChangeRequestMutation,
   // END OF EXPORTS
 } = changeRequestService
 

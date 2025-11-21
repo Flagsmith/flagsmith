@@ -1,9 +1,3 @@
-.calendar-icon {
-    position: absolute;
-    top: 16px;
-    right: 12px;
-}
-
 .react-datepicker-wrapper .react-datepicker__input-container {
     input[type=text].invalid, input[type=password].invalid {
         border: 1px solid $danger;
@@ -207,11 +201,6 @@
 }
 
 .dark {
-    .calendar-icon {
-        path {
-            fill: $bg-dark400;
-        }
-    }
     .react-datepicker {
         background-color: $bg-dark300;
         box-shadow: none;
@@ -238,13 +227,5 @@
     .react-datepicker__time-container .react-datepicker__time {
         background-color: $bg-dark300;
         scrollbar-color: $bg-dark300;
-    }
-}
-
-.dark {
-    .calendar-icon {
-        path {
-            fill: $text-icon-grey;
-        }
     }
 }

@@ -29,9 +29,7 @@ const DateSelect: FC<DateSelectProps> = ({
   return (
     <Flex style={{ position: 'relative' }}>
       <DatePicker
-        className={`input-lg ${className} ${
-          !isValid && touched ? 'invalid' : ''
-        }`}
+        className={`${className} ${!isValid && touched ? 'invalid' : ''}`}
         dateFormat={dateFormat}
         onFocus={() => setTouched(true)}
         renderCustomHeader={({
@@ -134,7 +132,7 @@ const DateSelect: FC<DateSelectProps> = ({
         }}
         open={isOpen}
       />
-      <span className='calendar-icon'>
+      <span className='input-icon-right'>
         <Icon name='calendar' fill={isOpen ? '#1A2634' : '#9DA4AE'} />
       </span>
     </Flex>

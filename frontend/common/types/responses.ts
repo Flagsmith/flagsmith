@@ -627,6 +627,7 @@ export type FeatureStateWithConflict = TypedFeatureState & {
 export type ChangeRequest = {
   id: number
   created_at: string
+  ignore_conflicts: boolean
   updated_at: string
   environment: number
   title: string
@@ -1053,6 +1054,7 @@ export type Res = {
   userWithRoles: PagedResponse<Role>
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
+  updateChangeRequest: ChangeRequest
   groupSummaries: UserGroupSummary[]
   supportedContentType: ContentType[]
   externalResource: PagedResponse<ExternalResource>
