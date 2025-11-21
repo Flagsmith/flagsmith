@@ -2,6 +2,20 @@ import { OptionProps } from 'react-select/lib/components/Option'
 import { MultiSelectOption } from './MultiSelect'
 import Icon from 'components/Icon'
 import { useEffect, useRef } from 'react'
+import { getDarkMode } from 'project/darkMode'
+
+const getOptionColors = (isFocused: boolean) => {
+  const isDarkMode = getDarkMode()
+
+  const focusedBgColor = isDarkMode ? '#202839' : '#f0f0f0'
+  const backgroundColor = isFocused ? focusedBgColor : 'transparent'
+  const textColor = isDarkMode ? 'white' : 'inherit'
+
+  return {
+    backgroundColor,
+    textColor,
+  }
+}
 
 export const CustomOption = ({
   children,
@@ -19,6 +33,8 @@ export const CustomOption = ({
     }
   }, [props.isFocused])
 
+  const { backgroundColor, textColor } = getOptionColors(props.isFocused)
+
   return (
     <div
       ref={ref}
@@ -28,7 +44,8 @@ export const CustomOption = ({
       aria-disabled={props.isDisabled}
       style={{
         alignItems: 'center',
-        backgroundColor: props.isFocused ? '#f0f0f0' : 'transparent',
+        backgroundColor,
+        color: textColor,
         cursor: props.isDisabled ? 'not-allowed' : 'pointer',
         display: 'flex',
         gap: '8px',
