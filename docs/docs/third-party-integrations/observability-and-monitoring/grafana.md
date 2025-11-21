@@ -45,11 +45,6 @@ Annotations for feature-specific events include project tags, user-defined tags,
 
 ## Feature Health Provider Setup
 
-:::info
-
-[Feature Health](/managing-flags/feature-health-metrics) is in Beta, please email support@flagsmith.com or chat with us <a href="#" class="open-chat" data-crisp-chat-message="Hello, I'm interested in joining the feature health beta.">here</a> if you'd like to join.
-:::
-
 ### In Flagsmith:
 
 1. Go to Project Settings > Feature Health.
