@@ -49,7 +49,7 @@ export const FeatureNameValidation = ({
       project.id,
       {
         errorMessage: 'Failed to save regex. Please try again.',
-        successMessage: 'Feature name regex saved',
+        successMessage: 'Project Saved',
       },
     )
   }
