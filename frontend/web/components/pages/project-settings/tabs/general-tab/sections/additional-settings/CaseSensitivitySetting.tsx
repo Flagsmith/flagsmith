@@ -29,7 +29,7 @@ export const CaseSensitivitySetting = ({
       data-test='js-flag-case-sensitivity'
       disabled={isSaving}
       onChange={handleToggle}
-      checked={project.only_allow_lower_case_feature_names}
+      checked={!project.only_allow_lower_case_feature_names}
       title='Case sensitive features'
       description='By default, features are lower case in order to prevent human error. Enabling this will allow you to use upper case characters when creating features.'
     />
