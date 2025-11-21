@@ -26,7 +26,7 @@ export const OrganisationInformation = ({
 
   return (
     <FormGroup>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className='d-flex flex-column gap-2 m-0'>
         <Row className='align-items-start'>
           <Flex className='ml-0'>
             <Input
