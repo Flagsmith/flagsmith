@@ -1,7 +1,9 @@
 import { MultiSelectOption } from './MultiSelect'
 import { MultiValueProps } from 'react-select/lib/components/MultiValue'
+import { getDarkMode } from 'project/darkMode'
 
 export const InlineMultiValue = (props: MultiValueProps<MultiSelectOption>) => {
+  const isDarkMode = getDarkMode()
   const { data } = props
   const selectedOptions = props.getValue() as MultiSelectOption[]
   const currentIndex = selectedOptions.findIndex(
@@ -28,6 +30,7 @@ export const InlineMultiValue = (props: MultiValueProps<MultiSelectOption>) => {
     <div
       title={formattedText}
       style={{
+        color: isDarkMode ? 'white' : 'inherit',
         fontWeight: '500',
         maxWidth: '100%',
         overflow: 'hidden',

@@ -14,6 +14,7 @@ export const CustomMultiValue = ({
         borderRadius: '4px',
         color: 'white',
         fontSize: '12px',
+        gap: '4px',
         maxHeight: '24px',
         maxWidth: '150px',
         overflow: 'hidden',
