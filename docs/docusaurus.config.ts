@@ -323,7 +323,6 @@ const config: Config = {
     ],
 
     clientModules: [
-        require.resolve('./plugins/crisp-chat-links.js'),
         require.resolve('./plugins/reo.js'),
         require.resolve('./plugins/amplitude.js'),
     ],
