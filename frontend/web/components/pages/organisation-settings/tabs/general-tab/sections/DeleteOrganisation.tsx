@@ -13,7 +13,8 @@ export const DeleteOrganisation = ({
   organisation,
 }: DeleteOrganisationProps) => {
   const history = useHistory()
-  const [deleteOrganisationWithToast] = useDeleteOrganisationWithToast()
+  const [deleteOrganisationWithToast, { isLoading }] =
+    useDeleteOrganisationWithToast()
 
   const handleDelete = () => {
     openModal(
@@ -52,8 +53,9 @@ export const DeleteOrganisation = ({
           data-test='delete-org-btn'
           onClick={handleDelete}
           theme='danger'
+          disabled={isLoading}
         >
-          Delete Organisation
+          {isLoading ? 'Deleting...' : 'Delete Organisation'}
         </Button>
       </Row>
     </>
