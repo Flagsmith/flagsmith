@@ -24,7 +24,6 @@ export const DeleteOrganisation = ({
         cb={() => {
           deleteOrganisationWithToast(organisation.id, {
             onSuccess: (nextOrgId) => {
-              // Redirect to next organisation or organisations list after deletion
               if (nextOrgId) {
                 history.replace(`/organisation/${nextOrgId}/projects`)
               } else {

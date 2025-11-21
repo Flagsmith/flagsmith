@@ -61,7 +61,6 @@ const OrganisationSettingsPage: FC = () => {
     )
   }
 
-  // Check permission from organisation data
   const isAdmin = organisation.role === 'ADMIN'
   const isAWS = organisation.subscription?.payment_method === 'AWS_MARKETPLACE'
 
