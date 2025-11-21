@@ -3,6 +3,7 @@ import {
   useDeleteOrganisationMutation,
   useGetOrganisationsQuery,
 } from 'common/services/useOrganisation'
+import AppActions from 'common/dispatcher/app-actions'
 
 type DeleteOrganisationOptions = {
   successMessage?: string
@@ -30,6 +31,10 @@ export const useDeleteOrganisationWithToast = () => {
           (org) => org.id !== Number(organisationId),
         )
         const nextOrgId = remaining?.[0]?.id
+
+        // Refresh OrganisationStore to update navbar and other components
+        // that rely on the legacy store
+        AppActions.refreshOrganisation()
 
         toast(options?.successMessage || 'Your organisation has been removed')
         options?.onSuccess?.(nextOrgId)
