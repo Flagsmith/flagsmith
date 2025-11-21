@@ -30,8 +30,8 @@ export const CaseSensitivitySetting = ({
       disabled={isSaving}
       onChange={handleToggle}
       checked={project.only_allow_lower_case_feature_names}
-      title='Force Flag names to lowercase'
-      description='When enabled, all feature names will be converted to lower case'
+      title='Case sensitive features'
+      description='By default, features are lower case in order to prevent human error. Enabling this will allow you to use upper case characters when creating features.'
     />
   )
 }

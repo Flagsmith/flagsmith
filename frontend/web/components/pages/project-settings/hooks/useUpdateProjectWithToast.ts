@@ -22,7 +22,7 @@ export const useUpdateProjectWithToast = () => {
           body,
           id: String(projectId),
         }).unwrap()
-        toast(options?.successMessage || 'Setting updated')
+        toast(options?.successMessage || 'Project Saved')
         // Refresh OrganisationStore to update navbar and other components
         // that rely on the legacy store
         AppActions.refreshOrganisation()
