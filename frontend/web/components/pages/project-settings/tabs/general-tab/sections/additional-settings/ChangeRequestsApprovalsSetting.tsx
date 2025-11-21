@@ -1,0 +1,59 @@
+import React, { useState } from 'react'
+import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
+import Utils from 'common/utils/utils'
+import { Project } from 'common/types/responses'
+import { useUpdateProjectWithToast } from 'components/pages/project-settings/hooks'
+
+type ChangeRequestsApprovalsSettingProps = {
+  project: Project
+}
+
+export const ChangeRequestsApprovalsSetting = ({
+  project,
+}: ChangeRequestsApprovalsSettingProps) => {
+  const [updateProjectWithToast, { isLoading: isSaving }] =
+    useUpdateProjectWithToast()
+  const [minimumChangeRequestApprovals, setMinimumChangeRequestApprovals] =
+    useState(project.minimum_change_request_approvals)
+
+  const changeRequestsFeature = Utils.getFlagsmithHasFeature(
+    'segment_change_requests',
+  )
+
+  const saveChangeRequests = async () => {
+    if (isSaving) return
+
+    await updateProjectWithToast(
+      {
+        minimum_change_request_approvals: minimumChangeRequestApprovals,
+        name: project.name,
+      },
+      project.id,
+      {
+        errorMessage: 'Failed to save project. Please try again.',
+        successMessage: 'Project Saved',
+      },
+    )
+  }
+
+  const handleChangeRequestsToggle = (value: number | null) => {
+    setMinimumChangeRequestApprovals(value)
+    // Auto-save on toggle
+    saveChangeRequests()
+  }
+
+  if (!changeRequestsFeature) {
+    return null
+  }
+
+  return (
+    <ChangeRequestsSetting
+      feature='4_EYES_PROJECT'
+      value={minimumChangeRequestApprovals}
+      onToggle={handleChangeRequestsToggle}
+      onSave={saveChangeRequests}
+      onChange={setMinimumChangeRequestApprovals}
+      isLoading={isSaving}
+    />
+  )
+}

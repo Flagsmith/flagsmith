@@ -65,11 +65,24 @@ declare global {
   const Select: typeof _Select
   const Column: typeof Component
   const Loader: typeof Component
+  const Input: typeof Component
+  const Button: typeof Component
   const E2E: boolean
   const closeModal: () => void
   const closeModal2: () => void
   const toast: (message: string) => void
   const Tooltip: FC<TooltipProps>
+  const API: {
+    trackPage: (title: string) => void
+    trackEvent: (data: {
+      category: string
+      event: string
+      label?: string
+      extra?: Record<string, any>
+    }) => void
+    trackTraits: (traits: Record<string, any>) => void
+    [key: string]: any
+  }
   interface Window {
     $crisp: Crisp
     engagement: {
