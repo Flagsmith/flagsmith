@@ -22,7 +22,7 @@ export const useUpdateOrganisationWithToast = () => {
           body,
           id: String(organisationId),
         }).unwrap()
-        toast(options?.successMessage || 'Organisation updated')
+        toast(options?.successMessage || 'Saved organisation')
         // Refresh AccountStore to update navbar and other components
         // that rely on the legacy store
         AppActions.refreshOrganisation()

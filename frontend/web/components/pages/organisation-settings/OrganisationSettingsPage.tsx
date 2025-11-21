@@ -121,7 +121,7 @@ const OrganisationSettingsPage: FC = () => {
   return (
     <div className='app-container container'>
       <PageTitle title='Organisation Settings' />
-      <Tabs urlParam='tab' className='mt-0' uncontrolled>
+      <Tabs urlParam='tab' className='mt-0' uncontrolled hideNavOnSingleTab>
         {tabs.map(({ component, key, label }) => (
           <TabItem key={key} tabLabel={label} data-test={key}>
             {component}
