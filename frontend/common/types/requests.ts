@@ -38,7 +38,7 @@ export type UpdateProjectBody = {
 }
 
 export type UpdateOrganisationBody = {
-  name?: string
+  name: string
   force_2fa?: boolean
   restrict_project_create_to_admin?: boolean
   webhook_notification_email?: string | null

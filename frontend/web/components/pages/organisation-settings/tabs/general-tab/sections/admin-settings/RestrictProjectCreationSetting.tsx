@@ -21,6 +21,7 @@ export const RestrictProjectCreationSetting = ({
   const handleToggle = async () => {
     await updateOrganisationWithToast(
       {
+        name: organisation.name,
         restrict_project_create_to_admin:
           !organisation.restrict_project_create_to_admin,
       },
