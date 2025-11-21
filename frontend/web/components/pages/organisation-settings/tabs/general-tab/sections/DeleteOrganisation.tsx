@@ -4,8 +4,6 @@ import { Organisation } from 'common/types/responses'
 import { useDeleteOrganisationWithToast } from 'components/pages/organisation-settings/hooks'
 import ConfirmRemoveOrganisation from 'components/modals/ConfirmRemoveOrganisation'
 import SettingTitle from 'components/SettingTitle'
-import AccountStore from 'common/stores/account-store'
-import Utils from 'common/utils/utils'
 
 type DeleteOrganisationProps = {
   organisation: Organisation
@@ -24,13 +22,12 @@ export const DeleteOrganisation = ({
         organisation={organisation}
         cb={() => {
           deleteOrganisationWithToast(organisation.id, {
-            onSuccess: () => {
-              // Redirect to organisation home page after deletion
-              const newOrganisation = AccountStore.getOrganisation()
-              if (newOrganisation) {
-                history.replace(Utils.getOrganisationHomePage())
+            onSuccess: (nextOrgId) => {
+              // Redirect to next organisation or organisations list after deletion
+              if (nextOrgId) {
+                history.replace(`/organisation/${nextOrgId}/projects`)
               } else {
-                history.replace('/create')
+                history.replace('/organisations')
               }
             },
           })
