@@ -33,7 +33,6 @@ export const useUpdateOrganisationWithToast = () => {
           'danger',
         )
         options?.onError?.(error)
-        // Don't re-throw - error is already handled with toast notification
       }
     },
     [updateOrganisation],
