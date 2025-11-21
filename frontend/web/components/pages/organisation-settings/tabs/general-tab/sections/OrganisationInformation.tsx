@@ -33,7 +33,7 @@ export const OrganisationInformation = ({
               value={name}
               inputClassName='full-width'
               name='org-name'
-              data-test='org-name'
+              data-test='organisation-name'
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setName(Utils.safeParseEventValue(e))
               }
