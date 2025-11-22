@@ -252,8 +252,9 @@ const CreateFlag = class extends Component {
                   },
                 })
               })
-              .catch((e) => {
-                console.log('Cannot retrieve user overrides')
+              .catch(() => {
+                //eslint-disable-next-line no-console
+                console.error('Cannot retrieve user overrides')
               })
           }
         })

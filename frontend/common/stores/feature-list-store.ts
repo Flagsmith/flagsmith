@@ -29,7 +29,6 @@ import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
-import { projectService } from 'common/services/useProject'
 import { changeRequestService } from 'common/services/useChangeRequest'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
@@ -807,7 +806,7 @@ const controller = {
     }
 
     prom
-      .then((res) => {
+      .then(() => {
         if (store.model) {
           store.model.lastSaved = new Date().valueOf()
         }
