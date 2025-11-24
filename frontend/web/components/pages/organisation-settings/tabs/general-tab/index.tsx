@@ -13,11 +13,13 @@ type GeneralTabProps = {
 
 export const GeneralTab = ({ organisation }: GeneralTabProps) => {
   return (
-    <div className='col-md-8'>
-      <SettingTitle>Organisation Information</SettingTitle>
-      <JSONReference title='Organisation' json={organisation} />
-      <div className='mt-2'>
+    <div className='col-md-8 d-flex flex-column gap-2'>
+      <div>
+        <SettingTitle>Organisation Information</SettingTitle>
+        <JSONReference title='Organisation' json={organisation} />
         <OrganisationInformation organisation={organisation} />
+      </div>
+      <div>
         <SettingTitle>Admin Settings</SettingTitle>
         <Force2FASetting organisation={organisation} />
         <RestrictProjectCreationSetting organisation={organisation} />

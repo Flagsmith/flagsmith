@@ -27,7 +27,8 @@ export const DeleteOrganisation = ({
               if (nextOrgId) {
                 history.replace(`/organisation/${nextOrgId}/projects`)
               } else {
-                history.replace('/organisations')
+                // Redirect to /create when no organisations remain
+                history.replace('/create')
               }
             },
           })
