@@ -966,6 +966,7 @@ export type Res = {
   segment: Segment
   auditLogs: PagedResponse<AuditLogItem>
   organisationLicence: {}
+  organisation: Organisation
   organisations: PagedResponse<Organisation>
   projects: ProjectSummary[]
   project: Project
