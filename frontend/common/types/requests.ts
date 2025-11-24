@@ -158,9 +158,9 @@ export type Req = {
     environments?: string
   }>
   getOrganisations: {}
-  getOrganisation: { id: string | number }
-  updateOrganisation: { id: string | number; body: UpdateOrganisationBody }
-  deleteOrganisation: { id: string | number }
+  getOrganisation: { id: number }
+  updateOrganisation: { id: number; body: UpdateOrganisationBody }
+  deleteOrganisation: { id: number }
   uploadOrganisationLicence: {
     id: number
     body: {

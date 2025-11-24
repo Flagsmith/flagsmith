@@ -14,13 +14,13 @@ export const useUpdateOrganisationWithToast = () => {
   const updateWithToast = useCallback(
     async (
       body: UpdateOrganisationBody,
-      organisationId: string | number,
+      organisationId: number,
       options?: UpdateOrganisationOptions,
     ) => {
       try {
         await updateOrganisation({
           body,
-          id: String(organisationId),
+          id: organisationId,
         }).unwrap()
         toast(options?.successMessage || 'Saved organisation')
         // Refresh AccountStore to update navbar and other components

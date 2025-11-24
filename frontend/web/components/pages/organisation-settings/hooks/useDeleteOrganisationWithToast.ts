@@ -17,18 +17,15 @@ export const useDeleteOrganisationWithToast = () => {
   const { data: organisations } = useGetOrganisationsQuery({})
 
   const deleteWithToast = useCallback(
-    async (
-      organisationId: string | number,
-      options?: DeleteOrganisationOptions,
-    ) => {
+    async (organisationId: number, options?: DeleteOrganisationOptions) => {
       try {
         await deleteOrganisation({
-          id: String(organisationId),
+          id: organisationId,
         }).unwrap()
 
         // Calculate next available organisation after deletion
         const remaining = organisations?.results?.filter(
-          (org) => org.id !== Number(organisationId),
+          (org) => org.id !== organisationId,
         )
         const nextOrgId = remaining?.[0]?.id
 
