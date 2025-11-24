@@ -14,18 +14,18 @@ export const ChangeRequestsApprovalsSetting = ({
   const [updateProjectWithToast, { isLoading: isSaving }] =
     useUpdateProjectWithToast()
   const [minimumChangeRequestApprovals, setMinimumChangeRequestApprovals] =
-    useState(project.minimum_change_request_approvals)
+    useState(project.minimum_change_request_approvals ?? null)
 
   const changeRequestsFeature = Utils.getFlagsmithHasFeature(
     'segment_change_requests',
   )
 
-  const saveChangeRequests = async () => {
+  const saveChangeRequests = async (value: number | null) => {
     if (isSaving) return
 
     await updateProjectWithToast(
       {
-        minimum_change_request_approvals: minimumChangeRequestApprovals,
+        minimum_change_request_approvals: value,
         name: project.name,
       },
       project.id,
@@ -38,8 +38,7 @@ export const ChangeRequestsApprovalsSetting = ({
 
   const handleChangeRequestsToggle = (value: number | null) => {
     setMinimumChangeRequestApprovals(value)
-    // Auto-save on toggle
-    saveChangeRequests()
+    saveChangeRequests(value)
   }
 
   if (!changeRequestsFeature) {
@@ -48,10 +47,11 @@ export const ChangeRequestsApprovalsSetting = ({
 
   return (
     <ChangeRequestsSetting
+      data-test='js-change-request-approvals'
       feature='4_EYES_PROJECT'
       value={minimumChangeRequestApprovals}
       onToggle={handleChangeRequestsToggle}
-      onSave={saveChangeRequests}
+      onSave={() => saveChangeRequests(minimumChangeRequestApprovals)}
       onChange={setMinimumChangeRequestApprovals}
       isLoading={isSaving}
     />
