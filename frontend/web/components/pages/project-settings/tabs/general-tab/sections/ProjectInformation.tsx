@@ -59,14 +59,14 @@ export const ProjectInformation = ({ project }: ProjectInformationProps) => {
         </Row>
 
         {hasVersioning && (
-          <>
+          <div className='d-flex  flex-column gap-2'>
             <div className='d-flex mt-4 gap-2 align-items-center'>
               <Tooltip
                 title={
-                  <>
-                    <label className='mb-0'>Stale Flag Detection </label>
+                  <div className='d-flex align-items-center gap-1'>
+                    <label className='mb-0'>Stale Flag Detection</label>
                     <Icon name='info-outlined' />
-                  </>
+                  </div>
                 }
               >
                 {`If no changes have been made to a feature in any environment within this threshold the feature will be tagged as stale. You will need to enable feature versioning in your environments for stale features to be detected.`}
@@ -110,7 +110,7 @@ export const ProjectInformation = ({ project }: ProjectInformationProps) => {
                 theme={'description'}
               />
             )}
-          </>
+          </div>
         )}
 
         <div className='text-right'>
