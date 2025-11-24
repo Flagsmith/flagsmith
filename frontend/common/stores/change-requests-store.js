@@ -1,15 +1,12 @@
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
-const { flatten } = require('lodash')
 const {
   addFeatureSegmentsToFeatureStates,
 } = require('../services/useFeatureState')
 const { getStore } = require('common/store')
-const { segmentService } = require('common/services/useSegment')
 const { changeRequestService } = require('common/services/useChangeRequest')
-
-const PAGE_SIZE = 20
+const { featureStateService } = require('common/services/useFeatureState')
 const transformChangeRequest = async (changeRequest) => {
   const feature_states = await Promise.all(
     changeRequest.feature_states.map(addFeatureSegmentsToFeatureStates),
@@ -24,7 +21,10 @@ const controller = {
   actionChangeRequest: (id, action, cb) => {
     store.loading()
     data
-      .post(`${Project.api}features/workflows/change-requests/${id}/${action}/`)
+      .post(
+        `${Project.api}features/workflows/change-requests/${id}/${action}/`,
+        {},
+      )
       .then(() => {
         data
           .get(`${Project.api}features/workflows/change-requests/${id}/`)
@@ -34,6 +34,9 @@ const controller = {
             store.loaded()
             getStore().dispatch(
               changeRequestService.util.invalidateTags(['ChangeRequest']),
+            )
+            getStore().dispatch(
+              featureStateService.util.invalidateTags(['FeatureState']),
             )
           })
       })
