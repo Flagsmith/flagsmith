@@ -35,8 +35,8 @@ export const organisationService = service
         Res['organisation'],
         Req['updateOrganisation']
       >({
-        invalidatesTags: (res) => [
-          { id: res?.id, type: 'Organisation' },
+        invalidatesTags: (_, __, req) => [
+          { id: req.id, type: 'Organisation' },
           { id: 'LIST', type: 'Organisation' },
         ],
         async onQueryStarted({ body, id }, { dispatch, queryFulfilled }) {
