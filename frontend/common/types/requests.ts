@@ -519,6 +519,7 @@ export type Req = {
     live_from_after?: string
     committed?: boolean
   }>
+  updateChangeRequest: ChangeRequest
   getGroupSummaries: {
     orgId: string
   }
