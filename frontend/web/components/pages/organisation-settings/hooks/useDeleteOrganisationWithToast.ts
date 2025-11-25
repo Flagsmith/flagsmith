@@ -23,11 +23,9 @@ export const useDeleteOrganisationWithToast = () => {
           id: organisationId,
         }).unwrap()
 
-        // Calculate next available organisation after deletion
-        const remaining = organisations?.results?.filter(
+        const nextOrgId = organisations?.results?.filter(
           (org) => org.id !== organisationId,
-        )
-        const nextOrgId = remaining?.[0]?.id
+        )?.[0]?.id
 
         // Refresh OrganisationStore to update navbar and other components
         // that rely on the legacy store
