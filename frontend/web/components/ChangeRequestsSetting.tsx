@@ -11,9 +11,11 @@ type ChangeRequestsSettingType = {
   onChange: (value: number | null) => void
   isLoading: boolean
   feature: '4_EYES' | '4_EYES_PROJECT'
+  'data-test'?: string
 }
 
 const ChangeRequestsSetting: FC<ChangeRequestsSettingType> = ({
+  'data-test': dataTest,
   feature,
   isLoading,
   onChange,
@@ -26,6 +28,7 @@ const ChangeRequestsSetting: FC<ChangeRequestsSettingType> = ({
   return (
     <FormGroup className='mt-4 col-md-8'>
       <Setting
+        data-test={dataTest}
         feature={feature}
         checked={has4EyesPermission && Utils.changeRequestsEnabled(value)}
         onChange={(v) => onToggle(v ? 0 : null)}
