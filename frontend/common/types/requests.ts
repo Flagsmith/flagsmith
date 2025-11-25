@@ -73,7 +73,7 @@ export const freePeriods = [
   { label: 'Last 30 days', value: undefined },
 ]
 export type CreateVersionFeatureState = {
-  environmentId: number
+  environmentId: string
   featureId: number
   sha: string
   featureState: FeatureState
@@ -177,47 +177,47 @@ export type Req = {
   getOrganisationUsage: {
     organisationId: number
     projectId?: number
-    environmentId?: number
+    environmentId?: string
     billing_period?:
       | 'current_billing_period'
       | 'previous_billing_period'
       | '90_day_period'
   }
   getWebhooks: {
-    environmentId: number
+    environmentId: string
   }
   createWebhook: {
-    environmentId: number
+    environmentId: string
     enabled: boolean
     secret: string
     url: string
   }
   updateWebhook: {
     id: number
-    environmentId: number
+    environmentId: string
     enabled: boolean
     secret: string
     url: string
   }
   deleteWebhook: {
     id: number
-    environmentId: number
+    environmentId: string
   }
   deleteIdentity: {
     id: string
-    environmentId: number
+    environmentId: string
     isEdge: boolean
   }
   createIdentities: {
     isEdge: boolean
-    environmentId: number
+    environmentId: string
     identifiers: string[]
   }
   featureSegment: {
     segment: number
   }
   getIdentities: PagedRequest<{
-    environmentId: number
+    environmentId: string
     pageType?: 'NEXT' | 'PREVIOUS'
     dashboard_alias?: string
     pages?: (string | undefined)[] // this is needed for edge since it returns no paging info other than a key
@@ -266,7 +266,7 @@ export type Req = {
     orgId: number
   }>
   createSegmentOverride: {
-    environmentId: number
+    environmentId: string
     featureId: number
     enabled: boolean
     multivariate_feature_state_values: MultivariateOption[] | null
@@ -341,7 +341,7 @@ export type Req = {
   }
   getProjectFlags: {
     project: number
-    environmentId?: number
+    environmentId?: string
     tags?: string[]
     is_archived?: boolean
   }
@@ -442,7 +442,7 @@ export type Req = {
     }
   }
   createFeatureExport: {
-    environment_id: number
+    environment_id: string
     tag_ids?: number[]
   }
   getFeatureExport: {
@@ -452,7 +452,7 @@ export type Req = {
     projectId: number
   }
   createFlagsmithProjectImport: {
-    environment_id: number
+    environment_id: string
     strategy: ImportStrategy
     file: File
   }
@@ -467,14 +467,14 @@ export type Req = {
   deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
   createAndSetFeatureVersion: {
     projectId: number
-    environmentId: number
+    environmentId: string
     featureId: number
     skipPublish?: boolean
     featureStates: FeatureState[]
     liveFrom?: string
   }
   createFeatureVersion: {
-    environmentId: number
+    environmentId: string
     featureId: number
     live_from?: string
     feature_states_to_create: Omit<FeatureState, 'id'>[]
@@ -484,7 +484,7 @@ export type Req = {
   }
   publishFeatureVersion: {
     sha: string
-    environmentId: number
+    environmentId: string
     featureId: number
   }
   createVersionFeatureState: CreateVersionFeatureState
@@ -495,14 +495,14 @@ export type Req = {
   }
   getVersionFeatureState: {
     sha: string
-    environmentId: number
+    environmentId: string
     featureId: number
   }
   updateSegmentPriorities: { id: number; priority: number }[]
   deleteFeatureSegment: { id: number }
   getFeatureVersions: PagedRequest<{
     featureId: number
-    environmentId: number
+    environmentId: string
     is_live?: boolean
   }>
   getUsers: { organisationId: number }
@@ -510,11 +510,11 @@ export type Req = {
     uuid: string
   }
   enableFeatureVersioning: {
-    environmentId: number
+    environmentId: string
   }
   getChangeRequests: PagedRequest<{
     search?: string
-    environmentId: number
+    environmentId: string
     feature_id?: number
     live_from_after?: string
     committed?: boolean
@@ -590,10 +590,10 @@ export type Req = {
     github_resource: string
   }>
   getGithubRepos: { installation_id: string; organisation_id: number }
-  getServersideEnvironmentKeys: { environmentId: number }
-  deleteServersideEnvironmentKeys: { environmentId: number; id: string }
+  getServersideEnvironmentKeys: { environmentId: string }
+  deleteServersideEnvironmentKeys: { environmentId: string; id: string }
   createServersideEnvironmentKeys: {
-    environmentId: number
+    environmentId: string
     data: { name: string }
   }
   getAuditLogItem: {
@@ -623,7 +623,7 @@ export type Req = {
   }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
-    environment_id: number
+    environment_id: string
     identity_id: string
     body: {
       source_identity_id?: string
@@ -675,7 +675,7 @@ export type Req = {
     }
   }
   updateIdentity: {
-    environmentId: number
+    environmentId: string
     data: Identity
   }
   getProjectChangeRequests: PagedRequest<{
@@ -708,23 +708,23 @@ export type Req = {
   deleteAuditLogWebhook: { organisationId: number; id: number }
   createIdentityTrait: {
     use_edge_identities: boolean
-    environmentId: number
+    environmentId: string
     identity: string
     data: IdentityTrait
   }
   getIdentityTraits: {
     use_edge_identities: boolean
-    environmentId: number
+    environmentId: string
     identity: string
   }
   updateIdentityTrait: {
     use_edge_identities: boolean
-    environmentId: number
+    environmentId: string
     identity: string
     data: IdentityTrait
   }
   deleteIdentityTrait: {
-    environmentId: number
+    environmentId: string
     identity: string
     use_edge_identities: boolean
     data: Omit<IdentityTrait, 'trait_value'>
@@ -734,7 +734,7 @@ export type Req = {
     identity: string
     projectId: number
   }>
-  getConversionEvents: PagedRequest<{ q?: string; environment_id: number }>
+  getConversionEvents: PagedRequest<{ q?: string; environment_id: string }>
   getSplitTest: PagedRequest<{
     conversion_event_type_id: number
   }>
@@ -759,7 +759,7 @@ export type Req = {
   createOnboardingSupportOptIn: {}
   getEnvironmentMetrics: { id: number }
   getUserEnvironmentPermissions: {
-    environmentId: number
+    environmentId: string
     userId: number
   }
   getUserPermissions: {
@@ -812,13 +812,13 @@ export type Req = {
     project_id: number
     feature_id: number
     period: number
-    environment_ids: number[]
+    environment_ids: string[]
   }
   getEnvironmentAnalytics: {
     project_id: number
     feature_id: number
     period: number
-    environment_id: number
+    environment_id: string
   }
   // END OF TYPES
 }
