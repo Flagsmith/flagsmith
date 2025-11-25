@@ -9,23 +9,17 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
-import TableSortFilter from 'components/tables/TableSortFilter'
-import TableSearchFilter from 'components/tables/TableSearchFilter'
-import TableTagFilter from 'components/tables/TableTagFilter'
-import { getViewMode, setViewMode } from 'common/useViewMode'
-import TableFilterOptions from 'components/tables/TableFilterOptions'
 import Format from 'common/utils/format'
 import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
-import TableOwnerFilter from 'components/tables/TableOwnerFilter'
-import TableGroupsFilter from 'components/tables/TableGroupsFilter'
-import TableValueFilter from 'components/tables/TableValueFilter'
 import classNames from 'classnames'
-import ClearFilters from 'components/ClearFilters'
-import Button from 'components/base/forms/Button'
 import { isEqual } from 'lodash'
 import { withRouter } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
-import { FeaturesEmptyState, FeatureMetricsSection } from './features'
+import {
+  FeaturesEmptyState,
+  FeatureMetricsSection,
+  FeaturesTableFilters,
+} from './features'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -36,12 +30,11 @@ const FeaturesPage = class extends Component {
         typeof params.group_owners === 'string'
           ? params.group_owners.split(',').map((v) => parseInt(v))
           : [],
-      is_enabled:
-        params.is_enabled === 'true'
-          ? true
-          : params.is_enabled === 'false'
-          ? false
-          : null,
+      is_enabled: (() => {
+        if (params.is_enabled === 'true') return true
+        if (params.is_enabled === 'false') return false
+        return null
+      })(),
       loadedOnce: false,
       owners:
         typeof params.owners === 'string'
@@ -376,177 +369,27 @@ const FeaturesPage = class extends Component {
                             isLoading={FeatureListStore.isLoading}
                             paging={FeatureListStore.paging}
                             header={
-                              <Row className='table-header'>
-                                <div className='table-column flex-row flex-fill'>
-                                  <TableSearchFilter
-                                    onChange={(e) => {
-                                      this.setState(
-                                        {
-                                          search: Utils.safeParseEventValue(e),
-                                        },
-                                        this.filter,
-                                      )
-                                    }}
-                                    value={this.state.search}
-                                  />
-                                  <Row className='flex-row py-2 py-lg-0 px-1 px-lg-0 flex-fill justify-content-lg-end'>
-                                    {hasFilters && (
-                                      <ClearFilters onClick={clearFilters} />
-                                    )}
-                                    <TableTagFilter
-                                      useLocalStorage
-                                      isLoading={FeatureListStore.isLoading}
-                                      projectId={projectId}
-                                      className='me-4'
-                                      title='Tags'
-                                      tagStrategy={this.state.tag_strategy}
-                                      onChangeStrategy={(
-                                        tag_strategy,
-                                        isAutomated,
-                                      ) => {
-                                        this.setState(
-                                          {
-                                            tag_strategy,
-                                          },
-                                          this.filter,
-                                        )
-                                      }}
-                                      value={this.state.tags}
-                                      onToggleArchived={(value) => {
-                                        if (value !== this.state.showArchived) {
-                                          FeatureListStore.isLoading = true
-                                          this.setState(
-                                            {
-                                              showArchived:
-                                                !this.state.showArchived,
-                                            },
-                                            this.filter,
-                                          )
-                                        }
-                                      }}
-                                      showArchived={this.state.showArchived}
-                                      onClearAll={() => {
-                                        FeatureListStore.isLoading = true
-                                        this.setState(
-                                          { showArchived: false, tags: [] },
-                                          this.filter,
-                                        )
-                                      }}
-                                      onChange={(tags) => {
-                                        FeatureListStore.isLoading = true
-                                        if (
-                                          tags.includes('') &&
-                                          tags.length > 1
-                                        ) {
-                                          if (!this.state.tags.includes('')) {
-                                            this.setState(
-                                              { tags: [''] },
-                                              this.filter,
-                                            )
-                                          } else {
-                                            this.setState(
-                                              {
-                                                tags: tags.filter((v) => !!v),
-                                              },
-                                              this.filter,
-                                            )
-                                          }
-                                        } else {
-                                          this.setState({ tags }, this.filter)
-                                        }
-                                      }}
-                                    />
-                                    <TableValueFilter
-                                      title={'State'}
-                                      className={'me-4'}
-                                      projectId={projectId}
-                                      useLocalStorage
-                                      value={{
-                                        enabled: this.state.is_enabled,
-                                        valueSearch: this.state.value_search,
-                                      }}
-                                      onChange={({ enabled, valueSearch }) => {
-                                        this.setState(
-                                          {
-                                            is_enabled: enabled,
-                                            value_search: valueSearch,
-                                          },
-                                          this.filter,
-                                        )
-                                      }}
-                                    />
-                                    <TableOwnerFilter
-                                      title={'Owners'}
-                                      className={'me-4'}
-                                      useLocalStorage
-                                      value={this.state.owners}
-                                      onChange={(owners) => {
-                                        FeatureListStore.isLoading = true
-                                        this.setState(
-                                          {
-                                            owners: owners,
-                                          },
-                                          this.filter,
-                                        )
-                                      }}
-                                    />
-                                    <TableGroupsFilter
-                                      title={'Groups'}
-                                      className={'me-4'}
-                                      projectId={projectId}
-                                      orgId={AccountStore.getOrganisation()?.id}
-                                      useLocalStorage
-                                      value={this.state.group_owners}
-                                      onChange={(group_owners) => {
-                                        FeatureListStore.isLoading = true
-                                        this.setState(
-                                          {
-                                            group_owners: group_owners,
-                                          },
-                                          this.filter,
-                                        )
-                                      }}
-                                    />
-                                    <TableFilterOptions
-                                      title={'View'}
-                                      className={'me-4'}
-                                      value={getViewMode()}
-                                      onChange={setViewMode}
-                                      options={[
-                                        {
-                                          label: 'Default',
-                                          value: 'default',
-                                        },
-                                        {
-                                          label: 'Compact',
-                                          value: 'compact',
-                                        },
-                                      ]}
-                                    />
-                                    <TableSortFilter
-                                      isLoading={FeatureListStore.isLoading}
-                                      value={this.state.sort}
-                                      options={[
-                                        {
-                                          default: true,
-                                          label: 'Name',
-                                          order: 'asc',
-                                          value: 'name',
-                                        },
-                                        {
-                                          label: 'Created Date',
-                                          order: 'asc',
-                                          value: 'created_date',
-                                        },
-                                      ]}
-                                      onChange={(sort) => {
-                                        FeatureListStore.isLoading = true
-                                        this.setState({ sort }, this.filter)
-                                      }}
-                                    />
-                                  </Row>
-                                </div>
-                              </Row>
+                              <FeaturesTableFilters
+                                projectId={projectId}
+                                filters={{
+                                  group_owners: this.state.group_owners,
+                                  is_enabled: this.state.is_enabled,
+                                  owners: this.state.owners,
+                                  search: this.state.search,
+                                  showArchived: this.state.showArchived,
+                                  sort: this.state.sort,
+                                  tag_strategy: this.state.tag_strategy,
+                                  tags: this.state.tags,
+                                  value_search: this.state.value_search,
+                                }}
+                                hasFilters={hasFilters}
+                                isLoading={FeatureListStore.isLoading}
+                                orgId={AccountStore.getOrganisation()?.id}
+                                onFilterChange={(updates) => {
+                                  this.setState(updates, this.filter)
+                                }}
+                                onClearFilters={clearFilters}
+                              />
                             }
                             nextPage={() =>
                               this.filter(FeatureListStore.paging.next)
