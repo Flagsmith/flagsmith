@@ -4,7 +4,7 @@ import React from 'react'
 
 type ImportTabProps = {
   projectName: string
-  projectId: string
+  projectId: number
   environmentId?: string
 }
 
