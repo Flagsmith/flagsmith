@@ -31,7 +31,7 @@ const ProjectSettingsPage = () => {
     error,
     isLoading,
     isUninitialized,
-  } = useGetProjectQuery({ id: String(projectId) }, { skip: !projectId })
+  } = useGetProjectQuery({ id: projectId! }, { skip: !projectId })
 
   useEffect(() => {
     API.trackPage(Constants.pages.PROJECT_SETTINGS)
