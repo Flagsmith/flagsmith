@@ -136,6 +136,8 @@ export type Project = {
   total_features?: number
   stale_flags_limit_days?: number
   total_segments?: number
+  only_allow_lower_case_feature_names?: boolean
+  feature_name_regex?: string | null
   environments: Environment[]
 }
 export type ImportStrategy = 'SKIP' | 'OVERWRITE_DESTRUCTIVE'
@@ -1106,7 +1108,7 @@ export type Res = {
   }
   profile: User
   onboarding: {}
-  userPermissions: UserPermissions
+  userPermissions: UserPermission[]
   releasePipelines: PagedResponse<ReleasePipeline>
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>

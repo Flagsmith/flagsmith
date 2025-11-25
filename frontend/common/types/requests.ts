@@ -14,7 +14,6 @@ import {
   UserGroup,
   AttributeName,
   Identity,
-  ChangeRequest,
   ProjectChangeRequest,
   Role,
   RolePermission,
@@ -26,6 +25,17 @@ import {
   StageActionBody,
 } from './responses'
 import { UtmsType } from './utms'
+
+export type UpdateProjectBody = {
+  name: string
+  hide_disabled_flags?: boolean
+  prevent_flag_defaults?: boolean
+  enable_realtime_updates?: boolean
+  minimum_change_request_approvals?: number | null
+  stale_flags_limit_days?: number | null
+  only_allow_lower_case_feature_names?: boolean
+  feature_name_regex?: string | null
+}
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -581,6 +591,10 @@ export type Req = {
     id: string
   }
   getProject: { id: string }
+  updateProject: { id: string; body: UpdateProjectBody }
+  deleteProject: { id: string }
+  migrateProject: { id: string }
+  getProjectPermissions: { projectId: string }
   createGroup: {
     orgId: string
     data: Omit<UserGroup, 'id' | 'users'>
