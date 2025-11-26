@@ -41,6 +41,12 @@ const CreateOrganisationPage: React.FC = () => {
       AppActions.selectOrganisation(id)
       API.setCookie('organisation', `${id}`)
 
+      getStore().dispatch(
+        organisationService.util.invalidateTags([
+          { id: 'LIST', type: 'Organisation' },
+        ]),
+      )
+
       if (showHostingPreferences) {
         updateTools({
           hosting_preferences: hosting,
@@ -110,12 +116,6 @@ const CreateOrganisationPage: React.FC = () => {
             )
           }
           AppActions.createOrganisation(name)
-          // Invalidate RTK Query cache to refresh organization lists
-          getStore().dispatch(
-            organisationService.util.invalidateTags([
-              { id: 'LIST', type: 'Organisation' },
-            ]),
-          )
         }}
       >
         <CondensedRow>

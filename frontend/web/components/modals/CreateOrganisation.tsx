@@ -16,6 +16,12 @@ const CreateOrganisationModal: FC = () => {
     AppActions.selectOrganisation(id)
     AppActions.getOrganisation(id)
     API.setCookie('organisation', `${id}`)
+    getStore().dispatch(
+      organisationService.util.invalidateTags([
+        { id: 'LIST', type: 'Organisation' },
+      ]),
+    )
+    closeModal()
   }
 
   return (
@@ -35,13 +41,6 @@ const CreateOrganisationModal: FC = () => {
                 )
               }
               createOrganisation(name)
-              // Invalidate RTK Query cache to refresh organization lists
-              getStore().dispatch(
-                organisationService.util.invalidateTags([
-                  { id: 'LIST', type: 'Organisation' },
-                ]),
-              )
-              closeModal()
             }}
           >
             <InputGroup
