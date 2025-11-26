@@ -28,6 +28,7 @@ export const useDeleteOrganisationWithToast = () => {
         )?.[0]?.id
 
         AppActions.selectOrganisation(nextOrgId)
+        AppActions.getOrganisation(nextOrgId)
 
         toast(options?.successMessage || 'Your organisation has been removed')
         options?.onSuccess?.(nextOrgId)
