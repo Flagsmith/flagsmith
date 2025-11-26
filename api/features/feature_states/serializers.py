@@ -66,7 +66,7 @@ class FeatureIdentifierSerializer(serializers.Serializer):  # type: ignore[type-
         return data
 
 
-class SegmentSerializer(serializers.Serializer):  # type: ignore[type-arg]
+class FeatureUpdateSegmentDataSerializer(serializers.Serializer):  # type: ignore[type-arg]
     id = serializers.IntegerField(required=True)
     priority = serializers.IntegerField(required=False, allow_null=True)
 
@@ -98,7 +98,7 @@ class FeatureValueSerializer(serializers.Serializer):  # type: ignore[type-arg]
 
 class UpdateFlagSerializer(BaseFeatureUpdateSerializer):
     feature = FeatureIdentifierSerializer(required=True)
-    segment = SegmentSerializer(required=False)
+    segment = FeatureUpdateSegmentDataSerializer(required=False)
     enabled = serializers.BooleanField(required=True)
     value = FeatureValueSerializer(required=True)
 
