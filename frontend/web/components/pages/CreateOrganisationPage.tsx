@@ -16,6 +16,8 @@ import { Account } from 'common/types/responses'
 import CheckboxGroup from 'components/base/forms/CheckboxGroup'
 import OrganisationStore from 'common/stores/organisation-store'
 import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
+import { organisationService } from 'common/services/useOrganisation'
+import { getStore } from 'common/store'
 
 const CreateOrganisationPage: React.FC = () => {
   const [name, setName] = useState<string>('')
@@ -53,7 +55,7 @@ const CreateOrganisationPage: React.FC = () => {
       OrganisationStore.off('change', onChangeAccountStore)
       OrganisationStore.off('saved', onSave)
     }
-  }, [hosting, history])
+  }, [hosting, history, showHostingPreferences, updateTools])
 
   useEffect(() => {
     API.trackPage(Constants.pages.CREATE_ORGANISATION)
@@ -108,6 +110,12 @@ const CreateOrganisationPage: React.FC = () => {
             )
           }
           AppActions.createOrganisation(name)
+          // Invalidate RTK Query cache to refresh organization lists
+          getStore().dispatch(
+            organisationService.util.invalidateTags([
+              { id: 'LIST', type: 'Organisation' },
+            ]),
+          )
         }}
       >
         <CondensedRow>

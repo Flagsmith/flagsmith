@@ -6,6 +6,8 @@ import InputGroup from 'components/base/forms/InputGroup'
 import API from 'project/api'
 import { FC, useState } from 'react'
 import Project from 'common/project'
+import { organisationService } from 'common/services/useOrganisation'
+import { getStore } from 'common/store'
 
 const CreateOrganisationModal: FC = () => {
   const [name, setName] = useState('')
@@ -33,6 +35,12 @@ const CreateOrganisationModal: FC = () => {
                 )
               }
               createOrganisation(name)
+              // Invalidate RTK Query cache to refresh organization lists
+              getStore().dispatch(
+                organisationService.util.invalidateTags([
+                  { id: 'LIST', type: 'Organisation' },
+                ]),
+              )
               closeModal()
             }}
           >
