@@ -354,7 +354,7 @@ def test_update_flag_segment_override_by_name(
 
     # Create an identity that matches the segment
     identity = Identity.objects.create(identifier="test_user", environment=environment_)
-    identity.update_traits([{"trait_key": "email", "trait_value": "test@example.com"}])
+    identity.update_traits([{"trait_key": "email", "trait_value": "test@example.com"}])  # type: ignore[typeddict-item]
 
     url = reverse(
         "api-experiments:update-flag-v1",
@@ -427,7 +427,7 @@ def test_update_flag_segment_override_creates_feature_segment_if_not_exists(
     identity = Identity.objects.create(
         identifier="premium_user", environment=environment_
     )
-    identity.update_traits([{"trait_key": "user_type", "trait_value": "premium"}])
+    identity.update_traits([{"trait_key": "user_type", "trait_value": "premium"}])  # type: ignore[typeddict-item]
 
     url = reverse(
         "api-experiments:update-flag-v1",
@@ -517,12 +517,12 @@ def test_update_feature_states_creates_new_segment_overrides(
     vip_identity = Identity.objects.create(
         identifier="vip_user", environment=environment_
     )
-    vip_identity.update_traits([{"trait_key": "tier", "trait_value": "vip"}])
+    vip_identity.update_traits([{"trait_key": "tier", "trait_value": "vip"}])  # type: ignore[typeddict-item]
 
     beta_identity = Identity.objects.create(
         identifier="beta_user", environment=environment_
     )
-    beta_identity.update_traits([{"trait_key": "beta", "trait_value": "true"}])
+    beta_identity.update_traits([{"trait_key": "beta", "trait_value": "true"}])  # type: ignore[typeddict-item]
 
     url = reverse(
         "api-experiments:update-flag-v2",

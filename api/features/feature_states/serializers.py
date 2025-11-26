@@ -1,5 +1,6 @@
 import typing
 
+from django.db.models import Q
 from rest_framework import serializers
 
 from environments.models import Environment
@@ -16,20 +17,18 @@ from users.models import FFAdminUser
 class BaseFeatureUpdateSerializer(serializers.Serializer):  # type: ignore[type-arg]
     def get_feature(self) -> Feature:
         feature_data = self.validated_data["feature"]
-        environment: Environment = self.context.get("environment")
+        environment: Environment = self.context.get("environment")  # type: ignore[assignment]
 
         if not environment:
             raise serializers.ValidationError("Environment context is required")
 
         try:
-            if "id" in feature_data:
-                return Feature.objects.get(
-                    id=feature_data["id"], project_id=environment.project_id
-                )
-            else:
-                return Feature.objects.get(
-                    name=feature_data["name"], project_id=environment.project_id
-                )
+            # TODO: strip out the id vs name piece as this is ugly as heck.
+            query = Q(project_id=environment.project_id) & (
+                Q(id=feature_data.get("id")) | Q(name=feature_data.get("name"))
+            )
+            feature: Feature = Feature.objects.get(query)
+            return feature
         except Feature.DoesNotExist:
             identifier = feature_data.get("id") or feature_data.get("name")
             raise serializers.ValidationError(

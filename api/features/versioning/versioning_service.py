@@ -202,7 +202,7 @@ def _update_flag_for_versioning_v1(
         )
 
         # FeatureStateValue is automatically created via signal
-        target_feature_state = FeatureState.objects.create(
+        target_feature_state: FeatureState = FeatureState.objects.create(
             feature=feature,
             environment=environment,
             feature_segment=feature_segment,
@@ -281,7 +281,7 @@ def _create_segment_override(
         priority=priority if priority is not None else 0,
     )
 
-    segment_state = FeatureState.objects.create(
+    segment_state: FeatureState = FeatureState.objects.create(
         feature=feature,
         environment=environment,
         feature_segment=feature_segment,

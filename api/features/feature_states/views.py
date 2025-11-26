@@ -46,7 +46,7 @@ from .serializers import UpdateFlagSerializer, UpdateFlagV2Serializer
         )
     },
     tags=["Experimental - Feature States"],
-)
+)  # type: ignore[misc]
 @api_view(http_method_names=["POST"])
 def update_flag_v1(request: Request, environment_id: int) -> Response:
     """
@@ -113,7 +113,7 @@ def update_flag_v1(request: Request, environment_id: int) -> Response:
         )
     },
     tags=["Experimental - Feature States"],
-)
+)  # type: ignore[misc]
 @api_view(http_method_names=["POST"])
 def update_flag_v2(request: Request, environment_id: int) -> Response:
     """

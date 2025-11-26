@@ -233,6 +233,7 @@ class Identity(models.Model):
 
     def update_traits(
         self,
+        # TODO: this typing isn't true as it also supports regular dicts like {"trait_key": "foo", "trait_value": "bar"}
         trait_data_items: list[SDKTraitData],
     ) -> list[Trait]:
         """
