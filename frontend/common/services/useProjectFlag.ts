@@ -66,6 +66,19 @@ export const projectFlagService = service
           )
         },
       }),
+      removeProjectFlag: builder.mutation<
+        void,
+        { project: string; id: number }
+      >({
+        invalidatesTags: [
+          { id: 'LIST', type: 'ProjectFlag' },
+          { id: 'LIST', type: 'FeatureList' },
+        ],
+        query: ({ id, project }) => ({
+          method: 'DELETE',
+          url: `projects/${project}/features/${id}/`,
+        }),
+      }),
       updateProjectFlag: builder.mutation<
         Res['projectFlag'],
         Req['updateProjectFlag']
@@ -134,6 +147,7 @@ export const {
   useCreateProjectFlagMutation,
   useGetProjectFlagQuery,
   useGetProjectFlagsQuery,
+  useRemoveProjectFlagMutation,
   useUpdateProjectFlagMutation,
   // END OF EXPORTS
 } = projectFlagService
