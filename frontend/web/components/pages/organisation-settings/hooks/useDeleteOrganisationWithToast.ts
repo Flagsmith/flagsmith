@@ -27,9 +27,7 @@ export const useDeleteOrganisationWithToast = () => {
           (org) => org.id !== organisationId,
         )?.[0]?.id
 
-        // Refresh OrganisationStore to update navbar and other components
-        // that rely on the legacy store
-        AppActions.refreshOrganisation()
+        AppActions.selectOrganisation(nextOrgId)
 
         toast(options?.successMessage || 'Your organisation has been removed')
         options?.onSuccess?.(nextOrgId)
