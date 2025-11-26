@@ -1124,5 +1124,21 @@ export type Res = {
     day: string
     count: number
   }[]
+  featureList: {
+    results: ProjectFlag[]
+    count: number
+    next: string | null
+    previous: string | null
+    environmentStates: Record<number, FeatureState>
+    pagination: {
+      count: number
+      next: string | null
+      previous: string | null
+      page: number
+      pageSize: number
+    }
+  }
+  featureState: FeatureState
+  multivariateOption: MultivariateOption
   // END OF TYPES
 }

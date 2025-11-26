@@ -820,5 +820,42 @@ export type Req = {
     period: number
     environment_id: string
   }
+  getFeatureList: {
+    projectId: string
+    environmentId: string
+    page?: number
+    page_size?: number
+    search?: string | null
+    tags?: string
+    is_archived?: boolean
+    is_enabled?: boolean | null
+    owners?: string
+    group_owners?: string
+    value_search?: string
+    tag_strategy?: TagStrategy
+    sort_field?: string
+    sort_direction?: 'ASC' | 'DESC'
+  }
+  updateFeatureState: {
+    environmentId: string
+    stateId: number
+    body: Partial<FeatureState>
+  }
+  createMultivariateOption: {
+    projectId: string
+    featureId: number
+    body: Partial<MultivariateOption>
+  }
+  updateMultivariateOption: {
+    projectId: string
+    featureId: number
+    mvId: number
+    body: Partial<MultivariateOption>
+  }
+  deleteMultivariateOption: {
+    projectId: string
+    featureId: number
+    mvId: number
+  }
   // END OF TYPES
 }
