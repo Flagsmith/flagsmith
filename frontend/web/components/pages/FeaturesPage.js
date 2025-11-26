@@ -371,6 +371,9 @@ const FeaturesPage = class extends Component {
                             header={
                               <FeaturesTableFilters
                                 projectId={projectId}
+                                environmentId={ProjectStore.getEnvironmentIdFromKey(
+                                  this.props.match.params.environmentId,
+                                )}
                                 filters={{
                                   group_owners: this.state.group_owners,
                                   is_enabled: this.state.is_enabled,
