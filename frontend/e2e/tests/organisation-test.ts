@@ -8,6 +8,7 @@ import {
   login,
   setText,
   waitForElementVisible,
+  waitForElementNotExist,
   clickByText,
 } from '../helpers.cafe'
 import { E2E_USER, PASSWORD } from '../config'
@@ -108,6 +109,7 @@ export default async function () {
   await click('#delete-org-btn')
   await setText("[name='confirm-org-name']", 'E2E Cancel Test Org')
   await clickByText('Confirm')
+  await waitForElementNotExist('.modal')
   await waitForElementVisible(byId('organisation-link'))
   await assertTextContent('#organisation-link', 'Test Organisation')
 
