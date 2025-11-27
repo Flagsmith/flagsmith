@@ -17,7 +17,7 @@ Feature health enables you to monitor observability metrics within Flagsmith, sp
 
 1. Go to your **Project Settings** in Flagsmith.
 2. Navigate to the **Feature Health** section.
-3. Choose your desired provider from the **Provider Name** drop-down menu (e.g., Grafana/Prometheus Alertmanager or Sample).
+3. Choose your desired provider from the **Provider Name** drop-down menu (e.g., Grafana/Prometheus Alertmanager or Generic).
 4. Click **Create** and copy the webhook URL.
 
 ---
@@ -28,12 +28,12 @@ Feature health enables you to monitor observability metrics within Flagsmith, sp
 
 [Learn more](/third-party-integrations/observability-and-monitoring/grafana) about configuring Grafana / Prometheus Alertmanager feature health provider.
 
-### Sample Provider
+### Generic Provider
 
-We provide a Sample Provider for your custom integrations. To create a Sample Feature Health webhook:
+We provide a Generic Provider for your custom integrations. To create a Generic Feature Health webhook:
 
 1. Go to Project Settings > Feature Health.
-2. Select "Sample" from the Provider Name drop-down menu.
+2. Select "Generic" from the Provider Name drop-down menu.
 3. Click Create and copy the webhook URL.
 
 You can use the webhook in your custom integration. Refer to the payload schema below:
@@ -41,7 +41,7 @@ You can use the webhook in your custom integration. Refer to the payload schema 
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "SampleEvent",
+  "title": "GenericEvent",
   "type": "object",
   "properties": {
     "environment": {
