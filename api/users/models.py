@@ -199,8 +199,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
 
     @property
     def pylon_email_signature(self) -> str | None:
-        if not settings.PYLON_IDENTITY_VERIFICATION_SECRET:
-            return None
         return get_user_email_signature(self.email)
 
     def get_full_name(self):  # type: ignore[no-untyped-def]
