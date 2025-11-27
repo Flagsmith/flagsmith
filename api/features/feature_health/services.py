@@ -19,7 +19,7 @@ from features.feature_health.models import (
     FeatureHealthProvider,
     FeatureHealthProviderName,
 )
-from features.feature_health.providers import grafana, generic
+from features.feature_health.providers import generic, grafana
 from features.feature_health.types import FeatureHealthEventReason
 from features.models import Feature
 from projects.tags.models import Tag, TagType
