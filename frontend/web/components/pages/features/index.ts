@@ -1,3 +1,6 @@
 export { FeaturesEmptyState } from './FeaturesEmptyState'
 export { FeatureMetricsSection } from './FeatureMetricsSection'
 export { FeaturesTableFilters } from './components/FeaturesTableFilters'
+export { FeaturesPageHeader } from './components/FeaturesPageHeader'
+export { FeaturesList } from './components/FeaturesList'
+export { FeaturesSDKIntegration } from './components/FeaturesSDKIntegration'
