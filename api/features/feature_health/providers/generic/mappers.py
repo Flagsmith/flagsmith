@@ -4,20 +4,20 @@ from features.feature_health.models import (
     FeatureHealthEventType,
     FeatureHealthProviderName,
 )
-from features.feature_health.providers.sample.types import (
-    SampleEvent,
-    SampleEventStatus,
+from features.feature_health.providers.generic.types import (
+    GenericEvent,
+    GenericEventStatus,
 )
 from features.feature_health.types import (
     FeatureHealthEventData,
     FeatureHealthProviderResponse,
 )
 
-_sample_event_type_adapter = TypeAdapter(SampleEvent)
+_sample_event_type_adapter = TypeAdapter(GenericEvent)
 
 
 def map_sample_event_status_to_feature_health_event_type(
-    status: SampleEventStatus,
+    status: GenericEventStatus,
 ) -> FeatureHealthEventType:
     return (
         FeatureHealthEventType.UNHEALTHY
@@ -29,7 +29,7 @@ def map_sample_event_status_to_feature_health_event_type(
 def map_payload_to_provider_response(
     payload: str,
 ) -> FeatureHealthProviderResponse:
-    event_data: SampleEvent = _sample_event_type_adapter.validate_json(payload)
+    event_data: GenericEvent = _sample_event_type_adapter.validate_json(payload)
 
     return FeatureHealthProviderResponse(
         events=[
@@ -40,7 +40,7 @@ def map_payload_to_provider_response(
                     event_data["status"]
                 ),
                 reason=event_data.get("reason"),
-                provider_name=FeatureHealthProviderName.SAMPLE.value,
+                provider_name=FeatureHealthProviderName.GENERIC.value,
             ),
         ],
     )

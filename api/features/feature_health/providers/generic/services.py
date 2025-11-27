@@ -1,4 +1,4 @@
-from features.feature_health.providers.sample.mappers import (
+from features.feature_health.providers.generic.mappers import (
     map_payload_to_provider_response,
 )
 from features.feature_health.types import FeatureHealthProviderResponse

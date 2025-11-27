@@ -1,4 +1,4 @@
-from features.feature_health.providers.sample.services import (
+from features.feature_health.providers.generic.services import (
     get_provider_response,
 )
 

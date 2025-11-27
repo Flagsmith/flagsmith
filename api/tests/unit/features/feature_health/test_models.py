@@ -25,7 +25,7 @@ def test_feature_health_provider__get_create_log_message__return_expected(
     log_message = feature_health_provider.get_create_log_message(mocker.Mock())
 
     # Then
-    assert log_message == "Health provider Sample set up for project Test Project."
+    assert log_message == "Health provider Generic set up for project Test Project."
 
 
 def test_feature_health_provider__get_delete_log_message__return_expected(
@@ -36,7 +36,7 @@ def test_feature_health_provider__get_delete_log_message__return_expected(
     log_message = feature_health_provider.get_delete_log_message(mocker.Mock())
 
     # Then
-    assert log_message == "Health provider Sample removed from project Test Project."
+    assert log_message == "Health provider Generic removed from project Test Project."
 
 
 def test_feature_health_provider__get_audit_log_author__return_expected(

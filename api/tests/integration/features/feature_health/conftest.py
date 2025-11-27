@@ -16,25 +16,25 @@ def _get_feature_health_provider_webhook_url(
 
 
 @pytest.fixture
-def sample_feature_health_provider_webhook_url(
+def generic_feature_health_provider_webhook_url(
     project: int, admin_client_new: APIClient
 ) -> str:
     return _get_feature_health_provider_webhook_url(
         project=project,
         api_client=admin_client_new,
-        name="Sample",
+        name="Generic",
     )
 
 
 @pytest.fixture
 def unhealthy_feature(
-    sample_feature_health_provider_webhook_url: str,
+    generic_feature_health_provider_webhook_url: str,
     feature_name: str,
     feature: int,
     api_client: APIClient,
 ) -> int:
     api_client.post(
-        sample_feature_health_provider_webhook_url,
+        generic_feature_health_provider_webhook_url,
         data=json.dumps({"feature": feature_name, "status": "unhealthy"}),
         content_type="application/json",
     )
