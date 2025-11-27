@@ -1,12 +1,12 @@
+from features.feature_health.providers.generic.types import (
+    WebhookEvent,
+    WebhookEventStatus,
+)
 from pydantic.type_adapter import TypeAdapter
 
 from features.feature_health.models import (
     FeatureHealthEventType,
     FeatureHealthProviderName,
-)
-from features.feature_health.providers.generic.types import (
-    WebhookEvent,
-    WebhookEventStatus,
 )
 from features.feature_health.types import (
     FeatureHealthEventData,
