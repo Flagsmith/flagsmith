@@ -17,9 +17,9 @@ const FeatureHealthProviderDocumentationNote: React.FC<
       </div>
       <div>
         <span>
-          Sample provider:{' '}
-          <a href='https://docs.flagsmith.com/advanced-use/feature-health#sample-provider'>
-            https://docs.flagsmith.com/advanced-use/feature-health#sample-provider
+          Webhook provider:{' '}
+          <a href='https://docs.flagsmith.com/advanced-use/feature-health#webhook-provider'>
+            https://docs.flagsmith.com/advanced-use/feature-health#webhook-provider
           </a>
         </span>
       </div>
