@@ -360,7 +360,7 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#F7D56E' />
                               </span>
                               <div className='ml-2'>
-                                Priority Real Time Technical Support via chat and Discord,
+                                Priority real-time technical support via chat and Discord,
                                 with Slack/Teams optional
                               </div>
                             </Row>
