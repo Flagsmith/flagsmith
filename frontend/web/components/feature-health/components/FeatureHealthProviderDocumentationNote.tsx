@@ -17,9 +17,9 @@ const FeatureHealthProviderDocumentationNote: React.FC<
       </div>
       <div>
         <span>
-          Generic provider:{' '}
-          <a href='https://docs.flagsmith.com/advanced-use/feature-health#generic-provider'>
-            https://docs.flagsmith.com/advanced-use/feature-health#generic-provider
+          Webhook provider:{' '}
+          <a href='https://docs.flagsmith.com/advanced-use/feature-health#webhook-provider'>
+            https://docs.flagsmith.com/advanced-use/feature-health#webhook-provider
           </a>
         </span>
       </div>
