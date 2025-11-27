@@ -51,7 +51,7 @@ def test_dismiss_feature_health_event__healthy_event__log_expected(
     healthy_event = FeatureHealthEvent.objects.create(
         feature=feature,
         environment=environment,
-        provider_name="Generic",
+        provider_name="Webhook",
         external_id="test_external_id",
         type=FeatureHealthEventType.HEALTHY,
     )

@@ -13,5 +13,5 @@ def feature_health_provider(
     return FeatureHealthProvider.objects.create(  # type: ignore[no-any-return]
         created_by=staff_user,
         project=project,
-        name="Generic",
+        name="Webhook",
     )

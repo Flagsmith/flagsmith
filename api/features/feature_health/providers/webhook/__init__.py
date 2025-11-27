@@ -1,4 +1,4 @@
-from features.feature_health.providers.generic.services import (
+from features.feature_health.providers.webhook.services import (
     get_provider_response,
 )
 

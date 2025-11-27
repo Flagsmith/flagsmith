@@ -19,7 +19,7 @@ from features.feature_health.models import (
     FeatureHealthProvider,
     FeatureHealthProviderName,
 )
-from features.feature_health.providers import generic, grafana
+from features.feature_health.providers import webhook, grafana
 from features.feature_health.types import FeatureHealthEventReason
 from features.models import Feature
 from projects.tags.models import Tag, TagType
@@ -36,7 +36,7 @@ PROVIDER_RESPONSE_GETTERS: dict[
     typing.Callable[[str], "FeatureHealthProviderResponse"],
 ] = {
     FeatureHealthProviderName.GRAFANA.value: grafana.get_provider_response,
-    FeatureHealthProviderName.GENERIC.value: generic.get_provider_response,
+    FeatureHealthProviderName.WEBHOOK.value: webhook.get_provider_response,
 }
 
 

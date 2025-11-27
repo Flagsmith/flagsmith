@@ -5,20 +5,20 @@ from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db import migrations, models
 
 
-def migrate_sample_to_generic_forward(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
+def migrate_sample_to_webhook_forward(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
     FeatureHealthProvider = apps.get_model("feature_health", "FeatureHealthProvider")
     FeatureHealthEvent = apps.get_model("feature_health", "FeatureHealthEvent")
     
-    FeatureHealthProvider.objects.filter(name="Sample").update(name="Generic")
-    FeatureHealthEvent.objects.filter(provider_name="Sample").update(provider_name="Generic")
+    FeatureHealthProvider.objects.filter(name="Sample").update(name="Webhook")
+    FeatureHealthEvent.objects.filter(provider_name="Sample").update(provider_name="Webhook")
 
 
-def migrate_sample_to_generic_reverse(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
+def migrate_sample_to_webhook_reverse(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
     FeatureHealthProvider = apps.get_model("feature_health", "FeatureHealthProvider")
     FeatureHealthEvent = apps.get_model("feature_health", "FeatureHealthEvent")
     
-    FeatureHealthProvider.objects.filter(name="Generic").update(name="Sample")
-    FeatureHealthEvent.objects.filter(provider_name="Generic").update(provider_name="Sample")
+    FeatureHealthProvider.objects.filter(name="Webhook").update(name="Sample")
+    FeatureHealthEvent.objects.filter(provider_name="Webhook").update(provider_name="Sample")
 
 
 
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
             model_name='featurehealthprovider',
             name='name',
             field=models.CharField(
-                choices=[('Generic', 'Generic'), ('Grafana', 'Grafana')],
+                choices=[('Webhook', 'Webhook'), ('Grafana', 'Grafana')],
                 max_length=50
             ),
         ),
@@ -41,12 +41,12 @@ class Migration(migrations.Migration):
             model_name='historicalfeaturehealthprovider',
             name='name',
             field=models.CharField(
-                choices=[('Generic', 'Generic'), ('Grafana', 'Grafana')],
+                choices=[('Webhook', 'Webhook'), ('Grafana', 'Grafana')],
                 max_length=50
             ),
         ),
         migrations.RunPython(
-            migrate_sample_to_generic_forward,
-            migrate_sample_to_generic_reverse,
+            migrate_sample_to_webhook_forward,
+            migrate_sample_to_webhook_reverse,
         ),
     ]

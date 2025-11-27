@@ -4,7 +4,7 @@ from features.feature_health.models import (
     FeatureHealthEventType,
     FeatureHealthProviderName,
 )
-from features.feature_health.providers.generic.types import (
+from features.feature_health.providers.webhook.types import (
     WebhookEvent,
     WebhookEventStatus,
 )
