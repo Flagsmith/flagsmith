@@ -36,7 +36,7 @@ const CreateHealthProviderForm = ({ projectId }: { projectId: number }) => {
     useCreateHealthProviderMutation()
 
   const providers = [
-    { name: FeatureHealthProviderName.WEBHOOK },
+    { name: FeatureHealthProviderName.GENERIC },
     { name: FeatureHealthProviderName.GRAFANA },
   ]
 

@@ -1,4 +1,4 @@
 export enum FeatureHealthProviderName {
-  WEBHOOK = 'Webhook',
+  GENERIC = 'Generic',
   GRAFANA = 'Grafana',
 }
