@@ -83,6 +83,32 @@ declare global {
     trackTraits: (traits: Record<string, any>) => void
     [key: string]: any
   }
+  const Utils: {
+    fromParam: () => any
+    toParam: (params: any) => string
+    getFlagsmithHasFeature: (feature: string) => boolean
+    renderWithPermission: (permission: boolean, text: string, el: any) => any
+    calculateRemainingLimitsPercentage: (
+      current: number,
+      max: number | null,
+    ) => { percentage: number }
+    displayLimitAlert: (type: string, percentage: number) => ReactNode
+    getManageFeaturePermission: (changeRequestsEnabled: boolean) => string
+    changeRequestsEnabled: (minApprovals: number | null) => boolean
+    [key: string]: any
+  }
+  const AsyncStorage: {
+    setItem: (key: string, value: string) => void
+    getItem: (key: string) => string | null
+    removeItem: (key: string) => void
+    [key: string]: any
+  }
+  const AccountStore: {
+    getOrganisation: () => { id: number } | null
+    [key: string]: any
+  }
+  const PanelSearch: typeof Component
+  const CodeHelp: typeof Component
   interface Window {
     $crisp: Crisp
     engagement: {
