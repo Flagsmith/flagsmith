@@ -2,12 +2,21 @@ from drf_yasg import openapi  # type: ignore[import-untyped]
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from environments.models import Environment
 
 from .serializers import UpdateFlagSerializer, UpdateFlagV2Serializer
+
+
+def _check_workflow_not_enabled(environment: Environment) -> None:
+    if environment.is_workflow_enabled:
+        raise PermissionDenied(
+            "This endpoint cannot be used when change requests are enabled. "
+            "Use the change request workflow instead."
+        )
 
 
 @swagger_auto_schema(
@@ -56,6 +65,7 @@ def update_flag_v1(request: Request, environment_id: int) -> Response:
     Feature identification is provided in the request payload.
     """
     environment = Environment.objects.get(id=environment_id)
+    _check_workflow_not_enabled(environment)
 
     serializer = UpdateFlagSerializer(
         data=request.data,
@@ -124,6 +134,7 @@ def update_flag_v2(request: Request, environment_id: int) -> Response:
     - Multiple segment overrides with priority ordering
     """
     environment = Environment.objects.get(id=environment_id)
+    _check_workflow_not_enabled(environment)
 
     serializer = UpdateFlagV2Serializer(
         data=request.data,

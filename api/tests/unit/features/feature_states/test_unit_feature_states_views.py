@@ -711,3 +711,72 @@ def test_update_existing_segment_override_with_priority_v2(
     )
     assert feature_segment is not None
     assert feature_segment.priority == 2
+
+
+# Workflow enabled tests
+
+
+def test_update_flag_v1_returns_403_when_workflow_enabled(
+    staff_client: APIClient,
+    feature: Feature,
+    environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+    environment.minimum_change_request_approvals = 1
+    environment.save()
+
+    url = reverse(
+        "api-experiments:update-flag-v1",
+        kwargs={"environment_id": environment.id},
+    )
+
+    data = {
+        "feature": {"name": feature.name},
+        "enabled": True,
+        "value": {"type": "string", "string_value": "test"},
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert "change requests are enabled" in str(response.json())
+
+
+def test_update_flag_v2_returns_403_when_workflow_enabled(
+    staff_client: APIClient,
+    feature: Feature,
+    environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+    environment.minimum_change_request_approvals = 1
+    environment.save()
+
+    url = reverse(
+        "api-experiments:update-flag-v2",
+        kwargs={"environment_id": environment.id},
+    )
+
+    data = {
+        "feature": {"name": feature.name},
+        "environment_default": {
+            "enabled": True,
+            "value": {"type": "string", "string_value": "test"},
+        },
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert "change requests are enabled" in str(response.json())
