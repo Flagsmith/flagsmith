@@ -4,7 +4,7 @@ from common.core.utils import using_database_replica
 from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 
-from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
+from core.constants import BOOLEAN, INTEGER, STRING
 from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.versioning.dataclasses import (
@@ -128,12 +128,13 @@ def _update_flag_for_versioning_v2(
         created_by_api_key=change_set.api_key,
     )
 
-    try:
-        target_feature_state: FeatureState = new_version.feature_states.get(
-            feature_segment__segment_id=change_set.segment_id,
-        )
-    except FeatureState.DoesNotExist:
-        if change_set.segment_id:
+    if change_set.segment_id:
+        # Segment override - may or may not exist
+        try:
+            target_feature_state: FeatureState = new_version.feature_states.get(
+                feature_segment__segment_id=change_set.segment_id,
+            )
+        except FeatureState.DoesNotExist:
             segment = Segment.objects.get(id=change_set.segment_id)
 
             feature_segment = FeatureSegment.objects.create(
@@ -153,8 +154,11 @@ def _update_flag_for_versioning_v2(
                 environment_feature_version=new_version,
                 enabled=change_set.enabled,
             )
-        else:
-            raise
+    else:
+        # Environment default - always exists
+        target_feature_state = new_version.feature_states.get(
+            feature_segment__isnull=True,
+        )
 
     target_feature_state.enabled = change_set.enabled
     target_feature_state.save()
@@ -254,9 +258,6 @@ def _update_feature_state_value(
             else:
                 fsv.boolean_value = str(value).lower() == "true"
             fsv.type = BOOLEAN
-        case "float":
-            fsv.float_value = float(value)
-            fsv.type = FLOAT
 
     fsv.save()
 

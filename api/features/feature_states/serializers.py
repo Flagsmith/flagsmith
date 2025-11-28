@@ -75,7 +75,7 @@ class FeatureValueSerializer(serializers.Serializer):  # type: ignore[type-arg]
     """Value is always a string; type field indicates how to parse it."""
 
     type = serializers.ChoiceField(
-        choices=["integer", "string", "boolean", "float"], required=True
+        choices=["integer", "string", "boolean"], required=True
     )
     string_value = serializers.CharField(required=True, allow_blank=True)
 
@@ -90,10 +90,8 @@ class FeatureValueSerializer(serializers.Serializer):  # type: ignore[type-arg]
                 return int(string_val)
             case "boolean":
                 return string_val.lower() == "true"
-            case "float":
-                return float(string_val)
-
-        return string_val
+            case _:
+                raise ValueError(f"Unsupported value type: {value_type}")
 
 
 class UpdateFlagSerializer(BaseFeatureUpdateSerializer):

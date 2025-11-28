@@ -600,3 +600,38 @@ def test_get_updated_feature_states_for_version_detects_segment_override_multiva
     assert updated_feature_states[0].feature_segment is not None
     assert updated_feature_states[0].feature_segment.segment == segment
     assert updated_feature_states[0].get_feature_state_value() == "new_control_value"
+
+
+def test_update_feature_state_value_with_boolean_string(
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    """Test _update_feature_state_value handles boolean passed as string."""
+    from features.versioning.versioning_service import _update_feature_state_value
+
+    feature_state = FeatureState.objects.get(
+        feature=feature, environment=environment, feature_segment=None
+    )
+    fsv = feature_state.feature_state_value
+
+    # Call with string "true" instead of bool True
+    _update_feature_state_value(fsv, "true", "boolean")
+
+    fsv.refresh_from_db()
+    assert fsv.boolean_value is True
+
+
+def test_get_environment_flags_list_with_replica(
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    """Test get_environment_flags_list with from_replica=True."""
+    # This just verifies the code path works - actual replica behavior
+    # depends on database configuration
+    result = get_environment_flags_list(
+        environment=environment,
+        from_replica=True,
+    )
+
+    assert len(result) >= 1
+    assert result[0].feature == feature

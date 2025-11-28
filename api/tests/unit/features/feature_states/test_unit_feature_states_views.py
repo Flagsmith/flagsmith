@@ -62,6 +62,14 @@ def get_identity_feature_state_from_sdk(
 
 
 @pytest.mark.parametrize(
+    "value_type,string_value,expected_value",
+    [
+        ("integer", "42", 42),
+        ("string", "hello", "hello"),
+        ("boolean", "true", True),
+    ],
+)
+@pytest.mark.parametrize(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
@@ -70,6 +78,9 @@ def test_update_flag_by_name(
     feature: Feature,
     environment_: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
+    value_type: str,
+    string_value: str,
+    expected_value: typing.Any,
 ) -> None:
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
@@ -81,7 +92,7 @@ def test_update_flag_by_name(
     data = {
         "feature": {"name": feature.name},
         "enabled": True,
-        "value": {"type": "integer", "string_value": "42"},
+        "value": {"type": value_type, "string_value": string_value},
     }
 
     # When
@@ -97,7 +108,7 @@ def test_update_flag_by_name(
     )
 
     assert latest_flags[0].enabled is True
-    assert latest_flags[0].get_feature_state_value() == 42
+    assert latest_flags[0].get_feature_state_value() == expected_value
 
 
 @pytest.mark.parametrize(
@@ -617,3 +628,183 @@ def test_update_feature_states_environment_default_only(
     env_default = [fs for fs in latest_flags if fs.feature_segment is None][0]
     assert env_default.enabled is True
     assert env_default.get_feature_state_value() == 100
+
+
+def test_update_feature_states_rejects_duplicate_segment_ids(
+    staff_client: APIClient,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+
+    segment1 = Segment.objects.create(name="segment1", project=project)
+
+    url = reverse(
+        "api-experiments:update-flag-v2",
+        kwargs={"environment_id": environment.id},
+    )
+
+    # Request with duplicate segment_id
+    data = {
+        "feature": {"name": feature.name},
+        "environment_default": {
+            "enabled": True,
+            "value": {"type": "string", "string_value": "default"},
+        },
+        "segment_overrides": [
+            {
+                "segment_id": segment1.id,
+                "enabled": True,
+                "value": {"type": "string", "string_value": "value1"},
+            },
+            {
+                "segment_id": segment1.id,  # Duplicate!
+                "enabled": False,
+                "value": {"type": "string", "string_value": "value2"},
+            },
+        ],
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Duplicate segment_id values are not allowed" in str(response.json())
+
+
+@pytest.mark.parametrize(
+    "environment_",
+    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+)
+def test_update_existing_segment_override_with_priority_v1(
+    staff_client: APIClient,
+    feature: Feature,
+    environment_: Environment,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    """Test updating an existing segment override with a new priority using V1 endpoint."""
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+
+    segment = Segment.objects.create(name="priority_segment", project=project)
+
+    url = reverse(
+        "api-experiments:update-flag-v1",
+        kwargs={"environment_id": environment_.id},
+    )
+
+    # First, create the segment override
+    create_data = {
+        "feature": {"name": feature.name},
+        "segment": {"id": segment.id, "priority": 5},
+        "enabled": True,
+        "value": {"type": "integer", "string_value": "100"},
+    }
+    response = staff_client.post(
+        url, data=json.dumps(create_data), content_type="application/json"
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # When - Update the same segment override with new priority
+    update_data = {
+        "feature": {"name": feature.name},
+        "segment": {"id": segment.id, "priority": 1},  # Changed priority
+        "enabled": False,  # Changed enabled
+        "value": {"type": "integer", "string_value": "200"},  # Changed value
+    }
+    response = staff_client.post(
+        url, data=json.dumps(update_data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Verify the update - get the latest feature segment (V2 versioning creates new ones)
+    feature_segment = (
+        FeatureSegment.objects.filter(
+            feature=feature, segment=segment, environment=environment_
+        )
+        .order_by("-id")
+        .first()
+    )
+    assert feature_segment is not None
+    assert feature_segment.priority == 1
+
+
+@pytest.mark.parametrize(
+    "environment_",
+    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+)
+def test_update_existing_segment_override_with_priority_v2(
+    staff_client: APIClient,
+    feature: Feature,
+    environment_: Environment,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    """Test updating an existing segment override with a new priority using V2 endpoint."""
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+
+    segment = Segment.objects.create(name="priority_segment_v2", project=project)
+
+    # First, create the segment override using V1 endpoint
+    v1_url = reverse(
+        "api-experiments:update-flag-v1",
+        kwargs={"environment_id": environment_.id},
+    )
+    create_data = {
+        "feature": {"name": feature.name},
+        "segment": {"id": segment.id, "priority": 5},
+        "enabled": True,
+        "value": {"type": "string", "string_value": "initial"},
+    }
+    response = staff_client.post(
+        v1_url, data=json.dumps(create_data), content_type="application/json"
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # When - Update the existing segment override using V2 endpoint
+    v2_url = reverse(
+        "api-experiments:update-flag-v2",
+        kwargs={"environment_id": environment_.id},
+    )
+    update_data = {
+        "feature": {"name": feature.name},
+        "environment_default": {
+            "enabled": True,
+            "value": {"type": "string", "string_value": "default"},
+        },
+        "segment_overrides": [
+            {
+                "segment_id": segment.id,
+                "priority": 2,  # Changed priority
+                "enabled": False,  # Changed enabled
+                "value": {"type": "string", "string_value": "updated"},
+            },
+        ],
+    }
+    response = staff_client.post(
+        v2_url, data=json.dumps(update_data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Verify the priority was updated - get the latest feature segment
+    feature_segment = (
+        FeatureSegment.objects.filter(
+            feature=feature, segment=segment, environment=environment_
+        )
+        .order_by("-id")
+        .first()
+    )
+    assert feature_segment is not None
+    assert feature_segment.priority == 2
