@@ -37,6 +37,13 @@ export type UpdateProjectBody = {
   feature_name_regex?: string | null
 }
 
+export type UpdateOrganisationBody = {
+  name: string
+  force_2fa?: boolean
+  restrict_project_create_to_admin?: boolean
+  webhook_notification_email?: string | null
+}
+
 export type PagedRequest<T> = T & {
   page?: number
   page_size?: number
@@ -151,6 +158,9 @@ export type Req = {
     environments?: string
   }>
   getOrganisations: {}
+  getOrganisation: { id: number }
+  updateOrganisation: { id: number; body: UpdateOrganisationBody }
+  deleteOrganisation: { id: number }
   uploadOrganisationLicence: {
     id: number
     body: {

@@ -16,6 +16,7 @@ import projectPermissionTest from './tests/project-permission-test'
 import environmentPermissionTest from './tests/environment-permission-test'
 import flagsmith from 'flagsmith/isomorphic';
 import rolesTest from './tests/roles-test'
+import organisationTest from './tests/organisation-test'
 
 require('dotenv').config()
 
@@ -111,6 +112,8 @@ test('Invite', inviteTest).meta({ category: 'oss' })
 test('Environment', environmentTest).meta({ autoLogout: true, category: 'oss' })
 
 test('Project', projectTest).meta({ autoLogout: true, category: 'oss' })
+
+test('Organization', organisationTest).meta({ autoLogout: true, category: 'oss' })
 
 test('Versioning', versioningTests).meta({ autoLogout: true, category: 'oss' })
 
