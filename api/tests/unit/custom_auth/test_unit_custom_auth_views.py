@@ -27,6 +27,33 @@ def test_get_current_user(staff_user: FFAdminUser, staff_client: APIClient) -> N
     assert response_json["first_name"] == staff_user.first_name
     assert response_json["last_name"] == staff_user.last_name
     assert response_json["uuid"] == str(staff_user.uuid)
+    assert response_json["pylon_email_signature"] is None
+
+
+def test_get_current_user_with_pylon_signature(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    secret = "736f6d652d736563726574"  # "some-secret" in hexadecimal
+
+    # calculated manually to verify the logic without relying on behaviour under test
+    expected_signature = (
+        "6c2bf866224d1d7661db091d2572982161fc2872103b04a44e0397cd4117ab68"
+    )
+
+    settings.PYLON_IDENTITY_VERIFICATION_SECRET = secret
+    url = reverse("api-v1:custom_auth:ffadminuser-me")
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["pylon_email_signature"] == expected_signature
 
 
 @pytest.mark.parametrize(
