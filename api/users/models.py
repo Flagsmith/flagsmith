@@ -19,6 +19,7 @@ from django_lifecycle.conditions import (  # type: ignore[import-untyped]
 )
 from pydantic import BaseModel
 
+from integrations.pylon.identity_verification import get_user_email_signature
 from organisations.models import (
     Organisation,
     OrganisationRole,
@@ -195,6 +196,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     @property
     def email_domain(self):  # type: ignore[no-untyped-def]
         return self.email.split("@")[1]
+
+    @property
+    def pylon_email_signature(self) -> str | None:
+        return get_user_email_signature(self.email)
 
     def get_full_name(self):  # type: ignore[no-untyped-def]
         if not self.first_name:
