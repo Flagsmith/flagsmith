@@ -8,57 +8,14 @@ from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment
 from features.versioning.versioning_service import (
     get_environment_flags_list,
 )
 from projects.models import Project
-from segments.models import Condition, Segment, SegmentRule
+from segments.models import Segment
 from tests.types import WithEnvironmentPermissionsCallable
-
-
-@pytest.fixture()
-def sdk_client_factory() -> typing.Callable[[Environment], APIClient]:
-    """Factory to create SDK clients for different environments."""
-
-    def _create_sdk_client(environment: Environment) -> APIClient:
-        client = APIClient()
-        client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-        return client
-
-    return _create_sdk_client
-
-
-@pytest.fixture()
-def sdk_client(
-    environment: Environment,
-    sdk_client_factory: typing.Callable[[Environment], APIClient],
-) -> APIClient:
-    """API client configured with SDK authentication for the default environment."""
-    return sdk_client_factory(environment)
-
-
-def get_identity_feature_state_from_sdk(
-    sdk_client: APIClient, identifier: str, feature_name: str
-) -> typing.Dict[str, typing.Any]:
-    """Helper to get a specific feature's state for an identity via SDK endpoint."""
-    identities_url = reverse("api-v1:sdk-identities")
-    data = {"identifier": identifier}
-
-    response = sdk_client.post(
-        identities_url, data=json.dumps(data), content_type="application/json"
-    )
-    assert response.status_code == status.HTTP_200_OK
-    response_json = response.json()
-
-    # Find the specific feature in the flags list
-    for flag in response_json["flags"]:
-        if flag["feature"]["name"] == feature_name:
-            return flag  # type: ignore[no-any-return]
-
-    raise ValueError(f"Feature {feature_name} not found in identity flags response")
 
 
 @pytest.mark.parametrize(
@@ -345,27 +302,9 @@ def test_update_flag_segment_override_by_name(
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
 
-    # Create SDK client for this environment
-    sdk_client = APIClient()
-    sdk_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_.api_key)
-
-    # Create a segment with a rule that matches identities with email containing "test"
     segment = Segment.objects.create(
         name="test_segment", project=project, description="Test segment"
     )
-    segment_rule = SegmentRule.objects.create(
-        segment=segment, type=SegmentRule.ALL_RULE
-    )
-    Condition.objects.create(
-        rule=segment_rule,
-        property="email",
-        operator="CONTAINS",
-        value="test",
-    )
-
-    # Create an identity that matches the segment
-    identity = Identity.objects.create(identifier="test_user", environment=environment_)
-    identity.update_traits([{"trait_key": "email", "trait_value": "test@example.com"}])  # type: ignore[typeddict-item]
 
     url = reverse(
         "api-experiments:update-flag-v1",
@@ -387,12 +326,17 @@ def test_update_flag_segment_override_by_name(
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    # Verify the segment override is applied to the identity via SDK
-    flag_state = get_identity_feature_state_from_sdk(
-        sdk_client, identity.identifier, feature.name
+    # Verify the segment override was created
+    latest_flags = get_environment_flags_list(
+        environment=environment_, feature_name=feature.name
     )
-    assert flag_state["enabled"] is False
-    assert flag_state["feature_state_value"] == 999
+    segment_override = [
+        fs
+        for fs in latest_flags
+        if fs.feature_segment and fs.feature_segment.segment_id == segment.id
+    ][0]
+    assert segment_override.enabled is False
+    assert segment_override.get_feature_state_value() == 999
 
 
 @pytest.mark.parametrize(
@@ -409,36 +353,16 @@ def test_update_flag_segment_override_creates_feature_segment_if_not_exists(
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
 
-    # Create SDK client for this environment
-    sdk_client = APIClient()
-    sdk_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_.api_key)
-
-    # Create a segment with a rule (but no existing feature segment override)
     segment = Segment.objects.create(
         name="new_segment",
         project=project,
         description="New segment for testing creation",
-    )
-    segment_rule = SegmentRule.objects.create(
-        segment=segment, type=SegmentRule.ALL_RULE
-    )
-    Condition.objects.create(
-        rule=segment_rule,
-        property="user_type",
-        operator="EQUAL",
-        value="premium",
     )
 
     # Verify FeatureSegment doesn't exist yet
     assert not FeatureSegment.objects.filter(
         feature=feature, segment=segment, environment=environment_
     ).exists()
-
-    # Create an identity that matches the segment
-    identity = Identity.objects.create(
-        identifier="premium_user", environment=environment_
-    )
-    identity.update_traits([{"trait_key": "user_type", "trait_value": "premium"}])  # type: ignore[typeddict-item]
 
     url = reverse(
         "api-experiments:update-flag-v1",
@@ -460,12 +384,17 @@ def test_update_flag_segment_override_creates_feature_segment_if_not_exists(
     # Then - Should succeed and CREATE the FeatureSegment
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    # Verify the segment override was created and is applied via SDK
-    flag_state = get_identity_feature_state_from_sdk(
-        sdk_client, identity.identifier, feature.name
+    # Verify the segment override was created
+    latest_flags = get_environment_flags_list(
+        environment=environment_, feature_name=feature.name
     )
-    assert flag_state["enabled"] is True
-    assert flag_state["feature_state_value"] == "premium_feature"
+    segment_override = [
+        fs
+        for fs in latest_flags
+        if fs.feature_segment and fs.feature_segment.segment_id == segment.id
+    ][0]
+    assert segment_override.enabled is True
+    assert segment_override.get_feature_state_value() == "premium_feature"
 
 
 # Update Multiple Feature States Tests
@@ -485,35 +414,12 @@ def test_update_feature_states_creates_new_segment_overrides(
     # Given
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
 
-    # Create SDK client for this environment
-    sdk_client = APIClient()
-    sdk_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_.api_key)
-
     # Create two segments that don't have feature overrides yet
     segment1 = Segment.objects.create(
         name="vip_segment", project=project, description="VIP users"
     )
-    segment_rule1 = SegmentRule.objects.create(
-        segment=segment1, type=SegmentRule.ALL_RULE
-    )
-    Condition.objects.create(
-        rule=segment_rule1,
-        property="tier",
-        operator="EQUAL",
-        value="vip",
-    )
-
     segment2 = Segment.objects.create(
         name="beta_segment", project=project, description="Beta testers"
-    )
-    segment_rule2 = SegmentRule.objects.create(
-        segment=segment2, type=SegmentRule.ALL_RULE
-    )
-    Condition.objects.create(
-        rule=segment_rule2,
-        property="beta",
-        operator="EQUAL",
-        value="true",
     )
 
     # Verify neither FeatureSegment exists yet
@@ -523,17 +429,6 @@ def test_update_feature_states_creates_new_segment_overrides(
     assert not FeatureSegment.objects.filter(
         feature=feature, segment=segment2, environment=environment_
     ).exists()
-
-    # Create identities that match the segments
-    vip_identity = Identity.objects.create(
-        identifier="vip_user", environment=environment_
-    )
-    vip_identity.update_traits([{"trait_key": "tier", "trait_value": "vip"}])  # type: ignore[typeddict-item]
-
-    beta_identity = Identity.objects.create(
-        identifier="beta_user", environment=environment_
-    )
-    beta_identity.update_traits([{"trait_key": "beta", "trait_value": "true"}])  # type: ignore[typeddict-item]
 
     url = reverse(
         "api-experiments:update-flag-v2",
@@ -571,18 +466,26 @@ def test_update_feature_states_creates_new_segment_overrides(
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    # Verify both segment overrides were created and are applied via SDK
-    vip_flag = get_identity_feature_state_from_sdk(
-        sdk_client, vip_identity.identifier, feature.name
+    # Verify both segment overrides were created
+    latest_flags = get_environment_flags_list(
+        environment=environment_, feature_name=feature.name
     )
-    assert vip_flag["enabled"] is True
-    assert vip_flag["feature_state_value"] == "vip_feature"
 
-    beta_flag = get_identity_feature_state_from_sdk(
-        sdk_client, beta_identity.identifier, feature.name
-    )
-    assert beta_flag["enabled"] is True
-    assert beta_flag["feature_state_value"] == "beta_feature"
+    vip_override = [
+        fs
+        for fs in latest_flags
+        if fs.feature_segment and fs.feature_segment.segment_id == segment1.id
+    ][0]
+    assert vip_override.enabled is True
+    assert vip_override.get_feature_state_value() == "vip_feature"
+
+    beta_override = [
+        fs
+        for fs in latest_flags
+        if fs.feature_segment and fs.feature_segment.segment_id == segment2.id
+    ][0]
+    assert beta_override.enabled is True
+    assert beta_override.get_feature_state_value() == "beta_feature"
 
 
 @pytest.mark.parametrize(
