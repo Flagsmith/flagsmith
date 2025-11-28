@@ -16,7 +16,11 @@ class SegmentPermissions(IsAuthenticated):
         if not project_pk:
             return False
 
-        project = Project.objects.select_related("organisation").get(pk=project_pk)
+        projects = Project.objects.select_related("organisation")
+        try:
+            project = projects.get(pk=project_pk)
+        except Project.DoesNotExist:
+            return False
 
         if request.user.has_project_permission(MANAGE_SEGMENTS, project):
             return True
