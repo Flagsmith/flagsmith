@@ -118,6 +118,11 @@
 - 1.6.3: Use serial commas. Write "Raleigh, Durham, and Chapel Hill" instead of "Raleigh, Durham and Chapel Hill."
 - 1.6.4: Hyphenate compound modifiers where the first adjective modifies the second: "cloud-based solutions," "right-click menu."
 - 1.6.5: Do not hyphenate compounds with adverbs ending in "-ly": "commonly used method."
+- 1.6.6: Use a colon to introduce lists.
+- 1.6.7: Do not punctuate the end of list items unless they are complete sentences.
+- 1.6.8: When list items are complete sentences, end each with a period.
+- 1.6.9: Keep list items grammatically parallel. Use the same structure (all imperative verbs, all noun phrases, or all complete sentences) for every item.
+- 1.6.10: Use semicolons to separate list items that contain internal commas.
 
 ## 1.7 Deictic References
 
