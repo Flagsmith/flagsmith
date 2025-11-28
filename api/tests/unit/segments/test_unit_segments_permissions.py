@@ -21,6 +21,24 @@ mock_view = mock.MagicMock()
 segment_permissions = SegmentPermissions()
 
 
+def test_has_permission_returns_false_for_non_existent_project(
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    mock_request = mock.MagicMock()
+    mock_request.user = staff_user
+    mock_view = mock.MagicMock()
+    mock_view.kwargs = {"project_pk": 999999}
+    mock_view.action = "list"
+    segment_permissions = SegmentPermissions()
+
+    # When
+    result = segment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is False
+
+
 def test_staff_user_has_permission(staff_user: FFAdminUser, project: Project) -> None:
     # Given
     mock_request = mock.MagicMock()

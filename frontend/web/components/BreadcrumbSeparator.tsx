@@ -189,12 +189,8 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
 
   useEffect(() => {
     if (!open) {
-      if (projectSearch) {
-        setProjectSearch('')
-      }
-      if (organisationSearch) {
-        setOrganisationSearch('')
-      }
+      setProjectSearch('')
+      setOrganisationSearch('')
     }
   }, [open, organisationSearch, projectSearch])
 

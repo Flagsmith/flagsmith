@@ -31,7 +31,7 @@ const OrganisationSettingsPage: FC = () => {
     error,
     isLoading,
   } = useGetOrganisationQuery(
-    { id: String(organisationId) },
+    { id: organisationId || 0 },
     { skip: !organisationId },
   )
 
