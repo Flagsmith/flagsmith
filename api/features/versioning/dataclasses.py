@@ -1,5 +1,5 @@
 import typing
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 from pydantic import BaseModel, computed_field
@@ -21,13 +21,16 @@ class Conflict(BaseModel):
 
 
 @dataclass
-class FlagChangeSet:
+class AuditFieldsMixin:
+    user: typing.Optional["FFAdminUser"] = field(default=None, kw_only=True)
+    api_key: typing.Optional["MasterAPIKey"] = field(default=None, kw_only=True)
+
+
+@dataclass
+class FlagChangeSet(AuditFieldsMixin):
     enabled: bool
     feature_state_value: typing.Any
     type_: str
-
-    user: typing.Optional["FFAdminUser"] = None
-    api_key: typing.Optional["MasterAPIKey"] = None
 
     segment_id: int | None = None
     segment_priority: int | None = None
@@ -35,8 +38,6 @@ class FlagChangeSet:
 
 @dataclass
 class SegmentOverrideChangeSet:
-    """Represents a single segment override change."""
-
     segment_id: int
     enabled: bool
     feature_state_value: typing.Any
@@ -45,17 +46,9 @@ class SegmentOverrideChangeSet:
 
 
 @dataclass
-class FlagChangeSetV2:
-    """Represents V2 feature state changes (environment default + segment overrides)."""
-
-    # Environment default state
+class FlagChangeSetV2(AuditFieldsMixin):
     environment_default_enabled: bool
     environment_default_value: typing.Any
     environment_default_type: str
 
-    # Segment overrides (list)
-    segment_overrides: list[SegmentOverrideChangeSet]
-
-    # Audit fields
-    user: typing.Optional["FFAdminUser"] = None
-    api_key: typing.Optional["MasterAPIKey"] = None
+    segment_overrides: list[SegmentOverrideChangeSet] = field(default_factory=list)

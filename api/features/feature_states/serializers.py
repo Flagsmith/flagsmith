@@ -72,8 +72,6 @@ class FeatureUpdateSegmentDataSerializer(serializers.Serializer):  # type: ignor
 
 
 class FeatureValueSerializer(serializers.Serializer):  # type: ignore[type-arg]
-    """Value is always a string; type field indicates how to parse it."""
-
     type = serializers.ChoiceField(
         choices=["integer", "string", "boolean"], required=True
     )

@@ -146,7 +146,6 @@ def _update_flag_for_versioning_v2(
                 else 0,
             )
 
-            # FeatureStateValue is automatically created via signal
             target_feature_state = FeatureState.objects.create(
                 feature=feature,
                 environment=environment,
@@ -205,7 +204,6 @@ def _update_flag_for_versioning_v1(
             else 0,
         )
 
-        # FeatureStateValue is automatically created via signal
         target_feature_state: FeatureState = FeatureState.objects.create(
             feature=feature,
             environment=environment,
@@ -244,7 +242,6 @@ def _update_flag_for_versioning_v1(
 def _update_feature_state_value(
     fsv: FeatureStateValue, value: typing.Any, type_: str
 ) -> None:
-    """Works for both V1 and V2 changesets."""
     match type_:
         case "string":
             fsv.string_value = str(value)
@@ -253,10 +250,7 @@ def _update_feature_state_value(
             fsv.integer_value = int(value)
             fsv.type = INTEGER
         case "boolean":
-            if isinstance(value, bool):
-                fsv.boolean_value = value
-            else:
-                fsv.boolean_value = str(value).lower() == "true"
+            fsv.boolean_value = value
             fsv.type = BOOLEAN
 
     fsv.save()
@@ -299,16 +293,9 @@ def _update_segment_priority(feature_state: FeatureState, priority: int) -> None
         feature_segment.to(priority)
 
 
-# V2 Update Functions (FlagChangeSetV2)
-
-
 def update_flag_v2(
     environment: Environment, feature: Feature, change_set: FlagChangeSetV2
 ) -> dict:  # type: ignore[type-arg]
-    """
-    Update multiple feature states (V2 changeset).
-    Returns a dict with the results.
-    """
     if environment.use_v2_feature_versioning:
         return _update_flag_v2_for_versioning_v2(environment, feature, change_set)
     else:
@@ -318,10 +305,6 @@ def update_flag_v2(
 def _update_flag_v2_for_versioning_v2(
     environment: Environment, feature: Feature, change_set: FlagChangeSetV2
 ) -> dict:  # type: ignore[type-arg]
-    """
-    V2 changeset update for V2 versioning.
-    Creates a new version with all changes applied.
-    """
     new_version = EnvironmentFeatureVersion.objects.create(
         environment=environment,
         feature=feature,
@@ -391,10 +374,6 @@ def _update_flag_v2_for_versioning_v2(
 def _update_flag_v2_for_versioning_v1(
     environment: Environment, feature: Feature, change_set: FlagChangeSetV2
 ) -> dict:  # type: ignore[type-arg]
-    """
-    V2 changeset update for V1 versioning.
-    Updates all feature states in place.
-    """
     env_default_states = get_environment_flags_dict(
         environment=environment,
         feature_name=feature.name,
