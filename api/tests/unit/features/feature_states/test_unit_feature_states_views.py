@@ -11,6 +11,7 @@ from rest_framework.test import APIClient
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.versioning_service import (
+    get_current_live_environment_feature_version,
     get_environment_flags_list,
 )
 from projects.models import Project
@@ -772,3 +773,77 @@ def test_update_flag_v2_returns_403_when_workflow_enabled(
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert "change requests are enabled" in str(response.json())
+
+
+def test_update_existing_segment_override_v2_versioning(
+    staff_client: APIClient,
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+
+    segment = Segment.objects.create(name="existing_segment", project=project)
+
+    # Get the current live version and create segment override associated with it
+    current_version = get_current_live_environment_feature_version(
+        environment_v2_versioning.id, feature.id
+    )
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        priority=5,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment=feature_segment,
+        environment_feature_version=current_version,
+        enabled=True,
+    )
+
+    url = reverse(
+        "api-experiments:update-flag-v2",
+        kwargs={"environment_id": environment_v2_versioning.id},
+    )
+
+    # When - Update the existing segment override
+    data = {
+        "feature": {"name": feature.name},
+        "environment_default": {
+            "enabled": True,
+            "value": {"type": "string", "string_value": "default"},
+        },
+        "segment_overrides": [
+            {
+                "segment_id": segment.id,
+                "priority": 1,  # Changed priority from 5 to 1
+                "enabled": False,  # Changed enabled from True to False
+                "value": {"type": "integer", "string_value": "999"},
+            },
+        ],
+    }
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Verify the segment override was updated
+    latest_flags = get_environment_flags_list(
+        environment=environment_v2_versioning, feature_name=feature.name
+    )
+    segment_override = [
+        fs
+        for fs in latest_flags
+        if fs.feature_segment and fs.feature_segment.segment_id == segment.id
+    ][0]
+
+    assert segment_override.enabled is False
+    assert segment_override.get_feature_state_value() == 999
+    assert segment_override.feature_segment is not None
+    assert segment_override.feature_segment.priority == 1
