@@ -239,18 +239,16 @@ def _update_flag_for_versioning_v1(
     return target_feature_state
 
 
-def _update_feature_state_value(
-    fsv: FeatureStateValue, value: typing.Any, type_: str
-) -> None:
+def _update_feature_state_value(fsv: FeatureStateValue, value: str, type_: str) -> None:
     match type_:
         case "string":
-            fsv.string_value = str(value)
+            fsv.string_value = value
             fsv.type = STRING
         case "integer":
             fsv.integer_value = int(value)
             fsv.type = INTEGER
         case "boolean":
-            fsv.boolean_value = value
+            fsv.boolean_value = value.lower() == "true"
             fsv.type = BOOLEAN
 
     fsv.save()

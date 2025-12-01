@@ -9,7 +9,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment
-from features.models import Feature, FeatureSegment
+from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.versioning_service import (
     get_environment_flags_list,
 )
@@ -248,9 +248,7 @@ def test_update_flag_error_when_feature_not_found_by_name(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "Feature with identifier 'non_existent_feature' not found" in str(
-        response.json()
-    )
+    assert "not found in project" in str(response.json())
 
 
 @pytest.mark.parametrize(
@@ -282,10 +280,7 @@ def test_update_flag_error_when_feature_not_found_by_id(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "Feature with identifier '999999' not found" in str(response.json())
-
-
-# V1 Segment Override Tests
+    assert "not found in project" in str(response.json())
 
 
 @pytest.mark.parametrize(
@@ -598,22 +593,24 @@ def test_update_existing_segment_override_with_priority_v1(
 
     segment = Segment.objects.create(name="priority_segment", project=project)
 
+    # Create the segment override manually
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_,
+        priority=5,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_,
+        feature_segment=feature_segment,
+        enabled=True,
+    )
+
     url = reverse(
         "api-experiments:update-flag-v1",
         kwargs={"environment_id": environment_.id},
     )
-
-    # First, create the segment override
-    create_data = {
-        "feature": {"name": feature.name},
-        "segment": {"id": segment.id, "priority": 5},
-        "enabled": True,
-        "value": {"type": "integer", "string_value": "100"},
-    }
-    response = staff_client.post(
-        url, data=json.dumps(create_data), content_type="application/json"
-    )
-    assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # When - Update the same segment override with new priority
     update_data = {
@@ -658,21 +655,19 @@ def test_update_existing_segment_override_with_priority_v2(
 
     segment = Segment.objects.create(name="priority_segment_v2", project=project)
 
-    # First, create the segment override using V1 endpoint
-    v1_url = reverse(
-        "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment_.id},
+    # Create the segment override manually
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_,
+        priority=5,
     )
-    create_data = {
-        "feature": {"name": feature.name},
-        "segment": {"id": segment.id, "priority": 5},
-        "enabled": True,
-        "value": {"type": "string", "string_value": "initial"},
-    }
-    response = staff_client.post(
-        v1_url, data=json.dumps(create_data), content_type="application/json"
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_,
+        feature_segment=feature_segment,
+        enabled=True,
     )
-    assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # When - Update the existing segment override using V2 endpoint
     v2_url = reverse(
@@ -711,9 +706,6 @@ def test_update_existing_segment_override_with_priority_v2(
     )
     assert feature_segment is not None
     assert feature_segment.priority == 2
-
-
-# Workflow enabled tests
 
 
 def test_update_flag_v1_returns_403_when_workflow_enabled(

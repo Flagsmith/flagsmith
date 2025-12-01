@@ -36,11 +36,10 @@ def _check_workflow_not_enabled(environment: Environment) -> None:
     **Value Format:**
     - Always use `string_value` field (value is always a string)
     - The `type` field tells the server how to parse it
-    - Available types: integer, string, boolean, float
+    - Available types: integer, string, boolean
     - Examples:
       - `{"type": "integer", "string_value": "42"}`
       - `{"type": "boolean", "string_value": "true"}`
-      - `{"type": "float", "string_value": "3.14"}`
       - `{"type": "string", "string_value": "hello"}`
 
     **Segment Priority:**
@@ -69,14 +68,10 @@ def update_flag_v1(request: Request, environment_id: int) -> Response:
 
     serializer = UpdateFlagSerializer(
         data=request.data,
-        context={
-            "request": request,
-            "view": update_flag_v1,
-            "environment": environment,
-        },
+        context={"request": request, "environment": environment},
     )
     serializer.is_valid(raise_exception=True)
-    serializer.save(environment=environment)
+    serializer.save()
 
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -103,7 +98,7 @@ def update_flag_v1(request: Request, environment_id: int) -> Response:
     **Value Format:**
     - Always use `string_value` field (value is always a string)
     - The `type` field tells the server how to parse it
-    - Available types: integer, string, boolean, float
+    - Available types: integer, string, boolean
     - Examples:
       - `{"type": "string", "string_value": "production"}`
       - `{"type": "integer", "string_value": "100"}`
@@ -138,13 +133,9 @@ def update_flag_v2(request: Request, environment_id: int) -> Response:
 
     serializer = UpdateFlagV2Serializer(
         data=request.data,
-        context={
-            "request": request,
-            "view": update_flag_v2,
-            "environment": environment,
-        },
+        context={"request": request, "environment": environment},
     )
     serializer.is_valid(raise_exception=True)
-    serializer.save(environment=environment)
+    serializer.save()
 
     return Response(status=status.HTTP_204_NO_CONTENT)

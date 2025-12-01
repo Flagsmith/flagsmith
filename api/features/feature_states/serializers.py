@@ -1,6 +1,3 @@
-import typing
-
-from django.db.models import Q
 from rest_framework import serializers
 
 from environments.models import Environment
@@ -11,7 +8,6 @@ from features.versioning.dataclasses import (
     SegmentOverrideChangeSet,
 )
 from features.versioning.versioning_service import update_flag, update_flag_v2
-from users.models import FFAdminUser
 
 
 class BaseFeatureUpdateSerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -21,38 +17,18 @@ class BaseFeatureUpdateSerializer(serializers.Serializer):  # type: ignore[type-
 
         if not environment:
             raise serializers.ValidationError("Environment context is required")
-
         try:
-            # TODO: strip out the id vs name piece as this is ugly as heck.
-            query = Q(project_id=environment.project_id) & (
-                Q(id=feature_data.get("id")) | Q(name=feature_data.get("name"))
+            feature: Feature = Feature.objects.get(
+                project_id=environment.project_id, **feature_data
             )
-            feature: Feature = Feature.objects.get(query)
             return feature
         except Feature.DoesNotExist:
-            identifier = feature_data.get("id") or feature_data.get("name")
             raise serializers.ValidationError(
-                f"Feature with identifier '{identifier}' not found in project"
+                f"Feature '{feature_data}' not found in project"
             )
-
-    def _add_audit_fields(
-        self, change_set: typing.Union[FlagChangeSet, FlagChangeSetV2]
-    ) -> None:
-        request = self.context["request"]
-        if type(request.user) is FFAdminUser:
-            change_set.user = request.user
-        else:
-            change_set.api_key = request.user.key
-
-    def _parse_feature_value(self, value_data: dict) -> typing.Any:  # type: ignore[type-arg]
-        value_serializer = FeatureValueSerializer(data=value_data)
-        value_serializer.is_valid()
-        return value_serializer.get_typed_value()
 
 
 class FeatureIdentifierSerializer(serializers.Serializer):  # type: ignore[type-arg]
-    """Accepts either name OR id (mutually exclusive)."""
-
     name = serializers.CharField(required=False, allow_blank=False)
     id = serializers.IntegerField(required=False)
 
@@ -77,19 +53,24 @@ class FeatureValueSerializer(serializers.Serializer):  # type: ignore[type-arg]
     )
     string_value = serializers.CharField(required=True, allow_blank=True)
 
-    def get_typed_value(self) -> typing.Any:
-        value_type = self.validated_data["type"]
-        string_val = self.validated_data["string_value"]
+    def validate(self, data: dict) -> dict:  # type: ignore[type-arg]
+        value_type = data["type"]
+        string_val = data["string_value"]
 
-        match value_type:
-            case "string":
-                return string_val
-            case "integer":
-                return int(string_val)
-            case "boolean":
-                return string_val.lower() == "true"
-            case _:
-                raise ValueError(f"Unsupported value type: {value_type}")
+        if value_type == "integer":
+            try:
+                int(string_val)
+            except ValueError:
+                raise serializers.ValidationError(
+                    f"'{string_val}' is not a valid integer"
+                )
+        elif value_type == "boolean":
+            if string_val.lower() not in ("true", "false"):
+                raise serializers.ValidationError(
+                    f"'{string_val}' is not a valid boolean (use 'true' or 'false')"
+                )
+
+        return data
 
 
 class UpdateFlagSerializer(BaseFeatureUpdateSerializer):
@@ -106,20 +87,18 @@ class UpdateFlagSerializer(BaseFeatureUpdateSerializer):
 
         change_set = FlagChangeSet(
             enabled=validated_data["enabled"],
-            feature_state_value=self._parse_feature_value(value_data),
+            feature_state_value=value_data["string_value"],
             type_=value_data["type"],
             segment_id=segment_data.get("id") if segment_data else None,
             segment_priority=segment_data.get("priority") if segment_data else None,
         )
 
-        self._add_audit_fields(change_set)
+        change_set.set_audit_fields_from_request(self.context["request"])
         return change_set
 
-    def save(self, **kwargs: typing.Any) -> FeatureState:
-        environment: Environment = kwargs["environment"]
-        feature: Feature = self.get_feature()
-
-        return update_flag(environment, feature, self.flag_change_set)
+    def save(self, **kwargs: object) -> FeatureState:
+        feature = self.get_feature()
+        return update_flag(self.context["environment"], feature, self.flag_change_set)
 
 
 class EnvironmentDefaultSerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -170,7 +149,7 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer):
             segment_override = SegmentOverrideChangeSet(
                 segment_id=override_data["segment_id"],
                 enabled=override_data["enabled"],
-                feature_state_value=self._parse_feature_value(value_data),
+                feature_state_value=value_data["string_value"],
                 type_=value_data["type"],
                 priority=override_data.get("priority"),
             )
@@ -178,16 +157,14 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer):
 
         change_set = FlagChangeSetV2(
             environment_default_enabled=env_default["enabled"],
-            environment_default_value=self._parse_feature_value(env_value_data),
+            environment_default_value=env_value_data["string_value"],
             environment_default_type=env_value_data["type"],
             segment_overrides=segment_overrides,
         )
 
-        self._add_audit_fields(change_set)
+        change_set.set_audit_fields_from_request(self.context["request"])
         return change_set
 
-    def save(self, **kwargs: typing.Any) -> dict:  # type: ignore[type-arg]
-        environment: Environment = kwargs["environment"]
-        feature: Feature = self.get_feature()
-
-        return update_flag_v2(environment, feature, self.change_set_v2)
+    def save(self, **kwargs: object) -> dict:  # type: ignore[type-arg]
+        feature = self.get_feature()
+        return update_flag_v2(self.context["environment"], feature, self.change_set_v2)
