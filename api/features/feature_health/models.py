@@ -25,7 +25,7 @@ if typing.TYPE_CHECKING:
 
 
 class FeatureHealthProviderName(models.Choices):
-    SAMPLE = "Sample"
+    WEBHOOK = "Webhook"
     GRAFANA = "Grafana"
 
 
