@@ -847,3 +847,81 @@ def test_update_existing_segment_override_v2_versioning(
     assert segment_override.get_feature_state_value() == 999
     assert segment_override.feature_segment is not None
     assert segment_override.feature_segment.priority == 1
+
+
+def test_update_flag_v1_returns_403_without_permission(
+    staff_client: APIClient,
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    # Given - no permissions granted
+    url = reverse(
+        "api-experiments:update-flag-v1",
+        kwargs={"environment_id": environment.id},
+    )
+
+    data = {
+        "feature": {"name": feature.name},
+        "enabled": True,
+        "value": {"type": "string", "string_value": "test"},
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_update_flag_v2_returns_403_without_permission(
+    staff_client: APIClient,
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    # Given - no permissions granted
+    url = reverse(
+        "api-experiments:update-flag-v2",
+        kwargs={"environment_id": environment.id},
+    )
+
+    data = {
+        "feature": {"name": feature.name},
+        "environment_default": {
+            "enabled": True,
+            "value": {"type": "string", "string_value": "test"},
+        },
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_update_flag_v1_returns_403_for_nonexistent_environment(
+    staff_client: APIClient,
+) -> None:
+    # Given
+    url = reverse(
+        "api-experiments:update-flag-v1",
+        kwargs={"environment_id": 999999},
+    )
+
+    data = {
+        "feature": {"name": "any_feature"},
+        "enabled": True,
+        "value": {"type": "string", "string_value": "test"},
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN

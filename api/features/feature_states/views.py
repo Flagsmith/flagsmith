@@ -1,13 +1,15 @@
 from drf_yasg import openapi  # type: ignore[import-untyped]
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from environments.models import Environment
 
+from .permissions import EnvironmentUpdateFeatureStatePermission
 from .serializers import UpdateFlagSerializer, UpdateFlagV2Serializer
 
 
@@ -56,13 +58,8 @@ def _check_workflow_not_enabled(environment: Environment) -> None:
     tags=["Experimental - Feature States"],
 )  # type: ignore[misc]
 @api_view(http_method_names=["POST"])
+@permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])
 def update_flag_v1(request: Request, environment_id: int) -> Response:
-    """
-    V1: Single feature state update endpoint (issue #6279).
-
-    Updates a single feature state (environment default OR one segment override).
-    Feature identification is provided in the request payload.
-    """
     environment = Environment.objects.get(id=environment_id)
     _check_workflow_not_enabled(environment)
 
@@ -120,14 +117,8 @@ def update_flag_v1(request: Request, environment_id: int) -> Response:
     tags=["Experimental - Feature States"],
 )  # type: ignore[misc]
 @api_view(http_method_names=["POST"])
+@permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])
 def update_flag_v2(request: Request, environment_id: int) -> Response:
-    """
-    Update multiple feature states endpoint (issue #6233).
-
-    Updates multiple feature states in a single request:
-    - Environment default state
-    - Multiple segment overrides with priority ordering
-    """
     environment = Environment.objects.get(id=environment_id)
     _check_workflow_not_enabled(environment)
 
