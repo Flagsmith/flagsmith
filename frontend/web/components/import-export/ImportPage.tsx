@@ -16,17 +16,13 @@ import FeatureImport from './FeatureImport'
 import AccountStore from 'common/stores/account-store'
 import Constants from 'common/constants'
 import { useHistory } from 'react-router-dom'
+
 type ImportPageType = {
   projectId: string
-  environmentId: string
   projectName: string
 }
 
-const ImportPage: FC<ImportPageType> = ({
-  environmentId,
-  projectId,
-  projectName,
-}) => {
+const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
   const history = useHistory()
   const [LDKey, setLDKey] = useState<string>('')
   const [importId, setImportId] = useState<number>()
