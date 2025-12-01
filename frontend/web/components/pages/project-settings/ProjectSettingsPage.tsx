@@ -15,6 +15,7 @@ import { SDKSettingsTab } from './tabs/SDKSettingsTab'
 import { PermissionsTab } from './tabs/PermissionsTab'
 import { CustomFieldsTab } from './tabs/CustomFieldsTab'
 import { ImportTab } from './tabs/ImportTab'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 
 type ProjectSettingsTab = {
   component: ReactNode
@@ -32,6 +33,10 @@ const ProjectSettingsPage = () => {
     isLoading,
     isUninitialized,
   } = useGetProjectQuery({ id: String(projectId) }, { skip: !projectId })
+  const { data: environments } = useGetEnvironmentsQuery(
+    { projectId: String(projectId) },
+    { skip: !projectId },
+  )
 
   useEffect(() => {
     API.trackPage(Constants.pages.PROJECT_SETTINGS)
@@ -62,7 +67,7 @@ const ProjectSettingsPage = () => {
   }
 
   // Derive data from project after all early returns
-  const hasEnvironments = !!project.environments?.length
+  const hasEnvironments = (environments?.results?.length || 0) > 0
   const hasFeatureHealth = Utils.getFlagsmithHasFeature('feature_health')
   const organisationId = project.organisation
 
@@ -115,7 +120,6 @@ const ProjectSettingsPage = () => {
       component: (
         <ImportTab
           projectId={String(project.id)}
-          environmentId={environmentId}
           projectName={project?.name || ''}
         />
       ),
