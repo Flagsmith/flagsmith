@@ -43,6 +43,7 @@ type FeatureOverrideRowProps = {
   projectFlag: ProjectFlag
   environmentFeatureState: FeatureState
   overrideFeatureState?: FeatureState | IdentityFeatureState | null
+  highlightSegmentId?: number
 }
 
 const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
@@ -58,6 +59,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   shouldPreselect,
   toggleDataTest,
   valueDataTest,
+  highlightSegmentId,
 }) => {
   const hasUserOverride =
     !!overrideFeatureState?.identity ||
@@ -147,6 +149,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
           ...overrideFeatureState,
         }}
         environmentFlag={environmentFeatureState}
+        highlightSegmentId={highlightSegmentId}
       />,
       'side-modal create-feature-modal overflow-y-auto',
       () => {
@@ -168,6 +171,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     identity,
     identityName,
     projectId,
+    highlightSegmentId,
   ])
 
   useEffect(() => {

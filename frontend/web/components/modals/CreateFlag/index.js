@@ -1293,6 +1293,10 @@ const Index = class extends Component {
                                                               v,
                                                             )
                                                           }}
+                                                          highlightSegmentId={
+                                                            this.props
+                                                              .highlightSegmentId
+                                                          }
                                                         />
                                                       </>
                                                     )

@@ -730,6 +730,12 @@ const controller = {
           if (version.error) {
             throw version.error
           }
+          getStore().dispatch(
+            projectFlagService.util.invalidateTags(['ProjectFlag']),
+          )
+          if(!store.model) {
+            return
+          }
           // Fetch and update the latest environment feature state
           return getVersionFeatureState(getStore(), {
             environmentId: ProjectStore.getEnvironmentIdFromKey(environmentId),
