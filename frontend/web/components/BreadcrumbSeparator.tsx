@@ -1,11 +1,4 @@
-import React, {
-  FC,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
 import { IonIcon } from '@ionic/react'
 import {
   checkmarkCircle,
@@ -20,11 +13,10 @@ import {
   Organisation,
   PagedResponse,
   Project,
-  User,
 } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
 import { useGetProjectsQuery } from 'common/services/useProject'
-import AccountProvider from 'common/providers/AccountProvider'
+import { useGetOrganisationsQuery } from 'common/services/useOrganisation'
 import { useHistory } from 'react-router-dom'
 import OrganisationStore from 'common/stores/organisation-store'
 import AppActions from 'common/dispatcher/app-actions'
@@ -94,7 +86,7 @@ const ItemList: FC<ItemListType> = ({
         el.scrollTop += scrollAmount
       }
     }
-  }, [hoverValue])
+  }, [hoverValue, items])
   return (
     <div
       id={ref.current}
@@ -107,15 +99,17 @@ const ItemList: FC<ItemListType> = ({
           <Loader />
         </div>
       )}
-      {items?.length === 0 ? (
-        search ? (
-          <div className='py-2'>
-            No results found for <strong>"{search}"</strong>
-          </div>
-        ) : (
-          <div>No Results</div>
-        )
-      ) : null}
+      {items?.length === 0 && (
+        <div className='py-2'>
+          {search ? (
+            <>
+              No results found for <strong>"{search}"</strong>
+            </>
+          ) : (
+            'No Results'
+          )}
+        </div>
+      )}
       {items?.map((v, i) => {
         const isActive = `${v.id}` === `${value}`
         const isHovered = `${v.id}` === `${hoverValue}`
@@ -161,6 +155,9 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   const [organisationSearch, setOrganisationSearch] = useState('')
   const [projectSearch, setProjectSearch] = useState('')
 
+  const { data: organisationsData } = useGetOrganisationsQuery({})
+  const organisations = organisationsData?.results || []
+
   const [activeOrganisation, setActiveOrganisation] = useState<string>(
     `${AccountStore.getOrganisation()?.id}`,
   )
@@ -192,12 +189,8 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
 
   useEffect(() => {
     if (!open) {
-      if (projectSearch) {
-        setProjectSearch('')
-      }
-      if (organisationSearch) {
-        setOrganisationSearch('')
-      }
+      setProjectSearch('')
+      setOrganisationSearch('')
     }
   }, [open])
 
@@ -218,9 +211,9 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
       ? organisations.findIndex((v) => `${v.id}` === `${hoveredOrganisation}`)
       : -1
     const newIndex = getNewIndex(e, currentIndex, organisations, goOrganisation)
-    if (newIndex > -1) {
+    if (newIndex > -1 && organisations) {
       setHoveredProject(undefined)
-      setHoveredOrganisation(organisations![newIndex])
+      setHoveredOrganisation(organisations[newIndex])
     }
   }
 
@@ -255,8 +248,8 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
       ? projects.findIndex((v) => `${v.id}` === `${hoveredProject}`)
       : -1
     const newIndex = getNewIndex(e, currentIndex, projects, goProject)
-    if (newIndex > -1) {
-      setHoveredProject(`${projects![newIndex]!.id}`)
+    if (newIndex > -1 && projects?.[newIndex]) {
+      setHoveredProject(projects[newIndex].id)
     }
   }
   const goOrganisation = (organisation: Organisation) => {
@@ -268,7 +261,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   const goProject = (project: Project) => {
     getEnvironments(getStore(), {
       projectId: `${project.id}`,
-    }).then((res: { data: PagedResponse<Environment> }) => {
+    }).then((_res: { data: PagedResponse<Environment> }) => {
       history.push(`/project/${project.id}`)
       setOpen(false)
     })
@@ -337,120 +330,114 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
         }
       >
         {!!open && (
-          <AccountProvider>
-            {({ user }: { user: User }) => {
-              return (
-                <div className='d-flex px-2'>
-                  <div
-                    className={classNames({
-                      'bg-faint h-100 rounded': hoveredSection === 'project',
-                    })}
-                    onMouseEnter={() => setHoveredSection('organisation')}
-                    style={{ maxWidth: 'calc(50vw - 10px)', width: 260 }}
-                  >
-                    <Input
-                      autoFocus={focus === 'organisation'}
-                      onKeyDown={(e: KeyboardEvent) =>
-                        navigateOrganisations(e, user.organisations)
-                      }
-                      onChange={(e: KeyboardEvent) => {
-                        setOrganisationSearch(Utils.safeParseEventValue(e))
-                      }}
-                      search
-                      inputClassName='border-0 bg-transparent border-bottom-1'
-                      size='xSmall'
-                      className='full-width'
-                      placeholder='Search Organisations...'
-                    />
-                    <ItemList
-                      search={organisationSearch}
-                      className='px-2 pt-2'
-                      title='Organisations'
-                      hoverValue={hoveredOrganisation}
-                      items={user.organisations}
-                      value={activeOrganisation}
-                      onHover={(organisation: Organisation) => {
-                        setHoveredOrganisation(organisation)
-                        setHoveredProject(undefined)
-                      }}
-                      onClick={goOrganisation}
-                      footer={
-                        Utils.canCreateOrganisation() && (
-                          <Button
-                            theme='outline'
-                            id='create-organisation-link'
-                            size='small'
-                            onClick={() => {
-                              setOpen(false)
-                              openModal(
-                                'Create Organisation',
-                                <CreateOrganisationModal />,
-                                'side-modal',
-                              )
-                            }}
-                          >
-                            Create Organisation
-                          </Button>
+          <div className='d-flex px-2'>
+            <div
+              className={classNames({
+                'bg-faint h-100 rounded': hoveredSection === 'project',
+              })}
+              onMouseEnter={() => setHoveredSection('organisation')}
+              style={{ maxWidth: 'calc(50vw - 10px)', width: 260 }}
+            >
+              <Input
+                autoFocus={focus === 'organisation'}
+                onKeyDown={(e: KeyboardEvent) =>
+                  navigateOrganisations(e, organisations)
+                }
+                onChange={(e: KeyboardEvent) => {
+                  setOrganisationSearch(Utils.safeParseEventValue(e))
+                }}
+                search
+                inputClassName='border-0 bg-transparent border-bottom-1'
+                size='xSmall'
+                className='full-width'
+                placeholder='Search Organisations...'
+              />
+              <ItemList
+                search={organisationSearch}
+                className='px-2 pt-2'
+                title='Organisations'
+                hoverValue={hoveredOrganisation}
+                items={organisations}
+                value={activeOrganisation}
+                onHover={(organisation: Organisation) => {
+                  setHoveredOrganisation(organisation)
+                  setHoveredProject(undefined)
+                }}
+                onClick={goOrganisation}
+                footer={
+                  Utils.canCreateOrganisation() && (
+                    <Button
+                      theme='outline'
+                      id='create-organisation-link'
+                      size='small'
+                      onClick={() => {
+                        setOpen(false)
+                        openModal(
+                          'Create Organisation',
+                          <CreateOrganisationModal />,
+                          'side-modal',
                         )
-                      }
-                    />
-                  </div>
-                  <div
-                    onMouseEnter={() => setHoveredSection('project')}
-                    style={{ maxWidth: 'calc(50vw)', width: 260 }}
-                    className={classNames(
-                      {
-                        'bg-faint rounded': hoveredSection === 'organisation',
-                      },
-                      'border-left-1',
-                    )}
-                  >
-                    <Input
-                      onChange={(e: InputEvent) => {
-                        setProjectSearch(Utils.safeParseEventValue(e))
                       }}
-                      autoFocus={focus === 'project'}
-                      onKeyDown={(e: KeyboardEvent) => navigateProjects(e)}
-                      search
-                      className='full-width'
-                      inputClassName='border-0 bg-transparent border-bottom-1'
-                      size='xSmall'
-                      placeholder='Search Projects...'
-                    />
-                    <ItemList
-                      search={projectSearch}
-                      className='px-2 pt-2'
-                      title='Projects'
-                      items={projects}
-                      value={projectId}
-                      hoverValue={hoveredProject}
-                      onHover={(v) => setHoveredProject(v.id)}
-                      onClick={goProject}
-                      footer={Utils.renderWithPermission(
-                        canCreateProject,
-                        Constants.organisationPermissions(
-                          Utils.getCreateProjectPermissionDescription(
-                            AccountStore.getOrganisation(),
-                          ),
-                        ),
-                        <Button
-                          theme='outline'
-                          onClick={() => {
-                            document.location = `/organisation/${hoveredOrganisation.id}/projects/?create=1`
-                          }}
-                          id='create-organisation-link'
-                          size='small'
-                        >
-                          <IonIcon className='fs-small' icon={createOutline} />
-                          Create Project
-                        </Button>,
-                      )}
-                    />
-                  </div>
-                </div>
-              )
-            }}
-          </AccountProvider>
+                    >
+                      Create Organisation
+                    </Button>
+                  )
+                }
+              />
+            </div>
+            <div
+              onMouseEnter={() => setHoveredSection('project')}
+              style={{ maxWidth: 'calc(50vw)', width: 260 }}
+              className={classNames(
+                {
+                  'bg-faint rounded': hoveredSection === 'organisation',
+                },
+                'border-left-1',
+              )}
+            >
+              <Input
+                onChange={(e: InputEvent) => {
+                  setProjectSearch(Utils.safeParseEventValue(e))
+                }}
+                autoFocus={focus === 'project'}
+                onKeyDown={(e: KeyboardEvent) => navigateProjects(e)}
+                search
+                className='full-width'
+                inputClassName='border-0 bg-transparent border-bottom-1'
+                size='xSmall'
+                placeholder='Search Projects...'
+              />
+              <ItemList
+                search={projectSearch}
+                className='px-2 pt-2'
+                title='Projects'
+                items={projects}
+                value={projectId}
+                hoverValue={hoveredProject}
+                onHover={(v) => setHoveredProject(v.id)}
+                onClick={goProject}
+                footer={Utils.renderWithPermission(
+                  canCreateProject,
+                  Constants.organisationPermissions(
+                    Utils.getCreateProjectPermissionDescription(
+                      AccountStore.getOrganisation(),
+                    ),
+                  ),
+                  <Button
+                    theme='outline'
+                    onClick={() => {
+                      document.location = `/organisation/${hoveredOrganisation.id}/projects/?create=1`
+                    }}
+                    id='create-organisation-link'
+                    size='small'
+                  >
+                    <IonIcon className='fs-small' icon={createOutline} />
+                    Create Project
+                  </Button>,
+                )}
+              />
+            </div>
+          </div>
         )}
       </InlineModal>
     </div>

@@ -30,7 +30,10 @@ import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
-import { changeRequestService } from 'common/services/useChangeRequest'
+import {
+  changeRequestService,
+  updateChangeRequest,
+} from 'common/services/useChangeRequest'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -479,7 +482,9 @@ const controller = {
     projectFlag: ProjectFlag,
     environmentFlag: FeatureState,
     segmentOverrides: any,
-    changeRequest: Req['createChangeRequest'],
+    changeRequest: Req['createChangeRequest'] & {
+      ignore_conflicts?: boolean
+    },
     commit: boolean,
   ) => {
     store.saving()
@@ -545,14 +550,6 @@ const controller = {
         feature_states_to_update = version.feature_states_to_update
         segment_ids_to_delete_overrides =
           version.segment_ids_to_delete_overrides
-
-        if (
-          !feature_states_to_create.length &&
-          !feature_states_to_update.length &&
-          !segment_ids_to_delete_overrides.length
-        ) {
-          throw new Error('Change request contains no changes')
-        }
       }
       const prom = data
         .get(
@@ -562,6 +559,7 @@ const controller = {
           const {
             approvals,
             featureStateId,
+            ignore_conflicts,
             multivariate_options,
             ...changeRequestData
           } = changeRequest
@@ -646,10 +644,15 @@ const controller = {
               }
 
               prom = (
-                shouldUpdateMv
-                  ? data.put(
-                      `${Project.api}features/workflows/change-requests/${updatedChangeRequest.id}/`,
-                      updatedChangeRequest,
+                shouldUpdateMv || (commit && ignore_conflicts)
+                  ? updateChangeRequest(
+                      getStore(),
+                      commit && ignore_conflicts
+                        ? {
+                            ...updatedChangeRequest,
+                            ignore_conflicts: true,
+                          }
+                        : updatedChangeRequest,
                     )
                   : Promise.resolve()
               ).then(() => {

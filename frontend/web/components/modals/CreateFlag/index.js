@@ -51,6 +51,7 @@ import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
 import BetaFlag from 'components/BetaFlag'
+import ProjectProvider from 'common/providers/ProjectProvider'
 
 const Index = class extends Component {
   static displayName = 'CreateFlag'
@@ -910,6 +911,39 @@ const Index = class extends Component {
               const saveFeatureValue = saveFeatureWithValidation((schedule) => {
                 if ((is4Eyes || schedule) && !identity) {
                   this.setState({ segmentsChanged: false, valueChanged: false })
+                  // Until this page and feature-list-store are refactored, this is the best way of parsing feature states
+                  const featureStates = (this.props.segmentOverrides || [])
+                    .filter((override) => !override.toRemove)
+                    .map((override) => {
+                      return {
+                        enabled: override.enabled,
+                        feature: override.feature,
+                        feature_segment: {
+                          environment: override.environment,
+                          id: override.id,
+                          is_feature_specific: override.is_feature_specific,
+                          priority: override.priority,
+                          segment: override.segment,
+                          segment_name: override.segment_name,
+                          uuid: override.uuid,
+                        },
+                        feature_state_value: Utils.valueToFeatureState(
+                          override.value,
+                        ),
+                        id: override.id,
+                        multivariate_feature_state_values:
+                          override.multivariate_options,
+                      }
+                    })
+                    .concat([
+                      Object.assign({}, this.props.environmentFlag, {
+                        enabled: default_enabled,
+                        feature_state_value:
+                          Utils.valueToFeatureState(initial_value),
+                        multivariate_feature_state_values:
+                          this.state.identityVariations,
+                      }),
+                    ])
 
                   openModal2(
                     schedule
@@ -918,12 +952,20 @@ const Index = class extends Component {
                       ? 'Update Change Request'
                       : 'New Change Request',
                     <ChangeRequestModal
+                      showIgnoreConflicts={true}
                       showAssignees={is4Eyes}
                       isScheduledChange={schedule}
                       changeRequest={this.props.changeRequest}
+                      projectId={this.props.projectId}
+                      environmentId={ProjectStore.getEnvironmentIdFromKey(
+                        this.props.environmentId,
+                      )}
+                      featureId={projectFlag.id}
+                      featureStates={featureStates}
                       onSave={({
                         approvals,
                         description,
+                        ignore_conflicts,
                         live_from,
                         title,
                       }) => {
@@ -953,6 +995,7 @@ const Index = class extends Component {
                                 id:
                                   this.props.changeRequest &&
                                   this.props.changeRequest.id,
+                                ignore_conflicts,
                                 live_from,
                                 multivariate_options: this.props
                                   .multivariate_options
