@@ -51,10 +51,7 @@ const FeaturesPageComponent: FC = () => {
     page,
   } = useFeatureFilters(history)
 
-  const { forceMetricsRefetch, removeFlag, toggleFlag } = useFeatureActions(
-    projectId,
-    environmentId,
-  )
+  const { removeFlag, toggleFlag } = useFeatureActions(projectId, environmentId)
 
   const [loadedOnce, setLoadedOnce] = useState(false)
 
@@ -170,7 +167,6 @@ const FeaturesPageComponent: FC = () => {
               <div>
                 <FeatureMetricsSection
                   environmentApiKey={environment?.api_key}
-                  forceRefetch={forceMetricsRefetch}
                   projectId={projectId}
                 />
 

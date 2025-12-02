@@ -4,13 +4,17 @@ import Utils from 'common/utils/utils'
 
 type FeatureMetricsSectionProps = {
   environmentApiKey?: string
-  forceRefetch: boolean
   projectId: string
 }
 
+/**
+ * Wrapper for EnvironmentMetricsList with feature flag check
+ *
+ * Note: Metrics automatically refresh via RTK Query cache invalidation.
+ * Feature mutations invalidate the METRICS tag, triggering automatic refetch.
+ */
 export const FeatureMetricsSection: FC<FeatureMetricsSectionProps> = ({
   environmentApiKey,
-  forceRefetch,
   projectId,
 }) => {
   const environmentMetricsEnabled = Utils.getFlagsmithHasFeature(
@@ -24,7 +28,6 @@ export const FeatureMetricsSection: FC<FeatureMetricsSectionProps> = ({
   return (
     <EnvironmentMetricsList
       environmentApiKey={environmentApiKey}
-      forceRefetch={forceRefetch}
       projectId={projectId}
     />
   )

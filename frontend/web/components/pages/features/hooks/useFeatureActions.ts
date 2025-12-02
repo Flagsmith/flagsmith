@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import { useRemoveProjectFlagMutation } from 'common/services/useProjectFlag'
 import { useUpdateFeatureStateMutation } from 'common/services/useFeatureList'
 import type { ProjectFlag } from 'common/types/responses'
@@ -7,16 +7,13 @@ import type { EnvironmentFlagsMap } from 'components/pages/features/types'
 /**
  * Custom hook for feature actions (remove, toggle) with toast notifications
  * Follows the pattern from settings pages (useUpdateWithToast)
+ *
+ * Note: Metrics refresh automatically via RTK Query cache invalidation.
+ * The mutations invalidate the METRICS tag, triggering automatic refetch.
  */
 export function useFeatureActions(projectId: string, environmentId: string) {
-  const [forceMetricsRefetch, setForceMetricsRefetch] = useState(false)
-
   const [removeProjectFlag] = useRemoveProjectFlagMutation()
   const [updateFeatureState] = useUpdateFeatureStateMutation()
-
-  const toggleForceMetricsRefetch = useCallback(() => {
-    setForceMetricsRefetch((prev) => !prev)
-  }, [])
 
   const removeFlag = useCallback(
     async (projectFlag: ProjectFlag) => {
@@ -25,13 +22,12 @@ export function useFeatureActions(projectId: string, environmentId: string) {
           id: projectFlag.id,
           project: projectId,
         }).unwrap()
-        toggleForceMetricsRefetch()
         toast(`Removed feature: ${projectFlag.name}`)
       } catch (error) {
         toast('Failed to remove feature', 'danger')
       }
     },
-    [projectId, removeProjectFlag, toggleForceMetricsRefetch],
+    [projectId, removeProjectFlag],
   )
 
   const toggleFlag = useCallback(
@@ -47,18 +43,15 @@ export function useFeatureActions(projectId: string, environmentId: string) {
           environmentId,
           stateId: environmentFlag.id,
         }).unwrap()
-        toggleForceMetricsRefetch()
       } catch (error) {
         toast('Failed to toggle feature', 'danger')
       }
     },
-    [environmentId, updateFeatureState, toggleForceMetricsRefetch],
+    [environmentId, updateFeatureState],
   )
 
   return {
-    forceMetricsRefetch,
     removeFlag,
     toggleFlag,
-    toggleForceMetricsRefetch,
   }
 }
