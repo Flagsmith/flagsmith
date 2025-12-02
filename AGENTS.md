@@ -34,7 +34,9 @@
 > ```
 > Compliance Report #<count>
 > Action: <proposed action in imperative form>
-> - Section <N>: <score>/5 (<justification>)
+> - <Section Name>: <score>/5 (<justification>)
+> - <Section Name>: N/A (<justification>)
+> - ...(include ALL sections)...
 > ```
 >
 > **Tracking:** Increment `#<count>` with each report. Start at #1 for the session. This count is cumulative and never resets within a session.
@@ -57,26 +59,23 @@
 > Never:
 > - Assume
 > - Speculate
-> - Optimize for speed over correctness
+> - Optimise for speed over correctness
 > - Give yourself the benefit of the doubt
-
----
-
-> [!NOTE]
-> Follow the [Red Hat Technical Writing Style Guide](https://stylepedia.net/style/5.1/) for all written communication.
-
 
 ---
 
 
 # 1. Writing Style
 
+Follow the [Red Hat Technical Writing Style Guide](https://stylepedia.net/style/5.1/) for all written communication. A summary is as follows.
+
 ## 1.1 Voice and Tense
 
 - 1.1.1: Use active voice. Write "Type the command" instead of "The command can be typed."
 - 1.1.2: Use simple present tense. Write "The window opens" instead of "The window will open."
 - 1.1.3: Use imperative mood for instructions. Write "Configure the server" instead of "You should configure the server."
-- 1.1.4: Do not use passive voice except in release notes or when front-loading keywords.
+- 1.1.4: Do not use passive voice except in release notes, issue titles, or when front-loading keywords.
+- 1.1.5: Always use active voice in PR titles and descriptions.
 
 ## 1.2 Sentence Structure
 
@@ -211,11 +210,12 @@
 
 ## 3.3 Pre-Commit Verification
 
-- 3.3.1: Run the full test suite before every commit. Execute `make test` or equivalent.
-- 3.3.2: Run linters before every commit. Execute `make lint` or equivalent.
-- 3.3.3: If tests fail, fix the commit. Do not proceed with failing tests.
-- 3.3.4: If linters report errors, fix them. Do not proceed with linter errors.
-- 3.3.5: After each commit, verify atomicity by checking out that specific commit and running tests in isolation.
+- 3.3.1: Run `pre-commit run --all-files` or equivalent before every commit.
+- 3.3.2: Run the full test suite before every commit. Execute `make test` or equivalent.
+- 3.3.3: Run linters before every commit. Execute `make lint` or equivalent.
+- 3.3.4: If tests fail, fix the commit. Do not proceed with failing tests.
+- 3.3.5: If linters report errors, fix them. Do not proceed with linter errors.
+- 3.3.6: After each commit, verify atomicity by checking out that specific commit and running tests in isolation.
 
 
 ---
@@ -228,7 +228,7 @@
 - 4.1.1: Format titles as `<Verb> <object>` in imperative mood.
 - 4.1.2: Do not use prefixes, types, or scopes in commit titles.
 - 4.1.3: Describe the outcome (why or what capability), not the process (how).
-- 4.1.4: Do not use process verbs: "Convert," "Migrate," "Refactor," "Reorganize."
+- 4.1.4: Do not use process verbs: "Convert," "Migrate," "Refactor," "Reorganise."
 - 4.1.5: Use outcome verbs: "Use," "Support," "Enable," "Fix," "Add," "Remove," "Prevent."
 
 ## 4.2 Title Content
@@ -269,7 +269,7 @@
 - 4.6.4: "Restore logic for updating orgid_unique property"
 - 4.6.5: "Remove stale flags from codebase"
 - 4.6.6: "Clarify key semantics in evaluation context"
-- 4.6.7: "Centralize Poetry install in CI"
+- 4.6.7: "Centralise Poetry install in CI"
 - 4.6.8: "Handle deleted objects in SSE access logs"
 - 4.6.9: "Update Datadog integration documentation"
 - 4.6.10: "Add timeout to SSE stream access logs"
@@ -289,6 +289,8 @@
 - 5.1.5: Do not include style fixes outside changed lines.
 - 5.1.6: Do not include opportunistic improvements.
 - 5.1.7: Do not include "while I am here" changes.
+- 5.1.8: Do not create issues without explicit user request. Discuss scope with the user first; the user identifies the goal.
+- 5.1.9: Do not modify issue bodies without explicit user request.
 
 ## 5.2 Preparatory Work
 
@@ -309,14 +311,15 @@
 ## 5.4 Pull Request Titles
 
 - 5.4.1: Format PR titles as `<type>(<Component>): <Verb> <object> [<condition>]`.
-- 5.4.2: Use `<type>` from `./release-please-config.json@changelog-sections` if present.
-- 5.4.3: Write `<Component>` in title case with words separated by spaces, unless otherwise appropriate.
-- 5.4.4: Pull requests represent progress toward goals (partial or complete).
-- 5.4.5: Example: "fix(Segments): Diff strings considering spaces"
-- 5.4.6: Example: "feat(Features): Add view mode selector for diffing features"
-- 5.4.7: Example: "perf(Sales Dashboard): Optimize OrganisationList query"
-- 5.4.8: Example: "docs(Edge Proxy): Reinstate reference documentation"
-- 5.4.9: Example: "refactor(Segments): Remove deprecated change request code"
+- 5.4.2: For bugfix PRs linked to an issue, use `fix(<Component>): <original issue title>`.
+- 5.4.3: Use `<type>` from `./release-please-config.json@changelog-sections` if present.
+- 5.4.4: Write `<Component>` in title case with words separated by spaces, unless otherwise appropriate.
+- 5.4.5: Pull requests represent progress toward goals (partial or complete).
+- 5.4.6: Example: "fix(Segments): Diff strings considering spaces"
+- 5.4.7: Example: "feat(Features): Add view mode selector for diffing features"
+- 5.4.8: Example: "perf(Sales Dashboard): Optimise OrganisationList query"
+- 5.4.9: Example: "docs(Edge Proxy): Reinstate reference documentation"
+- 5.4.10: Example: "refactor(Segments): Remove deprecated change request code"
 
 ## 5.5 Description Format
 
@@ -325,11 +328,11 @@
 - 5.5.3: For PRs, include a section titled "Changes" with a checklist.
 - 5.5.4: Checklist items describe sellable goals and impact (why), not implementation (how).
 - 5.5.5: Use blockquotes with `[!NOTE]` for highlights and `[!WARNING]` for warnings.
-- 5.5.6: Include "Closes #<issueID>" when the PR completes the issue.
-- 5.5.7: Include "Contributes to #<issueID>" when the PR resolves the issue partially or human actions remain.
-- 5.5.8: Add "Review effort: X/5" at the end (1=trivial, 5=extensive).
-- 5.5.9: Do not list file changes; reviewers read patches.
-- 5.5.10: Mirror and sync checklists between issue and PR after push or fetch.
+- 5.5.6: Include "Closes #<issueID>" when merging the PR should auto-close the issue.
+- 5.5.7: Include "Contributes to #<issueID>" when the PR progresses toward the issue but should not auto-close it.
+- 5.5.8: Both keywords are valid; choose based on whether auto-close is desired.
+- 5.5.9: Add "Review effort: X/5" at the end (1=trivial, 5=extensive).
+- 5.5.10: Do not list file changes; reviewers read patches.
 
 
 ---
@@ -376,36 +379,52 @@
 
 # 7. PR Reviews
 
-## 7.1 Fetching Reviews
+## 7.1 Fetching Comments
 
-- 7.1.1: Fetch reviews using `gh pr view <pr-number> --json reviews,comments`.
-- 7.1.2: Fetch detailed comments using `gh api repos/<owner>/<repo>/pulls/<pr-number>/comments`.
+- 7.1.1: Fetch review summaries:
+  ```bash
+  gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews
+  ```
+- 7.1.2: Fetch inline review comments:
+  ```bash
+  gh api repos/<owner>/<repo>/pulls/<pr-number>/comments
+  ```
+- 7.1.3: Fetch general PR discussion comments:
+  ```bash
+  gh api repos/<owner>/<repo>/issues/<pr-number>/comments
+  ```
+- 7.1.4: Include comments from all sources: review summaries, inline code comments, and general discussion.
 
-## 7.2 Processing Feedback
+## 7.2 Presenting Comments
 
-- 7.2.1: Summarize feedback by topic. Present all topics to the user.
-- 7.2.2: For each topic, ask the user how to proceed.
-- 7.2.3: Wait for explicit approval before implementing changes.
-- 7.2.4: Do not assume agreement.
+- 7.2.1: Present all comments in a numbered list.
+- 7.2.2: For each comment, include:
+  - The comment author
+  - A link to the GitHub thread
+  - A local file reference as `path/to/file:line` when the comment references code
+- 7.2.3: For resolved threads, display ✅ without expansion.
+- 7.2.4: For unresolved threads:
+  - Blockquote the first few lines of the comment, adding "[truncated]" if shortened
+  - If the PR has 3 or fewer comments, display the full comment text instead
+  - Provide context and relevant facts to help the user form their own opinion
+- 7.2.5: Fetch and summarise replies to each comment thread. Include reply authors and key points.
+- 7.2.6: Do not state opinions. Present facts, code references, and trade-offs.
+- 7.2.7: Do not assume agreement. Wait for explicit user validation of each comment.
 
-## 7.3 Responding to Reviews
+## 7.3 Acknowledging Comments
 
-- 7.3.1: After user approval and push, react with thumbs up:
+- 7.3.1: When the user validates a comment, react with 👍:
   ```bash
   gh api repos/<owner>/<repo>/pulls/comments/<comment-id>/reactions -X POST -f content="+1"
   ```
-- 7.3.2: Reply in thread with the addressing commit:
-  ```bash
-  gh api -X POST repos/<owner>/<repo>/pulls/<pr-number>/comments/<comment-id>/replies -f body="Addressed in <commit_sha>."
-  ```
-- 7.3.3: If the user disagrees with reviewer feedback, halt and wait for instructions.
+- 7.3.2: The 👍 reaction signals the user intends to engage with the comment.
+- 7.3.3: Do not reply to comments. Do not offer to reply. Impersonating user responses is forbidden.
 
-## 7.4 Requesting Re-review
+## 7.4 After Addressing Feedback
 
-- 7.4.1: After addressing all feedback, request re-review:
-  ```bash
-  gh api -X POST repos/<owner>/<repo>/pulls/<pr-number>/requested_reviewers -f reviewers[]="<username>"
-  ```
+- 7.4.1: After work is pushed, suggest the user reply in the GitHub thread with: "Addressed in `<commit-sha>`."
+- 7.4.2: Do not post replies on behalf of the user.
+- 7.4.3: Do not automate re-review requests. The user handles human-to-human interaction.
 
 
 ---
@@ -442,7 +461,7 @@
 
 ## 9.1 General Principles
 
-- 9.1.1: Maximize code reuse. Use framework features to avoid duplication.
+- 9.1.1: Maximise code reuse. Use framework features to avoid duplication.
 - 9.1.2: Defer custom implementations until requirements prove them necessary.
 - 9.1.3: Review proposed changes line by line against existing code and these guidelines before applying.
 - 9.1.4: Avoid redundant configuration, unnecessary exceptions, and deviations from established patterns.
@@ -512,21 +531,21 @@
 - 11.1.2: Do not commit code with failing tests.
 - 11.1.3: New features require tests in the same commit.
 - 11.1.4: Bug fixes require regression tests in the same commit.
-- 11.1.5: Tests document expected behavior. Write them to be readable.
+- 11.1.5: Tests document expected behaviour. Write them to be readable.
 
 ## 11.2 Test Structure
 
-- 11.2.1: Use Given/When/Then structure for test organization.
-- 11.2.2: Each test verifies one behavior. Do not combine multiple assertions for unrelated behaviors.
+- 11.2.1: Use Given/When/Then structure for test organisation.
+- 11.2.2: Each test verifies one behaviour. Do not combine multiple assertions for unrelated behaviours.
 - 11.2.3: Test names describe the scenario and expected outcome.
 - 11.2.4: Avoid test interdependence. Each test should run in isolation.
 
 ## 11.3 Coverage
 
-- 11.3.1: Cover the happy path (expected successful behavior).
+- 11.3.1: Cover the happy path (expected successful behaviour).
 - 11.3.2: Cover error cases (invalid input, missing data, boundary conditions).
 - 11.3.3: Cover edge cases specific to the domain.
-- 11.3.4: Do not aim for 100% line coverage at the expense of meaningful tests. Prioritize behavior coverage.
+- 11.3.4: Do not aim for 100% line coverage at the expense of meaningful tests. Prioritise behaviour coverage.
 
 
 ---
@@ -546,7 +565,7 @@
 
 - 12.2.1: Use minimal text while omitting no information.
 - 12.2.2: Prefer structured formats (bulleted lists, numbered steps) over prose.
-- 12.2.3: Use headings to organize multi-part responses.
+- 12.2.3: Use headings to organise multi-part responses.
 - 12.2.4: Keep paragraphs short. One idea per paragraph.
 - 12.2.5: Front-load important information. Lead with the answer, then explain.
 
