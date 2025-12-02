@@ -60,7 +60,7 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
           <div className='my-2'>
             <Permissions
               level='organisation'
-              levelId={String(orgId)}
+              levelId={orgId}
               userId={user?.id}
             />
           </div>

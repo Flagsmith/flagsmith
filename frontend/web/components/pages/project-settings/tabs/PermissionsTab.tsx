@@ -24,7 +24,7 @@ export const PermissionsTab = ({
     error: permissionsError,
     isLoading: permissionsLoading,
     refetch: refetchPermissions,
-  } = useGetProjectPermissionsQuery({ projectId: String(projectId) })
+  } = useGetProjectPermissionsQuery({ projectId })
 
   const handleSaveUser = () => {
     refetchPermissions()
