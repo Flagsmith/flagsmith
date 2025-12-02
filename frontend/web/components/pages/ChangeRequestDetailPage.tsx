@@ -3,7 +3,7 @@ import OrganisationStore from 'common/stores/organisation-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import FeatureListStore from 'common/stores/feature-list-store'
 import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
-import CreateFlagModal from 'components/modals/CreateFlag'
+import CreateFeatureModal from 'components/modals/CreateEditFeature'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
 import {
@@ -161,11 +161,11 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     if (!changeRequest) return
     openModal(
       'Edit Change Request',
-      <CreateFlagModal
+      <CreateFeatureModal
         history={history}
         environmentId={environmentId}
         projectId={projectId}
-        changeRequest={changeRequest}
+        schangeRequest={changeRequest}
         projectFlag={projectFlag}
         multivariate_options={
           changeRequest.feature_states[0].multivariate_feature_state_values

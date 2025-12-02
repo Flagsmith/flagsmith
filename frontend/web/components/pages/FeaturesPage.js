@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import CreateFlagModal from 'components/modals/CreateFlag'
+import CreateFeatureModal from 'components/modals/CreateEditFeature'
 import TryIt from 'components/TryIt'
 import FeatureRow from 'components/feature-summary/FeatureRow'
 import FeatureListStore from 'common/stores/feature-list-store'
@@ -80,7 +80,7 @@ const FeaturesPage = class extends Component {
   newFlag = () => {
     openModal(
       'New Feature',
-      <CreateFlagModal
+      <CreateFeatureModal
         history={this.props.history}
         environmentId={this.props.match.params.environmentId}
         projectId={this.projectId}

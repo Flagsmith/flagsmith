@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useMemo } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
-import CreateFlagModal from 'components/modals/CreateFlag'
+import CreateFeatureModal from 'components/modals/CreateEditFeature'
 import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
@@ -179,7 +179,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
           <Icon name='copy' />
         </Button>
       </Row>,
-      <CreateFlagModal
+      <CreateFeatureModal
         hideTagsByType={['UNHEALTHY']}
         hasUnhealthyEvents={
           isFeatureHealthEnabled && !!featureUnhealthyEvents?.length

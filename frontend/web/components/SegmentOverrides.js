@@ -298,8 +298,7 @@ const SegmentOverrideInner = class Override extends React.Component {
         {!!multivariateOptions?.length && (
           <div className='px-3'>
             <VariationOptions
-              preventRemove
-              readOnlyValue
+              readOnly
               disabled={readOnly}
               controlValue={controlValue}
               controlPercentage={controlPercent}

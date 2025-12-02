@@ -10,10 +10,9 @@ interface VariationOptionsProps {
   controlValue: any
   disabled: boolean
   multivariateOptions: any[]
-  preventRemove: boolean
-  readOnlyValue: boolean
+  readOnly?: boolean
   removeVariation: (i: number) => void
-  select: boolean
+  select?: boolean
   setValue: (value: any) => void
   setVariations: (variations: any[]) => void
   updateVariation: (
@@ -31,8 +30,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
   controlValue,
   disabled,
   multivariateOptions,
-  preventRemove,
-  readOnlyValue,
+  readOnly,
   removeVariation,
   select,
   setValue,
@@ -56,7 +54,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           error='Your variation percentage splits total to over 100%'
         />
       )}
-      {!preventRemove && (
+      {!readOnly && (
         <p className='mb-4'>
           <InfoMessage collapseId={'variation-value'}>
             Changing a Variation Value will affect{' '}
@@ -152,7 +150,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
             key={i}
             index={i}
             canCreateFeature={canCreateFeature}
-            readOnlyValue={readOnlyValue}
+            readOnly={readOnly}
             value={theValue}
             onChange={(e) => {
               updateVariation(i, e, variationOverrides)
@@ -160,7 +158,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
             weightTitle={weightTitle}
             disabled={disabled}
             onRemove={
-              preventRemove || disabled ? undefined : () => removeVariation(i)
+              readOnly || disabled ? undefined : () => removeVariation(i)
             }
           />
         )

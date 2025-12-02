@@ -23,7 +23,7 @@ import API from 'project/api'
 import Constants from 'common/constants'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
-import CreateFlagModal from 'components/modals/CreateFlag'
+import CreateFeatureModal from 'components/modals/CreateEditFeature'
 import { useHistory } from 'react-router-dom'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import FeatureOverrideCTA from './FeatureOverrideCTA'
@@ -136,7 +136,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
           </Button>
         </Row>
       </span>,
-      <CreateFlagModal
+      <CreateFeatureModal
         history={history}
         identity={identity}
         identityName={identityName}
