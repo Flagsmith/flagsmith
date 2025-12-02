@@ -17,7 +17,7 @@ const FeatureHealthTabContent: React.FC<FeatureHealthTabContentProps> = ({
   projectId,
 }) => {
   const { data: healthEvents, isLoading } = useGetHealthEventsQuery(
-    { projectId: String(projectId) },
+    { projectId },
     { skip: !projectId },
   )
 
