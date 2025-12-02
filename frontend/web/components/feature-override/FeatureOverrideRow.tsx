@@ -1,7 +1,6 @@
 import classNames from 'classnames'
-import React, { FC, useEffect, useMemo, useRef } from 'react'
+import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import {
-  Environment,
   FeatureState,
   IdentityFeatureState,
   ProjectFlag,
@@ -26,11 +25,10 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import { useHistory } from 'react-router-dom'
-import ProjectStore from 'common/stores/project-store'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import FeatureOverrideCTA from './FeatureOverrideCTA'
 
-const COLUMN_WIDTHS = [200, 48, 78]
+const COLUMN_WIDTHS = [200, 60, 78]
 
 type FeatureOverrideRowProps = {
   shouldPreselect?: boolean
@@ -45,6 +43,7 @@ type FeatureOverrideRowProps = {
   projectFlag: ProjectFlag
   environmentFeatureState: FeatureState
   overrideFeatureState?: FeatureState | IdentityFeatureState | null
+  highlightSegmentId?: number
 }
 
 const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
@@ -60,6 +59,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   shouldPreselect,
   toggleDataTest,
   valueDataTest,
+  highlightSegmentId,
 }) => {
   const hasUserOverride =
     !!overrideFeatureState?.identity ||
@@ -76,35 +76,36 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   const actualValue = overrideFeatureState?.feature_state_value ?? flagValue
 
   const onToggle = () => {
-    const confirmToggle = (projectFlag: any, environmentFlag: any, cb: any) => {
-      openModal(
-        'Toggle Feature',
-        <ConfirmToggleFeature
-          identity={identity}
-          identityName={identityName}
-          environmentId={environmentId}
-          projectFlag={projectFlag}
-          environmentFlag={environmentFlag}
-          cb={cb}
-        />,
-        'p-0',
-      )
+    if (level === 'segment') {
+      onClick()
+      return
     }
 
-    confirmToggle(projectFlag, overrideFeatureState, () =>
-      AppActions.toggleUserFlag({
-        environmentFlag: environmentFeatureState,
-        environmentId,
-        identity,
-        identityFlag: overrideFeatureState,
-        projectFlag: {
-          id: featureId,
-        },
-      }),
+    openModal(
+      'Toggle Feature',
+      <ConfirmToggleFeature
+        identity={identity}
+        identityName={identityName}
+        environmentId={environmentId}
+        projectFlag={projectFlag}
+        environmentFlag={overrideFeatureState}
+        cb={() =>
+          AppActions.toggleUserFlag({
+            environmentFlag: environmentFeatureState,
+            environmentId,
+            identity,
+            identityFlag: overrideFeatureState,
+            projectFlag: {
+              id: featureId,
+            },
+          })
+        }
+      />,
+      'p-0',
     )
   }
 
-  const onClick = () => {
+  const onClick = useCallback(() => {
     if (
       !projectFlag ||
       !environmentId ||
@@ -112,8 +113,14 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
       !overrideFeatureState
     )
       return
-
-    history.replace(`${document.location.pathname}?flag=${projectFlag.name}`)
+    const tab = level === 'segment' ? 'segment-overrides' : 'value'
+    const params = Utils.fromParam()
+    const newParams = Utils.toParam({
+      ...params,
+      flag: projectFlag.name,
+      tab,
+    })
+    history.replace(`${document.location.pathname}?${newParams}`)
     API.trackEvent(Constants.events.VIEW_USER_FEATURE)
     openModal(
       <span>
@@ -142,13 +149,30 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
           ...overrideFeatureState,
         }}
         environmentFlag={environmentFeatureState}
+        highlightSegmentId={highlightSegmentId}
       />,
       'side-modal create-feature-modal overflow-y-auto',
       () => {
-        history.replace(document.location.pathname)
+        const params = Utils.fromParam()
+        const newParams = Utils.toParam({
+          ...params,
+          flag: undefined,
+        })
+        history.replace(`${document.location.pathname}?${newParams}`)
       },
     )
-  }
+  }, [
+    projectFlag,
+    environmentId,
+    environmentFeatureState,
+    overrideFeatureState,
+    level,
+    history,
+    identity,
+    identityName,
+    projectId,
+    highlightSegmentId,
+  ])
 
   useEffect(() => {
     if (shouldPreselect && !hasPreselected.current) {
@@ -210,7 +234,11 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
       data-test={dataTest}
       onClick={onClick}
     >
-      <Flex className='table-column pt-0'>
+      <Flex
+        className={classNames('table-column pt-0', {
+          'pb-0': viewMode === 'compact',
+        })}
+      >
         <div>
           <Flex>
             <div className='d-flex align-items-center'>
@@ -226,6 +254,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
             )}
             {showSegmentOverride && (
               <SegmentOverrideDescription
+                level={level}
                 showEnabledOverride={hasEnabledDiff}
                 showValueOverride={!hasEnabledDiff}
                 controlEnabled={flagEnabled}
@@ -261,23 +290,24 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
           />,
         )}
       </div>
-
-      <div
-        className='table-column p-0'
-        style={{ width: COLUMN_WIDTHS[2] }}
-        onClick={stopPropagation}
-      >
-        <FeatureOverrideCTA
-          identifier={identifier}
-          identity={identity}
-          environmentId={environmentId}
-          projectFlag={projectFlag}
-          environmentFeatureState={environmentFeatureState}
-          hasUserOverride={hasUserOverride}
-          overrideFeatureState={overrideFeatureState}
-          level={level}
-        />
-      </div>
+      {level === 'identity' && (
+        <div
+          className='table-column p-0'
+          style={{ width: COLUMN_WIDTHS[2] }}
+          onClick={stopPropagation}
+        >
+          <FeatureOverrideCTA
+            identifier={identifier}
+            identity={identity}
+            environmentId={environmentId}
+            projectFlag={projectFlag}
+            environmentFeatureState={environmentFeatureState}
+            hasUserOverride={hasUserOverride}
+            overrideFeatureState={overrideFeatureState}
+            level={level}
+          />
+        </div>
+      )}
     </div>
   )
 }

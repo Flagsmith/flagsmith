@@ -8,11 +8,13 @@ type SegmentOverrideDescriptionType = {
   showValueOverride: boolean
   controlEnabled: boolean
   controlValue: FlagsmithValue
+  level: 'segment' | 'identity'
 }
 
 const SegmentOverrideDescription: FC<SegmentOverrideDescriptionType> = ({
   controlEnabled,
   controlValue,
+  level,
   showEnabledOverride,
   showValueOverride,
 }) => {
@@ -24,11 +26,13 @@ const SegmentOverrideDescription: FC<SegmentOverrideDescriptionType> = ({
             <Flex>
               <span className='list-item-subtitle d-flex text-primary align-items-center'>
                 <SegmentsIcon className='me-1' width={16} fill='#6837fc' />
-                {`This flag is being overridden by a segment and would normally be`}
+                {`This flag is being overridden by ${
+                  level === 'segment' ? 'this' : 'a'
+                } segment and would normally be`}
                 <div className='ph-1 ml-1 mr-1 fw-semibold'>
                   {controlEnabled ? 'on' : 'off'}
                 </div>{' '}
-                for this user
+                {level === 'identity' ? 'for this user' : ''}
               </span>
             </Flex>
           </Row>
@@ -37,15 +41,13 @@ const SegmentOverrideDescription: FC<SegmentOverrideDescriptionType> = ({
       {showValueOverride && (
         <span className='d-flex list-item-subtitle text-primary align-items-center'>
           <SegmentsIcon className='me-1' width={16} fill='#6837fc' />
-          {`This feature is being
-                                                        overridden by a segment
-                                                        and would normally be`}
+          {`This feature is being overridden by a segment and would normally be`}
           <FeatureValue
             className='ml-1 chip--xs'
             includeEmpty
             value={`${controlValue}`}
           />{' '}
-          for this user
+          {level === 'identity' ? 'for this user' : ''}
         </span>
       )}
     </>

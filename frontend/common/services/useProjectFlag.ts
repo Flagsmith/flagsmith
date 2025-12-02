@@ -53,7 +53,10 @@ export const projectFlagService = service
         Req['getProjectFlags']
       >({
         providesTags: (res, _, req) => [
-          { id: req?.project, type: 'ProjectFlag' },
+          {
+            id: `${req?.project}-${req?.environmentId}-${req?.segmentId}`,
+            type: 'ProjectFlag',
+          },
         ],
         queryFn: async (args, _, _2, baseQuery) => {
           return await recursivePageGet(

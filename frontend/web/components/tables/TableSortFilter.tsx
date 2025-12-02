@@ -2,6 +2,7 @@ import React, { FC } from 'react'
 import TableFilter from './TableFilter'
 import Icon from 'components/Icon'
 import classNames from 'classnames'
+import { SortOrder } from 'common/types/requests'
 
 export type SortType = {
   value: string
@@ -10,7 +11,7 @@ export type SortType = {
 export type SortValue = {
   sortBy: string
   label: string
-  sortOrder: 'asc' | 'desc'
+  sortOrder: SortOrder
 }
 type TableFilterType = {
   options: SortType[]
@@ -28,7 +29,7 @@ const TableSortFilter: FC<TableFilterType> = ({
   const value = _value || {
     label: options[0].label,
     sortBy: options[0].value,
-    sortOrder: 'asc',
+    sortOrder: SortOrder.ASC,
   }
   return (
     <div className={isLoading ? 'disabled' : ''}>
@@ -47,10 +48,10 @@ const TableSortFilter: FC<TableFilterType> = ({
                   label: sortOption.label,
                   sortBy: sortOption.value,
                   sortOrder: isActive
-                    ? value.sortOrder === 'asc'
-                      ? 'desc'
-                      : 'asc'
-                    : 'asc',
+                    ? value.sortOrder === SortOrder.ASC
+                      ? SortOrder.DESC
+                      : SortOrder.ASC
+                    : SortOrder.ASC,
                 })
               }}
             >
@@ -62,7 +63,9 @@ const TableSortFilter: FC<TableFilterType> = ({
                       'opacity-0': !isActive,
                     })}
                     name={
-                      value?.sortOrder === 'asc' ? 'chevron-up' : 'chevron-down'
+                      value?.sortOrder === SortOrder.ASC
+                        ? 'chevron-up'
+                        : 'chevron-down'
                     }
                   />
                 </div>

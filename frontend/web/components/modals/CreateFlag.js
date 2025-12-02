@@ -1383,6 +1383,10 @@ const CreateFlag = class extends Component {
                                                               v,
                                                             )
                                                           }}
+                                                          highlightSegmentId={
+                                                            this.props
+                                                              .highlightSegmentId
+                                                          }
                                                         />
                                                       </>
                                                     )
