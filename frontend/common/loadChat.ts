@@ -121,6 +121,7 @@ function setupPylon() {
         account_id: String(user.id),
         app_id: Project.pylonAppId || defaultPylonID,
         email: user.email,
+        email_hash: user.pylon_email_signature,
         name: getUserDisplayName(user),
       },
     }
