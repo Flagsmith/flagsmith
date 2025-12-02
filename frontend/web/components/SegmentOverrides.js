@@ -16,9 +16,11 @@ import Icon from './Icon'
 import SegmentOverrideLimit from './SegmentOverrideLimit'
 import { getStore } from 'common/store'
 import { getEnvironment } from 'common/services/useEnvironment'
+import { getSegment } from 'common/services/useSegment'
 import Tooltip from './Tooltip'
 import SegmentsIcon from './svg/SegmentsIcon'
 import SegmentOverrideActions from './SegmentOverrideActions'
+import Button from './base/forms/Button'
 
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
@@ -49,6 +51,7 @@ const SegmentOverrideInner = class Override extends React.Component {
       disabled,
       environmentId,
       hideViewSegment,
+      highlightSegmentId,
       index,
       multivariateOptions,
       name,
@@ -82,6 +85,7 @@ const SegmentOverrideInner = class Override extends React.Component {
     const changed = !v.id || this.state.changed
     const showValue = !(multivariateOptions && multivariateOptions.length)
     const controlPercent = Utils.calculateControl(mvOptions)
+    const isHighlighted = highlightSegmentId && v.segment === highlightSegmentId
     if (!v || v.toRemove) {
       if (this.props.id) {
         return (
@@ -101,7 +105,7 @@ const SegmentOverrideInner = class Override extends React.Component {
           this.props.id
             ? ''
             : ' panel user-select-none panel-without-heading panel--draggable pb-0'
-        }`}
+        }${isHighlighted ? ' border-2 border-primary' : ''}`}
       >
         <Row className='p-0 table-header px-3 py-1' space>
           <div className='flex flex-1 text-left'>
@@ -349,6 +353,7 @@ const SegmentOverrideListInner = ({
   disabled,
   environmentId,
   hideViewSegment,
+  highlightSegmentId,
   id,
   items,
   multivariateOptions,
@@ -374,6 +379,7 @@ const SegmentOverrideListInner = ({
             name={name}
             segment={value.segment}
             hideViewSegment={hideViewSegment}
+            highlightSegmentId={highlightSegmentId}
             onSortEnd={onSortEnd}
             disabled={disabled}
             showEditSegment={showEditSegment}
@@ -431,6 +437,38 @@ class TheComponent extends Component {
     }).then((res) => {
       this.setState({
         totalSegmentOverrides: res.data.total_segment_overrides,
+      })
+    })
+    this.checkPreselectedSegment()
+  }
+
+  componentDidUpdate(prevProps) {
+    if (
+      this.props.highlightSegmentId &&
+      this.props.highlightSegmentId !== prevProps.highlightSegmentId
+    ) {
+      this.checkPreselectedSegment()
+    }
+  }
+
+  checkPreselectedSegment = () => {
+    const { highlightSegmentId, projectId, value } = this.props
+    if (!highlightSegmentId) return
+
+    const existingOverride = value?.find((v) => v.segment === highlightSegmentId)
+    if (existingOverride) {
+      return
+    }
+
+    getSegment(getStore(), {
+      id: highlightSegmentId,
+      projectId: projectId,
+    }).then((res) => {
+      this.setState({
+        selectedSegment: {
+          label: res.data.name,
+          value: res.data.id,
+        },
       })
     })
   }
@@ -573,19 +611,37 @@ class TheComponent extends Component {
             !this.props.disableCreate &&
             !this.props.showCreateSegment &&
             !this.props.readOnly && (
-              <Flex className='text-left'>
-                <SegmentSelect
-                  disabled={!!isLimitReached}
-                  projectId={this.props.projectId}
-                  data-test='select-segment'
-                  placeholder='Create a Segment Override...'
-                  filter={filter}
-                  value={this.state.selectedSegment?.value}
-                  onChange={(selectedSegment) =>
-                    this.setState({ selectedSegment }, this.addItem)
-                  }
-                />
-              </Flex>
+              <Row className='text-left gap-2'>
+                <div className='flex-1'>
+                  <SegmentSelect
+                    className="w-100"
+                    disabled={!!isLimitReached}
+                    projectId={this.props.projectId}
+                    data-test='select-segment'
+                    placeholder='Create a Segment Override...'
+                    filter={filter}
+                    value={this.state.selectedSegment?.value}
+                    onChange={(selectedSegment) => {
+                      if (this.props.highlightSegmentId) {
+                        this.setState({ selectedSegment })
+                      } else {
+                        this.setState({ selectedSegment }, this.addItem)
+                      }
+                    }}
+                  />
+                </div>
+                {this.props.highlightSegmentId &&
+                  this.state.selectedSegment && (
+                    <Button
+                      disabled={!!isLimitReached}
+                      onClick={this.addItem}
+                      data-test='create-segment-override-btn'
+                      className='align-self-start'
+                    >
+                      Create
+                    </Button>
+                  )}
+              </Row>
             )}
           {this.props.showCreateSegment && !this.state.segmentEditId && (
             <div className='create-segment-overrides'>
@@ -710,6 +766,7 @@ class TheComponent extends Component {
                       onSortEnd={this.onSortEnd}
                       projectFlag={this.props.projectFlag}
                       hideViewSegment={this.props.hideViewSegment}
+                      highlightSegmentId={this.props.highlightSegmentId}
                     />
                     <div className='text-left mt-4'>
                       <JSONReference

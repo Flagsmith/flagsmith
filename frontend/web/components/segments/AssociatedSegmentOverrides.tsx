@@ -157,6 +157,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
                     environmentFeatureState={
                       projectFlag.environment_feature_state!
                     }
+                    highlightSegmentId={segmentId}
                   />
                 )
               )
