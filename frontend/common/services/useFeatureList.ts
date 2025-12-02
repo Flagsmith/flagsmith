@@ -13,7 +13,10 @@ export const featureListService = service
         Res['multivariateOption'],
         Req['createMultivariateOption']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'FeatureList' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'FeatureList' },
+          { id: 'METRICS', type: 'Environment' },
+        ],
         query: (query: Req['createMultivariateOption']) => ({
           body: query.body,
           method: 'POST',
@@ -25,7 +28,10 @@ export const featureListService = service
         void,
         Req['deleteMultivariateOption']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'FeatureList' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'FeatureList' },
+          { id: 'METRICS', type: 'Environment' },
+        ],
         query: (query: Req['deleteMultivariateOption']) => ({
           method: 'DELETE',
           url: `projects/${query.projectId}/features/${query.featureId}/mv-options/${query.mvId}/`,
@@ -91,6 +97,7 @@ export const featureListService = service
         invalidatesTags: (_res, _meta, _req) => [
           { id: 'LIST', type: 'FeatureList' },
           { id: 'LIST', type: 'FeatureState' },
+          { id: 'METRICS', type: 'Environment' },
         ],
 
         // Optimistic update for better UX
@@ -137,7 +144,10 @@ export const featureListService = service
         Res['multivariateOption'],
         Req['updateMultivariateOption']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'FeatureList' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'FeatureList' },
+          { id: 'METRICS', type: 'Environment' },
+        ],
         query: (query: Req['updateMultivariateOption']) => ({
           body: query.body,
           method: 'PUT',
