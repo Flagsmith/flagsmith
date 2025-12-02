@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FC, useMemo } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import UserSelect from 'components/UserSelect'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Button from 'components/base/forms/Button'
@@ -12,24 +12,42 @@ import AccountStore from 'common/stores/account-store'
 import InputGroup from 'components/base/forms/InputGroup'
 import moment from 'moment'
 import Utils from 'common/utils/utils'
-import { Approval, ChangeRequest, User } from 'common/types/responses'
+import {
+  Approval,
+  ChangeRequest,
+  TypedFeatureState,
+  User,
+} from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+import ChangeRequestConflictCheck from 'components/ChangeRequestConflictCheck'
 
 interface ChangeRequestModalProps {
   changeRequest?: ChangeRequest
   onSave: (
-    data: Omit<Req['createChangeRequest'], 'multivariate_options'>,
+    data: Omit<Req['createChangeRequest'], 'multivariate_options'> & {
+      ignore_conflicts?: boolean
+    },
   ) => void
   isScheduledChange?: boolean
+  showIgnoreConflicts?: boolean
   showAssignees?: boolean
+  projectId?: string | number
+  environmentId?: string | number
+  featureId?: number
+  featureStates?: TypedFeatureState[]
 }
 
 const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   changeRequest,
+  environmentId,
+  featureId,
+  featureStates,
   isScheduledChange,
   onSave,
+  projectId,
   showAssignees,
+  showIgnoreConflicts,
 }) => {
   const [approvals, setApprovals] = useState<Approval[]>([
     ...(changeRequest?.approvals ?? []),
@@ -46,6 +64,8 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   const [showUsers, setShowUsers] = useState(false)
   const [showGroups, setShowGroups] = useState(false)
   const [currDate, setCurrDate] = useState(new Date())
+  const [ignoreConflicts, setIgnoreConflicts] = useState(false)
+  const [hasChanges, setHasChanges] = useState(true)
 
   const { data: groups } = useGetMyGroupsQuery({
     orgId: AccountStore.getOrganisation().id,
@@ -89,6 +109,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
     onSave({
       approvals,
       description,
+      ignore_conflicts: ignoreConflicts,
       live_from: liveFrom || undefined,
       title,
     })
@@ -105,8 +126,11 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   }
 
   const isValid = useMemo(() => {
+    if (!hasChanges && !ignoreConflicts) {
+      return false
+    }
     return !!title?.length && !!liveFrom
-  }, [title, liveFrom])
+  }, [title, liveFrom, hasChanges, ignoreConflicts])
 
   return (
     <OrganisationProvider>
@@ -159,7 +183,6 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                       className='ml-2'
                       onClick={handleClear}
                       theme='secondary'
-                      size='large'
                     >
                       Clear
                     </Button>
@@ -280,6 +303,19 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                 isOpen={showGroups}
                 onToggle={() => setShowGroups(!showGroups)}
                 size='-sm'
+              />
+            )}
+            {!changeRequest && showIgnoreConflicts && (
+              <ChangeRequestConflictCheck
+                action={isScheduledChange ? 'publish' : 'create'}
+                projectId={projectId!}
+                environmentId={environmentId!}
+                featureId={featureId!}
+                featureStates={featureStates || []}
+                liveFrom={liveFrom}
+                ignoreConflicts={ignoreConflicts}
+                onIgnoreConflictsChange={setIgnoreConflicts}
+                onHasChangesChange={setHasChanges}
               />
             )}
             <FormGroup className='text-right mt-2'>

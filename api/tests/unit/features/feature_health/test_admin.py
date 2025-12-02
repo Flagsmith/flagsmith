@@ -49,7 +49,7 @@ def test_feature_health_provider_admin__webhook_url__return_expected(
     admin_instance = FeatureHealthProviderAdmin(
         FeatureHealthProvider, mocker.MagicMock()
     )
-    feature_health_provider = FeatureHealthProvider(name="Sample")
+    feature_health_provider = FeatureHealthProvider(name="Webhook")
     admin_instance.changelist_view(feature_health_provider_admin_request)
 
     # When

@@ -140,6 +140,7 @@ module.exports = {
     'no-debugger': 'warn',
     'no-empty': 'off',
     'no-empty-pattern': 'off',
+    'no-nested-ternary': 'error',
     'no-unused-vars': 'off',
     'no-var': 'error',
     'object-curly-spacing': ['error', 'always'],

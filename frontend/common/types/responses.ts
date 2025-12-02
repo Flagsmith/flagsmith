@@ -136,6 +136,8 @@ export type Project = {
   total_features?: number
   stale_flags_limit_days?: number
   total_segments?: number
+  only_allow_lower_case_feature_names?: boolean
+  feature_name_regex?: string | null
   environments: Environment[]
 }
 export type ImportStrategy = 'SKIP' | 'OVERWRITE_DESTRUCTIVE'
@@ -629,6 +631,7 @@ export type FeatureStateWithConflict = TypedFeatureState & {
 export type ChangeRequest = {
   id: number
   created_at: string
+  ignore_conflicts: boolean
   updated_at: string
   environment: number
   title: string
@@ -966,6 +969,7 @@ export type Res = {
   segment: Segment
   auditLogs: PagedResponse<AuditLogItem>
   organisationLicence: {}
+  organisation: Organisation
   organisations: PagedResponse<Organisation>
   projects: ProjectSummary[]
   project: Project
@@ -1055,6 +1059,7 @@ export type Res = {
   userWithRoles: PagedResponse<Role>
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
+  updateChangeRequest: ChangeRequest
   groupSummaries: UserGroupSummary[]
   supportedContentType: ContentType[]
   externalResource: PagedResponse<ExternalResource>
@@ -1106,7 +1111,7 @@ export type Res = {
   }
   profile: User
   onboarding: {}
-  userPermissions: UserPermissions
+  userPermissions: UserPermission[]
   releasePipelines: PagedResponse<ReleasePipeline>
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
