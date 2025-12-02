@@ -4,31 +4,41 @@ import classNames from 'classnames'
 import FeatureRow from 'components/feature-summary/FeatureRow'
 import JSONReference from 'components/JSONReference'
 import Permission from 'common/providers/Permission'
-import ProjectStore from 'common/stores/project-store'
 import { FeaturesTableFilters } from './FeaturesTableFilters'
 import type { FilterState } from './FeaturesTableFilters'
-import type { FeatureState, ProjectFlag } from 'common/types/responses'
+import type {
+  Environment,
+  FeatureState,
+  ProjectFlag,
+} from 'common/types/responses'
+import type { Pagination } from 'components/pages/features/types'
 
 type FeaturesListProps = {
   projectId: string
   environmentId: string
   numericEnvironmentId: number | undefined
+  environment: Environment | undefined
+  organisationId: number | undefined
   projectFlags: ProjectFlag[]
   environmentFlags: Record<number, FeatureState>
   filters: FilterState
   hasFilters: boolean
   isLoading: boolean
   isFetching: boolean
-  paging: any
+  paging: Pagination
   page: number
   onFilterChange: (updates: Partial<FilterState>) => void
   onClearFilters: () => void
   onPageChange: (page: number) => void
-  onToggleFlag: (flag: any, environmentFlags: any) => Promise<void>
-  onRemoveFlag: (projectFlag: any) => Promise<void>
+  onToggleFlag: (
+    flag: ProjectFlag,
+    environmentFlags: Record<number, FeatureState>,
+  ) => Promise<void>
+  onRemoveFlag: (projectFlag: ProjectFlag) => Promise<void>
 }
 
 export const FeaturesList: FC<FeaturesListProps> = ({
+  environment,
   environmentFlags,
   environmentId,
   filters,
@@ -41,24 +51,24 @@ export const FeaturesList: FC<FeaturesListProps> = ({
   onPageChange,
   onRemoveFlag,
   onToggleFlag,
+  organisationId,
   page,
   paging,
   projectFlags,
   projectId,
 }) => {
   const history = useHistory()
-  const environment = ProjectStore.getEnvironment(environmentId)
 
   const handleToggleFlag = (
     _projectId: string,
     _environmentId: string,
-    flag: any,
-    environmentFlags: any,
+    flag: ProjectFlag,
+    environmentFlags: Record<number, FeatureState>,
   ) => {
     return onToggleFlag(flag, environmentFlags)
   }
 
-  const handleRemoveFlag = (_projectId: string, projectFlag: any) => {
+  const handleRemoveFlag = (_projectId: string, projectFlag: ProjectFlag) => {
     return onRemoveFlag(projectFlag)
   }
 
@@ -82,7 +92,7 @@ export const FeaturesList: FC<FeaturesListProps> = ({
             filters={filters}
             hasFilters={hasFilters}
             isLoading={isLoading}
-            orgId={AccountStore.getOrganisation()?.id}
+            orgId={organisationId}
             onFilterChange={onFilterChange}
             onClearFilters={onClearFilters}
           />
