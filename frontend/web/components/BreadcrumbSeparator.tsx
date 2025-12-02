@@ -192,7 +192,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
       setProjectSearch('')
       setOrganisationSearch('')
     }
-  }, [open, organisationSearch, projectSearch])
+  }, [open])
 
   const { data: projects } = useGetProjectsQuery(
     {
