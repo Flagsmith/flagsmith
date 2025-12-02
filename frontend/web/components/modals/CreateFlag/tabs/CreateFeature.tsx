@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import { FeatureState, ProjectFlag } from 'common/types/responses'
-import FeatureValue from 'components/modals/CreateFlag/tabs/FeatureValue'
-import FeatureSettings from 'components/modals/CreateFlag/tabs/FeatureSettings'
+import FeatureValue from './FeatureValue'
+import FeatureSettings from './FeatureSettings'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import { useHasPermission } from 'common/providers/Permission'
@@ -11,24 +11,16 @@ type CreateFeatureTabProps = {
   error: any
   multivariate_options: any[]
   environmentVariations: any[]
-  featureState: Partial<FeatureState>
+  featureState: FeatureState
   environmentFlag: any
-  projectFlag: ProjectFlag | null | undefined
+  projectFlag: ProjectFlag | null
   featureContentType: any
   identity?: string
-  tags: number[]
-  description: string
-  is_server_key_only: boolean
-  is_archived: boolean
-  onChange: (featureState: Partial<FeatureState>) => void
+  onChange: (featureState: FeatureState) => void
+  onProjectFlagChange: (projectFlag: ProjectFlag) => void
   removeVariation: (i: number) => void
   updateVariation: (i: number, e: any, environmentVariations: any[]) => void
   addVariation: () => void
-  onTagsChange: (tags: number[]) => void
-  onMetadataChange: (metadata: any[]) => void
-  onDescriptionChange: (description: string) => void
-  onServerKeyOnlyChange: (is_server_key_only: boolean) => void
-  onArchivedChange: (is_archived: boolean) => void
   onHasMetadataRequiredChange: (hasMetadataRequired: boolean) => void
   featureError?: string
   featureWarning?: string
@@ -36,7 +28,6 @@ type CreateFeatureTabProps = {
 
 const CreateFeature: FC<CreateFeatureTabProps> = ({
   addVariation,
-  description,
   environmentFlag,
   environmentVariations,
   error,
@@ -45,20 +36,13 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
   featureState,
   featureWarning,
   identity,
-  is_archived,
-  is_server_key_only,
   multivariate_options,
-  onArchivedChange,
   onChange,
-  onDescriptionChange,
   onHasMetadataRequiredChange,
-  onMetadataChange,
-  onServerKeyOnlyChange,
-  onTagsChange,
+  onProjectFlagChange,
   projectFlag,
   projectId,
   removeVariation,
-  tags,
   updateVariation,
 }) => {
   const { permission: createFeature } = useHasPermission({
@@ -78,41 +62,37 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
     <>
       <ErrorMessage error={featureError} />
       <WarningMessage warningMessage={featureWarning} />
-      <FeatureValue
-        error={error}
-        createFeature={createFeature}
-        hideValue={false}
-        isEdit={false}
-        noPermissions={noPermissions}
-        multivariate_options={multivariate_options}
-        environmentVariations={environmentVariations}
-        featureState={featureState}
-        environmentFlag={environmentFlag}
-        projectFlag={projectFlag!}
-        onChange={onChange}
-        removeVariation={removeVariation}
-        updateVariation={updateVariation}
-        addVariation={addVariation}
-      />
-      <FeatureSettings
-        projectAdmin={projectAdmin}
-        createFeature={createFeature}
-        featureContentType={featureContentType}
-        identity={identity}
-        isEdit={false}
-        projectId={projectId}
-        projectFlag={projectFlag}
-        tags={tags}
-        description={description}
-        is_server_key_only={is_server_key_only}
-        is_archived={is_archived}
-        onTagsChange={onTagsChange}
-        onMetadataChange={onMetadataChange}
-        onDescriptionChange={onDescriptionChange}
-        onServerKeyOnlyChange={onServerKeyOnlyChange}
-        onArchivedChange={onArchivedChange}
-        onHasMetadataRequiredChange={onHasMetadataRequiredChange}
-      />
+      {!!projectFlag && (
+        <>
+          <FeatureValue
+            error={error}
+            createFeature={createFeature}
+            hideValue={false}
+            isEdit={false}
+            noPermissions={noPermissions}
+            multivariate_options={multivariate_options}
+            environmentVariations={environmentVariations}
+            featureState={featureState}
+            environmentFlag={environmentFlag}
+            projectFlag={projectFlag}
+            onChange={onChange}
+            removeVariation={removeVariation}
+            updateVariation={updateVariation}
+            addVariation={addVariation}
+          />
+          <FeatureSettings
+            projectAdmin={projectAdmin}
+            createFeature={createFeature}
+            featureContentType={featureContentType}
+            identity={identity}
+            isEdit={false}
+            projectId={projectId}
+            projectFlag={projectFlag}
+            onChange={onProjectFlagChange}
+            onHasMetadataRequiredChange={onHasMetadataRequiredChange}
+          />
+        </>
+      )}
     </>
   )
 }

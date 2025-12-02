@@ -2,7 +2,6 @@ import React, { FC } from 'react'
 import { ProjectFlag } from 'common/types/responses'
 import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
-import FormGroup from 'components/base/forms/FormGroup'
 import InputGroup from 'components/base/forms/InputGroup'
 import AddEditTags from 'components/tags/AddEditTags'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
@@ -10,12 +9,13 @@ import Permission from 'common/providers/Permission'
 import FlagOwners from 'components/FlagOwners'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import PlanBasedBanner from 'components/PlanBasedAccess'
-import Row from 'components/base/Row'
 import Switch from 'components/Switch'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
-
+import FormGroup from 'components/base/grid/FormGroup'
+import Row from 'components/base/grid/Row'
+import AccountStore from 'common/stores/account-store'
 type FeatureSettingsTabProps = {
   projectAdmin: boolean
   createFeature: boolean
@@ -23,36 +23,20 @@ type FeatureSettingsTabProps = {
   identity?: string
   isEdit: boolean
   projectId: number | string
-  projectFlag: ProjectFlag | null | undefined
-  tags: number[]
-  description: string
-  is_server_key_only: boolean
-  is_archived: boolean
-  onTagsChange: (tags: number[]) => void
-  onMetadataChange: (metadata: any[]) => void
-  onDescriptionChange: (description: string) => void
-  onServerKeyOnlyChange: (is_server_key_only: boolean) => void
-  onArchivedChange: (is_archived: boolean) => void
+  projectFlag: ProjectFlag | null
+  onChange: (projectFlag: ProjectFlag) => void
   onHasMetadataRequiredChange: (hasMetadataRequired: boolean) => void
 }
 
 const FeatureSettings: FC<FeatureSettingsTabProps> = ({
   createFeature,
-  description,
   featureContentType,
   identity,
   isEdit,
-  is_archived,
-  is_server_key_only,
-  onArchivedChange,
-  onDescriptionChange,
+  onChange,
   onHasMetadataRequiredChange,
-  onMetadataChange,
-  onServerKeyOnlyChange,
-  onTagsChange,
   projectFlag,
   projectId,
-  tags,
 }) => {
   const metadataEnable = Utils.getPlansPermission('METADATA')
 
@@ -68,9 +52,12 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
     )
   }
 
+  if (!projectFlag) {
+    return null
+  }
   return (
     <>
-      {!identity && tags && (
+      {!identity && projectFlag?.tags && (
         <FormGroup className='mb-3 setting'>
           <InputGroup
             title={'Tags'}
@@ -79,8 +66,8 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
               <AddEditTags
                 readOnly={!!identity || !createFeature}
                 projectId={`${projectId}`}
-                value={tags}
-                onChange={onTagsChange}
+                value={projectFlag.tags}
+                onChange={(tags) => onChange({ ...projectFlag, tags })}
               />
             }
           />
@@ -96,16 +83,12 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
             entityContentType={featureContentType?.id}
             entity={featureContentType?.model}
             setHasMetadataRequired={onHasMetadataRequiredChange}
-            onChange={onMetadataChange}
+            onChange={(metadata) => onChange({ ...projectFlag, metadata })}
           />
         </>
       )}
-      {!identity && projectFlag && (
-        <Permission
-          level='project'
-          permission='CREATE_FEATURE'
-          id={projectId}
-        >
+      {!identity && projectFlag?.id && (
+        <Permission level='project' permission='CREATE_FEATURE' id={projectId}>
           {({ permission }) =>
             permission && (
               <>
@@ -127,13 +110,18 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
       )}
       <FormGroup className='mb-3 setting'>
         <InputGroup
-          value={description}
+          value={projectFlag?.description || ''}
           data-test='featureDesc'
           inputProps={{
             className: 'full-width',
             name: 'featureDesc',
           }}
-          onChange={(e) => onDescriptionChange(Utils.safeParseEventValue(e))}
+          onChange={(e: InputEvent) =>
+            onChange({
+              ...projectFlag,
+              description: Utils.safeParseEventValue(e),
+            })
+          }
           ds
           type='text'
           title={identity ? 'Description' : 'Description (optional)'}
@@ -145,8 +133,10 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
         <FormGroup className='mb-3 mt-3 setting'>
           <Row>
             <Switch
-              checked={is_server_key_only}
-              onChange={onServerKeyOnlyChange}
+              checked={projectFlag?.is_server_key_only || false}
+              onChange={(is_server_key_only) =>
+                onChange({ ...projectFlag, is_server_key_only })
+              }
               className='ml-0'
             />
             <Tooltip
@@ -166,8 +156,10 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
         <FormGroup className='mb-3 setting'>
           <Row>
             <Switch
-              checked={is_archived}
-              onChange={onArchivedChange}
+              checked={projectFlag?.is_archived || false}
+              onChange={(is_archived) =>
+                onChange({ ...projectFlag, is_archived })
+              }
               className='ml-0'
             />
             <Tooltip

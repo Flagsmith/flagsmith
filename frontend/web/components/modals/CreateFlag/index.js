@@ -10,10 +10,7 @@ import IdentityProvider from 'common/providers/IdentityProvider'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import SegmentOverrides from 'components/SegmentOverrides'
-import AddEditTags from 'components/tags/AddEditTags'
-import FlagOwners from 'components/FlagOwners'
 import ChangeRequestModal from 'components/modals/ChangeRequestModal'
-import Feature from 'components/Feature'
 import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
 import JSONReference from 'components/JSONReference'
@@ -28,19 +25,16 @@ import Icon from 'components/Icon'
 import ModalHR from 'components/modals/ModalHR'
 import FeatureValue from 'components/feature-summary/FeatureValue'
 import { getStore } from 'common/store'
-import FlagOwnerGroups from 'components/FlagOwnerGroups'
-import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
 import Button from 'components/base/forms/Button'
-import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
-import PlanBasedBanner from 'components/PlanBasedAccess'
 import FeatureHistory from 'components/FeatureHistory'
 import WarningMessage from 'components/WarningMessage'
 import FeatureAnalytics from 'components/feature-page/FeatureNavTab/FeatureAnalytics'
+import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import { getPermission } from 'common/services/usePermission'
 import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
@@ -52,7 +46,11 @@ import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTa
 import BetaFlag from 'components/BetaFlag'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import CreateFeature from './tabs/CreateFeature'
+import FeatureSettings from './tabs/FeatureSettings'
+import FeatureValueTab from './tabs/FeatureValue'
 import FeatureLimitAlert from './FeatureLimitAlert'
+import FeatureUpdateSummary from './FeatureUpdateSummary'
+import FeatureNameInput from './FeatureNameInput'
 
 const Index = class extends Component {
   static displayName = 'CreateFlag'
@@ -538,7 +536,6 @@ const Index = class extends Component {
   render() {
     const {
       default_enabled,
-      description,
       enabledIndentity,
       enabledSegment,
       featureContentType,
@@ -549,8 +546,6 @@ const Index = class extends Component {
       multivariate_options,
       name,
     } = this.state
-    const FEATURE_ID_MAXLENGTH = Constants.forms.maxLength.FEATURE_ID
-
     const { identity, identityName, projectFlag } = this.props
     const Provider = identity ? IdentityProvider : FeatureListProvider
     const environmentVariations = this.props.environmentVariations
@@ -569,7 +564,6 @@ const Index = class extends Component {
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
     let regexValid = true
-    const metadataEnable = Utils.getPlansPermission('METADATA')
 
     const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
       'git_code_references',
@@ -582,299 +576,7 @@ const Index = class extends Component {
     } catch (e) {
       regexValid = false
     }
-    const Settings = (projectAdmin, createFeature, featureContentType) =>
-      !createFeature ? (
-        <InfoMessage>
-          <div
-            dangerouslySetInnerHTML={{
-              __html: Constants.projectPermissions('Create Feature'),
-            }}
-          />
-        </InfoMessage>
-      ) : (
-        <>
-          {!identity && this.state.tags && (
-            <FormGroup className='mb-3 setting'>
-              <InputGroup
-                title={'Tags'}
-                tooltip={Constants.strings.TAGS_DESCRIPTION}
-                component={
-                  <AddEditTags
-                    readOnly={!!identity || !createFeature}
-                    projectId={`${this.props.projectId}`}
-                    value={this.state.tags}
-                    onChange={(tags) =>
-                      this.setState({ settingsChanged: true, tags })
-                    }
-                  />
-                }
-              />
-            </FormGroup>
-          )}
-          {metadataEnable && featureContentType?.id && (
-            <>
-              <label className='mt-1'>Custom Fields</label>
-              <AddMetadataToEntity
-                organisationId={AccountStore.getOrganisation().id}
-                projectId={this.props.projectId}
-                entityId={projectFlag?.id}
-                entityContentType={featureContentType?.id}
-                entity={featureContentType?.model}
-                setHasMetadataRequired={(b) => {
-                  this.setState({
-                    hasMetadataRequired: b,
-                  })
-                }}
-                onChange={(m) => {
-                  this.setState({
-                    metadata: m,
-                  })
-                }}
-              />
-            </>
-          )}
-          {!identity && projectFlag && (
-            <Permission
-              level='project'
-              permission='CREATE_FEATURE'
-              id={this.props.projectId}
-            >
-              {({ permission }) =>
-                permission && (
-                  <>
-                    <FormGroup className='mb-3 setting'>
-                      <FlagOwners
-                        projectId={this.props.projectId}
-                        id={projectFlag.id}
-                      />
-                    </FormGroup>
-                    <FormGroup className='mb-3 setting'>
-                      <FlagOwnerGroups
-                        projectId={this.props.projectId}
-                        id={projectFlag.id}
-                      />
-                    </FormGroup>
-                    <PlanBasedBanner
-                      className='mb-3'
-                      feature={'FLAG_OWNERS'}
-                      theme={'description'}
-                    />
-                  </>
-                )
-              }
-            </Permission>
-          )}
-          <FormGroup className='mb-3 setting'>
-            <InputGroup
-              value={description}
-              data-test='featureDesc'
-              inputProps={{
-                className: 'full-width',
-                name: 'featureDesc',
-              }}
-              onChange={(e) =>
-                this.setState({
-                  description: Utils.safeParseEventValue(e),
-                  settingsChanged: true,
-                })
-              }
-              ds
-              type='text'
-              title={identity ? 'Description' : 'Description (optional)'}
-              placeholder="e.g. 'This determines what size the header is' "
-            />
-          </FormGroup>
 
-          {!identity && (
-            <FormGroup className='mb-3 mt-3 setting'>
-              <Row>
-                <Switch
-                  checked={this.state.is_server_key_only}
-                  onChange={(is_server_key_only) =>
-                    this.setState({ is_server_key_only, settingsChanged: true })
-                  }
-                  className='ml-0'
-                />
-                <Tooltip
-                  title={
-                    <label className='cols-sm-2 control-label mb-0 ml-3'>
-                      Server-side only <Icon name='info-outlined' />
-                    </label>
-                  }
-                >
-                  Prevent this feature from being accessed with client-side
-                  SDKs.
-                </Tooltip>
-              </Row>
-            </FormGroup>
-          )}
-
-          {!identity && isEdit && (
-            <FormGroup className='mb-3 setting'>
-              <Row>
-                <Switch
-                  checked={this.state.is_archived}
-                  onChange={(is_archived) => {
-                    this.setState({ is_archived, settingsChanged: true })
-                  }}
-                  className='ml-0'
-                />
-                <Tooltip
-                  title={
-                    <label className='cols-sm-2 control-label mb-0 ml-3'>
-                      Archived <Icon name='info-outlined' />
-                    </label>
-                  }
-                >
-                  {`Archiving a flag allows you to filter out flags from the
-                Flagsmith dashboard that are no longer relevant.
-                <br />
-                An archived flag will still return as normal in all SDK
-                endpoints.`}
-                </Tooltip>
-              </Row>
-            </FormGroup>
-          )}
-        </>
-      )
-
-    const Value = (error, projectAdmin, createFeature, hideValue) => {
-      const { featureError, featureWarning } = this.parseError(error)
-      const { changeRequests, scheduledChangeRequests } = this.state
-      return (
-        <>
-          {!!isEdit && !identity && (
-            <ExistingChangeRequestAlert
-              className='mb-4'
-              history={this.props.history}
-              editingChangeRequest={this.props.changeRequest}
-              projectId={this.props.projectId}
-              environmentId={this.props.environmentId}
-              changeRequests={changeRequests}
-              scheduledChangeRequests={scheduledChangeRequests}
-            />
-          )}
-          {!isEdit && (
-            <FormGroup className='mb-4 mt-2'>
-              <InputGroup
-                ref={(e) => (this.input = e)}
-                data-test='featureID'
-                inputProps={{
-                  className: 'full-width',
-                  maxLength: FEATURE_ID_MAXLENGTH,
-                  name: 'featureID',
-                  readOnly: isEdit,
-                }}
-                value={name}
-                onChange={(e) => {
-                  const newName = Utils.safeParseEventValue(e).replace(
-                    / /g,
-                    '_',
-                  )
-                  this.setState({
-                    name: caseSensitive ? newName.toLowerCase() : newName,
-                  })
-                }}
-                isValid={!!name && regexValid}
-                type='text'
-                title={
-                  <>
-                    <Tooltip
-                      title={
-                        <Row>
-                          <span className={'mr-1'}>
-                            {isEdit ? 'ID / Name' : 'ID / Name*'}
-                          </span>
-                          <Icon name='info-outlined' />
-                        </Row>
-                      }
-                    >
-                      The ID that will be used by SDKs to retrieve the feature
-                      value and enabled state. This cannot be edited once the
-                      feature has been created.
-                    </Tooltip>
-                    {!!regex && !isEdit && (
-                      <div className='mt-2'>
-                        {' '}
-                        <InfoMessage collapseId={'flag-regex'}>
-                          {' '}
-                          This must conform to the regular expression{' '}
-                          <pre>{regex}</pre>
-                        </InfoMessage>
-                      </div>
-                    )}
-                  </>
-                }
-                placeholder='E.g. header_size'
-              />
-            </FormGroup>
-          )}
-          <ErrorMessage error={featureError} />
-          <WarningMessage warningMessage={featureWarning} />
-          {identity && description && (
-            <FormGroup className='mb-4 mt-2 mx-3'>
-              <InputGroup
-                value={description}
-                data-test='featureDesc'
-                inputProps={{
-                  className: 'full-width',
-                  name: 'featureDesc',
-                  readOnly: !!identity || noPermissions,
-                  valueChanged: true,
-                }}
-                onChange={(e) =>
-                  this.setState({ description: Utils.safeParseEventValue(e) })
-                }
-                type='text'
-                title={identity ? 'Description' : 'Description (optional)'}
-                placeholder='No description'
-              />
-            </FormGroup>
-          )}
-          {!hideValue && (
-            <div
-              className={`${identity && !description ? 'mt-4 mx-3' : ''} ${
-                identity ? 'mx-3' : ''
-              }`}
-            >
-              <Feature
-                readOnly={noPermissions}
-                multivariate_options={multivariate_options}
-                environmentVariations={environmentVariations}
-                isEdit={isEdit}
-                projectId={this.props.projectId}
-                error={error?.initial_value?.[0]}
-                canCreateFeature={createFeature}
-                identity={identity}
-                removeVariation={this.removeVariation}
-                updateVariation={this.updateVariation}
-                addVariation={this.addVariation}
-                checked={default_enabled}
-                value={initial_value}
-                identityVariations={this.state.identityVariations}
-                onChangeIdentityVariations={(identityVariations) => {
-                  this.setState({ identityVariations, valueChanged: true })
-                }}
-                environmentFlag={this.props.environmentFlag}
-                projectFlag={projectFlag}
-                onValueChange={(e) => {
-                  const initial_value = Utils.getTypedValue(
-                    Utils.safeParseEventValue(e),
-                  )
-                  this.setState({ initial_value, valueChanged: true })
-                }}
-                onCheckedChange={(default_enabled) =>
-                  this.setState({ default_enabled })
-                }
-              />
-            </div>
-          )}
-          {!isEdit &&
-            !identity &&
-            Settings(projectAdmin, createFeature, featureContentType)}
-        </>
-      )
-    }
     return (
       <ProjectProvider id={this.props.projectId}>
         {({ project }) => (
@@ -941,12 +643,18 @@ const Index = class extends Component {
                       }),
                     ])
 
+                  const getModalTitle = () => {
+                    if (schedule) {
+                      return 'New Scheduled Flag Update'
+                    }
+                    if (this.props.changeRequest) {
+                      return 'Update Change Request'
+                    }
+                    return 'New Change Request'
+                  }
+
                   openModal2(
-                    schedule
-                      ? 'New Scheduled Flag Update'
-                      : this.props.changeRequest
-                      ? 'Update Change Request'
-                      : 'New Change Request',
+                    getModalTitle(),
                     <ChangeRequestModal
                       showIgnoreConflicts={true}
                       showAssignees={is4Eyes}
@@ -1048,6 +756,22 @@ const Index = class extends Component {
 
               const { featureError, featureWarning } = this.parseError(error)
 
+              const featureState = {
+                enabled: default_enabled,
+                feature_state_value: initial_value,
+                multivariate_feature_state_values:
+                  this.state.identityVariations,
+              }
+
+              const createProjectFlag = {
+                description: this.state.description,
+                is_archived: this.state.is_archived,
+                is_server_key_only: this.state.is_server_key_only,
+                metadata: this.state.metadata,
+                multivariate_options: this.state.multivariate_options,
+                tags: this.state.tags,
+              }
+
               return (
                 <Permission
                   level='project'
@@ -1065,6 +789,18 @@ const Index = class extends Component {
                         const _hasMetadataRequired =
                           this.state.hasMetadataRequired &&
                           !this.state.metadata.length
+
+                        const editProjectFlag = projectFlag
+                          ? {
+                              ...projectFlag,
+                              description: this.state.description,
+                              is_archived: this.state.is_archived,
+                              is_server_key_only: this.state.is_server_key_only,
+                              metadata: this.state.metadata,
+                              tags: this.state.tags,
+                            }
+                          : null
+
                         return (
                           <div id='create-feature-modal'>
                             {isEdit && !identity ? (
@@ -1092,7 +828,90 @@ const Index = class extends Component {
                                         )}
                                       </Row>
                                     }
-                                  ></TabItem>
+                                  >
+                                    <FeatureValueTab
+                                      error={error}
+                                      createFeature={createFeature}
+                                      hideValue={false}
+                                      isEdit={isEdit}
+                                      noPermissions={noPermissions}
+                                      multivariate_options={
+                                        multivariate_options
+                                      }
+                                      environmentVariations={
+                                        environmentVariations
+                                      }
+                                      featureState={{
+                                        enabled: default_enabled,
+                                        feature_state_value: initial_value,
+                                        multivariate_feature_state_values:
+                                          this.state.identityVariations,
+                                      }}
+                                      environmentFlag={
+                                        this.props.environmentFlag
+                                      }
+                                      projectFlag={projectFlag}
+                                      onChange={(featureState) => {
+                                        const updates = {}
+                                        if (
+                                          featureState.enabled !== undefined
+                                        ) {
+                                          updates.default_enabled =
+                                            featureState.enabled
+                                        }
+                                        if (
+                                          featureState.feature_state_value !==
+                                          undefined
+                                        ) {
+                                          updates.initial_value =
+                                            featureState.feature_state_value
+                                          updates.valueChanged = true
+                                        }
+                                        if (
+                                          featureState.multivariate_feature_state_values !==
+                                          undefined
+                                        ) {
+                                          updates.identityVariations =
+                                            featureState.multivariate_feature_state_values
+                                          updates.valueChanged = true
+                                        }
+                                        this.setState(updates)
+                                      }}
+                                      removeVariation={this.removeVariation}
+                                      updateVariation={this.updateVariation}
+                                      addVariation={this.addVariation}
+                                    />
+                                    <JSONReference
+                                      className='mb-3'
+                                      showNamesButton
+                                      title={'Feature'}
+                                      json={projectFlag}
+                                    />
+                                    <JSONReference
+                                      className='mb-3'
+                                      title={'Feature state'}
+                                      json={this.props.environmentFlag}
+                                    />
+                                    <FlagValueFooter
+                                      is4Eyes={is4Eyes}
+                                      isVersioned={isVersioned}
+                                      projectId={this.props.projectId}
+                                      projectFlag={projectFlag}
+                                      environmentId={this.props.environmentId}
+                                      environmentName={
+                                        _.find(project.environments, {
+                                          api_key: this.props.environmentId,
+                                        })?.name || ''
+                                      }
+                                      isSaving={isSaving}
+                                      featureName={name}
+                                      isInvalid={invalid}
+                                      existingChangeRequest={
+                                        existingChangeRequest
+                                      }
+                                      onSaveFeatureValue={saveFeatureValue}
+                                    />
+                                  </TabItem>
                                   {!existingChangeRequest && (
                                     <TabItem
                                       data-test='segment_overrides'
@@ -1307,11 +1126,7 @@ const Index = class extends Component {
                                                 <div>
                                                   <p className='text-right mt-4 fs-small lh-sm modal-caption'>
                                                     {is4Eyes && isVersioned
-                                                      ? `This will create a change request ${
-                                                          isVersioned
-                                                            ? 'with any value and segment override changes '
-                                                            : ''
-                                                        }for the environment`
+                                                      ? 'This will create a change request with any value and segment override changes for the environment'
                                                       : 'This will update the segment overrides for the environment'}{' '}
                                                     <strong>
                                                       {
@@ -1382,13 +1197,18 @@ const Index = class extends Component {
                                                                     !savePermission
                                                                   }
                                                                 >
-                                                                  {isSaving
-                                                                    ? existingChangeRequest
-                                                                      ? 'Updating Change Request'
-                                                                      : 'Creating Change Request'
-                                                                    : existingChangeRequest
-                                                                    ? 'Update Change Request'
-                                                                    : 'Create Change Request'}
+                                                                  {(() => {
+                                                                    if (
+                                                                      isSaving
+                                                                    ) {
+                                                                      return existingChangeRequest
+                                                                        ? 'Updating Change Request'
+                                                                        : 'Creating Change Request'
+                                                                    }
+                                                                    return existingChangeRequest
+                                                                      ? 'Update Change Request'
+                                                                      : 'Create Change Request'
+                                                                  })()}
                                                                 </Button>,
                                                               )
                                                             }
@@ -1421,13 +1241,18 @@ const Index = class extends Component {
                                                                           !savePermission
                                                                         }
                                                                       >
-                                                                        {isSaving
-                                                                          ? existingChangeRequest
-                                                                            ? 'Updating Change Request'
-                                                                            : 'Scheduling Update'
-                                                                          : existingChangeRequest
-                                                                          ? 'Update Change Request'
-                                                                          : 'Schedule Update'}
+                                                                        {(() => {
+                                                                          if (
+                                                                            isSaving
+                                                                          ) {
+                                                                            return existingChangeRequest
+                                                                              ? 'Updating Change Request'
+                                                                              : 'Scheduling Update'
+                                                                          }
+                                                                          return existingChangeRequest
+                                                                            ? 'Update Change Request'
+                                                                            : 'Schedule Update'
+                                                                        })()}
                                                                       </Button>
                                                                     </>
                                                                   )}
@@ -1862,11 +1687,59 @@ const Index = class extends Component {
                                         </Row>
                                       }
                                     >
-                                      {Settings(
-                                        projectAdmin,
-                                        createFeature,
-                                        featureContentType,
-                                      )}
+                                      <FeatureSettings
+                                        projectAdmin={projectAdmin}
+                                        createFeature={createFeature}
+                                        featureContentType={featureContentType}
+                                        identity={identity}
+                                        isEdit={isEdit}
+                                        projectId={this.props.projectId}
+                                        projectFlag={editProjectFlag}
+                                        onChange={(projectFlag) => {
+                                          const updates = {
+                                            settingsChanged: true,
+                                          }
+                                          if (projectFlag.tags !== undefined) {
+                                            updates.tags = projectFlag.tags
+                                          }
+                                          if (
+                                            projectFlag.description !==
+                                            undefined
+                                          ) {
+                                            updates.description =
+                                              projectFlag.description
+                                          }
+                                          if (
+                                            projectFlag.is_server_key_only !==
+                                            undefined
+                                          ) {
+                                            updates.is_server_key_only =
+                                              projectFlag.is_server_key_only
+                                          }
+                                          if (
+                                            projectFlag.is_archived !==
+                                            undefined
+                                          ) {
+                                            updates.is_archived =
+                                              projectFlag.is_archived
+                                          }
+                                          if (
+                                            projectFlag.metadata !== undefined
+                                          ) {
+                                            updates.metadata =
+                                              projectFlag.metadata
+                                            delete updates.settingsChanged
+                                          }
+                                          this.setState(updates)
+                                        }}
+                                        onHasMetadataRequiredChange={(
+                                          hasMetadataRequired,
+                                        ) =>
+                                          this.setState({
+                                            hasMetadataRequired,
+                                          })
+                                        }
+                                      />
                                       <JSONReference
                                         className='mb-3'
                                         showNamesButton
@@ -1921,25 +1794,24 @@ const Index = class extends Component {
                                     this.setState({ featureLimitAlert })
                                   }
                                 />
+                                <FeatureNameInput
+                                  value={name}
+                                  onChange={(name) => this.setState({ name })}
+                                  caseSensitive={caseSensitive}
+                                  regex={regex}
+                                  regexValid={regexValid}
+                                  autoFocus
+                                />
                                 <CreateFeature
                                   projectId={this.props.projectId}
                                   error={error}
                                   multivariate_options={multivariate_options}
                                   environmentVariations={environmentVariations}
-                                  featureState={{
-                                    enabled: default_enabled,
-                                    feature_state_value: initial_value,
-                                    multivariate_feature_state_values:
-                                      this.state.identityVariations,
-                                  }}
+                                  featureState={featureState}
                                   environmentFlag={this.props.environmentFlag}
-                                  projectFlag={projectFlag}
+                                  projectFlag={createProjectFlag}
                                   featureContentType={featureContentType}
                                   identity={identity}
-                                  tags={this.state.tags}
-                                  description={this.state.description}
-                                  is_server_key_only={this.state.is_server_key_only}
-                                  is_archived={this.state.is_archived}
                                   onChange={(featureState) => {
                                     const updates = {}
                                     if (featureState.enabled !== undefined) {
@@ -1964,33 +1836,35 @@ const Index = class extends Component {
                                     }
                                     this.setState(updates)
                                   }}
+                                  onProjectFlagChange={(projectFlag) => {
+                                    const updates = { settingsChanged: true }
+                                    if (projectFlag.tags !== undefined) {
+                                      updates.tags = projectFlag.tags
+                                    }
+                                    if (projectFlag.description !== undefined) {
+                                      updates.description =
+                                        projectFlag.description
+                                    }
+                                    if (
+                                      projectFlag.is_server_key_only !==
+                                      undefined
+                                    ) {
+                                      updates.is_server_key_only =
+                                        projectFlag.is_server_key_only
+                                    }
+                                    if (projectFlag.is_archived !== undefined) {
+                                      updates.is_archived =
+                                        projectFlag.is_archived
+                                    }
+                                    if (projectFlag.metadata !== undefined) {
+                                      updates.metadata = projectFlag.metadata
+                                      delete updates.settingsChanged
+                                    }
+                                    this.setState(updates)
+                                  }}
                                   removeVariation={this.removeVariation}
                                   updateVariation={this.updateVariation}
                                   addVariation={this.addVariation}
-                                  onTagsChange={(tags) =>
-                                    this.setState({ tags, settingsChanged: true })
-                                  }
-                                  onMetadataChange={(metadata) =>
-                                    this.setState({ metadata })
-                                  }
-                                  onDescriptionChange={(description) =>
-                                    this.setState({
-                                      description,
-                                      settingsChanged: true,
-                                    })
-                                  }
-                                  onServerKeyOnlyChange={(is_server_key_only) =>
-                                    this.setState({
-                                      is_server_key_only,
-                                      settingsChanged: true,
-                                    })
-                                  }
-                                  onArchivedChange={(is_archived) =>
-                                    this.setState({
-                                      is_archived,
-                                      settingsChanged: true,
-                                    })
-                                  }
                                   onHasMetadataRequiredChange={(
                                     hasMetadataRequired,
                                   ) =>
@@ -2005,52 +1879,18 @@ const Index = class extends Component {
                                     this.parseError(error).featureWarning
                                   }
                                 />
-                                <ModalHR
-                                  className={`my-4 ${identity ? 'mx-3' : ''}`}
+                                <FeatureUpdateSummary
+                                  identity={identity}
+                                  onCreateFeature={onCreateFeature}
+                                  isSaving={isSaving}
+                                  name={name}
+                                  invalid={invalid}
+                                  regexValid={regexValid}
+                                  featureLimitPercentage={
+                                    this.state.featureLimitAlert.percentage
+                                  }
+                                  hasMetadataRequired={_hasMetadataRequired}
                                 />
-                                {!identity && (
-                                  <div className='text-right mb-3'>
-                                    {project.prevent_flag_defaults ? (
-                                      <InfoMessage
-                                        collapseId={'create-flag'}
-                                        className='text-right modal-caption fs-small lh-sm'
-                                      >
-                                        This will create the feature for{' '}
-                                        <strong>all environments</strong>, you
-                                        can edit this feature per environment
-                                        once the feature's enabled state and
-                                        environment once the feature is created.
-                                      </InfoMessage>
-                                    ) : (
-                                      <InfoMessage
-                                        collapseId={'create-flag'}
-                                        className='text-right modal-caption fs-small lh-sm'
-                                      >
-                                        This will create the feature for{' '}
-                                        <strong>all environments</strong>, you
-                                        can edit this feature per environment
-                                        once the feature is created.
-                                      </InfoMessage>
-                                    )}
-
-                                    <Button
-                                      onClick={onCreateFeature}
-                                      data-test='create-feature-btn'
-                                      id='create-feature-btn'
-                                      disabled={
-                                        isSaving ||
-                                        !name ||
-                                        invalid ||
-                                        !regexValid ||
-                                        this.state.featureLimitAlert.percentage >=
-                                          100 ||
-                                        _hasMetadataRequired
-                                      }
-                                    >
-                                      {isSaving ? 'Creating' : 'Create Feature'}
-                                    </Button>
-                                  </div>
-                                )}
                               </div>
                             )}
                             {identity && (
