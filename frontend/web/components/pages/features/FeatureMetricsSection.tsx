@@ -7,12 +7,6 @@ type FeatureMetricsSectionProps = {
   projectId: string
 }
 
-/**
- * Wrapper for EnvironmentMetricsList with feature flag check
- *
- * Note: Metrics automatically refresh via RTK Query cache invalidation.
- * Feature mutations invalidate the METRICS tag, triggering automatic refetch.
- */
 export const FeatureMetricsSection: FC<FeatureMetricsSectionProps> = ({
   environmentApiKey,
   projectId,

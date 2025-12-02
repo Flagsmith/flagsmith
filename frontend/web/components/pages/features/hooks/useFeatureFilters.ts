@@ -39,7 +39,6 @@ const getFiltersFromParams = (params: UrlParams) => {
 }
 
 export function useFeatureFilters(history: History) {
-  // Initialize filters from URL params
   const initialFilters = useMemo(
     () => getFiltersFromParams(Utils.fromParam()),
     [],
@@ -48,7 +47,6 @@ export function useFeatureFilters(history: History) {
   const [filters, setFilters] = useState<FilterState>(initialFilters)
   const [page, setPage] = useState<number>(initialFilters.page)
 
-  // Update URL params when filters change
   const updateURLParams = useCallback(() => {
     const currentParams = Utils.fromParam()
     if (!currentParams.feature) {
@@ -78,7 +76,7 @@ export function useFeatureFilters(history: History) {
 
   const handleFilterChange = useCallback((updates: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...updates }))
-    setPage(1) // Reset to page 1 when filters change
+    setPage(1)
   }, [])
 
   const clearFilters = useCallback(() => {
@@ -92,7 +90,6 @@ export function useFeatureFilters(history: History) {
     setPage(newPage)
   }, [])
 
-  // Check if filters are active
   const params = Utils.fromParam()
   const hasFilters = !isEqual(
     getFiltersFromParams({ ...params, page: '1' }),

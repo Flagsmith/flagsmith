@@ -27,7 +27,6 @@ const FeaturesPageComponent: FC = () => {
   const history = useHistory()
   const routeContext = useRouteContext()
 
-  // Use new hook to replace ProjectStore
   const { getEnvironment, getEnvironmentIdFromKey, maxFeaturesAllowed } =
     useProjectEnvironments(projectId)
 
@@ -41,7 +40,6 @@ const FeaturesPageComponent: FC = () => {
     [getEnvironment, environmentId],
   )
 
-  // Custom hooks for state management
   const {
     clearFilters,
     filters,
@@ -55,7 +53,6 @@ const FeaturesPageComponent: FC = () => {
 
   const [loadedOnce, setLoadedOnce] = useState(false)
 
-  // RTK Query for data fetching
   const { data, isFetching, isLoading } = useGetFeatureListQuery(
     {
       environmentId: numericEnvironmentId?.toString() || '',
@@ -85,7 +82,6 @@ const FeaturesPageComponent: FC = () => {
   const paging = data?.pagination
   const totalFeatures = data?.count || 0
 
-  // Track page load
   useEffect(() => {
     API.trackPage(Constants.pages.FEATURES)
     AsyncStorage.setItem(
@@ -98,7 +94,6 @@ const FeaturesPageComponent: FC = () => {
     )
   }, [environmentId, projectId, routeContext.organisationId])
 
-  // Mark as loaded once data arrives
   useEffect(() => {
     if (data && !loadedOnce) {
       setLoadedOnce(true)
