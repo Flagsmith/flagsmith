@@ -155,6 +155,7 @@
     "@types/classnames": "^2.3.1",
     "@types/color": "^3.0.3",
     "@types/dompurify": "^3.0.2",
+    "@types/rc-switch": "^1.9.5",
     "@types/react-router": "^5.1.20",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-select": "^2.0.3",

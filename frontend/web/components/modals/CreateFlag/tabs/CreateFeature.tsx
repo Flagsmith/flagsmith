@@ -69,6 +69,7 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
             createFeature={createFeature}
             hideValue={false}
             isEdit={false}
+            identity={identity}
             noPermissions={noPermissions}
             multivariate_options={multivariate_options}
             environmentVariations={environmentVariations}

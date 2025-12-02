@@ -39,7 +39,7 @@ const FeatureNameInput: FC<FeatureNameInputProps> = ({
           readOnly: false,
         }}
         value={value}
-        onChange={(e) => {
+        onChange={(e: InputEvent) => {
           const newName = Utils.safeParseEventValue(e).replace(/ /g, '_')
           onChange(caseSensitive ? newName.toLowerCase() : newName)
         }}

@@ -1,5 +1,5 @@
 import React, { FC } from 'react'
-import RCSwitch, { SwitchProps as RCSwitchProps } from 'rc-switch'
+import RCSwitch, { Props as RCSwitchProps } from 'rc-switch'
 import Icon from './Icon'
 
 export type SwitchProps = RCSwitchProps & {

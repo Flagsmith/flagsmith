@@ -10,7 +10,7 @@ import Tooltip from 'components/Tooltip'
 import Icon from 'components/Icon'
 import Switch from 'components/Switch'
 import Utils from 'common/utils/utils'
-import { FlagsmithValue, FeatureState, ProjectFlag } from 'common/types/responses'
+import { FeatureState, ProjectFlag } from 'common/types/responses'
 
 function isNegativeNumberString(str: any) {
   if (typeof Utils.getTypedValue(str) !== 'number') {
@@ -33,10 +33,10 @@ type EditFeatureValueProps = {
   noPermissions: boolean
   multivariate_options: any[]
   environmentVariations: any[]
-  featureState: Partial<FeatureState>
+  featureState: FeatureState
   environmentFlag: any
   projectFlag: ProjectFlag
-  onChange: (featureState: Partial<FeatureState>) => void
+  onChange: (featureState: FeatureState) => void
   removeVariation: (i: number) => void
   updateVariation: (i: number, e: any, environmentVariations: any[]) => void
   addVariation: () => void
@@ -97,11 +97,17 @@ const FeatureValue: FC<EditFeatureValueProps> = ({
 
   const enabledString = isEdit ? 'Enabled' : 'Enabled by default'
   const controlPercentage = Utils.calculateControl(multivariate_options)
-  const valueString = identity
-    ? 'User override'
-    : !!multivariate_options && multivariate_options.length
-    ? `Control Value - ${controlPercentage}%`
-    : `Value`
+
+  const getValueString = () => {
+    if (identity) {
+      return 'User override'
+    }
+    if (multivariate_options && multivariate_options.length) {
+      return `Control Value - ${controlPercentage}%`
+    }
+    return 'Value'
+  }
+  const valueString = getValueString()
 
   const showValue = !(
     !!identity &&
@@ -134,8 +140,9 @@ const FeatureValue: FC<EditFeatureValueProps> = ({
                 </div>
               }
             >
-              {!isEdit &&
-                'This will determine the initial enabled state for all environments. You can edit the this individually for each environment once the feature is created.'}
+              {!isEdit
+                ? 'This will determine the initial enabled state for all environments. You can edit the this individually for each environment once the feature is created.'
+                : ''}
             </Tooltip>
           </FormGroup>
 
