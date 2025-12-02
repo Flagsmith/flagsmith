@@ -1,9 +1,9 @@
 import React, { FC, useEffect } from 'react'
 import { HealthProvider } from 'common/types/responses'
-import PanelSearch from './PanelSearch'
-import Button from './base/forms/Button'
+import PanelSearch from 'components/PanelSearch'
+import Button from 'components/base/forms/Button'
 
-import Icon from './Icon'
+import Icon from 'components/Icon'
 
 import Utils from 'common/utils/utils'
 import {
@@ -12,8 +12,9 @@ import {
   useGetHealthProvidersQuery,
 } from 'common/services/useHealthProvider'
 import { components } from 'react-select'
-import InteractiveDemo from './InteractiveDemo'
-import FeatureHealthProviderDocumentationNote from './feature-health/components/FeatureHealthProviderDocumentationNote'
+import InteractiveDemo from 'components/InteractiveDemo'
+import FeatureHealthProviderDocumentationNote from 'components/feature-health/components/FeatureHealthProviderDocumentationNote'
+import { FeatureHealthProviderName } from 'components/feature-health/feature-health.types'
 
 type EditHealthProviderType = {
   projectId: number
@@ -34,7 +35,10 @@ const CreateHealthProviderForm = ({ projectId }: { projectId: number }) => {
   const [createProvider, { error, isError, isLoading, isSuccess }] =
     useCreateHealthProviderMutation()
 
-  const providers = [{ name: 'Sample' }, { name: 'Grafana' }]
+  const providers = [
+    { name: FeatureHealthProviderName.WEBHOOK },
+    { name: FeatureHealthProviderName.GRAFANA },
+  ]
 
   const providerOptions = providers.map((provider) => ({
     label: provider.name,
