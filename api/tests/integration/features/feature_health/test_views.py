@@ -40,7 +40,7 @@ def test_feature_health_providers__get__expected_response(
     url = reverse("api-v1:projects:feature-health-providers-list", args=[project])
     expected_feature_health_provider_data = admin_client_new.post(
         url,
-        data={"name": "Sample"},
+        data={"name": "Webhook"},
     ).json()
 
     # When
@@ -49,7 +49,7 @@ def test_feature_health_providers__get__expected_response(
     # Then
     assert expected_feature_health_provider_data == {
         "created_by": expected_created_by,
-        "name": "Sample",
+        "name": "Webhook",
         "project": project,
         "webhook_url": mocker.ANY,
     }
@@ -68,7 +68,7 @@ def test_feature_health_providers__delete__expected_response(
     url = reverse("api-v1:projects:feature-health-providers-list", args=[project])
     admin_client_new.post(
         url,
-        data={"name": "Sample"},
+        data={"name": "Webhook"},
     ).json()
 
     # When
@@ -76,7 +76,7 @@ def test_feature_health_providers__delete__expected_response(
     response = admin_client_new.delete(
         reverse(
             "api-v1:projects:feature-health-providers-detail",
-            args=[project, "sample"],
+            args=[project, "Webhook"],
         )
     )
 
@@ -138,7 +138,7 @@ def test_feature_health_events__dismiss__expected_response(
             "environment": None,
             "feature": unhealthy_feature,
             "id": mocker.ANY,
-            "provider_name": "Sample",
+            "provider_name": "Webhook",
             "reason": {
                 "text_blocks": [
                     {"text": f"Manually dismissed by {expected_dismissed_by}"}
@@ -168,7 +168,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
     feature: int,
     project: int,
     feature_name: str,
-    sample_feature_health_provider_webhook_url: str,
+    webhook_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
     mocker: MockerFixture,
@@ -186,7 +186,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
         "status": "unhealthy",
     }
     response = api_client.post(
-        sample_feature_health_provider_webhook_url,
+        webhook_feature_health_provider_webhook_url,
         data=json.dumps(webhook_data),
         content_type="application/json",
     )
@@ -200,7 +200,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
             "created_at": "2023-01-19T09:09:47.325132Z",
             "environment": None,
             "feature": feature,
-            "provider_name": "Sample",
+            "provider_name": "Webhook",
             "reason": None,
             "type": "UNHEALTHY",
         }
@@ -229,7 +229,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
     environment: int,
     feature_name: str,
     environment_name: str,
-    sample_feature_health_provider_webhook_url: str,
+    webhook_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
     mocker: MockerFixture,
@@ -246,7 +246,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
         "status": "unhealthy",
     }
     response = api_client.post(
-        sample_feature_health_provider_webhook_url,
+        webhook_feature_health_provider_webhook_url,
         data=json.dumps(webhook_data),
         content_type="application/json",
     )
@@ -260,7 +260,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
             "created_at": "2023-01-19T09:09:47.325132Z",
             "environment": environment,
             "feature": feature,
-            "provider_name": "Sample",
+            "provider_name": "Webhook",
             "reason": None,
             "type": "UNHEALTHY",
         }
@@ -272,7 +272,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
     unhealthy_feature: int,
     project: int,
     feature_name: str,
-    sample_feature_health_provider_webhook_url: str,
+    webhook_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
     mocker: MockerFixture,
@@ -291,7 +291,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
     }
     with freeze_time(datetime.now() + timedelta(seconds=1)):
         response = api_client.post(
-            sample_feature_health_provider_webhook_url,
+            webhook_feature_health_provider_webhook_url,
             data=json.dumps(webhook_data),
             content_type="application/json",
         )
@@ -305,7 +305,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
             "created_at": "2023-01-19T09:09:48.325132Z",
             "environment": None,
             "feature": unhealthy_feature,
-            "provider_name": "Sample",
+            "provider_name": "Webhook",
             "reason": None,
             "type": "HEALTHY",
         }
@@ -330,14 +330,14 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
 @pytest.mark.parametrize(
     "body", ["invalid", json.dumps({"status": "unhealthy", "feature": "non_existent"})]
 )
-def test_webhook__sample_provider__post__invalid_payload__expected_response(
-    sample_feature_health_provider_webhook_url: str,
+def test_webhook__webhook_provider__post__invalid_payload__expected_response(
+    webhook_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     body: str,
 ) -> None:
     # When
     response = api_client.post(
-        sample_feature_health_provider_webhook_url,
+        webhook_feature_health_provider_webhook_url,
         data=body,
         content_type="application/json",
     )

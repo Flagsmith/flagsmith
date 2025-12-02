@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.203.0](https://github.com/Flagsmith/flagsmith/compare/v2.202.0...v2.203.0) (2025-12-01)
+
+
+### Features
+
+* Add ability to create a change request ignoring conflicts ([#6236](https://github.com/Flagsmith/flagsmith/issues/6236)) ([2381efa](https://github.com/Flagsmith/flagsmith/commit/2381efa78d9128b6dfa57bbb1015840235be3e60))
+* renamed-feature-health-sample-to-webhook ⚠️  ([#6332](https://github.com/Flagsmith/flagsmith/issues/6332)) ([71fcd4b](https://github.com/Flagsmith/flagsmith/commit/71fcd4b6402cf58fbc5f65e7ea462c26c4d4c47a))
+
+
+### Bug Fixes
+
+* dark mode on multi select component ([#6316](https://github.com/Flagsmith/flagsmith/issues/6316)) ([55cfd47](https://github.com/Flagsmith/flagsmith/commit/55cfd470fc01efe79085b7672aafe181b6d7e28e))
+* project-settings-export-import-missing ([#6343](https://github.com/Flagsmith/flagsmith/issues/6343)) ([fc22a05](https://github.com/Flagsmith/flagsmith/commit/fc22a055c10e65358549e6096189237e826c304a))
+* **Segments:** Handle missing project in permissions ([#6338](https://github.com/Flagsmith/flagsmith/issues/6338)) ([fafc41a](https://github.com/Flagsmith/flagsmith/commit/fafc41a5c8324c50667b41bc6fb67f4706b619f0))
+
+
+### Dependency Updates
+
+* bump js-yaml from 4.1.0 to 4.1.1 in /frontend ([#6292](https://github.com/Flagsmith/flagsmith/issues/6292)) ([93fb6c4](https://github.com/Flagsmith/flagsmith/commit/93fb6c4f1a07c794fccfaa860a64898b2102862a))
+* bump licensing 0.2.0 ([#6333](https://github.com/Flagsmith/flagsmith/issues/6333)) ([599caeb](https://github.com/Flagsmith/flagsmith/commit/599caeb7737c1d9f37a6afec8d363c9d50f46ca0))
+* bump node-forge from 1.3.1 to 1.3.2 in /docs ([#6327](https://github.com/Flagsmith/flagsmith/issues/6327)) ([e0bdb66](https://github.com/Flagsmith/flagsmith/commit/e0bdb664963dcb2ea6de71e075d4d8dec52bf624))
+
 ## [2.202.0](https://github.com/Flagsmith/flagsmith/compare/v2.201.3...v2.202.0) (2025-11-19)
 
 
