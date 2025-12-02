@@ -95,7 +95,7 @@ module.exports = {
     'window': true,
     'zE': true,
   },
-  'ignorePatterns': ['server/index.tsx', 'next.config.js', 'babel.config.js'],
+  'ignorePatterns': ['server/index.js', 'next.config.js', 'babel.config.js'],
   'parser': '@typescript-eslint/parser',
   'parserOptions': {
     'ecmaFeatures': {
