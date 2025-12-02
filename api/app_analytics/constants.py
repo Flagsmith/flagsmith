@@ -29,7 +29,9 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "unknown",
         "6.1.0",
     ],
-    "flagsmith-go-sdk": ["unknown"],
+    "flagsmith-go-sdk": ["unknown",
+        "5.0.0",
+    ],
     "flagsmith-java-sdk": ["unknown"],
     "flagsmith-js-sdk": [
         "unknown",
