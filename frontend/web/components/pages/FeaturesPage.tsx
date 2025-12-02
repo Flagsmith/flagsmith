@@ -1,7 +1,6 @@
 import React, { FC, useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useHistory } from 'react-router-dom'
 import CreateFlagModal from 'components/modals/CreateFlag'
-import ProjectStore from 'common/stores/project-store'
 import Permission from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
@@ -16,6 +15,7 @@ import {
 import { useGetFeatureListQuery } from 'common/services/useFeatureList'
 import { useFeatureFilters } from './features/hooks/useFeatureFilters'
 import { useFeatureActions } from './features/hooks/useFeatureActions'
+import { useProjectEnvironments } from './features/hooks/useProjectEnvironments'
 
 type RouteParams = {
   environmentId: string
@@ -27,9 +27,18 @@ const FeaturesPageComponent: FC = () => {
   const history = useHistory()
   const routeContext = useRouteContext()
 
+  // Use new hook to replace ProjectStore
+  const { getEnvironment, getEnvironmentIdFromKey, maxFeaturesAllowed } =
+    useProjectEnvironments(projectId)
+
   const numericEnvironmentId = useMemo(
-    () => ProjectStore.getEnvironmentIdFromKey(environmentId),
-    [environmentId],
+    () => getEnvironmentIdFromKey(environmentId),
+    [getEnvironmentIdFromKey, environmentId],
+  )
+
+  const environment = useMemo(
+    () => getEnvironment(environmentId),
+    [getEnvironment, environmentId],
   )
 
   // Custom hooks for state management
@@ -86,11 +95,11 @@ const FeaturesPageComponent: FC = () => {
       'lastEnv',
       JSON.stringify({
         environmentId,
-        orgId: AccountStore.getOrganisation()?.id,
+        orgId: routeContext.organisationId,
         projectId,
       }),
     )
-  }, [environmentId, projectId])
+  }, [environmentId, projectId, routeContext.organisationId])
 
   // Mark as loaded once data arrives
   useEffect(() => {
@@ -131,11 +140,6 @@ const FeaturesPageComponent: FC = () => {
   )
 
   const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
-  const environment = ProjectStore.getEnvironment(environmentId)
-
-  const maxFeaturesAllowed = routeContext.projectId
-    ? ProjectStore.getMaxFeaturesAllowed(routeContext.projectId)
-    : null
 
   const showInitialLoader =
     (isLoading || !loadedOnce) && (!projectFlags || !projectFlags.length)
@@ -185,6 +189,8 @@ const FeaturesPageComponent: FC = () => {
                   projectId={projectId}
                   environmentId={environmentId}
                   numericEnvironmentId={numericEnvironmentId}
+                  environment={environment}
+                  organisationId={routeContext.organisationId}
                   projectFlags={projectFlags}
                   environmentFlags={environmentFlags}
                   filters={filters}
