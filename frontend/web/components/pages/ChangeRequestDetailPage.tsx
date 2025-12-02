@@ -3,7 +3,7 @@ import OrganisationStore from 'common/stores/organisation-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import FeatureListStore from 'common/stores/feature-list-store'
 import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
-import CreateFeatureModal from 'components/modals/CreateEditFeature'
+import CreateFeatureModal from 'components/modals/CreateFlag'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
 import {

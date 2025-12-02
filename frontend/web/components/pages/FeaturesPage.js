@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import CreateFeatureModal from 'components/modals/CreateEditFeature'
+import CreateFeatureModal from 'components/modals/CreateFlag'
 import TryIt from 'components/TryIt'
 import FeatureRow from 'components/feature-summary/FeatureRow'
 import FeatureListStore from 'common/stores/feature-list-store'

@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useMemo } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
-import CreateFeatureModal from 'components/modals/CreateEditFeature'
+import CreateFeatureModal from 'components/modals/CreateFlag'
 import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
 import { useProtectedTags } from 'common/utils/useProtectedTags'

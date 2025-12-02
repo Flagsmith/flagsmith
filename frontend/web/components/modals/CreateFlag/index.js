@@ -47,11 +47,12 @@ import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabC
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
-import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
 import BetaFlag from 'components/BetaFlag'
 import ProjectProvider from 'common/providers/ProjectProvider'
+import CreateFeature from './tabs/CreateFeature'
+import FeatureLimitAlert from './FeatureLimitAlert'
 
 const Index = class extends Component {
   static displayName = 'CreateFlag'
@@ -92,6 +93,7 @@ const Index = class extends Component {
       externalResource: {},
       externalResources: [],
       featureContentType: {},
+      featureLimitAlert: { percentage: 0 },
       githubId: '',
       hasIntegrationWithGithub: false,
       hasMetadataRequired: false,
@@ -183,12 +185,6 @@ const Index = class extends Component {
 
   componentDidMount = () => {
     setInterceptClose(this.onClosing)
-    if (!this.state.isEdit && !E2E) {
-      this.focusTimeout = setTimeout(() => {
-        this.input.focus()
-        this.focusTimeout = null
-      }, 500)
-    }
     if (Utils.getPlansPermission('METADATA')) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
@@ -1050,11 +1046,6 @@ const Index = class extends Component {
               })
               const isLimitReached = false
 
-              const featureLimitAlert =
-                Utils.calculateRemainingLimitsPercentage(
-                  project.total_features,
-                  project.max_features_allowed,
-                )
               const { featureError, featureWarning } = this.parseError(error)
 
               return (
@@ -1924,17 +1915,96 @@ const Index = class extends Component {
                                   !isEdit ? 'create-feature-tab px-3' : '',
                                 )}
                               >
-                                {featureLimitAlert.percentage &&
-                                  Utils.displayLimitAlert(
-                                    'features',
-                                    featureLimitAlert.percentage,
-                                  )}
-                                {Value(
-                                  error,
-                                  projectAdmin,
-                                  createFeature,
-                                  project.prevent_flag_defaults && !identity,
-                                )}
+                                <FeatureLimitAlert
+                                  projectId={this.props.projectId}
+                                  onChange={(featureLimitAlert) =>
+                                    this.setState({ featureLimitAlert })
+                                  }
+                                />
+                                <CreateFeature
+                                  projectId={this.props.projectId}
+                                  error={error}
+                                  multivariate_options={multivariate_options}
+                                  environmentVariations={environmentVariations}
+                                  featureState={{
+                                    enabled: default_enabled,
+                                    feature_state_value: initial_value,
+                                    multivariate_feature_state_values:
+                                      this.state.identityVariations,
+                                  }}
+                                  environmentFlag={this.props.environmentFlag}
+                                  projectFlag={projectFlag}
+                                  featureContentType={featureContentType}
+                                  identity={identity}
+                                  tags={this.state.tags}
+                                  description={this.state.description}
+                                  is_server_key_only={this.state.is_server_key_only}
+                                  is_archived={this.state.is_archived}
+                                  onChange={(featureState) => {
+                                    const updates = {}
+                                    if (featureState.enabled !== undefined) {
+                                      updates.default_enabled =
+                                        featureState.enabled
+                                    }
+                                    if (
+                                      featureState.feature_state_value !==
+                                      undefined
+                                    ) {
+                                      updates.initial_value =
+                                        featureState.feature_state_value
+                                      updates.valueChanged = true
+                                    }
+                                    if (
+                                      featureState.multivariate_feature_state_values !==
+                                      undefined
+                                    ) {
+                                      updates.identityVariations =
+                                        featureState.multivariate_feature_state_values
+                                      updates.valueChanged = true
+                                    }
+                                    this.setState(updates)
+                                  }}
+                                  removeVariation={this.removeVariation}
+                                  updateVariation={this.updateVariation}
+                                  addVariation={this.addVariation}
+                                  onTagsChange={(tags) =>
+                                    this.setState({ tags, settingsChanged: true })
+                                  }
+                                  onMetadataChange={(metadata) =>
+                                    this.setState({ metadata })
+                                  }
+                                  onDescriptionChange={(description) =>
+                                    this.setState({
+                                      description,
+                                      settingsChanged: true,
+                                    })
+                                  }
+                                  onServerKeyOnlyChange={(is_server_key_only) =>
+                                    this.setState({
+                                      is_server_key_only,
+                                      settingsChanged: true,
+                                    })
+                                  }
+                                  onArchivedChange={(is_archived) =>
+                                    this.setState({
+                                      is_archived,
+                                      settingsChanged: true,
+                                    })
+                                  }
+                                  onHasMetadataRequiredChange={(
+                                    hasMetadataRequired,
+                                  ) =>
+                                    this.setState({
+                                      hasMetadataRequired,
+                                    })
+                                  }
+                                  featureError={
+                                    this.parseError(error).featureError
+                                  }
+                                  featureWarning={
+                                    this.parseError(error).featureWarning
+                                  }
+                                />
                                 <ModalHR
                                   className={`my-4 ${identity ? 'mx-3' : ''}`}
                                 />
@@ -1972,7 +2042,8 @@ const Index = class extends Component {
                                         !name ||
                                         invalid ||
                                         !regexValid ||
-                                        featureLimitAlert.percentage >= 100 ||
+                                        this.state.featureLimitAlert.percentage >=
+                                          100 ||
                                         _hasMetadataRequired
                                       }
                                     >

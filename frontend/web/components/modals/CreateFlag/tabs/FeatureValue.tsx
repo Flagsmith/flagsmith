@@ -43,7 +43,7 @@ type EditFeatureValueProps = {
 }
 
 /* eslint-disable sort-destructure-keys/sort-destructure-keys */
-const EditFeatureValue: FC<EditFeatureValueProps> = ({
+const FeatureValue: FC<EditFeatureValueProps> = ({
   addVariation,
   createFeature,
   environmentFlag,
@@ -258,4 +258,4 @@ const EditFeatureValue: FC<EditFeatureValueProps> = ({
   )
 }
 
-export default EditFeatureValue
+export default FeatureValue

@@ -1,6 +1,7 @@
 import React, { FC } from 'react'
 import { FeatureState, ProjectFlag } from 'common/types/responses'
-import EditFeatureValue from 'components/modals/CreateEditFeature/EditFeatureValue'
+import FeatureValue from 'components/modals/CreateFlag/tabs/FeatureValue'
+import FeatureSettings from 'components/modals/CreateFlag/tabs/FeatureSettings'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import { useHasPermission } from 'common/providers/Permission'
@@ -14,22 +15,28 @@ type CreateFeatureTabProps = {
   environmentFlag: any
   projectFlag: ProjectFlag | null | undefined
   featureContentType: any
+  identity?: string
+  tags: number[]
+  description: string
+  is_server_key_only: boolean
+  is_archived: boolean
   onChange: (featureState: Partial<FeatureState>) => void
   removeVariation: (i: number) => void
   updateVariation: (i: number, e: any, environmentVariations: any[]) => void
   addVariation: () => void
-  Settings: (
-    projectAdmin: boolean,
-    createFeature: boolean,
-    featureContentType: any,
-  ) => JSX.Element
+  onTagsChange: (tags: number[]) => void
+  onMetadataChange: (metadata: any[]) => void
+  onDescriptionChange: (description: string) => void
+  onServerKeyOnlyChange: (is_server_key_only: boolean) => void
+  onArchivedChange: (is_archived: boolean) => void
+  onHasMetadataRequiredChange: (hasMetadataRequired: boolean) => void
   featureError?: string
   featureWarning?: string
 }
 
-const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
-  Settings,
+const CreateFeature: FC<CreateFeatureTabProps> = ({
   addVariation,
+  description,
   environmentFlag,
   environmentVariations,
   error,
@@ -37,11 +44,21 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
   featureError,
   featureState,
   featureWarning,
+  identity,
+  is_archived,
+  is_server_key_only,
   multivariate_options,
+  onArchivedChange,
   onChange,
+  onDescriptionChange,
+  onHasMetadataRequiredChange,
+  onMetadataChange,
+  onServerKeyOnlyChange,
+  onTagsChange,
   projectFlag,
   projectId,
   removeVariation,
+  tags,
   updateVariation,
 }) => {
   const { permission: createFeature } = useHasPermission({
@@ -61,7 +78,7 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
     <>
       <ErrorMessage error={featureError} />
       <WarningMessage warningMessage={featureWarning} />
-      <EditFeatureValue
+      <FeatureValue
         error={error}
         createFeature={createFeature}
         hideValue={false}
@@ -77,9 +94,27 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
         updateVariation={updateVariation}
         addVariation={addVariation}
       />
-      {Settings(projectAdmin, createFeature, featureContentType)}
+      <FeatureSettings
+        projectAdmin={projectAdmin}
+        createFeature={createFeature}
+        featureContentType={featureContentType}
+        identity={identity}
+        isEdit={false}
+        projectId={projectId}
+        projectFlag={projectFlag}
+        tags={tags}
+        description={description}
+        is_server_key_only={is_server_key_only}
+        is_archived={is_archived}
+        onTagsChange={onTagsChange}
+        onMetadataChange={onMetadataChange}
+        onDescriptionChange={onDescriptionChange}
+        onServerKeyOnlyChange={onServerKeyOnlyChange}
+        onArchivedChange={onArchivedChange}
+        onHasMetadataRequiredChange={onHasMetadataRequiredChange}
+      />
     </>
   )
 }
 
-export default CreateFeatureTab
+export default CreateFeature
