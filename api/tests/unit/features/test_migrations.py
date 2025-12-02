@@ -241,3 +241,95 @@ def test_fix_feature_type_migration(migrator):  # type: ignore[no-untyped-def]
     )
     assert NewFeature.objects.get(id=standard_feature.id).type == STANDARD
     assert NewFeature.objects.get(id=mv_feature.id).type == MULTIVARIATE
+
+
+def test_migrate_sample_to_webhook_forward(migrator):  # type: ignore[no-untyped-def]
+    # Given
+    old_state = migrator.apply_initial_migration(
+        ("feature_health", "0002_featurehealthevent_add_external_id_alter_created_at")
+    )
+
+    FeatureHealthProvider = old_state.apps.get_model(
+        "feature_health", "FeatureHealthProvider"
+    )
+    FeatureHealthEvent = old_state.apps.get_model(
+        "feature_health", "FeatureHealthEvent"
+    )
+    Organisation = old_state.apps.get_model("organisations", "Organisation")
+    Project = old_state.apps.get_model("projects", "Project")
+    Feature = old_state.apps.get_model("features", "Feature")
+
+    organisation = Organisation.objects.create(name="Test Org")
+    project = Project.objects.create(name="Test Project", organisation=organisation)
+    feature = Feature.objects.create(name="test_feature", project=project)
+
+    provider = FeatureHealthProvider.objects.create(name="Sample", project=project)
+    event = FeatureHealthEvent.objects.create(
+        feature=feature, type="UNHEALTHY", provider_name="Sample"
+    )
+
+    # When
+    new_state = migrator.apply_tested_migration(
+        ("feature_health", "0003_migrate_sample_to_webhook")
+    )
+
+    NewFeatureHealthProvider = new_state.apps.get_model(
+        "feature_health", "FeatureHealthProvider"
+    )
+    NewFeatureHealthEvent = new_state.apps.get_model(
+        "feature_health", "FeatureHealthEvent"
+    )
+
+    # Then
+    assert NewFeatureHealthProvider.objects.get(id=provider.id).name == "Webhook"
+    assert NewFeatureHealthEvent.objects.get(id=event.id).provider_name == "Webhook"
+    assert not NewFeatureHealthProvider.objects.filter(name="Sample").exists()
+    assert not NewFeatureHealthEvent.objects.filter(provider_name="Sample").exists()
+
+
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
+def test_migrate_sample_to_webhook_reverse(migrator):  # type: ignore[no-untyped-def]
+    # Given
+    old_state = migrator.apply_initial_migration(
+        ("feature_health", "0003_migrate_sample_to_webhook")
+    )
+
+    FeatureHealthProvider = old_state.apps.get_model(
+        "feature_health", "FeatureHealthProvider"
+    )
+    FeatureHealthEvent = old_state.apps.get_model(
+        "feature_health", "FeatureHealthEvent"
+    )
+    Organisation = old_state.apps.get_model("organisations", "Organisation")
+    Project = old_state.apps.get_model("projects", "Project")
+    Feature = old_state.apps.get_model("features", "Feature")
+
+    organisation = Organisation.objects.create(name="Test Org")
+    project = Project.objects.create(name="Test Project", organisation=organisation)
+    feature = Feature.objects.create(name="test_feature_webhook", project=project)
+
+    provider = FeatureHealthProvider.objects.create(name="Webhook", project=project)
+    event = FeatureHealthEvent.objects.create(
+        feature_id=feature.id, type="UNHEALTHY", provider_name="Webhook"
+    )
+
+    # When
+    new_state = migrator.apply_tested_migration(
+        ("feature_health", "0002_featurehealthevent_add_external_id_alter_created_at")
+    )
+
+    NewFeatureHealthProvider = new_state.apps.get_model(
+        "feature_health", "FeatureHealthProvider"
+    )
+    NewFeatureHealthEvent = new_state.apps.get_model(
+        "feature_health", "FeatureHealthEvent"
+    )
+
+    # Then
+    assert NewFeatureHealthProvider.objects.get(id=provider.id).name == "Sample"
+    assert NewFeatureHealthEvent.objects.get(id=event.id).provider_name == "Sample"
+    assert not NewFeatureHealthProvider.objects.filter(name="Webhook").exists()
+    assert not NewFeatureHealthEvent.objects.filter(provider_name="Webhook").exists()

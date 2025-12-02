@@ -4,11 +4,11 @@ from typing_extensions import TypedDict
 
 from features.feature_health.types import FeatureHealthEventReason
 
-SampleEventStatus: typing.TypeAlias = typing.Literal["healthy", "unhealthy"]
+WebhookEventStatus: typing.TypeAlias = typing.Literal["healthy", "unhealthy"]
 
 
-class SampleEvent(TypedDict):
+class WebhookEvent(TypedDict):
     environment: typing.NotRequired[str]
     feature: str
-    status: SampleEventStatus
+    status: WebhookEventStatus
     reason: typing.NotRequired[FeatureHealthEventReason]

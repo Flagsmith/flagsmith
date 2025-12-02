@@ -5,6 +5,7 @@ import BreadcrumbSeparator from 'components/BreadcrumbSeparator'
 import classNames from 'classnames'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
+import { useGetOrganisationQuery } from 'common/services/useOrganisation'
 
 type SelectOrgAndProjectType = {
   activeProject: Project | undefined
@@ -17,6 +18,12 @@ const SelectOrgAndProject: FC<SelectOrgAndProjectType> = ({
 }) => {
   const isOrganisationSelect = document.location.pathname === '/organisations'
   const isCreateOrganisation = document.location.pathname === '/create'
+
+  const organisationId = AccountStore.getOrganisation()?.id
+  const { data: organisation } = useGetOrganisationQuery(
+    { id: organisationId as number },
+    { skip: !organisationId },
+  )
 
   return (
     <Row className='gap-2'>
@@ -50,7 +57,9 @@ const SelectOrgAndProject: FC<SelectOrgAndProjectType> = ({
                 })}
                 to={Utils.getOrganisationHomePage()}
               >
-                <div>{AccountStore.getOrganisation()?.name}</div>
+                <div>
+                  {organisation?.name || AccountStore.getOrganisation()?.name}
+                </div>
               </NavLink>
             </BreadcrumbSeparator>
           </div>

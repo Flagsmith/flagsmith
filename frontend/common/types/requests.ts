@@ -26,6 +26,24 @@ import {
 } from './responses'
 import { UtmsType } from './utms'
 
+export type UpdateProjectBody = {
+  name: string
+  hide_disabled_flags?: boolean
+  prevent_flag_defaults?: boolean
+  enable_realtime_updates?: boolean
+  minimum_change_request_approvals?: number | null
+  stale_flags_limit_days?: number | null
+  only_allow_lower_case_feature_names?: boolean
+  feature_name_regex?: string | null
+}
+
+export type UpdateOrganisationBody = {
+  name: string
+  force_2fa?: boolean
+  restrict_project_create_to_admin?: boolean
+  webhook_notification_email?: string | null
+}
+
 export type PagedRequest<T> = T & {
   page?: number
   page_size?: number
@@ -140,6 +158,9 @@ export type Req = {
     environments?: string
   }>
   getOrganisations: {}
+  getOrganisation: { id: number }
+  updateOrganisation: { id: number; body: UpdateOrganisationBody }
+  deleteOrganisation: { id: number }
   uploadOrganisationLicence: {
     id: number
     body: {
@@ -498,6 +519,7 @@ export type Req = {
     live_from_after?: string
     committed?: boolean
   }>
+  updateChangeRequest: ChangeRequest
   getGroupSummaries: {
     orgId: string
   }
@@ -579,6 +601,10 @@ export type Req = {
     id: string
   }
   getProject: { id: string }
+  updateProject: { id: string; body: UpdateProjectBody }
+  deleteProject: { id: string }
+  migrateProject: { id: string }
+  getProjectPermissions: { projectId: string }
   createGroup: {
     orgId: string
     data: Omit<UserGroup, 'id' | 'users'>

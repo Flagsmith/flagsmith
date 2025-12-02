@@ -207,6 +207,7 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
     auth_type = serializers.CharField(read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     uuid = serializers.UUIDField(read_only=True)
+    pylon_email_signature = serializers.CharField(read_only=True)
 
     def to_representation(self, instance: FFAdminUser) -> dict[str, Any]:
         rep = super().to_representation(instance)
@@ -229,6 +230,7 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
             "is_superuser",
             "date_joined",
             "uuid",
+            "pylon_email_signature",
         )
 
 
