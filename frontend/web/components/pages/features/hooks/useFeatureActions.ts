@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
 import { useRemoveProjectFlagMutation } from 'common/services/useProjectFlag'
 import { useUpdateFeatureStateMutation } from 'common/services/useFeatureList'
+import type { ProjectFlag } from 'common/types/responses'
+import type { EnvironmentFlagsMap } from 'components/pages/features/types'
 
 /**
  * Custom hook for feature actions (remove, toggle) with toast notifications
@@ -17,7 +19,7 @@ export function useFeatureActions(projectId: string, environmentId: string) {
   }, [])
 
   const removeFlag = useCallback(
-    async (projectFlag: any) => {
+    async (projectFlag: ProjectFlag) => {
       try {
         await removeProjectFlag({
           id: projectFlag.id,
@@ -33,7 +35,7 @@ export function useFeatureActions(projectId: string, environmentId: string) {
   )
 
   const toggleFlag = useCallback(
-    async (flag: any, environmentFlags: any) => {
+    async (flag: ProjectFlag, environmentFlags: EnvironmentFlagsMap) => {
       const environmentFlag = environmentFlags[flag.id]
       if (!environmentFlag) return
 

@@ -1,9 +1,11 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { isEqual } from 'lodash'
+import type { History } from 'history'
 import type { FilterState } from 'components/pages/features/components/FeaturesTableFilters'
+import type { UrlParams } from 'components/pages/features/types'
 import Format from 'common/utils/format'
 
-const getFiltersFromParams = (params: any) => {
+const getFiltersFromParams = (params: UrlParams) => {
   return {
     group_owners:
       typeof params.group_owners === 'string'
@@ -36,7 +38,7 @@ const getFiltersFromParams = (params: any) => {
   }
 }
 
-export function useFeatureFilters(history: any) {
+export function useFeatureFilters(history: History) {
   // Initialize filters from URL params
   const initialFilters = useMemo(
     () => getFiltersFromParams(Utils.fromParam()),
