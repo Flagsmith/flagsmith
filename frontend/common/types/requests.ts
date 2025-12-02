@@ -73,7 +73,7 @@ export const freePeriods = [
   { label: 'Last 30 days', value: undefined },
 ]
 export type CreateVersionFeatureState = {
-  environmentId: number
+  environmentId: string
   featureId: number
   sha: string
   featureState: FeatureState
@@ -129,33 +129,33 @@ export interface PipelineStageRequest {
 
 export type Req = {
   getFeatureCodeReferences: {
-    projectId: number | string
-    featureId: number | string
+    projectId: number
+    featureId: number
   }
   getSegments: PagedRequest<{
     q?: string
-    projectId: number | string
+    projectId: number
     identity?: number
     include_feature_specific?: boolean
   }>
-  deleteSegment: { projectId: number | string; id: number }
+  deleteSegment: { projectId: number; id: number }
   updateSegment: {
-    projectId: number | string
+    projectId: number
     segment: Segment
   }
   createSegment: {
-    projectId: number | string
+    projectId: number
     segment: Omit<Segment, 'id' | 'uuid' | 'project'>
   }
   cloneSegment: {
-    projectId: number | string
+    projectId: number
     segmentId: number
     name: string
   }
   getAuditLogs: PagedRequest<{
     search?: string
-    project: string
-    environments?: string
+    project: number
+    environments?: number
   }>
   getOrganisations: {}
   getOrganisation: { id: number }
@@ -169,14 +169,14 @@ export type Req = {
     }
   }
   getProjects: {
-    organisationId: string
+    organisationId: number
   }
   getEnvironments: {
-    projectId: string
+    projectId: number
   }
   getOrganisationUsage: {
-    organisationId: string
-    projectId?: string
+    organisationId: number
+    projectId?: number
     environmentId?: string
     billing_period?:
       | 'current_billing_period'
@@ -223,24 +223,24 @@ export type Req = {
     pages?: (string | undefined)[] // this is needed for edge since it returns no paging info other than a key
     isEdge: boolean
   }>
-  getPermission: { id: string; level: PermissionLevel }
+  getPermission: { id: number; level: PermissionLevel }
   getAvailablePermissions: { level: PermissionLevel }
-  getTag: { id: string }
-  getHealthEvents: { projectId: number | string }
-  dismissHealthEvent: { projectId: number | string; eventId: number }
+  getTag: { id: number }
+  getHealthEvents: { projectId: number }
+  dismissHealthEvent: { projectId: number; eventId: number }
   getHealthProviders: { projectId: number }
   createHealthProvider: { projectId: number; name: string }
   deleteHealthProvider: { projectId: number; name: string }
-  updateTag: { projectId: string; tag: Tag }
+  updateTag: { projectId: number; tag: Tag }
   deleteTag: {
     id: number
-    projectId: string
+    projectId: number
   }
   getTags: {
-    projectId: string
+    projectId: number
   }
-  createTag: { projectId: string; tag: Omit<Tag, 'id'> }
-  getSegment: { projectId: string; id: string }
+  createTag: { projectId: number; tag: Omit<Tag, 'id'> }
+  getSegment: { projectId: number; id: number }
   updateAccount: Account
   deleteAccount: {
     current_password: string
@@ -248,26 +248,26 @@ export type Req = {
   }
   updateUserEmail: { current_password: string; new_email: string }
   createGroupAdmin: {
-    group: number | string
-    user: number | string
-    orgId: number | string
+    group: number
+    user: number
+    orgId: number
   }
   deleteGroupAdmin: {
-    orgId: number | string
-    group: number | string
-    user: number | string
+    orgId: number
+    group: number
+    user: number
   }
   getGroups: PagedRequest<{
     orgId: number
   }>
-  deleteGroup: { id: number | string; orgId: number | string }
-  getGroup: { id: string; orgId: string }
+  deleteGroup: { id: number; orgId: number }
+  getGroup: { id: number; orgId: number }
   getMyGroups: PagedRequest<{
-    orgId: string
+    orgId: number
   }>
   createSegmentOverride: {
     environmentId: string
-    featureId: string
+    featureId: number
     enabled: boolean
     multivariate_feature_state_values: MultivariateOption[] | null
     feature_segment: {
@@ -300,7 +300,7 @@ export type Req = {
     organisationId: number
     inviteId: number
   }
-  getRole: { organisation_id: string; role_id: number }
+  getRole: { organisation_id: number; role_id: number }
   updateRole: {
     organisation_id: number
     role_id: number
@@ -336,16 +336,16 @@ export type Req = {
   deleteRolePermission: { organisation_id: number; role_id: number }
 
   getIdentityFeatureStatesAll: {
-    environment: string
+    environment: number
     user: string
   }
   getProjectFlags: {
-    project: string
+    project: number
     environmentId?: string
     tags?: string[]
     is_archived?: boolean
   }
-  getProjectFlag: { project: string | number; id: string }
+  getProjectFlag: { project: number; id: number }
   getRolesPermissionUsers: { organisation_id: number; role_id: number }
   deleteRolesPermissionUsers: {
     organisation_id: number
@@ -377,14 +377,14 @@ export type Req = {
     organisation_id: number
     role_id: number
   }
-  getGetSubscriptionMetadata: { id: string }
-  getEnvironment: { id: string }
-  getSubscriptionMetadata: { id: string }
-  getMetadataModelFields: { organisation_id: string }
-  getMetadataModelField: { organisation_id: string; id: string }
+  getGetSubscriptionMetadata: { id: number }
+  getEnvironment: { id: number }
+  getSubscriptionMetadata: { id: number }
+  getMetadataModelFields: { organisation_id: number }
+  getMetadataModelField: { organisation_id: number; id: number }
   updateMetadataModelField: {
-    organisation_id: string
-    id: string
+    organisation_id: number
+    id: number
     body: {
       content_type: number
       field: number
@@ -394,31 +394,31 @@ export type Req = {
       }[]
     }
   }
-  deleteMetadataModelField: { organisation_id: string; id: string | number }
+  deleteMetadataModelField: { organisation_id: number; id: number }
   createMetadataModelField: {
-    organisation_id: string
+    organisation_id: number
     body: {
-      content_type: number | string
-      field: string | number
+      content_type: number
+      field: number
     }
   }
-  getMetadataField: { organisation_id: string }
-  getMetadataList: { organisation: string }
+  getMetadataField: { organisation_id: number }
+  getMetadataList: { organisation: number }
   updateMetadataField: {
-    id: string
+    id: number
     body: {
       name: string
       type: string
       description: string
-      organisation: string
+      organisation: number
     }
   }
-  deleteMetadataField: { id: string }
+  deleteMetadataField: { id: number }
   createMetadataField: {
     body: {
       description: string
       name: string
-      organisation: string
+      organisation: number
       type: string
     }
   }
@@ -435,7 +435,7 @@ export type Req = {
   }
   getRolesMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
   createLaunchDarklyProjectImport: {
-    project_id: string
+    project_id: number
     body: {
       project_key: string
       token: string
@@ -443,38 +443,38 @@ export type Req = {
   }
   createFeatureExport: {
     environment_id: string
-    tag_ids?: (number | string)[]
+    tag_ids?: number[]
   }
   getFeatureExport: {
-    id: string
+    id: number
   }
   getFeatureExports: {
-    projectId: string
+    projectId: number
   }
   createFlagsmithProjectImport: {
-    environment_id: number | string
+    environment_id: string
     strategy: ImportStrategy
     file: File
   }
   getFeatureImports: {
-    projectId: string
+    projectId: number
   }
-  getLaunchDarklyProjectImport: { project_id: string; import_id: string }
-  getLaunchDarklyProjectsImport: { project_id: string }
+  getLaunchDarklyProjectImport: { project_id: number; import_id: number }
+  getLaunchDarklyProjectsImport: { project_id: number }
   getUserWithRoles: { org_id: number; user_id: number }
   deleteUserWithRole: { org_id: number; user_id: number; role_id: number }
   getGroupWithRole: { org_id: number; group_id: number }
   deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
   createAndSetFeatureVersion: {
     projectId: number
-    environmentId: number
+    environmentId: string
     featureId: number
     skipPublish?: boolean
     featureStates: FeatureState[]
     liveFrom?: string
   }
   createFeatureVersion: {
-    environmentId: number
+    environmentId: string
     featureId: number
     live_from?: string
     feature_states_to_create: Omit<FeatureState, 'id'>[]
@@ -484,7 +484,7 @@ export type Req = {
   }
   publishFeatureVersion: {
     sha: string
-    environmentId: number
+    environmentId: string
     featureId: number
   }
   createVersionFeatureState: CreateVersionFeatureState
@@ -495,7 +495,7 @@ export type Req = {
   }
   getVersionFeatureState: {
     sha: string
-    environmentId: number
+    environmentId: string
     featureId: number
   }
   updateSegmentPriorities: { id: number; priority: number }[]
@@ -521,47 +521,47 @@ export type Req = {
   }>
   updateChangeRequest: ChangeRequest
   getGroupSummaries: {
-    orgId: string
+    orgId: number
   }
-  getSupportedContentType: { organisation_id: string }
-  getExternalResources: { project_id: string; feature_id: string }
+  getSupportedContentType: { organisation_id: number }
+  getExternalResources: { project_id: number; feature_id: number }
   deleteExternalResource: {
-    project_id: string
-    feature_id: string
+    project_id: number
+    feature_id: number
     external_resource_id: string
   }
   createExternalResource: {
-    project_id: string
-    feature_id: string
+    project_id: number
+    feature_id: number
     body: ExternalResource
   }
 
   getGithubIntegration: {
-    organisation_id: string
-    id?: string
+    organisation_id: number
+    id?: number
   }
   updateGithubIntegration: {
-    organisation_id: string
-    github_integration_id: string
+    organisation_id: number
+    github_integration_id: number
   }
   deleteGithubIntegration: {
-    organisation_id: string
-    github_integration_id: string
+    organisation_id: number
+    github_integration_id: number
   }
   createGithubIntegration: {
-    organisation_id: string
+    organisation_id: number
     body: {
       installation_id: string
     }
   }
   getGithubRepositories: {
-    organisation_id: string
-    github_id: string
+    organisation_id: number
+    github_id: number
   }
   updateGithubRepository: {
-    organisation_id: string
-    github_id: string
-    id: string
+    organisation_id: number
+    github_id: number
+    id: number
     body: {
       project: number
       repository_name: string
@@ -570,26 +570,26 @@ export type Req = {
     }
   }
   deleteGithubRepository: {
-    organisation_id: string
-    github_id: string
-    id: string
+    organisation_id: number
+    github_id: number
+    id: number
   }
   createGithubRepository: {
-    organisation_id: string
-    github_id: string
+    organisation_id: number
+    github_id: number
     body: {
-      project: string
+      project: number
       repository_name: string
       repository_owner: string
     }
   }
   getGithubResources: PagedRequest<{
-    organisation_id: string
+    organisation_id: number
     repo_name: string
     repo_owner: string
     github_resource: string
   }>
-  getGithubRepos: { installation_id: string; organisation_id: string }
+  getGithubRepos: { installation_id: string; organisation_id: number }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }
   createServersideEnvironmentKeys: {
@@ -597,31 +597,31 @@ export type Req = {
     data: { name: string }
   }
   getAuditLogItem: {
-    projectId: string
+    projectId: number
     id: string
   }
-  getProject: { id: string }
-  updateProject: { id: string; body: UpdateProjectBody }
-  deleteProject: { id: string }
-  migrateProject: { id: string }
-  getProjectPermissions: { projectId: string }
+  getProject: { id: number }
+  updateProject: { id: number; body: UpdateProjectBody }
+  deleteProject: { id: number }
+  migrateProject: { id: number }
+  getProjectPermissions: { projectId: number }
   createGroup: {
-    orgId: string
+    orgId: number
     data: Omit<UserGroup, 'id' | 'users'>
     users: UserGroup['users']
     usersToAddAdmin: number[] | null
   }
-  getUserGroupPermission: { project_id: string }
+  getUserGroupPermission: { project_id: number }
   updateProjectFlag: {
-    project_id: string | number
-    feature_id: string | number
+    project_id: number
+    feature_id: number
     body: ProjectFlag
   }
   createProjectFlag: {
-    project_id: string | number
+    project_id: number
     body: ProjectFlag
   }
-  updateEnvironment: { id: string; body: Environment }
+  updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
     environment_id: string
     identity_id: string
@@ -631,7 +631,7 @@ export type Req = {
     }
   }
   updateGroup: Req['createGroup'] & {
-    orgId: string
+    orgId: number
     data: UserGroup
     users: UserGroup['users']
 
@@ -650,7 +650,7 @@ export type Req = {
     environment?: number
     feature?: number
   }
-  getFeatureSegment: { id: string }
+  getFeatureSegment: { id: number }
   getSamlConfiguration: { name: string }
   getSamlConfigurations: { organisation_id: number }
   getSamlConfigurationMetadata: { name: string }
@@ -679,33 +679,33 @@ export type Req = {
     data: Identity
   }
   getProjectChangeRequests: PagedRequest<{
-    project_id: string
-    segment_id?: string
+    project_id: number
+    segment_id?: number
     live_from_after?: string
     committed?: boolean
   }>
-  getProjectChangeRequest: { project_id: string; id: string }
+  getProjectChangeRequest: { project_id: number; id: string }
   updateProjectChangeRequest: {
     data: ProjectChangeRequest
-    project_id: string
+    project_id: number
   }
   createProjectChangeRequest: {
     data: WithoutId<ProjectChangeRequest>
-    project_id: string
+    project_id: number
   }
   actionProjectChangeRequest: {
     actionType: 'approve' | 'commit'
-    project_id: string
+    project_id: number
     id: string
   }
-  deleteProjectChangeRequest: { project_id: string; id: string }
+  deleteProjectChangeRequest: { project_id: number; id: string }
   createAuditLogWebhooks: {
-    organisationId: string
+    organisationId: number
     data: Omit<Webhook, 'id' | 'created_at' | 'updated_at'>
   }
-  getAuditLogWebhooks: { organisationId: string }
-  updateAuditLogWebhooks: { organisationId: string; data: Webhook }
-  deleteAuditLogWebhook: { organisationId: string; id: number }
+  getAuditLogWebhooks: { organisationId: number }
+  updateAuditLogWebhooks: { organisationId: number; data: Webhook }
+  deleteAuditLogWebhook: { organisationId: number; id: number }
   createIdentityTrait: {
     use_edge_identities: boolean
     environmentId: string
@@ -732,18 +732,18 @@ export type Req = {
   getIdentitySegments: PagedRequest<{
     q?: string
     identity: string
-    projectId: string
+    projectId: number
   }>
   getConversionEvents: PagedRequest<{ q?: string; environment_id: string }>
   getSplitTest: PagedRequest<{
-    conversion_event_type_id: string
+    conversion_event_type_id: number
   }>
   testWebhook: {
     webhookUrl: string
     secret?: string
     scope: {
       type: 'environment' | 'organisation'
-      id: string
+      id: number
     }
   }
   register: {
@@ -757,13 +757,13 @@ export type Req = {
   }
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
-  getEnvironmentMetrics: { id: string }
+  getEnvironmentMetrics: { id: number }
   getUserEnvironmentPermissions: {
     environmentId: string
-    userId: string
+    userId: number
   }
   getUserPermissions: {
-    id?: string
+    id?: number
     userId: number | undefined
     level: PermissionLevel
   }
@@ -809,14 +809,14 @@ export type Req = {
     name: string
   }
   getFeatureAnalytics: {
-    project_id: string
-    feature_id: string
+    project_id: number
+    feature_id: number
     period: number
     environment_ids: string[]
   }
   getEnvironmentAnalytics: {
-    project_id: string
-    feature_id: string
+    project_id: number
+    feature_id: number
     period: number
     environment_id: string
   }

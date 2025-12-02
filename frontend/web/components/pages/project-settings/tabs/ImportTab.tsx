@@ -3,7 +3,7 @@ import ImportPage from 'components/import-export/ImportPage'
 
 type ImportTabProps = {
   projectName: string
-  projectId: string
+  projectId: number
 }
 
 export const ImportTab = ({ projectId, projectName }: ImportTabProps) => {

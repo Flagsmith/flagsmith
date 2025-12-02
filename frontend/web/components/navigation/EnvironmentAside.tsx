@@ -1,4 +1,4 @@
-import React, { ComponentProps, FC, useEffect, useState } from 'react'
+import React, { ComponentProps, FC } from 'react'
 import ProjectStore from 'common/stores/project-store'
 import Utils from 'common/utils/utils'
 import { Environment } from 'common/types/responses'
@@ -23,7 +23,7 @@ import OverflowNav from './OverflowNav'
 
 type HomeAsideType = {
   environmentId: string
-  projectId: string
+  projectId: number
 }
 
 type CustomOptionProps = ComponentProps<typeof components.Option> & {
@@ -132,10 +132,7 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
     <>
       <OrganisationProvider>
         {() => (
-          <ProjectProvider
-            id={parseInt(projectId?.toString())}
-            onSave={onProjectSave}
-          >
+          <ProjectProvider id={projectId} onSave={onProjectSave}>
             {({}) => {
               const createEnvironmentButton = (
                 <Permission

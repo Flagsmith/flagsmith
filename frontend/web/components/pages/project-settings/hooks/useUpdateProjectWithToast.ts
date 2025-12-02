@@ -14,13 +14,13 @@ export const useUpdateProjectWithToast = () => {
   const updateWithToast = useCallback(
     async (
       body: UpdateProjectBody,
-      projectId: string | number,
+      projectId: number,
       options?: UpdateProjectOptions,
     ) => {
       try {
         await updateProject({
           body,
-          id: String(projectId),
+          id: projectId,
         }).unwrap()
         toast(options?.successMessage || 'Project Saved')
         // Refresh OrganisationStore to update navbar and other components

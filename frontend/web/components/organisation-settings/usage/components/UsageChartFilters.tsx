@@ -4,7 +4,7 @@ import EnvironmentFilter from 'components/EnvironmentFilter'
 import { billingPeriods, freePeriods, Req } from 'common/types/requests'
 
 export interface UsageChartFiltersProps {
-  organisationId: string
+  organisationId: number
   project: string | undefined
   setProject: (project: string | undefined) => void
   environment: string | undefined
@@ -40,7 +40,7 @@ const UsageChartFilters: FC<UsageChartFiltersProps> = ({
         <label>Project</label>
         <ProjectFilter
           showAll
-          organisationId={parseInt(organisationId)}
+          organisationId={organisationId}
           onChange={setProject}
           value={project}
         />

@@ -6,7 +6,7 @@ import { getExtraMetricsData } from './constants'
 
 interface EnvironmentMetricsListProps {
   environmentApiKey: string
-  projectId: string
+  projectId: number
   forceRefetch?: boolean
 }
 

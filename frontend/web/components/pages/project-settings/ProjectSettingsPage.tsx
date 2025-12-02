@@ -32,9 +32,9 @@ const ProjectSettingsPage = () => {
     error,
     isLoading,
     isUninitialized,
-  } = useGetProjectQuery({ id: String(projectId) }, { skip: !projectId })
+  } = useGetProjectQuery({ id: projectId! }, { skip: !projectId })
   const { data: environments } = useGetEnvironmentsQuery(
-    { projectId: String(projectId) },
+    { projectId: projectId! },
     { skip: !projectId },
   )
 

@@ -10,9 +10,9 @@ import AppActions from 'common/dispatcher/app-actions'
 
 type ExternalResourcesLinkTabType = {
   githubId: string
-  organisationId: string
+  organisationId: number
   featureId: string
-  projectId: string
+  projectId: number
   environmentId: string
 }
 
@@ -60,7 +60,7 @@ const ExternalResourcesLinkTab: FC<ExternalResourcesLinkTabType> = ({
       project_id: projectId,
     }).then(() => {
       toast('External Resource Added')
-      AppActions.refreshFeatures(parseInt(projectId), environmentId)
+      AppActions.refreshFeatures(projectId, environmentId)
     })
   }
   return (
