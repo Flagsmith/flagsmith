@@ -49,6 +49,15 @@ def _check_workflow_not_enabled(environment: Environment) -> None:
     - If null/omitted, segment is appended to end
     - Use specific priority value to reorder
     """,
+    manual_parameters=[
+        openapi.Parameter(
+            "environment_key",
+            openapi.IN_PATH,
+            description="The environment API key",
+            type=openapi.TYPE_STRING,
+            required=True,
+        )
+    ],
     request_body=UpdateFlagSerializer,
     responses={
         204: openapi.Response(
@@ -59,8 +68,8 @@ def _check_workflow_not_enabled(environment: Environment) -> None:
 )  # type: ignore[misc]
 @api_view(http_method_names=["POST"])
 @permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])
-def update_flag_v1(request: Request, environment_id: int) -> Response:
-    environment = Environment.objects.get(id=environment_id)
+def update_flag_v1(request: Request, environment_key: str) -> Response:
+    environment = Environment.objects.get(api_key=environment_key)
     _check_workflow_not_enabled(environment)
 
     serializer = UpdateFlagSerializer(
@@ -108,6 +117,15 @@ def update_flag_v1(request: Request, environment_id: int) -> Response:
     - Duplicate segment_id values are not allowed
 
     """,
+    manual_parameters=[
+        openapi.Parameter(
+            "environment_key",
+            openapi.IN_PATH,
+            description="The environment API key",
+            type=openapi.TYPE_STRING,
+            required=True,
+        )
+    ],
     request_body=UpdateFlagV2Serializer,
     responses={
         204: openapi.Response(
@@ -118,8 +136,8 @@ def update_flag_v1(request: Request, environment_id: int) -> Response:
 )  # type: ignore[misc]
 @api_view(http_method_names=["POST"])
 @permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])
-def update_flag_v2(request: Request, environment_id: int) -> Response:
-    environment = Environment.objects.get(id=environment_id)
+def update_flag_v2(request: Request, environment_key: str) -> Response:
+    environment = Environment.objects.get(api_key=environment_key)
     _check_workflow_not_enabled(environment)
 
     serializer = UpdateFlagV2Serializer(

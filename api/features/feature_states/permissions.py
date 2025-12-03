@@ -8,9 +8,9 @@ from environments.models import Environment
 
 class EnvironmentUpdateFeatureStatePermission(BasePermission):
     def has_permission(self, request: Request, view: APIView) -> bool:
-        environment_id = view.kwargs.get("environment_id")
+        environment_key = view.kwargs.get("environment_key")
         try:
-            environment = Environment.objects.get(id=environment_id)
+            environment = Environment.objects.get(api_key=environment_key)
         except Environment.DoesNotExist:
             return False
 

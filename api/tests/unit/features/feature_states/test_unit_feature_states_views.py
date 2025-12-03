@@ -44,7 +44,7 @@ def test_update_flag_by_name(
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
 
     data = {
@@ -83,7 +83,7 @@ def test_update_flag_by_id(
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
 
     data = {
@@ -122,7 +122,7 @@ def test_update_flag_error_when_both_name_and_id_provided(
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
 
     # Providing both name and ID (even if they match the same feature)
@@ -164,7 +164,7 @@ def test_update_flag_error_when_both_name_and_id_provided_for_different_features
 
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
 
     # Providing both name and ID for DIFFERENT features (worst case)
@@ -199,7 +199,7 @@ def test_update_flag_error_when_neither_name_nor_id_provided(
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
 
     # Providing empty feature object
@@ -233,7 +233,7 @@ def test_update_flag_error_when_feature_not_found_by_name(
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
 
     data = {
@@ -265,7 +265,7 @@ def test_update_flag_error_when_feature_not_found_by_id(
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
 
     data = {
@@ -304,7 +304,7 @@ def test_update_flag_segment_override_by_name(
 
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
 
     data = {
@@ -362,7 +362,7 @@ def test_update_flag_segment_override_creates_feature_segment_if_not_exists(
 
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
 
     data = {
@@ -428,7 +428,7 @@ def test_update_feature_states_creates_new_segment_overrides(
 
     url = reverse(
         "api-experiments:update-flag-v2",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
 
     # Batch update with environment default + 2 new segment overrides
@@ -498,7 +498,7 @@ def test_update_feature_states_environment_default_only(
     with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
     url = reverse(
         "api-experiments:update-flag-v2",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
 
     # Test with just environment default (no segment overrides)
@@ -543,7 +543,7 @@ def test_update_feature_states_rejects_duplicate_segment_ids(
 
     url = reverse(
         "api-experiments:update-flag-v2",
-        kwargs={"environment_id": environment.id},
+        kwargs={"environment_key": environment.api_key},
     )
 
     # Request with duplicate segment_id
@@ -610,7 +610,7 @@ def test_update_existing_segment_override_with_priority_v1(
 
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
 
     # When - Update the same segment override with new priority
@@ -673,7 +673,7 @@ def test_update_existing_segment_override_with_priority_v2(
     # When - Update the existing segment override using V2 endpoint
     v2_url = reverse(
         "api-experiments:update-flag-v2",
-        kwargs={"environment_id": environment_.id},
+        kwargs={"environment_key": environment_.api_key},
     )
     update_data = {
         "feature": {"name": feature.name},
@@ -722,7 +722,7 @@ def test_update_flag_v1_returns_403_when_workflow_enabled(
 
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment.id},
+        kwargs={"environment_key": environment.api_key},
     )
 
     data = {
@@ -754,7 +754,7 @@ def test_update_flag_v2_returns_403_when_workflow_enabled(
 
     url = reverse(
         "api-experiments:update-flag-v2",
-        kwargs={"environment_id": environment.id},
+        kwargs={"environment_key": environment.api_key},
     )
 
     data = {
@@ -807,7 +807,7 @@ def test_update_existing_segment_override_v2_versioning(
 
     url = reverse(
         "api-experiments:update-flag-v2",
-        kwargs={"environment_id": environment_v2_versioning.id},
+        kwargs={"environment_key": environment_v2_versioning.api_key},
     )
 
     # When - Update the existing segment override
@@ -857,7 +857,7 @@ def test_update_flag_v1_returns_403_without_permission(
     # Given - no permissions granted
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": environment.id},
+        kwargs={"environment_key": environment.api_key},
     )
 
     data = {
@@ -883,7 +883,7 @@ def test_update_flag_v2_returns_403_without_permission(
     # Given - no permissions granted
     url = reverse(
         "api-experiments:update-flag-v2",
-        kwargs={"environment_id": environment.id},
+        kwargs={"environment_key": environment.api_key},
     )
 
     data = {
@@ -909,7 +909,7 @@ def test_update_flag_v1_returns_403_for_nonexistent_environment(
     # Given
     url = reverse(
         "api-experiments:update-flag-v1",
-        kwargs={"environment_id": 999999},
+        kwargs={"environment_key": "nonexistent_key"},
     )
 
     data = {
