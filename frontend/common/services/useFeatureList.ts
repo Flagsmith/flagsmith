@@ -102,36 +102,6 @@ export const featureListService = service
           { id: 'LIST', type: 'FeatureState' },
           { id: 'METRICS', type: 'Environment' },
         ],
-        async onQueryStarted(
-          { body, environmentId, stateId },
-          { dispatch, queryFulfilled },
-        ) {
-          const patches: { undo: () => void }[] = []
-
-          patches.push(
-            dispatch(
-              featureListService.util.updateQueryData(
-                'getFeatureList',
-                (args: Req['getFeatureList']) =>
-                  args.environmentId === environmentId,
-                (draft) => {
-                  const state = Object.values(draft.environmentStates).find(
-                    (s) => s.id === stateId,
-                  )
-                  if (state) {
-                    Object.assign(state, body)
-                  }
-                },
-              ),
-            ),
-          )
-
-          try {
-            await queryFulfilled
-          } catch (error) {
-            patches.forEach((patch) => patch.undo())
-          }
-        },
         query: (query: Req['updateFeatureState']) => ({
           body: query.body,
           method: 'PUT',
