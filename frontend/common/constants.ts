@@ -242,7 +242,6 @@ const Constants = {
       'React Native': 'javascript',
     },
   },
-  FEATURES_PAGE_SIZE: 50,
   colours: {
     primary: '#6837fc',
     white: '#ffffff',
@@ -451,7 +450,6 @@ const Constants = {
     SETTINGS: 'settings',
     VALUE: 'value',
   },
-
   forms: {
     maxLength: {
       'FEATURE_ID': 150,

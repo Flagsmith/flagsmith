@@ -3,6 +3,7 @@ import { useParams, useHistory } from 'react-router-dom'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import Permission from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import { config } from 'common/config'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import { useRouteContext } from 'components/providers/RouteContext'
@@ -83,7 +84,7 @@ const FeaturesPageComponent: FC = () => {
     count: 0,
     currentPage: 1,
     next: null,
-    pageSize: Constants.FEATURES_PAGE_SIZE,
+    pageSize: config.FEATURES_PAGE_SIZE,
     previous: null,
   }
   const totalFeatures = data?.count ?? 0

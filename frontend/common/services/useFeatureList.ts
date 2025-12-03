@@ -1,7 +1,7 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
-import Constants from 'common/constants'
+import { config } from 'common/config'
 
 export const featureListService = service
   .enhanceEndpoints({
@@ -52,7 +52,7 @@ export const featureListService = service
             params: {
               environment: parseInt(environmentId),
               page: params.page || 1,
-              page_size: params.page_size || Constants.FEATURES_PAGE_SIZE,
+              page_size: params.page_size || config.FEATURES_PAGE_SIZE,
               ...params,
             },
             url: `projects/${projectId}/features/`,
@@ -83,7 +83,7 @@ export const featureListService = service
             currentPage: arg.page || 1,
             next: response.next,
             page: arg.page || 1,
-            pageSize: arg.page_size || Constants.FEATURES_PAGE_SIZE,
+            pageSize: arg.page_size || config.FEATURES_PAGE_SIZE,
             previous: response.previous,
           },
         }),

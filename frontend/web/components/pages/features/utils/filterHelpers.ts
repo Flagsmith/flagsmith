@@ -4,7 +4,7 @@
  */
 
 import type { FilterState } from 'components/pages/features/components/FeaturesTableFilters'
-import Constants from 'common/constants'
+import { config } from 'common/config'
 
 /**
  * Check if any filters are currently active.
@@ -95,7 +95,7 @@ export function buildApiFilterParams(
     is_enabled: filters.is_enabled,
     owners: filters.owners.length ? filters.owners.join(',') : undefined,
     page,
-    page_size: Constants.FEATURES_PAGE_SIZE,
+    page_size: config.FEATURES_PAGE_SIZE,
     projectId,
     search: filters.search,
     sort_direction: filters.sort.sortOrder === 'asc' ? 'ASC' : 'DESC',

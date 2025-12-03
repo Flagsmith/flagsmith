@@ -4,7 +4,7 @@ import Utils from 'common/utils/utils'
 
 type FeatureMetricsSectionProps = {
   environmentApiKey?: string
-  projectId: string
+  projectId: number
 }
 
 export const FeatureMetricsSection: FC<FeatureMetricsSectionProps> = ({
@@ -15,7 +15,7 @@ export const FeatureMetricsSection: FC<FeatureMetricsSectionProps> = ({
     'environment_metrics',
   )
 
-  if (!environmentMetricsEnabled) {
+  if (!environmentMetricsEnabled || !environmentApiKey) {
     return null
   }
 
