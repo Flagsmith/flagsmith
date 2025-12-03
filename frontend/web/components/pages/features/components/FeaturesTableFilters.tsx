@@ -121,7 +121,7 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
         <Row className='flex-row py-2 py-lg-0 px-1 px-lg-0 flex-fill justify-content-lg-end'>
           {hasFilters && <ClearFilters onClick={onClearFilters} />}
           <TableTagFilter
-            isLoading={isLoading || false}
+            isLoading={isLoadingProp || false}
             projectId={projectId}
             className='me-4'
             tagStrategy={tagStrategy}
@@ -165,7 +165,7 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
             options={VIEW_MODE_OPTIONS}
           />
           <TableSortFilter
-            isLoading={isLoading}
+            isLoading={isLoadingProp}
             value={sort}
             options={SORT_OPTIONS}
             onChange={(sort) => onFilterChange({ sort })}

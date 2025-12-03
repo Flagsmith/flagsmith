@@ -13,7 +13,6 @@ import {
   FeaturesList,
   FeaturesSDKIntegration,
 } from './features'
-import { FEATURES_PAGE_SIZE } from './features/constants'
 import {
   shouldShowInitialLoader,
   shouldShowContent,
@@ -31,12 +30,17 @@ type RouteParams = {
 }
 
 const FeaturesPageComponent: FC = () => {
-  const { environmentId, projectId } = useParams<RouteParams>()
+  const { environmentId, projectId: projectIdParam } = useParams<RouteParams>()
   const history = useHistory()
   const routeContext = useRouteContext()
+  const projectId = routeContext.projectId ?? parseInt(projectIdParam)
 
-  const { getEnvironment, getEnvironmentIdFromKey, maxFeaturesAllowed } =
-    useProjectEnvironments(projectId)
+  const {
+    getEnvironment,
+    getEnvironmentIdFromKey,
+    isLoading: isLoadingEnvironments,
+    maxFeaturesAllowed,
+  } = useProjectEnvironments(projectId)
 
   const numericEnvironmentId = useMemo(
     () => getEnvironmentIdFromKey(environmentId),
@@ -69,7 +73,7 @@ const FeaturesPageComponent: FC = () => {
       projectId,
     ),
     {
-      skip: !numericEnvironmentId || !projectId,
+      skip: !numericEnvironmentId || !projectId || isLoadingEnvironments,
     },
   )
 
@@ -79,7 +83,7 @@ const FeaturesPageComponent: FC = () => {
     count: 0,
     currentPage: 1,
     next: null,
-    pageSize: FEATURES_PAGE_SIZE,
+    pageSize: Constants.FEATURES_PAGE_SIZE,
     previous: null,
   }
   const totalFeatures = data?.count ?? 0

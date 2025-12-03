@@ -19,8 +19,11 @@ import {
 export const getFiltersFromParams = (params: UrlParams): FilterState => {
   return {
     group_owners:
-      typeof params.group_owners === 'string'
-        ? params.group_owners.split(',').map((v: string) => parseInt(v))
+      typeof params.group_owners === 'string' && params.group_owners
+        ? params.group_owners
+            .split(',')
+            .filter((v) => v)
+            .map((v: string) => parseInt(v))
         : [],
     is_enabled: (() => {
       if (params.is_enabled === 'true') return true
@@ -28,8 +31,11 @@ export const getFiltersFromParams = (params: UrlParams): FilterState => {
       return null
     })(),
     owners:
-      typeof params.owners === 'string'
-        ? params.owners.split(',').map((v: string) => parseInt(v))
+      typeof params.owners === 'string' && params.owners
+        ? params.owners
+            .split(',')
+            .filter((v) => v)
+            .map((v: string) => parseInt(v))
         : [],
     page: params.page ? parseInt(params.page) : 1,
     search: params.search ?? null,
@@ -41,8 +47,11 @@ export const getFiltersFromParams = (params: UrlParams): FilterState => {
     },
     tag_strategy: params.tag_strategy ?? 'INTERSECTION',
     tags:
-      typeof params.tags === 'string'
-        ? params.tags.split(',').map((v: string) => parseInt(v))
+      typeof params.tags === 'string' && params.tags
+        ? params.tags
+            .split(',')
+            .filter((v) => v)
+            .map((v: string) => parseInt(v))
         : [],
     value_search:
       typeof params.value_search === 'string' ? params.value_search : '',

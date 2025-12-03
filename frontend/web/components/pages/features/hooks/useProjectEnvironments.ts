@@ -23,7 +23,7 @@ import type { Environment, Project } from 'common/types/responses'
  * const canAddFeature = maxFeaturesAllowed === null || features.length < maxFeaturesAllowed
  * ```
  */
-export function useProjectEnvironments(projectId: string): {
+export function useProjectEnvironments(projectId: number): {
   project: Project | undefined
   environments: Environment[]
   getEnvironmentIdFromKey: (apiKey: string) => number | undefined

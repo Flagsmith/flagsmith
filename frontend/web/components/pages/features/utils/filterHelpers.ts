@@ -4,7 +4,7 @@
  */
 
 import type { FilterState } from 'components/pages/features/components/FeaturesTableFilters'
-import { FEATURES_PAGE_SIZE } from 'components/pages/features/constants'
+import Constants from 'common/constants'
 
 /**
  * Check if any filters are currently active.
@@ -38,16 +38,19 @@ export function buildUrlParams(
   page: number,
 ): Record<string, string | number | boolean | undefined> {
   return {
-    group_owners: filters.group_owners?.join(',') ?? undefined,
+    group_owners:
+      filters.group_owners?.length > 0
+        ? filters.group_owners.join(',')
+        : undefined,
     is_archived: filters.showArchived || undefined,
     is_enabled: filters.is_enabled === null ? undefined : filters.is_enabled,
-    owners: filters.owners?.join(',') ?? undefined,
+    owners: filters.owners?.length > 0 ? filters.owners.join(',') : undefined,
     page: page ?? 1,
     search: filters.search ?? '',
     sortBy: filters.sort.sortBy,
     sortOrder: filters.sort.sortOrder,
     tag_strategy: filters.tag_strategy,
-    tags: filters.tags?.join(',') ?? undefined,
+    tags: filters.tags?.length > 0 ? filters.tags.join(',') : undefined,
     value_search: filters.value_search ?? undefined,
   }
 }
@@ -92,7 +95,7 @@ export function buildApiFilterParams(
     is_enabled: filters.is_enabled,
     owners: filters.owners.length ? filters.owners.join(',') : undefined,
     page,
-    page_size: FEATURES_PAGE_SIZE,
+    page_size: Constants.FEATURES_PAGE_SIZE,
     projectId,
     search: filters.search,
     sort_direction: filters.sort.sortOrder === 'asc' ? 'ASC' : 'DESC',
