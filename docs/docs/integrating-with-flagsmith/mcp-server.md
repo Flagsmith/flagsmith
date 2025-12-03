@@ -22,7 +22,7 @@ Use it for human-in-the-loop workflows (asking your IDE assistant to toggle a fl
 
 ## Installation
 
-Getting started takes about 60 seconds. Head to our installation page and pick your client:
+Head to our installation page and pick your client:
 
 👉 **[Install the Flagsmith MCP Server](https://mcp.flagsmith.com/mcp/flagsmith-mcp/install)**
 
