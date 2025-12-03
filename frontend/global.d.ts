@@ -103,10 +103,6 @@ declare global {
     removeItem: (key: string) => void
     [key: string]: any
   }
-  const AccountStore: {
-    getOrganisation: () => { id: number } | null
-    [key: string]: any
-  }
   const PanelSearch: typeof Component
   const CodeHelp: typeof Component
   interface Window {

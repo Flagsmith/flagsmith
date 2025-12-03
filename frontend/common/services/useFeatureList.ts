@@ -1,6 +1,7 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+import { FEATURES_PAGE_SIZE } from 'web/components/pages/features/constants'
 
 export const featureListService = service
   .enhanceEndpoints({
@@ -8,7 +9,6 @@ export const featureListService = service
   })
   .injectEndpoints({
     endpoints: (builder) => ({
-      // Multivariate Option Mutations
       createMultivariateOption: builder.mutation<
         Res['multivariateOption'],
         Req['createMultivariateOption']
@@ -38,13 +38,13 @@ export const featureListService = service
         }),
       }),
 
-      // Main paginated query with all filters
       getFeatureList: builder.query<Res['featureList'], Req['getFeatureList']>({
         providesTags: (_res, _meta, req) => [
           {
             id: `${req?.projectId}-${req?.environmentId}`,
             type: 'FeatureList',
           },
+          { id: 'LIST', type: 'FeatureList' },
         ],
         query: (query: Req['getFeatureList']) => {
           const { environmentId, projectId, ...params } = query
@@ -52,7 +52,7 @@ export const featureListService = service
             params: {
               environment: parseInt(environmentId),
               page: params.page || 1,
-              page_size: params.page_size || 50,
+              page_size: params.page_size || FEATURES_PAGE_SIZE,
               ...params,
             },
             url: `projects/${projectId}/features/`,
@@ -69,7 +69,6 @@ export const featureListService = service
           arg,
         ) => ({
           ...response,
-          // Transform embedded environment_feature_state to keyed object
           environmentStates: response.results.reduce((acc, feature) => {
             if (feature.environment_feature_state) {
               acc[feature.id] = {
@@ -81,15 +80,14 @@ export const featureListService = service
           }, {} as Res['featureList']['environmentStates']),
           pagination: {
             count: response.count,
+            currentPage: arg.page || 1,
             next: response.next,
-            page: arg.page || 1,
-            pageSize: arg.page_size || 50,
+            pageSize: arg.page_size || FEATURES_PAGE_SIZE,
             previous: response.previous,
           },
         }),
       }),
 
-      // Feature State Mutations (environment-level)
       updateFeatureState: builder.mutation<
         Res['featureState'],
         Req['updateFeatureState']
@@ -99,15 +97,12 @@ export const featureListService = service
           { id: 'LIST', type: 'FeatureState' },
           { id: 'METRICS', type: 'Environment' },
         ],
-
-        // Optimistic update for better UX
         async onQueryStarted(
           { body, environmentId, stateId },
           { dispatch, queryFulfilled },
         ) {
           const patches: { undo: () => void }[] = []
 
-          // Update all cached queries for this environment
           patches.push(
             dispatch(
               featureListService.util.updateQueryData(
@@ -129,7 +124,6 @@ export const featureListService = service
           try {
             await queryFulfilled
           } catch (error) {
-            // Revert optimistic updates on error
             patches.forEach((patch) => patch.undo())
           }
         },
@@ -154,11 +148,9 @@ export const featureListService = service
           url: `projects/${query.projectId}/features/${query.featureId}/mv-options/${query.mvId}/`,
         }),
       }),
-      // END OF ENDPOINTS
     }),
   })
 
-// Export hooks
 export const {
   useCreateMultivariateOptionMutation,
   useDeleteMultivariateOptionMutation,
@@ -167,7 +159,6 @@ export const {
   useUpdateMultivariateOptionMutation,
 } = featureListService
 
-// Helper function for imperative queries
 export async function getFeatureList(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   store: any,

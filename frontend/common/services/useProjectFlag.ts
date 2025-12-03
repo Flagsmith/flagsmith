@@ -35,7 +35,10 @@ export const projectFlagService = service
         Res['projectFlag'],
         Req['createProjectFlag']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'ProjectFlag' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'ProjectFlag' },
+          { id: 'LIST', type: 'FeatureList' },
+        ],
         query: (query: Req['createProjectFlag']) => ({
           body: query.body,
           method: 'POST',
