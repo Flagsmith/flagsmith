@@ -597,5 +597,5 @@ Follow the [Red Hat Technical Writing Style Guide](https://stylepedia.net/style/
 
 - 13.1: **Completed**: Changes delivered to `main`, ready for release.
 - 13.2: **Done**: Changes released, tested, and verified to achieve issue goals.
-- 13.3: **Repository**:
-- 13.4: **Project**:
+- 13.3: **Repository**: A discrete unit of version control containing source code, configuration, or documentation.
+- 13.4: **Project**: A temporary endeavour undertaken to create a unique product, service, or result.
