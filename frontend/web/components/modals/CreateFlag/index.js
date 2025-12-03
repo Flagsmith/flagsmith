@@ -797,14 +797,12 @@ const Index = class extends Component {
                                         })
                                       }}
                                       onProjectFlagChange={(changes) => {
-                                        const updates = {
-                                          settingsChanged: true,
-                                        }
-                                        updates.projectFlag = {
-                                          ...this.state.projectFlag,
-                                          ...changes,
-                                        }
-                                        this.setState(updates)
+                                        this.setState({
+                                          projectFlag: {
+                                            ...this.state.projectFlag,
+                                            ...changes,
+                                          },
+                                        })
                                       }}
                                       onRemoveMultivariateOption={
                                         this.props.removeMultivariateOption
