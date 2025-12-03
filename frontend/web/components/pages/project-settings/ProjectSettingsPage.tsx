@@ -8,7 +8,7 @@ import { useRouteContext } from 'components/providers/RouteContext'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import ProjectUsage from 'components/ProjectUsage'
-import EditHealthProvider from 'components/EditHealthProvider'
+import EditHealthProvider from './tabs/EditHealthProvider'
 import FeatureExport from 'components/import-export/FeatureExport'
 import { GeneralTab } from './tabs/general-tab'
 import { SDKSettingsTab } from './tabs/SDKSettingsTab'
@@ -32,9 +32,9 @@ const ProjectSettingsPage = () => {
     error,
     isLoading,
     isUninitialized,
-  } = useGetProjectQuery({ id: String(projectId) }, { skip: !projectId })
+  } = useGetProjectQuery({ id: projectId! }, { skip: !projectId })
   const { data: environments } = useGetEnvironmentsQuery(
-    { projectId: String(projectId) },
+    { projectId: projectId! },
     { skip: !projectId },
   )
 
