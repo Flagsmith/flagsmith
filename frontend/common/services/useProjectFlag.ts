@@ -28,7 +28,7 @@ function recursivePageGet(
   })
 }
 export const projectFlagService = service
-  .enhanceEndpoints({ addTagTypes: ['ProjectFlag'] })
+  .enhanceEndpoints({ addTagTypes: ['ProjectFlag', 'FeatureList'] })
   .injectEndpoints({
     endpoints: (builder) => ({
       createProjectFlag: builder.mutation<
@@ -69,17 +69,14 @@ export const projectFlagService = service
           )
         },
       }),
-      removeProjectFlag: builder.mutation<
-        void,
-        { project: number; id: number }
-      >({
+      removeProjectFlag: builder.mutation<void, Req['removeProjectFlag']>({
         invalidatesTags: [
           { id: 'LIST', type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
         ],
-        query: ({ id, project }) => ({
+        query: ({ flag_id, project_id }) => ({
           method: 'DELETE',
-          url: `projects/${project}/features/${id}/`,
+          url: `projects/${project_id}/features/${flag_id}/`,
         }),
       }),
       updateProjectFlag: builder.mutation<

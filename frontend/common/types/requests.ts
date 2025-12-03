@@ -645,6 +645,10 @@ export type Req = {
     project_id: number
     body: ProjectFlag
   }
+  removeProjectFlag: {
+    project_id: number
+    flag_id: number
+  }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
     environment_id: string

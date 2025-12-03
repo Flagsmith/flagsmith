@@ -50,8 +50,8 @@ export function useFeatureActions(
     async (_projectId: number, projectFlag: ProjectFlag) => {
       try {
         await removeProjectFlag({
-          id: projectFlag.id,
-          project: projectId,
+          flag_id: projectFlag.id,
+          project_id: projectId,
         }).unwrap()
         toast(`Removed feature: ${projectFlag.name}`)
       } catch (error) {
