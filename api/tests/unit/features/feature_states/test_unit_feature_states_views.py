@@ -925,3 +925,362 @@ def test_update_flag_v1_returns_403_for_nonexistent_environment(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+# Delete Segment Override Tests
+
+
+def test_delete_segment_override_success_v1(
+    staff_client: APIClient,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+
+    segment = Segment.objects.create(name="segment_to_delete", project=project)
+
+    # Create segment override (V1 - no version association)
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment,
+        priority=1,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        enabled=True,
+    )
+
+    url = reverse(
+        "api-experiments:delete-segment-override",
+        kwargs={"environment_key": environment.api_key},
+    )
+
+    data = {
+        "feature": {"name": feature.name},
+        "segment": {"id": segment.id},
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Verify segment override is deleted
+    latest_flags = get_environment_flags_list(
+        environment=environment, feature_name=feature.name
+    )
+    segment_overrides = [
+        fs
+        for fs in latest_flags
+        if fs.feature_segment and fs.feature_segment.segment_id == segment.id
+    ]
+    assert len(segment_overrides) == 0
+
+
+def test_delete_segment_override_success_v2(
+    staff_client: APIClient,
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+
+    segment = Segment.objects.create(name="segment_to_delete_v2", project=project)
+
+    # Get current version and create segment override associated with it
+    current_version = get_current_live_environment_feature_version(
+        environment_v2_versioning.id, feature.id
+    )
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        priority=1,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment=feature_segment,
+        environment_feature_version=current_version,
+        enabled=True,
+    )
+
+    url = reverse(
+        "api-experiments:delete-segment-override",
+        kwargs={"environment_key": environment_v2_versioning.api_key},
+    )
+
+    data = {
+        "feature": {"name": feature.name},
+        "segment": {"id": segment.id},
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Verify segment override is deleted
+    latest_flags = get_environment_flags_list(
+        environment=environment_v2_versioning, feature_name=feature.name
+    )
+    segment_overrides = [
+        fs
+        for fs in latest_flags
+        if fs.feature_segment and fs.feature_segment.segment_id == segment.id
+    ]
+    assert len(segment_overrides) == 0
+
+
+def test_delete_segment_override_by_feature_id(
+    staff_client: APIClient,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+
+    segment = Segment.objects.create(name="segment_by_id", project=project)
+
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment,
+        priority=1,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        enabled=True,
+    )
+
+    url = reverse(
+        "api-experiments:delete-segment-override",
+        kwargs={"environment_key": environment.api_key},
+    )
+
+    # Use feature.id instead of feature.name
+    data = {
+        "feature": {"id": feature.id},
+        "segment": {"id": segment.id},
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+def test_delete_segment_override_feature_not_found(
+    staff_client: APIClient,
+    environment: Environment,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+
+    segment = Segment.objects.create(name="some_segment", project=project)
+
+    url = reverse(
+        "api-experiments:delete-segment-override",
+        kwargs={"environment_key": environment.api_key},
+    )
+
+    data = {
+        "feature": {"name": "nonexistent_feature"},
+        "segment": {"id": segment.id},
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "not found in project" in str(response.json())
+
+
+@pytest.mark.parametrize(
+    "environment_",
+    (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
+)
+def test_delete_segment_override_segment_not_found(
+    staff_client: APIClient,
+    feature: Feature,
+    environment_: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+
+    url = reverse(
+        "api-experiments:delete-segment-override",
+        kwargs={"environment_key": environment_.api_key},
+    )
+
+    # Segment override doesn't exist
+    data = {
+        "feature": {"name": feature.name},
+        "segment": {"id": 999999},
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "does not exist" in str(response.json())
+
+
+def test_delete_segment_override_403_without_permission(
+    staff_client: APIClient,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+) -> None:
+    # Given - no permissions granted
+    segment = Segment.objects.create(name="no_perm_segment", project=project)
+
+    url = reverse(
+        "api-experiments:delete-segment-override",
+        kwargs={"environment_key": environment.api_key},
+    )
+
+    data = {
+        "feature": {"name": feature.name},
+        "segment": {"id": segment.id},
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_delete_segment_override_403_when_workflow_enabled(
+    staff_client: APIClient,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+    environment.minimum_change_request_approvals = 1
+    environment.save()
+
+    segment = Segment.objects.create(name="workflow_segment", project=project)
+
+    url = reverse(
+        "api-experiments:delete-segment-override",
+        kwargs={"environment_key": environment.api_key},
+    )
+
+    data = {
+        "feature": {"name": feature.name},
+        "segment": {"id": segment.id},
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert "change requests are enabled" in str(response.json())
+
+
+def test_delete_segment_override_v2_versioning_creates_new_version(
+    staff_client: APIClient,
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+
+    segment = Segment.objects.create(name="v2_delete_segment", project=project)
+
+    # Get current version and create segment override associated with it
+    current_version = get_current_live_environment_feature_version(
+        environment_v2_versioning.id, feature.id
+    )
+    assert current_version is not None
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        priority=1,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        feature_segment=feature_segment,
+        environment_feature_version=current_version,
+        enabled=True,
+    )
+
+    url = reverse(
+        "api-experiments:delete-segment-override",
+        kwargs={"environment_key": environment_v2_versioning.api_key},
+    )
+
+    data = {
+        "feature": {"name": feature.name},
+        "segment": {"id": segment.id},
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Verify a new version was created and published
+    new_version = get_current_live_environment_feature_version(
+        environment_v2_versioning.id, feature.id
+    )
+    assert new_version is not None
+    assert new_version.uuid != current_version.uuid
+
+    # Verify segment override is not in the new version
+    latest_flags = get_environment_flags_list(
+        environment=environment_v2_versioning, feature_name=feature.name
+    )
+    segment_overrides = [
+        fs
+        for fs in latest_flags
+        if fs.feature_segment and fs.feature_segment.segment_id == segment.id
+    ]
+    assert len(segment_overrides) == 0

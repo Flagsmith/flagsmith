@@ -7,7 +7,11 @@ from features.versioning.dataclasses import (
     FlagChangeSetV2,
     SegmentOverrideChangeSet,
 )
-from features.versioning.versioning_service import update_flag, update_flag_v2
+from features.versioning.versioning_service import (
+    delete_segment_override,
+    update_flag,
+    update_flag_v2,
+)
 
 
 class BaseFeatureUpdateSerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -168,3 +172,25 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer):
     def save(self, **kwargs: object) -> dict:  # type: ignore[type-arg]
         feature = self.get_feature()
         return update_flag_v2(self.context["environment"], feature, self.change_set_v2)
+
+
+class SegmentIdentifierSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    id = serializers.IntegerField(required=True)
+
+
+class DeleteSegmentOverrideSerializer(BaseFeatureUpdateSerializer):
+    feature = FeatureIdentifierSerializer(required=True)
+    segment = SegmentIdentifierSerializer(required=True)
+
+    def save(self, **kwargs: object) -> None:
+        from users.models import FFAdminUser
+
+        feature = self.get_feature()
+        environment = self.context["environment"]
+        segment_id = self.validated_data["segment"]["id"]
+
+        request = self.context["request"]
+        user = request.user if isinstance(request.user, FFAdminUser) else None
+        api_key = getattr(request.user, "key", None) if user is None else None
+
+        delete_segment_override(environment, feature, segment_id, user, api_key)

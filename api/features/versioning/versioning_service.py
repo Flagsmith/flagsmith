@@ -436,6 +436,76 @@ def _update_flag_v2_for_versioning_v1(
     }
 
 
+def delete_segment_override(
+    environment: "Environment",
+    feature: "Feature",
+    segment_id: int,
+    user: "typing.Any" = None,
+    api_key: str | None = None,
+) -> None:
+    """
+    Delete a segment override for a feature in the given environment.
+    Handles both V1 (direct delete) and V2 (versioned delete) modes.
+    """
+    if environment.use_v2_feature_versioning:
+        _delete_segment_override_v2(environment, feature, segment_id, user, api_key)
+    else:
+        _delete_segment_override_v1(environment, feature, segment_id)
+
+
+def _delete_segment_override_v1(
+    environment: "Environment",
+    feature: "Feature",
+    segment_id: int,
+) -> None:
+    """V1: Direct delete of FeatureSegment (cascades to FeatureState)."""
+    from rest_framework.exceptions import ValidationError
+
+    from features.models import FeatureSegment
+
+    try:
+        feature_segment = FeatureSegment.objects.get(
+            feature=feature,
+            segment_id=segment_id,
+            environment=environment,
+        )
+        feature_segment.delete()
+    except FeatureSegment.DoesNotExist:
+        raise ValidationError(
+            f"Segment override for segment {segment_id} does not exist"
+        )
+
+
+def _delete_segment_override_v2(
+    environment: "Environment",
+    feature: "Feature",
+    segment_id: int,
+    user: "typing.Any",
+    api_key: str | None,
+) -> None:
+    from rest_framework.exceptions import ValidationError
+
+    new_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment,
+        feature=feature,
+        created_by=user,
+        created_by_api_key=api_key,
+    )
+
+    try:
+        segment_feature_state = new_version.feature_states.get(
+            feature_segment__segment_id=segment_id
+        )
+        segment_feature_state.feature_segment.delete()
+    except FeatureState.DoesNotExist:
+        new_version.delete()
+        raise ValidationError(
+            f"Segment override for segment {segment_id} does not exist"
+        )
+
+    new_version.publish(published_by=user, published_by_api_key=api_key)
+
+
 def get_updated_feature_states_for_version(
     version: EnvironmentFeatureVersion,
 ) -> list[FeatureState]:
