@@ -5,7 +5,12 @@ import { config } from 'common/config'
 
 export const featureListService = service
   .enhanceEndpoints({
-    addTagTypes: ['FeatureList', 'FeatureState', 'MultivariateOption'],
+    addTagTypes: [
+      'FeatureList',
+      'FeatureState',
+      'MultivariateOption',
+      'Environment',
+    ],
   })
   .injectEndpoints({
     endpoints: (builder) => ({
