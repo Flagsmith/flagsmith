@@ -3,10 +3,11 @@ import typing
 from common.core.utils import using_database_replica
 from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
+from rest_framework.exceptions import NotFound
 
 from environments.models import Environment
 from features.feature_states.models import FeatureValueType
-from features.models import Feature, FeatureState, FeatureStateValue
+from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
 from features.versioning.dataclasses import (
     FlagChangeSet,
     FlagChangeSetV2,
@@ -393,6 +394,66 @@ def _update_flag_v2_for_versioning_v1(
 
             if override.priority is not None:
                 _update_segment_priority(segment_state, override.priority)
+
+
+def delete_segment_override(
+    environment: "Environment",
+    feature: "Feature",
+    segment_id: int,
+    user: "typing.Any" = None,
+    api_key: str | None = None,
+) -> None:
+    if environment.use_v2_feature_versioning:
+        _delete_segment_override_v2(environment, feature, segment_id, user, api_key)
+    else:
+        _delete_segment_override_v1(environment, feature, segment_id)
+
+
+def _delete_segment_override_v1(
+    environment: "Environment",
+    feature: "Feature",
+    segment_id: int,
+) -> None:
+    deleted_count, _ = FeatureSegment.objects.filter(
+        feature=feature,
+        segment_id=segment_id,
+        environment=environment,
+    ).delete()
+    if deleted_count == 0:
+        raise NotFound(f"Segment override for segment {segment_id} does not exist")
+
+
+def _delete_segment_override_v2(
+    environment: "Environment",
+    feature: "Feature",
+    segment_id: int,
+    user: "typing.Any",
+    api_key: str | None,
+) -> None:
+    current_version = get_current_live_environment_feature_version(
+        environment.id, feature.id
+    )
+    if (
+        not current_version
+        or not current_version.feature_states.filter(
+            feature_segment__segment_id=segment_id
+        ).exists()
+    ):
+        raise NotFound(f"Segment override for segment {segment_id} does not exist")
+
+    new_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment,
+        feature=feature,
+        created_by=user,
+        created_by_api_key=api_key,
+    )
+
+    segment_feature_state = new_version.feature_states.get(
+        feature_segment__segment_id=segment_id
+    )
+    segment_feature_state.feature_segment.delete()
+
+    new_version.publish(published_by=user, published_by_api_key=api_key)
 
 
 def get_updated_feature_states_for_version(
