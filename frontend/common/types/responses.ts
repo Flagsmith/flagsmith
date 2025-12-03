@@ -1135,7 +1135,7 @@ export type Res = {
       count: number
       next: string | null
       previous: string | null
-      page: number
+      currentPage: number
       pageSize: number
     }
   }
