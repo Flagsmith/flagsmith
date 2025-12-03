@@ -10,7 +10,7 @@ Connect your AI tools directly to Flagsmith and let them manage your feature fla
 
 The MCP Server exposes the Flagsmith Admin API, giving your AI access to:
 
-- **Organizations & Projects** — List and navigate your Flagsmith workspace
+- **Organisations & Projects** — List and navigate your Flagsmith workspace
 - **Feature Flags** — Create, update, and manage flags across environments
 - **Segments** — Build and modify user segments for precise targeting
 - **Release Pipelines** — Orchestrate controlled rollouts
