@@ -15,9 +15,14 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
   forceRefetch,
   projectId,
 }) => {
-  const { data, isLoading, refetch } = useGetEnvironmentMetricsQuery({
-    id: environmentApiKey,
-  })
+  const { data, isLoading, refetch } = useGetEnvironmentMetricsQuery(
+    {
+      id: environmentApiKey,
+    },
+    {
+      skip: !environmentApiKey,
+    },
+  )
 
   const MAX_COLUMNS = 6
   const columns = Math.min(data?.metrics?.length || 0, MAX_COLUMNS) || 1
