@@ -433,9 +433,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         }
       default:
         return {
-          permission: Utils.getManageFeaturePermission(false),
-          permissionDescription:
-            Utils.getManageFeaturePermissionDescription(false),
+          permission: 'MANAGE_SEGMENT_OVERRIDES',
+          permissionDescription: 'Manage Segment Overrides',
         }
     }
   },

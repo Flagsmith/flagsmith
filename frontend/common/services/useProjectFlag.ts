@@ -54,7 +54,7 @@ export const projectFlagService = service
       >({
         providesTags: (res, _, req) => [
           {
-            id: `${req?.project}-${req?.environmentId}-${req?.segmentId}`,
+            id: `${req?.project}-${req?.environment}-${req?.segment}`,
             type: 'ProjectFlag',
           },
         ],
