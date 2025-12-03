@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect, useCallback, useMemo } from 'react'
-import { useParams, useHistory } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import Permission from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -25,16 +25,11 @@ import { useFeatureFilters } from './features/hooks/useFeatureFilters'
 import { useFeatureActions } from './features/hooks/useFeatureActions'
 import { useProjectEnvironments } from './features/hooks/useProjectEnvironments'
 
-type RouteParams = {
-  environmentId: string
-  projectId: string
-}
-
 const FeaturesPageComponent: FC = () => {
-  const { environmentId, projectId: projectIdParam } = useParams<RouteParams>()
   const history = useHistory()
   const routeContext = useRouteContext()
-  const projectId = routeContext.projectId ?? parseInt(projectIdParam)
+  const projectId = routeContext.projectId!
+  const environmentId = routeContext.environmentId!
 
   const {
     getEnvironment,
