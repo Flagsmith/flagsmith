@@ -9,6 +9,7 @@ from django.utils import timezone
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from freezegun.api import FrozenDateTimeFactory
 from pytest_mock import MockerFixture
+from features.versioning.tasks import enable_v2_versioning
 
 from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
@@ -1030,3 +1031,55 @@ def test_delete_organisation_with_committed_change_request(
 
     # Then
     assert organisation.deleted_at is not None
+
+
+def test_enable_v2_versioning_clears_change_request_from_feature_states(
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given - Existing committed CR and one scheduled CR
+    pre_existing_cr = ChangeRequest.objects.create(
+        environment=environment,
+        title="immediate",
+        user=admin_user,
+    )
+    FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        change_request=pre_existing_cr,
+        version=None,
+    )
+    pre_existing_cr.commit(admin_user)
+
+    scheduled_cr = ChangeRequest.objects.create(
+        environment=environment,
+        title="scheduled",
+        user=admin_user,
+    )
+    FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        change_request=scheduled_cr,
+        live_from=timezone.now() + timedelta(days=2),
+        version=None,
+    )
+    scheduled_cr.commit(admin_user)
+
+    # When - Enable v2 versioning
+    enable_v2_versioning(environment_id=environment.id)
+
+    environment.refresh_from_db()
+    assert environment.use_v2_feature_versioning is True
+
+    # Then - CR must have been cleared from feature states
+    feature_states_with_efv = FeatureState.objects.filter(
+        environment=environment,
+        environment_feature_version__isnull=False,
+    )
+    assert feature_states_with_efv.exists()
+    assert not feature_states_with_efv.filter(change_request__isnull=False).exists()
+
+    project.delete()
+    assert project.deleted_at is not None
