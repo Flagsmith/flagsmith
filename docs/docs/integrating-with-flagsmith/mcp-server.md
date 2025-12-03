@@ -1,6 +1,6 @@
 # MCP Server
 
-Connect your AI tools directly to Flagsmith and let them manage your feature flags, segments, and releases. Whether you're using an IDE like Cursor, a CLI tool like Claude Code, or building your own AI agent that runs at any part of your CI/CD — the Flagsmith MCP Server gives your AI the power to work with your feature flag infrastructure.
+The Flagsmith MCP Server provides programmatic access to the Flagsmith Admin API through the Model Context Protocol. This enables AI assistants and agents to interact with your feature flag infrastructure, including managing flags, segments, and release workflows. The server is compatible with MCP-enabled IDE extensions (such as Cursor), CLI tools (such as Claude Code), and custom AI agents integrated into CI/CD pipelines.
 
 ## What is MCP?
 
@@ -16,7 +16,6 @@ The MCP Server exposes the Flagsmith Admin API, giving your AI access to:
 - **Release Pipelines** — Orchestrate controlled rollouts
 - **Change Requests** — Create and manage approval workflows
 - **Multivariate Testing** — Configure A/B test variations
-- **Feature Versioning** — Work with v2 versioned feature states
 
 Use it for human-in-the-loop workflows (asking your IDE assistant to toggle a flag), or fully automated pipelines (letting an agent manage progressive rollouts).
 
@@ -26,7 +25,7 @@ Head to our installation page and pick your client:
 
 👉 **[Install the Flagsmith MCP Server](https://mcp.flagsmith.com/mcp/flagsmith-mcp/install)**
 
-We support Cursor, Claude Code, Claude Desktop, Windsurf, Gemini CLI, Codex CLI, and 27+ more clients.
+We support Cursor, Claude Code, Claude Desktop, Windsurf, Gemini CLI, Codex CLI, and any other client that supports MCP servers.
 
 ### Configuration
 
