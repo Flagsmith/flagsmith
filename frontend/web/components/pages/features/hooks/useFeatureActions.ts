@@ -76,8 +76,8 @@ export function useFeatureActions(
           body: {
             enabled: !environmentFlag.enabled,
           },
+          environmentFlagId: environmentFlag.id,
           environmentId,
-          stateId: environmentFlag.id,
         }).unwrap()
       } catch (error) {
         console.error('Failed to toggle feature:', error)

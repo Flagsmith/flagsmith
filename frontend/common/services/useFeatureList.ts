@@ -105,7 +105,7 @@ export const featureListService = service
         query: (query: Req['updateFeatureState']) => ({
           body: query.body,
           method: 'PUT',
-          url: `environments/${query.environmentId}/featurestates/${query.stateId}/`,
+          url: `environments/${query.environmentId}/featurestates/${query.environmentFlagId}/`,
         }),
       }),
 

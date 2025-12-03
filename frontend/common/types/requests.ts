@@ -862,7 +862,7 @@ export type Req = {
   }
   updateFeatureState: {
     environmentId: string
-    stateId: number
+    environmentFlagId: number
     body: UpdateFeatureStateBody
   }
   createMultivariateOption: {
