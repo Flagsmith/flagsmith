@@ -9,7 +9,6 @@ import TableSortFilter, { SortValue } from 'components/tables/TableSortFilter'
 import ClearFilters from 'components/ClearFilters'
 import { getViewMode, setViewMode } from 'common/useViewMode'
 import { TagStrategy } from 'common/types/responses'
-import { useGetFeatureListQuery } from 'common/services/useFeatureList'
 
 const VIEW_MODE_OPTIONS = [
   {
@@ -20,7 +19,7 @@ const VIEW_MODE_OPTIONS = [
     label: 'Compact',
     value: 'compact',
   },
-]
+] as const
 
 const SORT_OPTIONS = [
   {
@@ -78,38 +77,12 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
     value_search: valueSearch,
   } = filters
 
-  // Use RTK Query for data fetching with automatic caching and refetching
-  const { isLoading: isLoadingQuery } = useGetFeatureListQuery(
-    {
-      environmentId: environmentId!,
-      group_owners: groupOwners.length ? groupOwners.join(',') : undefined,
-      is_archived: showArchived,
-      is_enabled: isEnabled,
-      owners: owners.length ? owners.join(',') : undefined,
-      page: 1,
-      page_size: 50,
-      projectId,
-      search,
-      sort_direction: sort.sortOrder === 'asc' ? 'ASC' : 'DESC',
-      sort_field: sort.sortBy,
-      tag_strategy: tagStrategy,
-      tags: tags.length ? tags.join(',') : undefined,
-      value_search: valueSearch || undefined,
-    },
-    {
-      skip: !environmentId || !projectId,
-    },
-  )
-
-  // Use RTK Query loading state, fallback to prop for backward compatibility
-  const isLoading = isLoadingQuery || isLoadingProp
-
   // Handle empty tag ('') as mutually exclusive with other tags
   const handleTagsChange = (newTags: (number | string)[]) => {
     if (newTags.includes('') && newTags.length > 1) {
       if (!tags.includes('')) {
         // User just selected empty tag - make it exclusive
-        onFilterChange({ tags: [''] as (number | string)[] })
+        onFilterChange({ tags: [''] })
       } else {
         // Empty tag was already selected - remove it to allow other tags
         onFilterChange({ tags: newTags.filter((v) => !!v) })
@@ -185,12 +158,14 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
             className='me-4'
             value={getViewMode()}
             onChange={(value) => {
-              setViewMode(value as 'default' | 'compact')
+              if (value === 'default' || value === 'compact') {
+                setViewMode(value)
+              }
             }}
             options={VIEW_MODE_OPTIONS}
           />
           <TableSortFilter
-            isLoading={isLoading || false}
+            isLoading={isLoading}
             value={sort}
             options={SORT_OPTIONS}
             onChange={(sort) => onFilterChange({ sort })}

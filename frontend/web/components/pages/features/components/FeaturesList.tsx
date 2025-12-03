@@ -1,9 +1,9 @@
 import React, { FC } from 'react'
-import { useHistory } from 'react-router-dom'
 import classNames from 'classnames'
 import FeatureRow from 'components/feature-summary/FeatureRow'
 import JSONReference from 'components/JSONReference'
 import Permission from 'common/providers/Permission'
+import Utils from 'common/utils/utils'
 import { FeaturesTableFilters } from './FeaturesTableFilters'
 import type { FilterState } from './FeaturesTableFilters'
 import type {
@@ -25,16 +25,18 @@ type FeaturesListProps = {
   hasFilters: boolean
   isLoading: boolean
   isFetching: boolean
-  paging: Pagination
+  paging: Pagination | undefined
   page: number
   onFilterChange: (updates: Partial<FilterState>) => void
   onClearFilters: () => void
   onPageChange: (page: number) => void
   onToggleFlag: (
+    projectId: string,
+    environmentId: string,
     flag: ProjectFlag,
-    environmentFlags: Record<number, FeatureState>,
+    environmentFlag: FeatureState | undefined,
   ) => Promise<void>
-  onRemoveFlag: (projectFlag: ProjectFlag) => Promise<void>
+  onRemoveFlag: (projectId: string, projectFlag: ProjectFlag) => Promise<void>
 }
 
 export const FeaturesList: FC<FeaturesListProps> = ({
@@ -57,21 +59,6 @@ export const FeaturesList: FC<FeaturesListProps> = ({
   projectFlags,
   projectId,
 }) => {
-  const history = useHistory()
-
-  const handleToggleFlag = (
-    _projectId: string,
-    _environmentId: string,
-    flag: ProjectFlag,
-    environmentFlags: Record<number, FeatureState>,
-  ) => {
-    return onToggleFlag(flag, environmentFlags)
-  }
-
-  const handleRemoveFlag = (_projectId: string, projectFlag: ProjectFlag) => {
-    return onRemoveFlag(projectFlag)
-  }
-
   return (
     <FormGroup
       className={classNames('mb-4', {
@@ -131,13 +118,11 @@ export const FeaturesList: FC<FeaturesListProps> = ({
               <FeatureRow
                 environmentFlags={environmentFlags}
                 permission={permission}
-                history={history}
                 environmentId={environmentId}
                 projectId={projectId}
                 index={i}
-                canDelete={permission}
-                toggleFlag={handleToggleFlag}
-                removeFlag={handleRemoveFlag}
+                toggleFlag={onToggleFlag}
+                removeFlag={onRemoveFlag}
                 projectFlag={projectFlag}
               />
             )}
