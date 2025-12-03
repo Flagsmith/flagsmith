@@ -45,7 +45,7 @@ export type FilterState = {
 }
 
 type FeaturesTableFiltersProps = {
-  projectId: string
+  projectId: number
   environmentId: string
   filters: FilterState
   hasFilters: boolean
@@ -56,7 +56,7 @@ type FeaturesTableFiltersProps = {
 }
 
 export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
-  environmentId,
+  environmentId: _environmentId,
   filters,
   hasFilters,
   isLoading: isLoadingProp,

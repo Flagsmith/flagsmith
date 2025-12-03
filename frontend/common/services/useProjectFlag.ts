@@ -71,7 +71,7 @@ export const projectFlagService = service
       }),
       removeProjectFlag: builder.mutation<
         void,
-        { project: string; id: number }
+        { project: number; id: number }
       >({
         invalidatesTags: [
           { id: 'LIST', type: 'ProjectFlag' },

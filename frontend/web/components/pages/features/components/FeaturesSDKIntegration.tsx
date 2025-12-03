@@ -4,7 +4,7 @@ import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 import Constants from 'common/constants'
 
 type FeaturesSDKIntegrationProps = {
-  projectId: string
+  projectId: number
   environmentId: string
   firstFeatureName?: string
 }
