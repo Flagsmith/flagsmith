@@ -40,7 +40,7 @@ You'll need an **Organisation API Key** from Flagsmith:
 MCP_FLAGSMITH_TOKEN_AUTH="Api-Key YOUR_API_KEY_HERE"
 ```
 
-> ⚠️ **Important**: The `Api-Key ` prefix is required. Your token should look like `Api-Key ser.abc123...`, not just the key itself.
+> ⚠️ **Important**: The `Api-Key ` prefix is required. The value of your environment variable should look like `Api-Key ser.abc123...`, not just the key itself.
 
 ### Self-Hosted Flagsmith
 
