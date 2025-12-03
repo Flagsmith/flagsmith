@@ -32,7 +32,7 @@ We support Cursor, Claude Code, Claude Desktop, Windsurf, Gemini CLI, Codex CLI,
 
 You'll need an **Organisation API Key** from Flagsmith:
 
-1. Go to **Organization Settings** in your Flagsmith dashboard
+1. Go to **Organisation Settings** in your Flagsmith dashboard
 2. Generate a new API Key
 3. Set your environment variable with the `Api-Key` prefix:
 
