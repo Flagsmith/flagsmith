@@ -8,7 +8,6 @@ type TableFilterType = {
   onChange: (value: TableFilterType['value']) => void
   className?: string
   isLoading?: boolean
-  projectId: number
   orgId: string | undefined
 }
 
@@ -17,7 +16,6 @@ const TableGroupsFilter: FC<TableFilterType> = ({
   isLoading,
   onChange,
   orgId,
-  projectId: _projectId,
   value,
 }) => {
   const { data } = useGetGroupSummariesQuery(

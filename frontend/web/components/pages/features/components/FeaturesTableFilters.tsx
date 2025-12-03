@@ -46,7 +46,6 @@ export type FilterState = {
 
 type FeaturesTableFiltersProps = {
   projectId: number
-  environmentId: string
   filters: FilterState
   hasFilters: boolean
   isLoading?: boolean
@@ -56,7 +55,6 @@ type FeaturesTableFiltersProps = {
 }
 
 export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
-  environmentId: _environmentId,
   filters,
   hasFilters,
   isLoading: isLoadingProp,
@@ -148,7 +146,6 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
           />
           <TableGroupsFilter
             className='me-4'
-            projectId={projectId}
             orgId={orgId?.toString()}
             value={groupOwners}
             onChange={(group_owners) => onFilterChange({ group_owners })}

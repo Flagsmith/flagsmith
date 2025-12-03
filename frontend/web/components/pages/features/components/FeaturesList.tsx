@@ -16,7 +16,6 @@ import type { Pagination } from 'components/pages/features/types'
 type FeaturesListProps = {
   projectId: number
   environmentId: string
-  numericEnvironmentId: number | undefined
   environment: Environment | undefined
   organisationId: number | undefined
   projectFlags: ProjectFlag[]
@@ -47,7 +46,6 @@ export const FeaturesList: FC<FeaturesListProps> = ({
   hasFilters,
   isFetching,
   isLoading,
-  numericEnvironmentId,
   onClearFilters,
   onFilterChange,
   onPageChange,
@@ -75,7 +73,6 @@ export const FeaturesList: FC<FeaturesListProps> = ({
         header={
           <FeaturesTableFilters
             projectId={projectId}
-            environmentId={numericEnvironmentId?.toString() || ''}
             filters={filters}
             hasFilters={hasFilters}
             isLoading={isLoading}

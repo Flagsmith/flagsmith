@@ -38,7 +38,7 @@ const FeaturesPageComponent: FC = () => {
     maxFeaturesAllowed,
   } = useProjectEnvironments(projectId)
 
-  const numericEnvironmentId = useMemo(
+  const environmentDbId = useMemo(
     () => getEnvironmentIdFromKey(environmentId),
     [getEnvironmentIdFromKey, environmentId],
   )
@@ -65,11 +65,11 @@ const FeaturesPageComponent: FC = () => {
     buildApiFilterParams(
       filters,
       page,
-      numericEnvironmentId?.toString() ?? '',
+      environmentDbId?.toString() ?? '',
       projectId,
     ),
     {
-      skip: !numericEnvironmentId || !projectId || isLoadingEnvironments,
+      skip: !environmentDbId || !projectId || isLoadingEnvironments,
     },
   )
 
@@ -183,7 +183,6 @@ const FeaturesPageComponent: FC = () => {
                 <FeaturesList
                   projectId={projectId}
                   environmentId={environmentId}
-                  numericEnvironmentId={numericEnvironmentId}
                   environment={environment}
                   organisationId={routeContext.organisationId}
                   projectFlags={projectFlags}
