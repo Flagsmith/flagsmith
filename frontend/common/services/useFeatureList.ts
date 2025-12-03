@@ -80,7 +80,6 @@ export const featureListService = service
           }, {} as Res['featureList']['environmentStates']),
           pagination: {
             count: response.count,
-            currentPage: arg.page || 1,
             next: response.next,
             page: arg.page || 1,
             pageSize: arg.page_size || config.FEATURES_PAGE_SIZE,

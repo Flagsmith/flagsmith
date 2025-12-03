@@ -528,6 +528,7 @@ export type ProjectFlag = {
     last_successful_repository_scanned_at: string
     last_feature_found_at: string
   }[]
+  environment_feature_state?: FeatureState
 }
 
 export type FeatureListProviderData = {
