@@ -23,6 +23,8 @@ import {
   StageTrigger,
   StageActionType,
   StageActionBody,
+  ChangeRequest,
+  TagStrategy,
 } from './responses'
 import { UtmsType } from './utms'
 
@@ -42,6 +44,28 @@ export type UpdateOrganisationBody = {
   force_2fa?: boolean
   restrict_project_create_to_admin?: boolean
   webhook_notification_email?: string | null
+}
+
+export type UpdateFeatureStateBody = {
+  enabled?: boolean
+  feature_state_value?: FeatureStateValue
+  multivariate_feature_state_values?: MultivariateOption[] | null
+}
+
+export type CreateMultivariateOptionBody = {
+  type: string
+  integer_value?: number
+  string_value: string
+  boolean_value?: boolean
+  default_percentage_allocation: number
+}
+
+export type UpdateMultivariateOptionBody = {
+  type?: string
+  integer_value?: number
+  string_value?: string
+  boolean_value?: boolean
+  default_percentage_allocation?: number
 }
 
 export type PagedRequest<T> = T & {
@@ -821,7 +845,7 @@ export type Req = {
     environment_id: string
   }
   getFeatureList: {
-    projectId: string
+    projectId: number
     environmentId: string
     page?: number
     page_size?: number
@@ -839,21 +863,21 @@ export type Req = {
   updateFeatureState: {
     environmentId: string
     stateId: number
-    body: Partial<FeatureState>
+    body: UpdateFeatureStateBody
   }
   createMultivariateOption: {
-    projectId: string
+    projectId: number
     featureId: number
-    body: Partial<MultivariateOption>
+    body: CreateMultivariateOptionBody
   }
   updateMultivariateOption: {
-    projectId: string
+    projectId: number
     featureId: number
     mvId: number
-    body: Partial<MultivariateOption>
+    body: UpdateMultivariateOptionBody
   }
   deleteMultivariateOption: {
-    projectId: string
+    projectId: number
     featureId: number
     mvId: number
   }
