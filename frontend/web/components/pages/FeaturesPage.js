@@ -9,12 +9,9 @@ import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
-import { rocket } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 import classNames from 'classnames'
 import Button from 'components/base/forms/Button'
-import EnvironmentMetricsList from 'components/metrics/EnvironmentMetricsList'
 import { withRouter } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 import FeatureFilters, {
@@ -22,6 +19,7 @@ import FeatureFilters, {
   getServerFilter,
   getURLParamsFromFilters,
 } from 'components/feature-page/FeatureFilters'
+import { FeatureMetricsSection, FeaturesEmptyState } from './features'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
