@@ -183,10 +183,15 @@ def _update_flag_for_versioning_v1(
 ) -> FeatureState:
     from features.models import FeatureSegment, FeatureState
 
+    if change_set.segment_id:
+        additional_filters = Q(feature_segment__segment_id=change_set.segment_id)
+    else:
+        additional_filters = Q(feature_segment__isnull=True)
+
     latest_feature_states = get_environment_flags_dict(
         environment=environment,
         feature_name=feature.name,
-        additional_filters=Q(feature_segment__segment_id=change_set.segment_id),
+        additional_filters=additional_filters,
     )
 
     if len(latest_feature_states) == 0 and change_set.segment_id:
