@@ -171,18 +171,14 @@ const Index = class extends Component {
   onClosing = () => {
     if (this.state.isEdit) {
       return new Promise((resolve) => {
-        // For identity flags, use change tracking flags instead of object comparison
-        // since props may have different references or missing fields
-        const hasChanges = this.props.identity
-          ? this.state.valueChanged
-          : !_.isEqual(this.state.projectFlag, this.props.projectFlag) ||
-            !_.isEqual(
-              this.state.environmentFlag,
-              this.props.environmentFlag || this.props.identityFlag,
-            ) ||
-            this.state.segmentsChanged
-
-        if (hasChanges) {
+        const projectFlagChanged = this.state.settingsChanged
+        const environmentFlagChanged = this.state.valueChanged
+        const segmentOverridesChanged = this.state.segmentsChanged
+        if (
+          projectFlagChanged ||
+          environmentFlagChanged ||
+          segmentOverridesChanged
+        ) {
           openConfirm({
             body: 'Closing this will discard your unsaved changes.',
             noText: 'Cancel',
@@ -1900,6 +1896,9 @@ const FeatureProvider = (WrappedComponent) => {
                 ...(newEnvironmentFlag || {}),
               },
               projectFlag,
+              segmentsChanged: false,
+              settingsChanged: false,
+              valueChanged: false,
             })
           } else if (this.props.projectFlag) {
             //update the environmentFlag and projectFlag to the new values
@@ -1914,6 +1913,9 @@ const FeatureProvider = (WrappedComponent) => {
                 ...(newEnvironmentFlag || {}),
               },
               projectFlag: newProjectFlag,
+              segmentsChanged: false,
+              settingsChanged: false,
+              valueChanged: false,
             })
           }
         },
