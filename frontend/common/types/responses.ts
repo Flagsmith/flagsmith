@@ -586,6 +586,7 @@ export type Account = {
   first_name: string
   last_name: string
   date_joined: string
+  pylon_email_signature: string
   sign_up_type: SignupType
   id: number
   email: string

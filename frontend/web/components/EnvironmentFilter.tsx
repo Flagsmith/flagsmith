@@ -2,7 +2,7 @@ import { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 
 export type EnvironmentFilterType = {
-  projectId: string
+  projectId: number
   value?: string
   onChange: (value: string) => void
   showAll?: boolean
