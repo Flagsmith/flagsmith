@@ -1,9 +1,37 @@
 import { useCallback, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { useGetProjectQuery } from 'common/services/useProject'
-import type { Environment } from 'common/types/responses'
+import type { Environment, Project } from 'common/types/responses'
 
-export function useProjectEnvironments(projectId: string) {
+/**
+ * Custom hook for fetching and managing project and environment data.
+ *
+ * Provides both raw data and convenient accessor functions for:
+ * - Looking up environments by API key
+ * - Accessing project feature limits
+ * - Unified loading/error states
+ *
+ * @param projectId - The project ID to fetch data for
+ * @returns Object containing project data, environments, and accessor functions
+ *
+ * @example
+ * ```tsx
+ * const { environments, getEnvironment, maxFeaturesAllowed, isLoading } =
+ *   useProjectEnvironments(projectId)
+ *
+ * const env = getEnvironment(apiKey)
+ * const canAddFeature = maxFeaturesAllowed === null || features.length < maxFeaturesAllowed
+ * ```
+ */
+export function useProjectEnvironments(projectId: string): {
+  project: Project | undefined
+  environments: Environment[]
+  getEnvironmentIdFromKey: (apiKey: string) => number | undefined
+  getEnvironment: (apiKey: string) => Environment | undefined
+  maxFeaturesAllowed: number | null
+  isLoading: boolean
+  error: unknown
+} {
   const {
     data: project,
     error: projectError,
@@ -17,7 +45,7 @@ export function useProjectEnvironments(projectId: string) {
   } = useGetEnvironmentsQuery({ projectId }, { skip: !projectId })
 
   const environments = useMemo(
-    () => environmentsData?.results || [],
+    () => environmentsData?.results ?? [],
     [environmentsData?.results],
   )
 

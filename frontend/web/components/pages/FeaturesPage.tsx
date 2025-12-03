@@ -4,6 +4,7 @@ import CreateFlagModal from 'components/modals/CreateFlag'
 import Permission from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import Utils from 'common/utils/utils'
 import { useRouteContext } from 'components/providers/RouteContext'
 import {
   FeaturesEmptyState,
@@ -12,6 +13,13 @@ import {
   FeaturesList,
   FeaturesSDKIntegration,
 } from './features'
+import { FEATURES_PAGE_SIZE } from './features/constants'
+import {
+  shouldShowInitialLoader,
+  shouldShowContent,
+  shouldShowEmptyState,
+} from './features/utils/displayLogic'
+import { buildApiFilterParams } from './features/utils/filterHelpers'
 import { useGetFeatureListQuery } from 'common/services/useFeatureList'
 import { useFeatureFilters } from './features/hooks/useFeatureFilters'
 import { useFeatureActions } from './features/hooks/useFeatureActions'
@@ -54,33 +62,27 @@ const FeaturesPageComponent: FC = () => {
   const [loadedOnce, setLoadedOnce] = useState(false)
 
   const { data, isFetching, isLoading } = useGetFeatureListQuery(
-    {
-      environmentId: numericEnvironmentId?.toString() || '',
-      group_owners: filters.group_owners.length
-        ? filters.group_owners.join(',')
-        : undefined,
-      is_archived: filters.showArchived,
-      is_enabled: filters.is_enabled,
-      owners: filters.owners.length ? filters.owners.join(',') : undefined,
+    buildApiFilterParams(
+      filters,
       page,
-      page_size: 50,
+      numericEnvironmentId?.toString() ?? '',
       projectId,
-      search: filters.search,
-      sort_direction: filters.sort.sortOrder === 'asc' ? 'ASC' : 'DESC',
-      sort_field: filters.sort.sortBy,
-      tag_strategy: filters.tag_strategy,
-      tags: filters.tags.length ? filters.tags.join(',') : undefined,
-      value_search: filters.value_search || undefined,
-    },
+    ),
     {
       skip: !numericEnvironmentId || !projectId,
     },
   )
 
-  const projectFlags = data?.results || []
-  const environmentFlags = data?.environmentStates || {}
-  const paging = data?.pagination
-  const totalFeatures = data?.count || 0
+  const projectFlags = data?.results ?? []
+  const environmentFlags = data?.environmentStates ?? {}
+  const paging = data?.pagination ?? {
+    count: 0,
+    currentPage: 1,
+    next: null,
+    pageSize: FEATURES_PAGE_SIZE,
+    previous: null,
+  }
+  const totalFeatures = data?.count ?? 0
 
   useEffect(() => {
     API.trackPage(Constants.pages.FEATURES)
@@ -100,7 +102,7 @@ const FeaturesPageComponent: FC = () => {
     }
   }, [data, loadedOnce])
 
-  const newFlag = useCallback(() => {
+  const newFlag = useCallback((): void => {
     openModal(
       'New Feature',
       <CreateFlagModal
@@ -113,7 +115,7 @@ const FeaturesPageComponent: FC = () => {
   }, [history, environmentId, projectId])
 
   const createFeaturePermission = useCallback(
-    (el: (permission: boolean) => React.ReactNode) => {
+    (el: (permission: boolean) => React.ReactNode): React.ReactNode => {
       return (
         <Permission level='project' permission='CREATE_FEATURE' id={projectId}>
           {({ permission }) =>
@@ -133,15 +135,17 @@ const FeaturesPageComponent: FC = () => {
 
   const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
 
-  const showInitialLoader =
-    (isLoading || !loadedOnce) && (!projectFlags || !projectFlags.length)
-  const showContent =
-    loadedOnce ||
-    ((filters.showArchived ||
-      typeof filters.search === 'string' ||
-      !!filters.tags.length) &&
-      !isLoading)
-  const showEmptyState = !isLoading && loadedOnce && !showContent
+  const showInitialLoader = shouldShowInitialLoader(
+    isLoading,
+    loadedOnce,
+    projectFlags,
+  )
+  const showContent = shouldShowContent(loadedOnce, filters, isLoading)
+  const showEmptyState = shouldShowEmptyState(
+    isLoading,
+    loadedOnce,
+    showContent,
+  )
 
   return (
     <div

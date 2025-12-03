@@ -2,10 +2,10 @@ import { FeatureState, ProjectFlag } from 'common/types/responses'
 
 export type Pagination = {
   count: number
+  currentPage: number
   next: string | null
-  previous: string | null
-  page: number
   pageSize: number
+  previous: string | null
 }
 
 export type EnvironmentFlagsMap = Record<number, FeatureState>

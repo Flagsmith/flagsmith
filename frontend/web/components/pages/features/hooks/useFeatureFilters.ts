@@ -1,11 +1,22 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { isEqual } from 'lodash'
 import type { History } from 'history'
 import type { FilterState } from 'components/pages/features/components/FeaturesTableFilters'
 import type { UrlParams } from 'components/pages/features/types'
+import Utils from 'common/utils/utils'
 import Format from 'common/utils/format'
+import {
+  hasActiveFilters,
+  buildUrlParams,
+} from 'components/pages/features/utils/filterHelpers'
 
-const getFiltersFromParams = (params: UrlParams) => {
+/**
+ * Converts URL query parameters to FilterState object.
+ * Handles parsing of arrays, booleans, and sort configuration from URL params.
+ *
+ * @param params - URL query parameters as key-value pairs
+ * @returns Structured filter state object
+ */
+export const getFiltersFromParams = (params: UrlParams): FilterState => {
   return {
     group_owners:
       typeof params.group_owners === 'string'
@@ -21,14 +32,14 @@ const getFiltersFromParams = (params: UrlParams) => {
         ? params.owners.split(',').map((v: string) => parseInt(v))
         : [],
     page: params.page ? parseInt(params.page) : 1,
-    search: params.search || null,
+    search: params.search ?? null,
     showArchived: params.is_archived === 'true',
     sort: {
-      label: Format.camelCase(params.sortBy || 'Name'),
-      sortBy: params.sortBy || 'name',
-      sortOrder: params.sortOrder || 'asc',
+      label: Format.camelCase(params.sortBy ?? 'Name'),
+      sortBy: params.sortBy ?? 'name',
+      sortOrder: params.sortOrder ?? 'asc',
     },
-    tag_strategy: params.tag_strategy || 'INTERSECTION',
+    tag_strategy: params.tag_strategy ?? 'INTERSECTION',
     tags:
       typeof params.tags === 'string'
         ? params.tags.split(',').map((v: string) => parseInt(v))
@@ -38,7 +49,36 @@ const getFiltersFromParams = (params: UrlParams) => {
   }
 }
 
-export function useFeatureFilters(history: History) {
+/**
+ * Custom hook for managing feature list filters and pagination state.
+ *
+ * Syncs filter state with URL query parameters bidirectionally:
+ * - Initializes filters from URL on mount
+ * - Updates URL whenever filters change
+ * - Preserves filter state across page refreshes
+ *
+ * @param history - React Router history object for URL manipulation
+ * @returns Object containing filters, pagination state, and filter management functions
+ *
+ * @example
+ * ```tsx
+ * const { filters, page, handleFilterChange, goToPage } = useFeatureFilters(history)
+ *
+ * // Update search filter
+ * handleFilterChange({ search: 'my-feature' })
+ *
+ * // Navigate to next page
+ * goToPage(page + 1)
+ * ```
+ */
+export function useFeatureFilters(history: History): {
+  filters: FilterState
+  page: number
+  hasFilters: boolean
+  handleFilterChange: (updates: Partial<FilterState>) => void
+  clearFilters: () => void
+  goToPage: (newPage: number) => void
+} {
   const initialFilters = useMemo(
     () => getFiltersFromParams(Utils.fromParam()),
     [],
@@ -50,20 +90,7 @@ export function useFeatureFilters(history: History) {
   const updateURLParams = useCallback(() => {
     const currentParams = Utils.fromParam()
     if (!currentParams.feature) {
-      const urlParams = {
-        group_owners: filters.group_owners?.join(',') || undefined,
-        is_archived: filters.showArchived || undefined,
-        is_enabled:
-          filters.is_enabled === null ? undefined : filters.is_enabled,
-        owners: filters.owners?.join(',') || undefined,
-        page: page || 1,
-        search: filters.search || '',
-        sortBy: filters.sort.sortBy,
-        sortOrder: filters.sort.sortOrder,
-        tag_strategy: filters.tag_strategy,
-        tags: filters.tags?.join(',') || undefined,
-        value_search: filters.value_search || undefined,
-      }
+      const urlParams = buildUrlParams(filters, page)
       history.replace(
         `${document.location.pathname}?${Utils.toParam(urlParams)}`,
       )
@@ -90,18 +117,12 @@ export function useFeatureFilters(history: History) {
     setPage(newPage)
   }, [])
 
-  const params = Utils.fromParam()
-  const hasFilters = !isEqual(
-    getFiltersFromParams({ ...params, page: '1' }),
-    getFiltersFromParams({ page: '1' }),
-  )
-
   return {
     clearFilters,
     filters,
     goToPage,
     handleFilterChange,
-    hasFilters,
+    hasFilters: hasActiveFilters(filters),
     page,
   }
 }
