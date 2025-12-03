@@ -35,7 +35,7 @@ export interface FeatureRowProps {
   environmentId: string
   permission?: boolean
   projectFlag: ProjectFlag
-  projectId: string
+  projectId: number
   removeFlag?: FeatureListProviderActions['removeFlag']
   toggleFlag?: FeatureListProviderActions['toggleFlag']
   index: number

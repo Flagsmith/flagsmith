@@ -69,10 +69,10 @@ export function buildApiFilterParams(
   filters: FilterState,
   page: number,
   environmentId: string,
-  projectId: string,
+  projectId: number,
 ): {
   environmentId: string
-  projectId: string
+  projectId: number
   page: number
   page_size: number
   search: string | null

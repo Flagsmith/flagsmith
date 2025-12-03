@@ -14,7 +14,7 @@ import type {
 import type { Pagination } from 'components/pages/features/types'
 
 type FeaturesListProps = {
-  projectId: string
+  projectId: number
   environmentId: string
   numericEnvironmentId: number | undefined
   environment: Environment | undefined
@@ -31,12 +31,12 @@ type FeaturesListProps = {
   onClearFilters: () => void
   onPageChange: (page: number) => void
   onToggleFlag: (
-    projectId: string,
+    projectId: number,
     environmentId: string,
     flag: ProjectFlag,
     environmentFlag: FeatureState | undefined,
   ) => Promise<void>
-  onRemoveFlag: (projectId: string, projectFlag: ProjectFlag) => Promise<void>
+  onRemoveFlag: (projectId: number, projectFlag: ProjectFlag) => Promise<void>
 }
 
 export const FeaturesList: FC<FeaturesListProps> = ({

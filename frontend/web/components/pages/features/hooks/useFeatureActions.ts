@@ -32,12 +32,12 @@ import type { FeatureState, ProjectFlag } from 'common/types/responses'
  * Once migrated, FeatureRow's callback signatures can be simplified.
  */
 export function useFeatureActions(
-  projectId: string,
+  projectId: number,
   environmentId: string,
 ): {
-  removeFlag: (projectId: string, projectFlag: ProjectFlag) => Promise<void>
+  removeFlag: (projectId: number, projectFlag: ProjectFlag) => Promise<void>
   toggleFlag: (
-    projectId: string,
+    projectId: number,
     environmentId: string,
     flag: ProjectFlag,
     environmentFlag: FeatureState | undefined,
@@ -47,7 +47,7 @@ export function useFeatureActions(
   const [updateFeatureState] = useUpdateFeatureStateMutation()
 
   const removeFlag = useCallback(
-    async (_projectId: string, projectFlag: ProjectFlag) => {
+    async (_projectId: number, projectFlag: ProjectFlag) => {
       try {
         await removeProjectFlag({
           id: projectFlag.id,
@@ -64,7 +64,7 @@ export function useFeatureActions(
 
   const toggleFlag = useCallback(
     async (
-      _projectId: string,
+      _projectId: number,
       _environmentId: string,
       flag: ProjectFlag,
       environmentFlag: FeatureState | undefined,

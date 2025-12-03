@@ -540,12 +540,12 @@ export type FeatureListProviderData = {
 
 export type FeatureListProviderActions = {
   toggleFlag: (
-    projectId: string,
+    projectId: number,
     environmentId: string,
     projectFlag: ProjectFlag,
     environmentFlags: FeatureState | undefined,
   ) => void
-  removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
+  removeFlag: (projectId: number, projectFlag: ProjectFlag) => void
 }
 
 export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
