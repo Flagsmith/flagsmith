@@ -14,7 +14,7 @@ This is the API that your client and server-side SDKs interact with to get flag 
 - **Authentication:** Uses a public, non-secret **Environment Key**.
 - **Security:** Open by design. The Environment Key can be exposed in client-side code.
 
-[Learn more about the Flags API](./flags-api).
+[Learn more about the Flags API](/integrating-with-flagsmith/flagsmith-api-overview/flags-api).
 
 ### 2. The Admin API (Private Admin API)
 
@@ -24,4 +24,4 @@ This is the API you use to programmatically manage your Flagsmith projects. Anyt
 - **Authentication:** Uses a secret **Organisation API Token**.
 - **Security:** Requires a secret key that should never be exposed in client-side code.
 
-[Learn more about the Admin API](./admin-api). 
+[Learn more about the Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api). 
