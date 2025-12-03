@@ -57,37 +57,30 @@ const Index = class extends Component {
 
   constructor(props, context) {
     super(props, context)
-    const {
-      description,
-      enabled,
-      feature_state_value,
-      is_archived,
-      is_server_key_only,
-      multivariate_options,
-      name,
-      tags,
-    } = this.props.projectFlag
-      ? Utils.getFlagValue(
-          this.props.projectFlag,
-          this.props.environmentFlag,
-          this.props.identityFlag,
-        )
-      : {
-          multivariate_options: [],
-        }
-    const { allowEditDescription } = this.props
-    const hideTags = this.props.hideTags || []
-
     if (this.props.projectFlag) {
       this.userOverridesPage(1, true)
     }
+
+    const projectFlagData = this.props.projectFlag
+      ? _.cloneDeep(this.props.projectFlag)
+      : {
+          description: undefined,
+          is_archived: undefined,
+          is_server_key_only: undefined,
+          metadata: [],
+          multivariate_options: [],
+          name: undefined,
+          tags: [],
+        }
+
+    const sourceFlag = this.props.identityFlag || this.props.environmentFlag
+    const environmentFlagData = sourceFlag ? _.cloneDeep(sourceFlag) : {}
+
     this.state = {
-      allowEditDescription,
       changeRequests: [],
-      default_enabled: enabled,
-      description,
       enabledIndentity: false,
       enabledSegment: false,
+      environmentFlag: environmentFlagData,
       externalResource: {},
       externalResources: [],
       featureContentType: {},
@@ -95,31 +88,16 @@ const Index = class extends Component {
       githubId: '',
       hasIntegrationWithGithub: false,
       hasMetadataRequired: false,
-      identityVariations:
-        this.props.identityFlag &&
-        this.props.identityFlag.multivariate_feature_state_values
-          ? _.cloneDeep(
-              this.props.identityFlag.multivariate_feature_state_values,
-            )
-          : [],
-      initial_value:
-        typeof feature_state_value === 'undefined'
-          ? undefined
-          : Utils.getTypedValue(feature_state_value),
       isEdit: !!this.props.projectFlag,
-      is_archived,
-      is_server_key_only,
-      metadata: [],
-      multivariate_options: _.cloneDeep(multivariate_options),
-      name,
       period: 30,
+      projectFlag: projectFlagData,
       scheduledChangeRequests: [],
+      segmentsChanged: false,
       selectedIdentity: null,
-      tags: tags?.filter((tag) => !hideTags.includes(tag)) || [],
+      settingsChanged: false,
+      valueChanged: false,
     }
   }
-
-  getState = () => {}
 
   close() {
     closeModal()
@@ -127,6 +105,36 @@ const Index = class extends Component {
 
   componentDidUpdate(prevProps) {
     ES6Component(this)
+
+    const environmentFlagSource =
+      this.props.identityFlag || this.props.environmentFlag
+    const prevEnvironmentFlagSource =
+      prevProps.identityFlag || prevProps.environmentFlag
+
+    if (
+      environmentFlagSource &&
+      prevEnvironmentFlagSource &&
+      environmentFlagSource.updated_at &&
+      prevEnvironmentFlagSource.updated_at &&
+      environmentFlagSource.updated_at !== prevEnvironmentFlagSource.updated_at
+    ) {
+      this.setState({
+        environmentFlag: _.cloneDeep(environmentFlagSource),
+      })
+    }
+
+    if (
+      this.props.projectFlag &&
+      prevProps.projectFlag &&
+      this.props.projectFlag.updated_at &&
+      prevProps.projectFlag.updated_at &&
+      this.props.projectFlag.updated_at !== prevProps.projectFlag.updated_at
+    ) {
+      this.setState({
+        projectFlag: _.cloneDeep(this.props.projectFlag),
+      })
+    }
+
     if (
       !this.props.identity &&
       this.props.environmentVariations !== prevProps.environmentVariations
@@ -136,22 +144,25 @@ const Index = class extends Component {
         this.props.environmentVariations.length
       ) {
         this.setState({
-          multivariate_options:
-            this.state.multivariate_options &&
-            this.state.multivariate_options.map((v) => {
-              const matchingVariation = (
-                this.props.multivariate_options ||
-                this.props.environmentVariations
-              ).find((e) => e.multivariate_feature_option === v.id)
-              return {
-                ...v,
-                default_percentage_allocation:
-                  (matchingVariation &&
-                    matchingVariation.percentage_allocation) ||
-                  v.default_percentage_allocation ||
-                  0,
-              }
-            }),
+          projectFlag: {
+            ...this.state.projectFlag,
+            multivariate_options:
+              this.state.projectFlag.multivariate_options &&
+              this.state.projectFlag.multivariate_options.map((v) => {
+                const matchingVariation = (
+                  this.props.multivariate_options ||
+                  this.props.environmentVariations
+                ).find((e) => e.multivariate_feature_option === v.id)
+                return {
+                  ...v,
+                  default_percentage_allocation:
+                    (matchingVariation &&
+                      matchingVariation.percentage_allocation) ||
+                    v.default_percentage_allocation ||
+                    0,
+                }
+              }),
+          },
         })
       }
     }
@@ -160,11 +171,18 @@ const Index = class extends Component {
   onClosing = () => {
     if (this.state.isEdit) {
       return new Promise((resolve) => {
-        if (
-          this.state.valueChanged ||
-          this.state.segmentsChanged ||
-          this.state.settingsChanged
-        ) {
+        // For identity flags, use change tracking flags instead of object comparison
+        // since props may have different references or missing fields
+        const hasChanges = this.props.identity
+          ? this.state.valueChanged
+          : !_.isEqual(this.state.projectFlag, this.props.projectFlag) ||
+            !_.isEqual(
+              this.state.environmentFlag,
+              this.props.environmentFlag || this.props.identityFlag,
+            ) ||
+            this.state.segmentsChanged
+
+        if (hasChanges) {
           openConfirm({
             body: 'Closing this will discard your unsaved changes.',
             noText: 'Cancel',
@@ -282,42 +300,32 @@ const Index = class extends Component {
 
   save = (func, isSaving) => {
     const {
-      environmentFlag,
+      environmentFlag: propsEnvironmentFlag,
       environmentId,
       identity,
       identityFlag,
       projectFlag: _projectFlag,
       segmentOverrides,
     } = this.props
-    const {
-      default_enabled,
-      description,
-      initial_value,
-      is_archived,
-      is_server_key_only,
-      name,
-    } = this.state
-    const projectFlag = {
-      skipSaveProjectFeature: this.state.skipSaveProjectFeature,
-      ..._projectFlag,
-    }
+    const { environmentFlag: stateEnvironmentFlag, projectFlag } = this.state
     const hasMultivariate =
-      this.props.environmentFlag &&
-      this.props.environmentFlag.multivariate_feature_state_values &&
-      this.props.environmentFlag.multivariate_feature_state_values.length
+      propsEnvironmentFlag &&
+      propsEnvironmentFlag.multivariate_feature_state_values &&
+      propsEnvironmentFlag.multivariate_feature_state_values.length
     if (identity) {
       !isSaving &&
-        name &&
+        projectFlag.name &&
         func({
-          environmentFlag,
+          environmentFlag: propsEnvironmentFlag,
           environmentId,
           identity,
           identityFlag: Object.assign({}, identityFlag || {}, {
-            enabled: default_enabled,
+            enabled: stateEnvironmentFlag.enabled,
             feature_state_value: hasMultivariate
-              ? this.props.environmentFlag.feature_state_value
-              : this.cleanInputValue(initial_value),
-            multivariate_options: this.state.identityVariations,
+              ? propsEnvironmentFlag.feature_state_value
+              : this.cleanInputValue(stateEnvironmentFlag.feature_state_value),
+            multivariate_options:
+              stateEnvironmentFlag.multivariate_feature_state_values,
           }),
           projectFlag,
         })
@@ -325,28 +333,33 @@ const Index = class extends Component {
       FeatureListStore.isSaving = true
       FeatureListStore.trigger('change')
       !isSaving &&
-        name &&
+        projectFlag.name &&
         func(
           this.props.projectId,
           this.props.environmentId,
           {
-            default_enabled,
-            description,
-            initial_value: this.cleanInputValue(initial_value),
-            is_archived,
-            is_server_key_only,
+            default_enabled: stateEnvironmentFlag.enabled,
+            description: projectFlag.description,
+            initial_value: this.cleanInputValue(
+              stateEnvironmentFlag.feature_state_value,
+            ),
+            is_archived: projectFlag.is_archived,
+            is_server_key_only: projectFlag.is_server_key_only,
             metadata:
               !this.props.projectFlag?.metadata ||
-              (this.props.projectFlag.metadata !== this.state.metadata &&
-                this.state.metadata.length)
-                ? this.state.metadata
+              (this.props.projectFlag.metadata !== projectFlag.metadata &&
+                projectFlag.metadata.length)
+                ? projectFlag.metadata
                 : this.props.projectFlag.metadata,
-            multivariate_options: this.state.multivariate_options,
-            name,
-            tags: this.state.tags,
+            multivariate_options: projectFlag.multivariate_options,
+            name: projectFlag.name,
+            tags: projectFlag.tags,
           },
-          projectFlag,
-          environmentFlag,
+          {
+            skipSaveProjectFeature: this.state.skipSaveProjectFeature,
+            ..._projectFlag,
+          },
+          propsEnvironmentFlag,
           segmentOverrides,
         )
     }
@@ -463,40 +476,6 @@ const Index = class extends Component {
     }
   }
 
-  addVariation = () => {
-    this.setState({
-      multivariate_options: this.state.multivariate_options.concat([
-        {
-          ...Utils.valueToFeatureState(''),
-          default_percentage_allocation: 0,
-        },
-      ]),
-      valueChanged: true,
-    })
-  }
-
-  removeVariation = (i) => {
-    this.state.valueChanged = true
-    if (this.state.multivariate_options[i].id) {
-      const idToRemove = this.state.multivariate_options[i].id
-      if (idToRemove) {
-        this.props.removeMultivariateOption(idToRemove)
-      }
-      this.state.multivariate_options.splice(i, 1)
-      this.forceUpdate()
-    } else {
-      this.state.multivariate_options.splice(i, 1)
-      this.forceUpdate()
-    }
-  }
-
-  updateVariation = (i, e, environmentVariations) => {
-    this.props.onEnvironmentVariationsChange(environmentVariations)
-    this.state.multivariate_options[i] = e
-    this.state.valueChanged = true
-    this.forceUpdate()
-  }
-
   fetchChangeRequests = (forceRefetch) => {
     const { environmentId, projectFlag } = this.props
     if (!projectFlag?.id) return
@@ -535,20 +514,17 @@ const Index = class extends Component {
 
   render() {
     const {
-      default_enabled,
       enabledIndentity,
       enabledSegment,
+      environmentFlag,
       featureContentType,
       githubId,
       hasIntegrationWithGithub,
-      initial_value,
       isEdit,
-      multivariate_options,
-      name,
+      projectFlag,
     } = this.state
-    const { identity, identityName, projectFlag } = this.props
+    const { identity, identityName } = this.props
     const Provider = identity ? IdentityProvider : FeatureListProvider
-    const environmentVariations = this.props.environmentVariations
     const environment = ProjectStore.getEnvironment(this.props.environmentId)
     const isVersioned = !!environment?.use_v2_feature_versioning
     const is4Eyes =
@@ -557,9 +533,13 @@ const Index = class extends Component {
     const project = ProjectStore.model
     const caseSensitive = project?.only_allow_lower_case_feature_names
     const regex = project?.feature_name_regex
-    const controlValue = Utils.calculateControl(multivariate_options)
+    const controlValue = Utils.calculateControl(
+      projectFlag.multivariate_options,
+    )
     const invalid =
-      !!multivariate_options && multivariate_options.length && controlValue < 0
+      !!projectFlag.multivariate_options &&
+      projectFlag.multivariate_options.length &&
+      controlValue < 0
     const existingChangeRequest = this.props.changeRequest
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
@@ -570,8 +550,8 @@ const Index = class extends Component {
     )
 
     try {
-      if (!isEdit && name && regex) {
-        regexValid = name.match(new RegExp(regex))
+      if (!isEdit && projectFlag.name && regex) {
+        regexValid = projectFlag.name.match(new RegExp(regex))
       }
     } catch (e) {
       regexValid = false
@@ -635,11 +615,12 @@ const Index = class extends Component {
                     })
                     .concat([
                       Object.assign({}, this.props.environmentFlag, {
-                        enabled: default_enabled,
-                        feature_state_value:
-                          Utils.valueToFeatureState(initial_value),
+                        enabled: environmentFlag.enabled,
+                        feature_state_value: Utils.valueToFeatureState(
+                          environmentFlag.feature_state_value,
+                        ),
                         multivariate_feature_state_values:
-                          this.state.identityVariations,
+                          environmentFlag.multivariate_feature_state_values,
                       }),
                     ])
 
@@ -705,7 +686,7 @@ const Index = class extends Component {
                                   .multivariate_options
                                   ? this.props.multivariate_options.map((v) => {
                                       const matching =
-                                        this.state.multivariate_options.find(
+                                        projectFlag.multivariate_options.find(
                                           (m) =>
                                             m.id ===
                                             v.multivariate_feature_option,
@@ -716,7 +697,7 @@ const Index = class extends Component {
                                           matching.default_percentage_allocation,
                                       }
                                     })
-                                  : this.state.multivariate_options,
+                                  : projectFlag.multivariate_options,
                                 title,
                               },
                               !is4Eyes,
@@ -756,22 +737,6 @@ const Index = class extends Component {
 
               const { featureError, featureWarning } = this.parseError(error)
 
-              const featureState = {
-                enabled: default_enabled,
-                feature_state_value: initial_value,
-                multivariate_feature_state_values:
-                  this.state.identityVariations,
-              }
-
-              const createProjectFlag = {
-                description: this.state.description,
-                is_archived: this.state.is_archived,
-                is_server_key_only: this.state.is_server_key_only,
-                metadata: this.state.metadata,
-                multivariate_options: this.state.multivariate_options,
-                tags: this.state.tags,
-              }
-
               return (
                 <Permission
                   level='project'
@@ -788,18 +753,7 @@ const Index = class extends Component {
                         this.state.skipSaveProjectFeature = !createFeature
                         const _hasMetadataRequired =
                           this.state.hasMetadataRequired &&
-                          !this.state.metadata.length
-
-                        const editProjectFlag = projectFlag
-                          ? {
-                              ...projectFlag,
-                              description: this.state.description,
-                              is_archived: this.state.is_archived,
-                              is_server_key_only: this.state.is_server_key_only,
-                              metadata: this.state.metadata,
-                              tags: this.state.tags,
-                            }
-                          : null
+                          !projectFlag.metadata?.length
 
                         return (
                           <div id='create-feature-modal'>
@@ -835,51 +789,30 @@ const Index = class extends Component {
                                       hideValue={false}
                                       isEdit={isEdit}
                                       noPermissions={noPermissions}
-                                      multivariate_options={
-                                        multivariate_options
-                                      }
-                                      environmentVariations={
-                                        environmentVariations
-                                      }
-                                      featureState={{
-                                        enabled: default_enabled,
-                                        feature_state_value: initial_value,
-                                        multivariate_feature_state_values:
-                                          this.state.identityVariations,
-                                      }}
-                                      environmentFlag={
-                                        this.props.environmentFlag
-                                      }
+                                      featureState={environmentFlag}
                                       projectFlag={projectFlag}
-                                      onChange={(featureState) => {
-                                        const updates = {}
-                                        if (
-                                          featureState.enabled !== undefined
-                                        ) {
-                                          updates.default_enabled =
-                                            featureState.enabled
+                                      onEnvironmentFlagChange={(changes) => {
+                                        this.setState({
+                                          environmentFlag: {
+                                            ...this.state.environmentFlag,
+                                            ...changes,
+                                          },
+                                          valueChanged: true,
+                                        })
+                                      }}
+                                      onProjectFlagChange={(changes) => {
+                                        const updates = {
+                                          settingsChanged: true,
                                         }
-                                        if (
-                                          featureState.feature_state_value !==
-                                          undefined
-                                        ) {
-                                          updates.initial_value =
-                                            featureState.feature_state_value
-                                          updates.valueChanged = true
-                                        }
-                                        if (
-                                          featureState.multivariate_feature_state_values !==
-                                          undefined
-                                        ) {
-                                          updates.identityVariations =
-                                            featureState.multivariate_feature_state_values
-                                          updates.valueChanged = true
+                                        updates.projectFlag = {
+                                          ...this.state.projectFlag,
+                                          ...changes,
                                         }
                                         this.setState(updates)
                                       }}
-                                      removeVariation={this.removeVariation}
-                                      updateVariation={this.updateVariation}
-                                      addVariation={this.addVariation}
+                                      onRemoveMultivariateOption={
+                                        this.props.removeMultivariateOption
+                                      }
                                     />
                                     <JSONReference
                                       className='mb-3'
@@ -904,7 +837,7 @@ const Index = class extends Component {
                                         })?.name || ''
                                       }
                                       isSaving={isSaving}
-                                      featureName={name}
+                                      featureName={projectFlag.name}
                                       isInvalid={invalid}
                                       existingChangeRequest={
                                         existingChangeRequest
@@ -933,362 +866,352 @@ const Index = class extends Component {
                                         </Row>
                                       }
                                     >
-                                      {!identity && isEdit && (
-                                        <FormGroup className='mb-4'>
-                                          <FeatureInPipelineGuard
-                                            projectId={this.props.projectId}
-                                            featureId={projectFlag?.id}
-                                            renderFallback={(
-                                              matchingReleasePipeline,
-                                            ) => (
-                                              <>
-                                                <h5 className='mb-2'>
-                                                  Segment Overrides{' '}
-                                                </h5>
-                                                <InfoMessage
-                                                  title={`Feature in release pipeline`}
+                                      <FormGroup className='mb-4'>
+                                        <FeatureInPipelineGuard
+                                          projectId={this.props.projectId}
+                                          featureId={projectFlag?.id}
+                                          renderFallback={(
+                                            matchingReleasePipeline,
+                                          ) => (
+                                            <>
+                                              <h5 className='mb-2'>
+                                                Segment Overrides{' '}
+                                              </h5>
+                                              <InfoMessage
+                                                title={`Feature in release pipeline`}
+                                              >
+                                                This feature is in{' '}
+                                                <b>
+                                                  {
+                                                    matchingReleasePipeline?.name
+                                                  }
+                                                </b>{' '}
+                                                release pipeline and no segment
+                                                overrides can be created
+                                              </InfoMessage>
+                                            </>
+                                          )}
+                                        >
+                                          <div>
+                                            <Row className='align-items-center mb-2 gap-4 segment-overrides-title'>
+                                              <div className='flex-fill'>
+                                                <Tooltip
+                                                  title={
+                                                    <h5 className='mb-0'>
+                                                      Segment Overrides{' '}
+                                                      <Icon name='info-outlined' />
+                                                    </h5>
+                                                  }
+                                                  place='top'
                                                 >
-                                                  This feature is in{' '}
-                                                  <b>
-                                                    {
-                                                      matchingReleasePipeline?.name
+                                                  {
+                                                    Constants.strings
+                                                      .SEGMENT_OVERRIDES_DESCRIPTION
+                                                  }
+                                                </Tooltip>
+                                              </div>
+                                              <Permission
+                                                level='environment'
+                                                permission={
+                                                  'MANAGE_SEGMENT_OVERRIDES'
+                                                }
+                                                id={this.props.environmentId}
+                                              >
+                                                {({
+                                                  permission:
+                                                    manageSegmentOverrides,
+                                                }) =>
+                                                  !this.state
+                                                    .showCreateSegment &&
+                                                  !!manageSegmentOverrides &&
+                                                  !this.props.disableCreate && (
+                                                    <div className='text-right'>
+                                                      <Button
+                                                        size='small'
+                                                        onClick={() => {
+                                                          this.setState({
+                                                            showCreateSegment: true,
+                                                          })
+                                                        }}
+                                                        theme='outline'
+                                                        disabled={
+                                                          !!isLimitReached
+                                                        }
+                                                      >
+                                                        Create Feature-Specific
+                                                        Segment
+                                                      </Button>
+                                                    </div>
+                                                  )
+                                                }
+                                              </Permission>
+                                              {!this.state.showCreateSegment &&
+                                                !noPermissions && (
+                                                  <Button
+                                                    onClick={() =>
+                                                      this.changeSegment(
+                                                        this.props
+                                                          .segmentOverrides,
+                                                      )
                                                     }
-                                                  </b>{' '}
-                                                  release pipeline and no
-                                                  segment overrides can be
-                                                  created
-                                                </InfoMessage>
-                                              </>
-                                            )}
-                                          >
-                                            <div>
-                                              <Row className='align-items-center mb-2 gap-4 segment-overrides-title'>
-                                                <div className='flex-fill'>
-                                                  <Tooltip
-                                                    title={
-                                                      <h5 className='mb-0'>
-                                                        Segment Overrides{' '}
-                                                        <Icon name='info-outlined' />
-                                                      </h5>
-                                                    }
-                                                    place='top'
+                                                    type='button'
+                                                    theme='secondary'
+                                                    size='small'
                                                   >
-                                                    {
-                                                      Constants.strings
-                                                        .SEGMENT_OVERRIDES_DESCRIPTION
-                                                    }
-                                                  </Tooltip>
-                                                </div>
-                                                <Permission
-                                                  level='environment'
-                                                  permission={
-                                                    'MANAGE_SEGMENT_OVERRIDES'
-                                                  }
-                                                  id={this.props.environmentId}
-                                                >
-                                                  {({
-                                                    permission:
-                                                      manageSegmentOverrides,
-                                                  }) =>
-                                                    !this.state
-                                                      .showCreateSegment &&
-                                                    !!manageSegmentOverrides &&
-                                                    !this.props
-                                                      .disableCreate && (
-                                                      <div className='text-right'>
-                                                        <Button
-                                                          size='small'
-                                                          onClick={() => {
-                                                            this.setState({
-                                                              showCreateSegment: true,
-                                                            })
-                                                          }}
-                                                          theme='outline'
-                                                          disabled={
-                                                            !!isLimitReached
-                                                          }
-                                                        >
-                                                          Create
-                                                          Feature-Specific
-                                                          Segment
-                                                        </Button>
-                                                      </div>
-                                                    )
-                                                  }
-                                                </Permission>
-                                                {!this.state
-                                                  .showCreateSegment &&
-                                                  !noPermissions && (
-                                                    <Button
-                                                      onClick={() =>
-                                                        this.changeSegment(
-                                                          this.props
-                                                            .segmentOverrides,
-                                                        )
-                                                      }
-                                                      type='button'
-                                                      theme='secondary'
-                                                      size='small'
-                                                    >
-                                                      {enabledSegment
-                                                        ? 'Enable All'
-                                                        : 'Disable All'}
-                                                    </Button>
-                                                  )}
-                                              </Row>
-                                              {this.props.segmentOverrides ? (
-                                                <Permission
-                                                  level='environment'
-                                                  permission={
-                                                    'MANAGE_SEGMENT_OVERRIDES'
-                                                  }
-                                                  id={this.props.environmentId}
-                                                >
-                                                  {({
-                                                    permission:
-                                                      manageSegmentOverrides,
-                                                  }) => {
-                                                    const isReadOnly =
-                                                      !manageSegmentOverrides
-                                                    return (
-                                                      <>
-                                                        <ErrorMessage
-                                                          error={featureError}
-                                                        />
-                                                        <WarningMessage
-                                                          warningMessage={
-                                                            featureWarning
-                                                          }
-                                                        />
-                                                        <SegmentOverrides
-                                                          setShowCreateSegment={(
+                                                    {enabledSegment
+                                                      ? 'Enable All'
+                                                      : 'Disable All'}
+                                                  </Button>
+                                                )}
+                                            </Row>
+                                            {this.props.segmentOverrides ? (
+                                              <Permission
+                                                level='environment'
+                                                permission={
+                                                  'MANAGE_SEGMENT_OVERRIDES'
+                                                }
+                                                id={this.props.environmentId}
+                                              >
+                                                {({
+                                                  permission:
+                                                    manageSegmentOverrides,
+                                                }) => {
+                                                  const isReadOnly =
+                                                    !manageSegmentOverrides
+                                                  return (
+                                                    <>
+                                                      <ErrorMessage
+                                                        error={featureError}
+                                                      />
+                                                      <WarningMessage
+                                                        warningMessage={
+                                                          featureWarning
+                                                        }
+                                                      />
+                                                      <SegmentOverrides
+                                                        setShowCreateSegment={(
+                                                          showCreateSegment,
+                                                        ) =>
+                                                          this.setState({
                                                             showCreateSegment,
-                                                          ) =>
-                                                            this.setState({
-                                                              showCreateSegment,
-                                                            })
-                                                          }
-                                                          readOnly={isReadOnly}
-                                                          is4Eyes={is4Eyes}
-                                                          showEditSegment
-                                                          showCreateSegment={
-                                                            this.state
-                                                              .showCreateSegment
-                                                          }
-                                                          feature={
-                                                            projectFlag.id
-                                                          }
-                                                          projectId={
-                                                            this.props.projectId
-                                                          }
-                                                          multivariateOptions={
-                                                            multivariate_options
-                                                          }
-                                                          environmentId={
+                                                          })
+                                                        }
+                                                        readOnly={isReadOnly}
+                                                        is4Eyes={is4Eyes}
+                                                        showEditSegment
+                                                        showCreateSegment={
+                                                          this.state
+                                                            .showCreateSegment
+                                                        }
+                                                        feature={projectFlag.id}
+                                                        projectId={
+                                                          this.props.projectId
+                                                        }
+                                                        multivariateOptions={
+                                                          projectFlag.multivariate_options
+                                                        }
+                                                        environmentId={
+                                                          this.props
+                                                            .environmentId
+                                                        }
+                                                        value={
+                                                          this.props
+                                                            .segmentOverrides
+                                                        }
+                                                        controlValue={
+                                                          environmentFlag.feature_state_value
+                                                        }
+                                                        onChange={(v) => {
+                                                          this.setState({
+                                                            segmentsChanged: true,
+                                                          })
+                                                          this.props.updateSegments(
+                                                            v,
+                                                          )
+                                                        }}
+                                                        highlightSegmentId={
+                                                          this.props
+                                                            .highlightSegmentId
+                                                        }
+                                                      />
+                                                    </>
+                                                  )
+                                                }}
+                                              </Permission>
+                                            ) : (
+                                              <div className='text-center'>
+                                                <Loader />
+                                              </div>
+                                            )}
+                                            {!this.state.showCreateSegment && (
+                                              <ModalHR className='mt-4' />
+                                            )}
+                                            {!this.state.showCreateSegment && (
+                                              <div>
+                                                <p className='text-right mt-4 fs-small lh-sm modal-caption'>
+                                                  {is4Eyes && isVersioned
+                                                    ? 'This will create a change request with any value and segment override changes for the environment'
+                                                    : 'This will update the segment overrides for the environment'}{' '}
+                                                  <strong>
+                                                    {
+                                                      _.find(
+                                                        project.environments,
+                                                        {
+                                                          api_key:
                                                             this.props
-                                                              .environmentId
-                                                          }
-                                                          value={
-                                                            this.props
-                                                              .segmentOverrides
-                                                          }
-                                                          controlValue={
-                                                            initial_value
-                                                          }
-                                                          onChange={(v) => {
-                                                            this.setState({
-                                                              segmentsChanged: true,
-                                                            })
-                                                            this.props.updateSegments(
-                                                              v,
-                                                            )
-                                                          }}
-                                                          highlightSegmentId={
-                                                            this.props
-                                                              .highlightSegmentId
-                                                          }
-                                                        />
-                                                      </>
-                                                    )
-                                                  }}
-                                                </Permission>
-                                              ) : (
-                                                <div className='text-center'>
-                                                  <Loader />
-                                                </div>
-                                              )}
-                                              {!this.state
-                                                .showCreateSegment && (
-                                                <ModalHR className='mt-4' />
-                                              )}
-                                              {!this.state
-                                                .showCreateSegment && (
-                                                <div>
-                                                  <p className='text-right mt-4 fs-small lh-sm modal-caption'>
-                                                    {is4Eyes && isVersioned
-                                                      ? 'This will create a change request with any value and segment override changes for the environment'
-                                                      : 'This will update the segment overrides for the environment'}{' '}
-                                                    <strong>
-                                                      {
-                                                        _.find(
-                                                          project.environments,
-                                                          {
-                                                            api_key:
-                                                              this.props
-                                                                .environmentId,
-                                                          },
-                                                        ).name
-                                                      }
-                                                    </strong>
-                                                  </p>
-                                                  <div className='text-right'>
-                                                    <Permission
-                                                      level='environment'
-                                                      tags={projectFlag.tags}
-                                                      permission={Utils.getManageFeaturePermission(
-                                                        is4Eyes,
-                                                        identity,
-                                                      )}
-                                                      id={
-                                                        this.props.environmentId
-                                                      }
-                                                    >
-                                                      {({
-                                                        permission:
-                                                          savePermission,
-                                                      }) => (
-                                                        <Permission
-                                                          level='environment'
-                                                          permission={
-                                                            'MANAGE_SEGMENT_OVERRIDES'
-                                                          }
-                                                          id={
-                                                            this.props
-                                                              .environmentId
-                                                          }
-                                                        >
-                                                          {({
-                                                            permission:
-                                                              manageSegmentsOverrides,
-                                                          }) => {
-                                                            if (
-                                                              isVersioned &&
-                                                              is4Eyes
-                                                            ) {
-                                                              return Utils.renderWithPermission(
-                                                                savePermission,
-                                                                Utils.getManageFeaturePermissionDescription(
-                                                                  is4Eyes,
-                                                                  identity,
-                                                                ),
-                                                                <Button
-                                                                  onClick={() =>
-                                                                    saveFeatureSegments(
-                                                                      false,
-                                                                    )
-                                                                  }
-                                                                  type='button'
-                                                                  data-test='update-feature-segments-btn'
-                                                                  id='update-feature-segments-btn'
-                                                                  disabled={
-                                                                    isSaving ||
-                                                                    !name ||
-                                                                    invalid ||
-                                                                    !savePermission
-                                                                  }
-                                                                >
-                                                                  {(() => {
-                                                                    if (
-                                                                      isSaving
-                                                                    ) {
-                                                                      return existingChangeRequest
-                                                                        ? 'Updating Change Request'
-                                                                        : 'Creating Change Request'
-                                                                    }
-                                                                    return existingChangeRequest
-                                                                      ? 'Update Change Request'
-                                                                      : 'Create Change Request'
-                                                                  })()}
-                                                                </Button>,
-                                                              )
-                                                            }
-
+                                                              .environmentId,
+                                                        },
+                                                      ).name
+                                                    }
+                                                  </strong>
+                                                </p>
+                                                <div className='text-right'>
+                                                  <Permission
+                                                    level='environment'
+                                                    tags={projectFlag.tags}
+                                                    permission={Utils.getManageFeaturePermission(
+                                                      is4Eyes,
+                                                      identity,
+                                                    )}
+                                                    id={
+                                                      this.props.environmentId
+                                                    }
+                                                  >
+                                                    {({
+                                                      permission:
+                                                        savePermission,
+                                                    }) => (
+                                                      <Permission
+                                                        level='environment'
+                                                        permission={
+                                                          'MANAGE_SEGMENT_OVERRIDES'
+                                                        }
+                                                        id={
+                                                          this.props
+                                                            .environmentId
+                                                        }
+                                                      >
+                                                        {({
+                                                          permission:
+                                                            manageSegmentsOverrides,
+                                                        }) => {
+                                                          if (
+                                                            isVersioned &&
+                                                            is4Eyes
+                                                          ) {
                                                             return Utils.renderWithPermission(
-                                                              manageSegmentsOverrides,
-                                                              Constants.environmentPermissions(
-                                                                'Manage segment overrides',
+                                                              savePermission,
+                                                              Utils.getManageFeaturePermissionDescription(
+                                                                is4Eyes,
+                                                                identity,
                                                               ),
-                                                              <>
-                                                                {!is4Eyes &&
-                                                                  isVersioned && (
-                                                                    <>
-                                                                      <Button
-                                                                        feature='SCHEDULE_FLAGS'
-                                                                        theme='secondary'
-                                                                        onClick={() =>
-                                                                          saveFeatureSegments(
-                                                                            true,
-                                                                          )
-                                                                        }
-                                                                        className='mr-2'
-                                                                        type='button'
-                                                                        data-test='create-change-request'
-                                                                        id='create-change-request-btn'
-                                                                        disabled={
-                                                                          isSaving ||
-                                                                          !name ||
-                                                                          invalid ||
-                                                                          !savePermission
-                                                                        }
-                                                                      >
-                                                                        {(() => {
-                                                                          if (
-                                                                            isSaving
-                                                                          ) {
-                                                                            return existingChangeRequest
-                                                                              ? 'Updating Change Request'
-                                                                              : 'Scheduling Update'
-                                                                          }
-                                                                          return existingChangeRequest
-                                                                            ? 'Update Change Request'
-                                                                            : 'Schedule Update'
-                                                                        })()}
-                                                                      </Button>
-                                                                    </>
-                                                                  )}
-                                                                <Button
-                                                                  onClick={() =>
-                                                                    saveFeatureSegments(
-                                                                      false,
-                                                                    )
+                                                              <Button
+                                                                onClick={() =>
+                                                                  saveFeatureSegments(
+                                                                    false,
+                                                                  )
+                                                                }
+                                                                type='button'
+                                                                data-test='update-feature-segments-btn'
+                                                                id='update-feature-segments-btn'
+                                                                disabled={
+                                                                  isSaving ||
+                                                                  !projectFlag.name ||
+                                                                  invalid ||
+                                                                  !savePermission
+                                                                }
+                                                              >
+                                                                {(() => {
+                                                                  if (
+                                                                    isSaving
+                                                                  ) {
+                                                                    return existingChangeRequest
+                                                                      ? 'Updating Change Request'
+                                                                      : 'Creating Change Request'
                                                                   }
-                                                                  type='button'
-                                                                  data-test='update-feature-segments-btn'
-                                                                  id='update-feature-segments-btn'
-                                                                  disabled={
-                                                                    isSaving ||
-                                                                    !name ||
-                                                                    invalid ||
-                                                                    !manageSegmentsOverrides
-                                                                  }
-                                                                >
-                                                                  {isSaving
-                                                                    ? 'Updating'
-                                                                    : 'Update Segment Overrides'}
-                                                                </Button>
-                                                              </>,
+                                                                  return existingChangeRequest
+                                                                    ? 'Update Change Request'
+                                                                    : 'Create Change Request'
+                                                                })()}
+                                                              </Button>,
                                                             )
-                                                          }}
-                                                        </Permission>
-                                                      )}
-                                                    </Permission>
-                                                  </div>
+                                                          }
+
+                                                          return Utils.renderWithPermission(
+                                                            manageSegmentsOverrides,
+                                                            Constants.environmentPermissions(
+                                                              'Manage segment overrides',
+                                                            ),
+                                                            <>
+                                                              {!is4Eyes &&
+                                                                isVersioned && (
+                                                                  <>
+                                                                    <Button
+                                                                      feature='SCHEDULE_FLAGS'
+                                                                      theme='secondary'
+                                                                      onClick={() =>
+                                                                        saveFeatureSegments(
+                                                                          true,
+                                                                        )
+                                                                      }
+                                                                      className='mr-2'
+                                                                      type='button'
+                                                                      data-test='create-change-request'
+                                                                      id='create-change-request-btn'
+                                                                      disabled={
+                                                                        isSaving ||
+                                                                        !projectFlag.name ||
+                                                                        invalid ||
+                                                                        !savePermission
+                                                                      }
+                                                                    >
+                                                                      {(() => {
+                                                                        if (
+                                                                          isSaving
+                                                                        ) {
+                                                                          return existingChangeRequest
+                                                                            ? 'Updating Change Request'
+                                                                            : 'Scheduling Update'
+                                                                        }
+                                                                        return existingChangeRequest
+                                                                          ? 'Update Change Request'
+                                                                          : 'Schedule Update'
+                                                                      })()}
+                                                                    </Button>
+                                                                  </>
+                                                                )}
+                                                              <Button
+                                                                onClick={() =>
+                                                                  saveFeatureSegments(
+                                                                    false,
+                                                                  )
+                                                                }
+                                                                type='button'
+                                                                data-test='update-feature-segments-btn'
+                                                                id='update-feature-segments-btn'
+                                                                disabled={
+                                                                  isSaving ||
+                                                                  !projectFlag.name ||
+                                                                  invalid ||
+                                                                  !manageSegmentsOverrides
+                                                                }
+                                                              >
+                                                                {isSaving
+                                                                  ? 'Updating'
+                                                                  : 'Update Segment Overrides'}
+                                                              </Button>
+                                                            </>,
+                                                          )
+                                                        }}
+                                                      </Permission>
+                                                    )}
+                                                  </Permission>
                                                 </div>
-                                              )}
-                                            </div>
-                                          </FeatureInPipelineGuard>
-                                        </FormGroup>
-                                      )}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </FeatureInPipelineGuard>
+                                      </FormGroup>
                                     </TabItem>
                                   )}
                                   <Permission
@@ -1299,8 +1222,6 @@ const Index = class extends Component {
                                     id={this.props.environmentId}
                                   >
                                     {({ permission: viewIdentities }) =>
-                                      !identity &&
-                                      isEdit &&
                                       !existingChangeRequest &&
                                       !hideIdentityOverridesTab && (
                                         <TabItem>
@@ -1694,42 +1615,21 @@ const Index = class extends Component {
                                         identity={identity}
                                         isEdit={isEdit}
                                         projectId={this.props.projectId}
-                                        projectFlag={editProjectFlag}
-                                        onChange={(projectFlag) => {
-                                          const updates = {
-                                            settingsChanged: true,
+                                        projectFlag={projectFlag}
+                                        onChange={(changes) => {
+                                          const updates = {}
+
+                                          // Update projectFlag with changes
+                                          updates.projectFlag = {
+                                            ...this.state.projectFlag,
+                                            ...changes,
                                           }
-                                          if (projectFlag.tags !== undefined) {
-                                            updates.tags = projectFlag.tags
+
+                                          // Set settingsChanged flag unless it's only metadata changing
+                                          if (changes.metadata === undefined) {
+                                            updates.settingsChanged = true
                                           }
-                                          if (
-                                            projectFlag.description !==
-                                            undefined
-                                          ) {
-                                            updates.description =
-                                              projectFlag.description
-                                          }
-                                          if (
-                                            projectFlag.is_server_key_only !==
-                                            undefined
-                                          ) {
-                                            updates.is_server_key_only =
-                                              projectFlag.is_server_key_only
-                                          }
-                                          if (
-                                            projectFlag.is_archived !==
-                                            undefined
-                                          ) {
-                                            updates.is_archived =
-                                              projectFlag.is_archived
-                                          }
-                                          if (
-                                            projectFlag.metadata !== undefined
-                                          ) {
-                                            updates.metadata =
-                                              projectFlag.metadata
-                                            delete updates.settingsChanged
-                                          }
+
                                           this.setState(updates)
                                         }}
                                         onHasMetadataRequiredChange={(
@@ -1765,7 +1665,7 @@ const Index = class extends Component {
                                                 id='update-feature-btn'
                                                 disabled={
                                                   isSaving ||
-                                                  !name ||
+                                                  !projectFlag.name ||
                                                   invalid ||
                                                   _hasMetadataRequired
                                                 }
@@ -1794,77 +1694,50 @@ const Index = class extends Component {
                                     this.setState({ featureLimitAlert })
                                   }
                                 />
-                                <FeatureNameInput
-                                  value={name}
-                                  onChange={(name) => this.setState({ name })}
-                                  caseSensitive={caseSensitive}
-                                  regex={regex}
-                                  regexValid={regexValid}
-                                  autoFocus
-                                />
+                                <div className={identity ? 'px-3' : ''}>
+                                  <FeatureNameInput
+                                    value={projectFlag.name}
+                                    onChange={(name) =>
+                                      this.setState({
+                                        projectFlag: {
+                                          ...this.state.projectFlag,
+                                          name,
+                                        },
+                                      })
+                                    }
+                                    caseSensitive={caseSensitive}
+                                    regex={regex}
+                                    regexValid={regexValid}
+                                    autoFocus
+                                  />
+                                </div>
                                 <CreateFeature
                                   projectId={this.props.projectId}
                                   error={error}
-                                  multivariate_options={multivariate_options}
-                                  environmentVariations={environmentVariations}
-                                  featureState={featureState}
-                                  environmentFlag={this.props.environmentFlag}
-                                  projectFlag={createProjectFlag}
+                                  featureState={environmentFlag}
+                                  projectFlag={projectFlag}
                                   featureContentType={featureContentType}
                                   identity={identity}
-                                  onChange={(featureState) => {
-                                    const updates = {}
-                                    if (featureState.enabled !== undefined) {
-                                      updates.default_enabled =
-                                        featureState.enabled
-                                    }
-                                    if (
-                                      featureState.feature_state_value !==
-                                      undefined
-                                    ) {
-                                      updates.initial_value =
-                                        featureState.feature_state_value
-                                      updates.valueChanged = true
-                                    }
-                                    if (
-                                      featureState.multivariate_feature_state_values !==
-                                      undefined
-                                    ) {
-                                      updates.identityVariations =
-                                        featureState.multivariate_feature_state_values
-                                      updates.valueChanged = true
-                                    }
-                                    this.setState(updates)
+                                  onEnvironmentFlagChange={(changes) => {
+                                    this.setState({
+                                      environmentFlag: {
+                                        ...this.state.environmentFlag,
+                                        ...changes,
+                                      },
+                                      valueChanged: true,
+                                    })
                                   }}
-                                  onProjectFlagChange={(projectFlag) => {
-                                    const updates = { settingsChanged: true }
-                                    if (projectFlag.tags !== undefined) {
-                                      updates.tags = projectFlag.tags
-                                    }
-                                    if (projectFlag.description !== undefined) {
-                                      updates.description =
-                                        projectFlag.description
-                                    }
-                                    if (
-                                      projectFlag.is_server_key_only !==
-                                      undefined
-                                    ) {
-                                      updates.is_server_key_only =
-                                        projectFlag.is_server_key_only
-                                    }
-                                    if (projectFlag.is_archived !== undefined) {
-                                      updates.is_archived =
-                                        projectFlag.is_archived
-                                    }
-                                    if (projectFlag.metadata !== undefined) {
-                                      updates.metadata = projectFlag.metadata
-                                      delete updates.settingsChanged
-                                    }
-                                    this.setState(updates)
+                                  onProjectFlagChange={(changes) => {
+                                    this.setState({
+                                      projectFlag: {
+                                        ...this.state.projectFlag,
+                                        ...changes,
+                                      },
+                                    })
                                   }}
-                                  removeVariation={this.removeVariation}
-                                  updateVariation={this.updateVariation}
-                                  addVariation={this.addVariation}
+                                  onRemoveMultivariateOption={
+                                    this.props.removeMultivariateOption
+                                  }
                                   onHasMetadataRequiredChange={(
                                     hasMetadataRequired,
                                   ) =>
@@ -1883,7 +1756,7 @@ const Index = class extends Component {
                                   identity={identity}
                                   onCreateFeature={onCreateFeature}
                                   isSaving={isSaving}
-                                  name={name}
+                                  name={projectFlag.name}
                                   invalid={invalid}
                                   regexValid={regexValid}
                                   featureLimitPercentage={
@@ -1925,7 +1798,11 @@ const Index = class extends Component {
                                         onClick={() => saveFeatureValue()}
                                         data-test='update-feature-btn'
                                         id='update-feature-btn'
-                                        disabled={isSaving || !name || invalid}
+                                        disabled={
+                                          isSaving ||
+                                          !projectFlag.name ||
+                                          invalid
+                                        }
                                       >
                                         {isSaving
                                           ? 'Updating'

@@ -56,7 +56,7 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
     return null
   }
   return (
-    <>
+    <div className={`${identity ? 'mx-3' : ''}`}>
       {!identity && projectFlag?.tags && (
         <FormGroup className='mb-3 setting'>
           <InputGroup
@@ -73,7 +73,7 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
           />
         </FormGroup>
       )}
-      {metadataEnable && featureContentType?.id && (
+      {metadataEnable && featureContentType?.id && !identity && (
         <>
           <label className='mt-1'>Custom Fields</label>
           <AddMetadataToEntity
@@ -115,6 +115,7 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
           inputProps={{
             className: 'full-width',
             name: 'featureDesc',
+            readOnly: !!identity,
           }}
           onChange={(e: InputEvent) =>
             onChange({
@@ -178,7 +179,7 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
           </Row>
         </FormGroup>
       )}
-    </>
+    </div>
   )
 }
 

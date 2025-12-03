@@ -9,41 +9,31 @@ import { useHasPermission } from 'common/providers/Permission'
 type CreateFeatureTabProps = {
   projectId: number
   error: any
-  multivariate_options: any[]
-  environmentVariations: any[]
   featureState: FeatureState
-  environmentFlag: any
   projectFlag: ProjectFlag | null
   featureContentType: any
   identity?: string
-  onChange: (featureState: FeatureState) => void
-  onProjectFlagChange: (projectFlag: ProjectFlag) => void
-  removeVariation: (i: number) => void
-  updateVariation: (i: number, e: any, environmentVariations: any[]) => void
-  addVariation: () => void
+  onEnvironmentFlagChange: (changes: FeatureState) => void
+  onProjectFlagChange: (changes: ProjectFlag) => void
+  onRemoveMultivariateOption?: (id: number) => void
   onHasMetadataRequiredChange: (hasMetadataRequired: boolean) => void
   featureError?: string
   featureWarning?: string
 }
 
 const CreateFeature: FC<CreateFeatureTabProps> = ({
-  addVariation,
-  environmentFlag,
-  environmentVariations,
   error,
   featureContentType,
   featureError,
   featureState,
   featureWarning,
   identity,
-  multivariate_options,
-  onChange,
+  onEnvironmentFlagChange,
   onHasMetadataRequiredChange,
   onProjectFlagChange,
+  onRemoveMultivariateOption,
   projectFlag,
   projectId,
-  removeVariation,
-  updateVariation,
 }) => {
   const { permission: createFeature } = useHasPermission({
     id: projectId,
@@ -58,6 +48,7 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
   })
 
   const noPermissions = !createFeature && !projectAdmin
+
   return (
     <>
       <ErrorMessage error={featureError} />
@@ -71,15 +62,11 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
             isEdit={false}
             identity={identity}
             noPermissions={noPermissions}
-            multivariate_options={multivariate_options}
-            environmentVariations={environmentVariations}
             featureState={featureState}
-            environmentFlag={environmentFlag}
             projectFlag={projectFlag}
-            onChange={onChange}
-            removeVariation={removeVariation}
-            updateVariation={updateVariation}
-            addVariation={addVariation}
+            onEnvironmentFlagChange={onEnvironmentFlagChange}
+            onProjectFlagChange={onProjectFlagChange}
+            onRemoveMultivariateOption={onRemoveMultivariateOption}
           />
           <FeatureSettings
             projectAdmin={projectAdmin}
