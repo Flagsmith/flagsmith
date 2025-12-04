@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import type { ProjectFlag } from 'common/types/responses'
-import type { FilterState } from 'components/pages/features/components/FeaturesTableFilters'
+import type { FilterState } from 'common/types/featureFilters'
 
 // ============================================================================
 // Internal Helper Functions
