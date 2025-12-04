@@ -8,23 +8,35 @@ from features.versioning.dataclasses import (
     SegmentOverrideChangeSet,
 )
 from features.versioning.versioning_service import update_flag, update_flag_v2
+from segments.models import Segment
 
 
 class BaseFeatureUpdateSerializer(serializers.Serializer):  # type: ignore[type-arg]
-    def get_feature(self) -> Feature:
-        feature_data = self.validated_data["feature"]
-        environment: Environment = self.context.get("environment")  # type: ignore[assignment]
-
+    @property
+    def environment(self) -> Environment:
+        environment: Environment | None = self.context.get("environment")
         if not environment:
             raise serializers.ValidationError("Environment context is required")
+        return environment
+
+    def get_feature(self) -> Feature:
+        feature_data = self.validated_data["feature"]
         try:
             feature: Feature = Feature.objects.get(
-                project_id=environment.project_id, **feature_data
+                project_id=self.environment.project_id, **feature_data
             )
             return feature
         except Feature.DoesNotExist:
             raise serializers.ValidationError(
                 f"Feature '{feature_data}' not found in project"
+            )
+
+    def validate_segment_id(self, segment_id: int) -> None:
+        if not Segment.objects.filter(
+            id=segment_id, project_id=self.environment.project_id
+        ).exists():
+            raise serializers.ValidationError(
+                f"Segment with id {segment_id} not found in project"
             )
 
 
@@ -79,6 +91,11 @@ class UpdateFlagSerializer(BaseFeatureUpdateSerializer):
     enabled = serializers.BooleanField(required=True)
     value = FeatureValueSerializer(required=True)
 
+    def validate_segment(self, value: dict) -> dict:  # type: ignore[type-arg]
+        if value and value.get("id"):
+            self.validate_segment_id(value["id"])
+        return value
+
     @property
     def flag_change_set(self) -> FlagChangeSet:
         validated_data = self.validated_data
@@ -98,7 +115,7 @@ class UpdateFlagSerializer(BaseFeatureUpdateSerializer):
 
     def save(self, **kwargs: object) -> FeatureState:
         feature = self.get_feature()
-        return update_flag(self.context["environment"], feature, self.flag_change_set)
+        return update_flag(self.environment, feature, self.flag_change_set)
 
 
 class EnvironmentDefaultSerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -130,6 +147,9 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer):
             raise serializers.ValidationError(
                 "Duplicate segment_id values are not allowed"
             )
+
+        for segment_id in segment_ids:
+            self.validate_segment_id(segment_id)
 
         return value
 
@@ -167,4 +187,4 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer):
 
     def save(self, **kwargs: object) -> dict:  # type: ignore[type-arg]
         feature = self.get_feature()
-        return update_flag_v2(self.context["environment"], feature, self.change_set_v2)
+        return update_flag_v2(self.environment, feature, self.change_set_v2)
