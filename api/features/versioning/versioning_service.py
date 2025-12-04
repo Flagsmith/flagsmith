@@ -185,7 +185,7 @@ def _update_flag_for_versioning_v1(
     if change_set.segment_id:
         additional_filters = Q(feature_segment__segment_id=change_set.segment_id)
     else:
-        additional_filters = Q(feature_segment__isnull=True)
+        additional_filters = Q(feature_segment__isnull=True, identity_id__isnull=True)
 
     latest_feature_states = get_environment_flags_dict(
         environment=environment,
@@ -363,7 +363,7 @@ def _update_flag_v2_for_versioning_v1(
     env_default_states = get_environment_flags_dict(
         environment=environment,
         feature_name=feature.name,
-        additional_filters=Q(feature_segment__isnull=True),
+        additional_filters=Q(feature_segment__isnull=True, identity_id__isnull=True),
     )
     assert len(env_default_states) == 1
 
