@@ -5,10 +5,10 @@ import TableValueFilter from 'components/tables/TableValueFilter'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
-import TableSortFilter, { SortValue } from 'components/tables/TableSortFilter'
+import TableSortFilter from 'components/tables/TableSortFilter'
 import ClearFilters from 'components/ClearFilters'
 import { getViewMode, setViewMode } from 'common/useViewMode'
-import { TagStrategy } from 'common/types/responses'
+import type { FilterState } from 'common/types/featureFilters'
 
 const VIEW_MODE_OPTIONS = [
   {
@@ -31,18 +31,6 @@ const SORT_OPTIONS = [
     value: 'created_date',
   },
 ]
-
-export type FilterState = {
-  search: string | null
-  tags: (number | string)[]
-  tag_strategy: TagStrategy
-  showArchived: boolean
-  is_enabled: boolean | null
-  value_search: string
-  owners: number[]
-  group_owners: number[]
-  sort: SortValue
-}
 
 type FeaturesTableFiltersProps = {
   projectId: number

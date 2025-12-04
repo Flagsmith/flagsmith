@@ -6,17 +6,13 @@ import Permission from 'common/providers/Permission'
 import Utils from 'common/utils/utils'
 import { FeaturesTableFilters } from './FeaturesTableFilters'
 import type { FilterState } from './FeaturesTableFilters'
-import type {
-  Environment,
-  FeatureState,
-  ProjectFlag,
-} from 'common/types/responses'
+import type { FeatureState, ProjectFlag } from 'common/types/responses'
 import type { Pagination } from 'components/pages/features/types'
 
 type FeaturesListProps = {
   projectId: number
   environmentId: string
-  environment: Environment | undefined
+  minimumChangeRequestApprovals: number | null | undefined
   organisationId: number | undefined
   projectFlags: ProjectFlag[]
   environmentFlags: Record<number, FeatureState>
@@ -30,22 +26,20 @@ type FeaturesListProps = {
   onClearFilters: () => void
   onPageChange: (page: number) => void
   onToggleFlag: (
-    projectId: number,
-    environmentId: string,
     flag: ProjectFlag,
     environmentFlag: FeatureState | undefined,
   ) => Promise<void>
-  onRemoveFlag: (projectId: number, projectFlag: ProjectFlag) => Promise<void>
+  onRemoveFlag: (projectFlag: ProjectFlag) => Promise<void>
 }
 
 export const FeaturesList: FC<FeaturesListProps> = ({
-  environment,
   environmentFlags,
   environmentId,
   filters,
   hasFilters,
   isFetching,
   isLoading,
+  minimumChangeRequestApprovals,
   onClearFilters,
   onFilterChange,
   onPageChange,
@@ -100,14 +94,12 @@ export const FeaturesList: FC<FeaturesListProps> = ({
             />
           </>
         )}
-        renderRow={(projectFlag, i) => (
+        renderRow={(projectFlag: ProjectFlag, i: number) => (
           <Permission
             level='environment'
             tags={projectFlag.tags}
             permission={Utils.getManageFeaturePermission(
-              Utils.changeRequestsEnabled(
-                environment && environment.minimum_change_request_approvals,
-              ),
+              Utils.changeRequestsEnabled(minimumChangeRequestApprovals),
             )}
             id={environmentId}
           >

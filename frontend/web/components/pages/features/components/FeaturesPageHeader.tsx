@@ -3,6 +3,7 @@ import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
+import PermissionGate from 'components/base/PermissionGate'
 
 type FeaturesPageHeaderProps = {
   totalFeatures: number
@@ -10,15 +11,13 @@ type FeaturesPageHeaderProps = {
   showCreateButton: boolean
   onCreateFeature: () => void
   readOnly: boolean
-  createFeaturePermission: (
-    el: (permission: boolean) => React.ReactNode,
-  ) => React.ReactNode
+  projectId: number
 }
 
 export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
-  createFeaturePermission,
   maxFeaturesAllowed,
   onCreateFeature,
+  projectId,
   readOnly,
   showCreateButton,
   totalFeatures,
@@ -39,8 +38,13 @@ export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
         title={'Features'}
         cta={
           <>
-            {showCreateButton
-              ? createFeaturePermission((perm) => (
+            {showCreateButton ? (
+              <PermissionGate
+                level='project'
+                permission='CREATE_FEATURE'
+                id={projectId}
+              >
+                {(perm) => (
                   <Button
                     disabled={
                       !perm || readOnly || featureLimitAlert.percentage >= 100
@@ -52,8 +56,9 @@ export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
                   >
                     Create Feature
                   </Button>
-                ))
-              : null}
+                )}
+              </PermissionGate>
+            ) : null}
           </>
         }
       >
