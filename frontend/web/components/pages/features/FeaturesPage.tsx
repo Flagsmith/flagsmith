@@ -256,7 +256,23 @@ const FeaturesPageComponent: FC = () => {
                 >
                   {error ? (
                     <div className='text-center p-4'>
-                      <ErrorMessage error={error} />
+                      <h4 className='mb-3'>Unable to Load Features</h4>
+                      <p className='text-muted mb-3'>
+                        We couldn't load your feature flags. This might be due
+                        to a network issue or a temporary server problem.
+                      </p>
+                      <ErrorMessage
+                        error={error}
+                        errorMessageClass='mb-3 d-inline-flex'
+                      />
+                      <div>
+                        <Button
+                          className='btn btn-primary mt-2'
+                          onClick={() => window.location.reload()}
+                        >
+                          Try Again
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <PanelSearch
