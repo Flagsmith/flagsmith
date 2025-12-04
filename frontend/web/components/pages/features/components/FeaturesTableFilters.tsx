@@ -19,7 +19,7 @@ const VIEW_MODE_OPTIONS = [
     label: 'Compact',
     value: 'compact',
   },
-] as const
+]
 
 const SORT_OPTIONS = [
   {
@@ -45,7 +45,7 @@ type FeaturesTableFiltersProps = {
 export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
   filters,
   hasFilters,
-  isLoading: isLoadingProp,
+  isLoading,
   onClearFilters,
   onFilterChange,
   orgId,
@@ -107,7 +107,7 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
         <Row className='flex-row py-2 py-lg-0 px-1 px-lg-0 flex-fill justify-content-lg-end'>
           {hasFilters && <ClearFilters onClick={onClearFilters} />}
           <TableTagFilter
-            isLoading={isLoadingProp || false}
+            isLoading={isLoading || false}
             projectId={projectId}
             className='me-4'
             tagStrategy={tagStrategy}
@@ -150,7 +150,7 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
             options={VIEW_MODE_OPTIONS}
           />
           <TableSortFilter
-            isLoading={isLoadingProp}
+            isLoading={!!isLoading}
             value={sort}
             options={SORT_OPTIONS}
             onChange={(sort) => onFilterChange({ sort })}

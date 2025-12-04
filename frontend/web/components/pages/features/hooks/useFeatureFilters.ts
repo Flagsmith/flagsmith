@@ -42,10 +42,10 @@ export function useFeatureFilters(history: History): {
     updateURLParams()
   }, [updateURLParams])
 
-  const handleFilterChange = useCallback((updates: Partial<FilterState>) => {
+  const handleFilterChange = (updates: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...updates }))
     setPage(1)
-  }, [])
+  }
 
   const clearFilters = useCallback(() => {
     history.replace(document.location.pathname)
@@ -54,9 +54,9 @@ export function useFeatureFilters(history: History): {
     setPage(1)
   }, [history])
 
-  const goToPage = useCallback((newPage: number) => {
+  const goToPage = (newPage: number) => {
     setPage(newPage)
-  }, [])
+  }
 
   return {
     clearFilters,
