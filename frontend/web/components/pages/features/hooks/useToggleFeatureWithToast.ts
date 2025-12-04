@@ -9,24 +9,7 @@ type ToggleFeatureOptions = {
   onSuccess?: () => void
 }
 
-/**
- * Hook for toggling a feature flag's enabled state with toast notifications.
- *
- * Follows the standard "withToast" pattern used across the application.
- * Returns mutation state for loading/error indicators.
- *
- * @returns Tuple of [toggleWithToast function, mutation state]
- *
- * @example
- * ```tsx
- * const [toggleFeature, { isLoading }] = useToggleFeatureWithToast()
- *
- * await toggleFeature(flag, environmentFlag, environmentId, {
- *   successMessage: 'Feature toggled',
- *   onSuccess: () => console.log('Done!'),
- * })
- * ```
- */
+/** Toggles a feature flag's enabled state with toast notifications. */
 export const useToggleFeatureWithToast = () => {
   const [updateFeatureState, state] = useUpdateFeatureStateMutation()
 

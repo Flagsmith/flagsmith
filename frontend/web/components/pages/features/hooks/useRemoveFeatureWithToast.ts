@@ -9,24 +9,7 @@ type RemoveFeatureOptions = {
   onSuccess?: () => void
 }
 
-/**
- * Hook for removing a feature flag with toast notifications.
- *
- * Follows the standard "withToast" pattern used across the application.
- * Returns mutation state for loading/error indicators.
- *
- * @returns Tuple of [removeWithToast function, mutation state]
- *
- * @example
- * ```tsx
- * const [removeFeature, { isLoading }] = useRemoveFeatureWithToast()
- *
- * await removeFeature(projectFlag, projectId, {
- *   successMessage: 'Feature deleted successfully',
- *   onSuccess: () => console.log('Done!'),
- * })
- * ```
- */
+/** Removes a feature flag with toast notifications. */
 export const useRemoveFeatureWithToast = () => {
   const [removeProjectFlag, state] = useRemoveProjectFlagMutation()
 

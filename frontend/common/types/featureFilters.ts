@@ -1,17 +1,10 @@
 import type { TagStrategy } from './responses'
 import type { SortValue } from 'components/tables/TableSortFilter'
 
-/**
- * URL query parameters type for feature list filtering.
- * Represents the raw URL parameters before parsing into FilterState.
- */
+/** Raw URL parameters for feature list filtering. */
 export type UrlParams = Record<string, string | string[] | undefined>
 
-/**
- * Feature list filter state.
- * Represents the structured filter configuration for querying feature lists.
- * Used across the application for consistent feature filtering behavior.
- */
+/** Structured filter configuration for querying feature lists. */
 export type FilterState = {
   search: string | null
   tags: (number | string)[]

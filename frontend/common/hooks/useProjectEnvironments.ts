@@ -3,31 +3,7 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { useGetProjectQuery } from 'common/services/useProject'
 import type { Environment, Project } from 'common/types/responses'
 
-/**
- * Custom hook for fetching and managing project and environment data.
- *
- * Provides raw project and environment data along with convenient accessor functions
- * for looking up environments by API key. This is a general-purpose hook that can be
- * used across the application whenever both project and environment data are needed.
- *
- * @param projectId - The project ID to fetch data for
- * @returns Object containing project data, environments, accessor functions, and loading/error states
- *
- * @example
- * ```tsx
- * const { project, environments, getEnvironment, isLoading } = useProjectEnvironments(projectId)
- *
- * // Access project properties
- * const maxFeatures = project?.max_features_allowed
- *
- * // Look up environment by API key
- * const env = getEnvironment(apiKey)
- * const requiresApprovals = env?.minimum_change_request_approvals
- *
- * // Access all environments
- * const envCount = environments.length
- * ```
- */
+/** Fetches project and environment data with accessor functions for API key lookups. */
 export function useProjectEnvironments(projectId: number): {
   project: Project | undefined
   environments: Environment[]
