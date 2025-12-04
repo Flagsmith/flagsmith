@@ -171,6 +171,18 @@ const FeaturesPageComponent: FC = () => {
     </Permission>
   )
 
+  const handleNextPage = () => {
+    if (paging?.next) {
+      goToPage(page + 1)
+    }
+  }
+
+  const handlePrevPage = () => {
+    if (paging?.previous) {
+      goToPage(page - 1)
+    }
+  }
+
   const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
   return (
     <div
@@ -203,25 +215,6 @@ const FeaturesPageComponent: FC = () => {
                   projectId={projectId}
                 />
 
-                {/* Temporary: Verify no ignore properties from RTK Query */}
-                {(() => {
-                  console.log(
-                    '[FeaturesPage] ProjectFlags count:',
-                    projectFlags?.length,
-                  )
-                  console.log(
-                    '[FeaturesPage] Has ignore property?',
-                    projectFlags?.some((f) => (f as any).ignore),
-                  )
-                  if (projectFlags?.some((f) => (f as any).ignore)) {
-                    console.warn(
-                      '[FeaturesPage] Found flags with ignore:',
-                      projectFlags.filter((f) => (f as any).ignore),
-                    )
-                  }
-                  return null
-                })()}
-
                 <FormGroup
                   className={classNames('mb-4', {
                     'opacity-50': isFetching,
@@ -235,8 +228,8 @@ const FeaturesPageComponent: FC = () => {
                     isLoading={isLoading}
                     paging={paging}
                     header={renderHeader()}
-                    nextPage={() => paging?.next && goToPage(page + 1)}
-                    prevPage={() => paging?.previous && goToPage(page - 1)}
+                    nextPage={handleNextPage}
+                    prevPage={handlePrevPage}
                     goToPage={goToPage}
                     items={projectFlags}
                     renderFooter={renderFooter}
