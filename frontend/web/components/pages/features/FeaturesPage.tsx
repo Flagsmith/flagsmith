@@ -1,5 +1,6 @@
 import React, { FC } from 'react'
 import { useHistory } from 'react-router-dom'
+import classNames from 'classnames'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
@@ -8,11 +9,14 @@ import { config } from 'common/config'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { usePageTrackingWithContext } from 'common/hooks/usePageTracking'
 import PermissionGate from 'components/base/PermissionGate'
+import FeatureRow from 'components/feature-summary/FeatureRow'
+import JSONReference from 'components/JSONReference'
+import Permission from 'common/providers/Permission'
 import {
   FeaturesEmptyState,
   FeatureMetricsSection,
   FeaturesPageHeader,
-  FeaturesList,
+  FeaturesTableFilters,
   FeaturesSDKIntegration,
 } from './components'
 import { useFeatureFilters } from './hooks/useFeatureFilters'
@@ -147,30 +151,81 @@ const FeaturesPageComponent: FC = () => {
                   projectId={projectId}
                 />
 
-                <FeaturesList
-                  projectId={projectId}
-                  environmentId={environmentId}
-                  minimumChangeRequestApprovals={minimumChangeRequestApprovals}
-                  organisationId={routeContext.organisationId}
-                  projectFlags={projectFlags}
-                  environmentFlags={environmentFlags}
-                  filters={filters}
-                  hasFilters={hasFilters}
-                  isLoading={isLoading}
-                  isFetching={isFetching}
-                  paging={paging}
-                  page={page}
-                  onFilterChange={handleFilterChange}
-                  onClearFilters={clearFilters}
-                  onPageChange={goToPage}
-                  onToggleFlag={toggleFlag}
-                  onRemoveFlag={removeFlag}
-                />
+                <FormGroup
+                  className={classNames('mb-4', {
+                    'opacity-50': isFetching,
+                  })}
+                >
+                  <PanelSearch
+                    className='no-pad overflow-visible'
+                    id='features-list'
+                    renderSearchWithNoResults
+                    itemHeight={65}
+                    isLoading={isLoading}
+                    paging={paging}
+                    header={
+                      <FeaturesTableFilters
+                        projectId={projectId}
+                        filters={filters}
+                        hasFilters={hasFilters}
+                        isLoading={isLoading}
+                        orgId={routeContext.organisationId}
+                        onFilterChange={handleFilterChange}
+                        onClearFilters={clearFilters}
+                      />
+                    }
+                    nextPage={() => paging?.next && goToPage(page + 1)}
+                    prevPage={() => paging?.previous && goToPage(page - 1)}
+                    goToPage={goToPage}
+                    items={projectFlags?.filter((v) => !(v as any).ignore)}
+                    renderFooter={() => (
+                      <>
+                        <JSONReference
+                          className='mx-2 mt-4'
+                          showNamesButton
+                          title={'Features'}
+                          json={projectFlags}
+                        />
+                        <JSONReference
+                          className='mx-2'
+                          title={'Feature States'}
+                          json={
+                            environmentFlags && Object.values(environmentFlags)
+                          }
+                        />
+                      </>
+                    )}
+                    renderRow={(projectFlag: ProjectFlag, i: number) => (
+                      <Permission
+                        level='environment'
+                        tags={projectFlag.tags}
+                        permission={Utils.getManageFeaturePermission(
+                          Utils.changeRequestsEnabled(
+                            minimumChangeRequestApprovals,
+                          ),
+                        )}
+                        id={environmentId}
+                      >
+                        {({ permission }) => (
+                          <FeatureRow
+                            environmentFlags={environmentFlags}
+                            permission={permission}
+                            environmentId={environmentId}
+                            projectId={projectId}
+                            index={i}
+                            toggleFlag={toggleFlag}
+                            removeFlag={removeFlag}
+                            projectFlag={projectFlag}
+                          />
+                        )}
+                      </Permission>
+                    )}
+                  />
+                </FormGroup>
 
                 <FeaturesSDKIntegration
                   projectId={projectId}
                   environmentId={environmentId}
-                  firstFeatureName={projectFlags?.[0]?.name}
                 />
               </div>
             ) : (

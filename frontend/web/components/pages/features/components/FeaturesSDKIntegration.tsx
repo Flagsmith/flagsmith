@@ -6,12 +6,10 @@ import Constants from 'common/constants'
 type FeaturesSDKIntegrationProps = {
   projectId: number
   environmentId: string
-  firstFeatureName?: string
 }
 
 export const FeaturesSDKIntegration: FC<FeaturesSDKIntegrationProps> = ({
   environmentId,
-  firstFeatureName,
   projectId,
 }) => {
   return (
@@ -23,7 +21,7 @@ export const FeaturesSDKIntegration: FC<FeaturesSDKIntegrationProps> = ({
         />
         <CodeHelp
           title='2: Initialising your project'
-          snippets={Constants.codeHelp.INIT(environmentId, firstFeatureName)}
+          snippets={Constants.codeHelp.INIT(environmentId)}
         />
         <EnvironmentDocumentCodeHelp
           title='3: Providing feature defaults and support offline'
