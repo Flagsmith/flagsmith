@@ -4,7 +4,6 @@ from common.core.utils import using_database_replica
 from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 
-from core.constants import BOOLEAN, INTEGER, STRING
 from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.versioning.dataclasses import (
@@ -240,17 +239,7 @@ def _update_flag_for_versioning_v1(
 
 
 def _update_feature_state_value(fsv: FeatureStateValue, value: str, type_: str) -> None:
-    match type_:
-        case "string":
-            fsv.string_value = value
-            fsv.type = STRING
-        case "integer":
-            fsv.integer_value = int(value)
-            fsv.type = INTEGER
-        case "boolean":
-            fsv.boolean_value = value.lower() == "true"
-            fsv.type = BOOLEAN
-
+    fsv.set_value(value, type_)
     fsv.save()
 
 
