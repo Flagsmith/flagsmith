@@ -119,6 +119,18 @@ const FeaturesPageComponent: FC = () => {
     )
   }
 
+  const renderHeader = () => (
+    <FeaturesTableFilters
+      projectId={projectId}
+      filters={filters}
+      hasFilters={hasFilters}
+      isLoading={isLoading}
+      orgId={routeContext.organisationId}
+      onFilterChange={handleFilterChange}
+      onClearFilters={clearFilters}
+    />
+  )
+
   const renderFooter = () => (
     <>
       <JSONReference
@@ -203,17 +215,7 @@ const FeaturesPageComponent: FC = () => {
                     itemHeight={65}
                     isLoading={isLoading}
                     paging={paging}
-                    header={
-                      <FeaturesTableFilters
-                        projectId={projectId}
-                        filters={filters}
-                        hasFilters={hasFilters}
-                        isLoading={isLoading}
-                        orgId={routeContext.organisationId}
-                        onFilterChange={handleFilterChange}
-                        onClearFilters={clearFilters}
-                      />
-                    }
+                    header={renderHeader()}
                     nextPage={() => paging?.next && goToPage(page + 1)}
                     prevPage={() => paging?.previous && goToPage(page - 1)}
                     goToPage={goToPage}
