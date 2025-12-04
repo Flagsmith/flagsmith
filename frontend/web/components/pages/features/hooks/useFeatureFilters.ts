@@ -1,70 +1,24 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import type { History } from 'history'
-import type { FilterState } from 'components/pages/features/components/FeaturesTableFilters'
-import type { UrlParams } from 'components/pages/features/types'
-import Utils from 'common/utils/utils'
-import Format from 'common/utils/format'
+import type { FilterState } from 'common/types/featureFilters'
 import {
   hasActiveFilters,
   buildUrlParams,
-} from 'components/pages/features/utils/filterHelpers'
-
-/**
- * Converts URL query parameters to FilterState object.
- * Handles parsing of arrays, booleans, and sort configuration from URL params.
- *
- * @param params - URL query parameters as key-value pairs
- * @returns Structured filter state object
- */
-export const getFiltersFromParams = (params: UrlParams): FilterState => {
-  return {
-    group_owners:
-      typeof params.group_owners === 'string' && params.group_owners
-        ? params.group_owners
-            .split(',')
-            .filter((v) => v)
-            .map((v: string) => parseInt(v))
-        : [],
-    is_enabled: (() => {
-      if (params.is_enabled === 'true') return true
-      if (params.is_enabled === 'false') return false
-      return null
-    })(),
-    owners:
-      typeof params.owners === 'string' && params.owners
-        ? params.owners
-            .split(',')
-            .filter((v) => v)
-            .map((v: string) => parseInt(v))
-        : [],
-    page: params.page ? parseInt(params.page) : 1,
-    search: params.search ?? null,
-    showArchived: params.is_archived === 'true',
-    sort: {
-      label: Format.camelCase(params.sortBy ?? 'Name'),
-      sortBy: params.sortBy ?? 'name',
-      sortOrder: params.sortOrder ?? 'asc',
-    },
-    tag_strategy: params.tag_strategy ?? 'INTERSECTION',
-    tags:
-      typeof params.tags === 'string' && params.tags
-        ? params.tags
-            .split(',')
-            .filter((v) => v)
-            .map((v: string) => parseInt(v))
-        : [],
-    value_search:
-      typeof params.value_search === 'string' ? params.value_search : '',
-  }
-}
+  getFiltersFromParams,
+} from 'common/utils/featureFilterParams'
+import Utils from 'common/utils/utils'
 
 /**
  * Custom hook for managing feature list filters and pagination state.
+ *
+ * This hook is **FeaturesPage-specific** and handles bidirectional URL synchronization.
+ * It composes global filter utilities with page-specific URL management logic.
  *
  * Syncs filter state with URL query parameters bidirectionally:
  * - Initializes filters from URL on mount
  * - Updates URL whenever filters change
  * - Preserves filter state across page refreshes
+ * - Skips URL updates when viewing a single feature (feature detail view)
  *
  * @param history - React Router history object for URL manipulation
  * @returns Object containing filters, pagination state, and filter management functions
@@ -98,6 +52,7 @@ export function useFeatureFilters(history: History): {
 
   const updateURLParams = useCallback(() => {
     const currentParams = Utils.fromParam()
+    // FeaturesPage-specific: Skip URL update when viewing single feature detail
     if (!currentParams.feature) {
       const urlParams = buildUrlParams(filters, page)
       history.replace(
