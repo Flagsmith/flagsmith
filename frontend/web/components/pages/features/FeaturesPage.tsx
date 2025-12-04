@@ -203,6 +203,25 @@ const FeaturesPageComponent: FC = () => {
                   projectId={projectId}
                 />
 
+                {/* Temporary: Verify no ignore properties from RTK Query */}
+                {(() => {
+                  console.log(
+                    '[FeaturesPage] ProjectFlags count:',
+                    projectFlags?.length,
+                  )
+                  console.log(
+                    '[FeaturesPage] Has ignore property?',
+                    projectFlags?.some((f) => (f as any).ignore),
+                  )
+                  if (projectFlags?.some((f) => (f as any).ignore)) {
+                    console.warn(
+                      '[FeaturesPage] Found flags with ignore:',
+                      projectFlags.filter((f) => (f as any).ignore),
+                    )
+                  }
+                  return null
+                })()}
+
                 <FormGroup
                   className={classNames('mb-4', {
                     'opacity-50': isFetching,
@@ -219,7 +238,7 @@ const FeaturesPageComponent: FC = () => {
                     nextPage={() => paging?.next && goToPage(page + 1)}
                     prevPage={() => paging?.previous && goToPage(page - 1)}
                     goToPage={goToPage}
-                    items={projectFlags?.filter((v) => !(v as any).ignore)}
+                    items={projectFlags}
                     renderFooter={renderFooter}
                     renderRow={renderFeatureRow}
                   />
