@@ -1032,53 +1032,26 @@ def test_delete_organisation_with_committed_change_request(
     assert organisation.deleted_at is not None
 
 
-def test_enable_v2_versioning_clears_change_request_from_feature_states(
-    project: Project,
-    environment: Environment,
-    feature: Feature,
-    admin_user: FFAdminUser,
+def test_soft_delete_committed_change_request_does_not_trigger_audit_log(
+    change_request_no_required_approvals: ChangeRequest,
+    mocker: MockerFixture,
 ) -> None:
-    # Given - Existing committed CR and one scheduled CR
-    pre_existing_cr = ChangeRequest.objects.create(
-        environment=environment,
-        title="immediate",
-        user=admin_user,
-    )
-    FeatureState.objects.create(
-        environment=environment,
-        feature=feature,
-        change_request=pre_existing_cr,
-        version=None,
-    )
-    pre_existing_cr.commit(admin_user)
+    # Given
+    committer = FFAdminUser.objects.create(email="committer@example.com")
+    change_request_no_required_approvals.commit(committer)
 
-    scheduled_cr = ChangeRequest.objects.create(
-        environment=environment,
-        title="scheduled",
-        user=admin_user,
+    mock_went_live_task = mocker.patch(
+        "features.workflows.core.models.create_feature_state_went_live_audit_log"
     )
-    FeatureState.objects.create(
-        environment=environment,
-        feature=feature,
-        change_request=scheduled_cr,
-        live_from=timezone.now() + timedelta(days=2),
-        version=None,
+    mock_updated_task = mocker.patch(
+        "features.workflows.core.models.create_feature_state_updated_by_change_request_audit_log"
     )
-    scheduled_cr.commit(admin_user)
 
-    # When - Enable v2 versioning
-    enable_v2_versioning(environment_id=environment.id)
+    # When
+    environment = change_request_no_required_approvals.environment
+    environment.delete()
+    change_request_no_required_approvals.delete()
 
-    environment.refresh_from_db()
-    assert environment.use_v2_feature_versioning is True
-
-    # Then - CR must have been cleared from feature states
-    feature_states_with_efv = FeatureState.objects.filter(
-        environment=environment,
-        environment_feature_version__isnull=False,
-    )
-    assert feature_states_with_efv.exists()
-    assert not feature_states_with_efv.filter(change_request__isnull=False).exists()
-
-    project.delete()
-    assert project.deleted_at is not None
+    # Then
+    mock_went_live_task.delay.assert_not_called()
+    mock_updated_task.delay.assert_not_called()

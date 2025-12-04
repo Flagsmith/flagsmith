@@ -106,10 +106,7 @@ def _create_initial_feature_versions(environment: "Environment"):  # type: ignor
             feature_states__in=latest_feature_states
         )
 
-        latest_feature_states.update(
-            environment_feature_version=ef_version,
-            change_request=None,
-        )
+        latest_feature_states.update(environment_feature_version=ef_version)
         related_feature_segments.update(environment_feature_version=ef_version)
 
         scheduled_feature_states = FeatureState.objects.filter(
