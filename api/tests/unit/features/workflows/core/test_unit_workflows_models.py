@@ -26,7 +26,7 @@ from features.versioning.models import (
     EnvironmentFeatureVersion,
     VersionChangeSet,
 )
-from features.versioning.tasks import publish_version_change_set
+from features.versioning.tasks import enable_v2_versioning, publish_version_change_set
 from features.versioning.versioning_service import get_environment_flags_list
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
