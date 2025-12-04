@@ -1,0 +1,38 @@
+.skeleton-row {
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-color, #e8e8e8);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+
+  &-text {
+    height: 16px;
+  }
+
+  &-badge {
+    border-radius: 12px;
+  }
+
+  &-circle {
+    border-radius: 50%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
