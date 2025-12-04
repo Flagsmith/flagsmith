@@ -119,6 +119,46 @@ const FeaturesPageComponent: FC = () => {
     )
   }
 
+  const renderFooter = () => (
+    <>
+      <JSONReference
+        className='mx-2 mt-4'
+        showNamesButton
+        title={'Features'}
+        json={projectFlags}
+      />
+      <JSONReference
+        className='mx-2'
+        title={'Feature States'}
+        json={environmentFlags && Object.values(environmentFlags)}
+      />
+    </>
+  )
+
+  const renderFeatureRow = (projectFlag: ProjectFlag, i: number) => (
+    <Permission
+      level='environment'
+      tags={projectFlag.tags}
+      permission={Utils.getManageFeaturePermission(
+        Utils.changeRequestsEnabled(minimumChangeRequestApprovals),
+      )}
+      id={environmentId}
+    >
+      {({ permission }) => (
+        <FeatureRow
+          environmentFlags={environmentFlags}
+          permission={permission}
+          environmentId={environmentId}
+          projectId={projectId}
+          index={i}
+          toggleFlag={toggleFlag}
+          removeFlag={removeFlag}
+          projectFlag={projectFlag}
+        />
+      )}
+    </Permission>
+  )
+
   const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
   return (
     <div
@@ -178,48 +218,8 @@ const FeaturesPageComponent: FC = () => {
                     prevPage={() => paging?.previous && goToPage(page - 1)}
                     goToPage={goToPage}
                     items={projectFlags?.filter((v) => !(v as any).ignore)}
-                    renderFooter={() => (
-                      <>
-                        <JSONReference
-                          className='mx-2 mt-4'
-                          showNamesButton
-                          title={'Features'}
-                          json={projectFlags}
-                        />
-                        <JSONReference
-                          className='mx-2'
-                          title={'Feature States'}
-                          json={
-                            environmentFlags && Object.values(environmentFlags)
-                          }
-                        />
-                      </>
-                    )}
-                    renderRow={(projectFlag: ProjectFlag, i: number) => (
-                      <Permission
-                        level='environment'
-                        tags={projectFlag.tags}
-                        permission={Utils.getManageFeaturePermission(
-                          Utils.changeRequestsEnabled(
-                            minimumChangeRequestApprovals,
-                          ),
-                        )}
-                        id={environmentId}
-                      >
-                        {({ permission }) => (
-                          <FeatureRow
-                            environmentFlags={environmentFlags}
-                            permission={permission}
-                            environmentId={environmentId}
-                            projectId={projectId}
-                            index={i}
-                            toggleFlag={toggleFlag}
-                            removeFlag={removeFlag}
-                            projectFlag={projectFlag}
-                          />
-                        )}
-                      </Permission>
-                    )}
+                    renderFooter={renderFooter}
+                    renderRow={renderFeatureRow}
                   />
                 </FormGroup>
 
