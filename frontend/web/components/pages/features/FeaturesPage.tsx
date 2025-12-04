@@ -80,7 +80,7 @@ const FeaturesPageComponent: FC = () => {
   )
 
   // Data fetching - API key conversion handled internally
-  const { data, isFetching, isLoading } = useFeatureListWithFilters(
+  const { data, error, isFetching, isLoading } = useFeatureListWithFilters(
     filters,
     page,
     environmentId,
@@ -230,7 +230,26 @@ const FeaturesPageComponent: FC = () => {
           </div>
         )}
 
-        {(!isLoading || loadedOnce) && (
+        {error && (
+          <div className='text-center mt-4'>
+            <div className='alert alert-danger'>
+              <strong>Failed to load features.</strong>
+              <div className='mt-2'>
+                {(error as any)?.data?.detail ||
+                  (error as any)?.message ||
+                  'An error occurred while fetching features. Please try again.'}
+              </div>
+              <button
+                className='btn btn-primary mt-3'
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!error && (!isLoading || loadedOnce) && (
           <div>
             {showContent ? (
               <div>
