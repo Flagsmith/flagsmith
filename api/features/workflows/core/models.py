@@ -18,7 +18,10 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     LifecycleModelMixin,
     hook,
 )
-from django_lifecycle.conditions import WhenFieldValueIs, WhenFieldValueIsNot  # type: ignore[import-untyped]
+from django_lifecycle.conditions import (  # type: ignore[import-untyped]
+    WhenFieldValueIs,
+    WhenFieldValueIsNot,
+)
 
 from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
