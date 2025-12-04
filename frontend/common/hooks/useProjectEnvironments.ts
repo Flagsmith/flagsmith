@@ -6,21 +6,26 @@ import type { Environment, Project } from 'common/types/responses'
 /**
  * Custom hook for fetching and managing project and environment data.
  *
- * Provides both raw data and convenient accessor functions for:
- * - Looking up environments by API key
- * - Accessing project feature limits
- * - Unified loading/error states
+ * Provides raw project and environment data along with convenient accessor functions
+ * for looking up environments by API key. This is a general-purpose hook that can be
+ * used across the application whenever both project and environment data are needed.
  *
  * @param projectId - The project ID to fetch data for
- * @returns Object containing project data, environments, and accessor functions
+ * @returns Object containing project data, environments, accessor functions, and loading/error states
  *
  * @example
  * ```tsx
- * const { environments, getEnvironment, maxFeaturesAllowed, isLoading } =
- *   useProjectEnvironments(projectId)
+ * const { project, environments, getEnvironment, isLoading } = useProjectEnvironments(projectId)
  *
+ * // Access project properties
+ * const maxFeatures = project?.max_features_allowed
+ *
+ * // Look up environment by API key
  * const env = getEnvironment(apiKey)
- * const canAddFeature = maxFeaturesAllowed === null || features.length < maxFeaturesAllowed
+ * const requiresApprovals = env?.minimum_change_request_approvals
+ *
+ * // Access all environments
+ * const envCount = environments.length
  * ```
  */
 export function useProjectEnvironments(projectId: number): {
@@ -28,7 +33,6 @@ export function useProjectEnvironments(projectId: number): {
   environments: Environment[]
   getEnvironmentIdFromKey: (apiKey: string) => number | undefined
   getEnvironment: (apiKey: string) => Environment | undefined
-  maxFeaturesAllowed: number | null
   isLoading: boolean
   error: unknown
 } {
@@ -69,7 +73,6 @@ export function useProjectEnvironments(projectId: number): {
     getEnvironment,
     getEnvironmentIdFromKey,
     isLoading: isLoadingProject || isLoadingEnvironments,
-    maxFeaturesAllowed: project?.max_features_allowed ?? null,
     project,
   }
 }
