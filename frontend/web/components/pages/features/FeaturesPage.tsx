@@ -231,13 +231,7 @@ const FeaturesPageComponent: FC = () => {
           </div>
         )}
 
-        {error && (
-          <div className='text-center mt-4'>
-            <ErrorMessage error={error} />
-          </div>
-        )}
-
-        {!error && (!isLoading || loadedOnce) && (
+        {(!isLoading || loadedOnce) && (
           <div>
             {showContent ? (
               <div>
@@ -260,21 +254,27 @@ const FeaturesPageComponent: FC = () => {
                     'opacity-50': isFetching,
                   })}
                 >
-                  <PanelSearch
-                    className='no-pad overflow-visible'
-                    id='features-list'
-                    renderSearchWithNoResults
-                    itemHeight={65}
-                    isLoading={isLoading}
-                    paging={paging}
-                    header={renderHeader()}
-                    nextPage={handleNextPage}
-                    prevPage={handlePrevPage}
-                    goToPage={goToPage}
-                    items={projectFlags}
-                    renderFooter={renderFooter}
-                    renderRow={renderFeatureRow}
-                  />
+                  {error ? (
+                    <div className='text-center p-4'>
+                      <ErrorMessage error={error} />
+                    </div>
+                  ) : (
+                    <PanelSearch
+                      className='no-pad overflow-visible'
+                      id='features-list'
+                      renderSearchWithNoResults
+                      itemHeight={65}
+                      isLoading={isLoading}
+                      paging={paging}
+                      header={renderHeader()}
+                      nextPage={handleNextPage}
+                      prevPage={handlePrevPage}
+                      goToPage={goToPage}
+                      items={projectFlags}
+                      renderFooter={renderFooter}
+                      renderRow={renderFeatureRow}
+                    />
+                  )}
                 </FormGroup>
 
                 <FeaturesSDKIntegration
