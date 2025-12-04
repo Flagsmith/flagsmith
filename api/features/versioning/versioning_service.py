@@ -137,10 +137,10 @@ def _update_flag_for_versioning_v2(
                 feature=feature,
                 segment_id=change_set.segment_id,
                 environment=environment,
-                priority=change_set.segment_priority
-                if change_set.segment_priority is not None
-                else 0,
             )
+
+            if change_set.segment_priority is not None:
+                feature_segment.to(change_set.segment_priority)
 
             target_feature_state = FeatureState.objects.create(
                 feature=feature,
@@ -198,10 +198,10 @@ def _update_flag_for_versioning_v1(
             feature=feature,
             segment_id=change_set.segment_id,
             environment=environment,
-            priority=change_set.segment_priority
-            if change_set.segment_priority is not None
-            else 0,
         )
+
+        if change_set.segment_priority is not None:
+            feature_segment.to(change_set.segment_priority)
 
         target_feature_state: FeatureState = FeatureState.objects.create(
             feature=feature,
@@ -257,8 +257,10 @@ def _create_segment_override(
         feature=feature,
         segment_id=segment_id,
         environment=environment,
-        priority=priority if priority is not None else 0,
     )
+
+    if priority is not None:
+        feature_segment.to(priority)
 
     segment_state: FeatureState = FeatureState.objects.create(
         feature=feature,

@@ -391,6 +391,65 @@ def test_update_flag_segment_override_creates_feature_segment_if_not_exists(
     ][0]
     assert segment_override.enabled is True
     assert segment_override.get_feature_state_value() == "premium_feature"
+    assert segment_override.feature_segment is not None
+    assert segment_override.feature_segment.priority == 10
+
+
+def test_create_new_segment_override_reorders_priorities_v1(
+    staff_client: APIClient,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+
+    segment1 = Segment.objects.create(name="segment1", project=project)
+    segment2 = Segment.objects.create(name="segment2", project=project)
+
+    # Create existing segment override at priority 0
+    feature_segment1 = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment1,
+        environment=environment,
+        priority=0,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment1,
+        enabled=True,
+    )
+
+    url = reverse(
+        "api-experiments:update-flag-v1",
+        kwargs={"environment_key": environment.api_key},
+    )
+
+    # When - Create new segment override at priority 0 (should push segment1 to priority 1)
+    data = {
+        "feature": {"name": feature.name},
+        "segment": {"id": segment2.id, "priority": 0},
+        "enabled": True,
+        "value": {"type": "string", "string_value": "new_segment_value"},
+    }
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Refresh from DB
+    feature_segment1.refresh_from_db()
+    feature_segment2 = FeatureSegment.objects.get(
+        feature=feature, segment=segment2, environment=environment
+    )
+
+    # segment2 should be at priority 0, segment1 should have been pushed to priority 1
+    assert feature_segment2.priority == 0
+    assert feature_segment1.priority == 1
 
 
 # Update Multiple Feature States Tests
@@ -707,6 +766,72 @@ def test_update_existing_segment_override_with_priority_v2(
     )
     assert feature_segment is not None
     assert feature_segment.priority == 2
+
+
+def test_create_new_segment_override_reorders_priorities_v2(
+    staff_client: APIClient,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+
+    segment1 = Segment.objects.create(name="segment1_v2", project=project)
+    segment2 = Segment.objects.create(name="segment2_v2", project=project)
+
+    # Create existing segment override at priority 0
+    feature_segment1 = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment1,
+        environment=environment,
+        priority=0,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment1,
+        enabled=True,
+    )
+
+    url = reverse(
+        "api-experiments:update-flag-v2",
+        kwargs={"environment_key": environment.api_key},
+    )
+
+    # When - Create new segment override at priority 0 (should push segment1 to priority 1)
+    data = {
+        "feature": {"name": feature.name},
+        "environment_default": {
+            "enabled": True,
+            "value": {"type": "string", "string_value": "default"},
+        },
+        "segment_overrides": [
+            {
+                "segment_id": segment2.id,
+                "priority": 0,
+                "enabled": True,
+                "value": {"type": "string", "string_value": "new_segment_value"},
+            },
+        ],
+    }
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Refresh from DB
+    feature_segment1.refresh_from_db()
+    feature_segment2 = FeatureSegment.objects.get(
+        feature=feature, segment=segment2, environment=environment
+    )
+
+    # segment2 should be at priority 0, segment1 should have been pushed to priority 1
+    assert feature_segment2.priority == 0
+    assert feature_segment1.priority == 1
 
 
 def test_update_flag_v1_returns_403_when_workflow_enabled(
