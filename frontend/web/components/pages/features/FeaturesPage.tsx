@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useCallback, useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
 import classNames from 'classnames'
 import CreateFlagModal from 'components/modals/CreateFlag'
@@ -65,16 +65,19 @@ const FeaturesPageComponent: FC = () => {
   const [removeFeature] = useRemoveFeatureWithToast()
   const [toggleFeature] = useToggleFeatureWithToast()
 
-  const removeFlag = async (projectFlag: ProjectFlag) => {
-    await removeFeature(projectFlag, projectId)
-  }
+  const removeFlag = useCallback(
+    async (projectFlag: ProjectFlag) => {
+      await removeFeature(projectFlag, projectId)
+    },
+    [removeFeature, projectId],
+  )
 
-  const toggleFlag = async (
-    flag: ProjectFlag,
-    environmentFlag: FeatureState | undefined,
-  ) => {
-    await toggleFeature(flag, environmentFlag, environmentId)
-  }
+  const toggleFlag = useCallback(
+    async (flag: ProjectFlag, environmentFlag: FeatureState | undefined) => {
+      await toggleFeature(flag, environmentFlag, environmentId)
+    },
+    [toggleFeature, environmentId],
+  )
 
   // Data fetching - API key conversion handled internally
   const { data, isFetching, isLoading } = useFeatureListWithFilters(
@@ -85,10 +88,16 @@ const FeaturesPageComponent: FC = () => {
   )
 
   // Extract data with defaults
-  const projectFlags = data?.results ?? []
-  const environmentFlags = data?.environmentStates ?? {}
-  const paging = data?.pagination ?? DEFAULT_PAGINATION
-  const totalFeatures = data?.count ?? 0
+  const projectFlags = useMemo(() => data?.results ?? [], [data?.results])
+  const environmentFlags = useMemo(
+    () => data?.environmentStates ?? {},
+    [data?.environmentStates],
+  )
+  const paging = useMemo(
+    () => data?.pagination ?? DEFAULT_PAGINATION,
+    [data?.pagination],
+  )
+  const totalFeatures = useMemo(() => data?.count ?? 0, [data?.count])
 
   // Display state management using custom hook
   const {
@@ -119,56 +128,80 @@ const FeaturesPageComponent: FC = () => {
     )
   }
 
-  const renderHeader = () => (
-    <FeaturesTableFilters
-      projectId={projectId}
-      filters={filters}
-      hasFilters={hasFilters}
-      isLoading={isLoading}
-      orgId={routeContext.organisationId}
-      onFilterChange={handleFilterChange}
-      onClearFilters={clearFilters}
-    />
+  const renderHeader = useCallback(
+    () => (
+      <FeaturesTableFilters
+        projectId={projectId}
+        filters={filters}
+        hasFilters={hasFilters}
+        isLoading={isLoading}
+        orgId={routeContext.organisationId}
+        onFilterChange={handleFilterChange}
+        onClearFilters={clearFilters}
+      />
+    ),
+    [
+      projectId,
+      filters,
+      hasFilters,
+      isLoading,
+      routeContext.organisationId,
+      handleFilterChange,
+      clearFilters,
+    ],
   )
 
-  const renderFooter = () => (
-    <>
-      <JSONReference
-        className='mx-2 mt-4'
-        showNamesButton
-        title={'Features'}
-        json={projectFlags}
-      />
-      <JSONReference
-        className='mx-2'
-        title={'Feature States'}
-        json={environmentFlags && Object.values(environmentFlags)}
-      />
-    </>
-  )
-
-  const renderFeatureRow = (projectFlag: ProjectFlag, i: number) => (
-    <Permission
-      level='environment'
-      tags={projectFlag.tags}
-      permission={Utils.getManageFeaturePermission(
-        Utils.changeRequestsEnabled(minimumChangeRequestApprovals),
-      )}
-      id={environmentId}
-    >
-      {({ permission }) => (
-        <FeatureRow
-          environmentFlags={environmentFlags}
-          permission={permission}
-          environmentId={environmentId}
-          projectId={projectId}
-          index={i}
-          toggleFlag={toggleFlag}
-          removeFlag={removeFlag}
-          projectFlag={projectFlag}
+  const renderFooter = useCallback(
+    () => (
+      <>
+        <JSONReference
+          className='mx-2 mt-4'
+          showNamesButton
+          title={'Features'}
+          json={projectFlags}
         />
-      )}
-    </Permission>
+        <JSONReference
+          className='mx-2'
+          title={'Feature States'}
+          json={environmentFlags && Object.values(environmentFlags)}
+        />
+      </>
+    ),
+    [projectFlags, environmentFlags],
+  )
+
+  const renderFeatureRow = useCallback(
+    (projectFlag: ProjectFlag, i: number) => (
+      <Permission
+        level='environment'
+        tags={projectFlag.tags}
+        permission={Utils.getManageFeaturePermission(
+          Utils.changeRequestsEnabled(minimumChangeRequestApprovals),
+        )}
+        id={environmentId}
+      >
+        {({ permission }) => (
+          <FeatureRow
+            environmentFlags={environmentFlags}
+            permission={permission}
+            environmentId={environmentId}
+            projectId={projectId}
+            index={i}
+            toggleFlag={toggleFlag}
+            removeFlag={removeFlag}
+            projectFlag={projectFlag}
+          />
+        )}
+      </Permission>
+    ),
+    [
+      environmentFlags,
+      environmentId,
+      projectId,
+      minimumChangeRequestApprovals,
+      toggleFlag,
+      removeFlag,
+    ],
   )
 
   const handleNextPage = () => {
