@@ -9,30 +9,8 @@ import {
 import Utils from 'common/utils/utils'
 
 /**
- * Custom hook for managing feature list filters and pagination state.
- *
- * This hook is **FeaturesPage-specific** and handles bidirectional URL synchronization.
- * It composes global filter utilities with page-specific URL management logic.
- *
- * Syncs filter state with URL query parameters bidirectionally:
- * - Initializes filters from URL on mount
- * - Updates URL whenever filters change
- * - Preserves filter state across page refreshes
- * - Skips URL updates when viewing a single feature (feature detail view)
- *
- * @param history - React Router history object for URL manipulation
- * @returns Object containing filters, pagination state, and filter management functions
- *
- * @example
- * ```tsx
- * const { filters, page, handleFilterChange, goToPage } = useFeatureFilters(history)
- *
- * // Update search filter
- * handleFilterChange({ search: 'my-feature' })
- *
- * // Navigate to next page
- * goToPage(page + 1)
- * ```
+ * Manages feature filters with bidirectional URL synchronization.
+ * FeaturesPage-specific implementation.
  */
 export function useFeatureFilters(history: History): {
   filters: FilterState
@@ -52,7 +30,6 @@ export function useFeatureFilters(history: History): {
 
   const updateURLParams = useCallback(() => {
     const currentParams = Utils.fromParam()
-    // FeaturesPage-specific: Skip URL update when viewing single feature detail
     if (!currentParams.feature) {
       const urlParams = buildUrlParams(filters, page)
       history.replace(

@@ -3,10 +3,7 @@ import Format from './format'
 import type { FilterState, UrlParams } from 'common/types/featureFilters'
 import type { TagStrategy } from 'common/types/responses'
 
-/**
- * Check if any filters are currently active.
- * Uses simple boolean checks instead of deep equality comparison for better performance.
- */
+/** Check if any filters are currently active. */
 export function hasActiveFilters(filters: FilterState): boolean {
   return (
     (filters.tags && filters.tags.length > 0) ||
@@ -19,10 +16,7 @@ export function hasActiveFilters(filters: FilterState): boolean {
   )
 }
 
-/**
- * Build URL query parameters from filter state.
- * Converts filter state into a format suitable for URL serialization.
- */
+/** Converts filter state to URL query parameters. */
 export function buildUrlParams(
   filters: FilterState,
   page: number,
@@ -45,10 +39,7 @@ export function buildUrlParams(
   }
 }
 
-/**
- * Build API filter parameters from filter state.
- * Converts filter state into the format expected by the RTK Query API call.
- */
+/** Converts filter state to RTK Query API parameters. */
 export function buildApiFilterParams(
   filters: FilterState,
   page: number,
@@ -90,13 +81,7 @@ export function buildApiFilterParams(
   }
 }
 
-/**
- * Converts URL query parameters to FilterState object with page number.
- * Handles parsing of arrays, booleans, and sort configuration from URL params.
- *
- * @param params - URL query parameters as key-value pairs
- * @returns Object containing structured filter state and page number
- */
+/** Parses URL query parameters into FilterState with page number. */
 export function getFiltersFromParams(
   params: UrlParams,
 ): FilterState & { page: number } {
