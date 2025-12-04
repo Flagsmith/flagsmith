@@ -8,7 +8,6 @@ import PermissionGate from 'components/base/PermissionGate'
 type FeaturesPageHeaderProps = {
   totalFeatures: number
   maxFeaturesAllowed: number | null
-  showCreateButton: boolean
   onCreateFeature: () => void
   readOnly: boolean
   projectId: number
@@ -19,7 +18,6 @@ export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
   onCreateFeature,
   projectId,
   readOnly,
-  showCreateButton,
   totalFeatures,
 }) => {
   const featureLimitAlert = Utils.calculateRemainingLimitsPercentage(
@@ -37,29 +35,25 @@ export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
       <PageTitle
         title={'Features'}
         cta={
-          <>
-            {showCreateButton ? (
-              <PermissionGate
-                level='project'
-                permission='CREATE_FEATURE'
-                id={projectId}
+          <PermissionGate
+            level='project'
+            permission='CREATE_FEATURE'
+            id={projectId}
+          >
+            {(perm) => (
+              <Button
+                disabled={
+                  !perm || readOnly || featureLimitAlert.percentage >= 100
+                }
+                className='w-100'
+                data-test='show-create-feature-btn'
+                id='show-create-feature-btn'
+                onClick={onCreateFeature}
               >
-                {(perm) => (
-                  <Button
-                    disabled={
-                      !perm || readOnly || featureLimitAlert.percentage >= 100
-                    }
-                    className='w-100'
-                    data-test='show-create-feature-btn'
-                    id='show-create-feature-btn'
-                    onClick={onCreateFeature}
-                  >
-                    Create Feature
-                  </Button>
-                )}
-              </PermissionGate>
-            ) : null}
-          </>
+                Create Feature
+              </Button>
+            )}
+          </PermissionGate>
         }
       >
         View and manage{' '}
