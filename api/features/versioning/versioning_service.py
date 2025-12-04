@@ -139,9 +139,6 @@ def _update_flag_for_versioning_v2(
                 environment=environment,
             )
 
-            if change_set.segment_priority is not None:
-                feature_segment.to(change_set.segment_priority)
-
             target_feature_state = FeatureState.objects.create(
                 feature=feature,
                 environment=environment,
@@ -166,9 +163,7 @@ def _update_flag_for_versioning_v2(
     )
 
     if change_set.segment_id and change_set.segment_priority is not None:
-        feature_segment = target_feature_state.feature_segment
-        if feature_segment:
-            feature_segment.to(change_set.segment_priority)
+        _update_segment_priority(target_feature_state, change_set.segment_priority)
 
     new_version.publish(
         published_by=change_set.user, published_by_api_key=change_set.api_key
@@ -200,29 +195,16 @@ def _update_flag_for_versioning_v1(
             environment=environment,
         )
 
-        if change_set.segment_priority is not None:
-            feature_segment.to(change_set.segment_priority)
-
         target_feature_state: FeatureState = FeatureState.objects.create(
             feature=feature,
             environment=environment,
             feature_segment=feature_segment,
             enabled=change_set.enabled,
         )
-
-        _update_feature_state_value(
-            target_feature_state.feature_state_value,
-            change_set.feature_state_value,
-            change_set.type_,
-        )
-
-        return target_feature_state
-
-    assert len(latest_feature_states) == 1
-
-    target_feature_state = list(latest_feature_states.values())[0]
-    target_feature_state.enabled = change_set.enabled
-    target_feature_state.save()
+    else:
+        target_feature_state = list(latest_feature_states.values())[0]
+        target_feature_state.enabled = change_set.enabled
+        target_feature_state.save()
 
     _update_feature_state_value(
         target_feature_state.feature_state_value,
@@ -231,9 +213,7 @@ def _update_flag_for_versioning_v1(
     )
 
     if change_set.segment_id and change_set.segment_priority is not None:
-        feature_segment = target_feature_state.feature_segment
-        if feature_segment:
-            feature_segment.to(change_set.segment_priority)
+        _update_segment_priority(target_feature_state, change_set.segment_priority)
 
     return target_feature_state
 
