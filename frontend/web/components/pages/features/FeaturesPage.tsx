@@ -12,6 +12,7 @@ import PermissionGate from 'components/base/PermissionGate'
 import FeatureRow from 'components/feature-summary/FeatureRow'
 import JSONReference from 'components/JSONReference'
 import Permission from 'common/providers/Permission'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import {
   FeaturesEmptyState,
   FeatureMetricsSection,
@@ -232,20 +233,7 @@ const FeaturesPageComponent: FC = () => {
 
         {error && (
           <div className='text-center mt-4'>
-            <div className='alert alert-danger'>
-              <strong>Failed to load features.</strong>
-              <div className='mt-2'>
-                {(error as any)?.data?.detail ||
-                  (error as any)?.message ||
-                  'An error occurred while fetching features. Please try again.'}
-              </div>
-              <button
-                className='btn btn-primary mt-3'
-                onClick={() => window.location.reload()}
-              >
-                Retry
-              </button>
-            </div>
+            <ErrorMessage error={error} />
           </div>
         )}
 
