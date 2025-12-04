@@ -10,9 +10,10 @@ import { useRouteContext } from 'components/providers/RouteContext'
 import { usePageTrackingWithContext } from 'common/hooks/usePageTracking'
 import PermissionGate from 'components/base/PermissionGate'
 import FeatureRow from 'components/feature-summary/FeatureRow'
+import FeatureRowSkeleton from 'components/feature-summary/FeatureRowSkeleton'
 import JSONReference from 'components/JSONReference'
 import Permission from 'common/providers/Permission'
-import ErrorMessage from 'components/messages/ErrorMessage'
+import Panel from 'components/base/grid/Panel'
 import {
   FeaturesEmptyState,
   FeatureMetricsSection,
@@ -24,7 +25,6 @@ import { useFeatureFilters } from './hooks/useFeatureFilters'
 import { useRemoveFeatureWithToast } from './hooks/useRemoveFeatureWithToast'
 import { useToggleFeatureWithToast } from './hooks/useToggleFeatureWithToast'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
-import { useFeaturePageDisplay } from './hooks/useFeaturePageDisplay'
 import { useFeatureListWithFilters } from 'common/hooks/useFeatureListWithFilters'
 import type { Pagination } from './types'
 import type { ProjectFlag, FeatureState } from 'common/types/responses'
@@ -43,16 +43,13 @@ const FeaturesPageComponent: FC = () => {
   const projectId = routeContext.projectId!
   const environmentId = routeContext.environmentId!
 
-  // Project and environment data
   const { getEnvironment, project } = useProjectEnvironments(projectId)
 
-  // Derive page-specific properties
   const maxFeaturesAllowed = project?.max_features_allowed ?? null
   const currentEnvironment = getEnvironment(environmentId)
   const minimumChangeRequestApprovals =
     currentEnvironment?.minimum_change_request_approvals
 
-  // Filters and pagination
   const {
     clearFilters,
     filters,
@@ -62,9 +59,8 @@ const FeaturesPageComponent: FC = () => {
     page,
   } = useFeatureFilters(history)
 
-  // Feature actions
-  const [removeFeature] = useRemoveFeatureWithToast()
-  const [toggleFeature] = useToggleFeatureWithToast()
+  const [removeFeature, { isLoading: isRemoving }] = useRemoveFeatureWithToast()
+  const [toggleFeature, { isLoading: isToggling }] = useToggleFeatureWithToast()
 
   const removeFlag = useCallback(
     async (projectFlag: ProjectFlag) => {
@@ -80,7 +76,6 @@ const FeaturesPageComponent: FC = () => {
     [toggleFeature, environmentId],
   )
 
-  // Data fetching - API key conversion handled internally
   const { data, error, isFetching, isLoading } = useFeatureListWithFilters(
     filters,
     page,
@@ -88,7 +83,6 @@ const FeaturesPageComponent: FC = () => {
     projectId,
   )
 
-  // Extract data with defaults
   const projectFlags = useMemo(() => data?.results ?? [], [data?.results])
   const environmentFlags = useMemo(
     () => data?.environmentStates ?? {},
@@ -100,16 +94,8 @@ const FeaturesPageComponent: FC = () => {
   )
   const totalFeatures = useMemo(() => data?.count ?? 0, [data?.count])
 
-  // Display state management using custom hook
-  const {
-    loadedOnce,
-    shouldShowCreateButton,
-    showContent,
-    showEmptyState,
-    showInitialLoader,
-  } = useFeaturePageDisplay(isLoading, projectFlags, filters, data)
+  const isSaving = isToggling || isRemoving
 
-  // Page tracking with environment context
   usePageTrackingWithContext(
     Constants.pages.FEATURES,
     environmentId,
@@ -217,6 +203,58 @@ const FeaturesPageComponent: FC = () => {
     }
   }
 
+  const renderFeaturesList = () => {
+    if (!data) {
+      return (
+        <Panel className='no-pad panel--grey'>
+          {renderHeader()}
+          <div className='skeleton-list'>
+            {[...Array(5)].map((_, i) => (
+              <FeatureRowSkeleton key={i} />
+            ))}
+          </div>
+        </Panel>
+      )
+    }
+
+    if (projectFlags.length > 0) {
+      return (
+        <PanelSearch
+          className='no-pad overflow-visible'
+          id='features-list'
+          renderSearchWithNoResults
+          itemHeight={65}
+          isLoading={isLoading}
+          paging={paging}
+          header={renderHeader()}
+          nextPage={handleNextPage}
+          prevPage={handlePrevPage}
+          goToPage={goToPage}
+          items={projectFlags}
+          renderFooter={renderFooter}
+          renderRow={renderFeatureRow}
+        />
+      )
+    }
+
+    return (
+      <PermissionGate
+        level='project'
+        permission='CREATE_FEATURE'
+        id={projectId}
+      >
+        {(perm) => (
+          <FeaturesEmptyState
+            environmentId={environmentId}
+            projectId={projectId}
+            onCreateFeature={newFlag}
+            canCreateFeature={perm}
+          />
+        )}
+      </PermissionGate>
+    )
+  }
+
   const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
   return (
     <div
@@ -225,98 +263,42 @@ const FeaturesPageComponent: FC = () => {
       className='app-container container'
     >
       <div className='features-page'>
-        {showInitialLoader && (
-          <div className='centered-container'>
-            <Loader />
+        {error ? (
+          <div className='text-center'>
+            <h4 className='mb-3'>Unable to Load Features</h4>
+            <p className='text-muted mb-3'>
+              We couldn't load your feature flags. This might be due to a
+              network issue or a temporary server problem.
+            </p>
           </div>
-        )}
+        ) : (
+          <>
+            <FeatureMetricsSection
+              environmentId={environmentId}
+              projectId={projectId}
+            />
 
-        {(!isLoading || loadedOnce) && (
-          <div>
-            {showContent ? (
-              <div>
-                <FeatureMetricsSection
-                  environmentId={environmentId}
-                  projectId={projectId}
-                />
+            <FeaturesPageHeader
+              totalFeatures={totalFeatures}
+              maxFeaturesAllowed={maxFeaturesAllowed}
+              onCreateFeature={newFlag}
+              readOnly={readOnly}
+              projectId={projectId}
+            />
 
-                <FeaturesPageHeader
-                  totalFeatures={totalFeatures}
-                  maxFeaturesAllowed={maxFeaturesAllowed}
-                  showCreateButton={shouldShowCreateButton}
-                  onCreateFeature={newFlag}
-                  readOnly={readOnly}
-                  projectId={projectId}
-                />
+            <FormGroup
+              className={classNames('mb-4', {
+                'opacity-50': isSaving,
+              })}
+            >
+              {renderFeaturesList()}
+            </FormGroup>
 
-                <FormGroup
-                  className={classNames('mb-4', {
-                    'opacity-50': isFetching,
-                  })}
-                >
-                  {error ? (
-                    <div className='text-center p-4'>
-                      <h4 className='mb-3'>Unable to Load Features</h4>
-                      <p className='text-muted mb-3'>
-                        We couldn't load your feature flags. This might be due
-                        to a network issue or a temporary server problem.
-                      </p>
-                      <ErrorMessage
-                        error={error}
-                        errorMessageClass='mb-3 d-inline-flex'
-                      />
-                      <div>
-                        <Button
-                          className='btn btn-primary mt-2'
-                          onClick={() => window.location.reload()}
-                        >
-                          Try Again
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <PanelSearch
-                      className='no-pad overflow-visible'
-                      id='features-list'
-                      renderSearchWithNoResults
-                      itemHeight={65}
-                      isLoading={isLoading}
-                      paging={paging}
-                      header={renderHeader()}
-                      nextPage={handleNextPage}
-                      prevPage={handlePrevPage}
-                      goToPage={goToPage}
-                      items={projectFlags}
-                      renderFooter={renderFooter}
-                      renderRow={renderFeatureRow}
-                    />
-                  )}
-                </FormGroup>
-
-                <FeaturesSDKIntegration
-                  projectId={projectId}
-                  environmentId={environmentId}
-                />
-              </div>
-            ) : (
-              showEmptyState && (
-                <PermissionGate
-                  level='project'
-                  permission='CREATE_FEATURE'
-                  id={projectId}
-                >
-                  {(perm) => (
-                    <FeaturesEmptyState
-                      environmentId={environmentId}
-                      projectId={projectId}
-                      onCreateFeature={newFlag}
-                      canCreateFeature={perm}
-                    />
-                  )}
-                </PermissionGate>
-              )
-            )}
-          </div>
+            <FeaturesSDKIntegration
+              projectId={projectId}
+              environmentId={environmentId}
+            />
+          </>
         )}
       </div>
     </div>
