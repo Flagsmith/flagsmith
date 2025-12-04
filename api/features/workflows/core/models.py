@@ -18,7 +18,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     LifecycleModelMixin,
     hook,
 )
-from django_lifecycle.conditions import WhenFieldValueIs, WhenFieldValueIsNot
+from django_lifecycle.conditions import WhenFieldValueIs, WhenFieldValueIsNot  # type: ignore[import-untyped]
 
 from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
@@ -196,8 +196,8 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
     @hook(
         AFTER_SAVE,
         condition=(
-            WhenFieldValueIsNot("committed_at", value=None)
-            & WhenFieldValueIs("deleted_at", value=None)
+            WhenFieldValueIsNot("committed_at", None)
+            & WhenFieldValueIs("deleted_at", None)
         ),
     )
     def create_audit_log_for_related_feature_state(self):  # type: ignore[no-untyped-def]
