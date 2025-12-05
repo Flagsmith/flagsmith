@@ -451,7 +451,11 @@ export type MultivariateOption = {
 }
 
 export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
-export type TagStrategy = 'INTERSECTION' | 'UNION'
+
+export enum TagStrategy {
+  INTERSECTION = 'INTERSECTION',
+  UNION = 'UNION',
+}
 
 export type IdentityFeatureState = {
   feature: {
