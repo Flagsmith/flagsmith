@@ -27,7 +27,7 @@ import { useFeatureFilters } from './hooks/useFeatureFilters'
 import { useRemoveFeatureWithToast } from './hooks/useRemoveFeatureWithToast'
 import { useToggleFeatureWithToast } from './hooks/useToggleFeatureWithToast'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
-import { useFeatureListWithFilters } from 'common/hooks/useFeatureListWithFilters'
+import { useFeatureListWithApiKey } from 'common/hooks/useFeatureListWithApiKey'
 import type { Pagination } from './types'
 import type { ProjectFlag, FeatureState } from 'common/types/responses'
 
@@ -55,7 +55,7 @@ const FeaturesPageComponent: FC = () => {
 
   const { getEnvironment, project } = useProjectEnvironments(projectId)
   const { data, error, isFetching, isLoading, refetch } =
-    useFeatureListWithFilters(filters, page, environmentId, projectId)
+    useFeatureListWithApiKey(filters, page, environmentId, projectId)
 
   // Backward compatibility: Populate ProjectStore for legacy components (CreateFlag)
   // TODO: Remove this when CreateFlag is migrated to RTK Query
@@ -122,7 +122,7 @@ const FeaturesPageComponent: FC = () => {
     routeContext.organisationId,
   )
 
-  const newFlag = () => {
+  const openNewFlagModal = () => {
     openModal(
       'New Feature',
       <CreateFlagModal
@@ -269,7 +269,7 @@ const FeaturesPageComponent: FC = () => {
           <FeaturesEmptyState
             environmentId={environmentId}
             projectId={projectId}
-            onCreateFeature={newFlag}
+            onCreateFeature={openNewFlagModal}
             canCreateFeature={perm}
           />
         )}
@@ -303,7 +303,7 @@ const FeaturesPageComponent: FC = () => {
             <FeaturesPageHeader
               totalFeatures={totalFeatures}
               maxFeaturesAllowed={maxFeaturesAllowed}
-              onCreateFeature={newFlag}
+              onCreateFeature={openNewFlagModal}
               readOnly={readOnly}
               projectId={projectId}
             />
