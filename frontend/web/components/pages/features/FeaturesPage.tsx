@@ -44,8 +44,22 @@ const FeaturesPageComponent: FC = () => {
   const routeContext = useRouteContext()
   const projectId = routeContext.projectId!
   const environmentId = routeContext.environmentId!
+  const {
+    clearFilters,
+    filters,
+    goToPage,
+    handleFilterChange,
+    hasFilters,
+    page,
+  } = useFeatureFilters(history)
 
   const { getEnvironment, project } = useProjectEnvironments(projectId)
+  const { data, error, isLoading, refetch } = useFeatureListWithFilters(
+    filters,
+    page,
+    environmentId,
+    projectId,
+  )
 
   // Backward compatibility: Populate ProjectStore for legacy components (CreateFlag)
   // TODO: Remove this when CreateFlag is migrated to RTK Query
@@ -75,15 +89,6 @@ const FeaturesPageComponent: FC = () => {
   const minimumChangeRequestApprovals =
     currentEnvironment?.minimum_change_request_approvals
 
-  const {
-    clearFilters,
-    filters,
-    goToPage,
-    handleFilterChange,
-    hasFilters,
-    page,
-  } = useFeatureFilters(history)
-
   const [removeFeature, { isLoading: isRemoving }] = useRemoveFeatureWithToast()
   const [toggleFeature, { isLoading: isToggling }] = useToggleFeatureWithToast()
 
@@ -99,13 +104,6 @@ const FeaturesPageComponent: FC = () => {
       await toggleFeature(flag, environmentFlag, environmentId)
     },
     [toggleFeature, environmentId],
-  )
-
-  const { data, error, isLoading, refetch } = useFeatureListWithFilters(
-    filters,
-    page,
-    environmentId,
-    projectId,
   )
 
   const projectFlags = useMemo(() => data?.results ?? [], [data?.results])
