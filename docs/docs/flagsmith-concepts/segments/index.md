@@ -70,6 +70,12 @@ Identity overrides always take precedence over segment overrides. Simply put, th
 
 ## Context values
 
+:::info
+
+See [minimum required SDK versions](segment-rule-operators#minimum-sdk-versions-for-local-evaluation-mode) to use Context values in local evaluation mode.
+
+:::
+
 In addition to identity [traits](/flagsmith-concepts/identities#identity-traits), you can use the following context values as Segment rule properties. For more information about identities and traits, see the [Identities documentation](/flagsmith-concepts/identities).
 
 - **Identifier**: a unique identifier for an identity, used for segment and multivariate feature flag targeting, and displayed in the Flagsmith UI. Useful for bucketing via the [`% Split`](./segment-rule-operators#percentage-split) operator, or managing a list of users via the [`In`](./segment-rule-operators#in) operator.
