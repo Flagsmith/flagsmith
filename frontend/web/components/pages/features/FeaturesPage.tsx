@@ -54,12 +54,8 @@ const FeaturesPageComponent: FC = () => {
   } = useFeatureFilters(history)
 
   const { getEnvironment, project } = useProjectEnvironments(projectId)
-  const { data, error, isLoading, refetch } = useFeatureListWithFilters(
-    filters,
-    page,
-    environmentId,
-    projectId,
-  )
+  const { data, error, isFetching, isLoading, refetch } =
+    useFeatureListWithFilters(filters, page, environmentId, projectId)
 
   // Backward compatibility: Populate ProjectStore for legacy components (CreateFlag)
   // TODO: Remove this when CreateFlag is migrated to RTK Query
@@ -227,7 +223,8 @@ const FeaturesPageComponent: FC = () => {
   }
 
   const renderFeaturesList = () => {
-    if (!data) {
+    // Show skeleton when we have no data OR fetching with no features
+    if (!data || (isFetching && projectFlags.length === 0)) {
       return (
         <Panel className='no-pad panel--grey'>
           {renderHeader()}
@@ -240,6 +237,7 @@ const FeaturesPageComponent: FC = () => {
       )
     }
 
+    // Show features if we have them (even during refetch)
     if (projectFlags.length > 0) {
       return (
         <PanelSearch
@@ -260,6 +258,7 @@ const FeaturesPageComponent: FC = () => {
       )
     }
 
+    // Only show empty state when truly done and no features
     return (
       <PermissionGate
         level='project'

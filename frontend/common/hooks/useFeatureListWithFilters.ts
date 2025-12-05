@@ -25,6 +25,7 @@ export function useFeatureListWithFilters(
   }, [filters, page, environmentId, projectId])
 
   return useGetFeatureListQuery(apiParams || ({} as any), {
+    refetchOnMountOrArgChange: true,
     skip: !apiParams || isLoadingEnvironments,
   })
 }
