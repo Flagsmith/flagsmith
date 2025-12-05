@@ -9,7 +9,7 @@ from django.utils import timezone
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
-from environments.sdk.types import SDKTraitData
+from environments.sdk.types import SDKTraitData, TraitValue
 
 IdentityAndTraits: TypeAlias = tuple[Identity, list[Trait]]
 
@@ -93,9 +93,20 @@ def get_persisted_identity_and_traits(
 
 def get_transient_identifier(sdk_trait_data: list[SDKTraitData]) -> str:
     if sdk_trait_data:
+
+        def get_value(
+            trait_value: TraitValue,
+        ) -> str | int | bool | float:
+            # Handle both structured SDKTraitValueData and raw primitive values
+            if isinstance(trait_value, dict):
+                return trait_value["value"]
+            # None is filtered out at the call site, but we need to satisfy the type checker
+            assert trait_value is not None
+            return trait_value
+
         return hashlib.sha256(
             "".join(
-                f"{trait['trait_key']}{trait_value['value']}"
+                f"{trait['trait_key']}{get_value(trait_value)}"
                 for trait in sorted(sdk_trait_data, key=itemgetter("trait_key"))
                 if (trait_value := trait["trait_value"]) is not None
             ).encode(),
