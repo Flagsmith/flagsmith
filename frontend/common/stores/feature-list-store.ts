@@ -70,8 +70,11 @@ const controller = {
     if (
       !createdFirstFeature &&
       !flagsmith.getTrait('first_feature') &&
+      AccountStore.model &&
       AccountStore.model.organisations.length === 1 &&
+      OrganisationStore.model &&
       OrganisationStore.model.projects.length === 1 &&
+      store.model &&
       (!store.model.features || !store.model.features.length)
     ) {
       createdFirstFeature = true

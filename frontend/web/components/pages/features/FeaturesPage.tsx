@@ -6,6 +6,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import AppActions from 'common/dispatcher/app-actions'
+import FeatureListStore from 'common/stores/feature-list-store'
 import { config } from 'common/config'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { usePageTrackingWithContext } from 'common/hooks/usePageTracking'
@@ -54,6 +55,21 @@ const FeaturesPageComponent: FC = () => {
     }
   }, [projectId])
 
+  // Force re-fetch when legacy Flux store updates features
+  // TODO: Remove when all feature mutations use RTK Query
+  useEffect(() => {
+    const onFeatureListChange = () => {
+      // Refetch RTK Query data when Flux store changes
+      refetch()
+    }
+    FeatureListStore.on('saved', onFeatureListChange)
+    FeatureListStore.on('removed', onFeatureListChange)
+    return () => {
+      FeatureListStore.off('saved', onFeatureListChange)
+      FeatureListStore.off('removed', onFeatureListChange)
+    }
+  }, [refetch])
+
   const maxFeaturesAllowed = project?.max_features_allowed ?? null
   const currentEnvironment = getEnvironment(environmentId)
   const minimumChangeRequestApprovals =
@@ -85,7 +101,7 @@ const FeaturesPageComponent: FC = () => {
     [toggleFeature, environmentId],
   )
 
-  const { data, error, isFetching, isLoading } = useFeatureListWithFilters(
+  const { data, error, isLoading, refetch } = useFeatureListWithFilters(
     filters,
     page,
     environmentId,
