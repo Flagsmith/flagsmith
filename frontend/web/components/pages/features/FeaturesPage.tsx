@@ -1,10 +1,11 @@
-import React, { FC, useCallback, useMemo } from 'react'
+import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
 import classNames from 'classnames'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
+import AppActions from 'common/dispatcher/app-actions'
 import { config } from 'common/config'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { usePageTrackingWithContext } from 'common/hooks/usePageTracking'
@@ -44,6 +45,14 @@ const FeaturesPageComponent: FC = () => {
   const environmentId = routeContext.environmentId!
 
   const { getEnvironment, project } = useProjectEnvironments(projectId)
+
+  // Backward compatibility: Populate ProjectStore for legacy components (CreateFlag)
+  // TODO: Remove this when CreateFlag is migrated to RTK Query
+  useEffect(() => {
+    if (projectId) {
+      AppActions.getProject(projectId)
+    }
+  }, [projectId])
 
   const maxFeaturesAllowed = project?.max_features_allowed ?? null
   const currentEnvironment = getEnvironment(environmentId)
