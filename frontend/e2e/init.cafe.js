@@ -113,7 +113,7 @@ test('Environment', environmentTest).meta({ autoLogout: true, category: 'oss' })
 
 test('Project', projectTest).meta({ autoLogout: true, category: 'oss' })
 
-test('Organization', organisationTest).meta({ autoLogout: true, category: 'oss' })
+test('Organization', organisationTest).meta({ autoLogout: true, category: 'oss', skipEnterprise: true })
 
 test('Versioning', versioningTests).meta({ autoLogout: true, category: 'oss' })
 

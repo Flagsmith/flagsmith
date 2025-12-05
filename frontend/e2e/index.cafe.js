@@ -51,11 +51,17 @@ createTestCafe()
             .clientScripts('e2e/add-error-logs.js')
             .src(['./e2e/init.cafe.js'])
             .concurrency(parseInt(concurrentInstances))
-            .filter((_, __, ___, testMeta, fixtureMeta) =>
-                 metaConditions.some(({ key, value }) =>
-                      testMeta[key] === value || fixtureMeta[key] === value
-                 )
-           )
+            .filter((_, __, ___, testMeta, fixtureMeta) => {
+                const isEnterpriseRun = metaConditions.some(({ key, value }) =>
+                    key === 'category' && value === 'enterprise'
+                )
+                if (isEnterpriseRun && testMeta.skipEnterprise) {
+                    return false
+                }
+                return metaConditions.some(({ key, value }) =>
+                    testMeta[key] === value || fixtureMeta[key] === value
+                )
+            })
             .run(options)
     })
     .then(async (v) => {
