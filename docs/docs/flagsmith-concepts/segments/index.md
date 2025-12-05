@@ -72,7 +72,7 @@ Identity overrides always take precedence over segment overrides. Simply put, th
 
 :::info
 
-See [minimum required SDK versions](segment-rule-operators#minimum-sdk-versions-for-local-evaluation-mode) to use Context values in local evaluation mode.
+See [minimum required SDK versions](/flagsmith-concepts/segments/segment-rule-operators#minimum-sdk-versions-for-local-evaluation-mode) to use Context values in local evaluation mode.
 
 :::
 
