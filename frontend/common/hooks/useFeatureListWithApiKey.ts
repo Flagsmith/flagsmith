@@ -8,20 +8,8 @@ import type { FilterState } from 'common/types/featureFilters'
 /**
  * Fetches filtered feature list, accepting environment API key instead of numeric ID.
  *
- * This hook bridges the gap between routing (which uses API keys) and the API
- * (which expects numeric environment IDs). It wraps useGetFeatureListQuery and
- * delegates the API key → numeric ID conversion to buildApiFilterParams.
- *
- * TODO: This hook will be simplified once environmentNumericId is added to RouteContext.
- * See: FEATURES_MIGRATION_FOLLOWUP.md - PR #1
- * When RouteContext provides the numeric ID directly, components can call
- * useGetFeatureListQuery directly without this wrapper.
- *
- * @param filters - Filter state for the feature list
- * @param page - Current page number
- * @param environmentApiKey - Environment API key from router context (string)
- * @param projectId - Project ID
- * @returns RTK Query result with feature list data
+ * TODO: This wrapper will be removed once environmentNumericId is added to RouteContext
+ * (see FEATURES_MIGRATION_FOLLOWUP.md - PR #1).
  */
 export function useFeatureListWithApiKey(
   filters: FilterState,
@@ -32,7 +20,6 @@ export function useFeatureListWithApiKey(
   const { getEnvironmentIdFromKey, isLoading: isLoadingEnvironments } =
     useProjectEnvironments(projectId!)
 
-  // Build API filter parameters (includes API key → ID conversion)
   const apiParams = useMemo(() => {
     if (!environmentApiKey || !projectId || !getEnvironmentIdFromKey) {
       return null

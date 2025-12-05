@@ -9,8 +9,6 @@ import { TagStrategy } from 'common/types/responses'
  */
 export type EnvironmentIdResolver = (apiKey: string) => number | undefined
 
-// ===== Helper Functions =====
-
 /** Converts array to comma-separated string, or undefined if empty */
 function joinArrayOrUndefined(
   arr: (string | number)[] | undefined,
@@ -68,8 +66,6 @@ function parsePageNumber(value: string | string[] | undefined): number {
   return 1
 }
 
-// ===== Exported Functions =====
-
 /** Check if any filters are currently active. */
 export function hasActiveFilters(filters: FilterState): boolean {
   return !!(
@@ -106,24 +102,8 @@ export function buildUrlParams(
 /**
  * Converts filter state to RTK Query API parameters.
  *
- * This transformation function bridges the gap between the application's filter state
- * and the format expected by the feature list API endpoint. It handles:
- * - Environment API key → numeric ID conversion (via callback)
- * - Array to comma-separated string transformations (tags, owners, etc.)
- * - Sort order normalization (UI 'asc'/'desc' → API 'ASC'/'DESC')
- * - Pagination parameters
- *
- * TODO: The getEnvironmentIdFromKey callback parameter is temporary.
- * See: FEATURES_MIGRATION_FOLLOWUP.md - PR #1
- * Once RouteContext provides environmentNumericId directly, this function can accept
- * the numeric ID as a simple parameter instead of requiring a callback.
- *
- * @param filters - Application filter state
- * @param page - Current page number (1-indexed)
- * @param environmentApiKey - Environment API key from router (string)
- * @param projectId - Project ID
- * @param getEnvironmentIdFromKey - Function to resolve API key to numeric ID
- * @returns API request parameters, or null if environment ID cannot be resolved
+ * TODO: getEnvironmentIdFromKey callback is temporary
+ * Once RouteContext provides environementID and environmentApiKey, this can accept the numeric environementID directly.
  */
 export function buildApiFilterParams(
   filters: FilterState,
@@ -132,7 +112,6 @@ export function buildApiFilterParams(
   projectId: number,
   getEnvironmentIdFromKey: EnvironmentIdResolver,
 ) {
-  // Convert environment API key to numeric ID
   const environmentId = getEnvironmentIdFromKey(environmentApiKey)
   if (!environmentId) {
     return null
