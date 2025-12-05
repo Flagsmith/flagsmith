@@ -5,7 +5,7 @@ from typing_extensions import NotRequired
 
 class SDKTraitValueData(typing.TypedDict):
     type: str
-    value: str
+    value: str | int | bool | float
 
 
 # Trait value can be either:
