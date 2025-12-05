@@ -126,23 +126,5 @@ export const featureListService = service
     }),
   })
 
-export const {
-  useCreateMultivariateOptionMutation,
-  useDeleteMultivariateOptionMutation,
-  useGetFeatureListQuery,
-  useUpdateFeatureStateMutation,
-  useUpdateMultivariateOptionMutation,
-} = featureListService
-
-export async function getFeatureList(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  store: any,
-  data: Req['getFeatureList'],
-  options?: Parameters<
-    typeof featureListService.endpoints.getFeatureList.initiate
-  >[1],
-) {
-  return store.dispatch(
-    featureListService.endpoints.getFeatureList.initiate(data, options),
-  )
-}
+export const { useGetFeatureListQuery, useUpdateFeatureStateMutation } =
+  featureListService

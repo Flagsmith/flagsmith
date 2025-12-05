@@ -3,15 +3,19 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { useGetProjectQuery } from 'common/services/useProject'
 import type { Environment, Project } from 'common/types/responses'
 
-/** Fetches project and environment data with accessor functions for API key lookups. */
-export function useProjectEnvironments(projectId: number): {
+interface UseProjectEnvironmentsResult {
   project: Project | undefined
   environments: Environment[]
   getEnvironmentIdFromKey: (apiKey: string) => number | undefined
   getEnvironment: (apiKey: string) => Environment | undefined
   isLoading: boolean
-  error: unknown
-} {
+  error: Error | undefined
+}
+
+/** Fetches project and environment data with accessor functions for API key lookups. */
+export function useProjectEnvironments(
+  projectId: number,
+): UseProjectEnvironmentsResult {
   const {
     data: project,
     error: projectError,

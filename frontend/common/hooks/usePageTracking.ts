@@ -3,22 +3,13 @@ import { useEffect } from 'react'
 /**
  * Generic hook for tracking page views with analytics.
  *
+ * Internal helper used by usePageTrackingWithContext.
  * Automatically calls API.trackPage when the component mounts or dependencies change.
- * This standardizes the page tracking pattern used across multiple page components.
  *
  * @param pageName - The page constant name from Constants.pages
  * @param deps - Optional dependency array for re-tracking on changes (defaults to empty array for mount-only)
- *
- * @example
- * ```tsx
- * // Track once on mount
- * usePageTracking(Constants.pages.FEATURES)
- *
- * // Track when environment changes
- * usePageTracking(Constants.pages.FEATURES, [environmentId])
- * ```
  */
-export function usePageTracking(
+function usePageTracking(
   pageName: string,
   deps: React.DependencyList = [],
 ): void {
@@ -34,7 +25,7 @@ export function usePageTracking(
  * Extended page tracking hook that also persists environment context to storage.
  *
  * Used by pages that need to remember the last selected environment/project
- * for restoration on next visit.
+ * for restoration on next visit. Internally uses usePageTracking for analytics.
  *
  * @param pageName - The page constant name from Constants.pages
  * @param environmentId - The current environment ID (API key)
@@ -57,13 +48,11 @@ export function usePageTrackingWithContext(
   projectId: number,
   organisationId?: number,
 ): void {
-  useEffect(() => {
-    // Track page view
-    if (typeof API !== 'undefined' && API.trackPage) {
-      API.trackPage(pageName)
-    }
+  // Track page view using base hook
+  usePageTracking(pageName, [environmentId, projectId, organisationId])
 
-    // Persist environment context
+  // Persist environment context to storage
+  useEffect(() => {
     if (typeof AsyncStorage !== 'undefined' && AsyncStorage.setItem) {
       AsyncStorage.setItem(
         'lastEnv',
@@ -74,5 +63,5 @@ export function usePageTrackingWithContext(
         }),
       )
     }
-  }, [pageName, environmentId, projectId, organisationId])
+  }, [environmentId, projectId, organisationId])
 }
