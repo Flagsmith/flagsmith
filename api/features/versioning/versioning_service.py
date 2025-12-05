@@ -202,6 +202,7 @@ def _update_flag_for_versioning_v1(
             enabled=change_set.enabled,
         )
     else:
+        assert len(latest_feature_states) == 1
         target_feature_state = list(latest_feature_states.values())[0]
         target_feature_state.enabled = change_set.enabled
         target_feature_state.save()
@@ -361,6 +362,8 @@ def _update_flag_v2_for_versioning_v1(
 
     updated_segments = []
     for override in change_set.segment_overrides:
+        # TODO: optimise this once this is out of the
+        # experimentation stage
         segment_states = get_environment_flags_dict(
             environment=environment,
             feature_name=feature.name,

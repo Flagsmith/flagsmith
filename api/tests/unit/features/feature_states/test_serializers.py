@@ -1,6 +1,7 @@
 import typing
 
 import pytest
+from rest_framework import serializers
 
 from environments.models import Environment
 from features.feature_states.serializers import (
@@ -16,6 +17,7 @@ from segments.models import Segment
 def test_get_feature_raises_error_when_environment_not_in_context(
     feature: Feature,
 ) -> None:
+    # Given
     serializer = UpdateFlagSerializer(
         data={
             "feature": {"name": feature.name},
@@ -26,32 +28,48 @@ def test_get_feature_raises_error_when_environment_not_in_context(
     )
     serializer.is_valid()
 
-    with pytest.raises(Exception) as exc_info:
+    # When
+    with pytest.raises(serializers.ValidationError) as exc_info:
         serializer.get_feature()
 
+    # Then
     assert "Environment context is required" in str(exc_info.value)
 
 
 def test_validate_segment_overrides_returns_empty_list() -> None:
+    # Given
     serializer = UpdateFlagV2Serializer()
+
+    # When
     result = serializer.validate_segment_overrides([])
 
+    # Then
     assert result == []
 
 
 def test_feature_value_serializer_rejects_invalid_integer() -> None:
+    # Given
     serializer = FeatureValueSerializer(
         data={"type": "integer", "string_value": "not_a_number"}
     )
 
-    assert serializer.is_valid() is False
+    # When
+    is_valid = serializer.is_valid()
+
+    # Then
+    assert is_valid is False
     assert "not a valid integer" in str(serializer.errors)
 
 
 def test_feature_value_serializer_rejects_invalid_boolean() -> None:
+    # Given
     serializer = FeatureValueSerializer(data={"type": "boolean", "string_value": "yes"})
 
-    assert serializer.is_valid() is False
+    # When
+    is_valid = serializer.is_valid()
+
+    # Then
+    assert is_valid is False
     assert "not a valid boolean" in str(serializer.errors)
 
 
@@ -92,12 +110,17 @@ def test_serializer_rejects_nonexistent_segment(
     serializer_class: type,
     data_factory: typing.Callable[[Feature, int], dict],  # type: ignore[type-arg]
 ) -> None:
+    # Given
     serializer = serializer_class(
         data=data_factory(feature, 999999),
         context={"environment": environment},
     )
 
-    assert serializer.is_valid() is False
+    # When
+    is_valid = serializer.is_valid()
+
+    # Then
+    assert is_valid is False
     assert "not found in project" in str(serializer.errors)
 
 
@@ -139,16 +162,20 @@ def test_serializer_rejects_cross_project_segment(
     serializer_class: type,
     data_factory: typing.Callable[[Feature, int], dict],  # type: ignore[type-arg]
 ) -> None:
+    # Given
     other_project = Project.objects.create(
         name="Other Project",
         organisation=organisation,
     )
     other_segment = Segment.objects.create(name="other_segment", project=other_project)
-
     serializer = serializer_class(
         data=data_factory(feature, other_segment.id),
         context={"environment": environment},
     )
 
-    assert serializer.is_valid() is False
+    # When
+    is_valid = serializer.is_valid()
+
+    # Then
+    assert is_valid is False
     assert "not found in project" in str(serializer.errors)
