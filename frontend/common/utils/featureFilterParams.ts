@@ -23,7 +23,7 @@ function parseIntArray(value: string | string[] | undefined): number[] {
   return value
     .split(',')
     .filter((v) => v)
-    .map((v) => parseInt(v))
+    .map((v) => parseInt(v, 10))
 }
 
 /** Normalizes UI sort order to API format */
@@ -60,7 +60,7 @@ function parseStringParam(
 /** Parses page number from URL param, defaulting to 1 */
 function parsePageNumber(value: string | string[] | undefined): number {
   if (typeof value === 'string') {
-    const parsed = parseInt(value)
+    const parsed = parseInt(value, 10)
     return isNaN(parsed) ? 1 : parsed
   }
   return 1
@@ -103,7 +103,7 @@ export function buildUrlParams(
  * Converts filter state to RTK Query API parameters.
  *
  * TODO: getEnvironmentIdFromKey callback is temporary
- * Once RouteContext provides environementID and environmentApiKey, this can accept the numeric environementID directly.
+ * Once RouteContext provides environmentID and environmentApiKey, this can accept the numeric environmentID directly.
  */
 export function buildApiFilterParams(
   filters: FilterState,
