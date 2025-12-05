@@ -451,7 +451,11 @@ export type MultivariateOption = {
 }
 
 export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
-export type TagStrategy = 'INTERSECTION' | 'UNION'
+
+export enum TagStrategy {
+  INTERSECTION = 'INTERSECTION',
+  UNION = 'UNION',
+}
 
 export type IdentityFeatureState = {
   feature: {
@@ -528,6 +532,7 @@ export type ProjectFlag = {
     last_successful_repository_scanned_at: string
     last_feature_found_at: string
   }[]
+  environment_feature_state?: FeatureState
 }
 
 export type FeatureListProviderData = {
@@ -539,12 +544,12 @@ export type FeatureListProviderData = {
 
 export type FeatureListProviderActions = {
   toggleFlag: (
-    projectId: string,
+    projectId: number,
     environmentId: string,
     projectFlag: ProjectFlag,
     environmentFlags: FeatureState | undefined,
   ) => void
-  removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
+  removeFlag: (projectId: number, projectFlag: ProjectFlag) => void
 }
 
 export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
@@ -1124,5 +1129,21 @@ export type Res = {
     day: string
     count: number
   }[]
+  featureList: {
+    results: ProjectFlag[]
+    count: number
+    next: string | null
+    previous: string | null
+    environmentStates: Record<number, FeatureState>
+    pagination: {
+      count: number
+      next: string | null
+      previous: string | null
+      currentPage: number
+      pageSize: number
+    }
+  }
+  featureState: FeatureState
+  multivariateOption: MultivariateOption
   // END OF TYPES
 }

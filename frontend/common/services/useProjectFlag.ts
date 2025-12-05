@@ -28,14 +28,17 @@ function recursivePageGet(
   })
 }
 export const projectFlagService = service
-  .enhanceEndpoints({ addTagTypes: ['ProjectFlag'] })
+  .enhanceEndpoints({ addTagTypes: ['ProjectFlag', 'FeatureList'] })
   .injectEndpoints({
     endpoints: (builder) => ({
       createProjectFlag: builder.mutation<
         Res['projectFlag'],
         Req['createProjectFlag']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'ProjectFlag' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'ProjectFlag' },
+          { id: 'LIST', type: 'FeatureList' },
+        ],
         query: (query: Req['createProjectFlag']) => ({
           body: query.body,
           method: 'POST',
@@ -65,6 +68,16 @@ export const projectFlagService = service
             baseQuery,
           )
         },
+      }),
+      removeProjectFlag: builder.mutation<void, Req['removeProjectFlag']>({
+        invalidatesTags: [
+          { id: 'LIST', type: 'ProjectFlag' },
+          { id: 'LIST', type: 'FeatureList' },
+        ],
+        query: ({ flag_id, project_id }) => ({
+          method: 'DELETE',
+          url: `projects/${project_id}/features/${flag_id}/`,
+        }),
       }),
       updateProjectFlag: builder.mutation<
         Res['projectFlag'],
@@ -134,6 +147,7 @@ export const {
   useCreateProjectFlagMutation,
   useGetProjectFlagQuery,
   useGetProjectFlagsQuery,
+  useRemoveProjectFlagMutation,
   useUpdateProjectFlagMutation,
   // END OF EXPORTS
 } = projectFlagService
