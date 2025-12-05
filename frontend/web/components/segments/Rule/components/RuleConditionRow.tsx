@@ -11,7 +11,6 @@ import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
 import RuleConditionPropertySelect from './RuleConditionPropertySelect'
 import RuleConditionValueInput from './RuleConditionValueInput'
-import { RuleContextValues } from 'common/types/rules.types'
 import { useRuleOperator, useRuleContext } from 'components/segments/Rule/hooks'
 import classNames from 'classnames'
 
@@ -69,11 +68,6 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
   if (rule.delete) {
     return null
   }
-
-  const showEvaluationContextWarning = isLastRule && isValueFromContext
-  const isSkippingEvaluationContextWarning =
-    operator === 'PERCENTAGE_SPLIT' &&
-    rule.property === RuleContextValues.IDENTITY_KEY
 
   return (
     <div className='rule__row reveal' key={ruleIndex}>
@@ -179,16 +173,6 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
         </Row>
       )}
 
-      {showEvaluationContextWarning && !isSkippingEvaluationContextWarning && (
-        <Row className='mt-2'>
-          <div className='d-flex align-items-center gap-1'>
-            <Icon name='info-outlined' width={16} height={16} />
-            <span>
-              Context values are only compatible with remote evaluation
-            </span>
-          </div>
-        </Row>
-      )}
       {(ruleErrors?.property || ruleErrors?.value) && (
         <Row className='mt-2'>
           <ErrorMessage error={ruleErrors} />
