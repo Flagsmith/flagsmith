@@ -101,6 +101,13 @@ def seed_data() -> None:
     user_org_permission.add_permission(MANAGE_USER_GROUPS)
     UserPermissionGroup.objects.create(name="TestGroup", organisation=organisation)
 
+    separate_org: Organisation = Organisation.objects.create(name="E2E Separate Org")
+    separate_test_user: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
+        email=settings.E2E_SEPARATE_TEST_USER,
+        password=PASSWORD,
+    )
+    separate_test_user.add_organisation(separate_org, OrganisationRole.ADMIN)
+
     # We add different projects and environments to give each e2e test its own isolated context.
     project_test_data = [
         {
@@ -196,10 +203,3 @@ def seed_data() -> None:
             EdgeIdentity(engine_identity).save()  # pragma: no cover
         else:
             Identity.objects.create(**identity_info)
-
-    separate_org: Organisation = Organisation.objects.create(name="E2E Separate Org")
-    separate_test_user: FFAdminUser = FFAdminUser.objects.create_user(
-        email=settings.E2E_SEPARATE_TEST_USER,
-        password=PASSWORD,
-    )
-    separate_test_user.add_organisation(separate_org, OrganisationRole.ADMIN)
