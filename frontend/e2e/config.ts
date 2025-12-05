@@ -9,4 +9,5 @@ export const E2E_NON_ADMIN_USER_WITH_PROJECT_READ_PERMISSIONS = `e2e_non_admin_u
 export const E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS = `e2e_non_admin_user_with_env_permissions@${E2E_EMAIL_DOMAIN}`
 export const E2E_NON_ADMIN_USER_WITH_A_ROLE = `e2e_non_admin_user_with_a_role@${E2E_EMAIL_DOMAIN}`
 export const E2E_CHANGE_MAIL = `e2e_change_email@${E2E_EMAIL_DOMAIN}`
+export const E2E_SEPARATE_TEST_USER = `e2e_separate_test_user@${E2E_EMAIL_DOMAIN}`
 export const PASSWORD = 'Str0ngp4ssw0rd!'

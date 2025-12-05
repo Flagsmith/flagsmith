@@ -58,6 +58,7 @@ def teardown() -> None:
     delete_user_and_its_organisations(
         user_email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE
     )
+    delete_user_and_its_organisations(user_email=settings.E2E_SEPARATE_TEST_USER)
 
 
 def seed_data() -> None:
@@ -195,3 +196,10 @@ def seed_data() -> None:
             EdgeIdentity(engine_identity).save()  # pragma: no cover
         else:
             Identity.objects.create(**identity_info)
+
+    separate_org: Organisation = Organisation.objects.create(name="E2E Separate Org")
+    separate_test_user: FFAdminUser = FFAdminUser.objects.create_user(
+        email=settings.E2E_SEPARATE_TEST_USER,
+        password=PASSWORD,
+    )
+    separate_test_user.add_organisation(separate_org, OrganisationRole.ADMIN)
