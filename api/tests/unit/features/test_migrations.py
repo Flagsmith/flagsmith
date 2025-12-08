@@ -243,6 +243,10 @@ def test_fix_feature_type_migration(migrator):  # type: ignore[no-untyped-def]
     assert NewFeature.objects.get(id=mv_feature.id).type == MULTIVARIATE
 
 
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
 def test_migrate_sample_to_webhook_forward(migrator):  # type: ignore[no-untyped-def]
     # Given
     old_state = migrator.apply_initial_migration(
