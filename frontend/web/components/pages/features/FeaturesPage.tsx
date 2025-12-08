@@ -228,7 +228,7 @@ const FeaturesPageComponent: FC = () => {
       return (
         <Panel className='no-pad panel--grey'>
           {renderHeader()}
-          <div className='skeleton-list'>
+          <div className='search-list search-list--skeleton'>
             {[...Array(5)].map((_, i) => (
               <FeatureRowSkeleton key={i} />
             ))}
