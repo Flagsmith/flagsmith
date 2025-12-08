@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.204.0](https://github.com/Flagsmith/flagsmith/compare/v2.203.0...v2.204.0) (2025-12-08)
+
+
+### Features
+
+* Add Pylon email signature ([#6352](https://github.com/Flagsmith/flagsmith/issues/6352)) ([2794bed](https://github.com/Flagsmith/flagsmith/commit/2794bed56878d4cf66b6e873b42770d583a3acc7))
+* frontend-rename-feature-health-sample-to-webhook ⚠️  ([#6330](https://github.com/Flagsmith/flagsmith/issues/6330)) ([6afcf9d](https://github.com/Flagsmith/flagsmith/commit/6afcf9deabdbadb4a0849c6aa640cf91ac3717e7))
+
+
+### Bug Fixes
+
+* skip-organization-test-in-enterprise-e2e ([#6372](https://github.com/Flagsmith/flagsmith/issues/6372)) ([e88ea83](https://github.com/Flagsmith/flagsmith/commit/e88ea8340fea49b507ec36237e7e66437cfa2b92))
+
+
+### Dependency Updates
+
+* bump django from 4.2.26 to 4.2.27 in /api ([#6366](https://github.com/Flagsmith/flagsmith/issues/6366)) ([362b8dc](https://github.com/Flagsmith/flagsmith/commit/362b8dc36ba8e7615c66de85d2f567e58b09331c))
+* bump sha.js from 2.4.11 to 2.4.12 in /docs ([#6386](https://github.com/Flagsmith/flagsmith/issues/6386)) ([a3b89f1](https://github.com/Flagsmith/flagsmith/commit/a3b89f10a46d719d268bf2d50ecf361fec1a3a42))
+* bump-flagsmith-private-to-0.4.2 ([#6357](https://github.com/Flagsmith/flagsmith/issues/6357)) ([3fa1ace](https://github.com/Flagsmith/flagsmith/commit/3fa1aceee95ea043c1e459782a40fcee4dcc712e))
+
 ## [2.203.0](https://github.com/Flagsmith/flagsmith/compare/v2.202.0...v2.203.0) (2025-12-01)
 
 
