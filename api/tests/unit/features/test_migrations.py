@@ -1,15 +1,8 @@
 from datetime import timedelta
 
-import pytest
-from django.conf import settings
 from django.utils import timezone
 
 from features.feature_types import MULTIVARIATE, STANDARD
-
-pytestmark = pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
 
 
 def test_migrate_feature_segments_forward(migrator):  # type: ignore[no-untyped-def]
