@@ -16,7 +16,7 @@ import {
 import { IdentityTrait } from 'common/types/responses'
 
 type IdentityTraitsType = {
-  projectId: string
+  projectId: string | number
   environmentId: string
   identityName: string
   identityId: string

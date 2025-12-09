@@ -126,7 +126,10 @@ export type RegisterRequest = {
   marketing_consent_given?: boolean
   utm_data?: UtmsType
 }
-
+export enum SortOrder {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
 export interface StageActionRequest {
   action_type: StageActionType | ''
   action_body: StageActionBody
@@ -364,10 +367,21 @@ export type Req = {
     user: string
   }
   getProjectFlags: {
-    project: number
-    environmentId?: string
-    tags?: string[]
+    project: string
+    environment?: number
+    segment?: number
+    search?: string | null
+    releasePipelines?: number[]
+    page?: number
+    tag_strategy?: TagStrategy
+    tags?: string
     is_archived?: boolean
+    value_search?: string | null
+    is_enabled?: boolean | null
+    owners?: number[]
+    group_owners?: number[]
+    sort_field?: string
+    sort_direction?: SortOrder
   }
   getProjectFlag: { project: number; id: number }
   getRolesPermissionUsers: { organisation_id: number; role_id: number }

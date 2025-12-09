@@ -510,6 +510,8 @@ export type ProjectFlag = {
   created_date: string
   default_enabled: boolean
   description?: string
+  environment_feature_state?: FeatureState
+  segment_feature_state?: FeatureState
   id: number
   initial_value: FlagsmithValue
   is_archived: boolean

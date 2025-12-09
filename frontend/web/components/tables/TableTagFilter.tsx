@@ -33,7 +33,10 @@ const TableTagFilter: FC<TableFilterType> = ({
   value,
 }) => {
   const [filter, setFilter] = useState('')
-  const { data } = useGetTagsQuery({ projectId })
+  const { data } = useGetTagsQuery(
+    { projectId: `${projectId}` },
+    { skip: !projectId },
+  )
 
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
   const flagGatedTags = useMemo(() => {
