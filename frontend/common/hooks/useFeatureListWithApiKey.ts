@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { skipToken } from '@reduxjs/toolkit/query'
-import { useGetFeatureListQuery } from 'common/services/useFeatureList'
+import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from './useProjectEnvironments'
 import { buildApiFilterParams } from 'common/utils/featureFilterParams'
 import type { FilterState } from 'common/types/featureFilters'
@@ -16,7 +16,7 @@ export function useFeatureListWithApiKey(
   page: number,
   environmentApiKey: string | undefined,
   projectId: number | undefined,
-) {
+): ReturnType<typeof useGetFeatureListQuery> {
   const { getEnvironmentIdFromKey, isLoading: isLoadingEnvironments } =
     useProjectEnvironments(projectId!)
 

@@ -3,6 +3,11 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 
+/**
+ * Number of features to display per page in the features list.
+ */
+export const FEATURES_PAGE_SIZE = 50
+
 function recursivePageGet(
   url: string,
   parentRes: null | PagedResponse<ProjectFlag>,
@@ -28,7 +33,9 @@ function recursivePageGet(
   })
 }
 export const projectFlagService = service
-  .enhanceEndpoints({ addTagTypes: ['ProjectFlag', 'FeatureList'] })
+  .enhanceEndpoints({
+    addTagTypes: ['ProjectFlag', 'FeatureList', 'FeatureState', 'Environment'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       createProjectFlag: builder.mutation<
@@ -45,12 +52,64 @@ export const projectFlagService = service
           url: `projects/${query.project_id}/features/`,
         }),
       }),
+      // Endpoints from useFeatureList
+      getFeatureList: builder.query<Res['featureList'], Req['getFeatureList']>({
+        providesTags: (_res, _meta, req) => [
+          {
+            id: `${req?.projectId}-${req?.environmentId}`,
+            type: 'FeatureList',
+          },
+          { id: 'LIST', type: 'FeatureList' },
+        ],
+        query: (query: Req['getFeatureList']) => {
+          const { environmentId, projectId, ...params } = query
+          return {
+            params: {
+              environment: parseInt(environmentId),
+              page: params.page || 1,
+              page_size: params.page_size || FEATURES_PAGE_SIZE,
+              ...params,
+            },
+            url: `projects/${projectId}/features/`,
+          }
+        },
+        transformResponse: (
+          response: {
+            results: Res['featureList']['results']
+            count: number
+            next: string | null
+            previous: string | null
+          },
+          _,
+          arg,
+        ) => ({
+          ...response,
+          environmentStates: response.results.reduce((acc, feature) => {
+            if (feature.environment_feature_state) {
+              acc[feature.id] = {
+                ...feature.environment_feature_state,
+                feature: feature.id,
+              }
+            }
+            return acc
+          }, {} as Res['featureList']['environmentStates']),
+          pagination: {
+            count: response.count,
+            currentPage: arg.page || 1,
+            next: response.next,
+            pageSize: arg.page_size || FEATURES_PAGE_SIZE,
+            previous: response.previous,
+          },
+        }),
+      }),
+
       getProjectFlag: builder.query<Res['projectFlag'], Req['getProjectFlag']>({
         providesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
         query: (query: Req['getProjectFlag']) => ({
           url: `projects/${query.project}/features/${query.id}/`,
         }),
       }),
+
       getProjectFlags: builder.query<
         Res['projectFlags'],
         Req['getProjectFlags']
@@ -74,6 +133,7 @@ export const projectFlagService = service
           )
         },
       }),
+
       removeProjectFlag: builder.mutation<void, Req['removeProjectFlag']>({
         invalidatesTags: [
           { id: 'LIST', type: 'ProjectFlag' },
@@ -82,6 +142,22 @@ export const projectFlagService = service
         query: ({ flag_id, project_id }) => ({
           method: 'DELETE',
           url: `projects/${project_id}/features/${flag_id}/`,
+        }),
+      }),
+
+      updateFeatureState: builder.mutation<
+        Res['featureState'],
+        Req['updateFeatureState']
+      >({
+        invalidatesTags: (_res, _meta, _req) => [
+          { id: 'LIST', type: 'FeatureList' },
+          { id: 'LIST', type: 'FeatureState' },
+          { id: 'METRICS', type: 'Environment' },
+        ],
+        query: (query: Req['updateFeatureState']) => ({
+          body: query.body,
+          method: 'PUT',
+          url: `environments/${query.environmentId}/featurestates/${query.environmentFlagId}/`,
         }),
       }),
       updateProjectFlag: builder.mutation<
@@ -150,9 +226,12 @@ export async function createProjectFlag(
 
 export const {
   useCreateProjectFlagMutation,
+  useGetFeatureListQuery,
   useGetProjectFlagQuery,
   useGetProjectFlagsQuery,
   useRemoveProjectFlagMutation,
+  // Hooks from merged useFeatureList service
+  useUpdateFeatureStateMutation,
   useUpdateProjectFlagMutation,
   // END OF EXPORTS
 } = projectFlagService

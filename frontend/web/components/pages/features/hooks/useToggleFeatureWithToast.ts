@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useUpdateFeatureStateMutation } from 'common/services/useFeatureList'
+import { useUpdateFeatureStateMutation } from 'common/services/useProjectFlag'
 import type { FeatureState, ProjectFlag } from 'common/types/responses'
 
 type ToggleFeatureOptions = {
