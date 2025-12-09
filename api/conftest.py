@@ -87,6 +87,7 @@ from tests.test_helpers import fix_issue_3869
 from tests.types import (
     AdminClientAuthType,
     EnableFeaturesFixture,
+    MigratorFactory,
     WithEnvironmentPermissionsCallable,
     WithOrganisationPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -1313,8 +1314,8 @@ def clear_content_type_cache() -> typing.Generator[None, None, None]:
 
 
 @pytest.fixture()
-def migrator(request: pytest.FixtureRequest) -> Migrator:
+def migrator(migrator_factory: MigratorFactory) -> Migrator:
     if settings.SKIP_MIGRATION_TESTS:
         pytest.skip("Skip migration tests to speed up tests where necessary")
-    migrator: Migrator = request.getfixturevalue("migrator")
+    migrator: Migrator = migrator_factory()
     return migrator
