@@ -52,7 +52,6 @@ export const projectFlagService = service
           url: `projects/${query.project_id}/features/`,
         }),
       }),
-      // Endpoints from useFeatureList
       getFeatureList: builder.query<Res['featureList'], Req['getFeatureList']>({
         providesTags: (_res, _meta, req) => [
           {
@@ -230,10 +229,8 @@ export const {
   useGetProjectFlagQuery,
   useGetProjectFlagsQuery,
   useRemoveProjectFlagMutation,
-  // Hooks from merged useFeatureList service
   useUpdateFeatureStateMutation,
   useUpdateProjectFlagMutation,
-  // END OF EXPORTS
 } = projectFlagService
 
 /* Usage examples:
