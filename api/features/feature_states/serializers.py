@@ -95,7 +95,7 @@ class UpdateFlagSerializer(BaseFeatureUpdateSerializer):
     value = FeatureValueSerializer(required=True)
 
     def validate_segment(self, value: dict) -> dict:  # type: ignore[type-arg]
-        if value and value.get("id"):
+        if value and "id" in value:
             self.validate_segment_id(value["id"])
         return value
 

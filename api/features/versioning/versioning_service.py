@@ -127,7 +127,7 @@ def _update_flag_for_versioning_v2(
         created_by_api_key=change_set.author.api_key,
     )
 
-    if change_set.segment_id:
+    if change_set.segment_id is not None:
         # Segment override - may or may not exist
         try:
             target_feature_state: FeatureState = new_version.feature_states.get(
@@ -164,7 +164,7 @@ def _update_flag_for_versioning_v2(
         change_set.type_,
     )
 
-    if change_set.segment_id and change_set.segment_priority is not None:
+    if change_set.segment_id is not None and change_set.segment_priority is not None:
         _update_segment_priority(target_feature_state, change_set.segment_priority)
 
     new_version.publish(
@@ -180,7 +180,7 @@ def _update_flag_for_versioning_v1(
 ) -> FeatureState:
     from features.models import FeatureSegment, FeatureState
 
-    if change_set.segment_id:
+    if change_set.segment_id is not None:
         additional_filters = Q(feature_segment__segment_id=change_set.segment_id)
     else:
         additional_filters = Q(feature_segment__isnull=True, identity_id__isnull=True)
@@ -191,7 +191,7 @@ def _update_flag_for_versioning_v1(
         additional_filters=additional_filters,
     )
 
-    if len(latest_feature_states) == 0 and change_set.segment_id:
+    if len(latest_feature_states) == 0 and change_set.segment_id is not None:
         feature_segment = FeatureSegment.objects.create(
             feature=feature,
             segment_id=change_set.segment_id,
@@ -216,7 +216,7 @@ def _update_flag_for_versioning_v1(
         change_set.type_,
     )
 
-    if change_set.segment_id and change_set.segment_priority is not None:
+    if change_set.segment_id is not None and change_set.segment_priority is not None:
         _update_segment_priority(target_feature_state, change_set.segment_priority)
 
     return target_feature_state
