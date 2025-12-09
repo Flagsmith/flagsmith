@@ -11,6 +11,7 @@ from features.value_types import (
     STRING,
 )
 
+# TODO: use Pydantic TypeAdapter to map serializer data to DTOs
 FeatureValueType = Literal["string", "integer", "boolean"]
 
 
