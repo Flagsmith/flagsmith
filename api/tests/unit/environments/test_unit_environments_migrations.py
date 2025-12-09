@@ -1,12 +1,7 @@
-import pytest
-from django.conf import settings
+from django_test_migrations.migrator import Migrator
 
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
-def test_migrate_use_mv_v2_evaluation(migrator):  # type: ignore[no-untyped-def]
+def test_migrate_use_mv_v2_evaluation(migrator: Migrator) -> None:
     # Given
     old_state = migrator.apply_initial_migration(
         ("environments", "0027_auto_20230106_0626")
