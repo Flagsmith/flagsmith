@@ -34,8 +34,17 @@ const TableTagFilter: FC<TableFilterType> = ({
   onChange,
   value,
 }) => {
-  const { searchInput, setSearchInput } = useDebouncedSearch('')
-
+  const { search, searchInput, setSearchInput } = useDebouncedSearch(
+    value?.valueSearch || '',
+  )
+  useEffect(() => {
+    if (search !== value.valueSearch) {
+      onChange({
+        enabled: value.enabled,
+        valueSearch: search,
+      })
+    }
+  }, [search, value])
   return (
     <div className={isLoading ? 'disabled' : ''}>
       <TableFilter

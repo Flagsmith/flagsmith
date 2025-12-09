@@ -62,7 +62,7 @@ const FeatureListProvider = class extends React.Component {
         multivariate_options: projectFlag.multivariate_options.map((mv) => {
           const matching =
             environmentFlag.multivariate_feature_state_values.find(
-              (v) => v.multivariate_feature_option == mv.id,
+              (v) => v.multivariate_feature_option === mv.id,
             )
           return {
             ...mv,
