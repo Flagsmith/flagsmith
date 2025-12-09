@@ -1,11 +1,6 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
 import { IonIcon } from '@ionic/react'
-import {
-  checkmarkCircle,
-  chevronDown,
-  chevronUp,
-  createOutline,
-} from 'ionicons/icons'
+import { checkmarkCircle, chevronDown, chevronUp } from 'ionicons/icons'
 import InlineModal from './InlineModal'
 import Input from './base/forms/Input'
 import {
@@ -431,7 +426,6 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                     id='create-organisation-link'
                     size='small'
                   >
-                    <IonIcon className='fs-small' icon={createOutline} />
                     Create Project
                   </Button>,
                 )}
