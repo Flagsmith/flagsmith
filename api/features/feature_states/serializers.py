@@ -3,6 +3,7 @@ from rest_framework import serializers
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.versioning.dataclasses import (
+    AuthorData,
     FlagChangeSet,
     FlagChangeSetV2,
     SegmentOverrideChangeSet,
@@ -63,11 +64,11 @@ class FeatureValueSerializer(serializers.Serializer):  # type: ignore[type-arg]
     type = serializers.ChoiceField(
         choices=["integer", "string", "boolean"], required=True
     )
-    string_value = serializers.CharField(required=True, allow_blank=True)
+    value = serializers.CharField(required=True, allow_blank=True)
 
     def validate(self, data: dict) -> dict:  # type: ignore[type-arg]
         value_type = data["type"]
-        string_val = data["string_value"]
+        string_val = data["value"]
 
         if value_type == "integer":
             try:
@@ -102,16 +103,14 @@ class UpdateFlagSerializer(BaseFeatureUpdateSerializer):
         value_data = validated_data["value"]
         segment_data = validated_data.get("segment")
 
-        change_set = FlagChangeSet(
+        return FlagChangeSet(
+            author=AuthorData.from_request(self.context["request"]),
             enabled=validated_data["enabled"],
-            feature_state_value=value_data["string_value"],
+            feature_state_value=value_data["value"],
             type_=value_data["type"],
             segment_id=segment_data.get("id") if segment_data else None,
             segment_priority=segment_data.get("priority") if segment_data else None,
         )
-
-        change_set.set_audit_fields_from_request(self.context["request"])
-        return change_set
 
     def save(self, **kwargs: object) -> FeatureState:
         feature = self.get_feature()
@@ -148,6 +147,7 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer):
                 "Duplicate segment_id values are not allowed"
             )
 
+        # TODO: optimise this once out of experimentation
         for segment_id in segment_ids:
             self.validate_segment_id(segment_id)
 
@@ -169,22 +169,20 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer):
             segment_override = SegmentOverrideChangeSet(
                 segment_id=override_data["segment_id"],
                 enabled=override_data["enabled"],
-                feature_state_value=value_data["string_value"],
+                feature_state_value=value_data["value"],
                 type_=value_data["type"],
                 priority=override_data.get("priority"),
             )
             segment_overrides.append(segment_override)
 
-        change_set = FlagChangeSetV2(
+        return FlagChangeSetV2(
+            author=AuthorData.from_request(self.context["request"]),
             environment_default_enabled=env_default["enabled"],
-            environment_default_value=env_value_data["string_value"],
+            environment_default_value=env_value_data["value"],
             environment_default_type=env_value_data["type"],
             segment_overrides=segment_overrides,
         )
 
-        change_set.set_audit_fields_from_request(self.context["request"])
-        return change_set
-
-    def save(self, **kwargs: object) -> dict:  # type: ignore[type-arg]
+    def save(self, **kwargs: object) -> None:
         feature = self.get_feature()
-        return update_flag_v2(self.environment, feature, self.change_set_v2)
+        update_flag_v2(self.environment, feature, self.change_set_v2)

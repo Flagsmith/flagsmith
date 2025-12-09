@@ -5,6 +5,7 @@ from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 
 from environments.models import Environment
+from features.feature_states.models import FeatureValueType
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.versioning.dataclasses import (
     FlagChangeSet,
@@ -122,8 +123,8 @@ def _update_flag_for_versioning_v2(
     new_version = EnvironmentFeatureVersion.objects.create(
         environment=environment,
         feature=feature,
-        created_by=change_set.user,
-        created_by_api_key=change_set.api_key,
+        created_by=change_set.author.user,
+        created_by_api_key=change_set.author.api_key,
     )
 
     if change_set.segment_id:
@@ -166,7 +167,8 @@ def _update_flag_for_versioning_v2(
         _update_segment_priority(target_feature_state, change_set.segment_priority)
 
     new_version.publish(
-        published_by=change_set.user, published_by_api_key=change_set.api_key
+        published_by=change_set.author.user,
+        published_by_api_key=change_set.author.api_key,
     )
 
     return target_feature_state
@@ -219,7 +221,9 @@ def _update_flag_for_versioning_v1(
     return target_feature_state
 
 
-def _update_feature_state_value(fsv: FeatureStateValue, value: str, type_: str) -> None:
+def _update_feature_state_value(
+    fsv: FeatureStateValue, value: str, type_: FeatureValueType
+) -> None:
     fsv.set_value(value, type_)
     fsv.save()
 
@@ -262,21 +266,21 @@ def _update_segment_priority(feature_state: FeatureState, priority: int) -> None
 
 def update_flag_v2(
     environment: Environment, feature: Feature, change_set: FlagChangeSetV2
-) -> dict:  # type: ignore[type-arg]
+) -> None:
     if environment.use_v2_feature_versioning:
-        return _update_flag_v2_for_versioning_v2(environment, feature, change_set)
+        _update_flag_v2_for_versioning_v2(environment, feature, change_set)
     else:
-        return _update_flag_v2_for_versioning_v1(environment, feature, change_set)
+        _update_flag_v2_for_versioning_v1(environment, feature, change_set)
 
 
 def _update_flag_v2_for_versioning_v2(
     environment: Environment, feature: Feature, change_set: FlagChangeSetV2
-) -> dict:  # type: ignore[type-arg]
+) -> None:
     new_version = EnvironmentFeatureVersion.objects.create(
         environment=environment,
         feature=feature,
-        created_by=change_set.user,
-        created_by_api_key=change_set.api_key,
+        created_by=change_set.author.user,
+        created_by_api_key=change_set.author.api_key,
     )
 
     env_default_state = new_version.feature_states.get(
@@ -291,7 +295,6 @@ def _update_flag_v2_for_versioning_v2(
         change_set.environment_default_type,
     )
 
-    updated_segments = []
     for override in change_set.segment_overrides:
         try:
             segment_state = new_version.feature_states.get(
@@ -324,25 +327,15 @@ def _update_flag_v2_for_versioning_v2(
                 override.type_,
             )
 
-        updated_segments.append(
-            {"segment_id": override.segment_id, "enabled": override.enabled}
-        )
-
     new_version.publish(
-        published_by=change_set.user,
-        published_by_api_key=change_set.api_key,
+        published_by=change_set.author.user,
+        published_by_api_key=change_set.author.api_key,
     )
-
-    return {
-        "environment_default": {"enabled": change_set.environment_default_enabled},
-        "segment_overrides": updated_segments,
-        "version": new_version.uuid,
-    }
 
 
 def _update_flag_v2_for_versioning_v1(
     environment: Environment, feature: Feature, change_set: FlagChangeSetV2
-) -> dict:  # type: ignore[type-arg]
+) -> None:
     env_default_states = get_environment_flags_dict(
         environment=environment,
         feature_name=feature.name,
@@ -360,7 +353,6 @@ def _update_flag_v2_for_versioning_v1(
         change_set.environment_default_type,
     )
 
-    updated_segments = []
     for override in change_set.segment_overrides:
         # TODO: optimise this once this is out of the
         # experimentation stage
@@ -399,15 +391,6 @@ def _update_flag_v2_for_versioning_v1(
 
             if override.priority is not None:
                 _update_segment_priority(segment_state, override.priority)
-
-        updated_segments.append(
-            {"segment_id": override.segment_id, "enabled": override.enabled}
-        )
-
-    return {
-        "environment_default": {"enabled": change_set.environment_default_enabled},
-        "segment_overrides": updated_segments,
-    }
 
 
 def get_updated_feature_states_for_version(

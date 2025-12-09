@@ -50,7 +50,7 @@ def test_update_flag_by_name(
     data = {
         "feature": {"name": feature.name},
         "enabled": True,
-        "value": {"type": value_type, "string_value": string_value},
+        "value": {"type": value_type, "value": string_value},
     }
 
     # When
@@ -89,7 +89,7 @@ def test_update_flag_by_id(
     data = {
         "feature": {"id": feature.id},
         "enabled": False,
-        "value": {"type": "string", "string_value": "test_value"},
+        "value": {"type": "string", "value": "test_value"},
     }
 
     # When
@@ -129,7 +129,7 @@ def test_update_flag_error_when_both_name_and_id_provided(
     data = {
         "feature": {"name": feature.name, "id": feature.id},
         "enabled": True,
-        "value": {"type": "integer", "string_value": "42"},
+        "value": {"type": "integer", "value": "42"},
     }
 
     # When
@@ -171,7 +171,7 @@ def test_update_flag_error_when_both_name_and_id_provided_for_different_features
     data = {
         "feature": {"name": feature.name, "id": another_feature.id},
         "enabled": True,
-        "value": {"type": "integer", "string_value": "42"},
+        "value": {"type": "integer", "value": "42"},
     }
 
     # When
@@ -206,7 +206,7 @@ def test_update_flag_error_when_neither_name_nor_id_provided(
     data = {
         "feature": {},
         "enabled": True,
-        "value": {"type": "integer", "string_value": "42"},
+        "value": {"type": "integer", "value": "42"},
     }
 
     # When
@@ -239,7 +239,7 @@ def test_update_flag_error_when_feature_not_found_by_name(
     data = {
         "feature": {"name": "non_existent_feature"},
         "enabled": True,
-        "value": {"type": "integer", "string_value": "42"},
+        "value": {"type": "integer", "value": "42"},
     }
 
     # When
@@ -271,7 +271,7 @@ def test_update_flag_error_when_feature_not_found_by_id(
     data = {
         "feature": {"id": 999999},  # Non-existent ID
         "enabled": True,
-        "value": {"type": "integer", "string_value": "42"},
+        "value": {"type": "integer", "value": "42"},
     }
 
     # When
@@ -311,7 +311,7 @@ def test_update_flag_segment_override_by_name(
         "feature": {"name": feature.name},
         "segment": {"id": segment.id, "priority": 1},
         "enabled": False,
-        "value": {"type": "integer", "string_value": "999"},
+        "value": {"type": "integer", "value": "999"},
     }
 
     # When
@@ -369,7 +369,7 @@ def test_update_flag_segment_override_creates_feature_segment_if_not_exists(
         "feature": {"name": feature.name},
         "segment": {"id": segment.id, "priority": 10},
         "enabled": True,
-        "value": {"type": "string", "string_value": "premium_feature"},
+        "value": {"type": "string", "value": "premium_feature"},
     }
 
     # When
@@ -432,7 +432,7 @@ def test_create_new_segment_override_reorders_priorities_v1(
         "feature": {"name": feature.name},
         "segment": {"id": segment2.id, "priority": 0},
         "enabled": True,
-        "value": {"type": "string", "string_value": "new_segment_value"},
+        "value": {"type": "string", "value": "new_segment_value"},
     }
     response = staff_client.post(
         url, data=json.dumps(data), content_type="application/json"
@@ -495,20 +495,20 @@ def test_update_feature_states_creates_new_segment_overrides(
         "feature": {"name": feature.name},
         "environment_default": {
             "enabled": False,
-            "value": {"type": "string", "string_value": "default"},
+            "value": {"type": "string", "value": "default"},
         },
         "segment_overrides": [
             {
                 "segment_id": segment1.id,
                 "priority": 1,
                 "enabled": True,
-                "value": {"type": "string", "string_value": "vip_feature"},
+                "value": {"type": "string", "value": "vip_feature"},
             },
             {
                 "segment_id": segment2.id,
                 "priority": 2,
                 "enabled": True,
-                "value": {"type": "string", "string_value": "beta_feature"},
+                "value": {"type": "string", "value": "beta_feature"},
             },
         ],
     }
@@ -565,7 +565,7 @@ def test_update_feature_states_environment_default_only(
         "feature": {"name": feature.name},
         "environment_default": {
             "enabled": True,
-            "value": {"type": "integer", "string_value": "100"},
+            "value": {"type": "integer", "value": "100"},
         },
     }
 
@@ -610,18 +610,18 @@ def test_update_feature_states_rejects_duplicate_segment_ids(
         "feature": {"name": feature.name},
         "environment_default": {
             "enabled": True,
-            "value": {"type": "string", "string_value": "default"},
+            "value": {"type": "string", "value": "default"},
         },
         "segment_overrides": [
             {
                 "segment_id": segment1.id,
                 "enabled": True,
-                "value": {"type": "string", "string_value": "value1"},
+                "value": {"type": "string", "value": "value1"},
             },
             {
                 "segment_id": segment1.id,  # Duplicate!
                 "enabled": False,
-                "value": {"type": "string", "string_value": "value2"},
+                "value": {"type": "string", "value": "value2"},
             },
         ],
     }
@@ -677,7 +677,7 @@ def test_update_existing_segment_override_with_priority_v1(
         "feature": {"name": feature.name},
         "segment": {"id": segment.id, "priority": 1},  # Changed priority
         "enabled": False,  # Changed enabled
-        "value": {"type": "integer", "string_value": "200"},  # Changed value
+        "value": {"type": "integer", "value": "200"},  # Changed value
     }
     response = staff_client.post(
         url, data=json.dumps(update_data), content_type="application/json"
@@ -738,14 +738,14 @@ def test_update_existing_segment_override_with_priority_v2(
         "feature": {"name": feature.name},
         "environment_default": {
             "enabled": True,
-            "value": {"type": "string", "string_value": "default"},
+            "value": {"type": "string", "value": "default"},
         },
         "segment_overrides": [
             {
                 "segment_id": segment.id,
                 "priority": 2,  # Changed priority
                 "enabled": False,  # Changed enabled
-                "value": {"type": "string", "string_value": "updated"},
+                "value": {"type": "string", "value": "updated"},
             },
         ],
     }
@@ -805,14 +805,14 @@ def test_create_new_segment_override_reorders_priorities_v2(
         "feature": {"name": feature.name},
         "environment_default": {
             "enabled": True,
-            "value": {"type": "string", "string_value": "default"},
+            "value": {"type": "string", "value": "default"},
         },
         "segment_overrides": [
             {
                 "segment_id": segment2.id,
                 "priority": 0,
                 "enabled": True,
-                "value": {"type": "string", "string_value": "new_segment_value"},
+                "value": {"type": "string", "value": "new_segment_value"},
             },
         ],
     }
@@ -853,7 +853,7 @@ def test_update_flag_v1_returns_403_when_workflow_enabled(
     data = {
         "feature": {"name": feature.name},
         "enabled": True,
-        "value": {"type": "string", "string_value": "test"},
+        "value": {"type": "string", "value": "test"},
     }
 
     # When
@@ -886,7 +886,7 @@ def test_update_flag_v2_returns_403_when_workflow_enabled(
         "feature": {"name": feature.name},
         "environment_default": {
             "enabled": True,
-            "value": {"type": "string", "string_value": "test"},
+            "value": {"type": "string", "value": "test"},
         },
     }
 
@@ -940,14 +940,14 @@ def test_update_existing_segment_override_v2_versioning(
         "feature": {"name": feature.name},
         "environment_default": {
             "enabled": True,
-            "value": {"type": "string", "string_value": "default"},
+            "value": {"type": "string", "value": "default"},
         },
         "segment_overrides": [
             {
                 "segment_id": segment.id,
                 "priority": 1,  # Changed priority from 5 to 1
                 "enabled": False,  # Changed enabled from True to False
-                "value": {"type": "integer", "string_value": "999"},
+                "value": {"type": "integer", "value": "999"},
             },
         ],
     }
@@ -988,7 +988,7 @@ def test_update_flag_v1_returns_403_without_permission(
     data = {
         "feature": {"name": feature.name},
         "enabled": True,
-        "value": {"type": "string", "string_value": "test"},
+        "value": {"type": "string", "value": "test"},
     }
 
     # When
@@ -1015,7 +1015,7 @@ def test_update_flag_v2_returns_403_without_permission(
         "feature": {"name": feature.name},
         "environment_default": {
             "enabled": True,
-            "value": {"type": "string", "string_value": "test"},
+            "value": {"type": "string", "value": "test"},
         },
     }
 
@@ -1040,7 +1040,7 @@ def test_update_flag_v1_returns_403_for_nonexistent_environment(
     data = {
         "feature": {"name": "any_feature"},
         "enabled": True,
-        "value": {"type": "string", "string_value": "test"},
+        "value": {"type": "string", "value": "test"},
     }
 
     # When

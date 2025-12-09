@@ -1,4 +1,5 @@
 import typing
+from typing import Literal
 
 from django.conf import settings
 from django.db import models
@@ -9,6 +10,8 @@ from features.value_types import (
     INTEGER,
     STRING,
 )
+
+FeatureValueType = Literal["string", "integer", "boolean"]
 
 
 class AbstractBaseFeatureValueModel(models.Model):
@@ -39,7 +42,7 @@ class AbstractBaseFeatureValueModel(models.Model):
             self.string_value,
         )
 
-    def set_value(self, value: str, type_: str) -> None:
+    def set_value(self, value: str, type_: FeatureValueType) -> None:
         typed_value: str | int | bool
         match type_:
             case "string":

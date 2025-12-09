@@ -23,7 +23,7 @@ def _check_workflow_not_enabled(environment: Environment) -> None:
 
 @swagger_auto_schema(
     method="post",
-    operation_summary="Update single feature state (V1)",
+    operation_summary="Update single feature state",
     operation_description="""
     **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
 
@@ -33,21 +33,19 @@ def _check_workflow_not_enabled(environment: Environment) -> None:
 
     **Feature Identification:**
     - Use `feature.name` OR `feature.id` (mutually exclusive)
-    - Feature must belong to the environment's project
 
     **Value Format:**
-    - Always use `string_value` field (value is always a string)
+    - The `value` field is always a string representation
     - The `type` field tells the server how to parse it
     - Available types: integer, string, boolean
     - Examples:
-      - `{"type": "integer", "string_value": "42"}`
-      - `{"type": "boolean", "string_value": "true"}`
-      - `{"type": "string", "string_value": "hello"}`
+      - `{"type": "integer", "value": "42"}`
+      - `{"type": "boolean", "value": "true"}`
+      - `{"type": "string", "value": "hello"}`
 
     **Segment Priority:**
     - Optional `segment.priority` field controls ordering
-    - If null/omitted, segment is appended to end
-    - Use specific priority value to reorder
+    - If field value is null or the field is omitted, lowest priority is assumed
     """,
     manual_parameters=[
         openapi.Parameter(
@@ -64,7 +62,7 @@ def _check_workflow_not_enabled(environment: Environment) -> None:
             description="Feature state updated successfully (no content returned)"
         )
     },
-    tags=["Experimental - Feature States"],
+    tags=["experimental"],
 )  # type: ignore[misc]
 @api_view(http_method_names=["POST"])
 @permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])
@@ -99,16 +97,15 @@ def update_flag_v1(request: Request, environment_key: str) -> Response:
 
     **Feature Identification:**
     - Use `feature.name` OR `feature.id` (mutually exclusive)
-    - Feature must belong to the environment's project
 
     **Value Format:**
-    - Always use `string_value` field (value is always a string)
+    - The `value` field is always a string representation
     - The `type` field tells the server how to parse it
     - Available types: integer, string, boolean
     - Examples:
-      - `{"type": "string", "string_value": "production"}`
-      - `{"type": "integer", "string_value": "100"}`
-      - `{"type": "boolean", "string_value": "false"}`
+      - `{"type": "string", "value": "production"}`
+      - `{"type": "integer", "value": "100"}`
+      - `{"type": "boolean", "value": "false"}`
 
     **Segment Overrides:**
     - Provide array of segment override configurations
@@ -132,7 +129,7 @@ def update_flag_v1(request: Request, environment_key: str) -> Response:
             description="Feature states updated successfully (no content returned)"
         )
     },
-    tags=["Experimental - Feature States"],
+    tags=["experimental"],
 )  # type: ignore[misc]
 @api_view(http_method_names=["POST"])
 @permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])

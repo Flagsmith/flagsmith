@@ -1,5 +1,8 @@
+from typing import cast
+
 import pytest
 
+from features.feature_states.models import FeatureValueType
 from features.models import FeatureState
 from features.value_types import BOOLEAN, INTEGER, STRING
 
@@ -17,7 +20,7 @@ from features.value_types import BOOLEAN, INTEGER, STRING
 def test_set_value(
     feature_state: FeatureState,
     value: str,
-    type_: str,
+    type_: FeatureValueType,
     expected_value: str | int | bool,
     expected_type: str,
 ) -> None:
@@ -51,7 +54,7 @@ def test_set_value_invalid_raises_error(
 
     # When / Then
     with pytest.raises(ValueError) as exc_info:
-        fsv.set_value(value, type_)
+        fsv.set_value(value, cast(FeatureValueType, type_))
 
     assert expected_error in str(exc_info.value)
 
@@ -99,7 +102,7 @@ def test_set_value_preserves_original_value_on_error(
 
     # When - try to set invalid value
     with pytest.raises(ValueError):
-        fsv.set_value(invalid_value, invalid_type)
+        fsv.set_value(invalid_value, cast(FeatureValueType, invalid_type))
 
     # Then - original value should be preserved
     assert fsv.integer_value == 42
