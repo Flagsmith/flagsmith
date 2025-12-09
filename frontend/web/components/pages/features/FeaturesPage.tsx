@@ -54,8 +54,12 @@ const FeaturesPageComponent: FC = () => {
   } = useFeatureFilters(history)
 
   const { getEnvironment, project } = useProjectEnvironments(projectId)
-  const { data, error, isFetching, isLoading, refetch } =
-    useFeatureListWithApiKey(filters, page, environmentId, projectId)
+  const { data, error, isLoading, refetch } = useFeatureListWithApiKey(
+    filters,
+    page,
+    environmentId,
+    projectId,
+  )
 
   // Backward compatibility: Populate ProjectStore for legacy components (CreateFlag)
   // TODO: Remove this when CreateFlag is migrated to RTK Query
@@ -223,8 +227,8 @@ const FeaturesPageComponent: FC = () => {
   }
 
   const renderFeaturesList = () => {
-    // Show skeleton when we have no data OR fetching with no features
-    if (!data || (isFetching && projectFlags.length === 0)) {
+    // Show skeleton only on initial load to avoid remounting search input during refetch
+    if (isLoading && !data) {
       return (
         <Panel className='no-pad panel--grey'>
           {renderHeader()}
