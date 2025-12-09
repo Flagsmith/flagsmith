@@ -1,4 +1,4 @@
-import { config } from 'common/config'
+import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 import Format from './format'
 import type { FilterState, UrlParams } from 'common/types/featureFilters'
 import { TagStrategy } from 'common/types/responses'
@@ -117,21 +117,27 @@ export function buildApiFilterParams(
     return null
   }
 
+  const groupOwners = joinArrayOrUndefined(filters.group_owners)
+  const owners = joinArrayOrUndefined(filters.owners)
+  const tags = joinArrayOrUndefined(filters.tags)
+  const sortDirection = normalizeSortDirection(filters.sort.sortOrder)
+  const valueSearch = filters.value_search ?? undefined
+
   return {
     environmentId: String(environmentId),
-    group_owners: joinArrayOrUndefined(filters.group_owners),
+    group_owners: groupOwners,
     is_archived: filters.showArchived,
     is_enabled: filters.is_enabled,
-    owners: joinArrayOrUndefined(filters.owners),
+    owners,
     page,
-    page_size: config.FEATURES_PAGE_SIZE,
+    page_size: FEATURES_PAGE_SIZE,
     projectId,
     search: filters.search,
-    sort_direction: normalizeSortDirection(filters.sort.sortOrder),
+    sort_direction: sortDirection,
     sort_field: filters.sort.sortBy,
     tag_strategy: filters.tag_strategy,
-    tags: joinArrayOrUndefined(filters.tags),
-    value_search: filters.value_search ?? undefined,
+    tags,
+    value_search: valueSearch,
   }
 }
 

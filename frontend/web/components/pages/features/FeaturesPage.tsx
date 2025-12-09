@@ -7,7 +7,7 @@ import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import AppActions from 'common/dispatcher/app-actions'
 import FeatureListStore from 'common/stores/feature-list-store'
-import { config } from 'common/config'
+import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { usePageTrackingWithContext } from 'common/hooks/usePageTracking'
 import PermissionGate from 'components/base/PermissionGate'
@@ -35,7 +35,7 @@ const DEFAULT_PAGINATION: Pagination = {
   count: 0,
   currentPage: 1,
   next: null,
-  pageSize: config.FEATURES_PAGE_SIZE,
+  pageSize: FEATURES_PAGE_SIZE,
   previous: null,
 }
 
