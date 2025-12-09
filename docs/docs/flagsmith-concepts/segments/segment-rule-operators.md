@@ -77,19 +77,19 @@ This segment will include all identities having a `user_id` trait that is divisi
 
 When running in local evaluation mode, SDK clients evaluate segment rules locally, which means they must be updated to support the latest operators.
 
-If an SDK client tries to evaluate a segment rule that has an unrecognised operator, that rule will silently evaluate to `false`. The table below lists the minimum required SDK version required by each operator:
+If an SDK client tries to evaluate a segment rule that has an unrecognised operator or context value, that rule will silently evaluate to `false`. The table below lists the minimum required SDK version required by each operator or a context value:
 
-|         | Modulo | In    |
-| ------- | ------ | ----- |
-| Python  | 2.3.0  | 3.3.0 |
-| Java    | 5.1.0  | 7.1.0 |
-| .NET    | 4.2.0  | 5.0.0 |
-| Node.js | 2.4.0  | 2.5.0 |
-| Ruby    | 3.1.0  | 3.2.0 |
-| PHP     | 3.1.0  | 4.1.0 |
-| Go      | 2.2.0  | 3.1.0 |
-| Rust    | 0.2.0  | 1.3.0 |
-| Elixir  | 1.1.0  | 2.0.0 |
+|         | Modulo Operator | In Operator | Environment Name context value | Identifier context value |
+| ------- | --------------- | ----------- | ------------------------------ | ------------------------ |
+| Python  | 2.3.0           | 3.3.0       | 5.0.3                          | 5.0.3                    |
+| Java    | 5.1.0           | 7.1.0       | 8.0.0                          | 8.0.0                    |
+| .NET    | 4.2.0           | 5.0.0       | 9.0.0                          | 9.0.0                    |
+| Node.js | 2.4.0           | 2.5.0       | 7.0.2                          | 7.0.2                    |
+| Ruby    | 3.1.0           | 3.2.0       | 5.0.0                          | 5.0.0                    |
+| PHP     | 3.1.0           | 4.1.0       | 5.0.0                          | 5.0.0                    |
+| Go      | 2.2.0           | 3.1.0       | 5.0.0                          | 5.0.0                    |
+| Rust    | 0.2.0           | 1.3.0       | 2.1.0                          | 2.1.0                    |
+| Elixir  | 1.1.0           | 2.0.0       | N/A                            | N/A                      |
 
 ## Limits
 

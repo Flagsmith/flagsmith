@@ -103,7 +103,7 @@ enabled = true
 
 [tool.poetry.dependencies]
 python = ">3.11,<3.13"
-django = "~4.2.26"
+django = "~4.2.27"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
 backoff = "~2.2.1"
@@ -211,7 +211,7 @@ flagsmith-split-testing = { git = "https://github.com/flagsmith/flagsmith-split-
 optional = true
 
 [tool.poetry.group.release-pipelines.dependencies]
-flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.4.1" }
+flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.4.2" }
 
 
 [tool.poetry.group.dev.dependencies]
