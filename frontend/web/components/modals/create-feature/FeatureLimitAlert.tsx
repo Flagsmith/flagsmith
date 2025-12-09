@@ -28,7 +28,9 @@ const FeatureLimitAlert: FC<FeatureLimitAlertType> = ({
     return null
   }
 
-  return <>{Utils.displayLimitAlert('features', featureLimitAlert.percentage)}</>
+  return (
+    <>{Utils.displayLimitAlert('features', featureLimitAlert.percentage)}</>
+  )
 }
 
 export default FeatureLimitAlert
