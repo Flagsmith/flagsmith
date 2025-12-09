@@ -46,11 +46,13 @@ class FeatureIdentifierSerializer(serializers.Serializer):  # type: ignore[type-
     id = serializers.IntegerField(required=False)
 
     def validate(self, data: dict) -> dict:  # type: ignore[type-arg]
-        if not data.get("name") and not data.get("id"):
+        has_name = "name" in data
+        has_id = "id" in data
+        if not has_name and not has_id:
             raise serializers.ValidationError(
                 "Either 'name' or 'id' is required for feature identification"
             )
-        if data.get("name") and data.get("id"):
+        if has_name and has_id:
             raise serializers.ValidationError("Provide either 'name' or 'id', not both")
         return data
 

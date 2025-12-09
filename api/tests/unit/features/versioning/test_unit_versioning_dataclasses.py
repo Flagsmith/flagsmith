@@ -13,14 +13,15 @@ def test_conflict_is_environment_default(
 
 
 def test_author_data_from_request_sets_api_key_for_non_user() -> None:
-    mock_api_key = Mock()
-    mock_api_key.key = "test_api_key"
+    mock_master_api_key = Mock(spec_set=["id", "name"])
+    mock_api_key_user = Mock()
+    mock_api_key_user.key = mock_master_api_key
     mock_request = Mock()
-    mock_request.user = mock_api_key
+    mock_request.user = mock_api_key_user
 
     author = AuthorData.from_request(mock_request)
 
-    assert author.api_key == "test_api_key"
+    assert author.api_key is mock_master_api_key
     assert author.user is None
 
 
