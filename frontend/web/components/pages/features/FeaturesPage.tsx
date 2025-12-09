@@ -241,8 +241,6 @@ const FeaturesPageComponent: FC = () => {
       )
     }
 
-    // Show features if we have them (even during refetch)
-    // OR if we have active filters (to show "no results" message)
     if (projectFlags.length > 0 || hasFilters) {
       return (
         <PanelSearch
@@ -263,7 +261,6 @@ const FeaturesPageComponent: FC = () => {
       )
     }
 
-    // Only show empty state when no filters active and truly no features
     return (
       <PermissionGate
         level='project'
