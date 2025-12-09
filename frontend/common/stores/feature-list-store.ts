@@ -12,6 +12,7 @@ import {
   updateProjectFlag,
 } from 'common/services/useProjectFlag'
 import OrganisationStore from './organisation-store'
+import { SortOrder } from 'common/types/requests'
 import {
   ChangeRequest,
   Environment,
@@ -170,7 +171,7 @@ const controller = {
         if (onComplete) {
           onComplete(res)
         }
-        if (store.model) {
+        if (store.model?.features) {
           const index = _.findIndex(store.model.features, { id: flag.id })
           store.model.features[index] = controller.parseFlag(flag)
           store.model.lastSaved = new Date().valueOf()
@@ -438,7 +439,7 @@ const controller = {
 
         Promise.all([prom, segmentOverridesRequest])
           .then(([res, segmentRes]) => {
-            if (store.model) {
+            if (store.model?.keyedEnvironmentFeatures) {
               store.model.keyedEnvironmentFeatures[projectFlag.id] = res
               if (segmentRes) {
                 const feature = _.find(
@@ -729,6 +730,12 @@ const controller = {
           if (version.error) {
             throw version.error
           }
+          getStore().dispatch(
+            projectFlagService.util.invalidateTags(['ProjectFlag']),
+          )
+          if(!store.model) {
+            return
+          }
           // Fetch and update the latest environment feature state
           return getVersionFeatureState(getStore(), {
             environmentId: ProjectStore.getEnvironmentIdFromKey(environmentId),
@@ -809,7 +816,7 @@ const controller = {
     }
 
     prom
-      .then((res) => {
+      .then(() => {
         if (store.model) {
           store.model.lastSaved = new Date().valueOf()
         }
@@ -977,7 +984,12 @@ const store = Object.assign({}, BaseStore, {
   },
   id: 'features',
   paging: {},
-  sort: { default: true, label: 'Name', sortBy: 'name', sortOrder: 'asc' },
+  sort: {
+    default: true,
+    label: 'Name',
+    sortBy: 'name',
+    sortOrder: SortOrder.ASC,
+  },
 })
 
 store.dispatcherIndex = Dispatcher.register(store, (payload) => {

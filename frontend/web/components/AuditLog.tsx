@@ -88,7 +88,6 @@ const AuditLog: FC<AuditLogType> = (props) => {
     id,
     log,
     project,
-    related_feature_id,
     related_object_type,
     related_object_uuid,
   }: AuditLogItem) => {
