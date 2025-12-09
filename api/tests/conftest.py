@@ -1,6 +1,8 @@
 import typing
 
 import pytest
+from django.conf import settings
+from django_test_migrations.migrator import Migrator
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.fixtures import SettingsWrapper
 
@@ -10,6 +12,7 @@ from environments.dynamodb import (
     DynamoIdentityWrapper,
 )
 from environments.models import Environment
+from tests.types import MigratorFactory
 from util.mappers import (
     map_environment_to_environment_document,
     map_environment_to_environment_v2_document,
@@ -108,3 +111,11 @@ def dynamo_environment_wrapper(
     wrapper = DynamoEnvironmentWrapper()
     wrapper.table_name = flagsmith_environment_table.name
     return wrapper
+
+
+@pytest.fixture()
+def migrator(migrator_factory: MigratorFactory) -> Migrator:
+    if settings.SKIP_MIGRATION_TESTS:
+        pytest.skip("Skip migration tests to speed up tests where necessary")
+    migrator: Migrator = migrator_factory()
+    return migrator

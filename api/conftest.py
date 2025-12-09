@@ -14,12 +14,10 @@ from common.environments.permissions import (
     VIEW_IDENTITIES,
 )
 from common.projects.permissions import CREATE_ENVIRONMENT, DELETE_FEATURE, VIEW_PROJECT
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
 from django.test.utils import setup_databases
-from django_test_migrations.migrator import Migrator
 from flag_engine.segments.constants import EQUAL
 from flagsmith import Flagsmith
 from flagsmith.models import Flags
@@ -87,7 +85,6 @@ from tests.test_helpers import fix_issue_3869
 from tests.types import (
     AdminClientAuthType,
     EnableFeaturesFixture,
-    MigratorFactory,
     WithEnvironmentPermissionsCallable,
     WithOrganisationPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -1311,11 +1308,3 @@ def enable_features(
 def clear_content_type_cache() -> typing.Generator[None, None, None]:
     yield
     ContentType.objects.clear_cache()
-
-
-@pytest.fixture()
-def migrator(migrator_factory: MigratorFactory) -> Migrator:
-    if settings.SKIP_MIGRATION_TESTS:
-        pytest.skip("Skip migration tests to speed up tests where necessary")
-    migrator: Migrator = migrator_factory()
-    return migrator
