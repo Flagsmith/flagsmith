@@ -138,6 +138,7 @@ def _update_flag_for_versioning_v2(
                 feature=feature,
                 segment_id=change_set.segment_id,
                 environment=environment,
+                environment_feature_version=new_version,
             )
 
             target_feature_state = FeatureState.objects.create(
@@ -242,6 +243,7 @@ def _create_segment_override(
         feature=feature,
         segment_id=segment_id,
         environment=environment,
+        environment_feature_version=version,
     )
 
     if priority is not None:
