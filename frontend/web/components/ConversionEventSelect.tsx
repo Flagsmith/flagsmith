@@ -6,16 +6,16 @@ import ProjectStore from 'common/stores/project-store'
 
 type ConversionEventSelectType = {
   onChange: (v: number) => void
-  environmentId: string
+  environmentKey: string
 }
 
 const ConversionEventSelect: FC<ConversionEventSelectType> = ({
-  environmentId,
+  environmentKey,
   onChange,
 }) => {
   const { search, searchInput, setSearchInput } = useDebouncedSearch('')
   const { data } = useGetConversionEventsQuery({
-    environment_id: ProjectStore.getEnvironmentIdFromKey(environmentId),
+    environment_id: ProjectStore.getEnvironmentIdFromKey(environmentKey),
     q: `${search}`,
   })
   const [selected, setSelected] = useState<ConversionEvent | null>(null)

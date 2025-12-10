@@ -26,7 +26,7 @@ import { getDarkMode } from 'project/darkMode'
 
 type CompareIdentitiesType = {
   projectId: string
-  environmentId: string
+  environmentKey: string
 }
 const selectWidth = 300
 const featureNameWidth = 300
@@ -54,30 +54,31 @@ const calculateFeatureDifference = (
   }
 }
 const CompareIdentities: FC<CompareIdentitiesType> = ({
-  environmentId: _environmentId,
+  environmentKey: initialEnvironmentKey,
   projectId,
 }) => {
   const [leftId, setLeftId] = useState<IdentitySelectType['value']>()
   const [rightId, setRightId] = useState<IdentitySelectType['value']>()
+  const [environmentKey, setEnvironmentKey] = useState(initialEnvironmentKey)
+
   const { data: projectFlags, refetch } = useGetProjectFlagsQuery({
-    environment: ProjectStore.getEnvironmentIdFromKey(_environmentId),
+    environment: ProjectStore.getEnvironmentIdFromKey(environmentKey),
     project: projectId,
   })
-  const [environmentId, setEnvironmentId] = useState(_environmentId)
   const [showArchived, setShowArchived] = useState(false)
 
   const { isLoading: permissionLoading, permission } = useHasPermission({
-    id: environmentId,
+    id: environmentKey,
     level: 'environment',
     permission: Utils.getViewIdentitiesPermission(),
   })
 
   const { data: leftUser } = useGetIdentityFeatureStatesAllQuery(
-    { environment: environmentId, user: `${leftId?.value}` },
+    { environment: environmentKey, user: `${leftId?.value}` },
     { skip: !leftId },
   )
   const { data: rightUser } = useGetIdentityFeatureStatesAllQuery(
-    { environment: environmentId, user: `${rightId?.value}` },
+    { environment: environmentKey, user: `${rightId?.value}` },
     { skip: !rightId },
   )
   const [createCloneIdentityFeatureStates] =
@@ -87,7 +88,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     // Clear users whenever environment or project is changed
     setLeftId(null)
     setRightId(null)
-  }, [environmentId, projectId])
+  }, [environmentKey, projectId])
 
   const filteredItems = useMemo(() => {
     if (!projectFlags?.results) return projectFlags?.results
@@ -121,7 +122,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     window.open(
       `${
         document.location.origin
-      }/project/${projectId}/environment/${environmentId}/users/${encodeURIComponent(
+      }/project/${projectId}/environment/${environmentKey}/users/${encodeURIComponent(
         user!.label,
       )}/${user!.value}?flag=${encodeURIComponent(feature)}`,
       '_blank',
@@ -133,7 +134,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     rightIdentityName: string,
     leftIdentityId: string,
     rightIdentityId: string,
-    environmentId: string,
+    environmentKey: string,
   ) => {
     const body =
       Utils.getFeatureStatesEndpoint() === 'featurestates'
@@ -155,7 +156,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       onYes: () => {
         createCloneIdentityFeatureStates({
           body: body,
-          environment_id: environmentId,
+          environment_id: environmentKey,
           identity_id: rightIdentityId,
         }).then(() => {
           toast('Identity overrides successfully cloned!')
@@ -177,12 +178,12 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       </div>
       <div className='mb-2' style={{ width: selectWidth }}>
         <EnvironmentSelect
-          value={environmentId}
+          value={environmentKey}
           projectId={projectId}
           onChange={(v) => {
             setRightId(null)
             setLeftId(null)
-            setEnvironmentId(v)
+            setEnvironmentKey(v)
           }}
         />
       </div>
@@ -200,7 +201,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
               isEdge={isEdge}
               ignoreIds={[`${rightId?.value}`]}
               onChange={setLeftId}
-              environmentId={environmentId}
+              environmentId={environmentKey}
             />
           </div>
           <div className='mx-3'>
@@ -216,7 +217,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
               ignoreIds={[`${leftId?.value}`]}
               isEdge={isEdge}
               onChange={setRightId}
-              environmentId={environmentId}
+              environmentId={environmentKey}
             />
           </div>
         </Row>
@@ -233,14 +234,14 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                   <Tooltip
                     title={
                       <Button
-                        disabled={!leftId || !rightId || !environmentId}
+                        disabled={!leftId || !rightId || !environmentKey}
                         onClick={() => {
                           cloneIdentityValues(
                             leftId?.label,
                             rightId?.label,
                             leftId?.value,
                             rightId?.value,
-                            environmentId,
+                            environmentKey,
                           )
                         }}
                         className='ms-2 me-2'

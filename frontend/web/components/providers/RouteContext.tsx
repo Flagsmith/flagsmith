@@ -5,7 +5,8 @@ const RouteContext = createContext<RouteContextType>({})
 type RouteContextType = {
   projectId?: number
   organisationId?: number
-  environmentId?: string
+  environmentKey?: string
+  environmentId?: number
 }
 
 export const RouteProvider: React.FC<{

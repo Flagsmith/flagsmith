@@ -117,7 +117,7 @@ const SplitTestPage: FC = () => {
         Conversion Event{' '}
         <div className={'ms-2'} style={{ width: 200 }}>
           <ConversionEventSelect
-            environmentId={environmentId}
+            environmentKey={environmentId}
             onChange={setConversionEvent}
           />
         </div>
