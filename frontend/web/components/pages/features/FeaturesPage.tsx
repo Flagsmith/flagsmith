@@ -15,7 +15,6 @@ import FeatureRow from 'components/feature-summary/FeatureRow'
 import FeatureRowSkeleton from 'components/feature-summary/FeatureRowSkeleton'
 import JSONReference from 'components/JSONReference'
 import Permission from 'common/providers/Permission'
-import Panel from 'components/base/grid/Panel'
 import {
   FeaturesEmptyState,
   FeatureMetricsSection,
@@ -37,6 +36,16 @@ const DEFAULT_PAGINATION: Pagination = {
   next: null,
   pageSize: FEATURES_PAGE_SIZE,
   previous: null,
+}
+
+const SKELETON_ITEMS = Array(10).fill({ isSkeleton: true })
+
+type SkeletonItem = { isSkeleton: boolean }
+
+function isSkeletonItem(
+  item: ProjectFlag | SkeletonItem,
+): item is SkeletonItem {
+  return 'isSkeleton' in item && item.isSkeleton === true
 }
 
 const FeaturesPageComponent: FC = () => {
@@ -177,29 +186,35 @@ const FeaturesPageComponent: FC = () => {
   )
 
   const renderFeatureRow = useCallback(
-    (projectFlag: ProjectFlag, i: number) => (
-      <Permission
-        level='environment'
-        tags={projectFlag.tags}
-        permission={Utils.getManageFeaturePermission(
-          Utils.changeRequestsEnabled(minimumChangeRequestApprovals),
-        )}
-        id={environmentId}
-      >
-        {({ permission }) => (
-          <FeatureRow
-            environmentFlags={environmentFlags}
-            permission={permission}
-            environmentId={environmentId}
-            projectId={projectId}
-            index={i}
-            toggleFlag={toggleFlag}
-            removeFlag={removeFlag}
-            projectFlag={projectFlag}
-          />
-        )}
-      </Permission>
-    ),
+    (projectFlag: ProjectFlag | SkeletonItem, i: number) => {
+      if (isSkeletonItem(projectFlag)) {
+        return <FeatureRowSkeleton key={`skeleton-${i}`} />
+      }
+
+      return (
+        <Permission
+          level='environment'
+          tags={projectFlag.tags}
+          permission={Utils.getManageFeaturePermission(
+            Utils.changeRequestsEnabled(minimumChangeRequestApprovals),
+          )}
+          id={environmentId}
+        >
+          {({ permission }) => (
+            <FeatureRow
+              environmentFlags={environmentFlags}
+              permission={permission}
+              environmentId={environmentId}
+              projectId={projectId}
+              index={i}
+              toggleFlag={toggleFlag}
+              removeFlag={removeFlag}
+              projectFlag={projectFlag}
+            />
+          )}
+        </Permission>
+      )
+    },
     [
       environmentFlags,
       environmentId,
@@ -223,33 +238,23 @@ const FeaturesPageComponent: FC = () => {
   }
 
   const renderFeaturesList = () => {
-    if (!data && !hasFilters && !isFetching) {
-      return (
-        <Panel className='no-pad panel--grey'>
-          {renderHeader()}
-          <div className='search-list search-list--skeleton'>
-            {[...Array(5)].map((_, i) => (
-              <FeatureRowSkeleton key={i} />
-            ))}
-          </div>
-        </Panel>
-      )
-    }
+    const shouldShowEmptyState =
+      data && projectFlags.length === 0 && !hasFilters && !isFetching
 
-    if (projectFlags.length > 0 || hasFilters || isFetching) {
+    if (!shouldShowEmptyState) {
       return (
         <PanelSearch
           className='no-pad overflow-visible'
           id='features-list'
           renderSearchWithNoResults
           itemHeight={65}
-          isLoading={isFetching}
+          isLoading={isLoading}
           paging={paging}
           header={renderHeader()}
           nextPage={handleNextPage}
           prevPage={handlePrevPage}
           goToPage={goToPage}
-          items={projectFlags}
+          items={!data ? SKELETON_ITEMS : projectFlags}
           renderFooter={renderFooter}
           renderRow={renderFeatureRow}
         />
