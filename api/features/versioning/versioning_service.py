@@ -9,6 +9,7 @@ from environments.models import Environment
 from features.feature_states.models import FeatureValueType
 from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
 from features.versioning.dataclasses import (
+    AuthorData,
     FlagChangeSet,
     FlagChangeSetV2,
 )
@@ -400,11 +401,10 @@ def delete_segment_override(
     environment: "Environment",
     feature: "Feature",
     segment_id: int,
-    user: "typing.Any" = None,
-    api_key: str | None = None,
+    author: AuthorData,
 ) -> None:
     if environment.use_v2_feature_versioning:
-        _delete_segment_override_v2(environment, feature, segment_id, user, api_key)
+        _delete_segment_override_v2(environment, feature, segment_id, author)
     else:
         _delete_segment_override_v1(environment, feature, segment_id)
 
@@ -427,8 +427,7 @@ def _delete_segment_override_v2(
     environment: "Environment",
     feature: "Feature",
     segment_id: int,
-    user: "typing.Any",
-    api_key: str | None,
+    author: AuthorData,
 ) -> None:
     current_version = get_current_live_environment_feature_version(
         environment.id, feature.id
@@ -444,8 +443,8 @@ def _delete_segment_override_v2(
     new_version = EnvironmentFeatureVersion.objects.create(
         environment=environment,
         feature=feature,
-        created_by=user,
-        created_by_api_key=api_key,
+        created_by=author.user,
+        created_by_api_key=author.api_key,
     )
 
     segment_feature_state = new_version.feature_states.get(
@@ -453,7 +452,7 @@ def _delete_segment_override_v2(
     )
     segment_feature_state.feature_segment.delete()
 
-    new_version.publish(published_by=user, published_by_api_key=api_key)
+    new_version.publish(published_by=author.user, published_by_api_key=author.api_key)
 
 
 def get_updated_feature_states_for_version(

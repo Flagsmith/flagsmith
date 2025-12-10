@@ -14,7 +14,6 @@ from features.versioning.versioning_service import (
     update_flag_v2,
 )
 from segments.models import Segment
-from users.models import FFAdminUser
 
 
 class BaseFeatureUpdateSerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -211,9 +210,6 @@ class DeleteSegmentOverrideSerializer(BaseFeatureUpdateSerializer):
     def save(self, **kwargs: object) -> None:
         feature = self.get_feature()
         segment_id = self.validated_data["segment"]["id"]
+        author = AuthorData.from_request(self.context["request"])
 
-        request = self.context["request"]
-        user = request.user if isinstance(request.user, FFAdminUser) else None
-        api_key = getattr(request.user, "key", None) if user is None else None
-
-        delete_segment_override(self.environment, feature, segment_id, user, api_key)
+        delete_segment_override(self.environment, feature, segment_id, author)

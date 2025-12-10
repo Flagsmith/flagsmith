@@ -182,7 +182,7 @@ def update_flag_v2(request: Request, environment_key: str) -> Response:
     responses={
         204: openapi.Response(description="Segment override deleted successfully")
     },
-    tags=["Experimental - Feature States"],
+    tags=["experimental"],
 )  # type: ignore[misc]
 @api_view(http_method_names=["POST"])
 @permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])
