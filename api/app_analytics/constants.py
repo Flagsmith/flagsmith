@@ -41,7 +41,6 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "unknown",
         "9.3.1",
         "10.0.0",
-    
     ],
     "flagsmith-kotlin-android-sdk": ["unknown"],
     "flagsmith-nodejs-sdk": [
