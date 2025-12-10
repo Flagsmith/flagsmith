@@ -74,21 +74,3 @@ export function usePageTracking(options: PageTrackingOptions): void {
     }
   }, [saveToStorage, context])
 }
-
-/**
- * Legacy wrapper for backward compatibility.
- * @deprecated Use usePageTracking with options object instead.
- */
-export function usePageTrackingWithContext(
-  pageName: string,
-  environmentId: string,
-  projectId: number,
-  organisationId?: number,
-): void {
-  usePageTracking({
-    context: { environmentId, organisationId, projectId },
-    deps: [environmentId, projectId, organisationId],
-    pageName,
-    saveToStorage: true,
-  })
-}

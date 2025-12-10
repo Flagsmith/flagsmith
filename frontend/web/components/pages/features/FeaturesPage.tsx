@@ -9,7 +9,7 @@ import AppActions from 'common/dispatcher/app-actions'
 import FeatureListStore from 'common/stores/feature-list-store'
 import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 import { useRouteContext } from 'components/providers/RouteContext'
-import { usePageTrackingWithContext } from 'common/hooks/usePageTracking'
+import { usePageTracking } from 'common/hooks/usePageTracking'
 import PermissionGate from 'components/base/PermissionGate'
 import FeatureRow from 'components/feature-summary/FeatureRow'
 import FeatureRowSkeleton from 'components/feature-summary/FeatureRowSkeleton'
@@ -124,12 +124,15 @@ const FeaturesPageComponent: FC = () => {
 
   const isSaving = isToggling || isRemoving
 
-  usePageTrackingWithContext(
-    Constants.pages.FEATURES,
-    environmentId,
-    projectId,
-    routeContext.organisationId,
-  )
+  usePageTracking({
+    context: {
+      environmentId,
+      organisationId: routeContext.organisationId,
+      projectId,
+    },
+    pageName: Constants.pages.FEATURES,
+    saveToStorage: true,
+  })
 
   const openNewFlagModal = () => {
     openModal(
