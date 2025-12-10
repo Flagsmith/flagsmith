@@ -5,7 +5,12 @@ from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 
 from environments.models import Environment
-from features.models import FeatureState
+from features.feature_states.models import FeatureValueType
+from features.models import Feature, FeatureState, FeatureStateValue
+from features.versioning.dataclasses import (
+    FlagChangeSet,
+    FlagChangeSetV2,
+)
 from features.versioning.models import EnvironmentFeatureVersion
 
 
@@ -99,6 +104,295 @@ def get_current_live_environment_feature_version(
         .order_by("-live_from")
         .first()
     )
+
+
+def update_flag(
+    environment: Environment, feature: Feature, change_set: FlagChangeSet
+) -> FeatureState:
+    if environment.use_v2_feature_versioning:
+        return _update_flag_for_versioning_v2(environment, feature, change_set)
+    else:
+        return _update_flag_for_versioning_v1(environment, feature, change_set)
+
+
+def _update_flag_for_versioning_v2(
+    environment: Environment, feature: Feature, change_set: FlagChangeSet
+) -> FeatureState:
+    from features.models import FeatureSegment, FeatureState
+
+    new_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment,
+        feature=feature,
+        created_by=change_set.author.user,
+        created_by_api_key=change_set.author.api_key,
+    )
+
+    if change_set.segment_id is not None:
+        # Segment override - may or may not exist
+        try:
+            target_feature_state: FeatureState = new_version.feature_states.get(
+                feature_segment__segment_id=change_set.segment_id,
+            )
+        except FeatureState.DoesNotExist:
+            feature_segment = FeatureSegment.objects.create(
+                feature=feature,
+                segment_id=change_set.segment_id,
+                environment=environment,
+                environment_feature_version=new_version,
+            )
+
+            target_feature_state = FeatureState.objects.create(
+                feature=feature,
+                environment=environment,
+                feature_segment=feature_segment,
+                environment_feature_version=new_version,
+                enabled=change_set.enabled,
+            )
+    else:
+        # Environment default - always exists
+        target_feature_state = new_version.feature_states.get(
+            feature_segment__isnull=True,
+            identity_id=None,
+        )
+
+    target_feature_state.enabled = change_set.enabled
+    target_feature_state.save()
+
+    _update_feature_state_value(
+        target_feature_state.feature_state_value,
+        change_set.feature_state_value,
+        change_set.type_,
+    )
+
+    if change_set.segment_id is not None and change_set.segment_priority is not None:
+        _update_segment_priority(target_feature_state, change_set.segment_priority)
+
+    new_version.publish(
+        published_by=change_set.author.user,
+        published_by_api_key=change_set.author.api_key,
+    )
+
+    return target_feature_state
+
+
+def _update_flag_for_versioning_v1(
+    environment: Environment, feature: Feature, change_set: FlagChangeSet
+) -> FeatureState:
+    from features.models import FeatureSegment, FeatureState
+
+    if change_set.segment_id is not None:
+        additional_filters = Q(feature_segment__segment_id=change_set.segment_id)
+    else:
+        additional_filters = Q(feature_segment__isnull=True, identity_id__isnull=True)
+
+    latest_feature_states = get_environment_flags_dict(
+        environment=environment,
+        feature_name=feature.name,
+        additional_filters=additional_filters,
+    )
+
+    if len(latest_feature_states) == 0 and change_set.segment_id is not None:
+        feature_segment = FeatureSegment.objects.create(
+            feature=feature,
+            segment_id=change_set.segment_id,
+            environment=environment,
+        )
+
+        target_feature_state: FeatureState = FeatureState.objects.create(
+            feature=feature,
+            environment=environment,
+            feature_segment=feature_segment,
+            enabled=change_set.enabled,
+        )
+    else:
+        assert len(latest_feature_states) == 1
+        target_feature_state = list(latest_feature_states.values())[0]
+        target_feature_state.enabled = change_set.enabled
+        target_feature_state.save()
+
+    _update_feature_state_value(
+        target_feature_state.feature_state_value,
+        change_set.feature_state_value,
+        change_set.type_,
+    )
+
+    if change_set.segment_id is not None and change_set.segment_priority is not None:
+        _update_segment_priority(target_feature_state, change_set.segment_priority)
+
+    return target_feature_state
+
+
+def _update_feature_state_value(
+    fsv: FeatureStateValue, value: str, type_: FeatureValueType
+) -> None:
+    fsv.set_value(value, type_)
+    fsv.save()
+
+
+def _create_segment_override(
+    feature: Feature,
+    environment: Environment,
+    segment_id: int,
+    enabled: bool,
+    priority: int | None,
+    version: EnvironmentFeatureVersion | None = None,
+) -> FeatureState:
+    from features.models import FeatureSegment
+
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment_id=segment_id,
+        environment=environment,
+        environment_feature_version=version,
+    )
+
+    if priority is not None:
+        feature_segment.to(priority)
+
+    segment_state: FeatureState = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        environment_feature_version=version,
+        enabled=enabled,
+    )
+
+    return segment_state
+
+
+def _update_segment_priority(feature_state: FeatureState, priority: int) -> None:
+    feature_segment = feature_state.feature_segment
+    if feature_segment:
+        feature_segment.to(priority)
+
+
+def update_flag_v2(
+    environment: Environment, feature: Feature, change_set: FlagChangeSetV2
+) -> None:
+    if environment.use_v2_feature_versioning:
+        _update_flag_v2_for_versioning_v2(environment, feature, change_set)
+    else:
+        _update_flag_v2_for_versioning_v1(environment, feature, change_set)
+
+
+def _update_flag_v2_for_versioning_v2(
+    environment: Environment, feature: Feature, change_set: FlagChangeSetV2
+) -> None:
+    new_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment,
+        feature=feature,
+        created_by=change_set.author.user,
+        created_by_api_key=change_set.author.api_key,
+    )
+
+    env_default_state = new_version.feature_states.get(
+        feature_segment__isnull=True, identity_id=None
+    )
+    env_default_state.enabled = change_set.environment_default_enabled
+    env_default_state.save()
+
+    _update_feature_state_value(
+        env_default_state.feature_state_value,
+        change_set.environment_default_value,
+        change_set.environment_default_type,
+    )
+
+    for override in change_set.segment_overrides:
+        try:
+            segment_state = new_version.feature_states.get(
+                feature_segment__segment_id=override.segment_id
+            )
+            segment_state.enabled = override.enabled
+            segment_state.save()
+
+            _update_feature_state_value(
+                segment_state.feature_state_value,
+                override.feature_state_value,
+                override.type_,
+            )
+
+            if override.priority is not None:
+                _update_segment_priority(segment_state, override.priority)
+        except FeatureState.DoesNotExist:
+            segment_state = _create_segment_override(
+                feature=feature,
+                environment=environment,
+                segment_id=override.segment_id,
+                enabled=override.enabled,
+                priority=override.priority,
+                version=new_version,
+            )
+
+            _update_feature_state_value(
+                segment_state.feature_state_value,
+                override.feature_state_value,
+                override.type_,
+            )
+
+    new_version.publish(
+        published_by=change_set.author.user,
+        published_by_api_key=change_set.author.api_key,
+    )
+
+
+def _update_flag_v2_for_versioning_v1(
+    environment: Environment, feature: Feature, change_set: FlagChangeSetV2
+) -> None:
+    env_default_states = get_environment_flags_dict(
+        environment=environment,
+        feature_name=feature.name,
+        additional_filters=Q(feature_segment__isnull=True, identity_id__isnull=True),
+    )
+    assert len(env_default_states) == 1
+
+    env_default_state = list(env_default_states.values())[0]
+    env_default_state.enabled = change_set.environment_default_enabled
+    env_default_state.save()
+
+    _update_feature_state_value(
+        env_default_state.feature_state_value,
+        change_set.environment_default_value,
+        change_set.environment_default_type,
+    )
+
+    for override in change_set.segment_overrides:
+        # TODO: optimise this once this is out of the
+        # experimentation stage
+        segment_states = get_environment_flags_dict(
+            environment=environment,
+            feature_name=feature.name,
+            additional_filters=Q(feature_segment__segment_id=override.segment_id),
+        )
+
+        if len(segment_states) == 0:
+            segment_state = _create_segment_override(
+                feature=feature,
+                environment=environment,
+                segment_id=override.segment_id,
+                enabled=override.enabled,
+                priority=override.priority,
+                version=None,  # V1 versioning doesn't use versions
+            )
+
+            _update_feature_state_value(
+                segment_state.feature_state_value,
+                override.feature_state_value,
+                override.type_,
+            )
+        else:
+            assert len(segment_states) == 1
+            segment_state = list(segment_states.values())[0]
+            segment_state.enabled = override.enabled
+            segment_state.save()
+
+            _update_feature_state_value(
+                segment_state.feature_state_value,
+                override.feature_state_value,
+                override.type_,
+            )
+
+            if override.priority is not None:
+                _update_segment_priority(segment_state, override.priority)
 
 
 def get_updated_feature_states_for_version(
