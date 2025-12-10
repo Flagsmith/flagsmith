@@ -90,12 +90,12 @@ export function buildUrlParams(
     is_enabled: filters.is_enabled === null ? undefined : filters.is_enabled,
     owners: joinArrayOrUndefined(filters.owners),
     page: page ?? 1,
-    search: filters.search ?? '',
+    search: filters.search || undefined,
     sortBy: filters.sort.sortBy,
     sortOrder: filters.sort.sortOrder ?? 'asc',
     tag_strategy: filters.tag_strategy,
     tags: joinArrayOrUndefined(filters.tags),
-    value_search: filters.value_search ?? undefined,
+    value_search: filters.value_search || undefined,
   }
 }
 
@@ -121,24 +121,28 @@ export function buildApiFilterParams(
   const owners = joinArrayOrUndefined(filters.owners)
   const tags = joinArrayOrUndefined(filters.tags)
   const sortDirection = normalizeSortDirection(filters.sort.sortOrder)
-  const valueSearch = filters.value_search ?? undefined
 
-  return {
+  // Build params object, omitting undefined/null values
+  const params: Record<string, string | number | boolean> = {
     environmentId: String(environmentId),
-    group_owners: groupOwners,
-    is_archived: filters.showArchived,
-    is_enabled: filters.is_enabled,
-    owners,
     page,
     page_size: FEATURES_PAGE_SIZE,
     projectId,
-    search: filters.search,
     sort_direction: sortDirection,
     sort_field: filters.sort.sortBy,
     tag_strategy: filters.tag_strategy,
-    tags,
-    value_search: valueSearch,
   }
+
+  // Only add optional params if they have values
+  if (groupOwners) params.group_owners = groupOwners
+  if (filters.showArchived) params.is_archived = filters.showArchived
+  if (filters.is_enabled !== null) params.is_enabled = filters.is_enabled
+  if (owners) params.owners = owners
+  if (filters.search) params.search = filters.search
+  if (tags) params.tags = tags
+  if (filters.value_search) params.value_search = filters.value_search
+
+  return params
 }
 
 /** Parses URL query parameters into FilterState with page number. */
@@ -166,6 +170,6 @@ export function getFiltersFromParams(
         ? TagStrategy.UNION
         : TagStrategy.INTERSECTION,
     tags: parseIntArray(params.tags),
-    value_search: parseStringParam(params.value_search, ''),
+    value_search: parseStringParam(params.value_search, '') || null,
   }
 }

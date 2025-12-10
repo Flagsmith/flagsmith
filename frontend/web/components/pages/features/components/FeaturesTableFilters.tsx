@@ -101,7 +101,7 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
     <Row className='table-header'>
       <div className='table-column flex-row flex-fill'>
         <TableSearchFilter
-          onChange={(v) => onFilterChange({ search: v })}
+          onChange={(v) => onFilterChange({ search: v || null })}
           value={search}
         />
         <Row className='flex-row py-2 py-lg-0 px-1 px-lg-0 flex-fill justify-content-lg-end'>

@@ -54,12 +54,8 @@ const FeaturesPageComponent: FC = () => {
   } = useFeatureFilters(history)
 
   const { getEnvironment, project } = useProjectEnvironments(projectId)
-  const { data, error, isLoading, refetch } = useFeatureListWithApiKey(
-    filters,
-    page,
-    environmentId,
-    projectId,
-  )
+  const { data, error, isFetching, isLoading, refetch } =
+    useFeatureListWithApiKey(filters, page, environmentId, projectId)
 
   // Backward compatibility: Populate ProjectStore for legacy components (CreateFlag)
   // TODO: Remove this when CreateFlag is migrated to RTK Query
@@ -167,12 +163,12 @@ const FeaturesPageComponent: FC = () => {
         <JSONReference
           className='mx-2 mt-4'
           showNamesButton
-          title={'Features'}
+          title='Features'
           json={projectFlags}
         />
         <JSONReference
           className='mx-2'
-          title={'Feature States'}
+          title='Feature States'
           json={environmentFlags && Object.values(environmentFlags)}
         />
       </>
@@ -227,8 +223,8 @@ const FeaturesPageComponent: FC = () => {
   }
 
   const renderFeaturesList = () => {
-    // Show skeleton only on initial load to avoid remounting search input during refetch
-    if (isLoading && !data) {
+    // Show skeleton only on true initial load (no data, no filters, not fetching)
+    if (!data && !hasFilters && !isFetching) {
       return (
         <Panel className='no-pad panel--grey'>
           {renderHeader()}
@@ -241,14 +237,16 @@ const FeaturesPageComponent: FC = () => {
       )
     }
 
-    if (projectFlags.length > 0 || hasFilters) {
+    // Show content if we have features OR filters are active OR currently fetching
+    // This prevents remounting of search input when filters change
+    if (projectFlags.length > 0 || hasFilters || isFetching) {
       return (
         <PanelSearch
           className='no-pad overflow-visible'
           id='features-list'
           renderSearchWithNoResults
           itemHeight={65}
-          isLoading={isLoading}
+          isLoading={isFetching}
           paging={paging}
           header={renderHeader()}
           nextPage={handleNextPage}
@@ -261,6 +259,28 @@ const FeaturesPageComponent: FC = () => {
       )
     }
 
+    // Show empty state when successfully loaded with no features and no filters
+    // This explicit check ensures we show empty state for truly empty projects
+    if (data && projectFlags.length === 0 && !hasFilters) {
+      return (
+        <PermissionGate
+          level='project'
+          permission='CREATE_FEATURE'
+          id={projectId}
+        >
+          {(perm) => (
+            <FeaturesEmptyState
+              environmentId={environmentId}
+              projectId={projectId}
+              onCreateFeature={openNewFlagModal}
+              canCreateFeature={perm}
+            />
+          )}
+        </PermissionGate>
+      )
+    }
+
+    // Fallback: should never reach here, but return empty state just in case
     return (
       <PermissionGate
         level='project'
