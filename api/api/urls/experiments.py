@@ -7,7 +7,11 @@ Use at your own risk - breaking changes may occur without prior notice.
 
 from django.urls import path
 
-from features.feature_states.views import update_flag_v1, update_flag_v2
+from features.feature_states.views import (
+    delete_segment_override,
+    update_flag_v1,
+    update_flag_v2,
+)
 
 app_name = "experiments"
 
@@ -21,5 +25,10 @@ urlpatterns = [
         "environments/<str:environment_key>/update-flag-v2/",
         update_flag_v2,
         name="update-flag-v2",
+    ),
+    path(
+        "environments/<str:environment_key>/delete-segment-override/",
+        delete_segment_override,
+        name="delete-segment-override",
     ),
 ]
