@@ -73,7 +73,6 @@ const Permission: FC<PermissionType> = ({
 
   const finalPermission = hasPermission || AccountStore.isAdmin()
 
-  // Handle different children types
   if (typeof children === 'function') {
     return (
       <>
@@ -85,12 +84,10 @@ const Permission: FC<PermissionType> = ({
     )
   }
 
-  // ReactNode children pattern
   if (finalPermission) {
     return <>{children}</>
   }
 
-  // Permission denied - show tooltip or fallback
   if (showTooltip) {
     return Utils.renderWithPermission(
       finalPermission,

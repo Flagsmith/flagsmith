@@ -158,7 +158,6 @@ export const projectFlagService = service
           url: `projects/${query.project_id}/features/${query.feature_id}/`,
         }),
       }),
-      // END OF ENDPOINTS
     }),
   })
 
@@ -206,7 +205,6 @@ export async function createProjectFlag(
     projectFlagService.endpoints.createProjectFlag.initiate(data, options),
   )
 }
-// END OF FUNCTION_EXPORTS
 
 export const {
   useCreateProjectFlagMutation,
@@ -216,9 +214,3 @@ export const {
   useRemoveProjectFlagMutation,
   useUpdateProjectFlagMutation,
 } = projectFlagService
-
-/* Usage examples:
-const { data, isLoading } = useGetProjectFlagsQuery({ id: 2 }, {}) //get hook
-const [createProjectFlags, { isLoading, data, isSuccess }] = useCreateProjectFlagsMutation() //create hook
-projectFlagService.endpoints.getProjectFlags.select({id: 2})(store.getState()) //access data from any function
-*/

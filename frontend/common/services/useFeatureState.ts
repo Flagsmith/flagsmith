@@ -28,7 +28,6 @@ export const featureStateService = service
       >({
         providesTags: [{ id: 'LIST', type: 'FeatureState' }],
         queryFn: async (query, baseQueryApi, extraOptions, baseQuery) => {
-          //This endpoint returns feature_segments as a number, so it fetches the feature segments and appends
           const {
             data,
           }: {
@@ -66,7 +65,6 @@ export const featureStateService = service
           url: `environments/${query.environmentId}/featurestates/${query.environmentFlagId}/`,
         }),
       }),
-      // END OF ENDPOINTS
     }),
   })
 
@@ -93,16 +91,6 @@ export async function updateFeatureState(
     featureStateService.endpoints.updateFeatureState.initiate(data, options),
   )
 }
-// END OF FUNCTION_EXPORTS
 
-export const {
-  useGetFeatureStatesQuery,
-  useUpdateFeatureStateMutation,
-  // END OF EXPORTS
-} = featureStateService
-
-/* Usage examples:
-const { data, isLoading } = useGetFeatureStatesQuery({ id: 2 }, {}) //get hook
-const [createFeatureStates, { isLoading, data, isSuccess }] = useCreateFeatureStatesMutation() //create hook
-featureStateService.endpoints.getFeatureStates.select({id: 2})(store.getState()) //access data from any function
-*/
+export const { useGetFeatureStatesQuery, useUpdateFeatureStateMutation } =
+  featureStateService
