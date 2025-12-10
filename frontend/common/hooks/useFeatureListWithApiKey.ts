@@ -8,8 +8,7 @@ import type { FilterState } from 'common/types/featureFilters'
 /**
  * Fetches filtered feature list, accepting environment API key instead of numeric ID.
  *
- * TODO: This wrapper will be removed once environmentNumericId is added to RouteContext
- * (see FEATURES_MIGRATION_FOLLOWUP.md - PR #1).
+ * TODO: This wrapper will be removed once we standardize environmentId and environmentApiKey on RouteContext.
  */
 export function useFeatureListWithApiKey(
   filters: FilterState,
