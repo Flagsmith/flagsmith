@@ -83,20 +83,7 @@ declare global {
     trackTraits: (traits: Record<string, any>) => void
     [key: string]: any
   }
-  const Utils: {
-    fromParam: () => any
-    toParam: (params: any) => string
-    getFlagsmithHasFeature: (feature: string) => boolean
-    renderWithPermission: (permission: boolean, text: string, el: any) => any
-    calculateRemainingLimitsPercentage: (
-      current: number,
-      max: number | null,
-    ) => { percentage: number }
-    displayLimitAlert: (type: string, percentage: number) => ReactNode
-    getManageFeaturePermission: (changeRequestsEnabled: boolean) => string
-    changeRequestsEnabled: (minApprovals: number | null) => boolean
-    [key: string]: any
-  }
+  const Utils: typeof Utils
   const AsyncStorage: {
     setItem: (key: string, value: string) => void
     getItem: (key: string) => string | null
