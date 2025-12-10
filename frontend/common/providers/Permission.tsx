@@ -4,13 +4,22 @@ import { PermissionLevel } from 'common/types/requests'
 import AccountStore from 'common/stores/account-store'
 import intersection from 'lodash/intersection'
 import { cloneDeep } from 'lodash'
+import Utils from 'common/utils/utils'
+import Constants from 'common/constants'
 
 type PermissionType = {
   id: any
   permission: string
   tags?: number[]
   level: PermissionLevel
-  children: (data: { permission: boolean; isLoading: boolean }) => ReactNode
+  children:
+    | ReactNode
+    | ((data: { permission: boolean; isLoading: boolean }) => ReactNode)
+
+  // New optional props from PermissionGate
+  fallback?: ReactNode
+  permissionName?: string
+  showTooltip?: boolean
 }
 
 export const useHasPermission = ({
@@ -47,9 +56,12 @@ export const useHasPermission = ({
 
 const Permission: FC<PermissionType> = ({
   children,
+  fallback,
   id,
   level,
   permission,
+  permissionName,
+  showTooltip = false,
   tags,
 }) => {
   const { isLoading, permission: hasPermission } = useHasPermission({
@@ -58,14 +70,36 @@ const Permission: FC<PermissionType> = ({
     permission,
     tags,
   })
-  return (
-    <>
-      {children({
-        isLoading,
-        permission: hasPermission || AccountStore.isAdmin(),
-      }) || null}
-    </>
-  )
+
+  const finalPermission = hasPermission || AccountStore.isAdmin()
+
+  // Handle different children types
+  if (typeof children === 'function') {
+    return (
+      <>
+        {children({
+          isLoading,
+          permission: finalPermission,
+        }) || null}
+      </>
+    )
+  }
+
+  // ReactNode children pattern
+  if (finalPermission) {
+    return <>{children}</>
+  }
+
+  // Permission denied - show tooltip or fallback
+  if (showTooltip) {
+    return Utils.renderWithPermission(
+      finalPermission,
+      permissionName || Constants.projectPermissions(permission),
+      children,
+    )
+  }
+
+  return <>{fallback || null}</>
 }
 
 export default Permission

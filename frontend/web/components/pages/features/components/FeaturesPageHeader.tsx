@@ -3,7 +3,7 @@ import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
-import PermissionGate from 'components/base/PermissionGate'
+import Permission from 'common/providers/Permission'
 
 type FeaturesPageHeaderProps = {
   totalFeatures: number
@@ -35,12 +35,13 @@ export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
       <PageTitle
         title={'Features'}
         cta={
-          <PermissionGate
+          <Permission
             level='project'
             permission='CREATE_FEATURE'
             id={projectId}
+            showTooltip
           >
-            {(perm) => (
+            {({ permission: perm }) => (
               <Button
                 disabled={
                   !perm || readOnly || featureLimitAlert.percentage >= 100
@@ -53,7 +54,7 @@ export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
                 Create Feature
               </Button>
             )}
-          </PermissionGate>
+          </Permission>
         }
       >
         View and manage{' '}

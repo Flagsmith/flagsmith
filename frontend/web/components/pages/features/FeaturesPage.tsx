@@ -10,7 +10,6 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { usePageTracking } from 'common/hooks/usePageTracking'
-import PermissionGate from 'components/base/PermissionGate'
 import FeatureRow from 'components/feature-summary/FeatureRow'
 import FeatureRowSkeleton from 'components/feature-summary/FeatureRowSkeleton'
 import JSONReference from 'components/JSONReference'
@@ -265,12 +264,13 @@ const FeaturesPageComponent: FC = () => {
     }
 
     return (
-      <PermissionGate
+      <Permission
         level='project'
         permission='CREATE_FEATURE'
         id={projectId}
+        showTooltip
       >
-        {(perm) => (
+        {({ permission: perm }) => (
           <FeaturesEmptyState
             environmentId={environmentId}
             projectId={projectId}
@@ -278,7 +278,7 @@ const FeaturesPageComponent: FC = () => {
             canCreateFeature={perm}
           />
         )}
-      </PermissionGate>
+      </Permission>
     )
   }
 
