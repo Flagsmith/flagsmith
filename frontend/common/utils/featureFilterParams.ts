@@ -122,7 +122,6 @@ export function buildApiFilterParams(
   const tags = joinArrayOrUndefined(filters.tags)
   const sortDirection = normalizeSortDirection(filters.sort.sortOrder)
 
-  // Build params object, omitting undefined/null values
   const params: Record<string, string | number | boolean> = {
     environmentId: String(environmentId),
     page,
@@ -133,7 +132,6 @@ export function buildApiFilterParams(
     tag_strategy: filters.tag_strategy,
   }
 
-  // Only add optional params if they have values
   if (groupOwners) params.group_owners = groupOwners
   if (filters.showArchived) params.is_archived = filters.showArchived
   if (filters.is_enabled !== null) params.is_enabled = filters.is_enabled

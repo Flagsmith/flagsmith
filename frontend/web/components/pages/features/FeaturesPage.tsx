@@ -223,7 +223,6 @@ const FeaturesPageComponent: FC = () => {
   }
 
   const renderFeaturesList = () => {
-    // Show skeleton only on true initial load (no data, no filters, not fetching)
     if (!data && !hasFilters && !isFetching) {
       return (
         <Panel className='no-pad panel--grey'>
@@ -237,8 +236,6 @@ const FeaturesPageComponent: FC = () => {
       )
     }
 
-    // Show content if we have features OR filters are active OR currently fetching
-    // This prevents remounting of search input when filters change
     if (projectFlags.length > 0 || hasFilters || isFetching) {
       return (
         <PanelSearch
@@ -259,28 +256,6 @@ const FeaturesPageComponent: FC = () => {
       )
     }
 
-    // Show empty state when successfully loaded with no features and no filters
-    // This explicit check ensures we show empty state for truly empty projects
-    if (data && projectFlags.length === 0 && !hasFilters) {
-      return (
-        <PermissionGate
-          level='project'
-          permission='CREATE_FEATURE'
-          id={projectId}
-        >
-          {(perm) => (
-            <FeaturesEmptyState
-              environmentId={environmentId}
-              projectId={projectId}
-              onCreateFeature={openNewFlagModal}
-              canCreateFeature={perm}
-            />
-          )}
-        </PermissionGate>
-      )
-    }
-
-    // Fallback: should never reach here, but return empty state just in case
     return (
       <PermissionGate
         level='project'
