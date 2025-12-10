@@ -17,7 +17,9 @@ export const addFeatureSegmentsToFeatureStates = async (v) => {
   }
 }
 export const featureStateService = service
-  .enhanceEndpoints({ addTagTypes: ['FeatureState'] })
+  .enhanceEndpoints({
+    addTagTypes: ['FeatureState', 'FeatureList', 'Environment'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       getFeatureStates: builder.query<
@@ -49,6 +51,21 @@ export const featureStateService = service
           }
         },
       }),
+      updateFeatureState: builder.mutation<
+        Res['featureState'],
+        Req['updateFeatureState']
+      >({
+        invalidatesTags: (_res, _meta, _req) => [
+          { id: 'LIST', type: 'FeatureList' },
+          { id: 'LIST', type: 'FeatureState' },
+          { id: 'METRICS', type: 'Environment' },
+        ],
+        query: (query: Req['updateFeatureState']) => ({
+          body: query.body,
+          method: 'PUT',
+          url: `environments/${query.environmentId}/featurestates/${query.environmentFlagId}/`,
+        }),
+      }),
       // END OF ENDPOINTS
     }),
   })
@@ -64,10 +81,23 @@ export async function getFeatureStates(
     featureStateService.endpoints.getFeatureStates.initiate(data, options),
   )
 }
+
+export async function updateFeatureState(
+  store: any,
+  data: Req['updateFeatureState'],
+  options?: Parameters<
+    typeof featureStateService.endpoints.updateFeatureState.initiate
+  >[1],
+) {
+  return store.dispatch(
+    featureStateService.endpoints.updateFeatureState.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useGetFeatureStatesQuery,
+  useUpdateFeatureStateMutation,
   // END OF EXPORTS
 } = featureStateService
 

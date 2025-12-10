@@ -144,21 +144,6 @@ export const projectFlagService = service
         }),
       }),
 
-      updateFeatureState: builder.mutation<
-        Res['featureState'],
-        Req['updateFeatureState']
-      >({
-        invalidatesTags: (_res, _meta, _req) => [
-          { id: 'LIST', type: 'FeatureList' },
-          { id: 'LIST', type: 'FeatureState' },
-          { id: 'METRICS', type: 'Environment' },
-        ],
-        query: (query: Req['updateFeatureState']) => ({
-          body: query.body,
-          method: 'PUT',
-          url: `environments/${query.environmentId}/featurestates/${query.environmentFlagId}/`,
-        }),
-      }),
       updateProjectFlag: builder.mutation<
         Res['projectFlag'],
         Req['updateProjectFlag']
@@ -229,7 +214,6 @@ export const {
   useGetProjectFlagQuery,
   useGetProjectFlagsQuery,
   useRemoveProjectFlagMutation,
-  useUpdateFeatureStateMutation,
   useUpdateProjectFlagMutation,
 } = projectFlagService
 
