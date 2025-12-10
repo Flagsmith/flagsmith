@@ -1146,6 +1146,5 @@ export type Res = {
     }
   }
   featureState: FeatureState
-  multivariateOption: MultivariateOption
   // END OF TYPES
 }

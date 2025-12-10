@@ -52,22 +52,6 @@ export type UpdateFeatureStateBody = {
   multivariate_feature_state_values?: MultivariateOption[] | null
 }
 
-export type CreateMultivariateOptionBody = {
-  type: string
-  integer_value?: number
-  string_value: string
-  boolean_value?: boolean
-  default_percentage_allocation: number
-}
-
-export type UpdateMultivariateOptionBody = {
-  type?: string
-  integer_value?: number
-  string_value?: string
-  boolean_value?: boolean
-  default_percentage_allocation?: number
-}
-
 export type PagedRequest<T> = T & {
   page?: number
   page_size?: number
@@ -882,22 +866,6 @@ export type Req = {
     environmentId: string
     environmentFlagId: number
     body: UpdateFeatureStateBody
-  }
-  createMultivariateOption: {
-    projectId: number
-    featureId: number
-    body: CreateMultivariateOptionBody
-  }
-  updateMultivariateOption: {
-    projectId: number
-    featureId: number
-    mvId: number
-    body: UpdateMultivariateOptionBody
-  }
-  deleteMultivariateOption: {
-    projectId: number
-    featureId: number
-    mvId: number
   }
   // END OF TYPES
 }
