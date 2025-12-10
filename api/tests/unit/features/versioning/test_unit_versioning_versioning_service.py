@@ -600,3 +600,18 @@ def test_get_updated_feature_states_for_version_detects_segment_override_multiva
     assert updated_feature_states[0].feature_segment is not None
     assert updated_feature_states[0].feature_segment.segment == segment
     assert updated_feature_states[0].get_feature_state_value() == "new_control_value"
+
+
+def test_get_environment_flags_list_with_replica(
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    # This just verifies the code path works - actual replica behavior
+    # depends on database configuration
+    result = get_environment_flags_list(
+        environment=environment,
+        from_replica=True,
+    )
+
+    assert len(result) >= 1
+    assert result[0].feature == feature

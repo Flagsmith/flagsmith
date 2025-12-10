@@ -1,4 +1,5 @@
 import typing
+from typing import Literal
 
 from django.conf import settings
 from django.db import models
@@ -9,6 +10,9 @@ from features.value_types import (
     INTEGER,
     STRING,
 )
+
+# TODO: use Pydantic TypeAdapter to map serializer data to DTOs
+FeatureValueType = Literal["string", "integer", "boolean"]
 
 
 class AbstractBaseFeatureValueModel(models.Model):
@@ -38,3 +42,36 @@ class AbstractBaseFeatureValueModel(models.Model):
             self.type,  # type: ignore[arg-type]
             self.string_value,
         )
+
+    def set_value(self, value: str, type_: FeatureValueType) -> None:
+        typed_value: str | int | bool
+        match type_:
+            case "string":
+                typed_value = value
+                field = "string_value"
+                type_const = STRING
+            case "integer":
+                try:
+                    typed_value = int(value)
+                except ValueError:
+                    raise ValueError(f"'{value}' is not a valid integer")
+                field = "integer_value"
+                type_const = INTEGER
+            case "boolean":
+                if value.lower() not in ("true", "false"):
+                    raise ValueError(
+                        f"'{value}' is not a valid boolean (use 'true' or 'false')"
+                    )
+                typed_value = value.lower() == "true"
+                field = "boolean_value"
+                type_const = BOOLEAN
+            case _:
+                raise ValueError(
+                    f"'{type_}' is not a valid type (use 'string', 'integer', or 'boolean')"
+                )
+
+        self.string_value = None
+        self.integer_value = None
+        self.boolean_value = None
+        setattr(self, field, typed_value)
+        self.type = type_const
