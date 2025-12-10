@@ -8,7 +8,11 @@ from features.versioning.dataclasses import (
     FlagChangeSetV2,
     SegmentOverrideChangeSet,
 )
-from features.versioning.versioning_service import update_flag, update_flag_v2
+from features.versioning.versioning_service import (
+    delete_segment_override,
+    update_flag,
+    update_flag_v2,
+)
 from segments.models import Segment
 
 
@@ -188,3 +192,24 @@ class UpdateFlagV2Serializer(BaseFeatureUpdateSerializer):
     def save(self, **kwargs: object) -> None:
         feature = self.get_feature()
         update_flag_v2(self.environment, feature, self.change_set_v2)
+
+
+class SegmentIdentifierSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    id = serializers.IntegerField(required=True)
+
+
+class DeleteSegmentOverrideSerializer(BaseFeatureUpdateSerializer):
+    feature = FeatureIdentifierSerializer(required=True)
+    segment = SegmentIdentifierSerializer(required=True)
+
+    def validate_segment(self, value: dict) -> dict:  # type: ignore[type-arg]
+        if value and value.get("id"):
+            self.validate_segment_id(value["id"])
+        return value
+
+    def save(self, **kwargs: object) -> None:
+        feature = self.get_feature()
+        segment_id = self.validated_data["segment"]["id"]
+        author = AuthorData.from_request(self.context["request"])
+
+        delete_segment_override(self.environment, feature, segment_id, author)

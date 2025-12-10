@@ -10,7 +10,11 @@ from rest_framework.response import Response
 from environments.models import Environment
 
 from .permissions import EnvironmentUpdateFeatureStatePermission
-from .serializers import UpdateFlagSerializer, UpdateFlagV2Serializer
+from .serializers import (
+    DeleteSegmentOverrideSerializer,
+    UpdateFlagSerializer,
+    UpdateFlagV2Serializer,
+)
 
 
 def _check_workflow_not_enabled(environment: Environment) -> None:
@@ -138,6 +142,55 @@ def update_flag_v2(request: Request, environment_key: str) -> Response:
     _check_workflow_not_enabled(environment)
 
     serializer = UpdateFlagV2Serializer(
+        data=request.data,
+        context={"request": request, "environment": environment},
+    )
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@swagger_auto_schema(
+    method="post",
+    operation_summary="Delete segment override",
+    operation_description="""
+    **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
+
+    Deletes a segment override for a feature in the given environment.
+
+    **Feature Identification:**
+    - Use `feature.name` OR `feature.id` (mutually exclusive)
+    - Feature must belong to the environment's project
+
+    **Segment Identification:**
+    - Use `segment.id` (required)
+
+    The segment override must exist for the given feature/environment combination.
+    Returns 400 if the segment override does not exist.
+    """,
+    manual_parameters=[
+        openapi.Parameter(
+            "environment_key",
+            openapi.IN_PATH,
+            description="The environment API key",
+            type=openapi.TYPE_STRING,
+            required=True,
+        )
+    ],
+    request_body=DeleteSegmentOverrideSerializer,
+    responses={
+        204: openapi.Response(description="Segment override deleted successfully")
+    },
+    tags=["experimental"],
+)  # type: ignore[misc]
+@api_view(http_method_names=["POST"])
+@permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])
+def delete_segment_override(request: Request, environment_key: str) -> Response:
+    environment = Environment.objects.get(api_key=environment_key)
+    _check_workflow_not_enabled(environment)
+
+    serializer = DeleteSegmentOverrideSerializer(
         data=request.data,
         context={"request": request, "environment": environment},
     )
