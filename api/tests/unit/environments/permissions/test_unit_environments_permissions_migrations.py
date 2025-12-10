@@ -1,4 +1,5 @@
-import pytest
+from typing import Type
+
 from common.environments.permissions import (
     APPROVE_CHANGE_REQUEST,
     CREATE_CHANGE_REQUEST,
@@ -6,18 +7,13 @@ from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_IDENTITIES,
 )
-from django.conf import settings
-
-if settings.SKIP_MIGRATION_TESTS is True:
-    pytest.skip(
-        "Skip migration tests to speed up tests where necessary",
-        allow_module_level=True,
-    )
+from django.db.models import Model
+from django_test_migrations.migrator import Migrator
 
 
-def test_add_change_request_permissions_adds_correct_permissions_if_user_has_update_fs(  # type: ignore[no-untyped-def]  # noqa: E501
-    django_user_model, migrator
-):
+def test_add_change_request_permissions_adds_correct_permissions_if_user_has_update_fs(  # noqa: E501
+    django_user_model: Type[Model], migrator: Migrator
+) -> None:
     # Given
     old_state = migrator.apply_initial_migration(
         ("environment_permissions", "0003_add_manage_identities_permission")
@@ -229,11 +225,7 @@ def test_add_view_identity_permissions_does_nothing_if_user_does_not_have_manage
     )
 
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
-def test_merge_duplicate_permissions_migration(migrator):  # type: ignore[no-untyped-def]
+def test_merge_duplicate_permissions_migration(migrator: Migrator) -> None:
     # Given - the migration state is at 0005 (before the migration we want to test)
     old_state = migrator.apply_initial_migration(
         ("environment_permissions", "0005_add_view_identity_permissions")

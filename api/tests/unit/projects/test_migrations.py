@@ -1,16 +1,11 @@
-import pytest
 from common.projects.permissions import (
     CREATE_ENVIRONMENT,
     VIEW_PROJECT,
 )
-from django.conf import settings
+from django_test_migrations.migrator import Migrator
 
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
-def test_merge_duplicate_permissions_migration(migrator):  # type: ignore[no-untyped-def]
+def test_merge_duplicate_permissions_migration(migrator: Migrator) -> None:
     # Given - the migration state is at 0016 (before the migration we want to test)
     old_state = migrator.apply_initial_migration(
         ("projects", "0016_soft_delete_projects")

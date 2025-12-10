@@ -1,17 +1,12 @@
 from datetime import timedelta
 
-import pytest
-from django.conf import settings
 from django.utils import timezone
+from django_test_migrations.migrator import Migrator
 
 from features.feature_types import MULTIVARIATE, STANDARD
 
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
-def test_migrate_feature_segments_forward(migrator):  # type: ignore[no-untyped-def]
+def test_migrate_feature_segments_forward(migrator: Migrator) -> None:
     # Given - the migration state is at 0017 (before the migration we want to test)
     old_state = migrator.apply_initial_migration(
         ("features", "0017_auto_20200607_1005")
@@ -87,11 +82,7 @@ def test_migrate_feature_segments_forward(migrator):  # type: ignore[no-untyped-
     assert NewFeatureState.objects.values("feature_segment").distinct().count() == 4
 
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
-def test_migrate_feature_segments_reverse(migrator):  # type: ignore[no-untyped-def]
+def test_migrate_feature_segments_reverse(migrator: Migrator) -> None:
     # Given - migration state is at 0018, after the migration we want to test in reverse
     old_state = migrator.apply_initial_migration(
         ("features", "0018_auto_20200607_1057")
@@ -145,11 +136,7 @@ def test_migrate_feature_segments_reverse(migrator):  # type: ignore[no-untyped-
     assert NewFeatureSegment.objects.first().segment.pk == segment.pk
 
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
-def test_revert_feature_state_versioning_migrations(migrator):  # type: ignore[no-untyped-def]
+def test_revert_feature_state_versioning_migrations(migrator: Migrator) -> None:
     # Given
     old_state = migrator.apply_initial_migration(
         ("features", "0038_remove_old_versions_and_drafts")
@@ -196,11 +183,7 @@ def test_revert_feature_state_versioning_migrations(migrator):  # type: ignore[n
     assert NewFeatureState.objects.filter(id=v2.id).exists()
 
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
-def test_fix_feature_type_migration(migrator):  # type: ignore[no-untyped-def]
+def test_fix_feature_type_migration(migrator: Migrator) -> None:
     # Given
     old_state = migrator.apply_initial_migration(
         ("features", "0058_alter_boolean_values")
@@ -243,7 +226,7 @@ def test_fix_feature_type_migration(migrator):  # type: ignore[no-untyped-def]
     assert NewFeature.objects.get(id=mv_feature.id).type == MULTIVARIATE
 
 
-def test_migrate_sample_to_webhook_forward(migrator):  # type: ignore[no-untyped-def]
+def test_migrate_sample_to_webhook_forward(migrator: Migrator) -> None:
     # Given
     old_state = migrator.apply_initial_migration(
         ("feature_health", "0002_featurehealthevent_add_external_id_alter_created_at")
@@ -287,11 +270,7 @@ def test_migrate_sample_to_webhook_forward(migrator):  # type: ignore[no-untyped
     assert not NewFeatureHealthEvent.objects.filter(provider_name="Sample").exists()
 
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
-def test_migrate_sample_to_webhook_reverse(migrator):  # type: ignore[no-untyped-def]
+def test_migrate_sample_to_webhook_reverse(migrator: Migrator) -> None:
     # Given
     old_state = migrator.apply_initial_migration(
         ("feature_health", "0003_migrate_sample_to_webhook")
