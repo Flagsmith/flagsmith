@@ -72,5 +72,13 @@ export function usePageTracking(options: PageTrackingOptions): void {
         )
       }
     }
-  }, [saveToStorage, context])
+    // We intentionally use individual properties instead of context object
+    // to prevent re-runs when object reference changes but values don't
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    saveToStorage,
+    context?.environmentId,
+    context?.organisationId,
+    context?.projectId,
+  ])
 }
