@@ -210,6 +210,10 @@
                     "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient"
                 },
                 {
+                    "name": "SEGMENTS_THROTTLE_RATE",
+                    "value": "5/min"
+                },
+                {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
                 },
