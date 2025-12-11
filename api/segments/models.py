@@ -147,7 +147,6 @@ class Segment(
         self.version_of = self
         self.save_without_historical_record()
 
-    @transaction.atomic
     def clone(self, is_revision: bool = False, **extra_attrs: typing.Any) -> "Segment":
         """
         Create a revision of the segment
