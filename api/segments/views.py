@@ -41,6 +41,8 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [SegmentPermissions]
     pagination_class = CustomPagination
 
+    throttle_scope = "segments"
+
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Segment.objects.none()
