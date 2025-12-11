@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
-import { Link, useRouteMatch, withRouter } from 'react-router-dom'
+import { Link, withRouter } from 'react-router-dom'
 import { useHasPermission } from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
 
@@ -21,11 +21,6 @@ import IdentifierString from 'components/IdentifierString'
 import CodeHelp from 'components/CodeHelp'
 import { getStore } from 'common/store'
 import { useRouteContext } from 'components/providers/RouteContext'
-
-interface RouteParams {
-  environmentId: string
-  projectId: string
-}
 
 const searchTypes = [
   { label: 'ID', value: 'id' },
@@ -72,7 +67,6 @@ export const removeIdentity = (
 
 const UsersPage: FC<{ props: any }> = (props) => {
   const { environmentKey, projectId } = useRouteContext()
-  const match = useRouteMatch<RouteParams>()
   const [page, setPage] = useState<{
     number: number
     pageType: Req['getIdentities']['pageType']
@@ -93,7 +87,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
   }, [searchType])
   const { data: identities, isLoading } = useGetIdentitiesQuery({
     dashboard_alias: searchType === 'alias' ? search?.toLowerCase() : undefined,
-    environmentId: match?.params?.environmentId,
+    environmentId: environmentKey!,
     isEdge,
     page: page.number,
     pageType: page.pageType,
@@ -102,10 +96,8 @@ const UsersPage: FC<{ props: any }> = (props) => {
     q: searchType === 'alias' ? undefined : search,
   })
 
-  const environmentId = match?.params?.environmentId
-
   const { permission } = useHasPermission({
-    id: environmentId,
+    id: environmentKey,
     level: 'environment',
     permission: Utils.getViewIdentitiesPermission(),
   })
@@ -113,7 +105,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
   const newUser = () => {
     openModal(
       'New Identities',
-      <CreateUserModal environmentId={environmentId} />,
+      <CreateUserModal environmentId={environmentKey!} />,
       'side-modal',
     )
   }

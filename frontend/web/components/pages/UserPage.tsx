@@ -47,8 +47,6 @@ import Project from 'common/project'
 import SettingTitle from 'components/SettingTitle'
 
 interface RouteParams {
-  environmentId: string
-  projectId: string
   id: string
   identity: string
 }
@@ -58,9 +56,8 @@ const UserPage: FC = () => {
   const history = useHistory()
   const params = Utils.fromParam()
   const defaultState = parseFiltersFromUrlParams(params)
-  const environmentId = match?.params?.environmentId
+  const { environmentKey, projectId } = useRouteContext()
   const id = match?.params?.id
-  const { projectId } = useRouteContext()
 
   const [filter, setFilter] = useState<FiltersValue>(defaultState)
   const [actualFlags, setActualFlags] =
@@ -84,13 +81,13 @@ const UserPage: FC = () => {
     const { search, sort } = filter
     AppActions.searchFeatures(
       projectId,
-      environmentId,
+      environmentKey,
       true,
       search,
       sort,
       getServerFilter(filter),
     )
-  }, [filter, environmentId, projectId])
+  }, [filter, environmentKey, projectId])
 
   useEffect(() => {
     AppActions.getIdentity(environmentId, id)
@@ -136,7 +133,7 @@ const UserPage: FC = () => {
       const { search, sort } = filter
       AppActions.getFeatures(
         projectId,
-        environmentId,
+        environmentKey,
         true,
         search,
         sort,
@@ -144,7 +141,7 @@ const UserPage: FC = () => {
         getServerFilter(filter),
       )
     },
-    [environmentId, projectId, filter],
+    [environmentKey, projectId, filter],
   )
 
   return (

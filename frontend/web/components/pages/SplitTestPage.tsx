@@ -2,7 +2,6 @@ import React, { FC, useState } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import { SplitTestResult } from 'common/types/responses'
-import { useRouteMatch } from 'react-router-dom'
 import PageTitle from 'components/PageTitle'
 import ConversionEventSelect from 'components/ConversionEventSelect'
 import InfoMessage from 'components/InfoMessage'
@@ -14,18 +13,13 @@ import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronForward } from 'ionicons/icons'
 import Confidence from 'components/Confidence'
 import FeatureValue from 'components/feature-summary/FeatureValue'
-
-interface RouteParams {
-  environmentId: string
-  projectId: string
-}
+import { useRouteContext } from 'components/providers/RouteContext'
 
 const widths = [200, 200, 150]
 const innerWidths = [200, 150, 150]
 
 const SplitTestPage: FC = () => {
-  const match = useRouteMatch<RouteParams>()
-  const environmentId = match?.params?.environmentId
+  const { environmentKey } = useRouteContext()
   const { searchInput, setSearchInput } = useDebouncedSearch()
   const [conversion_event_type_id, setConversionEvent] = useState<
     number | null
@@ -117,7 +111,7 @@ const SplitTestPage: FC = () => {
         Conversion Event{' '}
         <div className={'ms-2'} style={{ width: 200 }}>
           <ConversionEventSelect
-            environmentKey={environmentId}
+            environmentKey={environmentKey}
             onChange={setConversionEvent}
           />
         </div>
