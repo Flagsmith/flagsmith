@@ -155,13 +155,19 @@ const Permission: FC<PermissionType> = ({
   const finalPermission = hasPermission || AccountStore.isAdmin()
 
   if (typeof children === 'function') {
-    return (
-      <>
-        {children({
-          isLoading,
-          permission: finalPermission,
-        }) || null}
-      </>
+    const renderedChildren = children({
+      isLoading,
+      permission: finalPermission,
+    })
+
+    if (finalPermission || !showTooltip) {
+      return <>{renderedChildren || null}</>
+    }
+
+    return Utils.renderWithPermission(
+      finalPermission,
+      permissionName || Constants.projectPermissions(permission),
+      renderedChildren,
     )
   }
 
