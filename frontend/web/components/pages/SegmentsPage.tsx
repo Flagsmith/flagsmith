@@ -4,7 +4,6 @@ import { sortBy } from 'lodash'
 
 import Constants from 'common/constants'
 import useDebouncedSearch from 'common/useDebouncedSearch'
-import { Environment } from 'common/types/responses'
 import {
   useDeleteSegmentMutation,
   useGetSegmentsQuery,
@@ -25,15 +24,14 @@ import InfoMessage from 'components/InfoMessage'
 
 import CodeHelp from 'components/CodeHelp'
 import SegmentRow from 'components/segments/SegmentRow/SegmentRow'
+import { useRouteContext } from 'components/providers/RouteContext'
 
 const SegmentsPage: FC = () => {
   const history = useHistory()
   const route = useRouteMatch<{ environmentId: string; projectId: string }>()
 
   const { projectId } = route.params
-  const environmentId = (
-    ProjectStore.getEnvironment() as unknown as Environment | undefined
-  )?.api_key
+  const { environmentKey } = useRouteContext()
   const params = Utils.fromParam()
   const id = params.id
   const { search, searchInput, setSearchInput } = useDebouncedSearch('')
@@ -48,9 +46,9 @@ const SegmentsPage: FC = () => {
     } else if (!id && typeof closeModal !== 'undefined') {
       closeModal()
     }
-  }, [id])
+  }, [id, history, manageSegmentsPermission])
 
-  const { data, error, isLoading, refetch } = useGetSegmentsQuery({
+  const { data, error, isLoading } = useGetSegmentsQuery({
     include_feature_specific: showFeatureSpecific,
     page,
     page_size: 100,
@@ -90,7 +88,7 @@ const SegmentsPage: FC = () => {
         onComplete={() => {
           closeModal()
         }}
-        environmentId={environmentId!}
+        environmentId={environmentKey!}
         projectId={projectId}
       />,
       'side-modal create-new-segment-modal',
