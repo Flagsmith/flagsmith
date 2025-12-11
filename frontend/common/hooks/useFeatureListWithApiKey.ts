@@ -23,13 +23,11 @@ export function useFeatureListWithApiKey(
     if (!environmentApiKey || !projectId || !getEnvironmentIdFromKey) {
       return null
     }
-    return buildApiFilterParams(
-      filters,
-      page,
-      environmentApiKey,
-      projectId,
-      getEnvironmentIdFromKey,
-    )
+    const environmentId = getEnvironmentIdFromKey(environmentApiKey)
+    if (!environmentId) {
+      return null
+    }
+    return buildApiFilterParams(filters, page, environmentId, projectId)
   }, [filters, page, environmentApiKey, projectId, getEnvironmentIdFromKey])
 
   return useGetFeatureListQuery(apiParams ?? skipToken, {

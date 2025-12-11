@@ -71,7 +71,7 @@ export const removeIdentity = (
 }
 
 const UsersPage: FC<{ props: any }> = (props) => {
-  const { projectId } = useRouteContext()
+  const { environmentKey, projectId } = useRouteContext()
   const match = useRouteMatch<RouteParams>()
   const [page, setPage] = useState<{
     number: number
@@ -83,13 +83,11 @@ const UsersPage: FC<{ props: any }> = (props) => {
   const isEdge = Utils.getIsEdge()
   const showAliases = isEdge
 
-  const [searchType, setSearchType] = useState<'id' | 'alias'>(
-    showAliases
-      ? localStorage.getItem('identity_search_type') === 'alias'
-        ? 'alias'
-        : 'id' || 'id'
-      : 'id',
-  )
+  const [searchType, setSearchType] = useState<'id' | 'alias'>(() => {
+    if (!showAliases) return 'id'
+    const stored = localStorage.getItem('identity_search_type')
+    return stored === 'alias' ? 'alias' : 'id'
+  })
   useEffect(() => {
     localStorage.setItem('identity_search_type', searchType)
   }, [searchType])
@@ -247,9 +245,9 @@ const UsersPage: FC<{ props: any }> = (props) => {
                   data-test={`user-item-${index}`}
                 >
                   <Link
-                    to={`/project/${projectId}/environment/${
-                      props.match.params.environmentId
-                    }/users/${encodeURIComponent(identifier)}/${id}`}
+                    to={`/project/${projectId}/environment/${props.environmentKey!}/users/${encodeURIComponent(
+                      identifier,
+                    )}/${id}`}
                     className='flex-row flex flex-1 table-column'
                   >
                     <div>
@@ -345,7 +343,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
                 showInitially
                 title='Creating identities and getting their feature settings'
                 snippets={Constants.codeHelp.CREATE_USER(
-                  match.params.environmentId,
+                  environmentKey!,
                   identities?.results?.[0]?.identifier,
                 )}
               />

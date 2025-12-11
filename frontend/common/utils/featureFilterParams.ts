@@ -101,18 +101,13 @@ export function buildUrlParams(
 
 /**
  * Converts filter state to RTK Query API parameters.
- *
- * TODO: getEnvironmentIdFromKey callback is temporary
- * Once RouteContext provides environmentID and environmentApiKey, this can accept the numeric environmentID directly.
  */
 export function buildApiFilterParams(
   filters: FilterState,
   page: number,
-  environmentApiKey: string,
+  environmentId: number,
   projectId: number,
-  getEnvironmentIdFromKey: EnvironmentIdResolver,
 ) {
-  const environmentId = getEnvironmentIdFromKey(environmentApiKey)
   if (!environmentId) {
     return null
   }

@@ -1,14 +1,12 @@
 import React, { FC } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useRouteMatch } from 'react-router-dom'
-import ProjectStore from 'common/stores/project-store'
 import {
   useGetFeatureVersionQuery,
   useGetFeatureVersionsQuery,
 } from 'common/services/useFeatureVersion'
 import { useGetUsersQuery } from 'common/services/useUser'
 import AccountStore from 'common/stores/account-store'
-import { Environment } from 'common/types/responses'
 import PageTitle from 'components/PageTitle'
 import FeatureVersion from 'components/FeatureVersion'
 import moment from 'moment'
@@ -27,13 +25,13 @@ interface RouteParams {
 
 const FeatureHistoryPage: FC = () => {
   const match = useRouteMatch<RouteParams>()
-  const { projectId } = useRouteContext()
+  const {
+    environmentId: numericEnvironmentId,
+    environmentKey,
+    projectId,
+  } = useRouteContext()
 
-  const env: Environment | undefined = ProjectStore.getEnvironment(
-    match.params.environmentId,
-  ) as any
-  // @ts-ignore
-  const environmentId = `${env?.id}`
+  const environmentId = `${numericEnvironmentId}`
   const uuid = match.params.id
   const { data: users } = useGetUsersQuery({
     organisationId: AccountStore.getOrganisation().id,
@@ -70,15 +68,15 @@ const FeatureHistoryPage: FC = () => {
         items={[
           {
             title: 'Features',
-            url: `/project/${projectId?.toString() || ''}/environment/${
-              match.params.environmentId
-            }/features`,
+            url: `/project/${
+              projectId?.toString() || ''
+            }/environment/${environmentKey!}/features`,
           },
           {
             title: feature?.name,
-            url: `/project/${projectId?.toString() || ''}/environment/${
-              match.params.environmentId
-            }/features?feature=${featureId}&tab=history`,
+            url: `/project/${
+              projectId?.toString() || ''
+            }/environment/${environmentKey!}/features?feature=${featureId}&tab=history`,
           },
         ]}
         currentPage={'History'}
