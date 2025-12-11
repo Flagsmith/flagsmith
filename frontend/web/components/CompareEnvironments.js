@@ -25,7 +25,7 @@ class CompareEnvironments extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      environmentLeft: props.environmentId,
+      environmentLeft: props.environmentKey,
       environmentRight: '',
       isLoading: true,
       projectFlagsLeft: null,

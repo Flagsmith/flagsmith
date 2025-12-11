@@ -2,8 +2,6 @@ import React, { FC } from 'react'
 import { useGetSegmentQuery } from 'common/services/useSegment'
 import { useHistory, useRouteMatch } from 'react-router-dom'
 import CreateSegment from 'components/modals/CreateSegment'
-import ProjectStore from 'common/stores/project-store'
-import { Environment } from 'common/types/responses'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import Breadcrumb from 'components/Breadcrumb'
 import Button from 'components/base/forms/Button'
@@ -12,16 +10,15 @@ import Icon from 'components/Icon'
 import { handleRemoveSegment } from 'components/modals/ConfirmRemoveSegment'
 import SegmentSelect from 'components/SegmentSelect'
 import Utils from 'common/utils/utils'
+import { useRouteContext } from 'components/providers/RouteContext'
 
 type SegmentPageType = {}
 
 const SegmentPage: FC<SegmentPageType> = ({}) => {
   const route = useRouteMatch<{ id: string; projectId: string }>()
   const { id, projectId } = route.params
+  const { environmentKey } = useRouteContext()
   const history = useHistory()
-  const environmentId = (
-    ProjectStore.getEnvironment() as unknown as Environment | undefined
-  )?.api_key
   const { data: segment } = useGetSegmentQuery({ id, projectId })
 
   const { permission: manageSegmentsPermission } = useHasPermission({
@@ -83,7 +80,7 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
           segment={parseInt(id)}
           readOnly={!manageSegmentsPermission}
           projectId={projectId}
-          environmentId={environmentId!}
+          environmentId={environmentKey!}
         />
       </div>
     </div>

@@ -5,16 +5,10 @@ import Icon from './Icon'
 import ServerSideSDKKeys from './ServerSideSDKKeys'
 import PageTitle from './PageTitle'
 import Utils from 'common/utils/utils'
-import { useRouteMatch } from 'react-router-dom'
-
-interface RouteParams {
-  environmentId: string
-  projectId: string
-}
+import { useRouteContext } from './providers/RouteContext'
 
 const SDKKeysPage: FC = () => {
-  const match = useRouteMatch<RouteParams>()
-  const environmentId = match?.params?.environmentId
+  const { environmentKey } = useRouteContext()
 
   return (
     <div
@@ -37,7 +31,7 @@ const SDKKeysPage: FC = () => {
         <Row>
           <Flex>
             <Input
-              value={environmentId}
+              value={environmentKey}
               inputClassName='input input--wide'
               type='text'
               title={<h3>Client-side Environment Key</h3>}
@@ -46,7 +40,7 @@ const SDKKeysPage: FC = () => {
           </Flex>
           <Button
             onClick={() => {
-              Utils.copyToClipboard(environmentId)
+              Utils.copyToClipboard(environmentKey)
             }}
             className='ml-2 btn-with-icon'
           >
@@ -55,7 +49,7 @@ const SDKKeysPage: FC = () => {
         </Row>
       </div>
       <hr className='py-0 my-4' />
-      <ServerSideSDKKeys environmentId={environmentId} />
+      <ServerSideSDKKeys environmentId={environmentKey} />
     </div>
   )
 }

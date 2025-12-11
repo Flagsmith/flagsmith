@@ -19,7 +19,7 @@ import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import { getRoleEnvironmentPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
-import { Link, useHistory, useRouteMatch } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
@@ -66,11 +66,7 @@ const EnvironmentSettingsPage: React.FC = () => {
 
   const store = getStore()
   const history = useHistory()
-  const match = useRouteMatch<{
-    projectId: string
-    environmentId: string
-  }>()
-  const { projectId } = useRouteContext()
+  const { environmentKey, projectId } = useRouteContext()
   const [currentEnv, setCurrentEnv] = useState<Environment | null>(null)
   const [roles, setRoles] = useState<Role[]>([])
   const [environmentContentType, setEnvironmentContentType] =
@@ -79,14 +75,14 @@ const EnvironmentSettingsPage: React.FC = () => {
   const env = useMemo(() => {
     return (
       (ProjectStore?.getEnvs() as Environment[] | null | undefined)?.find(
-        (env: Environment) => env.api_key === match.params.environmentId,
+        (env: Environment) => env.api_key === environmentKey,
       ) ?? null
     )
-  }, [match.params.environmentId])
+  }, [environmentKey])
 
   const { data: webhooks, isLoading: webhooksLoading } = useGetWebhooksQuery(
-    { environmentId: match.params.environmentId },
-    { skip: !match.params.environmentId },
+    { environmentId: environmentKey! },
+    { skip: !environmentKey },
   )
 
   const onDiscard = () => {
@@ -168,7 +164,7 @@ const EnvironmentSettingsPage: React.FC = () => {
 
   useEffect(() => {
     getEnvironment()
-  }, [match.params.environmentId, getEnvironment])
+  }, [environmentKey, getEnvironment])
 
   useEffect(() => {
     API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
@@ -290,12 +286,12 @@ const EnvironmentSettingsPage: React.FC = () => {
     openModal(
       'New Webhook',
       <CreateWebhookModal
-        environmentId={match.params.environmentId}
+        environmentId={environmentKey!}
         projectId={projectId}
         save={(webhook: Webhook) =>
           createWebhook({
             ...webhook,
-            environmentId: match.params.environmentId,
+            environmentId: environmentKey!,
           })
         }
       />,
@@ -309,10 +305,10 @@ const EnvironmentSettingsPage: React.FC = () => {
       <CreateWebhookModal
         webhook={webhook}
         isEdit
-        environmentId={match.params.environmentId}
+        environmentId={environmentKey!}
         projectId={projectId}
         save={(webhook: Webhook) =>
-          saveWebhook({ ...webhook, environmentId: match.params.environmentId })
+          saveWebhook({ ...webhook, environmentId: environmentKey! })
         }
       />,
       'side-modal',
@@ -323,12 +319,12 @@ const EnvironmentSettingsPage: React.FC = () => {
     openModal(
       'Remove Webhook',
       <ConfirmRemoveWebhook
-        environmentId={match.params.environmentId}
+        environmentId={environmentKey!}
         projectId={projectId}
         url={webhook.url}
         cb={() =>
           deleteWebhook({
-            environmentId: match.params.environmentId,
+            environmentId: environmentKey!,
             id: webhook.id,
           })
         }
@@ -396,12 +392,12 @@ const EnvironmentSettingsPage: React.FC = () => {
       >
         {({ deleteEnv, isLoading, isSaving, project }) => {
           const env = _.find(project?.environments, {
-            api_key: match.params.environmentId,
+            api_key: environmentKey!,
           })
           if (
             (env &&
               typeof env?.minimum_change_request_approvals === 'undefined') ||
-            env?.api_key !== match.params.environmentId
+            env?.api_key !== environmentKey!
           ) {
             setTimeout(() => {
               const minimumChangeRequestApprovals = Utils.changeRequestsEnabled(
@@ -624,7 +620,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                               const envToRemove = _.find(
                                 project?.environments,
                                 {
-                                  api_key: match.params.environmentId,
+                                  api_key: environmentKey!,
                                 },
                               )
                               if (!envToRemove) return
@@ -799,7 +795,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                         parentId={projectId}
                         parentLevel='project'
                         parentSettingsLink={`/project/${projectId}/settings`}
-                        id={match.params.environmentId}
+                        id={environmentKey!}
                         envId={env?.id}
                         level='environment'
                         roleTabTitle='Environment Permissions'

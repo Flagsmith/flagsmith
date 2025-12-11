@@ -1,13 +1,17 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
 import classNames from 'classnames'
+import { skipToken } from '@reduxjs/toolkit/query'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import AppActions from 'common/dispatcher/app-actions'
 import FeatureListStore from 'common/stores/feature-list-store'
-import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
+import {
+  FEATURES_PAGE_SIZE,
+  useGetFeatureListQuery,
+} from 'common/services/useProjectFlag'
 import { useRouteContext } from 'components/providers/RouteContext'
 import { usePageTracking } from 'common/hooks/usePageTracking'
 import FeatureRow from 'components/feature-summary/FeatureRow'
@@ -25,7 +29,7 @@ import { useFeatureFilters } from './hooks/useFeatureFilters'
 import { useRemoveFeatureWithToast } from './hooks/useRemoveFeatureWithToast'
 import { useToggleFeatureWithToast } from './hooks/useToggleFeatureWithToast'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
-import { useFeatureListWithApiKey } from 'common/hooks/useFeatureListWithApiKey'
+import { buildApiFilterParams } from 'common/utils/featureFilterParams'
 import type { Pagination } from './types'
 import type { ProjectFlag, FeatureState } from 'common/types/responses'
 
@@ -51,6 +55,7 @@ const FeaturesPageComponent: FC = () => {
   const history = useHistory()
   const routeContext = useRouteContext()
   const projectId = routeContext.projectId!
+  const environmentKey = routeContext.environmentKey!
   const environmentId = routeContext.environmentId!
   const {
     clearFilters,
@@ -62,8 +67,16 @@ const FeaturesPageComponent: FC = () => {
   } = useFeatureFilters(history)
 
   const { getEnvironment, project } = useProjectEnvironments(projectId)
+
+  const apiParams = useMemo(() => {
+    if (!environmentId || !projectId) return null
+    return buildApiFilterParams(filters, page, environmentId, projectId)
+  }, [filters, page, environmentId, projectId])
+
   const { data, error, isFetching, isLoading, refetch } =
-    useFeatureListWithApiKey(filters, page, environmentId, projectId)
+    useGetFeatureListQuery(apiParams ?? skipToken, {
+      refetchOnMountOrArgChange: true,
+    })
 
   // Backward compatibility: Populate ProjectStore for legacy components (CreateFlag)
   // TODO: Remove this when CreateFlag is migrated to RTK Query
@@ -89,7 +102,7 @@ const FeaturesPageComponent: FC = () => {
   }, [refetch])
 
   const maxFeaturesAllowed = project?.max_features_allowed ?? null
-  const currentEnvironment = getEnvironment(environmentId)
+  const currentEnvironment = getEnvironment(environmentKey)
   const minimumChangeRequestApprovals =
     currentEnvironment?.minimum_change_request_approvals
 
@@ -105,9 +118,9 @@ const FeaturesPageComponent: FC = () => {
 
   const toggleFlag = useCallback(
     async (flag: ProjectFlag, environmentFlag: FeatureState | undefined) => {
-      await toggleFeature(flag, environmentFlag, environmentId)
+      await toggleFeature(flag, environmentFlag, environmentKey)
     },
-    [toggleFeature, environmentId],
+    [toggleFeature, environmentKey],
   )
 
   const projectFlags = useMemo(() => data?.results ?? [], [data?.results])
@@ -125,7 +138,7 @@ const FeaturesPageComponent: FC = () => {
 
   usePageTracking({
     context: {
-      environmentId,
+      environmentId: environmentKey,
       organisationId: routeContext.organisationId,
       projectId,
     },
@@ -137,7 +150,7 @@ const FeaturesPageComponent: FC = () => {
     openModal(
       'New Feature',
       <CreateFlagModal
-        environmentId={environmentId}
+        environmentId={environmentKey}
         history={history}
         projectId={projectId}
       />,
@@ -200,13 +213,13 @@ const FeaturesPageComponent: FC = () => {
           permission={Utils.getManageFeaturePermission(
             Utils.changeRequestsEnabled(minimumChangeRequestApprovals),
           )}
-          id={environmentId}
+          id={environmentKey}
         >
           {({ permission }) => (
             <FeatureRow
               environmentFlags={environmentFlags}
               permission={permission}
-              environmentId={environmentId}
+              environmentId={environmentKey}
               projectId={projectId}
               index={i}
               toggleFlag={toggleFlag}
@@ -219,7 +232,7 @@ const FeaturesPageComponent: FC = () => {
     },
     [
       environmentFlags,
-      environmentId,
+      environmentKey,
       projectId,
       minimumChangeRequestApprovals,
       toggleFlag,
@@ -272,7 +285,7 @@ const FeaturesPageComponent: FC = () => {
       >
         {({ permission: perm }) => (
           <FeaturesEmptyState
-            environmentId={environmentId}
+            environmentId={environmentKey}
             projectId={projectId}
             onCreateFeature={openNewFlagModal}
             canCreateFeature={perm}
@@ -323,7 +336,7 @@ const FeaturesPageComponent: FC = () => {
 
             <FeaturesSDKIntegration
               projectId={projectId}
-              environmentId={environmentId}
+              environmentId={environmentKey}
             />
           </>
         )}

@@ -35,7 +35,7 @@ class ComparePage extends Component {
             <div className='mt-4'>
               <CompareEnvironments
                 projectId={this.projectId}
-                environmentId={this.props.match.params.environmentId}
+                environmentKey={this.props.match.params.environmentId}
               />
             </div>
           </TabItem>
@@ -47,7 +47,7 @@ class ComparePage extends Component {
           <TabItem tabLabel='Identities'>
             <div className='mt-4'>
               <CompareIdentities
-                environmentId={this.props.match.params.environmentId}
+                environmentKey={this.props.match.params.environmentId}
                 projectId={this.projectId}
               />
             </div>

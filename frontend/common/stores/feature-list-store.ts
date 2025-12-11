@@ -65,7 +65,7 @@ const convertSegmentOverrideToFeatureState = (
   } as Partial<FeatureState>
 }
 const controller = {
-  createFlag(projectId, environmentId, flag) {
+  createFlag(projectId, environmentKey, flag) {
     store.saving()
     API.trackEvent(Constants.events.CREATE_FEATURE)
     if (
@@ -128,7 +128,7 @@ const controller = {
             `${
               Project.api
             }projects/${projectId}/features/?environment=${ProjectStore.getEnvironmentIdFromKey(
-              environmentId,
+              environmentKey,
             )}`,
           ),
         ]).then(([features]) => {
@@ -634,13 +634,16 @@ const controller = {
                           (v.multivariate_feature_option || v.id) ===
                           (m.multivariate_feature_option || m.id),
                       )
-                      return {
-                        ...v,
-                        percentage_allocation: matching
-                          ? typeof matching.percentage_allocation === 'number'
+                      let percentage_allocation = v.percentage_allocation
+                      if (matching) {
+                        percentage_allocation =
+                          typeof matching.percentage_allocation === 'number'
                             ? matching.percentage_allocation
                             : matching.default_percentage_allocation
-                          : v.percentage_allocation,
+                      }
+                      return {
+                        ...v,
+                        percentage_allocation,
                       }
                     },
                   )
@@ -705,7 +708,7 @@ const controller = {
   },
   editVersionedFeatureState: (
     projectId,
-    environmentId,
+    environmentKey,
     flag,
     projectFlag,
     environmentFlag,
@@ -722,7 +725,7 @@ const controller = {
       )
       prom = ProjectStore.getEnvironmentIdFromKeyAsync(
         projectId,
-        environmentId,
+        environmentKey,
       ).then((res) => {
         return createAndSetFeatureVersion(getStore(), {
           environmentId: res,
@@ -736,12 +739,12 @@ const controller = {
           getStore().dispatch(
             projectFlagService.util.invalidateTags(['ProjectFlag']),
           )
-          if(!store.model) {
+          if (!store.model) {
             return
           }
           // Fetch and update the latest environment feature state
           return getVersionFeatureState(getStore(), {
-            environmentId: ProjectStore.getEnvironmentIdFromKey(environmentId),
+            environmentId: ProjectStore.getEnvironmentIdFromKey(environmentKey),
             featureId: projectFlag.id,
             sha: version.data.version_sha,
           }).then((res) => {
@@ -759,7 +762,7 @@ const controller = {
       // Create a new version with feature state / multivariate options
       prom = data
         .get(
-          `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
+          `${Project.api}environments/${environmentKey}/featurestates/${environmentFlag.id}/`,
         )
         .then((environmentFeatureStates) => {
           // Match all multivariate options to stored ids
@@ -782,7 +785,7 @@ const controller = {
 
           return ProjectStore.getEnvironmentIdFromKeyAsync(
             projectId,
-            environmentId,
+            environmentKey,
           ).then((res) => {
             const data = Object.assign({}, environmentFlag, {
               enabled: flag.default_enabled,
@@ -830,11 +833,11 @@ const controller = {
         API.ajaxHandler(store, e)
       })
   },
-  getFeatures: (projectId, environmentId, force, page, filter, pageSize) => {
-    if (!store.model || store.envId !== environmentId || force) {
-      store.envId = environmentId
+  getFeatures: (projectId, environmentKey, force, page, filter, pageSize) => {
+    if (!store.model || store.envId !== environmentKey || force) {
+      store.envId = environmentKey
       store.projectId = projectId
-      store.environmentId = environmentId
+      store.environmentKey = environmentKey
       store.page = page
       store.filter = filter
       let filterUrl = ''
@@ -843,7 +846,7 @@ const controller = {
         filterUrl = `&${Utils.toParam(store.filter)}`
       }
 
-      ProjectStore.getEnvironmentIdFromKeyAsync(projectId, environmentId).then(
+      ProjectStore.getEnvironmentIdFromKeyAsync(projectId, environmentKey).then(
         (environment) => {
           let featuresEndpoint =
             typeof page === 'string'
