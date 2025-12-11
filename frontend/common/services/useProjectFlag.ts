@@ -137,6 +137,7 @@ export const projectFlagService = service
         invalidatesTags: [
           { id: 'LIST', type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
+          { id: 'METRICS', type: 'Environment' },
         ],
         query: ({ flag_id, project_id }) => ({
           method: 'DELETE',
