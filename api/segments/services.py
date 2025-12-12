@@ -1,4 +1,5 @@
 import typing
+import uuid
 
 from django.db import models, transaction
 from django.utils import timezone
@@ -76,3 +77,84 @@ def delete_segment(
             now.isoformat(),
         )
     )
+
+
+def copy_segment_rules_and_conditions(
+    target_segment: "Segment",
+    source_segment: "Segment",
+) -> None:
+    """
+    Copy rules and conditions from source to target segment using bulk operations.
+
+    If target has existing rules, they are hard-deleted first.
+
+    """
+    from segments.models import Condition, SegmentRule
+
+    assert transaction.get_connection().in_atomic_block, "Must run in a transaction"
+
+    SegmentRule.objects.filter(segment=target_segment).delete()
+
+    top_level_rules = list(SegmentRule.objects.filter(segment=source_segment))
+    if not top_level_rules:
+        return
+
+    rule_id_to_cloned_rule: dict[int, SegmentRule] = {}
+
+    cloned_top_rules = [
+        SegmentRule(
+            uuid=uuid.uuid4(),
+            segment=target_segment,
+            rule=None,
+            type=rule.type,
+        )
+        for rule in top_level_rules
+    ]
+    SegmentRule.objects.bulk_create(cloned_top_rules)
+
+    for rule, cloned in zip(top_level_rules, cloned_top_rules):
+        rule_id_to_cloned_rule[rule.id] = cloned
+
+    current_level_rule_ids = [r.id for r in top_level_rules]
+    while current_level_rule_ids:
+        nested_rules = list(
+            SegmentRule.objects.filter(rule_id__in=current_level_rule_ids)
+        )
+        cloned_nested = []
+        for rule in nested_rules:
+            assert rule.rule_id is not None
+            cloned_nested.append(
+                SegmentRule(
+                    uuid=uuid.uuid4(),
+                    segment=None,
+                    rule=rule_id_to_cloned_rule[rule.rule_id],
+                    type=rule.type,
+                )
+            )
+
+        if cloned_nested:
+            SegmentRule.objects.bulk_create(cloned_nested)
+
+        for rule, cloned in zip(nested_rules, cloned_nested):
+            rule_id_to_cloned_rule[rule.id] = cloned
+
+        current_level_rule_ids = [r.id for r in nested_rules]
+
+    source_conditions = list(
+        Condition.objects.filter(rule_id__in=rule_id_to_cloned_rule.keys())
+    )
+    if source_conditions:
+        Condition.objects.bulk_create(
+            [
+                Condition(
+                    uuid=uuid.uuid4(),
+                    rule=rule_id_to_cloned_rule[c.rule_id],
+                    operator=c.operator,
+                    property=c.property,
+                    value=c.value,
+                    description=c.description,
+                    created_with_segment=True,
+                )
+                for c in source_conditions
+            ]
+        )

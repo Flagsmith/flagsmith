@@ -265,3 +265,85 @@ def test_delete_segment_cascades_to_feature_states(
 
     # Then
     assert not FeatureState.objects.filter(id=feature_state_id).exists()
+
+
+def test_copy_segment_rules_and_conditions_copies_rules(project: Project) -> None:
+    # Given
+    source = _create_segment_with_nested_rules(
+        project, num_rules=2, num_nested=2, num_conditions=3
+    )
+    target = Segment.objects.create(name="Target Segment", project=project)
+
+    # When
+    target.copy_rules_and_conditions_from(source)
+
+    # Then
+    source_rule_count = SegmentRule.objects.filter(segment=source).count()
+    target_rule_count = SegmentRule.objects.filter(segment=target).count()
+    assert target_rule_count == source_rule_count
+
+    source_condition_count = Condition.objects.filter(
+        rule__rule__rule__segment=source
+    ).count()
+    target_condition_count = Condition.objects.filter(
+        rule__rule__rule__segment=target
+    ).count()
+    assert target_condition_count == source_condition_count
+
+
+def test_copy_segment_rules_and_conditions_replaces_existing_rules(
+    project: Project,
+) -> None:
+    # Given
+    source = _create_segment_with_nested_rules(
+        project, num_rules=3, num_nested=2, num_conditions=2
+    )
+    target = _create_segment_with_nested_rules(
+        project, num_rules=5, num_nested=3, num_conditions=4
+    )
+    target.name = "Target Segment"
+    target.save()
+
+    original_target_rule_ids = list(
+        SegmentRule.objects.filter(segment=target).values_list("id", flat=True)
+    )
+
+    # When
+    target.copy_rules_and_conditions_from(source)
+
+    # Then - old rules should be hard deleted
+    for rule_id in original_target_rule_ids:
+        assert not SegmentRule.objects.filter(id=rule_id).exists()
+
+    # And new rules should match source
+    source_rule_count = SegmentRule.objects.filter(segment=source).count()
+    target_rule_count = SegmentRule.objects.filter(segment=target).count()
+    assert target_rule_count == source_rule_count
+
+
+def test_copy_segment_rules_and_conditions_query_count_is_constant(
+    project: Project,
+) -> None:
+    # Given
+    small_source = _create_segment_with_nested_rules(
+        project, num_rules=2, num_nested=2, num_conditions=2
+    )
+    large_source = _create_segment_with_nested_rules(
+        project, num_rules=10, num_nested=5, num_conditions=5
+    )
+    small_target = Segment.objects.create(name="Small Target", project=project)
+    large_target = Segment.objects.create(name="Large Target", project=project)
+
+    # When
+    reset_queries()
+    with CaptureQueriesContext(connection) as ctx_small:
+        small_target.copy_rules_and_conditions_from(small_source)
+    small_query_count = len(ctx_small.captured_queries)
+
+    reset_queries()
+    with CaptureQueriesContext(connection) as ctx_large:
+        large_target.copy_rules_and_conditions_from(large_source)
+    large_query_count = len(ctx_large.captured_queries)
+
+    # Then - query count should be the same (O(depth) not O(n))
+    assert small_query_count == large_query_count == 10
