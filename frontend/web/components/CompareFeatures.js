@@ -90,6 +90,19 @@ class CompareFeatures extends Component {
           <div>
             <FeatureListProvider onSave={this.onSave} onError={this.onError}>
               {({}, { removeFlag, toggleFlag }) => {
+                // Adapt old FeatureListProvider signatures to new FeatureRow signatures
+                const adaptedToggleFlag =
+                  (environmentId) => (projectFlag, environmentFlag) => {
+                    toggleFlag(
+                      this.props.projectId,
+                      environmentId,
+                      projectFlag,
+                      environmentFlag,
+                    )
+                  }
+                const adaptedRemoveFlag = (projectFlag) => {
+                  removeFlag(this.props.projectId, projectFlag)
+                }
                 const renderRow = (data, i) => {
                   const flagValues = this.state.environmentResults[i]
                   const compare =
@@ -141,8 +154,8 @@ class CompareFeatures extends Component {
                             history={this.props.history}
                             index={i}
                             canDelete={permission}
-                            toggleFlag={toggleFlag}
-                            removeFlag={removeFlag}
+                            toggleFlag={adaptedToggleFlag(data.api_key)}
+                            removeFlag={adaptedRemoveFlag}
                             projectFlag={this.state.flag}
                             onCloseEditModal={() => {
                               this.props.history.replace({
