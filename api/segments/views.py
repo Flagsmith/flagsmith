@@ -11,6 +11,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
+from core.dataclasses import AuthorData
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -28,6 +29,7 @@ from .serializers import (
     SegmentListQuerySerializer,
     SegmentSerializer,
 )
+from .services import delete_segment
 
 logger = logging.getLogger()
 
@@ -121,6 +123,12 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        segment = self.get_object()
+        author = AuthorData.from_request(request)
+        delete_segment(segment, author=author)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @swagger_auto_schema(
         request_body=CloneSegmentSerializer,

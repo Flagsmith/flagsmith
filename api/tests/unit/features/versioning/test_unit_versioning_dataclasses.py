@@ -2,7 +2,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from features.versioning.dataclasses import AuthorData, Conflict
+from core.dataclasses import AuthorData
+from features.versioning.dataclasses import Conflict
 
 
 @pytest.mark.parametrize("segment_id, expected_result", ((None, True), (1, False)))

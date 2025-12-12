@@ -5,11 +5,11 @@ from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 from rest_framework.exceptions import NotFound
 
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.feature_states.models import FeatureValueType
 from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
 from features.versioning.dataclasses import (
-    AuthorData,
     FlagChangeSet,
     FlagChangeSetV2,
 )

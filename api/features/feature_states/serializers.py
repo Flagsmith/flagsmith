@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.versioning.dataclasses import (
-    AuthorData,
     FlagChangeSet,
     FlagChangeSetV2,
     SegmentOverrideChangeSet,
