@@ -1,0 +1,50 @@
+---
+title: Open Source & Self-Hosted - FAQ
+sidebar_label: Open Source & Self-Hosted
+sidebar_position: 2
+---
+
+import Link from '@docusaurus/Link';
+
+<Link to="/support/faq">← Back to FAQ</Link>
+
+
+### Does the Open Source version of Flagsmith have a limit of requests per month? 
+No. There are no API limits on the self-hosted open-source version.
+
+**Related documentation:** [Self-Hosting & Deployment](/deployment-self-hosting)
+
+
+### Does the Open Source version of Flagsmith have any restrictions? 
+
+Yes. While the majority of the code is BSD 3-Clause, the **Enterprise Edition** (EE) features—such as Role-Based Access Control (RBAC), SAML/SSO, and certain database integrations—are closed source and require a license.
+
+**Related documentation:** [Enterprise Edition](/deployment-self-hosting/enterprise-edition) • [RBAC](/administration-and-security/access-control/rbac)
+
+
+
+### Can the open source version be configured to connect to an LDAP server? 
+
+Not out of the box. While the underlying Django framework supports it, there are no pre-built configurations for LDAP in the open-source version. Authentication integrations like SAML/Okta are Enterprise features.
+
+**Related:** [Does Flagsmith have G Suite or does Flagsmith Support SSO?](/support/faq/account-billing-organisation#does-flagsmith-have-g-suite-or-does-flagsmith-support-sso)
+
+**Related documentation:** [LDAP](/administration-and-security/access-control/ldap) • [SAML](/administration-and-security/access-control/saml)
+
+
+
+### When deploying with Docker, how do I configure SES credentials? 
+
+You configure them using standard AWS environment variables passed to the Docker container: `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
+
+**Related documentation:** [Docker Deployment](/deployment-self-hosting/hosting-guides/docker) • [Environment Variables](/deployment-self-hosting/core-configuration/environment-variables)
+
+
+## Related FAQ Categories
+
+- [Account, Billing & Organisation](/support/faq/account-billing-organisation) - Questions about SSO and authentication
+- [Infrastructure & API](/support/faq/infrastructure-api) - Questions about hosting and infrastructure
+
+<div style={{marginTop: '2rem', textAlign: 'center'}}>
+  <Link to="#top">↑ Back to top</Link>
+</div>

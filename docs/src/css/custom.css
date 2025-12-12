@@ -316,3 +316,37 @@ section > h2 {
     margin-right: auto;
   }
 }
+
+/* FAQ Page Styling */
+.faq-question {
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.faq-question:last-child {
+  border-bottom: none;
+}
+
+.faq-question h3 {
+  margin-bottom: 0.75rem;
+  color: var(--ifm-heading-color);
+  font-size: 1.15rem;
+}
+
+.faq-question h3::before {
+  content: "Q: ";
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.faq-answer {
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.7;
+  margin-top: 0.75rem;
+}
+
+[data-theme='dark'] .faq-question {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}

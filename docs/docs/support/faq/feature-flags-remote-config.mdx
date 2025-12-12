@@ -1,0 +1,97 @@
+---
+title: Feature Flags & Remote Config - FAQ
+sidebar_label: Feature Flags & Remote Config
+sidebar_position: 4
+---
+
+import Link from '@docusaurus/Link';
+
+<Link to="/support/faq">← Back to FAQ</Link>
+
+
+### Is it possible to have a calendar based release using Flagsmith?
+
+Yes, but only on Scale-Up and Enterprise plans. You can use the **Change Requests** feature to schedule a flag change for a specific date and time.
+
+**Related documentation:** [Change Requests](/administration-and-security/governance-and-compliance/change-requests) • [Scheduled Flags](/managing-flags/scheduled-flags)
+
+
+### Is it possible to create two keys in one environment and have different permissions?
+
+Yes, effectively. You have **Client-side Environment Keys** (read-only, public) and **Server-side SDK Keys** (can manage identities/traits, private).
+
+**Related documentation:** [Core Management](/managing-flags/core-management)
+
+
+### Is it possible to set a flag that has complete precedent over all users & segments?
+
+No. You cannot force a flag to "lock" its state ignoring all segments without removing the segment overrides or creating a new "super-segment" at the top of the priority list.
+
+**Related:** [What happens if I have the same user that is attached to two segments and have an opposite config on the same feature?](/support/faq/segments-targeting#what-happens-if-i-have-the-same-user-that-is-attached-to-two-segments-and-have-an-opposite-config-on-the-same-feature)
+
+**Related documentation:** [Segments](/flagsmith-concepts/segments)
+
+
+### Is it possible to clone a flag?
+
+No. Flagsmith does not currently support cloning flags or creating flag templates.
+
+
+
+### Can I bulk change flags?
+
+Yes, but **only via the API**. There is no UI for bulk changes.
+
+**Related documentation:** [Flagsmith API Overview](/integrating-with-flagsmith/flagsmith-api-overview)
+
+
+
+### Can I copy Features across Environments?
+
+Features are automatically shared/created across all environments within a project. You configure the *values* per environment, but the *feature definition* exists everywhere.
+
+**Related documentation:** [Data Model](/flagsmith-concepts/data-model#environments)
+
+
+### What is the difference between Feature Flag and Remote Config?
+
+A **Feature Flag** is a boolean (on/off). **Remote Config** allows you to return a value (String, Number, boolean, or JSON) along with the feature state.
+
+**Related documentation:** [Core Management](/managing-flags/core-management#remote-config)
+
+
+
+### Can my application send multiple values with remote config?
+
+Yes, typically by storing the values as a JSON object or stringified JSON in the Remote Config value field.
+
+**Related:** [What is the difference between Feature Flag and Remote Config?](#what-is-the-difference-between-feature-flag-and-remote-config)
+
+
+
+### Is there any way to export a config in Flagsmith?
+
+No direct "Export" button exists. You would need to write a script to fetch the config via the API.
+
+**Related:** [Can I bulk change flags?](#can-i-bulk-change-flags)
+
+**Related documentation:** [Flagsmith API Overview](/integrating-with-flagsmith/flagsmith-api-overview)
+
+
+### Can I create Environments using the API? Can I create a flag via an SDK?
+
+**Create Environments API:** Yes.
+
+**Create Flag via SDK:** No. Flags are administrative resources created via the Dashboard or the Admin API, not the Client SDKs.
+
+**Related documentation:** [Flagsmith API Overview](/integrating-with-flagsmith/flagsmith-api-overview)
+
+
+## Related FAQ Categories
+
+- [Segments & Targeting](/support/faq/segments-targeting) - Questions about targeting flags to segments
+- [SDKs & Implementation](/support/faq/sdks-implementation) - Questions about using flags in SDKs
+
+<div style={{marginTop: '2rem', textAlign: 'center'}}>
+  <Link to="#top">↑ Back to top</Link>
+</div>

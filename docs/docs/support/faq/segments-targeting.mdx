@@ -1,0 +1,105 @@
+---
+title: Segments & Targeting - FAQ
+sidebar_label: Segments & Targeting
+sidebar_position: 5
+---
+
+import Link from '@docusaurus/Link';
+
+<Link to="/support/faq">← Back to FAQ</Link>
+
+
+### If a segment is 'off' what does that mean? 
+
+It means that for any user falling into that segment, the feature flag is forced to the **OFF** state (overriding the environment default).
+
+**Related:** [Will a segment override work if the feature is toggled off?](#will-a-segment-override-work-if-the-feature-is-toggled-off)
+
+**Related documentation:** [Segments](/flagsmith-concepts/segments)
+
+
+### Will a segment override work if the feature is toggled off?
+
+Yes. A segment override is evaluated regardless of the global environment on/off switch for that flag.
+
+**Related:** [If a segment is 'off' what does that mean?](#if-a-segment-is-off-what-does-that-mean)
+
+
+### How can I check which users belongs to which Segment? 
+
+You can go to the **Segments** page in the UI and view the "Users" tab to see identities currently in that segment.
+
+**Related:** [Can I view all the users in a segment?](#can-i-view-all-the-users-in-a-segment)
+
+**Related documentation:** [Segments](/flagsmith-concepts/segments)
+
+
+### Can I view all the users in a segment? 
+Yes, via the method mentioned above.
+
+**Related:** [How can I check which users belongs to which Segment?](#how-can-i-check-which-users-belongs-to-which-segment)
+
+
+
+### Does the % split segment feature work for non-identified users? 
+
+No. Percentage splits require a consistent Identity ID to hash against. Anonymous users must be assigned a generated ID for this to work.
+
+**Related:** [How do I identify an anonymous user? What about running AB tests with anonymous users?](/support/faq/user-identity-management#how-do-i-identify-an-anonymous-user-what-about-running-ab-tests-with-anonymous-users)
+
+**Related documentation:** [Segment Rule Operators](/flagsmith-concepts/segments/segment-rule-operators) • [Identities](/flagsmith-concepts/identities)
+
+
+### When using a segment with "% split", would changing the value affect existing users? 
+
+No. The bucket is determined by hashing the Identity ID. As long as the percentage value and the User ID remain the same, the user stays in the same bucket.
+
+**Related:** [Is customer bucketing guaranteed in A/B tests over time to ensure their consistent system experience?](/support/faq/infrastructure-api#is-customer-bucketing-guaranteed-in-ab-tests-over-time-to-ensure-their-consistent-system-experience)
+
+**Related documentation:** [Segment Rule Operators](/flagsmith-concepts/segments/segment-rule-operators)
+
+
+
+### Can I put a Segment inside a Segment?
+
+No. Nested segments are not supported.
+
+**Related:** [Is there a way to combine two conditions with 'AND' for Segments?](#is-there-a-way-to-combine-two-conditions-with-and-for-segments)
+
+
+### Is there a way to combine two conditions with 'AND' for Segments? 
+Yes. You can add multiple conditions within a segment rule, which function as AND logic.
+
+**Related documentation:** [Segment Rule Operators](/flagsmith-concepts/segments/segment-rule-operators)
+
+
+### What happens if I have the same user that is attached to two segments and have an opposite config on the same feature? 
+
+**Related:** [Is it possible to set a flag that has complete precedent over all users & segments?](/support/faq/feature-flags-remote-config#is-it-possible-to-set-a-flag-that-has-complete-precedent-over-all-users--segments)
+
+**Related documentation:** [Segments](/flagsmith-concepts/segments)
+
+
+### Does Flagsmith allow me to incorporate user segmentation data (eg from mixpanel) to deploy flags based on user attributes?
+
+**Via Integrations:** Yes, if you use **Segment.com** (the CDP) or **Amplitude**, Flagsmith has native integrations to sync identities/segments.
+
+**Related documentation:** [Segment Integration](/third-party-integrations/analytics/segment) • [Amplitude Integration](/third-party-integrations/analytics/amplitude)
+
+
+### Is it possible to export the users to a .CSV or something similar? 
+No button exists in the UI. You must retrieve the users via the API to generate a CSV.
+
+**Related:** [How can I check which users belongs to which Segment?](#how-can-i-check-which-users-belongs-to-which-segment)
+
+**Related documentation:** [Flagsmith API Overview](/integrating-with-flagsmith/flagsmith-api-overview)
+
+
+## Related FAQ Categories
+
+- [User & Identity Management](/support/faq/user-identity-management) - Questions about user identification and traits
+- [Feature Flags & Remote Config](/support/faq/feature-flags-remote-config) - Questions about flag configuration and targeting
+
+<div style={{marginTop: '2rem', textAlign: 'center'}}>
+  <Link to="#top">↑ Back to top</Link>
+</div>
