@@ -61,7 +61,11 @@ const FeaturesPageComponent: FC = () => {
     page,
   } = useFeatureFilters(history)
 
-  const { getEnvironment, project } = useProjectEnvironments(projectId)
+  const {
+    error: projectEnvError,
+    getEnvironment,
+    project,
+  } = useProjectEnvironments(projectId)
   const { data, error, isFetching, isLoading, refetch } =
     useFeatureListWithApiKey(filters, page, environmentId, projectId)
 
@@ -290,7 +294,7 @@ const FeaturesPageComponent: FC = () => {
       className='app-container container'
     >
       <div className='features-page'>
-        {error ? (
+        {error || projectEnvError ? (
           <div className='text-center'>
             <h4 className='mb-3'>Unable to Load Features</h4>
             <p className='text-muted mb-3'>
