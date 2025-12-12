@@ -15,7 +15,8 @@ import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Panel from 'components/base/grid/Panel'
 import { checkmarkCircle } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
-
+import FormGroup from 'components/base/grid/FormGroup'
+import Row from 'components/base/grid/Row'
 window.AppActions = require('../../common/dispatcher/app-actions')
 window.Actions = require('../../common/dispatcher/action-constants')
 window.ES6Component = require('../../common/ES6Component')
@@ -29,15 +30,14 @@ window.ProjectProvider = ProjectProvider
 window.Paging = Paging
 
 // Useful components
-window.Row = require('../components/base/grid/Row')
+window.Row = Row
 window.Flex = require('../components/base/grid/Flex')
 window.Column = require('../components/base/grid/Column')
 window.InputGroup = InputGroup
 window.Input = Input
 window.Button = Button
-window.FormGroup = require('../components/base/grid/FormGroup')
+window.FormGroup = FormGroup
 window.Panel = Panel
-window.FormGroup = require('../components/base/grid/FormGroup')
 
 window.PanelSearch = PanelSearch
 window.CodeHelp = CodeHelp

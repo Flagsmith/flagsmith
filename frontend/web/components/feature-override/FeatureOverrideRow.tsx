@@ -23,7 +23,7 @@ import API from 'project/api'
 import Constants from 'common/constants'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
-import CreateFlagModal from 'components/modals/CreateFlag'
+import CreateFlagModal from 'components/modals/create-feature'
 import { useHistory } from 'react-router-dom'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import FeatureOverrideCTA from './FeatureOverrideCTA'
@@ -50,6 +50,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   dataTest,
   environmentFeatureState,
   environmentId,
+  highlightSegmentId,
   identifier,
   identity,
   identityName,
@@ -59,7 +60,6 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   shouldPreselect,
   toggleDataTest,
   valueDataTest,
-  highlightSegmentId,
 }) => {
   const hasUserOverride =
     !!overrideFeatureState?.identity ||

@@ -66,14 +66,19 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
                 projectId={projectId}
               />
             </span>
-            <Button
-              data-test='remove-segment-btn'
-              className='btn btn-with-icon'
-              type='button'
-              onClick={onRemoveSegment}
-            >
-              <Icon name='trash-2' width={20} fill='#656D7B' />
-            </Button>
+            {Utils.renderWithPermission(
+              manageSegmentsPermission,
+              'Manage Segments',
+              <Button
+                data-test='remove-segment-btn'
+                className='btn btn-with-icon'
+                type='button'
+                disabled={!manageSegmentsPermission}
+                onClick={onRemoveSegment}
+              >
+                <Icon name='trash-2' width={20} fill='#656D7B' />
+              </Button>,
+            )}
           </div>
         }
       />
