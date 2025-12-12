@@ -1,3 +1,4 @@
+from django.utils.dateparse import parse_datetime
 from task_processor.decorators import (
     register_task_handler,
 )
@@ -23,8 +24,6 @@ def create_segment_deleted_audit_log(
     master_api_key_id: int | None,
     created_date: str,
 ) -> None:
-    from django.utils.dateparse import parse_datetime
-
     AuditLog.objects.create(
         project_id=project_id,
         environment=None,

@@ -176,7 +176,7 @@ def test_delete_segment_query_count_is_constant(
     large_query_count = len(ctx_large.captured_queries)
 
     # Then
-    assert small_query_count == large_query_count
+    assert small_query_count == large_query_count == 26
 
 
 def test_delete_segment_without_rules_works(

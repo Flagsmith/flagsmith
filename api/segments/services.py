@@ -54,8 +54,6 @@ def delete_segment(
                 "id", flat=True
             )
         )
-        if not nested_rule_ids:
-            break
         all_rule_ids.update(nested_rule_ids)
         current_level_ids = nested_rule_ids
 

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -12,11 +10,11 @@ if TYPE_CHECKING:
 
 @dataclass
 class AuthorData:
-    user: FFAdminUser | None = None
-    api_key: MasterAPIKey | None = None
+    user: "FFAdminUser | None" = None
+    api_key: "MasterAPIKey | None" = None
 
     @classmethod
-    def from_request(cls, request: Request) -> AuthorData:
+    def from_request(cls, request: "Request") -> "AuthorData":
         from users.models import FFAdminUser
 
         if type(request.user) is FFAdminUser:
