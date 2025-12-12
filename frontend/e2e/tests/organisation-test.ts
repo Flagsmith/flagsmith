@@ -11,12 +11,12 @@ import {
   waitForElementNotExist,
   clickByText,
 } from '../helpers.cafe'
-import { E2E_USER, PASSWORD } from '../config'
+import { E2E_SEPARATE_TEST_USER, PASSWORD } from '../config'
 import { Selector, t } from 'testcafe'
 
 export default async function () {
   log('Login')
-  await login(E2E_USER, PASSWORD)
+  await login(E2E_SEPARATE_TEST_USER, PASSWORD)
 
   log('Navigate to Organisation Settings')
   await waitForElementVisible(byId('organisation-link'))
