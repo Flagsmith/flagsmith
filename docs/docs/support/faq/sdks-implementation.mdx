@@ -1,0 +1,73 @@
+---
+title: SDKs & Implementation - FAQ
+sidebar_label: SDKs & Implementation
+sidebar_position: 6
+---
+
+import Link from '@docusaurus/Link';
+
+<Link to="/support/faq">← Back to FAQ</Link>
+
+
+### In the React SDK, is it possible to separate the initialization, like in the Node.js API? 
+
+Yes. You can use the `preventFetch` option in `flagsmith.init` to initialize without immediately fetching flags.
+
+**Related documentation:** [JavaScript/React SDK](/integrating-with-flagsmith/sdks/client-side-sdks/javascript)
+
+
+### Is the function startListening(ms) something that can "auto-fetch"? 
+Yes. It polls the API for new flags every `ms` milliseconds. Note that this counts against your API request quota.
+
+**Related:** [How can I check in Flagsmith how many requests I've send to the service?](/support/faq/infrastructure-api#how-can-i-check-in-flagsmith-how-many-requests-ive-send-to-the-service)
+
+**Related documentation:** [JavaScript/React SDK](/integrating-with-flagsmith/sdks/client-side-sdks/javascript)
+
+
+### Is there a way to await the response from the method bullettrain.identify()? 
+
+Yes. The `identify()` method returns a Promise that resolves when the flags are fetched.
+
+**Related:** [When I query for feature flags what method / API should I be using to pass the user email address?](#when-i-query-for-feature-flags-what-method--api-should-i-be-using-to-pass-the-user-email-address)
+
+**Related documentation:** [JavaScript/React SDK](/integrating-with-flagsmith/sdks/client-side-sdks/javascript)
+
+
+### When I query for feature flags what method / API should I be using to pass the user email address?
+
+You use the `identify("user_email_here")` method in the SDK. The email acts as the Identity ID.
+
+**Related:** [How do I identify an anonymous user? What about running AB tests with anonymous users?](/support/faq/user-identity-management#how-do-i-identify-an-anonymous-user-what-about-running-ab-tests-with-anonymous-users)
+
+**Related documentation:** [Identities](/flagsmith-concepts/identities)
+
+
+### Is there support for initializing a client that does not establish a network connection to Flagsmith? 
+
+Yes. You can initialize the client with default flags or cache without calling `getFlags`.
+
+**Related documentation:** [Local Evaluation Mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode)
+
+
+### Do you support Python? 
+
+Yes, there is an official Python SDK.
+
+**Related documentation:** [Python SDK](/integrating-with-flagsmith/sdks/server-side#python)
+
+
+### Does the Flagsmith .net SDK work with Unity 3D? 
+Yes. It is built on .NET Standard 2.0 and is compatible with Unity.
+
+**Related documentation:** [.NET SDK](/integrating-with-flagsmith/sdks/server-side#net)
+
+
+## Related FAQ Categories
+
+- [User & Identity Management](/support/faq/user-identity-management) - Questions about identifying users in SDKs
+- [Feature Flags & Remote Config](/support/faq/feature-flags-remote-config) - Questions about using flags in your application
+- [Infrastructure & API](/support/faq/infrastructure-api) - Questions about API usage and quotas
+
+<div style={{marginTop: '2rem', textAlign: 'center'}}>
+  <Link to="#top">↑ Back to top</Link>
+</div>

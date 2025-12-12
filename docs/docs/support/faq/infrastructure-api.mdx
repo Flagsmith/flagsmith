@@ -1,0 +1,90 @@
+---
+title: Infrastructure & API - FAQ
+sidebar_label: Infrastructure & API
+sidebar_position: 7
+---
+
+import Link from '@docusaurus/Link';
+
+<Link to="/support/faq">← Back to FAQ</Link>
+
+
+### Where is Flagsmith hosted?
+
+The SaaS version uses an Edge API replicated across **8 AWS regions** globally.
+
+**Related documentation:** [Edge API](/performance/edge-api) • [Platform Architecture](/flagsmith-concepts/platform-architecture)
+
+
+
+### What is the official base URI for the API?
+
+For Client SDKs: `https://edge.api.flagsmith.com/api/v1/`
+
+For Management/Admin: `https://api.flagsmith.com/api/v1/`
+
+**Related documentation:** [Edge API Overview](/edge-api/Overview) • [Flagsmith API Overview](/integrating-with-flagsmith/flagsmith-api-overview)
+
+
+
+### How can I check in Flagsmith how many requests I've send to the service?
+
+Go to **Organisation** > **Manage** > **Admin Settings**. There is a usage graph there.
+
+**Related:** [Is the function startListening(ms) something that can "auto-fetch"?](/support/faq/sdks-implementation#is-the-function-startlisteningms-something-that-can-auto-fetch)
+
+**Related documentation:** [Billing & API Usage](/administration-and-security/billing-api-usage)
+
+
+
+### Where can I find my Project ID?
+
+It is visible in the URL of your project settings page, or via the network tab in your browser developer tools.
+
+**Related documentation:** [Data Model](/flagsmith-concepts/data-model#projects)
+
+
+
+### Where can I get the Flagsmith token for an Environment?
+
+Go to the **Settings** page of the specific **Environment** in the dashboard.
+
+**Related:** [Is it possible to create two keys in one environment and have different permissions?](/support/faq/feature-flags-remote-config#is-it-possible-to-create-two-keys-in-one-environment-and-have-different-permissions)
+
+
+
+### What events can I send from Flagsmith into my own infrastructure?
+
+You can configure **Webhooks** for *Flag Change* events and *Audit Log* events. There are no webhooks for individual User/Identity events.
+
+**Related documentation:** [Webhooks](/third-party-integrations/webhook)
+
+
+### How would I define an experiment for a subset of users based on existing traits in a CDP?
+
+You would likely need to use the **Segment (CDP)** integration to push those traits into Flagsmith as Identity Traits, then create a Segment in Flagsmith based on those traits to target the experiment.
+
+**Related:** [Does Flagsmith allow me to incorporate user segmentation data (eg from mixpanel) to deploy flags based on user attributes?](/support/faq/segments-targeting#does-flagsmith-allow-me-to-incorporate-user-segmentation-data-eg-from-mixpanel-to-deploy-flags-based-on-user-attributes)
+
+**Related documentation:** [Segment Integration](/third-party-integrations/analytics/segment) • [Experimentation & A/B Testing](/experimentation-ab-testing)
+
+
+
+### Is customer bucketing guaranteed in A/B tests over time to ensure their consistent system experience?
+
+Yes. Bucketing is deterministic based on the Identity ID hash.
+
+**Related:** [When using a segment with "% split", would changing the value affect existing users?](/support/faq/segments-targeting#when-using-a-segment-with-split-would-changing-the-value-affect-existing-users)
+
+**Related documentation:** [Experimentation & A/B Testing](/experimentation-ab-testing)
+
+
+
+## Related FAQ Categories
+
+- [SDKs & Implementation](/support/faq/sdks-implementation) - Questions about API usage in SDKs
+- [Segments & Targeting](/support/faq/segments-targeting) - Questions about A/B testing and bucketing
+
+<div style={{marginTop: '2rem', textAlign: 'center'}}>
+  <Link to="#top">↑ Back to top</Link>
+</div>

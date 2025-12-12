@@ -1,0 +1,56 @@
+---
+title: User & Identity Management - FAQ
+sidebar_label: User & Identity Management
+sidebar_position: 1
+---
+
+import Link from '@docusaurus/Link';
+
+<Link to="/support/faq">← Back to FAQ</Link>
+
+### Is there a user_created date? 
+
+No. Flagsmith does not currently store an automatic `created_date` trait for users/identities.
+
+**Related:** [Can I create common User Traits for all users in the same environment?](#can-i-create-common-user-traits-for-all-users-in-the-same-environment)
+
+
+
+### Can I create common User Traits for all users in the same environment? 
+
+No. Traits are specific to individual Identities (Users) and are created automatically when you identify the user in the SDK.
+
+**Related documentation:** [Identities](/flagsmith-concepts/identities)
+
+
+### How do I identify an anonymous user? What about running AB tests with anonymous users? 
+
+You must generate a unique identifier (like a random GUID/hash) on your client side, store it (e.g., in a cookie), and pass it to the `identify` method. For A/B tests to be consistent, this ID must persist across sessions.
+
+**Related:** [Does the % split segment feature work for non-identified users?](/support/faq/segments-targeting#does-the--split-segment-feature-work-for-non-identified-users)
+
+**Related documentation:** [Identities](/flagsmith-concepts/identities)
+
+
+### When querying identities, is it possible to sort by creation date? 
+
+No. Searching and sorting identities is currently in the backlog.
+
+
+### Is there way to render traits in users list in your webUI? 
+
+Not directly in the main list. You can view traits for a specific user by clicking into their profile, or view users belonging to a segment that is defined by traits.
+
+**Related:** [How can I check which users belongs to which Segment?](/support/faq/segments-targeting#how-can-i-check-which-users-belongs-to-which-segment)
+
+**Related documentation:** [Segments](/flagsmith-concepts/segments)
+
+
+## Related FAQ Categories
+
+- [Segments & Targeting](/support/faq/segments-targeting) - Questions about user segmentation and targeting
+- [SDKs & Implementation](/support/faq/sdks-implementation) - Questions about SDK usage and implementation
+
+<div style={{marginTop: '2rem', textAlign: 'center'}}>
+  <Link to="#top">↑ Back to top</Link>
+</div>
