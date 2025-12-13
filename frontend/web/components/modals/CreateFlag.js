@@ -113,6 +113,8 @@ const CreateFlag = class extends Component {
       scheduledChangeRequests: [],
       selectedIdentity: null,
       tags: tags?.filter((tag) => !hideTags.includes(tag)) || [],
+      userOverridesError: false,
+      userOverridesNoPermission: false,
     }
   }
 
@@ -229,35 +231,91 @@ const CreateFlag = class extends Component {
             permissions: 'VIEW_IDENTITIES',
           },
           { forceRefetch },
-        ).then((permissions) => {
-          const hasViewIdentitiesPermission =
-            permissions[Utils.getViewIdentitiesPermission()]
-          if (hasViewIdentitiesPermission || AccountStore.isAdmin()) {
-            data
-              .get(
-                `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
-              )
-              .then((userOverrides) => {
-                this.setState({
-                  userOverrides: userOverrides.results.map((v) => ({
-                    ...v.feature_state,
-                    identity: {
-                      id: v.identity_uuid,
-                      identifier: v.identifier,
+        )
+          .then((permissions) => {
+            const hasViewIdentitiesPermission =
+              permissions[Utils.getViewIdentitiesPermission()]
+            if (hasViewIdentitiesPermission || AccountStore.isAdmin()) {
+              data
+                .get(
+                  `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
+                )
+                .then((userOverrides) => {
+                  this.setState({
+                    userOverrides: userOverrides.results.map((v) => ({
+                      ...v.feature_state,
+                      identity: {
+                        id: v.identity_uuid,
+                        identifier: v.identifier,
+                      },
+                    })),
+                    userOverridesError: false,
+                    userOverridesNoPermission: false,
+                    userOverridesPaging: {
+                      count: userOverrides.count,
+                      currentPage: page,
+                      next: userOverrides.next,
                     },
-                  })),
-                  userOverridesPaging: {
-                    count: userOverrides.count,
-                    currentPage: page,
-                    next: userOverrides.next,
-                  },
+                  })
                 })
+                .catch((response) => {
+                  // Check if it's a 403 (permission denied) or other error
+                  if (response?.status === 403) {
+                    this.setState({
+                      userOverrides: [],
+                      userOverridesNoPermission: true,
+                      userOverridesPaging: {
+                        count: 0,
+                        currentPage: 1,
+                        next: null,
+                      },
+                    })
+                  } else {
+                    this.setState({
+                      userOverrides: [],
+                      userOverridesError: true,
+                      userOverridesPaging: {
+                        count: 0,
+                        currentPage: 1,
+                        next: null,
+                      },
+                    })
+                  }
+                })
+            } else {
+              // User doesn't have permission - show permission message
+              this.setState({
+                userOverrides: [],
+                userOverridesNoPermission: true,
+                userOverridesPaging: {
+                  count: 0,
+                  currentPage: 1,
+                  next: null,
+                },
               })
-              .catch(() => {
-                //eslint-disable-next-line no-console
-                console.error('Cannot retrieve user overrides')
-              })
-          }
+            }
+          })
+          .catch(() => {
+            // Permission check failed - set error state
+            this.setState({
+              userOverrides: [],
+              userOverridesError: true,
+              userOverridesPaging: {
+                count: 0,
+                currentPage: 1,
+                next: null,
+              },
+            })
+          })
+      } else {
+        // Tab is hidden - set empty state
+        this.setState({
+          userOverrides: [],
+          userOverridesPaging: {
+            count: 0,
+            currentPage: 1,
+            next: null,
+          },
         })
       }
 
@@ -274,6 +332,8 @@ const CreateFlag = class extends Component {
       .then((userOverrides) => {
         this.setState({
           userOverrides: userOverrides.results,
+          userOverridesError: false,
+          userOverridesNoPermission: false,
           userOverridesPaging: {
             count: userOverrides.count,
             currentPage: page,
@@ -281,6 +341,54 @@ const CreateFlag = class extends Component {
           },
         })
       })
+      .catch((response) => {
+        // Check if it's a 403 (permission denied) or other error
+        if (response?.status === 403) {
+          this.setState({
+            userOverrides: [],
+            userOverridesNoPermission: true,
+            userOverridesPaging: {
+              count: 0,
+              currentPage: 1,
+              next: null,
+            },
+          })
+        } else {
+          this.setState({
+            userOverrides: [],
+            userOverridesError: true,
+            userOverridesPaging: {
+              count: 0,
+              currentPage: 1,
+              next: null,
+            },
+          })
+        }
+      })
+  }
+
+  renderUserOverridesNoResults = () => {
+    if (this.state.userOverridesError) {
+      return (
+        <div className='text-center py-4'>
+          Failed to load identity overrides.
+        </div>
+      )
+    }
+    if (this.state.userOverridesNoPermission) {
+      return (
+        <div className='text-center py-4'>
+          You do not have permission to view identity overrides.
+        </div>
+      )
+    }
+    return (
+      <Row className='list-item'>
+        <div className='table-column'>
+          No identities are overriding this feature.
+        </div>
+      </Row>
+    )
   }
 
   save = (func, isSaving) => {
@@ -1818,14 +1926,7 @@ const CreateFlag = class extends Component {
                                                       </Row>
                                                     )
                                                   }}
-                                                  renderNoResults={
-                                                    <Row className='list-item'>
-                                                      <div className='table-column'>
-                                                        No identities are
-                                                        overriding this feature.
-                                                      </div>
-                                                    </Row>
-                                                  }
+                                                  renderNoResults={this.renderUserOverridesNoResults()}
                                                   isLoading={
                                                     !this.state.userOverrides
                                                   }
