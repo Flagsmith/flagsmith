@@ -115,7 +115,7 @@ class EnvironmentRetrieveSerializerWithMetadata(EnvironmentSerializerWithMetadat
         )
 
 
-class CreateUpdateEnvironmentSerializer(
+class _BaseCreateUpdateEnvironmentSerializer(
     ReadOnlyIfNotValidPlanMixin, EnvironmentSerializerWithMetadata
 ):
     invalid_plans = ("free",)
@@ -130,25 +130,33 @@ class CreateUpdateEnvironmentSerializer(
             )
         ]
 
+
+class CreateEnvironmentSerializer(_BaseCreateUpdateEnvironmentSerializer):
     def get_subscription(self) -> Subscription | None:
         view = self.context["view"]
+        # handle `project` not being part of the data
+        # When request comes from yasg2(as part of schema generation)
+        project_id = view.request.data.get("project")
+        if not project_id:
+            return None
 
-        if view.action == "create":
-            # handle `project` not being part of the data
-            # When request comes from yasg2(as part of schema generation)
-            project_id = view.request.data.get("project")
-            if not project_id:
-                return None
+        project = Project.objects.select_related(
+            "organisation", "organisation__subscription"
+        ).get(id=project_id)
 
-            project = Project.objects.select_related(
-                "organisation", "organisation__subscription"
-            ).get(id=project_id)
+        return getattr(project.organisation, "subscription", None)
 
-            return getattr(project.organisation, "subscription", None)
-        elif view.action in ("update", "partial_update"):
-            return getattr(self.instance.project.organisation, "subscription", None)  # type: ignore[union-attr]
 
-        return None
+class UpdateEnvironmentSerializer(_BaseCreateUpdateEnvironmentSerializer):
+    class Meta(_BaseCreateUpdateEnvironmentSerializer.Meta):
+        read_only_fields = EnvironmentSerializerLight.Meta.read_only_fields + (  # type: ignore[assignment]
+            "project",
+        )
+
+    def get_subscription(self) -> Subscription | None:
+        if self.instance is None:
+            return None
+        return getattr(self.instance.project.organisation, "subscription", None)  # type: ignore[union-attr]
 
 
 class CloneEnvironmentSerializer(EnvironmentSerializerLight):

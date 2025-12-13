@@ -55,10 +55,11 @@ from .permissions.models import (
 )
 from .serializers import (
     CloneEnvironmentSerializer,
-    CreateUpdateEnvironmentSerializer,
+    CreateEnvironmentSerializer,
     EnvironmentAPIKeySerializer,
     EnvironmentRetrieveSerializerWithMetadata,
     EnvironmentSerializerWithMetadata,
+    UpdateEnvironmentSerializer,
     WebhookSerializer,
 )
 
@@ -94,8 +95,10 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             return CloneEnvironmentSerializer
         if self.action == "retrieve":
             return EnvironmentRetrieveSerializerWithMetadata
-        elif self.action in ("create", "update", "partial_update"):
-            return CreateUpdateEnvironmentSerializer
+        elif self.action == "create":
+            return CreateEnvironmentSerializer
+        elif self.action in ("update", "partial_update"):
+            return UpdateEnvironmentSerializer
         return EnvironmentSerializerWithMetadata
 
     def get_serializer_context(self):  # type: ignore[no-untyped-def]
