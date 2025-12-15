@@ -222,93 +222,8 @@ const CreateFlag = class extends Component {
 
   userOverridesPage = (page, forceRefetch) => {
     if (Utils.getIsEdge()) {
-      if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
-        getPermission(
-          getStore(),
-          {
-            id: this.props.environmentId,
-            level: 'environment',
-            permissions: 'VIEW_IDENTITIES',
-          },
-          { forceRefetch },
-        )
-          .then((permissions) => {
-            const hasViewIdentitiesPermission =
-              permissions[Utils.getViewIdentitiesPermission()]
-            if (hasViewIdentitiesPermission || AccountStore.isAdmin()) {
-              data
-                .get(
-                  `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
-                )
-                .then((userOverrides) => {
-                  this.setState({
-                    userOverrides: userOverrides.results.map((v) => ({
-                      ...v.feature_state,
-                      identity: {
-                        id: v.identity_uuid,
-                        identifier: v.identifier,
-                      },
-                    })),
-                    userOverridesError: false,
-                    userOverridesNoPermission: false,
-                    userOverridesPaging: {
-                      count: userOverrides.count,
-                      currentPage: page,
-                      next: userOverrides.next,
-                    },
-                  })
-                })
-                .catch((response) => {
-                  // Check if it's a 403 (permission denied) or other error
-                  if (response?.status === 403) {
-                    this.setState({
-                      userOverrides: [],
-                      userOverridesNoPermission: true,
-                      userOverridesPaging: {
-                        count: 0,
-                        currentPage: 1,
-                        next: null,
-                      },
-                    })
-                  } else {
-                    this.setState({
-                      userOverrides: [],
-                      userOverridesError: true,
-                      userOverridesPaging: {
-                        count: 0,
-                        currentPage: 1,
-                        next: null,
-                      },
-                    })
-                  }
-                })
-            } else {
-              // User doesn't have permission - show permission message
-              this.setState({
-                userOverrides: [],
-                userOverridesNoPermission: true,
-                userOverridesPaging: {
-                  count: 0,
-                  currentPage: 1,
-                  next: null,
-                },
-              })
-            }
-          })
-          .catch(() => {
-            // Permission check failed - set error state
-            this.setState({
-              userOverrides: [],
-              userOverridesError: true,
-              userOverridesPaging: {
-                count: 0,
-                currentPage: 1,
-                next: null,
-              },
-            })
-          })
-      } else {
-        // Tab is hidden - set empty state
+      // Early return if tab should be hidden
+      if (Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
         this.setState({
           userOverrides: [],
           userOverridesPaging: {
@@ -317,10 +232,103 @@ const CreateFlag = class extends Component {
             next: null,
           },
         })
+        return
       }
+
+      getPermission(
+        getStore(),
+        {
+          id: this.props.environmentId,
+          level: 'environment',
+          permissions: 'VIEW_IDENTITIES',
+        },
+        { forceRefetch },
+      )
+        .then((permissions) => {
+          const hasViewIdentitiesPermission =
+            permissions[Utils.getViewIdentitiesPermission()]
+
+          // Early return if user doesn't have permission
+          if (!hasViewIdentitiesPermission && !AccountStore.isAdmin()) {
+            this.setState({
+              userOverrides: [],
+              userOverridesError: false,
+              userOverridesNoPermission: true,
+              userOverridesPaging: {
+                count: 0,
+                currentPage: 1,
+                next: null,
+              },
+            })
+            return
+          }
+
+          data
+            .get(
+              `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
+            )
+            .then((userOverrides) => {
+              this.setState({
+                userOverrides: userOverrides.results.map((v) => ({
+                  ...v.feature_state,
+                  identity: {
+                    id: v.identity_uuid,
+                    identifier: v.identifier,
+                  },
+                })),
+                userOverridesError: false,
+                userOverridesNoPermission: false,
+                userOverridesPaging: {
+                  count: userOverrides.count,
+                  currentPage: page,
+                  next: userOverrides.next,
+                },
+              })
+            })
+            .catch((response) => {
+              // Check if it's a 403 (permission denied) or other error
+              if (response?.status === 403) {
+                this.setState({
+                  userOverrides: [],
+                  userOverridesError: false,
+                  userOverridesNoPermission: true,
+                  userOverridesPaging: {
+                    count: 0,
+                    currentPage: 1,
+                    next: null,
+                  },
+                })
+              } else {
+                this.setState({
+                  userOverrides: [],
+                  userOverridesError: true,
+                  userOverridesNoPermission: false,
+                  userOverridesPaging: {
+                    count: 0,
+                    currentPage: 1,
+                    next: null,
+                  },
+                })
+              }
+            })
+        })
+        .catch(() => {
+          // Permission check failed - set error state
+          this.setState({
+            userOverrides: [],
+            userOverridesError: true,
+            userOverridesNoPermission: false,
+            userOverridesPaging: {
+              count: 0,
+              currentPage: 1,
+              next: null,
+            },
+          })
+        })
 
       return
     }
+
     data
       .get(
         `${Project.api}environments/${
@@ -346,6 +354,7 @@ const CreateFlag = class extends Component {
         if (response?.status === 403) {
           this.setState({
             userOverrides: [],
+            userOverridesError: false,
             userOverridesNoPermission: true,
             userOverridesPaging: {
               count: 0,
@@ -357,6 +366,7 @@ const CreateFlag = class extends Component {
           this.setState({
             userOverrides: [],
             userOverridesError: true,
+            userOverridesNoPermission: false,
             userOverridesPaging: {
               count: 0,
               currentPage: 1,
