@@ -6,6 +6,8 @@ sidebar_position: 5
 
 import Link from '@docusaurus/Link';
 
+<span id="top" />
+
 <Link to="/support/faq">← Back to FAQ</Link>
 
 
@@ -50,7 +52,7 @@ No. Percentage splits require a consistent Identity ID to hash against. Anonymou
 **Related documentation:** [Segment Rule Operators](/flagsmith-concepts/segments/segment-rule-operators) • [Identities](/flagsmith-concepts/identities)
 
 
-### When using a segment with "% split", would changing the value affect existing users? 
+### When using a segment with "% split", would changing the value affect existing users? {#when-using-a-segment-with-split-would-changing-the-value-affect-existing-users}
 
 No. The bucket is determined by hashing the Identity ID. As long as the percentage value and the User ID remain the same, the user stays in the same bucket.
 
@@ -99,7 +101,3 @@ No button exists in the UI. You must retrieve the users via the API to generate 
 
 - [User & Identity Management](/support/faq/user-identity-management) - Questions about user identification and traits
 - [Feature Flags & Remote Config](/support/faq/feature-flags-remote-config) - Questions about flag configuration and targeting
-
-<div style={{marginTop: '2rem', textAlign: 'center'}}>
-  <Link to="#top">↑ Back to top</Link>
-</div>

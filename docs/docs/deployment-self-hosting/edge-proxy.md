@@ -157,7 +157,7 @@ Optionally, specify the LRU cache size with `cache_max_size`. Defaults to 128.
 
 When set to `true`, the Edge Proxy will use the `X-Forwarded-For` and `X-Forwarded-Proto` HTTP headers to determine
 client IP addresses. This is useful if the Edge Proxy is running behind a reverse proxy, and you want the
-[access logs](#logging.override) to show the real IP addresses of your clients.
+[access logs](#loggingoverride) to show the real IP addresses of your clients.
 
 By default, only the loopback address is trusted. This can be changed with the [`FORWARDED_ALLOW_IPS` environment
 variable](#environment-variables).
