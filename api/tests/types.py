@@ -1,4 +1,7 @@
+import typing
 from typing import Callable, Literal, Protocol
+
+from django_test_migrations.migrator import Migrator
 
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.permissions.models import UserOrganisationPermission
@@ -34,3 +37,7 @@ class GetIdentityFlagsResponseJSONCallable(Protocol):
 
 class EnableFeaturesFixture(Protocol):
     def __call__(self, *feature_names: str) -> None: ...
+
+
+class MigratorFactory(typing.Protocol):
+    def __call__(self, name: typing.Optional[str] = None) -> Migrator: ...
