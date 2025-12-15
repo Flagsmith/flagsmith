@@ -47,7 +47,7 @@ from features.dataclasses import EnvironmentFeatureOverridesData
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
-from features.value_types import BOOLEAN, INTEGER, STRING
+from features.value_types import STRING
 from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import MetadataModelField
 from organisations.models import Organisation, OrganisationRole
@@ -3341,9 +3341,7 @@ def test_list_features_with_feature_state(
         version=100,
     )
     feature_state_value_versioned = feature_state_versioned.feature_state_value
-    feature_state_value_versioned.string_value = None
-    feature_state_value_versioned.integer_value = 2005
-    feature_state_value_versioned.type = INTEGER
+    feature_state_value_versioned.set_value("2005", "integer")
     feature_state_value_versioned.save()
 
     feature_state2 = feature2.feature_states.filter(environment=environment).first()
@@ -3351,9 +3349,7 @@ def test_list_features_with_feature_state(
     feature_state2.save()
 
     feature_state_value2 = feature_state2.feature_state_value
-    feature_state_value2.string_value = None
-    feature_state_value2.boolean_value = True
-    feature_state_value2.type = BOOLEAN
+    feature_state_value2.set_value("true", "boolean")
     feature_state_value2.save()
 
     feature_state_value3 = (
@@ -3361,7 +3357,7 @@ def test_list_features_with_feature_state(
         .first()
         .feature_state_value
     )
-    feature_state_value3.string_value = "present"
+    feature_state_value3.set_value("present", "string")
     feature_state_value3.save()
 
     # This should be ignored due to identity being set.
@@ -3470,9 +3466,7 @@ def test_list_features_with_filter_by_value_search_string_and_int(
     environment_feature_version1.publish(staff_user)
 
     feature_state_value1 = feature_state1.feature_state_value
-    feature_state_value1.string_value = None
-    feature_state_value1.integer_value = 1945
-    feature_state_value1.type = INTEGER
+    feature_state_value1.set_value("1945", "integer")
     feature_state_value1.save()
 
     feature_state2 = feature2.feature_states.filter(environment=environment).first()
@@ -3480,9 +3474,7 @@ def test_list_features_with_filter_by_value_search_string_and_int(
     feature_state2.save()
 
     feature_state_value2 = feature_state2.feature_state_value
-    feature_state_value2.string_value = None
-    feature_state_value2.boolean_value = True
-    feature_state_value2.type = BOOLEAN
+    feature_state_value2.set_value("true", "boolean")
     feature_state_value2.save()
 
     feature_state_value3 = (
@@ -3490,8 +3482,7 @@ def test_list_features_with_filter_by_value_search_string_and_int(
         .first()
         .feature_state_value
     )
-    feature_state_value3.string_value = "present"
-    feature_state_value3.type = STRING
+    feature_state_value3.set_value("present", "string")
     feature_state_value3.save()
 
     feature_state4 = feature4.feature_states.filter(environment=environment).first()
@@ -3499,8 +3490,7 @@ def test_list_features_with_filter_by_value_search_string_and_int(
     feature_state4.save()
 
     feature_state_value4 = feature_state4.feature_state_value
-    feature_state_value4.string_value = "year 1945"
-    feature_state_value4.type = STRING
+    feature_state_value4.set_value("year 1945", "string")
     feature_state_value4.save()
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
@@ -3548,9 +3538,7 @@ def test_list_features_with_filter_by_search_value_boolean(
     feature_state1.save()  # type: ignore[union-attr]
 
     feature_state_value1 = feature_state1.feature_state_value  # type: ignore[union-attr]
-    feature_state_value1.string_value = None
-    feature_state_value1.integer_value = 1945
-    feature_state_value1.type = INTEGER
+    feature_state_value1.set_value("1945", "integer")
     feature_state_value1.save()
 
     feature_state2 = feature2.feature_states.filter(environment=environment).first()
@@ -3558,9 +3546,7 @@ def test_list_features_with_filter_by_search_value_boolean(
     feature_state2.save()
 
     feature_state_value2 = feature_state2.feature_state_value
-    feature_state_value2.string_value = None
-    feature_state_value2.boolean_value = True
-    feature_state_value2.type = BOOLEAN
+    feature_state_value2.set_value("true", "boolean")
     feature_state_value2.save()
 
     feature_state_value3 = (
@@ -3568,8 +3554,7 @@ def test_list_features_with_filter_by_search_value_boolean(
         .first()
         .feature_state_value
     )
-    feature_state_value3.string_value = "present"
-    feature_state_value3.type = STRING
+    feature_state_value3.set_value("present", "string")
     feature_state_value3.save()
 
     feature_state4 = feature4.feature_states.filter(environment=environment).first()
@@ -3577,8 +3562,7 @@ def test_list_features_with_filter_by_search_value_boolean(
     feature_state4.save()
 
     feature_state_value4 = feature_state4.feature_state_value
-    feature_state_value4.string_value = "year 1945"
-    feature_state_value4.type = STRING
+    feature_state_value4.set_value("year 1945", "string")
     feature_state_value4.save()
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
@@ -4094,7 +4078,7 @@ def test_list_features_segment_query_param_with_valid_segment(
         environment=environment,
         enabled=True,
     )
-    segment_override.feature_state_value.string_value = "segment_value"
+    segment_override.feature_state_value.set_value("segment_value", "string")
     segment_override.feature_state_value.save()
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])

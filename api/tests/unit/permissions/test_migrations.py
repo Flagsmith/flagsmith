@@ -1,16 +1,11 @@
-import pytest
-from django.conf import settings
+from django_test_migrations.migrator import Migrator
 
 from organisations.models import OrganisationRole
 
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
-def test_migration_only_remove_permissions_for_users_that_are_not_part_of_the_organisation(  # type: ignore[no-untyped-def]  # noqa: E501
-    migrator,
-):
+def test_migration_only_remove_permissions_for_users_that_are_not_part_of_the_organisation(  # noqa: E501
+    migrator: Migrator,
+) -> None:
     # Given - the migration state is at 0004 (before the migration we want to test)
     old_state = migrator.apply_initial_migration(
         ("permissions", "0004_add_create_project_permission"),
