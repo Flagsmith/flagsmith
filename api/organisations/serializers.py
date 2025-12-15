@@ -2,13 +2,14 @@ import logging
 
 from django.conf import settings
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from organisations.chargebee import (  # type: ignore[attr-defined]
     get_hosted_page_url_for_subscription_upgrade,
     get_subscription_data_from_hosted_page,
 )
 from organisations.invites.models import Invite
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 
 from .models import (
     Organisation,
@@ -116,6 +117,22 @@ class InviteSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
                 {"email": "Invite for email %s already exists" % attrs["email"]}
             )
         return super(InviteSerializer, self).validate(attrs)
+
+    def validate_permission_groups(
+        self, permission_groups: list[UserPermissionGroup]
+    ) -> list[UserPermissionGroup]:
+        organisation_id = self.context.get("organisation")
+        invalid_groups = [
+            group.name
+            for group in permission_groups
+            if group.organisation_id != organisation_id
+        ]
+        if invalid_groups:
+            raise ValidationError(
+                "The following group(s) do not belong to current organisation: %s"
+                % ", ".join(invalid_groups),
+            )
+        return permission_groups
 
 
 class MultiInvitesSerializer(serializers.Serializer):  # type: ignore[type-arg]

@@ -224,6 +224,45 @@ def test_create_invite_with_permission_groups(
     assert invite.invited_by == admin_user
 
 
+@pytest.mark.saas_mode
+def test_create_invite_with_permission_groups_fails_if_permission_group_belongs_to_another_organisation(
+    admin_client: APIClient,
+    organisation: Organisation,
+    chargebee_subscription: Subscription,
+) -> None:
+    # Given
+    # update subscription to add another seat
+    chargebee_subscription.max_seats = 2
+    chargebee_subscription.save()
+
+    another_organisation = Organisation.objects.create(name="Another Organisation")
+    user_permission_group = UserPermissionGroup.objects.create(
+        organisation=another_organisation, name="Group"
+    )
+
+    url = reverse(
+        "api-v1:organisations:organisation-invites-list",
+        args=[organisation.pk],
+    )
+    email = "test@example.com"
+    data = {"email": email, "permission_groups": [user_permission_group.id]}
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    response_json = response.json()
+    assert response_json == {
+        "permission_groups": [
+            f"The following group(s) do not belong to current organisation: {user_permission_group.name}"
+        ]
+    }
+
+
 def test_create_invite_returns_400_if_seats_are_over(
     admin_client: APIClient,
     organisation: Organisation,
