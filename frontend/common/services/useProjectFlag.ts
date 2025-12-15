@@ -64,10 +64,10 @@ export const projectFlagService = service
           const { environmentId, projectId, ...params } = query
           return {
             params: {
+              ...params,
               environment: parseInt(environmentId),
               page: params.page || 1,
               page_size: params.page_size || FEATURES_PAGE_SIZE,
-              ...params,
             },
             url: `projects/${projectId}/features/`,
           }
