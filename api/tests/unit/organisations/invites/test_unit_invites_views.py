@@ -258,7 +258,7 @@ def test_create_invite_with_permission_groups_fails_if_permission_group_belongs_
     response_json = response.json()
     assert response_json == {
         "permission_groups": [
-            f"The following group(s) do not belong to current organisation: {user_permission_group.name}"
+            f'Invalid pk "{user_permission_group.pk}" - object does not exist.'
         ]
     }
 
