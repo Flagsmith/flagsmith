@@ -246,10 +246,10 @@ const CreateFlag = class extends Component {
       )
         .then((permissions) => {
           const hasViewIdentitiesPermission =
-            permissions[Utils.getViewIdentitiesPermission()]
-
+            permissions[Utils.getViewIdentitiesPermission()] ||
+            permissions.ADMIN
           // Early return if user doesn't have permission
-          if (!hasViewIdentitiesPermission && !AccountStore.isAdmin()) {
+          if (!hasViewIdentitiesPermission) {
             this.setState({
               userOverrides: [],
               userOverridesError: false,
