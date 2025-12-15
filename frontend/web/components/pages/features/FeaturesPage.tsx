@@ -2,7 +2,6 @@ import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
 import classNames from 'classnames'
 import CreateFlagModal from 'components/modals/CreateFlag'
-import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import AppActions from 'common/dispatcher/app-actions'
@@ -47,7 +46,7 @@ function isSkeletonItem(
   return 'isSkeleton' in item && item.isSkeleton === true
 }
 
-const FeaturesPageComponent: FC = () => {
+const FeaturesPage: FC = () => {
   const history = useHistory()
   const routeContext = useRouteContext()
   const projectId = routeContext.projectId!
@@ -336,7 +335,5 @@ const FeaturesPageComponent: FC = () => {
     </div>
   )
 }
-
-const FeaturesPage = ConfigProvider(FeaturesPageComponent)
 
 export default FeaturesPage
