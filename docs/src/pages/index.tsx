@@ -152,12 +152,6 @@ export default function Home() {
             icon={documentText} 
           />
           <Card 
-            title="Public Roadmap" 
-            description="Features coming soon" 
-            link="/project-and-community/roadmap/"
-            icon={map} 
-          />
-          <Card 
             title="Contribute to Flagsmith" 
             description="How to file issues, PRs, and contribute" 
             link="/project-and-community/contributing/"

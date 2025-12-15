@@ -469,10 +469,6 @@
             "destination": "/project-and-community/release-notes"
         },
         {
-            "source": "/platform/roadmap",
-            "destination": "/project-and-community/roadmap"
-        },
-        {
             "source": "/guides-and-examples/integration-approaches",
             "destination": "/best-practices/integration-approaches"
         },
