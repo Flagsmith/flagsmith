@@ -40,6 +40,7 @@ export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
             permission='CREATE_FEATURE'
             id={projectId}
             showTooltip
+            permissionName='Create Feature'
           >
             {({ permission: perm }) => (
               <Button
