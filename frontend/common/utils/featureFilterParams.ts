@@ -1,6 +1,7 @@
 import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 import Format from './format'
 import type { FilterState, UrlParams } from 'common/types/featureFilters'
+import { SortOrder } from 'common/types/requests'
 import { TagStrategy } from 'common/types/responses'
 
 /**
@@ -27,8 +28,8 @@ function parseIntArray(value: string | string[] | undefined): number[] {
 }
 
 /** Normalizes UI sort order to API format */
-function normalizeSortDirection(sortOrder: string | null): 'ASC' | 'DESC' {
-  return sortOrder === 'asc' ? 'ASC' : 'DESC'
+function normalizeSortDirection(sortOrder: SortOrder | null): SortOrder {
+  return sortOrder === SortOrder.ASC ? SortOrder.ASC : SortOrder.DESC
 }
 
 /** Parses boolean from URL param */
@@ -41,11 +42,11 @@ function parseBooleanParam(
 }
 
 /** Parses sort order from URL param, defaulting to ASC */
-function parseSortOrder(value: string | string[] | undefined): 'asc' | 'desc' {
-  if (typeof value === 'string' && value === 'desc') {
-    return 'desc'
+function parseSortOrder(value: string | string[] | undefined): SortOrder {
+  if (typeof value === 'string' && value.toLowerCase() === 'desc') {
+    return SortOrder.DESC
   }
-  return 'asc'
+  return SortOrder.ASC
 }
 
 /** Parses string from URL param, returns default if invalid */
@@ -92,7 +93,7 @@ export function buildUrlParams(
     page: page ?? 1,
     search: filters.search || undefined,
     sortBy: filters.sort.sortBy,
-    sortOrder: filters.sort.sortOrder ?? 'asc',
+    sortOrder: filters.sort.sortOrder === SortOrder.DESC ? 'desc' : 'asc',
     tag_strategy: filters.tag_strategy,
     tags: joinArrayOrUndefined(filters.tags),
     value_search: filters.value_search || undefined,

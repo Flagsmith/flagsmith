@@ -273,6 +273,7 @@ const FeaturesPageComponent: FC = () => {
         permission='CREATE_FEATURE'
         id={projectId}
         showTooltip
+        permissionName='Create Feature'
       >
         {({ permission: perm }) => (
           <FeaturesEmptyState
