@@ -538,7 +538,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               />
             </div>
           </TabItem>
-          <TabItem tabLabel='Users'>
+          <TabItem tabLabel='Identities'>
             <div className='my-4'>
               <CreateSegmentUsersTabContent
                 projectId={projectId}
