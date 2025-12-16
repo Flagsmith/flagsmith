@@ -25,6 +25,10 @@ import InfoMessage from 'components/InfoMessage'
 
 import CodeHelp from 'components/CodeHelp'
 import SegmentRow from 'components/segments/SegmentRow/SegmentRow'
+import {
+  ProjectPermission,
+  ProjectPermissionDescriptions,
+} from 'common/types/permissions.types'
 
 const SegmentsPage: FC = () => {
   const history = useHistory()
@@ -100,7 +104,7 @@ const SegmentsPage: FC = () => {
   const { permission: manageSegmentsPermission } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'MANAGE_SEGMENTS',
+    permission: ProjectPermission.MANAGE_SEGMENTS,
   })
 
   const renderWithPermission = (
@@ -112,7 +116,9 @@ const SegmentsPage: FC = () => {
       el
     ) : (
       <Tooltip title={el} place='right'>
-        {Constants.projectPermissions('Manage segments')}
+        {Constants.projectPermissions(
+          ProjectPermissionDescriptions.MANAGE_SEGMENTS,
+        )}
       </Tooltip>
     )
   }

@@ -23,6 +23,10 @@ import IdentityOverridesIcon from './IdentityOverridesIcon'
 import Tooltip from './Tooltip'
 import PageTitle from './PageTitle'
 import { getDarkMode } from 'project/darkMode'
+import {
+  EnvironmentPermission,
+  EnvironmentPermissionDescriptions,
+} from 'common/types/permissions.types'
 
 type CompareIdentitiesType = {
   projectId: string
@@ -69,7 +73,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
   const { isLoading: permissionLoading, permission } = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getViewIdentitiesPermission(),
+    permission: EnvironmentPermission.VIEW_IDENTITIES,
   })
 
   const { data: leftUser } = useGetIdentityFeatureStatesAllQuery(
@@ -189,7 +193,9 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       {!permission && !permissionLoading ? (
         <div
           dangerouslySetInnerHTML={{
-            __html: Constants.environmentPermissions('View Identities'),
+            __html: Constants.environmentPermissions(
+              EnvironmentPermissionDescriptions.VIEW_IDENTITIES,
+            ),
           }}
         />
       ) : (

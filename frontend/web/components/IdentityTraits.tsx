@@ -14,6 +14,10 @@ import {
   useGetIdentityTraitsQuery,
 } from 'common/services/useIdentityTrait'
 import { IdentityTrait } from 'common/types/responses'
+import {
+  EnvironmentPermission,
+  EnvironmentPermissionDescriptions,
+} from 'common/types/permissions.types'
 
 type IdentityTraitsType = {
   projectId: string | number
@@ -33,7 +37,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
   const { permission: manageUserPermission } = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getManageUserPermission(),
+    permission: EnvironmentPermission.MANAGE_IDENTITIES,
   })
 
   const { data: traits } = useGetIdentityTraitsQuery({
@@ -126,7 +130,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
             {Utils.renderWithPermission(
               manageUserPermission,
               Constants.environmentPermissions(
-                Utils.getManageUserPermissionDescription(),
+                EnvironmentPermissionDescriptions.MANAGE_IDENTITIES,
               ),
               <Button
                 disabled={!manageUserPermission}
@@ -183,7 +187,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
               {Utils.renderWithPermission(
                 manageUserPermission,
                 Constants.environmentPermissions(
-                  Utils.getManageUserPermissionDescription(),
+                  EnvironmentPermissionDescriptions.MANAGE_IDENTITIES,
                 ),
                 <Button
                   id='remove-feature'
@@ -208,7 +212,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
                 {Utils.renderWithPermission(
                   manageUserPermission,
                   Constants.environmentPermissions(
-                    Utils.getManageUserPermissionDescription(),
+                    EnvironmentPermissionDescriptions.MANAGE_IDENTITIES,
                   ),
                   <Button
                     disabled={!manageUserPermission}

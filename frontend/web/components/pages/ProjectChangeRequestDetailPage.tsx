@@ -18,6 +18,10 @@ import { useGetProjectQuery } from 'common/services/useProject'
 import DiffSegment from 'components/diff/DiffSegment'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useHistory } from 'react-router-dom'
+import {
+  ProjectPermission,
+  ProjectPermissionDescriptions,
+} from 'common/types/permissions.types'
 
 type ProjectChangeRequestPageType = {
   router: RouterChildContext['router']
@@ -37,12 +41,12 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
   const approvePermission = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'MANAGE_SEGMENTS',
+    permission: ProjectPermission.APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS,
   })
   const publishPermission = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'MANAGE_SEGMENTS',
+    permission: ProjectPermission.MANAGE_SEGMENTS,
   })
   const { data: project } = useGetProjectQuery({ id: projectId })
   const [actionChangeRequest, { isLoading: isActioning }] =
@@ -231,7 +235,7 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
         addOwner={addOwner}
         removeOwner={removeOwner}
         publishPermissionDescription={Constants.projectPermissions(
-          'Update Segments',
+          ProjectPermissionDescriptions.MANAGE_SEGMENTS,
         )}
         deleteChangeRequest={deleteChangeRequest}
         minApprovals={minApprovals || 0}

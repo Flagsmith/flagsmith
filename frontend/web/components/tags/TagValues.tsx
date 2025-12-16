@@ -6,6 +6,10 @@ import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import { useHasPermission } from 'common/providers/Permission'
 import { Tag as TTag } from 'common/types/responses'
+import {
+  ProjectPermission,
+  ProjectPermissionDescriptions,
+} from 'common/types/permissions.types'
 
 type TagValuesType = {
   onAdd?: (tag?: TTag) => void
@@ -31,14 +35,13 @@ const TagValues: FC<TagValuesType> = ({
 }) => {
   const { data } = useGetTagsQuery({ projectId })
   const Wrapper = inline ? Fragment : Row
-  const permissionType = 'MANAGE_TAGS'
 
   const tags = data?.filter((tag) => !hideTags?.includes(tag.id))
 
   const { permission: createEditTagPermission } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: permissionType,
+    permission: ProjectPermission.MANAGE_TAGS,
   })
 
   return (
@@ -60,7 +63,7 @@ const TagValues: FC<TagValuesType> = ({
         Utils.renderWithPermission(
           createEditTagPermission,
           Constants.projectPermissions(
-            permissionType === 'ADMIN' ? 'Admin' : 'Manage Tags',
+            ProjectPermissionDescriptions.MANAGE_TAGS,
           ),
           <Button
             disabled={!createEditTagPermission}
