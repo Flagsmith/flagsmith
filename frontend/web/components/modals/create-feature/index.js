@@ -51,9 +51,11 @@ import FeatureValueTab from './tabs/FeatureValue'
 import FeatureLimitAlert from './FeatureLimitAlert'
 import FeatureUpdateSummary from './FeatureUpdateSummary'
 import FeatureNameInput from './FeatureNameInput'
-import { EnvironmentPermission } from 'common/types/permissions.types'
-import { ProjectPermission } from 'common/types/permissions.types'
-import { EnvironmentPermissionDescriptions } from 'common/types/permissions.types'
+import {
+  EnvironmentPermission,
+  ProjectPermission,
+  EnvironmentPermissionDescriptions,
+} from 'common/types/permissions.types'
 
 const Index = class extends Component {
   static displayName = 'create-feature'
