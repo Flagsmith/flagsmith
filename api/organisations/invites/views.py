@@ -137,7 +137,10 @@ class InviteViewSet(
 
     def get_serializer_context(self) -> dict[str, Any]:
         context = super().get_serializer_context()
-        context["organisation"] = self.kwargs.get("organisation_pk")
+        if getattr(self.request, "swagger_fake_view", False):
+            return context
+
+        context["organisation"] = int(self.kwargs["organisation_pk"])
         return context
 
     @action(detail=True, methods=["POST"], throttle_classes=[ScopedRateThrottle])
