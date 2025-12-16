@@ -137,7 +137,7 @@ class InviteViewSet(
 
     def get_serializer_context(self) -> dict[str, Any]:
         context = super().get_serializer_context()
-        context["organisation"] = self.kwargs["organisation_pk"]
+        context["organisation"] = self.kwargs.get("organisation_pk")
         return context
 
     @action(detail=True, methods=["POST"], throttle_classes=[ScopedRateThrottle])
