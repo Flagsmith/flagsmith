@@ -137,7 +137,7 @@ class InviteViewSet(
 
     def get_serializer_context(self) -> dict[str, Any]:
         context = super().get_serializer_context()
-        if getattr(self.request, "swagger_fake_view", False):
+        if getattr(self.request, "swagger_fake_view", False):  # pragma: no cover
             return context
 
         context["organisation"] = int(self.kwargs["organisation_pk"])
