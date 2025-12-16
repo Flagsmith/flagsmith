@@ -13,7 +13,6 @@ import classNames from 'classnames'
 import Button from 'components/base/forms/Button'
 import {
   Environment,
-  FeatureListProviderActions,
   FeatureListProviderData,
   ProjectFlag,
   ReleasePipeline,
@@ -35,9 +34,14 @@ export interface FeatureRowProps {
   environmentId: string
   permission?: boolean
   projectFlag: ProjectFlag
-  projectId: string
-  removeFlag?: FeatureListProviderActions['removeFlag']
-  toggleFlag?: FeatureListProviderActions['toggleFlag']
+  projectId: number
+  removeFlag?: (projectFlag: ProjectFlag) => void | Promise<void>
+  toggleFlag?: (
+    projectFlag: ProjectFlag,
+    environmentFlag:
+      | FeatureListProviderData['environmentFlags'][number]
+      | undefined,
+  ) => void | Promise<void>
   index: number
   readOnly?: boolean
   condensed?: boolean
@@ -125,12 +129,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         projectFlag={projectFlag}
         environmentFlag={environmentFlags?.[id]}
         cb={() => {
-          toggleFlag?.(
-            projectId,
-            environmentId,
-            projectFlag,
-            environmentFlags?.[id],
-          )
+          toggleFlag?.(projectFlag, environmentFlags?.[id])
         }}
       />,
       'p-0',
@@ -248,7 +247,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     onRemove: () => {
       if (disableControls) return
       confirmRemove(projectFlag, () => {
-        removeFlag?.(projectId, projectFlag)
+        removeFlag?.(projectFlag)
       })
     },
     onShowAudit: () => {

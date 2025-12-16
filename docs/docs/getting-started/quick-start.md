@@ -21,8 +21,7 @@ By the end of this tutorial, you will be able to:
 
 ## Prerequisites
 
-You will need access to a Flagsmith instance (either using the SaaS platform or self-hosted) and a basic understanding of HTML and JavaScript.
-
+You will need access to a Flagsmith instance (either using the SaaS platform or self-hosted) and a basic understanding of HTML and JavaScript. To set up self-hosted easily via Docker follow the instructions available [here](/deployment-self-hosting/hosting-guides/docker).
 :::tip
 If you're using the SaaS platform, log in at [app.flagsmith.com](https://app.flagsmith.com/). If you're self-hosting, log in to your deployed instance.
 :::

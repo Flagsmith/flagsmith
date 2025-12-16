@@ -1,12 +1,6 @@
-import pytest
-from django.conf import settings
 from django_test_migrations.migrator import Migrator
 
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
 def test_migrate_add_project_to_change_request(migrator: Migrator) -> None:
     old_state = migrator.apply_initial_migration(
         ("workflows_core", "0010_add_ignore_conflicts_option"),

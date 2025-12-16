@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.205.1](https://github.com/Flagsmith/flagsmith/compare/v2.205.0...v2.205.1) (2025-12-16)
+
+
+### Bug Fixes
+
+* disable-flacky-test ([#6409](https://github.com/Flagsmith/flagsmith/issues/6409)) ([0b90d0c](https://github.com/Flagsmith/flagsmith/commit/0b90d0ca7b8760a51c0c131b9df863e7a09f749b))
+* Show segment identities tab regardless of environment being set ([#6413](https://github.com/Flagsmith/flagsmith/issues/6413)) ([b5498ba](https://github.com/Flagsmith/flagsmith/commit/b5498ba80e4fceb632b3938a485624469458dcf9))
+
+
+### Dependency Updates
+
+* bump mdast-util-to-hast from 13.2.0 to 13.2.1 in /docs ([#6346](https://github.com/Flagsmith/flagsmith/issues/6346)) ([2e4de74](https://github.com/Flagsmith/flagsmith/commit/2e4de742f07c6015a6e6fc8c14427b954ff93dbc))
+
+## [2.205.0](https://github.com/Flagsmith/flagsmith/compare/v2.204.0...v2.205.0) (2025-12-12)
+
+
+### Features
+
+* add delete-segment-override experimental endpoint ([#6383](https://github.com/Flagsmith/flagsmith/issues/6383)) ([9e584f1](https://github.com/Flagsmith/flagsmith/commit/9e584f16583973f580c1e96ba512084154fa049b))
+* **api:** add experimental feature flag update endpoints  ([#6305](https://github.com/Flagsmith/flagsmith/issues/6305)) ([32e9bc5](https://github.com/Flagsmith/flagsmith/commit/32e9bc58e03e056e94b8ae490fb45b7f966468b6))
+
+
+### Bug Fixes
+
+* optimise segment deletion and cloning with bulk operations ([#6401](https://github.com/Flagsmith/flagsmith/issues/6401)) ([acd2d4a](https://github.com/Flagsmith/flagsmith/commit/acd2d4ab0dd52cf56cd8ed043966181d0961e18f))
+* skip-audit-log-for-soft-deleted-CR ([#6367](https://github.com/Flagsmith/flagsmith/issues/6367)) ([9fe23ba](https://github.com/Flagsmith/flagsmith/commit/9fe23ba2f3da53793bf654df3d54bbf66f8deb42))
+
 ## [2.204.0](https://github.com/Flagsmith/flagsmith/compare/v2.203.0...v2.204.0) (2025-12-08)
 
 

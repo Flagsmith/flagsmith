@@ -58,6 +58,7 @@ def teardown() -> None:
     delete_user_and_its_organisations(
         user_email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE
     )
+    delete_user_and_its_organisations(user_email=settings.E2E_SEPARATE_TEST_USER)
 
 
 def seed_data() -> None:
@@ -99,6 +100,13 @@ def seed_data() -> None:
     user_org_permission.add_permission(CREATE_PROJECT)
     user_org_permission.add_permission(MANAGE_USER_GROUPS)
     UserPermissionGroup.objects.create(name="TestGroup", organisation=organisation)
+
+    separate_org: Organisation = Organisation.objects.create(name="E2E Separate Org")
+    separate_test_user: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
+        email=settings.E2E_SEPARATE_TEST_USER,
+        password=PASSWORD,
+    )
+    separate_test_user.add_organisation(separate_org, OrganisationRole.ADMIN)
 
     # We add different projects and environments to give each e2e test its own isolated context.
     project_test_data = [
