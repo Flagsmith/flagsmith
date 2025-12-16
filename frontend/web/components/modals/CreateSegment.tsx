@@ -145,7 +145,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [description, setDescription] = useState(segment.description)
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
-
+  useEffect(() => {
+    if (_segment) {
+      setSegment(_segment)
+    }
+  }, [_segment])
   useEffect(() => {
     if (segment) {
       setRules(segment.rules)
@@ -538,22 +542,20 @@ const CreateSegment: FC<CreateSegmentType> = ({
               />
             </div>
           </TabItem>
-          <TabItem tabLabel='Users'>
+          <TabItem tabLabel='Identities'>
             <div className='my-4'>
-              {!!identities && (
-                <CreateSegmentUsersTabContent
-                  projectId={projectId}
-                  environmentId={environmentId}
-                  setEnvironmentId={setEnvironmentId}
-                  identitiesLoading={identitiesLoading}
-                  identities={identities}
-                  page={page}
-                  setPage={setPage}
-                  name={name}
-                  searchInput={searchInput}
-                  setSearchInput={setSearchInput}
-                />
-              )}
+              <CreateSegmentUsersTabContent
+                projectId={projectId}
+                environmentId={environmentId}
+                setEnvironmentId={setEnvironmentId}
+                identitiesLoading={identitiesLoading}
+                identities={identities}
+                page={page}
+                setPage={setPage}
+                name={name}
+                searchInput={searchInput}
+                setSearchInput={setSearchInput}
+              />
             </div>
           </TabItem>
           {metadataEnable && segmentContentType?.id && (
