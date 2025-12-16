@@ -1873,22 +1873,39 @@ const Index = class extends Component {
 
                                 <div className='text-right mb-2'>
                                   {identity && (
-                                    <div>
-                                      <Button
-                                        onClick={() => saveFeatureValue()}
-                                        data-test='update-feature-btn'
-                                        id='update-feature-btn'
-                                        disabled={
-                                          isSaving ||
-                                          !projectFlag.name ||
-                                          invalid
-                                        }
-                                      >
-                                        {isSaving
-                                          ? 'Updating'
-                                          : 'Update Feature'}
-                                      </Button>
-                                    </div>
+                                    <Permission
+                                      level='environment'
+                                      tags={projectFlag.tags}
+                                      permission={Utils.getManageFeaturePermission(
+                                        is4Eyes,
+                                        identity,
+                                      )}
+                                      id={this.props.environmentId}
+                                    >
+                                      {({ permission: savePermission }) =>
+                                        Utils.renderWithPermission(
+                                          savePermission,
+                                          EnvironmentPermissionDescriptions.UPDATE_FEATURE_STATE,
+                                          <div>
+                                            <Button
+                                              onClick={() => saveFeatureValue()}
+                                              data-test='update-feature-btn'
+                                              id='update-feature-btn'
+                                              disabled={
+                                                (!savePermission,
+                                                isSaving ||
+                                                  !projectFlag.name ||
+                                                  invalid)
+                                              }
+                                            >
+                                              {isSaving
+                                                ? 'Updating'
+                                                : 'Update Feature'}
+                                            </Button>
+                                          </div>,
+                                        )
+                                      }
+                                    </Permission>
                                   )}
                                 </div>
                               </div>
