@@ -29,7 +29,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
 }) => {
   const history = useHistory()
   const [environment, setEnvironment] = useState<Environment>()
-  const [preselect] = useState(Utils.fromParam().flag)
+  const preselect = Utils.fromParam().flag
   const [filter, setFilter] = useState(
     parseFiltersFromUrlParams(Utils.fromParam()),
   )

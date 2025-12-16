@@ -19,7 +19,10 @@ NINETY_DAY_PERIOD: PeriodType
 # because, when we prepare the data for Influx, we need to map to numeric IDs.
 # This allows us to efficiently store usage and evaluation data.
 SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
-    "flagsmith-dotnet-sdk": ["unknown"],
+    "flagsmith-dotnet-sdk": [
+        "unknown",
+        "9.0.0",
+    ],
     "flagsmith-elixir-sdk": [
         "unknown",
         "2.3.0",
@@ -42,8 +45,12 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
     "flagsmith-nodejs-sdk": [
         "unknown",
         "6.2.0",
+        "7.0.2",
     ],
-    "flagsmith-php-sdk": ["unknown"],
+    "flagsmith-php-sdk": [
+        "unknown",
+        "5.0.0",
+    ],
     "flagsmith-python-sdk": [
         "unknown",
         "5.0.0",

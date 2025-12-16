@@ -70,9 +70,9 @@ Identity overrides always take precedence over segment overrides. Simply put, th
 
 ## Context values
 
-:::warning
+:::info
 
-Currently, context values are only available for remote evaluation. In local evaluation, rules using context values will evaluate to `false`.
+See [minimum required SDK versions](/flagsmith-concepts/segments/segment-rule-operators#minimum-sdk-versions-for-local-evaluation-mode) to use Context values in local evaluation mode.
 
 :::
 

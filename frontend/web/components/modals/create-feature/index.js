@@ -53,7 +53,7 @@ import FeatureUpdateSummary from './FeatureUpdateSummary'
 import FeatureNameInput from './FeatureNameInput'
 
 const Index = class extends Component {
-  static displayName = 'CreateFlag'
+  static displayName = 'create-feature'
 
   constructor(props, context) {
     super(props, context)

@@ -65,7 +65,7 @@ const UserPage: FC = () => {
   const [filter, setFilter] = useState<FiltersValue>(defaultState)
   const [actualFlags, setActualFlags] =
     useState<Record<string, IdentityFeatureState>>()
-  const [preselect] = useState(Utils.fromParam().flag)
+  const preselect = Utils.fromParam().flag
   const [segmentsPage, setSegmentsPage] = useState(1)
   const { search, searchInput, setSearchInput } = useDebouncedSearch('')
   const { data: segments, isFetching: isFetchingSegments } =

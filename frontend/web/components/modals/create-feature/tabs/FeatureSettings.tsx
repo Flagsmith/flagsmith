@@ -123,7 +123,6 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
               description: Utils.safeParseEventValue(e),
             })
           }
-          ds
           type='text'
           title={identity ? 'Description' : 'Description (optional)'}
           placeholder="e.g. 'This determines what size the header is' "
