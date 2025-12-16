@@ -51,6 +51,7 @@ import FeatureValueTab from './tabs/FeatureValue'
 import FeatureLimitAlert from './FeatureLimitAlert'
 import FeatureUpdateSummary from './FeatureUpdateSummary'
 import FeatureNameInput from './FeatureNameInput'
+import { EnvironmentPermission } from '../../../../common/types/permissions.types';
 
 const Index = class extends Component {
   static displayName = 'create-feature'
@@ -242,7 +243,7 @@ const Index = class extends Component {
           { forceRefetch },
         ).then((permissions) => {
           const hasViewIdentitiesPermission =
-            permissions[Utils.getViewIdentitiesPermission()]
+            permissions[EnvironmentPermission.VIEW_IDENTITIES]
           if (hasViewIdentitiesPermission || AccountStore.isAdmin()) {
             data
               .get(

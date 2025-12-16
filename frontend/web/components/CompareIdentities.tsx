@@ -1,28 +1,29 @@
-import React, { FC, useEffect, useMemo, useState } from 'react'
-import IdentitySelect, { IdentitySelectType } from './IdentitySelect'
-import Utils from 'common/utils/utils'
-import EnvironmentSelect from './EnvironmentSelect'
+import React, { FC, useEffect, useMemo, useState } from 'react';
+import IdentitySelect, { IdentitySelectType } from './IdentitySelect';
+import Utils from 'common/utils/utils';
+import EnvironmentSelect from './EnvironmentSelect';
 import {
-  useCreateCloneIdentityFeatureStatesMutation,
-  useGetIdentityFeatureStatesAllQuery,
-} from 'common/services/useIdentityFeatureState'
-import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
-import Tag from './tags/Tag'
-import PanelSearch from './PanelSearch'
-import { IdentityFeatureState } from 'common/types/responses'
-import Icon from './Icon'
-import Switch from './Switch'
-import FeatureValue from './feature-summary/FeatureValue'
-import { sortBy } from 'lodash'
-import { useHasPermission } from 'common/providers/Permission'
-import Constants from 'common/constants'
-import Button from './base/forms/Button'
-import ProjectStore from 'common/stores/project-store'
-import SegmentOverridesIcon from './SegmentOverridesIcon'
-import IdentityOverridesIcon from './IdentityOverridesIcon'
-import Tooltip from './Tooltip'
-import PageTitle from './PageTitle'
-import { getDarkMode } from 'project/darkMode'
+    useCreateCloneIdentityFeatureStatesMutation,
+    useGetIdentityFeatureStatesAllQuery,
+} from 'common/services/useIdentityFeatureState';
+import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag';
+import Tag from './tags/Tag';
+import PanelSearch from './PanelSearch';
+import { IdentityFeatureState } from 'common/types/responses';
+import Icon from './Icon';
+import Switch from './Switch';
+import FeatureValue from './feature-summary/FeatureValue';
+import { sortBy } from 'lodash';
+import { useHasPermission } from 'common/providers/Permission';
+import Constants from 'common/constants';
+import Button from './base/forms/Button';
+import ProjectStore from 'common/stores/project-store';
+import SegmentOverridesIcon from './SegmentOverridesIcon';
+import IdentityOverridesIcon from './IdentityOverridesIcon';
+import Tooltip from './Tooltip';
+import PageTitle from './PageTitle';
+import { getDarkMode } from 'project/darkMode';
+import { EnvironmentPermission } from 'common/types/permissions.types';
 
 type CompareIdentitiesType = {
   projectId: string
@@ -69,7 +70,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
   const { isLoading: permissionLoading, permission } = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getViewIdentitiesPermission(),
+    permission: EnvironmentPermission.VIEW_IDENTITIES,
   })
 
   const { data: leftUser } = useGetIdentityFeatureStatesAllQuery(

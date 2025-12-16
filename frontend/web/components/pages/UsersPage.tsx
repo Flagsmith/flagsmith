@@ -21,6 +21,7 @@ import IdentifierString from 'components/IdentifierString'
 import CodeHelp from 'components/CodeHelp'
 import { getStore } from 'common/store'
 import { useRouteContext } from 'components/providers/RouteContext'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
 interface RouteParams {
   environmentId: string
@@ -109,7 +110,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
   const { permission } = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getViewIdentitiesPermission(),
+    permission: EnvironmentPermission.VIEW_IDENTITIES,
   })
 
   const newUser = () => {

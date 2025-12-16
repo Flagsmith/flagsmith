@@ -4,10 +4,10 @@ import { PermissionLevel } from 'common/types/requests'
 import AccountStore from 'common/stores/account-store'
 import intersection from 'lodash/intersection'
 import { cloneDeep } from 'lodash'
-
+import { Permission } from 'common/types/permissions.types'
 type PermissionType = {
   id: any
-  permission: string
+  permission: Permission
   tags?: number[]
   level: PermissionLevel
   children: (data: { permission: boolean; isLoading: boolean }) => ReactNode

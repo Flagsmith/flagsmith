@@ -28,6 +28,14 @@ import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
 import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
 import { TimeUnit } from 'components/release-pipelines/constants'
+import {
+  ADMIN_PERMISSION,
+  ADMIN_PERMISSION_DESCRIPTION,
+  EnvironmentPermission,
+  EnvironmentPermissionDescription,
+  OrganisationPermission,
+  OrganisationPermissionDescription,
+} from 'common/types/permissions.types'
 
 const semver = require('semver')
 
@@ -218,15 +226,15 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getCreateProjectPermission(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
-      return 'ADMIN'
+      return ADMIN_PERMISSION
     }
-    return 'CREATE_PROJECT'
+    return OrganisationPermission.CREATE_PROJECT
   },
   getCreateProjectPermissionDescription(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
-      return 'Administrator'
+      return ADMIN_PERMISSION_DESCRIPTION
     }
-    return 'Create Project'
+    return OrganisationPermissionDescription.CREATE_PROJECT
   },
   getExistingWaitForTime: (
     waitFor: string | undefined,
@@ -376,19 +384,19 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getManageFeaturePermission(isChangeRequest: boolean) {
     if (isChangeRequest) {
-      return 'CREATE_CHANGE_REQUEST'
+      return EnvironmentPermission.CREATE_CHANGE_REQUEST
     }
-    return 'UPDATE_FEATURE_STATE'
+    return EnvironmentPermission.UPDATE_FEATURE_STATE
   },
   getManageFeaturePermissionDescription(isChangeRequest: boolean) {
     if (isChangeRequest) {
-      return 'Create Change Request'
+      return EnvironmentPermissionDescription.CREATE_CHANGE_REQUEST
     }
-    return 'Update Feature State'
+    return EnvironmentPermissionDescription.UPDATE_FEATURE_STATE
   },
 
   getManageUserPermission() {
-    return 'MANAGE_IDENTITIES'
+    return EnvironmentPermission.MANAGE_IDENTITIES
   },
   getManageUserPermissionDescription() {
     return 'Manage Identities'
@@ -621,9 +629,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       }
       return utms
     }, {} as UtmsType)
-  },
-  getViewIdentitiesPermission() {
-    return 'VIEW_IDENTITIES'
   },
 
   hasEntityPermission(key: string, entityPermissions: UserPermissions) {
