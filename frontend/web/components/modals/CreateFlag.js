@@ -220,6 +220,24 @@ const CreateFlag = class extends Component {
     }
   }
 
+  setUserOverridesError = () => {
+    this.setState({
+      userOverrides: [],
+      userOverridesError: true,
+      userOverridesNoPermission: false,
+      userOverridesPaging: { count: 0, currentPage: 1, next: null },
+    })
+  }
+
+  setUserOverridesNoPermission = () => {
+    this.setState({
+      userOverrides: [],
+      userOverridesError: false,
+      userOverridesNoPermission: true,
+      userOverridesPaging: { count: 0, currentPage: 1, next: null },
+    })
+  }
+
   userOverridesPage = (page, forceRefetch) => {
     if (Utils.getIsEdge()) {
       // Early return if tab should be hidden
@@ -250,16 +268,7 @@ const CreateFlag = class extends Component {
             permissions.ADMIN
           // Early return if user doesn't have permission
           if (!hasViewIdentitiesPermission) {
-            this.setState({
-              userOverrides: [],
-              userOverridesError: false,
-              userOverridesNoPermission: true,
-              userOverridesPaging: {
-                count: 0,
-                currentPage: 1,
-                next: null,
-              },
-            })
+            this.setUserOverridesNoPermission()
             return
           }
 
@@ -286,44 +295,15 @@ const CreateFlag = class extends Component {
               })
             })
             .catch((response) => {
-              // Check if it's a 403 (permission denied) or other error
               if (response?.status === 403) {
-                this.setState({
-                  userOverrides: [],
-                  userOverridesError: false,
-                  userOverridesNoPermission: true,
-                  userOverridesPaging: {
-                    count: 0,
-                    currentPage: 1,
-                    next: null,
-                  },
-                })
+                this.setUserOverridesNoPermission()
               } else {
-                this.setState({
-                  userOverrides: [],
-                  userOverridesError: true,
-                  userOverridesNoPermission: false,
-                  userOverridesPaging: {
-                    count: 0,
-                    currentPage: 1,
-                    next: null,
-                  },
-                })
+                this.setUserOverridesError()
               }
             })
         })
         .catch(() => {
-          // Permission check failed - set error state
-          this.setState({
-            userOverrides: [],
-            userOverridesError: true,
-            userOverridesNoPermission: false,
-            userOverridesPaging: {
-              count: 0,
-              currentPage: 1,
-              next: null,
-            },
-          })
+          this.setUserOverridesError()
         })
 
       return
@@ -350,29 +330,10 @@ const CreateFlag = class extends Component {
         })
       })
       .catch((response) => {
-        // Check if it's a 403 (permission denied) or other error
         if (response?.status === 403) {
-          this.setState({
-            userOverrides: [],
-            userOverridesError: false,
-            userOverridesNoPermission: true,
-            userOverridesPaging: {
-              count: 0,
-              currentPage: 1,
-              next: null,
-            },
-          })
+          this.setUserOverridesNoPermission()
         } else {
-          this.setState({
-            userOverrides: [],
-            userOverridesError: true,
-            userOverridesNoPermission: false,
-            userOverridesPaging: {
-              count: 0,
-              currentPage: 1,
-              next: null,
-            },
-          })
+          this.setUserOverridesError()
         }
       })
   }
