@@ -80,6 +80,12 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     permission: 'APPROVE_CHANGE_REQUEST',
     tags: projectFlag?.tags,
   })
+  const editPermission = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: 'CREATE_CHANGE_REQUEST',
+    tags: projectFlag?.tags,
+  })
   const publishPermission = useHasPermission({
     id: environmentId,
     level: 'environment',
@@ -339,6 +345,10 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         publishChangeRequest={publishChangeRequest}
         approvePermission={approvePermission?.permission}
         approveChangeRequest={approveChangeRequest}
+        editPermission={editPermission?.permission}
+        editPermissionDescription={Constants.environmentPermissions(
+          'Create Change Request',
+        )}
         publishPermission={publishPermission?.permission}
         isScheduled={isScheduled}
         changeRequest={changeRequest}
@@ -425,6 +435,8 @@ type ChangeRequestPageInnerType = {
   publishChangeRequest?: () => void
   DiffView: ReactNode
   error?: any
+  editPermission: boolean | undefined
+  editPermissionDescription: string
 }
 
 export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
@@ -435,6 +447,8 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
   changeRequest,
   deleteChangeRequest,
   editChangeRequest,
+  editPermission,
+  editPermissionDescription,
   error,
   hidePublish,
   isScheduled,
@@ -545,10 +559,25 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
               <Button theme='secondary' onClick={deleteChangeRequest}>
                 Delete
               </Button>
-              {editChangeRequest && (
-                <Button onClick={editChangeRequest} className='ml-2'>
-                  Edit
-                </Button>
+              {Utils.renderWithPermission(
+                editPermission,
+                editPermissionDescription,
+                <>
+                  <Button
+                    disabled={!editPermission}
+                    onClick={editChangeRequest}
+                    className='ml-2'
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    disabled={!editPermission}
+                    onClick={editChangeRequest}
+                    className='ml-2'
+                  >
+                    Edit
+                  </Button>
+                </>,
               )}
             </Row>
           )
