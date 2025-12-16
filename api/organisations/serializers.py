@@ -109,9 +109,7 @@ class _PermissionGroupPKRelatedField(
 ):
     def get_queryset(self) -> QuerySet[UserPermissionGroup]:
         return UserPermissionGroup.objects.filter(
-            organisation__id=typing.cast(
-                InviteSerializer, self.parent.parent
-            ).get_organisation_id()
+            organisation__id=self.context["organisation"]
         )
 
 
@@ -125,15 +123,12 @@ class InviteSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
 
     def validate(self, attrs: typing.Any) -> typing.Any:
         if Invite.objects.filter(
-            email=attrs["email"], organisation__id=self.get_organisation_id()
+            email=attrs["email"], organisation__id=self.context["organisation"]
         ).exists():
             raise serializers.ValidationError(
                 {"email": "Invite for email %s already exists" % attrs["email"]}
             )
         return super(InviteSerializer, self).validate(attrs)
-
-    def get_organisation_id(self) -> int:
-        return int(self.context["view"].kwargs.get("organisation_pk"))
 
 
 class MultiInvitesSerializer(serializers.Serializer):  # type: ignore[type-arg]
