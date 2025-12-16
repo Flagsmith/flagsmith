@@ -96,7 +96,6 @@ const Index = class extends Component {
       segmentsChanged: false,
       selectedIdentity: null,
       settingsChanged: false,
-      tags: tags?.filter((tag) => !hideTags.includes(tag)) || [],
       userOverridesError: false,
       userOverridesNoPermission: false,
       valueChanged: false,
