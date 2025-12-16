@@ -130,7 +130,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
         <TabItem
           className='p-0'
           tabLabel={
-            <div className='d-flex gap-2'>
+            <div className='d-flex align-items-center'>
               Created <div className='unread'>{created.length}</div>
             </div>
           }
