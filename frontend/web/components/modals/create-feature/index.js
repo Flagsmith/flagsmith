@@ -94,10 +94,9 @@ const Index = class extends Component {
       scheduledChangeRequests: [],
       segmentsChanged: false,
       selectedIdentity: null,
-      tags: tags?.filter((tag) => !hideTags.includes(tag)) || [],
+      settingsChanged: false,
       userOverridesError: false,
       userOverridesNoPermission: false,
-      settingsChanged: false,
       valueChanged: false,
     }
   }
