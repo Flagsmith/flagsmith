@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
@@ -19,6 +19,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import { Environment } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import { useRouteContext } from 'components/providers/RouteContext'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 const CreateEnvironmentPage: React.FC = () => {
   const [envContentType, setEnvContentType] = useState<Record<string, any>>({})
@@ -81,7 +82,7 @@ const CreateEnvironmentPage: React.FC = () => {
       </PageTitle>
       <Permission
         level='project'
-        permission='CREATE_ENVIRONMENT'
+        permission={ProjectPermission.CREATE_ENVIRONMENT}
         id={projectId}
       >
         {({ isLoading, permission }) =>

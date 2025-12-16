@@ -4,6 +4,7 @@ import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type FeaturesPageHeaderProps = {
   totalFeatures: number
@@ -37,7 +38,7 @@ export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
         cta={
           <Permission
             level='project'
-            permission='CREATE_FEATURE'
+            permission={ProjectPermission.CREATE_FEATURE}
             id={projectId}
             showTooltip
             permissionName='Create Feature'

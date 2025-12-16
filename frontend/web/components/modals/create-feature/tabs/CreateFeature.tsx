@@ -5,6 +5,10 @@ import FeatureSettings from './FeatureSettings'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import { useHasPermission } from 'common/providers/Permission'
+import {
+  ADMIN_PERMISSION,
+  ProjectPermission,
+} from 'common/types/permissions.types'
 
 type CreateFeatureTabProps = {
   projectId: number
@@ -38,13 +42,13 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
   const { permission: createFeature } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'CREATE_FEATURE',
+    permission: ProjectPermission.CREATE_FEATURE,
   })
 
   const { permission: projectAdmin } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'ADMIN',
+    permission: ADMIN_PERMISSION,
   })
 
   const noPermissions = !createFeature && !projectAdmin

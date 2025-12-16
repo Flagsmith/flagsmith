@@ -52,6 +52,8 @@ import FeatureLimitAlert from './FeatureLimitAlert'
 import FeatureUpdateSummary from './FeatureUpdateSummary'
 import FeatureNameInput from './FeatureNameInput'
 import { EnvironmentPermission } from 'common/types/permissions.types'
+import { ProjectPermission } from 'common/types/permissions.types'
+import { EnvironmentPermissionDescriptions } from 'common/types/permissions.types'
 
 const Index = class extends Component {
   static displayName = 'create-feature'
@@ -270,7 +272,7 @@ const Index = class extends Component {
         {
           id: this.props.environmentId,
           level: 'environment',
-          permissions: 'VIEW_IDENTITIES',
+          permissions: EnvironmentPermission.VIEW_IDENTITIES,
         },
         { forceRefetch },
       )
@@ -821,7 +823,7 @@ const Index = class extends Component {
               return (
                 <Permission
                   level='project'
-                  permission='CREATE_FEATURE'
+                  permission={ProjectPermission.CREATE_FEATURE}
                   id={this.props.projectId}
                 >
                   {({ permission: createFeature }) => (
@@ -993,7 +995,7 @@ const Index = class extends Component {
                                               <Permission
                                                 level='environment'
                                                 permission={
-                                                  'MANAGE_SEGMENT_OVERRIDES'
+                                                  EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES
                                                 }
                                                 id={this.props.environmentId}
                                               >
@@ -1048,7 +1050,7 @@ const Index = class extends Component {
                                               <Permission
                                                 level='environment'
                                                 permission={
-                                                  'MANAGE_SEGMENT_OVERRIDES'
+                                                  EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES
                                                 }
                                                 id={this.props.environmentId}
                                               >
@@ -1164,7 +1166,7 @@ const Index = class extends Component {
                                                       <Permission
                                                         level='environment'
                                                         permission={
-                                                          'MANAGE_SEGMENT_OVERRIDES'
+                                                          EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES
                                                         }
                                                         id={
                                                           this.props
@@ -1220,7 +1222,7 @@ const Index = class extends Component {
                                                           return Utils.renderWithPermission(
                                                             manageSegmentsOverrides,
                                                             Constants.environmentPermissions(
-                                                              'Manage segment overrides',
+                                                              EnvironmentPermissionDescriptions.MANAGE_SEGMENT_OVERRIDES,
                                                             ),
                                                             <>
                                                               {!is4Eyes &&
@@ -1298,7 +1300,9 @@ const Index = class extends Component {
                                     data-test='identity_overrides'
                                     tabLabel='Identity Overrides'
                                     level='environment'
-                                    permission={'VIEW_IDENTITIES'}
+                                    permission={
+                                      EnvironmentPermission.VIEW_IDENTITIES
+                                    }
                                     id={this.props.environmentId}
                                   >
                                     {({ permission: viewIdentities }) =>
@@ -1558,7 +1562,7 @@ const Index = class extends Component {
                                                 dangerouslySetInnerHTML={{
                                                   __html:
                                                     Constants.environmentPermissions(
-                                                      'View Identities',
+                                                      EnvironmentPermissionDescriptions.VIEW_IDENTITIES,
                                                     ),
                                                 }}
                                               />

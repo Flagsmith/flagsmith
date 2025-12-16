@@ -6,7 +6,10 @@ import intersection from 'lodash/intersection'
 import { cloneDeep } from 'lodash'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
-import { Permission } from 'common/types/permissions.types'
+import {
+  Permission as PermissionEnum,
+  PermissionDescriptions,
+} from 'common/types/permissions.types'
 
 /**
  * Props for the Permission component
@@ -22,7 +25,7 @@ import { Permission } from 'common/types/permissions.types'
  */
 type PermissionType = {
   id: number | string
-  permission: Permission
+  permission: PermissionEnum
   tags?: number[]
   level: PermissionLevel
   children:
@@ -167,7 +170,8 @@ const Permission: FC<PermissionType> = ({
 
     return Utils.renderWithPermission(
       finalPermission,
-      permissionName || Constants.projectPermissions(permission),
+      permissionName ||
+        Constants.projectPermissions(PermissionDescriptions[permission]),
       renderedChildren,
     )
   }
@@ -179,7 +183,8 @@ const Permission: FC<PermissionType> = ({
   if (showTooltip) {
     return Utils.renderWithPermission(
       finalPermission,
-      permissionName || Constants.projectPermissions(permission),
+      permissionName ||
+        Constants.projectPermissions(PermissionDescriptions[permission]),
       children,
     )
   }

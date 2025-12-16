@@ -45,7 +45,7 @@ import getUserDisplayName from 'common/utils/getUserDisplayName'
 import {
   ADMIN_PERMISSION_DESCRIPTION,
   OrganisationPermission,
-  OrganisationPermissionDescription,
+  OrganisationPermissionDescriptions,
 } from 'common/types/permissions.types'
 
 type UsersAndPermissionsPageType = {
@@ -537,7 +537,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                           {Utils.renderWithPermission(
                             manageGroupsPermission.permission,
                             Constants.organisationPermissions(
-                              OrganisationPermissionDescription.MANAGE_USER_GROUPS,
+                              OrganisationPermissionDescriptions.MANAGE_USER_GROUPS,
                             ),
                             <Button
                               id='btn-invite-groups'

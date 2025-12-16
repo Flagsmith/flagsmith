@@ -16,6 +16,11 @@ import Utils from 'common/utils/utils'
 import FormGroup from 'components/base/grid/FormGroup'
 import Row from 'components/base/grid/Row'
 import AccountStore from 'common/stores/account-store'
+import {
+  ProjectPermission,
+  ProjectPermissionDescriptions,
+} from 'common/types/permissions.types'
+
 type FeatureSettingsTabProps = {
   projectAdmin: boolean
   createFeature: boolean
@@ -45,7 +50,9 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
       <InfoMessage>
         <div
           dangerouslySetInnerHTML={{
-            __html: Constants.projectPermissions('Create Feature'),
+            __html: Constants.projectPermissions(
+              ProjectPermissionDescriptions.CREATE_FEATURE,
+            ),
           }}
         />
       </InfoMessage>
@@ -88,7 +95,11 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
         </>
       )}
       {!identity && projectFlag?.id && (
-        <Permission level='project' permission='CREATE_FEATURE' id={projectId}>
+        <Permission
+          level='project'
+          permission={ProjectPermission.CREATE_FEATURE}
+          id={projectId}
+        >
           {({ permission }) =>
             permission && (
               <>

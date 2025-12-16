@@ -14,11 +14,11 @@ import FeatureRowSkeleton from 'components/feature-summary/FeatureRowSkeleton'
 import JSONReference from 'components/JSONReference'
 import Permission from 'common/providers/Permission'
 import {
-  FeaturesEmptyState,
   FeatureMetricsSection,
+  FeaturesEmptyState,
   FeaturesPageHeader,
-  FeaturesTableFilters,
   FeaturesSDKIntegration,
+  FeaturesTableFilters,
 } from './components'
 import { useFeatureFilters } from './hooks/useFeatureFilters'
 import { useRemoveFeatureWithToast } from './hooks/useRemoveFeatureWithToast'
@@ -26,7 +26,8 @@ import { useToggleFeatureWithToast } from './hooks/useToggleFeatureWithToast'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { useFeatureListWithApiKey } from 'common/hooks/useFeatureListWithApiKey'
 import type { Pagination } from './types'
-import type { ProjectFlag, FeatureState } from 'common/types/responses'
+import type { FeatureState, ProjectFlag } from 'common/types/responses'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 const DEFAULT_PAGINATION: Pagination = {
   count: 0,
@@ -269,7 +270,7 @@ const FeaturesPage: FC = () => {
     return (
       <Permission
         level='project'
-        permission='CREATE_FEATURE'
+        permission={ProjectPermission.CREATE_FEATURE}
         id={projectId}
         showTooltip
         permissionName='Create Feature'

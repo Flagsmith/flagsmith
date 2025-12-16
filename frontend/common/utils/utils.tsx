@@ -9,11 +9,11 @@ import {
   MultivariateFeatureStateValue,
   MultivariateOption,
   Organisation,
+  PConfidence,
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
   Tag,
-  PConfidence,
   UserPermissions,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
@@ -33,8 +33,9 @@ import {
   ADMIN_PERMISSION_DESCRIPTION,
   EnvironmentPermission,
   EnvironmentPermissionDescription,
+  EnvironmentPermissionDescriptions,
   OrganisationPermission,
-  OrganisationPermissionDescription,
+  OrganisationPermissionDescriptions,
 } from 'common/types/permissions.types'
 
 const semver = require('semver')
@@ -234,7 +235,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (organisation?.restrict_project_create_to_admin) {
       return ADMIN_PERMISSION_DESCRIPTION
     }
-    return OrganisationPermissionDescription.CREATE_PROJECT
+    return OrganisationPermissionDescriptions.CREATE_PROJECT
   },
   getExistingWaitForTime: (
     waitFor: string | undefined,
@@ -390,16 +391,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getManageFeaturePermissionDescription(isChangeRequest: boolean) {
     if (isChangeRequest) {
-      return EnvironmentPermissionDescription.CREATE_CHANGE_REQUEST
+      return EnvironmentPermissionDescriptions.CREATE_CHANGE_REQUEST
     }
-    return EnvironmentPermissionDescription.UPDATE_FEATURE_STATE
-  },
-
-  getManageUserPermission() {
-    return EnvironmentPermission.MANAGE_IDENTITIES
-  },
-  getManageUserPermissionDescription() {
-    return 'Manage Identities'
+    return EnvironmentPermissionDescriptions.UPDATE_FEATURE_STATE
   },
 
   getNextPlan: (skipFree?: boolean) => {
@@ -431,7 +425,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
   },
-  getOverridePermission: (level: 'identity' | 'segment') => {
+  getOverridePermission: (
+    level: 'identity' | 'segment',
+  ): {
+    permission: EnvironmentPermission
+    permissionDescription: EnvironmentPermissionDescription
+  } => {
     switch (level) {
       case 'identity':
         return {
@@ -441,8 +440,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         }
       default:
         return {
-          permission: 'MANAGE_SEGMENT_OVERRIDES',
-          permissionDescription: 'Manage Segment Overrides',
+          permission: EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
+          permissionDescription:
+            EnvironmentPermissionDescriptions.MANAGE_SEGMENT_OVERRIDES,
         }
     }
   },

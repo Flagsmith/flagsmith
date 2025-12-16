@@ -21,7 +21,10 @@ import IdentifierString from 'components/IdentifierString'
 import CodeHelp from 'components/CodeHelp'
 import { getStore } from 'common/store'
 import { useRouteContext } from 'components/providers/RouteContext'
-import { EnvironmentPermission } from 'common/types/permissions.types'
+import {
+  ADMIN_PERMISSION_DESCRIPTION,
+  EnvironmentPermission,
+} from 'common/types/permissions.types'
 
 interface RouteParams {
   environmentId: string
@@ -151,7 +154,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
                 }
                 place='right'
               >
-                {Constants.environmentPermissions('Admin')}
+                {Constants.environmentPermissions(ADMIN_PERMISSION_DESCRIPTION)}
               </Tooltip>
             )}
           </>

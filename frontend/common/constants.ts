@@ -4,6 +4,11 @@ import Utils from './utils/utils'
 
 import Project from './project'
 import { integrationCategories } from 'components/pages/IntegrationsPage'
+import {
+  EnvironmentPermissionDescription,
+  OrganisationPermissionDescription,
+  ProjectPermissionDescription,
+} from './types/permissions.types'
 const keywords = {
   FEATURE_FUNCTION: 'myCoolFeature',
   FEATURE_NAME: 'my_cool_feature',
@@ -252,7 +257,7 @@ const Constants = {
     value: '',
   } as SegmentCondition,
   defaultTagColor: '#3d4db6',
-  environmentPermissions: (perm: string) =>
+  environmentPermissions: (perm: EnvironmentPermissionDescription) =>
     `To manage this feature you need the <i>${perm}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`,
   events: {
     'ACCEPT_INVITE': (org: any) => ({
@@ -623,7 +628,7 @@ const Constants = {
   modals: {
     'PAYMENT': 'Payment Modal',
   },
-  organisationPermissions: (perm: string) =>
+  organisationPermissions: (perm: OrganisationPermissionDescription) =>
     `To manage this feature you need the <i>${perm}</i> permission for this organisastion.<br/>Please contact a member of this organisation who has administrator privileges.`,
   pages: {
     'ACCOUNT': 'Account Page',
@@ -656,7 +661,7 @@ const Constants = {
     '#FFBE71',
     '#F57C78',
   ],
-  projectPermissions: (perm: string) =>
+  projectPermissions: (perm: ProjectPermissionDescription) =>
     `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`,
   resourceTypes: {
     GITHUB_ISSUE: {

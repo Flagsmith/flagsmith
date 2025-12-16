@@ -4,17 +4,18 @@ export enum OrganisationPermission {
   MANAGE_USERS = 'MANAGE_USERS',
   MANAGE_USER_GROUPS = 'MANAGE_USER_GROUPS',
 }
-export const OrganisationPermissionDescription: Record<
-  OrganisationPermission,
-  string
-> = {
+export const OrganisationPermissionDescriptions = {
   [OrganisationPermission.CREATE_PROJECT]: 'Create project',
   [OrganisationPermission.MANAGE_USERS]: 'Manage users',
   [OrganisationPermission.MANAGE_USER_GROUPS]: 'Manage user groups',
-}
+} as const
 
-export const ADMIN_PERMISSION = 'ADMIN'
-export const ADMIN_PERMISSION_DESCRIPTION = 'Administrator'
+export type OrganisationPermissionDescription =
+  | (typeof OrganisationPermissionDescriptions)[keyof typeof OrganisationPermissionDescriptions]
+  | typeof ADMIN_PERMISSION_DESCRIPTION
+
+export const ADMIN_PERMISSION = 'ADMIN' as const
+export const ADMIN_PERMISSION_DESCRIPTION = 'Administrator' as const
 
 // Project Permissions
 export enum ProjectPermission {
@@ -29,7 +30,7 @@ export enum ProjectPermission {
   APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS = 'APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS',
   CREATE_PROJECT_LEVEL_CHANGE_REQUESTS = 'CREATE_PROJECT_LEVEL_CHANGE_REQUESTS',
 }
-export const ProjectPermissionDescription: Record<ProjectPermission, string> = {
+export const ProjectPermissionDescriptions = {
   [ProjectPermission.VIEW_PROJECT]: 'View project',
   [ProjectPermission.CREATE_ENVIRONMENT]: 'Create environment',
   [ProjectPermission.DELETE_FEATURE]: 'Delete feature',
@@ -43,7 +44,11 @@ export const ProjectPermissionDescription: Record<ProjectPermission, string> = {
     'Approve project level change requests',
   [ProjectPermission.CREATE_PROJECT_LEVEL_CHANGE_REQUESTS]:
     'Create project level change requests',
-}
+} as const
+
+export type ProjectPermissionDescription =
+  | (typeof ProjectPermissionDescriptions)[keyof typeof ProjectPermissionDescriptions]
+  | typeof ADMIN_PERMISSION_DESCRIPTION
 
 // Environment Permissions
 export enum EnvironmentPermission {
@@ -55,10 +60,7 @@ export enum EnvironmentPermission {
   VIEW_IDENTITIES = 'VIEW_IDENTITIES',
   MANAGE_SEGMENT_OVERRIDES = 'MANAGE_SEGMENT_OVERRIDES',
 }
-export const EnvironmentPermissionDescription: Record<
-  EnvironmentPermission,
-  string
-> = {
+export const EnvironmentPermissionDescriptions = {
   [EnvironmentPermission.VIEW_ENVIRONMENT]: 'View environment',
   [EnvironmentPermission.UPDATE_FEATURE_STATE]: 'Update feature state',
   [EnvironmentPermission.MANAGE_IDENTITIES]: 'Manage identities',
@@ -66,9 +68,27 @@ export const EnvironmentPermissionDescription: Record<
   [EnvironmentPermission.APPROVE_CHANGE_REQUEST]: 'Approve change request',
   [EnvironmentPermission.VIEW_IDENTITIES]: 'View identities',
   [EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES]: 'Manage segment overrides',
-}
+} as const
+
+export type EnvironmentPermissionDescription =
+  | (typeof EnvironmentPermissionDescriptions)[keyof typeof EnvironmentPermissionDescriptions]
+  | typeof ADMIN_PERMISSION_DESCRIPTION
 
 export type Permission =
   | OrganisationPermission
   | ProjectPermission
   | EnvironmentPermission
+  | typeof ADMIN_PERMISSION
+
+export type PermissionDescription =
+  | OrganisationPermissionDescription
+  | ProjectPermissionDescription
+  | EnvironmentPermissionDescription
+
+// Combined permission descriptions record
+export const PermissionDescriptions = {
+  ...OrganisationPermissionDescriptions,
+  ...ProjectPermissionDescriptions,
+  ...EnvironmentPermissionDescriptions,
+  [ADMIN_PERMISSION]: ADMIN_PERMISSION_DESCRIPTION,
+} as const

@@ -47,7 +47,7 @@ import { openPublishChangeRequestConfirm } from 'components/PublishChangeRequest
 import { getChangeRequestLiveDate } from 'common/utils/getChangeRequestLiveDate'
 import {
   EnvironmentPermission,
-  EnvironmentPermissionDescription,
+  EnvironmentPermissionDescriptions,
 } from 'common/types/permissions.types'
 
 type ChangeRequestPageType = {
@@ -352,7 +352,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         addOwner={addOwner}
         removeOwner={removeOwner}
         publishPermissionDescription={Constants.environmentPermissions(
-          EnvironmentPermissionDescription.UPDATE_FEATURE_STATE,
+          EnvironmentPermissionDescriptions.UPDATE_FEATURE_STATE,
         )}
         scheduledDate={getChangeRequestLiveDate(changeRequest)}
         deleteChangeRequest={deleteChangeRequest}
@@ -703,7 +703,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                     Utils.renderWithPermission(
                       approvePermission,
                       Constants.environmentPermissions(
-                        EnvironmentPermissionDescription.APPROVE_CHANGE_REQUEST,
+                        EnvironmentPermissionDescriptions.APPROVE_CHANGE_REQUEST,
                       ),
                       <Button
                         disabled={

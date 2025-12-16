@@ -12,6 +12,7 @@ import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import { useHasPermission } from 'common/providers/Permission'
 import { withRouter, useHistory, RouteComponentProps } from 'react-router-dom'
+import { ADMIN_PERMISSION_DESCRIPTION } from 'common/types/permissions.types'
 const rolesWidths = [250, 100]
 
 interface RolesTableType extends RouteComponentProps {
@@ -83,7 +84,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
         <h5 className='m-b-0'>Roles</h5>
         {Utils.renderWithPermission(
           isAdmin,
-          Constants.organisationPermissions('Admin'),
+          Constants.organisationPermissions(ADMIN_PERMISSION_DESCRIPTION),
           <Button
             disabled={!isAdmin}
             className='mr-2'

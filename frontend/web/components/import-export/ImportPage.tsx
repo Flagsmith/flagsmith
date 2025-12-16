@@ -16,6 +16,7 @@ import FeatureImport from './FeatureImport'
 import AccountStore from 'common/stores/account-store'
 import Constants from 'common/constants'
 import { useHistory } from 'react-router-dom'
+import { ADMIN_PERMISSION_DESCRIPTION } from 'common/types/permissions.types'
 
 type ImportPageType = {
   projectId: string
@@ -102,7 +103,9 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     return (
       <div
         dangerouslySetInnerHTML={{
-          __html: Constants.organisationPermissions('Administrator'),
+          __html: Constants.organisationPermissions(
+            ADMIN_PERMISSION_DESCRIPTION,
+          ),
         }}
         className='mt-4'
       />

@@ -5,6 +5,7 @@ import PageTitle from 'components/PageTitle'
 import Utils from 'common/utils/utils'
 import InfoMessage from 'components/InfoMessage'
 import AccountStore from 'common/stores/account-store'
+import { ADMIN_PERMISSION_DESCRIPTION } from 'common/types/permissions.types'
 
 const OrganisationIntegrationsPage = ({ match }) => {
   useEffect(() => {
@@ -19,7 +20,9 @@ const OrganisationIntegrationsPage = ({ match }) => {
     return (
       <div
         dangerouslySetInnerHTML={{
-          __html: Constants.organisationPermissions('Admin'),
+          __html: Constants.organisationPermissions(
+            ADMIN_PERMISSION_DESCRIPTION,
+          ),
         }}
         className='text-center'
       ></div>
