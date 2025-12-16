@@ -540,20 +540,18 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem tabLabel='Users'>
             <div className='my-4'>
-              {!!identities && (
-                <CreateSegmentUsersTabContent
-                  projectId={projectId}
-                  environmentId={environmentId}
-                  setEnvironmentId={setEnvironmentId}
-                  identitiesLoading={identitiesLoading}
-                  identities={identities}
-                  page={page}
-                  setPage={setPage}
-                  name={name}
-                  searchInput={searchInput}
-                  setSearchInput={setSearchInput}
-                />
-              )}
+              <CreateSegmentUsersTabContent
+                projectId={projectId}
+                environmentId={environmentId}
+                setEnvironmentId={setEnvironmentId}
+                identitiesLoading={identitiesLoading}
+                identities={identities}
+                page={page}
+                setPage={setPage}
+                name={name}
+                searchInput={searchInput}
+                setSearchInput={setSearchInput}
+              />
             </div>
           </TabItem>
           {metadataEnable && segmentContentType?.id && (
