@@ -22,6 +22,10 @@ if not settings.TASK_PROCESSOR_MODE:
         ),
         re_path(r"^api/v1/", include("api.urls.v1", namespace="api-v1")),
         re_path(r"^api/v2/", include("api.urls.v2", namespace="api-v2")),
+        re_path(
+            r"^api/experiments/",
+            include("api.urls.experiments", namespace="api-experiments"),
+        ),
         re_path(r"^admin/", admin.site.urls),
         re_path(
             r"^sales-dashboard/",

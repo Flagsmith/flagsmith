@@ -17,7 +17,7 @@ interface CreateSegmentUsersTabContentProps {
   environmentId: string
   setEnvironmentId: (environmentId: string) => void
   identitiesLoading: boolean
-  identities: Res['identities']
+  identities: Res['identities'] | undefined
   page: any
   setPage: (page: any) => void
   name: string

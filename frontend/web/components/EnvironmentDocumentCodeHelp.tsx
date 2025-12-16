@@ -10,7 +10,7 @@ import { useHasPermission } from 'common/providers/Permission'
 import { Link } from 'react-router-dom'
 type EnvironmentDocumentCodeHelpType = {
   environmentId: string
-  projectId: string
+  projectId: number
   title: string
 }
 

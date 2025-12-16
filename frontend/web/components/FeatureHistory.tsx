@@ -46,6 +46,7 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
       featureId: feature,
       is_live: true,
       page,
+      page_size: 20,
     },
     { skip: !environmentId || !feature },
   )
