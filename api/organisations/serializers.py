@@ -114,7 +114,9 @@ class _PermissionGroupPKRelatedField(
 
 
 class InviteSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
-    permission_groups = _PermissionGroupPKRelatedField(many=True)
+    permission_groups = _PermissionGroupPKRelatedField(
+        many=True, required=False, allow_null=True, allow_empty=True
+    )
 
     class Meta:
         model = Invite
