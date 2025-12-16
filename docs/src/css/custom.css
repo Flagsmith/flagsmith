@@ -318,6 +318,39 @@ section > h2 {
 }
 
 /* FAQ Page Styling */
+/* Style FAQ category pages - makes questions stand out with Q: prefix and better spacing */
+.faq-content h3 {
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  color: var(--ifm-heading-color);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.faq-content h3:first-of-type {
+  margin-top: 2rem;
+}
+
+.faq-content h3::before {
+  content: "Q: ";
+  color: var(--ifm-color-primary);
+  font-weight: 700;
+  margin-right: 0.5rem;
+}
+
+/* Style content following FAQ questions */
+.faq-content h3 + p,
+.faq-content h3 + *:not(h3):not(h2):not(h1):not(div):not(ul):not(ol) {
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.7;
+  margin-top: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+
+/* Manual FAQ question/answer classes for more control */
 .faq-question {
   margin-top: 2rem;
   margin-bottom: 1.5rem;
@@ -349,4 +382,149 @@ section > h2 {
 
 [data-theme='dark'] .faq-question {
   border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+/* FAQ Landing Page Styling */
+.faq-landing {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.faq-intro {
+  font-size: 1.1rem;
+  color: var(--ifm-color-emphasis-700);
+  margin-bottom: 3rem;
+  line-height: 1.7;
+}
+
+.faq-quick-links {
+  margin-bottom: 4rem;
+}
+
+.faq-quick-links h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--ifm-heading-color);
+}
+
+.faq-quick-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.faq-quick-list li {
+  padding: 0.75rem 1rem;
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 8px;
+  border-left: 3px solid var(--ifm-color-primary);
+  transition: all 0.2s ease;
+}
+
+.faq-quick-list li:hover {
+  background: var(--ifm-color-emphasis-200);
+  transform: translateX(4px);
+}
+
+.faq-quick-list a {
+  color: var(--ifm-color-content);
+  text-decoration: none;
+  font-weight: 500;
+  display: block;
+}
+
+.faq-quick-list a:hover {
+  color: var(--ifm-color-primary);
+}
+
+.faq-categories h2 {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  color: var(--ifm-heading-color);
+}
+
+.faq-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.faq-category-card {
+  display: block;
+  padding: 1.5rem;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.faq-category-card:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  text-decoration: none;
+  color: inherit;
+}
+
+[data-theme='dark'] .faq-category-card {
+  background: var(--ifm-background-surface-color);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .faq-category-card:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.faq-category-header {
+  margin-bottom: 0.75rem;
+}
+
+.faq-category-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+}
+
+.faq-category-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.5;
+}
+
+.faq-help {
+  padding: 2rem;
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 12px;
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.faq-help p {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.faq-help a {
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.faq-help a:hover {
+  text-decoration: underline;
+}
+
+[data-theme='dark'] .faq-help {
+  background: rgba(255, 255, 255, 0.05);
 }
