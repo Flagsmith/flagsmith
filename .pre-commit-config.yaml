@@ -41,12 +41,16 @@ repos:
         require_serial: true
         pass_filenames: false
         types: [python]
+        stages: [pre-push]
 
   - repo: https://github.com/python-poetry/poetry
     rev: 2.2.1
     hooks:
       - id: poetry-check
         args: ["-C", "api"]
+
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
 
 ci:
   skip: [generate-docs, python-typecheck]
