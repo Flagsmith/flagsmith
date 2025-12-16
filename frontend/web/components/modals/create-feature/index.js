@@ -287,6 +287,7 @@ const Index = class extends Component {
             this.setUserOverridesNoPermission()
             return
           }
+
           data
             .get(
               `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
