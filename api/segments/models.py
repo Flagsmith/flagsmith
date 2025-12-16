@@ -28,6 +28,7 @@ from core.models import (
 from features.models import Feature
 from metadata.models import Metadata
 from projects.models import Project
+from segments.services import copy_segment_rules_and_conditions
 
 ModelT = typing.TypeVar("ModelT", bound=models.Model)
 
@@ -180,39 +181,9 @@ class Segment(
         return cloned_segment
 
     def copy_rules_and_conditions_from(self, source_segment: "Segment") -> None:
-        """
-        Recursively copy rules and conditions from another segment
-        """
-        assert transaction.get_connection().in_atomic_block, "Must run in a transaction"
-
-        # Delete existing rules
-        SegmentRule.objects.filter(segment=self).delete()
-
-        source_rules = SegmentRule.objects.filter(
-            models.Q(segment=source_segment) | models.Q(rule__segment=source_segment)
+        copy_segment_rules_and_conditions(
+            target_segment=self, source_segment=source_segment
         )
-
-        # Ensure top-level rules are cloned first (for dependencies)
-        source_rules = source_rules.order_by(models.F("rule").asc(nulls_first=True))
-
-        rule_to_cloned_rule_map: dict[SegmentRule, SegmentRule] = {}
-        for rule in source_rules:
-            cloned_rule = deepcopy(rule)
-            cloned_rule.pk = None
-            cloned_rule.uuid = uuid.uuid4()
-            cloned_rule.segment = self if rule.segment else None
-            if rule.rule in rule_to_cloned_rule_map:
-                cloned_rule.rule = rule_to_cloned_rule_map[rule.rule]
-            cloned_rule.save()
-            rule_to_cloned_rule_map[rule] = cloned_rule
-
-        source_conditions = Condition.objects.filter(rule__in=rule_to_cloned_rule_map)
-        for condition in source_conditions:
-            cloned_condition = deepcopy(condition)
-            cloned_condition.pk = None
-            cloned_condition.uuid = uuid.uuid4()
-            cloned_condition.rule = rule_to_cloned_rule_map[condition.rule]
-            cloned_condition.save()
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return SEGMENT_CREATED_MESSAGE % self.name

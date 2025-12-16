@@ -32,7 +32,7 @@ The diagram below shows an overview of how permissions are assigned within your 
 ```mermaid
 graph LR;
     R[Custom roles] -->|Assigned to| G[Groups];
-    B[Built-in role] -->|Assigned to| U[Users];
+    B[Built-in roles] -->|Assigned to| U[Users];
     R -->|Assigned to| U;
     R -->|Assigned to| A[Admin API keys];
     G -->|Contains many| U;

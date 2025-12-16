@@ -94,6 +94,9 @@ const Index = class extends Component {
       scheduledChangeRequests: [],
       segmentsChanged: false,
       selectedIdentity: null,
+      tags: tags?.filter((tag) => !hideTags.includes(tag)) || [],
+      userOverridesError: false,
+      userOverridesNoPermission: false,
       settingsChanged: false,
       valueChanged: false,
     }
@@ -229,51 +232,95 @@ const Index = class extends Component {
     }
   }
 
+  setUserOverridesError = () => {
+    this.setState({
+      userOverrides: [],
+      userOverridesError: true,
+      userOverridesNoPermission: false,
+      userOverridesPaging: { count: 0, currentPage: 1, next: null },
+    })
+  }
+
+  setUserOverridesNoPermission = () => {
+    this.setState({
+      userOverrides: [],
+      userOverridesError: false,
+      userOverridesNoPermission: true,
+      userOverridesPaging: { count: 0, currentPage: 1, next: null },
+    })
+  }
+
   userOverridesPage = (page, forceRefetch) => {
     if (Utils.getIsEdge()) {
-      if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
-        getPermission(
-          getStore(),
-          {
-            id: this.props.environmentId,
-            level: 'environment',
-            permissions: 'VIEW_IDENTITIES',
+      // Early return if tab should be hidden
+      if (Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
+        this.setState({
+          userOverrides: [],
+          userOverridesPaging: {
+            count: 0,
+            currentPage: 1,
+            next: null,
           },
-          { forceRefetch },
-        ).then((permissions) => {
-          const hasViewIdentitiesPermission =
-            permissions[Utils.getViewIdentitiesPermission()]
-          if (hasViewIdentitiesPermission || AccountStore.isAdmin()) {
-            data
-              .get(
-                `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
-              )
-              .then((userOverrides) => {
-                this.setState({
-                  userOverrides: userOverrides.results.map((v) => ({
-                    ...v.feature_state,
-                    identity: {
-                      id: v.identity_uuid,
-                      identifier: v.identifier,
-                    },
-                  })),
-                  userOverridesPaging: {
-                    count: userOverrides.count,
-                    currentPage: page,
-                    next: userOverrides.next,
-                  },
-                })
-              })
-              .catch(() => {
-                //eslint-disable-next-line no-console
-                console.error('Cannot retrieve user overrides')
-              })
-          }
         })
+        return
       }
+
+      getPermission(
+        getStore(),
+        {
+          id: this.props.environmentId,
+          level: 'environment',
+          permissions: 'VIEW_IDENTITIES',
+        },
+        { forceRefetch },
+      )
+        .then((permissions) => {
+          const hasViewIdentitiesPermission =
+            permissions[Utils.getViewIdentitiesPermission()] ||
+            permissions.ADMIN
+          // Early return if user doesn't have permission
+          if (!hasViewIdentitiesPermission) {
+            this.setUserOverridesNoPermission()
+            return
+          }
+
+          data
+            .get(
+              `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
+            )
+            .then((userOverrides) => {
+              this.setState({
+                userOverrides: userOverrides.results.map((v) => ({
+                  ...v.feature_state,
+                  identity: {
+                    id: v.identity_uuid,
+                    identifier: v.identifier,
+                  },
+                })),
+                userOverridesError: false,
+                userOverridesNoPermission: false,
+                userOverridesPaging: {
+                  count: userOverrides.count,
+                  currentPage: page,
+                  next: userOverrides.next,
+                },
+              })
+            })
+            .catch((response) => {
+              if (response?.status === 403) {
+                this.setUserOverridesNoPermission()
+              } else {
+                this.setUserOverridesError()
+              }
+            })
+        })
+        .catch(() => {
+          this.setUserOverridesError()
+        })
 
       return
     }
+
     data
       .get(
         `${Project.api}environments/${
@@ -285,6 +332,8 @@ const Index = class extends Component {
       .then((userOverrides) => {
         this.setState({
           userOverrides: userOverrides.results,
+          userOverridesError: false,
+          userOverridesNoPermission: false,
           userOverridesPaging: {
             count: userOverrides.count,
             currentPage: page,
@@ -292,6 +341,37 @@ const Index = class extends Component {
           },
         })
       })
+      .catch((response) => {
+        if (response?.status === 403) {
+          this.setUserOverridesNoPermission()
+        } else {
+          this.setUserOverridesError()
+        }
+      })
+  }
+
+  renderUserOverridesNoResults = () => {
+    if (this.state.userOverridesError) {
+      return (
+        <div className='text-center py-4'>
+          Failed to load identity overrides.
+        </div>
+      )
+    }
+    if (this.state.userOverridesNoPermission) {
+      return (
+        <div className='text-center py-4'>
+          You do not have permission to view identity overrides.
+        </div>
+      )
+    }
+    return (
+      <Row className='list-item'>
+        <div className='table-column'>
+          No identities are overriding this feature.
+        </div>
+      </Row>
+    )
   }
 
   save = (func, isSaving) => {
@@ -1459,14 +1539,7 @@ const Index = class extends Component {
                                                       </Row>
                                                     )
                                                   }}
-                                                  renderNoResults={
-                                                    <Row className='list-item'>
-                                                      <div className='table-column'>
-                                                        No identities are
-                                                        overriding this feature.
-                                                      </div>
-                                                    </Row>
-                                                  }
+                                                  renderNoResults={this.renderUserOverridesNoResults()}
                                                   isLoading={
                                                     !this.state.userOverrides
                                                   }
