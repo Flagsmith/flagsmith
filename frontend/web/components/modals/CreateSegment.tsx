@@ -145,7 +145,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [description, setDescription] = useState(segment.description)
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
-
+  useEffect(() => {
+    if (_segment) {
+      setSegment(_segment)
+    }
+  }, [_segment])
   useEffect(() => {
     if (segment) {
       setRules(segment.rules)
