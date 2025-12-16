@@ -80,11 +80,6 @@ export type Permission =
   | EnvironmentPermission
   | typeof ADMIN_PERMISSION
 
-export type PermissionDescription =
-  | OrganisationPermissionDescription
-  | ProjectPermissionDescription
-  | EnvironmentPermissionDescription
-
 // Combined permission descriptions record
 export const PermissionDescriptions = {
   ...OrganisationPermissionDescriptions,

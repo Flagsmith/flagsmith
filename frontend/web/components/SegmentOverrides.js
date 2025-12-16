@@ -23,7 +23,7 @@ import SegmentOverrideActions from './SegmentOverrideActions'
 import Button from './base/forms/Button'
 import {
   EnvironmentPermission,
-  EnvironmentPermissionDescription,
+  EnvironmentPermissionDescriptions,
 } from 'common/types/permissions.types'
 
 const arrayMoveMutate = (array, from, to) => {
@@ -192,7 +192,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                     Utils.renderWithPermission(
                       permission,
                       Constants.projectPermissions(
-                        EnvironmentPermissionDescription.MANAGE_SEGMENT_OVERRIDES,
+                        EnvironmentPermissionDescriptions.MANAGE_SEGMENT_OVERRIDES,
                       ),
                       <>
                         <SegmentOverrideActions
