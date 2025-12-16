@@ -110,7 +110,7 @@ class _PermissionGroupPKRelatedField(
     def get_queryset(self) -> QuerySet[UserPermissionGroup]:
         return UserPermissionGroup.objects.filter(
             organisation__id=typing.cast(
-                InviteSerializer, self.root
+                InviteSerializer, self.parent.parent
             ).get_organisation_id()
         )
 
