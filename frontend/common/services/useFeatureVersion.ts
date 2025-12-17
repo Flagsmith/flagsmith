@@ -56,9 +56,11 @@ export const getFeatureStateCrud = (
       )
       return !!diff?.totalChanges
     })
-    const newValueFeatureState = featureStates.find((v) => !v.feature_segment)!
+    const newValueFeatureState = featureStates.find(
+      (v) => !v.feature_segment?.segment,
+    )!
     const oldValueFeatureState = oldFeatureStates.find(
-      (v) => !v.feature_segment,
+      (v) => !v.feature_segment?.segment,
     )!
     // return nothing if feature state isn't different
     const valueDiff = getFeatureStateDiff(

@@ -62,13 +62,13 @@ export const useToggleFeatureWithToast = () => {
           toast(options.successMessage)
         }
         options?.onSuccess?.()
-      } catch (error) {
-        console.error('Failed to toggle feature:', error)
-        toast(
-          options?.errorMessage ||
-            'Failed to toggle feature. Please try again.',
-          'danger',
-        )
+      } catch (error: any) {
+        const errorMessage =
+          error?.data?.detail ||
+          error?.message ||
+          'Failed to toggle feature. Please try again.'
+        console.error('Failed to toggle feature:', error, errorMessage)
+        toast(options?.errorMessage || errorMessage, 'danger')
         options?.onError?.(error)
       }
     },
