@@ -23,7 +23,6 @@ import {
   StageTrigger,
   StageActionType,
   StageActionBody,
-  ChangeRequest,
   TagStrategy,
 } from './responses'
 import { UtmsType } from './utms'
@@ -44,12 +43,6 @@ export type UpdateOrganisationBody = {
   force_2fa?: boolean
   restrict_project_create_to_admin?: boolean
   webhook_notification_email?: string | null
-}
-
-export type UpdateFeatureStateBody = {
-  enabled?: boolean
-  feature_state_value?: FeatureStateValue
-  multivariate_feature_state_values?: MultivariateOption[] | null
 }
 
 export type PagedRequest<T> = T & {
@@ -643,10 +636,6 @@ export type Req = {
     project_id: number
     body: ProjectFlag
   }
-  removeProjectFlag: {
-    project_id: number
-    flag_id: number
-  }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
     environment_id: string
@@ -845,27 +834,6 @@ export type Req = {
     feature_id: number
     period: number
     environment_id: string
-  }
-  getFeatureList: {
-    projectId: number
-    environmentId: string
-    page?: number
-    page_size?: number
-    search?: string | null
-    tags?: string
-    is_archived?: boolean
-    is_enabled?: boolean | null
-    owners?: string
-    group_owners?: string
-    value_search?: string
-    tag_strategy?: TagStrategy
-    sort_field?: string
-    sort_direction?: 'ASC' | 'DESC'
-  }
-  updateFeatureState: {
-    environmentId: string
-    environmentFlagId: number
-    body: UpdateFeatureStateBody
   }
   // END OF TYPES
 }
