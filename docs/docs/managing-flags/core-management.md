@@ -88,3 +88,7 @@ Deleting a feature flag is permanent and cannot be undone. Make sure your applic
 ### Permission Issues
 
 - You may need additional permissions to create, edit, clone, or delete feature flags. If you see permission errors or options are disabled, contact your Flagsmith administrator to review your access rights. For more information, see the [Permissions and Roles](/administration-and-security/access-control/rbac) page.
+
+## Remote Config {#remote-config}
+
+Remote Config lets you return a typed value (string, number, boolean or JSON) alongside the on/off state of a feature. You configure Remote Config on the same feature definition, and SDKs read these values when evaluating flags, using the same targeting and rollout rules. This is useful for tweaking behaviour, thresholds, copy or layout without changing code, rather than only enabling or disabling features.
