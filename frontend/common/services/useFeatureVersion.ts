@@ -19,6 +19,7 @@ import {
 } from 'components/diff/diff-utils'
 import { getSegments } from './useSegment'
 import { getFeatureStates } from './useFeatureState'
+import { projectFlagService } from './useProjectFlag'
 import moment from 'moment'
 
 const transformFeatureStates = (featureStates: TypedFeatureState[]) =>
@@ -105,7 +106,7 @@ export const getFeatureStateCrud = (
 }
 
 export const featureVersionService = service
-  .enhanceEndpoints({ addTagTypes: ['FeatureVersion', 'Environment'] })
+  .enhanceEndpoints({ addTagTypes: ['FeatureVersion', 'Environment', 'FeatureList'] })
   .injectEndpoints({
     endpoints: (builder) => ({
       createAndSetFeatureVersion: builder.mutation<
@@ -114,8 +115,34 @@ export const featureVersionService = service
       >({
         invalidatesTags: [
           { id: 'LIST', type: 'FeatureVersion' },
+          { id: 'LIST', type: 'FeatureList' },
           { id: 'METRICS', type: 'Environment' },
         ],
+        async onQueryStarted(
+          { projectId, environmentId, featureId, featureStates },
+          { dispatch, queryFulfilled },
+        ) {
+          // Optimistic update: immediately update cache before API responds
+          const newEnabled = featureStates[0]?.enabled
+          const patchResult = dispatch(
+            projectFlagService.util.updateQueryData(
+              'getFeatureList',
+              { projectId, environmentId } as any,
+              (draft) => {
+                if (draft.environmentStates?.[featureId]) {
+                  draft.environmentStates[featureId].enabled = newEnabled
+                }
+              },
+            ),
+          )
+
+          try {
+            await queryFulfilled
+          } catch {
+            // Rollback on error
+            patchResult.undo()
+          }
+        },
         queryFn: async (query: Req['createAndSetFeatureVersion']) => {
           // todo: this will be removed when we combine saving value and segment overrides
           const mode = query.featureStates.find(
@@ -145,24 +172,29 @@ export const featureVersionService = service
                   })
                 ).data.results
 
-          const {
-            feature_states_to_create,
-            feature_states_to_update,
-            segment_ids_to_delete_overrides,
-          } = getFeatureStateCrud(
-            query.featureStates.map((v) => ({
-              ...v,
-              feature_state_value: Utils.valueToFeatureState(
-                v.feature_state_value,
-              ),
-            })),
-            oldFeatureStates.data.results.filter((v) => {
+          const newFeatureStates = query.featureStates.map((v) => ({
+            ...v,
+            feature_state_value: Utils.valueToFeatureState(
+              v.feature_state_value,
+            ),
+          }))
+          const oldFeatureStatesFiltered = oldFeatureStates.data.results.filter(
+            (v) => {
               if (mode === 'VALUE') {
                 return !v.feature_segment?.segment
               } else {
                 return !!v.feature_segment?.segment
               }
-            }),
+            },
+          )
+
+          const {
+            feature_states_to_create,
+            feature_states_to_update,
+            segment_ids_to_delete_overrides,
+          } = getFeatureStateCrud(
+            newFeatureStates,
+            oldFeatureStatesFiltered,
             segments,
           )
 
