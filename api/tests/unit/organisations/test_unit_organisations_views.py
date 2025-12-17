@@ -460,9 +460,13 @@ def test_can_invite_user_as_admin(
     data = {"invites": [{"email": invited_email, "role": OrganisationRole.ADMIN.name}]}
 
     # When
-    admin_client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
+    assert response.status_code == status.HTTP_201_CREATED, response.json()
+
     assert Invite.objects.filter(email=invited_email).exists()
     assert Invite.objects.get(email=invited_email).role == OrganisationRole.ADMIN.name
 
@@ -481,12 +485,15 @@ def test_can_invite_user_as_user(
     data = {"invites": [{"email": invited_email, "role": OrganisationRole.USER.name}]}
 
     # When
-    admin_client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
-    assert Invite.objects.filter(email=invited_email).exists()
+    assert response.status_code == status.HTTP_201_CREATED, response.json()
 
     # and
+    assert Invite.objects.filter(email=invited_email).exists()
     assert Invite.objects.get(email=invited_email).role == OrganisationRole.USER.name
 
 
