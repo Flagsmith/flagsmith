@@ -87,7 +87,7 @@ export function buildUrlParams(
 ): Record<string, string | number | boolean | undefined> {
   return {
     group_owners: joinArrayOrUndefined(filters.group_owners),
-    is_archived: filters.showArchived || undefined,
+    is_archived: filters.showArchived ? 'true' : 'false',
     is_enabled: filters.is_enabled === null ? undefined : filters.is_enabled,
     owners: joinArrayOrUndefined(filters.owners),
     page: page ?? 1,
@@ -133,14 +133,13 @@ export function buildApiFilterParams(
     tag_strategy: filters.tag_strategy,
   }
 
+  params.is_archived = filters.showArchived ? 'true' : 'false'
   if (groupOwners) params.group_owners = groupOwners
-  if (filters.showArchived) params.is_archived = filters.showArchived
   if (filters.is_enabled !== null) params.is_enabled = filters.is_enabled
   if (owners) params.owners = owners
   if (filters.search) params.search = filters.search
   if (tags) params.tags = tags
   if (filters.value_search) params.value_search = filters.value_search
-
   return params
 }
 
