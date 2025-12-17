@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.205.2](https://github.com/Flagsmith/flagsmith/compare/v2.205.1...v2.205.2) (2025-12-17)
+
+
+### Bug Fixes
+
+* prevent infinite loading on Identity Overrides tab ([#6404](https://github.com/Flagsmith/flagsmith/issues/6404)) ([5295a74](https://github.com/Flagsmith/flagsmith/commit/5295a74a478c686ec3aa9cf5a8a314bc51a7ce13))
+* prevent invites with invalid permission groups ([#6407](https://github.com/Flagsmith/flagsmith/issues/6407)) ([d5fbcd7](https://github.com/Flagsmith/flagsmith/commit/d5fbcd784037c39f691ae1760b720110c49c19e1))
+* removed-skip-organisation-tests ([#6418](https://github.com/Flagsmith/flagsmith/issues/6418)) ([c69409f](https://github.com/Flagsmith/flagsmith/commit/c69409fe1f75625ba58d7500083d1c283bdc8772))
+
 ## [2.205.1](https://github.com/Flagsmith/flagsmith/compare/v2.205.0...v2.205.1) (2025-12-16)
 
 
