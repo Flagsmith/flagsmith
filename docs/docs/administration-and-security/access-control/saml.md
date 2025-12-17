@@ -28,7 +28,7 @@ Users that log in using SSO can only belong to one Flagsmith organisation. If a 
 
 If you are self-hosting Flagsmith, TLS is required. Encrypted SAML assertions are not supported.
 
-## Setup SAML
+## Setup SAML {#setup}
 
 :::tip
 
@@ -105,7 +105,7 @@ this mapping tells Flagsmith to look for user groups in a claim other than the d
 
 By default, users logging in via SAML will have no permissions to view or modify anything in the Flagsmith dashboard. You can customise this by creating a [group](/administration-and-security/access-control/rbac) with the "Add new users by default" option enabled, and assigning your desired default permissions to that group.
 
-### Using groups from your identity provider
+### Using groups from your identity provider {#using-groups-from-your-saml-idp}
 
 Flagsmith can add or remove a user from groups based on your identity provider's SAML response when logging in.
 

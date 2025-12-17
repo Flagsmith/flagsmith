@@ -354,7 +354,7 @@ are all computed locally.
 - Identities and their Traits are **not** read from or written to the Flagsmith API, and so are not persisted in the
   datastore. This means that you have to provide the full complement of Traits when requesting the Flags for a
   particular Identity. Our SDKs all provide relevant methods to achieve this.
-- [Analytics-based Integrations](/third-party-integrations#analytics-platforms) do not run.
+- [Analytics-based Integrations](/third-party-integrations#analytics--data-platforms) do not run.
 -  [Flag Analytics](/managing-flags/flag-analytics) do still work, if enabled within the
    [SDK setup](/integrating-with-flagsmith/sdks/server-side#configuring-the-sdk).
 - **[Edge API](/deployment-self-hosting/edge-proxy) only**: Currently, Flagsmith SDKs support up to ~500 identity overrides, depending on flag value sizes and segment count, when used with

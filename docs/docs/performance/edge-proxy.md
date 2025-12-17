@@ -66,8 +66,8 @@ Please see the [hosting documentation](/deployment-self-hosting/edge-proxy).
 
 The standard Flagsmith architecture:
 
-![Image](/img/edge-proxy-existing.svg)
+![Standard Flagsmith architecture](/img/architecture.svg)
 
 With the proxy added to the mix:
 
-![Image](/img/edge-proxy-proxy.svg)
+![Edge Proxy architecture](/img/edge-api-now.svg)

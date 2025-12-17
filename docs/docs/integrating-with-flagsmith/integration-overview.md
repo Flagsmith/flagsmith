@@ -49,6 +49,10 @@ For privacy-sensitive use cases, you can use transient traits and identities. Th
 
 Learn more about this feature in our [Transient Traits and Identities documentation](/flagsmith-concepts/identities#transient-traits).
 
+## Local Evaluation Mode {#local-evaluation-mode}
+
+For low-latency, high-throughput back-end use cases, you can run SDKs in Local Evaluation mode or use the [Edge Proxy](/deployment-self-hosting/edge-proxy). In this mode the SDK periodically fetches an environment document and evaluates flags locally without making per-request calls to the Flagsmith API. See the [Server-side SDKs documentation](/integrating-with-flagsmith/sdks/server-side#local-evaluation-mode-network-behaviour) for detailed behaviour and trade-offs.
+
 ## Third-party Integrations
 
 Flagsmith also integrates with a variety of third-party tools for analytics, project management, and more. You can browse all available integrations in the [Integrations section](/third-party-integrations/analytics/segment). 
