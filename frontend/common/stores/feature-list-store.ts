@@ -736,7 +736,7 @@ const controller = {
           getStore().dispatch(
             projectFlagService.util.invalidateTags(['ProjectFlag']),
           )
-          if(!store.model) {
+          if (!store.model) {
             return
           }
           // Fetch and update the latest environment feature state
@@ -748,9 +748,11 @@ const controller = {
             const environmentFeatureState = res.data.find(
               (v) => !v.feature_segment,
             )
-            store.model.keyedEnvironmentFeatures[projectFlag.id] = {
-              ...store.model.keyedEnvironmentFeatures[projectFlag.id],
-              ...environmentFeatureState,
+            if (store.model?.keyedEnvironmentFeatures) {
+              store.model.keyedEnvironmentFeatures[projectFlag.id] = {
+                ...store.model.keyedEnvironmentFeatures[projectFlag.id],
+                ...environmentFeatureState,
+              }
             }
           })
         })
@@ -798,11 +800,13 @@ const controller = {
                 throw version.error
               }
               const featureState = version.data.feature_states[0].data
-              store.model.keyedEnvironmentFeatures[projectFlag.id] = {
-                ...featureState,
-                feature_state_value: Utils.featureStateToValue(
-                  featureState.feature_state_value,
-                ),
+              if (store.model?.keyedEnvironmentFeatures) {
+                store.model.keyedEnvironmentFeatures[projectFlag.id] = {
+                  ...featureState,
+                  feature_state_value: Utils.featureStateToValue(
+                    featureState.feature_state_value,
+                  ),
+                }
               }
             })
           })
