@@ -5,29 +5,24 @@ import EnvironmentMetric from './EnvironmentMetric'
 import { getExtraMetricsData } from './constants'
 
 interface EnvironmentMetricsListProps {
-  environmentId: string
+  environmentApiKey: string
   projectId: number
   forceRefetch?: boolean
 }
 
 const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
-  environmentId,
+  environmentApiKey,
   forceRefetch,
   projectId,
 }) => {
-  const { data, isLoading, refetch } = useGetEnvironmentMetricsQuery(
-    {
-      id: environmentId,
-    },
-    {
-      skip: !environmentId,
-    },
-  )
+  const { data, isLoading, refetch } = useGetEnvironmentMetricsQuery({
+    id: environmentApiKey,
+  })
 
   const MAX_COLUMNS = 6
   const columns = Math.min(data?.metrics?.length || 0, MAX_COLUMNS) || 1
 
-  const extraMetricsData = getExtraMetricsData(projectId, environmentId)
+  const extraMetricsData = getExtraMetricsData(projectId, environmentApiKey)
 
   useEffect(() => {
     if (forceRefetch) {
