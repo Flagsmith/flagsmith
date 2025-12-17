@@ -113,8 +113,7 @@ test('Environment', environmentTest).meta({ autoLogout: true, category: 'oss' })
 
 test('Project', projectTest).meta({ autoLogout: true, category: 'oss' })
 
-// Skipping organization test for now until E2E_SEPARATE_TEST_USER is available in production
-test.skip('Organization', organisationTest).meta({ autoLogout: true, category: 'oss' })
+test('Organization', organisationTest).meta({ autoLogout: true, category: 'oss' })
 
 test('Versioning', versioningTests).meta({ autoLogout: true, category: 'oss' })
 
