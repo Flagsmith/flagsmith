@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
 import classNames from 'classnames'
-import CreateFlagModal from 'components/modals/CreateFlag'
+import CreateFlagModal from 'components/modals/create-feature'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import AppActions from 'common/dispatcher/app-actions'
