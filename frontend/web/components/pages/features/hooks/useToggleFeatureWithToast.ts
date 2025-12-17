@@ -1,6 +1,11 @@
 import { useCallback } from 'react'
 import { useUpdateFeatureStateMutation } from 'common/services/useFeatureState'
-import type { FeatureState, ProjectFlag } from 'common/types/responses'
+import { useCreateAndSetFeatureVersionMutation } from 'common/services/useFeatureVersion'
+import type {
+  Environment,
+  FeatureState,
+  ProjectFlag,
+} from 'common/types/responses'
 
 type ToggleFeatureOptions = {
   successMessage?: string
@@ -11,28 +16,47 @@ type ToggleFeatureOptions = {
 
 /** Toggles a feature flag's enabled state with toast notifications. */
 export const useToggleFeatureWithToast = () => {
-  const [updateFeatureState, state] = useUpdateFeatureStateMutation()
+  const [updateFeatureState, updateState] = useUpdateFeatureStateMutation()
+  const [createAndSetFeatureVersion, versionState] =
+    useCreateAndSetFeatureVersionMutation()
 
   const toggleWithToast = useCallback(
     async (
       flag: ProjectFlag,
       environmentFlag: FeatureState | undefined,
-      environmentId: string,
+      environment: Environment,
       options?: ToggleFeatureOptions,
     ) => {
       if (!environmentFlag) {
         console.warn('Cannot toggle feature: environmentFlag is undefined')
         return
       }
+      const environmentId = `${environment.id}`
 
       try {
-        await updateFeatureState({
-          body: {
-            enabled: !environmentFlag.enabled,
-          },
-          environmentFlagId: environmentFlag.id,
-          environmentId,
-        }).unwrap()
+        if (environment.use_v2_feature_versioning) {
+          // Versioned environment: use versioning API
+          await createAndSetFeatureVersion({
+            environmentId,
+            featureId: flag.id,
+            featureStates: [
+              {
+                ...environmentFlag,
+                enabled: !environmentFlag.enabled,
+              },
+            ],
+            projectId: flag.project,
+          }).unwrap()
+        } else {
+          // Non-versioned environment: use simple PUT
+          await updateFeatureState({
+            body: {
+              enabled: !environmentFlag.enabled,
+            },
+            environmentFlagId: environmentFlag.id,
+            environmentId,
+          }).unwrap()
+        }
 
         if (options?.successMessage) {
           toast(options.successMessage)
@@ -48,8 +72,10 @@ export const useToggleFeatureWithToast = () => {
         options?.onError?.(error)
       }
     },
-    [updateFeatureState],
+    [updateFeatureState, createAndSetFeatureVersion],
   )
 
-  return [toggleWithToast, state] as const
+  const isLoading = updateState.isLoading || versionState.isLoading
+
+  return [toggleWithToast, { isLoading }] as const
 }

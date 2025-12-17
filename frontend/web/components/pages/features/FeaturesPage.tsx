@@ -108,9 +108,10 @@ const FeaturesPage: FC = () => {
 
   const toggleFlag = useCallback(
     async (flag: ProjectFlag, environmentFlag: FeatureState | undefined) => {
-      await toggleFeature(flag, environmentFlag, environmentId)
+      if (!currentEnvironment) return
+      await toggleFeature(flag, environmentFlag, currentEnvironment)
     },
-    [toggleFeature, environmentId],
+    [toggleFeature, currentEnvironment],
   )
 
   const projectFlags = useMemo(() => data?.results ?? [], [data?.results])
