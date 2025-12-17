@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -132,6 +134,14 @@ class InviteViewSet(
         return Invite.objects.filter(organisation__in=user.organisations.all()).filter(  # type: ignore[misc,union-attr]  # noqa: E501
             organisation__id=organisation_pk
         )
+
+    def get_serializer_context(self) -> dict[str, Any]:
+        context = super().get_serializer_context()
+        if getattr(self.request, "swagger_fake_view", False):  # pragma: no cover
+            return context
+
+        context["organisation"] = int(self.kwargs["organisation_pk"])
+        return context
 
     @action(detail=True, methods=["POST"], throttle_classes=[ScopedRateThrottle])
     def resend(self, request, organisation_pk, pk):  # type: ignore[no-untyped-def]
