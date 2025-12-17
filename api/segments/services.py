@@ -101,16 +101,17 @@ def copy_segment_rules_and_conditions(
 
     rule_id_to_cloned_rule: dict[int, SegmentRule] = {}
 
-    cloned_top_rules = [
-        SegmentRule(
-            uuid=uuid.uuid4(),
-            segment=target_segment,
-            rule=None,
-            type=rule.type,
-        )
-        for rule in top_level_rules
-    ]
-    SegmentRule.objects.bulk_create(cloned_top_rules)
+    cloned_top_rules = SegmentRule.objects.bulk_create(
+        [
+            SegmentRule(
+                uuid=uuid.uuid4(),
+                segment=target_segment,
+                rule=None,
+                type=rule.type,
+            )
+            for rule in top_level_rules
+        ]
+    )
 
     for rule, cloned in zip(top_level_rules, cloned_top_rules):
         rule_id_to_cloned_rule[rule.id] = cloned
@@ -120,20 +121,19 @@ def copy_segment_rules_and_conditions(
         nested_rules = list(
             SegmentRule.objects.filter(rule_id__in=current_level_rule_ids)
         )
-        cloned_nested = []
-        for rule in nested_rules:
-            assert rule.rule_id is not None
-            cloned_nested.append(
+
+        cloned_nested = SegmentRule.objects.bulk_create(
+            [
                 SegmentRule(
                     uuid=uuid.uuid4(),
                     segment=None,
                     rule=rule_id_to_cloned_rule[rule.rule_id],
                     type=rule.type,
                 )
-            )
-
-        if cloned_nested:
-            SegmentRule.objects.bulk_create(cloned_nested)
+                for rule in nested_rules
+                if rule.rule_id is not None
+            ]
+        )
 
         for rule, cloned in zip(nested_rules, cloned_nested):
             rule_id_to_cloned_rule[rule.id] = cloned
