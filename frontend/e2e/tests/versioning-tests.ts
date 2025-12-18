@@ -14,8 +14,15 @@ import {
     toggleFeature,
     waitForElementVisible,
 } from '../helpers.cafe';
-import { t } from 'testcafe';
+import { RequestLogger, t } from 'testcafe';
 import { E2E_USER, PASSWORD } from '../config';
+
+// Request logger to verify versioned toggle uses the versions API endpoint
+// Versioned: POST /environments/{envId}/features/{featureId}/versions/
+const versionApiLogger = RequestLogger(/\/features\/\d+\/versions\/$/, {
+    logRequestBody: true,
+    logRequestHeaders: true,
+})
 
 export default async () => {
     const flagsmith = await getFlagsmith()
@@ -72,9 +79,17 @@ export default async () => {
     // ===================================================================================
     log('Test row toggle in versioned environment')
 
+    // Clear any previous requests from the logger
+    await t.addRequestHooks(versionApiLogger)
+    versionApiLogger.clear()
+
     // Feature 'c' (index 2) is currently ON - toggle it OFF
     log('Toggle feature OFF via row switch (versioned env)')
     await toggleFeature(2, false)
+
+    // Verify: Versioned API endpoint was called (POST /features/{id}/versions/)
+    log('Verify versioned API endpoint was called')
+    await t.expect(versionApiLogger.requests.length).gte(1, 'Expected versioned API to be called')
 
     // Verify: Switch shows OFF state on features list
     await waitForElementVisible(byId('feature-switch-2-off'))
@@ -99,9 +114,16 @@ export default async () => {
     await waitForElementVisible(byId('features-page'))
     await waitForElementVisible(byId('feature-switch-2-off'))
 
+    // Clear logger before second toggle
+    versionApiLogger.clear()
+
     // Toggle feature 'c' back ON using row switch
     log('Toggle feature ON via row switch (versioned env)')
     await toggleFeature(2, true)
+
+    // Verify: Versioned API endpoint was called again
+    log('Verify versioned API endpoint was called for toggle ON')
+    await t.expect(versionApiLogger.requests.length).gte(1, 'Expected versioned API to be called for toggle ON')
 
     // Verify: Switch shows ON state on features list
     await waitForElementVisible(byId('feature-switch-2-on'))
