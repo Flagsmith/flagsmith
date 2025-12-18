@@ -9,6 +9,7 @@ export default defineConfig({
     timeout: 20000,
   },
   forbidOnly: !!process.env.CI,
+  outputDir: 'reports/test-results',
   projects: [
     {
       name: 'api teardown',

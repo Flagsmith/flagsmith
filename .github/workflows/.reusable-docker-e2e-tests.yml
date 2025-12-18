@@ -14,7 +14,7 @@ on:
         required: true
       args:
         type: string
-        description: Additional arguments to testcafe
+        description: Additional arguments to playwright (e.g., --project=oss)
         required: false
         default: ''
       concurrency:
@@ -50,7 +50,7 @@ jobs:
 
     steps:
       - name: Cloning repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Login to Github Container Registry
         if: ${{ env.GCR_TOKEN }}
