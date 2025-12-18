@@ -489,14 +489,15 @@ export type Req = {
   deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
   createAndSetFeatureVersion: {
     projectId: number
-    environmentId: string
+    environmentId: number // Numeric ID for getFeatureStates query
+    environmentApiKey?: string // API key for URL endpoints (optional for legacy store)
     featureId: number
     skipPublish?: boolean
     featureStates: FeatureState[]
     liveFrom?: string
   }
   createFeatureVersion: {
-    environmentId: string
+    environmentId: number // Numeric ID for URL
     featureId: number
     live_from?: string
     feature_states_to_create: Omit<FeatureState, 'id'>[]
@@ -517,7 +518,7 @@ export type Req = {
   }
   getVersionFeatureState: {
     sha: string
-    environmentId: string
+    environmentId: number
     featureId: number
   }
   updateSegmentPriorities: { id: number; priority: number }[]

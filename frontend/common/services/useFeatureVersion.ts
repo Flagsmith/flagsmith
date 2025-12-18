@@ -106,7 +106,9 @@ export const getFeatureStateCrud = (
 }
 
 export const featureVersionService = service
-  .enhanceEndpoints({ addTagTypes: ['FeatureVersion', 'Environment', 'FeatureList'] })
+  .enhanceEndpoints({
+    addTagTypes: ['FeatureVersion', 'Environment', 'FeatureList'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       createAndSetFeatureVersion: builder.mutation<
@@ -119,15 +121,19 @@ export const featureVersionService = service
           { id: 'METRICS', type: 'Environment' },
         ],
         async onQueryStarted(
-          { projectId, environmentId, featureId, featureStates },
+          { environmentApiKey, featureId, featureStates, projectId },
           { dispatch, queryFulfilled },
         ) {
-          // Optimistic update: immediately update cache before API responds
+          // Optimistic update: only when environmentApiKey is provided (RTK flow)
+          // Legacy store flow doesn't pass environmentApiKey, so skip optimistic update
+          if (!environmentApiKey) {
+            return
+          }
           const newEnabled = featureStates[0]?.enabled
           const patchResult = dispatch(
             projectFlagService.util.updateQueryData(
               'getFeatureList',
-              { projectId, environmentId } as any,
+              { environmentId: environmentApiKey, projectId } as any,
               (draft) => {
                 if (draft.environmentStates?.[featureId]) {
                   draft.environmentStates[featureId].enabled = newEnabled
