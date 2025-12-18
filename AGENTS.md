@@ -3,7 +3,7 @@
 > [!TIP]
 > ## Invocation
 >
-> Start every session with: "Follow @AGENTS.md"
+> For humans: start every session with: "Follow @AGENTS.md"
 
 ---
 
@@ -34,9 +34,9 @@
 > ```
 > Compliance Report #<count>
 > Action: <proposed action in imperative form>
-> - <Section Name>: <score>/5 (<justification>)
-> - <Section Name>: N/A (<justification>)
-> - ...(include ALL sections)...
+> - §1 <Section Name>: <score>/5 (<justification>)
+> - §2 <Section Name>: N/A (<justification>)
+> - ...(include ALL major [not minor] sections)...
 > ```
 >
 > **Tracking:** Increment `#<count>` with each report. Start at #1 for the session. This count is cumulative and never resets within a session.
@@ -328,12 +328,11 @@ Follow the [Red Hat Technical Writing Style Guide](https://stylepedia.net/style/
 - 5.5.3: For PRs, include a section titled "Changes" with a checklist.
 - 5.5.4: Checklist items describe sellable goals and impact (why), not implementation (how).
 - 5.5.5: Use blockquotes with `[!NOTE]` for highlights and `[!WARNING]` for warnings.
-- 5.5.6: Include "Closes #<issueID>" only when merging the PR results in the issue being Done (released, tested, and verified). Use this for changes to documentation or other content that becomes publicly available upon merge.
-- 5.5.7: Include "Contributes to #<issueID>" when the PR results in the issue being Completed (changes delivered to `main`) but not Done. Use this for code changes that require a release cycle to reach users.
-- 5.5.8: Choose between "Closes" and "Contributes to" based on whether the merge alone achieves the issue goals (Done) or requires additional steps such as a release (Completed only).
-- 5.5.9: Mark checklist items as complete (`- [x]`) when the corresponding work is finished. Do not leave checkboxes unchecked for completed work.
-- 5.5.10: Add "Review effort: X/5" at the end (1=trivial, 5=extensive).
-- 5.5.11: Do not list file changes; reviewers read patches.
+- 5.5.6: Include "Closes #<issueID>" when merging the PR should auto-close the issue.
+- 5.5.7: Include "Contributes to #<issueID>" when the PR progresses toward the issue but should not auto-close it.
+- 5.5.8: Both keywords are valid; choose based on whether auto-close is desired.
+- 5.5.9: Add "Review effort: X/5" at the end (1=trivial, 5=extensive).
+- 5.5.10: Do not list file changes; reviewers read patches.
 
 
 ---
@@ -453,6 +452,10 @@ Follow the [Red Hat Technical Writing Style Guide](https://stylepedia.net/style/
 ## 8.3 Project Documentation
 
 - 8.3.1: Add or update project documentation when making changes. See project-specific section for location.
+- 8.3.2: Do not create documentation that duplicates information in code. Models, URLs, and schemas are already documented by the code itself.
+- 8.3.3: Do not create index files or tables of contents that require manual synchronization.
+- 8.3.4: Prefer one file per concept over monolithic files. Smaller files reduce merge conflicts and are easier to maintain.
+- 8.3.5: Before creating documentation, ask: "Will this require updates when the code changes?" If yes, reconsider.
 
 
 ---
