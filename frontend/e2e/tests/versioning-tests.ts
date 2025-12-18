@@ -6,11 +6,15 @@ import {
     createFeature,
     createOrganisationAndProject,
     createRemoteConfig,
-    editRemoteConfig, getFlagsmith,
+    editRemoteConfig,
+    getFlagsmith,
+    getText,
     log,
     login,
+    toggleFeature,
     waitForElementVisible,
 } from '../helpers.cafe';
+import { t } from 'testcafe';
 import { E2E_USER, PASSWORD } from '../config';
 
 export default async () => {
@@ -51,11 +55,75 @@ export default async () => {
     log('Edit feature 3')
     await editRemoteConfig(2,'',true)
 
-    log('Edit feature 3')
+    log('Assert version counts')
     await assertNumberOfVersions(0, 2)
     await assertNumberOfVersions(1, 2)
     await assertNumberOfVersions(2, 2)
     await compareVersion(0,0,null,true,true, 'small','medium')
     await compareVersion(1,0,null,true,true, 'small','small')
     await compareVersion(2,0,null,false,true, null,null)
+
+    // ===================================================================================
+    // Test: Row toggle in versioned environment
+    // This tests that toggling a feature via the row switch works when Feature Versioning
+    // is enabled. The toggle must use the versioning API instead of the regular PUT.
+    // We reuse the existing versioned environment from the tests above.
+    // Note: Feature 'c' is currently ON after editRemoteConfig(2,'',true) above.
+    // ===================================================================================
+    log('Test row toggle in versioned environment')
+
+    // Feature 'c' (index 2) is currently ON - toggle it OFF
+    log('Toggle feature OFF via row switch (versioned env)')
+    await toggleFeature(2, false)
+
+    // Verify: Switch shows OFF state on features list
+    await waitForElementVisible(byId('feature-switch-2-off'))
+
+    // Verify: API returns correct state (feature disabled)
+    log('Verify API returns disabled state')
+    await t.wait(2000)
+    await click('#try-it-btn')
+    await t.wait(1500)
+    let text = await getText('#try-it-results')
+    let json
+    try {
+      json = JSON.parse(text)
+    } catch (e) {
+      throw new Error('Try it results are not valid JSON')
+    }
+    await t.expect(json.c.enabled).eql(false)
+
+    // Refresh page to verify state was persisted to backend
+    log('Refresh page to verify toggle OFF persisted')
+    await t.eval(() => location.reload())
+    await waitForElementVisible(byId('features-page'))
+    await waitForElementVisible(byId('feature-switch-2-off'))
+
+    // Toggle feature 'c' back ON using row switch
+    log('Toggle feature ON via row switch (versioned env)')
+    await toggleFeature(2, true)
+
+    // Verify: Switch shows ON state on features list
+    await waitForElementVisible(byId('feature-switch-2-on'))
+
+    // Verify: API returns correct state (feature enabled)
+    log('Verify API returns enabled state')
+    await t.wait(2000)
+    await click('#try-it-btn')
+    await t.wait(1500)
+    text = await getText('#try-it-results')
+    try {
+      json = JSON.parse(text)
+    } catch (e) {
+      throw new Error('Try it results are not valid JSON')
+    }
+    await t.expect(json.c.enabled).eql(true)
+
+    // Refresh page to verify state was persisted to backend
+    log('Refresh page to verify toggle ON persisted')
+    await t.eval(() => location.reload())
+    await waitForElementVisible(byId('features-page'))
+    await waitForElementVisible(byId('feature-switch-2-on'))
+
+    log('Versioned toggle test passed')
 }
