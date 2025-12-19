@@ -1619,18 +1619,6 @@ django = "*"
 typing-extensions = "*"
 
 [[package]]
-name = "django-templated-mail"
-version = "1.1.1"
-description = "Send emails using Django template system."
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "django-templated-mail-1.1.1.tar.gz", hash = "sha256:8db807effebb42a532622e2d142dfd453dafcd0d7794c4c3332acb90656315f9"},
-    {file = "django_templated_mail-1.1.1-py3-none-any.whl", hash = "sha256:f7127e1e31d7cad4e6c4b4801d25814d4b8782627ead76f4a75b3b7650687556"},
-]
-
-[[package]]
 name = "django-test-migrations"
 version = "1.5.0"
 description = "Test django schema and data migrations, including ordering"
@@ -1759,19 +1747,19 @@ markdown = ["types-Markdown (>=0.1.5)"]
 
 [[package]]
 name = "djoser"
-version = "2.3.0"
+version = "2.3.3"
 description = "REST implementation of Django authentication system."
 optional = false
-python-versions = "<4.0,>=3.8"
+python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "djoser-2.3.0-py3-none-any.whl", hash = "sha256:6af76cb8d73f8a879ab417c1251f5aa0242c4e3c4a8fee3a6393f1126874b269"},
-    {file = "djoser-2.3.0.tar.gz", hash = "sha256:c46e4b609348b824ba138aba914ca8a89bb42b7d23975c34e2702ea04b13c989"},
+    {file = "djoser-2.3.3-py3-none-any.whl", hash = "sha256:b97d233b626c26ebccb09f5614420873ad78b8b1fb1459c76475b05319bae567"},
+    {file = "djoser-2.3.3.tar.gz", hash = "sha256:6ceeea9898cbdd585f1daa1ee9d46270600c0401dcd2d1db6f7894782006f6a6"},
 ]
 
 [package.dependencies]
-django = ">=3.0.0"
-django-templated-mail = ">=1.1.1,<2.0.0"
+django = ">=3.2"
+djangorestframework = ">=3.14"
 djangorestframework-simplejwt = ">=5.0,<6.0"
 social-auth-app-django = ">=5.0.0,<6.0.0"
 
@@ -4871,19 +4859,22 @@ testing = ["Flask (>=1,<2)", "Flask-Sockets (>=0.2,<1)", "Werkzeug (<2)", "black
 
 [[package]]
 name = "social-auth-app-django"
-version = "5.4.1"
+version = "5.4.3"
 description = "Python Social Authentication, Django integration."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "social-auth-app-django-5.4.1.tar.gz", hash = "sha256:2a43cde559dd34fdc7132417b6c52c780fa99ec2332dee9f405b4763f371c367"},
-    {file = "social_auth_app_django-5.4.1-py3-none-any.whl", hash = "sha256:7519f186c63c50f2d364457b236f051338d194bcface55e318a6a705c5213477"},
+    {file = "social_auth_app_django-5.4.3-py3-none-any.whl", hash = "sha256:db70b972faeb10ee1ec83d0dc7dbd0558d5f5830417bba317b712b10ff58d031"},
+    {file = "social_auth_app_django-5.4.3.tar.gz", hash = "sha256:d1f4286d5ca1e512c9b2f686e7ecb2a0128148f1a33d853b69dc07b58508362e"},
 ]
 
 [package.dependencies]
 Django = ">=3.2"
-social-auth-core = ">=4.4.1"
+social-auth-core = ">=4.4,<5.0"
+
+[package.extras]
+dev = ["coverage (>=3.6)"]
 
 [[package]]
 name = "social-auth-core"
