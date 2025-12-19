@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.205.3](https://github.com/Flagsmith/flagsmith/compare/v2.205.2...v2.205.3) (2025-12-19)
+
+
+### Dependency Updates
+
+* bump urllib3 dependency ([#6435](https://github.com/Flagsmith/flagsmith/issues/6435)) ([2d208b1](https://github.com/Flagsmith/flagsmith/commit/2d208b18c383a756703eba926830770546eac6ff))
+
 ## [2.205.2](https://github.com/Flagsmith/flagsmith/compare/v2.205.1...v2.205.2) (2025-12-17)
 
 
