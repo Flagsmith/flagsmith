@@ -308,10 +308,13 @@ def test_search_identities_still_allows_paging(
 def test_identity_search_is_throttled(
     admin_client: APIClient,
     environment: Environment,
-    settings,
+    reset_cache: None,
+    mocker: MockerFixture,
 ) -> None:
-    # Given - configure a very restrictive throttle rate for testing
-    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["identity_search"] = "1/min"
+    # Given - mock the throttle rate to be restrictive for testing
+    mocker.patch(
+        "rest_framework.throttling.ScopedRateThrottle.get_rate", return_value="1/minute"
+    )
     base_url = reverse(
         "api-v1:environments:environment-identities-list",
         args=[environment.api_key],
