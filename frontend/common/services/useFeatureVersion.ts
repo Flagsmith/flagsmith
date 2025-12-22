@@ -117,7 +117,7 @@ export const featureVersionService = service
         invalidatesTags: (_result, _error, arg) => [
           { id: 'LIST', type: 'FeatureVersion' },
           {
-            id: `${arg.projectId}-${arg.environmentApiKey}`,
+            id: `${arg.projectId}-${arg.environmentId}`,
             type: 'FeatureList',
           },
           { id: 'METRICS', type: 'Environment' },
