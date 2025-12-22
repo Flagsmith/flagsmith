@@ -160,6 +160,18 @@ export const getLogger = () =>
     stringifyResponseBody: true,
   })
 
+export const checkApiRequest = (
+  urlPattern: RegExp,
+  method: 'get' | 'post' | 'put' | 'patch' | 'delete',
+) =>
+  RequestLogger(
+    (req) => req.url.match(urlPattern) && req.method === method,
+    {
+      logRequestBody: true,
+      logRequestHeaders: true,
+    },
+  )
+
 export const createRole = async (
   roleName: string,
   index: number,
@@ -336,6 +348,15 @@ export const assertTextContent = (selector: string, v: string) =>
 export const assertTextContentContains = (selector: string, v: string) =>
   t.expect(Selector(selector).textContent).contains(v)
 export const getText = (selector: string) => Selector(selector).innerText
+
+export const parseTryItResults = async (): Promise<Record<string, any>> => {
+  const text = await getText('#try-it-results')
+  try {
+    return JSON.parse(text)
+  } catch (e) {
+    throw new Error('Try it results are not valid JSON')
+  }
+}
 
 export const cloneSegment = async (index: number, name: string) => {
   await click(byId(`segment-action-${index}`))
