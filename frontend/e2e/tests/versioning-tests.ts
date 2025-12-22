@@ -1,6 +1,7 @@
 import {
     assertNumberOfVersions,
     byId,
+    checkApiRequest,
     click,
     compareVersion,
     createFeature,
@@ -8,21 +9,18 @@ import {
     createRemoteConfig,
     editRemoteConfig,
     getFlagsmith,
-    getText,
     log,
     login,
+    parseTryItResults,
     toggleFeature,
     waitForElementVisible,
 } from '../helpers.cafe';
-import { RequestLogger, t } from 'testcafe';
+import { t } from 'testcafe';
 import { E2E_USER, PASSWORD } from '../config';
 
 // Request logger to verify versioned toggle uses the versions API endpoint
 // Versioned: POST /environments/{envId}/features/{featureId}/versions/
-const versionApiLogger = RequestLogger(/\/features\/\d+\/versions\/$/, {
-    logRequestBody: true,
-    logRequestHeaders: true,
-})
+const versionApiLogger = checkApiRequest(/\/features\/\d+\/versions\/$/, 'post')
 
 export default async () => {
     const flagsmith = await getFlagsmith()
@@ -96,16 +94,10 @@ export default async () => {
 
     // Verify: API returns correct state (feature disabled)
     log('Verify API returns disabled state')
-    await t.wait(2000)
+    await t.wait(500)
     await click('#try-it-btn')
-    await t.wait(1500)
-    let text = await getText('#try-it-results')
-    let json
-    try {
-      json = JSON.parse(text)
-    } catch (e) {
-      throw new Error('Try it results are not valid JSON')
-    }
+    await t.wait(500)
+    let json = await parseTryItResults()
     await t.expect(json.c.enabled).eql(false)
 
     // Refresh page to verify state was persisted to backend
@@ -130,15 +122,10 @@ export default async () => {
 
     // Verify: API returns correct state (feature enabled)
     log('Verify API returns enabled state')
-    await t.wait(2000)
+    await t.wait(500)
     await click('#try-it-btn')
-    await t.wait(1500)
-    text = await getText('#try-it-results')
-    try {
-      json = JSON.parse(text)
-    } catch (e) {
-      throw new Error('Try it results are not valid JSON')
-    }
+    await t.wait(500)
+    json = await parseTryItResults()
     await t.expect(json.c.enabled).eql(true)
 
     // Refresh page to verify state was persisted to backend
