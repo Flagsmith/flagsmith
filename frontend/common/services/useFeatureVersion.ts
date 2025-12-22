@@ -19,7 +19,6 @@ import {
 } from 'components/diff/diff-utils'
 import { getSegments } from './useSegment'
 import { getFeatureStates } from './useFeatureState'
-import { projectFlagService } from './useProjectFlag'
 import moment from 'moment'
 
 const transformFeatureStates = (featureStates: TypedFeatureState[]) =>
@@ -115,40 +114,14 @@ export const featureVersionService = service
         Res['featureVersion'],
         Req['createAndSetFeatureVersion']
       >({
-        invalidatesTags: [
+        invalidatesTags: (_result, _error, arg) => [
           { id: 'LIST', type: 'FeatureVersion' },
-          { id: 'LIST', type: 'FeatureList' },
+          {
+            id: `${arg.projectId}-${arg.environmentApiKey}`,
+            type: 'FeatureList',
+          },
           { id: 'METRICS', type: 'Environment' },
         ],
-        async onQueryStarted(
-          { environmentApiKey, featureId, featureStates, projectId },
-          { dispatch, queryFulfilled },
-        ) {
-          // Optimistic update: only when environmentApiKey is provided (RTK flow)
-          // Legacy store flow doesn't pass environmentApiKey, so skip optimistic update
-          if (!environmentApiKey) {
-            return
-          }
-          const newEnabled = featureStates[0]?.enabled
-          const patchResult = dispatch(
-            projectFlagService.util.updateQueryData(
-              'getFeatureList',
-              { environmentId: environmentApiKey, projectId } as any,
-              (draft) => {
-                if (draft.environmentStates?.[featureId]) {
-                  draft.environmentStates[featureId].enabled = newEnabled
-                }
-              },
-            ),
-          )
-
-          try {
-            await queryFulfilled
-          } catch {
-            // Rollback on error
-            patchResult.undo()
-          }
-        },
         queryFn: async (query: Req['createAndSetFeatureVersion']) => {
           // todo: this will be removed when we combine saving value and segment overrides
           const mode = query.featureStates.find(
