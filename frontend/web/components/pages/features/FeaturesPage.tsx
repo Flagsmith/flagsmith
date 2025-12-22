@@ -1,6 +1,5 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
-import classNames from 'classnames'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
@@ -106,8 +105,8 @@ const FeaturesPage: FC = () => {
   const minimumChangeRequestApprovals =
     currentEnvironment?.minimum_change_request_approvals
 
-  const [removeFeature, { isLoading: isRemoving }] = useRemoveFeatureWithToast()
-  const [toggleFeature, { isLoading: isToggling }] = useToggleFeatureWithToast()
+  const [removeFeature] = useRemoveFeatureWithToast()
+  const [toggleFeature] = useToggleFeatureWithToast()
 
   const removeFlag = useCallback(
     async (projectFlag: ProjectFlag) => {
@@ -117,9 +116,15 @@ const FeaturesPage: FC = () => {
   )
 
   const toggleFlag = useCallback(
-    async (flag: ProjectFlag, environmentFlag: FeatureState | undefined) => {
+    async (
+      flag: ProjectFlag,
+      environmentFlag: FeatureState | undefined,
+      onError?: () => void,
+    ) => {
       if (!currentEnvironment) return
-      await toggleFeature(flag, environmentFlag, currentEnvironment)
+      await toggleFeature(flag, environmentFlag, currentEnvironment, {
+        onError,
+      })
     },
     [toggleFeature, currentEnvironment],
   )
@@ -134,8 +139,6 @@ const FeaturesPage: FC = () => {
     [data?.pagination],
   )
   const totalFeatures = useMemo(() => data?.count ?? 0, [data?.count])
-
-  const isSaving = isToggling || isRemoving
 
   usePageTracking({
     context: {
@@ -328,13 +331,7 @@ const FeaturesPage: FC = () => {
               projectId={projectId}
             />
 
-            <FormGroup
-              className={classNames('mb-4', {
-                'opacity-50': isSaving,
-              })}
-            >
-              {renderFeaturesList()}
-            </FormGroup>
+            <FormGroup className='mb-4'>{renderFeaturesList()}</FormGroup>
 
             <FeaturesSDKIntegration
               projectId={projectId}

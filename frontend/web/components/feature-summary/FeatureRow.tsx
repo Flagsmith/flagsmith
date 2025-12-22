@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo } from 'react'
+import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateFlagModal from 'components/modals/CreateFlag'
@@ -27,6 +27,7 @@ import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import FeatureName from './FeatureName'
 import FeatureDescription from './FeatureDescription'
 import FeatureTags from './FeatureTags'
+import { useOptimisticToggle } from 'components/pages/features/hooks/useOptimisticToggle'
 
 export interface FeatureRowProps {
   disableControls?: boolean
@@ -41,6 +42,7 @@ export interface FeatureRowProps {
     environmentFlag:
       | FeatureListProviderData['environmentFlags'][number]
       | undefined,
+    onError?: () => void,
   ) => void | Promise<void>
   index: number
   readOnly?: boolean
@@ -80,6 +82,14 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   } = props
   const protectedTags = useProtectedTags(projectFlag, projectId)
   const history = useHistory()
+  const { id } = projectFlag
+
+  const actualEnabled = environmentFlags?.[id]?.enabled
+  const {
+    displayValue: displayEnabled,
+    revertOptimistic,
+    setOptimistic,
+  } = useOptimisticToggle(actualEnabled)
 
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: String(projectFlag.project) },
@@ -121,7 +131,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   }
 
   const confirmToggle = () => {
-    const { id } = projectFlag
     openModal(
       'Toggle Feature',
       <ConfirmToggleFeature
@@ -129,12 +138,25 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         projectFlag={projectFlag}
         environmentFlag={environmentFlags?.[id]}
         cb={() => {
-          toggleFlag?.(projectFlag, environmentFlags?.[id])
+          handleToggle()
         }}
       />,
       'p-0',
     )
   }
+
+  const handleToggle = useCallback(() => {
+    setOptimistic(!actualEnabled)
+    toggleFlag?.(projectFlag, environmentFlags?.[id], revertOptimistic)
+  }, [
+    actualEnabled,
+    environmentFlags,
+    id,
+    projectFlag,
+    revertOptimistic,
+    setOptimistic,
+    toggleFlag,
+  ])
 
   const onChange = () => {
     if (disableControls) {
@@ -209,7 +231,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   const isReadOnly = readOnly || Utils.getFlagsmithHasFeature('read_only_mode')
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
 
-  const { description, id } = projectFlag
+  const { description } = projectFlag
   const environment = ProjectStore.getEnvironment(
     environmentId,
   ) as Environment | null
@@ -311,9 +333,9 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
               <Switch
                 disabled={!permission || isReadOnly}
                 data-test={`feature-switch-${index}${
-                  environmentFlags?.[id]?.enabled ? '-on' : '-off'
+                  displayEnabled ? '-on' : '-off'
                 }`}
-                checked={environmentFlags?.[id]?.enabled}
+                checked={displayEnabled}
                 onChange={onChange}
               />
             </div>
@@ -341,9 +363,9 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
           <Switch
             disabled={!permission || isReadOnly}
             data-test={`feature-switch-${index}${
-              environmentFlags?.[id]?.enabled ? '-on' : '-off'
+              displayEnabled ? '-on' : '-off'
             }`}
-            checked={environmentFlags?.[id]?.enabled}
+            checked={displayEnabled}
             onChange={onChange}
           />
           <FeatureAction {...featureActionProps} disableE2E={true} />
