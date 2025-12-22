@@ -305,6 +305,28 @@ def test_search_identities_still_allows_paging(
     assert response2.data["results"]
 
 
+def test_identity_search_is_throttled(
+    admin_client: APIClient,
+    environment: Environment,
+    settings,
+) -> None:
+    # Given - configure a very restrictive throttle rate for testing
+    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["identity_search"] = "1/min"
+    base_url = reverse(
+        "api-v1:environments:environment-identities-list",
+        args=[environment.api_key],
+    )
+    url = f"{base_url}?q=test"
+
+    # When - make 2 requests in quick succession
+    response1 = admin_client.get(url)
+    response2 = admin_client.get(url)
+
+    # Then - first should succeed, second should be throttled
+    assert response1.status_code == status.HTTP_200_OK
+    assert response2.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+
 def test_can_delete_identity(
     environment: Environment,
     admin_client: APIClient,
