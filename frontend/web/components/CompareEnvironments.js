@@ -199,6 +199,19 @@ class CompareEnvironments extends Component {
         {this.state.environmentLeft && this.state.environmentRight ? (
           <FeatureListProvider onSave={this.onSave} onError={this.onError}>
             {({}, { removeFlag, toggleFlag }) => {
+              // Adapt old FeatureListProvider signatures to new FeatureRow signatures
+              const adaptedToggleFlag =
+                (environmentId) => (projectFlag, environmentFlag) => {
+                  toggleFlag(
+                    this.props.projectId,
+                    environmentId,
+                    projectFlag,
+                    environmentFlag,
+                  )
+                }
+              const adaptedRemoveFlag = (projectFlag) => {
+                removeFlag(this.props.projectId, projectFlag)
+              }
               const renderRow = (p, i, fadeEnabled, fadeValue) => {
                 const environmentLeft = ProjectStore.getEnvironment(
                   this.state.environmentLeft,
@@ -260,8 +273,10 @@ class CompareEnvironments extends Component {
                           projectId={this.props.projectId}
                           index={i}
                           canDelete={permission}
-                          toggleFlag={toggleFlag}
-                          removeFlag={removeFlag}
+                          toggleFlag={adaptedToggleFlag(
+                            this.state.environmentLeft,
+                          )}
+                          removeFlag={adaptedRemoveFlag}
                           projectFlag={p.projectFlagLeft}
                         />
                       )}
@@ -290,8 +305,10 @@ class CompareEnvironments extends Component {
                           projectId={this.props.projectId}
                           index={i}
                           canDelete={permission}
-                          toggleFlag={toggleFlag}
-                          removeFlag={removeFlag}
+                          toggleFlag={adaptedToggleFlag(
+                            this.state.environmentRight,
+                          )}
+                          removeFlag={adaptedRemoveFlag}
                           projectFlag={p.projectFlagRight}
                         />
                       )}

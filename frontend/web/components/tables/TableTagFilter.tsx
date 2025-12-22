@@ -10,7 +10,7 @@ import { TagStrategy } from 'common/types/responses'
 import TagContent from 'components/tags/TagContent'
 
 type TableFilterType = {
-  projectId: string | number
+  projectId: number
   value: (number | string)[] | undefined
   isLoading: boolean
   onChange: (value: (number | string)[], isAutomatedChange?: boolean) => void
@@ -68,7 +68,7 @@ const TableTagFilter: FC<TableFilterType> = ({
                   }),
                 }}
                 onChange={(v) => {
-                  onChangeStrategy(v!.value)
+                  if (v) onChangeStrategy(v.value)
                 }}
                 value={{
                   label:
