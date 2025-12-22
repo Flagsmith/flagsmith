@@ -16,6 +16,7 @@ const dir = path.join(__dirname, '../reports/screen-captures');
 if (fs.existsSync(dir)) {
     fs.rmdirSync(dir, { recursive: true });
 }
+
 const start = Date.now().valueOf();
 // Parse CLI arg --meta-filter
 const args = minimist(process.argv.slice(2));
@@ -79,4 +80,9 @@ createTestCafe()
         server.kill('SIGINT');
         testcafe.close();
         process.exit(v);
+    }) .catch(async (err) => {
+        console.error('TestCafe initialisation error:', err);
+        if (server) server.kill('SIGINT');
+        if (testcafe) testcafe.close();
+        process.exit(1);
     });
