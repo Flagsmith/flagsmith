@@ -29,6 +29,27 @@ By clicking the **Create A/B/n Test** button, you can define values for A/B test
 
 :::
 
+### Multivariate flags (A/B/n)
+
+Multivariate flags let you define multiple variants with percentage weightings (A/B/n). Key points:
+
+- Require identified users: multivariate bucketing is calculated per identity, so you must identify users (or generate anonymous GUID identities) to serve a consistent variant.
+- Deterministic per environment: the same identity gets the same variant within an environment unless you change weights.
+- Stable weights matter: changing weightings during a live test can re-bucket users; avoid mid-test weight changes unless you intentionally want to reshuffle.
+- Per-environment: identity bucketing is independent per environment; the same identity can land in different buckets across environments.
+- Percentages must sum to 100% and you need at least two variants.
+- The SDK returns both the boolean `enabled` state and the multivariate `value`; use the value to drive your experiment behaviour.
+
+If you need to test unauthenticated traffic, create anonymous identities (e.g., GUID stored in a cookie) before requesting flags so the user stays in the same bucket.
+
+Quick A/B/n setup checklist:
+1) Define variants and weights (total 100%); 2) enable the flag; 3) identify the user (or anonymous GUID) before fetching; 4) branch on the multivariate `value`; 5) log the assigned variant to analytics.
+
+Troubleshooting variant churn:
+- Ensure you identify before fetching flags.
+- Do not rotate anonymous IDs; persist them (e.g., cookie/localStorage/device ID).
+- Avoid changing weights mid-experiment unless you want buckets to shift.
+
 ---
 
 ## Editing a Feature Flag
