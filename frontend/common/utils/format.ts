@@ -38,7 +38,7 @@ const Format = {
       }
       duration = moment.duration({ from: moment(), to: moment(value) })
       return `${Format.nearestTen(
-        parseInt(duration.asDays().toString()),
+        Math.floor(duration.asDays()),
       )}d ${Format.nearestTen(duration.hours())}h ${Format.nearestTen(
         duration.minutes(),
       )}m`
@@ -53,9 +53,9 @@ const Format = {
     let duration
     if (value) {
       duration = moment.duration({ from: moment(), to: moment(value) })
-      return `${Format.nearestTen(
-        parseInt(duration.minutes().toString()),
-      )}:${Format.nearestTen(duration.seconds())}`
+      return `${Format.nearestTen(duration.minutes())}:${Format.nearestTen(
+        duration.seconds(),
+      )}`
     }
     return value
   },
@@ -182,7 +182,7 @@ const Format = {
     const suffixIndex = Math.floor((numDigits - 1) / 3)
 
     let shortValue: number = number / Math.pow(1000, suffixIndex)
-    shortValue = +parseFloat(shortValue.toString()).toFixed(1)
+    shortValue = +shortValue.toFixed(1)
 
     return shortValue + suffixes[suffixIndex]
   },
