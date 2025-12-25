@@ -198,8 +198,14 @@ describe('Format', () => {
       expect(Format.money(0, 'N/A')).toBe('N/A')
     })
 
-    it('should return null for null value', () => {
-      expect(Format.money(null)).toBe(null)
+    it('should return FREE for null/undefined values', () => {
+      expect(Format.money(null)).toBe('FREE')
+      expect(Format.money(undefined)).toBe('FREE')
+    })
+
+    it('should return custom default value for null/undefined', () => {
+      expect(Format.money(null, 'N/A')).toBe('N/A')
+      expect(Format.money(undefined, 'N/A')).toBe('N/A')
     })
   })
 

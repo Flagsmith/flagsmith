@@ -1,3 +1,5 @@
+import moment from 'moment'
+
 type Person = {
   firstName?: string
   lastName?: string
@@ -129,18 +131,15 @@ const Format = {
     value: number | null | undefined,
     defaultValue?: string | null,
   ): string | null | undefined {
-    if (value === 0) {
+    if (value === null || value === undefined || value === 0) {
       return defaultValue == null ? 'FREE' : defaultValue
     }
 
-    return (
-      value &&
-      `£${value
-        .toFixed(2)
-        .replace(/./g, (c, i, a) =>
-          i && c !== '.' && (a.length - i) % 3 === 0 ? `,${c}` : c,
-        )}`
-    )
+    return `£${value
+      .toFixed(2)
+      .replace(/./g, (c, i, a) =>
+        i && c !== '.' && (a.length - i) % 3 === 0 ? `,${c}` : c,
+      )}`
   },
 
   monthAndYear(value: string | null | undefined): string | null | undefined {
