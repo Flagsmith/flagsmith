@@ -24,10 +24,6 @@ export default defineConfig({
       testMatch: /global-teardown\.ts/,
     },
     {
-      name: 'tests',
-      testDir: './e2e/tests',
-    },
-    {
       dependencies: ['api teardown', 'run bundled app'],
       grep: /@oss/,
       name: 'oss',
