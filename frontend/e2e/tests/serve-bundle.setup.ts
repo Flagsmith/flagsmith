@@ -11,16 +11,17 @@ setup('serve bundled app', async ({ }) => {
     return
   }
 
+  const port = process.env.PORT || '8080';
   const serverProcess = spawn('node', ['api/index.js'], {
     shell: true,
     stdio: 'inherit',
     env: {
       ...process.env,
-      PORT: '3000',
+      PORT: port,
     },
   });
   process.env.PLAYWRIGHT_BUNDLED_SERVER_PID = String(serverProcess.pid);
   // Wait for server to start
   await new Promise((resolve) => setTimeout(resolve, 3000));
-  console.log('Serving bundled app in port 3000')
+  console.log(`Serving bundled app on port ${port}`)
 });
