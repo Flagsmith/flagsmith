@@ -300,7 +300,7 @@ export const compareVersion = async (
     await assertTextContent(page, byId(`old-value`), `${oldValue}`);
   }
   if (newValue) {
-    await assertTextContent(page, byId(`old-value`), `${oldValue}`);
+    await assertTextContent(page, byId(`new-value`), `${newValue}`);
   }
   await closeModal(page);
 };

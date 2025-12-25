@@ -19,7 +19,7 @@ setup('serve bundled app', async ({ }) => {
       PORT: '3000',
     },
   });
-  process.env.BUNDLED_SERVER_PID = String(serverProcess.pid);
+  process.env.PLAYWRIGHT_BUNDLED_SERVER_PID = String(serverProcess.pid);
   // Wait for server to start
   await new Promise((resolve) => setTimeout(resolve, 3000));
   console.log('Serving bundled app in port 3000')
