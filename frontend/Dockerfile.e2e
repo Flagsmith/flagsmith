@@ -4,7 +4,7 @@ FROM ghcr.io/flagsmith/e2e-frontend-base:latest
 # These are needed because the base image may not have them yet
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgdk-pixbuf-2.0-0 fonts-unifont fonts-ubuntu \
+    libgdk-pixbuf-2.0-0 fonts-unifont \
     && rm -rf /var/lib/apt/lists/*
 
 # Build Flagsmith
