@@ -1,7 +1,7 @@
 FROM debian:bookworm-slim
 
-# Set node version to match package.json engines
-ENV NODE_VERSION 22
+# Set node version to match .nvmrc (must include 'v' prefix for path)
+ENV NODE_VERSION v22.18.0
 
 # replace shell with bash so we can source files
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
@@ -32,8 +32,8 @@ RUN source $NVM_DIR/nvm.sh \
     && nvm use default
 
 # add node and npm to path so the commands are available
-ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
-ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+ENV NODE_PATH $NVM_DIR/versions/node/$NODE_VERSION/lib/node_modules
+ENV PATH $NVM_DIR/versions/node/$NODE_VERSION/bin:$PATH
 
 # confirm installation of node
 RUN node -v
