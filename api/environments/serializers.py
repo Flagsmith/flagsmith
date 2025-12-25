@@ -134,12 +134,10 @@ class _BaseCreateUpdateEnvironmentSerializer(
 class CreateEnvironmentSerializer(_BaseCreateUpdateEnvironmentSerializer):
     def get_subscription(self) -> Subscription | None:
         view = self.context["view"]
-        # handle `project` not being part of the data
-        # When request comes from yasg2(as part of schema generation)
-        project_id = view.request.data.get("project")
-        if not project_id:
+        if getattr(view, "swagger_fake_view", False):
             return None
 
+        project_id = view.request.data["project"]
         project = Project.objects.select_related(
             "organisation", "organisation__subscription"
         ).get(id=project_id)
@@ -154,7 +152,8 @@ class UpdateEnvironmentSerializer(_BaseCreateUpdateEnvironmentSerializer):
         )
 
     def get_subscription(self) -> Subscription | None:
-        if self.instance is None:
+        view = self.context["view"]
+        if getattr(view, "swagger_fake_view", False):
             return None
         return getattr(self.instance.project.organisation, "subscription", None)  # type: ignore[union-attr]
 
