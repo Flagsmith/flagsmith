@@ -1,5 +1,12 @@
 FROM ghcr.io/flagsmith/e2e-frontend-base:latest
 
+# Install Playwright browser dependencies (renamed packages in Debian Bookworm)
+# These are needed because the base image may not have them yet
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgdk-pixbuf-2.0-0 fonts-unifont fonts-ubuntu \
+    && rm -rf /var/lib/apt/lists/*
+
 # Build Flagsmith
 WORKDIR /srv/flagsmith
 COPY frontend/package.json frontend/package-lock.json frontend/.npmrc frontend/.nvmrc ./
@@ -14,8 +21,8 @@ COPY frontend .
 COPY .release-please-manifest.json ./.versions.json
 RUN npm run env
 
-# Install Playwright browsers
-RUN npm run playwright:install
+# Install Playwright browsers (without --with-deps since we installed deps above)
+RUN npx playwright install firefox
 
 ARG CI_COMMIT_SHA=dev
 RUN echo ${CI_COMMIT_SHA} > ./CI_COMMIT_SHA
