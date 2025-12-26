@@ -28,6 +28,9 @@ serve:
 
 .PHONY: test
 test:
+	docker compose up -d flagsmith-api
+	docker compose exec flagsmith-api sh -c 'until wget -q -O- http://localhost:8000/health > /dev/null 2>&1; do echo "Waiting for API..."; sleep 2; done'
 	docker compose run frontend \
 		npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test -- $(opts) \
 		|| (docker compose logs flagsmith-api; exit 1)
+	docker compose run frontend npm run test:upload || true
