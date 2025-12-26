@@ -9,6 +9,7 @@ import {
 import { E2E_SIGN_UP_USER, PASSWORD } from '../config';
 
 test('@oss Initial setup test', async ({ page }) => {
+  await page.goto('');
   log('Create Organisation');
   await click(page, byId('jsSignup'));
   await setText(page, byId('firstName'), 'Bullet');
