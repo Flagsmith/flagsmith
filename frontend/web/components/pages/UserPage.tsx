@@ -315,7 +315,7 @@ const UserPage: FC = () => {
                                             actualFlags?.[name]
                                               ?.feature_state_value,
                                         }
-                                      : actualFlags?.[name]
+                                      : environmentFlags[featureId]
                                   }
                                   environmentFeatureState={
                                     environmentFlags[featureId]
