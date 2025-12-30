@@ -281,12 +281,7 @@ const UserPage: FC = () => {
                           isLoading={FeatureListStore.isLoading}
                           items={projectFlags}
                           renderRow={({ id: featureId, name }, i) => {
-                            const rawIdentityFlag = identityFlags[featureId]
-                            // Ignore stale overrides - feature.id should match current featureId
-                            const identityFlag =
-                              rawIdentityFlag?.feature?.id === featureId
-                                ? rawIdentityFlag
-                                : undefined
+                            const identityFlag = identityFlags[featureId]
                             const actualEnabled =
                               actualFlags && actualFlags[name]?.enabled
                             const environmentFlag =
@@ -296,6 +291,19 @@ const UserPage: FC = () => {
                             const projectFlag = projectFlags?.find(
                               (p: any) => p.id === environmentFlag.feature,
                             )
+                            const actualFlagForFeature =
+                              actualFlags?.[name]?.feature?.id === featureId
+                                ? actualFlags[name]
+                                : undefined
+                            const overrideFeatureState = identityFlag
+                              ? {
+                                  ...identityFlag,
+                                  //resolves multivariate value if one is set
+                                  feature_state_value:
+                                    actualFlagForFeature?.feature_state_value,
+                                }
+                              : actualFlagForFeature ??
+                                environmentFlags[featureId]
                             return (
                               !!projectFlag && (
                                 <FeatureOverrideRow
@@ -311,17 +319,7 @@ const UserPage: FC = () => {
                                   valueDataTest={`user-feature-value-${i}`}
                                   projectFlag={projectFlag}
                                   dataTest={`user-feature-${i}`}
-                                  overrideFeatureState={
-                                    identityFlag
-                                      ? {
-                                          ...identityFlag,
-                                          //resolves multivariate value if one is set
-                                          feature_state_value:
-                                            actualFlags?.[name]
-                                              ?.feature_state_value,
-                                        }
-                                      : actualFlags?.[name]
-                                  }
+                                  overrideFeatureState={overrideFeatureState}
                                   environmentFeatureState={
                                     environmentFlags[featureId]
                                   }
