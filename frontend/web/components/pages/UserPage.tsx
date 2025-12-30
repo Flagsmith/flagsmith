@@ -281,7 +281,12 @@ const UserPage: FC = () => {
                           isLoading={FeatureListStore.isLoading}
                           items={projectFlags}
                           renderRow={({ id: featureId, name }, i) => {
-                            const identityFlag = identityFlags[featureId]
+                            const rawIdentityFlag = identityFlags[featureId]
+                            // Ignore stale overrides - feature.id should match current featureId
+                            const identityFlag =
+                              rawIdentityFlag?.feature?.id === featureId
+                                ? rawIdentityFlag
+                                : undefined
                             const actualEnabled =
                               actualFlags && actualFlags[name]?.enabled
                             const environmentFlag =
@@ -315,7 +320,7 @@ const UserPage: FC = () => {
                                             actualFlags?.[name]
                                               ?.feature_state_value,
                                         }
-                                      : environmentFlags[featureId]
+                                      : actualFlags?.[name]
                                   }
                                   environmentFeatureState={
                                     environmentFlags[featureId]
