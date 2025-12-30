@@ -140,8 +140,8 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
         </h5>
       </Row>
       <p className='fs-small lh-sm col-md-8 mb-4'>
-        Flagsmith lets you connect health providers for tagging feature flags
-        unhealthy state in different environments.{' '}
+        Connect your monitoring tools to Flagsmith and get updates on the health
+        of your features in the Flagsmith dashboard.{' '}
         <Button
           theme='text'
           href='https://docs.flagsmith.com/advanced-use/feature-health'
