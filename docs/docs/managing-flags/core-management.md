@@ -43,7 +43,11 @@ Multivariate flags let you define multiple variants with percentage weightings (
 If you need to test unauthenticated traffic, generate a unique identifier (like a GUID/UUID) for each anonymous user and store it persistently (e.g., in a cookie or localStorage) so the same user gets the same variant across sessions.
 
 Quick A/B/n setup checklist:
-1) Define variants and weights (total 100%); 2) enable the flag; 3) identify the user (or generate and persist an anonymous identifier) before fetching; 4) branch on the multivariate `value`; 5) log the assigned variant to analytics.
+1. Define variants and weights (total 100%)
+2. Enable the flag
+3. Identify the user (or anonymous GUID) before fetching
+4. Use the `value` of the feature when defining the branching logic in your code
+5. Enable required [integrations](/third-party-integrations/) for analytics purposes
 
 ---
 
