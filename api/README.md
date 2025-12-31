@@ -37,7 +37,7 @@ To auto-generate migrations for your new code, run `make docker-up django-make-m
 
 The prompt will ask you for a name and not generate one; we avoid auto-generated migration names.
 
-Squash migrations whenever you can.
+Squash newly added migrations whenever you can.
 
 ### Code guidelines: typing
 
