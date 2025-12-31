@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 
 from drf_spectacular.extensions import OpenApiSerializerExtension
 from drf_spectacular.openapi import AutoSchema
@@ -30,7 +30,9 @@ class _GenerateJsonSchema(GenerateJsonSchema):
         return elem  # type: ignore[no-any-return]
 
 
-class PydanticSchemaExtension(OpenApiSerializerExtension):  # type: ignore[misc]
+class PydanticSchemaExtension(
+    OpenApiSerializerExtension  # type: ignore[no-untyped-call]
+):
     """
     An OpenAPI extension that allows drf-spectacular to generate schema documentation
     from Pydantic models.
@@ -42,7 +44,11 @@ class PydanticSchemaExtension(OpenApiSerializerExtension):  # type: ignore[misc]
     target_class = "pydantic.BaseModel"
     match_subclasses = True
 
-    def get_name(self) -> str | None:
+    def get_name(
+        self,
+        auto_schema: AutoSchema | None = None,
+        direction: Literal["request", "response"] | None = None,
+    ) -> str | None:
         return self.target.__name__  # type: ignore[no-any-return]
 
     def map_serializer(
@@ -50,7 +56,7 @@ class PydanticSchemaExtension(OpenApiSerializerExtension):  # type: ignore[misc]
         auto_schema: AutoSchema,
         direction: str,
     ) -> dict[str, Any]:
-        model_cls: type[BaseModel] = self.target  # type: ignore[assignment]
+        model_cls: type[BaseModel] = self.target
 
         model_json_schema = model_cls.model_json_schema(
             mode="serialization",
@@ -63,7 +69,7 @@ class PydanticSchemaExtension(OpenApiSerializerExtension):  # type: ignore[misc]
             for ref_name, schema_kwargs in model_json_schema.pop("$defs").items():
                 # Mark nested models as nullable (same behaviour as the old implementation)
                 schema_kwargs["nullable"] = True
-                component = ResolvedComponent(
+                component = ResolvedComponent(  # type: ignore[no-untyped-call]
                     name=ref_name,
                     type=ResolvedComponent.SCHEMA,
                     object=ref_name,
@@ -101,7 +107,7 @@ def resolve_pydantic_schema(
     if "$defs" in model_json_schema:
         for ref_name, schema_kwargs in model_json_schema.pop("$defs").items():
             schema_kwargs["nullable"] = True
-            component = ResolvedComponent(
+            component = ResolvedComponent(  # type: ignore[no-untyped-call]
                 name=ref_name,
                 type=ResolvedComponent.SCHEMA,
                 object=ref_name,

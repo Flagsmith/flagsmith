@@ -16,10 +16,12 @@ def test_pydantic_schema_extension__renders_expected() -> None:
         nested_list: list[Nested]
 
     # Create an extension instance targeting the ResponseModel
-    extension = PydanticSchemaExtension(target=ResponseModel)
+    extension = PydanticSchemaExtension(  # type: ignore[no-untyped-call]
+        target=ResponseModel,
+    )
 
     # Create a mock AutoSchema with a registry
-    generator = SchemaGenerator()
+    generator = SchemaGenerator()  # type: ignore[no-untyped-call]
     auto_schema = AutoSchema()
     auto_schema.registry = generator.registry
 
@@ -50,9 +52,11 @@ def test_pydantic_schema_extension__registers_nested_components() -> None:
     class ResponseModel(pydantic.BaseModel):
         nested: Nested
 
-    extension = PydanticSchemaExtension(target=ResponseModel)
+    extension = PydanticSchemaExtension(  # type: ignore[no-untyped-call]
+        target=ResponseModel,
+    )
 
-    generator = SchemaGenerator()
+    generator = SchemaGenerator()  # type: ignore[no-untyped-call]
     auto_schema = AutoSchema()
     auto_schema.registry = generator.registry
 
@@ -72,7 +76,9 @@ def test_pydantic_schema_extension__get_name() -> None:
     class MyModel(pydantic.BaseModel):
         field: str
 
-    extension = PydanticSchemaExtension(target=MyModel)
+    extension = PydanticSchemaExtension(  # type: ignore[no-untyped-call]
+        target=MyModel,
+    )
 
     # When
     name = extension.get_name()

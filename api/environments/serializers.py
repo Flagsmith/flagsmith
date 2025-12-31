@@ -1,4 +1,4 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from rest_framework import serializers
 
@@ -34,7 +34,7 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):  # type: ignore[ty
         )
 
 
-class EnvironmentSerializerLight(serializers.ModelSerializer):  # type: ignore[type-arg]
+class EnvironmentSerializerLight(serializers.ModelSerializer[Environment]):
     use_mv_v2_evaluation = serializers.SerializerMethodField()
 
     class Meta:
@@ -149,6 +149,8 @@ class CreateUpdateEnvironmentSerializer(
             # Handle schema generation when instance is None.
             if self.instance is None:
                 return None
+            if TYPE_CHECKING:
+                assert isinstance(self.instance, Environment)
             return getattr(self.instance.project.organisation, "subscription", None)
 
         return None
