@@ -31,10 +31,10 @@ class EnvironmentFeatureVersionPermissions(BasePermission):
             feature = Feature.objects.get(id=feature_id, project=environment.project)
             tag_ids = list(feature.tags.values_list("id", flat=True))
 
-        return request.user.has_environment_permission(  # type: ignore[union-attr]
+        return request.user.has_environment_permission(  # type: ignore[union-attr,no-any-return]
             permission=required_permission,
             environment=environment,
-            tag_ids=tag_ids,  # type: ignore[arg-type]
+            tag_ids=tag_ids,
         )
 
     def has_object_permission(
@@ -53,10 +53,10 @@ class EnvironmentFeatureVersionPermissions(BasePermission):
         if required_permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
             tag_ids = list(obj.feature.tags.values_list("id", flat=True))
 
-        return request.user.has_environment_permission(  # type: ignore[union-attr]
+        return request.user.has_environment_permission(  # type: ignore[union-attr,no-any-return]
             permission=required_permission,
             environment=obj.environment,
-            tag_ids=tag_ids,  # type: ignore[arg-type]
+            tag_ids=tag_ids,
         )
 
 
@@ -73,11 +73,11 @@ class EnvironmentFeatureVersionFeatureStatePermissions(BasePermission):
         environment = Environment.objects.get(id=environment_pk)
 
         if view.action == "list":
-            return request.user.has_environment_permission(  # type: ignore[union-attr]
+            return request.user.has_environment_permission(  # type: ignore[union-attr,no-any-return]
                 permission=VIEW_ENVIRONMENT, environment=environment
             )
 
-        return request.user.has_environment_permission(  # type: ignore[union-attr]
+        return request.user.has_environment_permission(  # type: ignore[union-attr,no-any-return]
             permission=UPDATE_FEATURE_STATE, environment=environment
         )
 
@@ -88,12 +88,12 @@ class EnvironmentFeatureVersionFeatureStatePermissions(BasePermission):
         obj: FeatureState,
     ) -> bool:
         if view.action == "retrieve":
-            return request.user.has_environment_permission(  # type: ignore[union-attr]
+            return request.user.has_environment_permission(  # type: ignore[union-attr,no-any-return]
                 permission=VIEW_ENVIRONMENT,
-                environment=obj.environment,  # type: ignore[arg-type]
+                environment=obj.environment,
             )
 
-        return request.user.has_environment_permission(  # type: ignore[union-attr]
+        return request.user.has_environment_permission(  # type: ignore[union-attr,no-any-return]
             permission=UPDATE_FEATURE_STATE,
-            environment=obj.environment,  # type: ignore[arg-type]
+            environment=obj.environment,
         )

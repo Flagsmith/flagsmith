@@ -34,7 +34,7 @@ class IdentityManager(Manager["Identity"]):
         self,
         integrations: "Iterable[IntegrationConfig] | None" = None,
         extra_select_related: "Iterable[str] | None" = None,
-        extra_prefetch_related: "Iterable[str | Prefetch] | None" = None,
+        extra_prefetch_related: "Iterable[str | Prefetch] | None" = None,  # type: ignore[type-arg]
     ) -> "QuerySet[Identity]":
         from integrations.integration import IDENTITY_INTEGRATIONS
 
