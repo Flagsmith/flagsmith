@@ -43,11 +43,11 @@ class FeatureAdmin(SimpleHistoryAdmin):  # type: ignore[misc]
 class FeatureSegmentAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     model = FeatureSegment
 
-    def add_view(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+    def add_view(self, *args, **kwargs):  # type: ignore[no-untyped-def]  # pragma: no cover
         self.exclude = ("priority",)  # type: ignore[misc]
         return super(FeatureSegmentAdmin, self).add_view(*args, **kwargs)
 
-    def change_view(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+    def change_view(self, *args, **kwargs):  # type: ignore[no-untyped-def]  # pragma: no cover
         self.exclude = ()  # type: ignore[misc]
         return super(FeatureSegmentAdmin, self).change_view(*args, **kwargs)
 

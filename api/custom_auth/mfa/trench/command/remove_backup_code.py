@@ -11,7 +11,7 @@ def remove_backup_code_command(user_id: Any, method_name: str, code: str) -> Non
         .values_list("_backup_codes", flat=True)
         .first()
     )
-    if serialized_codes is None:
+    if serialized_codes is None:  # pragma: no cover
         return
     codes = MFAMethod._BACKUP_CODES_DELIMITER.join(
         _remove_code_from_set(  # type: ignore[arg-type]

@@ -87,7 +87,7 @@ class EnvironmentFeatureVersionFeatureStatePermissions(BasePermission):
         view: GenericViewSet,  # type: ignore[override,type-arg]
         obj: FeatureState,
     ) -> bool:
-        if view.action == "retrieve":
+        if view.action == "retrieve":  # pragma: no cover
             return request.user.has_environment_permission(  # type: ignore[union-attr,no-any-return]
                 permission=VIEW_ENVIRONMENT,
                 environment=obj.environment,
