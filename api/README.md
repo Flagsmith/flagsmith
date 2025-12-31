@@ -15,7 +15,7 @@ To run tests, run `make docker-up test`.
 
 To prepare a dev database, run `make docker-up django-migrate`.
 
-To bring up a dev server, run `make serve`, or `make serve-with-task-processor` to run the Task processor alongside with the server.
+To bring up a dev server, run `make serve`, or `make serve-with-task-processor` to run the Task processor alongside the server.
 
 ### Code guidelines: testing
 
