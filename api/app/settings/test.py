@@ -67,4 +67,4 @@ PAhkbx1Jf3FftZf4YL9X3W3ghczPPatemfylyAFiTGH5FrjlhlRJn+8owfWjK3zN
 
 ENABLE_POSTPONE_DECORATOR = False
 
-DEBUG = True
+DEBUG = False
