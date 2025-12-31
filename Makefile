@@ -1,4 +1,4 @@
-.PHONY: install-hooks
+.PHONY: install-pre-commit
 install-pre-commit:
 	curl -LsSf uvx.sh/pre-commit/install.sh | sh
 
