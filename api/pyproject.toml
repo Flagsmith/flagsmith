@@ -131,7 +131,6 @@ python-http-client = "~3.3.7"
 django-health-check = "~3.18.2"
 django-admin-sso = "~5.2.0"
 drf-spectacular = "~0.28.0"
-django-debug-toolbar = "^3.2.1"
 sentry-sdk = "~2.8.0"
 environs = "^14.1.1"
 django-lifecycle = "~1.2.4"
@@ -243,6 +242,7 @@ ruff = "^0.9.7"
 flagsmith-common = { git = "https://github.com/flagsmith/flagsmith-common", branch = "deps/django-5-upgrade", extras = ["test-tools"] }
 pytest-responses = "^0.5.1"
 diff-cover = "^10.1.0"
+django-debug-toolbar = "*"
 
 [build-system]
 requires = ["poetry>=2.0.0"]
