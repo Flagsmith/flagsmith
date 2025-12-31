@@ -1,9 +1,19 @@
+.PHONY: install-hooks
+install-pre-commit:
+	curl -LsSf uvx.sh/pre-commit/install.sh | sh
+
+.PHONY: install-hooks
+install-hooks: install-pre-commit
+	pre-commit install
+
 .PHONY: install
 install:
-	cd api && $(MAKE) install
-	cd docs && $(MAKE) install
+	$(MAKE) -C api install
+	$(MAKE) -C docs install
+	$(MAKE) -C frontend install
 
 .PHONY: lint
 lint:
-	cd api && $(MAKE) lint
-	cd docs && $(MAKE) lint
+	$(MAKE) -C api lint
+	$(MAKE) -C docs lint
+	$(MAKE) -C frontend lint

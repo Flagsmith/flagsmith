@@ -1,11 +1,12 @@
 Thanks for submitting a PR! Please check the boxes below:
 
-- [ ] I have added information to `docs/` if required so people know about the feature!
-- [ ] I have filled in the "Changes" section below?
-- [ ] I have filled in the "How did you test this code" section below?
-- [ ] I have used a [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/) title for this Pull Request
+- [ ] I have added information to `docs/` if required so people know about the feature.
+- [ ] I have filled in the "Changes" section below.
+- [ ] I have filled in the "How did you test this code" section below.
 
 ## Changes
+
+Contributes to <!-- insert issue # or URL -->
 
 _Please describe._
 
