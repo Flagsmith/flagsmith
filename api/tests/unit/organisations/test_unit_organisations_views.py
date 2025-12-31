@@ -795,7 +795,7 @@ def test_chargebee_webhook(
         15,
         33,
         9,
-        tzinfo=dttz.utc,  # type: ignore[attr-defined]
+        tzinfo=dttz.utc,
     )
     assert subscription_cache.allowed_projects is None
     assert subscription_cache.allowed_30d_api_calls == api_calls
