@@ -9,10 +9,10 @@ from common.features.serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureStateValueSerializer,
 )
+from drf_spectacular.utils import extend_schema_field
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
 )
-from drf_yasg.utils import swagger_serializer_method  # type: ignore[import-untyped]
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -291,9 +291,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 
         return attrs
 
-    @swagger_serializer_method(  # type: ignore[misc]
-        serializer_or_field=FeatureStateSerializerSmall(allow_null=True)
-    )
+    @extend_schema_field(FeatureStateSerializerSmall(allow_null=True))
     def get_environment_feature_state(  # type: ignore[return]
         self, instance: Feature
     ) -> dict[str, Any] | None:
@@ -302,9 +300,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         ):
             return FeatureStateSerializerSmall(instance=feature_state).data
 
-    @swagger_serializer_method(  # type: ignore[misc]
-        serializer_or_field=FeatureStateSerializerSmall(allow_null=True)
-    )
+    @extend_schema_field(FeatureStateSerializerSmall(allow_null=True))
     def get_segment_feature_state(  # type: ignore[return]
         self, instance: Feature
     ) -> dict[str, Any] | None:

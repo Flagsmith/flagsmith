@@ -135,7 +135,7 @@ class CreateUpdateEnvironmentSerializer(
 
         if view.action == "create":
             # handle `project` not being part of the data
-            # When request comes from yasg2(as part of schema generation)
+            # When request comes from drf-spectacular (as part of schema generation)
             project_id = view.request.data.get("project")
             if not project_id:
                 return None
@@ -146,7 +146,10 @@ class CreateUpdateEnvironmentSerializer(
 
             return getattr(project.organisation, "subscription", None)
         elif view.action in ("update", "partial_update"):
-            return getattr(self.instance.project.organisation, "subscription", None)  # type: ignore[union-attr]
+            # Handle schema generation when instance is None.
+            if self.instance is None:
+                return None
+            return getattr(self.instance.project.organisation, "subscription", None)
 
         return None
 

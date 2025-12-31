@@ -2,7 +2,7 @@ from itertools import chain
 
 from django.contrib.contenttypes.models import ContentType
 from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -29,16 +29,13 @@ from .serializers import (
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(query_serializer=MetadataFieldQuerySerializer),
+    decorator=extend_schema(parameters=[MetadataFieldQuerySerializer]),
 )
 class MetadataFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [MetadataFieldPermissions]
     serializer_class = MetadataFieldSerializer
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        if getattr(self, "swagger_fake_view", False):
-            return MetadataField.objects.none()
-
         queryset = MetadataField.objects.filter(organisation__users=self.request.user)
         if self.action == "list":
             serializer = MetadataFieldQuerySerializer(data=self.request.query_params)
@@ -54,7 +51,7 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(query_serializer=MetadataModelFieldQuerySerializer),
+    decorator=extend_schema(parameters=[MetadataModelFieldQuerySerializer]),
 )
 class MetaDataModelFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [MetadataModelFieldPermissions]
@@ -73,9 +70,7 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg
 
         return queryset
 
-    @swagger_auto_schema(
-        method="GET", responses={200: ContentTypeSerializer(many=True)}
-    )
+    @extend_schema(responses={200: ContentTypeSerializer(many=True)})
     @action(
         detail=False,
         methods=["GET"],
@@ -93,10 +88,9 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg
 
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        method="GET",
+    @extend_schema(
         responses={200: ContentTypeSerializer(many=True)},
-        query_serializer=SupportedRequiredForModelQuerySerializer,
+        parameters=[SupportedRequiredForModelQuerySerializer],
     )
     @action(
         detail=False,

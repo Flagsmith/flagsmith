@@ -1,18 +1,11 @@
 import pydantic
-from drf_yasg.openapi import (  # type: ignore[import-untyped]
-    SCHEMA_DEFINITIONS,
-    ReferenceResolver,
-    Response,
-    Schema,
-)
-from pytest_mock import MockerFixture
+from drf_spectacular.generators import SchemaGenerator
+from drf_spectacular.openapi import AutoSchema
 
-from api.openapi import PydanticResponseCapableSwaggerAutoSchema
+from api.openapi import PydanticSchemaExtension
 
 
-def test_pydantic_response_capable_auto_schema__renders_expected(
-    mocker: MockerFixture,
-) -> None:
+def test_pydantic_schema_extension__renders_expected() -> None:
     # Given
     class Nested(pydantic.BaseModel):
         usual_str: str
@@ -22,50 +15,67 @@ def test_pydantic_response_capable_auto_schema__renders_expected(
         nested_once: Nested
         nested_list: list[Nested]
 
-    auto_schema = PydanticResponseCapableSwaggerAutoSchema(
-        view=mocker.MagicMock(),
-        path=mocker.MagicMock(),
-        method=mocker.MagicMock(),
-        components=ReferenceResolver("definitions", force_init=True),
-        request=mocker.MagicMock(),
-        overrides=mocker.MagicMock(),
-    )
+    # Create an extension instance targeting the ResponseModel
+    extension = PydanticSchemaExtension(target=ResponseModel)
+
+    # Create a mock AutoSchema with a registry
+    generator = SchemaGenerator()
+    auto_schema = AutoSchema()
+    auto_schema.registry = generator.registry
 
     # When
-    response_schemas = auto_schema.get_response_schemas({200: ResponseModel})
+    schema = extension.map_serializer(auto_schema, direction="response")
 
     # Then
-    assert response_schemas == {
-        "200": Response(
-            description="ResponseModel",
-            schema=Schema(
-                title="ResponseModel",
-                required=["nested_once", "nested_list"],
-                type="object",
-                properties={
-                    "nested_list": {
-                        "items": {"$ref": "#/definitions/Nested"},
-                        "title": "Nested List",
-                        "type": "array",
-                    },
-                    "nested_once": {"$ref": "#/definitions/Nested"},
-                },
-            ),
-        ),
+    assert schema["title"] == "ResponseModel"
+    assert schema["type"] == "object"
+    assert "nested_once" in schema["properties"]
+    assert "nested_list" in schema["properties"]
+    assert schema["required"] == ["nested_once", "nested_list"]
+
+    # Check nested_list is an array with reference
+    assert schema["properties"]["nested_list"]["type"] == "array"
+    assert "$ref" in schema["properties"]["nested_list"]["items"]
+
+    # Check nested_once is a reference
+    assert "$ref" in schema["properties"]["nested_once"]
+
+
+def test_pydantic_schema_extension__registers_nested_components() -> None:
+    # Given
+    class Nested(pydantic.BaseModel):
+        usual_str: str
+        optional_int: int | None = None
+
+    class ResponseModel(pydantic.BaseModel):
+        nested: Nested
+
+    extension = PydanticSchemaExtension(target=ResponseModel)
+
+    generator = SchemaGenerator()
+    auto_schema = AutoSchema()
+    auto_schema.registry = generator.registry
+
+    # When
+    extension.map_serializer(auto_schema, direction="response")
+
+    # Then
+    # Check that the Nested model was registered as a component
+    registered_schemas = {
+        component.name for component in auto_schema.registry._components.values()
     }
-    nested_schema = auto_schema.components.with_scope(SCHEMA_DEFINITIONS).get("Nested")
-    assert nested_schema == Schema(
-        title="Nested",
-        required=["usual_str"],
-        type="object",
-        properties={
-            "optional_int": {
-                "default": None,
-                "title": "Optional Int",
-                "type": "integer",
-                "x-nullable": True,
-            },
-            "usual_str": {"title": "Usual Str", "type": "string"},
-        },
-        x_nullable=True,
-    )
+    assert "Nested" in registered_schemas
+
+
+def test_pydantic_schema_extension__get_name() -> None:
+    # Given
+    class MyModel(pydantic.BaseModel):
+        field: str
+
+    extension = PydanticSchemaExtension(target=MyModel)
+
+    # When
+    name = extension.get_name()
+
+    # Then
+    assert name == "MyModel"

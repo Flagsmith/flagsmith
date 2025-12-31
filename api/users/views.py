@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import FormView
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
@@ -95,7 +95,7 @@ class AdminInitView(View):
 
 
 @method_decorator(
-    decorator=swagger_auto_schema(query_serializer=ListUsersQuerySerializer()),
+    decorator=extend_schema(parameters=[ListUsersQuerySerializer]),
     name="list",
 )
 class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):  # type: ignore[type-arg]
@@ -169,9 +169,6 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
     permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        if getattr(self, "swagger_fake_view", False):
-            return UserPermissionGroup.objects.none()
-
         organisation_pk = self.kwargs.get("organisation_pk")
         organisation = Organisation.objects.get(id=organisation_pk)
 
@@ -228,8 +225,8 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         serializer.save(organisation_id=self.kwargs["organisation_pk"])
 
-    @swagger_auto_schema(
-        request_body=UserIdsSerializer,
+    @extend_schema(
+        request=UserIdsSerializer,
         responses={200: UserPermissionGroupSerializerDetail},
     )
     @action(detail=True, methods=["POST"], url_path="add-users")
@@ -253,8 +250,8 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
 
         return Response(UserPermissionGroupSerializerDetail(instance=group).data)
 
-    @swagger_auto_schema(
-        request_body=UserIdsSerializer,
+    @extend_schema(
+        request=UserIdsSerializer,
         responses={200: UserPermissionGroupSerializerDetail},
     )
     @action(detail=True, methods=["POST"], url_path="remove-users")

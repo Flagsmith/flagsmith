@@ -2,7 +2,7 @@ import logging
 
 from common.projects.permissions import VIEW_PROJECT
 from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(query_serializer=FeatureSegmentQuerySerializer()),
+    decorator=extend_schema(parameters=[FeatureSegmentQuerySerializer]),
 )
 class FeatureSegmentViewSet(
     viewsets.ModelViewSet,  # type: ignore[type-arg]
@@ -35,9 +35,6 @@ class FeatureSegmentViewSet(
     permission_classes = [FeatureSegmentPermissions]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        if getattr(self, "swagger_fake_view", False):
-            return FeatureSegment.objects.none()
-
         permitted_projects = self.request.user.get_permitted_projects(  # type: ignore[union-attr]
             permission_key=VIEW_PROJECT
         )
@@ -75,9 +72,8 @@ class FeatureSegmentViewSet(
 
         return FeatureSegmentListSerializer
 
-    @swagger_auto_schema(
-        methods=["POST"],
-        request_body=FeatureSegmentChangePrioritiesSerializer(many=True),
+    @extend_schema(
+        request=FeatureSegmentChangePrioritiesSerializer(many=True),
         responses={200: FeatureSegmentListSerializer(many=True)},
     )
     @action(detail=False, methods=["POST"], url_path="update-priorities")

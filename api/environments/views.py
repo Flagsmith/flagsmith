@@ -7,8 +7,7 @@ from common.environments.permissions import (
 )
 from django.db.models import Count, Q, QuerySet
 from django.utils.decorators import method_decorator
-from drf_yasg import openapi  # type: ignore[import-untyped]
-from drf_yasg.utils import no_body, swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -69,14 +68,14 @@ logger = logging.getLogger(__name__)
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "project",
-                openapi.IN_QUERY,
-                "ID of the project to filter by.",
+    decorator=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="project",
+                location=OpenApiParameter.QUERY,
+                description="ID of the project to filter by.",
                 required=False,
-                type=openapi.TYPE_INTEGER,
+                type=int,
             )
         ]
     ),
@@ -217,7 +216,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @swagger_auto_schema(responses={200: PermissionModelSerializer(many=True)})
+    @extend_schema(responses={200: PermissionModelSerializer(many=True)})
     @action(detail=False, methods=["GET"])
     def permissions(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         return Response(
@@ -228,7 +227,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             ).data
         )
 
-    @swagger_auto_schema(responses={200: UserObjectPermissionsSerializer})
+    @extend_schema(responses={200: UserObjectPermissionsSerializer})
     @action(
         detail=True,
         methods=["GET"],
@@ -252,9 +251,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        responses={200: UserDetailedPermissionsSerializer},
-    )  # type: ignore[misc]
+    @extend_schema(responses={200: UserDetailedPermissionsSerializer})
     @action(
         detail=True,
         methods=["GET"],
@@ -281,7 +278,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         )
         return Response(serializer.data)
 
-    @swagger_auto_schema(responses={200: SDKEnvironmentDocumentModel})  # type: ignore[misc]
+    @extend_schema(responses={200: SDKEnvironmentDocumentModel})
     @action(detail=True, methods=["GET"], url_path="document")
     def get_document(self, request, api_key: str):  # type: ignore[no-untyped-def]
         environment = (
@@ -289,7 +286,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         )  # use get_object to ensure permissions check is performed
         return Response(Environment.get_environment_document(environment.api_key))
 
-    @swagger_auto_schema(request_body=no_body, responses={202: ""})  # type: ignore[misc]
+    @extend_schema(request=None, responses={202: None})
     @action(detail=True, methods=["POST"], url_path="enable-v2-versioning")
     def enable_v2_versioning(self, request: Request, api_key: str) -> Response:
         environment = self.get_object()
@@ -301,7 +298,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         enable_v2_versioning.delay(kwargs={"environment_id": environment.id})
         return Response(status=status.HTTP_202_ACCEPTED)
 
-    @swagger_auto_schema(request_body=no_body, responses={202: ""})  # type: ignore[misc]
+    @extend_schema(request=None, responses={202: None})
     @action(detail=True, methods=["POST"], url_path="disable-v2-versioning")
     def disable_v2_versioning(self, request: Request, api_key: str) -> Response:
         environment = self.get_object()
@@ -370,9 +367,9 @@ class EnvironmentMetricsViewSet(GenericViewSet[Environment]):
     serializer_class: type[BaseSerializer[Any]] = EnvironmentMetricsSerializer
     queryset = Environment.objects.all()
 
-    @swagger_auto_schema(  # type: ignore[misc]
-        operation_description="Get metrics for this environment.",
-        responses={200: openapi.Response("Metrics", EnvironmentMetricsSerializer)},
+    @extend_schema(
+        description="Get metrics for this environment.",
+        responses={200: EnvironmentMetricsSerializer},
     )
     def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         environment: Environment = self.get_object()

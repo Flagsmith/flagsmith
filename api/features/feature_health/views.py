@@ -6,7 +6,7 @@ from common.projects.permissions import (
 )
 from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, BasePermission
@@ -54,9 +54,6 @@ class FeatureHealthEventViewSet(
         ]
 
     def get_queryset(self) -> QuerySet[FeatureHealthEvent]:
-        if getattr(self, "swagger_fake_view", False):
-            return self.model_class.objects.none()
-
         project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
         return self.model_class.objects.get_latest_by_project(project)
 
@@ -84,9 +81,6 @@ class FeatureHealthProviderViewSet(
         return [NestedProjectPermissions()]
 
     def get_queryset(self) -> QuerySet[FeatureHealthProvider]:
-        if getattr(self, "swagger_fake_view", False):
-            return self.model_class.objects.none()
-
         project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
         return self.model_class.objects.filter(project=project)
 
@@ -97,8 +91,8 @@ class FeatureHealthProviderViewSet(
             name__iexact=self.kwargs["name"],
         )
 
-    @swagger_auto_schema(  # type: ignore[misc]
-        request_body=CreateFeatureHealthProviderSerializer,
+    @extend_schema(
+        request=CreateFeatureHealthProviderSerializer,
         responses={status.HTTP_201_CREATED: FeatureHealthProviderSerializer()},
     )
     def create(

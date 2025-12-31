@@ -2,7 +2,7 @@ from common.projects.permissions import (
     CREATE_FEATURE,
     VIEW_PROJECT,
 )
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
@@ -40,16 +40,11 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[t
         return super().create(request, *args, **kwargs)
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        if getattr(self, "swagger_fake_view", False):
-            return MultivariateFeatureOption.objects.none()
-
         feature = get_object_or_404(Feature, pk=self.kwargs["feature_pk"])
         return feature.multivariate_options.all()
 
 
-@swagger_auto_schema(
-    responses={200: MultivariateFeatureOptionSerializer()}, method="get"
-)
+@extend_schema(responses={200: MultivariateFeatureOptionSerializer()})
 @api_view(["GET"])
 def get_mv_feature_option_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)

@@ -5,7 +5,7 @@ from common.projects.permissions import (
 from django.db.models import QuerySet
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import BasePermission
@@ -46,14 +46,11 @@ class LaunchDarklyImportRequestViewSet(
         ]
 
     def get_queryset(self) -> QuerySet[LaunchDarklyImportRequest]:
-        if getattr(self, "swagger_fake_view", False):
-            return self.model_class.objects.none()  # type: ignore[no-any-return]
-
         project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
         return self.model_class.objects.filter(project=project)  # type: ignore[no-any-return]
 
-    @swagger_auto_schema(  # type: ignore[misc]
-        request_body=CreateLaunchDarklyImportRequestSerializer,
+    @extend_schema(
+        request=CreateLaunchDarklyImportRequestSerializer,
         responses={status.HTTP_201_CREATED: LaunchDarklyImportRequestSerializer()},
     )
     def create(self, request: Request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]

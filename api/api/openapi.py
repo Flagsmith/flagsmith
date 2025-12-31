@@ -1,12 +1,8 @@
-import inspect
 from typing import Any
 
-from drf_yasg.inspectors import SwaggerAutoSchema  # type: ignore[import-untyped]
-from drf_yasg.openapi import (  # type: ignore[import-untyped]
-    SCHEMA_DEFINITIONS,
-    Response,
-    Schema,
-)
+from drf_spectacular.extensions import OpenApiSerializerExtension
+from drf_spectacular.openapi import AutoSchema
+from drf_spectacular.plumbing import ResolvedComponent
 from pydantic import BaseModel
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 from pydantic_core import core_schema
@@ -14,10 +10,7 @@ from pydantic_core import core_schema
 
 class _GenerateJsonSchema(GenerateJsonSchema):
     def nullable_schema(self, schema: core_schema.NullableSchema) -> JsonSchemaValue:
-        """Generates an OpenAPI 2.0-compatible JSON schema that matches a schema that allows null values.
-
-        (The catch is OpenAPI 2.0 does not allow them, but some clients are capable
-        to consume the `x-nullable` annotation.)
+        """Generates an OpenAPI 3.0-compatible JSON schema that allows null values.
 
         Args:
             schema: The core schema.
@@ -31,68 +24,89 @@ class _GenerateJsonSchema(GenerateJsonSchema):
             for any_of in anyof_schema_value["anyOf"]
             if any_of.get("type") != "null"
         )
-        if type := elem.get("type"):
-            return {"type": type, "x-nullable": True}
+        if type_ := elem.get("type"):
+            return {"type": type_, "nullable": True}
         # Assuming a reference here (which we can not annotate)
         return elem  # type: ignore[no-any-return]
 
 
-class PydanticResponseCapableSwaggerAutoSchema(SwaggerAutoSchema):  # type: ignore[misc]
+class PydanticSchemaExtension(OpenApiSerializerExtension):  # type: ignore[misc]
     """
-    A `SwaggerAutoSchema` subclass that allows to generate view response Swagger docs
-    from a Pydantic model.
+    An OpenAPI extension that allows drf-spectacular to generate schema documentation
+    from Pydantic models.
 
-    Example usage:
-
-    ```
-    @drf_yasg.utils.swagger_auto_schema(
-        responses={200: YourPydanticSchema},
-        auto_schema=PydanticResponseCapableSwaggerAutoSchema,
-    )
-    def your_view(): ...
-    ```
-
-    To adapt Pydantic-generated schemas, the following is taken care of:
-
-    1. Pydantic-generated definitions are unwrapped and added to drf-yasg's global definitions.
-    2. Rather than using `anyOf`, nullable fields are annotated with `x-nullable`.
-    3. As there's no way to annotate a reference, all nested models are assumed to be `x-nullable`.
+    This extension is automatically used when a Pydantic BaseModel subclass is passed
+    as a response type in @extend_schema decorators.
     """
 
-    def get_response_schemas(
+    target_class = "pydantic.BaseModel"
+    match_subclasses = True
+
+    def get_name(self) -> str | None:
+        return self.target.__name__  # type: ignore[no-any-return]
+
+    def map_serializer(
         self,
-        response_serializers: dict[str | int, Any],
-    ) -> dict[str, Response]:
-        result = {}
+        auto_schema: AutoSchema,
+        direction: str,
+    ) -> dict[str, Any]:
+        model_cls: type[BaseModel] = self.target  # type: ignore[assignment]
 
-        definitions = self.components.with_scope(SCHEMA_DEFINITIONS)
+        model_json_schema = model_cls.model_json_schema(
+            mode="serialization",
+            schema_generator=_GenerateJsonSchema,
+            ref_template="#/components/schemas/{model}",
+        )
 
-        for status_code in list(response_serializers):
-            if inspect.isclass(response_serializers[status_code]) and issubclass(
-                model_cls := response_serializers[status_code], BaseModel
-            ):
-                model_json_schema = model_cls.model_json_schema(
-                    mode="serialization",
-                    schema_generator=_GenerateJsonSchema,
-                    ref_template=f"#/{SCHEMA_DEFINITIONS}/{{model}}",
+        # Register nested definitions as components
+        if "$defs" in model_json_schema:
+            for ref_name, schema_kwargs in model_json_schema.pop("$defs").items():
+                # Mark nested models as nullable (same behaviour as the old implementation)
+                schema_kwargs["nullable"] = True
+                component = ResolvedComponent(
+                    name=ref_name,
+                    type=ResolvedComponent.SCHEMA,
+                    object=ref_name,
+                    schema=schema_kwargs,
                 )
+                auto_schema.registry.register_on_missing(component)
 
-                for ref_name, schema_kwargs in model_json_schema.pop("$defs").items():
-                    definitions.setdefault(
-                        ref_name,
-                        maker=lambda: Schema(
-                            **schema_kwargs,
-                            # We can not annotate references with `x-nullable`,
-                            # So just assume all nested models as nullable for now.
-                            x_nullable=True,
-                        ),
-                    )
+        return model_json_schema
 
-                result[str(status_code)] = Response(
-                    description=model_cls.__name__,
-                    schema=Schema(**model_json_schema),
-                )
 
-                del response_serializers[status_code]
+def resolve_pydantic_schema(
+    auto_schema: AutoSchema,
+    model_cls: type[BaseModel],
+) -> dict[str, Any]:
+    """
+    Utility function to resolve a Pydantic model to an OpenAPI schema.
 
-        return {**super().get_response_schemas(response_serializers), **result}
+    This can be used when you need to manually build a schema that includes
+    Pydantic models.
+
+    Args:
+        auto_schema: The AutoSchema instance from drf-spectacular.
+        model_cls: The Pydantic model class to resolve.
+
+    Returns:
+        The OpenAPI schema dictionary.
+    """
+    model_json_schema = model_cls.model_json_schema(
+        mode="serialization",
+        schema_generator=_GenerateJsonSchema,
+        ref_template="#/components/schemas/{model}",
+    )
+
+    # Register nested definitions as components
+    if "$defs" in model_json_schema:
+        for ref_name, schema_kwargs in model_json_schema.pop("$defs").items():
+            schema_kwargs["nullable"] = True
+            component = ResolvedComponent(
+                name=ref_name,
+                type=ResolvedComponent.SCHEMA,
+                object=ref_name,
+                schema=schema_kwargs,
+            )
+            auto_schema.registry.register_on_missing(component)
+
+    return model_json_schema

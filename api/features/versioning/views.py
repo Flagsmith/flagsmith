@@ -8,7 +8,7 @@ from django.db.models import BooleanField, ExpressionWrapper, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.mixins import (
@@ -49,9 +49,7 @@ from users.models import FFAdminUser
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(
-        query_serializer=EnvironmentFeatureVersionQuerySerializer()
-    ),
+    decorator=extend_schema(parameters=[EnvironmentFeatureVersionQuerySerializer]),
 )
 class EnvironmentFeatureVersionViewSet(
     GenericViewSet,  # type: ignore[type-arg]
@@ -100,9 +98,6 @@ class EnvironmentFeatureVersionViewSet(
         self.environment = environment
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        if getattr(self, "swagger_fake_view", False):
-            return EnvironmentFeatureVersion.objects.none()
-
         queryset = EnvironmentFeatureVersion.objects.filter(
             environment=self.environment, feature_id=self.feature
         )
@@ -215,9 +210,6 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         self.environment_feature_version = None
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        if getattr(self, "swagger_fake_view", False):
-            return FeatureState.objects.none()
-
         environment_feature_version_uuid = self.kwargs["environment_feature_version_pk"]
 
         return FeatureState.objects.filter(

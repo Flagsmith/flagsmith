@@ -1,6 +1,6 @@
 import typing
 
-from drf_yasg.utils import swagger_serializer_method  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from audit.models import AuditLog
@@ -60,9 +60,7 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[t
             "change_type",
         )
 
-    @swagger_serializer_method(  # type: ignore[misc]
-        serializer_or_field=AuditLogChangeDetailsSerializer(many=True)
-    )
+    @extend_schema_field(AuditLogChangeDetailsSerializer(many=True))
     def get_change_details(
         self, instance: AuditLog
     ) -> typing.List[typing.Dict[str, typing.Any]]:

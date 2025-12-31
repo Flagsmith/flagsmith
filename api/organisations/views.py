@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
@@ -95,8 +95,6 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return context
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        if getattr(self, "swagger_fake_view", False):
-            return Organisation.objects.none()
         return self.request.user.organisations.all()  # type: ignore[union-attr]
 
     def get_throttles(self):  # type: ignore[no-untyped-def]
@@ -158,9 +156,9 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.save()
         return Response(serializer.data, status=200)
 
-    @swagger_auto_schema(
+    @extend_schema(
         deprecated=True,
-        operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/total-count/",
+        description="Please use /api/v1/organisations/{organisation_pk}/usage-data/total-count/",
     )
     @action(
         detail=True,
@@ -181,8 +179,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         return Response({"events": events}, status=status.HTTP_200_OK)
 
+    @extend_schema(responses={200: OrganisationSerializerFull})
     @action(detail=True, methods=["POST"], url_path="update-subscription")
-    @swagger_auto_schema(responses={200: OrganisationSerializerFull})
     def update_subscription(self, request, pk):  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -237,10 +235,10 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.save()
         return Response(serializer.data)
 
-    @swagger_auto_schema(
+    @extend_schema(
         deprecated=True,
-        operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/",
-        query_serializer=InfluxDataQuerySerializer(),
+        description="Please use /api/v1/organisations/{organisation_pk}/usage-data/",
+        parameters=[InfluxDataQuerySerializer],
     )
     @action(
         detail=True,
@@ -279,9 +277,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        responses={200: UserDetailedPermissionsSerializer},
-    )  # type: ignore[misc]
+    @extend_schema(responses={200: UserDetailedPermissionsSerializer})
     @action(
         detail=True,
         methods=["GET"],
@@ -344,9 +340,6 @@ class OrganisationWebhookViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
     webhook_type = WebhookType.ORGANISATION
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        if getattr(self, "swagger_fake_view", False):
-            return OrganisationWebhook.objects.none()
-
         if "organisation_pk" not in self.kwargs:
             raise ValidationError("Missing required path parameter 'organisation_pk'")
 

@@ -1,6 +1,6 @@
 import typing
 
-from drf_yasg.utils import swagger_serializer_method  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema_field
 from flag_engine.features.models import FeatureStateModel
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -134,9 +134,7 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):  # type: ignor
             return "IDENTITY"
         return None
 
-    @swagger_serializer_method(  # type: ignore[misc]
-        serializer_or_field=IdentityAllFeatureStatesSegmentSerializer
-    )
+    @extend_schema_field(IdentityAllFeatureStatesSegmentSerializer)
     def get_segment(self, instance) -> typing.Optional[typing.Dict[str, typing.Any]]:  # type: ignore[no-untyped-def]
         if getattr(instance, "feature_segment_id", None) is not None:
             return IdentityAllFeatureStatesSegmentSerializer(

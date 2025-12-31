@@ -3,7 +3,7 @@ from typing import Optional
 
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import condition
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -29,7 +29,7 @@ class SDKEnvironmentAPIView(APIView):
     def get_authenticators(self):  # type: ignore[no-untyped-def]
         return [EnvironmentKeyAuthentication(required_key_prefix="ser.")]
 
-    @swagger_auto_schema(responses={200: SDKEnvironmentDocumentModel})  # type: ignore[misc]
+    @extend_schema(responses={200: SDKEnvironmentDocumentModel})
     @method_decorator(condition(last_modified_func=get_last_modified))
     def get(self, request: Request) -> Response:
         environment_document = Environment.get_environment_document(

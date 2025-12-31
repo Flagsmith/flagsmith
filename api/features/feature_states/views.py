@@ -1,5 +1,4 @@
-from drf_yasg import openapi  # type: ignore[import-untyped]
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
@@ -25,10 +24,9 @@ def _check_workflow_not_enabled(environment: Environment) -> None:
         )
 
 
-@swagger_auto_schema(
-    method="post",
-    operation_summary="Update single feature state",
-    operation_description="""
+@extend_schema(
+    summary="Update single feature state",
+    description="""
     **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
 
     Updates a single feature state within an environment. You can update either:
@@ -51,23 +49,19 @@ def _check_workflow_not_enabled(environment: Environment) -> None:
     - Optional `segment.priority` field controls ordering
     - If field value is null or the field is omitted, lowest priority is assumed
     """,
-    manual_parameters=[
-        openapi.Parameter(
-            "environment_key",
-            openapi.IN_PATH,
+    parameters=[
+        OpenApiParameter(
+            name="environment_key",
+            location=OpenApiParameter.PATH,
             description="The environment API key",
-            type=openapi.TYPE_STRING,
+            type=str,
             required=True,
         )
     ],
-    request_body=UpdateFlagSerializer,
-    responses={
-        204: openapi.Response(
-            description="Feature state updated successfully (no content returned)"
-        )
-    },
+    request=UpdateFlagSerializer,
+    responses={204: None},
     tags=["experimental"],
-)  # type: ignore[misc]
+)
 @api_view(http_method_names=["POST"])
 @permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])
 def update_flag_v1(request: Request, environment_key: str) -> Response:
@@ -84,10 +78,9 @@ def update_flag_v1(request: Request, environment_key: str) -> Response:
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@swagger_auto_schema(
-    method="post",
-    operation_summary="Update multiple feature states",
-    operation_description="""
+@extend_schema(
+    summary="Update multiple feature states",
+    description="""
     **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
 
     Updates multiple feature states in a single request. This endpoint allows
@@ -118,23 +111,19 @@ def update_flag_v1(request: Request, environment_key: str) -> Response:
     - Duplicate segment_id values are not allowed
 
     """,
-    manual_parameters=[
-        openapi.Parameter(
-            "environment_key",
-            openapi.IN_PATH,
+    parameters=[
+        OpenApiParameter(
+            name="environment_key",
+            location=OpenApiParameter.PATH,
             description="The environment API key",
-            type=openapi.TYPE_STRING,
+            type=str,
             required=True,
         )
     ],
-    request_body=UpdateFlagV2Serializer,
-    responses={
-        204: openapi.Response(
-            description="Feature states updated successfully (no content returned)"
-        )
-    },
+    request=UpdateFlagV2Serializer,
+    responses={204: None},
     tags=["experimental"],
-)  # type: ignore[misc]
+)
 @api_view(http_method_names=["POST"])
 @permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])
 def update_flag_v2(request: Request, environment_key: str) -> Response:
@@ -151,10 +140,9 @@ def update_flag_v2(request: Request, environment_key: str) -> Response:
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@swagger_auto_schema(
-    method="post",
-    operation_summary="Delete segment override",
-    operation_description="""
+@extend_schema(
+    summary="Delete segment override",
+    description="""
     **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
 
     Deletes a segment override for a feature in the given environment.
@@ -169,21 +157,19 @@ def update_flag_v2(request: Request, environment_key: str) -> Response:
     The segment override must exist for the given feature/environment combination.
     Returns 400 if the segment override does not exist.
     """,
-    manual_parameters=[
-        openapi.Parameter(
-            "environment_key",
-            openapi.IN_PATH,
+    parameters=[
+        OpenApiParameter(
+            name="environment_key",
+            location=OpenApiParameter.PATH,
             description="The environment API key",
-            type=openapi.TYPE_STRING,
+            type=str,
             required=True,
         )
     ],
-    request_body=DeleteSegmentOverrideSerializer,
-    responses={
-        204: openapi.Response(description="Segment override deleted successfully")
-    },
+    request=DeleteSegmentOverrideSerializer,
+    responses={204: None},
     tags=["experimental"],
-)  # type: ignore[misc]
+)
 @api_view(http_method_names=["POST"])
 @permission_classes([IsAuthenticated, EnvironmentUpdateFeatureStatePermission])
 def delete_segment_override(request: Request, environment_key: str) -> Response:
