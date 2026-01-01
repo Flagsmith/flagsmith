@@ -2,7 +2,7 @@ import pydantic
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.openapi import AutoSchema
 
-from api.openapi import PydanticSchemaExtension
+from api.openapi import PydanticSchemaExtension, resolve_pydantic_schema
 
 
 def test_pydantic_schema_extension__renders_expected() -> None:
@@ -85,3 +85,31 @@ def test_pydantic_schema_extension__get_name() -> None:
 
     # Then
     assert name == "MyModel"
+
+
+def test_resolve_pydantic_schema__renders_expected() -> None:
+    # Given
+    class Nested(pydantic.BaseModel):
+        usual_str: str
+        optional_int: int | None = None
+
+    class ResponseModel(pydantic.BaseModel):
+        nested: Nested
+
+    generator = SchemaGenerator()  # type: ignore[no-untyped-call]
+    auto_schema = AutoSchema()
+    auto_schema.registry = generator.registry
+
+    # When
+    schema = resolve_pydantic_schema(auto_schema, ResponseModel)
+
+    # Then
+    assert schema["title"] == "ResponseModel"
+    assert schema["type"] == "object"
+    assert "nested" in schema["properties"]
+
+    # Check that the Nested model was registered as a component
+    registered_schemas = {
+        component.name for component in auto_schema.registry._components.values()
+    }
+    assert "Nested" in registered_schemas

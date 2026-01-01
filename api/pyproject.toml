@@ -63,6 +63,7 @@ exclude_also = [
 [tool.coverage.run]
 omit = [
   "app/settings/common.py",
+  "app/settings/local.py",
   "manage.py",
   "e2etests/*",
   "scripts/*",
@@ -249,6 +250,7 @@ types-pytz = "^2025.1.0.20250204"
 ruff = "^0.9.7"
 flagsmith-common = { version = "*", extras = ["test-tools"] }
 pytest-responses = "^0.5.1"
+diff-cover = "^10.1.0"
 
 [build-system]
 requires = ["poetry>=2.0.0"]
