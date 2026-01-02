@@ -126,15 +126,6 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
 
         allowed_api_calls = subscription_cache.allowed_30d_api_calls
 
-    if subscription_cache.api_calls_30d < (
-        subscription_cache.allowed_30d_api_calls * min(API_USAGE_ALERT_THRESHOLDS) / 100
-    ):
-        # Skip organisations whose usage in the last 30d is below the threshold of the
-        # minimum notification level for their allowance. If their usage is below the
-        # threshold in the last 30d, it must be below it for the current billing period
-        # (which by definition is <30d).
-        return
-
     api_usage = get_current_api_usage(organisation.id, period_starts_at)
 
     # For some reason the allowed API calls is set to 0 so default to the max free plan.
