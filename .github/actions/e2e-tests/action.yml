@@ -5,9 +5,6 @@ inputs:
   e2e_test_token:
     description: The authentication token used for E2E test endpoints.
     required: true
-  slack_token:
-    description: The slack authentication token.
-    required: true
   environment:
     description: The value of the ENV environment variable to use for npm run env.
     required: true
@@ -48,9 +45,7 @@ runs:
           lsof -ti:3000 | xargs kill -9 || true
       env:
         E2E_TEST_TOKEN: ${{ inputs.e2e_test_token }}
-        SLACK_TOKEN: ${{ inputs.slack_token }}
         ENV: ${{ inputs.environment == 'production' && 'prod' || inputs.environment }}
-        GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
     - name: Upload failed test videos
       if: failure()

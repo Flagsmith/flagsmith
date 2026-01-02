@@ -47,14 +47,11 @@ services:
       E2E_TEST_TOKEN_DEV: some-token
       DISABLE_ANALYTICS_FEATURES: 'true'
       FLAGSMITH_API: flagsmith-api:8000/api/v1/
-      SLACK_TOKEN: ${SLACK_TOKEN}
-      GITHUB_ACTION_URL: ${GITHUB_ACTION_URL}
     ports:
       - 3000:3000
     depends_on:
       flagsmith-api:
         condition: service_healthy
-
     links:
       - flagsmith-api:flagsmith-api
     command: [npm, run, test]

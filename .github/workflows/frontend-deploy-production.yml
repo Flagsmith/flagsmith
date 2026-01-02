@@ -40,7 +40,6 @@ jobs:
         uses: ./.github/actions/e2e-tests
         with:
           e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
-          slack_token: ${{ secrets.SLACK_TOKEN }}
           environment: prod
 
   deploy-production:

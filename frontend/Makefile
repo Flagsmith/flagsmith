@@ -28,6 +28,11 @@ serve:
 
 .PHONY: test
 test:
-	docker compose run frontend \
-		npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test -- $(opts) \
-		|| (docker compose logs flagsmith-api; exit 1)
+	mkdir -p e2e-videos
+	docker rm -f e2e-test-runner 2>/dev/null || true
+	docker compose run --rm=false --name e2e-test-runner frontend \
+		npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test -- $(opts); \
+		TEST_EXIT_CODE=$$?; \
+		docker cp e2e-test-runner:/srv/flagsmith/reports/screen-captures/. e2e-videos/ 2>/dev/null || true; \
+		docker rm e2e-test-runner 2>/dev/null || true; \
+		if [ $$TEST_EXIT_CODE -ne 0 ]; then docker compose logs flagsmith-api; exit $$TEST_EXIT_CODE; fi

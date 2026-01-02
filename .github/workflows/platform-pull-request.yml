@@ -154,7 +154,6 @@ jobs:
       args: --meta-filter category=oss
     secrets:
       GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
-      SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
 
     strategy:
       matrix:
@@ -171,7 +170,6 @@ jobs:
       args: --meta-filter category=oss,category=enterprise
     secrets:
       GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
-      SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
 
     strategy:
       matrix:

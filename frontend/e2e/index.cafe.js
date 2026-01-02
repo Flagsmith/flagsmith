@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const { fork } = require('child_process');
 const _options = require("../.testcaferc")
-const upload = require('../bin/upload-file');
 const minimist = require('minimist');
 const options = {
     ..._options,
@@ -66,18 +65,10 @@ createTestCafe()
             .run(options)
     })
     .then(async (v) => {
-        // Upload files
         console.log(`Test failures ${v} in ${Date.now().valueOf() - start}ms`);
-        if (fs.existsSync(dir) && !process.env.E2E_DEV) {
-            try {
-                const files = fs.readdirSync(dir);
-                // Upload to Slack
-                await Promise.all(files.map(f => upload(path.join(dir, f))));
-                // Videos will also be uploaded to GitHub Actions artifacts by the workflow
-                console.log(`${files.length} video files processed for Slack upload and available for GitHub Actions artifacts`);
-            } catch (e) { console.log('error uploading files', e); }
-        } else {
-            console.log('No files to upload');
+        if (fs.existsSync(dir)) {
+            const files = fs.readdirSync(dir);
+            console.log(`${files.length} video file(s) saved for GitHub Actions artifacts`);
         }
         // Shut down server and testcafe
         server.kill('SIGINT');
