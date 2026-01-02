@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.205.5](https://github.com/Flagsmith/flagsmith/compare/v2.205.4...v2.205.5) (2026-01-02)
+
+
+### Bug Fixes
+
+* add throttle to flag analytics endpoint ([#6454](https://github.com/Flagsmith/flagsmith/issues/6454)) ([23d37ca](https://github.com/Flagsmith/flagsmith/commit/23d37ca202487dd9523bb5face31a098dd3e77b9))
+
 ## [2.205.4](https://github.com/Flagsmith/flagsmith/compare/v2.205.3...v2.205.4) (2026-01-02)
 
 
