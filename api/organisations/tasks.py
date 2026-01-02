@@ -132,7 +132,7 @@ def handle_api_usage_notifications() -> None:
         # threshold in the last 30d, it must be below it for the current billing period
         # (which by definition is <30d).
         subscription_information_cache__api_calls_30d__gte=F(
-            "subscription_information_cache__allowed_api_calls_30d"
+            "subscription_information_cache__allowed_30d_api_calls"
         )
         * threshold_percentage,
     ).select_related("subscription", "subscription_information_cache"):

@@ -390,12 +390,11 @@ def test_handle_api_usage_notifications_when_feature_flag_is_off(
     now = timezone.now()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
-        allowed_seats=10,
-        allowed_projects=3,
         allowed_30d_api_calls=100,
         chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=45),
         current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=110,
     )
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
@@ -703,12 +702,11 @@ def test_handle_api_usage_notifications_with_error(
     organisation.subscription.save()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
-        allowed_seats=10,
-        allowed_projects=3,
         allowed_30d_api_calls=100,
         chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=45),
         current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=100,
     )
 
     get_client_mock = mocker.patch("organisations.tasks.get_client")
