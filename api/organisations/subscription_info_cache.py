@@ -60,6 +60,7 @@ def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, .
             "chargebee_updated_at",
             "influx_updated_at",
         ],
+        batch_size=settings.OSIC_UPDATE_BATCH_SIZE,
     )
 
 
