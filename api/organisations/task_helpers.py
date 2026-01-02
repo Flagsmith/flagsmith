@@ -100,6 +100,17 @@ def _send_api_usage_notification(
 def handle_api_usage_notification_for_organisation(organisation: Organisation) -> None:
     now = timezone.now()
 
+    if not organisation.has_subscription_information_cache():
+        # Not having a subscription information cache implies that the organisation has
+        # no usage so no notification is needed.
+        logger.debug(
+            "Organisation %d does not have subscription information cache. Ignoring.",
+            organisation.id,
+        )
+        return
+
+    subscription_cache = organisation.subscription_information_cache
+
     if (
         organisation.subscription.is_free_plan
         or organisation.subscription.cancellation_date is not None
@@ -108,15 +119,7 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         # Default to a rolling month for free accounts or canceled subscriptions.
         days = 30
         period_starts_at = now - timedelta(days)
-    elif not organisation.has_subscription_information_cache():
-        # Since the calling code is a list of many organisations
-        # log the error and return without raising an exception.
-        logger.error(
-            f"Paid organisation {organisation.id} is missing subscription information cache"
-        )
-        return
     else:
-        subscription_cache = organisation.subscription_information_cache
         billing_starts_at = subscription_cache.current_billing_term_starts_at
 
         if billing_starts_at is None:
@@ -132,6 +135,16 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         period_starts_at = relativedelta(months=month_delta) + billing_starts_at
 
         allowed_api_calls = subscription_cache.allowed_30d_api_calls
+
+    if subscription_cache.api_calls_30d < (
+        subscription_cache.allowed_30d_api_calls * min(API_USAGE_ALERT_THRESHOLDS) / 100
+    ):
+        # Skip organisations whose 30d usage is within the bounds of the minimum
+        # notification level for their allowance. This optimises the amount of queries
+        # that we need to query influx for, and the logic is that if they are within
+        # their usage for the last 30d, they must be within their usage since the
+        # start of the current billing period.
+        return
 
     api_usage = get_current_api_usage(organisation.id, period_starts_at)
 
