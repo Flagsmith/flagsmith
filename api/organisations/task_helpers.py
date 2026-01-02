@@ -129,11 +129,10 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
     if subscription_cache.api_calls_30d < (
         subscription_cache.allowed_30d_api_calls * min(API_USAGE_ALERT_THRESHOLDS) / 100
     ):
-        # Skip organisations whose 30d usage is within the bounds of the minimum
-        # notification level for their allowance. This optimises the amount of queries
-        # that we need to query influx for, and the logic is that if they are within
-        # their usage for the last 30d, they must be within their usage since the
-        # start of the current billing period.
+        # Skip organisations whose usage in the last 30d is below the threshold of the
+        # minimum notification level for their allowance. If their usage is below the
+        # threshold in the last 30d, it must be below it for the current billing period
+        # (which by definition is <30d).
         return
 
     api_usage = get_current_api_usage(organisation.id, period_starts_at)
