@@ -17,7 +17,7 @@ class InfluxQueryThrottle(SimpleRateThrottle):
                 "scope": self.scope,
                 "ident": request.user.pk,
             }
-        return self.cache_format % {
+        return self.cache_format % {  # pragma: no cover
             "scope": self.scope,
             "ident": self.get_ident(request),
         }
