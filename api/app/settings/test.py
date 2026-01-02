@@ -11,6 +11,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "invite": "10/min",
     "signup": "100/min",
     "user": "100000/day",
+    "influx_query": "50/min",
 }
 
 AWS_SSE_LOGS_BUCKET_NAME = "test_bucket"
