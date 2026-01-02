@@ -21,6 +21,7 @@ from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
     get_multiple_event_list_for_organisation,
 )
+from app_analytics.throttles import InfluxQueryThrottle
 from core.helpers import get_current_site_url
 from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
@@ -164,6 +165,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     @action(
         detail=True,
         methods=["GET"],
+        throttle_classes=[InfluxQueryThrottle],
     )
     def usage(self, request, pk):  # type: ignore[no-untyped-def]
         organisation = self.get_object()
@@ -240,7 +242,12 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/",
         query_serializer=InfluxDataQuerySerializer(),
     )
-    @action(detail=True, methods=["GET"], url_path="influx-data")
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="influx-data",
+        throttle_classes=[InfluxQueryThrottle],
+    )
     def get_influx_data(self, request, pk):  # type: ignore[no-untyped-def]
         filters = InfluxDataQuerySerializer(data=request.query_params)
         filters.is_valid(raise_exception=True)
