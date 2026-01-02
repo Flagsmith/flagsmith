@@ -319,12 +319,22 @@ def test_handle_api_usage_notification_for_organisation_when_cancellation_date_i
     mocker: MockerFixture,
 ) -> None:
     # Given
+    usage = 25
+    allowance = 1_000_000
+
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.subscription_id = "fancy_id"
     organisation.subscription.cancellation_date = timezone.now()
     organisation.subscription.save()
     mock_api_usage = mocker.patch("organisations.task_helpers.get_current_api_usage")
-    mock_api_usage.return_value = 25
+    mock_api_usage.return_value = usage
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=allowance,
+        api_calls_30d=usage,
+    )
+
     from organisations.task_helpers import logger
 
     logger.addHandler(inspecting_handler)

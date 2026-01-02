@@ -99,16 +99,6 @@ def _send_api_usage_notification(
 
 def handle_api_usage_notification_for_organisation(organisation: Organisation) -> None:
     now = timezone.now()
-
-    if not organisation.has_subscription_information_cache():
-        # Not having a subscription information cache implies that the organisation has
-        # no usage so no notification is needed.
-        logger.debug(
-            "Organisation %d does not have subscription information cache. Ignoring.",
-            organisation.id,
-        )
-        return
-
     subscription_cache = organisation.subscription_information_cache
 
     if (

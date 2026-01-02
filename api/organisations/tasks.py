@@ -121,9 +121,9 @@ def finish_subscription_cancellation() -> None:
 def handle_api_usage_notifications() -> None:
     flagsmith_client = get_client("local", local_eval=True)
 
-    for organisation in Organisation.objects.all().select_related(
-        "subscription", "subscription_information_cache"
-    ):
+    for organisation in Organisation.objects.filter(
+        subscription_information_cache__isnull=False
+    ).select_related("subscription", "subscription_information_cache"):
         feature_enabled = flagsmith_client.get_identity_flags(
             organisation.flagsmith_identifier,
             traits=organisation.flagsmith_on_flagsmith_api_traits,
