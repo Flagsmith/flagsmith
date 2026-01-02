@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.205.6](https://github.com/Flagsmith/flagsmith/compare/v2.205.5...v2.205.6) (2026-01-02)
+
+
+### Bug Fixes
+
+* add a batch size to the bulk_update of OrganisationSubscriptionInformationCache objects ([#6456](https://github.com/Flagsmith/flagsmith/issues/6456)) ([38ac162](https://github.com/Flagsmith/flagsmith/commit/38ac16206879e67ea3d72485659231fd61c3d362))
+
 ## [2.205.5](https://github.com/Flagsmith/flagsmith/compare/v2.205.4...v2.205.5) (2026-01-02)
 
 
