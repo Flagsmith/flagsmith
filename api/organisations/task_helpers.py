@@ -99,6 +99,7 @@ def _send_api_usage_notification(
 
 def handle_api_usage_notification_for_organisation(organisation: Organisation) -> None:
     now = timezone.now()
+    subscription_cache = organisation.subscription_information_cache
 
     if (
         organisation.subscription.is_free_plan
@@ -108,15 +109,7 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         # Default to a rolling month for free accounts or canceled subscriptions.
         days = 30
         period_starts_at = now - timedelta(days)
-    elif not organisation.has_subscription_information_cache():
-        # Since the calling code is a list of many organisations
-        # log the error and return without raising an exception.
-        logger.error(
-            f"Paid organisation {organisation.id} is missing subscription information cache"
-        )
-        return
     else:
-        subscription_cache = organisation.subscription_information_cache
         billing_starts_at = subscription_cache.current_billing_term_starts_at
 
         if billing_starts_at is None:
