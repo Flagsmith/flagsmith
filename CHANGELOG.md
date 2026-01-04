@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.205.7](https://github.com/Flagsmith/flagsmith/compare/v2.205.6...v2.205.7) (2026-01-04)
+
+
+### Bug Fixes
+
+* optimise influxdb calls from handle_api_usage_notifications task ([#6458](https://github.com/Flagsmith/flagsmith/issues/6458)) ([26ac021](https://github.com/Flagsmith/flagsmith/commit/26ac0211e51c08ebc14d4903c79beffb6290627a))
+
 ## [2.205.6](https://github.com/Flagsmith/flagsmith/compare/v2.205.5...v2.205.6) (2026-01-02)
 
 
