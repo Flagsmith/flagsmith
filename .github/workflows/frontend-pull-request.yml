@@ -7,6 +7,9 @@ on:
       - frontend/**
       - .github/workflows/frontend-pull-request.yml
 
+permissions:
+  contents: read
+
 jobs:
   unit-tests:
     name: Unit Tests
