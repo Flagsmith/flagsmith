@@ -19,6 +19,7 @@ import {
   FeaturesTableFilters,
   FeaturesSDKIntegration,
 } from './components'
+import ImportSuccessBanner from 'components/import-export/ImportSuccessBanner'
 import { useFeatureFilters } from './hooks/useFeatureFilters'
 import { useRemoveFeatureWithToast } from './hooks/useRemoveFeatureWithToast'
 import { useToggleFeatureWithToast } from './hooks/useToggleFeatureWithToast'
@@ -321,6 +322,11 @@ const FeaturesPage: FC = () => {
             <FeatureMetricsSection
               environmentId={environmentId}
               projectId={projectId}
+            />
+
+            <ImportSuccessBanner
+              projectId={projectId}
+              environmentId={environmentId}
             />
 
             <FeaturesPageHeader

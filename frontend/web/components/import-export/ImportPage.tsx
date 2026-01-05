@@ -26,52 +26,45 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
   const history = useHistory()
   const [LDKey, setLDKey] = useState<string>('')
   const [importId, setImportId] = useState<number>()
+  const [importSource, setImportSource] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [isAppLoading, setAppIsLoading] = useState<boolean>(false)
   const [projects, setProjects] = useState<{ key: string; name: string }[]>([])
   const [createLaunchDarklyProjectImport, { data, isSuccess }] =
     useCreateLaunchDarklyProjectImportMutation()
 
-  const {
-    data: status,
-    isSuccess: statusLoaded,
-    isUninitialized,
-    refetch,
-  } = useGetLaunchDarklyProjectImportQuery(
+  const { data: status } = useGetLaunchDarklyProjectImportQuery(
     {
       import_id: `${importId}`,
       project_id: projectId,
     },
-    { skip: !importId },
+    {
+      pollingInterval: importId ? 1000 : 0,
+      skip: !importId,
+    },
   )
 
-  useEffect(() => {
-    const checkImportStatus = async () => {
-      setAppIsLoading(true)
-      const intervalId = setInterval(async () => {
-        await refetch()
-
-        if (statusLoaded && status && status.status.result === 'success') {
-          clearInterval(intervalId)
-          setAppIsLoading(false)
-          window.location.reload()
-        }
-      }, 1000)
-    }
-
-    if (statusLoaded) {
-      checkImportStatus()
-    }
-  }, [statusLoaded, status, refetch])
-
+  // Set importId when mutation succeeds
   useEffect(() => {
     if (isSuccess && data?.id) {
       setImportId(data.id)
-      if (!isUninitialized) {
-        refetch()
-      }
+      setImportSource('LaunchDarkly')
     }
-  }, [isSuccess, data, refetch, isUninitialized])
+  }, [isSuccess, data])
+
+  // Navigate away on import success
+  useEffect(() => {
+    if (status?.status?.result === 'success') {
+      const params = new URLSearchParams()
+      params.set('import_success', '1')
+      params.set('import_source', importSource)
+      params.set('import_count', String(status.status.requested_flag_count))
+      params.set(
+        'import_deprecated',
+        String(status.status.deprecated_flag_count ?? 0),
+      )
+      history.push(`/project/${projectId}?${params.toString()}`)
+    }
+  }, [status, projectId, history, importSource])
 
   const getProjectList = (LDKey: string) => {
     setIsLoading(true)
@@ -210,11 +203,13 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     </>
   )
 
+  const isImporting = !!importId && status?.status?.result !== 'success'
+
   return (
     <>
-      {isAppLoading && (
+      {isImporting && (
         <div className='overlay'>
-          <div className='title'>Importing Project</div>
+          <div className='title'>Importing from {importSource}...</div>
           <AppLoader />
         </div>
       )}

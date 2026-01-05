@@ -141,11 +141,13 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
         ("testtag", "#3d4db6"),
         ("testtag2", "#3d4db6"),
         ("Imported", "#3d4db6"),
+        ("Deprecated", "#3d4db6"),
     }
     assert set(
         Feature.objects.filter(project=project).values_list("name", "tags__label")
     ) == {
         ("flag1", "Imported"),
+        ("flag1", "Deprecated"),
         ("flag2_value", "Imported"),
         ("flag3_multivalue", "Imported"),
         ("flag4_multivalue", "Imported"),
@@ -157,6 +159,10 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
         ("TEST_SEGMENT_TARGET", "Imported"),
         ("TEST_COMBINED_TARGET", "Imported"),
     }
+
+    # Deprecated flags are archived.
+    deprecated_feature = Feature.objects.get(project=project, name="flag1")
+    assert deprecated_feature.is_archived is True
 
     # Standard feature states have expected values.
     boolean_standard_feature = Feature.objects.get(project=project, name="flag1")
