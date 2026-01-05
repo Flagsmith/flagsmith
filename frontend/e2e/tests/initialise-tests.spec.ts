@@ -9,6 +9,7 @@ import {
 import { E2E_SIGN_UP_USER, PASSWORD } from '../config';
 
 test('@oss Initial setup test', async ({ page }) => {
+  await page.goto('/');
   log('Create Organisation');
   await click(page, byId('jsSignup'));
   await setText(page, byId('firstName'), 'Bullet');
@@ -18,6 +19,8 @@ test('@oss Initial setup test', async ({ page }) => {
   await click(page, byId('signup-btn'));
   await setText(page, '[name="orgName"]', 'Flagsmith Ltd 0');
   await click(page, '#create-org-btn');
+  await click(page, byId('skip-integrations'));
+  await click(page, byId('create-project'));
   await waitForElementVisible(page, byId('project-manage-widget'));
 
   log('Create Project');

@@ -25,7 +25,8 @@
     "typecheck": "tsc",
     "dev": "cross-env npm run env && npx nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
     "dev:local": "ENV=local cross-env npm run env && npx nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
-    "playwright:install": "npx playwright install --with-deps firefox"
+    "playwright:install": "npx playwright install --with-deps firefox",
+    "test:upload": "node ./bin/upload-playwright-videos.js"
   },
   "engines": {
     "node": "22.x",
