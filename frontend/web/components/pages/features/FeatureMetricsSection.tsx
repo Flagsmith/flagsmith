@@ -3,25 +3,28 @@ import EnvironmentMetricsList from 'components/metrics/EnvironmentMetricsList'
 import Utils from 'common/utils/utils'
 
 type FeatureMetricsSectionProps = {
-  environmentId?: string
-  projectId: number
+  environmentApiKey?: string
+  forceRefetch: boolean
+  projectId: string
 }
 
 export const FeatureMetricsSection: FC<FeatureMetricsSectionProps> = ({
-  environmentId,
+  environmentApiKey,
+  forceRefetch,
   projectId,
 }) => {
   const environmentMetricsEnabled = Utils.getFlagsmithHasFeature(
     'environment_metrics',
   )
 
-  if (!environmentMetricsEnabled || !environmentId) {
+  if (!environmentMetricsEnabled) {
     return null
   }
 
   return (
     <EnvironmentMetricsList
-      environmentId={environmentId}
+      environmentApiKey={environmentApiKey}
+      forceRefetch={forceRefetch}
       projectId={projectId}
     />
   )

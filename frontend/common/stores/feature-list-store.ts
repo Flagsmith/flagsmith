@@ -71,11 +71,8 @@ const controller = {
     if (
       !createdFirstFeature &&
       !flagsmith.getTrait('first_feature') &&
-      AccountStore.model &&
       AccountStore.model.organisations.length === 1 &&
-      OrganisationStore.model &&
       OrganisationStore.model.projects.length === 1 &&
-      store.model &&
       (!store.model.features || !store.model.features.length)
     ) {
       createdFirstFeature = true
@@ -736,7 +733,7 @@ const controller = {
           getStore().dispatch(
             projectFlagService.util.invalidateTags(['ProjectFlag']),
           )
-          if (!store.model) {
+          if(!store.model) {
             return
           }
           // Fetch and update the latest environment feature state
@@ -748,11 +745,9 @@ const controller = {
             const environmentFeatureState = res.data.find(
               (v) => !v.feature_segment,
             )
-            if (store.model?.keyedEnvironmentFeatures) {
-              store.model.keyedEnvironmentFeatures[projectFlag.id] = {
-                ...store.model.keyedEnvironmentFeatures[projectFlag.id],
-                ...environmentFeatureState,
-              }
+            store.model.keyedEnvironmentFeatures[projectFlag.id] = {
+              ...store.model.keyedEnvironmentFeatures[projectFlag.id],
+              ...environmentFeatureState,
             }
           })
         })
@@ -800,13 +795,11 @@ const controller = {
                 throw version.error
               }
               const featureState = version.data.feature_states[0].data
-              if (store.model?.keyedEnvironmentFeatures) {
-                store.model.keyedEnvironmentFeatures[projectFlag.id] = {
-                  ...featureState,
-                  feature_state_value: Utils.featureStateToValue(
-                    featureState.feature_state_value,
-                  ),
-                }
+              store.model.keyedEnvironmentFeatures[projectFlag.id] = {
+                ...featureState,
+                feature_state_value: Utils.featureStateToValue(
+                  featureState.feature_state_value,
+                ),
               }
             })
           })

@@ -4,11 +4,10 @@ import {
   closeModal,
   createFeature,
   createRemoteConfig,
-  deleteFeature,
-  editRemoteConfig,
+  deleteFeature, editRemoteConfig,
+  getText,
   log,
   login,
-  parseTryItResults,
   toggleFeature,
   waitForElementVisible,
 } from '../helpers.cafe';
@@ -48,8 +47,14 @@ export default async function () {
   log('Try it')
   await t.wait(2000)
   await click('#try-it-btn')
-  await t.wait(500)
-  let json = await parseTryItResults()
+  await t.wait(1500)
+  let text = await getText('#try-it-results')
+  let json
+  try {
+    json = JSON.parse(text)
+  } catch (e) {
+    throw new Error('Try it results are not valid JSON')
+  }
   await t.expect(json.header_size.value).eql('big')
   await t.expect(json.mv_flag.value).eql('big')
   await t.expect(json.header_enabled.enabled).eql(true)
@@ -58,20 +63,30 @@ export default async function () {
   await editRemoteConfig(1,12)
 
   log('Try it again')
-  await t.wait(500)
+  await t.wait(2000)
   await click('#try-it-btn')
-  await t.wait(500)
-  json = await parseTryItResults()
+  await t.wait(1500)
+  text = await getText('#try-it-results')
+  try {
+    json = JSON.parse(text)
+  } catch (e) {
+    throw new Error('Try it results are not valid JSON')
+  }
   await t.expect(json.header_size.value).eql(12)
 
   log('Change feature value to boolean')
   await editRemoteConfig(1,false)
 
   log('Try it again 2')
-  await t.wait(500)
+  await t.wait(2000)
   await click('#try-it-btn')
-  await t.wait(500)
-  json = await parseTryItResults()
+  await t.wait(1500)
+  text = await getText('#try-it-results')
+  try {
+    json = JSON.parse(text)
+  } catch (e) {
+    throw new Error('Try it results are not valid JSON')
+  }
   await t.expect(json.header_size.value).eql(false)
 
   log('Switch environment')
