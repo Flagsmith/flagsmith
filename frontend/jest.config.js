@@ -1,5 +1,6 @@
 /** @type {import('jest').Config} */
 module.exports = {
+  clearMocks: true,
   collectCoverageFrom: [
     'common/**/*.{ts,tsx}',
     'web/**/*.{ts,tsx}',
