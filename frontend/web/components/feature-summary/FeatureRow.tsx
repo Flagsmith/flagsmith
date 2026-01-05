@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useMemo } from 'react'
+import React, { FC, useEffect, useMemo } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateFlagModal from 'components/modals/CreateFlag'
@@ -13,6 +13,7 @@ import classNames from 'classnames'
 import Button from 'components/base/forms/Button'
 import {
   Environment,
+  FeatureListProviderActions,
   FeatureListProviderData,
   ProjectFlag,
   ReleasePipeline,
@@ -27,7 +28,6 @@ import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import FeatureName from './FeatureName'
 import FeatureDescription from './FeatureDescription'
 import FeatureTags from './FeatureTags'
-import { useOptimisticToggle } from 'components/pages/features/hooks/useOptimisticToggle'
 
 export interface FeatureRowProps {
   disableControls?: boolean
@@ -35,15 +35,9 @@ export interface FeatureRowProps {
   environmentId: string
   permission?: boolean
   projectFlag: ProjectFlag
-  projectId: number
-  removeFlag?: (projectFlag: ProjectFlag) => void | Promise<void>
-  toggleFlag?: (
-    projectFlag: ProjectFlag,
-    environmentFlag:
-      | FeatureListProviderData['environmentFlags'][number]
-      | undefined,
-    onError?: () => void,
-  ) => void | Promise<void>
+  projectId: string
+  removeFlag?: FeatureListProviderActions['removeFlag']
+  toggleFlag?: FeatureListProviderActions['toggleFlag']
   index: number
   readOnly?: boolean
   condensed?: boolean
@@ -82,14 +76,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   } = props
   const protectedTags = useProtectedTags(projectFlag, projectId)
   const history = useHistory()
-  const { id } = projectFlag
-
-  const actualEnabled = environmentFlags?.[id]?.enabled
-  const {
-    displayValue: displayEnabled,
-    revertOptimistic,
-    setOptimistic,
-  } = useOptimisticToggle(actualEnabled)
 
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: String(projectFlag.project) },
@@ -131,6 +117,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   }
 
   const confirmToggle = () => {
+    const { id } = projectFlag
     openModal(
       'Toggle Feature',
       <ConfirmToggleFeature
@@ -138,25 +125,17 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         projectFlag={projectFlag}
         environmentFlag={environmentFlags?.[id]}
         cb={() => {
-          handleToggle()
+          toggleFlag?.(
+            projectId,
+            environmentId,
+            projectFlag,
+            environmentFlags?.[id],
+          )
         }}
       />,
       'p-0',
     )
   }
-
-  const handleToggle = useCallback(() => {
-    setOptimistic(!actualEnabled)
-    toggleFlag?.(projectFlag, environmentFlags?.[id], revertOptimistic)
-  }, [
-    actualEnabled,
-    environmentFlags,
-    id,
-    projectFlag,
-    revertOptimistic,
-    setOptimistic,
-    toggleFlag,
-  ])
 
   const onChange = () => {
     if (disableControls) {
@@ -231,7 +210,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   const isReadOnly = readOnly || Utils.getFlagsmithHasFeature('read_only_mode')
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
 
-  const { description } = projectFlag
+  const { description, id } = projectFlag
   const environment = ProjectStore.getEnvironment(
     environmentId,
   ) as Environment | null
@@ -269,7 +248,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     onRemove: () => {
       if (disableControls) return
       confirmRemove(projectFlag, () => {
-        removeFlag?.(projectFlag)
+        removeFlag?.(projectId, projectFlag)
       })
     },
     onShowAudit: () => {
@@ -333,9 +312,9 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
               <Switch
                 disabled={!permission || isReadOnly}
                 data-test={`feature-switch-${index}${
-                  displayEnabled ? '-on' : '-off'
+                  environmentFlags?.[id]?.enabled ? '-on' : '-off'
                 }`}
-                checked={displayEnabled}
+                checked={environmentFlags?.[id]?.enabled}
                 onChange={onChange}
               />
             </div>
@@ -363,9 +342,9 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
           <Switch
             disabled={!permission || isReadOnly}
             data-test={`feature-switch-${index}${
-              displayEnabled ? '-on' : '-off'
+              environmentFlags?.[id]?.enabled ? '-on' : '-off'
             }`}
-            checked={displayEnabled}
+            checked={environmentFlags?.[id]?.enabled}
             onChange={onChange}
           />
           <FeatureAction {...featureActionProps} disableE2E={true} />
