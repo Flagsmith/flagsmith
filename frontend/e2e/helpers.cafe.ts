@@ -1,8 +1,9 @@
 import { RequestLogger, Selector, t } from 'testcafe'
-import Project from '../common/project'
-import fetch from 'node-fetch'
-import flagsmith from 'flagsmith/isomorphic'
-import { IFlagsmith, FlagsmithValue } from 'flagsmith/types'
+import Project from '../common/project';
+import fetch from 'node-fetch';
+import flagsmith from 'flagsmith/isomorphic';
+import { IFlagsmith, FlagsmithValue } from 'flagsmith/types';
+import { delay } from 'lodash';
 
 export const LONG_TIMEOUT = 40000
 
@@ -22,12 +23,8 @@ export const isElementExists = async (selector: string) => {
   return Selector(byId(selector)).exists
 }
 
-const initProm = flagsmith.init({
-  api: Project.flagsmithClientAPI,
-  environmentID: Project.flagsmith,
-  fetch,
-})
-export const getFlagsmith = async function () {
+const initProm = flagsmith.init({fetch,environmentID:Project.flagsmith,api:Project.flagsmithClientAPI})
+export const getFlagsmith = async function() {
   await initProm
   return flagsmith as IFlagsmith
 }
@@ -70,15 +67,13 @@ export const waitForElementClickable = async (selector: string) => {
 }
 
 export const clickSegmentByName = async (name: string) => {
-  const el = Selector('[data-test^="segment-"][data-test$="-name"]').withText(
-    name,
-  )
-  await t.scrollIntoView(el)
-  await t
-    .expect(el.visible)
-    .ok(`segment "${name}" not visible`, { timeout: LONG_TIMEOUT })
-  await t.click(el)
-}
+   const el = Selector('[data-test^="segment-"][data-test$="-name"]').withText(
+      name,
+   )
+   await t.scrollIntoView(el)
+   await t.expect(el.visible).ok(`segment "${name}" not visible`, { timeout: LONG_TIMEOUT })
+   await t.click(el)
+  }
 
 export const logResults = async (requests: LoggedRequest[], t) => {
   if (!t.testRun?.errs?.length) {
@@ -159,18 +154,6 @@ export const getLogger = () =>
     stringifyRequestBody: true,
     stringifyResponseBody: true,
   })
-
-export const checkApiRequest = (
-  urlPattern: RegExp,
-  method: 'get' | 'post' | 'put' | 'patch' | 'delete',
-) =>
-  RequestLogger(
-    (req) => req.url.match(urlPattern) && req.method === method,
-    {
-      logRequestBody: true,
-      logRequestHeaders: true,
-    },
-  )
 
 export const createRole = async (
   roleName: string,
@@ -349,15 +332,6 @@ export const assertTextContentContains = (selector: string, v: string) =>
   t.expect(Selector(selector).textContent).contains(v)
 export const getText = (selector: string) => Selector(selector).innerText
 
-export const parseTryItResults = async (): Promise<Record<string, any>> => {
-  const text = await getText('#try-it-results')
-  try {
-    return JSON.parse(text)
-  } catch (e) {
-    throw new Error('Try it results are not valid JSON')
-  }
-}
-
 export const cloneSegment = async (index: number, name: string) => {
   await click(byId(`segment-action-${index}`))
   await click(byId(`segment-clone-${index}`))
@@ -366,13 +340,16 @@ export const cloneSegment = async (index: number, name: string) => {
   await waitForElementVisible(byId(`segment-${index + 1}-name`))
 }
 
-export const deleteSegmentFromPage = async (name: string) => {
+export const deleteSegmentFromPage = async (name:string) => {
   await click(byId(`remove-segment-btn`))
   await setText('[name="confirm-segment-name"]', name)
   await click('#confirm-remove-segment-btn')
   await waitForElementVisible(byId('show-create-segment-btn'))
 }
-export const deleteSegment = async (index: number, name: string) => {
+export const deleteSegment = async (
+  index: number,
+  name: string,
+) => {
   await click(byId(`segment-action-${index}`))
   await click(byId(`segment-remove-${index}`))
   await setText('[name="confirm-segment-name"]', name)
@@ -490,7 +467,7 @@ export const createOrganisationAndProject = async (
 export const editRemoteConfig = async (
   index: number,
   value: string | number | boolean,
-  toggleFeature = false,
+  toggleFeature: boolean = false,
   mvs: MultiVariate[] = [],
 ) => {
   const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`
@@ -548,10 +525,10 @@ export const deleteFeature = async (index: number, name: string) => {
 }
 
 export const toggleFeature = async (index: number, toValue: boolean) => {
-  await click(byId(`feature-switch-${index}-${toValue ? 'off' : 'on'}`))
+  await click(byId(`feature-switch-${index}${toValue ? '-off' : 'on'}`))
   await click('#confirm-toggle-feature-btn')
   await waitForElementVisible(
-    byId(`feature-switch-${index}-${toValue ? 'on' : 'off'}`),
+    byId(`feature-switch-${index}${toValue ? '-on' : 'off'}`),
   )
 }
 
@@ -632,23 +609,23 @@ export const refreshUntilElementVisible = async (
 }
 
 const permissionsMap = {
-  'APPROVE_CHANGE_REQUEST': 'environment',
-  'CREATE_CHANGE_REQUEST': 'environment',
-  'CREATE_ENVIRONMENT': 'project',
-  'CREATE_FEATURE': 'project',
   'CREATE_PROJECT': 'organisation',
-  'DELETE_FEATURE': 'project',
-  'MANAGE_IDENTITIES': 'environment',
-  'MANAGE_SEGMENTS': 'project',
-  'MANAGE_SEGMENT_OVERRIDES': 'environment',
-  'MANAGE_TAGS': 'project',
   'MANAGE_USERS': 'organisation',
   'MANAGE_USER_GROUPS': 'organisation',
-  'UPDATE_FEATURE_STATE': 'environment',
+  'VIEW_PROJECT': 'project',
+  'CREATE_ENVIRONMENT': 'project',
+  'DELETE_FEATURE': 'project',
+  'CREATE_FEATURE': 'project',
+  'MANAGE_SEGMENTS': 'project',
   'VIEW_AUDIT_LOG': 'project',
   'VIEW_ENVIRONMENT': 'environment',
+  'UPDATE_FEATURE_STATE': 'environment',
+  'MANAGE_IDENTITIES': 'environment',
+  'CREATE_CHANGE_REQUEST': 'environment',
+  'APPROVE_CHANGE_REQUEST': 'environment',
   'VIEW_IDENTITIES': 'environment',
-  'VIEW_PROJECT': 'project',
+  'MANAGE_SEGMENT_OVERRIDES': 'environment',
+  'MANAGE_TAGS': 'project',
 } as const
 
 export const setUserPermission = async (
