@@ -70,6 +70,7 @@ export const clickByText = async (page: Page, text: string, element = 'button') 
 
 export const gotoSegments = async (page: Page) => {
   await click(page, '#segments-link');
+  await waitForElementVisible(page, byId('show-create-segment-btn'));
 };
 
 export const createRole = async (page: Page, roleName: string, index: number, users: number[]) => {
@@ -253,7 +254,7 @@ export const deleteSegment = async (page: Page, index: number, name: string) => 
   await click(page, byId(`remove-segment-btn-${index}`));
   await setText(page, '[name="confirm-segment-name"]', name);
   await click(page, '#confirm-remove-segment-btn');
-  await waitForElementNotExist(page, `remove-segment-btn-${index}`);
+  await waitForElementNotExist(page, byId(`remove-segment-btn-${index}`));
 };
 
 export const login = async (page: Page, email: string, password: string) => {
@@ -273,7 +274,13 @@ export const logout = async (page: Page) => {
 
 export const goToFeatureVersions = async (page: Page, featureIndex: number) => {
   await gotoFeature(page, featureIndex);
-  await click(page, byId('change-history'));
+  const changeHistoryBtn = page.locator(byId('change-history'));
+  if (await changeHistoryBtn.isVisible()) {
+    await click(page, byId('change-history'));
+  } else {
+    await click(page, byId('tabs-overflow-button'));
+    await click(page, byId('change-history'));
+  }
 };
 
 export const compareVersion = async (
@@ -300,7 +307,7 @@ export const compareVersion = async (
     await assertTextContent(page, byId(`old-value`), `${oldValue}`);
   }
   if (newValue) {
-    await assertTextContent(page, byId(`old-value`), `${oldValue}`);
+    await assertTextContent(page, byId(`new-value`), `${newValue}`);
   }
   await closeModal(page);
 };
@@ -415,7 +422,7 @@ export const deleteFeature = async (page: Page, index: number, name: string) => 
   await click(page, byId(`remove-feature-btn-${index}`));
   await setText(page, '[name="confirm-feature-name"]', name);
   await click(page, '#confirm-remove-feature-btn');
-  await waitForElementNotExist(page, `remove-feature-btn-${index}`);
+  await waitForElementNotExist(page, byId(`remove-feature-btn-${index}`));
 };
 
 export const toggleFeature = async (page: Page, index: number, toValue: boolean) => {

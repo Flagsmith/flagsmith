@@ -266,9 +266,3 @@ jobs:
             {
               "appVersion": "${{ steps.version-trim.outputs.version }}"
             }
-
-  steps:
-    - name: Install Playwright browsers
-      run: npm run playwright:install
-    - name: Run tests
-      run: npm run test
