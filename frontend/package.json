@@ -184,6 +184,7 @@
     "react-refresh": "^0.14.2",
     "ssgrtk": "^0.3.5",
     "testcafe": "^3.7.3",
+    "testcafe-react-selectors": "^5.0.3",
     "typescript": "4.6.4"
   },
   "lint-staged": {
