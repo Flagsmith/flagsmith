@@ -23,6 +23,7 @@ import {
   StageTrigger,
   StageActionType,
   StageActionBody,
+  ChangeRequest,
   TagStrategy,
 } from './responses'
 import { UtmsType } from './utms'
@@ -43,6 +44,12 @@ export type UpdateOrganisationBody = {
   force_2fa?: boolean
   restrict_project_create_to_admin?: boolean
   webhook_notification_email?: string | null
+}
+
+export type UpdateFeatureStateBody = {
+  enabled?: boolean
+  feature_state_value?: FeatureStateValue
+  multivariate_feature_state_values?: MultivariateOption[] | null
 }
 
 export type PagedRequest<T> = T & {
@@ -482,14 +489,15 @@ export type Req = {
   deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
   createAndSetFeatureVersion: {
     projectId: number
-    environmentId: string
+    environmentId: number // Numeric ID for getFeatureStates query
+    environmentApiKey?: string // API key for URL endpoints (optional for legacy store)
     featureId: number
     skipPublish?: boolean
     featureStates: FeatureState[]
     liveFrom?: string
   }
   createFeatureVersion: {
-    environmentId: string
+    environmentId: number // Numeric ID for URL
     featureId: number
     live_from?: string
     feature_states_to_create: Omit<FeatureState, 'id'>[]
@@ -510,7 +518,7 @@ export type Req = {
   }
   getVersionFeatureState: {
     sha: string
-    environmentId: string
+    environmentId: number
     featureId: number
   }
   updateSegmentPriorities: { id: number; priority: number }[]
@@ -635,6 +643,10 @@ export type Req = {
   createProjectFlag: {
     project_id: number
     body: ProjectFlag
+  }
+  removeProjectFlag: {
+    project_id: number
+    flag_id: number
   }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
@@ -834,6 +846,27 @@ export type Req = {
     feature_id: number
     period: number
     environment_id: string
+  }
+  getFeatureList: {
+    projectId: number
+    environmentId: string
+    page?: number
+    page_size?: number
+    search?: string | null
+    tags?: string
+    is_archived?: boolean
+    is_enabled?: boolean | null
+    owners?: string
+    group_owners?: string
+    value_search?: string
+    tag_strategy?: TagStrategy
+    sort_field?: string
+    sort_direction?: 'ASC' | 'DESC'
+  }
+  updateFeatureState: {
+    environmentId: string
+    environmentFlagId: number
+    body: UpdateFeatureStateBody
   }
   // END OF TYPES
 }
