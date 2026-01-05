@@ -251,10 +251,12 @@ export const getText = async (page: Page, selector: string) =>
   await page.locator(selector).innerText();
 
 export const deleteSegment = async (page: Page, index: number, name: string) => {
-  await click(page, byId(`remove-segment-btn-${index}`));
+  await click(page, byId(`segment-action-${index}`));
+  await waitForElementVisible(page, byId(`segment-remove-${index}`));
+  await click(page, byId(`segment-remove-${index}`));
   await setText(page, '[name="confirm-segment-name"]', name);
   await click(page, '#confirm-remove-segment-btn');
-  await waitForElementNotExist(page, byId(`remove-segment-btn-${index}`));
+  await waitForElementNotExist(page, byId(`segment-remove-${index}`));
 };
 
 export const login = async (page: Page, email: string, password: string) => {
@@ -418,11 +420,11 @@ export const createFeature = async (
 
 export const deleteFeature = async (page: Page, index: number, name: string) => {
   await click(page, byId(`feature-action-${index}`));
-  await waitForElementVisible(page, byId(`remove-feature-btn-${index}`));
-  await click(page, byId(`remove-feature-btn-${index}`));
+  await waitForElementVisible(page, byId(`feature-remove-${index}`));
+  await click(page, byId(`feature-remove-${index}`));
   await setText(page, '[name="confirm-feature-name"]', name);
   await click(page, '#confirm-remove-feature-btn');
-  await waitForElementNotExist(page, byId(`remove-feature-btn-${index}`));
+  await waitForElementNotExist(page, byId(`feature-remove-${index}`));
 };
 
 export const toggleFeature = async (page: Page, index: number, toValue: boolean) => {
