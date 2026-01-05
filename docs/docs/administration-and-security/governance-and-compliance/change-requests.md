@@ -24,12 +24,6 @@ Change Requests are configured at the environment level. To enable and set up Ch
 
 Once an environment is configured with Change Requests enabled, attempting to change a flag value will prompt you to create a new Change Request.
 
-:::info
-
-Any user with permission to *update* a feature within the environment can create a Change Request.
-
-:::
-
 When creating a Change Request, you will need to provide the following:
 
 * The **title** of the Change Request.
@@ -40,17 +34,20 @@ When creating a Change Request, you will need to provide the following:
 
 Change Requests awaiting approval are listed in the **Change Request** area.
 
-:::info
-
-Any user with permission to write to the environment containing the Change Request can approve it.
-
-:::
-
 1.  Click on a **Change Request** to view its details.
 2.  Review the current and new Flag values.
+3.  Click **Approve** or **Deny** to record your decision.
 
 ## Publish a Change Request
 
-When the required number of approvals have been made, you will be able to publish the Change Request.
+When the required number of approvals have been made, you will be able to publish the Change Request. The Change Request will immediately come into effect once the **Publish Change** button is clicked.
 
-The Change Request will immediately come into effect once the **Publish Change** button is clicked.
+## Permissions
+
+| Action                  | Required permission      |
+| ----------------------- | ------------------------ |
+| Create a Change Request | Create change request    |
+| Approve a Change Request| Approve change request   |
+| Publish a Change Request| Update feature state     |
+
+These permissions can be configured at both the project level and the environment level. For example, you might allow all developers to create change requests in Production, but only senior engineers to approve and publish them. See [Role-based access control](/administration-and-security/access-control/rbac) for details on configuring permissions.

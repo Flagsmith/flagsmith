@@ -26,30 +26,48 @@ left and open the **Users and Permissions** tab.
 
 ## Core concepts
 
-The diagram below shows an overview of how permissions are assigned within your Flagsmith organisation:
+### How permissions are assigned
 
-<div style={{textAlign: 'center'}}>
-```mermaid
-graph LR;
-    R[Custom roles] -->|Assigned to| G[Groups];
-    B[Built-in roles] -->|Assigned to| U[Users];
-    R -->|Assigned to| U;
-    R -->|Assigned to| A[Admin API keys];
-    G -->|Contains many| U;
-```
+Permissions are granted to **[roles](#roles)**, and roles are assigned to users, [groups](#groups), or [Admin API keys](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication). A user's effective permissions are the **union of all permissions** from every role assigned to them — both directly and through group membership.
 
-</div>
+![How permissions are assigned](/img/rbac-permissions-diagram.svg)
+
+### Permission levels
+
+Permissions in Flagsmith are managed at three levels that align with the data hierarchy. Understanding which permissions apply at which level is critical for setting up access control correctly.
+
+![Permission hierarchy: Organisation → Project → Environment](/img/permission-hierarchy.svg)
 
 ### Roles
 
 A role is a set of permissions that, when assigned, allows performing specific actions on your organisation, projects or
 project environments.
 
-**Built-in roles** are predefined by Flagsmith and cannot be modified. All users in your organisation have one of the
-following built-in roles:
+#### Organisation-level roles
 
-- _Organisation Administrator_ grants full access to everything in your Flagsmith organisation.
-- _User_ grants no access and requires you to assign permissions using custom roles and/or groups.
+Every user in your organisation has exactly one of these built-in organisation roles:
+
+- _Organisation Administrator_ — full access to everything in your Flagsmith organisation
+- _User_ — no default access; requires permissions via custom roles, groups, or project/environment admin assignments
+
+A user with the _User_ organisation role can still have significant access — for example, they could be an administrator of specific projects or environments while having no access to others.
+
+#### Project and environment administrators
+
+In addition to organisation-level roles, Flagsmith has built-in administrator permissions at the project and environment levels:
+
+- _Project Administrator_ — full access to a specific project and all its environments
+- _Environment Administrator_ — full access to a specific environment only
+
+These are assigned per-resource, not globally. For example, a user could be:
+
+- An _Organisation User_ (no organisation-wide admin access)
+- A _Project Administrator_ for _Mobile App_ (full control of that project and all of its environments)
+- An _Environment Administrator_ for _Development_ in _Web App_ (full control of just that environment)
+
+This granular approach allows you to give users administrative control exactly where they need it, without granting organisation-wide access.
+
+#### Custom roles
 
 **Custom roles** can be assigned to users, groups or [Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api) keys. Any
 number of custom roles can be created and assigned.
@@ -93,7 +111,7 @@ permissions they need as soon as they log in for the first time.
 When a user accepts their email invitation, they will be prompted to sign up for a Flagsmith account, or they can choose
 to log in if they already have an account with the same email address.
 
-Users who have not yet accepted their invitations are listed in the "Pending invites" section at the bottom of this
+Users who have not yet accepted their invitations are listed in the _Pending invites_ section at the bottom of this
 page. From here you can also resend or revoke any pending invitations.
 
 ### Invitation links
@@ -120,27 +138,15 @@ options:
 - [Use existing groups from your enterprise identity provider](/administration-and-security/access-control/saml#using-groups-from-your-saml-idp).
   Any time a user logs in using single sign-on, they will be made a member of any groups with matching external IDs.
 
-## Deprecated features
+## Tagged permissions
 
-Groups can grant permissions directly to their members in the same way that roles do. This functionality was deprecated
-in Flagsmith 2.137.0. To grant permissions to all members of a group, create a role with the desired permissions and
-assign it to the group instead.
+Some permissions can be restricted to features with specific tags. For example, you can configure a role to create change requests only for features tagged with _marketing_.
 
-Assigning roles to groups has several benefits over assigning permissions directly to a group:
-
-- Roles can be assigned to Admin API keys, but Admin API keys cannot belong to groups.
-- If you need multiple groups or users with similar permissions, the common permissions can be defined in a role and
-  assigned to multiple groups or users instead of being duplicated.
-- Having roles as the single place where permissions are defined makes auditing permissions easier.
+The _Supports Tags_ column in the tables below indicates which permissions support tag-based restrictions. See [Tags](/managing-flags/tagging) for how to create and manage tags.
 
 ## Permissions reference
 
 Permissions can be assigned at four levels: user group, organisation, project, and environment.
-
-## Tagged Permissions
-
-When creating a role, some permissions allow you to grant access when features have specific tags. For example, you can
-configure a role to create change requests only for features tagged with "marketing".
 
 ### User group
 
@@ -154,8 +160,6 @@ configure a role to create change requests only for features tagged with "market
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Create project     | Allows creating projects in the organisation. Users are automatically granted Administrator permissions on any projects they create. |
 | Manage user groups | Allows adding or removing users from any group.                                                                                      |
-
-### Project
 
 ### Project
 
@@ -181,3 +185,117 @@ configure a role to create change requests only for features tagged with "market
 | Create change request    | Allows creating change requests for features in this environment.                                                        | Yes           |
 | Approve change request   | Allows approving or denying change requests in this environment.                                                         | Yes           |
 | View identities          | Grants read-only access to identities in this environment.                                                               |               |
+
+### Permission levels explained
+
+Some permissions are **project-level** and cannot be restricted to specific environments. This follows directly from the [Flagsmith data model](/flagsmith-concepts/data-model): features and segments are defined at the project level and shared across all environments.
+
+- **Create feature** — New features appear in all environments simultaneously
+- **Delete feature** — Removing a feature removes it from all environments simultaneously
+- **Manage segments** — Segments are project-wide and affect all environments
+
+To control **flag values** per environment, use environment-level permissions like _Update feature state_ and _Manage segment overrides_.
+
+## Common permission setups
+
+The following scenarios illustrate how to configure permissions for typical team structures. These examples help clarify which permissions to set at the project level versus the environment level.
+
+:::note
+
+These examples assume users have the built-in _User_ role at the organisation level (not _Organisation Administrator_). Organisation Administrators have full access to everything, so granular permissions only apply to users with the _User_ role.
+
+:::
+
+### Developer with Production restrictions
+
+**Goal**: Alice (developer) can create features and work freely in Development and Staging, but cannot modify Production directly — she must submit change requests instead.
+
+**Setup**:
+
+1. Create a _Developers_ group and add Alice to it
+2. Create a custom role called _Developer Access_ with these permissions:
+   - **Project-level**: View project, Create feature
+   - **Development environment**: Administrator
+   - **Staging environment**: Administrator
+   - **Production environment**: View environment, Create change request
+3. Assign the _Developer Access_ role to the _Developers_ group
+
+**Result**: Alice can create features (which appear in all environments), toggle them freely in Development and Staging, but must submit change requests to modify anything in Production.
+
+### QA team with read-only Production access
+
+**Goal**: The QA team can view Production flag states and identities for verification, but cannot change anything.
+
+**Setup**:
+
+1. Create a _QA Team_ group and add QA team members to it
+2. Create a custom role called _Production Viewer_ with these permissions:
+   - **Project-level**: View project
+   - **Production environment**: View environment, View identities
+3. Assign the _Production Viewer_ role to the _QA Team_ group
+
+**Result**: QA team members can see the Production environment and inspect identities, but cannot modify flag states or create change requests. The _Production Viewer_ role can also be assigned to other groups (e.g., _Auditors_) that need the same access.
+
+:::note Why QA cannot have environment-specific segment access
+
+You might want QA to view segments in Production only. However, _Manage segments_ is a **project-level permission** — granting it would give QA segment control across all environments. Segments are defined once per project and shared across all environments.
+
+:::
+
+### Restricting feature deletion
+
+**Goal**: Prevent most developers from accidentally deleting features while allowing team leads to do so when necessary.
+
+**Understanding**: _Delete feature_ is a **project-level permission**. Deleting a feature removes it from **all environments simultaneously** — there is no way to delete a feature from just one environment.
+
+**Setup**:
+
+1. Create a custom role called _Feature Creator_ with:
+   - **Project-level**: View project, Create feature (but **not** Delete feature)
+   - Environment permissions as needed
+2. Create a custom role called _Feature Manager_ with:
+   - **Project-level**: View project, Create feature, Delete feature
+   - Environment permissions as needed
+3. Assign the _Feature Creator_ role to the _Developers_ group (or other groups that need to create features)
+4. Assign the _Feature Manager_ role to team leads or a _Team Leads_ group
+
+**Result**: Most developers can create and modify features, but only those with the _Feature Manager_ role can delete them. Multiple groups can share the same role.
+
+### Team lead with full project control
+
+**Goal**: A team lead needs complete control over their project, including all environments, but should not affect other projects in the organisation.
+
+**Setup**:
+
+1. Create a custom role called _Project Admin_ with:
+   - **Project-level**: Administrator
+2. Assign the _Project Admin_ role to the team lead user (or to a _Team Leads_ group)
+
+**Result**: The team lead has full access to all environments, features, and segments within that project. They can manage permissions for other users on that project. They cannot access other projects unless explicitly granted. The same _Project Admin_ role can be reused across different projects for different team leads.
+
+### External contractor with limited access
+
+**Goal**: An external contractor needs to work on a specific feature in Development only, with no access to Production data.
+
+**Setup**:
+
+1. Create a custom role called _Dev Environment Editor_ with:
+   - **Project-level**: View project
+   - **Development environment**: View environment, Update feature state
+2. Assign the _Dev Environment Editor_ role to the contractor user (or to a _Contractors_ group if you have multiple)
+3. Optionally, use [tagged permissions](#tagged-permissions) to restrict their access to only features with a specific tag (e.g., _contractor-feature_)
+
+**Result**: The contractor can see the project structure and modify flag states in Development only. They cannot see or affect Staging, Production, or any identities. This role could also be useful for interns or other users who should only work in Development.
+
+## Deprecated features
+
+Groups can grant permissions directly to their members in the same way that roles do. This functionality was deprecated
+in Flagsmith 2.137.0. To grant permissions to all members of a group, create a role with the desired permissions and
+assign it to the group instead.
+
+Assigning roles to groups has several benefits over assigning permissions directly to a group:
+
+- Roles can be assigned to Admin API keys, but Admin API keys cannot belong to groups.
+- If you need multiple groups or users with similar permissions, the common permissions can be defined in a role and
+  assigned to multiple groups or users instead of being duplicated.
+- Having roles as the single place where permissions are defined makes auditing permissions easier.
