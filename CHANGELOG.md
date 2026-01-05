@@ -1,5 +1,52 @@
 # Changelog
 
+## [2.205.7](https://github.com/Flagsmith/flagsmith/compare/v2.205.6...v2.205.7) (2026-01-04)
+
+
+### Bug Fixes
+
+* optimise influxdb calls from handle_api_usage_notifications task ([#6458](https://github.com/Flagsmith/flagsmith/issues/6458)) ([26ac021](https://github.com/Flagsmith/flagsmith/commit/26ac0211e51c08ebc14d4903c79beffb6290627a))
+
+## [2.205.6](https://github.com/Flagsmith/flagsmith/compare/v2.205.5...v2.205.6) (2026-01-02)
+
+
+### Bug Fixes
+
+* add a batch size to the bulk_update of OrganisationSubscriptionInformationCache objects ([#6456](https://github.com/Flagsmith/flagsmith/issues/6456)) ([38ac162](https://github.com/Flagsmith/flagsmith/commit/38ac16206879e67ea3d72485659231fd61c3d362))
+
+## [2.205.5](https://github.com/Flagsmith/flagsmith/compare/v2.205.4...v2.205.5) (2026-01-02)
+
+
+### Bug Fixes
+
+* add throttle to flag analytics endpoint ([#6454](https://github.com/Flagsmith/flagsmith/issues/6454)) ([23d37ca](https://github.com/Flagsmith/flagsmith/commit/23d37ca202487dd9523bb5face31a098dd3e77b9))
+
+## [2.205.4](https://github.com/Flagsmith/flagsmith/compare/v2.205.3...v2.205.4) (2026-01-02)
+
+
+### Bug Fixes
+
+* add throttling for influx query endpoints ([#6453](https://github.com/Flagsmith/flagsmith/issues/6453)) ([64a216a](https://github.com/Flagsmith/flagsmith/commit/64a216a02bbf7639dbd2d1906f0bb4e9b99445cc))
+* clean-up-ci-cafe-port-3000-on-error ([#6430](https://github.com/Flagsmith/flagsmith/issues/6430)) ([e6aeff8](https://github.com/Flagsmith/flagsmith/commit/e6aeff8521109eb3a183ae9f86122419461ed785))
+* ignore-stale-identity-overrides ([#6444](https://github.com/Flagsmith/flagsmith/issues/6444)) ([5ce3df6](https://github.com/Flagsmith/flagsmith/commit/5ce3df6a3681de9eaa238e7e9a0e2b64f8f27720))
+
+
+### Dependency Updates
+
+* bump filelock from 3.16.1 to 3.20.1 in /api ([#6425](https://github.com/Flagsmith/flagsmith/issues/6425)) ([d859638](https://github.com/Flagsmith/flagsmith/commit/d859638f256ccc9894e8a4f8f2678d1592b48a17))
+* bump js-yaml from 3.14.1 to 3.14.2 in /frontend ([#6329](https://github.com/Flagsmith/flagsmith/issues/6329)) ([5b8292b](https://github.com/Flagsmith/flagsmith/commit/5b8292b32554cfa716b732dc1677f258429e6f60))
+* bump marshmallow from 3.20.1 to 3.26.2 in /api ([#6440](https://github.com/Flagsmith/flagsmith/issues/6440)) ([c1d787f](https://github.com/Flagsmith/flagsmith/commit/c1d787f328ca0f2a09b9309abd550443d7244dd4))
+* bump qs and express in /docs ([#6449](https://github.com/Flagsmith/flagsmith/issues/6449)) ([bff8570](https://github.com/Flagsmith/flagsmith/commit/bff85709b8a2035ef11571f6ea1003e96203357b))
+* bump tmp, testcafe and inquirer in /frontend ([#6450](https://github.com/Flagsmith/flagsmith/issues/6450)) ([bdd9e87](https://github.com/Flagsmith/flagsmith/commit/bdd9e873f55c4a9e794030b2768a810f34acb267))
+* bump werkzeug from 3.0.6 to 3.1.4 in /api ([#6348](https://github.com/Flagsmith/flagsmith/issues/6348)) ([60506b9](https://github.com/Flagsmith/flagsmith/commit/60506b9594a59d8e30bee1188b06ab2649249f28))
+
+## [2.205.3](https://github.com/Flagsmith/flagsmith/compare/v2.205.2...v2.205.3) (2025-12-19)
+
+
+### Dependency Updates
+
+* bump urllib3 dependency ([#6435](https://github.com/Flagsmith/flagsmith/issues/6435)) ([2d208b1](https://github.com/Flagsmith/flagsmith/commit/2d208b18c383a756703eba926830770546eac6ff))
+
 ## [2.205.2](https://github.com/Flagsmith/flagsmith/compare/v2.205.1...v2.205.2) (2025-12-17)
 
 
