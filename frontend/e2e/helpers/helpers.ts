@@ -25,19 +25,19 @@ export const setText = async (page: Page, selector: string, text: string) => {
 
 export const waitForElementVisible = async (page: Page, selector: string) => {
   logUsingLastSection(`Waiting element visible ${selector}`);
-  await expect(page.locator(selector)).toBeVisible({ timeout: LONG_TIMEOUT });
+  await expect(page.locator(selector).first()).toBeVisible({ timeout: LONG_TIMEOUT });
 };
 
 export const waitForElementNotClickable = async (page: Page, selector: string) => {
   logUsingLastSection(`Waiting element visible ${selector}`);
-  await expect(page.locator(selector)).toBeVisible({ timeout: LONG_TIMEOUT });
-  await expect(page.locator(selector)).toHaveAttribute('disabled', '');
+  await expect(page.locator(selector).first()).toBeVisible({ timeout: LONG_TIMEOUT });
+  await expect(page.locator(selector).first()).toHaveAttribute('disabled', '');
 };
 
 export const waitForElementClickable = async (page: Page, selector: string) => {
   logUsingLastSection(`Waiting element visible ${selector}`);
-  await expect(page.locator(selector)).toBeVisible({ timeout: LONG_TIMEOUT });
-  await expect(page.locator(selector)).not.toHaveAttribute('disabled', '');
+  await expect(page.locator(selector).first()).toBeVisible({ timeout: LONG_TIMEOUT });
+  await expect(page.locator(selector).first()).not.toHaveAttribute('disabled', '');
 };
 
 export const waitForElementNotExist = async (page: Page, selector: string) => {
@@ -52,7 +52,7 @@ export const gotoFeatures = async (page: Page) => {
 
 export const click = async (page: Page, selector: string) => {
   await waitForElementVisible(page, selector);
-  const element = page.locator(selector);
+  const element = page.locator(selector).first();
   await element.scrollIntoViewIfNeeded();
   await expect(element).not.toHaveAttribute('disabled', '');
   await element.hover();

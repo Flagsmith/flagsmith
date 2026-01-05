@@ -32,3 +32,17 @@ test:
 		npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test -- $(opts) \
 		|| (docker compose logs flagsmith-api; exit 1)
 	npm run test:upload || true
+
+.PHONY: test-playwright
+test-playwright:
+	docker compose run frontend \
+		npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test:playwright -- $(opts) \
+		|| (docker compose logs flagsmith-api; exit 1)
+	npm run test:upload || true
+
+.PHONY: test-testcafe
+test-testcafe:
+	docker compose run frontend \
+		npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test:testcafe -- $(opts) \
+		|| (docker compose logs flagsmith-api; exit 1)
+	npm run test:upload || true
