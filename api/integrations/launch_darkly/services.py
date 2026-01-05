@@ -28,6 +28,7 @@ from integrations.launch_darkly import types as ld_types
 from integrations.launch_darkly.client import LaunchDarklyClient
 from integrations.launch_darkly.constants import (
     LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL,
+    LAUNCH_DARKLY_IMPORTED_DEPRECATED_TAG_LABEL,
     LAUNCH_DARKLY_IMPORTED_TAG_COLOR,
 )
 from integrations.launch_darkly.exceptions import LaunchDarklyRateLimitError
@@ -124,7 +125,11 @@ def _create_tags_from_ld(
 ) -> dict[str, Tag]:
     tags_by_ld_tag = {}
 
-    for ld_tag in (*ld_tags, LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL):
+    for ld_tag in (
+        *ld_tags,
+        LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL,
+        LAUNCH_DARKLY_IMPORTED_DEPRECATED_TAG_LABEL,
+    ):
         tags_by_ld_tag[ld_tag], _ = Tag.objects.update_or_create(
             label=ld_tag,
             project_id=project_id,
@@ -903,6 +908,8 @@ def _create_feature_from_ld(
         tags_by_ld_tag[LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL],
         *(tags_by_ld_tag[ld_tag] for ld_tag in ld_flag["tags"]),
     ]
+    if ld_flag["deprecated"]:
+        tags.append(tags_by_ld_tag[LAUNCH_DARKLY_IMPORTED_DEPRECATED_TAG_LABEL])
 
     feature, _ = Feature.objects.update_or_create(
         project_id=project_id,
@@ -911,7 +918,7 @@ def _create_feature_from_ld(
             "description": ld_flag.get("description"),
             "default_enabled": False,
             "type": feature_type,
-            "is_archived": ld_flag["archived"],
+            "is_archived": ld_flag["archived"] or ld_flag["deprecated"],
         },
     )
     feature.tags.set(tags)
@@ -1168,4 +1175,9 @@ def process_import_request(
             tags_by_ld_tag=flag_tags_by_ld_tag,
             segments_by_ld_key=segments_by_ld_key,
             project_id=import_request.project_id,
+        )
+
+        # Count deprecated flags for reporting
+        import_request.status["deprecated_flag_count"] = sum(
+            1 for ld_flag in ld_flags if ld_flag["deprecated"]
         )
