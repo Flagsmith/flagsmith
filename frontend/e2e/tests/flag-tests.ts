@@ -46,7 +46,7 @@ export default async function () {
   await toggleFeature(0, true)
 
   log('Try it')
-  await t.wait(500)
+  await t.wait(2000)
   await click('#try-it-btn')
   await t.wait(500)
   let json = await parseTryItResults()
