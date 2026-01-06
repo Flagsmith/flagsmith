@@ -17,6 +17,7 @@ import { useHistory } from 'react-router-dom'
 import { Environment } from 'common/types/responses'
 import { useGetSegmentQuery } from 'common/services/useSegment'
 import PageTitle from 'components/PageTitle'
+import ConnectedFeatureOverrideRow from 'components/ConnectedFeatureOverrideRow'
 
 type AssociatedSegmentOverridesType = {
   projectId: number
@@ -43,6 +44,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
     },
   )
 
+  // For regular segments, fetch all flags with segment overrides
   const {
     data: projectFlags,
     isFetching: projectFlagsFetching,
@@ -55,7 +57,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
       segment: segmentId,
     },
     {
-      skip: !projectId || !environment || !segmentId,
+      skip: !projectId || !environment || !segmentId || !!segment?.feature,
     },
   )
 
@@ -73,6 +75,52 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
       setEnvironment(environments.results[0])
     }
   }, [environment, environments])
+
+  // Render the feature-specific segment view
+  if (segment?.feature && environment) {
+    return (
+      <>
+        <div>
+          <PageTitle
+            title={
+              <div className='d-flex gap-4'>
+                Associated Feature
+                <div style={{ width: 200 }}>
+                  <EnvironmentSelect
+                    showAll={false}
+                    value={environment?.api_key}
+                    projectId={projectId}
+                    onChange={(id) =>
+                      setEnvironment(
+                        environments?.results?.find((e) => e.api_key === id),
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            }
+          >
+            This feature is specifically associated with the segment{' '}
+            <strong className='text-primary'>{segment?.name}</strong>.
+          </PageTitle>
+        </div>
+        <div className='panel panel-without-heading no-pad overflow-visible'>
+          <ConnectedFeatureOverrideRow
+            featureId={segment.feature}
+            projectId={projectId}
+            environmentId={environment.api_key}
+            environmentIdNumeric={environment.id}
+            segmentId={segmentId!}
+            shouldPreselect={false}
+            index={0}
+            openInNewTab
+          />
+        </div>
+      </>
+    )
+  }
+
+  // Render the regular segment features list
   return (
     <>
       <div>
