@@ -76,14 +76,30 @@ const FeaturesPage: FC = () => {
   }, [projectId])
 
   // Backward compatibility: Populate FeatureListStore for legacy components (CreateFlag modal)
-  // This ensures store.model is initialized for the modal's save flow in versioned environments
+  // Must pass current filters/search/page so FeatureListStore contains the same features
+  // that RTK Query displays. Otherwise editing features will crash because they're not in the store.
   // TODO: Remove this when CreateFlag is migrated to RTK Query
   useEffect(() => {
     if (projectId && environmentId) {
-      // getFeatures(projectId, environmentId, force, search, sort, page, filter, pageSize)
-      AppActions.getFeatures(projectId, environmentId, true, null, null, 1, {})
+      AppActions.getFeatures(
+        projectId,
+        environmentId,
+        true,
+        filters.search,
+        filters.sort,
+        page,
+        {
+          group_owners: filters.group_owners?.join(',') || undefined,
+          is_archived: filters.showArchived,
+          is_enabled: filters.is_enabled,
+          owners: filters.owners?.join(',') || undefined,
+          tag_strategy: filters.tag_strategy,
+          tags: filters.tags?.join(',') || undefined,
+          value_search: filters.value_search,
+        },
+      )
     }
-  }, [projectId, environmentId])
+  }, [projectId, environmentId, page, filters])
 
   // Force re-fetch when legacy Flux store updates features
   // TODO: Remove when all feature mutations use RTK Query
