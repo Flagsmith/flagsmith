@@ -546,7 +546,7 @@
         },
         {
             "source": "/advanced-use/release-pipelines",
-            "destination": "/managing-flags/release-pipelines"
+            "destination": "/managing-flags/release-pipeline"
         },
         {
             "source": "/advanced-use/scheduled-flags",
