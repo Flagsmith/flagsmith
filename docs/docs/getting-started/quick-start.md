@@ -8,7 +8,9 @@ import CodeBlock from '@theme/CodeBlock'; import { JsVersion } from '@site/src/c
 
 # Flagsmith Quick Start Guide
 
-This tutorial will guide you through the core concepts of integrating Flagsmith into your application.
+This tutorial will guide you through the core concepts of integrating Flagsmith into your application in four simple steps:
+
+![Quickstart steps](/img/quickstart/quickstart-flow.svg)
 
 ## Learning objectives
 
@@ -165,6 +167,7 @@ From here, some areas of the documentation you might want to check out are:
 
 - A deeper overview of the application - [Features](/managing-flags/core-management),
   [Identities](/flagsmith-concepts/identities) and [Segments](/flagsmith-concepts/segments).
+- How the different concepts used in the quickstart are related in the [Data Model](/flagsmith-concepts/data-model).
 - More details about our [API and SDKs](/integrating-with-flagsmith/integration-overview).
 - How you can [run Flagsmith yourself](/deployment-self-hosting/) or use our [Hosted API](https://flagsmith.com/).
 

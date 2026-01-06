@@ -1,0 +1,46 @@
+<svg viewBox="0 0 580 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <style>
+    .box-org { fill: #e0f2fe; stroke: #0284c7; stroke-width: 2; rx: 8; }
+    .box-proj { fill: #fef3c7; stroke: #d97706; stroke-width: 2; rx: 8; }
+    .box-env { fill: #dcfce7; stroke: #16a34a; stroke-width: 2; rx: 8; }
+    .label-bold { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; fill: #1e293b; font-weight: 600; }
+    .label-small { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; fill: #64748b; }
+    .arrow { stroke: #64748b; stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+  </style>
+
+  <!-- Organisation -->
+  <g filter="url(#shadow)">
+    <rect x="10" y="15" width="150" height="50" class="box-org"/>
+    <text x="85" y="37" text-anchor="middle" class="label-bold">Organisation</text>
+    <text x="85" y="52" text-anchor="middle" class="label-small">Org-wide settings</text>
+  </g>
+
+  <!-- Arrow -->
+  <line x1="160" y1="40" x2="200" y2="40" class="arrow"/>
+
+  <!-- Project -->
+  <g filter="url(#shadow)">
+    <rect x="205" y="15" width="160" height="50" class="box-proj"/>
+    <text x="285" y="37" text-anchor="middle" class="label-bold">Project</text>
+    <text x="285" y="52" text-anchor="middle" class="label-small">Features &amp; Segments</text>
+  </g>
+
+  <!-- Arrow -->
+  <line x1="365" y1="40" x2="405" y2="40" class="arrow"/>
+
+  <!-- Environment -->
+  <g filter="url(#shadow)">
+    <rect x="410" y="15" width="160" height="50" class="box-env"/>
+    <text x="490" y="37" text-anchor="middle" class="label-bold">Environment</text>
+    <text x="490" y="52" text-anchor="middle" class="label-small">Flag values &amp; Identities</text>
+  </g>
+</svg>

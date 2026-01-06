@@ -1,4 +1,5 @@
-import React, { FC, useMemo } from 'react'
+import React, { FC, useEffect, useMemo, useRef } from 'react'
+import { AsyncStorage } from 'polyfill-react-native'
 import TableFilterOptions from './TableFilterOptions'
 import { sortBy } from 'lodash'
 import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
@@ -8,7 +9,7 @@ type TableFilterType = {
   onChange: (value: TableFilterType['value']) => void
   className?: string
   isLoading?: boolean
-  orgId: string | undefined
+  orgId: number | undefined
 }
 
 const TableGroupsFilter: FC<TableFilterType> = ({
@@ -19,7 +20,7 @@ const TableGroupsFilter: FC<TableFilterType> = ({
   value,
 }) => {
   const { data } = useGetGroupSummariesQuery(
-    { orgId: orgId || '' },
+    { orgId: orgId! },
     { skip: !orgId },
   )
   const groups = useMemo(() => {
@@ -30,7 +31,7 @@ const TableGroupsFilter: FC<TableFilterType> = ({
       })),
       'label',
     )
-  }, [data])
+  }, [data, value])
 
   return (
     <TableFilterOptions

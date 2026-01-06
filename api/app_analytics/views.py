@@ -4,7 +4,7 @@ import typing
 from common.core.utils import using_database_replica
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.fields import IntegerField
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -20,6 +20,7 @@ from app_analytics.cache import FeatureEvaluationCache
 from app_analytics.mappers import (
     map_request_to_labels,
 )
+from app_analytics.throttles import InfluxQueryThrottle
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
 from features.models import FeatureState
@@ -135,6 +136,7 @@ class SelfHostedTelemetryAPIView(CreateAPIView):  # type: ignore[type-arg]
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, UsageDataPermission])
+@throttle_classes([InfluxQueryThrottle])
 def get_usage_data_total_count_view(request: Request, organisation_pk: int) -> Response:
     organisation = using_database_replica(Organisation.objects).get(id=organisation_pk)
     count = get_total_events_count(organisation)
@@ -151,6 +153,7 @@ def get_usage_data_total_count_view(request: Request, organisation_pk: int) -> R
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, UsageDataPermission])
+@throttle_classes([InfluxQueryThrottle])
 def get_usage_data_view(request: Request, organisation_pk: int) -> Response:
     filters = UsageDataQuerySerializer(data=request.query_params)
     filters.is_valid(raise_exception=True)
