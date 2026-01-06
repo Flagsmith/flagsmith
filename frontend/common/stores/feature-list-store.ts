@@ -34,6 +34,7 @@ import {
   changeRequestService,
   updateChangeRequest,
 } from 'common/services/useChangeRequest'
+import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -41,7 +42,6 @@ const data = require('../data/base/_data')
 const { createSegmentOverride } = require('../services/useSegmentOverride')
 const { getStore } = require('../store')
 let createdFirstFeature = false
-const PAGE_SIZE = 50
 
 const convertSegmentOverrideToFeatureState = (
   override,
@@ -636,6 +636,7 @@ const controller = {
                       )
                       return {
                         ...v,
+                        // eslint-disable-next-line no-nested-ternary
                         percentage_allocation: matching
                           ? typeof matching.percentage_allocation === 'number'
                             ? matching.percentage_allocation
@@ -855,7 +856,7 @@ const controller = {
               : `${Project.api}projects/${projectId}/features/?page=${
                   page || 1
                 }&environment=${environment}&page_size=${
-                  pageSize || PAGE_SIZE
+                  pageSize || FEATURES_PAGE_SIZE
                 }${filterUrl}`
           if (store.search) {
             featuresEndpoint += `&search=${store.search}`
@@ -884,7 +885,7 @@ const controller = {
                 return
               }
               store.paging.next = features.next
-              store.paging.pageSize = PAGE_SIZE
+              store.paging.pageSize = FEATURES_PAGE_SIZE
               store.paging.count = features.count
               store.paging.previous = features.previous
               store.paging.currentPage =
