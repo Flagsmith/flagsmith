@@ -71,7 +71,6 @@ class Command(BaseCommand):
             data={"name": "Development", "project": project_id},
         )
         dev_environment = dev_env_response.json()
-        dev_env_id = dev_environment["id"]
         dev_env_api_key = dev_environment["api_key"]
 
         client.post(
@@ -249,59 +248,70 @@ class Command(BaseCommand):
             content_type="application/json",
         )
 
-        # Create feature segments via API
-        feature_segment_url = reverse("api-v1:features:feature-segment-list")
-
+        # Create segment overrides via API
+        # dark_mode enabled for Premium Users
+        dark_mode_override_url = reverse(
+            "api-v1:environments:create-segment-override",
+            args=[dev_env_api_key, dark_mode_id],
+        )
         client.post(
-            feature_segment_url,
+            dark_mode_override_url,
             data=json.dumps(
                 {
-                    "feature": dark_mode_id,
-                    "segment": premium_segment_id,
-                    "environment": dev_env_id,
+                    "feature_segment": {"segment": premium_segment_id},
                     "enabled": True,
+                    "feature_state_value": {},
                 }
             ),
             content_type="application/json",
         )
 
+        # beta_features enabled for Beta Testers
+        beta_features_override_url = reverse(
+            "api-v1:environments:create-segment-override",
+            args=[dev_env_api_key, beta_features_id],
+        )
         client.post(
-            feature_segment_url,
+            beta_features_override_url,
             data=json.dumps(
                 {
-                    "feature": beta_features_id,
-                    "segment": beta_segment_id,
-                    "environment": dev_env_id,
+                    "feature_segment": {"segment": beta_segment_id},
                     "enabled": True,
+                    "feature_state_value": {},
                 }
             ),
             content_type="application/json",
         )
 
-        # Create segment overrides with custom values
+        # api_rate_limit with custom value for Premium Users
+        api_rate_limit_override_url = reverse(
+            "api-v1:environments:create-segment-override",
+            args=[dev_env_api_key, api_rate_limit_id],
+        )
         client.post(
-            feature_segment_url,
+            api_rate_limit_override_url,
             data=json.dumps(
                 {
-                    "feature": api_rate_limit_id,
-                    "segment": premium_segment_id,
-                    "environment": dev_env_id,
+                    "feature_segment": {"segment": premium_segment_id},
                     "enabled": True,
-                    "value": "500",
+                    "feature_state_value": {"type": "int", "integer_value": 500},
                 }
             ),
             content_type="application/json",
         )
 
+        # welcome_message with custom value for Beta Testers
+        welcome_message_override_url = reverse(
+            "api-v1:environments:create-segment-override",
+            args=[dev_env_api_key, welcome_message_id],
+        )
         client.post(
-            feature_segment_url,
+            welcome_message_override_url,
             data=json.dumps(
                 {
-                    "feature": welcome_message_id,
-                    "segment": beta_segment_id,
-                    "environment": dev_env_id,
+                    "feature_segment": {"segment": beta_segment_id},
                     "enabled": True,
-                    "value": "Welcome, Beta Tester!",
+                    "feature_state_value": {"string_value": "Welcome, Beta Tester!"},
                 }
             ),
             content_type="application/json",
@@ -348,8 +358,9 @@ class Command(BaseCommand):
             bob_featurestates_url,
             data=json.dumps(
                 {
-                    "feature": dark_mode_id,
+                    "feature": welcome_message_id,
                     "enabled": True,
+                    "feature_state_value": "Hello, Bob!",
                 }
             ),
             content_type="application/json",
