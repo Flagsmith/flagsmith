@@ -144,6 +144,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@extend_schema(tags=["sdk"])
 class SDKIdentities(SDKAPIView):
     serializer_class = IdentifyWithTraitsSerializer
     pagination_class = None  # set here to ensure documentation is correct

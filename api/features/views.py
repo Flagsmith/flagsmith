@@ -805,6 +805,7 @@ def get_feature_state_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     return Response(serializer.data)
 
 
+@extend_schema(tags=["sdk"])
 class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
     serializer_class = SDKFeatureStateSerializer
     permission_classes = (EnvironmentKeyPermissions,)

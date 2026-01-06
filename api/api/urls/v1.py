@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.urls import include, path, re_path
 from drf_spectacular.views import (
-    SpectacularAPIView,
+    SpectacularJSONAPIView,
     SpectacularSwaggerView,
+    SpectacularYAMLAPIView,
 )
 from rest_framework import permissions, routers
 
@@ -72,12 +73,16 @@ urlpatterns = [
     # API documentation
     path(
         "swagger.json",
-        SpectacularAPIView.as_view(permission_classes=[schema_view_permission_class]),
+        SpectacularJSONAPIView.as_view(
+            permission_classes=[schema_view_permission_class],
+        ),
         name="schema-json",
     ),
     path(
         "swagger.yaml",
-        SpectacularAPIView.as_view(permission_classes=[schema_view_permission_class]),
+        SpectacularYAMLAPIView.as_view(
+            permission_classes=[schema_view_permission_class],
+        ),
         name="schema-yaml",
     ),
     path(

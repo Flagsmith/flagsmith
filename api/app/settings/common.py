@@ -543,7 +543,7 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
 SPECTACULAR_SETTINGS = {
     "TITLE": "Flagsmith API",
     "OAS_VERSION": "3.1.0",
-    "DESCRIPTION": "",
+    "DESCRIPTION": "Flagsmith's Core and SDK APIs. Check out <a href='https://docs.flagsmith.com'>Flagsmith documentation</a>.",
     "VERSION": "v1",
     "LICENSE": {"name": "BSD License", "identifier": "BSD-3-Clause"},
     "CONTACT": {"email": "support@flagsmith.com"},
@@ -575,7 +575,12 @@ SPECTACULAR_SETTINGS = {
         "edge_api.identities.openapi",
         "environments.identities.traits.openapi",
     ],
+    "EXTENSIONS_ROOT": {
+        "$schema": "https://spec.openapis.org/oas/3.1/dialect/base",
+    },
     "ENUM_NAME_OVERRIDES": {
+        # Overrides to use specific schema names for fields named "type".
+        # If this is not set, drf-spectacular will generate schema names like "Type975Enum".
         "WebhookScopeTypeEnum": ["organisation", "environment"],
         "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
         "FeatureValueTypeEnum": ["integer", "string", "boolean"],

@@ -22,6 +22,7 @@ def get_last_modified(request: Request) -> datetime | None:
     return updated_at
 
 
+@extend_schema(tags=["sdk"])
 class SDKEnvironmentAPIView(APIView):
     permission_classes = (EnvironmentKeyPermissions,)
     throttle_classes = []
