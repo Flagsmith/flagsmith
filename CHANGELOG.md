@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.205.8](https://github.com/Flagsmith/flagsmith/compare/v2.205.7...v2.205.8) (2026-01-06)
+
+
+### Bug Fixes
+
+* **e2e:** increase wait time before Try It button click ([#6465](https://github.com/Flagsmith/flagsmith/issues/6465)) ([ea8bcc6](https://github.com/Flagsmith/flagsmith/commit/ea8bcc6b6bb9ec316ee37f0dc380a907c62bf518))
+* **features:** restore FeaturesPage RTK Query migration with versioning fixes ([#6429](https://github.com/Flagsmith/flagsmith/issues/6429)) ([3dd841a](https://github.com/Flagsmith/flagsmith/commit/3dd841ac240b19cf6b7f3a4255f2ad32d8f5916f))
+* revert: "fix(features): restore FeaturesPage RTK Query migration with versioning fixes" ([#6468](https://github.com/Flagsmith/flagsmith/issues/6468)) ([cc85eea](https://github.com/Flagsmith/flagsmith/commit/cc85eeacb8890e44602a92340c37cb0bb29a91f3))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Enable Admin API throttling in production ([#6479](https://github.com/Flagsmith/flagsmith/issues/6479)) ([0570f64](https://github.com/Flagsmith/flagsmith/commit/0570f64228c737b5df39b25bb609f518584c4bd1))
+
 ## [2.205.7](https://github.com/Flagsmith/flagsmith/compare/v2.205.6...v2.205.7) (2026-01-04)
 
 
