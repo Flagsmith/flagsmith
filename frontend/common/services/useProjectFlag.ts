@@ -81,25 +81,37 @@ export const projectFlagService = service
           },
           _,
           arg,
-        ) => ({
-          ...response,
-          environmentStates: response.results.reduce((acc, feature) => {
-            if (feature.environment_feature_state) {
-              acc[feature.id] = {
-                ...feature.environment_feature_state,
-                feature: feature.id,
+        ) => {
+          return {
+            ...response,
+            environmentStates: response.results.reduce((acc, feature) => {
+              if (feature.environment_feature_state) {
+                // Build multivariate_feature_state_values from multivariate_options
+                // The API expects format: { multivariate_feature_option: id, percentage_allocation: number }
+                const multivariateFeatureStateValues =
+                  feature.multivariate_options?.map((option) => ({
+                    multivariate_feature_option: option.id,
+                    percentage_allocation: option.default_percentage_allocation,
+                  })) || []
+
+                acc[feature.id] = {
+                  ...feature.environment_feature_state,
+                  feature: feature.id,
+                  multivariate_feature_state_values:
+                    multivariateFeatureStateValues,
+                }
               }
-            }
-            return acc
-          }, {} as Res['featureList']['environmentStates']),
-          pagination: {
-            count: response.count,
-            currentPage: arg.page || 1,
-            next: response.next,
-            pageSize: arg.page_size || FEATURES_PAGE_SIZE,
-            previous: response.previous,
-          },
-        }),
+              return acc
+            }, {} as Res['featureList']['environmentStates']),
+            pagination: {
+              count: response.count,
+              currentPage: arg.page || 1,
+              next: response.next,
+              pageSize: arg.page_size || FEATURES_PAGE_SIZE,
+              previous: response.previous,
+            },
+          }
+        },
       }),
 
       getProjectFlag: builder.query<Res['projectFlag'], Req['getProjectFlag']>({
