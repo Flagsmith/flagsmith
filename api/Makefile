@@ -156,3 +156,8 @@ generate-docs:
 .PHONY: add-known-sdk-version
 add-known-sdk-version:
 	poetry run python scripts/add-known-sdk-version.py $(opts)
+
+.PHONY: reset
+reset: docker-up
+	poetry run python manage.py waitfordb
+	poetry run python manage.py reset_local_database

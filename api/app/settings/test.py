@@ -1,5 +1,7 @@
 from app.settings.common import *  # noqa
-from app.settings.common import REST_FRAMEWORK
+from app.settings.common import ALLOWED_HOSTS, REST_FRAMEWORK
+
+ALLOWED_HOSTS = [*ALLOWED_HOSTS, "testserver"]
 
 # We dont want to track tests
 ENABLE_TELEMETRY = False

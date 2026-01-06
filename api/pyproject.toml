@@ -63,6 +63,7 @@ exclude_also = [
 [tool.coverage.run]
 omit = [
   "app/settings/common.py",
+  "app/settings/local.py",
   "manage.py",
   "e2etests/*",
   "scripts/*",

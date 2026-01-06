@@ -49,6 +49,25 @@ You can also manually run all the checks across the entire codebase with:
 pre-commit run --all-files
 ```
 
+## Local Development
+
+To run the API locally with Docker services:
+
+```bash
+cd api
+make serve
+```
+
+To reset your local database and populate it with test data:
+
+```bash
+cd api
+make reset
+```
+
+The command creates a development environment with sample organisations, projects,
+features, and segments for testing.
+
 ## Running Tests
 
 The application uses pytest for writing (appropriate use of fixtures) and running tests. Before running tests please make sure that `DJANGO_SETTINGS_MODULE` env var is pointing to the right module, e.g. `app.settings.test`.
