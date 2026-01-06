@@ -140,6 +140,10 @@ const FeatureListProvider = class extends React.Component {
     segmentOverrides,
     onComplete,
   ) => {
+    const transformedMultivariate = flag.multivariate_options?.map((v) => ({
+      multivariate_feature_option: v.id,
+      percentage_allocation: v.default_percentage_allocation,
+    }))
     AppActions.editEnvironmentFlag(
       projectId,
       environmentId,
@@ -147,7 +151,7 @@ const FeatureListProvider = class extends React.Component {
       projectFlag,
       {
         ...environmentFlag,
-        multivariate_feature_state_values: flag.multivariate_options,
+        multivariate_feature_state_values: transformedMultivariate,
       },
       segmentOverrides,
       'SEGMENT',
@@ -209,6 +213,12 @@ const FeatureListProvider = class extends React.Component {
           }),
       }),
       (newProjectFlag) => {
+        const transformedMultivariate = flag.multivariate_options?.map((v) => {
+          return {
+            multivariate_feature_option: v.id,
+            percentage_allocation: v.default_percentage_allocation,
+          }
+        })
         AppActions.editEnvironmentFlagChangeRequest(
           projectId,
           environmentId,
@@ -216,7 +226,7 @@ const FeatureListProvider = class extends React.Component {
           newProjectFlag,
           {
             ...environmentFlag,
-            multivariate_feature_state_values: flag.multivariate_options,
+            multivariate_feature_state_values: transformedMultivariate,
           },
           segmentOverrides,
           changeRequest,
