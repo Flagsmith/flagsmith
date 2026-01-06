@@ -6,6 +6,11 @@ import intersection from 'lodash/intersection'
 import { cloneDeep } from 'lodash'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
+import {
+  Permission as PermissionEnum,
+  PermissionDescriptions,
+  ProjectPermission,
+} from 'common/types/permissions.types'
 
 /**
  * Props for the Permission component
@@ -21,7 +26,7 @@ import Constants from 'common/constants'
  */
 type PermissionType = {
   id: number | string
-  permission: string
+  permission: PermissionEnum
   tags?: number[]
   level: PermissionLevel
   children:
@@ -153,7 +158,18 @@ const Permission: FC<PermissionType> = ({
   })
 
   const finalPermission = hasPermission || AccountStore.isAdmin()
-
+  let permissionDescriptionFunc: (perm: any) => any =
+    Constants.organisationPermissions
+  switch (level) {
+    case 'environment':
+      permissionDescriptionFunc = Constants.environmentPermissions
+      break
+    case 'project':
+      permissionDescriptionFunc = Constants.projectPermissions
+      break
+    default:
+      break
+  }
   if (typeof children === 'function') {
     const renderedChildren = children({
       isLoading,
@@ -166,7 +182,10 @@ const Permission: FC<PermissionType> = ({
 
     return Utils.renderWithPermission(
       finalPermission,
-      permissionName || Constants.projectPermissions(permission),
+      permissionName ||
+        permissionDescriptionFunc(
+          PermissionDescriptions[permission as ProjectPermission],
+        ),
       renderedChildren,
     )
   }
@@ -178,7 +197,10 @@ const Permission: FC<PermissionType> = ({
   if (showTooltip) {
     return Utils.renderWithPermission(
       finalPermission,
-      permissionName || Constants.projectPermissions(permission),
+      permissionName ||
+        permissionDescriptionFunc(
+          PermissionDescriptions[permission as ProjectPermission],
+        ),
       children,
     )
   }
