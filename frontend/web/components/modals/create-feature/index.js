@@ -280,7 +280,7 @@ const Index = class extends Component {
       )
         .then((permissions) => {
           const hasViewIdentitiesPermission =
-            permissions[EnvironmentPermission.VIEW_IDENTITIES]
+            permissions[EnvironmentPermission.VIEW_IDENTITIES] ||
           permissions.ADMIN
           // Early return if user doesn't have permission
           if (!hasViewIdentitiesPermission) {
