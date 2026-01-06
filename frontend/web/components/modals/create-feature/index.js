@@ -1892,7 +1892,7 @@ const Index = class extends Component {
                                               data-test='update-feature-btn'
                                               id='update-feature-btn'
                                               disabled={
-                                                (!savePermission,
+                                                (!savePermission ||
                                                 isSaving ||
                                                   !projectFlag.name ||
                                                   invalid)
