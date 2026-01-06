@@ -33,7 +33,7 @@ def get_environment_flags_list(
     additional_filters: Q = None,  # type: ignore[assignment]
     additional_select_related_args: typing.Iterable[str] = None,  # type: ignore[assignment]
     additional_prefetch_related_args: typing.Iterable[
-        typing.Union[str, Prefetch]
+        typing.Union[str, Prefetch[typing.Any]]
     ] = None,  # type: ignore[assignment]
     from_replica: bool = False,
 ) -> list[FeatureState]:
@@ -64,7 +64,7 @@ def get_environment_flags_dict(
     additional_filters: Q = None,  # type: ignore[assignment]
     additional_select_related_args: typing.Iterable[str] = None,  # type: ignore[assignment]
     additional_prefetch_related_args: typing.Iterable[
-        typing.Union[str, Prefetch]
+        typing.Union[str, Prefetch[typing.Any]]
     ] = None,  # type: ignore[assignment]
     key_function: typing.Callable[[FeatureState], tuple] = None,  # type: ignore[type-arg,assignment]
     from_replica: bool = False,
@@ -507,7 +507,7 @@ def _get_feature_states_queryset(
     additional_filters: Q = None,  # type: ignore[assignment]
     additional_select_related_args: typing.Iterable[str] = None,  # type: ignore[assignment]
     additional_prefetch_related_args: typing.Iterable[
-        typing.Union[str, Prefetch]
+        typing.Union[str, Prefetch[typing.Any]]
     ] = None,  # type: ignore[assignment]
     from_replica: bool = False,
 ) -> QuerySet[FeatureState]:

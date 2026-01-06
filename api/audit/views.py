@@ -105,7 +105,7 @@ class AllAuditLogViewSet(_BaseAuditLogViewSet):
 
         Since we're applying the base filters to the query set
         """
-        return (
+        return (  # type: ignore[no-any-return]
             self.request.user.organisations.filter(  # type: ignore[union-attr]
                 userorganisation__role=OrganisationRole.ADMIN
             )
