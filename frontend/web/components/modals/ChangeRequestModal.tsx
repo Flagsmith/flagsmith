@@ -21,6 +21,7 @@ import {
 import { Req } from 'common/types/requests'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import ChangeRequestConflictCheck from 'components/ChangeRequestConflictCheck'
+import { getChangeRequestLiveDate } from 'common/utils/getChangeRequestLiveDate'
 
 interface ChangeRequestModalProps {
   changeRequest?: ChangeRequest
@@ -58,7 +59,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   )
   // const [groups, setGroups] = useState([])
   const [liveFrom, setLiveFrom] = useState(
-    changeRequest?.feature_states[0]?.live_from,
+    getChangeRequestLiveDate(changeRequest)?.toISOString(),
   )
   const [title, setTitle] = useState(changeRequest?.title ?? '')
   const [showUsers, setShowUsers] = useState(false)
@@ -72,7 +73,8 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   })
 
   useEffect(() => {
-    const currLiveFromDate = changeRequest?.feature_states[0]?.live_from
+    const currLiveFromDate =
+      getChangeRequestLiveDate(changeRequest)?.toISOString()
     if (!currLiveFromDate) {
       return setLiveFrom(showAssignees ? currDate.toISOString() : undefined)
     }
