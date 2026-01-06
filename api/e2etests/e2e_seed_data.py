@@ -16,6 +16,8 @@ from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
+from features.models import Feature
+from features.multivariate.models import MultivariateFeatureOption
 from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import (
@@ -203,3 +205,38 @@ def seed_data() -> None:
             EdgeIdentity(engine_identity).save()  # pragma: no cover
         else:
             Identity.objects.create(**identity_info)
+
+    # Create features for pagination testing in the first project
+    # This creates 55 features to test page 2 navigation (page size is 50)
+    first_project = projects[0]  # "My Test Project"
+
+    for i in range(55):
+        Feature.objects.create(
+            project=first_project,
+            name=f"pagination_feature_{str(i).zfill(3)}",
+            type="STANDARD",
+            default_enabled=True,
+        )
+
+    # Create a feature with multivariate options for change request testing
+    mv_feature = Feature.objects.create(
+        project=first_project,
+        name="mv_test_feature",
+        type="MULTIVARIATE",
+        default_enabled=True,
+        initial_value="control",
+    )
+
+    # Add multivariate options
+    MultivariateFeatureOption.objects.create(
+        feature=mv_feature,
+        type="unicode",
+        string_value="variant_a",
+        default_percentage_allocation=50,
+    )
+    MultivariateFeatureOption.objects.create(
+        feature=mv_feature,
+        type="unicode",
+        string_value="variant_b",
+        default_percentage_allocation=50,
+    )

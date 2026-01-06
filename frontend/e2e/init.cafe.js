@@ -17,6 +17,11 @@ import environmentPermissionTest from './tests/environment-permission-test'
 import flagsmith from 'flagsmith/isomorphic'
 import rolesTest from './tests/roles-test'
 import organisationTest from './tests/organisation-test'
+import {
+  page2FeaturesTest,
+  searchOnPage2Test,
+  multivariateChangeRequestTest,
+} from './tests/feature-pagination-test'
 
 require('dotenv').config()
 
@@ -139,3 +144,15 @@ test('Environment-permission', environmentPermissionTest).meta({
 })
 
 test('Roles', rolesTest).meta({ autoLogout: true, category: 'enterprise' })
+
+test('Pagination', page2FeaturesTest).meta({ autoLogout: true, category: 'oss' })
+
+test('Search-Pagination', searchOnPage2Test).meta({
+  autoLogout: true,
+  category: 'oss',
+})
+
+test('Multivariate-CR', multivariateChangeRequestTest).meta({
+  autoLogout: true,
+  category: 'oss',
+})

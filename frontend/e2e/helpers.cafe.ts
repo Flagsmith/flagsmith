@@ -676,4 +676,38 @@ export const setUserPermission = async (
   await closeModal()
 }
 
+// Pagination helpers
+export const goToNextPage = async () => {
+  const nextButton = Selector('.paging button.icon').nth(1)
+  await t
+    .expect(nextButton.hasAttribute('disabled'))
+    .notOk('Next page button should be enabled')
+  await t.click(nextButton)
+  await t.wait(500)
+}
+
+export const goToPrevPage = async () => {
+  const prevButton = Selector('.paging button.icon').nth(0)
+  await t
+    .expect(prevButton.hasAttribute('disabled'))
+    .notOk('Previous page button should be enabled')
+  await t.click(prevButton)
+  await t.wait(500)
+}
+
+export const searchFeatures = async (searchText: string) => {
+  await setText('input[placeholder="Search"]', searchText)
+  await t.wait(500) // Wait for debounce
+}
+
+export const clearFeatureSearch = async () => {
+  await setText('input[placeholder="Search"]', '')
+  await t.wait(500)
+}
+
+export const assertPagingCount = async (expectedTotal: number) => {
+  const pagingText = Selector('.paging .text-muted')
+  await t.expect(pagingText.innerText).contains(`of ${expectedTotal}`)
+}
+
 export default {}
