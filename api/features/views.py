@@ -130,6 +130,9 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         }.get(self.action, ProjectFeatureSerializer)
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return Feature.objects.none()
+
         accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)  # type: ignore[union-attr]
 
         project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
@@ -537,6 +540,9 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         """
         Override queryset to filter based on provided URL parameters.
         """
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
+
         environment_api_key = self.kwargs["environment_api_key"]
 
         try:
@@ -692,6 +698,9 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
+
         return super().get_queryset().filter(identity__pk=self.kwargs["identity_pk"])  # type: ignore[no-untyped-call]
 
     @action(methods=["GET"], detail=False)
@@ -765,6 +774,9 @@ class SimpleFeatureStateViewSet(
     filterset_fields = ["environment", "feature", "feature_segment"]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
+
         if not self.action == "list":
             return FeatureState.objects.all()
 
@@ -800,10 +812,12 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
     renderer_classes = [JSONRenderer]
     pagination_class = None
     throttle_classes = []
+    queryset = FeatureState.objects.none()
 
     @extend_schema(
         parameters=[SDKFeatureStatesQuerySerializer],
         responses={200: FeatureStateSerializerFull(many=True)},
+        operation_id="get_flags",
     )
     @method_decorator(vary_on_headers(SDK_ENVIRONMENT_KEY_HEADER))
     @method_decorator(

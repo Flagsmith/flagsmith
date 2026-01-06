@@ -31,9 +31,9 @@ class AuditLogListSerializer(serializers.ModelSerializer):  # type: ignore[type-
 
 
 class AuditLogChangeDetailsSerializer(serializers.Serializer):  # type: ignore[type-arg]
-    field = serializers.ReadOnlyField()
-    old = serializers.ReadOnlyField()
-    new = serializers.ReadOnlyField()
+    field = serializers.CharField(read_only=True)
+    old = serializers.CharField(read_only=True, allow_null=True)
+    new = serializers.CharField(read_only=True, allow_null=True)
 
 
 class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]

@@ -40,6 +40,9 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[t
         return super().create(request, *args, **kwargs)
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return MultivariateFeatureOption.objects.none()
+
         feature = get_object_or_404(Feature, pk=self.kwargs["feature_pk"])
         return feature.multivariate_options.all()
 

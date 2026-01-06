@@ -63,6 +63,7 @@ class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[
             "enabled",
         )
 
+    @extend_schema_field({"type": ["string", "integer", "boolean"], "nullable": True})
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 
@@ -442,6 +443,17 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "enabled",
         )
 
+    @extend_schema_field(
+        {
+            "type": [
+                "string",
+                "integer",
+                "number",
+                "boolean",
+            ],
+            "nullable": True,
+        }
+    )
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 
@@ -516,6 +528,17 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         fields = "__all__"
         read_only_fields = ("version", "created_at", "updated_at", "status")
 
+    @extend_schema_field(
+        {
+            "type": [
+                "string",
+                "integer",
+                "number",
+                "boolean",
+                "null",
+            ],
+        }
+    )
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 

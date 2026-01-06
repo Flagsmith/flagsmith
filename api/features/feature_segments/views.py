@@ -35,6 +35,9 @@ class FeatureSegmentViewSet(
     permission_classes = [FeatureSegmentPermissions]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureSegment.objects.none()
+
         permitted_projects = self.request.user.get_permitted_projects(  # type: ignore[union-attr]
             permission_key=VIEW_PROJECT
         )

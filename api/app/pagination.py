@@ -3,7 +3,6 @@ import json
 from collections import OrderedDict
 from typing import Any
 
-from drf_spectacular.utils import OpenApiParameter
 from flag_engine.identities.models import IdentityModel
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -56,6 +55,28 @@ class EdgeIdentityPagination(CustomPagination):
             )
         )
 
+    def get_schema_operation_parameters(self, view: Any) -> list[dict[str, Any]]:
+        """
+        Returns the OpenAPI parameters for the pagination.
+        This is used by drf-spectacular to generate the schema.
+        """
+        return [
+            {
+                "name": "page_size",
+                "in": "query",
+                "description": "Number of results to return per page.",
+                "required": False,
+                "schema": {"type": "integer"},
+            },
+            {
+                "name": "last_evaluated_key",
+                "in": "query",
+                "description": "Used as the starting point for the page",
+                "required": False,
+                "schema": {"type": "string"},
+            },
+        ]
+
     def get_paginated_response_schema(self, schema: dict[str, Any]) -> dict[str, Any]:
         """
         Returns the OpenAPI schema for the paginated response.
@@ -72,26 +93,3 @@ class EdgeIdentityPagination(CustomPagination):
                 "results": schema,
             },
         }
-
-
-def get_edge_identity_pagination_parameters() -> list[OpenApiParameter]:
-    """
-    Returns the OpenAPI parameters for edge identity pagination.
-    Use this function with @extend_schema(parameters=...) decorator.
-    """
-    return [
-        OpenApiParameter(
-            name="page_size",
-            location=OpenApiParameter.QUERY,
-            description="Number of results to return per page.",
-            required=False,
-            type=int,
-        ),
-        OpenApiParameter(
-            name="last_evaluated_key",
-            location=OpenApiParameter.QUERY,
-            description="Used as the starting point for the page",
-            required=False,
-            type=str,
-        ),
-    ]

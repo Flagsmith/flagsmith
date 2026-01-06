@@ -36,6 +36,9 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = MetadataFieldSerializer
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return MetadataField.objects.none()
+
         queryset = MetadataField.objects.filter(organisation__users=self.request.user)
         if self.action == "list":
             serializer = MetadataFieldQuerySerializer(data=self.request.query_params)
@@ -49,10 +52,6 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return queryset
 
 
-@method_decorator(
-    name="list",
-    decorator=extend_schema(parameters=[MetadataModelFieldQuerySerializer]),
-)
 class MetaDataModelFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [MetadataModelFieldPermissions]
     serializer_class = MetaDataModelFieldSerializer

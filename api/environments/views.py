@@ -104,6 +104,9 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return context
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return Environment.objects.none()
+
         if self.action == "list":
             project_id = self.request.query_params.get(
                 "project"

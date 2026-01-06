@@ -47,6 +47,7 @@ from edge_api.identities.serializers import (
     GetEdgeIdentityOverridesSerializer,
     ListEdgeIdentitiesQuerySerializer,
 )
+from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
 )
@@ -76,6 +77,7 @@ class EdgeIdentityViewSet(
 ):
     pagination_class = EdgeIdentityPagination
     lookup_field = "identity_uuid"
+    queryset = Identity.objects.none()
 
     def initial(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         environment = self.get_environment_from_request()
@@ -98,6 +100,9 @@ class EdgeIdentityViewSet(
         return edge_identity
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return []
+
         page_size = self.pagination_class().get_page_size(self.request)
 
         query_serializer = ListEdgeIdentitiesQuerySerializer(
@@ -193,6 +198,7 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[ty
     lookup_field = "featurestate_uuid"
 
     serializer_class = EdgeIdentityFeatureStateSerializer
+    queryset = FeatureState.objects.none()
     # Patch is not supported
     http_method_names = [
         "get",

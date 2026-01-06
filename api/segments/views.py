@@ -44,6 +44,9 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     pagination_class = CustomPagination
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return Segment.objects.none()
+
         permitted_projects = self.request.user.get_permitted_projects(  # type: ignore[union-attr]
             permission_key=VIEW_PROJECT
         )

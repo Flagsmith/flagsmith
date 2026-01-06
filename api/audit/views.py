@@ -34,6 +34,9 @@ class _BaseAuditLogViewSet(
     pagination_class = CustomPagination
 
     def get_queryset(self) -> QuerySet[AuditLog]:
+        if getattr(self, "swagger_fake_view", False):
+            return AuditLog.objects.none()  # type: ignore[no-any-return]
+
         q = self._get_base_filters()
 
         serializer = AuditLogsQueryParamSerializer(data=self.request.GET)

@@ -95,6 +95,9 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return context
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return Organisation.objects.none()
+
         return self.request.user.organisations.all()  # type: ignore[union-attr]
 
     def get_throttles(self):  # type: ignore[no-untyped-def]
@@ -340,6 +343,9 @@ class OrganisationWebhookViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
     webhook_type = WebhookType.ORGANISATION
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return OrganisationWebhook.objects.none()
+
         if "organisation_pk" not in self.kwargs:
             raise ValidationError("Missing required path parameter 'organisation_pk'")
 
@@ -361,6 +367,9 @@ class OrganisationAPIUsageNotificationView(ListAPIView):  # type: ignore[type-ar
     permission_classes = [OrganisationAPIUsageNotificationPermission]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return OrganisationAPIUsageNotification.objects.none()
+
         organisation = Organisation.objects.get(id=self.kwargs["organisation_pk"])
         if not hasattr(organisation, "subscription_information_cache"):
             return OrganisationAPIUsageNotification.objects.none()

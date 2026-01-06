@@ -6,6 +6,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
+from environments.identities.traits.fields import TraitValueField
 from environments.models import Environment
 from environments.serializers import EnvironmentSerializerFull
 from features.models import FeatureState
@@ -55,9 +56,7 @@ class IdentitySerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
 class SDKIdentitiesResponseSerializer(serializers.Serializer):  # type: ignore[type-arg]
     class _TraitSerializer(serializers.Serializer):  # type: ignore[type-arg]
         trait_key = serializers.CharField()
-        trait_value = serializers.Field(  # type: ignore[var-annotated]
-            help_text="Can be of type string, boolean, float or integer."
-        )
+        trait_value = TraitValueField()
 
     identifier = serializers.CharField()
     flags = serializers.ListField(child=SDKFeatureStateSerializer())

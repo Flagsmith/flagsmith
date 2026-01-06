@@ -90,6 +90,9 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return super().get_serializer_context()
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return Project.objects.none()
+
         queryset = self.request.user.get_permitted_projects(permission_key=VIEW_PROJECT)  # type: ignore[union-attr]
 
         organisation_id = self.request.query_params.get("organisation")
@@ -218,6 +221,9 @@ class BaseProjectPermissionsViewSet(viewsets.ModelViewSet):  # type: ignore[type
     permission_classes = [IsAuthenticated, IsProjectAdmin]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return UserProjectPermission.objects.none()
+
         if not self.kwargs.get("project_pk"):
             raise ValidationError("Missing project pk.")
 

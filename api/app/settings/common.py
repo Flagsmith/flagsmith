@@ -542,9 +542,10 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Flagsmith API",
+    "OAS_VERSION": "3.1.0",
     "DESCRIPTION": "",
     "VERSION": "v1",
-    "LICENSE": {"name": "BSD License"},
+    "LICENSE": {"name": "BSD License", "identifier": "BSD-3-Clause"},
     "CONTACT": {"email": "support@flagsmith.com"},
     "SWAGGER_UI_SETTINGS": {
         "deepLinking": True,
@@ -569,7 +570,16 @@ SPECTACULAR_SETTINGS = {
             },
         },
     },
-    "EXTENSIONS_INFO": {},
+    "EXTENSIONS": [
+        "api.openapi",
+        "edge_api.identities.openapi",
+        "environments.identities.traits.openapi",
+    ],
+    "ENUM_NAME_OVERRIDES": {
+        "WebhookScopeTypeEnum": ["organisation", "environment"],
+        "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
+        "FeatureValueTypeEnum": ["integer", "string", "boolean"],
+    },
 }
 
 

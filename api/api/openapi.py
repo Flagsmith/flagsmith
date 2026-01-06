@@ -1,33 +1,44 @@
 from typing import Any, Literal
 
-from drf_spectacular.extensions import OpenApiSerializerExtension
-from drf_spectacular.openapi import AutoSchema
-from drf_spectacular.plumbing import ResolvedComponent
+from drf_spectacular import openapi
+from drf_spectacular.extensions import (
+    OpenApiSerializerExtension,
+)
+from drf_spectacular.plumbing import ResolvedComponent, safe_ref
+from drf_spectacular.plumbing import append_meta as append_meta_orig
 from pydantic import BaseModel
-from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
-from pydantic_core import core_schema
 
 
-class _GenerateJsonSchema(GenerateJsonSchema):
-    def nullable_schema(self, schema: core_schema.NullableSchema) -> JsonSchemaValue:
-        """Generates an OpenAPI 3.0-compatible JSON schema that allows null values.
+def append_meta(schema: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
+    """
+    See https://github.com/tfranzel/drf-spectacular/issues/1480
+    """
+    try:
+        return append_meta_orig(schema, meta)
+    except AssertionError as exc:
+        if str(exc) == "Invalid nullable case":
+            pass
+        else:  # pragma: no branch
+            raise exc
 
-        Args:
-            schema: The core schema.
+    if any("nullable" in d for d in (schema, meta)) and "oneOf" in schema:
+        schema = schema.copy()
+        meta = meta.copy()
 
-        Returns:
-            The generated JSON schema.
-        """
-        anyof_schema_value = super().nullable_schema(schema)
-        elem = next(
-            any_of
-            for any_of in anyof_schema_value["anyOf"]
-            if any_of.get("type") != "null"
-        )
-        if type_ := elem.get("type"):
-            return {"type": type_, "nullable": True}
-        # Assuming a reference here (which we can not annotate)
-        return elem  # type: ignore[no-any-return]
+        schema.pop("nullable", None)
+        meta.pop("nullable", None)
+
+        schema["oneOf"].append({"type": "null"})
+
+    if "exclusiveMinimum" in schema and "minimum" in schema:  # pragma: no branch
+        schema["exclusiveMinimum"] = schema.pop("minimum")
+    if "exclusiveMaximum" in schema and "maximum" in schema:  # pragma: no branch
+        schema["exclusiveMaximum"] = schema.pop("maximum")
+
+    return safe_ref({**schema, **meta})
+
+
+openapi.append_meta = append_meta  # type: ignore[attr-defined]
 
 
 class PydanticSchemaExtension(
@@ -46,29 +57,26 @@ class PydanticSchemaExtension(
 
     def get_name(
         self,
-        auto_schema: AutoSchema | None = None,
+        auto_schema: openapi.AutoSchema | None = None,
         direction: Literal["request", "response"] | None = None,
     ) -> str | None:
         return self.target.__name__  # type: ignore[no-any-return]
 
     def map_serializer(
         self,
-        auto_schema: AutoSchema,
+        auto_schema: openapi.AutoSchema,
         direction: str,
     ) -> dict[str, Any]:
         model_cls: type[BaseModel] = self.target
 
         model_json_schema = model_cls.model_json_schema(
             mode="serialization",
-            schema_generator=_GenerateJsonSchema,
             ref_template="#/components/schemas/{model}",
         )
 
         # Register nested definitions as components
         if "$defs" in model_json_schema:
             for ref_name, schema_kwargs in model_json_schema.pop("$defs").items():
-                # Mark nested models as nullable (same behaviour as the old implementation)
-                schema_kwargs["nullable"] = True
                 component = ResolvedComponent(  # type: ignore[no-untyped-call]
                     name=ref_name,
                     type=ResolvedComponent.SCHEMA,
@@ -78,41 +86,3 @@ class PydanticSchemaExtension(
                 auto_schema.registry.register_on_missing(component)
 
         return model_json_schema
-
-
-def resolve_pydantic_schema(
-    auto_schema: AutoSchema,
-    model_cls: type[BaseModel],
-) -> dict[str, Any]:
-    """
-    Utility function to resolve a Pydantic model to an OpenAPI schema.
-
-    This can be used when you need to manually build a schema that includes
-    Pydantic models.
-
-    Args:
-        auto_schema: The AutoSchema instance from drf-spectacular.
-        model_cls: The Pydantic model class to resolve.
-
-    Returns:
-        The OpenAPI schema dictionary.
-    """
-    model_json_schema = model_cls.model_json_schema(
-        mode="serialization",
-        schema_generator=_GenerateJsonSchema,
-        ref_template="#/components/schemas/{model}",
-    )
-
-    # Register nested definitions as components
-    if "$defs" in model_json_schema:
-        for ref_name, schema_kwargs in model_json_schema.pop("$defs").items():
-            schema_kwargs["nullable"] = True
-            component = ResolvedComponent(  # type: ignore[no-untyped-call]
-                name=ref_name,
-                type=ResolvedComponent.SCHEMA,
-                object=ref_name,
-                schema=schema_kwargs,
-            )
-            auto_schema.registry.register_on_missing(component)
-
-    return model_json_schema

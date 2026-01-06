@@ -9,7 +9,6 @@ from django.http import (
     JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect
-from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import FormView
 from drf_spectacular.utils import extend_schema
@@ -94,10 +93,6 @@ class AdminInitView(View):
         )
 
 
-@method_decorator(
-    decorator=extend_schema(parameters=[ListUsersQuerySerializer]),
-    name="list",
-)
 class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):  # type: ignore[type-arg]
     permission_classes = (IsAuthenticated, OrganisationUsersPermission)
     pagination_class = None
@@ -169,6 +164,9 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
     permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return UserPermissionGroup.objects.none()
+
         organisation_pk = self.kwargs.get("organisation_pk")
         organisation = Organisation.objects.get(id=organisation_pk)
 

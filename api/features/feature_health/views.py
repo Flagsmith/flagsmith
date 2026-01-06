@@ -54,6 +54,9 @@ class FeatureHealthEventViewSet(
         ]
 
     def get_queryset(self) -> QuerySet[FeatureHealthEvent]:
+        if getattr(self, "swagger_fake_view", False):
+            return self.model_class.objects.none()
+
         project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
         return self.model_class.objects.get_latest_by_project(project)
 
@@ -81,6 +84,9 @@ class FeatureHealthProviderViewSet(
         return [NestedProjectPermissions()]
 
     def get_queryset(self) -> QuerySet[FeatureHealthProvider]:
+        if getattr(self, "swagger_fake_view", False):
+            return self.model_class.objects.none()
+
         project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
         return self.model_class.objects.filter(project=project)
 

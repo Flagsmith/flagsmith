@@ -63,7 +63,7 @@ def feature_import(request: Request, environment_id: int) -> Response:
 
 
 @extend_schema(
-    responses={200: "File downloaded"},
+    responses={200: {"type": "object", "additionalProperties": True}},
     description="This endpoint is to download a feature export file from a specific environment",
 )
 @api_view(["GET"])
@@ -89,8 +89,8 @@ def download_feature_export(request: Request, feature_export_id: int) -> Respons
 
 
 @extend_schema(
-    responses={200: "Flagsmith on Flagsmith File downloaded"},
-    description="This endpoint is to download an feature export to enable flagsmith on flagsmith",
+    responses={200: {"type": "object", "additionalProperties": True}},
+    description="This endpoint is to download a feature export to enable Flagsmith on Flagsmith",
 )
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
@@ -122,6 +122,9 @@ class FeatureExportListView(ListAPIView):  # type: ignore[type-arg]
     permission_classes = [FeatureExportListPermissions]
 
     def get_queryset(self) -> QuerySet[FeatureExport]:
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureExport.objects.none()
+
         environment_ids = []
         user = self.request.user
 
@@ -141,6 +144,9 @@ class FeatureImportListView(ListAPIView):  # type: ignore[type-arg]
     permission_classes = [FeatureImportListPermissions]
 
     def get_queryset(self) -> QuerySet[FeatureImport]:
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureImport.objects.none()
+
         environment_ids = []
         user = self.request.user
 

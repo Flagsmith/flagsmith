@@ -43,6 +43,9 @@ class IdentityViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     pagination_class = CustomPagination
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return Identity.objects.none()
+
         environment = self.get_environment_from_request()  # type: ignore[no-untyped-call]
         queryset = Identity.objects.filter(environment=environment)
 

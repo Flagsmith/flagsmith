@@ -46,8 +46,11 @@ class LaunchDarklyImportRequestViewSet(
         ]
 
     def get_queryset(self) -> QuerySet[LaunchDarklyImportRequest]:
+        if getattr(self, "swagger_fake_view", False):
+            return LaunchDarklyImportRequest.objects.none()  # type: ignore[no-any-return]
+
         project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
-        return self.model_class.objects.filter(project=project)  # type: ignore[no-any-return]
+        return LaunchDarklyImportRequest.objects.filter(project=project)  # type: ignore[no-any-return]
 
     @extend_schema(
         request=CreateLaunchDarklyImportRequestSerializer,
