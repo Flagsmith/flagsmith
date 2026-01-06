@@ -60,7 +60,10 @@ const convertSegmentOverrideToFeatureState = (
     feature_state_value: override.value,
     id: override.id,
     live_from: changeRequest?.live_from,
-    multivariate_feature_state_values: override.multivariate_options,
+    multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
+      override.multivariate_options,
+      override.multivariate_feature_state_values,
+    ),
     toRemove: override.toRemove,
   } as Partial<FeatureState>
 }
@@ -206,7 +209,6 @@ const controller = {
       store.model && store.model.features
         ? store.model.features.find((v) => v.id === flag.id)
         : flag
-
     Promise.all(
       (flag.multivariate_options || []).map((v, i) => {
         const originalMV = v.id
@@ -634,14 +636,16 @@ const controller = {
                           (v.multivariate_feature_option || v.id) ===
                           (m.multivariate_feature_option || m.id),
                       )
-                      return {
-                        ...v,
-                        // eslint-disable-next-line no-nested-ternary
-                        percentage_allocation: matching
-                          ? typeof matching.percentage_allocation === 'number'
+                      let percentage_allocation = v.percentage_allocation
+                      if (matching) {
+                        percentage_allocation =
+                          typeof matching.percentage_allocation === 'number'
                             ? matching.percentage_allocation
                             : matching.default_percentage_allocation
-                          : v.percentage_allocation,
+                      }
+                      return {
+                        ...v,
+                        percentage_allocation,
                       }
                     },
                   )

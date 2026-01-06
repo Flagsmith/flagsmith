@@ -1,6 +1,7 @@
 import React from 'react'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ProjectStore from 'common/stores/project-store'
+import Utils from 'common/utils/utils'
 
 const FeatureListProvider = class extends React.Component {
   static displayName = 'FeatureListProvider'
@@ -147,7 +148,10 @@ const FeatureListProvider = class extends React.Component {
       projectFlag,
       {
         ...environmentFlag,
-        multivariate_feature_state_values: flag.multivariate_options,
+        multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
+          flag.multivariate_options,
+          environmentFlag.multivariate_feature_state_values,
+        ),
       },
       segmentOverrides,
       'SEGMENT',
@@ -216,7 +220,10 @@ const FeatureListProvider = class extends React.Component {
           newProjectFlag,
           {
             ...environmentFlag,
-            multivariate_feature_state_values: flag.multivariate_options,
+            multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
+              flag.multivariate_options,
+              environmentFlag.multivariate_feature_state_values,
+            ),
           },
           segmentOverrides,
           changeRequest,
