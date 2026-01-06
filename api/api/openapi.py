@@ -18,7 +18,7 @@ def append_meta(schema: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
     except AssertionError as exc:
         if str(exc) == "Invalid nullable case":
             pass
-        else:  # pragma: no branch
+        else:  # pragma: no cover
             raise exc
 
     if any("nullable" in d for d in (schema, meta)) and "oneOf" in schema:
@@ -30,9 +30,9 @@ def append_meta(schema: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
 
         schema["oneOf"].append({"type": "null"})
 
-    if "exclusiveMinimum" in schema and "minimum" in schema:  # pragma: no branch
+    if "exclusiveMinimum" in schema and "minimum" in schema:  # pragma: no cover
         schema["exclusiveMinimum"] = schema.pop("minimum")
-    if "exclusiveMaximum" in schema and "maximum" in schema:  # pragma: no branch
+    if "exclusiveMaximum" in schema and "maximum" in schema:  # pragma: no cover
         schema["exclusiveMaximum"] = schema.pop("maximum")
 
     return safe_ref({**schema, **meta})

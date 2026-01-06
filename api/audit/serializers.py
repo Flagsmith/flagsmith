@@ -1,5 +1,3 @@
-from typing import Any
-
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
@@ -29,11 +27,6 @@ class AuditLogListSerializer(serializers.ModelSerializer):  # type: ignore[type-
             "related_object_type",
             "is_system_event",
         )
-
-
-class AuditedContentField(serializers.Field):  # type: ignore[type-arg]
-    def to_representation(self, value: Any) -> Any:
-        return value
 
 
 class AuditLogChangeDetailsSerializer(serializers.Serializer[AuditLogChangeDetail]):
