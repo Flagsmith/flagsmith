@@ -120,7 +120,6 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
     )
   }
 
-  // Render the regular segment features list
   return (
     <>
       <div>
