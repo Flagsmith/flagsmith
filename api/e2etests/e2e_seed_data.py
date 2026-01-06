@@ -16,6 +16,8 @@ from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
+from features.models import Feature
+from features.multivariate.models import MultivariateFeatureOption
 from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import (
@@ -25,8 +27,6 @@ from organisations.permissions.permissions import (
 from organisations.subscriptions.constants import ENTERPRISE
 from projects.models import Project, UserProjectPermission
 from users.models import FFAdminUser, UserPermissionGroup
-from features.models import Feature
-from features.multivariate.models import MultivariateFeatureOption
 
 # Password used by all the test users
 PASSWORD = "Str0ngp4ssw0rd!"
