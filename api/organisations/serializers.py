@@ -1,6 +1,8 @@
 import logging
+import typing
 
 from django.conf import settings
+from django.db.models import QuerySet
 from rest_framework import serializers
 
 from organisations.chargebee import (  # type: ignore[attr-defined]
@@ -8,7 +10,7 @@ from organisations.chargebee import (  # type: ignore[attr-defined]
     get_subscription_data_from_hosted_page,
 )
 from organisations.invites.models import Invite
-from users.models import FFAdminUser
+from users.models import FFAdminUser, UserPermissionGroup
 
 from .models import (
     Organisation,
@@ -102,15 +104,28 @@ class InviteSerializerFull(serializers.ModelSerializer):  # type: ignore[type-ar
         )
 
 
+class _PermissionGroupPKRelatedField(
+    serializers.PrimaryKeyRelatedField[UserPermissionGroup]
+):
+    def get_queryset(self) -> QuerySet[UserPermissionGroup]:
+        return UserPermissionGroup.objects.filter(
+            organisation__id=self.context["organisation"]
+        )
+
+
 class InviteSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    permission_groups = _PermissionGroupPKRelatedField(
+        many=True, required=False, allow_null=True, allow_empty=True
+    )
+
     class Meta:
         model = Invite
         fields = ("id", "email", "role", "date_created", "permission_groups")
         read_only_fields = ("id", "date_created")
 
-    def validate(self, attrs):  # type: ignore[no-untyped-def]
-        if Invite.objects.filter(  # type: ignore[misc]
-            email=attrs["email"], organisation__id=self.context.get("organisation")
+    def validate(self, attrs: typing.Any) -> typing.Any:
+        if Invite.objects.filter(
+            email=attrs["email"], organisation__id=self.context["organisation"]
         ).exists():
             raise serializers.ValidationError(
                 {"email": "Invite for email %s already exists" % attrs["email"]}

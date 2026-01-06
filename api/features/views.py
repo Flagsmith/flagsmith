@@ -20,6 +20,7 @@ from rest_framework.decorators import (
     api_view,
     authentication_classes,
     permission_classes,
+    throttle_classes,
 )
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView, get_object_or_404
@@ -31,6 +32,7 @@ from rest_framework.response import Response
 from app.pagination import CustomPagination
 from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from app_analytics.throttles import InfluxQueryThrottle
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
 from core.request_origin import RequestOrigin
 from environments.authentication import EnvironmentKeyAuthentication
@@ -416,6 +418,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         responses={200: FeatureEvaluationDataSerializer()},
     )
     @action(detail=True, methods=["GET"], url_path="evaluation-data")
+    @throttle_classes([InfluxQueryThrottle])
     def get_evaluation_data(self, request, pk, project_pk):  # type: ignore[no-untyped-def]
         feature = get_object_or_404(Feature, pk=pk)
 

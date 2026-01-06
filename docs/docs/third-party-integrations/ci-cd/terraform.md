@@ -15,7 +15,7 @@ your Infrastructure as Code tooling.
 You can find the latest Hashicorp docs for using the Flagsmith provider
 [here](https://registry.terraform.io/providers/Flagsmith/flagsmith/latest/docs).
 
-Some API actions require object UUIDs/IDs to be referenced. You can enable the [JSON View](/integrating-with-flagsmith/flagsmith-api-overview/admin-api#json-view)
+Some API actions require object UUIDs/IDs to be referenced. You can enable the [JSON View](/integrating-with-flagsmith/flagsmith-api-overview/admin-api)
 from your account settings page which will help you access these variables.
 
 :::

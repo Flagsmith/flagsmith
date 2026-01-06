@@ -320,6 +320,7 @@ REST_FRAMEWORK = {
         "mfa_code": "5/min",
         "invite": "10/min",
         "user": USER_THROTTLE_RATE,
+        "influx_query": "5/min",
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_RENDERER_CLASSES": [
@@ -1468,3 +1469,5 @@ REQUIRE_AUTHENTICATION_FOR_API_DOCS = env.bool(
 )
 
 PYLON_IDENTITY_VERIFICATION_SECRET = env.str("PYLON_IDENTITY_VERIFICATION_SECRET", None)
+
+OSIC_UPDATE_BATCH_SIZE = env.int("OSIC_UPDATE_BATCH_SIZE", default=500)

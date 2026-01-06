@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom'
 type FeaturesEmptyStateProps = {
   environmentId: string
   onCreateFeature: () => void
-  projectId: number
+  projectId: string
   canCreateFeature: boolean
 }
 
