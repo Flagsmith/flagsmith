@@ -629,7 +629,7 @@ const Constants = {
     'PAYMENT': 'Payment Modal',
   },
   organisationPermissions: (perm: OrganisationPermissionDescription) =>
-    `To manage this feature you need the <i>${perm}</i> permission for this organisastion.<br/>Please contact a member of this organisation who has administrator privileges.`,
+    `To manage this feature you need the <i>${perm}</i> permission for this organisation.<br/>Please contact a member of this organisation who has administrator privileges.`,
   pages: {
     'ACCOUNT': 'Account Page',
     'AUDIT_LOG': 'Audit Log Page',
