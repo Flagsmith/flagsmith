@@ -2,7 +2,7 @@
   "api_key": "masked",
   "feature_states": [
     {
-      "django_id": 585364,
+      "django_id": 1091609,
       "enabled": false,
       "feature": {
         "id": 91559,
@@ -11,7 +11,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "cc446405-e6c8-497c-a2a1-d5a6e6e0c56d",
+      "featurestate_uuid": "30d81348-9c9e-4494-a575-2a8e876143bc",
       "multivariate_feature_state_values": []
     },
     {
