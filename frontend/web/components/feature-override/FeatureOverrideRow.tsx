@@ -50,6 +50,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   dataTest,
   environmentFeatureState,
   environmentId,
+  highlightSegmentId,
   identifier,
   identity,
   identityName,
@@ -59,7 +60,6 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   shouldPreselect,
   toggleDataTest,
   valueDataTest,
-  highlightSegmentId,
 }) => {
   const hasUserOverride =
     !!overrideFeatureState?.identity ||
@@ -181,6 +181,9 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     }
   }, [shouldPreselect, onClick])
 
+  const hasSegmentOverride =
+    level === 'segment' && !!overrideFeatureState?.feature_segment
+
   const { hasAnyOverride, hasEnabledDiff, hasValueDiff } = useMemo(() => {
     const enabledDiff = overrideFeatureState
       ? actualEnabled !== flagEnabled
@@ -189,7 +192,8 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
       ? !featureValuesEqual(actualValue, flagValue)
       : false
     return {
-      hasAnyOverride: enabledDiff || valueDiff || hasUserOverride,
+      hasAnyOverride:
+        enabledDiff || valueDiff || hasUserOverride || hasSegmentOverride,
       hasEnabledDiff: enabledDiff,
       hasValueDiff: valueDiff,
     }
@@ -200,6 +204,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     flagEnabled,
     flagValue,
     hasUserOverride,
+    hasSegmentOverride,
   ])
 
   const { permission, permissionDescription } =
@@ -211,9 +216,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     tags: projectFlag.tags,
   })
 
-  const hasSegmentOverride = level === 'segment' && !!overrideFeatureState?.feature_segment
-  const showDefaultsHint = viewMode === 'default' && !hasAnyOverride && !hasSegmentOverride
-  const shouldHighlight = hasAnyOverride || hasSegmentOverride
+  const showDefaultsHint = viewMode === 'default' && !hasAnyOverride
 
   const showMultivariateOverride = useMemo(() => {
     if (hasUserOverride || !hasValueDiff) return false
@@ -230,8 +233,8 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   return (
     <div
       className={classNames('flex-row space list-item clickable py-2', {
-        'bg-primary-opacity-5': shouldHighlight,
-        'list-item-xs': isCompact && !shouldHighlight,
+        'bg-primary-opacity-5': hasAnyOverride,
+        'list-item-xs': isCompact && !hasAnyOverride,
       })}
       key={featureId}
       data-test={dataTest}
@@ -259,15 +262,10 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
               <SegmentOverrideDescription
                 level={level}
                 showEnabledOverride={hasEnabledDiff}
-                showValueOverride={!hasEnabledDiff}
+                showValueOverride={!hasEnabledDiff && hasValueDiff}
                 controlEnabled={flagEnabled}
                 controlValue={flagValue}
               />
-            )}
-            {hasSegmentOverride && !hasAnyOverride && (
-              <div className='list-item-subtitle'>
-                This feature is being overridden for this segment
-              </div>
             )}
             {showDefaultsHint && (
               <div className='list-item-subtitle'>
