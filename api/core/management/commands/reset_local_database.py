@@ -1,7 +1,8 @@
 import json
 from typing import Any
 
-from django.core.management import BaseCommand, call_command
+from django.conf import settings
+from django.core.management import BaseCommand, CommandError, call_command
 from django.urls import reverse
 from rest_framework.test import APIClient
 
@@ -10,6 +11,11 @@ class Command(BaseCommand):
     help = "Resets and seeds the database with test data for local development"
 
     def handle(self, *args: Any, **kwargs: Any) -> None:
+        if not settings.ENABLE_LOCAL_DATABASE_RESET:
+            raise CommandError(
+                "This command is disabled. "
+                "Set ENABLE_LOCAL_DATABASE_RESET to True in Django settings to enable it."
+            )
         self.stdout.write("Flushing database...")
         call_command("flush", "--noinput", verbosity=0)
 

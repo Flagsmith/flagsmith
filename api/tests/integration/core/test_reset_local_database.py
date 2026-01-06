@@ -1,7 +1,8 @@
 from unittest.mock import MagicMock
 
 import pytest
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from environments.identities.models import Identity
@@ -19,6 +20,12 @@ from segments.models import Segment
 from users.models import FFAdminUser
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def enable_local_database_reset(settings: SettingsWrapper) -> None:
+    """Enable the reset_local_database command for tests."""
+    settings.ENABLE_LOCAL_DATABASE_RESET = True
 
 
 @pytest.fixture(autouse=True)
@@ -99,3 +106,16 @@ def test_reset_local_database__creates_expected_data() -> None:
     identifiers = list(Identity.objects.values_list("identifier", flat=True))
     assert "alice@example.com" in identifiers
     assert "bob@example.com" in identifiers
+
+
+def test_reset_local_database__raises_error_when_disabled(
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ENABLE_LOCAL_DATABASE_RESET = False
+
+    # When / Then
+    with pytest.raises(CommandError) as exc_info:
+        call_command("reset_local_database")
+
+    assert "ENABLE_LOCAL_DATABASE_RESET" in str(exc_info.value)

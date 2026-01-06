@@ -1471,3 +1471,7 @@ REQUIRE_AUTHENTICATION_FOR_API_DOCS = env.bool(
 PYLON_IDENTITY_VERIFICATION_SECRET = env.str("PYLON_IDENTITY_VERIFICATION_SECRET", None)
 
 OSIC_UPDATE_BATCH_SIZE = env.int("OSIC_UPDATE_BATCH_SIZE", default=500)
+
+# Allow the reset_local_database management command to run.
+# This command flushes and seeds the database with test data.
+ENABLE_LOCAL_DATABASE_RESET = False
