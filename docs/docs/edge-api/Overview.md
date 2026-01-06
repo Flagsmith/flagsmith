@@ -9,7 +9,7 @@ sidebar_label: Overview
 
 The Edge API is designed to be publicly accessible. Calls need to have an environment key supplied with each request.
 This is provided as an HTTP header, with the name `X-Environment-Key` and the value of the Environment Key that you can
-find within the Flagsmith administrative area.
+find within the Flagsmith administrative area. See [Flags API Authentication](/integrating-with-flagsmith/flagsmith-api-overview/flags-api/authentication) for more details.
 
 ## Core API
 
