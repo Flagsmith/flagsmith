@@ -228,6 +228,7 @@ const FeaturesPage: FC = () => {
 
       return (
         <Permission
+          key={projectFlag.id}
           level='environment'
           tags={projectFlag.tags}
           permission={Utils.getManageFeaturePermission(
