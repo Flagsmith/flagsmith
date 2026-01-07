@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.206.0](https://github.com/Flagsmith/flagsmith/compare/v2.205.8...v2.206.0) (2026-01-07)
+
+
+### Features
+
+* **deploy:** add SDK service to ECS deployment pipeline ([#6484](https://github.com/Flagsmith/flagsmith/issues/6484)) ([253d232](https://github.com/Flagsmith/flagsmith/commit/253d2320f6a30a81977a2e5bb8da8d6b9b523982))
+* re-fetch features on page focus ([#6483](https://github.com/Flagsmith/flagsmith/issues/6483)) ([2544ca0](https://github.com/Flagsmith/flagsmith/commit/2544ca094a80e7f295e905685b6b652a319b854e))
+
 ## [2.205.8](https://github.com/Flagsmith/flagsmith/compare/v2.205.7...v2.205.8) (2026-01-06)
 
 
