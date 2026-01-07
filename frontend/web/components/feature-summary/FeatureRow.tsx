@@ -87,6 +87,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   const actualEnabled = environmentFlags?.[id]?.enabled
   const {
     displayValue: displayEnabled,
+    isToggling,
     revertOptimistic,
     setOptimistic,
   } = useOptimisticToggle(actualEnabled)
@@ -146,7 +147,8 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   }
 
   const handleToggle = useCallback(() => {
-    setOptimistic(!actualEnabled)
+    const canToggle = setOptimistic(!actualEnabled)
+    if (!canToggle) return // Prevent rapid toggling
     toggleFlag?.(projectFlag, environmentFlags?.[id], revertOptimistic)
   }, [
     actualEnabled,
@@ -296,6 +298,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             isReadOnly ? '' : 'clickable'
           }`,
           className,
+          { 'list-item--toggling': isToggling },
         )}
         key={id}
         data-test={`feature-item-${index}`}
@@ -331,7 +334,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
               }}
             >
               <Switch
-                disabled={!permission || isReadOnly}
+                disabled={!permission || isReadOnly || isToggling}
                 data-test={`feature-switch-${index}${
                   displayEnabled ? '-on' : '-off'
                 }`}
@@ -353,7 +356,10 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       </div>
       <div
         onClick={() => !isReadOnly && editFeature()}
-        className='d-flex cursor-pointer flex-column justify-content-center px-2 list-item py-1  d-lg-none'
+        className={classNames(
+          'd-flex cursor-pointer flex-column justify-content-center px-2 list-item py-1 d-lg-none',
+          { 'list-item--toggling': isToggling },
+        )}
       >
         <div className='d-flex gap-2 align-items-center'>
           <div className='flex-1 align-items-center flex-wrap'>
@@ -361,7 +367,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             <FeatureTags editFeature={editFeature} projectFlag={projectFlag} />
           </div>
           <Switch
-            disabled={!permission || isReadOnly}
+            disabled={!permission || isReadOnly || isToggling}
             data-test={`feature-switch-${index}${
               displayEnabled ? '-on' : '-off'
             }`}
