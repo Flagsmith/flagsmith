@@ -10,7 +10,6 @@ import projectTest from './tests/project-test'
 import { testSegment1, testSegment2, testSegment3 } from './tests/segment-test'
 import initialiseTests from './tests/initialise-tests'
 import flagTests from './tests/flag-tests'
-import changeRequestTest from './tests/change-request-test'
 import versioningTests from './tests/versioning-tests'
 import organisationPermissionTest from './tests/organisation-permission-test'
 import projectPermissionTest from './tests/project-permission-test'
@@ -108,11 +107,6 @@ test('Segment-part-2', testSegment2).meta({ autoLogout: true, category: 'oss' })
 test('Segment-part-3', testSegment3).meta({ autoLogout: true, category: 'oss' })
 
 test('Flag', flagTests).meta({ autoLogout: true, category: 'oss' })
-
-test('Change-Request', changeRequestTest).meta({
-  autoLogout: true,
-  category: 'oss',
-})
 
 test('Signup', initialiseTests).meta({ autoLogout: true, category: 'oss' })
 

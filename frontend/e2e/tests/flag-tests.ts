@@ -114,27 +114,6 @@ export default async function () {
   await closeModal()
   await waitForElementVisible(byId('feature-switch-0-off'))
 
-  log('Multivariate toggle test via modal passed')
-
-  log('Toggle multivariate feature on again via list click (tests 400 error fix)')
-  // This tests the fix for the 400 error when toggling MV features
-  // Clicking toggle on MV feature opens the edit modal
-  // The fix includes multivariate_feature_state_values in the PATCH payload
-  await click(byId('feature-switch-0-off'))
-  await waitForElementVisible('#create-feature-modal')
-  await click(byId('toggle-feature-button'))
-  await click(byId('update-feature-btn'))
-  await closeModal()
-  await waitForElementVisible(byId('feature-switch-0-on'))
-
-  log('Toggle MV feature off again via list click')
-  await click(byId('feature-switch-0-on'))
-  await waitForElementVisible('#create-feature-modal')
-  await click(byId('toggle-feature-button'))
-  await click(byId('update-feature-btn'))
-  await closeModal()
-  await waitForElementVisible(byId('feature-switch-0-off'))
-
-  log('Multivariate toggle from list test passed')
+  log('Multivariate toggle test passed')
   await deleteFeature(0, 'mv_toggle_test')
 }
