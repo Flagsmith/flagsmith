@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useMemo } from 'react'
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateFlagModal from 'components/modals/CreateFlag'
@@ -84,6 +84,8 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   const history = useHistory()
   const { id } = projectFlag
 
+  const [isRemoving, setIsRemoving] = useState(false)
+
   const actualEnabled = environmentFlags?.[id]?.enabled
   const {
     displayValue: displayEnabled,
@@ -91,6 +93,8 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     revertOptimistic,
     setOptimistic,
   } = useOptimisticToggle(actualEnabled)
+
+  const isLoading = isToggling || isRemoving
 
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: String(projectFlag.project) },
@@ -270,8 +274,9 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     onCopyName: copyFeature,
     onRemove: () => {
       if (disableControls) return
-      confirmRemove(projectFlag, () => {
-        removeFlag?.(projectFlag)
+      confirmRemove(projectFlag, async () => {
+        setIsRemoving(true)
+        await removeFlag?.(projectFlag)
       })
     },
     onShowAudit: () => {
@@ -298,7 +303,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             isReadOnly ? '' : 'clickable'
           }`,
           className,
-          { 'list-item--toggling': isToggling },
+          { 'list-item--toggling': isLoading },
         )}
         key={id}
         data-test={`feature-item-${index}`}
@@ -334,7 +339,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
               }}
             >
               <Switch
-                disabled={!permission || isReadOnly || isToggling}
+                disabled={!permission || isReadOnly || isLoading}
                 data-test={`feature-switch-${index}${
                   displayEnabled ? '-on' : '-off'
                 }`}
@@ -358,7 +363,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         onClick={() => !isReadOnly && editFeature()}
         className={classNames(
           'd-flex cursor-pointer flex-column justify-content-center px-2 list-item py-1 d-lg-none',
-          { 'list-item--toggling': isToggling },
+          { 'list-item--toggling': isLoading },
         )}
       >
         <div className='d-flex gap-2 align-items-center'>
