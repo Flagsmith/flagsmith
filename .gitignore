@@ -23,3 +23,5 @@ src/CI_COMMIT_SHA
 .DS_Store
 .idea
 *.iml
+
+AGENTS.local.md

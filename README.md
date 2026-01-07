@@ -52,23 +52,17 @@ Please go to the following page and choose a password: http://localhost:8000/pas
 
 ## Flagsmith Open Source
 
-The Flagsmith repository is comprised of two core components - the [REST API](https://github.com/Flagsmith/flagsmith/tree/main/api) and the [frontend dashboard](https://github.com/Flagsmith/flagsmith/tree/main/frontend).
-
-Further documentation for these can be found at: 
-
-* [API](https://docs.flagsmith.com/deployment/hosting/locally-api)
-* [Frontend](https://docs.flagsmith.com/deployment/hosting/locally-frontend)
+We love contributions from the community and are always looking to improve! Here are our [contribution guidelines](https://docs.flagsmith.com/platform/contributing).
 
 ## Flagsmith hosted SaaS
+
 You can try our hosted version for free at https://flagsmith.com
 
-## Community Resources + Contribution Guidelines
+## Community Resources
 
 * [Visit our docs](https://docs.flagsmith.com/)
 * [Chat with other developers on Discord](https://discord.com/invite/hFhxNtXzgm)
 * If you need help getting up and running, please [get in touch](https://www.flagsmith.com/contact-us)
-
-We love contributions from the community and are always looking to improve! Here are our [contribution guidelines](https://docs.flagsmith.com/platform/contributing). 
 
 ## Open Source Philosophy
 

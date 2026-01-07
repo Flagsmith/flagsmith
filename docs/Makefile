@@ -22,4 +22,4 @@ build:
 
 .PHONY: serve
 serve:
-	npm run serve
+	npm run start
