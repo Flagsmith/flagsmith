@@ -70,4 +70,4 @@ API types are centralised in:
 - `common/types/requests.ts` - Request types
 - `common/types/responses.ts` - Response types
 
-For AI-assisted development, see [CLAUDE.md](CLAUDE.md).
+For AI-assisted development, see [CLAUDE.md](https://github.com/Flagsmith/flagsmith/blob/main/frontend/CLAUDE.md).
