@@ -64,7 +64,7 @@ Only use feature flags when explicitly requested by the user.
 | **Page Components** | **`web/components/pages/`** | **`FeaturesPage.js`, `ProjectSettingsPage.js`** |
 | Card Components | `components/project/cards/` | Summary cards, info cards |
 | Base UI Components | `components/base/` | Buttons, forms, inputs |
-| Feature Flags Context | `.claude/context/feature-flags.md` | Flagsmith integration guide |
+| Feature Flags Context | `.claude/context/feature-flags/` | Flagsmith integration guide |
 | Backend API | `../api/` | Flagsmith backend API |
 
 ## Common Components for Messages
@@ -126,35 +126,12 @@ See `/backend` slash command to search the backend codebase for specific endpoin
 
 ## RTK Query Patterns
 
-### Query (GET)
-```typescript
-builder.query<Res['entity'], Req['getEntity']>({
-  providesTags: [{ id: 'LIST', type: 'Entity' }],
-  query: (req) => ({
-    url: `endpoint/${req.id}`,
-  }),
-})
-```
+> For comprehensive RTK Query patterns, examples, and service structure, see [api-integration.md](api-integration.md).
 
-### Mutation (POST/PUT/DELETE)
-```typescript
-builder.mutation<Res['entity'], Req['updateEntity']>({
-  invalidatesTags: [{ id: 'LIST', type: 'Entity' }],
-  query: (req) => ({
-    body: req,
-    method: 'PUT',
-    url: `endpoint/${req.id}`,
-  }),
-})
-```
-
-### Skip Query
-```typescript
-useGetEntityQuery(
-  { id: entityId },
-  { skip: !entityId }  // Don't run query if no ID
-)
-```
+**Quick reference:**
+- `builder.query` for GET requests with `providesTags`
+- `builder.mutation` for POST/PUT/DELETE with `invalidatesTags`
+- Use `{ skip: !id }` to conditionally skip queries
 
 ## Component Patterns
 

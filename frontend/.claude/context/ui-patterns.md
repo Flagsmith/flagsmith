@@ -125,7 +125,7 @@ const MyPage = () => {
 }
 ```
 
-See `feature-flags.md` for more details on when and how to use feature flags.
+See `feature-flags/` for more details on when and how to use feature flags.
 
 ### Uncontrolled Tabs
 
