@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
@@ -64,6 +64,15 @@ from .serializers import OrganisationAPIUsageNotificationSerializer
 logger = logging.getLogger(__name__)
 
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "list_organisations",
+            "x-mcp-description": "Retrieve all organisations the user has access to.",
+        },
+    ),
+)
 class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = (IsAuthenticated, OrganisationPermission)
 

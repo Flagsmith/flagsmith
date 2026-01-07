@@ -54,6 +54,7 @@ from users.models import FFAdminUser
 @method_decorator(
     name="list",
     decorator=extend_schema(
+        tags=["mcp"],
         parameters=[
             OpenApiParameter(
                 name="organisation",
@@ -69,7 +70,11 @@ from users.models import FFAdminUser
                 required=False,
                 type=str,
             ),
-        ]
+        ],
+        extensions={
+            "x-mcp-name": "list_projects",
+            "x-mcp-description": "Retrieve all projects the user has access to.",
+        },
     ),
 )
 class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
