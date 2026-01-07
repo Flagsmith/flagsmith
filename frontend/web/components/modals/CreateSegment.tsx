@@ -534,7 +534,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               />
             </div>
           </TabItem>
-          <TabItem tabLabel='Features'>
+          <TabItem tabLabel={segment.feature ? 'Feature' : 'Features'}>
             <div className='my-4'>
               <AssociatedSegmentOverrides
                 projectId={projectId as number}

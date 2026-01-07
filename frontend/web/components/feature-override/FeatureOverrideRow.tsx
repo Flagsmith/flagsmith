@@ -50,6 +50,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   dataTest,
   environmentFeatureState,
   environmentId,
+  highlightSegmentId,
   identifier,
   identity,
   identityName,
@@ -59,7 +60,6 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
   shouldPreselect,
   toggleDataTest,
   valueDataTest,
-  highlightSegmentId,
 }) => {
   const hasUserOverride =
     !!overrideFeatureState?.identity ||
@@ -181,6 +181,9 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     }
   }, [shouldPreselect, onClick])
 
+  const hasSegmentOverride =
+    level === 'segment' && !!overrideFeatureState?.feature_segment
+
   const { hasAnyOverride, hasEnabledDiff, hasValueDiff } = useMemo(() => {
     const enabledDiff = overrideFeatureState
       ? actualEnabled !== flagEnabled
@@ -189,7 +192,8 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
       ? !featureValuesEqual(actualValue, flagValue)
       : false
     return {
-      hasAnyOverride: enabledDiff || valueDiff || hasUserOverride,
+      hasAnyOverride:
+        enabledDiff || valueDiff || hasUserOverride || hasSegmentOverride,
       hasEnabledDiff: enabledDiff,
       hasValueDiff: valueDiff,
     }
@@ -200,6 +204,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     flagEnabled,
     flagValue,
     hasUserOverride,
+    hasSegmentOverride,
   ])
 
   const { permission, permissionDescription } =
@@ -210,6 +215,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
     permission,
     tags: projectFlag.tags,
   })
+
   const showDefaultsHint = viewMode === 'default' && !hasAnyOverride
 
   const showMultivariateOverride = useMemo(() => {
@@ -256,7 +262,7 @@ const FeatureOverrideRow: FC<FeatureOverrideRowProps> = ({
               <SegmentOverrideDescription
                 level={level}
                 showEnabledOverride={hasEnabledDiff}
-                showValueOverride={!hasEnabledDiff}
+                showValueOverride={!hasEnabledDiff && hasValueDiff}
                 controlEnabled={flagEnabled}
                 controlValue={flagValue}
               />
