@@ -101,6 +101,9 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
         serializer.save(organisation_id=organisation_id)
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return GithubConfiguration.objects.none()
+
         return GithubConfiguration.objects.filter(
             organisation_id=self.kwargs["organisation_pk"]
         )
@@ -132,6 +135,9 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.save(github_configuration_id=github_configuration_id)
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return GitHubRepository.objects.none()
+
         try:
             if github_pk := self.kwargs.get("github_pk"):
                 int(github_pk)

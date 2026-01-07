@@ -3,7 +3,7 @@ import json
 from django.conf import settings
 from django.db.models import QuerySet
 from django.http import Http404
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import ListAPIView, get_object_or_404
@@ -33,9 +33,8 @@ from .serializers import (
 )
 
 
-@swagger_auto_schema(  # type: ignore[misc]
-    method="POST",
-    request_body=CreateFeatureExportSerializer(),
+@extend_schema(
+    request=CreateFeatureExportSerializer(),
     responses={201: FeatureExportSerializer()},
 )
 @api_view(["POST"])
@@ -49,9 +48,8 @@ def create_feature_export(request: Request) -> Response:
     return Response(response_serializer.data, status=201)
 
 
-@swagger_auto_schema(  # type: ignore[misc]
-    method="POST",
-    request_body=FeatureImportUploadSerializer(),
+@extend_schema(
+    request=FeatureImportUploadSerializer(),
     responses={201: FeatureImportSerializer()},
 )
 @api_view(["POST"])
@@ -64,10 +62,9 @@ def feature_import(request: Request, environment_id: int) -> Response:
     return Response(serializer.data, status=201)
 
 
-@swagger_auto_schema(  # type: ignore[misc]
-    method="GET",
-    responses={200: "File downloaded"},
-    operation_description="This endpoint is to download a feature export file from a specific environment",
+@extend_schema(
+    responses={200: {"type": "object", "additionalProperties": True}},
+    description="This endpoint is to download a feature export file from a specific environment",
 )
 @api_view(["GET"])
 @permission_classes([DownloadFeatureExportPermissions])
@@ -91,10 +88,9 @@ def download_feature_export(request: Request, feature_export_id: int) -> Respons
     return response
 
 
-@swagger_auto_schema(  # type: ignore[misc]
-    method="GET",
-    responses={200: "Flagsmith on Flagsmith File downloaded"},
-    operation_description="This endpoint is to download an feature export to enable flagsmith on flagsmith",
+@extend_schema(
+    responses={200: {"type": "object", "additionalProperties": True}},
+    description="This endpoint is to download a feature export to enable Flagsmith on Flagsmith",
 )
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
@@ -126,6 +122,9 @@ class FeatureExportListView(ListAPIView):  # type: ignore[type-arg]
     permission_classes = [FeatureExportListPermissions]
 
     def get_queryset(self) -> QuerySet[FeatureExport]:
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureExport.objects.none()
+
         environment_ids = []
         user = self.request.user
 
@@ -145,6 +144,9 @@ class FeatureImportListView(ListAPIView):  # type: ignore[type-arg]
     permission_classes = [FeatureImportListPermissions]
 
     def get_queryset(self) -> QuerySet[FeatureImport]:
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureImport.objects.none()
+
         environment_ids = []
         user = self.request.user
 

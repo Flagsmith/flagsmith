@@ -7,7 +7,7 @@ from django.contrib.auth import user_logged_out
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from djoser.views import TokenCreateView, UserViewSet  # type: ignore[import-untyped]
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action, api_view, permission_classes
@@ -109,7 +109,7 @@ def delete_token(request):  # type: ignore[no-untyped-def]
 
 @method_decorator(
     name="destroy",
-    decorator=swagger_auto_schema(query_serializer=CustomUserDelete()),
+    decorator=extend_schema(parameters=[CustomUserDelete]),
 )
 class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
     throttle_scope = "signup"

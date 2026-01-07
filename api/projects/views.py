@@ -7,8 +7,7 @@ from common.projects.permissions import (
 )
 from django.conf import settings
 from django.utils.decorators import method_decorator
-from drf_yasg import openapi  # type: ignore[import-untyped]
-from drf_yasg.utils import no_body, swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -54,21 +53,21 @@ from users.models import FFAdminUser
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "organisation",
-                openapi.IN_QUERY,
-                "ID of the organisation to filter by.",
+    decorator=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="organisation",
+                location=OpenApiParameter.QUERY,
+                description="ID of the organisation to filter by.",
                 required=False,
-                type=openapi.TYPE_INTEGER,
+                type=int,
             ),
-            openapi.Parameter(
-                "uuid",
-                openapi.IN_QUERY,
-                "uuid of the project to filter by.",
+            OpenApiParameter(
+                name="uuid",
+                location=OpenApiParameter.QUERY,
+                description="uuid of the project to filter by.",
                 required=False,
-                type=openapi.TYPE_STRING,
+                type=str,
             ),
         ]
     ),
@@ -93,6 +92,7 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Project.objects.none()
+
         queryset = self.request.user.get_permitted_projects(permission_key=VIEW_PROJECT)  # type: ignore[union-attr]
 
         organisation_id = self.request.query_params.get("organisation")
@@ -129,9 +129,7 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         environments = project.environments.all()
         return Response(EnvironmentSerializerLight(environments, many=True).data)
 
-    @swagger_auto_schema(
-        responses={200: PermissionModelSerializer(many=True)}, request_body=no_body
-    )
+    @extend_schema(responses={200: PermissionModelSerializer(many=True)})
     @action(detail=False, methods=["GET"])
     def permissions(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         return Response(
@@ -142,9 +140,7 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             ).data
         )
 
-    @swagger_auto_schema(
-        responses={200: UserDetailedPermissionsSerializer},
-    )  # type: ignore[misc]
+    @extend_schema(responses={200: UserDetailedPermissionsSerializer})
     @action(
         detail=True,
         methods=["GET"],
@@ -170,7 +166,7 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         )
         return Response(serializer.data)
 
-    @swagger_auto_schema(responses={200: UserObjectPermissionsSerializer()})  # type: ignore[misc]
+    @extend_schema(responses={200: UserObjectPermissionsSerializer})
     @action(
         detail=True,
         methods=["GET"],
@@ -191,9 +187,7 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
-    @swagger_auto_schema(  # type: ignore[misc]
-        responses={202: "Migration event generated"}, request_body=no_body
-    )
+    @extend_schema(request=None, responses={202: None})
     @action(
         detail=True,
         methods=["POST"],
@@ -228,7 +222,7 @@ class BaseProjectPermissionsViewSet(viewsets.ModelViewSet):  # type: ignore[type
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
-            return self.model_class.objects.none()  # type: ignore[attr-defined]
+            return UserProjectPermission.objects.none()
 
         if not self.kwargs.get("project_pk"):
             raise ValidationError("Missing project pk.")
@@ -262,7 +256,7 @@ class UserPermissionGroupProjectPermissionsViewSet(BaseProjectPermissionsViewSet
         return CreateUpdateUserPermissionGroupProjectPermissionSerializer
 
 
-@swagger_auto_schema(method="GET", responses={200: UserObjectPermissionsSerializer()})
+@extend_schema(responses={200: UserObjectPermissionsSerializer})
 @api_view(http_method_names=["GET"])  # type: ignore[arg-type]
 @permission_classes([IsAuthenticated, IsProjectAdmin])
 def get_user_project_permissions(request, **kwargs):  # type: ignore[no-untyped-def]

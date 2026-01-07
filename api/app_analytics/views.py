@@ -2,7 +2,7 @@ import logging
 import typing
 
 from common.core.utils import using_database_replica
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.fields import IntegerField
@@ -45,9 +45,9 @@ class SDKAnalyticsFlagsV2(CreateAPIView):  # type: ignore[type-arg]
     serializer_class = SDKAnalyticsFlagsSerializer
     throttle_classes = []
 
-    @swagger_auto_schema(  # type: ignore[misc]
-        request_body=SDKAnalyticsFlagsSerializer(),
-        responses={204: Response(status=status.HTTP_204_NO_CONTENT)},
+    @extend_schema(
+        request=SDKAnalyticsFlagsSerializer,
+        responses={204: None},
     )
     def create(self, request: Request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data)
@@ -67,9 +67,6 @@ class SDKAnalyticsFlags(CreateAPIView):  # type: ignore[type-arg]
     format_kwarg = None
 
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
-        if getattr(self, "swagger_fake_view", False):
-            return Serializer
-
         environment_feature_names = set(
             using_database_replica(FeatureState.objects)
             .filter(
@@ -99,9 +96,9 @@ class SDKAnalyticsFlags(CreateAPIView):  # type: ignore[type-arg]
 
         return _AnalyticsSerializer
 
-    @swagger_auto_schema(  # type: ignore[misc]
-        request_body=SDKAnalyticsFlagsSerializer(),
-        responses={200: Response(status=status.HTTP_200_OK)},
+    @extend_schema(
+        request=SDKAnalyticsFlagsSerializer,
+        responses={200: None},
     )
     def create(
         self, request: Request, *args: typing.Any, **kwargs: typing.Any
@@ -130,10 +127,7 @@ class SelfHostedTelemetryAPIView(CreateAPIView):  # type: ignore[type-arg]
     serializer_class = TelemetrySerializer
 
 
-@swagger_auto_schema(  # type: ignore[misc]
-    responses={200: UsageTotalCountSerializer()},
-    methods=["GET"],
-)
+@extend_schema(responses={200: UsageTotalCountSerializer})
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, UsageDataPermission])
 @throttle_classes([InfluxQueryThrottle])
@@ -146,10 +140,9 @@ def get_usage_data_total_count_view(request: Request, organisation_pk: int) -> R
     return Response(serializer.data)
 
 
-@swagger_auto_schema(  # type: ignore[misc]
-    query_serializer=UsageDataQuerySerializer(),
-    responses={200: UsageDataSerializer()},
-    methods=["GET"],
+@extend_schema(
+    parameters=[UsageDataQuerySerializer],
+    responses={200: UsageDataSerializer},
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, UsageDataPermission])

@@ -3,6 +3,7 @@ import typing
 
 from django.conf import settings
 from django.db.models import QuerySet
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from organisations.chargebee import (  # type: ignore[attr-defined]
@@ -31,6 +32,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):  # type: ignore[type-
         model = Subscription
         exclude = ("organisation",)
 
+    @extend_schema_field({"type": "boolean"})
     def get_has_active_billing_periods(self, obj):  # type: ignore[no-untyped-def]
         return obj.has_active_billing_periods
 
@@ -64,6 +66,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "block_access_to_admin",
         )
 
+    @extend_schema_field({"type": "string", "nullable": True})
     def get_role(self, instance):  # type: ignore[no-untyped-def]
         if self.context.get("request"):
             user = self.context["request"].user
@@ -264,7 +267,7 @@ class SubscriptionDetailsSerializer(serializers.Serializer):  # type: ignore[typ
     max_api_calls = serializers.IntegerField(source="api_calls")
     max_projects = serializers.IntegerField(source="projects", allow_null=True)
 
-    payment_source = serializers.ChoiceField(choices=[None, CHARGEBEE], allow_null=True)
+    payment_source = serializers.ChoiceField(choices=[CHARGEBEE], allow_null=True)
 
     chargebee_email = serializers.EmailField()
 

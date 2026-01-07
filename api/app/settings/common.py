@@ -120,7 +120,7 @@ INSTALLED_APPS = [
     "app",
     "e2etests",
     "simple_history",
-    "drf_yasg",
+    "drf_spectacular",
     "audit",
     "permissions",
     "projects.code_references",
@@ -327,6 +327,7 @@ REST_FRAMEWORK = {
         "util.renderers.PydanticJSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 MIDDLEWARE = [
     "common.core.middleware.APIResponseVersionHeaderMiddleware",
@@ -539,23 +540,48 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_PORT = env("EMAIL_PORT", default=587)
     EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
-SWAGGER_SETTINGS = {
-    "DEEP_LINKING": True,
-    "DEFAULT_AUTO_SCHEMA_CLASS": "api.openapi.PydanticResponseCapableSwaggerAutoSchema",
-    "SHOW_REQUEST_HEADERS": True,
-    "SECURITY_DEFINITIONS": {
-        "Private": {
-            "type": "apiKey",
-            "in": "header",
-            "name": "Authorization",
-            "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",  # noqa
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Flagsmith API",
+    "OAS_VERSION": "3.1.0",
+    "DESCRIPTION": "Flagsmith's Core and SDK APIs. Check out <a href='https://docs.flagsmith.com'>Flagsmith documentation</a>.",
+    "VERSION": "v1",
+    "LICENSE": {"name": "BSD License", "identifier": "BSD-3-Clause"},
+    "CONTACT": {"email": "support@flagsmith.com"},
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+    },
+    "SECURITY": [
+        {"Private": []},
+        {"Public": []},
+    ],
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "Private": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",
+            },
+            "Public": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-Environment-Key",
+                "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",
+            },
         },
-        "Public": {
-            "type": "apiKey",
-            "in": "header",
-            "name": "X-Environment-Key",
-            "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",  # noqa
-        },
+    },
+    "DEFAULT_GENERATOR_CLASS": "api.openapi.SchemaGenerator",
+    "EXTENSIONS": [
+        "api.openapi",
+        "edge_api.identities.openapi",
+        "environments.identities.traits.openapi",
+    ],
+    "ENUM_NAME_OVERRIDES": {
+        # Overrides to use specific schema names for fields named "type".
+        # If this is not set, drf-spectacular will generate schema names like "Type975Enum".
+        "WebhookScopeTypeEnum": ["organisation", "environment"],
+        "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
+        "FeatureValueTypeEnum": ["integer", "string", "boolean"],
     },
 }
 

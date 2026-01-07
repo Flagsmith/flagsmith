@@ -1,11 +1,12 @@
-from rest_framework.test import APIClient
+from django.test import Client
 
 
 def test_api_documentation_specification_loads(
-    client: APIClient,
+    client: Client,
 ) -> None:
     # When
-    response = client.get("/api/v1/docs/?format=openapi")
+    # Request JSON format via Accept header (drf-spectacular defaults to YAML).
+    response = client.get("/api/v1/swagger.json", HTTP_ACCEPT="application/json")
 
     # Then
     assert response.status_code == 200

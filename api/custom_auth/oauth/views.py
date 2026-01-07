@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -24,9 +24,8 @@ GITHUB_AUTH_ERROR_MESSAGE = AUTH_ERROR_MESSAGE.format("GITHUB")
 GOOGLE_AUTH_ERROR_MESSAGE = AUTH_ERROR_MESSAGE.format("GOOGLE")
 
 
-@swagger_auto_schema(
-    method="post",
-    request_body=GoogleLoginSerializer,
+@extend_schema(
+    request=GoogleLoginSerializer,
     responses={200: CustomTokenSerializer, 502: ErrorSerializer},
 )
 @api_view(["POST"])
@@ -49,9 +48,8 @@ def login_with_google(request):  # type: ignore[no-untyped-def]
         )
 
 
-@swagger_auto_schema(
-    method="post",
-    request_body=GithubLoginSerializer,
+@extend_schema(
+    request=GithubLoginSerializer,
     responses={200: CustomTokenSerializer, 502: ErrorSerializer},
 )
 @api_view(["POST"])
