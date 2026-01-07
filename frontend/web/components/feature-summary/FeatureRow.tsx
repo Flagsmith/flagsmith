@@ -8,7 +8,6 @@ import { useProtectedTags } from 'common/utils/useProtectedTags'
 import Icon from 'components/Icon'
 import FeatureValue from './FeatureValue'
 import FeatureAction, { FeatureActionProps } from './FeatureAction'
-import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
 import Button from 'components/base/forms/Button'
 import {
@@ -55,6 +54,7 @@ export interface FeatureRowProps {
   hideRemove?: boolean
   releasePipelines?: ReleasePipeline[]
   onCloseEditModal?: () => void
+  isCompact?: boolean
 }
 
 const width = [220, 50, 55, 70, 450]
@@ -71,6 +71,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     hideAudit = false,
     hideRemove = false,
     index,
+    isCompact = false,
     onCloseEditModal,
     permission,
     projectFlag,
@@ -238,8 +239,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   const environment = ProjectStore.getEnvironment(
     environmentId,
   ) as Environment | null
-
-  const isCompact = getViewMode() === 'compact'
 
   if (condensed) {
     return (
