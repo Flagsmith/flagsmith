@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import GenericAPIView
@@ -24,11 +24,10 @@ from users.models import FFAdminUser
 logger = logging.getLogger(__name__)
 
 
-@swagger_auto_schema(
-    method="post",
-    request_body=SelfHostedOnboardingSupportSendRequestSerializer,
-    responses={204: "No Content", 400: ErrorSerializer()},
-)  # type: ignore[misc]
+@extend_schema(
+    request=SelfHostedOnboardingSupportSendRequestSerializer,
+    responses={204: None, 400: ErrorSerializer},
+)
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
 def send_onboarding_request_to_saas_flagsmith_view(request: Request) -> Response:
@@ -57,10 +56,10 @@ class ReceiveSupportRequestFromSelfHosted(GenericAPIView):  # type: ignore[type-
     permission_classes = ()
     throttle_classes = [OnboardingRequestThrottle]
 
-    @swagger_auto_schema(
-        request_body=SelfHostedOnboardingReceiveSupportSerializer,
-        responses={204: "No Content", 400: ErrorSerializer()},
-    )  # type: ignore[misc]
+    @extend_schema(
+        request=SelfHostedOnboardingReceiveSupportSerializer,
+        responses={204: None, 400: ErrorSerializer},
+    )
     def post(self, request: Request) -> Response:
         if not settings.HUBSPOT_ACCESS_TOKEN:
             return Response(

@@ -9,10 +9,10 @@ from common.features.serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureStateValueSerializer,
 )
+from drf_spectacular.utils import extend_schema_field
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
 )
-from drf_yasg.utils import swagger_serializer_method  # type: ignore[import-untyped]
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -63,6 +63,7 @@ class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[
             "enabled",
         )
 
+    @extend_schema_field({"type": ["string", "integer", "boolean"], "nullable": True})
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 
@@ -291,9 +292,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 
         return attrs
 
-    @swagger_serializer_method(  # type: ignore[misc]
-        serializer_or_field=FeatureStateSerializerSmall(allow_null=True)
-    )
+    @extend_schema_field(FeatureStateSerializerSmall(allow_null=True))
     def get_environment_feature_state(  # type: ignore[return]
         self, instance: Feature
     ) -> dict[str, Any] | None:
@@ -302,9 +301,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         ):
             return FeatureStateSerializerSmall(instance=feature_state).data
 
-    @swagger_serializer_method(  # type: ignore[misc]
-        serializer_or_field=FeatureStateSerializerSmall(allow_null=True)
-    )
+    @extend_schema_field(FeatureStateSerializerSmall(allow_null=True))
     def get_segment_feature_state(  # type: ignore[return]
         self, instance: Feature
     ) -> dict[str, Any] | None:
@@ -446,6 +443,17 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "enabled",
         )
 
+    @extend_schema_field(
+        {
+            "type": [
+                "string",
+                "integer",
+                "number",
+                "boolean",
+            ],
+            "nullable": True,
+        }
+    )
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 
@@ -520,6 +528,17 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         fields = "__all__"
         read_only_fields = ("version", "created_at", "updated_at", "status")
 
+    @extend_schema_field(
+        {
+            "type": [
+                "string",
+                "integer",
+                "number",
+                "boolean",
+                "null",
+            ],
+        }
+    )
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 
