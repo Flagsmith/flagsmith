@@ -24,6 +24,7 @@ import { useRemoveFeatureWithToast } from './hooks/useRemoveFeatureWithToast'
 import { useToggleFeatureWithToast } from './hooks/useToggleFeatureWithToast'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { useFeatureListWithApiKey } from 'common/hooks/useFeatureListWithApiKey'
+import { useViewMode } from 'common/useViewMode'
 import type { Pagination } from './types'
 import type { ProjectFlag, FeatureState } from 'common/types/responses'
 
@@ -58,6 +59,12 @@ const FeaturesPage: FC = () => {
     hasFilters,
     page,
   } = useFeatureFilters(history)
+
+  const {
+    isCompact,
+    setViewMode: handleViewModeChange,
+    viewMode,
+  } = useViewMode()
 
   const {
     error: projectEnvError,
@@ -188,6 +195,8 @@ const FeaturesPage: FC = () => {
         orgId={routeContext.organisationId}
         onFilterChange={handleFilterChange}
         onClearFilters={clearFilters}
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
       />
     ),
     [
@@ -198,6 +207,8 @@ const FeaturesPage: FC = () => {
       routeContext.organisationId,
       handleFilterChange,
       clearFilters,
+      viewMode,
+      handleViewModeChange,
     ],
   )
 
@@ -246,6 +257,7 @@ const FeaturesPage: FC = () => {
               toggleFlag={toggleFlag}
               removeFlag={removeFlag}
               projectFlag={projectFlag}
+              isCompact={isCompact}
             />
           )}
         </Permission>
@@ -258,6 +270,7 @@ const FeaturesPage: FC = () => {
       minimumChangeRequestApprovals,
       toggleFlag,
       removeFlag,
+      isCompact,
     ],
   )
 

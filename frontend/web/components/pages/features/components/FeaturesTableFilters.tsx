@@ -7,7 +7,7 @@ import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
 import TableSortFilter from 'components/tables/TableSortFilter'
 import ClearFilters from 'components/ClearFilters'
-import { getViewMode, setViewMode } from 'common/useViewMode'
+import type { ViewMode } from 'common/useViewMode'
 import type { FilterState } from 'common/types/featureFilters'
 
 const VIEW_MODE_OPTIONS = [
@@ -40,6 +40,8 @@ type FeaturesTableFiltersProps = {
   orgId?: number
   onFilterChange: (updates: Partial<FilterState>) => void
   onClearFilters: () => void
+  viewMode: ViewMode
+  onViewModeChange: (value: ViewMode) => void
 }
 
 export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
@@ -48,8 +50,10 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
   isLoading,
   onClearFilters,
   onFilterChange,
+  onViewModeChange,
   orgId,
   projectId,
+  viewMode,
 }) => {
   const {
     group_owners: groupOwners,
@@ -141,12 +145,8 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
           <TableFilterOptions
             title={'View'}
             className='me-4'
-            value={getViewMode()}
-            onChange={(value) => {
-              if (value === 'default' || value === 'compact') {
-                setViewMode(value)
-              }
-            }}
+            value={viewMode}
+            onChange={(value) => onViewModeChange(value as ViewMode)}
             options={VIEW_MODE_OPTIONS}
           />
           <TableSortFilter
