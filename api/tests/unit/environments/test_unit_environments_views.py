@@ -1083,6 +1083,38 @@ def test_environment_update_cannot_change_is_creating(
     assert response.json()["is_creating"] is False
 
 
+def test_environment_update_cannot_change_project(
+    environment: Environment,
+    project: Project,
+    organisation: Organisation,
+    admin_client_new: APIClient,
+) -> None:
+    # Given - an environment in the original project
+    original_project = project
+    url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
+
+    # and a different project
+    other_project = Project.objects.create(
+        name="Other Project", organisation=organisation
+    )
+
+    data = {
+        "project": other_project.id,
+        "name": environment.name,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then - the project should NOT change
+    assert response.status_code == status.HTTP_200_OK
+    environment.refresh_from_db()
+    assert environment.project_id == original_project.id
+    assert response.json()["project"] == original_project.id
+
+
 def test_get_document(
     environment: Environment,
     project: Project,
