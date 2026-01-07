@@ -215,6 +215,7 @@ const controller = {
           ? originalFlag.multivariate_options.find((m) => m.id === v.id)
           : null
         const url = `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`
+        const userEnteredWeight = v.default_percentage_allocation
         const mvData = {
           ...v,
           default_percentage_allocation: 0,
@@ -225,8 +226,11 @@ const controller = {
             ? data.put(`${url}${originalMV.id}/`, mvData)
             : data.post(url, mvData)
         ).then((res) => {
-          // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
-          flag.multivariate_options[i] = res
+          // Preserve order and user's weight (API returns 0 for default_percentage_allocation)
+          flag.multivariate_options[i] = {
+            ...res,
+            default_percentage_allocation: userEnteredWeight,
+          }
           return {
             ...v,
             id: res.id,

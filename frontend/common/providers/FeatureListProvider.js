@@ -197,22 +197,22 @@ const FeatureListProvider = class extends React.Component {
   ) => {
     AppActions.editFeatureMv(
       projectId,
-      Object.assign({}, projectFlag, flag, {
-        multivariate_options:
-          flag.multivariate_options &&
-          flag.multivariate_options.map((v) => {
-            const matchingProjectVariate =
-              (projectFlag.multivariate_options &&
-                projectFlag.multivariate_options.find((p) => p.id === v.id)) ||
-              v
-            return {
-              ...v,
-              default_percentage_allocation:
-                matchingProjectVariate.default_percentage_allocation,
-            }
-          }),
-      }),
+      Object.assign({}, projectFlag, flag),
       (newProjectFlag) => {
+        const mvStateValues = newProjectFlag.multivariate_options?.map(
+          (mvOption) => {
+            const existing =
+              environmentFlag.multivariate_feature_state_values?.find(
+                (e) => e.multivariate_feature_option === mvOption.id,
+              )
+            return {
+              id: existing?.id,
+              multivariate_feature_option: mvOption.id,
+              percentage_allocation:
+                mvOption.default_percentage_allocation ?? 0,
+            }
+          },
+        )
         AppActions.editEnvironmentFlagChangeRequest(
           projectId,
           environmentId,
@@ -220,10 +220,7 @@ const FeatureListProvider = class extends React.Component {
           newProjectFlag,
           {
             ...environmentFlag,
-            multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
-              flag.multivariate_options,
-              environmentFlag.multivariate_feature_state_values,
-            ),
+            multivariate_feature_state_values: mvStateValues,
           },
           segmentOverrides,
           changeRequest,
