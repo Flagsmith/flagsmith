@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateFlagModal from 'components/modals/CreateFlag'
@@ -27,7 +27,7 @@ import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import FeatureName from './FeatureName'
 import FeatureDescription from './FeatureDescription'
 import FeatureTags from './FeatureTags'
-import { useOptimisticToggle } from 'components/pages/features/hooks/useOptimisticToggle'
+import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
 
 export interface FeatureRowProps {
   disableControls?: boolean
@@ -84,17 +84,14 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   const history = useHistory()
   const { id } = projectFlag
 
-  const [isRemoving, setIsRemoving] = useState(false)
-
   const actualEnabled = environmentFlags?.[id]?.enabled
   const {
-    displayValue: displayEnabled,
-    isToggling,
-    revertOptimistic,
-    setOptimistic,
-  } = useOptimisticToggle(actualEnabled)
-
-  const isLoading = isToggling || isRemoving
+    displayEnabled,
+    isLoading,
+    revertToggle,
+    startRemoving,
+    startToggle,
+  } = useFeatureRowState(actualEnabled)
 
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: String(projectFlag.project) },
@@ -151,16 +148,16 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   }
 
   const handleToggle = useCallback(() => {
-    const canToggle = setOptimistic(!actualEnabled)
+    const canToggle = startToggle(!actualEnabled)
     if (!canToggle) return // Prevent rapid toggling
-    toggleFlag?.(projectFlag, environmentFlags?.[id], revertOptimistic)
+    toggleFlag?.(projectFlag, environmentFlags?.[id], revertToggle)
   }, [
     actualEnabled,
     environmentFlags,
     id,
     projectFlag,
-    revertOptimistic,
-    setOptimistic,
+    revertToggle,
+    startToggle,
     toggleFlag,
   ])
 
@@ -275,7 +272,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     onRemove: () => {
       if (disableControls) return
       confirmRemove(projectFlag, async () => {
-        setIsRemoving(true)
+        startRemoving()
         await removeFlag?.(projectFlag)
       })
     },
@@ -372,7 +369,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             <FeatureTags editFeature={editFeature} projectFlag={projectFlag} />
           </div>
           <Switch
-            disabled={!permission || isReadOnly || isToggling}
+            disabled={!permission || isReadOnly || isLoading}
             data-test={`feature-switch-${index}${
               displayEnabled ? '-on' : '-off'
             }`}
