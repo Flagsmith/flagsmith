@@ -9,7 +9,8 @@ Thanks for submitting a PR! Please check the boxes below:
 
 Contributes to <!-- insert issue # or URL -->
 
-<!-- Change the above to "Closes" if you know that your changes do not need to be released to resolve the issue. -->
+<!-- Change "Contributes to" to "Closes" if this PR, when merged, completely resolves the referenced issue. 
+Leave "Contributes to" if the changes need to be released first. -->
 
 _Please describe._
 
