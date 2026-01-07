@@ -33,6 +33,7 @@ export function useFeatureListWithApiKey(
   }, [filters, page, environmentApiKey, projectId, getEnvironmentIdFromKey])
 
   return useGetFeatureListQuery(apiParams ?? skipToken, {
+    refetchOnFocus: true,
     refetchOnMountOrArgChange: true,
     skip: isLoadingEnvironments,
   })
