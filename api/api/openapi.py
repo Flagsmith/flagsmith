@@ -1,12 +1,13 @@
 from typing import Any, Literal
 
-from drf_spectacular import openapi
+from drf_spectacular import generators, openapi
 from drf_spectacular.extensions import (
     OpenApiSerializerExtension,
 )
 from drf_spectacular.plumbing import ResolvedComponent, safe_ref
 from drf_spectacular.plumbing import append_meta as append_meta_orig
 from pydantic import BaseModel
+from rest_framework.request import Request
 
 
 def append_meta(schema: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
@@ -39,6 +40,19 @@ def append_meta(schema: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
 
 
 openapi.append_meta = append_meta  # type: ignore[attr-defined]
+
+
+class SchemaGenerator(generators.SchemaGenerator):
+    """
+    Adds a `$schema` property to the root schema object.
+    """
+
+    def get_schema(
+        self, request: Request | None = None, public: bool = False
+    ) -> dict[str, Any]:
+        schema: dict[str, Any] = super().get_schema(request, public)  # type: ignore[no-untyped-call]
+        schema["$schema"] = "https://spec.openapis.org/oas/3.1/dialect/base"
+        return schema
 
 
 class PydanticSchemaExtension(

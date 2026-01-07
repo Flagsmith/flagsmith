@@ -570,14 +570,12 @@ SPECTACULAR_SETTINGS = {
             },
         },
     },
+    "DEFAULT_GENERATOR_CLASS": "api.openapi.SchemaGenerator",
     "EXTENSIONS": [
         "api.openapi",
         "edge_api.identities.openapi",
         "environments.identities.traits.openapi",
     ],
-    "EXTENSIONS_ROOT": {
-        "$schema": "https://spec.openapis.org/oas/3.1/dialect/base",
-    },
     "ENUM_NAME_OVERRIDES": {
         # Overrides to use specific schema names for fields named "type".
         # If this is not set, drf-spectacular will generate schema names like "Type975Enum".
