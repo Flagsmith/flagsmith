@@ -34,13 +34,17 @@ const FeaturesPage = class extends Component {
     ES6Component(this)
     this.projectId = this.props.routeContext.projectId
     const { filters } = this.state
+    this.fetchFeatures(filters)
+  }
+
+  fetchFeatures = (filters = this.state.filters, page = filters.page) => {
     AppActions.getFeatures(
       this.projectId,
       this.props.match.params.environmentId,
       true,
       filters.search,
       filters.sort,
-      filters.page,
+      page,
       getServerFilter(filters),
     )
   }
@@ -73,6 +77,17 @@ const FeaturesPage = class extends Component {
         projectId: params.projectId,
       }),
     )
+
+    // Add window focus listener to refetch features
+    this.handleWindowFocus = () => {
+      this.fetchFeatures()
+    }
+    window.addEventListener('focus', this.handleWindowFocus)
+  }
+
+  componentWillUnmount = () => {
+    // Clean up the window focus listener
+    window.removeEventListener('focus', this.handleWindowFocus)
   }
 
   newFlag = () => {
@@ -119,15 +134,7 @@ const FeaturesPage = class extends Component {
         )
       }
       if (page) {
-        AppActions.getFeatures(
-          this.projectId,
-          this.props.match.params.environmentId,
-          true,
-          f.search,
-          f.sort,
-          page,
-          getServerFilter(f),
-        )
+        this.fetchFeatures(f, page)
       } else {
         AppActions.searchFeatures(
           this.projectId,
@@ -207,13 +214,13 @@ const FeaturesPage = class extends Component {
 
             return (
               <div className='features-page'>
-                {(isLoading || !this.state.loadedOnce) &&
+                {!this.state.loadedOnce &&
                   (!projectFlags || !projectFlags.length) && (
                     <div className='centered-container'>
                       <Loader />
                     </div>
                   )}
-                {(!isLoading || this.state.loadedOnce) && (
+                {this.state.loadedOnce && (
                   <div>
                     {this.state.loadedOnce ||
                     ((this.state.filters.is_archived ||
@@ -283,7 +290,7 @@ const FeaturesPage = class extends Component {
                         </PageTitle>
                         <FormGroup
                           className={classNames('mb-4', {
-                            'opacity-50': isSaving,
+                            'opacity-50': isSaving || isLoading,
                           })}
                         >
                           <PanelSearch
