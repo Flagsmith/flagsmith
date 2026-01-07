@@ -684,14 +684,19 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     existingMvFeatureStateValues: MultivariateFeatureStateValue[],
   ): MultivariateFeatureStateValue[] {
     return mvOptions?.map((mvOption) => {
+      // For segment overrides, mvOption has multivariate_feature_option property
+      // For project flags, mvOption.id is the multivariate option ID
+      const mvOptionId =
+        (mvOption as any).multivariate_feature_option ?? mvOption.id
       const existing = existingMvFeatureStateValues?.find(
-        (e) => e.multivariate_feature_option === mvOption.id,
+        (e) => e.multivariate_feature_option === mvOptionId,
       )
       return {
         id: mvOption.id,
-        multivariate_feature_option: mvOption.id,
+        multivariate_feature_option: mvOptionId,
         percentage_allocation:
           existing?.percentage_allocation ??
+          (mvOption as any).percentage_allocation ??
           mvOption.default_percentage_allocation,
       }
     })

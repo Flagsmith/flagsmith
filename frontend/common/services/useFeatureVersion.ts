@@ -56,12 +56,11 @@ export const getFeatureStateCrud = (
       )
       return !!diff?.totalChanges
     })
-    const newValueFeatureState = featureStates.find(
-      (v) => !v.feature_segment?.segment,
-    )!
+    const newValueFeatureState = featureStates.find((v) => !v.feature_segment)!
     const oldValueFeatureState = oldFeatureStates.find(
-      (v) => !v.feature_segment?.segment,
+      (v) => !v.feature_segment,
     )!
+
     // return nothing if feature state isn't different
     const valueDiff = getFeatureStateDiff(
       oldValueFeatureState,
@@ -97,6 +96,7 @@ export const getFeatureStateCrud = (
     transformFeatureStates(featureStatesToCreate)
   const feature_states_to_update: Req['createFeatureVersion']['feature_states_to_update'] =
     transformFeatureStates(featureStatesToUpdate)
+
   return {
     feature_states_to_create,
     feature_states_to_update,
@@ -185,7 +185,7 @@ export const featureVersionService = service
             throw new Error('Feature contains no changes')
           }
 
-          const versionRes: { data: FeatureVersion } =
+          const versionRes: { data?: FeatureVersion; error?: any } =
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
@@ -196,12 +196,28 @@ export const featureVersionService = service
               segment_ids_to_delete_overrides,
             })
 
-          const currentFeatureStates: { data: FeatureState[] } =
+          if (versionRes.error || !versionRes.data) {
+            return {
+              error: versionRes.error || {
+                message: 'Failed to create feature version',
+              },
+            }
+          }
+
+          const currentFeatureStates: { data?: FeatureState[]; error?: any } =
             await getVersionFeatureState(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
               sha: versionRes.data.uuid,
             })
+
+          if (currentFeatureStates.error || !currentFeatureStates.data) {
+            return {
+              error: currentFeatureStates.error || {
+                message: 'Failed to get feature states',
+              },
+            }
+          }
 
           const res = currentFeatureStates.data
 
