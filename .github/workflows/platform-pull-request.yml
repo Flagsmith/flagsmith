@@ -8,6 +8,37 @@ on:
       - infrastructure/**
 
 jobs:
+  mcp-schema-push:
+    name: Push MCP Schema to Gram
+    runs-on: depot-ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install --only main
+
+      - name: Generate MCP schema
+        run: make generate-mcp-spec
+
+      - name: Install Gram CLI
+        run: npm install -g @speakeasy-api/gram
+
+      - name: Push to Gram
+        env:
+          GRAM_API_KEY: ${{ secrets.GRAM_API_KEY }}
+          GRAM_PROJECT: ${{ secrets.GRAM_PROJECT }}
+        run: gram push --api-key "$GRAM_API_KEY" --project "$GRAM_PROJECT" --config gram.json
+
   permissions-check:
     name: Check actor permissions
     runs-on: depot-ubuntu-latest
