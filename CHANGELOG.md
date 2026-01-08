@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.207.1](https://github.com/Flagsmith/flagsmith/compare/v2.207.0...v2.207.1) (2026-01-08)
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Use blocking Redis pool for throttle cache, limit max connections ([#6500](https://github.com/Flagsmith/flagsmith/issues/6500)) ([cb049bf](https://github.com/Flagsmith/flagsmith/commit/cb049bfa5ec35ac37d75cbc69d90825eff54d902))
+
 ## [2.207.0](https://github.com/Flagsmith/flagsmith/compare/v2.206.0...v2.207.0) (2026-01-08)
 
 
