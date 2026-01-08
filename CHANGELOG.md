@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.207.0](https://github.com/Flagsmith/flagsmith/compare/v2.206.0...v2.207.0) (2026-01-08)
+
+
+### Features
+
+* **api-docs:** Generate OpenAPI 3.1 docs with drf-spectacular ([#6451](https://github.com/Flagsmith/flagsmith/issues/6451)) ([42e4fdc](https://github.com/Flagsmith/flagsmith/commit/42e4fdc890ca2183133f311088755361dc5a7b83))
+* improve segment feature association ([#6478](https://github.com/Flagsmith/flagsmith/issues/6478)) ([58015b1](https://github.com/Flagsmith/flagsmith/commit/58015b117324da4cc7b41b54519e2b6fe1c0176a))
+
+
+### Bug Fixes
+
+* **ci:** Remove obsolete flagsmith-task-processor clone ([#6493](https://github.com/Flagsmith/flagsmith/issues/6493)) ([4a6ee45](https://github.com/Flagsmith/flagsmith/commit/4a6ee45e742a92d0b92744011ada821fc536927b))
+* **deploy:** use same task definition for API and SDK services ([#6495](https://github.com/Flagsmith/flagsmith/issues/6495)) ([8cdb036](https://github.com/Flagsmith/flagsmith/commit/8cdb036598ab0c6680ad9c1ca04bdeef108892d5))
+* inconsistent Capitalization for Badges - capitalized beta badge ([#6492](https://github.com/Flagsmith/flagsmith/issues/6492)) ([530d68b](https://github.com/Flagsmith/flagsmith/commit/530d68b36b51611ffe774f085b55b1560a25a789))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Enable Redis for per-user throttling in production ([#6497](https://github.com/Flagsmith/flagsmith/issues/6497)) ([c0058e4](https://github.com/Flagsmith/flagsmith/commit/c0058e4414a9fc1cf1f1bda49015c39b0a8bcabb))
+
+
+### Dependency Updates
+
+* bump pynacl from 1.5.0 to 1.6.2 in /api ([#6481](https://github.com/Flagsmith/flagsmith/issues/6481)) ([c54bc7a](https://github.com/Flagsmith/flagsmith/commit/c54bc7ac145b358c87bc9f61edc3bcd3ad6991ab))
+
 ## [2.206.0](https://github.com/Flagsmith/flagsmith/compare/v2.205.8...v2.206.0) (2026-01-07)
 
 
