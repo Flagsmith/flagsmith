@@ -51,7 +51,6 @@ class SchemaGenerator(generators.SchemaGenerator):
         self, request: Request | None = None, public: bool = False
     ) -> dict[str, Any]:
         schema: dict[str, Any] = super().get_schema(request, public)  # type: ignore[no-untyped-call]
-        # Rebuild dict with $schema at the top
         return {
             "$schema": "https://spec.openapis.org/oas/3.1/dialect/base",
             **schema,
@@ -76,9 +75,7 @@ class MCPSchemaGenerator(SchemaGenerator):
         schema = super().get_schema(request, public)
         schema["paths"] = self._filter_paths(schema.get("paths", {}))
         schema = self._update_security_for_mcp(schema)
-        # Remove $schema - not part of OpenAPI spec, causes validation errors
         schema.pop("$schema", None)
-        # Rebuild with servers in conventional position (after info)
         return {
             "openapi": schema.pop("openapi"),
             "info": schema.pop("info"),
@@ -95,7 +92,6 @@ class MCPSchemaGenerator(SchemaGenerator):
 
             for method, operation in path_item.items():
                 if not isinstance(operation, dict):
-                    # Preserve non-operation items (e.g., parameters)
                     filtered_operations[method] = operation
                     continue
 
@@ -103,9 +99,7 @@ class MCPSchemaGenerator(SchemaGenerator):
                 if self.MCP_TAG in tags:
                     filtered_operations[method] = self._transform_for_mcp(operation)
 
-            if any(
-                isinstance(op, dict) for op in filtered_operations.values()
-            ):
+            if any(isinstance(op, dict) for op in filtered_operations.values()):
                 filtered_paths[path] = filtered_operations
 
         return filtered_paths
