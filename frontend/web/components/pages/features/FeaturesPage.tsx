@@ -192,7 +192,7 @@ const FeaturesPage: FC = () => {
         filters={filters}
         hasFilters={hasFilters}
         isLoading={isLoading}
-        orgId={routeContext.organisationId}
+        orgId={project?.organisation}
         onFilterChange={handleFilterChange}
         onClearFilters={clearFilters}
         viewMode={viewMode}
@@ -204,7 +204,7 @@ const FeaturesPage: FC = () => {
       filters,
       hasFilters,
       isLoading,
-      routeContext.organisationId,
+      project?.organisation,
       handleFilterChange,
       clearFilters,
       viewMode,
