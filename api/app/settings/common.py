@@ -15,6 +15,7 @@ import json
 import os
 import warnings
 from datetime import datetime, time, timedelta
+from typing import Any
 
 import dj_database_url
 import django_stubs_ext
@@ -808,9 +809,18 @@ USER_THROTTLE_CACHE_BACKEND = env.str(
     "USER_THROTTLE_CACHE_BACKEND", "django.core.cache.backends.locmem.LocMemCache"
 )
 USER_THROTTLE_CACHE_LOCATION = env.str("USER_THROTTLE_CACHE_LOCATION", "admin-throttle")
-USER_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
+USER_THROTTLE_CACHE_OPTIONS: dict[str, Any] = env.dict(
     "USER_THROTTLE_CACHE_OPTIONS", default={}
 )
+_USER_THROTTLE_CACHE_CONNECTION_POOL_KWARGS = env.json(
+    "USER_THROTTLE_CACHE_CONNECTION_POOL_KWARGS", default={}
+)
+assert isinstance(_USER_THROTTLE_CACHE_CONNECTION_POOL_KWARGS, dict)
+if _USER_THROTTLE_CACHE_CONNECTION_POOL_KWARGS:
+    USER_THROTTLE_CACHE_OPTIONS = {
+        **USER_THROTTLE_CACHE_OPTIONS,
+        "CONNECTION_POOL_KWARGS": _USER_THROTTLE_CACHE_CONNECTION_POOL_KWARGS,
+    }
 
 ONBOARDING_REQUEST_THROTTLE_CACHE_NAME = "onboarding-request-throttle"
 ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND = env.str(
