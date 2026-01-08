@@ -18,6 +18,9 @@ inputs:
   aws_ecs_service_name:
     description: The name of the ECS service to deploy to.
     required: true
+  aws_ecs_sdk_service_name:
+    description: The name of the SDK ECS service to deploy to.
+    required: true
   aws_vpc_subnet_id:
     description: The id of the AWS VPC subnet to use for running migration tasks.
     required: true
@@ -91,11 +94,20 @@ runs:
       shell: bash
 
     - name: Deploy Amazon ECS web task definition
+      id: deploy-api-task-def
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         cluster: ${{ inputs.aws_ecs_cluster_name }}
         service: ${{ inputs.aws_ecs_service_name }}
         task-definition: ${{ steps.task-def-api.outputs.task-definition }}
+
+    - name: Deploy Amazon ECS SDK service with same task definition
+      run: |
+        aws ecs update-service \
+          --cluster ${{ inputs.aws_ecs_cluster_name }} \
+          --service ${{ inputs.aws_ecs_sdk_service_name }} \
+          --task-definition ${{ steps.deploy-api-task-def.outputs.task-definition-arn }}
+      shell: bash
 
     # The DynamoDB Identity Migrator uses the same task definition as the SQL schema migrator but overrides the container definition
     # with the new django execute target
@@ -136,8 +148,8 @@ runs:
                 ]'
       shell: bash
 
-    - name: Wait for service to be stable
-      run:
-        aws ecs wait services-stable --cluster ${{ inputs.aws_ecs_cluster_name }} --services ${{
-        inputs.aws_ecs_service_name }}
+    - name: Wait for services to be stable
+      run: |
+        aws ecs wait services-stable --cluster ${{ inputs.aws_ecs_cluster_name }} --services ${{ inputs.aws_ecs_service_name }}
+        aws ecs wait services-stable --cluster ${{ inputs.aws_ecs_cluster_name }} --services ${{ inputs.aws_ecs_sdk_service_name }}
       shell: bash
