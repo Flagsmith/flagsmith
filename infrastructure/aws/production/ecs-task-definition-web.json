@@ -147,7 +147,7 @@
                 },
                 {
                     "name": "USER_THROTTLE_RATE",
-                    "value": "10/sec"
+                    "value": "20/sec"
                 },
                 {
                     "name": "OAUTH_CLIENT_ID",
