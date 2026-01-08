@@ -7,7 +7,7 @@ from common.projects.permissions import (
 )
 from django.conf import settings
 from django.utils.decorators import method_decorator
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied, ValidationError

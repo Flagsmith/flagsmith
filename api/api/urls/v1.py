@@ -4,7 +4,6 @@ from drf_spectacular.views import SpectacularSwaggerView
 from rest_framework import permissions, routers
 
 from api.openapi_views import CustomSpectacularJSONAPIView, CustomSpectacularYAMLAPIView
-
 from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from environments.identities.traits.views import SDKTraits
 from environments.identities.views import SDKIdentities
