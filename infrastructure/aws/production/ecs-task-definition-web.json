@@ -139,7 +139,11 @@
                 },
                 {
                     "name": "USER_THROTTLE_CACHE_OPTIONS",
-                    "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient"
+                    "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient,CONNECTION_POOL_CLASS=redis.BlockingConnectionPool"
+                },
+                {
+                    "name": "USER_THROTTLE_CACHE_CONNECTION_POOL_KWARGS",
+                    "value": "{\"max_connections\": 50, \"retry_on_timeout\": true}"
                 },
                 {
                     "name": "USER_THROTTLE_RATE",
