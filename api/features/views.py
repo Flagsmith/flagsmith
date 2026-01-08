@@ -114,7 +114,44 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
 
 @method_decorator(
     name="list",
-    decorator=extend_schema(parameters=[FeatureQuerySerializer]),
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[FeatureQuerySerializer],
+        extensions={
+            "x-mcp-name": "list_project_features",
+            "x-mcp-description": "Retrieves all feature flags within the specified project with pagination.",
+        },
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "create_feature",
+            "x-mcp-description": "Creates a new feature flag in the specified project with default settings.",
+        },
+    ),
+)
+@method_decorator(
+    name="retrieve",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "get_feature_flag",
+            "x-mcp-description": "Retrieves detailed information about a specific feature flag.",
+        },
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "update_feature",
+            "x-mcp-description": "Updates feature flag properties such as name and description.",
+        },
+    ),
 )
 class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [FeaturePermissions]
@@ -410,8 +447,13 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return Response(serializer.data)
 
     @extend_schema(
+        tags=["mcp"],
         parameters=[GetUsageDataQuerySerializer],
         responses={200: FeatureEvaluationDataSerializer()},
+        extensions={
+            "x-mcp-name": "get_feature_evaluation_data",
+            "x-mcp-description": "Retrieves evaluation data and analytics for a specific feature flag.",
+        },
     )
     @action(detail=True, methods=["GET"], url_path="evaluation-data")
     @throttle_classes([InfluxQueryThrottle])

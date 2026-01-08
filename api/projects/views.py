@@ -52,28 +52,22 @@ from users.models import FFAdminUser
 
 
 @method_decorator(
-    name="list",
+    name="retrieve",
     decorator=extend_schema(
         tags=["mcp"],
-        parameters=[
-            OpenApiParameter(
-                name="organisation",
-                location=OpenApiParameter.QUERY,
-                description="ID of the organisation to filter by.",
-                required=False,
-                type=int,
-            ),
-            OpenApiParameter(
-                name="uuid",
-                location=OpenApiParameter.QUERY,
-                description="uuid of the project to filter by.",
-                required=False,
-                type=str,
-            ),
-        ],
         extensions={
-            "x-mcp-name": "list_projects",
-            "x-mcp-description": "Retrieve all projects the user has access to.",
+            "x-mcp-name": "get_project",
+            "x-mcp-description": "Retrieves comprehensive information about a specific project including configuration and statistics.",
+        },
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "update_project",
+            "x-mcp-description": "Updates project configuration settings such as name and feature visibility.",
         },
     ),
 )
@@ -128,6 +122,13 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = self.get_serializer(project)
         return Response(serializer.data)
 
+    @extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "list_project_environments",
+            "x-mcp-description": "Retrieves all environments configured for the specified project.",
+        },
+    )
     @action(detail=True)
     def environments(self, request, pk):  # type: ignore[no-untyped-def]
         project = self.get_object()

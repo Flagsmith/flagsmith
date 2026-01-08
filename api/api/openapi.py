@@ -51,8 +51,11 @@ class SchemaGenerator(generators.SchemaGenerator):
         self, request: Request | None = None, public: bool = False
     ) -> dict[str, Any]:
         schema: dict[str, Any] = super().get_schema(request, public)  # type: ignore[no-untyped-call]
-        schema["$schema"] = "https://spec.openapis.org/oas/3.1/dialect/base"
-        return schema
+        # Rebuild dict with $schema at the top
+        return {
+            "$schema": "https://spec.openapis.org/oas/3.1/dialect/base",
+            **schema,
+        }
 
 
 class MCPSchemaGenerator(SchemaGenerator):
@@ -65,6 +68,7 @@ class MCPSchemaGenerator(SchemaGenerator):
     """
 
     MCP_TAG = "mcp"
+    MCP_SERVER_URL = "https://api.flagsmith.com"
 
     def get_schema(
         self, request: Request | None = None, public: bool = False
@@ -72,7 +76,15 @@ class MCPSchemaGenerator(SchemaGenerator):
         schema = super().get_schema(request, public)
         schema["paths"] = self._filter_paths(schema.get("paths", {}))
         schema = self._update_security_for_mcp(schema)
-        return schema
+        # Remove $schema - not part of OpenAPI spec, causes validation errors
+        schema.pop("$schema", None)
+        # Rebuild with servers in conventional position (after info)
+        return {
+            "openapi": schema.pop("openapi"),
+            "info": schema.pop("info"),
+            "servers": [{"url": self.MCP_SERVER_URL}],
+            **schema,
+        }
 
     def _filter_paths(self, paths: dict[str, Any]) -> dict[str, Any]:
         """Filter paths to only include operations tagged with 'mcp'."""

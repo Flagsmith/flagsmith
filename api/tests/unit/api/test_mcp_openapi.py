@@ -153,11 +153,9 @@ def test_mcp_get_schema__filters_and_transforms() -> None:
     schema = generator.get_schema(request=None, public=True)
 
     # Then
-    # Schema should have standard OpenAPI structure
-    assert "$schema" in schema
+    assert "openapi" in schema
     assert "paths" in schema
     assert "components" in schema
-    # Security should be MCP-specific
     assert "ApiKey" in schema["components"]["securitySchemes"]
 
 
@@ -249,11 +247,14 @@ def test_mcp_schema__includes_organisations_endpoint() -> None:
     # Then
     assert "/api/v1/organisations/" in schema["paths"]
     org_list = schema["paths"]["/api/v1/organisations/"]["get"]
-    assert org_list["operationId"] == "list_organisations"
-    assert org_list["description"] == "Retrieve all organisations the user has access to."
+    assert org_list["operationId"] == "list_organizations"
+    assert (
+        org_list["description"]
+        == "Lists all organizations accessible with the provided user API key."
+    )
 
 
-def test_mcp_schema__includes_projects_endpoint() -> None:
+def test_mcp_schema__includes_organisation_projects_endpoint() -> None:
     # Given
     generator = MCPSchemaGenerator()
 
@@ -261,10 +262,13 @@ def test_mcp_schema__includes_projects_endpoint() -> None:
     schema = generator.get_schema(request=None, public=True)
 
     # Then
-    assert "/api/v1/projects/" in schema["paths"]
-    project_list = schema["paths"]["/api/v1/projects/"]["get"]
-    assert project_list["operationId"] == "list_projects"
-    assert project_list["description"] == "Retrieve all projects the user has access to."
+    assert "/api/v1/organisations/{id}/projects/" in schema["paths"]
+    projects_list = schema["paths"]["/api/v1/organisations/{id}/projects/"]["get"]
+    assert projects_list["operationId"] == "list_projects_in_organization"
+    assert (
+        projects_list["description"]
+        == "Retrieves all projects within a specified organization."
+    )
 
 
 def test_mcp_schema__excludes_non_mcp_endpoints() -> None:
@@ -277,3 +281,15 @@ def test_mcp_schema__excludes_non_mcp_endpoints() -> None:
     # Then
     # Users endpoint should not be in MCP schema (not tagged)
     assert "/api/v1/users/" not in schema["paths"]
+
+
+def test_mcp_schema__includes_https_server() -> None:
+    # Given
+    generator = MCPSchemaGenerator()
+
+    # When
+    schema = generator.get_schema(request=None, public=True)
+
+    # Then
+    assert "servers" in schema
+    assert schema["servers"] == [{"url": "https://api.flagsmith.com"}]

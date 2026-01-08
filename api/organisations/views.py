@@ -68,8 +68,8 @@ logger = logging.getLogger(__name__)
     list=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "list_organisations",
-            "x-mcp-description": "Retrieve all organisations the user has access to.",
+            "x-mcp-name": "list_organizations",
+            "x-mcp-description": "Lists all organizations accessible with the provided user API key.",
         },
     ),
 )
@@ -143,6 +143,13 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = self.get_serializer(organisation)
         return Response(serializer.data)
 
+    @extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "list_projects_in_organization",
+            "x-mcp-description": "Retrieves all projects within a specified organization.",
+        },
+    )
     @action(detail=True, permission_classes=[IsAuthenticated])
     def projects(self, request, pk):  # type: ignore[no-untyped-def]
         organisation = self.get_object()

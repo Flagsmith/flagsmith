@@ -33,7 +33,19 @@ from projects.models import Project
 from projects.permissions import NestedProjectPermissions
 from users.models import FFAdminUser
 
+from django.utils.decorators import method_decorator
 
+
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "get_feature_health_events",
+            "x-mcp-description": "Retrieves feature health monitoring events and metrics for the project.",
+        },
+    ),
+)
 class FeatureHealthEventViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet[FeatureHealthEvent],

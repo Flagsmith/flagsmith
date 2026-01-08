@@ -36,7 +36,44 @@ logger = logging.getLogger()
 
 @method_decorator(
     name="list",
-    decorator=extend_schema(parameters=[SegmentListQuerySerializer]),
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[SegmentListQuerySerializer],
+        extensions={
+            "x-mcp-name": "list_project_segments",
+            "x-mcp-description": "Retrieves all user segments defined for audience targeting within the project.",
+        },
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "create_project_segment",
+            "x-mcp-description": "Creates a new user segment for audience targeting within the project.",
+        },
+    ),
+)
+@method_decorator(
+    name="retrieve",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "get_project_segment",
+            "x-mcp-description": "Retrieves detailed information about a specific user segment.",
+        },
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "update_project_segment",
+            "x-mcp-description": "Updates an existing user segment's properties and rules.",
+        },
+    ),
 )
 class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = SegmentSerializer

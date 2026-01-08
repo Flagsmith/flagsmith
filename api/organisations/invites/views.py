@@ -35,6 +35,8 @@ from organisations.subscriptions.exceptions import (
 )
 from users.exceptions import InvalidInviteError
 
+from drf_spectacular.utils import extend_schema, extend_schema_view
+
 
 @api_view(["POST"])
 def join_organisation_from_email(request, hash):  # type: ignore[no-untyped-def]
@@ -107,6 +109,22 @@ class InviteLinkViewSet(
         serializer.save(organisation_id=self.kwargs.get("organisation_pk"))
 
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "list_organization_invites",
+            "x-mcp-description": "Retrieves all pending invitations for the organization.",
+        },
+    ),
+    create=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "create_organization_invite",
+            "x-mcp-description": "Send an invitation to join the organization with specified role and permissions.",
+        },
+    ),
+)
 class InviteViewSet(
     ListModelMixin,
     CreateModelMixin,
