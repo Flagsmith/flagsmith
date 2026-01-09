@@ -45,17 +45,16 @@ const DiffFeature: FC<FeatureDiffType> = ({
   projectId,
   tabTheme,
 }) => {
-  const { data: projectFlag } = useGetProjectFlagQuery({
-    id: featureId,
-    project: projectId,
-  })
+  const { data: projectFlag } = useGetProjectFlagQuery(
+    {
+      id: featureId,
+      project: projectId,
+    },
+    { refetchOnMountOrArgChange: true },
+  )
 
   const oldEnv = oldState?.find((v) => !v.feature_segment)
   const newEnv = newState?.find((v) => !v.feature_segment)
-  const { data: feature } = useGetProjectFlagQuery({
-    id: `${featureId}`,
-    project: projectId,
-  })
 
   const diff = getFeatureStateDiff(oldEnv, newEnv)
   const { conflict: valueConflict, totalChanges } = diff
@@ -70,8 +69,18 @@ const DiffFeature: FC<FeatureDiffType> = ({
 
   const segmentDiffs = disableSegments
     ? { diffs: [], totalChanges: 0 }
-    : getSegmentOverrideDiff(oldState, newState, segments?.results, conflicts)
-  const variationDiffs = getVariationDiff(oldEnv, newEnv)
+    : getSegmentOverrideDiff(
+        oldState,
+        newState,
+        segments?.results,
+        conflicts,
+        projectFlag?.multivariate_options,
+      )
+  const variationDiffs = getVariationDiff(
+    oldEnv,
+    newEnv,
+    projectFlag?.multivariate_options,
+  )
   const totalSegmentChanges = segmentDiffs?.totalChanges
   const totalVariationChanges = variationDiffs?.totalChanges
   useEffect(() => {
@@ -89,7 +98,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
   const selectedOption = viewOptions.find((v) => v.value === viewMode)
   return (
     <div>
-      {!feature ? (
+      {!projectFlag ? (
         <div className='text-center'>
           <Loader />
         </div>
@@ -265,6 +274,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
                   diffs={segmentDiffs.diffs}
                   projectId={projectId}
                   environmentId={environmentId}
+                  projectFlag={projectFlag}
                 />
               </TabItem>
             )}

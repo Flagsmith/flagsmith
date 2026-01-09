@@ -2,6 +2,7 @@ import {
   FeatureConflict,
   FeatureState,
   FeatureStateWithConflict,
+  MultivariateOption,
   Segment,
   SegmentCondition,
   SegmentRule,
@@ -69,6 +70,7 @@ export const getSegmentOverrideDiff = (
   newFeatureStates: FeatureStateWithConflict[] | undefined,
   segments: Segment[] | undefined,
   conflicts?: FeatureConflict[] | undefined,
+  projectMultivariateOptions?: MultivariateOption[],
 ) => {
   if (!oldFeatureStates || !newFeatureStates || !segments) {
     return null
@@ -102,7 +104,11 @@ export const getSegmentOverrideDiff = (
       }
     }
 
-    const variationDiff = getVariationDiff(oldFeatureState, newFeatureState)
+    const variationDiff = getVariationDiff(
+      oldFeatureState,
+      newFeatureState,
+      projectMultivariateOptions,
+    )
 
     const oldEnabled = !!oldFeatureState?.enabled
     const oldPriority = oldFeatureState?.feature_segment
@@ -164,13 +170,22 @@ export const getSegmentOverrideDiff = (
 export const getVariationDiff = (
   oldFeatureState: FeatureState | undefined,
   newFeatureState: FeatureState | undefined,
+  projectMultivariateOptions?: MultivariateOption[],
 ) => {
   let totalChanges = 0
-  const variationOptions = uniqBy(
-    oldFeatureState?.multivariate_feature_state_values ||
-      [].concat(newFeatureState?.multivariate_feature_state_values || []),
-    (v) => v.multivariate_feature_option,
-  )
+
+  // If project-level multivariate options are provided, use them as the source of truth
+  // This ensures newly added variations appear in the diff
+  const variationOptions = projectMultivariateOptions
+    ? projectMultivariateOptions.map((mv) => ({
+        multivariate_feature_option: mv.id,
+      }))
+    : uniqBy(
+        oldFeatureState?.multivariate_feature_state_values ||
+          [].concat(newFeatureState?.multivariate_feature_state_values || []),
+        (v) => v.multivariate_feature_option,
+      )
+
   const diffs = variationOptions.map((variationOption) => {
     const oldMV = oldFeatureState?.multivariate_feature_state_values?.find(
       (v) =>
@@ -183,8 +198,8 @@ export const getVariationDiff = (
         variationOption.multivariate_feature_option,
     )
 
-    const oldWeight = oldMV?.percentage_allocation
-    const newWeight = newMV?.percentage_allocation
+    const oldWeight = oldMV?.percentage_allocation ?? 0
+    const newWeight = newMV?.percentage_allocation ?? 0
     const hasChanged = oldWeight !== newWeight
     if (hasChanged) {
       totalChanges += 1
