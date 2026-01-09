@@ -23,9 +23,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: |
-          pip install poetry
-          poetry install --only main --no-root
+        run: make install
 
       - name: Generate MCP schema
         run: make generate-mcp-spec
