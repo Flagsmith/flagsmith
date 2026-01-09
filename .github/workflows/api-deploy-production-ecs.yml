@@ -1,5 +1,8 @@
 name: API Deploy to Production ECS
 
+permissions:
+  contents: read
+
 on:
   push:
     tags:
