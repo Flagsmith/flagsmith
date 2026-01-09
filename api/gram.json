@@ -4,7 +4,7 @@
   "sources": [
     {
       "type": "openapiv3",
-      "location": "mcp-openapi.yaml",
+      "location": "mcp_openapi.yaml",
       "name": "Flagsmith MCP",
       "slug": "flagsmith-mcp"
     }

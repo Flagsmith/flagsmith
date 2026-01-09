@@ -76,9 +76,11 @@ class MCPSchemaGenerator(SchemaGenerator):
         schema["paths"] = self._filter_paths(schema.get("paths", {}))
         schema = self._update_security_for_mcp(schema)
         schema.pop("$schema", None)
+        info = schema.pop("info")
+        info["title"] = "mcp_openapi"
         return {
             "openapi": schema.pop("openapi"),
-            "info": schema.pop("info"),
+            "info": info,
             "servers": [{"url": self.MCP_SERVER_URL}],
             **schema,
         }
