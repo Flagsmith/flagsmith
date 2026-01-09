@@ -2,6 +2,7 @@ from typing import Any
 
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
 from rest_framework.decorators import action, api_view
 from rest_framework.exceptions import PermissionDenied
@@ -34,8 +35,6 @@ from organisations.subscriptions.exceptions import (
     SubscriptionDoesNotSupportSeatUpgrade,
 )
 from users.exceptions import InvalidInviteError
-
-from drf_spectacular.utils import extend_schema, extend_schema_view
 
 
 @api_view(["POST"])
