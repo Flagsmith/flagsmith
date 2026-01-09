@@ -852,6 +852,12 @@ DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = env.bool(
     "DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS", True
 )
 
+# Enable reading from replicas in Redis Cluster mode.
+# Distributes read traffic to replica nodes (port 6380 on ElastiCache Serverless).
+REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
+    "REDIS_CLUSTER_READ_FROM_REPLICAS", default=True
+)
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",

@@ -24,6 +24,7 @@ Include the following configuration in Django project's settings.py file:
 import threading
 from copy import deepcopy
 
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django_redis.client.default import DefaultClient  # type: ignore[import-untyped]
 from django_redis.exceptions import (  # type: ignore[import-untyped]
@@ -125,6 +126,9 @@ class ClusterConnectionFactory(ConnectionFactory):  # type: ignore[misc]
             # Add explicit socket timeout
             client_cls_kwargs["socket_timeout"] = SOCKET_TIMEOUT
             client_cls_kwargs["socket_keepalive"] = True
+            client_cls_kwargs["read_from_replicas"] = (
+                settings.REDIS_CLUSTER_READ_FROM_REPLICAS
+            )
             # ... and then build and return the client
             return RedisCluster(**client_cls_kwargs)  # type: ignore[abstract]
         except Exception as e:
