@@ -148,8 +148,10 @@ const FeatureListProvider = class extends React.Component {
       projectFlag,
       {
         ...environmentFlag,
+        // Use projectFlag.multivariate_options as source of truth for IDs
+        // This ensures we only include saved variations with valid IDs
         multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
-          flag.multivariate_options,
+          projectFlag.multivariate_options,
           environmentFlag.multivariate_feature_state_values,
         ),
       },
@@ -166,14 +168,11 @@ const FeatureListProvider = class extends React.Component {
         multivariate_options:
           flag.multivariate_options &&
           flag.multivariate_options.map((v) => {
-            const matchingProjectVariate =
-              (projectFlag.multivariate_options &&
-                projectFlag.multivariate_options.find((p) => p.id === v.id)) ||
-              v
+            // Use the user's input value (v.default_percentage_allocation) directly
+            // This contains the Environment Weight % the user entered
             return {
               ...v,
-              default_percentage_allocation:
-                matchingProjectVariate.default_percentage_allocation,
+              default_percentage_allocation: v.default_percentage_allocation,
             }
           }),
       }),
@@ -201,33 +200,23 @@ const FeatureListProvider = class extends React.Component {
         multivariate_options:
           flag.multivariate_options &&
           flag.multivariate_options.map((v) => {
-            const matchingProjectVariate =
-              (projectFlag.multivariate_options &&
-                projectFlag.multivariate_options.find((p) => p.id === v.id)) ||
-              v
+            // Use the user's input value (v.default_percentage_allocation) directly
+            // This contains the Environment Weight % the user entered
             return {
               ...v,
-              default_percentage_allocation:
-                matchingProjectVariate.default_percentage_allocation,
+              default_percentage_allocation: v.default_percentage_allocation,
             }
           }),
       }),
       (newProjectFlag) => {
-        // Use flag.multivariate_options which has the user's new percentage weights
-        // Convert to feature state values format for the API
-        const mvStateValues = flag.multivariate_options?.map((mv) => {
-          const existing =
-            environmentFlag.multivariate_feature_state_values?.find(
-              (e) => e.multivariate_feature_option === mv.id,
-            )
-          return {
-            id: existing?.id,
-            multivariate_feature_option: mv.id,
-            // Use the user's input percentage_allocation, fallback to default
-            percentage_allocation:
-              mv.percentage_allocation ?? mv.default_percentage_allocation ?? 0,
-          }
-        })
+        // Use mapMvOptionsToStateValues to convert project-level MV options to feature state format
+        // This filters out unsaved variations and uses user's percentage weights
+        // IMPORTANT: Use newProjectFlag.multivariate_options (which has updated IDs after save)
+        // instead of flag.multivariate_options (which may still have undefined IDs for new variations)
+        const mvStateValues = Utils.mapMvOptionsToStateValues(
+          newProjectFlag.multivariate_options,
+          environmentFlag.multivariate_feature_state_values,
+        )
         AppActions.editEnvironmentFlagChangeRequest(
           projectId,
           environmentId,

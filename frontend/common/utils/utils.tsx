@@ -67,6 +67,30 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     img.src = src
     document.body.appendChild(img)
   },
+  // Builds MV state values for a segment override using override weights
+  buildSegmentOverrideMvValues(
+    projectMvOptions: MultivariateOption[] | undefined,
+    overrideMvOptions: MultivariateFeatureStateValue[] | undefined,
+  ): MultivariateFeatureStateValue[] {
+    const safeOverrides = overrideMvOptions || []
+    if (projectMvOptions) {
+      return projectMvOptions
+        .filter((mv) => mv.id)
+        .map((mv) => {
+          const overrideWeight = safeOverrides.find(
+            (o) => o.multivariate_feature_option === mv.id,
+          )
+          return {
+            multivariate_feature_option: mv.id,
+            percentage_allocation: overrideWeight?.percentage_allocation ?? 0,
+          }
+        })
+    }
+    return safeOverrides.map((o) => ({
+      multivariate_feature_option: o.multivariate_feature_option,
+      percentage_allocation: o.percentage_allocation ?? 0,
+    }))
+  },
   calculateControl(
     multivariateOptions: MultivariateOption[],
     variations?: MultivariateFeatureStateValue[],
@@ -680,23 +704,28 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     })
   },
   mapMvOptionsToStateValues(
-    mvOptions: MultivariateOption[],
-    existingMvFeatureStateValues: MultivariateFeatureStateValue[],
+    mvOptions: (MultivariateOption | MultivariateFeatureStateValue)[],
+    _existingMvFeatureStateValues: MultivariateFeatureStateValue[],
   ): MultivariateFeatureStateValue[] {
     // Filter out unsaved variations (without IDs) before mapping
     // These are variations added in the UI but not yet saved to the API
+    // Handles both MultivariateOption (with default_percentage_allocation) and
+    // MultivariateFeatureStateValue (with percentage_allocation) input types
     return mvOptions
       ?.filter((mvOption) => mvOption.id)
       .map((mvOption) => {
-        const existing = existingMvFeatureStateValues?.find(
-          (e) => e.multivariate_feature_option === mvOption.id,
-        )
+        // Determine the weight based on the input type:
+        // - MultivariateFeatureStateValue has percentage_allocation
+        // - MultivariateOption has default_percentage_allocation
+        const weight =
+          'percentage_allocation' in mvOption
+            ? mvOption.percentage_allocation
+            : (mvOption as MultivariateOption).default_percentage_allocation ??
+              0
         return {
           id: mvOption.id,
           multivariate_feature_option: mvOption.id,
-          percentage_allocation:
-            existing?.percentage_allocation ??
-            mvOption.default_percentage_allocation,
+          percentage_allocation: weight,
         }
       })
   },
@@ -742,6 +771,16 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     defaultValue?: string,
   ) => {
     return options?.find((option) => option.value === value) ?? defaultValue
+  },
+  // Updates a single variation weight in an array of multivariate options
+  updateVariationWeight(
+    variationOverrides: MultivariateFeatureStateValue[],
+    variationIndex: number,
+    newWeight: number,
+  ): MultivariateFeatureStateValue[] {
+    return variationOverrides.map((v, idx) =>
+      idx === variationIndex ? { ...v, percentage_allocation: newWeight } : v,
+    )
   },
 
   validateMetadataType(type: string, value: any) {

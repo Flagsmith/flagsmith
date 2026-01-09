@@ -21,6 +21,7 @@ import Tooltip from './Tooltip'
 import SegmentsIcon from './svg/SegmentsIcon'
 import SegmentOverrideActions from './SegmentOverrideActions'
 import Button from './base/forms/Button'
+import Utils from 'common/utils/utils'
 
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
@@ -68,20 +69,22 @@ const SegmentOverrideInner = class Override extends React.Component {
 
     const mvOptions =
       multivariateOptions &&
-      multivariateOptions.map((mv) => {
-        const foundMv =
-          v.multivariate_options &&
-          v.multivariate_options.find(
-            (v) => v.multivariate_feature_option === mv.id,
-          )
-        if (foundMv) {
-          return foundMv
-        }
-        return {
-          multivariate_feature_option: mv.id,
-          percentage_allocation: 0,
-        }
-      })
+      multivariateOptions
+        .filter((mv) => mv.id) // Only include saved variations with valid IDs
+        .map((mv) => {
+          const foundMv =
+            v.multivariate_options &&
+            v.multivariate_options.find(
+              (o) => o.multivariate_feature_option === mv.id,
+            )
+          if (foundMv) {
+            return foundMv
+          }
+          return {
+            multivariate_feature_option: mv.id,
+            percentage_allocation: 0,
+          }
+        })
     const changed = !v.id || this.state.changed
     const showValue = !(multivariateOptions && multivariateOptions.length)
     const controlPercent = Utils.calculateControl(mvOptions)
@@ -334,8 +337,14 @@ const SegmentOverrideInner = class Override extends React.Component {
                 setVariations(i, e)
                 this.setState({ changed: true })
               }}
-              updateVariation={(i, e) => {
-                setVariations(i, e)
+              updateVariation={(i, e, variationOverrides) => {
+                // Use variationOverrides (current state of all variations) to avoid stale closure issues
+                const newMvOptions = Utils.updateVariationWeight(
+                  variationOverrides,
+                  i,
+                  e.default_percentage_allocation,
+                )
+                setVariations(i, newMvOptions)
                 this.setState({ changed: true })
               }}
               weightTitle='Override Weight %'
@@ -397,25 +406,34 @@ const SegmentOverrideListInner = ({
             setValue={(value) => {
               setValue(index, value)
             }}
-            setVariations={(i, override) => {
-              // Get current multivariate_options from the segment override
-              // and ensure we have all variations from multivariateOptions
-              const currentMvOptions = multivariateOptions.map((mv) => {
-                const existing = value.multivariate_options?.find(
-                  (v) => v.multivariate_feature_option === mv.id,
-                )
-                return existing
-                  ? { ...existing }
-                  : {
-                      multivariate_feature_option: mv.id,
-                      percentage_allocation: 0,
-                    }
-              })
-              currentMvOptions[i] = {
-                ...currentMvOptions[i],
-                percentage_allocation: override.default_percentage_allocation,
+            setVariations={(i, mvOptionsOrOverride) => {
+              // Handle two cases:
+              // 1. From updateVariation: mvOptionsOrOverride is the full array of MV options
+              // 2. From setVariations/setValue (select mode): mvOptionsOrOverride is a single variation
+              const isFullArray = Array.isArray(mvOptionsOrOverride)
+              if (isFullArray) {
+                // Full array passed from updateVariation - use directly
+                setVariations(index, mvOptionsOrOverride)
+              } else {
+                // Single variation passed - build full array from current state
+                const currentMvOptions = multivariateOptions.map((mv) => {
+                  const existing = value.multivariate_options?.find(
+                    (v) => v.multivariate_feature_option === mv.id,
+                  )
+                  return existing
+                    ? { ...existing }
+                    : {
+                        multivariate_feature_option: mv.id,
+                        percentage_allocation: 0,
+                      }
+                })
+                currentMvOptions[i] = {
+                  ...currentMvOptions[i],
+                  percentage_allocation:
+                    mvOptionsOrOverride.default_percentage_allocation,
+                }
+                setVariations(index, currentMvOptions)
               }
-              setVariations(index, currentMvOptions)
             }}
             projectFlag={projectFlag}
           />

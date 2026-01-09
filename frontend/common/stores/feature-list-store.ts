@@ -50,10 +50,12 @@ const convertSegmentOverrideToFeatureState = (
   changeRequest?: Req['createChangeRequest'],
   projectMultivariateOptions?: MultivariateOption[],
 ) => {
-  // Use project-level multivariate options if provided, otherwise fall back to override options
-  // This ensures newly added variations are included in the API payload
-  const mvOptionsToUse =
-    projectMultivariateOptions || override.multivariate_options
+  // Use the extracted utility function to build MV values
+  // This ensures we use override weights (percentage_allocation), not project weights (default_percentage_allocation)
+  const mvStateValues = Utils.buildSegmentOverrideMvValues(
+    projectMultivariateOptions,
+    override.multivariate_options || override.multivariate_feature_state_values,
+  )
 
   return {
     enabled: override.enabled,
@@ -67,11 +69,7 @@ const convertSegmentOverrideToFeatureState = (
     feature_state_value: override.value,
     id: override.id,
     live_from: changeRequest?.live_from,
-    multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
-      mvOptionsToUse,
-      override.multivariate_options ||
-        override.multivariate_feature_state_values,
-    ),
+    multivariate_feature_state_values: mvStateValues,
     toRemove: override.toRemove,
   } as Partial<FeatureState>
 }
@@ -222,7 +220,8 @@ const controller = {
         const url = `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`
         const mvData = {
           ...v,
-          default_percentage_allocation: 0,
+          // Use the user's input value, preserving their Environment Weight %
+          default_percentage_allocation: v.default_percentage_allocation ?? 0,
           feature: flag.id,
         }
         return (
