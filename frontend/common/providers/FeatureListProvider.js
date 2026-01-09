@@ -1,6 +1,7 @@
 import React from 'react'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ProjectStore from 'common/stores/project-store'
+import Utils from 'common/utils/utils'
 
 const FeatureListProvider = class extends React.Component {
   static displayName = 'FeatureListProvider'
@@ -147,7 +148,10 @@ const FeatureListProvider = class extends React.Component {
       projectFlag,
       {
         ...environmentFlag,
-        multivariate_feature_state_values: flag.multivariate_options,
+        multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
+          flag.multivariate_options,
+          environmentFlag.multivariate_feature_state_values,
+        ),
       },
       segmentOverrides,
       'SEGMENT',
@@ -209,6 +213,21 @@ const FeatureListProvider = class extends React.Component {
           }),
       }),
       (newProjectFlag) => {
+        // Use flag.multivariate_options which has the user's new percentage weights
+        // Convert to feature state values format for the API
+        const mvStateValues = flag.multivariate_options?.map((mv) => {
+          const existing =
+            environmentFlag.multivariate_feature_state_values?.find(
+              (e) => e.multivariate_feature_option === mv.id,
+            )
+          return {
+            id: existing?.id,
+            multivariate_feature_option: mv.id,
+            // Use the user's input percentage_allocation, fallback to default
+            percentage_allocation:
+              mv.percentage_allocation ?? mv.default_percentage_allocation ?? 0,
+          }
+        })
         AppActions.editEnvironmentFlagChangeRequest(
           projectId,
           environmentId,
@@ -216,7 +235,7 @@ const FeatureListProvider = class extends React.Component {
           newProjectFlag,
           {
             ...environmentFlag,
-            multivariate_feature_state_values: flag.multivariate_options,
+            multivariate_feature_state_values: mvStateValues,
           },
           segmentOverrides,
           changeRequest,

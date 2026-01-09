@@ -17,6 +17,7 @@ import {
   ChangeRequest,
   Environment,
   FeatureState,
+  MultivariateOption,
   PagedResponse,
   ProjectFlag,
   TypedFeatureState,
@@ -47,7 +48,13 @@ const convertSegmentOverrideToFeatureState = (
   override,
   i,
   changeRequest?: Req['createChangeRequest'],
+  projectMultivariateOptions?: MultivariateOption[],
 ) => {
+  // Use project-level multivariate options if provided, otherwise fall back to override options
+  // This ensures newly added variations are included in the API payload
+  const mvOptionsToUse =
+    projectMultivariateOptions || override.multivariate_options
+
   return {
     enabled: override.enabled,
     feature: override.feature,
@@ -60,7 +67,11 @@ const convertSegmentOverrideToFeatureState = (
     feature_state_value: override.value,
     id: override.id,
     live_from: changeRequest?.live_from,
-    multivariate_feature_state_values: override.multivariate_options,
+    multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
+      mvOptionsToUse,
+      override.multivariate_options ||
+        override.multivariate_feature_state_values,
+    ),
     toRemove: override.toRemove,
   } as Partial<FeatureState>
 }
@@ -203,7 +214,6 @@ const controller = {
       store.model && store.model.features
         ? store.model.features.find((v) => v.id === flag.id)
         : flag
-
     Promise.all(
       (flag.multivariate_options || []).map((v, i) => {
         const originalMV = v.id
@@ -524,7 +534,12 @@ const controller = {
       if (env.use_v2_feature_versioning) {
         const featureStates = (segmentOverrides || [])
           .map((override: any, i: number) =>
-            convertSegmentOverrideToFeatureState(override, i, changeRequest),
+            convertSegmentOverrideToFeatureState(
+              override,
+              i,
+              changeRequest,
+              projectFlag.multivariate_options,
+            ),
           )
           .concat([
             Object.assign({}, environmentFlag, {
@@ -631,13 +646,16 @@ const controller = {
                           (v.multivariate_feature_option || v.id) ===
                           (m.multivariate_feature_option || m.id),
                       )
-                      return {
-                        ...v,
-                        percentage_allocation: matching
-                          ? typeof matching.percentage_allocation === 'number'
+                      let percentage_allocation = v.percentage_allocation
+                      if (matching) {
+                        percentage_allocation =
+                          typeof matching.percentage_allocation === 'number'
                             ? matching.percentage_allocation
                             : matching.default_percentage_allocation
-                          : v.percentage_allocation,
+                      }
+                      return {
+                        ...v,
+                        percentage_allocation,
                       }
                     },
                   )
@@ -714,8 +732,13 @@ const controller = {
 
     if (mode !== 'VALUE') {
       // Create a new version with segment overrides
-      const featureStates = segmentOverrides?.map(
-        convertSegmentOverrideToFeatureState,
+      const featureStates = segmentOverrides?.map((override: any, i: number) =>
+        convertSegmentOverrideToFeatureState(
+          override,
+          i,
+          undefined,
+          projectFlag.multivariate_options,
+        ),
       )
       prom = ProjectStore.getEnvironmentIdFromKeyAsync(
         projectId,
@@ -733,7 +756,7 @@ const controller = {
           getStore().dispatch(
             projectFlagService.util.invalidateTags(['ProjectFlag']),
           )
-          if(!store.model) {
+          if (!store.model) {
             return
           }
           // Fetch and update the latest environment feature state
