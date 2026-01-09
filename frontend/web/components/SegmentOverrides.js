@@ -326,16 +326,16 @@ const SegmentOverrideInner = class Override extends React.Component {
                   default_percentage_allocation: 0,
                 }
               })}
-              setVariations={(i, e, variationOverrides) => {
-                setVariations(i, e, variationOverrides)
+              setVariations={(i, e) => {
+                setVariations(i, e)
                 this.setState({ changed: true })
               }}
-              setValue={(i, e, variationOverrides) => {
-                setVariations(i, e, variationOverrides)
+              setValue={(i, e) => {
+                setVariations(i, e)
                 this.setState({ changed: true })
               }}
-              updateVariation={(i, e, variationOverrides) => {
-                setVariations(i, e, variationOverrides)
+              updateVariation={(i, e) => {
+                setVariations(i, e)
                 this.setState({ changed: true })
               }}
               weightTitle='Override Weight %'
@@ -397,13 +397,25 @@ const SegmentOverrideListInner = ({
             setValue={(value) => {
               setValue(index, value)
             }}
-            setVariations={(i, override, mvOptions) => {
-              const newValue = _.cloneDeep(mvOptions)
-              newValue[i] = {
-                ...newValue[i],
+            setVariations={(i, override) => {
+              // Get current multivariate_options from the segment override
+              // and ensure we have all variations from multivariateOptions
+              const currentMvOptions = multivariateOptions.map((mv) => {
+                const existing = value.multivariate_options?.find(
+                  (v) => v.multivariate_feature_option === mv.id,
+                )
+                return existing
+                  ? { ...existing }
+                  : {
+                      multivariate_feature_option: mv.id,
+                      percentage_allocation: 0,
+                    }
+              })
+              currentMvOptions[i] = {
+                ...currentMvOptions[i],
                 percentage_allocation: override.default_percentage_allocation,
               }
-              setVariations(index, newValue)
+              setVariations(index, currentMvOptions)
             }}
             projectFlag={projectFlag}
           />
@@ -455,7 +467,9 @@ class TheComponent extends Component {
     const { highlightSegmentId, projectId, value } = this.props
     if (!highlightSegmentId) return
 
-    const existingOverride = value?.find((v) => v.segment === highlightSegmentId)
+    const existingOverride = value?.find(
+      (v) => v.segment === highlightSegmentId,
+    )
     if (existingOverride) {
       return
     }
@@ -551,8 +565,11 @@ class TheComponent extends Component {
   }
 
   setValue = (i, value) => {
-    this.props.value[i].value = value
-    this.props.onChange(this.props.value)
+    // Create a new array to ensure React detects the state change
+    const newSegmentOverrides = this.props.value.map((item, index) =>
+      index === i ? { ...item, value } : item,
+    )
+    this.props.onChange(newSegmentOverrides)
   }
 
   setSegmentEditId = (id) => {
@@ -560,13 +577,19 @@ class TheComponent extends Component {
   }
 
   setVariations = (i, value) => {
-    this.props.value[i].multivariate_options = value
-    this.props.onChange(this.props.value)
+    // Create a new array to ensure React detects the state change
+    const newSegmentOverrides = this.props.value.map((item, index) =>
+      index === i ? { ...item, multivariate_options: value } : item,
+    )
+    this.props.onChange(newSegmentOverrides)
   }
 
   toggle = (i) => {
-    this.props.value[i].enabled = !this.props.value[i].enabled
-    this.props.onChange(this.props.value)
+    // Create a new array to ensure React detects the state change
+    const newSegmentOverrides = this.props.value.map((item, index) =>
+      index === i ? { ...item, enabled: !item.enabled } : item,
+    )
+    this.props.onChange(newSegmentOverrides)
   }
 
   onSortEnd = ({ newIndex, oldIndex }) => {
@@ -614,7 +637,7 @@ class TheComponent extends Component {
               <Row className='text-left gap-2'>
                 <div className='flex-1'>
                   <SegmentSelect
-                    className="w-100"
+                    className='w-100'
                     disabled={!!isLimitReached}
                     projectId={this.props.projectId}
                     data-test='select-segment'
