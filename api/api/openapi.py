@@ -51,7 +51,88 @@ class SchemaGenerator(generators.SchemaGenerator):
         self, request: Request | None = None, public: bool = False
     ) -> dict[str, Any]:
         schema: dict[str, Any] = super().get_schema(request, public)  # type: ignore[no-untyped-call]
-        schema["$schema"] = "https://spec.openapis.org/oas/3.1/dialect/base"
+        return {
+            "$schema": "https://spec.openapis.org/oas/3.1/dialect/base",
+            **schema,
+        }
+
+
+class MCPSchemaGenerator(SchemaGenerator):
+    """
+    Schema generator that filters to only include operations tagged with "mcp".
+
+    Supports custom extensions:
+    - x-mcp-name: Override the operationId for MCP tools
+    - x-mcp-description: Override the description for MCP tools
+    """
+
+    MCP_TAG = "mcp"
+    MCP_SERVER_URL = "https://api.flagsmith.com"
+
+    def get_schema(
+        self, request: Request | None = None, public: bool = False
+    ) -> dict[str, Any]:
+        schema = super().get_schema(request, public)
+        schema["paths"] = self._filter_paths(schema.get("paths", {}))
+        schema = self._update_security_for_mcp(schema)
+        schema.pop("$schema", None)
+        info = schema.pop("info")
+        info["title"] = "mcp_openapi"
+        return {
+            "openapi": schema.pop("openapi"),
+            "info": info,
+            "servers": [{"url": self.MCP_SERVER_URL}],
+            **schema,
+        }
+
+    def _filter_paths(self, paths: dict[str, Any]) -> dict[str, Any]:
+        """Filter paths to only include operations tagged with 'mcp'."""
+        filtered_paths: dict[str, Any] = {}
+
+        for path, path_item in paths.items():
+            filtered_operations: dict[str, Any] = {}
+
+            for method, operation in path_item.items():
+                if not isinstance(operation, dict):
+                    filtered_operations[method] = operation
+                    continue
+
+                tags = operation.get("tags", [])
+                if self.MCP_TAG in tags:
+                    filtered_operations[method] = self._transform_for_mcp(operation)
+
+            if any(isinstance(op, dict) for op in filtered_operations.values()):
+                filtered_paths[path] = filtered_operations
+
+        return filtered_paths
+
+    def _transform_for_mcp(self, operation: dict[str, Any]) -> dict[str, Any]:
+        """Apply MCP-specific transformations to an operation."""
+        operation = operation.copy()
+
+        # Override operationId if x-mcp-name provided
+        if mcp_name := operation.pop("x-mcp-name", None):
+            operation["operationId"] = mcp_name
+
+        # Override description if x-mcp-description provided
+        if mcp_desc := operation.pop("x-mcp-description", None):
+            operation["description"] = mcp_desc
+
+        return operation
+
+    def _update_security_for_mcp(self, schema: dict[str, Any]) -> dict[str, Any]:
+        """Update security schemes for MCP (admin API key)."""
+        schema = schema.copy()
+        schema["components"] = schema.get("components", {}).copy()
+        schema["components"]["securitySchemes"] = {
+            "ApiKey": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "API key for MCP access. Format: Api-Key <key>",
+            },
+        }
+        schema["security"] = [{"ApiKey": []}]
         return schema
 
 

@@ -7,6 +7,8 @@ from common.projects.permissions import VIEW_PROJECT
 from django.db.models import BooleanField, ExpressionWrapper, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.mixins import (
@@ -45,6 +47,26 @@ from features.versioning.serializers import (
 from users.models import FFAdminUser
 
 
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "get_environment_feature_versions",
+            "x-mcp-description": "Retrieves version information for a feature flag in a specific environment.",
+        },
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "create_environment_feature_version",
+            "x-mcp-description": "Creates a new version for a feature flag in a specific environment.",
+        },
+    ),
+)
 class EnvironmentFeatureVersionViewSet(
     GenericViewSet,  # type: ignore[type-arg]
     ListModelMixin,
@@ -184,6 +206,16 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
         return EnvironmentFeatureVersion.objects.all()
 
 
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "get_environment_feature_version_states",
+            "x-mcp-description": "Retrieves feature state information for a specific version in an environment.",
+        },
+    ),
+)
 class EnvironmentFeatureVersionFeatureStatesViewSet(
     GenericViewSet,  # type: ignore[type-arg]
     ListModelMixin,
