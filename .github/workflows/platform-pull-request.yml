@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install poetry
-          poetry install --only main
+          poetry install --only main --no-root
 
       - name: Generate MCP schema
         run: make generate-mcp-spec
