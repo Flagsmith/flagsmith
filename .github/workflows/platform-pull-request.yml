@@ -29,7 +29,7 @@ jobs:
         run: make generate-mcp-spec
 
       - name: Install Gram CLI
-        run: npm install -g @speakeasy-api/gram
+        run: curl -fsSL https://go.getgram.ai/cli.sh | bash
 
       - name: Push to Gram
         env:
