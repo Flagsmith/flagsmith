@@ -60,6 +60,7 @@ export const getFeatureStateCrud = (
     const oldValueFeatureState = oldFeatureStates.find(
       (v) => !v.feature_segment,
     )!
+
     // return nothing if feature state isn't different
     const valueDiff = getFeatureStateDiff(
       oldValueFeatureState,
@@ -95,6 +96,7 @@ export const getFeatureStateCrud = (
     transformFeatureStates(featureStatesToCreate)
   const feature_states_to_update: Req['createFeatureVersion']['feature_states_to_update'] =
     transformFeatureStates(featureStatesToUpdate)
+
   return {
     feature_states_to_create,
     feature_states_to_update,
@@ -103,15 +105,21 @@ export const getFeatureStateCrud = (
 }
 
 export const featureVersionService = service
-  .enhanceEndpoints({ addTagTypes: ['FeatureVersion', 'Environment'] })
+  .enhanceEndpoints({
+    addTagTypes: ['FeatureVersion', 'Environment', 'FeatureList'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       createAndSetFeatureVersion: builder.mutation<
         Res['featureVersion'],
         Req['createAndSetFeatureVersion']
       >({
-        invalidatesTags: [
+        invalidatesTags: (_result, _error, arg) => [
           { id: 'LIST', type: 'FeatureVersion' },
+          {
+            id: `${arg.projectId}-${arg.environmentId}`,
+            type: 'FeatureList',
+          },
           { id: 'METRICS', type: 'Environment' },
         ],
         queryFn: async (query: Req['createAndSetFeatureVersion']) => {
@@ -143,24 +151,29 @@ export const featureVersionService = service
                   })
                 ).data.results
 
-          const {
-            feature_states_to_create,
-            feature_states_to_update,
-            segment_ids_to_delete_overrides,
-          } = getFeatureStateCrud(
-            query.featureStates.map((v) => ({
-              ...v,
-              feature_state_value: Utils.valueToFeatureState(
-                v.feature_state_value,
-              ),
-            })),
-            oldFeatureStates.data.results.filter((v) => {
+          const newFeatureStates = query.featureStates.map((v) => ({
+            ...v,
+            feature_state_value: Utils.valueToFeatureState(
+              v.feature_state_value,
+            ),
+          }))
+          const oldFeatureStatesFiltered = oldFeatureStates.data.results.filter(
+            (v) => {
               if (mode === 'VALUE') {
                 return !v.feature_segment?.segment
               } else {
                 return !!v.feature_segment?.segment
               }
-            }),
+            },
+          )
+
+          const {
+            feature_states_to_create,
+            feature_states_to_update,
+            segment_ids_to_delete_overrides,
+          } = getFeatureStateCrud(
+            newFeatureStates,
+            oldFeatureStatesFiltered,
             segments,
           )
 
@@ -172,7 +185,7 @@ export const featureVersionService = service
             throw new Error('Feature contains no changes')
           }
 
-          const versionRes: { data: FeatureVersion } =
+          const versionRes: { data?: FeatureVersion; error?: any } =
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
@@ -183,12 +196,28 @@ export const featureVersionService = service
               segment_ids_to_delete_overrides,
             })
 
-          const currentFeatureStates: { data: FeatureState[] } =
+          if (versionRes.error || !versionRes.data) {
+            return {
+              error: versionRes.error || {
+                message: 'Failed to create feature version',
+              },
+            }
+          }
+
+          const currentFeatureStates: { data?: FeatureState[]; error?: any } =
             await getVersionFeatureState(getStore(), {
               environmentId: query.environmentId,
               featureId: query.featureId,
               sha: versionRes.data.uuid,
             })
+
+          if (currentFeatureStates.error || !currentFeatureStates.data) {
+            return {
+              error: currentFeatureStates.error || {
+                message: 'Failed to get feature states',
+              },
+            }
+          }
 
           const res = currentFeatureStates.data
 
@@ -302,7 +331,6 @@ export async function createAndSetFeatureVersion(
     ),
   )
 }
-
 export async function getFeatureVersions(
   store: any,
   data: Req['getFeatureVersions'],

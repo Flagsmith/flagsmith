@@ -4,22 +4,25 @@ import {
   closeModal,
   createFeature,
   createRemoteConfig,
-  deleteFeature, editRemoteConfig,
-  getText,
+  deleteFeature,
+  editRemoteConfig,
+  gotoFeatures,
   log,
   login,
+  parseTryItResults,
   toggleFeature,
   waitForElementVisible,
-} from '../helpers.cafe';
-import { t } from 'testcafe';
-import { E2E_USER, PASSWORD } from '../config';
+} from '../helpers.cafe'
+import { t } from 'testcafe'
+import { E2E_USER, PASSWORD } from '../config'
 
 export default async function () {
   log('Login')
   await login(E2E_USER, PASSWORD)
   await click('#project-select-0')
 
-  log('Create Features')
+  log('Go to features')
+  await waitForElementVisible('#features-link')
   await click('#features-link')
 
   await createRemoteConfig(0, 'header_size', 'big')
@@ -47,46 +50,30 @@ export default async function () {
   log('Try it')
   await t.wait(2000)
   await click('#try-it-btn')
-  await t.wait(1500)
-  let text = await getText('#try-it-results')
-  let json
-  try {
-    json = JSON.parse(text)
-  } catch (e) {
-    throw new Error('Try it results are not valid JSON')
-  }
+  await t.wait(500)
+  let json = await parseTryItResults()
   await t.expect(json.header_size.value).eql('big')
   await t.expect(json.mv_flag.value).eql('big')
   await t.expect(json.header_enabled.enabled).eql(true)
 
   log('Update feature')
-  await editRemoteConfig(1,12)
+  await editRemoteConfig(1, 12)
 
   log('Try it again')
-  await t.wait(2000)
+  await t.wait(500)
   await click('#try-it-btn')
-  await t.wait(1500)
-  text = await getText('#try-it-results')
-  try {
-    json = JSON.parse(text)
-  } catch (e) {
-    throw new Error('Try it results are not valid JSON')
-  }
+  await t.wait(500)
+  json = await parseTryItResults()
   await t.expect(json.header_size.value).eql(12)
 
   log('Change feature value to boolean')
-  await editRemoteConfig(1,false)
+  await editRemoteConfig(1, false)
 
   log('Try it again 2')
   await t.wait(2000)
   await click('#try-it-btn')
-  await t.wait(1500)
-  text = await getText('#try-it-results')
-  try {
-    json = JSON.parse(text)
-  } catch (e) {
-    throw new Error('Try it results are not valid JSON')
-  }
+  await t.wait(500)
+  json = await parseTryItResults()
   await t.expect(json.header_size.value).eql(false)
 
   log('Switch environment')
@@ -96,7 +83,37 @@ export default async function () {
   await waitForElementVisible(byId('switch-environment-production-active'))
   await waitForElementVisible(byId('feature-switch-0-off'))
 
+  log('Switch back to Development environment')
+  await click(byId('switch-environment-development'))
+  await waitForElementVisible(byId('switch-environment-development-active'))
+
   log('Clear down features')
   await deleteFeature(1, 'header_size')
   await deleteFeature(0, 'header_enabled')
+  await deleteFeature(0, 'mv_flag')
+
+  log('Create multivariate feature for toggle test')
+  await createRemoteConfig(
+    0,
+    'mv_toggle_test',
+    'control',
+    'MV toggle test',
+    false,
+    [
+      { value: 'variant_a', weight: 50 },
+      { value: 'variant_b', weight: 50 },
+    ],
+  )
+
+  log('Toggle multivariate feature via edit modal')
+  await gotoFeatures()
+  await click(byId('feature-switch-0-on'))
+  await waitForElementVisible('#create-feature-modal')
+  await click(byId('toggle-feature-button'))
+  await click(byId('update-feature-btn'))
+  await closeModal()
+  await waitForElementVisible(byId('feature-switch-0-off'))
+
+  log('Multivariate toggle test passed')
+  await deleteFeature(0, 'mv_toggle_test')
 }
