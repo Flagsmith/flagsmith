@@ -591,6 +591,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                       )}
                       <FormGroup className='mt-4'>
                         <ChangeRequestsSetting
+                          data-test='js-feature-change-requests'
                           feature='4_EYES'
                           isLoading={saveDisabled}
                           value={currentEnv?.minimum_change_request_approvals}

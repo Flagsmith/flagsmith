@@ -108,7 +108,7 @@ test('Flag', flagTests).meta({ autoLogout: true, category: 'oss' })
 
 test('Change-Request', changeRequestTest).meta({
   autoLogout: true,
-  category: 'oss',
+  category: 'enterprise',
 })
 
 test('Signup', initialiseTests).meta({ autoLogout: true, category: 'oss' })
