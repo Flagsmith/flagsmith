@@ -167,8 +167,9 @@ export const getVariationDiff = (
 ) => {
   let totalChanges = 0
   const variationOptions = uniqBy(
-    oldFeatureState?.multivariate_feature_state_values ||
-      [].concat(newFeatureState?.multivariate_feature_state_values || []),
+    (oldFeatureState?.multivariate_feature_state_values || []).concat(
+      newFeatureState?.multivariate_feature_state_values || [],
+    ),
     (v) => v.multivariate_feature_option,
   )
   const diffs = variationOptions.map((variationOption) => {
