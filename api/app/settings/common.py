@@ -15,6 +15,7 @@ import json
 import os
 import warnings
 from datetime import datetime, time, timedelta
+from typing import Any
 
 import dj_database_url
 import django_stubs_ext
@@ -808,7 +809,7 @@ USER_THROTTLE_CACHE_BACKEND = env.str(
     "USER_THROTTLE_CACHE_BACKEND", "django.core.cache.backends.locmem.LocMemCache"
 )
 USER_THROTTLE_CACHE_LOCATION = env.str("USER_THROTTLE_CACHE_LOCATION", "admin-throttle")
-USER_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
+USER_THROTTLE_CACHE_OPTIONS: dict[str, Any] = env.dict(
     "USER_THROTTLE_CACHE_OPTIONS", default={}
 )
 
@@ -840,6 +841,12 @@ DJANGO_REDIS_IGNORE_EXCEPTIONS = env.bool(
 # ref:https://github.com/jazzband/django-redis/tree/5.4.0#log-ignored-exceptions
 DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = env.bool(
     "DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS", True
+)
+
+# Enable reading from replicas in Redis Cluster mode.
+# Distributes read traffic to replica nodes (port 6380 on ElastiCache Serverless).
+REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
+    "REDIS_CLUSTER_READ_FROM_REPLICAS", default=True
 )
 
 CACHES = {
