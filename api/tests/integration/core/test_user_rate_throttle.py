@@ -14,7 +14,7 @@ def test_master_api_key_user_throttle__master_api_key_request__throttles(
 ) -> None:
     # Given
     mocker.patch(
-        "core.throttling.MasterAPIKeyUserRateThrottle.get_rate",
+        "core.throttling.UserRateThrottle.get_rate",
         return_value="1/minute",
     )
 
@@ -41,7 +41,7 @@ def test_master_api_key_user_throttle__authenticated_user_request__does_not_thro
 ) -> None:
     # Given
     mocker.patch(
-        "core.throttling.MasterAPIKeyUserRateThrottle.get_rate",
+        "core.throttling.UserRateThrottle.get_rate",
         return_value="1/minute",
     )
 
