@@ -15,7 +15,8 @@ class UserRateThrottle(throttling.UserRateThrottle):
     cache = caches[settings.USER_THROTTLE_CACHE_NAME]
 
 
-class MasterAPIKeyUserRateThrottle(throttling.UserRateThrottle):
+class MasterAPIKeyUserRateThrottle(throttling.SimpleRateThrottle):
+    scope = "master_api_key"
     cache = caches[settings.USER_THROTTLE_CACHE_NAME]
 
     def get_cache_key(self, request: "Request", view: "APIView") -> str | None:

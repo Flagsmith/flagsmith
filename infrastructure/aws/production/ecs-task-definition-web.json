@@ -127,7 +127,7 @@
                 },
                 {
                     "name": "DEFAULT_THROTTLE_CLASSES",
-                    "value": "core.throttling.MasterAPIKeyUserRateThrottle"
+                    "value": "core.throttling.UserRateThrottle,core.throttling.MasterAPIKeyUserRateThrottle"
                 },
                 {
                     "name": "USER_THROTTLE_CACHE_BACKEND",
@@ -142,8 +142,8 @@
                     "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient"
                 },
                 {
-                    "name": "USER_THROTTLE_RATE",
-                    "value": "500/min"
+                    "name": "MASTER_API_KEY_THROTTLE_RATE",
+                    "value": "10/sec"
                 },
                 {
                     "name": "OAUTH_CLIENT_ID",
