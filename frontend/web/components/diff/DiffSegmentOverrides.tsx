@@ -9,17 +9,20 @@ import Icon from 'components/Icon'
 import Tooltip from 'components/Tooltip'
 import { Link, useHistory } from 'react-router-dom'
 import DiffVariations from './DiffVariations'
+import { ProjectFlag } from 'common/types/responses'
 
 type DiffSegmentOverride = {
   diff: TDiffSegmentOverride
   projectId: string
   environmentId: string
+  projectFlag: ProjectFlag | undefined
 }
 
 const widths = [200, 80, 105]
 const DiffSegmentOverride: FC<DiffSegmentOverride> = ({
   diff,
   environmentId,
+  projectFlag,
   projectId,
 }) => {
   return (
@@ -70,8 +73,11 @@ const DiffSegmentOverride: FC<DiffSegmentOverride> = ({
         </div>
       </div>
       <div className='px-3'>
-        {!!diff.variationDiff?.diffs && (
-          <DiffVariations diffs={diff.variationDiff.diffs} />
+        {!!diff.variationDiff?.diffs?.length && (
+          <DiffVariations
+            diffs={diff.variationDiff.diffs}
+            projectFlag={projectFlag}
+          />
         )}
       </div>
     </div>
@@ -82,10 +88,12 @@ type DiffSegmentOverridesType = {
   diffs: TDiffSegmentOverride[] | undefined
   projectId: string
   environmentId: string
+  projectFlag: ProjectFlag | undefined
 }
 const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
   diffs,
   environmentId,
+  projectFlag,
   projectId,
 }) => {
   const history = useHistory()
@@ -139,6 +147,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
           {created.map((diff, i) => (
             <DiffSegmentOverride
               environmentId={environmentId}
+              projectFlag={projectFlag}
               projectId={projectId}
               key={i}
               diff={diff}
@@ -159,6 +168,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
           {deleted.map((diff, i) => (
             <DiffSegmentOverride
               environmentId={environmentId}
+              projectFlag={projectFlag}
               projectId={projectId}
               key={i}
               diff={diff}
@@ -179,6 +189,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
           {modified.map((diff, i) => (
             <DiffSegmentOverride
               environmentId={environmentId}
+              projectFlag={projectFlag}
               projectId={projectId}
               key={i}
               diff={diff}
@@ -199,6 +210,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
           {unChanged.map((diff, i) => (
             <DiffSegmentOverride
               environmentId={environmentId}
+              projectFlag={projectFlag}
               projectId={projectId}
               key={i}
               diff={diff}

@@ -263,6 +263,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
                 )}
                 <DiffSegmentOverrides
                   diffs={segmentDiffs.diffs}
+                  projectFlag={projectFlag}
                   projectId={projectId}
                   environmentId={environmentId}
                 />
