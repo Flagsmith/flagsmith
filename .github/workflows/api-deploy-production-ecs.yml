@@ -28,13 +28,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Poetry
+        run: make install-poetry
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: poetry
 
       - name: Install dependencies
-        run: make install
+        run: |
+          echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
+          git config --global credential.helper store
+          make install-packages opts="--with saml,auth-controller,workflows,release-pipelines"
+          make install-private-modules
+          rm -rf ${HOME}/.git-credentials
 
       - name: Generate MCP schema
         run: make generate-mcp-spec

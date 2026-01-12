@@ -159,4 +159,4 @@ add-known-sdk-version:
 
 .PHONY: generate-mcp-spec
 generate-mcp-spec:
-	poetry run python manage.py spectacular --generator-class api.openapi.MCPSchemaGenerator --file mcp-openapi.yaml
+	poetry run python manage.py spectacular --generator-class api.openapi.MCPSchemaGenerator --file mcp_openapi.yaml
