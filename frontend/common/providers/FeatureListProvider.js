@@ -147,20 +147,7 @@ const FeatureListProvider = class extends React.Component {
       projectFlag,
       {
         ...environmentFlag,
-        multivariate_feature_state_values: flag.multivariate_options?.map(
-          (v) => {
-            const existing =
-              environmentFlag.multivariate_feature_state_values?.find(
-                (e) => e.multivariate_feature_option === v.id,
-              )
-            return {
-              multivariate_feature_option: v.id,
-              percentage_allocation:
-                existing?.percentage_allocation ??
-                v.default_percentage_allocation,
-            }
-          },
-        ),
+        multivariate_feature_state_values: flag.multivariate_options,
       },
       segmentOverrides,
       'SEGMENT',
@@ -229,19 +216,15 @@ const FeatureListProvider = class extends React.Component {
           newProjectFlag,
           {
             ...environmentFlag,
-            multivariate_feature_state_values: flag.multivariate_options?.map(
-              (v) => {
-                const existing =
-                  environmentFlag.multivariate_feature_state_values?.find(
-                    (e) => e.multivariate_feature_option === v.id,
-                  )
-                return {
-                  multivariate_feature_option: v.id,
-                  percentage_allocation:
-                    existing?.percentage_allocation ??
-                    v.default_percentage_allocation,
-                }
-              },
+            multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
+              newProjectFlag.multivariate_options?.map((opt, i) => ({
+                ...opt,
+                default_percentage_allocation:
+                  flag.multivariate_options?.[i]
+                    ?.default_percentage_allocation ??
+                  opt.default_percentage_allocation,
+              })),
+              environmentFlag.multivariate_feature_state_values,
             ),
           },
           segmentOverrides,
