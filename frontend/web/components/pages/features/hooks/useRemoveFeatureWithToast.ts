@@ -35,6 +35,7 @@ export const useRemoveFeatureWithToast = () => {
           'danger',
         )
         options?.onError?.(error)
+        throw error
       }
     },
     [removeProjectFlag],

@@ -144,7 +144,10 @@ const FeaturesPage: FC = () => {
       environmentFlag: FeatureState | undefined,
       onError?: () => void,
     ) => {
-      if (!currentEnvironment) return
+      if (!currentEnvironment) {
+        onError?.()
+        return
+      }
       await toggleFeature(flag, environmentFlag, currentEnvironment, {
         onError,
       })

@@ -29,6 +29,7 @@ export const useToggleFeatureWithToast = () => {
     ) => {
       if (!environmentFlag) {
         console.warn('Cannot toggle feature: environmentFlag is undefined')
+        options?.onError?.(new Error('environmentFlag is undefined'))
         return
       }
       try {

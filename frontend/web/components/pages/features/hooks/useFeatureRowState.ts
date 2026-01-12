@@ -38,6 +38,10 @@ export function useFeatureRowState(actualEnabled: boolean | undefined) {
     setIsRemoving(true)
   }, [])
 
+  const stopRemoving = useCallback(() => {
+    setIsRemoving(false)
+  }, [])
+
   return {
     displayEnabled,
     isLoading,
@@ -46,5 +50,6 @@ export function useFeatureRowState(actualEnabled: boolean | undefined) {
     revertToggle,
     startRemoving,
     startToggle,
+    stopRemoving,
   }
 }

@@ -92,12 +92,14 @@ class CompareFeatures extends Component {
               {({}, { removeFlag, toggleFlag }) => {
                 // Adapt old FeatureListProvider signatures to new FeatureRow signatures
                 const adaptedToggleFlag =
-                  (environmentId) => (projectFlag, environmentFlag) => {
+                  (environmentId) =>
+                  (projectFlag, environmentFlag, onError) => {
                     toggleFlag(
                       this.props.projectId,
                       environmentId,
                       projectFlag,
                       environmentFlag,
+                      onError,
                     )
                   }
                 const adaptedRemoveFlag = (projectFlag) => {

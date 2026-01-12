@@ -92,6 +92,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     revertToggle,
     startRemoving,
     startToggle,
+    stopRemoving,
   } = useFeatureRowState(actualEnabled)
 
   const { data: healthEvents } = useGetHealthEventsQuery(
@@ -272,7 +273,11 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       if (disableControls) return
       confirmRemove(projectFlag, async () => {
         startRemoving()
-        await removeFlag?.(projectFlag)
+        try {
+          await removeFlag?.(projectFlag)
+        } catch {
+          stopRemoving()
+        }
       })
     },
     onShowAudit: () => {
