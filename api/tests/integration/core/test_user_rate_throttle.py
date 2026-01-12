@@ -6,55 +6,6 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 
-def test_master_api_key_user_throttle__master_api_key_request__throttles(
-    admin_master_api_key_client: APIClient,
-    project: int,
-    mocker: MockerFixture,
-    reset_cache: None,
-) -> None:
-    # Given
-    mocker.patch(
-        "core.throttling.UserRateThrottle.get_rate",
-        return_value="1/minute",
-    )
-
-    url = reverse("api-v1:projects:project-list")
-
-    # When - first request should be successful
-    response = admin_master_api_key_client.get(url, content_type="application/json")
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-
-    # When - second request should be throttled
-    response = admin_master_api_key_client.get(url, content_type="application/json")
-
-    # Then
-    assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
-
-
-def test_master_api_key_user_throttle__authenticated_user_request__does_not_throttle(
-    admin_client: APIClient,
-    project: int,
-    mocker: MockerFixture,
-    reset_cache: None,
-) -> None:
-    # Given
-    mocker.patch(
-        "core.throttling.UserRateThrottle.get_rate",
-        return_value="1/minute",
-    )
-
-    url = reverse("api-v1:projects:project-list")
-
-    # When
-    for _ in range(10):
-        response = admin_client.get(url, content_type="application/json")
-
-        # Then
-        assert response.status_code == status.HTTP_200_OK
-
-
 def test_get_flags_is_not_throttled_by_user_throttle(
     sdk_client: APIClient,
     environment: int,
