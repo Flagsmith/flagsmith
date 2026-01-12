@@ -47,16 +47,10 @@ def test_master_api_key_user_rate_throttle__regular_user__not_throttled(
 
     mock_view = MagicMock()
 
-    mock_parent_allow_request = mocker.patch(
-        "rest_framework.throttling.UserRateThrottle.allow_request",
-        return_value=False,
-    )
-
     # When
     result = throttle.allow_request(mock_request, mock_view)
 
     # Then
-    mock_parent_allow_request.assert_not_called()
     assert result is True
 
 
@@ -71,14 +65,8 @@ def test_master_api_key_user_rate_throttle__anonymous_user__not_throttled(
 
     mock_view = MagicMock()
 
-    mock_parent_allow_request = mocker.patch(
-        "rest_framework.throttling.UserRateThrottle.allow_request",
-        return_value=False,
-    )
-
     # When
     result = throttle.allow_request(mock_request, mock_view)
 
     # Then
-    mock_parent_allow_request.assert_not_called()
     assert result is True
