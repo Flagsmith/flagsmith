@@ -1,9 +1,32 @@
 import json
 
+import pytest
 from django.urls import reverse
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
+
+
+@pytest.mark.parametrize(
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+)
+def test_user_throttle_can_throttle_admin_endpoints(
+    client: APIClient, project: int, mocker: MockerFixture, reset_cache: None
+) -> None:
+    # Given
+    mocker.patch("core.throttling.UserRateThrottle.get_rate", return_value="1/minute")
+
+    url = reverse("api-v1:projects:project-list")
+
+    # Then - first request should be successful
+    response = client.get(url, content_type="application/json")
+    assert response.status_code == status.HTTP_200_OK
+
+    # Second request should be throttled
+    response = client.get(url, content_type="application/json")
+    assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
 
 def test_get_flags_is_not_throttled_by_user_throttle(
