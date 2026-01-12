@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.208.0](https://github.com/Flagsmith/flagsmith/compare/v2.207.1...v2.208.0) (2026-01-12)
+
+
+### Features
+
+* **redis:** enable read_from_replicas for Redis Cluster by default ([#6506](https://github.com/Flagsmith/flagsmith/issues/6506)) ([b53e0cf](https://github.com/Flagsmith/flagsmith/commit/b53e0cf57a88c22f2eb42dce5529363af377b1a5))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Revert to default Redis pool settings ([#6507](https://github.com/Flagsmith/flagsmith/issues/6507)) ([dbaf16e](https://github.com/Flagsmith/flagsmith/commit/dbaf16e24571f7f0e95be62fb5414de12e0e8820))
+* Set per-user rate limit to 500/min for Admin API ([#6502](https://github.com/Flagsmith/flagsmith/issues/6502)) ([6c1f175](https://github.com/Flagsmith/flagsmith/commit/6c1f175d98394f088ed043daac6c646bd4ebcc48))
+
 ## [2.207.1](https://github.com/Flagsmith/flagsmith/compare/v2.207.0...v2.207.1) (2026-01-08)
 
 
