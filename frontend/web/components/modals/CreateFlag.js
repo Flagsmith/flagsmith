@@ -1017,7 +1017,7 @@ const CreateFlag = class extends Component {
                         feature_state_value:
                           Utils.valueToFeatureState(initial_value),
                         multivariate_feature_state_values:
-                          this.state.identityVariations,
+                          this.props.environmentVariations,
                       }),
                     ])
 
@@ -1441,6 +1441,8 @@ const CreateFlag = class extends Component {
                                                             this.props.projectId
                                                           }
                                                           multivariateOptions={
+                                                            // Use local state to show all variations including unsaved ones
+                                                            // The change request creation will filter out unsaved variations (without IDs)
                                                             multivariate_options
                                                           }
                                                           environmentId={
