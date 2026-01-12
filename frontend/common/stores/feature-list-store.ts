@@ -48,6 +48,10 @@ const convertSegmentOverrideToFeatureState = (
   i,
   changeRequest?: Req['createChangeRequest'],
 ) => {
+  const mvResult = Utils.mapMvOptionsToStateValues(
+    override.multivariate_options,
+    override.multivariate_feature_state_values,
+  )
   return {
     enabled: override.enabled,
     feature: override.feature,
@@ -60,7 +64,7 @@ const convertSegmentOverrideToFeatureState = (
     feature_state_value: override.value,
     id: override.id,
     live_from: changeRequest?.live_from,
-    multivariate_feature_state_values: override.multivariate_options,
+    multivariate_feature_state_values: mvResult,
     toRemove: override.toRemove,
   } as Partial<FeatureState>
 }
@@ -212,6 +216,7 @@ const controller = {
           ? originalFlag.multivariate_options.find((m) => m.id === v.id)
           : null
         const url = `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`
+        const userEnteredWeight = v.default_percentage_allocation
         const mvData = {
           ...v,
           default_percentage_allocation: 0,
@@ -222,8 +227,11 @@ const controller = {
             ? data.put(`${url}${originalMV.id}/`, mvData)
             : data.post(url, mvData)
         ).then((res) => {
-          // It's important to preserve the original order of multivariate_options, so that editing feature states can use the updated ID
-          flag.multivariate_options[i] = res
+          // Preserve order and user's weight (API returns 0 for default_percentage_allocation)
+          flag.multivariate_options[i] = {
+            ...res,
+            default_percentage_allocation: userEnteredWeight,
+          }
           return {
             ...v,
             id: res.id,

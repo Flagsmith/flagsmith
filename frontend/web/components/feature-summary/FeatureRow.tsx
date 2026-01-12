@@ -8,7 +8,6 @@ import { useProtectedTags } from 'common/utils/useProtectedTags'
 import Icon from 'components/Icon'
 import FeatureValue from './FeatureValue'
 import FeatureAction, { FeatureActionProps } from './FeatureAction'
-import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
 import Button from 'components/base/forms/Button'
 import {
@@ -27,7 +26,7 @@ import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import FeatureName from './FeatureName'
 import FeatureDescription from './FeatureDescription'
 import FeatureTags from './FeatureTags'
-import { useOptimisticToggle } from 'components/pages/features/hooks/useOptimisticToggle'
+import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
 
 export interface FeatureRowProps {
   disableControls?: boolean
@@ -55,6 +54,7 @@ export interface FeatureRowProps {
   hideRemove?: boolean
   releasePipelines?: ReleasePipeline[]
   onCloseEditModal?: () => void
+  isCompact?: boolean
 }
 
 const width = [220, 50, 55, 70, 450]
@@ -71,6 +71,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     hideAudit = false,
     hideRemove = false,
     index,
+    isCompact = false,
     onCloseEditModal,
     permission,
     projectFlag,
@@ -86,10 +87,12 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
 
   const actualEnabled = environmentFlags?.[id]?.enabled
   const {
-    displayValue: displayEnabled,
-    revertOptimistic,
-    setOptimistic,
-  } = useOptimisticToggle(actualEnabled)
+    displayEnabled,
+    isLoading,
+    revertToggle,
+    startRemoving,
+    startToggle,
+  } = useFeatureRowState(actualEnabled)
 
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: String(projectFlag.project) },
@@ -146,15 +149,16 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   }
 
   const handleToggle = useCallback(() => {
-    setOptimistic(!actualEnabled)
-    toggleFlag?.(projectFlag, environmentFlags?.[id], revertOptimistic)
+    const canToggle = startToggle(!actualEnabled)
+    if (!canToggle) return // Prevent rapid toggling
+    toggleFlag?.(projectFlag, environmentFlags?.[id], revertToggle)
   }, [
     actualEnabled,
     environmentFlags,
     id,
     projectFlag,
-    revertOptimistic,
-    setOptimistic,
+    revertToggle,
+    startToggle,
     toggleFlag,
   ])
 
@@ -236,8 +240,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     environmentId,
   ) as Environment | null
 
-  const isCompact = getViewMode() === 'compact'
-
   if (condensed) {
     return (
       <CondensedFeatureRow
@@ -268,8 +270,9 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     onCopyName: copyFeature,
     onRemove: () => {
       if (disableControls) return
-      confirmRemove(projectFlag, () => {
-        removeFlag?.(projectFlag)
+      confirmRemove(projectFlag, async () => {
+        startRemoving()
+        await removeFlag?.(projectFlag)
       })
     },
     onShowAudit: () => {
@@ -296,6 +299,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             isReadOnly ? '' : 'clickable'
           }`,
           className,
+          { 'list-item--toggling': isLoading },
         )}
         key={id}
         data-test={`feature-item-${index}`}
@@ -331,7 +335,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
               }}
             >
               <Switch
-                disabled={!permission || isReadOnly}
+                disabled={!permission || isReadOnly || isLoading}
                 data-test={`feature-switch-${index}${
                   displayEnabled ? '-on' : '-off'
                 }`}
@@ -353,7 +357,10 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       </div>
       <div
         onClick={() => !isReadOnly && editFeature()}
-        className='d-flex cursor-pointer flex-column justify-content-center px-2 list-item py-1  d-lg-none'
+        className={classNames(
+          'd-flex cursor-pointer flex-column justify-content-center px-2 list-item py-1 d-lg-none',
+          { 'list-item--toggling': isLoading },
+        )}
       >
         <div className='d-flex gap-2 align-items-center'>
           <div className='flex-1 align-items-center flex-wrap'>
@@ -361,7 +368,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             <FeatureTags editFeature={editFeature} projectFlag={projectFlag} />
           </div>
           <Switch
-            disabled={!permission || isReadOnly}
+            disabled={!permission || isReadOnly || isLoading}
             data-test={`feature-switch-${index}${
               displayEnabled ? '-on' : '-off'
             }`}

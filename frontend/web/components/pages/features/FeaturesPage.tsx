@@ -24,6 +24,7 @@ import { useRemoveFeatureWithToast } from './hooks/useRemoveFeatureWithToast'
 import { useToggleFeatureWithToast } from './hooks/useToggleFeatureWithToast'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { useFeatureListWithApiKey } from 'common/hooks/useFeatureListWithApiKey'
+import { useViewMode } from 'common/useViewMode'
 import type { Pagination } from './types'
 import type { ProjectFlag, FeatureState } from 'common/types/responses'
 
@@ -58,6 +59,12 @@ const FeaturesPage: FC = () => {
     hasFilters,
     page,
   } = useFeatureFilters(history)
+
+  const {
+    isCompact,
+    setViewMode: handleViewModeChange,
+    viewMode,
+  } = useViewMode()
 
   const {
     error: projectEnvError,
@@ -185,9 +192,11 @@ const FeaturesPage: FC = () => {
         filters={filters}
         hasFilters={hasFilters}
         isLoading={isLoading}
-        orgId={routeContext.organisationId}
+        orgId={project?.organisation}
         onFilterChange={handleFilterChange}
         onClearFilters={clearFilters}
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
       />
     ),
     [
@@ -195,9 +204,11 @@ const FeaturesPage: FC = () => {
       filters,
       hasFilters,
       isLoading,
-      routeContext.organisationId,
+      project?.organisation,
       handleFilterChange,
       clearFilters,
+      viewMode,
+      handleViewModeChange,
     ],
   )
 
@@ -228,6 +239,7 @@ const FeaturesPage: FC = () => {
 
       return (
         <Permission
+          key={projectFlag.id}
           level='environment'
           tags={projectFlag.tags}
           permission={Utils.getManageFeaturePermission(
@@ -245,6 +257,7 @@ const FeaturesPage: FC = () => {
               toggleFlag={toggleFlag}
               removeFlag={removeFlag}
               projectFlag={projectFlag}
+              isCompact={isCompact}
             />
           )}
         </Permission>
@@ -257,6 +270,7 @@ const FeaturesPage: FC = () => {
       minimumChangeRequestApprovals,
       toggleFlag,
       removeFlag,
+      isCompact,
     ],
   )
 
