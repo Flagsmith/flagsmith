@@ -21,5 +21,8 @@ class MasterAPIKeyUserRateThrottle(throttling.UserRateThrottle):
     def get_cache_key(self, request: Request, view: "APIView") -> str | None:
         if getattr(request.user, "is_master_api_key_user", False):
             assert isinstance(request.user, APIKeyUser)
-            return str(request.user.key.id)
+            return self.cache_format % {
+                "scope": self.scope,
+                "ident": str(request.user.api_key.id),
+            }
         return None
