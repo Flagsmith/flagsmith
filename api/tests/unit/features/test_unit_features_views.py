@@ -3664,6 +3664,29 @@ def test_FeatureViewSet_list__includes_code_references_counts(
     ]
 
 
+def test_FeatureViewSet_list__no_scans__returns_empty_code_references_counts(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given - project has no code reference scans
+    with_project_permissions([VIEW_PROJECT])
+
+    # When
+    response = staff_client.get(
+        f"/api/v1/projects/{project.id}/features/?environment={environment.id}"
+    )
+
+    # Then - response should include code_references_counts as empty list
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert len(results) == 1
+    assert "code_references_counts" in results[0]
+    assert results[0]["code_references_counts"] == []
+
+
 def test_simple_feature_state_returns_only_latest_versions(
     staff_client: APIClient,
     staff_user: FFAdminUser,
