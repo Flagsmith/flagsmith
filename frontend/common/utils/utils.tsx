@@ -680,23 +680,40 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     })
   },
   mapMvOptionsToStateValues(
-    mvOptions: MultivariateOption[],
+    mvOptions: (MultivariateOption | MultivariateFeatureStateValue)[],
     existingMvFeatureStateValues: MultivariateFeatureStateValue[],
   ): MultivariateFeatureStateValue[] {
+    // Handle both MultivariateOption (from project flag) and MultivariateFeatureStateValue (from segment overrides)
     // Filter out variations without IDs (new variations that haven't been saved yet)
     // These cannot be referenced in a change request until saved to the project
     return mvOptions
-      ?.filter((mvOption) => mvOption.id !== undefined)
+      ?.filter((mvOption) => {
+        // Check for both 'id' (MultivariateOption) and 'multivariate_feature_option' (MultivariateFeatureStateValue)
+        const optionId =
+          (mvOption as MultivariateOption).id ??
+          (mvOption as MultivariateFeatureStateValue)
+            .multivariate_feature_option
+        return optionId !== undefined
+      })
       .map((mvOption) => {
+        // Get the option ID from either property
+        const optionId =
+          (mvOption as MultivariateOption).id ??
+          (mvOption as MultivariateFeatureStateValue)
+            .multivariate_feature_option
         const existing = existingMvFeatureStateValues?.find(
-          (e) => e.multivariate_feature_option === mvOption.id,
+          (e) => e.multivariate_feature_option === optionId,
         )
+        // Get the percentage allocation from the current option or existing or default
+        const currentAllocation = (mvOption as MultivariateFeatureStateValue)
+          .percentage_allocation
         return {
-          id: mvOption.id,
-          multivariate_feature_option: mvOption.id,
+          id: optionId,
+          multivariate_feature_option: optionId,
           percentage_allocation:
+            currentAllocation ??
             existing?.percentage_allocation ??
-            mvOption.default_percentage_allocation,
+            (mvOption as MultivariateOption).default_percentage_allocation,
         }
       })
   },
