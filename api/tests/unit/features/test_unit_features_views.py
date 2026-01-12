@@ -3672,7 +3672,7 @@ def test_FeatureViewSet_list__no_scans__returns_empty_code_references_counts(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given - project has no code reference scans
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     # When
     response = staff_client.get(
