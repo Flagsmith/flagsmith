@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.209.0](https://github.com/Flagsmith/flagsmith/compare/v2.208.0...v2.209.0) (2026-01-12)
+
+
+### Features
+
+* **throttling:** Throttle only requests authorised by master API keys ([#6513](https://github.com/Flagsmith/flagsmith/issues/6513)) ([e1afc88](https://github.com/Flagsmith/flagsmith/commit/e1afc883bd9f9a861edcbfc741a34f3c5b2496a1))
+
 ## [2.208.0](https://github.com/Flagsmith/flagsmith/compare/v2.207.1...v2.208.0) (2026-01-12)
 
 
