@@ -23,6 +23,6 @@ class MasterAPIKeyUserRateThrottle(throttling.UserRateThrottle):
             assert isinstance(request.user, APIKeyUser)
             return self.cache_format % {
                 "scope": self.scope,
-                "ident": str(request.user.api_key.id),
+                "ident": str(request.user.key.id),
             }
         return None

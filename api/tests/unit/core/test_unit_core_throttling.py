@@ -15,6 +15,8 @@ def test_master_api_key_user_rate_throttle__master_api_key_user__throttled(
 ) -> None:
     # Given
     throttle = MasterAPIKeyUserRateThrottle()
+    setattr(throttle, "num_requests", 1)
+    setattr(throttle, "duration", 60)  # 1 minute
     user = APIKeyUser(admin_master_api_key_object)
 
     mock_request = MagicMock(spec=Request)
@@ -22,16 +24,12 @@ def test_master_api_key_user_rate_throttle__master_api_key_user__throttled(
 
     mock_view = MagicMock()
 
-    mock_parent_allow_request = mocker.patch(
-        "rest_framework.throttling.UserRateThrottle.allow_request",
-        return_value=False,
-    )
+    throttle.allow_request(mock_request, mock_view)
 
     # When
     result = throttle.allow_request(mock_request, mock_view)
 
     # Then
-    mock_parent_allow_request.assert_called_once_with(mock_request, mock_view)
     assert result is False
 
 
@@ -41,11 +39,15 @@ def test_master_api_key_user_rate_throttle__regular_user__not_throttled(
 ) -> None:
     # Given
     throttle = MasterAPIKeyUserRateThrottle()
+    setattr(throttle, "num_requests", 1)
+    setattr(throttle, "duration", 60)  # 1 minute
 
     mock_request = MagicMock(spec=Request)
     mock_request.user = admin_user
 
     mock_view = MagicMock()
+
+    throttle.allow_request(mock_request, mock_view)
 
     # When
     result = throttle.allow_request(mock_request, mock_view)
@@ -59,11 +61,15 @@ def test_master_api_key_user_rate_throttle__anonymous_user__not_throttled(
 ) -> None:
     # Given
     throttle = MasterAPIKeyUserRateThrottle()
+    setattr(throttle, "num_requests", 1)
+    setattr(throttle, "duration", 60)  # 1 minute
 
     mock_request = MagicMock(spec=Request)
     mock_request.user = None
 
     mock_view = MagicMock()
+
+    throttle.allow_request(mock_request, mock_view)
 
     # When
     result = throttle.allow_request(mock_request, mock_view)
