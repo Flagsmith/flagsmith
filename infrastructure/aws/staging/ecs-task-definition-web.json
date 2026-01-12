@@ -195,7 +195,7 @@
                 },
                 {
                     "name": "DEFAULT_THROTTLE_CLASSES",
-                    "value": "core.throttling.UserRateThrottle"
+                    "value": "core.throttling.MasterAPIKeyUserRateThrottle"
                 },
                 {
                     "name": "USER_THROTTLE_CACHE_BACKEND",
