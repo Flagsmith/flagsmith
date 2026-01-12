@@ -3117,7 +3117,7 @@ def test_list_features_n_plus_1_without_rbac(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=17,
+        num_queries=18,
     )
 
 
@@ -3140,7 +3140,7 @@ def test_list_features_n_plus_1_with_rbac(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=18,
+        num_queries=19,
     )
 
 
@@ -3664,6 +3664,29 @@ def test_FeatureViewSet_list__includes_code_references_counts(
     ]
 
 
+def test_FeatureViewSet_list__no_scans__returns_empty_code_references_counts(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given - project has no code reference scans
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+
+    # When
+    response = staff_client.get(
+        f"/api/v1/projects/{project.id}/features/?environment={environment.id}"
+    )
+
+    # Then - response should include code_references_counts as empty list
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert len(results) == 1
+    assert "code_references_counts" in results[0]
+    assert results[0]["code_references_counts"] == []
+
+
 def test_simple_feature_state_returns_only_latest_versions(
     staff_client: APIClient,
     staff_user: FFAdminUser,
@@ -3737,7 +3760,7 @@ def test_feature_list_last_modified_values_without_rbac(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=19,
+        num_queries=20,
     )
 
 
@@ -3763,7 +3786,7 @@ def test_feature_list_last_modified_values_with_rbac(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=20,
+        num_queries=21,
     )
 
 
