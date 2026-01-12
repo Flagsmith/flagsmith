@@ -683,18 +683,22 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     mvOptions: MultivariateOption[],
     existingMvFeatureStateValues: MultivariateFeatureStateValue[],
   ): MultivariateFeatureStateValue[] {
-    return mvOptions?.map((mvOption) => {
-      const existing = existingMvFeatureStateValues?.find(
-        (e) => e.multivariate_feature_option === mvOption.id,
-      )
-      return {
-        id: mvOption.id,
-        multivariate_feature_option: mvOption.id,
-        percentage_allocation:
-          existing?.percentage_allocation ??
-          mvOption.default_percentage_allocation,
-      }
-    })
+    // Filter out variations without IDs (new variations that haven't been saved yet)
+    // These cannot be referenced in a change request until saved to the project
+    return mvOptions
+      ?.filter((mvOption) => mvOption.id !== undefined)
+      .map((mvOption) => {
+        const existing = existingMvFeatureStateValues?.find(
+          (e) => e.multivariate_feature_option === mvOption.id,
+        )
+        return {
+          id: mvOption.id,
+          multivariate_feature_option: mvOption.id,
+          percentage_allocation:
+            existing?.percentage_allocation ??
+            mvOption.default_percentage_allocation,
+        }
+      })
   },
   numberWithCommas(x: number) {
     if (typeof x !== 'number') return ''
