@@ -269,6 +269,13 @@ export default async function () {
     // Verify the segment name appears
     await assertTextContentContains('[data-test="change-requests-page"]', 'test_cr_segment')
     log('Verified: CR diff shows the segment override (test_cr_segment)')
+
+    // Verify the MV weight values are displayed in the segment override diff
+    // The segment override has weights: variant_a=60%, variant_b=30%, variant_c=10%
+    await assertTextContentContains('[data-test="change-requests-page"]', '60%')
+    await assertTextContentContains('[data-test="change-requests-page"]', '30%')
+    await assertTextContentContains('[data-test="change-requests-page"]', '10%')
+    log('Verified: CR diff shows segment override MV weights (60%, 30%, 10%)')
   } else {
     // Segment overrides might be shown inline
     const pageContent = await Selector('[data-test="change-requests-page"]').innerText
