@@ -60,10 +60,7 @@ const convertSegmentOverrideToFeatureState = (
     feature_state_value: override.value,
     id: override.id,
     live_from: changeRequest?.live_from,
-    multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
-      override.multivariate_options,
-      override.multivariate_feature_state_values,
-    ),
+    multivariate_feature_state_values: override.multivariate_options,
     toRemove: override.toRemove,
   } as Partial<FeatureState>
 }

@@ -428,7 +428,12 @@ const CreateFlag = class extends Component {
             tags: this.state.tags,
           },
           projectFlag,
-          environmentFlag,
+          {
+            ...environmentFlag,
+            multivariate_feature_state_values:
+              this.props.environmentVariations ||
+              environmentFlag.multivariate_feature_state_values,
+          },
           segmentOverrides,
         )
     }
@@ -1021,12 +1026,16 @@ const CreateFlag = class extends Component {
                       }),
                     ])
 
+                  let modalTitle = 'New Change Request'
+                  if (schedule) {
+                    modalTitle = 'New Scheduled Flag Update'
+                  }
+                  if (this.props.changeRequest) {
+                    modalTitle = 'Update Change Request'
+                  }
+
                   openModal2(
-                    schedule
-                      ? 'New Scheduled Flag Update'
-                      : this.props.changeRequest
-                      ? 'Update Change Request'
-                      : 'New Change Request',
+                    modalTitle,
                     <ChangeRequestModal
                       showIgnoreConflicts={true}
                       showAssignees={is4Eyes}
@@ -1534,6 +1543,38 @@ const CreateFlag = class extends Component {
                                                             permission:
                                                               manageSegmentsOverrides,
                                                           }) => {
+                                                            const getButtonText =
+                                                              () => {
+                                                                if (
+                                                                  isSaving &&
+                                                                  existingChangeRequest
+                                                                )
+                                                                  return 'Updating Change Request'
+                                                                if (isSaving)
+                                                                  return 'Creating Change Request'
+                                                                if (
+                                                                  existingChangeRequest
+                                                                )
+                                                                  return 'Update Change Request'
+                                                                return 'Create Change Request'
+                                                              }
+
+                                                            const getScheduleButtonText =
+                                                              () => {
+                                                                if (
+                                                                  isSaving &&
+                                                                  existingChangeRequest
+                                                                )
+                                                                  return 'Updating Change Request'
+                                                                if (isSaving)
+                                                                  return 'Scheduling Update'
+                                                                if (
+                                                                  existingChangeRequest
+                                                                )
+                                                                  return 'Update Change Request'
+                                                                return 'Schedule Update'
+                                                              }
+
                                                             if (
                                                               isVersioned &&
                                                               is4Eyes
@@ -1560,13 +1601,7 @@ const CreateFlag = class extends Component {
                                                                     !savePermission
                                                                   }
                                                                 >
-                                                                  {isSaving
-                                                                    ? existingChangeRequest
-                                                                      ? 'Updating Change Request'
-                                                                      : 'Creating Change Request'
-                                                                    : existingChangeRequest
-                                                                    ? 'Update Change Request'
-                                                                    : 'Create Change Request'}
+                                                                  {getButtonText()}
                                                                 </Button>,
                                                               )
                                                             }
@@ -1599,13 +1634,7 @@ const CreateFlag = class extends Component {
                                                                           !savePermission
                                                                         }
                                                                       >
-                                                                        {isSaving
-                                                                          ? existingChangeRequest
-                                                                            ? 'Updating Change Request'
-                                                                            : 'Scheduling Update'
-                                                                          : existingChangeRequest
-                                                                          ? 'Update Change Request'
-                                                                          : 'Schedule Update'}
+                                                                        {getScheduleButtonText()}
                                                                       </Button>
                                                                     </>
                                                                   )}

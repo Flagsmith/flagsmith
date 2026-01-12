@@ -688,11 +688,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         (e) => e.multivariate_feature_option === mvOption.id,
       )
       return {
-        id: mvOption.id,
+        id: existing?.id,
         multivariate_feature_option: mvOption.id,
         percentage_allocation:
-          existing?.percentage_allocation ??
-          mvOption.default_percentage_allocation,
+          mvOption.default_percentage_allocation ??
+          existing?.percentage_allocation,
       }
     })
   },
