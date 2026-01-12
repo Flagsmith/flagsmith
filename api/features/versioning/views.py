@@ -216,6 +216,26 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
         },
     ),
 )
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "create_environment_feature_version_state",
+            "x-mcp-description": "Creates a new feature state for a specific version in an environment.",
+        },
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-mcp-name": "update_environment_feature_version_state",
+            "x-mcp-description": "Updates an existing feature state for a specific version in an environment.",
+        },
+    ),
+)
 class EnvironmentFeatureVersionFeatureStatesViewSet(
     GenericViewSet,  # type: ignore[type-arg]
     ListModelMixin,

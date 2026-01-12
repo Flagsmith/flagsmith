@@ -118,21 +118,24 @@ class MCPSchemaGenerator(SchemaGenerator):
         if mcp_desc := operation.pop("x-mcp-description", None):
             operation["description"] = mcp_desc
 
+        # Remove operation-level security (use global MCP security instead)
+        operation.pop("security", None)
+
         return operation
 
     def _update_security_for_mcp(self, schema: dict[str, Any]) -> dict[str, Any]:
-        """Update security schemes for MCP (admin API key)."""
+        """Update security schemes for MCP (Organisation API Key)."""
         schema = schema.copy()
         schema["components"] = schema.get("components", {}).copy()
         schema["components"]["securitySchemes"] = {
-            "ApiKey": {
+            "TOKEN_AUTH": {
                 "type": "apiKey",
                 "in": "header",
                 "name": "Authorization",
-                "description": "API key for MCP access. Format: Api-Key <key>",
+                "description": "Organisation API Key. Format: Api-Key <key>",
             },
         }
-        schema["security"] = [{"ApiKey": []}]
+        schema["security"] = [{"TOKEN_AUTH": []}]
         return schema
 
 
