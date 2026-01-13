@@ -78,7 +78,7 @@ See [minimum required SDK versions](/flagsmith-concepts/segments/segment-rule-op
 
 In addition to identity [traits](/flagsmith-concepts/identities#identity-traits), you can use the following context values as Segment rule properties. For more information about identities and traits, see the [Identities documentation](/flagsmith-concepts/identities).
 
-- **Identifier**: a unique identifier for an identity, used for segment and multivariate feature flag targeting, and displayed in the Flagsmith UI. Useful for bucketing via the [`% Split`](./segment-rule-operators#percentage-split) operator, or managing a list of users via the [`In`](./segment-rule-operators#in) operator.
+- **Identifier**: a unique identifier for an identity, used for segment and multivariate feature flag targeting, and displayed in the Flagsmith UI. Useful for bucketing via the [`% Split`](./segment-rule-operators?operators=percent#operator-details) operator, or managing a list of users via the [`In`](./segment-rule-operators?operators=in#operator-details) operator.
 - **Identity Key**: a key used when selecting a value for a multivariate feature, or for % split segmentation. Set to an internal identifier or a composite value based on the environment key and identifier, depending on Flagsmith implementation.
 - **Environment Name**: an environment's human-readable name. Useful for restricting Segments to certain environments.
 

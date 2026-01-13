@@ -1961,10 +1961,14 @@ const FeatureProvider = (WrappedComponent) => {
             toast('Error updating the Flag', 'danger')
             return
           } else {
+            const isEditingChangeRequest =
+              this.props.changeRequest && changeRequest
             const operation = createdFlag || isCreate ? 'Created' : 'Updated'
             const type = changeRequest ? 'Change Request' : 'Feature'
 
-            const toastText = `${operation} ${type}`
+            const toastText = isEditingChangeRequest
+              ? `Updated ${type}`
+              : `${operation} ${type}`
             const toastAction = changeRequest
               ? {
                   buttonText: 'Open',

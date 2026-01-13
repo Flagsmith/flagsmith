@@ -119,17 +119,9 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
 
   return (
     <form id='create-segment-modal' onSubmit={save}>
-      {!condensed && (
+      {!condensed && segmentsLimitAlert.percentage && (
         <div className='mt-3'>
-          <InfoMessage collapseId={'value-type-conversions'}>
-            Learn more about rule and trait value type conversions{' '}
-            <a href='https://docs.flagsmith.com/basic-features/segments#rule-typing'>
-              here
-            </a>
-            .
-          </InfoMessage>
-          {segmentsLimitAlert.percentage &&
-            Utils.displayLimitAlert('segments', segmentsLimitAlert.percentage)}
+          {Utils.displayLimitAlert('segments', segmentsLimitAlert.percentage)}
         </div>
       )}
 
@@ -196,10 +188,17 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
           <label className='cols-sm-2 control-label mb-1'>
             Include users when all of the following rules apply:
           </label>
-          <span className='fs-caption text-faint'>
-            Note: Trait names are case sensitive
-          </span>
         </Flex>
+        {!condensed && (
+          <InfoMessage collapseId={'value-type-conversions'} className='mb-3'>
+            Trait names are case sensitive. Learn more about rule and trait
+            value type conversions{' '}
+            <a href='https://docs.flagsmith.com/basic-features/segments#rule-typing'>
+              here
+            </a>
+            .
+          </InfoMessage>
+        )}
         {allWarnings?.map((warning, i) => (
           <InfoMessage key={i}>
             <div dangerouslySetInnerHTML={{ __html: warning }} />

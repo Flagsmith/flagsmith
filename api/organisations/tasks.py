@@ -33,6 +33,7 @@ from users.models import FFAdminUser
 from .constants import (
     ALERT_EMAIL_MESSAGE,
     ALERT_EMAIL_SUBJECT,
+    API_USAGE_ALERT_THRESHOLDS,
     API_USAGE_GRACE_PERIOD,
 )
 from .subscriptions.constants import (
@@ -121,9 +122,20 @@ def finish_subscription_cancellation() -> None:
 def handle_api_usage_notifications() -> None:
     flagsmith_client = get_client("local", local_eval=True)
 
-    for organisation in Organisation.objects.all().select_related(
-        "subscription", "subscription_information_cache"
-    ):
+    threshold_percentage = min(API_USAGE_ALERT_THRESHOLDS) / 100
+    for organisation in Organisation.objects.filter(
+        # Not having a subscription information cache implies that the organisation has
+        # no usage so no notification is needed.
+        subscription_information_cache__isnull=False,
+        # Skip organisations whose usage in the last 30d is below the threshold of the
+        # minimum notification level for their allowance. If their usage is below the
+        # threshold in the last 30d, it must be below it for the current billing period
+        # (which by definition is <30d).
+        subscription_information_cache__api_calls_30d__gte=F(
+            "subscription_information_cache__allowed_30d_api_calls"
+        )
+        * threshold_percentage,
+    ).select_related("subscription", "subscription_information_cache"):
         feature_enabled = flagsmith_client.get_identity_flags(
             organisation.flagsmith_identifier,
             traits=organisation.flagsmith_on_flagsmith_api_traits,
