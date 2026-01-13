@@ -43,9 +43,8 @@ import {
 import OrganisationUsersTable from 'components/users-permissions/OrganisationUsersTable/OrganisationUsersTable'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import {
-  ADMIN_PERMISSION_DESCRIPTION,
+  ADMIN_PERMISSION,
   OrganisationPermission,
-  OrganisationPermissionDescriptions,
 } from 'common/types/permissions.types'
 
 type UsersAndPermissionsPageType = {
@@ -107,7 +106,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
     hasEmailProvider && manageUsersPermission.permission
   const tooltipText = !hasEmailProvider
     ? noEmailProvider
-    : Constants.organisationPermissions(ADMIN_PERMISSION_DESCRIPTION)
+    : Constants.organisationPermissions(ADMIN_PERMISSION)
 
   const { data: roles } = useGetRolesQuery({ organisation_id: organisation.id })
 
@@ -145,9 +144,8 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
           .then(() => {
             toast('Invite deleted successfully')
           })
-          .catch((error) => {
+          .catch(() => {
             toast('Error deleting invite', 'error')
-            console.error(error)
           }),
       title: 'Delete Invite',
       yesText: 'Confirm',
@@ -490,7 +488,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                               'Error resending invite',
                                               'error',
                                             )
-                                            console.error(error)
                                           })
                                       }
                                       theme='text'
@@ -537,7 +534,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                           {Utils.renderWithPermission(
                             manageGroupsPermission.permission,
                             Constants.organisationPermissions(
-                              OrganisationPermissionDescriptions.MANAGE_USER_GROUPS,
+                              OrganisationPermission.MANAGE_USER_GROUPS,
                             ),
                             <Button
                               id='btn-invite-groups'

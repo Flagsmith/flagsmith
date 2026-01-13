@@ -11,10 +11,7 @@ import { getTagColor } from 'components/tags/Tag'
 import ActionButton from 'components/ActionButton'
 import ActionItem from 'components/shared/ActionItem'
 import { calculateListPosition } from 'common/utils/calculateListPosition'
-import {
-  ProjectPermission,
-  ProjectPermissionDescriptions,
-} from 'common/types/permissions.types'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 export interface FeatureActionProps {
   projectId: string
@@ -150,7 +147,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                 Utils.renderWithPermission(
                   removeFeaturePermission,
                   Constants.projectPermissions(
-                    ProjectPermissionDescriptions.DELETE_FEATURE,
+                    ProjectPermission.DELETE_FEATURE,
                   ),
                   <Tooltip
                     title={

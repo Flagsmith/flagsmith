@@ -16,10 +16,7 @@ import Utils from 'common/utils/utils'
 import FormGroup from 'components/base/grid/FormGroup'
 import Row from 'components/base/grid/Row'
 import AccountStore from 'common/stores/account-store'
-import {
-  ProjectPermission,
-  ProjectPermissionDescriptions,
-} from 'common/types/permissions.types'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type FeatureSettingsTabProps = {
   projectAdmin: boolean
@@ -51,7 +48,7 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
         <div
           dangerouslySetInnerHTML={{
             __html: Constants.projectPermissions(
-              ProjectPermissionDescriptions.CREATE_FEATURE,
+              ProjectPermission.CREATE_FEATURE,
             ),
           }}
         />

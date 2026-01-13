@@ -22,7 +22,7 @@ import CodeHelp from 'components/CodeHelp'
 import { getStore } from 'common/store'
 import { useRouteContext } from 'components/providers/RouteContext'
 import {
-  ADMIN_PERMISSION_DESCRIPTION,
+  ADMIN_PERMISSION,
   EnvironmentPermission,
 } from 'common/types/permissions.types'
 
@@ -154,7 +154,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
                 }
                 place='right'
               >
-                {Constants.environmentPermissions(ADMIN_PERMISSION_DESCRIPTION)}
+                {Constants.environmentPermissions(ADMIN_PERMISSION)}
               </Tooltip>
             )}
           </>

@@ -6,10 +6,7 @@ import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import { useHasPermission } from 'common/providers/Permission'
 import { Tag as TTag } from 'common/types/responses'
-import {
-  ProjectPermission,
-  ProjectPermissionDescriptions,
-} from 'common/types/permissions.types'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type TagValuesType = {
   onAdd?: (tag?: TTag) => void
@@ -63,7 +60,7 @@ const TagValues: FC<TagValuesType> = ({
         Utils.renderWithPermission(
           createEditTagPermission,
           Constants.projectPermissions(
-            ProjectPermissionDescriptions.MANAGE_TAGS,
+            ProjectPermission.MANAGE_TAGS,
           ),
           <Button
             disabled={!createEditTagPermission}

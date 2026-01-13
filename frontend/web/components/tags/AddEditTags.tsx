@@ -17,10 +17,7 @@ import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import TagUsage from 'components/TagUsage'
-import {
-  ProjectPermission,
-  ProjectPermissionDescriptions,
-} from 'common/types/permissions.types'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type AddEditTagsType = {
   value?: number[]
@@ -192,7 +189,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
                 {Utils.renderWithPermission(
                   createEditTagPermission,
                   Constants.projectPermissions(
-                    ProjectPermissionDescriptions.MANAGE_TAGS,
+                    ProjectPermission.MANAGE_TAGS,
                   ),
                   <div className='text-center'>
                     <Button

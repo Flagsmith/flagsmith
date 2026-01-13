@@ -5,7 +5,7 @@ import Icon from 'components/Icon'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import shallowEqual from 'fbjs/lib/shallowEqual'
-import { ProjectPermissionDescriptions } from 'common/types/permissions.types'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 interface VariationValueProps {
   canCreateFeature: boolean
@@ -38,7 +38,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
               {Utils.renderWithPermission(
                 canCreateFeature,
                 Constants.projectPermissions(
-                  ProjectPermissionDescriptions.CREATE_FEATURE,
+                  ProjectPermission.CREATE_FEATURE,
                 ),
                 <ValueEditor
                   data-test={`featureVariationValue${

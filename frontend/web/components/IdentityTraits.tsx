@@ -14,10 +14,7 @@ import {
   useGetIdentityTraitsQuery,
 } from 'common/services/useIdentityTrait'
 import { IdentityTrait } from 'common/types/responses'
-import {
-  EnvironmentPermission,
-  EnvironmentPermissionDescriptions,
-} from 'common/types/permissions.types'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
 type IdentityTraitsType = {
   projectId: string | number
@@ -46,8 +43,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
     use_edge_identities,
   })
 
-  const [deleteTrait, { isLoading: deletingTrait }] =
-    useDeleteIdentityTraitMutation({})
+  const [deleteTrait] = useDeleteIdentityTraitMutation({})
 
   const onTraitSaved = () => {
     closeModal?.()
@@ -130,7 +126,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
             {Utils.renderWithPermission(
               manageUserPermission,
               Constants.environmentPermissions(
-                EnvironmentPermissionDescriptions.MANAGE_IDENTITIES,
+                EnvironmentPermission.MANAGE_IDENTITIES,
               ),
               <Button
                 disabled={!manageUserPermission}
@@ -187,7 +183,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
               {Utils.renderWithPermission(
                 manageUserPermission,
                 Constants.environmentPermissions(
-                  EnvironmentPermissionDescriptions.MANAGE_IDENTITIES,
+                  EnvironmentPermission.MANAGE_IDENTITIES,
                 ),
                 <Button
                   id='remove-feature'
@@ -212,7 +208,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
                 {Utils.renderWithPermission(
                   manageUserPermission,
                   Constants.environmentPermissions(
-                    EnvironmentPermissionDescriptions.MANAGE_IDENTITIES,
+                    EnvironmentPermission.MANAGE_IDENTITIES,
                   ),
                   <Button
                     disabled={!manageUserPermission}

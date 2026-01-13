@@ -45,10 +45,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import { useHistory } from 'react-router-dom'
 import { openPublishChangeRequestConfirm } from 'components/PublishChangeRequestModal'
 import { getChangeRequestLiveDate } from 'common/utils/getChangeRequestLiveDate'
-import {
-  EnvironmentPermission,
-  EnvironmentPermissionDescriptions,
-} from 'common/types/permissions.types'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
 type ChangeRequestPageType = {
   match: {
@@ -251,7 +248,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       children: (
         <NewVersionWarning
           environmentId={`${environment?.id}`}
-          featureId={featureId!}
+          featureId={featureId}
           date={`${changeRequest.created_at}`}
         />
       ),
@@ -352,7 +349,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         addOwner={addOwner}
         removeOwner={removeOwner}
         publishPermissionDescription={Constants.environmentPermissions(
-          EnvironmentPermissionDescriptions.UPDATE_FEATURE_STATE,
+          EnvironmentPermission.UPDATE_FEATURE_STATE,
         )}
         scheduledDate={getChangeRequestLiveDate(changeRequest)}
         deleteChangeRequest={deleteChangeRequest}
@@ -703,7 +700,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                     Utils.renderWithPermission(
                       approvePermission,
                       Constants.environmentPermissions(
-                        EnvironmentPermissionDescriptions.APPROVE_CHANGE_REQUEST,
+                        EnvironmentPermission.APPROVE_CHANGE_REQUEST,
                       ),
                       <Button
                         disabled={

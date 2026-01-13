@@ -23,10 +23,7 @@ import IdentityOverridesIcon from './IdentityOverridesIcon'
 import Tooltip from './Tooltip'
 import PageTitle from './PageTitle'
 import { getDarkMode } from 'project/darkMode'
-import {
-  EnvironmentPermission,
-  EnvironmentPermissionDescriptions,
-} from 'common/types/permissions.types'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
 type CompareIdentitiesType = {
   projectId: string
@@ -122,12 +119,13 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
   const isEdge = Utils.getIsEdge()
 
   const goUser = (user: IdentitySelectType['value'], feature: string) => {
+    if (!user) return
     window.open(
       `${
         document.location.origin
       }/project/${projectId}/environment/${environmentId}/users/${encodeURIComponent(
-        user!.label,
-      )}/${user!.value}?flag=${encodeURIComponent(feature)}`,
+        user.label,
+      )}/${user.value}?flag=${encodeURIComponent(feature)}`,
       '_blank',
     )
   }
@@ -194,7 +192,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
         <div
           dangerouslySetInnerHTML={{
             __html: Constants.environmentPermissions(
-              EnvironmentPermissionDescriptions.VIEW_IDENTITIES,
+              EnvironmentPermission.VIEW_IDENTITIES,
             ),
           }}
         />

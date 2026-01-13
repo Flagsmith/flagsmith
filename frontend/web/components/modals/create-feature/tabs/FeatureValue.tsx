@@ -11,7 +11,7 @@ import Icon from 'components/Icon'
 import Switch from 'components/Switch'
 import Utils from 'common/utils/utils'
 import { FeatureState, ProjectFlag } from 'common/types/responses'
-import { ProjectPermissionDescriptions } from 'common/types/permissions.types'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 function isNegativeNumberString(str: any) {
   if (typeof Utils.getTypedValue(str) !== 'number') {
@@ -278,7 +278,7 @@ const FeatureValue: FC<EditFeatureValueProps> = ({
               {Utils.renderWithPermission(
                 createFeature,
                 Constants.projectPermissions(
-                  ProjectPermissionDescriptions.CREATE_FEATURE,
+                  ProjectPermission.CREATE_FEATURE,
                 ),
                 <AddVariationButton
                   multivariateOptions={multivariate_options}
