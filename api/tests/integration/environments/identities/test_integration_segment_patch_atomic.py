@@ -4,12 +4,11 @@ import time
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient
 
 
 def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[no-untyped-def]
     admin_client,
-    admin_user,
+    admin_master_api_key_client,
     environment,
     environment_api_key,
     feature,
@@ -49,8 +48,8 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
         args=(environment_api_key, identity_id),
     )
 
-    patch_client = _build_admin_client(admin_user)
-    poll_client = _build_admin_client(admin_user)
+    patch_client = admin_master_api_key_client
+    poll_client = admin_client
     stop_event = threading.Event()
     end_time = time.monotonic() + 10
     patch_errors: list[str] = []
@@ -117,12 +116,6 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
     assert not patch_errors
     assert not poll_errors
     assert not mismatches
-
-
-def _build_admin_client(admin_user):  # type: ignore[no-untyped-def]
-    client = APIClient()
-    client.force_authenticate(user=admin_user)
-    return client
 
 
 def _build_rules_payload() -> list[dict]:
