@@ -22,6 +22,9 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
     permission_classes = [FeatureExternalResourcePermissions]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureExternalResource.objects.none()
+
         if "pk" in self.kwargs:
             return FeatureExternalResource.objects.filter(id=self.kwargs["pk"])
         else:

@@ -1,6 +1,6 @@
 ---
 title: Release Notes
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 We follow the [SemVer](https://semver.org/) version naming strategy.

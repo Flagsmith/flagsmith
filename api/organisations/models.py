@@ -100,7 +100,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return str(self.id) + "-" + self.name
 
     @property
-    def num_seats(self):  # type: ignore[no-untyped-def]
+    def num_seats(self) -> int:
         return self.users.count()
 
     def has_paid_subscription(self) -> bool:

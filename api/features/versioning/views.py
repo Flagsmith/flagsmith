@@ -7,8 +7,6 @@ from common.projects.permissions import VIEW_PROJECT
 from django.db.models import BooleanField, ExpressionWrapper, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework.decorators import action
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.mixins import (
@@ -47,12 +45,6 @@ from features.versioning.serializers import (
 from users.models import FFAdminUser
 
 
-@method_decorator(
-    name="list",
-    decorator=swagger_auto_schema(
-        query_serializer=EnvironmentFeatureVersionQuerySerializer()
-    ),
-)
 class EnvironmentFeatureVersionViewSet(
     GenericViewSet,  # type: ignore[type-arg]
     ListModelMixin,

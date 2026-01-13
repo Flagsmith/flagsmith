@@ -15,6 +15,7 @@ import json
 import os
 import warnings
 from datetime import datetime, time, timedelta
+from typing import Any
 
 import dj_database_url
 import django_stubs_ext
@@ -120,7 +121,7 @@ INSTALLED_APPS = [
     "app",
     "e2etests",
     "simple_history",
-    "drf_yasg",
+    "drf_spectacular",
     "audit",
     "permissions",
     "projects.code_references",
@@ -302,6 +303,7 @@ TASK_PROCESSOR_DATABASES = env.list(
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
+MASTER_API_KEY_THROTTLE_RATE = env("MASTER_API_KEY_THROTTLE_RATE", USER_THROTTLE_RATE)
 DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", subcast=str, default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -317,6 +319,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
+        "master_api_key": MASTER_API_KEY_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
         "user": USER_THROTTLE_RATE,
@@ -327,6 +330,7 @@ REST_FRAMEWORK = {
         "util.renderers.PydanticJSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 MIDDLEWARE = [
     "common.core.middleware.APIResponseVersionHeaderMiddleware",
@@ -539,23 +543,48 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_PORT = env("EMAIL_PORT", default=587)
     EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
-SWAGGER_SETTINGS = {
-    "DEEP_LINKING": True,
-    "DEFAULT_AUTO_SCHEMA_CLASS": "api.openapi.PydanticResponseCapableSwaggerAutoSchema",
-    "SHOW_REQUEST_HEADERS": True,
-    "SECURITY_DEFINITIONS": {
-        "Private": {
-            "type": "apiKey",
-            "in": "header",
-            "name": "Authorization",
-            "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",  # noqa
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Flagsmith API",
+    "OAS_VERSION": "3.1.0",
+    "DESCRIPTION": "Flagsmith's Core and SDK APIs. Check out <a href='https://docs.flagsmith.com'>Flagsmith documentation</a>.",
+    "VERSION": "v1",
+    "LICENSE": {"name": "BSD License", "identifier": "BSD-3-Clause"},
+    "CONTACT": {"email": "support@flagsmith.com"},
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+    },
+    "SECURITY": [
+        {"Private": []},
+        {"Public": []},
+    ],
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "Private": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",
+            },
+            "Public": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-Environment-Key",
+                "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",
+            },
         },
-        "Public": {
-            "type": "apiKey",
-            "in": "header",
-            "name": "X-Environment-Key",
-            "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",  # noqa
-        },
+    },
+    "DEFAULT_GENERATOR_CLASS": "api.openapi.SchemaGenerator",
+    "EXTENSIONS": [
+        "api.openapi",
+        "edge_api.identities.openapi",
+        "environments.identities.traits.openapi",
+    ],
+    "ENUM_NAME_OVERRIDES": {
+        # Overrides to use specific schema names for fields named "type".
+        # If this is not set, drf-spectacular will generate schema names like "Type975Enum".
+        "WebhookScopeTypeEnum": ["organisation", "environment"],
+        "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
+        "FeatureValueTypeEnum": ["integer", "string", "boolean"],
     },
 }
 
@@ -782,7 +811,7 @@ USER_THROTTLE_CACHE_BACKEND = env.str(
     "USER_THROTTLE_CACHE_BACKEND", "django.core.cache.backends.locmem.LocMemCache"
 )
 USER_THROTTLE_CACHE_LOCATION = env.str("USER_THROTTLE_CACHE_LOCATION", "admin-throttle")
-USER_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
+USER_THROTTLE_CACHE_OPTIONS: dict[str, Any] = env.dict(
     "USER_THROTTLE_CACHE_OPTIONS", default={}
 )
 
@@ -814,6 +843,12 @@ DJANGO_REDIS_IGNORE_EXCEPTIONS = env.bool(
 # ref:https://github.com/jazzband/django-redis/tree/5.4.0#log-ignored-exceptions
 DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = env.bool(
     "DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS", True
+)
+
+# Enable reading from replicas in Redis Cluster mode.
+# Distributes read traffic to replica nodes (port 6380 on ElastiCache Serverless).
+REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
+    "REDIS_CLUSTER_READ_FROM_REPLICAS", default=True
 )
 
 CACHES = {

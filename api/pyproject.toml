@@ -63,6 +63,7 @@ exclude_also = [
 [tool.coverage.run]
 omit = [
   "app/settings/common.py",
+  "app/settings/local.py",
   "manage.py",
   "e2etests/*",
   "scripts/*",
@@ -129,7 +130,7 @@ chargebee = "^2.7.7"
 python-http-client = "~3.3.7"
 django-health-check = "~3.18.2"
 django-admin-sso = "~5.2.0"
-drf-yasg = "~1.21.6"
+drf-spectacular = "~0.28.0"
 django-debug-toolbar = "~3.2.1"
 sentry-sdk = "~2.8.0"
 environs = "^14.1.1"
@@ -193,7 +194,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.1.0" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.1.1" }
 
 [tool.poetry.group.licensing]
 optional = true
@@ -249,6 +250,7 @@ types-pytz = "^2025.1.0.20250204"
 ruff = "^0.9.7"
 flagsmith-common = { version = "*", extras = ["test-tools"] }
 pytest-responses = "^0.5.1"
+diff-cover = "^10.1.0"
 
 [build-system]
 requires = ["poetry>=2.0.0"]

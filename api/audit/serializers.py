@@ -1,9 +1,8 @@
-import typing
-
-from drf_yasg.utils import swagger_serializer_method  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from audit.models import AuditLog
+from audit.types import AuditLogChangeDetail, ChangeType
 from environments.serializers import EnvironmentSerializerLight
 from projects.serializers import ProjectListSerializer
 from users.serializers import UserListSerializer
@@ -30,10 +29,10 @@ class AuditLogListSerializer(serializers.ModelSerializer):  # type: ignore[type-
         )
 
 
-class AuditLogChangeDetailsSerializer(serializers.Serializer):  # type: ignore[type-arg]
-    field = serializers.ReadOnlyField()
-    old = serializers.ReadOnlyField()
-    new = serializers.ReadOnlyField()
+class AuditLogChangeDetailsSerializer(serializers.Serializer[AuditLogChangeDetail]):
+    field = serializers.CharField(read_only=True)
+    old = serializers.ReadOnlyField(allow_null=True)
+    new = serializers.ReadOnlyField(allow_null=True)
 
 
 class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -60,12 +59,20 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[t
             "change_type",
         )
 
-    @swagger_serializer_method(  # type: ignore[misc]
-        serializer_or_field=AuditLogChangeDetailsSerializer(many=True)
+    @extend_schema_field(
+        {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "field": {"type": "string"},
+                    "old": {"type": ["string", "number", "boolean", "null"]},
+                    "new": {"type": ["string", "number", "boolean", "null"]},
+                },
+            },
+        }
     )
-    def get_change_details(
-        self, instance: AuditLog
-    ) -> typing.List[typing.Dict[str, typing.Any]]:
+    def get_change_details(self, instance: AuditLog) -> list[AuditLogChangeDetail]:
         if history_record := instance.history_record:
             return AuditLogChangeDetailsSerializer(  # type: ignore[return-value]
                 instance=history_record.get_change_details(),  # type: ignore[attr-defined]
@@ -74,7 +81,7 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[t
 
         return []
 
-    def get_change_type(self, instance: AuditLog) -> str:
+    def get_change_type(self, instance: AuditLog) -> ChangeType:
         if not (history_record := instance.history_record):
             return "UNKNOWN"
 
