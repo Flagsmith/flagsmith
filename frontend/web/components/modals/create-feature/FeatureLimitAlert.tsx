@@ -22,7 +22,8 @@ const FeatureLimitAlert: FC<FeatureLimitAlertType> = ({
     if (onChange && featureLimitAlert) {
       onChange(featureLimitAlert)
     }
-  }, [onChange, featureLimitAlert])
+    //eslint-disable-next-line
+  }, [featureLimitAlert])
 
   if (!featureLimitAlert.percentage) {
     return null
