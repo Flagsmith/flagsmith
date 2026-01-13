@@ -63,7 +63,7 @@ def context_matches_rule(context, rule, segment_key):
 2. Start a background thread that repeatedly PATCHes the same ruleset for ~10 seconds
 3. In parallel, poll `api-v1:environments:identity-featurestates-all` for the identity
 4. Capture any response where the feature is incorrectly enabled for the non-matching identity
-5. Assert at least one mismatch was observed (test fails once the fix is in place)
+5. Assert no mismatches were observed (current behaviour should surface a mismatch and fail)
 
 **Notes**:
 - No monkeypatching or synthetic delays; rely on real API behaviour and looped sampling
