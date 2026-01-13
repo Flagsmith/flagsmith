@@ -1,6 +1,5 @@
 import React, { FC, ReactNode, useMemo } from 'react'
 import { useGetPermissionQuery } from 'common/services/usePermission'
-import { PermissionLevel } from 'common/types/requests'
 import AccountStore from 'common/stores/account-store'
 import intersection from 'lodash/intersection'
 import { cloneDeep } from 'lodash'
