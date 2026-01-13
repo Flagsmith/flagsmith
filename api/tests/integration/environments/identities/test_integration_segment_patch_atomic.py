@@ -1,6 +1,7 @@
 import json
 import threading
 import time
+from typing import Any
 
 import pytest
 from django.urls import reverse
@@ -85,7 +86,7 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
     end_time = time.monotonic() + 10
     patch_errors: list[str] = []
     poll_errors: list[str] = []
-    mismatches: list[dict] = []
+    mismatches: list[dict[str, Any]] = []
 
     def patch_loop() -> None:
         # Repeatedly PATCH the same ruleset to simulate real-world churn in
@@ -155,7 +156,7 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
     assert not mismatches
 
 
-def _build_rules_payload() -> list[dict]:
+def _build_rules_payload() -> list[dict[str, Any]]:
     conditions = [
         {
             "operator": "EQUAL",
@@ -173,7 +174,11 @@ def _build_rules_payload() -> list[dict]:
     ]
 
 
-def _create_segment(admin_client, project_id, rules_payload):  # type: ignore[no-untyped-def]
+def _create_segment(
+    admin_client: APIClient,
+    project_id: int,
+    rules_payload: list[dict[str, Any]],
+) -> int:
     create_segment_url = reverse(
         "api-v1:projects:project-segments-list", args=[project_id]
     )
@@ -192,12 +197,12 @@ def _create_segment(admin_client, project_id, rules_payload):  # type: ignore[no
     return response.json()["id"]
 
 
-def _create_feature_segment(  # type: ignore[no-untyped-def]
-    admin_client,
-    environment_id,
-    feature_id,
-    segment_id,
-):
+def _create_feature_segment(
+    admin_client: APIClient,
+    environment_id: int,
+    feature_id: int,
+    segment_id: int,
+) -> int:
     create_feature_segment_url = reverse("api-v1:features:feature-segment-list")
     response = admin_client.post(
         create_feature_segment_url,
@@ -214,12 +219,12 @@ def _create_feature_segment(  # type: ignore[no-untyped-def]
     return response.json()["id"]
 
 
-def _create_feature_segment_override(  # type: ignore[no-untyped-def]
-    admin_client,
-    environment_id,
-    feature_id,
-    feature_segment_id,
-):
+def _create_feature_segment_override(
+    admin_client: APIClient,
+    environment_id: int,
+    feature_id: int,
+    feature_segment_id: int,
+) -> None:
     create_feature_state_url = reverse("api-v1:features:featurestates-list")
     response = admin_client.post(
         create_feature_state_url,
@@ -240,11 +245,11 @@ def _create_feature_segment_override(  # type: ignore[no-untyped-def]
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def _create_identity(  # type: ignore[no-untyped-def]
-    admin_client,
-    environment_api_key,
-    identifier,
-):
+def _create_identity(
+    admin_client: APIClient,
+    environment_api_key: str,
+    identifier: str,
+) -> int:
     create_identity_url = reverse(
         "api-v1:environments:environment-identities-list",
         args=[environment_api_key],
