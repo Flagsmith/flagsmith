@@ -111,6 +111,7 @@ def test_map_segment_rule_to_engine__return_expected(
     result = engine.map_segment_rule_to_engine(matching_rule)
 
     # Then
+    assert result is not None
     assert result == SegmentRuleModel(
         type="ALL",
         rules=[

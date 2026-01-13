@@ -78,33 +78,45 @@ def map_segment_to_engine(
     return SegmentModel(
         id=segment.pk,
         name=segment.name,
-        rules=[
-            map_segment_rule_to_engine(segment_rule) for segment_rule in segment_rules
-        ],
+        rules=_map_segment_rules_to_engine(segment_rules),
     )
 
 
 def map_segment_rule_to_engine(
     segment_rule: "SegmentRule",
-) -> SegmentRuleModel:
+) -> Optional[SegmentRuleModel]:
     segment_sub_rules = segment_rule.rules.all()
     conditions = segment_rule.conditions.all()
 
+    rules = _map_segment_rules_to_engine(segment_sub_rules)
+    condition_models = [
+        SegmentConditionModel(
+            operator=condition.operator,  # type: ignore[arg-type]
+            value=condition.value,
+            property_=condition.property,
+        )
+        for condition in conditions
+    ]
+
+    if not rules and not condition_models:
+        return None
+
     return SegmentRuleModel(
         type=segment_rule.type,  # type: ignore[arg-type]
-        rules=[
-            map_segment_rule_to_engine(segment_sub_rule)
-            for segment_sub_rule in segment_sub_rules
-        ],
-        conditions=[
-            SegmentConditionModel(
-                operator=condition.operator,  # type: ignore[arg-type]
-                value=condition.value,
-                property_=condition.property,
-            )
-            for condition in conditions
-        ],
+        rules=rules,
+        conditions=condition_models,
     )
+
+
+def _map_segment_rules_to_engine(
+    segment_rules: Iterable["SegmentRule"],
+) -> list[SegmentRuleModel]:
+    mapped_rules = []
+    for segment_rule in segment_rules:
+        mapped_rule = map_segment_rule_to_engine(segment_rule)
+        if mapped_rule is not None:
+            mapped_rules.append(mapped_rule)
+    return mapped_rules
 
 
 def map_integration_to_engine(
@@ -265,10 +277,9 @@ def map_environment_to_engine(
         SegmentModel(
             id=segment.pk,
             name=segment.name,
-            rules=[
-                map_segment_rule_to_engine(segment_rule)
-                for segment_rule in project_segment_rules_by_segment_id.pop(segment.pk)
-            ],
+            rules=_map_segment_rules_to_engine(
+                project_segment_rules_by_segment_id.pop(segment.pk)
+            ),
             feature_states=[
                 map_feature_state_to_engine(
                     feature_state,

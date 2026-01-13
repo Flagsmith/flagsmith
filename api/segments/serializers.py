@@ -131,6 +131,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
 
     def update(self, segment: Segment, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
         metadata = validated_data.pop("metadata", [])
+        rules_data = validated_data.pop("rules", None)
         with transaction.atomic():
             if not segment.change_request:
                 segment_revision = segment.clone(is_revision=True)
@@ -139,9 +140,51 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                     segment_id=segment.id,
                     revision_id=segment_revision.id,
                 )
-            segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
+
+            for attr, value in validated_data.items():
+                setattr(segment, attr, value)
+            segment.save()
+
+            if rules_data is not None:
+                self._atomic_update_rules(segment, rules_data)
+
         self._update_metadata(segment, metadata)
         return segment
+
+    def _atomic_update_rules(self, segment: Segment, rules_data: DictList) -> None:
+        existing_rule_ids = list(segment.rules.values_list("id", flat=True))
+        for rule_data in rules_data:
+            self._create_rule_tree(segment, rule_data, parent_rule=None)
+
+        if existing_rule_ids:
+            SegmentRule.objects.filter(id__in=existing_rule_ids).delete()
+
+    def _create_rule_tree(
+        self,
+        segment: Segment,
+        rule_data: dict[str, Any],
+        parent_rule: SegmentRule | None = None,
+    ) -> SegmentRule:
+        conditions_data = rule_data.pop("conditions", [])
+        nested_rules_data = rule_data.pop("rules", [])
+        rule_data.pop("id", None)
+        rule_data.pop("delete", None)
+
+        rule = SegmentRule.objects.create(
+            segment=segment if parent_rule is None else None,
+            rule=parent_rule,
+            type=rule_data.get("type", SegmentRule.ALL_RULE),
+        )
+
+        for condition_data in conditions_data:
+            condition_data.pop("id", None)
+            condition_data.pop("delete", None)
+            Condition.objects.create(rule=rule, **condition_data)
+
+        for nested_rule_data in nested_rules_data:
+            self._create_rule_tree(segment, nested_rule_data, parent_rule=rule)
+
+        return rule
 
     def _get_rules_and_conditions_without_deleted(
         self, rules_data: DictList
