@@ -432,7 +432,7 @@ const CreateFlag = class extends Component {
             ...environmentFlag,
             multivariate_feature_state_values:
               this.props.environmentVariations ||
-              environmentFlag.multivariate_feature_state_values,
+              environmentFlag?.multivariate_feature_state_values,
           },
           segmentOverrides,
         )
