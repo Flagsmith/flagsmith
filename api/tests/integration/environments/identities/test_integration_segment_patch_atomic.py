@@ -6,6 +6,9 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from api_keys.models import MasterAPIKey
+from organisations.models import Organisation
+
 
 def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[no-untyped-def]
     admin_client,
@@ -13,6 +16,7 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
     environment,
     environment_api_key,
     feature,
+    organisation,
     project,
 ):
     # Given
@@ -49,7 +53,14 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
         args=(environment_api_key, identity_id),
     )
 
-    patch_client = admin_client
+    organisation_obj = Organisation.objects.get(id=organisation)
+    _, master_key = MasterAPIKey.objects.create_key(
+        name="test_key",
+        organisation=organisation_obj,
+        is_admin=True,
+    )
+    patch_client = APIClient()
+    patch_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_key)
     poll_client = APIClient()
     poll_client.force_authenticate(user=admin_user)
     stop_event = threading.Event()
