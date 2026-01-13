@@ -68,8 +68,9 @@ const convertSegmentOverrideToFeatureState = (
             v.percentage_allocation ?? v.default_percentage_allocation,
         }))
       : override.multivariate_options?.map((v) => ({
-          multivariate_feature_option: v.id,
-          percentage_allocation: v.default_percentage_allocation,
+          multivariate_feature_option: v.multivariate_feature_option ?? v.id,
+          percentage_allocation:
+            v.percentage_allocation ?? v.default_percentage_allocation,
         })),
     toRemove: override.toRemove,
   } as Partial<FeatureState>
