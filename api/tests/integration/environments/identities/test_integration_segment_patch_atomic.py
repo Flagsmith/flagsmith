@@ -2,6 +2,7 @@ import json
 import threading
 import time
 
+import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -10,6 +11,7 @@ from api_keys.models import MasterAPIKey
 from organisations.models import Organisation
 
 
+@pytest.mark.django_db(transaction=True)
 def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[no-untyped-def]
     admin_client,
     admin_user,
@@ -54,11 +56,12 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
     )
 
     organisation_obj = Organisation.objects.get(id=organisation)
-    _, master_key = MasterAPIKey.objects.create_key(
+    master_key_data = MasterAPIKey.objects.create_key(  # type: ignore[attr-defined]
         name="test_key",
         organisation=organisation_obj,
         is_admin=True,
     )
+    _, master_key = master_key_data
     patch_client = APIClient()
     patch_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_key)
     poll_client = APIClient()
