@@ -1,7 +1,7 @@
 import json
 import threading
 import time
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from django.urls import reverse
@@ -68,7 +68,7 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
     # Use a master API key for PATCH requests so that concurrent writes
     # are authenticated independently of the admin session client.
     organisation_obj = Organisation.objects.get(id=organisation)
-    master_key_data = MasterAPIKey.objects.create_key(  # type: ignore[attr-defined]
+    master_key_data = cast(Any, MasterAPIKey.objects).create_key(
         name="test_key",
         organisation=organisation_obj,
         is_admin=True,
@@ -194,7 +194,7 @@ def _create_segment(
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
-    return response.json()["id"]
+    return int(response.json()["id"])
 
 
 def _create_feature_segment(
@@ -216,7 +216,7 @@ def _create_feature_segment(
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_201_CREATED
-    return response.json()["id"]
+    return int(response.json()["id"])
 
 
 def _create_feature_segment_override(
@@ -259,4 +259,4 @@ def _create_identity(
         data={"identifier": identifier},
     )
     assert response.status_code == status.HTTP_201_CREATED
-    return response.json()["id"]
+    return int(response.json()["id"])
