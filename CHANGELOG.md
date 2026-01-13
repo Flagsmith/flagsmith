@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.209.1](https://github.com/Flagsmith/flagsmith/compare/v2.209.0...v2.209.1) (2026-01-13)
+
+
+### Bug Fixes
+
+* **infra:** increase MASTER_API_KEY_THROTTLE_RATE to 100/sec ([#6521](https://github.com/Flagsmith/flagsmith/issues/6521)) ([d557800](https://github.com/Flagsmith/flagsmith/commit/d557800406a7d66e38d151063830fe670986a66f))
+
 ## [2.209.0](https://github.com/Flagsmith/flagsmith/compare/v2.208.0...v2.209.0) (2026-01-12)
 
 
