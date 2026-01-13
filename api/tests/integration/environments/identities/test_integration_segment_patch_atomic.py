@@ -21,7 +21,9 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
     organisation,
     project,
 ):
-    # Given
+    # Given: a segment that should only match identities with specific traits.
+    # The feature override is enabled for that segment, so non-matching
+    # identities must always see the feature disabled.
     rules_payload = _build_rules_payload()
     segment_id = _create_segment(
         admin_client=admin_client,
@@ -46,6 +48,7 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
         identifier="disabled-identity",
     )
 
+    # API endpoints under test: segment PATCH and identity feature state listing.
     patch_url = reverse(
         "api-v1:projects:project-segments-detail",
         args=[project, segment_id],
@@ -55,6 +58,8 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
         args=(environment_api_key, identity_id),
     )
 
+    # Use a master API key for PATCH requests so that concurrent writes
+    # are authenticated independently of the admin session client.
     organisation_obj = Organisation.objects.get(id=organisation)
     master_key_data = MasterAPIKey.objects.create_key(  # type: ignore[attr-defined]
         name="test_key",
@@ -64,8 +69,12 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
     _, master_key = master_key_data
     patch_client = APIClient()
     patch_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_key)
+
+    # Use an authenticated admin client for polling identity feature states.
     poll_client = APIClient()
     poll_client.force_authenticate(user=admin_user)
+
+    # Shared state used to coordinate the concurrent loops.
     stop_event = threading.Event()
     end_time = time.monotonic() + 10
     patch_errors: list[str] = []
@@ -73,6 +82,9 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
     mismatches: list[dict] = []
 
     def patch_loop() -> None:
+        # Repeatedly PATCH the same ruleset to simulate real-world churn in
+        # segment updates. This is intended to hit the race window where the
+        # rules are temporarily empty.
         while time.monotonic() < end_time and not stop_event.is_set():
             response = patch_client.patch(
                 patch_url,
@@ -92,6 +104,9 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
                 return
 
     def poll_loop() -> None:
+        # Continuously fetch identity feature states while PATCH is running.
+        # Any enabled feature for the non-matching identity indicates the
+        # segment temporarily evaluated as true.
         while time.monotonic() < end_time and not stop_event.is_set():
             response = poll_client.get(identity_feature_states_url)
             if response.status_code != status.HTTP_200_OK:
@@ -120,14 +135,14 @@ def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[n
                 stop_event.set()
                 return
 
-    # When
+    # When: execute concurrent PATCH and polling loops for up to 10 seconds.
     patch_thread = threading.Thread(target=patch_loop)
     patch_thread.start()
     poll_loop()
     stop_event.set()
     patch_thread.join(timeout=2)
 
-    # Then
+    # Then: failures indicate either bad API responses or a reproduced mismatch.
     assert not patch_thread.is_alive()
     assert not patch_errors
     assert not poll_errors
