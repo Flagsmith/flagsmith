@@ -11,6 +11,12 @@ from api_keys.models import MasterAPIKey
 from organisations.models import Organisation
 
 
+# This integration test reproduces a race condition during segment PATCH updates.
+# When nested segment rules are deleted before new rules are created, the segment
+# can temporarily evaluate as "match all". That causes identities without the
+# required traits to receive an enabled feature state from a segment override.
+# The test continuously PATCHes the same ruleset while polling identity feature
+# states to surface any incorrect, transient enables.
 @pytest.mark.django_db(transaction=True)
 def test_segment_patch_atomic__looped_repro__detects_mismatch(  # type: ignore[no-untyped-def]
     admin_client,
