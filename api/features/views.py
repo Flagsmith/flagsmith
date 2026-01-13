@@ -12,8 +12,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
-from drf_yasg import openapi  # type: ignore[import-untyped]
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import (
     action,
@@ -101,7 +100,7 @@ logger.setLevel(logging.INFO)
 flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 
-@swagger_auto_schema(responses={200: CreateFeatureSerializer()}, method="get")
+@extend_schema(responses={200: CreateFeatureSerializer()})
 @api_view(["GET"])
 def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
@@ -115,7 +114,7 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(query_serializer=FeatureQuerySerializer()),
+    decorator=extend_schema(parameters=[FeatureQuerySerializer]),
 )
 class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [FeaturePermissions]
@@ -157,7 +156,9 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         query_serializer.is_valid(raise_exception=True)
         query_data = query_serializer.validated_data
 
-        queryset = annotate_feature_queryset_with_code_references_summary(queryset)
+        queryset = annotate_feature_queryset_with_code_references_summary(
+            queryset, project.id
+        )
 
         queryset = self._filter_queryset(queryset)
 
@@ -238,9 +239,6 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
     def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super().get_serializer_context()
-        if getattr(self, "swagger_fake_view", False):
-            return context
-
         feature_states = getattr(self, "_feature_states", {})
         segment_feature_states = getattr(self, "_segment_feature_states", {})
         project = get_object_or_404(Project.objects.all(), pk=self.kwargs["project_pk"])
@@ -315,8 +313,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         return queryset.filter(id__in=feature_ids)
 
-    @swagger_auto_schema(
-        request_body=FeatureGroupOwnerInputSerializer,
+    @extend_schema(
+        request=FeatureGroupOwnerInputSerializer,
         responses={200: ProjectFeatureSerializer},
     )
     @action(detail=True, methods=["POST"], url_path="add-group-owners")
@@ -337,8 +335,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         response = Response(self.get_serializer(instance=feature).data)
         return response
 
-    @swagger_auto_schema(
-        request_body=FeatureGroupOwnerInputSerializer,
+    @extend_schema(
+        request=FeatureGroupOwnerInputSerializer,
         responses={200: ProjectFeatureSerializer},
     )
     @action(detail=True, methods=["POST"], url_path="remove-group-owners")
@@ -350,8 +348,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         response = Response(self.get_serializer(instance=feature).data)
         return response
 
-    @swagger_auto_schema(
-        request_body=FeatureOwnerInputSerializer,
+    @extend_schema(
+        request=FeatureOwnerInputSerializer,
         responses={200: ProjectFeatureSerializer},
     )
     @action(detail=True, methods=["POST"], url_path="add-owners")
@@ -369,8 +367,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.add_owners(feature)
         return Response(self.get_serializer(instance=feature).data)
 
-    @swagger_auto_schema(
-        request_body=FeatureOwnerInputSerializer,
+    @extend_schema(
+        request=FeatureOwnerInputSerializer,
         responses={200: ProjectFeatureSerializer},
     )
     @action(detail=True, methods=["POST"], url_path="remove-owners")
@@ -383,11 +381,11 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         return Response(self.get_serializer(instance=feature).data)
 
-    @swagger_auto_schema(
-        query_serializer=GetInfluxDataQuerySerializer(),
+    @extend_schema(
+        parameters=[GetInfluxDataQuerySerializer],
         responses={200: FeatureInfluxDataSerializer()},
         deprecated=True,
-        operation_description="Please use ​/api​/v1​/projects​/{project_pk}​/features​/{id}​/evaluation-data/",
+        description="Please use ​/api​/v1​/projects​/{project_pk}​/features​/{id}​/evaluation-data/",
     )
     @action(detail=True, methods=["GET"], url_path="influx-data")
     def get_influx_data(self, request, pk, project_pk):  # type: ignore[no-untyped-def]
@@ -413,8 +411,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = FeatureInfluxDataSerializer(instance={"events_list": events_list})
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        query_serializer=GetUsageDataQuerySerializer(),
+    @extend_schema(
+        parameters=[GetUsageDataQuerySerializer],
         responses={200: FeatureEvaluationDataSerializer()},
     )
     @action(detail=True, methods=["GET"], url_path="evaluation-data")
@@ -490,29 +488,29 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "feature",
-                openapi.IN_QUERY,
-                "ID of the feature to filter by.",
+    decorator=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="feature",
+                location=OpenApiParameter.QUERY,
+                description="ID of the feature to filter by.",
                 required=False,
-                type=openapi.TYPE_INTEGER,
+                type=int,
             ),
-            openapi.Parameter(
-                "feature_name",
-                openapi.IN_QUERY,
-                "Name of the feature to filter by.",
+            OpenApiParameter(
+                name="feature_name",
+                location=OpenApiParameter.QUERY,
+                description="Name of the feature to filter by.",
                 required=False,
-                type=openapi.TYPE_STRING,
+                type=str,
             ),
-            openapi.Parameter(
-                "anyIdentity",
-                openapi.IN_QUERY,
-                "Pass any value to get results that have an identity override. "
+            OpenApiParameter(
+                name="anyIdentity",
+                location=OpenApiParameter.QUERY,
+                description="Pass any value to get results that have an identity override. "
                 "Do not pass for default behaviour.",
                 required=False,
-                type=openapi.TYPE_STRING,
+                type=str,
             ),
         ]
     ),
@@ -724,8 +722,8 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
 
         return Response(serializer.data)
 
-    @swagger_auto_schema(  # type: ignore[misc]
-        request_body=IdentitySourceIdentityRequestSerializer(),
+    @extend_schema(
+        request=IdentitySourceIdentityRequestSerializer(),
         responses={200: IdentityAllFeatureStatesSerializer(many=True)},
     )
     @action(methods=["POST"], detail=False, url_path="clone-from-given-identity")
@@ -755,14 +753,14 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "environment",
-                openapi.IN_QUERY,
-                "ID of the environment.",
+    decorator=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="environment",
+                location=OpenApiParameter.QUERY,
+                description="ID of the environment.",
                 required=True,
-                type=openapi.TYPE_INTEGER,
+                type=int,
             ),
         ]
     ),
@@ -778,6 +776,9 @@ class SimpleFeatureStateViewSet(
     filterset_fields = ["environment", "feature", "feature_segment"]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
+
         if not self.action == "list":
             return FeatureState.objects.all()
 
@@ -794,9 +795,7 @@ class SimpleFeatureStateViewSet(
             raise NotFound("Environment not found.")
 
 
-@swagger_auto_schema(
-    responses={200: WritableNestedFeatureStateSerializer()}, method="get"
-)
+@extend_schema(responses={200: WritableNestedFeatureStateSerializer()})
 @api_view(["GET"])
 def get_feature_state_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
@@ -808,6 +807,7 @@ def get_feature_state_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     return Response(serializer.data)
 
 
+@extend_schema(tags=["sdk"])
 class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
     serializer_class = SDKFeatureStateSerializer
     permission_classes = (EnvironmentKeyPermissions,)
@@ -815,10 +815,12 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
     renderer_classes = [JSONRenderer]
     pagination_class = None
     throttle_classes = []
+    queryset = FeatureState.objects.none()
 
-    @swagger_auto_schema(
-        query_serializer=SDKFeatureStatesQuerySerializer(),
+    @extend_schema(
+        parameters=[SDKFeatureStatesQuerySerializer],
         responses={200: FeatureStateSerializerFull(many=True)},
+        operation_id="get_flags",
     )
     @method_decorator(vary_on_headers(SDK_ENVIRONMENT_KEY_HEADER))
     @method_decorator(
@@ -938,8 +940,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         return Response(flags.data, status=status.HTTP_200_OK)
 
 
-@swagger_auto_schema(  # type: ignore[misc]
-    method="GET",
+@extend_schema(
     responses={200: FeatureMVOptionsValuesResponseSerializer(many=True)},
 )
 @api_view(["GET"])
@@ -994,9 +995,8 @@ def organisation_has_got_feature(request, organisation):  # type: ignore[no-unty
         return True
 
 
-@swagger_auto_schema(  # type: ignore[misc]
-    method="POST",
-    request_body=CustomCreateSegmentOverrideFeatureStateSerializer(),
+@extend_schema(
+    request=CustomCreateSegmentOverrideFeatureStateSerializer(),
     responses={201: CustomCreateSegmentOverrideFeatureStateSerializer()},
 )
 @api_view(["POST"])

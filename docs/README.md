@@ -1,14 +1,14 @@
-# Website
+## Documentation
 
-This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
+docs.flagsmith.com is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
 
-## Installation
+### Installation
 
 ```console
 npm install
 ```
 
-## Local Development
+### Local Development
 
 ```console
 npm run start
@@ -38,7 +38,7 @@ If you want to apply any fixes discovered, you can run the following command:
 npx prettier <YOUR_DOC> --write
 ```
 
-## OpenAPI generator
+### OpenAPI generator
 
 We are using the https://github.com/PaloAltoNetworks/docusaurus-openapi-docs plugin to generate the OpenAPI docs. If
 `static/api-static/edge-api.yaml` changes you will need to rebuild the static files with:
@@ -50,7 +50,7 @@ npm run docusaurus gen-api-docs all
 
 and then commit them.
 
-## Build
+### Build
 
 ```console
 npm run build
@@ -59,6 +59,6 @@ npm run build
 This command generates static content into the `build` directory and can be served using any static contents hosting
 service.
 
-## Deployment
+### Deployment
 
 This site is set to auto deploy to Vercel.
