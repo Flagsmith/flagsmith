@@ -20,6 +20,7 @@ import FeatureFilters, {
   getURLParamsFromFilters,
 } from 'components/feature-page/FeatureFilters'
 import { FeatureMetricsSection, FeaturesEmptyState } from './features'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -160,7 +161,7 @@ const FeaturesPage = class extends Component {
             ? el(permission)
             : Utils.renderWithPermission(
                 permission,
-                Constants.projectPermissions('Create Feature'),
+                Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
                 el(permission),
               )
         }

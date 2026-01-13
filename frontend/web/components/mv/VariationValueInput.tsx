@@ -37,9 +37,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
             <>
               {Utils.renderWithPermission(
                 canCreateFeature,
-                Constants.projectPermissions(
-                  ProjectPermission.CREATE_FEATURE,
-                ),
+                Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
                 <ValueEditor
                   data-test={`featureVariationValue${
                     Utils.featureStateToValue(value) || index

@@ -59,9 +59,7 @@ const TagValues: FC<TagValuesType> = ({
       {!!onAdd &&
         Utils.renderWithPermission(
           createEditTagPermission,
-          Constants.projectPermissions(
-            ProjectPermission.MANAGE_TAGS,
-          ),
+          Constants.projectPermissions(ProjectPermission.MANAGE_TAGS),
           <Button
             disabled={!createEditTagPermission}
             size='xxSmall'

@@ -277,9 +277,7 @@ const FeatureValue: FC<EditFeatureValueProps> = ({
               </FormGroup>
               {Utils.renderWithPermission(
                 createFeature,
-                Constants.projectPermissions(
-                  ProjectPermission.CREATE_FEATURE,
-                ),
+                Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
                 <AddVariationButton
                   multivariateOptions={multivariate_options}
                   disabled={!createFeature || noPermissions}

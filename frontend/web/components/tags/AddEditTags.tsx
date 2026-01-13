@@ -188,9 +188,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
               <div className='text-right'>
                 {Utils.renderWithPermission(
                   createEditTagPermission,
-                  Constants.projectPermissions(
-                    ProjectPermission.MANAGE_TAGS,
-                  ),
+                  Constants.projectPermissions(ProjectPermission.MANAGE_TAGS),
                   <div className='text-center'>
                     <Button
                       size='small'

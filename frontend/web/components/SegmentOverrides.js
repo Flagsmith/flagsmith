@@ -192,7 +192,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                     Utils.renderWithPermission(
                       permission,
                       Constants.environmentPermissions(
-                        EnvironmentPermissionDescriptions.MANAGE_SEGMENT_OVERRIDES,
+                        EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
                       ),
                       <>
                         <SegmentOverrideActions

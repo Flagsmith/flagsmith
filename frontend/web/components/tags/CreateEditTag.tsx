@@ -132,9 +132,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
             {({ permission }) =>
               Utils.renderWithPermission(
                 permission,
-                Constants.projectPermissions(
-                  ProjectPermission.MANAGE_TAGS,
-                ),
+                Constants.projectPermissions(ProjectPermission.MANAGE_TAGS),
                 <div className='ml-2'>
                   <Button
                     onClick={save}

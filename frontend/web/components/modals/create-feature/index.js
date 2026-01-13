@@ -53,8 +53,8 @@ import FeatureUpdateSummary from './FeatureUpdateSummary'
 import FeatureNameInput from './FeatureNameInput'
 import {
   EnvironmentPermission,
-  ProjectPermission,
   EnvironmentPermissionDescriptions,
+  ProjectPermission,
 } from 'common/types/permissions.types'
 
 const Index = class extends Component {
@@ -281,7 +281,7 @@ const Index = class extends Component {
         .then((permissions) => {
           const hasViewIdentitiesPermission =
             permissions[EnvironmentPermission.VIEW_IDENTITIES] ||
-          permissions.ADMIN
+            permissions.ADMIN
           // Early return if user doesn't have permission
           if (!hasViewIdentitiesPermission) {
             this.setUserOverridesNoPermission()
@@ -1225,7 +1225,7 @@ const Index = class extends Component {
                                                           return Utils.renderWithPermission(
                                                             manageSegmentsOverrides,
                                                             Constants.environmentPermissions(
-                                                              EnvironmentPermissionDescriptions.MANAGE_SEGMENT_OVERRIDES,
+                                                              EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
                                                             ),
                                                             <>
                                                               {!is4Eyes &&
@@ -1565,7 +1565,7 @@ const Index = class extends Component {
                                                 dangerouslySetInnerHTML={{
                                                   __html:
                                                     Constants.environmentPermissions(
-                                                      EnvironmentPermissionDescriptions.VIEW_IDENTITIES,
+                                                      EnvironmentPermission.VIEW_IDENTITIES,
                                                     ),
                                                 }}
                                               />
@@ -1892,10 +1892,10 @@ const Index = class extends Component {
                                               data-test='update-feature-btn'
                                               id='update-feature-btn'
                                               disabled={
-                                                (!savePermission ||
+                                                !savePermission ||
                                                 isSaving ||
-                                                  !projectFlag.name ||
-                                                  invalid)
+                                                !projectFlag.name ||
+                                                invalid
                                               }
                                             >
                                               {isSaving
