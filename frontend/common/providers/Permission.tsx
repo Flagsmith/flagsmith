@@ -7,34 +7,55 @@ import { cloneDeep } from 'lodash'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import {
-  Permission as PermissionEnum,
-  PermissionDescriptions,
+  ADMIN_PERMISSION,
+  EnvironmentPermission,
+  OrganisationPermission,
   ProjectPermission,
 } from 'common/types/permissions.types'
 
 /**
- * Props for the Permission component
- *
- * @property {number | string} id - The ID of the resource (projectId, organisationId, environmentId, etc.)
- * @property {string} permission - The permission key to check (e.g., 'CREATE_FEATURE', 'UPDATE_FEATURE')
- * @property {PermissionLevel} level - The permission level ('project', 'organisation', 'environment')
- * @property {number[]} [tags] - Optional tag IDs for tag-based permission checking
- * @property {ReactNode | ((data: { permission: boolean; isLoading: boolean }) => ReactNode)} children - Content to render or render function
- * @property {ReactNode} [fallback] - Optional content to render when permission is denied
- * @property {string} [permissionName] - Optional custom permission name for tooltip display
- * @property {boolean} [showTooltip=false] - Whether to show a tooltip when permission is denied
+ * Base props shared across all permission levels
  */
-type PermissionType = {
+type BasePermissionProps = {
   id: number | string
-  permission: PermissionEnum
   tags?: number[]
-  level: PermissionLevel
   children:
     | ReactNode
     | ((data: { permission: boolean; isLoading: boolean }) => ReactNode)
   fallback?: ReactNode
   permissionName?: string
   showTooltip?: boolean
+}
+
+/**
+ * Discriminated union types for each permission level
+ * This means we can detect a mismatch between level and permission
+ */
+type OrganisationLevelProps = BasePermissionProps & {
+  level: 'organisation'
+  permission: OrganisationPermission
+}
+
+type ProjectLevelProps = BasePermissionProps & {
+  level: 'project'
+  permission: ProjectPermission
+}
+
+type EnvironmentLevelProps = BasePermissionProps & {
+  level: 'environment'
+  permission: EnvironmentPermission
+}
+
+type PermissionType =
+  | OrganisationLevelProps
+  | ProjectLevelProps
+  | EnvironmentLevelProps
+
+type UseHasPermissionParams = {
+  id: number | string
+  level: 'organisation' | 'project' | 'environment'
+  permission: OrganisationPermission | ProjectPermission | EnvironmentPermission
+  tags?: number[]
 }
 
 /**
@@ -59,12 +80,15 @@ export const useHasPermission = ({
   level,
   permission,
   tags,
-}: Omit<PermissionType, 'children'>) => {
+}: UseHasPermissionParams) => {
   const {
     data: permissionsData,
     isLoading,
     isSuccess,
-  } = useGetPermissionQuery({ id: `${id}`, level }, { skip: !id || !level })
+  } = useGetPermissionQuery(
+    { id: id as number, level },
+    { skip: !id || !level },
+  )
   const data = useMemo(() => {
     if (!tags?.length || !permissionsData?.tag_based_permissions)
       return permissionsData
@@ -158,18 +182,35 @@ const Permission: FC<PermissionType> = ({
   })
 
   const finalPermission = hasPermission || AccountStore.isAdmin()
-  let permissionDescriptionFunc: (perm: any) => any =
-    Constants.organisationPermissions
-  switch (level) {
-    case 'environment':
-      permissionDescriptionFunc = Constants.environmentPermissions
-      break
-    case 'project':
-      permissionDescriptionFunc = Constants.projectPermissions
-      break
-    default:
-      break
+
+  const getPermissionDescription = (): string => {
+    if (permission === ADMIN_PERMISSION) {
+      switch (level) {
+        case 'environment':
+          return Constants.environmentPermissions(ADMIN_PERMISSION)
+        case 'project':
+          return Constants.projectPermissions(ADMIN_PERMISSION)
+        default:
+          return Constants.organisationPermissions(ADMIN_PERMISSION)
+      }
+    }
+
+    switch (level) {
+      case 'environment':
+        return Constants.environmentPermissions(
+          permission as EnvironmentPermission,
+        )
+      case 'project':
+        return Constants.projectPermissions(permission as ProjectPermission)
+      default:
+        return Constants.organisationPermissions(
+          permission as OrganisationPermission,
+        )
+    }
   }
+
+  const tooltipMessage = permissionName || getPermissionDescription()
+
   if (typeof children === 'function') {
     const renderedChildren = children({
       isLoading,
@@ -182,10 +223,7 @@ const Permission: FC<PermissionType> = ({
 
     return Utils.renderWithPermission(
       finalPermission,
-      permissionName ||
-        permissionDescriptionFunc(
-          PermissionDescriptions[permission as ProjectPermission],
-        ),
+      tooltipMessage,
       renderedChildren,
     )
   }
@@ -195,14 +233,7 @@ const Permission: FC<PermissionType> = ({
   }
 
   if (showTooltip) {
-    return Utils.renderWithPermission(
-      finalPermission,
-      permissionName ||
-        permissionDescriptionFunc(
-          PermissionDescriptions[permission as ProjectPermission],
-        ),
-      children,
-    )
+    return Utils.renderWithPermission(finalPermission, tooltipMessage, children)
   }
 
   return <>{fallback || null}</>

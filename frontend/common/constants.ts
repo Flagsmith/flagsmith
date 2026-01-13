@@ -1,14 +1,17 @@
 import { OAuthType } from './types/requests'
 import { SegmentCondition } from './types/responses'
 import Utils from './utils/utils'
-
 import Project from './project'
 import { integrationCategories } from 'components/pages/IntegrationsPage'
 import {
-  EnvironmentPermissionDescription,
-  OrganisationPermissionDescription,
-  ProjectPermissionDescription,
+  EnvironmentPermission,
+  EnvironmentPermissionDescriptions,
+  OrganisationPermission,
+  OrganisationPermissionDescriptions,
+  ProjectPermission,
+  ProjectPermissionDescriptions,
 } from './types/permissions.types'
+
 const keywords = {
   FEATURE_FUNCTION: 'myCoolFeature',
   FEATURE_NAME: 'my_cool_feature',
@@ -257,8 +260,13 @@ const Constants = {
     value: '',
   } as SegmentCondition,
   defaultTagColor: '#3d4db6',
-  environmentPermissions: (perm: EnvironmentPermissionDescription) =>
-    `To manage this feature you need the <i>${perm}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`,
+  environmentPermissions: (perm: EnvironmentPermission) => {
+    const description =
+      perm === 'ADMIN'
+        ? 'Administrator'
+        : EnvironmentPermissionDescriptions[perm]
+    return `To manage this feature you need the <i>${description}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`
+  },
   events: {
     'ACCEPT_INVITE': (org: any) => ({
       'category': 'Invite',
@@ -628,8 +636,13 @@ const Constants = {
   modals: {
     'PAYMENT': 'Payment Modal',
   },
-  organisationPermissions: (perm: OrganisationPermissionDescription) =>
-    `To manage this feature you need the <i>${perm}</i> permission for this organisation.<br/>Please contact a member of this organisation who has administrator privileges.`,
+  organisationPermissions: (perm: OrganisationPermission) => {
+    const description =
+      perm === 'ADMIN'
+        ? 'Administrator'
+        : OrganisationPermissionDescriptions[perm]
+    return `To manage this feature you need the <i>${description}</i> permission for this organisation.<br/>Please contact a member of this organisation who has administrator privileges.`
+  },
   pages: {
     'ACCOUNT': 'Account Page',
     'AUDIT_LOG': 'Audit Log Page',
@@ -661,8 +674,11 @@ const Constants = {
     '#FFBE71',
     '#F57C78',
   ],
-  projectPermissions: (perm: ProjectPermissionDescription) =>
-    `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`,
+  projectPermissions: (perm: ProjectPermission) => {
+    const description =
+      perm === 'ADMIN' ? 'Administrator' : ProjectPermissionDescriptions[perm]
+    return `To use this feature you need the <i>${description}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`
+  },
   resourceTypes: {
     GITHUB_ISSUE: {
       id: 1,

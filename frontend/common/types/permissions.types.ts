@@ -1,24 +1,29 @@
+export const ADMIN_PERMISSION = 'ADMIN' as const
+export const ADMIN_PERMISSION_DESCRIPTION = 'Administrator' as const
+
 // Organization Permissions
-export enum OrganisationPermission {
+enum OrganisationPermissionEnum {
   CREATE_PROJECT = 'CREATE_PROJECT',
   MANAGE_USERS = 'MANAGE_USERS',
   MANAGE_USER_GROUPS = 'MANAGE_USER_GROUPS',
 }
 export const OrganisationPermissionDescriptions = {
-  [OrganisationPermission.CREATE_PROJECT]: 'Create project',
-  [OrganisationPermission.MANAGE_USERS]: 'Manage users',
-  [OrganisationPermission.MANAGE_USER_GROUPS]: 'Manage user groups',
+  [OrganisationPermissionEnum.CREATE_PROJECT]: 'Create project',
+  [OrganisationPermissionEnum.MANAGE_USERS]: 'Manage users',
+  [OrganisationPermissionEnum.MANAGE_USER_GROUPS]: 'Manage user groups',
 } as const
+
+export type OrganisationPermission =
+  | OrganisationPermissionEnum
+  | typeof ADMIN_PERMISSION
+export const OrganisationPermission = OrganisationPermissionEnum
 
 export type OrganisationPermissionDescription =
   | (typeof OrganisationPermissionDescriptions)[keyof typeof OrganisationPermissionDescriptions]
   | typeof ADMIN_PERMISSION_DESCRIPTION
 
-export const ADMIN_PERMISSION = 'ADMIN' as const
-export const ADMIN_PERMISSION_DESCRIPTION = 'Administrator' as const
-
 // Project Permissions
-export enum ProjectPermission {
+enum ProjectPermissionEnum {
   VIEW_PROJECT = 'VIEW_PROJECT',
   CREATE_ENVIRONMENT = 'CREATE_ENVIRONMENT',
   DELETE_FEATURE = 'DELETE_FEATURE',
@@ -31,27 +36,30 @@ export enum ProjectPermission {
   CREATE_PROJECT_LEVEL_CHANGE_REQUESTS = 'CREATE_PROJECT_LEVEL_CHANGE_REQUESTS',
 }
 export const ProjectPermissionDescriptions = {
-  [ProjectPermission.VIEW_PROJECT]: 'View project',
-  [ProjectPermission.CREATE_ENVIRONMENT]: 'Create environment',
-  [ProjectPermission.DELETE_FEATURE]: 'Delete feature',
-  [ProjectPermission.CREATE_FEATURE]: 'Create feature',
-  [ProjectPermission.MANAGE_SEGMENTS]: 'Manage segments',
-  [ProjectPermission.VIEW_AUDIT_LOG]: 'View audit log',
-  [ProjectPermission.MANAGE_TAGS]: 'Manage tags',
-  [ProjectPermission.MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS]:
+  [ProjectPermissionEnum.VIEW_PROJECT]: 'View project',
+  [ProjectPermissionEnum.CREATE_ENVIRONMENT]: 'Create environment',
+  [ProjectPermissionEnum.DELETE_FEATURE]: 'Delete feature',
+  [ProjectPermissionEnum.CREATE_FEATURE]: 'Create feature',
+  [ProjectPermissionEnum.MANAGE_SEGMENTS]: 'Manage segments',
+  [ProjectPermissionEnum.VIEW_AUDIT_LOG]: 'View audit log',
+  [ProjectPermissionEnum.MANAGE_TAGS]: 'Manage tags',
+  [ProjectPermissionEnum.MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS]:
     'Manage project level change requests',
-  [ProjectPermission.APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS]:
+  [ProjectPermissionEnum.APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS]:
     'Approve project level change requests',
-  [ProjectPermission.CREATE_PROJECT_LEVEL_CHANGE_REQUESTS]:
+  [ProjectPermissionEnum.CREATE_PROJECT_LEVEL_CHANGE_REQUESTS]:
     'Create project level change requests',
 } as const
+
+export type ProjectPermission = ProjectPermissionEnum | typeof ADMIN_PERMISSION
+export const ProjectPermission = ProjectPermissionEnum
 
 export type ProjectPermissionDescription =
   | (typeof ProjectPermissionDescriptions)[keyof typeof ProjectPermissionDescriptions]
   | typeof ADMIN_PERMISSION_DESCRIPTION
 
 // Environment Permissions
-export enum EnvironmentPermission {
+enum EnvironmentPermissionEnum {
   VIEW_ENVIRONMENT = 'VIEW_ENVIRONMENT',
   UPDATE_FEATURE_STATE = 'UPDATE_FEATURE_STATE',
   MANAGE_IDENTITIES = 'MANAGE_IDENTITIES',
@@ -61,14 +69,20 @@ export enum EnvironmentPermission {
   MANAGE_SEGMENT_OVERRIDES = 'MANAGE_SEGMENT_OVERRIDES',
 }
 export const EnvironmentPermissionDescriptions = {
-  [EnvironmentPermission.VIEW_ENVIRONMENT]: 'View environment',
-  [EnvironmentPermission.UPDATE_FEATURE_STATE]: 'Update feature state',
-  [EnvironmentPermission.MANAGE_IDENTITIES]: 'Manage identities',
-  [EnvironmentPermission.CREATE_CHANGE_REQUEST]: 'Create change request',
-  [EnvironmentPermission.APPROVE_CHANGE_REQUEST]: 'Approve change request',
-  [EnvironmentPermission.VIEW_IDENTITIES]: 'View identities',
-  [EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES]: 'Manage segment overrides',
+  [EnvironmentPermissionEnum.VIEW_ENVIRONMENT]: 'View environment',
+  [EnvironmentPermissionEnum.UPDATE_FEATURE_STATE]: 'Update feature state',
+  [EnvironmentPermissionEnum.MANAGE_IDENTITIES]: 'Manage identities',
+  [EnvironmentPermissionEnum.CREATE_CHANGE_REQUEST]: 'Create change request',
+  [EnvironmentPermissionEnum.APPROVE_CHANGE_REQUEST]: 'Approve change request',
+  [EnvironmentPermissionEnum.VIEW_IDENTITIES]: 'View identities',
+  [EnvironmentPermissionEnum.MANAGE_SEGMENT_OVERRIDES]:
+    'Manage segment overrides',
 } as const
+
+export type EnvironmentPermission =
+  | EnvironmentPermissionEnum
+  | typeof ADMIN_PERMISSION
+export const EnvironmentPermission = EnvironmentPermissionEnum
 
 export type EnvironmentPermissionDescription =
   | (typeof EnvironmentPermissionDescriptions)[keyof typeof EnvironmentPermissionDescriptions]
