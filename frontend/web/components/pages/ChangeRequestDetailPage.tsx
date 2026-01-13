@@ -167,7 +167,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         history={history}
         environmentId={environmentId}
         projectId={projectId}
-        schangeRequest={changeRequest}
+        changeRequest={changeRequest}
         projectFlag={projectFlag}
         multivariate_options={
           changeRequest.feature_states[0].multivariate_feature_state_values
