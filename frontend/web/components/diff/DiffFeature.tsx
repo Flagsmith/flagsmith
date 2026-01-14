@@ -211,7 +211,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
               <TabItem
                 className={'p-0'}
                 tabLabel={
-                  <div>
+                  <div className='d-flex justify-content-center gap-1 align-items-center'>
                     Variations{' '}
                     {variationDiffs.totalChanges ? (
                       <span className='unread'>
@@ -265,6 +265,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
                   diffs={segmentDiffs.diffs}
                   projectId={projectId}
                   environmentId={environmentId}
+                  projectFlag={projectFlag}
                 />
               </TabItem>
             )}

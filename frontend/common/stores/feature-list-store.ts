@@ -60,7 +60,18 @@ const convertSegmentOverrideToFeatureState = (
     feature_state_value: override.value,
     id: override.id,
     live_from: changeRequest?.live_from,
-    multivariate_feature_state_values: override.multivariate_options,
+    multivariate_feature_state_values: changeRequest
+      ? override.multivariate_options?.map((v) => ({
+          id: v.id,
+          multivariate_feature_option: v.multivariate_feature_option ?? v.id,
+          percentage_allocation:
+            v.percentage_allocation ?? v.default_percentage_allocation,
+        }))
+      : override.multivariate_options?.map((v) => ({
+          multivariate_feature_option: v.multivariate_feature_option ?? v.id,
+          percentage_allocation:
+            v.percentage_allocation ?? v.default_percentage_allocation,
+        })),
     toRemove: override.toRemove,
   } as Partial<FeatureState>
 }
@@ -203,7 +214,6 @@ const controller = {
       store.model && store.model.features
         ? store.model.features.find((v) => v.id === flag.id)
         : flag
-
     Promise.all(
       (flag.multivariate_options || []).map((v, i) => {
         const originalMV = v.id
@@ -631,13 +641,16 @@ const controller = {
                           (v.multivariate_feature_option || v.id) ===
                           (m.multivariate_feature_option || m.id),
                       )
-                      return {
-                        ...v,
-                        percentage_allocation: matching
-                          ? typeof matching.percentage_allocation === 'number'
+                      let percentage_allocation = v.percentage_allocation
+                      if (matching) {
+                        percentage_allocation =
+                          typeof matching.percentage_allocation === 'number'
                             ? matching.percentage_allocation
                             : matching.default_percentage_allocation
-                          : v.percentage_allocation,
+                      }
+                      return {
+                        ...v,
+                        percentage_allocation,
                       }
                     },
                   )
@@ -733,7 +746,7 @@ const controller = {
           getStore().dispatch(
             projectFlagService.util.invalidateTags(['ProjectFlag']),
           )
-          if(!store.model) {
+          if (!store.model) {
             return
           }
           // Fetch and update the latest environment feature state
