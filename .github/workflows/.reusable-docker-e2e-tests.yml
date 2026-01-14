@@ -12,9 +12,14 @@ on:
         type: string
         description: Frontend Docker with E2E capabilities image to use, e.g., `ghcr.io/flagsmith/flagsmith-e2e:main`
         required: true
+      test-framework:
+        type: string
+        description: Test framework to use (playwright or testcafe)
+        required: false
+        default: 'playwright'
       args:
         type: string
-        description: Additional arguments to testcafe
+        description: Additional arguments to test runner
         required: false
         default: ''
       concurrency:
@@ -37,7 +42,7 @@ on:
 
 jobs:
   run-e2e:
-    name: "E2E${{ inputs.tests && format(': {0}', inputs.tests) || '' }}"
+    name: "E2E (${{ inputs.test-framework }})${{ inputs.tests && format(': {0}', inputs.tests) || '' }}"
     runs-on: ${{ inputs.runs-on }}
 
     permissions:
@@ -72,7 +77,7 @@ jobs:
           shell: bash
           command: |
             cd frontend
-            make test
+            make test-${{ inputs.test-framework }}
           max_attempts: 2
           retry_on: error
           timeout_minutes: 20

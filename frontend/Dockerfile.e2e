@@ -1,4 +1,45 @@
-FROM ghcr.io/flagsmith/e2e-frontend-base:latest
+FROM debian:latest
+
+# Set node version
+ENV NODE_VERSION 22.12.0
+
+# replace shell with bash so we can source files
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    g++ make libssl-dev python3 python3-setuptools gnupg2 curl wget \
+    libgtk-3-0 libdbus-glib-1-2 libxt6 libx11-xcb1 libasound2 \
+    && apt-get -y autoclean
+
+# Download and install Firefox 143.0
+RUN ARCH=$(uname -m) && \
+    apt-get install -y xz-utils && \
+    wget -O /tmp/firefox.tar.xz "https://ftp.mozilla.org/pub/firefox/releases/143.0/linux-${ARCH}/en-US/firefox-143.0.tar.xz" && \
+    tar -xJf /tmp/firefox.tar.xz -C /opt && \
+    ln -s /opt/firefox/firefox /usr/local/bin/firefox && \
+    rm /tmp/firefox.tar.xz
+
+# nvm environment variables
+ENV NVM_DIR /usr/local/nvm
+
+# install nvm
+# https://github.com/creationix/nvm#install-script
+RUN mkdir /usr/local/nvm && curl --silent -o- https://raw.githubusercontent.com/creationix/nvm/v0.39.4/install.sh | bash
+
+# install node and npm LTS
+RUN source $NVM_DIR/nvm.sh \
+    && nvm install $NODE_VERSION \
+    && nvm alias default $NODE_VERSION \
+    && nvm use default
+
+# add node and npm to path so the commands are available
+ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
+ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+
+# confirm installation of node
+RUN node -v
+RUN npm -v
 
 # Build Flagsmith
 WORKDIR /srv/flagsmith
@@ -13,6 +54,9 @@ RUN npm ci
 COPY frontend .
 COPY .release-please-manifest.json ./.versions.json
 RUN npm run env
+
+# Install Playwright browsers
+RUN npm run playwright:install
 
 ARG CI_COMMIT_SHA=dev
 RUN echo ${CI_COMMIT_SHA} > ./CI_COMMIT_SHA

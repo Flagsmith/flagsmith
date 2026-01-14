@@ -78,13 +78,14 @@ jobs:
       image-name: flagsmith-e2e
       scan: false
 
-  run-e2e-tests:
+  run-e2e-tests-playwright:
     needs: [docker-build-api, docker-build-private-cloud-api, docker-build-e2e]
     uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
     with:
       runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ matrix.args.api-image }}
+      test-framework: playwright
       args: ${{ matrix.args.args }}
     secrets:
       GCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -95,14 +96,36 @@ jobs:
         runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
         args:
           - api-image: ${{ needs.docker-build-api.outputs.image }}
-            args: --meta-filter category=oss
+            args: --project=oss
           - api-image: ${{ needs.docker-build-private-cloud-api.outputs.image }}
-            args: --meta-filter category=oss,category=enterprise
+            args: --project=oss --project=enterprise
+
+  run-e2e-tests-testcafe:
+    needs: [docker-build-api, docker-build-private-cloud-api, docker-build-e2e]
+    uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
+    with:
+      runs-on: ${{ matrix.runs-on }}
+      e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
+      api-image: ${{ matrix.args.api-image }}
+      test-framework: testcafe
+      args: ${{ matrix.args.args }}
+    secrets:
+      GCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+
+    strategy:
+      matrix:
+        runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
+        args:
+          - api-image: ${{ needs.docker-build-api.outputs.image }}
+            args: --meta-filter category=smoke
+          - api-image: ${{ needs.docker-build-private-cloud-api.outputs.image }}
+            args: --meta-filter category=smoke --meta-filter category=enterprise
 
   # Publish to dockerhub
 
   docker-publish-api:
-    needs: [docker-build-api, run-e2e-tests]
+    needs: [docker-build-api, run-e2e-tests-playwright, run-e2e-tests-testcafe]
     uses: ./.github/workflows/.reusable-docker-publish.yml
     if: github.event_name == 'release'
     with:
@@ -111,7 +134,7 @@ jobs:
     secrets: inherit
 
   docker-publish-frontend:
-    needs: [docker-build-frontend, run-e2e-tests]
+    needs: [docker-build-frontend, run-e2e-tests-playwright, run-e2e-tests-testcafe]
     uses: ./.github/workflows/.reusable-docker-publish.yml
     if: github.event_name == 'release'
     with:
@@ -120,7 +143,7 @@ jobs:
     secrets: inherit
 
   docker-publish-unified:
-    needs: [docker-build-unified, run-e2e-tests]
+    needs: [docker-build-unified, run-e2e-tests-playwright, run-e2e-tests-testcafe]
     uses: ./.github/workflows/.reusable-docker-publish.yml
     if: github.event_name == 'release'
     with:
@@ -129,7 +152,7 @@ jobs:
     secrets: inherit
 
   docker-publish-private-cloud-api:
-    needs: [docker-build-private-cloud-api, run-e2e-tests]
+    needs: [docker-build-private-cloud-api, run-e2e-tests-playwright, run-e2e-tests-testcafe]
     uses: ./.github/workflows/.reusable-docker-publish.yml
     if: github.event_name == 'release'
     with:
@@ -138,7 +161,7 @@ jobs:
     secrets: inherit
 
   docker-publish-private-cloud:
-    needs: [docker-build-private-cloud, run-e2e-tests]
+    needs: [docker-build-private-cloud, run-e2e-tests-playwright, run-e2e-tests-testcafe]
     uses: ./.github/workflows/.reusable-docker-publish.yml
     if: github.event_name == 'release'
     with:
@@ -149,7 +172,7 @@ jobs:
   # Publish to Quay.io
 
   docker-publish-quay-enterprise:
-    needs: [ docker-build-private-cloud, run-e2e-tests ]
+    needs: [docker-build-private-cloud, run-e2e-tests-playwright, run-e2e-tests-testcafe]
     uses: ./.github/workflows/.reusable-docker-publish.yml
     if: github.event_name == 'release'
     with:
@@ -161,7 +184,7 @@ jobs:
     secrets: inherit
 
   docker-publish-quay-enterprise-api:
-    needs: [ docker-build-private-cloud-api, run-e2e-tests ]
+    needs: [docker-build-private-cloud-api, run-e2e-tests-playwright, run-e2e-tests-testcafe]
     uses: ./.github/workflows/.reusable-docker-publish.yml
     if: github.event_name == 'release'
     with:
@@ -173,7 +196,7 @@ jobs:
     secrets: inherit
 
   docker-publish-quay-frontend:
-    needs: [ docker-build-frontend, run-e2e-tests ]
+    needs: [docker-build-frontend, run-e2e-tests-playwright, run-e2e-tests-testcafe]
     uses: ./.github/workflows/.reusable-docker-publish.yml
     if: github.event_name == 'release'
     with:
@@ -185,7 +208,7 @@ jobs:
     secrets: inherit
 
   docker-publish-quay-split-testing:
-    needs: [ docker-build-split-testing, run-e2e-tests ]
+    needs: [docker-build-split-testing, run-e2e-tests-playwright, run-e2e-tests-testcafe]
     uses: ./.github/workflows/.reusable-docker-publish.yml
     if: github.event_name == 'release'
     with:
