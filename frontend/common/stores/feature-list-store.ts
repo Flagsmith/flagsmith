@@ -34,6 +34,7 @@ import {
   changeRequestService,
   updateChangeRequest,
 } from 'common/services/useChangeRequest'
+import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -41,7 +42,6 @@ const data = require('../data/base/_data')
 const { createSegmentOverride } = require('../services/useSegmentOverride')
 const { getStore } = require('../store')
 let createdFirstFeature = false
-const PAGE_SIZE = 50
 
 const convertSegmentOverrideToFeatureState = (
   override,
@@ -82,8 +82,11 @@ const controller = {
     if (
       !createdFirstFeature &&
       !flagsmith.getTrait('first_feature') &&
+      AccountStore.model &&
       AccountStore.model.organisations.length === 1 &&
+      OrganisationStore.model &&
       OrganisationStore.model.projects.length === 1 &&
+      store.model &&
       (!store.model.features || !store.model.features.length)
     ) {
       createdFirstFeature = true
@@ -758,9 +761,11 @@ const controller = {
             const environmentFeatureState = res.data.find(
               (v) => !v.feature_segment,
             )
-            store.model.keyedEnvironmentFeatures[projectFlag.id] = {
-              ...store.model.keyedEnvironmentFeatures[projectFlag.id],
-              ...environmentFeatureState,
+            if (store.model?.keyedEnvironmentFeatures) {
+              store.model.keyedEnvironmentFeatures[projectFlag.id] = {
+                ...store.model.keyedEnvironmentFeatures[projectFlag.id],
+                ...environmentFeatureState,
+              }
             }
           })
         })
@@ -808,11 +813,13 @@ const controller = {
                 throw version.error
               }
               const featureState = version.data.feature_states[0].data
-              store.model.keyedEnvironmentFeatures[projectFlag.id] = {
-                ...featureState,
-                feature_state_value: Utils.featureStateToValue(
-                  featureState.feature_state_value,
-                ),
+              if (store.model?.keyedEnvironmentFeatures) {
+                store.model.keyedEnvironmentFeatures[projectFlag.id] = {
+                  ...featureState,
+                  feature_state_value: Utils.featureStateToValue(
+                    featureState.feature_state_value,
+                  ),
+                }
               }
             })
           })
@@ -861,7 +868,7 @@ const controller = {
               : `${Project.api}projects/${projectId}/features/?page=${
                   page || 1
                 }&environment=${environment}&page_size=${
-                  pageSize || PAGE_SIZE
+                  pageSize || FEATURES_PAGE_SIZE
                 }${filterUrl}`
           if (store.search) {
             featuresEndpoint += `&search=${store.search}`
@@ -890,7 +897,7 @@ const controller = {
                 return
               }
               store.paging.next = features.next
-              store.paging.pageSize = PAGE_SIZE
+              store.paging.pageSize = FEATURES_PAGE_SIZE
               store.paging.count = features.count
               store.paging.previous = features.previous
               store.paging.currentPage =
