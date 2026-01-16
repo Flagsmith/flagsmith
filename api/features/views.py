@@ -193,7 +193,9 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         query_serializer.is_valid(raise_exception=True)
         query_data = query_serializer.validated_data
 
-        queryset = annotate_feature_queryset_with_code_references_summary(queryset)
+        queryset = annotate_feature_queryset_with_code_references_summary(
+            queryset, project.id
+        )
 
         queryset = self._filter_queryset(queryset)
 

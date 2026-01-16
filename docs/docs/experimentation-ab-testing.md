@@ -23,7 +23,7 @@ By the end of this tutorial, you will be able to:
 
 To follow this tutorial, you will need:
 
-- A basic understanding of [multivariate flags](/managing-flags/core-management) in Flagsmith.
+- A basic understanding of [multivariate flags](/managing-flags/core-management) in Flagsmith. Remember: multivariate bucketing only works when users are identified (use real identities or persistent anonymous GUIDs).
 - Access to a third-party analytics platform (e.g., Amplitude, Mixpanel) where you can send custom events. You can explore Flagsmith [integrations](/third-party-integrations/analytics/segment) for this purpose.
 - A development environment for your application where you can implement changes and integrate the Flagsmith SDK.
 

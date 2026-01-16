@@ -1,5 +1,64 @@
 # Changelog
 
+## [2.209.1](https://github.com/Flagsmith/flagsmith/compare/v2.209.0...v2.209.1) (2026-01-13)
+
+
+### Bug Fixes
+
+* **infra:** increase MASTER_API_KEY_THROTTLE_RATE to 100/sec ([#6521](https://github.com/Flagsmith/flagsmith/issues/6521)) ([d557800](https://github.com/Flagsmith/flagsmith/commit/d557800406a7d66e38d151063830fe670986a66f))
+
+## [2.209.0](https://github.com/Flagsmith/flagsmith/compare/v2.208.0...v2.209.0) (2026-01-12)
+
+
+### Features
+
+* **throttling:** Throttle only requests authorised by master API keys ([#6513](https://github.com/Flagsmith/flagsmith/issues/6513)) ([e1afc88](https://github.com/Flagsmith/flagsmith/commit/e1afc883bd9f9a861edcbfc741a34f3c5b2496a1))
+
+## [2.208.0](https://github.com/Flagsmith/flagsmith/compare/v2.207.1...v2.208.0) (2026-01-12)
+
+
+### Features
+
+* **redis:** enable read_from_replicas for Redis Cluster by default ([#6506](https://github.com/Flagsmith/flagsmith/issues/6506)) ([b53e0cf](https://github.com/Flagsmith/flagsmith/commit/b53e0cf57a88c22f2eb42dce5529363af377b1a5))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Revert to default Redis pool settings ([#6507](https://github.com/Flagsmith/flagsmith/issues/6507)) ([dbaf16e](https://github.com/Flagsmith/flagsmith/commit/dbaf16e24571f7f0e95be62fb5414de12e0e8820))
+* Set per-user rate limit to 500/min for Admin API ([#6502](https://github.com/Flagsmith/flagsmith/issues/6502)) ([6c1f175](https://github.com/Flagsmith/flagsmith/commit/6c1f175d98394f088ed043daac6c646bd4ebcc48))
+
+## [2.207.1](https://github.com/Flagsmith/flagsmith/compare/v2.207.0...v2.207.1) (2026-01-08)
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Use blocking Redis pool for throttle cache, limit max connections ([#6500](https://github.com/Flagsmith/flagsmith/issues/6500)) ([cb049bf](https://github.com/Flagsmith/flagsmith/commit/cb049bfa5ec35ac37d75cbc69d90825eff54d902))
+
+## [2.207.0](https://github.com/Flagsmith/flagsmith/compare/v2.206.0...v2.207.0) (2026-01-08)
+
+
+### Features
+
+* **api-docs:** Generate OpenAPI 3.1 docs with drf-spectacular ([#6451](https://github.com/Flagsmith/flagsmith/issues/6451)) ([42e4fdc](https://github.com/Flagsmith/flagsmith/commit/42e4fdc890ca2183133f311088755361dc5a7b83))
+* improve segment feature association ([#6478](https://github.com/Flagsmith/flagsmith/issues/6478)) ([58015b1](https://github.com/Flagsmith/flagsmith/commit/58015b117324da4cc7b41b54519e2b6fe1c0176a))
+
+
+### Bug Fixes
+
+* **ci:** Remove obsolete flagsmith-task-processor clone ([#6493](https://github.com/Flagsmith/flagsmith/issues/6493)) ([4a6ee45](https://github.com/Flagsmith/flagsmith/commit/4a6ee45e742a92d0b92744011ada821fc536927b))
+* **deploy:** use same task definition for API and SDK services ([#6495](https://github.com/Flagsmith/flagsmith/issues/6495)) ([8cdb036](https://github.com/Flagsmith/flagsmith/commit/8cdb036598ab0c6680ad9c1ca04bdeef108892d5))
+* inconsistent Capitalization for Badges - capitalized beta badge ([#6492](https://github.com/Flagsmith/flagsmith/issues/6492)) ([530d68b](https://github.com/Flagsmith/flagsmith/commit/530d68b36b51611ffe774f085b55b1560a25a789))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Enable Redis for per-user throttling in production ([#6497](https://github.com/Flagsmith/flagsmith/issues/6497)) ([c0058e4](https://github.com/Flagsmith/flagsmith/commit/c0058e4414a9fc1cf1f1bda49015c39b0a8bcabb))
+
+
+### Dependency Updates
+
+* bump pynacl from 1.5.0 to 1.6.2 in /api ([#6481](https://github.com/Flagsmith/flagsmith/issues/6481)) ([c54bc7a](https://github.com/Flagsmith/flagsmith/commit/c54bc7ac145b358c87bc9f61edc3bcd3ad6991ab))
+
 ## [2.206.0](https://github.com/Flagsmith/flagsmith/compare/v2.205.8...v2.206.0) (2026-01-07)
 
 
