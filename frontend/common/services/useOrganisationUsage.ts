@@ -34,6 +34,7 @@ export const organisationUsageService = service
             environmentDocument += v.environment_document || 0
             identities += v.identities || 0
           })
+
           return {
             events_list: data,
             totals: {

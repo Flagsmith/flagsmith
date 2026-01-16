@@ -1,9 +1,27 @@
-import React from 'react'
+import React, { FC } from 'react'
 import { Organisation } from 'common/types/responses'
-import Icon from 'components/Icon'
+import Icon, { IconName } from 'components/Icon'
 import Utils from 'common/utils/utils'
 import Payment from 'components/modals/Payment'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
+
+type LimitItemProps = {
+  icon: IconName
+  label: string
+  value: string
+}
+
+const LimitItem: FC<LimitItemProps> = ({ icon, label, value }) => (
+  <Row>
+    <div className='plan-icon'>
+      <Icon name={icon} width={32} />
+    </div>
+    <div>
+      <p className='fs-small lh-sm mb-0'>{label}</p>
+      <h4 className='mb-0'>{value}</h4>
+    </div>
+  </Row>
+)
 
 type BillingTabProps = {
   organisation: Organisation
@@ -14,8 +32,26 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
     id: String(organisation.id),
   })
 
-  const { chargebee_email } = subscriptionMeta || {}
+  const {
+    audit_log_visibility_days,
+    chargebee_email,
+    feature_history_visibility_days,
+    max_api_calls,
+    max_projects,
+    max_seats,
+  } = subscriptionMeta || {}
   const planName = Utils.getPlanName(organisation.subscription?.plan) || 'Free'
+
+  const formatLimit = (value: number | null | undefined): string => {
+    if (value === null || value === undefined) return 'Unlimited'
+    return Utils.numberWithCommas(value)
+  }
+
+  const formatDays = (value: number | null | undefined): string => {
+    if (value === null || value === undefined) return 'Unlimited'
+    if (value === 0) return 'Not available'
+    return `${value} days`
+  }
 
   return (
     <div className='mt-4'>
@@ -74,6 +110,45 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
           )}
         </div>
       </Row>
+      {subscriptionMeta && (
+        <>
+          <h5 className='mt-4 mb-3'>Subscription Limits</h5>
+          <Row className='plan p-4 mb-4'>
+            <Row className='flex-wrap gap-5'>
+              <LimitItem
+                icon='bar-chart'
+                label='API Calls'
+                value={formatLimit(max_api_calls)}
+              />
+              <LimitItem
+                icon='people'
+                label='Team Seats'
+                value={formatLimit(max_seats)}
+              />
+              <LimitItem
+                icon='layers'
+                label='Projects'
+                value={formatLimit(max_projects)}
+              />
+              {audit_log_visibility_days !== 0 && (
+                <LimitItem
+                  icon='list'
+                  label='Audit Log'
+                  value={formatDays(audit_log_visibility_days)}
+                />
+              )}
+              {Utils.getFlagsmithHasFeature('feature_versioning') &&
+                feature_history_visibility_days !== 0 && (
+                  <LimitItem
+                    icon='clock'
+                    label='Feature History'
+                    value={formatDays(feature_history_visibility_days)}
+                  />
+                )}
+            </Row>
+          </Row>
+        </>
+      )}
       <h5>Manage Payment Plan</h5>
       <Payment viewOnly={false} />
     </div>
