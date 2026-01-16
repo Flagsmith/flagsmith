@@ -38,6 +38,7 @@ from organisations.models import (
     OrganisationWebhook,
     Subscription,
 )
+from organisations.permissions import permissions as organisation_permissions
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import CREATE_PROJECT
 from organisations.subscriptions.constants import (
@@ -195,17 +196,15 @@ def test_create_new_orgnisation_returns_403_with_non_superuser(
     )
 
 
-@pytest.mark.skipif(
-    settings.SAML_INSTALLED,
-    reason="Expected failure if flagsmith-saml is installed.",
-)
 def test_saml_users_cannot_create_organisation(
     mocker: MockerFixture,
     staff_client: APIClient,
     staff_user: FFAdminUser,
 ) -> None:
     # Given
-    setattr(staff_user, "saml_user", mocker.Mock())
+    mock_user = mocker.Mock(wraps=staff_user)
+    mock_user.saml_user = mocker.Mock()
+    mocker.patch.object(organisation_permissions.Request, "user", mock_user)
 
     # When
     response = staff_client.post(
