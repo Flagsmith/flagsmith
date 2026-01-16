@@ -43,7 +43,7 @@ jobs:
               "test": "testing",
               "chore": "chore"
             }
-          ignored_types: '[]'
+          ignored_types: "[]"
 
   docker-prepare-report-comment:
     if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
@@ -103,6 +103,19 @@ jobs:
       ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
       comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
       scan: false
+
+  docker-build-api-private-test:
+    if: needs.permissions-check.outputs.can-write == 'true'
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build API Enterprise Test Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: api-private-test
+      image-name: flagsmith-api-private-test
+      scan: false
+    secrets:
+      secrets: |
+        github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
   docker-build-e2e:
     if: github.event.pull_request.draft == false && !cancelled()
