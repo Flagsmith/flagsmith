@@ -201,7 +201,13 @@ def test_saml_users_cannot_create_organisation(
     staff_user: FFAdminUser,
 ) -> None:
     # Given
-    setattr(staff_user, "saml_user", mocker.Mock())
+    mock_user = mocker.Mock(wraps=staff_user)
+    mock_user.saml_user = mocker.Mock()
+    mocker.patch(
+        "organisations.permissions.permissions.Request.user",
+        new_callable=mocker.PropertyMock,
+        return_value=mock_user,
+    )
 
     # When
     response = staff_client.post(

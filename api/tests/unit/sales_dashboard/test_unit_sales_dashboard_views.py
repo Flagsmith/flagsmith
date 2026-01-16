@@ -236,7 +236,7 @@ def test_start_trial(
 ) -> None:
     # Given
     url = reverse("sales_dashboard:organisation_start_trial", args=[organisation.id])
-    client.force_login(admin_user)
+    client.force_login(admin_user, backend="django.contrib.auth.backends.ModelBackend")
 
     seats = 20
     api_calls = 5_000_000
@@ -246,6 +246,10 @@ def test_start_trial(
 
     # Then
     assert response.status_code == 302
+    assert (
+        response.headers["Location"]
+        == f"/sales-dashboard/organisations/{organisation.pk}"
+    )
 
     subscription = Subscription.objects.get(organisation=organisation)
     assert subscription.subscription_id == TRIAL_SUBSCRIPTION_ID
@@ -273,13 +277,17 @@ def test_end_trial(
     url = reverse(
         "sales_dashboard:organisation_end_trial", args=[in_trial_organisation.id]
     )
-    client.force_login(admin_user)
+    client.force_login(admin_user, backend="django.contrib.auth.backends.ModelBackend")
 
     # When
     response = client.post(url)
 
     # Then
     assert response.status_code == 302
+    assert (
+        response.headers["Location"]
+        == f"/sales-dashboard/organisations/{in_trial_organisation.pk}"
+    )
 
     subscription = Subscription.objects.get(organisation=in_trial_organisation)
     assert subscription.subscription_id == ""
