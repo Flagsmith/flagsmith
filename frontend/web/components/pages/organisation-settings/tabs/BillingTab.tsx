@@ -130,7 +130,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
                 label='Projects'
                 value={formatLimit(max_projects)}
               />
-              {!!audit_log_visibility_days && (
+              {audit_log_visibility_days !== 0 && (
                 <LimitItem
                   icon='list'
                   label='Audit Log'
@@ -138,7 +138,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
                 />
               )}
               {Utils.getFlagsmithHasFeature('feature_versioning') &&
-                !!feature_history_visibility_days && (
+                feature_history_visibility_days !== 0 && (
                   <LimitItem
                     icon='clock'
                     label='Feature History'
