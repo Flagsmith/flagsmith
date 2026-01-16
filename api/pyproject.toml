@@ -200,12 +200,6 @@ optional = true
 [tool.poetry.group.licensing.dependencies]
 licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.2.0" }
 
-[tool.poetry.group.split-testing]
-optional = true
-
-[tool.poetry.group.split-testing.dependencies]
-flagsmith-split-testing = { git = "https://github.com/flagsmith/flagsmith-split-testing", tag = "v0.2.1" }
-
 [tool.poetry.group.release-pipelines]
 optional = true
 
