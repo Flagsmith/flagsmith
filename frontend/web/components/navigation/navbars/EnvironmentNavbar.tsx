@@ -120,16 +120,6 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               >
                 SDK Keys
               </SidebarLink>
-              {Utils.getFlagsmithHasFeature('split_testing') && (
-                <SidebarLink
-                  id={mobile ? undefined : 'split-tests-link'}
-                  exact
-                  icon='flask'
-                  to={`/project/${projectId}/environment/${environmentId}/split-tests`}
-                >
-                  Split Tests
-                </SidebarLink>
-              )}
               {environmentAdmin && (
                 <SidebarLink
                   icon='setting'

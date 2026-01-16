@@ -190,9 +190,9 @@ export type Req = {
     projectId?: number
     environmentId?: string
     billing_period?:
-      | 'current_billing_period'
-      | 'previous_billing_period'
-      | '90_day_period'
+    | 'current_billing_period'
+    | 'previous_billing_period'
+    | '90_day_period'
   }
   getWebhooks: {
     environmentId: string
@@ -762,9 +762,6 @@ export type Req = {
     projectId: number
   }>
   getConversionEvents: PagedRequest<{ q?: string; environment_id: string }>
-  getSplitTest: PagedRequest<{
-    conversion_event_type_id: number
-  }>
   testWebhook: {
     webhookUrl: string
     secret?: string

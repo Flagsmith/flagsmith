@@ -1403,10 +1403,6 @@ SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED = env.bool(
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
 WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 
-# Split Testing settings
-SPLIT_TESTING_INSTALLED = importlib.util.find_spec("split_testing")
-if SPLIT_TESTING_INSTALLED:
-    INSTALLED_APPS += ("split_testing",)
 
 ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)
 
