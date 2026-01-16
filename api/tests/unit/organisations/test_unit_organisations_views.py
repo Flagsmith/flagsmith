@@ -201,7 +201,12 @@ def test_saml_users_cannot_create_organisation(
     staff_user: FFAdminUser,
 ) -> None:
     # Given
-    setattr(staff_user, "saml_user", mocker.Mock())
+    try:  # A real SamlUser object is required when the SAML package is installed.
+        from saml.models import SamlUser
+
+        SamlUser.objects.create(user=staff_user)
+    except ImportError:
+        setattr(staff_user, "saml_user", mocker.Mock())
 
     # When
     response = staff_client.post(
