@@ -21,6 +21,10 @@ import Tooltip from './Tooltip'
 import SegmentsIcon from './svg/SegmentsIcon'
 import SegmentOverrideActions from './SegmentOverrideActions'
 import Button from './base/forms/Button'
+import {
+  EnvironmentPermission,
+  EnvironmentPermissionDescriptions,
+} from 'common/types/permissions.types'
 
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
@@ -181,13 +185,15 @@ const SegmentOverrideInner = class Override extends React.Component {
               <Row className='gap-2'>
                 <Permission
                   id={environmentId}
-                  permission={'MANAGE_SEGMENT_OVERRIDES'}
+                  permission={EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES}
                   level={'environment'}
                 >
                   {({ permission }) =>
                     Utils.renderWithPermission(
                       permission,
-                      Constants.projectPermissions('Manage Segments'),
+                      Constants.environmentPermissions(
+                        EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
+                      ),
                       <>
                         <SegmentOverrideActions
                           hideViewSegment={hideViewSegment}
@@ -454,7 +460,9 @@ class TheComponent extends Component {
     const { highlightSegmentId, projectId, value } = this.props
     if (!highlightSegmentId) return
 
-    const existingOverride = value?.find((v) => v.segment === highlightSegmentId)
+    const existingOverride = value?.find(
+      (v) => v.segment === highlightSegmentId,
+    )
     if (existingOverride) {
       return
     }
@@ -613,7 +621,7 @@ class TheComponent extends Component {
               <Row className='text-left gap-2'>
                 <div className='flex-1'>
                   <SegmentSelect
-                    className="w-100"
+                    className='w-100'
                     disabled={!!isLimitReached}
                     projectId={this.props.projectId}
                     data-test='select-segment'

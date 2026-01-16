@@ -14,6 +14,7 @@ import Constants from 'common/constants'
 import { useHasPermission } from 'common/providers/Permission'
 import Button from './base/forms/Button'
 import Tooltip from './Tooltip'
+import { ADMIN_PERMISSION, ADMIN_PERMISSION_DESCRIPTION } from 'common/types/permissions.types';
 
 class CreateServerSideKeyModal extends Component {
   state = {}
@@ -187,7 +188,7 @@ class ServerSideSDKKeys extends Component {
               }
               place='right'
             >
-              {Constants.environmentPermissions('ADMIN')}
+              {Constants.environmentPermissions(ADMIN_PERMISSION)}
             </Tooltip>
           )}
         </div>

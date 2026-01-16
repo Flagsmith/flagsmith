@@ -42,6 +42,10 @@ import {
 } from 'common/services/useInvites'
 import OrganisationUsersTable from 'components/users-permissions/OrganisationUsersTable/OrganisationUsersTable'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+import {
+  ADMIN_PERMISSION,
+  OrganisationPermission,
+} from 'common/types/permissions.types'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -90,19 +94,19 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const manageUsersPermission = useHasPermission({
     id: AccountStore.getOrganisation()?.id,
     level: 'organisation',
-    permission: 'MANAGE_USERS',
+    permission: OrganisationPermission.MANAGE_USERS,
   })
   const manageGroupsPermission = useHasPermission({
     id: AccountStore.getOrganisation()?.id,
     level: 'organisation',
-    permission: 'MANAGE_USER_GROUPS',
+    permission: OrganisationPermission.MANAGE_USER_GROUPS,
   })
 
   const hasInvitePermission =
     hasEmailProvider && manageUsersPermission.permission
-  const tooltTipText = !hasEmailProvider
+  const tooltipText = !hasEmailProvider
     ? noEmailProvider
-    : Constants.organisationPermissions('Admin')
+    : Constants.organisationPermissions(ADMIN_PERMISSION)
 
   const { data: roles } = useGetRolesQuery({ organisation_id: organisation.id })
 
@@ -140,9 +144,8 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
           .then(() => {
             toast('Invite deleted successfully')
           })
-          .catch((error) => {
+          .catch(() => {
             toast('Error deleting invite', 'error')
-            console.error(error)
           }),
       title: 'Delete Invite',
       yesText: 'Confirm',
@@ -195,7 +198,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         <h5 className='mb-0'>Team Members</h5>
                         {Utils.renderWithPermission(
                           hasInvitePermission,
-                          tooltTipText,
+                          tooltipText,
                           <Button
                             disabled={
                               !hasEmailProvider ||
@@ -485,7 +488,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                               'Error resending invite',
                                               'error',
                                             )
-                                            console.error(error)
                                           })
                                       }
                                       theme='text'
@@ -532,7 +534,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                           {Utils.renderWithPermission(
                             manageGroupsPermission.permission,
                             Constants.organisationPermissions(
-                              'Manage User Groups',
+                              OrganisationPermission.MANAGE_USER_GROUPS,
                             ),
                             <Button
                               id='btn-invite-groups'

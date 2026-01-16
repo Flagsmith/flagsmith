@@ -10,6 +10,12 @@ import { mergeChangeSets } from 'common/services/useChangeRequest'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getStore } from 'common/store'
 import {
+  mergeChangeSets,
+  useUpdateChangeRequestMutation,
+} from 'common/services/useChangeRequest'
+import { getFeatureStates } from 'common/services/useFeatureState'
+import { getStore } from 'common/store'
+import {
   ChangeRequest,
   Environment,
   FeatureState,
@@ -21,7 +27,6 @@ import {
 import Utils from 'common/utils/utils'
 import moment from 'moment'
 import ProjectStore from 'common/stores/project-store'
-import { useUpdateChangeRequestMutation } from 'common/services/useChangeRequest'
 import { useHasPermission } from 'common/providers/Permission'
 import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons'
@@ -43,6 +48,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import { useHistory } from 'react-router-dom'
 import { openPublishChangeRequestConfirm } from 'components/PublishChangeRequestModal'
 import { getChangeRequestLiveDate } from 'common/utils/getChangeRequestLiveDate'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
 type ChangeRequestPageType = {
   match: {
@@ -77,13 +83,13 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   const approvePermission = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: 'APPROVE_CHANGE_REQUEST',
+    permission: EnvironmentPermission.APPROVE_CHANGE_REQUEST,
     tags: projectFlag?.tags,
   })
   const publishPermission = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: 'UPDATE_FEATURE_STATE',
+    permission: EnvironmentPermission.UPDATE_FEATURE_STATE,
     tags: projectFlag?.tags,
   })
 
@@ -245,7 +251,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       children: (
         <NewVersionWarning
           environmentId={`${environment?.id}`}
-          featureId={featureId!}
+          featureId={featureId}
           date={`${changeRequest.created_at}`}
         />
       ),
@@ -346,7 +352,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         addOwner={addOwner}
         removeOwner={removeOwner}
         publishPermissionDescription={Constants.environmentPermissions(
-          'Update Feature States',
+          EnvironmentPermission.UPDATE_FEATURE_STATE,
         )}
         scheduledDate={getChangeRequestLiveDate(changeRequest)}
         deleteChangeRequest={deleteChangeRequest}
@@ -697,7 +703,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                     Utils.renderWithPermission(
                       approvePermission,
                       Constants.environmentPermissions(
-                        'Approve Change Requests',
+                        EnvironmentPermission.APPROVE_CHANGE_REQUEST,
                       ),
                       <Button
                         disabled={

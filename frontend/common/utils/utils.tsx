@@ -9,11 +9,11 @@ import {
   MultivariateFeatureStateValue,
   MultivariateOption,
   Organisation,
+  PConfidence,
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
   Tag,
-  PConfidence,
   UserPermissions,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
@@ -28,6 +28,15 @@ import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
 import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
 import { TimeUnit } from 'components/release-pipelines/constants'
+import {
+  ADMIN_PERMISSION,
+  ADMIN_PERMISSION_DESCRIPTION,
+  EnvironmentPermission,
+  EnvironmentPermissionDescription,
+  EnvironmentPermissionDescriptions,
+  OrganisationPermission,
+  OrganisationPermissionDescriptions,
+} from 'common/types/permissions.types'
 
 const semver = require('semver')
 
@@ -218,15 +227,15 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getCreateProjectPermission(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
-      return 'ADMIN'
+      return ADMIN_PERMISSION
     }
-    return 'CREATE_PROJECT'
+    return OrganisationPermission.CREATE_PROJECT
   },
   getCreateProjectPermissionDescription(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
-      return 'Administrator'
+      return ADMIN_PERMISSION_DESCRIPTION
     }
-    return 'Create Project'
+    return OrganisationPermissionDescriptions.CREATE_PROJECT
   },
   getExistingWaitForTime: (
     waitFor: string | undefined,
@@ -376,22 +385,15 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getManageFeaturePermission(isChangeRequest: boolean) {
     if (isChangeRequest) {
-      return 'CREATE_CHANGE_REQUEST'
+      return EnvironmentPermission.CREATE_CHANGE_REQUEST
     }
-    return 'UPDATE_FEATURE_STATE'
+    return EnvironmentPermission.UPDATE_FEATURE_STATE
   },
   getManageFeaturePermissionDescription(isChangeRequest: boolean) {
     if (isChangeRequest) {
-      return 'Create Change Request'
+      return EnvironmentPermissionDescriptions.CREATE_CHANGE_REQUEST
     }
-    return 'Update Feature State'
-  },
-
-  getManageUserPermission() {
-    return 'MANAGE_IDENTITIES'
-  },
-  getManageUserPermissionDescription() {
-    return 'Manage Identities'
+    return EnvironmentPermissionDescriptions.UPDATE_FEATURE_STATE
   },
 
   getNextPlan: (skipFree?: boolean) => {
@@ -423,7 +425,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
   },
-  getOverridePermission: (level: 'identity' | 'segment') => {
+  getOverridePermission: (
+    level: 'identity' | 'segment',
+  ): {
+    permission: EnvironmentPermission
+    permissionDescription: EnvironmentPermissionDescription
+  } => {
     switch (level) {
       case 'identity':
         return {
@@ -433,8 +440,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         }
       default:
         return {
-          permission: 'MANAGE_SEGMENT_OVERRIDES',
-          permissionDescription: 'Manage Segment Overrides',
+          permission: EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
+          permissionDescription:
+            EnvironmentPermissionDescriptions.MANAGE_SEGMENT_OVERRIDES,
         }
     }
   },
@@ -621,9 +629,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       }
       return utms
     }, {} as UtmsType)
-  },
-  getViewIdentitiesPermission() {
-    return 'VIEW_IDENTITIES'
   },
 
   hasEntityPermission(key: string, entityPermissions: UserPermissions) {

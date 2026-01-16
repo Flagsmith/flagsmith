@@ -10,6 +10,7 @@ import Constants from 'common/constants'
 import JSONReference from 'components/JSONReference'
 import { Segment } from 'common/types/responses'
 import ChangeRequestModal from './ChangeRequestModal'
+import { ADMIN_PERMISSION } from 'common/types/permissions.types'
 
 type DefaultSegmentType = Omit<Segment, 'id' | 'project' | 'uuid'> & {
   id?: number
@@ -221,7 +222,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
             }
             place='left'
           >
-            {Constants.projectPermissions('Admin')}
+            {Constants.projectPermissions(ADMIN_PERMISSION)}
           </Tooltip>
         </div>
       ) : (

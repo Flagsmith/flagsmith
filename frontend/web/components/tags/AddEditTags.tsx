@@ -17,6 +17,7 @@ import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import TagUsage from 'components/TagUsage'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type AddEditTagsType = {
   value?: number[]
@@ -57,12 +58,11 @@ const AddEditTags: FC<AddEditTagsType> = ({
   const [tab, setTab] = useState<'SELECT' | 'CREATE' | 'EDIT'>('SELECT')
   const [deleteTag] = useDeleteTagMutation()
   const [createTag] = useCreateTagMutation()
-  const permissionType = 'MANAGE_TAGS'
 
   const { permission: createEditTagPermission } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: permissionType,
+    permission: ProjectPermission.MANAGE_TAGS,
   })
 
   useEffect(() => {
@@ -188,9 +188,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
               <div className='text-right'>
                 {Utils.renderWithPermission(
                   createEditTagPermission,
-                  Constants.projectPermissions(
-                    permissionType === 'ADMIN' ? 'Admin' : 'Manage Tags',
-                  ),
+                  Constants.projectPermissions(ProjectPermission.MANAGE_TAGS),
                   <div className='text-center'>
                     <Button
                       size='small'

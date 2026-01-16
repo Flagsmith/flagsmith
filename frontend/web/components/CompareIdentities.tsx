@@ -23,6 +23,7 @@ import IdentityOverridesIcon from './IdentityOverridesIcon'
 import Tooltip from './Tooltip'
 import PageTitle from './PageTitle'
 import { getDarkMode } from 'project/darkMode'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
 type CompareIdentitiesType = {
   projectId: string
@@ -69,7 +70,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
   const { isLoading: permissionLoading, permission } = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getViewIdentitiesPermission(),
+    permission: EnvironmentPermission.VIEW_IDENTITIES,
   })
 
   const { data: leftUser } = useGetIdentityFeatureStatesAllQuery(
@@ -118,12 +119,13 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
   const isEdge = Utils.getIsEdge()
 
   const goUser = (user: IdentitySelectType['value'], feature: string) => {
+    if (!user) return
     window.open(
       `${
         document.location.origin
       }/project/${projectId}/environment/${environmentId}/users/${encodeURIComponent(
-        user!.label,
-      )}/${user!.value}?flag=${encodeURIComponent(feature)}`,
+        user.label,
+      )}/${user.value}?flag=${encodeURIComponent(feature)}`,
       '_blank',
     )
   }
@@ -189,7 +191,9 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       {!permission && !permissionLoading ? (
         <div
           dangerouslySetInnerHTML={{
-            __html: Constants.environmentPermissions('View Identities'),
+            __html: Constants.environmentPermissions(
+              EnvironmentPermission.VIEW_IDENTITIES,
+            ),
           }}
         />
       ) : (

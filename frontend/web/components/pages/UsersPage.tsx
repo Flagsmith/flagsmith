@@ -21,6 +21,10 @@ import IdentifierString from 'components/IdentifierString'
 import CodeHelp from 'components/CodeHelp'
 import { getStore } from 'common/store'
 import { useRouteContext } from 'components/providers/RouteContext'
+import {
+  ADMIN_PERMISSION,
+  EnvironmentPermission,
+} from 'common/types/permissions.types'
 
 interface RouteParams {
   environmentId: string
@@ -109,7 +113,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
   const { permission } = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getViewIdentitiesPermission(),
+    permission: EnvironmentPermission.VIEW_IDENTITIES,
   })
 
   const newUser = () => {
@@ -150,7 +154,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
                 }
                 place='right'
               >
-                {Constants.environmentPermissions('Admin')}
+                {Constants.environmentPermissions(ADMIN_PERMISSION)}
               </Tooltip>
             )}
           </>

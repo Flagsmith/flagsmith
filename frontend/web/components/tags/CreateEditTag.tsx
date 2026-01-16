@@ -16,6 +16,7 @@ import InlineModal from 'components/InlineModal'
 import ErrorMessage from 'components/ErrorMessage'
 import Switch from 'components/Switch'
 import Icon from 'components/Icon'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type CreateEditTagType = {
   projectId: string
@@ -110,7 +111,6 @@ const CreateEditTag: FC<CreateEditTagType> = ({
     }
   }
 
-  const permissionType = 'MANAGE_TAGS'
   return (
     <InlineModal
       title={title}
@@ -126,15 +126,13 @@ const CreateEditTag: FC<CreateEditTagType> = ({
           </Button>
           <Permission
             level='project'
-            permission={permissionType}
+            permission={ProjectPermission.MANAGE_TAGS}
             id={projectId}
           >
             {({ permission }) =>
               Utils.renderWithPermission(
                 permission,
-                Constants.projectPermissions(
-                  permissionType === 'ADMIN' ? 'Admin' : 'Manage Tags',
-                ),
+                Constants.projectPermissions(ProjectPermission.MANAGE_TAGS),
                 <div className='ml-2'>
                   <Button
                     onClick={save}
