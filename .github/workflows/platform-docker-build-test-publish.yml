@@ -66,6 +66,9 @@ jobs:
       target: api-private-test
       image-name: flagsmith-api-private-test
       scan: false
+    secrets:
+      secrets: |
+        github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
   docker-build-e2e:
     name: Build E2E Image
