@@ -175,7 +175,9 @@ WORKDIR /app
 COPY api /app/
 
 RUN make install-packages opts='--with dev' && \
-  make integrate-private-tests
+  make integrate-private-tests && \
+  git config --global --unset credential.helper && \
+  rm -f ${HOME}/.git-credentials
 
 CMD ["make test"]
 
