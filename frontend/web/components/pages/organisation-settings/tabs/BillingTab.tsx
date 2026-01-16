@@ -114,7 +114,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
         <>
           <h5 className='mt-4 mb-3'>Subscription Limits</h5>
           <Row className='plan p-4 mb-4'>
-            <Row className='flex-wrap gap-4'>
+            <Row className='flex-wrap gap-5'>
               <LimitItem
                 icon='bar-chart'
                 label='API Calls'
