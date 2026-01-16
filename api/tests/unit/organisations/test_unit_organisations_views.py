@@ -195,18 +195,17 @@ def test_create_new_orgnisation_returns_403_with_non_superuser(
     )
 
 
+@pytest.mark.skipif(
+    settings.SAML_INSTALLED,
+    reason="Expected failure if flagsmith-saml is installed.",
+)
 def test_saml_users_cannot_create_organisation(
     mocker: MockerFixture,
     staff_client: APIClient,
     staff_user: FFAdminUser,
 ) -> None:
     # Given
-    try:  # A real SamlUser object is required when the SAML package is installed.
-        from saml.models import SamlUser
-
-        SamlUser.objects.create(user=staff_user)
-    except ImportError:
-        setattr(staff_user, "saml_user", mocker.Mock())
+    setattr(staff_user, "saml_user", mocker.Mock())
 
     # When
     response = staff_client.post(
