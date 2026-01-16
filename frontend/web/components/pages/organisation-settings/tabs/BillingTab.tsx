@@ -137,13 +137,14 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
                   value={formatDays(audit_log_visibility_days)}
                 />
               )}
-              {!!feature_history_visibility_days && (
-                <LimitItem
-                  icon='clock'
-                  label='Feature History'
-                  value={formatDays(feature_history_visibility_days)}
-                />
-              )}
+              {Utils.getFlagsmithHasFeature('feature_versioning') &&
+                !!feature_history_visibility_days && (
+                  <LimitItem
+                    icon='clock'
+                    label='Feature History'
+                    value={formatDays(feature_history_visibility_days)}
+                  />
+                )}
             </Row>
           </Row>
         </>
