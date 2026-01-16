@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feat/enterprise-test-image
   release:
     types:
       - released
