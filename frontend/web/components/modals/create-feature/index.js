@@ -430,11 +430,16 @@ const Index = class extends Component {
             name: projectFlag.name,
             tags: projectFlag.tags,
           },
+            {
+                skipSaveProjectFeature: this.state.skipSaveProjectFeature,
+                ..._projectFlag,
+            },
           {
-            skipSaveProjectFeature: this.state.skipSaveProjectFeature,
-            ..._projectFlag,
+            ...environmentFlag,
+            multivariate_feature_state_values:
+              this.props.environmentVariations ||
+              environmentFlag?.multivariate_feature_state_values,
           },
-          propsEnvironmentFlag,
           segmentOverrides,
         )
     }
@@ -712,6 +717,13 @@ const Index = class extends Component {
                       return 'Update Change Request'
                     }
                     return 'New Change Request'
+                  }
+
+                  let modalTitle = 'New Change Request'
+                  if (schedule) {
+                    modalTitle = 'New Scheduled Flag Update'
+                  } else if (this.props.changeRequest) {
+                    modalTitle = 'Update Change Request'
                   }
 
                   openModal2(
@@ -1175,6 +1187,30 @@ const Index = class extends Component {
                                                           permission:
                                                             manageSegmentsOverrides,
                                                         }) => {
+                                                            const getButtonText =
+                                                              () => {
+                                                                if (isSaving) {
+                                                                  return existingChangeRequest
+                                                                    ? 'Updating Change Request'
+                                                                    : 'Creating Change Request'
+                                                                }
+                                                                return existingChangeRequest
+                                                                  ? 'Update Change Request'
+                                                                  : 'Create Change Request'
+                                                              }
+
+                                                            const getScheduleButtonText =
+                                                              () => {
+                                                                if (isSaving) {
+                                                                  return existingChangeRequest
+                                                                    ? 'Updating Change Request'
+                                                                    : 'Scheduling Update'
+                                                                }
+                                                                return existingChangeRequest
+                                                                  ? 'Update Change Request'
+                                                                  : 'Schedule Update'
+                                                              }
+
                                                           if (
                                                             isVersioned &&
                                                             is4Eyes
@@ -1201,18 +1237,7 @@ const Index = class extends Component {
                                                                   !savePermission
                                                                 }
                                                               >
-                                                                {(() => {
-                                                                  if (
-                                                                    isSaving
-                                                                  ) {
-                                                                    return existingChangeRequest
-                                                                      ? 'Updating Change Request'
-                                                                      : 'Creating Change Request'
-                                                                  }
-                                                                  return existingChangeRequest
-                                                                    ? 'Update Change Request'
-                                                                    : 'Create Change Request'
-                                                                })()}
+                                                                  {getButtonText()}
                                                               </Button>,
                                                             )
                                                           }
@@ -1245,18 +1270,7 @@ const Index = class extends Component {
                                                                         !savePermission
                                                                       }
                                                                     >
-                                                                      {(() => {
-                                                                        if (
-                                                                          isSaving
-                                                                        ) {
-                                                                          return existingChangeRequest
-                                                                            ? 'Updating Change Request'
-                                                                            : 'Scheduling Update'
-                                                                        }
-                                                                        return existingChangeRequest
-                                                                          ? 'Update Change Request'
-                                                                          : 'Schedule Update'
-                                                                      })()}
+                                                                        {getScheduleButtonText()}
                                                                     </Button>
                                                                   </>
                                                                 )}
