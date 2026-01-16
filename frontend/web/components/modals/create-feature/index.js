@@ -616,6 +616,7 @@ const Index = class extends Component {
       projectFlag.multivariate_options.length &&
       controlValue < 0
     const existingChangeRequest = this.props.changeRequest
+    const isVersionedChangeRequest = existingChangeRequest && isVersioned
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
     let regexValid = true
@@ -648,6 +649,10 @@ const Index = class extends Component {
               if (is4Eyes && !identity) {
                 this.fetchChangeRequests(true)
                 this.fetchScheduledChangeRequests(true)
+              }
+
+              if (this.props.changeRequest) {
+                this.close()
               }
             }}
           >
@@ -751,7 +756,8 @@ const Index = class extends Component {
                                 description,
                                 featureStateId:
                                   this.props.changeRequest &&
-                                  this.props.changeRequest.feature_states[0].id,
+                                  this.props.changeRequest.feature_states?.[0]
+                                    ?.id,
                                 id:
                                   this.props.changeRequest &&
                                   this.props.changeRequest.id,
@@ -918,7 +924,8 @@ const Index = class extends Component {
                                       onSaveFeatureValue={saveFeatureValue}
                                     />
                                   </TabItem>
-                                  {!existingChangeRequest && (
+                                  {(!existingChangeRequest ||
+                                    isVersionedChangeRequest) && (
                                     <TabItem
                                       data-test='segment_overrides'
                                       tabLabelString='Segment Overrides'
@@ -1930,10 +1937,14 @@ const FeatureProvider = (WrappedComponent) => {
             toast('Error updating the Flag', 'danger')
             return
           } else {
+            const isEditingChangeRequest =
+              this.props.changeRequest && changeRequest
             const operation = createdFlag || isCreate ? 'Created' : 'Updated'
             const type = changeRequest ? 'Change Request' : 'Feature'
 
-            const toastText = `${operation} ${type}`
+            const toastText = isEditingChangeRequest
+              ? `Updated ${type}`
+              : `${operation} ${type}`
             const toastAction = changeRequest
               ? {
                   buttonText: 'Open',

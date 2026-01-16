@@ -6,6 +6,9 @@ import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import CreateFeatureModal from 'components/modals/create-feature'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
+import { mergeChangeSets } from 'common/services/useChangeRequest'
+import { getFeatureStates } from 'common/services/useFeatureState'
+import { getStore } from 'common/store'
 import {
   ChangeRequest,
   Environment,
@@ -156,11 +159,52 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     })
   }
 
-  const editChangeRequest = (
+  const editChangeRequest = async (
     projectFlag: ProjectFlag,
     environmentFlag: FeatureState,
   ) => {
     if (!changeRequest) return
+
+    const environment: Environment = ProjectStore.getEnvironment(
+      environmentId,
+    ) as any
+
+    const isVersioned = !!environment?.use_v2_feature_versioning
+    let changedEnvironmentFlag = environmentFlag
+
+    if (isVersioned && changeRequest.change_sets) {
+      // Convert the changesets into a feature state
+      const currentFeatureStatesResponse = await getFeatureStates(getStore(), {
+        environment: environment.id,
+        feature: projectFlag.id,
+      })
+      const mergedStates = mergeChangeSets(
+        changeRequest.change_sets,
+        currentFeatureStatesResponse.data.results,
+        changeRequest.conflicts,
+      )
+      const mergedEnvFlag = mergedStates.find(
+        (v) => !v.feature_segment?.segment,
+      )
+      if (mergedEnvFlag) {
+        changedEnvironmentFlag = {
+          ...environmentFlag,
+          ...mergedEnvFlag,
+          feature_state_value: Utils.featureStateToValue(
+            mergedEnvFlag.feature_state_value,
+          ),
+        }
+      }
+    } else if (!isVersioned && changeRequest.feature_states?.[0]) {
+      changedEnvironmentFlag = {
+        ...environmentFlag,
+        enabled: changeRequest.feature_states[0].enabled,
+        feature_state_value: Utils.featureStateToValue(
+          changeRequest.feature_states[0].feature_state_value,
+        ),
+      }
+    }
+
     openModal(
       'Edit Change Request',
       <CreateFeatureModal
@@ -169,16 +213,13 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         projectId={projectId}
         changeRequest={changeRequest}
         projectFlag={projectFlag}
+        environmentFlag={changedEnvironmentFlag}
         multivariate_options={
-          changeRequest.feature_states[0].multivariate_feature_state_values
+          !isVersioned
+            ? changeRequest.feature_states?.[0]
+                ?.multivariate_feature_state_values
+            : undefined
         }
-        environmentFlag={{
-          ...environmentFlag,
-          enabled: changeRequest.feature_states[0].enabled,
-          feature_state_value: Utils.featureStateToValue(
-            changeRequest.feature_states[0].feature_state_value,
-          ),
-        }}
         flagId={environmentFlag.id}
       />,
       'side-modal create-feature-modal',
@@ -310,7 +351,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         scheduledDate={getChangeRequestLiveDate(changeRequest)}
         deleteChangeRequest={deleteChangeRequest}
         editChangeRequest={
-          !isVersioned && !changeRequest?.committed_at
+          !changeRequest?.committed_at
             ? () => editChangeRequest(projectFlag, environmentFlag)
             : undefined
         }
@@ -494,12 +535,13 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
     changeRequest &&
     changeRequest.user &&
     orgUsers.find((v) => v.id === changeRequest.user)
-
+  const isYours = AccountStore.getUserId() === changeRequest.user
   return (
     <div>
       <PageTitle
         cta={
-          (!changeRequest.committed_at || isScheduled) && (
+          (!changeRequest.committed_at || isScheduled) &&
+          isYours && (
             <Row>
               <Button theme='secondary' onClick={deleteChangeRequest}>
                 Delete
