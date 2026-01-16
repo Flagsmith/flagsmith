@@ -81,7 +81,6 @@ from projects.models import (
 )
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
-from tests.test_helpers import fix_issue_3869
 from tests.types import (
     AdminClientAuthType,
     EnableFeaturesFixture,
@@ -99,10 +98,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=False,
         help="Enable CI mode",
     )
-
-
-def pytest_sessionstart(session: pytest.Session) -> None:
-    fix_issue_3869()  # type: ignore[no-untyped-call]
 
 
 @pytest.fixture()

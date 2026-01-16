@@ -6,8 +6,9 @@ from drf_spectacular.extensions import (
 )
 from drf_spectacular.plumbing import ResolvedComponent, safe_ref
 from drf_spectacular.plumbing import append_meta as append_meta_orig
-from pydantic import BaseModel
+from pydantic import TypeAdapter
 from rest_framework.request import Request
+from typing_extensions import is_typeddict
 
 
 def append_meta(schema: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
@@ -135,19 +136,20 @@ class MCPSchemaGenerator(SchemaGenerator):
         return schema
 
 
-class PydanticSchemaExtension(
+class TypedDictSchemaExtension(
     OpenApiSerializerExtension  # type: ignore[no-untyped-call]
 ):
     """
     An OpenAPI extension that allows drf-spectacular to generate schema documentation
-    from Pydantic models.
+    from TypedDicts via Pydantic.
 
-    This extension is automatically used when a Pydantic BaseModel subclass is passed
+    This extension is automatically used when a TypedDict subclass is passed
     as a response type in @extend_schema decorators.
     """
 
-    target_class = "pydantic.BaseModel"
-    match_subclasses = True
+    @classmethod
+    def _matches(cls, target: type[Any]) -> bool:
+        return is_typeddict(target)
 
     def get_name(
         self,
@@ -161,9 +163,7 @@ class PydanticSchemaExtension(
         auto_schema: openapi.AutoSchema,
         direction: str,
     ) -> dict[str, Any]:
-        model_cls: type[BaseModel] = self.target
-
-        model_json_schema = model_cls.model_json_schema(
+        model_json_schema = TypeAdapter(self.target).json_schema(
             mode="serialization",
             ref_template="#/components/schemas/{model}",
         )

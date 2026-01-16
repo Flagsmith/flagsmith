@@ -1,22 +1,22 @@
-import pydantic
 from drf_spectacular.generators import SchemaGenerator
 from drf_spectacular.openapi import AutoSchema
+from typing_extensions import TypedDict
 
-from api.openapi import PydanticSchemaExtension
+from api.openapi import TypedDictSchemaExtension
 
 
 def test_pydantic_schema_extension__renders_expected() -> None:
     # Given
-    class Nested(pydantic.BaseModel):
+    class Nested(TypedDict):
         usual_str: str
-        optional_int: int | None = None
+        optional_int: int | None
 
-    class ResponseModel(pydantic.BaseModel):
+    class ResponseModel(TypedDict):
         nested_once: Nested
         nested_list: list[Nested]
 
     # Create an extension instance targeting the ResponseModel
-    extension = PydanticSchemaExtension(  # type: ignore[no-untyped-call]
+    extension = TypedDictSchemaExtension(  # type: ignore[no-untyped-call]
         target=ResponseModel,
     )
 
@@ -45,14 +45,14 @@ def test_pydantic_schema_extension__renders_expected() -> None:
 
 def test_pydantic_schema_extension__registers_nested_components() -> None:
     # Given
-    class Nested(pydantic.BaseModel):
+    class Nested(TypedDict):
         usual_str: str
-        optional_int: int | None = None
+        optional_int: int | None
 
-    class ResponseModel(pydantic.BaseModel):
+    class ResponseModel(TypedDict):
         nested: Nested
 
-    extension = PydanticSchemaExtension(  # type: ignore[no-untyped-call]
+    extension = TypedDictSchemaExtension(  # type: ignore[no-untyped-call]
         target=ResponseModel,
     )
 
@@ -73,10 +73,10 @@ def test_pydantic_schema_extension__registers_nested_components() -> None:
 
 def test_pydantic_schema_extension__get_name() -> None:
     # Given
-    class MyModel(pydantic.BaseModel):
+    class MyModel(TypedDict):
         field: str
 
-    extension = PydanticSchemaExtension(  # type: ignore[no-untyped-call]
+    extension = TypedDictSchemaExtension(  # type: ignore[no-untyped-call]
         target=MyModel,
     )
 
