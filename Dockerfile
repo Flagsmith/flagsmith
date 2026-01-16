@@ -39,6 +39,7 @@
 
 # - Internal stages
 # * api-test [build-python]
+# * api-private-test [build-python-private]
 
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]
@@ -158,11 +159,23 @@ RUN apk add xmlsec
 # * api-test [build-python]
 FROM build-python AS api-test
 
+WORKDIR /app
+
+COPY api /app/
+
 RUN make install-packages opts='--with dev'
+
+CMD ["make test"]
+
+# * api-private-test [build-python-private]
+FROM build-python-private AS api-private-test
 
 WORKDIR /app
 
 COPY api /app/
+
+RUN make install-packages opts='--with dev' && \
+  make integrate-private-tests
 
 CMD ["make test"]
 
