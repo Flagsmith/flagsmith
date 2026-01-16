@@ -2829,7 +2829,7 @@ pyasn1 = ">=0.4.6"
 
 [[package]]
 name = "licensing"
-version = "0.2.0"
+version = "0.2.1"
 description = "Licensing plugin for Flagsmith application."
 optional = false
 python-versions = ">=3.11,<4.0"
@@ -2839,13 +2839,13 @@ develop = false
 
 [package.dependencies]
 cryptography = ">=44.0.1"
-flagsmith-common = "*"
+flagsmith-common = ">=3.1.0"
 
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/licensing"
-reference = "v0.2.0"
-resolved_reference = "625c05dddd60488ed8a67647a386243b12e7d5ce"
+reference = "v0.2.1"
+resolved_reference = "0c0e1aad17b6f99e2887da3a9cb7aae30c03929c"
 
 [[package]]
 name = "markupsafe"
@@ -5317,4 +5317,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "4ecc9ba6c628a64b3378502da3cc4d4afaef5ec54da89306b3a63f740660efa0"
+content-hash = "32f406e7fe6605cc23d6439387ba5e704ff5e0e655d8e2ee713c30dd59d3d4be"
