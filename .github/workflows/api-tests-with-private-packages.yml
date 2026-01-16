@@ -9,7 +9,7 @@ defaults:
 
 jobs:
   test:
-    runs-on: depot-ubuntu-latest
+    runs-on: depot-ubuntu-latest-16
     name: API Tests
 
     services:
