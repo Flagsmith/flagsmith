@@ -2,262 +2,202 @@ import Format from 'common/utils/format'
 
 describe('Format', () => {
   describe('shortenNumber', () => {
-    it('should shorten millions with M suffix', () => {
-      expect(Format.shortenNumber(1523125)).toBe('1.5M')
-    })
-
-    it('should shorten thousands with K suffix', () => {
-      expect(Format.shortenNumber(1500)).toBe('1.5K')
-    })
-
-    it('should shorten billions with B suffix', () => {
-      expect(Format.shortenNumber(1500000000)).toBe('1.5B')
-    })
-
-    it('should shorten trillions with T suffix', () => {
-      expect(Format.shortenNumber(1500000000000)).toBe('1.5T')
-    })
-
-    it('should handle exact thousands', () => {
-      expect(Format.shortenNumber(1000)).toBe('1K')
-    })
-
-    it('should handle numbers with decimal precision', () => {
-      expect(Format.shortenNumber(1234)).toBe('1.2K')
-      expect(Format.shortenNumber(12345)).toBe('12.3K')
-      expect(Format.shortenNumber(123456)).toBe('123.5K')
+    it.each`
+      input            | expected
+      ${1523125}       | ${'1.5M'}
+      ${1500}          | ${'1.5K'}
+      ${1500000000}    | ${'1.5B'}
+      ${1500000000000} | ${'1.5T'}
+      ${1000}          | ${'1K'}
+      ${1234}          | ${'1.2K'}
+      ${12345}         | ${'12.3K'}
+      ${123456}        | ${'123.5K'}
+    `('shortenNumber($input) returns $expected', ({ expected, input }) => {
+      expect(Format.shortenNumber(input)).toBe(expected)
     })
   })
 
   describe('nearestTen', () => {
-    it('should pad single digits with leading zero', () => {
-      expect(Format.nearestTen(0)).toBe('00')
-      expect(Format.nearestTen(5)).toBe('05')
-      expect(Format.nearestTen(9)).toBe('09')
-    })
-
-    it('should return number as-is for values >= 10', () => {
-      expect(Format.nearestTen(10)).toBe(10)
-      expect(Format.nearestTen(15)).toBe(15)
-      expect(Format.nearestTen(99)).toBe(99)
+    it.each`
+      input | expected
+      ${0}  | ${'00'}
+      ${5}  | ${'05'}
+      ${9}  | ${'09'}
+      ${10} | ${10}
+      ${15} | ${15}
+      ${99} | ${99}
+    `('nearestTen($input) returns $expected', ({ expected, input }) => {
+      expect(Format.nearestTen(input)).toBe(expected)
     })
   })
 
   describe('camelCase', () => {
-    it('should capitalize first letter and lowercase rest', () => {
-      expect(Format.camelCase('hello')).toBe('Hello')
-      expect(Format.camelCase('HELLO')).toBe('Hello')
-      expect(Format.camelCase('hELLO')).toBe('Hello')
-    })
-
-    it('should handle single character', () => {
-      expect(Format.camelCase('a')).toBe('A')
-    })
-
-    it('should handle words with spaces', () => {
-      expect(Format.camelCase('hello world')).toBe('Hello world')
+    it.each`
+      input            | expected
+      ${'hello'}       | ${'Hello'}
+      ${'HELLO'}       | ${'Hello'}
+      ${'hELLO'}       | ${'Hello'}
+      ${'a'}           | ${'A'}
+      ${'hello world'} | ${'Hello world'}
+    `('camelCase("$input") returns "$expected"', ({ expected, input }) => {
+      expect(Format.camelCase(input)).toBe(expected)
     })
   })
 
   describe('enumeration', () => {
     describe('get', () => {
-      it('should convert constant to readable format', () => {
-        expect(Format.enumeration.get('MY_CONSTANT')).toBe('My constant')
-        expect(Format.enumeration.get('HELLO_WORLD')).toBe('Hello world')
-      })
-
-      it('should handle single word', () => {
-        expect(Format.enumeration.get('CONSTANT')).toBe('Constant')
-      })
-
-      it('should return empty string for null/undefined', () => {
-        expect(Format.enumeration.get(null)).toBe('')
-        expect(Format.enumeration.get(undefined)).toBe('')
-      })
+      it.each`
+        input            | expected
+        ${'MY_CONSTANT'} | ${'My constant'}
+        ${'HELLO_WORLD'} | ${'Hello world'}
+        ${'CONSTANT'}    | ${'Constant'}
+        ${null}          | ${''}
+        ${undefined}     | ${''}
+      `(
+        'enumeration.get($input) returns "$expected"',
+        ({ expected, input }) => {
+          expect(Format.enumeration.get(input)).toBe(expected)
+        },
+      )
     })
 
     describe('set', () => {
-      it('should convert readable to constant format', () => {
-        expect(Format.enumeration.set('My Constant')).toBe('MY_CONSTANT')
-        expect(Format.enumeration.set('Hello World')).toBe('HELLO_WORLD')
-      })
+      it.each`
+        input            | expected
+        ${'My Constant'} | ${'MY_CONSTANT'}
+        ${'Hello World'} | ${'HELLO_WORLD'}
+      `(
+        'enumeration.set("$input") returns "$expected"',
+        ({ expected, input }) => {
+          expect(Format.enumeration.set(input)).toBe(expected)
+        },
+      )
     })
   })
 
   describe('fullName', () => {
-    it('should format first and last name', () => {
-      expect(Format.fullName({ firstName: 'kyle', lastName: 'johnson' })).toBe(
-        'Kyle Johnson',
-      )
-    })
-
-    it('should handle uppercase names', () => {
-      expect(Format.fullName({ firstName: 'KYLE', lastName: 'JOHNSON' })).toBe(
-        'Kyle Johnson',
-      )
-    })
-
-    it('should handle only last name', () => {
-      expect(Format.fullName({ lastName: 'johnson' })).toBe('Johnson')
-    })
-
-    it('should handle only first name', () => {
-      expect(Format.fullName({ firstName: 'kyle' })).toBe('Kyle ')
-    })
-
-    it('should return empty string for null/undefined', () => {
-      expect(Format.fullName(null)).toBe('')
-      expect(Format.fullName(undefined)).toBe('')
-    })
-
-    it('should handle empty person object', () => {
-      expect(Format.fullName({})).toBe('')
+    it.each`
+      person                                        | expected
+      ${{ firstName: 'kyle', lastName: 'johnson' }} | ${'Kyle Johnson'}
+      ${{ firstName: 'KYLE', lastName: 'JOHNSON' }} | ${'Kyle Johnson'}
+      ${{ lastName: 'johnson' }}                    | ${'Johnson'}
+      ${{ firstName: 'kyle' }}                      | ${'Kyle '}
+      ${null}                                       | ${''}
+      ${undefined}                                  | ${''}
+      ${{}}                                         | ${''}
+    `('fullName($person) returns "$expected"', ({ expected, person }) => {
+      expect(Format.fullName(person)).toBe(expected)
     })
   })
 
   describe('initialAndLastName', () => {
-    it('should format as initial and last name', () => {
-      expect(
-        Format.initialAndLastName({ firstName: 'kyle', lastName: 'johnson' }),
-      ).toBe('K. Johnson')
-    })
-
-    it('should handle single name', () => {
-      expect(Format.initialAndLastName({ lastName: 'johnson' })).toBe('Johnson')
-    })
-
-    it('should return empty string for null/undefined', () => {
-      expect(Format.initialAndLastName(null)).toBe('')
-      expect(Format.initialAndLastName(undefined)).toBe('')
-    })
+    it.each`
+      person                                        | expected
+      ${{ firstName: 'kyle', lastName: 'johnson' }} | ${'K. Johnson'}
+      ${{ lastName: 'johnson' }}                    | ${'Johnson'}
+      ${null}                                       | ${''}
+      ${undefined}                                  | ${''}
+    `(
+      'initialAndLastName($person) returns "$expected"',
+      ({ expected, person }) => {
+        expect(Format.initialAndLastName(person)).toBe(expected)
+      },
+    )
   })
 
   describe('truncateText', () => {
-    it('should truncate text longer than specified length', () => {
-      expect(Format.truncateText('hello world', 5)).toBe('hello...')
-    })
-
-    it('should not truncate text shorter than specified length', () => {
-      expect(Format.truncateText('hello', 10)).toBe('hello')
-    })
-
-    it('should return null/undefined as-is', () => {
-      expect(Format.truncateText(null, 5)).toBe(null)
-      expect(Format.truncateText(undefined, 5)).toBe(undefined)
-    })
-
-    it('should handle exact length', () => {
-      expect(Format.truncateText('hello', 5)).toBe('hello')
-    })
+    it.each`
+      text             | length | expected
+      ${'hello world'} | ${5}   | ${'hello...'}
+      ${'hello'}       | ${10}  | ${'hello'}
+      ${'hello'}       | ${5}   | ${'hello'}
+      ${null}          | ${5}   | ${null}
+      ${undefined}     | ${5}   | ${undefined}
+    `(
+      'truncateText("$text", $length) returns $expected',
+      ({ expected, length, text }) => {
+        expect(Format.truncateText(text, length)).toBe(expected)
+      },
+    )
   })
 
   describe('ordinal', () => {
-    it('should add correct suffix for 1st, 2nd, 3rd', () => {
-      expect(Format.ordinal(1)).toBe('1st')
-      expect(Format.ordinal(2)).toBe('2nd')
-      expect(Format.ordinal(3)).toBe('3rd')
-    })
-
-    it('should add th suffix for 4-20', () => {
-      expect(Format.ordinal(4)).toBe('4th')
-      expect(Format.ordinal(11)).toBe('11th')
-      expect(Format.ordinal(12)).toBe('12th')
-      expect(Format.ordinal(13)).toBe('13th')
-    })
-
-    it('should handle 21st, 22nd, 23rd pattern', () => {
-      expect(Format.ordinal(21)).toBe('21st')
-      expect(Format.ordinal(22)).toBe('22nd')
-      expect(Format.ordinal(23)).toBe('23rd')
-      expect(Format.ordinal(24)).toBe('24th')
-    })
-
-    it('should return empty string for null/undefined/0', () => {
-      expect(Format.ordinal(null)).toBe('')
-      expect(Format.ordinal(undefined)).toBe('')
-      expect(Format.ordinal(0)).toBe('')
+    it.each`
+      input        | expected
+      ${1}         | ${'1st'}
+      ${2}         | ${'2nd'}
+      ${3}         | ${'3rd'}
+      ${4}         | ${'4th'}
+      ${11}        | ${'11th'}
+      ${12}        | ${'12th'}
+      ${13}        | ${'13th'}
+      ${21}        | ${'21st'}
+      ${22}        | ${'22nd'}
+      ${23}        | ${'23rd'}
+      ${24}        | ${'24th'}
+      ${null}      | ${''}
+      ${undefined} | ${''}
+      ${0}         | ${''}
+    `('ordinal($input) returns "$expected"', ({ expected, input }) => {
+      expect(Format.ordinal(input)).toBe(expected)
     })
   })
 
   describe('money', () => {
-    it('should format currency with pound symbol', () => {
-      expect(Format.money(10)).toBe('£10.00')
-      expect(Format.money(10.5)).toBe('£10.50')
-    })
-
-    it('should add comma separators for thousands', () => {
-      expect(Format.money(1000)).toBe('£1,000.00')
-      expect(Format.money(1000000)).toBe('£1,000,000.00')
-    })
-
-    it('should return FREE for zero', () => {
-      expect(Format.money(0)).toBe('FREE')
-    })
-
-    it('should return custom default value for zero', () => {
-      expect(Format.money(0, 'N/A')).toBe('N/A')
-    })
-
-    it('should return FREE for null/undefined values', () => {
-      expect(Format.money(null)).toBe('FREE')
-      expect(Format.money(undefined)).toBe('FREE')
-    })
-
-    it('should return custom default value for null/undefined', () => {
-      expect(Format.money(null, 'N/A')).toBe('N/A')
-      expect(Format.money(undefined, 'N/A')).toBe('N/A')
-    })
+    it.each`
+      value        | defaultVal   | expected
+      ${10}        | ${undefined} | ${'£10.00'}
+      ${10.5}      | ${undefined} | ${'£10.50'}
+      ${1000}      | ${undefined} | ${'£1,000.00'}
+      ${1000000}   | ${undefined} | ${'£1,000,000.00'}
+      ${0}         | ${undefined} | ${'FREE'}
+      ${0}         | ${'N/A'}     | ${'N/A'}
+      ${null}      | ${undefined} | ${'FREE'}
+      ${null}      | ${'N/A'}     | ${'N/A'}
+      ${undefined} | ${undefined} | ${'FREE'}
+      ${undefined} | ${'N/A'}     | ${'N/A'}
+    `(
+      'money($value, $defaultVal) returns "$expected"',
+      ({ defaultVal, expected, value }) => {
+        expect(Format.money(value, defaultVal)).toBe(expected)
+      },
+    )
   })
 
   describe('cssImage', () => {
-    it('should wrap value in url()', () => {
-      expect(Format.cssImage('image.jpg')).toBe('url("image.jpg")')
-    })
-
-    it('should return none for null/undefined', () => {
-      expect(Format.cssImage(null)).toBe('none')
-      expect(Format.cssImage(undefined)).toBe('none')
+    it.each`
+      value          | expected
+      ${'image.jpg'} | ${'url("image.jpg")'}
+      ${null}        | ${'none'}
+      ${undefined}   | ${'none'}
+    `('cssImage($value) returns "$expected"', ({ expected, value }) => {
+      expect(Format.cssImage(value)).toBe(expected)
     })
   })
 
   describe('trimAndHighlightSpaces', () => {
-    it('should replace leading/trailing whitespace groups with single delimiter', () => {
-      // The regex replaces entire whitespace groups at start/end with a single delimiter
-      expect(Format.trimAndHighlightSpaces('  hello  ')).toBe('␣hello␣')
-    })
-
-    it('should replace inline tabs with [TAB]', () => {
-      // Tabs in the middle of string are replaced (leading tabs become ␣ first)
-      expect(Format.trimAndHighlightSpaces('hello\tworld')).toBe(
-        'hello[TAB]world',
-      )
-    })
-
-    it('should replace newlines with delimiter', () => {
-      expect(Format.trimAndHighlightSpaces('hello\nworld')).toBe('hello↵world')
-    })
-
-    it('should handle null/undefined', () => {
-      expect(Format.trimAndHighlightSpaces(null)).toBe(undefined)
-      expect(Format.trimAndHighlightSpaces(undefined)).toBe(undefined)
-    })
+    it.each`
+      value             | expected
+      ${'  hello  '}    | ${'␣hello␣'}
+      ${'hello\tworld'} | ${'hello[TAB]world'}
+      ${'hello\nworld'} | ${'hello↵world'}
+      ${null}           | ${undefined}
+      ${undefined}      | ${undefined}
+    `(
+      'trimAndHighlightSpaces($value) returns $expected',
+      ({ expected, value }) => {
+        expect(Format.trimAndHighlightSpaces(value)).toBe(expected)
+      },
+    )
   })
 
   describe('userDisplayName', () => {
-    it('should return full name if available', () => {
-      expect(
-        Format.userDisplayName({
-          email: 'john@email.com',
-          firstName: 'John',
-          lastName: 'Doe',
-        }),
-      ).toBe('John Doe')
-    })
-
-    it('should return email if no name available', () => {
-      expect(Format.userDisplayName({ email: 'john@email.com' })).toBe(
-        'john@email.com',
-      )
+    it.each`
+      user                                                               | expected
+      ${{ email: 'john@email.com', firstName: 'John', lastName: 'Doe' }} | ${'John Doe'}
+      ${{ email: 'john@email.com' }}                                     | ${'john@email.com'}
+    `('userDisplayName($user) returns "$expected"', ({ expected, user }) => {
+      expect(Format.userDisplayName(user)).toBe(expected)
     })
   })
 })
