@@ -2,8 +2,6 @@ name: Run API tests with private package
 
 on:
   pull_request:
-    branches:
-      - main
 
 defaults:
   run:
