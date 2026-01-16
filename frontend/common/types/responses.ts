@@ -186,6 +186,7 @@ export type LaunchDarklyProjectImport = {
   status: {
     requested_environment_count: number
     requested_flag_count: number
+    deprecated_flag_count?: number
     result: string | null
     error_message: string | null
   }
