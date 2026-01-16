@@ -159,9 +159,9 @@ RUN apk add xmlsec
 # * api-test [build-python]
 FROM build-python AS api-test
 
-WORKDIR /app
+WORKDIR /build
 
-COPY api /app/
+COPY api /build/
 
 RUN make install-packages opts='--with dev'
 
@@ -170,9 +170,9 @@ CMD ["make test"]
 # * api-private-test [build-python-private]
 FROM build-python-private AS api-private-test
 
-WORKDIR /app
+WORKDIR /build
 
-COPY api /app/
+COPY api /build/
 
 RUN make install-packages opts='--with dev' && \
   make integrate-private-tests && \
