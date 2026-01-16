@@ -1,9 +1,27 @@
-import React from 'react'
+import React, { FC } from 'react'
 import { Organisation } from 'common/types/responses'
-import Icon from 'components/Icon'
+import Icon, { IconName } from 'components/Icon'
 import Utils from 'common/utils/utils'
 import Payment from 'components/modals/Payment'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
+
+type LimitItemProps = {
+  icon: IconName
+  label: string
+  value: string
+}
+
+const LimitItem: FC<LimitItemProps> = ({ icon, label, value }) => (
+  <Row>
+    <div className='plan-icon'>
+      <Icon name={icon} width={32} />
+    </div>
+    <div>
+      <p className='fs-small lh-sm mb-0'>{label}</p>
+      <h4 className='mb-0'>{value}</h4>
+    </div>
+  </Row>
+)
 
 type BillingTabProps = {
   organisation: Organisation
@@ -97,58 +115,34 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
           <h5 className='mt-4 mb-3'>Subscription Limits</h5>
           <Row className='plan p-4 mb-4'>
             <Row className='flex-wrap gap-4'>
-              <Row className='mr-3' style={{ width: '180px' }}>
-                <div className='plan-icon'>
-                  <Icon name='bar-chart' width={32} />
-                </div>
-                <div>
-                  <p className='fs-small lh-sm mb-0'>API Calls</p>
-                  <h4 className='mb-0'>{formatLimit(max_api_calls)}</h4>
-                </div>
-              </Row>
-              <Row className='mr-3' style={{ width: '180px' }}>
-                <div className='plan-icon'>
-                  <Icon name='people' width={32} />
-                </div>
-                <div>
-                  <p className='fs-small lh-sm mb-0'>Team Seats</p>
-                  <h4 className='mb-0'>{formatLimit(max_seats)}</h4>
-                </div>
-              </Row>
-              <Row className='mr-3' style={{ width: '180px' }}>
-                <div className='plan-icon'>
-                  <Icon name='layers' width={32} />
-                </div>
-                <div>
-                  <p className='fs-small lh-sm mb-0'>Projects</p>
-                  <h4 className='mb-0'>{formatLimit(max_projects)}</h4>
-                </div>
-              </Row>
+              <LimitItem
+                icon='bar-chart'
+                label='API Calls'
+                value={formatLimit(max_api_calls)}
+              />
+              <LimitItem
+                icon='people'
+                label='Team Seats'
+                value={formatLimit(max_seats)}
+              />
+              <LimitItem
+                icon='layers'
+                label='Projects'
+                value={formatLimit(max_projects)}
+              />
               {!!audit_log_visibility_days && (
-                <Row className='mr-3' style={{ width: '180px' }}>
-                  <div className='plan-icon'>
-                    <Icon name='list' width={32} />
-                  </div>
-                  <div>
-                    <p className='fs-small lh-sm mb-0'>Audit Log</p>
-                    <h4 className='mb-0'>
-                      {formatDays(audit_log_visibility_days)}
-                    </h4>
-                  </div>
-                </Row>
+                <LimitItem
+                  icon='list'
+                  label='Audit Log'
+                  value={formatDays(audit_log_visibility_days)}
+                />
               )}
               {!!feature_history_visibility_days && (
-                <Row style={{ width: '180px' }}>
-                  <div className='plan-icon'>
-                    <Icon name='clock' width={32} />
-                  </div>
-                  <div>
-                    <p className='fs-small lh-sm mb-0'>Feature History</p>
-                    <h4 className='mb-0'>
-                      {formatDays(feature_history_visibility_days)}
-                    </h4>
-                  </div>
-                </Row>
+                <LimitItem
+                  icon='clock'
+                  label='Feature History'
+                  value={formatDays(feature_history_visibility_days)}
+                />
               )}
             </Row>
           </Row>
