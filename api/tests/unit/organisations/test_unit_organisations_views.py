@@ -38,7 +38,6 @@ from organisations.models import (
     OrganisationWebhook,
     Subscription,
 )
-from organisations.permissions import permissions as organisation_permissions
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import CREATE_PROJECT
 from organisations.subscriptions.constants import (
@@ -204,7 +203,11 @@ def test_saml_users_cannot_create_organisation(
     # Given
     mock_user = mocker.Mock(wraps=staff_user)
     mock_user.saml_user = mocker.Mock()
-    mocker.patch.object(organisation_permissions.Request, "user", mock_user)
+    mocker.patch(
+        "organisations.permissions.permissions.Request.user",
+        new_callable=mocker.PropertyMock,
+        return_value=mock_user,
+    )
 
     # When
     response = staff_client.post(
