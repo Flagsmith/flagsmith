@@ -375,7 +375,7 @@ const Index = class extends Component {
 
   save = (func, isSaving) => {
     const {
-      environmentFlag: propsEnvironmentFlag,
+      environmentFlag,
       environmentId,
       identity,
       identityFlag,
@@ -384,20 +384,20 @@ const Index = class extends Component {
     } = this.props
     const { environmentFlag: stateEnvironmentFlag, projectFlag } = this.state
     const hasMultivariate =
-      propsEnvironmentFlag &&
-      propsEnvironmentFlag.multivariate_feature_state_values &&
-      propsEnvironmentFlag.multivariate_feature_state_values.length
+      environmentFlag &&
+      environmentFlag.multivariate_feature_state_values &&
+      environmentFlag.multivariate_feature_state_values.length
     if (identity) {
       !isSaving &&
         projectFlag.name &&
         func({
-          environmentFlag: propsEnvironmentFlag,
+          environmentFlag,
           environmentId,
           identity,
           identityFlag: Object.assign({}, identityFlag || {}, {
             enabled: stateEnvironmentFlag.enabled,
             feature_state_value: hasMultivariate
-              ? propsEnvironmentFlag.feature_state_value
+              ? environmentFlag.feature_state_value
               : this.cleanInputValue(stateEnvironmentFlag.feature_state_value),
             multivariate_options:
               stateEnvironmentFlag.multivariate_feature_state_values,
@@ -430,10 +430,10 @@ const Index = class extends Component {
             name: projectFlag.name,
             tags: projectFlag.tags,
           },
-            {
-                skipSaveProjectFeature: this.state.skipSaveProjectFeature,
-                ..._projectFlag,
-            },
+          {
+            skipSaveProjectFeature: this.state.skipSaveProjectFeature,
+            ..._projectFlag,
+          },
           {
             ...environmentFlag,
             multivariate_feature_state_values:
@@ -1187,29 +1187,29 @@ const Index = class extends Component {
                                                           permission:
                                                             manageSegmentsOverrides,
                                                         }) => {
-                                                            const getButtonText =
-                                                              () => {
-                                                                if (isSaving) {
-                                                                  return existingChangeRequest
-                                                                    ? 'Updating Change Request'
-                                                                    : 'Creating Change Request'
-                                                                }
+                                                          const getButtonText =
+                                                            () => {
+                                                              if (isSaving) {
                                                                 return existingChangeRequest
-                                                                  ? 'Update Change Request'
-                                                                  : 'Create Change Request'
+                                                                  ? 'Updating Change Request'
+                                                                  : 'Creating Change Request'
                                                               }
+                                                              return existingChangeRequest
+                                                                ? 'Update Change Request'
+                                                                : 'Create Change Request'
+                                                            }
 
-                                                            const getScheduleButtonText =
-                                                              () => {
-                                                                if (isSaving) {
-                                                                  return existingChangeRequest
-                                                                    ? 'Updating Change Request'
-                                                                    : 'Scheduling Update'
-                                                                }
+                                                          const getScheduleButtonText =
+                                                            () => {
+                                                              if (isSaving) {
                                                                 return existingChangeRequest
-                                                                  ? 'Update Change Request'
-                                                                  : 'Schedule Update'
+                                                                  ? 'Updating Change Request'
+                                                                  : 'Scheduling Update'
                                                               }
+                                                              return existingChangeRequest
+                                                                ? 'Update Change Request'
+                                                                : 'Schedule Update'
+                                                            }
 
                                                           if (
                                                             isVersioned &&
@@ -1237,7 +1237,7 @@ const Index = class extends Component {
                                                                   !savePermission
                                                                 }
                                                               >
-                                                                  {getButtonText()}
+                                                                {getButtonText()}
                                                               </Button>,
                                                             )
                                                           }
@@ -1270,7 +1270,7 @@ const Index = class extends Component {
                                                                         !savePermission
                                                                       }
                                                                     >
-                                                                        {getScheduleButtonText()}
+                                                                      {getScheduleButtonText()}
                                                                     </Button>
                                                                   </>
                                                                 )}
