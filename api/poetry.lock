@@ -2017,13 +2017,15 @@ djangorestframework-recursive = {version = "*", optional = true, markers = "extr
 drf-spectacular = {version = ">=0.28.0,<1", optional = true, markers = "extra == \"common-core\""}
 drf-writable-nested = {version = "*", optional = true, markers = "extra == \"common-core\""}
 environs = {version = "<15", optional = true, markers = "extra == \"common-core\""}
+flagsmith-flag-engine = {version = ">6", optional = true, markers = "extra == \"flagsmith-schemas\""}
 gunicorn = {version = ">=19.1", optional = true, markers = "extra == \"common-core\""}
 prometheus-client = {version = ">=0.0.16", optional = true, markers = "extra == \"common-core\" or extra == \"task-processor\""}
 psycopg2-binary = {version = ">=2.9,<3", optional = true, markers = "extra == \"common-core\""}
 pyfakefs = {version = ">=5,<6", optional = true, markers = "extra == \"test-tools\""}
 pytest-django = {version = ">=4,<5", optional = true, markers = "extra == \"test-tools\""}
 requests = {version = "*", optional = true, markers = "extra == \"common-core\""}
-simplejson = {version = ">=3,<4", optional = true, markers = "extra == \"common-core\""}
+simplejson = {version = ">=3,<4", optional = true, markers = "extra == \"common-core\" and extra == \"flagsmith-schemas\""}
+typing-extensions = {version = "*", optional = true, markers = "extra == \"flagsmith-schemas\""}
 
 [package.extras]
 common-core = ["django (>4,<6)", "django-health-check", "djangorestframework", "djangorestframework-recursive", "drf-spectacular (>=0.28.0,<1)", "drf-writable-nested", "environs (<15)", "gunicorn (>=19.1)", "prometheus-client (>=0.0.16)", "psycopg2-binary (>=2.9,<3)", "requests", "simplejson (>=3,<4)"]
@@ -5329,4 +5331,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "c4725403cb748858f1714237dbfc4a5d02e5559d66f139413fc1117913020155"
+content-hash = "8e299d0c8d0dfa302430d2703a66ec44c903fb842039d239791f412dc36a6ea1"
