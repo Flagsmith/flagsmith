@@ -163,7 +163,7 @@ COPY api /build/
 
 RUN make install-packages opts='--with dev'
 
-CMD ["make test"]
+CMD ["make", "test"]
 
 # * api-private-test [build-python-private]
 FROM build-python-private AS api-private-test
@@ -175,7 +175,7 @@ RUN make install-packages opts='--with dev' && \
   git config --global --unset credential.helper && \
   rm -f ${HOME}/.git-credentials
 
-CMD ["make test"]
+CMD ["make", "test"]
 
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]
