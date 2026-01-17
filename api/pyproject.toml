@@ -101,7 +101,7 @@ django_settings_module = "app.settings.local"
 enabled = true
 
 [tool.poetry]
-packages = [{ include = "**/*.py" }]
+packages = [{ include = "api/**/*.py" }]
 
 [tool.poetry.dependencies]
 python = ">3.11,<3.13"
