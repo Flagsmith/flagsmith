@@ -79,7 +79,7 @@ dependencies = [
     "whitenoise~=6.0.0",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "boto3-stubs~=1.36.20",
     "datamodel-code-generator~=0.25",

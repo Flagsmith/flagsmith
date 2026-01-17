@@ -97,7 +97,7 @@ COPY api/pyproject.toml api/uv.lock api/Makefile ./
 ENV UV_PROJECT_ENVIRONMENT=/build/.venv \
   UV_COMPILE_BYTECODE=1 \
   UV_LINK_MODE=copy
-RUN make install opts='--no-group dev'
+RUN make install
 
 # * build-python-private [build-python]
 FROM build-python AS build-python-private
@@ -109,7 +109,7 @@ ARG RBAC_REVISION
 RUN --mount=type=secret,id=github_private_cloud_token \
   echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
   git config --global credential.helper store && \
-  make install-packages opts='--no-group dev --group private' && \
+  make install-packages opts='--extra private' && \
   make install-private-modules
 
 # * api-runtime
@@ -157,7 +157,7 @@ FROM build-python AS api-test
 
 COPY api /build/
 
-RUN make install-packages opts='--group dev'
+RUN make install-packages opts='--extra dev'
 
 CMD ["make", "test"]
 
@@ -166,7 +166,7 @@ FROM build-python-private AS api-private-test
 
 COPY api /build/
 
-RUN make install-packages opts='--group dev' && \
+RUN make install-packages opts='--extra dev' && \
   make integrate-private-tests && \
   git config --global --unset credential.helper && \
   rm -f ${HOME}/.git-credentials
