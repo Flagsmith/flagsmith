@@ -124,7 +124,7 @@ def post_request_mock(mocker: MockerFixture) -> MagicMock:
     return mocker.patch("requests.post", side_effect=mocked_request)
 
 
-@pytest.hookimpl(trylast=True)  # type: ignore[misc]
+@pytest.hookimpl(trylast=True)
 def pytest_configure(config: pytest.Config) -> None:
     if (
         config.option.ci
