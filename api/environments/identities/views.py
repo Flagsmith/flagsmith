@@ -16,6 +16,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 
 from app.pagination import CustomPagination
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
@@ -41,6 +42,15 @@ from util.views import SDKAPIView
 class IdentityViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = IdentitySerializer
     pagination_class = CustomPagination
+    throttle_scope = "identity_search"
+
+    def get_throttles(self):  # type: ignore[no-untyped-def]
+        """
+        Apply identity_search throttle only to list (search) requests.
+        """
+        if getattr(self, "action", None) == "list":
+            return [ScopedRateThrottle()]
+        return []
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
