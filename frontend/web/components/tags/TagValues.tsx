@@ -64,7 +64,7 @@ const TagValues: FC<TagValuesType> = ({
           ),
           <Button
             disabled={!createEditTagPermission}
-            size='xSmall'
+            size='xxSmall'
             onClick={() => onAdd?.()}
             type='button'
             theme='outline'
