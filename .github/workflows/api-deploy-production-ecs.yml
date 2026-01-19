@@ -15,3 +15,6 @@ jobs:
     with:
       environment: production
     secrets: inherit
+    concurrency:
+      group: ${{ github.workflow }}
+      cancel-in-progress: true

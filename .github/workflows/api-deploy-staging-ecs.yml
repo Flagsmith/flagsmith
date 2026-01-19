@@ -17,3 +17,6 @@ jobs:
     with:
       environment: staging
     secrets: inherit
+    concurrency:
+      group: ${{ github.workflow }}
+      cancel-in-progress: true
