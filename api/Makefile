@@ -30,8 +30,8 @@ install-packages:
 .PHONY: install-private-modules
 install-private-modules:
 	$(eval SITE_PACKAGES_DIR := $(shell poetry run python -c 'import site; print(site.getsitepackages()[0])'))
-	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && mv ./flagsmith-saml/saml $(SITE_PACKAGES_DIR)
-	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/rbac $(SITE_PACKAGES_DIR)
+	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && rm -rf $(SITE_PACKAGES_DIR)/saml && mv ./flagsmith-saml/saml $(SITE_PACKAGES_DIR)
+	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && rm -rf $(SITE_PACKAGES_DIR)/rbac && mv ./flagsmith-rbac/rbac $(SITE_PACKAGES_DIR)
 	rm -rf ./flagsmith-saml ./flagsmith-rbac
 
 .PHONY: install
