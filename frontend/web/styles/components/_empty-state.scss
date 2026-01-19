@@ -1,0 +1,17 @@
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+
+  &__icon {
+    margin-bottom: 1rem;
+  }
+
+  &__title {
+    margin-bottom: 0.5rem;
+  }
+
+  &__description {
+    max-width: 400px;
+    margin: 0 auto 1rem;
+  }
+}

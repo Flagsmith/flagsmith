@@ -13,6 +13,7 @@ import PlanBasedBanner, {
   featureDescriptions,
 } from 'components/PlanBasedAccess'
 import PanelSearch from 'components/PanelSearch'
+import EmptyState from 'components/EmptyState'
 import JSONReference from 'components/JSONReference'
 import Icon from 'components/Icon'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
@@ -83,6 +84,14 @@ const ScheduledChangesPage: FC<ScheduledChangesPageType> = ({ match }) => {
                 isLoading={isLoading || !dataScheduled || !organisation}
                 paging={dataScheduled}
                 items={dataScheduled?.results}
+                renderNoResults={
+                  <EmptyState
+                    icon='calendar'
+                    title='No scheduled changes'
+                    description='To schedule a change, edit a feature flag and use the "Schedule" option when saving your changes.'
+                    docsUrl={featureDescriptions.SCHEDULE_FLAGS.docs}
+                  />
+                }
                 renderFooter={() => (
                   <JSONReference
                     className='mt-4 ml-3'
