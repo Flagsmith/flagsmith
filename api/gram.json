@@ -5,8 +5,8 @@
     {
       "type": "openapiv3",
       "location": "mcp_openapi.yaml",
-      "name": "Flagsmith MCP",
-      "slug": "flagsmith-mcp"
+      "name": "Flagsmith",
+      "slug": "flagsmith"
     }
   ]
 }
