@@ -144,6 +144,8 @@ jobs:
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
   mcp-schema-push:
+    if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
+    needs: permissions-check
     name: Push MCP Schema to Gram
     runs-on: depot-ubuntu-latest
     defaults:
