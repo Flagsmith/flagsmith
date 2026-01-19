@@ -63,7 +63,7 @@ runs:
           --services ${{ inputs.aws_ecs_service_name }} \
           --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition' \
           --output text)
-        if [[ "RUNNING_TASK_DEF" == "$EXPECTED_TASK_DEF" && ]]; then
+        if [[ "$RUNNING_TASK_DEF" == "$EXPECTED_TASK_DEF" && ]]; then
           exit 0
         else
           echo "Task definition mismatch detected"
