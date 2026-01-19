@@ -1,0 +1,10 @@
+name: test-curl.yml
+on:
+  pull_request:
+
+jobs:
+  test-curl:
+    runs-on: ubuntu-latest
+    steps:
+      - run: if [ "$(curl https://api.flagsmith.com/version/ -s | jq -r '.package_versions["."]')" == "2.210.0" ]; then exit 0; else exit 1; fi
+        shell: bash
