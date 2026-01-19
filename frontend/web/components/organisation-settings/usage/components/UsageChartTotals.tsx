@@ -136,21 +136,19 @@ const UsageChartTotals: FC<UsageChartTotalsProps> = ({
   ]
 
   return (
-    <Row className='plan p-4 mb-4'>
-      <Row className='flex-wrap gap-4'>
-        {totalItems.map((item) => (
-          <LegendItem
-            key={item.title}
-            selection={selection}
-            onChange={updateSelection}
-            colour={!withColor ? undefined : item.colour}
-            icon={item.icon}
-            limit={item.limit}
-            value={item.value}
-            title={item.title}
-          />
-        ))}
-      </Row>
+    <Row className='plan p-4 mb-4 flex-wrap gap-4'>
+      {totalItems.map((item) => (
+        <LegendItem
+          key={item.title}
+          selection={selection}
+          onChange={updateSelection}
+          colour={!withColor ? undefined : item.colour}
+          icon={item.icon}
+          limit={item.limit}
+          value={item.value}
+          title={item.title}
+        />
+      ))}
     </Row>
   )
 }

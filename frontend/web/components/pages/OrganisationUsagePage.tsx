@@ -57,14 +57,14 @@ const OrganisationUsagePage: FC = () => {
     {
       billing_period: billingPeriod,
       environmentId: environment,
-      organisationId: organisationId?.toString() || '',
+      organisationId: organisationId || 0,
       projectId: project,
     },
     { skip: !organisationId },
   )
 
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery(
-    { id: organisationId?.toString() || '' },
+    { id: organisationId || 0 },
     { skip: !organisationId },
   )
 
@@ -152,7 +152,7 @@ const OrganisationUsagePage: FC = () => {
           )}
         >
           <UsageChartFilters
-            organisationId={organisationId?.toString() || ''}
+            organisationId={organisationId || 0}
             project={project}
             setProject={setProject}
             environment={environment}
