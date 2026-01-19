@@ -351,25 +351,6 @@ ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
 if ADD_NEVER_CACHE_HEADERS:
     MIDDLEWARE.append("core.middleware.cache_control.NeverCacheMiddleware")
 
-APPLICATION_INSIGHTS_CONNECTION_STRING = env.str(
-    "APPLICATION_INSIGHTS_CONNECTION_STRING", default=None
-)
-OPENCENSUS_SAMPLING_RATE = env.float("OPENCENSUS_SAMPLING_RATE", 1.0)
-
-if APPLICATION_INSIGHTS_CONNECTION_STRING:
-    MIDDLEWARE.insert(
-        0, "integrations.opencensus.middleware.OpenCensusDbTraceMiddleware"
-    )
-    MIDDLEWARE.insert(0, "opencensus.ext.django.middleware.OpencensusMiddleware")
-    OPENCENSUS = {
-        "TRACE": {
-            "SAMPLER": f"opencensus.trace.samplers.ProbabilitySampler(rate={OPENCENSUS_SAMPLING_RATE})",
-            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
-                connection_string='{APPLICATION_INSIGHTS_CONNECTION_STRING}',
-            )""",
-        }
-    }
-
 if ENABLE_GZIP_COMPRESSION:
     # ref: https://docs.djangoproject.com/en/2.2/ref/middleware/#middleware-ordering
     MIDDLEWARE.insert(1, "django.middleware.gzip.GZipMiddleware")
@@ -701,15 +682,6 @@ else:
             },
         },
     }
-
-if APPLICATION_INSIGHTS_CONNECTION_STRING:
-    LOGGING["handlers"]["azure"] = {
-        "level": "DEBUG",
-        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
-        "connection_string": APPLICATION_INSIGHTS_CONNECTION_STRING,
-    }
-
-    LOGGING["loggers"][""]["handlers"].append("azure")
 
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
 if ENABLE_DB_LOGGING:
@@ -1431,10 +1403,6 @@ SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED = env.bool(
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
 WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 
-# Split Testing settings
-SPLIT_TESTING_INSTALLED = importlib.util.find_spec("split_testing")
-if SPLIT_TESTING_INSTALLED:
-    INSTALLED_APPS += ("split_testing",)
 
 ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)
 

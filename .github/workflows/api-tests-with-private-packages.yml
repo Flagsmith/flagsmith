@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - main
-    types: [labeled]
 
 defaults:
   run:
@@ -12,8 +11,7 @@ defaults:
 
 jobs:
   test:
-    if: ${{ github.event.label.name == 'api' }}
-    runs-on: depot-ubuntu-latest
+    runs-on: depot-ubuntu-latest-16
     name: API Tests
 
     services:
