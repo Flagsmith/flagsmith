@@ -1,6 +1,7 @@
 import typing
 
 import pytest
+from django.conf import settings
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 
 from environments.models import Environment
@@ -142,14 +143,16 @@ def test_is_user_environment_admin__short_circuits_on_direct_permission(
     environment_admin_via_user_permission: UserEnvironmentPermission,
     django_assert_num_queries: typing.Any,
 ) -> None:
-    # When/Then - should take only 6 queries:
+    # When/Then - should take only 6 queries (7 if RBAC installed):
     # 1. Check if user is org admin (is_user_organisation_admin)
     # 2. Check organisation membership for project (_is_user_object_admin)
     # 3. Check direct user permission on project (not found)
     # 4. Check group permission on project (not found)
-    # 5. Check organisation membership for environment (_is_user_object_admin)
-    # 6. Check direct user permission on environment (short-circuits here)
-    with django_assert_num_queries(6):
+    # 5. Check RBAC role permission on project (not found, only if RBAC installed)
+    # 6. Check organisation membership for environment (_is_user_object_admin)
+    # 7. Check direct user permission on environment (short-circuits here)
+    expected_queries = 7 if settings.IS_RBAC_INSTALLED else 6
+    with django_assert_num_queries(expected_queries):
         assert is_user_environment_admin(staff_user, environment) is True
 
 
@@ -159,13 +162,15 @@ def test_is_user_environment_admin__short_circuits_on_group_permission(
     environment_admin_via_user_permission_group: UserPermissionGroupEnvironmentPermission,
     django_assert_num_queries: typing.Any,
 ) -> None:
-    # When/Then - should take only 7 queries:
+    # When/Then - should take only 7 queries (8 if RBAC installed):
     # 1. Check if user is org admin (is_user_organisation_admin)
     # 2. Check organisation membership for project (_is_user_object_admin)
     # 3. Check direct user permission on project (not found)
     # 4. Check group permission on project (not found)
-    # 5. Check organisation membership for environment (_is_user_object_admin)
-    # 6. Check direct user permission on environment (not found)
-    # 7. Check group permission on environment (short-circuits here)
-    with django_assert_num_queries(7):
+    # 5. Check RBAC role permission on project (not found, only if RBAC installed)
+    # 6. Check organisation membership for environment (_is_user_object_admin)
+    # 7. Check direct user permission on environment (not found)
+    # 8. Check group permission on environment (short-circuits here)
+    expected_queries = 8 if settings.IS_RBAC_INSTALLED else 7
+    with django_assert_num_queries(expected_queries):
         assert is_user_environment_admin(staff_user, environment) is True
