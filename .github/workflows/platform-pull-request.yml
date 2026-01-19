@@ -167,6 +167,8 @@ jobs:
           echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
           git config --global credential.helper store
           make install-packages opts="--with saml,auth-controller,workflows,release-pipelines"
+          SITE_PACKAGES=$(poetry run python -c 'import site; print(site.getsitepackages()[0])')
+          rm -rf "$SITE_PACKAGES/saml" "$SITE_PACKAGES/rbac"
           make install-private-modules
           rm -rf ${HOME}/.git-credentials
 
