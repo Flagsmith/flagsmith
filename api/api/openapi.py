@@ -47,6 +47,9 @@ class SchemaGenerator(generators.SchemaGenerator):
     Adds a `$schema` property to the root schema object.
     """
 
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)  # type: ignore[no-untyped-call]
+
     def get_schema(
         self, request: Request | None = None, public: bool = False
     ) -> dict[str, Any]:

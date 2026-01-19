@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from api.openapi import MCPSchemaGenerator, SchemaGenerator
 
 
-class CustomSpectacularJSONAPIView(SpectacularJSONAPIView):  # type: ignore[misc]
+class CustomSpectacularJSONAPIView(SpectacularJSONAPIView):
     """
     JSON schema view that supports ?mcp=true query parameter for MCP-filtered output.
     """
@@ -22,10 +22,10 @@ class CustomSpectacularJSONAPIView(SpectacularJSONAPIView):  # type: ignore[misc
 
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         self.generator_class = self.get_generator_class()
-        return super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)  # type: ignore[no-untyped-call, no-any-return]
 
 
-class CustomSpectacularYAMLAPIView(SpectacularYAMLAPIView):  # type: ignore[misc]
+class CustomSpectacularYAMLAPIView(SpectacularYAMLAPIView):
     """
     YAML schema view that supports ?mcp=true query parameter for MCP-filtered output.
     """
@@ -41,7 +41,7 @@ class CustomSpectacularYAMLAPIView(SpectacularYAMLAPIView):  # type: ignore[misc
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         self.generator_class = self.get_generator_class()
         if self.generator_class is MCPSchemaGenerator:
-            response = super().get(request, *args, **kwargs)
+            response = super().get(request, *args, **kwargs)  # type: ignore[no-untyped-call]
             response["Content-Disposition"] = 'attachment; filename="mcp_openapi.yaml"'
-            return response
-        return super().get(request, *args, **kwargs)
+            return response  # type: ignore[no-any-return]
+        return super().get(request, *args, **kwargs)  # type: ignore[no-untyped-call, no-any-return]
