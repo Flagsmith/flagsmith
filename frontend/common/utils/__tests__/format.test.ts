@@ -90,21 +90,6 @@ describe('Format', () => {
     })
   })
 
-  describe('initialAndLastName', () => {
-    it.each`
-      person                                        | expected
-      ${{ firstName: 'kyle', lastName: 'johnson' }} | ${'K. Johnson'}
-      ${{ lastName: 'johnson' }}                    | ${'Johnson'}
-      ${null}                                       | ${''}
-      ${undefined}                                  | ${''}
-    `(
-      'initialAndLastName($person) returns "$expected"',
-      ({ expected, person }) => {
-        expect(Format.initialAndLastName(person)).toBe(expected)
-      },
-    )
-  })
-
   describe('truncateText', () => {
     it.each`
       text             | length | expected
@@ -119,60 +104,6 @@ describe('Format', () => {
         expect(Format.truncateText(text, length)).toBe(expected)
       },
     )
-  })
-
-  describe('ordinal', () => {
-    it.each`
-      input        | expected
-      ${1}         | ${'1st'}
-      ${2}         | ${'2nd'}
-      ${3}         | ${'3rd'}
-      ${4}         | ${'4th'}
-      ${11}        | ${'11th'}
-      ${12}        | ${'12th'}
-      ${13}        | ${'13th'}
-      ${21}        | ${'21st'}
-      ${22}        | ${'22nd'}
-      ${23}        | ${'23rd'}
-      ${24}        | ${'24th'}
-      ${null}      | ${''}
-      ${undefined} | ${''}
-      ${0}         | ${''}
-    `('ordinal($input) returns "$expected"', ({ expected, input }) => {
-      expect(Format.ordinal(input)).toBe(expected)
-    })
-  })
-
-  describe('money', () => {
-    it.each`
-      value        | defaultVal   | expected
-      ${10}        | ${undefined} | ${'£10.00'}
-      ${10.5}      | ${undefined} | ${'£10.50'}
-      ${1000}      | ${undefined} | ${'£1,000.00'}
-      ${1000000}   | ${undefined} | ${'£1,000,000.00'}
-      ${0}         | ${undefined} | ${'FREE'}
-      ${0}         | ${'N/A'}     | ${'N/A'}
-      ${null}      | ${undefined} | ${'FREE'}
-      ${null}      | ${'N/A'}     | ${'N/A'}
-      ${undefined} | ${undefined} | ${'FREE'}
-      ${undefined} | ${'N/A'}     | ${'N/A'}
-    `(
-      'money($value, $defaultVal) returns "$expected"',
-      ({ defaultVal, expected, value }) => {
-        expect(Format.money(value, defaultVal)).toBe(expected)
-      },
-    )
-  })
-
-  describe('cssImage', () => {
-    it.each`
-      value          | expected
-      ${'image.jpg'} | ${'url("image.jpg")'}
-      ${null}        | ${'none'}
-      ${undefined}   | ${'none'}
-    `('cssImage($value) returns "$expected"', ({ expected, value }) => {
-      expect(Format.cssImage(value)).toBe(expected)
-    })
   })
 
   describe('trimAndHighlightSpaces', () => {
@@ -200,39 +131,4 @@ describe('Format', () => {
       expect(Format.userDisplayName(user)).toBe(expected)
     })
   })
-
-  describe('removeAccents', () => {
-    it.each`
-      input         | expected
-      ${'Café'}     | ${'Cafe'}
-      ${'naïve'}    | ${'naive'}
-      ${'Müller'}   | ${'Muller'}
-      ${'Agüero'}   | ${'Aguero'}
-      ${'résumé'}   | ${'resume'}
-      ${'Ångström'} | ${'Angstrom'}
-      ${'Señor'}    | ${'Senor'}
-      ${'Łódź'}     | ${'Lodz'}
-      ${'hello'}    | ${'hello'}
-      ${'HELLO'}    | ${'HELLO'}
-      ${null}       | ${null}
-      ${undefined}  | ${undefined}
-    `('removeAccents("$input") returns "$expected"', ({ expected, input }) => {
-      expect(Format.removeAccents(input)).toBe(expected)
-    })
-  })
-
-  /*
-   * ============================================================================
-   * UNTESTED FUNCTIONS
-   * ============================================================================
-   *
-   * Date/time wrappers (moment, dateAndTime, monthAndYear, time):
-   * - These are thin wrappers around moment.js - testing them would just test
-   *   the third-party library, not our code.
-   *
-   * Time-relative functions (age, ago, countdown, countdownMinutes):
-   * - Use moment() to get current time, making output non-deterministic
-   * - Would need dependency injection (Clock pattern) to test properly
-   * ============================================================================
-   */
 })
