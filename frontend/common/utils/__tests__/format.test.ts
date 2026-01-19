@@ -200,4 +200,39 @@ describe('Format', () => {
       expect(Format.userDisplayName(user)).toBe(expected)
     })
   })
+
+  describe('removeAccents', () => {
+    it.each`
+      input         | expected
+      ${'Café'}     | ${'Cafe'}
+      ${'naïve'}    | ${'naive'}
+      ${'Müller'}   | ${'Muller'}
+      ${'Agüero'}   | ${'Aguero'}
+      ${'résumé'}   | ${'resume'}
+      ${'Ångström'} | ${'Angstrom'}
+      ${'Señor'}    | ${'Senor'}
+      ${'Łódź'}     | ${'Lodz'}
+      ${'hello'}    | ${'hello'}
+      ${'HELLO'}    | ${'HELLO'}
+      ${null}       | ${null}
+      ${undefined}  | ${undefined}
+    `('removeAccents("$input") returns "$expected"', ({ expected, input }) => {
+      expect(Format.removeAccents(input)).toBe(expected)
+    })
+  })
+
+  /*
+   * ============================================================================
+   * UNTESTED FUNCTIONS
+   * ============================================================================
+   *
+   * Date/time wrappers (moment, dateAndTime, monthAndYear, time):
+   * - These are thin wrappers around moment.js - testing them would just test
+   *   the third-party library, not our code.
+   *
+   * Time-relative functions (age, ago, countdown, countdownMinutes):
+   * - Use moment() to get current time, making output non-deterministic
+   * - Would need dependency injection (Clock pattern) to test properly
+   * ============================================================================
+   */
 })

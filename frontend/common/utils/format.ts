@@ -165,12 +165,11 @@ const Format = {
       return str
     }
 
-    let result = str
     for (let i = 0; i < Utils.accents.length; i++) {
-      result = result.replace(Utils.accents[i].letters, Utils.accents[i].base)
+      str = str.replace(Utils.accents[i].letters, Utils.accents[i].base)
     }
 
-    return result
+    return str
   },
 
   shortenNumber(number: number): string {
