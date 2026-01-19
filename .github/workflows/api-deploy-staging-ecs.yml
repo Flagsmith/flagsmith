@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - ci/add-check-for-failed-pipelines
     paths:
       - api/**
       - .github/**
