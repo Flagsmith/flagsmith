@@ -193,11 +193,7 @@ const Tabs: React.FC<TabsProps> = ({
                         isSelected={false}
                         className={classNames(
                           'full-width btn-no-focus width-100',
-                          [
-                            active
-                              ? 'text-primary fw-semibold fill-primary'
-                              : 'hover-color-primary',
-                          ],
+                          active && 'text-primary fw-semibold fill-primary',
                         )}
                         noFocus={noFocus}
                         child={child}
