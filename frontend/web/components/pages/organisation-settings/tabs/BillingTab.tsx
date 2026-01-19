@@ -29,7 +29,7 @@ type BillingTabProps = {
 
 export const BillingTab = ({ organisation }: BillingTabProps) => {
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
-    id: String(organisation.id),
+    id: organisation.id,
   })
 
   const {
@@ -52,6 +52,35 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
     if (value === 0) return 'Not available'
     return `${value} days`
   }
+
+  const showAuditLog = audit_log_visibility_days !== 0
+  const showFeatureHistory =
+    Utils.getFlagsmithHasFeature('feature_versioning') &&
+    feature_history_visibility_days !== 0
+
+  const limitItems: LimitItemProps[] = [
+    {
+      icon: 'bar-chart',
+      label: 'API Calls',
+      value: formatLimit(max_api_calls),
+    },
+    { icon: 'people', label: 'Team Seats', value: formatLimit(max_seats) },
+    { icon: 'layers', label: 'Projects', value: formatLimit(max_projects) },
+    showAuditLog
+      ? {
+          icon: 'list',
+          label: 'Audit Log',
+          value: formatDays(audit_log_visibility_days),
+        }
+      : undefined,
+    showFeatureHistory
+      ? {
+          icon: 'clock',
+          label: 'Feature History',
+          value: formatDays(feature_history_visibility_days),
+        }
+      : undefined,
+  ].filter((item): item is LimitItemProps => item !== undefined)
 
   return (
     <div className='mt-4'>
@@ -115,36 +144,14 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
           <h5 className='mt-4 mb-3'>Subscription Limits</h5>
           <Row className='plan p-4 mb-4'>
             <Row className='flex-wrap gap-5'>
-              <LimitItem
-                icon='bar-chart'
-                label='API Calls'
-                value={formatLimit(max_api_calls)}
-              />
-              <LimitItem
-                icon='people'
-                label='Team Seats'
-                value={formatLimit(max_seats)}
-              />
-              <LimitItem
-                icon='layers'
-                label='Projects'
-                value={formatLimit(max_projects)}
-              />
-              {audit_log_visibility_days !== 0 && (
+              {limitItems.map((item) => (
                 <LimitItem
-                  icon='list'
-                  label='Audit Log'
-                  value={formatDays(audit_log_visibility_days)}
+                  key={item.label}
+                  icon={item.icon}
+                  label={item.label}
+                  value={item.value}
                 />
-              )}
-              {Utils.getFlagsmithHasFeature('feature_versioning') &&
-                feature_history_visibility_days !== 0 && (
-                  <LimitItem
-                    icon='clock'
-                    label='Feature History'
-                    value={formatDays(feature_history_visibility_days)}
-                  />
-                )}
+              ))}
             </Row>
           </Row>
         </>
