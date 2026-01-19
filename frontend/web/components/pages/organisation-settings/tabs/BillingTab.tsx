@@ -142,7 +142,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
       {subscriptionMeta && (
         <>
           <h5 className='mt-4 mb-3'>Subscription Limits</h5>
-          <Row className='plan p-4 mb-4 flex-wrap gap-5'>
+          <Row className='plan p-4 mb-4 flex-wrap gap-5 row-gap-4'>
             {limitItems.map((item) => (
               <LimitItem
                 key={item.label}

@@ -49,7 +49,7 @@ const LegendItem: FC<LegendItemType> = ({
             onClick={() => onChange(title)}
           >
             <div
-              className='d-flex align-items-center justify-content-center'
+              className='d-flex align-items-center justify-content-center text-white'
               style={{
                 backgroundColor: colour,
                 borderRadius: 2,
