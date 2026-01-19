@@ -56,7 +56,7 @@ runs:
     - name: Verify correct version is running
       shell: bash
       run: |
-        EXPECTED_TASK_DEF=${{ steps.deploy-api-task-def.outputs.task-definition-arn }}
+        EXPECTED_TASK_DEF=${{ steps.task-def-task-processor.outputs.task-definition }}
         RUNNING_TASK_DEF=$(aws ecs describe-services \
           --cluster ${{ inputs.aws_ecs_cluster_name }} \
           --services ${{ inputs.aws_ecs_service_name }} \
