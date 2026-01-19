@@ -1,5 +1,6 @@
 import pytest
 
+from environments.models import Environment
 from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
@@ -43,7 +44,9 @@ def project_admin_via_user_permission_group(  # type: ignore[no-untyped-def]
 
 @pytest.fixture
 def environment_admin_via_user_permission(
-    staff_user: FFAdminUser, user_environment_permission: UserEnvironmentPermission
+    staff_user: FFAdminUser,
+    environment: Environment,  # Explicitly depend on environment to ensure same instance
+    user_environment_permission: UserEnvironmentPermission,
 ) -> UserEnvironmentPermission:
     user_environment_permission.admin = True
     user_environment_permission.save()
@@ -61,6 +64,7 @@ def environment_admin_via_user_permission_group(
     user_environment_permission_group: UserPermissionGroupEnvironmentPermission,
     staff_user: FFAdminUser,
     user_permission_group: UserPermissionGroup,
+    environment: Environment,  # Explicitly depend on environment to ensure same instance
 ) -> UserPermissionGroupEnvironmentPermission:
     user_permission_group.users.add(staff_user)
 
