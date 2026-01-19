@@ -93,14 +93,11 @@ RUN apk add build-base linux-headers curl git \
   python-${PYTHON_VERSION}-dev \
   py${PYTHON_VERSION}-pip
 
-COPY api/pyproject.toml api/poetry.lock api/Makefile ./
-ENV POETRY_VIRTUALENVS_IN_PROJECT=true \
-  POETRY_VIRTUALENVS_OPTIONS_ALWAYS_COPY=true \
-  POETRY_VIRTUALENVS_OPTIONS_NO_PIP=true \
-  POETRY_VIRTUALENVS_OPTIONS_NO_SETUPTOOLS=true \
-  POETRY_HOME=/opt/poetry \
-  PATH="/opt/poetry/bin:$PATH"
-RUN make install opts='--without dev'
+COPY api/pyproject.toml api/uv.lock api/Makefile ./
+ENV UV_PROJECT_ENVIRONMENT=/build/.venv \
+  UV_COMPILE_BYTECODE=1 \
+  UV_LINK_MODE=copy
+RUN make install
 
 # * build-python-private [build-python]
 FROM build-python AS build-python-private
@@ -109,11 +106,10 @@ FROM build-python AS build-python-private
 # and integrate private modules
 ARG SAML_REVISION
 ARG RBAC_REVISION
-ARG WITH="saml,auth-controller,ldap,workflows,licensing,release-pipelines"
 RUN --mount=type=secret,id=github_private_cloud_token \
   echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
   git config --global credential.helper store && \
-  make install-packages opts='--without dev --with ${WITH}' && \
+  make install-packages opts='--extra private' && \
   make install-private-modules
 
 # * api-runtime
@@ -161,7 +157,7 @@ FROM build-python AS api-test
 
 COPY api /build/
 
-RUN make install-packages opts='--with dev'
+RUN make install-packages opts='--extra dev'
 
 CMD ["make", "test"]
 
@@ -170,7 +166,7 @@ FROM build-python-private AS api-private-test
 
 COPY api /build/
 
-RUN make install-packages opts='--with dev' && \
+RUN make install-packages opts='--extra dev' && \
   make integrate-private-tests && \
   git config --global --unset credential.helper && \
   rm -f ${HOME}/.git-credentials
