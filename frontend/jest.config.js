@@ -20,7 +20,6 @@ module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/__tests__/**/*.test.ts', '**/*.test.ts'],
   transform: {
-    '^.+\\.(js|jsx)$': 'babel-jest',
     '^.+\\.(ts|tsx)$': [
       'ts-jest',
       {
@@ -28,5 +27,7 @@ module.exports = {
       },
     ],
   },
+  // Skip transforming JS files - they're ES5 compatible and don't need Babel
+  transformIgnorePatterns: [],
   verbose: true,
 }
