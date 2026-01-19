@@ -19,17 +19,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v5
         with:
-          python-version: 3.12
-          cache: pip
+          python-version: '3.12'
 
       - name: Install Dependencies
         run: make install
 
       - name: Update defaults
-        run: poetry run python manage.py updateflagsmithenvironment
+        run: uv run python manage.py updateflagsmithenvironment
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5

@@ -78,4 +78,4 @@ flags = flagsmith_client.get_identity_flags(
 ai_enabled = flags.is_feature_enabled("ai")
 ```
 
-To modify or add flags, edit [integrations/flagsmith/data/environment.json](integrations/flagsmith/data/environment.json), or run `poetry run python manage.py updateflagsmithenvironment`.
+To modify or add flags, edit [integrations/flagsmith/data/environment.json](integrations/flagsmith/data/environment.json), or run `uv run python manage.py updateflagsmithenvironment`.

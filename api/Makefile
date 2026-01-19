@@ -7,7 +7,7 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-POETRY_VERSION ?= 2.2.1
+UV_VERSION ?= 0.5.14
 
 SAML_REVISION ?= v1.6.6
 RBAC_REVISION ?= v0.12.1
@@ -15,35 +15,31 @@ RBAC_REVISION ?= v0.12.1
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
 
-.PHONY: install-pip
-install-pip:
-	python -m pip -q install --upgrade pip
-
-.PHONY: install-poetry
-install-poetry:
-	python -m pip -q install poetry==${POETRY_VERSION}
+.PHONY: install-uv
+install-uv:
+	@command -v uv >/dev/null 2>&1 || pip install uv==${UV_VERSION}
 
 .PHONY: install-packages
 install-packages:
-	poetry install --no-root $(opts)
+	uv sync $(opts)
 
 .PHONY: install-private-modules
 install-private-modules:
-	$(eval SITE_PACKAGES_DIR := $(shell poetry run python -c 'import site; print(site.getsitepackages()[0])'))
+	$(eval SITE_PACKAGES_DIR := $(shell uv run python -c 'import site; print(site.getsitepackages()[0])'))
 	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && mv ./flagsmith-saml/saml $(SITE_PACKAGES_DIR)
 	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/rbac $(SITE_PACKAGES_DIR)
 	rm -rf ./flagsmith-saml ./flagsmith-rbac
 
 .PHONY: install
-install: install-pip install-poetry install-packages
+install: install-uv install-packages
 
 .PHONY: lint
 lint:
-	poetry run pre-commit run -a
+	uv run pre-commit run -a
 
 .PHONY: typecheck
 typecheck:
-	poetry run mypy .
+	uv run mypy .
 
 .PHONY: docker-up
 docker-up:
@@ -68,39 +64,39 @@ docker-build:
 
 .PHONY: test
 test:
-	poetry run pytest $(opts)
+	uv run pytest $(opts)
 
 .PHONY: django-make-migrations
 django-make-migrations:
-	poetry run python manage.py waitfordb
-	poetry run python manage.py makemigrations $(opts)
+	uv run python manage.py waitfordb
+	uv run python manage.py makemigrations $(opts)
 
 .PHONY: django-squash-migrations
 django-squash-migrations:
-	poetry run python manage.py waitfordb
-	poetry run python manage.py squashmigrations $(opts)
+	uv run python manage.py waitfordb
+	uv run python manage.py squashmigrations $(opts)
 
 .PHONY: django-migrate
 django-migrate:
-	poetry run python manage.py waitfordb
-	poetry run python manage.py migrate
-	poetry run python manage.py createcachetable
+	uv run python manage.py waitfordb
+	uv run python manage.py migrate
+	uv run python manage.py createcachetable
 
 .PHONY: django-shell
 django-shell:
-	poetry run python manage.py shell
+	uv run python manage.py shell
 
 .PHONY: django-collect-static
 django-collect-static:
-	poetry run python manage.py collectstatic --noinput
+	uv run python manage.py collectstatic --noinput
 
 .PHONY: serve
 serve: docker-up
-	poetry run flagsmith start --reload api
+	uv run flagsmith start --reload api
 
 .PHONY: run-task-processor
 run-task-processor: docker-up
-	poetry run flagsmith start --reload --bind 0.0.0.0:8001 task-processor
+	uv run flagsmith start --reload --bind 0.0.0.0:8001 task-processor
 
 .PHONY: serve-with-task-processor
 serve-with-task-processor: TASK_RUN_METHOD=TASK_PROCESSOR
@@ -137,8 +133,8 @@ generate-grafana-client-types:
 
 .PHONY: integrate-private-tests
 integrate-private-tests:
-	$(eval WORKFLOW_REVISION := $(shell grep -A 1 "\[tool.poetry.group.workflows.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'))
-	$(eval AUTH_CONTROLLER_REVISION := $(shell grep -A 1 "\[tool.poetry.group.auth-controller.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'))
+	$(eval WORKFLOW_REVISION := $(shell uv run python -c "import tomllib; deps=tomllib.load(open('pyproject.toml','rb'))['dependency-groups']['private']; print([d.split('@')[-1] for d in deps if 'flagsmith-workflows' in d][0])"))
+	$(eval AUTH_CONTROLLER_REVISION := $(shell uv run python -c "import tomllib; deps=tomllib.load(open('pyproject.toml','rb'))['dependency-groups']['private']; print([d.split('@')[-1] for d in deps if 'flagsmith-auth-controller' in d][0])"))
 
 	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && mv ./flagsmith-saml/tests tests/saml_tests
 	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/tests tests/rbac_tests
@@ -148,8 +144,8 @@ integrate-private-tests:
 
 .PHONY: generate-docs
 generate-docs:
-	poetry run flagsmith docgen metrics > ../docs/docs/administration-and-security/platform-configuration/metrics.md
+	uv run flagsmith docgen metrics > ../docs/docs/administration-and-security/platform-configuration/metrics.md
 
 .PHONY: add-known-sdk-version
 add-known-sdk-version:
-	poetry run python scripts/add-known-sdk-version.py $(opts)
+	uv run python scripts/add-known-sdk-version.py $(opts)

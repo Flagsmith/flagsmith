@@ -8,3 +8,6 @@ features/workflows/logic/
 
 # Unit test coverage
 .coverage
+
+# Build artifacts
+*.egg-info/
