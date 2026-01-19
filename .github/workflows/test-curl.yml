@@ -1,6 +1,6 @@
 name: test-curl.yml
 on:
-  pull_request:
+  push:
 
 jobs:
   test-curl:
