@@ -233,18 +233,53 @@ def master_api_key_has_organisation_permission(
 def _is_user_object_admin(
     user: "FFAdminUser", object_: Union[Project, Environment]
 ) -> bool:
-    ModelClass = type(object_)
-    base_filter = get_base_permission_filter(user, ModelClass)  # type: ignore[arg-type]
-    filter_ = base_filter & Q(id=object_.id)
+    """
+    Check if user has admin permission on a project or environment.
 
-    if ModelClass is Project:
-        filter_ = filter_ & Q(organisation__users=user)
-    elif ModelClass is Environment:
-        filter_ = filter_ & Q(project__organisation__users=user)
+    Runs separate queries with early returns:
+    1. Organisation membership - check to prevent orphaned permission
+       records from granting access.
+    2. Direct user permission - checks UserProjectPermission/UserEnvironmentPermission.
+    3. Group permission - checks via user's group memberships.
+    4. Role permission - RBAC check, only if enabled.
+
+    Returns as soon as permission is found, avoiding unnecessary subsequent queries.
+
+    """
+    model_class = type(object_)
+    object_id = object_.id
+
+    # Check: verify user belongs to the organisation that owns this object
+    if model_class is Project:
+        if not Project.objects.filter(id=object_id, organisation__users=user).exists():
+            return False
+    elif model_class is Environment:
+        if not Environment.objects.filter(
+            id=object_id, project__organisation__users=user
+        ).exists():
+            return False
     else:  # pragma: no cover
-        raise ValueError(f"Unexpected object type {type(object_)}")
+        raise ValueError(f"Unexpected object type {model_class}")
 
-    return ModelClass.objects.filter(filter_).exists()
+    # Check direct permission
+    user_filter = get_user_permission_filter(user, allow_admin=True)
+    if model_class.objects.filter(user_filter & Q(id=object_id)).exists():
+        return True
+
+    # Check group permission
+    group_filter = get_group_permission_filter(user, allow_admin=True)
+    if model_class.objects.filter(group_filter & Q(id=object_id)).exists():
+        return True
+
+    # Check role permission (only if RBAC installed)
+    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
+        role_filter = get_role_permission_filter(
+            user, model_class, permission_key=None, allow_admin=True, tag_ids=None
+        )
+        if model_class.objects.filter(role_filter & Q(id=object_id)).exists():
+            return True
+
+    return False
 
 
 def get_base_permission_filter(  # type: ignore[no-untyped-def]

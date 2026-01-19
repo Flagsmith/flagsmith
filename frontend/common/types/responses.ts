@@ -724,21 +724,6 @@ export type SAMLAttributeMapping = {
   django_attribute_name: AttributeName
   idp_attribute_name: string
 }
-export type ServersideSplitTestResult = {
-  conversion_count: number
-  evaluation_count: number
-  feature: {
-    created_date: string
-    default_enabled: boolean
-    description: any
-    id: number
-    initial_value: string
-    name: string
-    type: string
-  }
-  pvalue: number
-  value_data: FeatureStateValue
-}
 
 export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
 
@@ -794,36 +779,6 @@ export type Version = {
       'has_logins': boolean
     }
   }
-}
-
-export type PConfidence =
-  | 'VERY_LOW'
-  | 'LOW'
-  | 'REASONABLE'
-  | 'HIGH'
-  | 'VERY_HIGH'
-export type SplitTestResult = {
-  results: {
-    conversion_count: number
-    evaluation_count: number
-    conversion_percentage: number
-    pvalue: number
-    confidence: PConfidence
-    value_data: FeatureStateValue
-  }[]
-  feature: {
-    created_date: string
-    default_enabled: boolean
-    description: any
-    id: number
-    initial_value: string
-    name: string
-    type: string
-  }
-  max_conversion_percentage: number
-  max_conversion_count: number
-  conversion_variance: number
-  max_conversion_pvalue: number
 }
 
 export type ConversionEvent = {
@@ -1104,7 +1059,6 @@ export type Res = {
   identityTrait: { id: string }
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>
-  splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
   environmentMetrics: {
     metrics: {

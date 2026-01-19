@@ -43,7 +43,7 @@ jobs:
               "test": "testing",
               "chore": "chore"
             }
-          ignored_types: '[]'
+          ignored_types: "[]"
 
   docker-prepare-report-comment:
     if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
@@ -104,6 +104,19 @@ jobs:
       comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
       scan: false
 
+  docker-build-api-private-test:
+    if: needs.permissions-check.outputs.can-write == 'true'
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build API Enterprise Test Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: api-private-test
+      image-name: flagsmith-api-private-test
+      scan: false
+    secrets:
+      secrets: |
+        github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+
   docker-build-e2e:
     if: github.event.pull_request.draft == false && !cancelled()
     needs: [permissions-check, docker-prepare-report-comment]
@@ -128,61 +141,6 @@ jobs:
     secrets:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-
-  docker-build-split-testing:
-    if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
-    needs: [permissions-check, docker-prepare-report-comment]
-    name: Build Split Testing Image
-    uses: ./.github/workflows/.reusable-docker-build.yml
-    with:
-      target: private-cloud-unified
-      image-name: flagsmith-private-cloud-split-testing
-      build-args: |
-        WITH=saml,auth-controller,ldap,workflows,licensing,split-testing
-    secrets:
-      secrets: |
-        github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
-
-  mcp-schema-push:
-    if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
-    needs: permissions-check
-    name: Push MCP Schema to Gram
-    runs-on: depot-ubuntu-latest
-    defaults:
-      run:
-        working-directory: api
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Poetry
-        run: make install-poetry
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: poetry
-
-      - name: Install dependencies
-        run: |
-          echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
-          git config --global credential.helper store
-          make install-packages opts="--with saml,auth-controller,workflows,release-pipelines"
-          make install-private-modules
-          rm -rf ${HOME}/.git-credentials
-
-      - name: Generate MCP schema
-        run: make generate-mcp-spec
-
-      - name: Install Gram CLI
-        run: curl -fsSL https://go.getgram.ai/cli.sh | bash
-
-      - name: Push to Gram
-        env:
-          GRAM_API_KEY: ${{ secrets.GRAM_API_KEY }}
-          GRAM_ORG: ${{ secrets.GRAM_ORG }}
-          GRAM_PROJECT: ${{ secrets.GRAM_PROJECT }}
-        run: gram push --api-key "$GRAM_API_KEY" --org "$GRAM_ORG" --project "$GRAM_PROJECT" --config gram.json
 
   run-e2e-tests:
     if: github.event.pull_request.draft == false && !cancelled()

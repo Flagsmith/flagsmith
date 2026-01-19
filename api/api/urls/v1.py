@@ -94,29 +94,3 @@ urlpatterns = [
     re_path(r"^webhooks/", include("webhooks.urls", namespace="webhooks")),
     path("", include("projects.code_references.urls", namespace="code_references")),
 ]
-
-if settings.SPLIT_TESTING_INSTALLED:
-    from split_testing.views import (  # type: ignore[import-not-found]
-        ConversionEventTypeView,
-        CreateConversionEventView,
-        SplitTestViewSet,
-    )
-
-    split_testing_router = routers.DefaultRouter()
-    split_testing_router.register(r"", SplitTestViewSet, basename="split-tests")
-
-    urlpatterns += [
-        re_path(
-            r"^split-testing/", include(split_testing_router.urls), name="split-testing"
-        ),
-        re_path(
-            r"^split-testing/conversion-events/",
-            CreateConversionEventView.as_view(),
-            name="conversion-events",
-        ),
-        path(
-            "conversion-event-types/",
-            ConversionEventTypeView.as_view(),
-            name="conversion-event-types",
-        ),
-    ]
