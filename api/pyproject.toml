@@ -192,7 +192,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.2.0" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.3.0" }
 
 [tool.poetry.group.licensing]
 optional = true
@@ -204,7 +204,7 @@ licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.2.1" }
 optional = true
 
 [tool.poetry.group.release-pipelines.dependencies]
-flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.4.3" }
+flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.4.4" }
 
 
 [tool.poetry.group.dev.dependencies]
