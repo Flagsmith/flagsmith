@@ -96,3 +96,32 @@ def test_is_user_project_admin__does_not_return_project_for_orphan_group_permiss
 
     # Then
     assert not is_user_project_admin(user=staff_user, project=project)
+
+
+def test_is_user_project_admin__short_circuits_on_direct_permission(
+    staff_user: FFAdminUser,
+    project: Project,
+    project_admin_via_user_permission: UserProjectPermission,
+    django_assert_num_queries: typing.Any,
+) -> None:
+    # When/Then - should take only 3 queries:
+    # 1. Check if user is org admin (is_user_organisation_admin)
+    # 2. Check organisation membership (_is_user_object_admin)
+    # 3. Check direct user permission (short-circuits here)
+    with django_assert_num_queries(3):
+        assert is_user_project_admin(staff_user, project) is True
+
+
+def test_is_user_project_admin__short_circuits_on_group_permission(
+    staff_user: FFAdminUser,
+    project: Project,
+    project_admin_via_user_permission_group: UserPermissionGroupProjectPermission,
+    django_assert_num_queries: typing.Any,
+) -> None:
+    # When/Then - should take only 4 queries:
+    # 1. Check if user is org admin (is_user_organisation_admin)
+    # 2. Check organisation membership (_is_user_object_admin)
+    # 3. Check direct user permission (not found)
+    # 4. Check group permission (short-circuits here)
+    with django_assert_num_queries(4):
+        assert is_user_project_admin(staff_user, project) is True

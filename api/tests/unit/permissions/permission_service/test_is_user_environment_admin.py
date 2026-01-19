@@ -134,3 +134,38 @@ def test_is_user_environment_admin__does_not_return_environment_for_orphan_group
 
     # Then
     assert not is_user_environment_admin(user=staff_user, environment=environment)
+
+
+def test_is_user_environment_admin__short_circuits_on_direct_permission(
+    staff_user: FFAdminUser,
+    environment: Environment,
+    environment_admin_via_user_permission: UserEnvironmentPermission,
+    django_assert_num_queries: typing.Any,
+) -> None:
+    # When/Then - should take only 6 queries:
+    # 1. Check if user is org admin (is_user_organisation_admin)
+    # 2. Check organisation membership for project (_is_user_object_admin)
+    # 3. Check direct user permission on project (not found)
+    # 4. Check group permission on project (not found)
+    # 5. Check organisation membership for environment (_is_user_object_admin)
+    # 6. Check direct user permission on environment (short-circuits here)
+    with django_assert_num_queries(6):
+        assert is_user_environment_admin(staff_user, environment) is True
+
+
+def test_is_user_environment_admin__short_circuits_on_group_permission(
+    staff_user: FFAdminUser,
+    environment: Environment,
+    environment_admin_via_user_permission_group: UserPermissionGroupEnvironmentPermission,
+    django_assert_num_queries: typing.Any,
+) -> None:
+    # When/Then - should take only 7 queries:
+    # 1. Check if user is org admin (is_user_organisation_admin)
+    # 2. Check organisation membership for project (_is_user_object_admin)
+    # 3. Check direct user permission on project (not found)
+    # 4. Check group permission on project (not found)
+    # 5. Check organisation membership for environment (_is_user_object_admin)
+    # 6. Check direct user permission on environment (not found)
+    # 7. Check group permission on environment (short-circuits here)
+    with django_assert_num_queries(7):
+        assert is_user_environment_admin(staff_user, environment) is True
