@@ -82,7 +82,7 @@ logger = logging.getLogger(__name__)
         extensions={
             "x-gram": {
                 "name": "list_environments",
-                "description": "Lists all environments the user has access to.",
+                "description": "Lists all environments the user has access to",
             },
         },
     ),
