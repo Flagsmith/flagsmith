@@ -70,7 +70,7 @@ from users.models import FFAdminUser
         extensions={
             "x-gram": {
                 "name": "update_project",
-                "description": "Updates project configuration settings such as name and feature visibility.",
+                "description": "Updates project configuration settings such as the project name and feature visibility.",
             },
         },
     ),
