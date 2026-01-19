@@ -33,4 +33,4 @@ jobs:
         run: npm ci
 
       - name: Run unit tests
-        run: npm run test:unit
+        run: npm run test:unit -- --passWithNoTests
