@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.210.0](https://github.com/Flagsmith/flagsmith/compare/v2.209.1...v2.210.0) (2026-01-19)
+
+
+### Features
+
+* Retire split-testing ([#6542](https://github.com/Flagsmith/flagsmith/issues/6542)) ([4ce72ad](https://github.com/Flagsmith/flagsmith/commit/4ce72adc0aa0667ad3a1b989eea35c3e9398ae86))
+
+
+### Bug Fixes
+
+* **CI:** Run tests with private modules ([#6540](https://github.com/Flagsmith/flagsmith/issues/6540)) ([c1ffe45](https://github.com/Flagsmith/flagsmith/commit/c1ffe459790d5be90934fe1d8b0891366bab274a))
+* create change request with mv in v2 ([#6515](https://github.com/Flagsmith/flagsmith/issues/6515)) ([f3bd96c](https://github.com/Flagsmith/flagsmith/commit/f3bd96cbfbbc3c39c49f4809430867c05d58bd1c))
+* improve _is_user_object_admin query performance ([#6537](https://github.com/Flagsmith/flagsmith/issues/6537)) ([04df8d5](https://github.com/Flagsmith/flagsmith/commit/04df8d5294b74124ee917c694c639d5a86e460fd))
+* remove Azure Application Insights integration ([#6530](https://github.com/Flagsmith/flagsmith/issues/6530)) ([e6174c6](https://github.com/Flagsmith/flagsmith/commit/e6174c6e8ca510b7819d179a32f31921e7b27204))
+* removed-hover-class-on-color ([#6531](https://github.com/Flagsmith/flagsmith/issues/6531)) ([670b241](https://github.com/Flagsmith/flagsmith/commit/670b241f0283a5bd0f13f55a501d121bdc18ebbe))
+* update permission test query counts for RBAC ([#6547](https://github.com/Flagsmith/flagsmith/issues/6547)) ([e2e77b0](https://github.com/Flagsmith/flagsmith/commit/e2e77b0a5d2c293dfacadff0b754d5fc6522930e))
+
+
+### Dependency Updates
+
+* bump filelock from 3.20.1 to 3.20.3 in /api ([#6527](https://github.com/Flagsmith/flagsmith/issues/6527)) ([0fd330a](https://github.com/Flagsmith/flagsmith/commit/0fd330a70be66a1deeccd5ba98c5674d476fb4f1))
+* bump urllib3 from 2.6.2 to 2.6.3 in /api ([#6494](https://github.com/Flagsmith/flagsmith/issues/6494)) ([c2e18bc](https://github.com/Flagsmith/flagsmith/commit/c2e18bc33608b062d5215e3b9b832ed86782b499))
+* bump virtualenv from 20.28.0 to 20.36.1 in /api ([#6526](https://github.com/Flagsmith/flagsmith/issues/6526)) ([40a70b9](https://github.com/Flagsmith/flagsmith/commit/40a70b99e1f5595fbfd5ad1fa3b43cb917d7d484))
+* upgrade-flagsmith-to-latest-version ([#6405](https://github.com/Flagsmith/flagsmith/issues/6405)) ([bcb557b](https://github.com/Flagsmith/flagsmith/commit/bcb557b7fff4b5929a1389341d60f58556151721))
+
 ## [2.209.1](https://github.com/Flagsmith/flagsmith/compare/v2.209.0...v2.209.1) (2026-01-13)
 
 
