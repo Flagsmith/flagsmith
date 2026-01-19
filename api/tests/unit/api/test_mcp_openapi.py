@@ -71,30 +71,16 @@ def test_mcp_filter_paths__mixed_operations() -> None:
     assert "post" not in filtered["/api/v1/organisations/"]
 
 
-def test_mcp_transform_for_mcp__overrides_operation_id_with_x_mcp_name() -> None:
-    # Given
-    operation: dict[str, Any] = {
-        "operationId": "organisations_list",
-        "tags": ["mcp"],
-        "x-mcp-name": "list_organisations",
-    }
-    generator = MCPSchemaGenerator()
-
-    # When
-    transformed = generator._transform_for_mcp(operation)
-
-    # Then
-    assert transformed["operationId"] == "list_organisations"
-    assert "x-mcp-name" not in transformed
-
-
-def test_mcp_transform_for_mcp__overrides_description_with_x_mcp_description() -> None:
+def test_mcp_transform_for_mcp__preserves_x_gram_extension() -> None:
     # Given
     operation: dict[str, Any] = {
         "operationId": "organisations_list",
         "tags": ["mcp"],
         "description": "Original description",
-        "x-mcp-description": "MCP-specific description",
+        "x-gram": {
+            "name": "list_organisations",
+            "description": "Gram-specific description",
+        },
     }
     generator = MCPSchemaGenerator()
 
@@ -102,8 +88,12 @@ def test_mcp_transform_for_mcp__overrides_description_with_x_mcp_description() -
     transformed = generator._transform_for_mcp(operation)
 
     # Then
-    assert transformed["description"] == "MCP-specific description"
-    assert "x-mcp-description" not in transformed
+    assert transformed["x-gram"] == {
+        "name": "list_organisations",
+        "description": "Gram-specific description",
+    }
+    assert transformed["operationId"] == "organisations_list"
+    assert transformed["description"] == "Original description"
 
 
 def test_mcp_transform_for_mcp__preserves_original_when_no_extensions() -> None:
@@ -123,6 +113,23 @@ def test_mcp_transform_for_mcp__preserves_original_when_no_extensions() -> None:
     assert transformed["description"] == "Original description"
 
 
+def test_mcp_transform_for_mcp__removes_operation_level_security() -> None:
+    # Given
+    operation: dict[str, Any] = {
+        "operationId": "organisations_list",
+        "tags": ["mcp"],
+        "description": "Original description",
+        "security": [{"Private": []}],
+    }
+    generator = MCPSchemaGenerator()
+
+    # When
+    transformed = generator._transform_for_mcp(operation)
+
+    # Then
+    assert "security" not in transformed
+
+
 def test_mcp_update_security_for_mcp__sets_api_key_security_scheme() -> None:
     # Given
     schema: dict[str, Any] = {
@@ -139,8 +146,8 @@ def test_mcp_update_security_for_mcp__sets_api_key_security_scheme() -> None:
     updated = generator._update_security_for_mcp(schema)
 
     # Then
-    assert "ApiKey" in updated["components"]["securitySchemes"]
-    assert updated["security"] == [{"ApiKey": []}]
+    assert "TOKEN_AUTH" in updated["components"]["securitySchemes"]
+    assert updated["security"] == [{"TOKEN_AUTH": []}]
     # Original scheme should be replaced
     assert "Private" not in updated["components"]["securitySchemes"]
 
@@ -156,7 +163,7 @@ def test_mcp_get_schema__filters_and_transforms() -> None:
     assert "openapi" in schema
     assert "paths" in schema
     assert "components" in schema
-    assert "ApiKey" in schema["components"]["securitySchemes"]
+    assert "TOKEN_AUTH" in schema["components"]["securitySchemes"]
 
 
 def test_custom_json_view__returns_mcp_generator_when_mcp_param_is_true() -> None:
@@ -247,11 +254,10 @@ def test_mcp_schema__includes_organisations_endpoint() -> None:
     # Then
     assert "/api/v1/organisations/" in schema["paths"]
     org_list = schema["paths"]["/api/v1/organisations/"]["get"]
-    assert org_list["operationId"] == "list_organizations"
-    assert (
-        org_list["description"]
-        == "Lists all organizations accessible with the provided user API key."
-    )
+    assert org_list["x-gram"] == {
+        "name": "list_organizations",
+        "description": "Lists all organizations accessible with the provided user API key.",
+    }
 
 
 def test_mcp_schema__includes_organisation_projects_endpoint() -> None:
@@ -264,11 +270,10 @@ def test_mcp_schema__includes_organisation_projects_endpoint() -> None:
     # Then
     assert "/api/v1/organisations/{id}/projects/" in schema["paths"]
     projects_list = schema["paths"]["/api/v1/organisations/{id}/projects/"]["get"]
-    assert projects_list["operationId"] == "list_projects_in_organization"
-    assert (
-        projects_list["description"]
-        == "Retrieves all projects within a specified organization."
-    )
+    assert projects_list["x-gram"] == {
+        "name": "list_projects_in_organization",
+        "description": "Retrieves all projects within a specified organization.",
+    }
 
 
 def test_mcp_schema__excludes_non_mcp_endpoints() -> None:

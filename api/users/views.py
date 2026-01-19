@@ -164,8 +164,10 @@ def password_reset_redirect(
     list=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "list_organization_groups",
-            "x-mcp-description": "Retrieves all permission groups within the organization.",
+            "x-gram": {
+                "name": "list_organization_groups",
+                "description": "Retrieves all permission groups within the organization.",
+            },
         },
     ),
 )

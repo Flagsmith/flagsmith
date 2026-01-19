@@ -40,8 +40,10 @@ from users.models import FFAdminUser
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "get_feature_health_events",
-            "x-mcp-description": "Retrieves feature health monitoring events and metrics for the project.",
+            "x-gram": {
+                "name": "get_feature_health_events",
+                "description": "Retrieves feature health monitoring events and metrics for the project.",
+            },
         },
     ),
 )

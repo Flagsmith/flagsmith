@@ -61,9 +61,8 @@ class MCPSchemaGenerator(SchemaGenerator):
     """
     Schema generator that filters to only include operations tagged with "mcp".
 
-    Supports custom extensions:
-    - x-mcp-name: Override the operationId for MCP tools
-    - x-mcp-description: Override the description for MCP tools
+    Uses x-gram extension for Gram-native tool naming and descriptions.
+    Gram reads x-gram directly from the spec.
     """
 
     MCP_TAG = "mcp"
@@ -109,18 +108,8 @@ class MCPSchemaGenerator(SchemaGenerator):
     def _transform_for_mcp(self, operation: dict[str, Any]) -> dict[str, Any]:
         """Apply MCP-specific transformations to an operation."""
         operation = operation.copy()
-
-        # Override operationId if x-mcp-name provided
-        if mcp_name := operation.pop("x-mcp-name", None):
-            operation["operationId"] = mcp_name
-
-        # Override description if x-mcp-description provided
-        if mcp_desc := operation.pop("x-mcp-description", None):
-            operation["description"] = mcp_desc
-
         # Remove operation-level security (use global MCP security instead)
         operation.pop("security", None)
-
         return operation
 
     def _update_security_for_mcp(self, schema: dict[str, Any]) -> dict[str, Any]:

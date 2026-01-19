@@ -56,8 +56,10 @@ from users.models import FFAdminUser
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "get_project",
-            "x-mcp-description": "Retrieves comprehensive information about a specific project including configuration and statistics.",
+            "x-gram": {
+                "name": "get_project",
+                "description": "Retrieves comprehensive information about a specific project including configuration and statistics.",
+            },
         },
     ),
 )
@@ -66,8 +68,10 @@ from users.models import FFAdminUser
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "update_project",
-            "x-mcp-description": "Updates project configuration settings such as name and feature visibility.",
+            "x-gram": {
+                "name": "update_project",
+                "description": "Updates project configuration settings such as name and feature visibility.",
+            },
         },
     ),
 )
@@ -125,8 +129,10 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     @extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "list_project_environments",
-            "x-mcp-description": "Retrieves all environments configured for the specified project.",
+            "x-gram": {
+                "name": "list_project_environments",
+                "description": "Retrieves all environments configured for the specified project.",
+            },
         },
     )
     @action(detail=True)

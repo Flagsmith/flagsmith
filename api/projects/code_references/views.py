@@ -39,8 +39,10 @@ class FeatureFlagCodeReferencesScanCreateAPIView(
 @extend_schema(
     tags=["mcp"],
     extensions={
-        "x-mcp-name": "get_feature_code_references",
-        "x-mcp-description": "Retrieves code references and usage information for the feature flag.",
+        "x-gram": {
+            "name": "get_feature_code_references",
+            "description": "Retrieves code references and usage information for the feature flag.",
+        },
     },
 )
 class FeatureFlagCodeReferenceDetailAPIView(

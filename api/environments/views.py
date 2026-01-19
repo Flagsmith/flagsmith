@@ -80,8 +80,10 @@ logger = logging.getLogger(__name__)
             )
         ],
         extensions={
-            "x-mcp-name": "list_environments",
-            "x-mcp-description": "Lists all environments the user has access to.",
+            "x-gram": {
+                "name": "list_environments",
+                "description": "Lists all environments the user has access to.",
+            },
         },
     ),
 )

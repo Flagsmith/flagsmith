@@ -52,8 +52,10 @@ from users.models import FFAdminUser
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "get_environment_feature_versions",
-            "x-mcp-description": "Retrieves version information for a feature flag in a specific environment.",
+            "x-gram": {
+                "name": "get_environment_feature_versions",
+                "description": "Retrieves version information for a feature flag in a specific environment.",
+            },
         },
     ),
 )
@@ -62,8 +64,10 @@ from users.models import FFAdminUser
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "create_environment_feature_version",
-            "x-mcp-description": "Creates a new version for a feature flag in a specific environment.",
+            "x-gram": {
+                "name": "create_environment_feature_version",
+                "description": "Creates a new version for a feature flag in a specific environment.",
+            },
         },
     ),
 )
@@ -211,8 +215,10 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "get_environment_feature_version_states",
-            "x-mcp-description": "Retrieves feature state information for a specific version in an environment.",
+            "x-gram": {
+                "name": "get_environment_feature_version_states",
+                "description": "Retrieves feature state information for a specific version in an environment.",
+            },
         },
     ),
 )
@@ -221,8 +227,10 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "create_environment_feature_version_state",
-            "x-mcp-description": "Creates a new feature state for a specific version in an environment.",
+            "x-gram": {
+                "name": "create_environment_feature_version_state",
+                "description": "Creates a new feature state for a specific version in an environment.",
+            },
         },
     ),
 )
@@ -231,8 +239,10 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "update_environment_feature_version_state",
-            "x-mcp-description": "Updates an existing feature state for a specific version in an environment.",
+            "x-gram": {
+                "name": "update_environment_feature_version_state",
+                "description": "Updates an existing feature state for a specific version in an environment.",
+            },
         },
     ),
 )

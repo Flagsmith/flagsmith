@@ -21,8 +21,10 @@ from .serializers import MultivariateFeatureOptionSerializer
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "list_feature_multivariate_options",
-            "x-mcp-description": "Retrieves all multivariate options for a feature flag.",
+            "x-gram": {
+                "name": "list_feature_multivariate_options",
+                "description": "Retrieves all multivariate options for a feature flag.",
+            },
         },
     ),
 )
@@ -31,8 +33,10 @@ from .serializers import MultivariateFeatureOptionSerializer
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "create_feature_multivariate_option",
-            "x-mcp-description": "Creates a new multivariate option for a feature flag.",
+            "x-gram": {
+                "name": "create_feature_multivariate_option",
+                "description": "Creates a new multivariate option for a feature flag.",
+            },
         },
     ),
 )
@@ -41,8 +45,10 @@ from .serializers import MultivariateFeatureOptionSerializer
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "update_feature_multivariate_option",
-            "x-mcp-description": "Updates an existing multivariate option.",
+            "x-gram": {
+                "name": "update_feature_multivariate_option",
+                "description": "Updates an existing multivariate option.",
+            },
         },
     ),
 )
@@ -51,8 +57,10 @@ from .serializers import MultivariateFeatureOptionSerializer
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "delete_feature_multivariate_option",
-            "x-mcp-description": "Deletes a multivariate option.",
+            "x-gram": {
+                "name": "delete_feature_multivariate_option",
+                "description": "Deletes a multivariate option.",
+            },
         },
     ),
 )

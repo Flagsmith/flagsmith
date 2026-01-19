@@ -118,8 +118,10 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
         tags=["mcp"],
         parameters=[FeatureQuerySerializer],
         extensions={
-            "x-mcp-name": "list_project_features",
-            "x-mcp-description": "Retrieves all feature flags within the specified project with pagination.",
+            "x-gram": {
+                "name": "list_project_features",
+                "description": "Retrieves all feature flags within the specified project with pagination.",
+            },
         },
     ),
 )
@@ -128,8 +130,10 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "create_feature",
-            "x-mcp-description": "Creates a new feature flag in the specified project with default settings.",
+            "x-gram": {
+                "name": "create_feature",
+                "description": "Creates a new feature flag in the specified project with default settings.",
+            },
         },
     ),
 )
@@ -138,8 +142,10 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "get_feature_flag",
-            "x-mcp-description": "Retrieves detailed information about a specific feature flag.",
+            "x-gram": {
+                "name": "get_feature_flag",
+                "description": "Retrieves detailed information about a specific feature flag.",
+            },
         },
     ),
 )
@@ -148,8 +154,10 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "update_feature",
-            "x-mcp-description": "Updates feature flag properties such as name and description.",
+            "x-gram": {
+                "name": "update_feature",
+                "description": "Updates feature flag properties such as name and description.",
+            },
         },
     ),
 )
@@ -453,8 +461,10 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         parameters=[GetUsageDataQuerySerializer],
         responses={200: FeatureEvaluationDataSerializer()},
         extensions={
-            "x-mcp-name": "get_feature_evaluation_data",
-            "x-mcp-description": "Retrieves evaluation data and analytics for a specific feature flag.",
+            "x-gram": {
+                "name": "get_feature_evaluation_data",
+                "description": "Retrieves evaluation data and analytics for a specific feature flag.",
+            },
         },
     )
     @action(detail=True, methods=["GET"], url_path="evaluation-data")

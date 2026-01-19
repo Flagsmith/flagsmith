@@ -24,8 +24,10 @@ from .serializers import FeatureExternalResourceSerializer
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "get_feature_external_resources",
-            "x-mcp-description": "Retrieves external resources linked to the feature flag.",
+            "x-gram": {
+                "name": "get_feature_external_resources",
+                "description": "Retrieves external resources linked to the feature flag.",
+            },
         },
     ),
 )

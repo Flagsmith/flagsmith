@@ -40,8 +40,10 @@ logger = logging.getLogger()
         tags=["mcp"],
         parameters=[SegmentListQuerySerializer],
         extensions={
-            "x-mcp-name": "list_project_segments",
-            "x-mcp-description": "Retrieves all user segments defined for audience targeting within the project.",
+            "x-gram": {
+                "name": "list_project_segments",
+                "description": "Retrieves all user segments defined for audience targeting within the project.",
+            },
         },
     ),
 )
@@ -50,8 +52,10 @@ logger = logging.getLogger()
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "create_project_segment",
-            "x-mcp-description": "Creates a new user segment for audience targeting within the project.",
+            "x-gram": {
+                "name": "create_project_segment",
+                "description": "Creates a new user segment for audience targeting within the project.",
+            },
         },
     ),
 )
@@ -60,8 +64,10 @@ logger = logging.getLogger()
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "get_project_segment",
-            "x-mcp-description": "Retrieves detailed information about a specific user segment.",
+            "x-gram": {
+                "name": "get_project_segment",
+                "description": "Retrieves detailed information about a specific user segment.",
+            },
         },
     ),
 )
@@ -70,8 +76,10 @@ logger = logging.getLogger()
     decorator=extend_schema(
         tags=["mcp"],
         extensions={
-            "x-mcp-name": "update_project_segment",
-            "x-mcp-description": "Updates an existing user segment's properties and rules.",
+            "x-gram": {
+                "name": "update_project_segment",
+                "description": "Updates an existing user segment's properties and rules.",
+            },
         },
     ),
 )
