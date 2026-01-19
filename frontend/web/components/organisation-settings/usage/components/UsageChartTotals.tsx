@@ -3,6 +3,14 @@ import { Res } from 'common/types/responses'
 import { IconName } from 'components/Icon'
 import StatItem from 'components/StatItem'
 
+type TotalItem = {
+  colour: string | undefined
+  icon: IconName
+  limit: number | null | undefined
+  title: string
+  value: number
+}
+
 export interface UsageChartTotalsProps {
   data: Res['organisationUsage'] | undefined
   selection: string[]
@@ -24,13 +32,7 @@ const UsageChartTotals: FC<UsageChartTotalsProps> = ({
     return null
   }
 
-  const totalItems: Array<{
-    colour: string | undefined
-    icon: IconName
-    limit: number | null | undefined
-    title: string
-    value: number
-  }> = [
+  const totalItems: TotalItem[] = [
     {
       colour: colours[0],
       icon: 'features',

@@ -10,6 +10,8 @@ type BillingTabProps = {
   organisation: Organisation
 }
 
+type LimitItem = Pick<StatItemProps, 'icon' | 'label'> & { value: string }
+
 export const BillingTab = ({ organisation }: BillingTabProps) => {
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
     id: organisation.id,
@@ -41,8 +43,6 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
     Utils.getFlagsmithHasFeature('feature_versioning') &&
     feature_history_visibility_days !== 0
 
-  type LimitItem = Pick<StatItemProps, 'icon' | 'label'> & { value: string }
-
   const limitItems: LimitItem[] = [
     {
       icon: 'bar-chart',
@@ -69,11 +69,11 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
 
   return (
     <div className='mt-4'>
-      <Row space className='plan p-4 mb-4'>
+      <Row space className='plan p-4 mb-4 flex-wrap gap-4'>
         <div>
-          <Row>
+          <Row className='flex-wrap gap-4'>
             <div>
-              <Row className='mr-3' style={{ width: '230px' }}>
+              <Row style={{ width: '230px' }}>
                 <div className='plan-icon'>
                   <Icon name='layers' width={32} />
                 </div>
@@ -84,7 +84,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
               </Row>
             </div>
             <div>
-              <Row style={{ width: '230px' }} className='mr-3'>
+              <Row style={{ width: '230px' }}>
                 <div className='plan-icon'>
                   <h4 className='mb-0 text-center' style={{ width: '32px' }}>
                     ID
@@ -111,7 +111,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
             )}
           </Row>
         </div>
-        <div className='align-self-start'>
+        <div className='align-self-center'>
           {organisation.subscription?.subscription_id && (
             <Button
               theme='secondary'
@@ -127,7 +127,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
       {subscriptionMeta && (
         <>
           <h5 className='mt-4 mb-3'>Subscription Limits</h5>
-          <Row className='plan p-4 mb-4 flex-wrap gap-5 row-gap-4'>
+          <Row className='plan p-4 mb-4 flex-wrap gap-4'>
             {limitItems.map((item) => (
               <StatItem
                 key={item.label}
