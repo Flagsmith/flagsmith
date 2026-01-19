@@ -114,7 +114,52 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
 
 @method_decorator(
     name="list",
-    decorator=extend_schema(parameters=[FeatureQuerySerializer]),
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[FeatureQuerySerializer],
+        extensions={
+            "x-gram": {
+                "name": "list_project_features",
+                "description": "Retrieves all feature flags within the specified project with pagination.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "create_feature",
+                "description": "Creates a new feature flag in the specified project with default settings.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="retrieve",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "get_feature_flag",
+                "description": "Retrieves detailed information about a specific feature flag.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "update_feature",
+                "description": "Updates feature flag properties such as name and description.",
+            },
+        },
+    ),
 )
 class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [FeaturePermissions]
@@ -412,8 +457,15 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return Response(serializer.data)
 
     @extend_schema(
+        tags=["mcp"],
         parameters=[GetUsageDataQuerySerializer],
         responses={200: FeatureEvaluationDataSerializer()},
+        extensions={
+            "x-gram": {
+                "name": "get_feature_evaluation_data",
+                "description": "Retrieves evaluation data and analytics for a specific feature flag.",
+            },
+        },
     )
     @action(detail=True, methods=["GET"], url_path="evaluation-data")
     @throttle_classes([InfluxQueryThrottle])

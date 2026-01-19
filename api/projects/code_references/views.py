@@ -1,6 +1,7 @@
 from typing import Any
 
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, response
 
 from features.models import Feature
@@ -35,6 +36,15 @@ class FeatureFlagCodeReferencesScanCreateAPIView(
         serializer.save(project_id=self.kwargs["project_pk"])
 
 
+@extend_schema(
+    tags=["mcp"],
+    extensions={
+        "x-gram": {
+            "name": "get_feature_code_references",
+            "description": "Retrieves code references and usage information for the feature flag.",
+        },
+    },
+)
 class FeatureFlagCodeReferenceDetailAPIView(
     generics.RetrieveAPIView[FeatureFlagCodeReferencesRepositorySummary],  # type: ignore[type-var]
 ):

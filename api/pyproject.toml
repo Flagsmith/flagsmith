@@ -204,7 +204,7 @@ licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.2.1" }
 optional = true
 
 [tool.poetry.group.release-pipelines.dependencies]
-flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.4.2" }
+flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.4.3" }
 
 
 [tool.poetry.group.dev.dependencies]

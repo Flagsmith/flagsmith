@@ -6,6 +6,7 @@ from common.projects.permissions import (
 )
 from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -34,6 +35,18 @@ from projects.permissions import NestedProjectPermissions
 from users.models import FFAdminUser
 
 
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "get_feature_health_events",
+                "description": "Retrieves feature health monitoring events and metrics for the project.",
+            },
+        },
+    ),
+)
 class FeatureHealthEventViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet[FeatureHealthEvent],
