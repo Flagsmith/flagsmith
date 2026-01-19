@@ -1,27 +1,10 @@
-import React, { FC } from 'react'
+import React from 'react'
 import { Organisation } from 'common/types/responses'
-import Icon, { IconName } from 'components/Icon'
+import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
 import Payment from 'components/modals/Payment'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
-
-type LimitItemProps = {
-  icon: IconName
-  label: string
-  value: string
-}
-
-const LimitItem: FC<LimitItemProps> = ({ icon, label, value }) => (
-  <Row>
-    <div className='plan-icon'>
-      <Icon name={icon} width={32} />
-    </div>
-    <div>
-      <p className='fs-small lh-sm mb-0'>{label}</p>
-      <h4 className='mb-0'>{value}</h4>
-    </div>
-  </Row>
-)
+import StatItem, { StatItemProps } from 'components/StatItem'
 
 type BillingTabProps = {
   organisation: Organisation
@@ -58,7 +41,9 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
     Utils.getFlagsmithHasFeature('feature_versioning') &&
     feature_history_visibility_days !== 0
 
-  const limitItems: LimitItemProps[] = [
+  type LimitItem = Pick<StatItemProps, 'icon' | 'label'> & { value: string }
+
+  const limitItems: LimitItem[] = [
     {
       icon: 'bar-chart',
       label: 'API Calls',
@@ -80,7 +65,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
           value: formatDays(feature_history_visibility_days),
         }
       : undefined,
-  ].filter((item): item is LimitItemProps => item !== undefined)
+  ].filter((item): item is LimitItem => item !== undefined)
 
   return (
     <div className='mt-4'>
@@ -144,7 +129,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
           <h5 className='mt-4 mb-3'>Subscription Limits</h5>
           <Row className='plan p-4 mb-4 flex-wrap gap-5 row-gap-4'>
             {limitItems.map((item) => (
-              <LimitItem
+              <StatItem
                 key={item.label}
                 icon={item.icon}
                 label={item.label}

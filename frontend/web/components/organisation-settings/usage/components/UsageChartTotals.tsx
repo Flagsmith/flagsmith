@@ -1,74 +1,7 @@
 import React, { FC } from 'react'
-import Utils from 'common/utils/utils'
-import { IonIcon } from '@ionic/react'
-import { checkmarkSharp } from 'ionicons/icons'
 import { Res } from 'common/types/responses'
-import Icon, { IconName } from 'components/Icon'
-
-type LegendItemType = {
-  title: string
-  value: number
-  limit?: number | null
-  selection: string[]
-  onChange: (v: string) => void
-  colour?: string
-  icon: IconName
-}
-
-const LegendItem: FC<LegendItemType> = ({
-  colour,
-  icon,
-  limit,
-  onChange,
-  selection,
-  title,
-  value,
-}) => {
-  if (!value) {
-    return null
-  }
-  return (
-    <div className='d-flex flex-row align-items-start gap-2 mr-4'>
-      <div className='plan-icon flex-shrink-0'>
-        <Icon name={icon} width={32} fill='#1A2634' />
-      </div>
-      <div>
-        <p className='fs-small lh-sm mb-0'>{title}</p>
-        <h4 className='mb-0'>
-          {Utils.numberWithCommas(value)}
-          {limit !== null && limit !== undefined && (
-            <span className='text-muted fs-small fw-normal'>
-              {' '}
-              / {Utils.numberWithCommas(limit)}
-            </span>
-          )}
-        </h4>
-        {!!colour && (
-          <div
-            className='cursor-pointer d-flex align-items-center gap-2 mt-1'
-            onClick={() => onChange(title)}
-          >
-            <div
-              className='d-flex align-items-center justify-content-center text-white'
-              style={{
-                backgroundColor: colour,
-                borderRadius: 2,
-                flexShrink: 0,
-                height: 16,
-                width: 16,
-              }}
-            >
-              {selection.includes(title) && (
-                <IonIcon size={'8px'} color='white' icon={checkmarkSharp} />
-              )}
-            </div>
-            <span className='text-muted fs-small'>Visible</span>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
+import { IconName } from 'components/Icon'
+import StatItem from 'components/StatItem'
 
 export interface UsageChartTotalsProps {
   data: Res['organisationUsage'] | undefined
@@ -137,18 +70,26 @@ const UsageChartTotals: FC<UsageChartTotalsProps> = ({
 
   return (
     <Row className='plan p-4 mb-4 flex-wrap gap-4'>
-      {totalItems.map((item) => (
-        <LegendItem
-          key={item.title}
-          selection={selection}
-          onChange={updateSelection}
-          colour={!withColor ? undefined : item.colour}
-          icon={item.icon}
-          limit={item.limit}
-          value={item.value}
-          title={item.title}
-        />
-      ))}
+      {totalItems
+        .filter((item) => item.value)
+        .map((item) => (
+          <StatItem
+            key={item.title}
+            icon={item.icon}
+            label={item.title}
+            value={item.value}
+            limit={item.limit}
+            visibilityToggle={
+              withColor && item.colour
+                ? {
+                    colour: item.colour,
+                    isVisible: selection.includes(item.title),
+                    onToggle: () => updateSelection(item.title),
+                  }
+                : undefined
+            }
+          />
+        ))}
     </Row>
   )
 }
