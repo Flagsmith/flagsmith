@@ -7,6 +7,7 @@ async function globalSetup(config: FullConfig) {
   console.log('Starting global setup for E2E tests...');
 
   const e2eTestApi = `${process.env.FLAGSMITH_API_URL || Project.api}e2etests/teardown/`;
+  const apiHealthUrl = `${process.env.FLAGSMITH_API_URL || Project.api}health`;
   const token = process.env.E2E_TEST_TOKEN
     ? process.env.E2E_TEST_TOKEN
     : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`];
@@ -18,6 +19,30 @@ async function globalSetup(config: FullConfig) {
     '\x1b[0m',
     '\n',
   );
+
+  // Wait for API to be ready (max 60 seconds)
+  console.log('Waiting for API to be ready...');
+  const maxWaitTime = 60000; // 60 seconds
+  const startTime = Date.now();
+  let apiReady = false;
+
+  while (!apiReady && Date.now() - startTime < maxWaitTime) {
+    try {
+      const healthRes = await fetch(apiHealthUrl);
+      if (healthRes.ok) {
+        apiReady = true;
+        console.log('\n', '\x1b[32m', 'API is ready', '\x1b[0m', '\n');
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+      }
+    } catch (error) {
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+    }
+  }
+
+  if (!apiReady) {
+    console.error('\n', '\x1b[31m', 'API health check failed - continuing anyway', '\x1b[0m', '\n');
+  }
 
   // Initialize Flagsmith
   await flagsmith.init({
