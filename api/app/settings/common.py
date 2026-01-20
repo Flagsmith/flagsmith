@@ -324,6 +324,7 @@ REST_FRAMEWORK = {
         "mfa_code": "5/min",
         "invite": "10/min",
         "user": USER_THROTTLE_RATE,
+        "influx_query": "5/min",
         "identity_search": IDENTITY_SEARCH_THROTTLE_RATE,
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
