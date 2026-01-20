@@ -14,7 +14,7 @@ on:
         required: true
       args:
         type: string
-        description: Additional arguments to testcafe
+        description: Additional arguments to playwright
         required: false
         default: ''
       concurrency:

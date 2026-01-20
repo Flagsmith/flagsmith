@@ -7,10 +7,11 @@ import {
   login,
   setText,
   waitForElementVisible,
-} from '../helpers.pw';
+  createHelpers,
+} from '../helpers.playwright';
 import { PASSWORD, E2E_USER } from '../config'
 
-test.describe('TestName', () => {
+test.describe('Environment Tests', () => {
   test('test description', async ({ page }) => {
     const helpers = createHelpers(page);
   log('Login')
@@ -18,7 +19,7 @@ test.describe('TestName', () => {
   await helpers.click('#project-select-0')
   log('Create environment')
   await helpers.click('#create-env-link')
-  await createEnvironment('Staging')
+  await createEnvironment(page, 'Staging')
   log('Edit Environment')
   await helpers.click('#env-settings-link')
   await helpers.setText("[name='env-name']", 'Internal')

@@ -11,11 +11,11 @@ import {
   waitForElementVisible,
   waitForElementNotExist,
   clickByText,
-} from '../helpers.pw'
+  createHelpers,
+} from '../helpers.playwright'
 import { E2E_SEPARATE_TEST_USER, PASSWORD } from '../config'
-import { Selector, t } from 'testcafe'
 
-test.describe('TestName', () => {
+test.describe('Organisation Tests', () => {
   test('test description', async ({ page }) => {
     const helpers = createHelpers(page);
   log('Login')
@@ -34,7 +34,7 @@ test.describe('TestName', () => {
 
   log('Verify Organisation Name Updated in Breadcrumb')
   await helpers.click('#projects-link')
-  await assertTextContent('#organisation-link', 'Test Organisation')
+  await assertTextContent(page, '#organisation-link', 'Test Organisation')
 
   log('Verify Organisation Name Persisted in Settings')
   await helpers.click(byId('organisation-link'))
@@ -55,7 +55,7 @@ test.describe('TestName', () => {
 
   log('Verify New Organisation Created and appears in nav')
   await helpers.waitForElementVisible(byId('organisation-link'))
-  await assertTextContent('#organisation-link', 'E2E Test Org to Delete')
+  await assertTextContent(page, '#organisation-link', 'E2E Test Org to Delete')
 
   log('Navigate back to the org we want to delete')
   await helpers.waitForElementVisible(byId('org-settings-link'))
@@ -72,14 +72,8 @@ test.describe('TestName', () => {
   log('Current org in nav after deletion: Test Organisation')
 
   log('Verify deleted org name does not appear in nav')
-  const orgLink = page.locator('#organisation-link')
-  await t
-    expect(orgLink.textContent)
-    .notContains(
-      'E2E Test Org to Delete',
-      'Deleted organisation should not appear in nav',
-    )
-  await assertTextContent('#organisation-link', 'Test Organisation')
+  await expect(page.locator('#organisation-link')).not.toContainText('E2E Test Org to Delete')
+  await assertTextContent(page, '#organisation-link', 'Test Organisation')
 
   log('Test 3: Cancel Organisation Deletion')
   log('Create temporary organisation for cancel test')
@@ -92,7 +86,7 @@ test.describe('TestName', () => {
 
   log('Navigate to org settings and open delete modal')
   await helpers.waitForElementVisible(byId('organisation-link'))
-  await assertTextContent('#organisation-link', 'E2E Cancel Test Org')
+  await assertTextContent(page, '#organisation-link', 'E2E Cancel Test Org')
   await helpers.waitForElementVisible(byId('org-settings-link'))
   await helpers.click(byId('org-settings-link'))
   await helpers.waitForElementVisible('#delete-org-btn')
@@ -101,12 +95,12 @@ test.describe('TestName', () => {
   await helpers.setText("[name='confirm-org-name']", 'E2E Cancel Test Org')
 
   log('Close modal without confirming deletion')
-  await closeModal()
+  await closeModal(page)
   await helpers.waitForElementNotExist('.modal')
 
   log('Verify organisation still exists in navbar')
   await helpers.waitForElementVisible(byId('organisation-link'))
-  await assertTextContent('#organisation-link', 'E2E Cancel Test Org')
+  await assertTextContent(page, '#organisation-link', 'E2E Cancel Test Org')
 
   log('Clean up: Delete the test organisation')
   await helpers.click('#delete-org-btn')
@@ -114,7 +108,7 @@ test.describe('TestName', () => {
   await helpers.clickByText('Confirm')
   await helpers.waitForElementNotExist('.modal')
   await helpers.waitForElementVisible(byId('organisation-link'))
-  await assertTextContent('#organisation-link', 'Test Organisation')
+  await assertTextContent(page, '#organisation-link', 'Test Organisation')
 
   log('Test 4: Organisation Name Validation')
   log('Navigate to Test Organisation settings')
@@ -124,23 +118,19 @@ test.describe('TestName', () => {
   log('Test empty organisation name validation')
   await helpers.waitForElementVisible("[data-test='organisation-name']")
   const orgNameInput = page.locator("[data-test='organisation-name']")
-  const originalName = await orgNameInput.value
+  const originalName = await orgNameInput.inputValue()
 
   log('Clear organisation name')
   await helpers.setText("[data-test='organisation-name']", '')
 
   log('Verify save button is disabled')
   const saveButton = page.locator('#save-org-btn')
-  await t
-    expect(saveButton.hasAttribute('disabled'))
-    .toBeVisible('Save button should be disabled with empty name')
+  await expect(saveButton).toBeDisabled()
 
   log('Restore original name')
   await helpers.setText("[data-test='organisation-name']", originalName)
 
   log('Verify save button is enabled')
-  await t
-    expect(saveButton.hasAttribute('disabled'))
-    .not.toBeVisible('Save button should be enabled with valid name')
+  await expect(saveButton).not.toBeDisabled()
   });
 });

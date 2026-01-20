@@ -14,7 +14,7 @@ async function globalSetup(config: FullConfig) {
   console.log(
     '\n',
     '\x1b[32m',
-    `E2E using API: ${e2eTestApi}. E2E URL: http://localhost:${process.env.PORT || 3000}`,
+    `E2E using API: ${e2eTestApi}. E2E URL: http://localhost:${process.env.PORT || 8080}`,
     '\x1b[0m',
     '\n',
   );

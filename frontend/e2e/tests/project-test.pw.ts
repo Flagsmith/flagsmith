@@ -10,10 +10,11 @@ import {
   setText,
   waitForElementNotExist,
   waitForElementVisible,
-} from '../helpers.pw';
+  createHelpers,
+} from '../helpers.playwright';
 import { E2E_USER, PASSWORD } from '../config'
 
-test.describe('TestName', () => {
+test.describe('Project Tests', () => {
   test('test description', async ({ page }) => {
     const helpers = createHelpers(page);
   const flagsmith = await getFlagsmith()
@@ -27,7 +28,7 @@ test.describe('TestName', () => {
   await helpers.click('#project-settings-link')
   await helpers.setText("[name='proj-name']", 'Test Project')
   await helpers.click('#save-proj-btn')
-  await assertTextContent(`#project-link`, 'Test Project')
+  await assertTextContent(page, `#project-link`, 'Test Project')
 
   if (hasSegmentChangeRequests) {
     log('Test Change Requests Approvals Setting')
@@ -47,7 +48,7 @@ test.describe('TestName', () => {
     await helpers.click('#features-link')
     await helpers.click('#project-settings-link')
     await helpers.waitForElementVisible('[name="env-name"]')
-    await assertInputValue('[name="env-name"]', '3')
+    await assertInputValue(page, '[name="env-name"]', '3')
 
     log('Test 3: Disable change requests (auto-save on toggle)')
     await helpers.click('[data-test="js-change-request-approvals"]')
@@ -65,7 +66,7 @@ test.describe('TestName', () => {
     await helpers.click('#features-link')
     await helpers.click('#project-settings-link')
     await helpers.waitForElementVisible('[name="env-name"]')
-    await assertInputValue('[name="env-name"]', '5')
+    await assertInputValue(page, '[name="env-name"]', '5')
   }
 
   });

@@ -4,7 +4,7 @@ import {
   createHelpers,
   getFlagsmith,
   log,
-} from '../helpers.pw';
+} from '../helpers.playwright';
 import { E2E_SIGN_UP_USER, PASSWORD } from '../config';
 
 test.describe('Signup', () => {
