@@ -195,7 +195,7 @@
                 },
                 {
                     "name": "DEFAULT_THROTTLE_CLASSES",
-                    "value": "core.throttling.UserRateThrottle"
+                    "value": "core.throttling.UserRateThrottle,core.throttling.MasterAPIKeyUserRateThrottle"
                 },
                 {
                     "name": "USER_THROTTLE_CACHE_BACKEND",
@@ -208,6 +208,10 @@
                 {
                     "name": "USER_THROTTLE_CACHE_OPTIONS",
                     "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient"
+                },
+                {
+                    "name": "MASTER_API_KEY_THROTTLE_RATE",
+                    "value": "10/sec"
                 },
                 {
                     "name": "GITHUB_APP_ID",

@@ -15,6 +15,7 @@ import json
 import os
 import warnings
 from datetime import datetime, time, timedelta
+from typing import Any
 
 import dj_database_url
 import django_stubs_ext
@@ -120,7 +121,7 @@ INSTALLED_APPS = [
     "app",
     "e2etests",
     "simple_history",
-    "drf_yasg",
+    "drf_spectacular",
     "audit",
     "permissions",
     "projects.code_references",
@@ -318,6 +319,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
+        "master_api_key": MASTER_API_KEY_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
         "user": USER_THROTTLE_RATE,
@@ -328,6 +330,7 @@ REST_FRAMEWORK = {
         "util.renderers.PydanticJSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 MIDDLEWARE = [
     "common.core.middleware.APIResponseVersionHeaderMiddleware",
@@ -347,25 +350,6 @@ MIDDLEWARE = [
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
 if ADD_NEVER_CACHE_HEADERS:
     MIDDLEWARE.append("core.middleware.cache_control.NeverCacheMiddleware")
-
-APPLICATION_INSIGHTS_CONNECTION_STRING = env.str(
-    "APPLICATION_INSIGHTS_CONNECTION_STRING", default=None
-)
-OPENCENSUS_SAMPLING_RATE = env.float("OPENCENSUS_SAMPLING_RATE", 1.0)
-
-if APPLICATION_INSIGHTS_CONNECTION_STRING:
-    MIDDLEWARE.insert(
-        0, "integrations.opencensus.middleware.OpenCensusDbTraceMiddleware"
-    )
-    MIDDLEWARE.insert(0, "opencensus.ext.django.middleware.OpencensusMiddleware")
-    OPENCENSUS = {
-        "TRACE": {
-            "SAMPLER": f"opencensus.trace.samplers.ProbabilitySampler(rate={OPENCENSUS_SAMPLING_RATE})",
-            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
-                connection_string='{APPLICATION_INSIGHTS_CONNECTION_STRING}',
-            )""",
-        }
-    }
 
 if ENABLE_GZIP_COMPRESSION:
     # ref: https://docs.djangoproject.com/en/2.2/ref/middleware/#middleware-ordering
@@ -540,23 +524,48 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_PORT = env("EMAIL_PORT", default=587)
     EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
-SWAGGER_SETTINGS = {
-    "DEEP_LINKING": True,
-    "DEFAULT_AUTO_SCHEMA_CLASS": "api.openapi.PydanticResponseCapableSwaggerAutoSchema",
-    "SHOW_REQUEST_HEADERS": True,
-    "SECURITY_DEFINITIONS": {
-        "Private": {
-            "type": "apiKey",
-            "in": "header",
-            "name": "Authorization",
-            "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",  # noqa
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Flagsmith API",
+    "OAS_VERSION": "3.1.0",
+    "DESCRIPTION": "Flagsmith's Core and SDK APIs. Check out <a href='https://docs.flagsmith.com'>Flagsmith documentation</a>.",
+    "VERSION": "v1",
+    "LICENSE": {"name": "BSD License", "identifier": "BSD-3-Clause"},
+    "CONTACT": {"email": "support@flagsmith.com"},
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+    },
+    "SECURITY": [
+        {"Private": []},
+        {"Public": []},
+    ],
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "Private": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",
+            },
+            "Public": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-Environment-Key",
+                "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",
+            },
         },
-        "Public": {
-            "type": "apiKey",
-            "in": "header",
-            "name": "X-Environment-Key",
-            "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",  # noqa
-        },
+    },
+    "DEFAULT_GENERATOR_CLASS": "api.openapi.SchemaGenerator",
+    "EXTENSIONS": [
+        "api.openapi",
+        "edge_api.identities.openapi",
+        "environments.identities.traits.openapi",
+    ],
+    "ENUM_NAME_OVERRIDES": {
+        # Overrides to use specific schema names for fields named "type".
+        # If this is not set, drf-spectacular will generate schema names like "Type975Enum".
+        "WebhookScopeTypeEnum": ["organisation", "environment"],
+        "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
+        "FeatureValueTypeEnum": ["integer", "string", "boolean"],
     },
 }
 
@@ -674,15 +683,6 @@ else:
         },
     }
 
-if APPLICATION_INSIGHTS_CONNECTION_STRING:
-    LOGGING["handlers"]["azure"] = {
-        "level": "DEBUG",
-        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
-        "connection_string": APPLICATION_INSIGHTS_CONNECTION_STRING,
-    }
-
-    LOGGING["loggers"][""]["handlers"].append("azure")
-
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
 if ENABLE_DB_LOGGING:
     if not DEBUG:
@@ -783,7 +783,7 @@ USER_THROTTLE_CACHE_BACKEND = env.str(
     "USER_THROTTLE_CACHE_BACKEND", "django.core.cache.backends.locmem.LocMemCache"
 )
 USER_THROTTLE_CACHE_LOCATION = env.str("USER_THROTTLE_CACHE_LOCATION", "admin-throttle")
-USER_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
+USER_THROTTLE_CACHE_OPTIONS: dict[str, Any] = env.dict(
     "USER_THROTTLE_CACHE_OPTIONS", default={}
 )
 
@@ -815,6 +815,12 @@ DJANGO_REDIS_IGNORE_EXCEPTIONS = env.bool(
 # ref:https://github.com/jazzband/django-redis/tree/5.4.0#log-ignored-exceptions
 DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = env.bool(
     "DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS", True
+)
+
+# Enable reading from replicas in Redis Cluster mode.
+# Distributes read traffic to replica nodes (port 6380 on ElastiCache Serverless).
+REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
+    "REDIS_CLUSTER_READ_FROM_REPLICAS", default=True
 )
 
 CACHES = {
@@ -1397,10 +1403,6 @@ SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED = env.bool(
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
 WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 
-# Split Testing settings
-SPLIT_TESTING_INSTALLED = importlib.util.find_spec("split_testing")
-if SPLIT_TESTING_INSTALLED:
-    INSTALLED_APPS += ("split_testing",)
 
 ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)
 
@@ -1470,3 +1472,5 @@ REQUIRE_AUTHENTICATION_FOR_API_DOCS = env.bool(
 )
 
 PYLON_IDENTITY_VERIFICATION_SECRET = env.str("PYLON_IDENTITY_VERIFICATION_SECRET", None)
+
+OSIC_UPDATE_BATCH_SIZE = env.int("OSIC_UPDATE_BATCH_SIZE", default=500)

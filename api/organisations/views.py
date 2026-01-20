@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
@@ -21,6 +21,7 @@ from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
     get_multiple_event_list_for_organisation,
 )
+from app_analytics.throttles import InfluxQueryThrottle
 from core.helpers import get_current_site_url
 from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
@@ -96,6 +97,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Organisation.objects.none()
+
         return self.request.user.organisations.all()  # type: ignore[union-attr]
 
     def get_throttles(self):  # type: ignore[no-untyped-def]
@@ -157,13 +159,14 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.save()
         return Response(serializer.data, status=200)
 
-    @swagger_auto_schema(
+    @extend_schema(
         deprecated=True,
-        operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/total-count/",
+        description="Please use /api/v1/organisations/{organisation_pk}/usage-data/total-count/",
     )
     @action(
         detail=True,
         methods=["GET"],
+        throttle_classes=[InfluxQueryThrottle],
     )
     def usage(self, request, pk):  # type: ignore[no-untyped-def]
         organisation = self.get_object()
@@ -179,8 +182,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         return Response({"events": events}, status=status.HTTP_200_OK)
 
+    @extend_schema(responses={200: OrganisationSerializerFull})
     @action(detail=True, methods=["POST"], url_path="update-subscription")
-    @swagger_auto_schema(responses={200: OrganisationSerializerFull})
     def update_subscription(self, request, pk):  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -235,12 +238,17 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.save()
         return Response(serializer.data)
 
-    @swagger_auto_schema(
+    @extend_schema(
         deprecated=True,
-        operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/",
-        query_serializer=InfluxDataQuerySerializer(),
+        description="Please use /api/v1/organisations/{organisation_pk}/usage-data/",
+        parameters=[InfluxDataQuerySerializer],
     )
-    @action(detail=True, methods=["GET"], url_path="influx-data")
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path="influx-data",
+        throttle_classes=[InfluxQueryThrottle],
+    )
     def get_influx_data(self, request, pk):  # type: ignore[no-untyped-def]
         filters = InfluxDataQuerySerializer(data=request.query_params)
         filters.is_valid(raise_exception=True)
@@ -272,9 +280,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        responses={200: UserDetailedPermissionsSerializer},
-    )  # type: ignore[misc]
+    @extend_schema(responses={200: UserDetailedPermissionsSerializer})
     @action(
         detail=True,
         methods=["GET"],
@@ -361,6 +367,9 @@ class OrganisationAPIUsageNotificationView(ListAPIView):  # type: ignore[type-ar
     permission_classes = [OrganisationAPIUsageNotificationPermission]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return OrganisationAPIUsageNotification.objects.none()
+
         organisation = Organisation.objects.get(id=self.kwargs["organisation_pk"])
         if not hasattr(organisation, "subscription_information_cache"):
             return OrganisationAPIUsageNotification.objects.none()

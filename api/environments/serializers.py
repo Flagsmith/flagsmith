@@ -1,4 +1,4 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from rest_framework import serializers
 
@@ -34,7 +34,7 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):  # type: ignore[ty
         )
 
 
-class EnvironmentSerializerLight(serializers.ModelSerializer):  # type: ignore[type-arg]
+class EnvironmentSerializerLight(serializers.ModelSerializer[Environment]):
     use_mv_v2_evaluation = serializers.SerializerMethodField()
 
     class Meta:
@@ -135,7 +135,7 @@ class CreateUpdateEnvironmentSerializer(
 
         if view.action == "create":
             # handle `project` not being part of the data
-            # When request comes from yasg2(as part of schema generation)
+            # When request comes from drf-spectacular (as part of schema generation)
             project_id = view.request.data.get("project")
             if not project_id:
                 return None
@@ -146,7 +146,12 @@ class CreateUpdateEnvironmentSerializer(
 
             return getattr(project.organisation, "subscription", None)
         elif view.action in ("update", "partial_update"):
-            return getattr(self.instance.project.organisation, "subscription", None)  # type: ignore[union-attr]
+            # Handle schema generation when instance is None.
+            if self.instance is None:
+                return None
+            if TYPE_CHECKING:
+                assert isinstance(self.instance, Environment)
+            return getattr(self.instance.project.organisation, "subscription", None)
 
         return None
 

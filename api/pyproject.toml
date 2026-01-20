@@ -63,6 +63,7 @@ exclude_also = [
 [tool.coverage.run]
 omit = [
   "app/settings/common.py",
+  "app/settings/local.py",
   "manage.py",
   "e2etests/*",
   "scripts/*",
@@ -129,7 +130,7 @@ chargebee = "^2.7.7"
 python-http-client = "~3.3.7"
 django-health-check = "~3.18.2"
 django-admin-sso = "~5.2.0"
-drf-yasg = "~1.21.6"
+drf-spectacular = "~0.28.0"
 django-debug-toolbar = "~3.2.1"
 sentry-sdk = "~2.8.0"
 environs = "^14.1.1"
@@ -140,8 +141,6 @@ flagsmith-flag-engine = "^6.0.2"
 boto3 = "~1.35.95"
 slack-sdk = "~3.9.0"
 asgiref = "~3.8.1"
-opencensus-ext-azure = "~1.1.4"
-opencensus-ext-django = "~0.7.6"
 djangorestframework-api-key = "~2.2.0"
 pymemcache = "~4.0.0"
 google-re2 = "^1.0"
@@ -163,7 +162,7 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-common = "^2.2.7"
+flagsmith-common = {version = "^3.2.1", extras = ["common-core", "task-processor"]}
 django-stubs = "^5.1.3"
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.5.1"
@@ -175,7 +174,7 @@ django_cockroachdb = "~4.2"
 optional = true
 
 [tool.poetry.group.auth-controller.dependencies]
-flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.1.3" }
+flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.1.4" }
 
 [tool.poetry.group.saml]
 optional = true
@@ -193,19 +192,13 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.1.0" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.2.0" }
 
 [tool.poetry.group.licensing]
 optional = true
 
 [tool.poetry.group.licensing.dependencies]
-licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.2.0" }
-
-[tool.poetry.group.split-testing]
-optional = true
-
-[tool.poetry.group.split-testing.dependencies]
-flagsmith-split-testing = { git = "https://github.com/flagsmith/flagsmith-split-testing", tag = "v0.2.1" }
+licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.2.1" }
 
 [tool.poetry.group.release-pipelines]
 optional = true
@@ -249,6 +242,7 @@ types-pytz = "^2025.1.0.20250204"
 ruff = "^0.9.7"
 flagsmith-common = { version = "*", extras = ["test-tools"] }
 pytest-responses = "^0.5.1"
+diff-cover = "^10.1.0"
 
 [build-system]
 requires = ["poetry>=2.0.0"]
