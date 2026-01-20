@@ -95,6 +95,17 @@
   }
 }
 
+.visibility-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  color: white;
+}
+
 /*Change text in autofill textbox*/
 .dark {
   input:-webkit-autofill,

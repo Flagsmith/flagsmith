@@ -12,6 +12,7 @@ import AccountStore from 'common/stores/account-store'
 import { planNames } from 'common/utils/utils'
 import { Req } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
+import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import UsageChartFilters from 'components/organisation-settings/usage/components/UsageChartFilters'
 import UsageChartTotals from 'components/organisation-settings/usage/components/UsageChartTotals'
 
@@ -27,7 +28,7 @@ const OrganisationUsagePage: FC = () => {
     }
     const params = new URLSearchParams(location.search)
     return params.get('p') === 'user-agents' ? 'user-agents' : 'global'
-  }, [location.search])
+  }, [isSdkViewEnabled, location.search])
 
   const [chartsView, setChartsView] = useState<'global' | 'user-agents'>(
     getInitialView(),
@@ -56,9 +57,14 @@ const OrganisationUsagePage: FC = () => {
     {
       billing_period: billingPeriod,
       environmentId: environment,
-      organisationId: organisationId?.toString() || '',
+      organisationId: organisationId || 0,
       projectId: project,
     },
+    { skip: !organisationId },
+  )
+
+  const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery(
+    { id: organisationId || 0 },
     { skip: !organisationId },
   )
 
@@ -146,7 +152,7 @@ const OrganisationUsagePage: FC = () => {
           )}
         >
           <UsageChartFilters
-            organisationId={organisationId?.toString() || ''}
+            organisationId={organisationId || 0}
             project={project}
             setProject={setProject}
             environment={environment}
@@ -161,6 +167,7 @@ const OrganisationUsagePage: FC = () => {
             updateSelection={updateSelection}
             colours={colours}
             withColor={chartsView !== 'user-agents'}
+            maxApiCalls={subscriptionMeta?.max_api_calls}
           />
           {chartsView === 'user-agents' ? (
             <OrganisationUsageMetrics data={data} selectedMetrics={selection} />
