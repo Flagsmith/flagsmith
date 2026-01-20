@@ -775,22 +775,7 @@ const Index = class extends Component {
                                   this.props.changeRequest.id,
                                 ignore_conflicts,
                                 live_from,
-                                multivariate_options: this.props
-                                  .multivariate_options
-                                  ? this.props.multivariate_options.map((v) => {
-                                      const matching =
-                                        projectFlag.multivariate_options.find(
-                                          (m) =>
-                                            m.id ===
-                                            v.multivariate_feature_option,
-                                        )
-                                      return {
-                                        ...v,
-                                        percentage_allocation:
-                                          matching.default_percentage_allocation,
-                                      }
-                                    })
-                                  : projectFlag.multivariate_options,
+                                multivariate_options: flag.multivariate_options,
                                 title,
                               },
                               !is4Eyes,
