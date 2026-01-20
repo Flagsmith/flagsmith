@@ -32,6 +32,7 @@ type EditFeatureValueProps = {
   identityName?: string
   noPermissions: boolean
   featureState: FeatureState
+  overrideFeatureState?: FeatureState
   projectFlag: ProjectFlag
   onEnvironmentFlagChange: (changes: FeatureState) => void
   onProjectFlagChange: (changes: ProjectFlag) => void
@@ -51,6 +52,7 @@ const FeatureValue: FC<EditFeatureValueProps> = ({
   onProjectFlagChange,
   onRemoveMultivariateOption,
   projectFlag,
+  overrideFeatureState,
 }) => {
   /* eslint-enable sort-destructure-keys/sort-destructure-keys */
   const default_enabled = featureState.enabled ?? false
@@ -59,8 +61,7 @@ const FeatureValue: FC<EditFeatureValueProps> = ({
   const environmentVariations =
     featureState.multivariate_feature_state_values ?? []
   const identityVariations =
-    featureState.multivariate_feature_state_values ?? []
-
+    overrideFeatureState?.multivariate_feature_state_values ?? []
   const addVariation = () => {
     const newVariation = {
       ...Utils.valueToFeatureState(''),

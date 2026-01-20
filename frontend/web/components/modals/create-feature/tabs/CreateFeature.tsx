@@ -10,6 +10,7 @@ type CreateFeatureTabProps = {
   projectId: number
   error: any
   featureState: FeatureState
+  overrideFeatureState?: FeatureState
   projectFlag: ProjectFlag | null
   featureContentType: any
   identity?: string
@@ -32,6 +33,7 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
   onHasMetadataRequiredChange,
   onProjectFlagChange,
   onRemoveMultivariateOption,
+  overrideFeatureState,
   projectFlag,
   projectId,
 }) => {
@@ -62,6 +64,7 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
             isEdit={false}
             identity={identity}
             noPermissions={noPermissions}
+            overrideFeatureState={overrideFeatureState}
             featureState={featureState}
             projectFlag={projectFlag}
             onEnvironmentFlagChange={onEnvironmentFlagChange}

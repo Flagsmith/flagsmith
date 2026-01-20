@@ -1801,10 +1801,15 @@ const Index = class extends Component {
                                 <CreateFeature
                                   projectId={this.props.projectId}
                                   error={error}
-                                  featureState={environmentFlag}
+                                  featureState={this.props.environmentFlag}
                                   projectFlag={projectFlag}
                                   featureContentType={featureContentType}
                                   identity={identity}
+                                  overrideFeatureState={
+                                    this.props.identityFlag
+                                      ? this.state.environmentFlag
+                                      : null
+                                  }
                                   onEnvironmentFlagChange={(changes) => {
                                     this.setState({
                                       environmentFlag: {

@@ -88,7 +88,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
                 onMouseDown={(e) => {
                   e.stopPropagation()
                   setVariations([])
-                  setValue(controlValue)
+                  setValue?.(controlValue)
                 }}
                 className={`btn-radio ml-2 ${
                   controlSelected ? 'btn-radio-on' : ''
