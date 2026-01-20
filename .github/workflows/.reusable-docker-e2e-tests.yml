@@ -44,6 +44,7 @@ jobs:
       contents: read
       packages: read
       id-token: write
+      pull-requests: write
 
     env:
       GCR_TOKEN: ${{ secrets.GCR_TOKEN }}
@@ -86,3 +87,27 @@ jobs:
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: frontend/e2e/test-results/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report
+          path: frontend/e2e/playwright-report/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Comment PR with test results
+        if: always() && github.event_name == 'pull_request'
+        uses: daun/playwright-report-summary@v3
+        with:
+          report-file: frontend/e2e/test-results/results.json

@@ -28,6 +28,16 @@ serve:
 
 .PHONY: test
 test:
-	docker compose run frontend \
+	@echo "Running E2E tests..."
+	@docker compose run --name e2e-test-run frontend \
 		npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test -- $(opts) \
-		|| (echo "\n=== API logs ===" && docker compose logs flagsmith-api && echo "\n=== Frontend logs (includes test results) ===" && docker compose logs frontend; exit 1)
+		|| TEST_FAILED=1; \
+	echo "Copying test results from container..."; \
+	docker cp e2e-test-run:/srv/flagsmith/e2e/test-results ./e2e/test-results 2>/dev/null || echo "No test results to copy"; \
+	docker cp e2e-test-run:/srv/flagsmith/e2e/playwright-report ./e2e/playwright-report 2>/dev/null || echo "No HTML report to copy"; \
+	docker rm e2e-test-run 2>/dev/null || true; \
+	if [ "$$TEST_FAILED" = "1" ]; then \
+		echo "\n=== API logs ===" && docker compose logs flagsmith-api && \
+		echo "\n=== Frontend logs (includes test results) ===" && docker compose logs frontend && \
+		exit 1; \
+	fi
