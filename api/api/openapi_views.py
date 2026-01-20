@@ -40,8 +40,4 @@ class CustomSpectacularYAMLAPIView(SpectacularYAMLAPIView):
 
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         self.generator_class = self.get_generator_class()
-        if self.generator_class is MCPSchemaGenerator:
-            response = super().get(request, *args, **kwargs)  # type: ignore[no-untyped-call]
-            response["Content-Disposition"] = 'attachment; filename="mcp_openapi.yaml"'
-            return response  # type: ignore[no-any-return]
         return super().get(request, *args, **kwargs)  # type: ignore[no-untyped-call, no-any-return]
