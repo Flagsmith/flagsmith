@@ -10,12 +10,13 @@ on:
       - infrastructure/aws/staging/**
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   deploy-ecs:
     uses: ./.github/workflows/.reusable-deploy-ecs.yml
     with:
       environment: staging
     secrets: inherit
-    concurrency:
-      group: ${{ github.workflow }}
-      cancel-in-progress: true
