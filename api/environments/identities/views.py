@@ -47,10 +47,11 @@ class IdentityViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def get_throttles(self):  # type: ignore[no-untyped-def]
         """
         Apply identity_search throttle only to list (search) requests.
+        For other actions, return the global default throttle classes.
         """
         if getattr(self, "action", None) == "list":
             return [ScopedRateThrottle()]
-        return []
+        return super().get_throttles()
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
