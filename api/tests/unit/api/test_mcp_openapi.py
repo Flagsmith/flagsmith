@@ -49,7 +49,10 @@ def test_mcp_filter_paths__excludes_operations_without_mcp_tag() -> None:
 def test_mcp_filter_paths__mixed_operations() -> None:
     # Given
     paths: dict[str, Any] = {
-        "/api/v1/organisations/": {
+        "/api/v1/organisations/{id}/": {
+            "parameters": [
+                {"name": "id", "in": "path", "required": True},
+            ],
             "get": {
                 "operationId": "organisations_list",
                 "tags": ["mcp", "organisations"],
@@ -66,9 +69,14 @@ def test_mcp_filter_paths__mixed_operations() -> None:
     filtered = generator._filter_paths(paths)
 
     # Then
-    assert "/api/v1/organisations/" in filtered
-    assert "get" in filtered["/api/v1/organisations/"]
-    assert "post" not in filtered["/api/v1/organisations/"]
+    assert "/api/v1/organisations/{id}/" in filtered
+    path_item = filtered["/api/v1/organisations/{id}/"]
+    assert "get" in path_item
+    assert "post" not in path_item
+    # Path-level parameters (a list, not a dict) should be preserved
+    assert path_item["parameters"] == [
+        {"name": "id", "in": "path", "required": True},
+    ]
 
 
 def test_mcp_transform_for_mcp__preserves_x_gram_extension() -> None:
