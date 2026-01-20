@@ -12,7 +12,7 @@ interface VariationValueProps {
   index: number
   onChange: (value: any) => void
   onRemove?: () => void
-  readOnlyValue: boolean
+  readOnly: boolean
   value: any
   weightTitle: string
 }
@@ -23,7 +23,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
   index,
   onChange,
   onRemove,
-  readOnlyValue,
+  readOnly,
   value,
   weightTitle,
 }) => {
@@ -44,7 +44,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
                   name='featureValue'
                   className='full-width code-medium'
                   value={Utils.getTypedValue(Utils.featureStateToValue(value))}
-                  disabled={!canCreateFeature || disabled || readOnlyValue}
+                  disabled={!canCreateFeature || disabled || readOnly}
                   onBlur={() => {
                     const newValue = {
                       ...value,
@@ -98,7 +98,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
           title={weightTitle}
         />
       </div>
-      {!!onRemove && (
+      {!!onRemove && !readOnly && (
         <div style={{ position: 'relative', top: '27px' }} className='ml-2'>
           <button
             onClick={onRemove}
