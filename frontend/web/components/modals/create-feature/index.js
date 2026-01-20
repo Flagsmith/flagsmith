@@ -1801,7 +1801,10 @@ const Index = class extends Component {
                                 <CreateFeature
                                   projectId={this.props.projectId}
                                   error={error}
-                                  featureState={this.props.environmentFlag}
+                                  featureState={
+                                    this.props.environmentFlag ||
+                                    environmentFlag
+                                  }
                                   projectFlag={projectFlag}
                                   featureContentType={featureContentType}
                                   identity={identity}
