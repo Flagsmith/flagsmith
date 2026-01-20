@@ -1,0 +1,150 @@
+import { test, expect } from '@playwright/test';
+import {
+  byId,
+  click, clickByText, closeModal, createEnvironment,
+  createFeature, editRemoteConfig,
+  gotoTraits,
+  log,
+  login, logout, setUserPermission,
+  toggleFeature, waitForElementClickable, waitForElementNotClickable, waitForElementNotExist, waitForElementVisible,
+} from '../helpers.pw';
+import {
+  PASSWORD,
+  E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS,
+  E2E_USER,
+} from '../config';
+import { Selector, t } from 'testcafe'
+
+test.describe('TestName', () => {
+  test('test description', async ({ page }) => {
+    const helpers = createHelpers(page);
+  log('Login')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  log('User can only view project')
+  await helpers.click('#project-select-0')
+  await t
+    expect(page.locator('#project-select-1'))
+    .not.toBeVisible('The element"#project-select-1" should not be present')
+  await helpers.logout()
+
+  log('User with permissions can Handle the Features')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await createFeature(0, 'test_feature', false)
+  await toggleFeature(0, true)
+  await helpers.logout()
+
+  log('User without permissions cannot create traits')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await gotoTraits()
+  const createTraitBtn = page.locator(byId('add-trait'))
+  await expect(createTraitBtn.hasAttribute('disabled')).toBeVisible()
+  await helpers.logout()
+
+  log('User without permissions cannot see audit logs')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await helpers.waitForElementNotExist(byId('audit-log-link'))
+  await helpers.logout()
+
+  log('Create new environment')
+  await helpers.login(E2E_USER, PASSWORD)
+  await helpers.clickByText('My Test Project 6 Env Permission')
+  await helpers.click('#create-env-link')
+  await createEnvironment('Production')
+  await helpers.logout()
+  log('User without permissions cannot see environment')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await helpers.waitForElementVisible(byId('switch-environment-development'))
+  await helpers.waitForElementNotExist(byId('switch-environment-production'))
+  await helpers.logout()
+
+  log('Grant view environment permission')
+  await helpers.login(E2E_USER, PASSWORD)
+  await setUserPermission(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, 'VIEW_ENVIRONMENT', 'Production', 'environment', 'My Test Project 6 Env Permission' )
+  await helpers.logout()
+  log('User with permissions can see environment')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await helpers.waitForElementVisible(byId('switch-environment-production'))
+  await helpers.waitForElementVisible(byId('switch-environment-production'))
+  await helpers.logout()
+
+  log('User with permissions can update feature state')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await createFeature(0,'my_feature',"foo",'A test feature')
+  await editRemoteConfig(0, 'bar')
+  await helpers.logout()
+  log('User without permission cannot create a segment override')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await helpers.click(byId('feature-item-0'))
+  await helpers.click(byId('segment_overrides'))
+  await waitForElementNotClickable('#update-feature-segments-btn')
+  await closeModal()
+  await helpers.logout()
+  log('Grant MANAGE_IDENTITIES permission')
+  await helpers.login(E2E_USER, PASSWORD)
+  await setUserPermission(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, 'MANAGE_SEGMENT_OVERRIDES', 'Development', 'environment', 'My Test Project 6 Env Permission' )
+  await helpers.logout()
+  log('User with permission can create a segment override')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await helpers.click(byId('feature-item-0'))
+  await helpers.click(byId('segment_overrides'))
+  await waitForElementClickable('#update-feature-segments-btn')
+  await closeModal()
+  await helpers.logout()
+
+  log('User without permissions cannot update feature state')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await waitForElementClickable(byId('feature-switch-0-on'))
+  await helpers.click(byId('switch-environment-production'))
+  await waitForElementNotClickable(byId('feature-switch-0-on'))
+  await helpers.click(byId('feature-item-0'))
+  await waitForElementNotClickable(byId('update-feature-btn'))
+  await closeModal()
+  await helpers.logout()
+
+  log('User with permissions can view identities')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await helpers.waitForElementVisible('#users-link')
+  await helpers.logout()
+
+  log('User without permissions cannot add user trait')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await helpers.click('#users-link')
+  await helpers.click(byId('user-item-0'))
+  await waitForElementNotClickable(byId('add-trait'))
+  await helpers.logout()
+
+  log('Grant MANAGE_IDENTITIES permission')
+  await helpers.login(E2E_USER, PASSWORD)
+  await setUserPermission(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, 'MANAGE_IDENTITIES', 'Development', 'environment', 'My Test Project 6 Env Permission' )
+  await helpers.logout()
+  log('User with permissions can add user trait')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await helpers.click('#users-link')
+  await helpers.click(byId('user-item-0'))
+  await waitForElementClickable(byId('add-trait'))
+  await helpers.logout()
+
+
+  log('Remove VIEW_IDENTITIES permission')
+  await helpers.login(E2E_USER, PASSWORD)
+  await setUserPermission(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, 'VIEW_IDENTITIES', 'Development', 'environment', 'My Test Project 6 Env Permission' )
+  await helpers.logout()
+  log('User without permissions cannot view identities')
+  await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
+  await helpers.click('#project-select-0')
+  await helpers.click('#users-link')
+  await helpers.waitForElementVisible(byId('missing-view-identities'))
+  });
+});
