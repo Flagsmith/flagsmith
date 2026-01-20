@@ -1998,42 +1998,38 @@ resolved_reference = "f5dfd44935c41bb6d777deb06c7e06b3e44210ad"
 
 [[package]]
 name = "flagsmith-common"
-version = "3.2.1"
+version = "3.3.0"
 description = "Flagsmith's common library"
 optional = false
-python-versions = ">=3.11,<4.0"
+python-versions = "<4.0,>=3.11"
 groups = ["main", "dev", "licensing", "workflows"]
-files = []
-develop = false
+files = [
+    {file = "flagsmith_common-3.3.0-py3-none-any.whl", hash = "sha256:dcb94458c7fd1bbc7762080d5c11c1d97507beac48a71132209f322112d8c60d"},
+    {file = "flagsmith_common-3.3.0.tar.gz", hash = "sha256:e2839eda7091f13794efbaa7e20895110f9fbf5953dd67f70585b93e7c5864fa"},
+]
 
 [package.dependencies]
-backoff = {version = ">=2.2.1,<3.0.0", optional = true}
-django = {version = ">4,<6", optional = true}
-django-health-check = {version = "*", optional = true}
-djangorestframework = {version = "*", optional = true}
-djangorestframework-recursive = {version = "*", optional = true}
-drf-spectacular = {version = ">=0.28.0,<1", optional = true}
-drf-writable-nested = {version = "*", optional = true}
-environs = {version = "<15", optional = true}
-gunicorn = {version = ">=19.1", optional = true}
-prometheus-client = {version = ">=0.0.16", optional = true}
-psycopg2-binary = {version = ">=2.9,<3", optional = true}
+backoff = {version = ">=2.2.1,<3.0.0", optional = true, markers = "extra == \"task-processor\""}
+django = {version = ">4,<6", optional = true, markers = "extra == \"common-core\" or extra == \"task-processor\""}
+django-health-check = {version = "*", optional = true, markers = "extra == \"common-core\" or extra == \"task-processor\""}
+djangorestframework = {version = "*", optional = true, markers = "extra == \"common-core\""}
+djangorestframework-recursive = {version = "*", optional = true, markers = "extra == \"common-core\""}
+drf-spectacular = {version = ">=0.28.0,<1", optional = true, markers = "extra == \"common-core\""}
+drf-writable-nested = {version = "*", optional = true, markers = "extra == \"common-core\""}
+environs = {version = "<15", optional = true, markers = "extra == \"common-core\""}
+gunicorn = {version = ">=19.1", optional = true, markers = "extra == \"common-core\""}
+prometheus-client = {version = ">=0.0.16", optional = true, markers = "extra == \"common-core\" or extra == \"task-processor\""}
+psycopg2-binary = {version = ">=2.9,<3", optional = true, markers = "extra == \"common-core\""}
 pyfakefs = {version = ">=5,<6", optional = true, markers = "extra == \"test-tools\""}
 pytest-django = {version = ">=4,<5", optional = true, markers = "extra == \"test-tools\""}
-requests = {version = "*", optional = true}
-simplejson = {version = ">=3,<4", optional = true}
+requests = {version = "*", optional = true, markers = "extra == \"common-core\""}
+simplejson = {version = ">=3,<4", optional = true, markers = "extra == \"common-core\""}
 
 [package.extras]
 common-core = ["django (>4,<6)", "django-health-check", "djangorestframework", "djangorestframework-recursive", "drf-spectacular (>=0.28.0,<1)", "drf-writable-nested", "environs (<15)", "gunicorn (>=19.1)", "prometheus-client (>=0.0.16)", "psycopg2-binary (>=2.9,<3)", "requests", "simplejson (>=3,<4)"]
-flagsmith-schemas = ["flagsmith-flag-engine (>6)", "typing_extensions"]
+flagsmith-schemas = ["flagsmith-flag-engine (>6)", "simplejson", "typing-extensions"]
 task-processor = ["backoff (>=2.2.1,<3.0.0)", "django (>4,<6)", "django-health-check", "prometheus-client (>=0.0.16)"]
 test-tools = ["pyfakefs (>=5,<6)", "pytest-django (>=4,<5)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/flagsmith/flagsmith-common"
-reference = "fix/metrics-availability"
-resolved_reference = "5b9903204562b3683281ecd5f0eca93cf752f8d3"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -5334,4 +5330,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "5dd18adbb49f34e92c56eac1836625e4612f6130581700c65867509d2a316fcb"
+content-hash = "4446acda8d9a50e1b59a68ce1721a282c99d5f1cb1189795f9df32d3f1edaf7c"
