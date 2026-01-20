@@ -24,5 +24,4 @@ src/CI_COMMIT_SHA
 .idea
 *.iml
 
-# Local overrides for AI agents
-**/*.local.md
+AGENTS.local.md

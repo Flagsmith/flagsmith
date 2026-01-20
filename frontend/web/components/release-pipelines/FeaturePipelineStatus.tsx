@@ -6,6 +6,7 @@ import AccordionCard from 'components/base/accordion/AccordionCard'
 import { useMemo } from 'react'
 
 import StageStatus from './StageStatus'
+import Utils from 'common/utils/utils'
 
 interface FeaturePipelineStatusProps {
   featureId: number
@@ -16,6 +17,8 @@ const FeaturePipelineStatus = ({
   featureId,
   projectId,
 }: FeaturePipelineStatusProps) => {
+  const isReleasePipelineEnabled =
+    Utils.getFlagsmithHasFeature('release_pipelines')
   const { data: releasePipelines } = useGetReleasePipelinesQuery(
     {
       page_size: 100,
@@ -23,7 +26,7 @@ const FeaturePipelineStatus = ({
       q: 'name',
     },
     {
-      skip: !projectId,
+      skip: !projectId || !isReleasePipelineEnabled,
     },
   )
   const matchingReleasePipeline = useMemo(
@@ -61,7 +64,7 @@ const FeaturePipelineStatus = ({
     [stageHasFeature, featureId],
   )
 
-  if (!stages) return null
+  if (!stages || !isReleasePipelineEnabled) return null
 
   return (
     <AccordionCard title='Release Pipeline'>

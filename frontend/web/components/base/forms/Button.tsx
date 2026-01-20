@@ -23,6 +23,7 @@ export const sizeClassNames = {
   large: 'btn-lg',
   small: 'btn-sm',
   xSmall: 'btn-xsm',
+  xxSmall: 'btn-xxsm',
 }
 
 export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {

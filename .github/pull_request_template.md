@@ -1,6 +1,6 @@
 Thanks for submitting a PR! Please check the boxes below:
 
-- [ ] I have read the [Contributing Guide](CONTRIBUTING.md).
+- [ ] I have read the [Contributing Guide](/CONTRIBUTING.md).
 - [ ] I have added information to `docs/` if required so people know about the feature.
 - [ ] I have filled in the "Changes" section below.
 - [ ] I have filled in the "How did you test this code" section below.
@@ -9,7 +9,8 @@ Thanks for submitting a PR! Please check the boxes below:
 
 Contributes to <!-- insert issue # or URL -->
 
-<!-- Change the above to "Closes" if you know that your changes do not need to be released to resolve the issue. -->
+<!-- Change "Contributes to" to "Closes" if this PR, when merged, completely resolves the referenced issue. 
+Leave "Contributes to" if the changes need to be released first. -->
 
 _Please describe._
 

@@ -3,7 +3,7 @@ title: Authentication
 sidebar_label: Authentication
 ---
 
-The Flags API uses a non-secret **Environment Key** for authentication. This key is safe to be exposed in public, client-side applications.
+The Flags API uses a non-secret **Environment Key** for authentication. This key is safe to be exposed in public, client-side applications. See [Integration Approaches](/best-practices/integration-approaches#client-side-sdk-flag-endpoints-are-public) for security best practices when using client-side keys.
 
 ## Finding Your Environment Key
 

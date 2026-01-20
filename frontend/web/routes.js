@@ -10,7 +10,7 @@ import UsersPage from './components/pages/UsersPage'
 import UserPage from './components/pages/UserPage'
 import UserIdPage from './components/pages/UserIdPage'
 import IntegrationsPage from './components/pages/IntegrationsPage'
-import FlagsPage from './components/pages/FeaturesPage'
+import FlagsPage from './components/pages/features'
 import SegmentsPage from './components/pages/SegmentsPage'
 import OrganisationSettingsPage from './components/pages/organisation-settings'
 import AccountSettingsPage from './components/pages/AccountSettingsPage'
@@ -38,7 +38,6 @@ import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
 import SDKKeysPage from './components/SDKKeysPage'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
-import SplitTestPage from './components/pages/SplitTestPage'
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
 import ProjectChangeRequestsPage from './components/pages/ProjectChangeRequestsPage'
 import ProjectChangeRequestPage from './components/pages/ProjectChangeRequestDetailPage'
@@ -169,11 +168,6 @@ export default (
         path={routes['environment-settings']}
         exact
         component={EnvironmentSettingsPage}
-      />
-      <ParameterizedRoute
-        path={routes['split-tests']}
-        exact
-        component={SplitTestPage}
       />
       <ParameterizedRoute
         path={routes['sdk-keys']}
