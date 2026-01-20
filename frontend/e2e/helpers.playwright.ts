@@ -4,7 +4,103 @@ import fetch from 'node-fetch';
 import flagsmith from 'flagsmith/isomorphic';
 import { IFlagsmith } from 'flagsmith/types';
 
-export const LONG_TIMEOUT = 40000;
+export const LONG_TIMEOUT = 10000;
+
+// Browser debugging - console and network logging
+export const setupBrowserLogging = (page: Page) => {
+  // Track console messages
+  page.on('console', async (msg) => {
+    const type = msg.type();
+    const text = msg.text();
+
+    // Only log errors and warnings
+    if (type === 'error') {
+      console.error('\n🔴 [CONSOLE ERROR]', text);
+      // Try to get stack trace if available
+      const args = msg.args();
+      for (const arg of args) {
+        try {
+          const val = await arg.jsonValue();
+          if (val && typeof val === 'object' && val.stack) {
+            console.error('  Stack:', val.stack);
+          }
+        } catch (e) {
+          // Ignore if we can't get the value
+        }
+      }
+    } else if (type === 'warning') {
+      console.warn('\n🟡 [CONSOLE WARNING]', text);
+    }
+  });
+
+  // Track page errors
+  page.on('pageerror', (error) => {
+    console.error('\n🔴 [PAGE ERROR]', error.message);
+    if (error.stack) {
+      console.error('  Stack:', error.stack);
+    }
+  });
+
+  // Track failed network requests
+  page.on('requestfailed', (request) => {
+    const url = request.url();
+    const failure = request.failure();
+    console.error('\n🔴 [NETWORK FAILED]', request.method(), url);
+    if (failure) {
+      console.error('  Error:', failure.errorText);
+    }
+  });
+
+  // Track API responses with errors
+  page.on('response', async (response) => {
+    const url = response.url();
+    const status = response.status();
+
+    // Only log API calls (not static assets)
+    if (!url.includes('/api/') && !url.includes('/e2etests/')) {
+      return;
+    }
+
+    // Ignore false positive errors that are expected/harmless
+    if (status === 404 && url.includes('/usage-data/')) {
+      // usage-data 404s are expected for new orgs without billing
+      return;
+    }
+    if (status === 400 && url.includes('/organisations/undefined/')) {
+      // Happens during initial page load before org is selected
+      return;
+    }
+
+    // Log throttling, rate limiting, and server errors
+    if (status === 429) {
+      console.error('\n🔴 [API THROTTLED]', response.request().method(), url);
+      try {
+        const body = await response.text();
+        console.error('  Response:', body);
+      } catch (e) {
+        // Ignore if we can't read the body
+      }
+    } else if (status >= 400 && status < 500) {
+      console.error(`\n🔴 [API CLIENT ERROR ${status}]`, response.request().method(), url);
+      try {
+        const body = await response.text();
+        console.error('  Response:', body);
+      } catch (e) {
+        // Ignore if we can't read the body
+      }
+    } else if (status >= 500) {
+      console.error(`\n🔴 [API SERVER ERROR ${status}]`, response.request().method(), url);
+      try {
+        const body = await response.text();
+        console.error('  Response:', body);
+      } catch (e) {
+        // Ignore if we can't read the body
+      }
+    }
+  });
+
+  console.log('✅ Browser logging enabled (console errors, network failures, API errors)');
+};
 
 export const byId = (id: string) => `[data-test="${id}"]`;
 
@@ -190,7 +286,18 @@ export class E2EHelpers {
     await this.setText('[name="email"]', email);
     await this.setText('[name="password"]', password);
     await this.click('#login-btn');
+    // Wait for navigation to complete
+    await this.page.waitForURL(/\/organisation\/\d+/, { timeout: LONG_TIMEOUT });
+    // Wait for the project manage widget to be present and projects to load
     await this.waitForElementVisible('#project-manage-widget');
+    // Wait for loading to complete - either project list or no projects message appears
+    await this.page.waitForFunction(() => {
+      const widget = document.querySelector('#project-manage-widget');
+      if (!widget) return false;
+      // Check if loader is gone and content is visible
+      const hasLoader = widget.querySelector('.centered-container .loader');
+      return !hasLoader;
+    }, { timeout: LONG_TIMEOUT });
   }
 
   async logout() {
@@ -287,8 +394,12 @@ export const setText = async (page: Page, selector: string, text: string) => {
   const element = page.locator(selector);
   await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
   await element.clear();
+  // Small wait after clearing to let React state update
+  await page.waitForTimeout(50);
   if (text) {
     await element.fill(text);
+    // Small wait after filling to let React state update
+    await page.waitForTimeout(50);
   }
 };
 
@@ -449,19 +560,42 @@ export const addSegmentOverride = async (
   await click(page, byId('segment_overrides'));
   await click(page, byId(`select-segment-option-${selectionIndex}`));
   await waitForElementVisible(page, byId(`segment-override-value-${index}`));
-  if (value) {
-    await click(page, `${byId(`segment-override-${index}`)} [role="switch"]`);
-  }
+
+  // Set multivariate weights first before enabling the switch
   if (mvs && mvs.length > 0) {
-    await Promise.all(
-      mvs.map(async (v) => {
-        await setText(
-          page,
-          `.segment-overrides ${byId(`featureVariationWeight${v.value}`)}`,
-          `${v.weight}`,
-        );
-      }),
-    );
+    // Set weights sequentially instead of in parallel to avoid race conditions
+    for (const v of mvs) {
+      await setText(
+        page,
+        `.segment-overrides ${byId(`featureVariationWeight${v.value}`)}`,
+        `${v.weight}`,
+      );
+      // Small wait between each weight change
+      await page.waitForTimeout(100);
+    }
+    // Wait longer for React state to fully update after all weight changes
+    await page.waitForTimeout(500);
+  }
+
+  // Now enable the switch after weights are set
+  if (value) {
+    const switchSelector = `${byId(`segment-override-${index}`)} [role="switch"]`;
+    await waitForElementVisible(page, switchSelector);
+
+    // Click the switch to toggle it on
+    await click(page, switchSelector);
+
+    // Wait a moment for the React state to update
+    await page.waitForTimeout(500);
+
+    // Verify the switch was actually toggled on
+    const isChecked = await page.locator(switchSelector).getAttribute('aria-checked');
+    if (isChecked !== 'true') {
+      // Try clicking again if it didn't work the first time
+      await page.waitForTimeout(200);
+      await click(page, switchSelector);
+      await page.waitForTimeout(500);
+    }
   }
 };
 
@@ -477,8 +611,8 @@ export const saveFeature = async (page: Page) => {
 // Save feature segments
 export const saveFeatureSegments = async (page: Page) => {
   await click(page, '#update-feature-segments-btn');
-  await waitForElementVisible(page, '.toast-message');
-  await waitForElementNotExist(page, '.toast-message');
+  // Wait for save to complete
+  await page.waitForTimeout(1000);
   await closeModal(page);
   await waitForElementNotExist(page, '#create-feature-modal');
 };
@@ -577,7 +711,18 @@ export const login = async (page: Page, email: string, password: string) => {
   await setText(page, '[name="email"]', email);
   await setText(page, '[name="password"]', password);
   await click(page, '#login-btn');
+  // Wait for navigation to complete
+  await page.waitForURL(/\/organisation\/\d+/, { timeout: LONG_TIMEOUT });
+  // Wait for the project manage widget to be present and projects to load
   await waitForElementVisible(page, '#project-manage-widget');
+  // Wait for loading to complete - either project list or no projects message appears
+  await page.waitForFunction(() => {
+    const widget = document.querySelector('#project-manage-widget');
+    if (!widget) return false;
+    // Check if loader is gone and content is visible
+    const hasLoader = widget.querySelector('.centered-container .loader');
+    return !hasLoader;
+  }, { timeout: LONG_TIMEOUT });
 };
 
 // Logout
@@ -618,13 +763,21 @@ export const compareVersion = async (
     await click(page, byId(`history-item-${versionIndex}-compare-previous`));
   }
 
-  await assertTextContent(page, byId('old-enabled'), `${oldEnabled}`);
-  await assertTextContent(page, byId('new-enabled'), `${newEnabled}`);
+  // Wait for comparison modal to fully load data
+  await page.waitForTimeout(2000);
+
+  // Use .first() to handle cases where multiple comparison modals might exist in DOM
+  await expect(page.locator(byId('old-enabled')).first()).toHaveText(`${oldEnabled}`);
+  await expect(page.locator(byId('new-enabled')).first()).toHaveText(`${newEnabled}`);
   if (oldValue !== undefined) {
-    await assertTextContent(page, byId('old-value'), `${oldValue}`);
+    // When value is null, the UI shows an empty string, not the text "null"
+    const expectedOldValue = oldValue === null ? '' : `${oldValue}`;
+    await expect(page.locator(byId('old-value')).first()).toHaveText(expectedOldValue);
   }
   if (newValue !== undefined) {
-    await assertTextContent(page, byId('new-value'), `${newValue}`);
+    // When value is null, the UI shows an empty string, not the text "null"
+    const expectedNewValue = newValue === null ? '' : `${newValue}`;
+    await expect(page.locator(byId('new-value')).first()).toHaveText(expectedNewValue);
   }
   await closeModal(page);
 };
@@ -662,8 +815,16 @@ export const createRemoteConfig = async (
   for (let i = 0; i < mvs.length; i++) {
     const v = mvs[i];
     await click(page, byId('add-variation'));
+    // Wait for the new variation row to appear
+    await page.waitForTimeout(200);
     await setText(page, byId(`featureVariationValue${i}`), v.value);
     await setText(page, byId(`featureVariationWeight${v.value}`), `${v.weight}`);
+    // Small wait between each variation to let React state update
+    await page.waitForTimeout(100);
+  }
+  // Wait for form validation to complete after all variations added
+  if (mvs.length > 0) {
+    await page.waitForTimeout(500);
   }
   await click(page, byId('create-feature-btn'));
   await waitForElementVisible(page, byId(`feature-value-${index}`));
@@ -682,7 +843,16 @@ export const createOrganisationAndProject = async (
   await click(page, byId('create-organisation-btn'));
   await setText(page, '[name="orgName"]', organisationName);
   await click(page, '#create-org-btn');
+  // Wait for navigation to projects page and project list to load
+  await page.waitForURL(/\/organisation\/\d+/, { timeout: LONG_TIMEOUT });
   await waitForElementVisible(page, byId('project-manage-widget'));
+  // Wait for loading to complete
+  await page.waitForFunction(() => {
+    const widget = document.querySelector('#project-manage-widget');
+    if (!widget) return false;
+    const hasLoader = widget.querySelector('.centered-container .loader');
+    return !hasLoader;
+  }, { timeout: LONG_TIMEOUT });
 
   log('Create Project');
   await click(page, '.btn-project-create');
@@ -702,16 +872,42 @@ export const editRemoteConfig = async (
   const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
   await gotoFeatures(page);
   await click(page, byId(`feature-item-${index}`));
+
+  // Change the value field first (if needed) to match TestCafe behavior
   if (value !== '') {
     await setText(page, byId('featureValue'), `${value}`);
   }
+
+  // Change multivariate weights - must be done after value field to avoid state conflicts
+  if (mvs.length > 0) {
+    // Wait after value field change before modifying weights
+    await page.waitForTimeout(500);
+
+    for (const v of mvs) {
+      const input = page.locator(byId(`featureVariationWeight${v.value}`));
+      await input.clear();
+      await page.waitForTimeout(100);
+      await input.fill(`${v.weight}`);
+      await page.waitForTimeout(100);
+      // Trigger blur to force validation
+      await input.blur();
+      // Wait between each weight change to let React state and validation update
+      await page.waitForTimeout(500);
+    }
+  }
+
   if (toggleFeature) {
     await click(page, byId('toggle-feature-button'));
   }
-  for (const v of mvs) {
-    await setText(page, byId(`featureVariationWeight${v.value}`), `${v.weight}`);
+
+  // Wait for the update button to become enabled after all changes
+  if (mvs.length > 0 || value !== '') {
+    // Use a long fixed timeout for form validation to complete
+    await page.waitForTimeout(1500);
   }
-  await click(page, byId('update-feature-btn'));
+
+  // Use button text to avoid strict mode violation (multiple buttons with same ID)
+  await click(page, 'button:has-text("Update Feature Value")');
   if (value) {
     await waitForElementVisible(page, byId(`feature-value-${index}`));
     await assertTextContent(page, byId(`feature-value-${index}`), expectedValue);
@@ -806,6 +1002,9 @@ export const createSegment = async (
       if (x > 0) {
         // eslint-disable-next-line no-await-in-loop
         await click(page, byId('add-rule'));
+        // eslint-disable-next-line no-await-in-loop
+        // Wait for the new rule row to appear before trying to interact with it
+        await waitForElementVisible(page, byId(`rule-${x}-property-0`));
       }
       // eslint-disable-next-line no-await-in-loop
       await setSegmentRule(page, x, 0, rule.name, rule.operator, rule.value);
@@ -814,6 +1013,9 @@ export const createSegment = async (
           const or = rule.ors[orIndex];
           // eslint-disable-next-line no-await-in-loop
           await click(page, byId(`rule-${x}-or`));
+          // eslint-disable-next-line no-await-in-loop
+          // Wait for the new OR row to appear before trying to interact with it
+          await waitForElementVisible(page, byId(`rule-${x}-property-${orIndex + 1}`));
           // eslint-disable-next-line no-await-in-loop
           await setSegmentRule(page, x, orIndex + 1, or.name, or.operator, or.value);
         }

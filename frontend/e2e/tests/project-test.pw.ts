@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../test-setup';
 import {
   assertInputValue,
   assertTextContent,
@@ -44,6 +44,8 @@ test.describe('Project Tests', () => {
     log('Test 2: Change minimum approvals to 3 (manual save)')
     await helpers.setText('[name="env-name"]', '3')
     await helpers.click('#save-env-btn')
+    // Wait for save to complete
+    await page.waitForTimeout(1000)
     log('Verify value 3 persisted after navigation')
     await helpers.click('#features-link')
     await helpers.click('#project-settings-link')

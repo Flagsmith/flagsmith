@@ -7,10 +7,14 @@ async function globalSetup(config: FullConfig) {
   console.log('Starting global setup for E2E tests...');
 
   const e2eTestApi = `${process.env.FLAGSMITH_API_URL || Project.api}e2etests/teardown/`;
-  const apiHealthUrl = `${process.env.FLAGSMITH_API_URL || Project.api}health`;
-  const token = process.env.E2E_TEST_TOKEN
+  let token = process.env.E2E_TEST_TOKEN
     ? process.env.E2E_TEST_TOKEN
     : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`];
+
+  // For local/dev testing, use the default token from docker-compose if not set
+  if (!token && (process.env.E2E_LOCAL === 'true' || process.env.E2E_DEV === 'true')) {
+    token = 'some-token';
+  }
 
   console.log(
     '\n',
@@ -19,30 +23,6 @@ async function globalSetup(config: FullConfig) {
     '\x1b[0m',
     '\n',
   );
-
-  // Wait for API to be ready (max 60 seconds)
-  console.log('Waiting for API to be ready...');
-  const maxWaitTime = 60000; // 60 seconds
-  const startTime = Date.now();
-  let apiReady = false;
-
-  while (!apiReady && Date.now() - startTime < maxWaitTime) {
-    try {
-      const healthRes = await fetch(apiHealthUrl);
-      if (healthRes.ok) {
-        apiReady = true;
-        console.log('\n', '\x1b[32m', 'API is ready', '\x1b[0m', '\n');
-      } else {
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
-      }
-    } catch (error) {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
-    }
-  }
-
-  if (!apiReady) {
-    console.error('\n', '\x1b[31m', 'API health check failed - continuing anyway', '\x1b[0m', '\n');
-  }
 
   // Initialize Flagsmith
   await flagsmith.init({
@@ -67,13 +47,28 @@ async function globalSetup(config: FullConfig) {
       if (res.ok) {
         console.log('\n', '\x1b[32m', 'e2e teardown successful', '\x1b[0m', '\n');
       } else {
-        console.error('\n', '\x1b[31m', 'e2e teardown failed', res.status, '\x1b[0m', '\n');
+        const errorMsg = `e2e teardown failed with status ${res.status}`;
+        console.error('\n', '\x1b[31m', errorMsg, '\x1b[0m', '\n');
+        if (process.env.E2E_LOCAL !== 'true' && process.env.E2E_DEV !== 'true') {
+          throw new Error(errorMsg); // Fail tests early in CI if teardown fails
+        }
       }
     } catch (error) {
-      console.error('\n', '\x1b[31m', 'e2e teardown error:', error, '\x1b[0m', '\n');
+      const errorMsg = `e2e teardown error: ${error.message || String(error)}`;
+      console.error('\n', '\x1b[31m', errorMsg, '\x1b[0m', '\n');
+      if (process.env.E2E_LOCAL !== 'true' && process.env.E2E_DEV !== 'true') {
+        throw error; // Fail tests early in CI if teardown errors
+      }
     }
   } else {
-    console.error('\n', '\x1b[31m', 'e2e teardown failed - no available token', '\x1b[0m', '\n');
+    // Only warn for local/dev testing, don't fail
+    if (process.env.E2E_LOCAL === 'true' || process.env.E2E_DEV === 'true') {
+      console.log('\n', '\x1b[33m', 'e2e teardown skipped (no token) - OK for local testing', '\x1b[0m', '\n');
+    } else {
+      const errorMsg = 'e2e teardown failed - no available token (set E2E_TEST_TOKEN or E2E_TEST_TOKEN_<ENV>)';
+      console.error('\n', '\x1b[31m', errorMsg, '\x1b[0m', '\n');
+      throw new Error(errorMsg); // Fail tests in CI if token is missing
+    }
   }
 
   console.log('Starting E2E tests');

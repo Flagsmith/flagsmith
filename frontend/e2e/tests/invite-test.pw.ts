@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test } from '../test-setup';
 import { assertTextContent, byId, createHelpers, log } from '../helpers.playwright';
 import { E2E_CHANGE_MAIL, E2E_USER, PASSWORD } from '../config';
 

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../test-setup';
 import {
   byId,
   click,
@@ -78,6 +78,8 @@ test.describe('Flag Tests', () => {
   await expect(json.header_size.value).toBe(false)
 
   log('Switch environment')
+  // Navigate back to features list so environment switcher is visible in navbar
+  await helpers.gotoFeatures()
   await helpers.click(byId('switch-environment-production'))
 
   log('Feature should be off under different environment')

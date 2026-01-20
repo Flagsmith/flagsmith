@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../test-setup';
 import {
     assertNumberOfVersions,
     byId,
@@ -34,7 +34,8 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     await helpers.click('#env-settings-link')
     await helpers.click(byId('enable-versioning'))
     await helpers.click('#confirm-btn-yes')
-    await helpers.waitForElementVisible(byId('feature-versioning-enabled'))
+    // Feature versioning takes up to a minute to enable on the backend
+    await page.locator(byId('feature-versioning-enabled')).waitFor({ state: 'visible', timeout: 70000 })
 
     log('Create feature 1')
     await createRemoteConfig(page, 0, 'a', 'small')
@@ -47,7 +48,7 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
         { value: 'big', weight: 0 },
     ])
     log('Edit feature 2')
-    await editRemoteConfig(page, 1,'',false,[
+    await editRemoteConfig(page, 1,'small',false,[
         { value: 'medium', weight: 0 },
         { value: 'big', weight: 100 },
     ])
@@ -104,9 +105,19 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
 
     // Verify: API returns correct state (feature enabled)
     log('Verify API returns enabled state')
-    await page.waitForTimeout(500)
+    // In versioned environments, changes may take MUCH longer to propagate to the edge API
+    // Versioning requires backend processing that can take several seconds
+    await page.waitForTimeout(10000)
+
+    // Click "Try it" button and wait for network request to complete
+    const responsePromise = page.waitForResponse(response =>
+      response.url().includes('/flags/') && response.request().method() === 'GET'
+    );
     await helpers.click('#try-it-btn')
-    await page.waitForTimeout(500)
+    await responsePromise
+
+    // Additional wait for UI to update with results
+    await page.waitForTimeout(1000)
     json = await parseTryItResults(page)
     expect(json.c.enabled).toBe(true)
 

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../test-setup';
 import {
   addSegmentOverride,
   addSegmentOverrideConfig,
@@ -126,15 +126,20 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
     { value: 'medium', weight: 0 },
     { value: 'small', weight: 100 },
   ])
+
   await helpers.click('#update-feature-segments-btn')
+
+  // Wait for success message to appear indicating save completed
+  await page.waitForSelector('.toast-message', { state: 'visible', timeout: 10000 })
+
+  // Wait for toast to disappear
+  await page.waitForSelector('.toast-message', { state: 'hidden', timeout: 10000 })
+
   await closeModal(page)
-  await page.waitForTimeout(2000)
-  await helpers.gotoFeatures()
-  await waitAndRefresh(page, 5000)
 
   await gotoTraits(page)
-  await page.waitForTimeout(3000)
-  await page.reload()
+  await waitAndRefresh(page)
+
   await assertTextContent(page, byId('user-feature-value-0'), '"small"')
 
   // log('Check user now belongs to segment');

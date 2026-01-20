@@ -10,6 +10,8 @@
     "build": "npm run bundle",
     "husky:install": "cd ../ && husky install",
     "test": "npm run test:bundle && cross-env NODE_ENV=production E2E=true npx playwright test",
+    "test:stress": "bash e2e/run-e2e-stress-test.sh",
+    "test:stress:build": "docker compose -f docker-compose-e2e-tests.yml build",
     "test:dev": "cross-env NODE_ENV=production E2E=true E2E_DEV=true npx playwright test --ui",
     "test:devlocal": "cross-env NODE_ENV=production E2E_LOCAL=true E2E_CONCURRENCY=1 E2E=true E2E_DEV=true npx playwright test --ui",
     "test:devBundle": "npm run test:bundle && npm run test:dev",
