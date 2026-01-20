@@ -14,7 +14,7 @@ import {
 import { E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, E2E_USER, PASSWORD } from '../config';
 
 test.describe('Project Permission Tests', () => {
-  test('test description', async ({ page }) => {
+  test('test description @enterprise', async ({ page }) => {
     const helpers = createHelpers(page);
 
   log('User with VIEW_PROJECT can only see their project')

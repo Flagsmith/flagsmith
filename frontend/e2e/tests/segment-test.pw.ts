@@ -76,7 +76,7 @@ const segmentRules =  [
   },
 ]
 
-test('Segment test 1 - Create, update, and manage segments with multivariate flags', async ({ page }) => {
+test('Segment test 1 - Create, update, and manage segments with multivariate flags @oss', async ({ page }) => {
   const helpers = createHelpers(page)
 
   log('Login')
@@ -162,7 +162,7 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
   await deleteFeature(page, 0, 'mv_flag')
 })
 
-test('Segment test 2 - Test segment priority and overrides', async ({ page }) => {
+test('Segment test 2 - Test segment priority and overrides @oss', async ({ page }) => {
   const helpers = createHelpers(page)
 
   log('Login')
@@ -252,7 +252,7 @@ test('Segment test 2 - Test segment priority and overrides', async ({ page }) =>
   await deleteFeature(page, 0, 'config')
 })
 
-test('Segment test 3 - Test user-specific feature overrides', async ({ page }) => {
+test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page }) => {
   const helpers = createHelpers(page)
 
   log('Login')

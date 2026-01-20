@@ -20,7 +20,7 @@ import {
 } from '../config'
 
 test.describe('Roles Tests', () => {
-  test('test description', async ({ page }) => {
+  test('test description @enterprise', async ({ page }) => {
     const helpers = createHelpers(page);
   const rolesProject = 'project-my-test-project-7-role'
   log('Login')

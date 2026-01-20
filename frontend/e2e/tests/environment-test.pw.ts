@@ -12,7 +12,7 @@ import {
 import { PASSWORD, E2E_USER } from '../config'
 
 test.describe('Environment Tests', () => {
-  test('test description', async ({ page }) => {
+  test('test description @oss', async ({ page }) => {
     const helpers = createHelpers(page);
   log('Login')
   await helpers.login(E2E_USER, PASSWORD)

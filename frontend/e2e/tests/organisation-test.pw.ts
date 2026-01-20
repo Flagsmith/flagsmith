@@ -16,7 +16,7 @@ import {
 import { E2E_SEPARATE_TEST_USER, PASSWORD } from '../config'
 
 test.describe('Organisation Tests', () => {
-  test('test description', async ({ page }) => {
+  test('test description @oss', async ({ page }) => {
     const helpers = createHelpers(page);
   log('Login')
   await helpers.login(E2E_SEPARATE_TEST_USER, PASSWORD)

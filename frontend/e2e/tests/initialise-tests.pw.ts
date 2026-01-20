@@ -8,7 +8,7 @@ import {
 import { E2E_SIGN_UP_USER, PASSWORD } from '../config';
 
 test.describe('Signup', () => {
-  test('Create Organisation and Project', async ({ page }) => {
+  test('Create Organisation and Project @oss', async ({ page }) => {
     const helpers = createHelpers(page);
     const flagsmith = await getFlagsmith();
 

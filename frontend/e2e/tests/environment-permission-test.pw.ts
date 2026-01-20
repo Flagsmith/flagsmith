@@ -16,7 +16,7 @@ import {
 } from '../config';
 
 test.describe('Environment Permission Tests', () => {
-  test('test description', async ({ page }) => {
+  test('test description @enterprise', async ({ page }) => {
     const helpers = createHelpers(page);
   log('Login')
   await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)

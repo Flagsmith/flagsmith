@@ -15,7 +15,7 @@ import {
 } from '../helpers.playwright';
 import { E2E_USER, PASSWORD } from '../config';
 
-test('Versioning tests - Create, edit, and compare feature versions', async ({ page }) => {
+test('Versioning tests - Create, edit, and compare feature versions @oss', async ({ page }) => {
     const helpers = createHelpers(page)
     const flagsmith = await getFlagsmith()
     const hasFeature = flagsmith.hasFeature("feature_versioning")

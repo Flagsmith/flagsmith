@@ -15,7 +15,7 @@ import {
 import { E2E_USER, PASSWORD } from '../config'
 
 test.describe('Project Tests', () => {
-  test('test description', async ({ page }) => {
+  test('test description @oss', async ({ page }) => {
     const helpers = createHelpers(page);
   const flagsmith = await getFlagsmith()
   const hasSegmentChangeRequests = flagsmith.hasFeature('segment_change_requests')

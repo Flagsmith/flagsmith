@@ -5,7 +5,7 @@ import { E2E_CHANGE_MAIL, E2E_USER, PASSWORD } from '../config';
 const invitePrefix = `flagsmith${new Date().valueOf()}`
 const inviteEmail = `${invitePrefix}@restmail.net`
 test.describe('Invite Tests', () => {
-  test('test description', async ({ page }) => {
+  test('test description @oss', async ({ page }) => {
     const helpers = createHelpers(page);
   log('Login')
   await helpers.login(E2E_USER, PASSWORD)
