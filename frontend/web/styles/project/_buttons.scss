@@ -341,6 +341,13 @@ button.btn {
     font-size: $font-caption-sm;
     border-radius: $border-radius-sm;
   }
+  &-xxsm {
+    padding: 0 12px;
+    line-height: $btn-line-height-xxsm;
+    height: $btn-line-height-xxsm;
+    font-size: $font-caption-sm;
+    border-radius: $border-radius-sm;
+  }
 }
 
 .btn-link {

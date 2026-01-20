@@ -1,11 +1,9 @@
-import _ from 'lodash'
 import { useMemo } from 'react'
 
 import Utils from 'common/utils/utils'
 import ModalHR from './ModalHR'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
-import { Identity } from 'common/types/responses'
 import { useGetReleasePipelinesQuery } from 'common/services/useReleasePipelines'
 import AddToReleasePipelineModal from 'components/release-pipelines/AddToReleasePipelineModal'
 import RemoveFromReleasePipelineModal from 'components/release-pipelines/RemoveFromReleasePipelineModal'
@@ -24,7 +22,6 @@ export interface FlagValueFooterProps {
   isInvalid: boolean
   existingChangeRequest: boolean
   onSaveFeatureValue: (schedule?: boolean) => void
-  identity: Identity
 }
 
 const FlagValueFooter = ({
@@ -32,7 +29,6 @@ const FlagValueFooter = ({
   environmentName,
   existingChangeRequest,
   featureName,
-  identity,
   is4Eyes,
   isInvalid,
   isSaving,
@@ -116,17 +112,14 @@ const FlagValueFooter = ({
             <Permission
               level='environment'
               tags={projectFlag?.tags}
-              permission={Utils.getManageFeaturePermission(is4Eyes, identity)}
+              permission={Utils.getManageFeaturePermission(is4Eyes)}
               id={environmentId}
             >
               {({ permission: savePermission }) =>
                 Utils.renderWithPermission(
                   savePermission,
                   Constants.environmentPermissions(
-                    Utils.getManageFeaturePermissionDescription(
-                      is4Eyes,
-                      identity,
-                    ),
+                    Utils.getManageFeaturePermissionDescription(is4Eyes),
                   ),
                   <>
                     {!is4Eyes && (

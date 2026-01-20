@@ -193,6 +193,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
                   ),
                   <div className='text-center'>
                     <Button
+                      size='small'
                       className=''
                       disabled={!createEditTagPermission}
                       onClick={() => {
@@ -215,14 +216,13 @@ const AddEditTags: FC<AddEditTagsType> = ({
                 <Loader />
               </div>
             )}
-            <div className='tag-list d-flex flex-column gap-4'>
+            <div className='tag-list d-flex flex-column gap-3'>
               {filteredTags &&
                 filteredTags.map((tag) => (
                   <div key={tag.id}>
                     <Row>
                       <Flex>
                         <Tag
-                          className='px-2 py-2'
                           onClick={selectTag}
                           selected={value?.includes(tag.id)}
                           tag={tag}
@@ -240,13 +240,13 @@ const AddEditTags: FC<AddEditTagsType> = ({
                                   : 'opacity-0 pointer-events-none'
                               }
                             >
-                              <Icon name='setting' fill='#9DA4AE' />
+                              <Icon width={18} name='setting' fill='#9DA4AE' />
                             </div>
                             <div
                               onClick={() => confirmDeleteTag(tag)}
                               className='ml-3 clickable'
                             >
-                              <Icon name='trash-2' fill='#9DA4AE' />
+                              <Icon width={18} name='trash-2' fill='#ef4d56' />
                             </div>
                           </>
                         )}
