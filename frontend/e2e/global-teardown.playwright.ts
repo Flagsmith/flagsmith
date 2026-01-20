@@ -5,8 +5,9 @@ import * as archiver from 'archiver';
 
 let upload: ((file: string) => Promise<void>) | null = null;
 try {
-  upload = require('../../bin/upload-file');
+  upload = require('../bin/upload-file');
 } catch (e) {
+  console.log('Upload module not available:', e.message);
   // upload-file module not available, will skip uploading
 }
 
