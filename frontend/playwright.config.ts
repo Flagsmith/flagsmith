@@ -42,7 +42,7 @@ export default defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ['html', { open: 'never', outputFolder: './e2e/playwright-report' }],
-    ['line'],
+    ['list', { printSteps: false }], // Only shows test names with pass/fail status
   ],
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,

@@ -30,4 +30,4 @@ serve:
 test:
 	docker compose run frontend \
 		npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test -- $(opts) \
-		|| (echo "=== Frontend logs ===" && docker compose logs frontend && echo "=== API logs ===" && docker compose logs flagsmith-api; exit 1)
+		|| (echo "\n=== Frontend logs ===" && docker compose logs frontend && echo "\n=== API logs ===" && docker compose logs flagsmith-api; exit 1)

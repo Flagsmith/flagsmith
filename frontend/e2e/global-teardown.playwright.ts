@@ -29,7 +29,7 @@ async function globalTeardown(config: FullConfig) {
   console.log('Running global teardown for E2E tests...');
 
   // Upload screenshots/videos if they exist and not in dev mode
-  const dir = path.join(__dirname, '../test-results');
+  const dir = path.join(__dirname, 'test-results');
 
   if (fs.existsSync(dir) && !process.env.E2E_DEV) {
     try {
@@ -60,11 +60,11 @@ async function globalTeardown(config: FullConfig) {
       }
 
       // Upload HTML report if it exists
-      const reportDir = path.join(__dirname, '../playwright-report');
+      const reportDir = path.join(__dirname, 'playwright-report');
       if (fs.existsSync(reportDir) && upload) {
         try {
           console.log('Zipping Playwright HTML report...');
-          const zipPath = path.join(__dirname, '../playwright-report.zip');
+          const zipPath = path.join(__dirname, 'playwright-report.zip');
           await zipDirectory(reportDir, zipPath);
           console.log('Uploading Playwright HTML report...');
           await upload(zipPath);
