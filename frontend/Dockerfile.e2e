@@ -1,4 +1,8 @@
-FROM ghcr.io/flagsmith/e2e-frontend-base:latest
+FROM node:22-bookworm
+
+# Install system dependencies for Playwright
+RUN apt-get update && apt-get install -y \
+    && apt-get -y autoclean
 
 # Build Flagsmith
 WORKDIR /srv/flagsmith
@@ -9,6 +13,10 @@ COPY frontend/env/ ./env/
 # Run npm ci before copying source code to improve caching of layers.
 ENV ENV=e2e
 RUN npm ci
+
+# Install Playwright browsers with system dependencies
+# This ensures the correct Firefox version matching the Playwright version in package.json
+RUN npx playwright install --with-deps firefox
 
 COPY frontend .
 COPY .release-please-manifest.json ./.versions.json
