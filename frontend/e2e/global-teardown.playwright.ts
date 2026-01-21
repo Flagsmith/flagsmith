@@ -38,7 +38,7 @@ async function globalTeardown(config: FullConfig) {
       console.log('Uploading test artifacts...');
       const files: string[] = [];
 
-      // Recursively find all screenshot and video files
+      // Recursively find only failed test artifacts
       const findFiles = (currentDir: string) => {
         const items = fs.readdirSync(currentDir);
         for (const item of items) {
@@ -47,7 +47,10 @@ async function globalTeardown(config: FullConfig) {
           if (stat.isDirectory()) {
             findFiles(fullPath);
           } else if (item.match(/\.(png|jpg|jpeg|mp4|webm)$/i)) {
-            files.push(fullPath);
+            // Only upload artifacts from failed tests
+            if (fullPath.includes('test-failed')) {
+              files.push(fullPath);
+            }
           }
         }
       };

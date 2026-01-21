@@ -120,6 +120,8 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
 
   // Wait for trait to be applied and feature values to load
   await waitAndRefresh(page)
+  // Wait for page to fully load after refresh before checking elements
+  await page.waitForLoadState('networkidle')
   await helpers.waitForElementVisible(byId('user-feature-value-0'))
   await assertTextContent(page, byId('user-feature-value-0'), '"medium"')
   await helpers.gotoFeatures()

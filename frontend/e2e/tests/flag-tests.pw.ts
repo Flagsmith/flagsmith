@@ -79,8 +79,11 @@ test.describe('Flag Tests', () => {
   // Navigate back to features list so environment switcher is visible in navbar
   await helpers.gotoFeatures()
   await waitForNetworkIdle(page)
-  await waitForElementVisible(page, byId('switch-environment-production'))
-  await page.waitForTimeout(500)
+  // Wait for environment switcher to be visible and actionable (not just visible)
+  const envSwitcher = page.locator(byId('switch-environment-production'))
+  await envSwitcher.waitFor({ state: 'visible', timeout: LONG_TIMEOUT })
+  // Ensure element is stable and clickable (not animating or obscured)
+  await expect(envSwitcher).toBeEnabled()
   await helpers.click(byId('switch-environment-production'))
 
   log('Feature should be off under different environment')
