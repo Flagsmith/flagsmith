@@ -34,10 +34,6 @@ services:
       DJANGO_ALLOWED_HOSTS: '*' # Change this in production
       FLAGSMITH_DOMAIN: localhost:8000 # Change this in production
       DJANGO_SECRET_KEY: secret # Change this in production
-
-      # E2E Testing Support
-      E2E_TEST_AUTH_TOKEN: some-token
-      ENABLE_FE_E2E: 'True'
       # PREVENT_SIGNUP: 'true' # Uncomment to prevent any additional signups
       # ALLOW_REGISTRATION_WITHOUT_INVITE: 'true' # Uncomment and set to false to only allow signups via invitations
 

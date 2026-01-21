@@ -1,64 +1,9 @@
 import { execSync } from 'child_process';
-import fetch from 'node-fetch';
-import Project from '../common/project';
+import { runTeardown } from './teardown';
 
 require('dotenv').config();
 
 const RETRIES = parseInt(process.env.E2E_RETRIES || '1', 10);
-
-async function runTeardown() {
-  console.log('\n\x1b[36m%s\x1b[0m\n', 'Running E2E teardown...');
-
-  const e2eTestApi = `${process.env.FLAGSMITH_API_URL || Project.api}e2etests/teardown/`;
-  const token = process.env.E2E_TEST_TOKEN
-    ? process.env.E2E_TEST_TOKEN
-    : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`];
-
-  if (!token) {
-    console.error('\x1b[31m%s\x1b[0m\n', 'Error: No E2E_TEST_TOKEN found');
-    return false;
-  }
-
-  const maxAttempts = 3;
-  const delayMs = 2000; // 2 seconds between attempts
-
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    if (attempt > 0) {
-      console.log(`\x1b[33m%s\x1b[0m`, `Retrying teardown (attempt ${attempt + 1}/${maxAttempts})...`);
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-    }
-
-    try {
-      const res = await fetch(e2eTestApi, {
-        body: JSON.stringify({}),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'X-E2E-Test-Auth-Token': token.trim(),
-        },
-        method: 'POST',
-      });
-
-      if (res.ok) {
-        console.log('\x1b[32m%s\x1b[0m\n', '✓ E2E teardown successful');
-        return true;
-      } else {
-        console.error('\x1b[31m%s\x1b[0m', `✗ E2E teardown failed: ${res.status}`);
-        if (attempt < maxAttempts - 1) {
-          console.log(''); // newline before retry message
-        }
-      }
-    } catch (error) {
-      console.error('\x1b[31m%s\x1b[0m', `✗ E2E teardown error: ${error}`);
-      if (attempt < maxAttempts - 1) {
-        console.log(''); // newline before retry message
-      }
-    }
-  }
-
-  console.log('\x1b[31m%s\x1b[0m\n', `✗ E2E teardown failed after ${maxAttempts} attempts`);
-  return false;
-}
 
 function runPlaywright(args: string[], quietMode: boolean): boolean {
   try {
