@@ -69,6 +69,7 @@ logger = logging.getLogger(__name__)
 @method_decorator(
     name="list",
     decorator=extend_schema(
+        tags=["mcp"],
         parameters=[
             OpenApiParameter(
                 name="project",
@@ -77,7 +78,13 @@ logger = logging.getLogger(__name__)
                 required=False,
                 type=int,
             )
-        ]
+        ],
+        extensions={
+            "x-gram": {
+                "name": "list_environments",
+                "description": "Lists all environments the user has access to",
+            },
+        },
     ),
 )
 class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]

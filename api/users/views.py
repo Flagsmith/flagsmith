@@ -11,7 +11,7 @@ from django.http import (
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django.views.generic.edit import FormView
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
@@ -160,6 +160,17 @@ def password_reset_redirect(
     return redirect(f"{current_site_url}/password-reset/{uidb64}/{token}")
 
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "list_organization_groups",
+                "description": "Retrieves all permission groups within the organization.",
+            },
+        },
+    ),
+)
 class UserPermissionGroupViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
 
