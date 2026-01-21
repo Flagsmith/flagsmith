@@ -173,7 +173,7 @@ django_cockroachdb = "~4.2"
 optional = true
 
 [tool.poetry.group.auth-controller.dependencies]
-flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.1.4" }
+flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", branch = "deps/support-django-5" }
 
 [tool.poetry.group.saml]
 optional = true

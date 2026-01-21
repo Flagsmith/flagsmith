@@ -1453,18 +1453,18 @@ Django = ">=3.2"
 
 [[package]]
 name = "django-multiselectfield"
-version = "0.1.12"
+version = "1.0.1"
 description = "Django multiple select field"
 optional = false
 python-versions = "*"
 groups = ["auth-controller"]
 files = [
-    {file = "django-multiselectfield-0.1.12.tar.gz", hash = "sha256:d0a4c71568fb2332c71478ffac9f8708e01314a35cf923dfd7a191343452f9f9"},
-    {file = "django_multiselectfield-0.1.12-py3-none-any.whl", hash = "sha256:c270faa7f80588214c55f2d68cbddb2add525c2aa830c216b8a198de914eb470"},
+    {file = "django_multiselectfield-1.0.1-py3-none-any.whl", hash = "sha256:18dc14801f7eca844a48e21cba6d8ec35b9b581f2373bbb2cb75e6994518259a"},
+    {file = "django_multiselectfield-1.0.1.tar.gz", hash = "sha256:3f8b4fff3e07d4a91c8bb4b809bc35caeb22b41769b606f4c9edc53b8d72a667"},
 ]
 
 [package.dependencies]
-django = ">=1.4"
+django = ">=3.2"
 
 [[package]]
 name = "django-ordered-model"
@@ -1970,13 +1970,13 @@ files = []
 develop = false
 
 [package.dependencies]
-django-multiselectfield = "0.1.12"
+django-multiselectfield = ">=1.0.1,<2"
 
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-auth-controller"
-reference = "v0.1.4"
-resolved_reference = "f5dfd44935c41bb6d777deb06c7e06b3e44210ad"
+reference = "deps/support-django-5"
+resolved_reference = "1675f159cd127465580bf716a4398eb2a0c4e3a1"
 
 [[package]]
 name = "flagsmith-common"
@@ -5276,4 +5276,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "0bb3b3343eb02e2d63cd01e5e3d36d08b7d230758aa2ecf4421d487a31db0f16"
+content-hash = "72dbf4f3b3548cd029f61ef80b3f7812f99b4ff064f5e9f23107922bfc274901"
