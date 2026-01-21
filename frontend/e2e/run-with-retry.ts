@@ -19,28 +19,45 @@ async function runTeardown() {
     return false;
   }
 
-  try {
-    const res = await fetch(e2eTestApi, {
-      body: JSON.stringify({}),
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-E2E-Test-Auth-Token': token.trim(),
-      },
-      method: 'POST',
-    });
+  const maxAttempts = 3;
+  const delayMs = 2000; // 2 seconds between attempts
 
-    if (res.ok) {
-      console.log('\x1b[32m%s\x1b[0m\n', '✓ E2E teardown successful');
-      return true;
-    } else {
-      console.error('\x1b[31m%s\x1b[0m\n', `✗ E2E teardown failed: ${res.status}`);
-      return false;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    if (attempt > 0) {
+      console.log(`\x1b[33m%s\x1b[0m`, `Retrying teardown (attempt ${attempt + 1}/${maxAttempts})...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
     }
-  } catch (error) {
-    console.error('\x1b[31m%s\x1b[0m\n', `✗ E2E teardown error: ${error}`);
-    return false;
+
+    try {
+      const res = await fetch(e2eTestApi, {
+        body: JSON.stringify({}),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-E2E-Test-Auth-Token': token.trim(),
+        },
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        console.log('\x1b[32m%s\x1b[0m\n', '✓ E2E teardown successful');
+        return true;
+      } else {
+        console.error('\x1b[31m%s\x1b[0m', `✗ E2E teardown failed: ${res.status}`);
+        if (attempt < maxAttempts - 1) {
+          console.log(''); // newline before retry message
+        }
+      }
+    } catch (error) {
+      console.error('\x1b[31m%s\x1b[0m', `✗ E2E teardown error: ${error}`);
+      if (attempt < maxAttempts - 1) {
+        console.log(''); // newline before retry message
+      }
+    }
   }
+
+  console.log('\x1b[31m%s\x1b[0m\n', `✗ E2E teardown failed after ${maxAttempts} attempts`);
+  return false;
 }
 
 function runPlaywright(args: string[], quietMode: boolean): boolean {
@@ -65,7 +82,8 @@ async function main() {
 
   // Get additional args passed to the script (e.g., test file names, -g patterns)
   const extraArgs = process.argv.slice(2);
-  const quietMode = process.env.QUIET === '1';
+  const verboseMode = process.env.VERBOSE === '1';
+  const quietMode = !verboseMode;
 
   while (attempt <= RETRIES) {
     if (attempt > 0) {

@@ -79,25 +79,22 @@ jobs:
         run: depot pull-token | docker login -u x-token --password-stdin registry.depot.dev
 
       - name: Run tests on dockerised frontend
-        uses: nick-fields/retry@v3
-        with:
-          shell: bash
-          command: |
-            cd frontend
-            make test
-          max_attempts: 2
-          retry_on: error
-          timeout_minutes: 20
-          on_retry_command: |
-            cd frontend
-            docker compose down --remove-orphans || true
+        working-directory: frontend
+        run: make test
         env:
           opts: ${{ inputs.args }}
           API_IMAGE: ${{ inputs.api-image }}
           E2E_IMAGE: ${{ inputs.e2e-image }}
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
+          E2E_RETRIES: 1
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        timeout-minutes: 20
+
+      - name: Cleanup E2E services
+        if: always()
+        working-directory: frontend
+        run: docker compose down --remove-orphans || true
 
       - name: Copy results.json to HTML report
         if: always()
