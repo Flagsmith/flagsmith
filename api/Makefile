@@ -113,6 +113,12 @@ serve-with-task-processor: TASK_RUN_METHOD=TASK_PROCESSOR
 serve-with-task-processor:
 	make -j2 serve run-task-processor
 
+.PHONY: generate-flagsmith-sdk-openapi
+generate-flagsmith-sdk-openapi:
+	poetry run python manage.py spectacular | \
+	  npx openapi-format /dev/fd/0 \
+	    --filterFile openapi-filter-flagsmith-sdk.yml
+
 .PHONY: generate-ld-client-types
 generate-ld-client-types:
 	curl -sSL https://app.launchdarkly.com/api/v2/openapi.json | \
