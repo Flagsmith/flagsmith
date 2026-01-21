@@ -2,9 +2,48 @@ import { FullConfig } from '@playwright/test';
 import fetch from 'node-fetch';
 import flagsmith from 'flagsmith/isomorphic';
 import Project from '../common/project';
+import * as fs from 'fs';
+import * as path from 'path';
 
 async function globalSetup(config: FullConfig) {
   console.log('Starting global setup for E2E tests...');
+
+  // Clear previous test results and reports (skip on retries to preserve failed.json)
+  const testResultsDir = path.join(__dirname, 'test-results');
+  const reportDir = path.join(__dirname, 'playwright-report');
+
+  if (!process.env.E2E_SKIP_CLEANUP) {
+    if (fs.existsSync(testResultsDir)) {
+      // Preserve error-context.md files from previous runs for debugging
+      // Only delete test result directories that don't contain error-context.md
+      const entries = fs.readdirSync(testResultsDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const errorContextPath = path.join(testResultsDir, entry.name, 'error-context.md');
+          if (!fs.existsSync(errorContextPath)) {
+            // No error context - safe to delete
+            fs.rmSync(path.join(testResultsDir, entry.name), { recursive: true, force: true });
+          }
+        } else {
+          // Delete files in test-results root (like .last-run.json, results.json)
+          fs.unlinkSync(path.join(testResultsDir, entry.name));
+        }
+      }
+      console.log('Cleared previous test results (preserved error contexts)');
+    }
+
+    if (fs.existsSync(reportDir)) {
+      fs.rmSync(reportDir, { recursive: true, force: true });
+      console.log('Cleared previous HTML report');
+    }
+  } else {
+    console.log('Skipping cleanup (retry attempt)');
+  }
+
+  // Ensure test-results directory exists for the JSON reporter
+  if (!fs.existsSync(testResultsDir)) {
+    fs.mkdirSync(testResultsDir, { recursive: true });
+  }
 
   const e2eTestApi = `${process.env.FLAGSMITH_API_URL || Project.api}e2etests/teardown/`;
   const token = process.env.E2E_TEST_TOKEN
@@ -26,33 +65,52 @@ async function globalSetup(config: FullConfig) {
     fetch,
   });
 
-  // Teardown previous test data
+  // Teardown previous test data with retry logic
   if (token) {
-    try {
-      const res = await fetch(e2eTestApi, {
-        body: JSON.stringify({}),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'X-E2E-Test-Auth-Token': token.trim(),
-        },
-        method: 'POST',
-      });
+    const maxAttempts = 3;
+    const delayMs = 2000;
+    let teardownSuccess = false;
 
-      if (res.ok) {
-        console.log('\n', '\x1b[32m', 'e2e teardown successful', '\x1b[0m', '\n');
-      } else {
-        const errorMsg = `e2e teardown failed with status ${res.status}`;
-        console.error('\n', '\x1b[31m', errorMsg, '\x1b[0m', '\n');
-        if (process.env.E2E_LOCAL !== 'true' && process.env.E2E_DEV !== 'true') {
-          throw new Error(errorMsg); // Fail tests early in CI if teardown fails
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      if (attempt > 0) {
+        console.log(`\x1b[33m%s\x1b[0m`, `Retrying teardown (attempt ${attempt + 1}/${maxAttempts})...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+
+      try {
+        const res = await fetch(e2eTestApi, {
+          body: JSON.stringify({}),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-E2E-Test-Auth-Token': token.trim(),
+          },
+          method: 'POST',
+        });
+
+        if (res.ok) {
+          console.log('\n', '\x1b[32m', 'e2e teardown successful', '\x1b[0m', '\n');
+          teardownSuccess = true;
+          break;
+        } else {
+          console.error('\x1b[31m%s\x1b[0m', `✗ E2E teardown failed: ${res.status}`);
+          if (attempt < maxAttempts - 1) {
+            console.log('');
+          }
+        }
+      } catch (error) {
+        console.error('\x1b[31m%s\x1b[0m', `✗ E2E teardown error: ${error.message || String(error)}`);
+        if (attempt < maxAttempts - 1) {
+          console.log('');
         }
       }
-    } catch (error) {
-      const errorMsg = `e2e teardown error: ${error.message || String(error)}`;
+    }
+
+    if (!teardownSuccess) {
+      const errorMsg = `e2e teardown failed after ${maxAttempts} attempts`;
       console.error('\n', '\x1b[31m', errorMsg, '\x1b[0m', '\n');
       if (process.env.E2E_LOCAL !== 'true' && process.env.E2E_DEV !== 'true') {
-        throw error; // Fail tests early in CI if teardown errors
+        throw new Error(errorMsg); // Fail tests early in CI if teardown fails
       }
     }
   } else {

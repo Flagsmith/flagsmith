@@ -6,13 +6,22 @@ Clean up E2E tests by removing unnecessary timeouts/waits and documenting necess
 
 - Test files location: `frontend/e2e/tests/*.pw.ts`
 - Test helpers: `frontend/e2e/helpers.playwright.ts`
+- Test results: Individual test directories in `frontend/e2e/test-results/`
+- **For EACH failed test**, a directory is created with these files:
+  - `failed.json` - Summary of failures with error messages and stack traces
+  - `error-context.md` - **MOST VALUABLE** - Page snapshot showing DOM state, field values, button states
+  - `trace.zip` - Detailed execution trace (unzip to get action logs)
+  - Screenshots (`.png`) and videos (`.webm`)
 - Tests should be fast, reliable, and well-documented
 
 ## Workflow
 
+**IMPORTANT: Always start by changing to the frontend directory** - the `.env` file and dependencies are located there.
+
 1. **Scan all test files:**
    ```bash
-   ls frontend/e2e/tests/*.pw.ts
+   cd frontend
+   ls e2e/tests/*.pw.ts
    ```
 
 2. **For each test file, look for:**
@@ -73,9 +82,24 @@ Clean up E2E tests by removing unnecessary timeouts/waits and documenting necess
        SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/modified-test.pw.ts --quiet
      done
      ```
-   - If any run fails, investigate whether the optimisation caused it
-   - If failures are due to removed waits, add them back with proper comments
-   - Only keep optimisations that pass all 3 runs
+   - **If any run fails, ALWAYS READ TRACES FIRST:**
+     1. **Read error-context.md** in the failed test directory:
+        - Shows exact DOM state when test failed
+        - YAML tree with all elements, their states, and data-test attributes
+        - Check if expected elements exist and their actual values
+        - Verify selector is correct by searching for the data-test attribute
+     2. **If error-context.md doesn't show the issue**, unzip and check trace files:
+        ```bash
+        cd frontend/e2e/test-results/<failed-test-directory>
+        unzip -q trace.zip
+        grep -i "error\|failed" 0-trace.network  # Check for network errors
+        ```
+     3. **Only after analyzing traces**, investigate whether the optimisation caused it:
+        - Wrong selector → Update to match actual DOM from error-context.md
+        - Missing wait → If optimisation removed a necessary wait, add it back with proper comment explaining why it's needed
+        - Element hidden → Check if removed wait was allowing element to become visible
+        - Race condition → If timeout removal caused timing issue, use event-based wait instead
+   - Only keep optimisations that pass all 3 runs consistently
 
 6. **Report changes:**
    - List files modified and verified

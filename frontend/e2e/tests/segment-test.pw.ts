@@ -3,7 +3,10 @@ import {
   addSegmentOverride,
   addSegmentOverrideConfig,
   assertTextContent,
+  assertUserFeatureValue,
   byId,
+  clickUserFeature,
+  clickUserFeatureSwitch,
   closeModal,
   createFeature,
   createRemoteConfig,
@@ -20,6 +23,7 @@ import {
   setSegmentOverrideIndex,
   viewFeature,
   waitAndRefresh,
+  waitForUserFeatureSwitch,
   cloneSegment,
   setSegmentRule,
   assertInputValue,
@@ -101,29 +105,25 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
   await helpers.gotoSegments()
   const lastRule = segmentRules[segmentRules.length - 1]
   await createSegment(page, 0, 'segment_to_update', [lastRule])
-  await helpers.click(byId('segment-0-name'))
+  await helpers.navigateToSegment('segment_to_update')
   await setSegmentRule(page, 0, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
   await helpers.click(byId('update-segment'))
   log('Check segment rule value')
   await helpers.gotoSegments()
-  await helpers.click(byId('segment-0-name'))
+  await helpers.navigateToSegment('segment_to_update')
   await assertInputValue(page, byId(`rule-${0}-value-0`), `${lastRule.value + 1}`)
   await deleteSegmentFromPage(page, 'segment_to_update')
 
   log('Create segment')
   await createSegment(page, 0, '18_or_19', segmentRules)
 
-
   log('Add segment trait for user')
   await gotoTraits(page)
-  await createTrait(page, 0, 'age', 18)
+  await createTrait(page, 'age', 18)
 
   // Wait for trait to be applied and feature values to load
   await waitAndRefresh(page)
-  // Wait for page to fully load after refresh before checking elements
-  await page.waitForLoadState('networkidle')
-  await helpers.waitForElementVisible(byId('user-feature-value-0'))
-  await assertTextContent(page, byId('user-feature-value-0'), '"medium"')
+  await assertUserFeatureValue(page, 'mv_flag', '"medium"')
   await helpers.gotoFeatures()
   await gotoFeature(page, 0)
 
@@ -145,20 +145,21 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
   await gotoTraits(page)
   await waitAndRefresh(page)
 
-  await assertTextContent(page, byId('user-feature-value-0'), '"small"')
+  await assertUserFeatureValue(page, 'mv_flag', '"small"')
 
   // log('Check user now belongs to segment');
-  await assertTextContent(page, byId('segment-0-name'), '18_or_19')
+  const segmentElement = page.locator('[data-test^="segment-"][data-test$="-name"]').filter({ hasText: '18_or_19' });
+  await expect(segmentElement).toBeVisible()
 
   // log('Delete segment trait for user');
-  await deleteTrait(page, 0)
+  await deleteTrait(page, 'age')
 
   log('Set user MV override')
-  await helpers.click(byId('user-feature-0'))
+  await clickUserFeature(page, 'mv_flag')
   await helpers.click(byId('select-variation-medium'))
   await helpers.click(byId('update-feature-btn'))
   await waitAndRefresh(page)
-  await assertTextContent(page, byId('user-feature-value-0'), '"medium"')
+  await assertUserFeatureValue(page, 'mv_flag', '"medium"')
 
   log('Clone segment')
   await helpers.gotoSegments()
@@ -223,12 +224,14 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
 
   log('Set user in segment_1')
   await goToUser(page, 0)
-  await createTrait(page, 0, 'trait', 1)
-  await createTrait(page, 1, 'trait2', 2)
-  await createTrait(page, 2, 'trait3', 3)
+  await createTrait(page, 'trait', 1)
+  await createTrait(page, 'trait2', 2)
+  await createTrait(page, 'trait3', 3)
   // await assertTextContent(page, byId('segment-0-name'), 'segment_1'); todo: view user segments disabled in edge
-  await helpers.waitForElementVisible(byId('user-feature-switch-1-on'))
-  await assertTextContent(page, byId('user-feature-value-0'), '1')
+  await waitForUserFeatureSwitch(page, 'flag', 'on')
+  // Wait for feature values to update after trait creation
+  await page.waitForTimeout(1000)
+  await assertUserFeatureValue(page, 'config', '1')
 
   log('Prioritise segment 2')
   await helpers.gotoFeatures()
@@ -239,8 +242,8 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
   await setSegmentOverrideIndex(page, 1, 0)
   await saveFeatureSegments(page)
   await goToUser(page, 0)
-  await helpers.waitForElementVisible(byId('user-feature-switch-1-off'))
-  await assertTextContent(page, byId('user-feature-value-0'), '2')
+  await waitForUserFeatureSwitch(page, 'flag', 'off')
+  await assertUserFeatureValue(page, 'config', '2')
 
   log('Prioritise segment 3')
   await helpers.gotoFeatures()
@@ -251,8 +254,8 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
   await setSegmentOverrideIndex(page, 2, 0)
   await saveFeatureSegments(page)
   await goToUser(page, 0)
-  await helpers.waitForElementVisible(byId('user-feature-switch-1-on'))
-  await assertTextContent(page, byId('user-feature-value-0'), '3')
+  await waitForUserFeatureSwitch(page, 'flag', 'on')
+  await assertUserFeatureValue(page, 'config', '3')
 
   log('Clear down features')
   await helpers.gotoFeatures()
@@ -275,21 +278,21 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
 
   log('Toggle flag for user')
   await goToUser(page, 0)
-  await helpers.click(byId('user-feature-switch-1-on'))
+  await clickUserFeatureSwitch(page, 'flag', 'on')
   await helpers.click('#confirm-toggle-feature-btn')
   await waitAndRefresh(page) // wait and refresh to avoid issues with data sync from UK -> US in github workflows
-  await helpers.waitForElementVisible(byId('user-feature-switch-1-off'))
+  await waitForUserFeatureSwitch(page, 'flag', 'off')
 
   log('Edit flag for user')
-  await helpers.click(byId('user-feature-0'))
+  await clickUserFeature(page, 'config')
   await helpers.setText(byId('featureValue'), 'small')
   await helpers.click('#update-feature-btn')
   await waitAndRefresh(page) // wait and refresh to avoid issues with data sync from UK -> US in github workflows
-  await assertTextContent(page, byId('user-feature-value-0'), '"small"')
+  await assertUserFeatureValue(page, 'config', '"small"')
 
   log('Toggle flag for user again')
-  await helpers.click(byId('user-feature-switch-1-off'));
+  await clickUserFeatureSwitch(page, 'flag', 'off');
   await helpers.click('#confirm-toggle-feature-btn');
   await waitAndRefresh(page); // wait and refresh to avoid issues with data sync from UK -> US in github workflows
-  await helpers.waitForElementVisible(byId('user-feature-switch-1-on'));
+  await waitForUserFeatureSwitch(page, 'flag', 'on');
 })

@@ -78,12 +78,11 @@ test.describe('Flag Tests', () => {
   log('Switch environment')
   // Navigate back to features list so environment switcher is visible in navbar
   await helpers.gotoFeatures()
-  await waitForNetworkIdle(page)
-  // Wait for environment switcher to be visible and actionable (not just visible)
-  const envSwitcher = page.locator(byId('switch-environment-production'))
-  await envSwitcher.waitFor({ state: 'visible', timeout: LONG_TIMEOUT })
-  // Ensure element is stable and clickable (not animating or obscured)
-  await expect(envSwitcher).toBeEnabled()
+  // Wait for page to be fully loaded and features page to be ready
+  await page.waitForLoadState('load')
+  await helpers.waitForElementVisible('#show-create-feature-btn')
+  // Wait for environment switcher to be visible and clickable
+  await helpers.waitForElementClickable(byId('switch-environment-production'))
   await helpers.click(byId('switch-environment-production'))
 
   log('Feature should be off under different environment')
@@ -91,6 +90,8 @@ test.describe('Flag Tests', () => {
   await helpers.waitForElementVisible(byId('feature-switch-0-off'))
 
   log('Clear down features')
+  // Ensure features list is fully loaded before attempting to delete
+  await helpers.waitForElementVisible(byId('feature-item-0'))
   await deleteFeature(page, 1, 'header_size')
   await deleteFeature(page, 0, 'header_enabled')
   });

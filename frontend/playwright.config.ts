@@ -26,6 +26,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Firefox'],
         headless: !process.env.E2E_DEV,
+
         // Launch options for Firefox
         launchOptions: {
           // Try to use system Firefox if PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD was set
@@ -34,8 +35,16 @@ export default defineConfig({
             // Disable auto-updates to prevent version conflicts
             'app.update.auto': false,
             'app.update.enabled': false,
+            // Disable cache
+            'browser.cache.disk.enable': false,
+            'browser.cache.memory.enable': false,
+            'browser.cache.offline.enable': false,
+            'network.http.use-cache': false,
           },
         },
+
+        // Clear storage before each test to prevent contamination
+        storageState: undefined,
       },
     },
   ],

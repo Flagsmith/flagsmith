@@ -25,6 +25,8 @@ test.describe('Invite Tests', () => {
   await helpers.setText(byId('email'), inviteEmail)
   await helpers.setText(byId('password'), PASSWORD)
   await helpers.waitForElementVisible(byId('signup-btn'))
+  // Wait for form validation to complete before clicking
+  await page.waitForTimeout(500)
   await helpers.click(byId('signup-btn'))
   log('Change email')
   await helpers.click(byId('account-settings-link'))

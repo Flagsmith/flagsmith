@@ -72,8 +72,9 @@ test.describe('Organisation Tests', () => {
   log('Current org in nav after deletion: Test Organisation')
 
   log('Verify deleted org name does not appear in nav')
-  await expect(page.locator('#organisation-link')).not.toContainText('E2E Test Org to Delete')
+  // Wait for the organisation link to update to the new org before asserting
   await assertTextContent(page, '#organisation-link', 'Test Organisation')
+  await expect(page.locator('#organisation-link')).not.toContainText('E2E Test Org to Delete')
 
   log('Test 3: Cancel Organisation Deletion')
   log('Create temporary organisation for cancel test')

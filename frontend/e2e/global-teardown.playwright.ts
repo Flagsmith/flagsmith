@@ -2,6 +2,7 @@ import { FullConfig } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as archiver from 'archiver';
+import { extractFailedTests } from './extract-failed-tests';
 
 let upload: ((file: string) => Promise<void>) | null = null;
 try {
@@ -29,6 +30,9 @@ async function zipDirectory(sourceDir: string, outPath: string): Promise<void> {
 
 async function globalTeardown(config: FullConfig) {
   console.log('Running global teardown for E2E tests...');
+
+  // Extract failed tests to a smaller JSON file for easier debugging
+  extractFailedTests(__dirname);
 
   // Upload screenshots/videos if they exist and not in dev mode
   const dir = path.join(__dirname, 'test-results');

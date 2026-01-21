@@ -5,7 +5,7 @@ require('dotenv').config();
 
 const RETRIES = parseInt(process.env.E2E_RETRIES || '1', 10);
 
-function runPlaywright(args: string[], quietMode: boolean): boolean {
+function runPlaywright(args: string[], quietMode: boolean, isRetry: boolean): boolean {
   try {
     // Quote arguments that contain spaces or special shell characters
     const quotedArgs = args.map(arg => {
@@ -14,7 +14,14 @@ function runPlaywright(args: string[], quietMode: boolean): boolean {
       }
       return arg;
     });
-    const playwrightCmd = ['npx', 'cross-env', 'NODE_ENV=production', 'E2E=true', 'playwright', 'test', ...quotedArgs];
+    const playwrightCmd = ['npx', 'cross-env', 'NODE_ENV=production', 'E2E=true'];
+
+    // Skip cleanup on retries to preserve failed.json and test artifacts
+    if (isRetry) {
+      playwrightCmd.push('E2E_SKIP_CLEANUP=1');
+    }
+
+    playwrightCmd.push('playwright', 'test', ...quotedArgs);
     if (!quietMode) console.log('Running:', playwrightCmd.join(' '));
     execSync(playwrightCmd.join(' '), {
       stdio: 'inherit',
@@ -45,6 +52,8 @@ async function main() {
       await runTeardown();
     }
 
+    // On retry, use --last-failed only if there were actual test failures
+    // If global setup failed before tests ran, run all tests instead
     const playwrightArgs = attempt > 0 ? ['--last-failed', ...extraArgs] : extraArgs;
 
     // Add --quiet flag if QUIET is set
@@ -66,7 +75,7 @@ async function main() {
     }
 
     if (!quietMode) console.log(attempt > 0 ? 'Running failed tests...' : 'Running all tests...');
-    const success = runPlaywright(playwrightArgs, quietMode);
+    const success = runPlaywright(playwrightArgs, quietMode, attempt > 0);
 
     if (success) {
       if (!quietMode) {
