@@ -4,12 +4,16 @@ on:
   pull_request:
     paths:
       - api/**
+      - docker/api/**
       - .github/**
+      - .release-please-manifest.json
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     paths:
       - api/**
+      - docker/api/**
       - .github/**
+      - .release-please-manifest.json
     branches:
       - main
 
