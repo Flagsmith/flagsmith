@@ -2,6 +2,18 @@ name: Run API tests with private package
 
 on:
   pull_request:
+    paths:
+      - api/**
+      - docker/api/**
+      - .github/**
+      - .release-please-manifest.json
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    paths:
+      - api/**
+      - docker/api/**
+      - .github/**
+      - .release-please-manifest.json
     branches:
       - main
 
@@ -14,16 +26,6 @@ jobs:
     runs-on: depot-ubuntu-latest-16
     name: API Tests
 
-    services:
-      postgres:
-        image: postgres:15.5-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports: ['5432:5432']
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
     steps:
       - name: Cloning repo
         uses: actions/checkout@v5
@@ -33,7 +35,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
           cache: poetry
 
       - name: Install SAML Dependencies
