@@ -4,6 +4,7 @@ name: flagsmith
 
 volumes:
   pg_11_data:
+  pg_11_data_analytics:
 
 services:
   db:
