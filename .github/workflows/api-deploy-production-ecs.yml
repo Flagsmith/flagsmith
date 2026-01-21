@@ -58,6 +58,6 @@ jobs:
       - name: Push to Gram
         env:
           GRAM_API_KEY: ${{ secrets.GRAM_API_KEY }}
-          GRAM_ORG: ${{ secrets.GRAM_ORG }}
-          GRAM_PROJECT: ${{ secrets.GRAM_PROJECT }}
+          GRAM_ORG: ${{ vars.GRAM_ORG }}
+          GRAM_PROJECT: ${{ vars.GRAM_PROJECT }}
         run: gram push --api-key "$GRAM_API_KEY" --org "$GRAM_ORG" --project "$GRAM_PROJECT" --config gram.json
