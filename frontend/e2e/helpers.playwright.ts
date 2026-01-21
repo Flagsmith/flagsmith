@@ -71,6 +71,14 @@ export const setupBrowserLogging = (page: Page) => {
       // Happens during initial page load before org is selected
       return;
     }
+    if (status === 403) {
+      // These 403s are expected for non-admin users
+      if (url.includes('/get-subscription-metadata/') ||
+          url.includes('/usage-data/') ||
+          url.includes('/invite-links/')) {
+        return;
+      }
+    }
 
     // Log throttling, rate limiting, and server errors
     if (status === 429) {

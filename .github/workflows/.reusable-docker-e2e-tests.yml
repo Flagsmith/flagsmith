@@ -53,6 +53,17 @@ jobs:
       - name: Cloning repo
         uses: actions/checkout@v5
 
+      - name: Determine test type
+        id: test-type
+        run: |
+          if [[ "${{ inputs.args }}" == *"@enterprise"* ]]; then
+            echo "type=private-cloud" >> $GITHUB_OUTPUT
+            echo "label=private-cloud" >> $GITHUB_OUTPUT
+          else
+            echo "type=oss" >> $GITHUB_OUTPUT
+            echo "label=oss" >> $GITHUB_OUTPUT
+          fi
+
       - name: Login to Github Container Registry
         if: ${{ env.GCR_TOKEN }}
         uses: docker/login-action@v3
@@ -94,10 +105,10 @@ jobs:
           cp frontend/e2e/test-results/results.json frontend/e2e/playwright-report/ || true
 
       - name: Upload HTML report
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-html-report-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index }}
+          name: playwright-html-report-${{ steps.test-type.outputs.type }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index }}
           path: frontend/e2e/playwright-report/
           retention-days: 30
           if-no-files-found: warn
@@ -113,9 +124,10 @@ jobs:
         uses: daun/playwright-report-summary@v3
         with:
           report-file: frontend/e2e/playwright-report/results.json
-          comment-title: 'Playwright Test Results'
+          comment-title: 'Playwright Test Results (${{ steps.test-type.outputs.label }})'
           custom-info: |
             **📦 Artifacts:** [View test results and HTML report](${{ steps.artifact-url.outputs.url }})
 
             **🖥️ Runner:** ${{ inputs.runs-on }}
             **🔄 Run:** #${{ github.run_number }} (attempt ${{ github.run_attempt }})
+            **📋 Test Type:** ${{ steps.test-type.outputs.label }}
