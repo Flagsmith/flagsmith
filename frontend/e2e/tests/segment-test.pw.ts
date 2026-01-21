@@ -219,11 +219,11 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
   log('Set user in segment_1')
   await goToUser(page, 0)
   await createTrait(page, 0, 'trait', 1)
-  await page.waitForTimeout(1000)
   await createTrait(page, 1, 'trait2', 2)
-  await page.waitForTimeout(1000)
   await createTrait(page, 2, 'trait3', 3)
   // await assertTextContent(page, byId('segment-0-name'), 'segment_1'); todo: view user segments disabled in edge
+  await page.waitForTimeout(3000)
+  await page.reload()
   await helpers.waitForElementVisible(byId('user-feature-switch-1-on'))
   await assertTextContent(page, byId('user-feature-value-0'), '1')
 

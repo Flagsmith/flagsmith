@@ -111,3 +111,9 @@ jobs:
         uses: daun/playwright-report-summary@v3
         with:
           report-file: frontend/e2e/test-results/results.json
+          comment-title: 'Playwright Test Results'
+          custom-info: |
+            **📦 Artifacts:** [View test results and HTML report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)
+
+            **🖥️ Runner:** ${{ inputs.runs-on }}
+            **🔄 Run:** #${{ github.run_number }} (attempt ${{ github.run_attempt }})

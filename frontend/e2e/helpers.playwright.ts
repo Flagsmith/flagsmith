@@ -611,8 +611,10 @@ export const saveFeature = async (page: Page) => {
 // Save feature segments
 export const saveFeatureSegments = async (page: Page) => {
   await click(page, '#update-feature-segments-btn');
-  // Wait for save to complete
-  await page.waitForTimeout(1000);
+  // Wait for success message to appear indicating save completed
+  await page.waitForSelector('.toast-message', { state: 'visible', timeout: 10000 });
+  // Wait for toast to disappear
+  await page.waitForSelector('.toast-message', { state: 'hidden', timeout: 10000 });
   await closeModal(page);
   await waitForElementNotExist(page, '#create-feature-modal');
 };

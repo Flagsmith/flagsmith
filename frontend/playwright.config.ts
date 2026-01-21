@@ -41,7 +41,14 @@ export default defineConfig({
   ],
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
-    ['html', { open: 'never', outputFolder: './e2e/playwright-report' }],
+    [
+      'html',
+      {
+        open: 'never',
+        outputFolder: './e2e/playwright-report',
+        title: 'Flagsmith E2E Test Results',
+      },
+    ],
     ['json', { outputFile: './e2e/test-results/results.json' }],
     ['list', { printSteps: false }], // Only shows test names with pass/fail status
   ],
@@ -59,12 +66,12 @@ export default defineConfig({
     baseURL: `http://localhost:${process.env.PORT || 8080}`,
     /* Navigation timeout */
     navigationTimeout: 20000,
-    /* Screenshot on failure */
-    screenshot: 'only-on-failure',
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-    /* Video on failure */
-    video: process.env.E2E_DEV ? 'retain-on-failure' : 'on-first-retry',
+    /* Screenshot on all tests for maximum detail */
+    screenshot: 'on',
+    /* Collect trace on all tests for maximum detail */
+    trace: 'on',
+    /* Video on all tests for maximum detail */
+    video: 'on',
   },
   /* Run your local dev server before starting the tests */
   webServer: process.env.E2E_LOCAL
