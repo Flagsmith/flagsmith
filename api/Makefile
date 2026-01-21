@@ -69,6 +69,7 @@ docker-build:
 
 .PHONY: test
 test: docker-up
+	poetry run python manage.py waitfordb
 	poetry run pytest $(opts)
 
 .PHONY: django-make-migrations
