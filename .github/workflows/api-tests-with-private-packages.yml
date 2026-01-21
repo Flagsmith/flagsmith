@@ -2,6 +2,11 @@ name: Run API tests with private package
 
 on:
   pull_request:
+    paths:
+      - api/**
+      - .github/**
+      - api/Makefile
+      - .release-please-manifest.json
     branches:
       - main
 
