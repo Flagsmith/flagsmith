@@ -67,6 +67,10 @@ export const setupBrowserLogging = (page: Page) => {
       // usage-data 404s are expected for new orgs without billing
       return;
     }
+    if (status === 404 && url.includes('/list-change-requests/')) {
+      // Change requests is an enterprise feature, 404s are expected in OSS
+      return;
+    }
     if (status === 400 && url.includes('/organisations/undefined/')) {
       // Happens during initial page load before org is selected
       return;
@@ -78,6 +82,10 @@ export const setupBrowserLogging = (page: Page) => {
           url.includes('/invite-links/')) {
         return;
       }
+    }
+    if (status === 429 && url.includes('/usage-data/')) {
+      // Usage data endpoint has rate limiting, throttling is expected
+      return;
     }
 
     // Log throttling, rate limiting, and server errors
@@ -894,7 +902,10 @@ export const editRemoteConfig = async (
     await page.waitForTimeout(500);
 
     for (const v of mvs) {
-      const input = page.locator(byId(`featureVariationWeight${v.value}`));
+      const selector = byId(`featureVariationWeight${v.value}`);
+      // Wait for the weight input to be visible before trying to interact with it
+      await waitForElementVisible(page, selector);
+      const input = page.locator(selector);
       await input.clear();
       await page.waitForTimeout(100);
       await input.fill(`${v.weight}`);
