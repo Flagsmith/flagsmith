@@ -117,8 +117,7 @@ test.describe('Organisation Tests', () => {
 
   log('Test empty organisation name validation')
   await helpers.waitForElementVisible("[data-test='organisation-name']")
-  const orgNameInput = page.locator("[data-test='organisation-name']")
-  const originalName = await orgNameInput.inputValue()
+  const originalName = await helpers.getInputValue("[data-test='organisation-name']")
 
   log('Clear organisation name')
   await helpers.setText("[data-test='organisation-name']", '')

@@ -10,8 +10,10 @@ import {
   log,
   login,
   parseTryItResults,
+  scrollBy,
   toggleFeature,
   waitForElementVisible,
+  waitForNetworkIdle,
   createHelpers,
 } from '../helpers.playwright';
 import { E2E_USER, PASSWORD } from '../config';
@@ -35,15 +37,11 @@ test.describe('Flag Tests', () => {
 
   log('Create Short Life Feature')
   await createFeature(page, 3, 'short_life_feature', false)
-  await page.evaluate(() => {
-    window.scrollBy(0, 15000)
-  })
+  await scrollBy(page, 0, 15000)
 
   log('Delete Short Life Feature')
   await deleteFeature(page, 3, 'short_life_feature')
-  await page.evaluate(() => {
-    window.scrollBy(0, 30000)
-  })
+  await scrollBy(page, 0, 30000)
 
   log('Toggle Feature')
   await toggleFeature(page, 0, true)
@@ -80,10 +78,8 @@ test.describe('Flag Tests', () => {
   log('Switch environment')
   // Navigate back to features list so environment switcher is visible in navbar
   await helpers.gotoFeatures()
-  // Add a wait to ensure the page has fully loaded and environment switcher is ready
-  await page.waitForTimeout(1500)
-  await helpers.waitForElementVisible(byId('switch-environment-production'))
-  // Additional wait to ensure element is interactive
+  await waitForNetworkIdle(page)
+  await waitForElementVisible(page, byId('switch-environment-production'))
   await page.waitForTimeout(500)
   await helpers.click(byId('switch-environment-production'))
 

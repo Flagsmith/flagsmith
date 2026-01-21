@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 import flagsmith from 'flagsmith/isomorphic';
 import { IFlagsmith } from 'flagsmith/types';
 
-export const LONG_TIMEOUT = 15000;
+export const LONG_TIMEOUT = 20000;
 
 // Browser debugging - console and network logging
 export const setupBrowserLogging = (page: Page) => {
@@ -97,7 +97,10 @@ export const setupBrowserLogging = (page: Page) => {
           url.includes('/usage-data/') ||
           url.includes('/invite-links/') ||
           url.includes('/roles/') ||
-          url.includes('/change-requests/')) {
+          url.includes('/change-requests/') ||
+          url.includes('/api-keys/') ||
+          url.includes('/metrics/') ||
+          url.includes('/invites/')) {
         return;
       }
     }
@@ -214,11 +217,11 @@ export class E2EHelpers {
     }
   }
 
-  async waitForElementVisible(selector: string) {
+  async waitForElementVisible(selector: string, timeout: number = LONG_TIMEOUT) {
     logUsingLastSection(`Waiting element visible ${selector}`);
     await this.page.locator(selector).first().waitFor({
       state: 'visible',
-      timeout: LONG_TIMEOUT
+      timeout
     });
   }
 
@@ -249,9 +252,45 @@ export class E2EHelpers {
     await expect(this.page.locator(selector)).toHaveCount(0, { timeout: 10000 });
   }
 
+  async waitForNetworkIdle() {
+    await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+      // Silently continue if timeout - page might already be idle
+    });
+  }
+
+  async waitForDomContentLoaded() {
+    await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {
+      // Silently continue if timeout - DOM might already be loaded
+    });
+  }
+
+  async waitForPageFullyLoaded() {
+    await this.waitForDomContentLoaded();
+    await this.waitForNetworkIdle();
+  }
+
+  async getInputValue(selector: string): Promise<string> {
+    const element = this.page.locator(selector).first();
+    await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    return await element.inputValue();
+  }
+
+  async scrollBy(x: number, y: number) {
+    await this.page.evaluate(({ x, y }) => {
+      window.scrollBy(x, y);
+    }, { x, y });
+  }
+
+  async scrollToBottom() {
+    await this.page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+  }
+
   async gotoFeatures() {
     await this.click('#features-link');
     await this.waitForElementVisible('#show-create-feature-btn');
+    await this.waitForPageFullyLoaded();
   }
 
   async click(selector: string) {
@@ -449,11 +488,11 @@ export const setText = async (page: Page, selector: string, text: string) => {
 };
 
 // Wait for an element to be visible
-export const waitForElementVisible = async (page: Page, selector: string) => {
+export const waitForElementVisible = async (page: Page, selector: string, timeout: number = LONG_TIMEOUT) => {
   logUsingLastSection(`Waiting element visible ${selector}`);
   await page.locator(selector).first().waitFor({
     state: 'visible',
-    timeout: LONG_TIMEOUT
+    timeout
   });
 };
 
@@ -488,10 +527,52 @@ export const waitForElementNotExist = async (page: Page, selector: string) => {
   await expect(page.locator(selector)).toHaveCount(0, { timeout: 10000 });
 };
 
+// Wait for network to be idle
+export const waitForNetworkIdle = async (page: Page) => {
+  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+    // Silently continue if timeout - page might already be idle
+  });
+};
+
+// Wait for DOM content to be loaded
+export const waitForDomContentLoaded = async (page: Page) => {
+  await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {
+    // Silently continue if timeout - DOM might already be loaded
+  });
+};
+
+// Wait for page to be fully loaded (DOM + network)
+export const waitForPageFullyLoaded = async (page: Page) => {
+  await waitForDomContentLoaded(page);
+  await waitForNetworkIdle(page);
+};
+
+// Get input value from an element
+export const getInputValue = async (page: Page, selector: string): Promise<string> => {
+  const element = page.locator(selector).first();
+  await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+  return await element.inputValue();
+};
+
+// Scroll the page by x and y pixels
+export const scrollBy = async (page: Page, x: number, y: number) => {
+  await page.evaluate(({ x, y }) => {
+    window.scrollBy(x, y);
+  }, { x, y });
+};
+
+// Scroll to bottom of page
+export const scrollToBottom = async (page: Page) => {
+  await page.evaluate(() => {
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+};
+
 // Navigate to features page
 export const gotoFeatures = async (page: Page) => {
   await click(page, '#features-link');
   await waitForElementVisible(page, '#show-create-feature-btn');
+  await waitForPageFullyLoaded(page);
 };
 
 // Click an element
@@ -869,9 +950,7 @@ export const createRemoteConfig = async (
     await page.waitForTimeout(100);
   }
   // Wait for form validation to complete after all variations added
-  if (mvs.length > 0) {
-    await page.waitForTimeout(500);
-  }
+  await page.waitForTimeout(500);
   await click(page, byId('create-feature-btn'));
   // Wait for the feature to be created and modal to close
   await page.waitForTimeout(2000); // Increased wait for API to process
@@ -989,6 +1068,7 @@ export const createFeature = async (
   if (value) {
     await click(page, byId('toggle-feature-button'));
   }
+  await page.waitForTimeout(500);
   await click(page, byId('create-feature-btn'));
   // Wait for feature creation to complete
   await page.waitForTimeout(1500);

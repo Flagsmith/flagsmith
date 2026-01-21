@@ -3,12 +3,17 @@ import {
   byId,
   click,
   createEnvironment,
-  createFeature, gotoSegments,
+  createFeature,
+  gotoSegments,
   log,
   login,
   logout,
   setUserPermission,
-  toggleFeature, waitForElementNotClickable, waitForElementNotExist, waitForElementVisible,
+  toggleFeature,
+  waitForElementNotClickable,
+  waitForElementNotExist,
+  waitForElementVisible,
+  waitForPageFullyLoaded,
   createHelpers,
 } from '../helpers.playwright';
 import { E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, E2E_USER, PASSWORD } from '../config';
@@ -90,6 +95,9 @@ test.describe('Project Permission Tests', () => {
   log('User without DELETE_FEATURE permissions cannot Delete any feature')
   await helpers.login(E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, PASSWORD)
   await helpers.click('#project-select-0')
+  await waitForPageFullyLoaded(page)
+  await waitForElementVisible(page, '#features-page')
+  await waitForElementVisible(page, byId('feature-switch-0-off'))
   await helpers.click(byId('feature-action-0'))
   await helpers.waitForElementVisible(byId('feature-remove-0'))
   await expect(page.locator(byId('feature-remove-0'))).toHaveClass(

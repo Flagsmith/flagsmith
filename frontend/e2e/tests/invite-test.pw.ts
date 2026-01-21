@@ -1,5 +1,5 @@
 import { test } from '../test-setup';
-import { assertTextContent, byId, createHelpers, log } from '../helpers.playwright';
+import { assertTextContent, byId, createHelpers, getInputValue, log } from '../helpers.playwright';
 import { E2E_CHANGE_MAIL, E2E_USER, PASSWORD } from '../config';
 
 const invitePrefix = `flagsmith${new Date().valueOf()}`
@@ -14,9 +14,9 @@ test.describe('Invite Tests', () => {
   await helpers.click(byId('organisation-link'))
   await helpers.waitForElementVisible(byId('org-settings-link'))
   await helpers.click(byId('org-settings-link'))
-  await page.locator(byId('organisation-name')).inputValue()
+  await getInputValue(page, byId('organisation-name'))
   await helpers.click(byId('users-and-permissions'))
-  const inviteLink = await page.locator(byId('invite-link')).inputValue()
+  const inviteLink = await getInputValue(page, byId('invite-link'))
   log('Accept invite')
   await page.goto(inviteLink)
   await helpers.setText('[name="email"]', inviteEmail)

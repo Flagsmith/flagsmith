@@ -35,7 +35,7 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     await helpers.click(byId('enable-versioning'))
     await helpers.click('#confirm-btn-yes')
     // Feature versioning takes up to a minute to enable on the backend
-    await page.locator(byId('feature-versioning-enabled')).waitFor({ state: 'visible', timeout: 70000 })
+    await helpers.waitForElementVisible(byId('feature-versioning-enabled'), 70000)
 
     log('Create feature 1')
     await createRemoteConfig(page, 0, 'a', 'small')
