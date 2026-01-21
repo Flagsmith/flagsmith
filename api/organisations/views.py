@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
@@ -64,6 +64,17 @@ from .serializers import OrganisationAPIUsageNotificationSerializer
 logger = logging.getLogger(__name__)
 
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "list_organizations",
+                "description": "Lists all organizations accessible with the provided user API key.",
+            },
+        },
+    ),
+)
 class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = (IsAuthenticated, OrganisationPermission)
 
@@ -134,6 +145,15 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = self.get_serializer(organisation)
         return Response(serializer.data)
 
+    @extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "list_projects_in_organization",
+                "description": "Retrieves all projects within a specified organization.",
+            },
+        },
+    )
     @action(detail=True, permission_classes=[IsAuthenticated])
     def projects(self, request, pk):  # type: ignore[no-untyped-def]
         organisation = self.get_object()

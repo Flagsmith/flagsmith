@@ -10,7 +10,7 @@ DOTENV_OVERRIDE_FILE ?= .env
 POETRY_VERSION ?= 2.2.1
 
 SAML_REVISION ?= v1.6.6
-RBAC_REVISION ?= v0.12.1
+RBAC_REVISION ?= v0.13.0
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
@@ -159,3 +159,7 @@ generate-docs:
 .PHONY: add-known-sdk-version
 add-known-sdk-version:
 	poetry run python scripts/add-known-sdk-version.py $(opts)
+
+.PHONY: generate-mcp-spec
+generate-mcp-spec:
+	poetry run python manage.py spectacular --generator-class api.openapi.MCPSchemaGenerator --file mcp_openapi.yaml
