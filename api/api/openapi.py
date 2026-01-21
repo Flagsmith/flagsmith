@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from drf_spectacular import generators, openapi
 from drf_spectacular.extensions import (
@@ -47,8 +47,10 @@ class SchemaGenerator(generators.SchemaGenerator):
     Adds a `$schema` property to the root schema object.
     """
 
-    def __init__(self, **kwargs: Any) -> None:  # pragma: no cover
-        super().__init__(**kwargs)  # type: ignore[no-untyped-call]
+    if TYPE_CHECKING:
+        # Parent class has no type_hints, this is used to ignore the type error upstream
+        def __init__(self, **kwargs: Any) -> None:
+            super().__init__(**kwargs)  # type: ignore[no-untyped-call]
 
     def get_schema(
         self, request: Request | None = None, public: bool = False
