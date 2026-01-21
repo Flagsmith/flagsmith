@@ -93,6 +93,7 @@ class MCPSchemaGenerator(SchemaGenerator):
 
         for path, path_item in paths.items():
             filtered_operations: dict[str, Any] = {}
+            has_any_mcp_tag = False
 
             for method, operation in path_item.items():
                 if not isinstance(operation, dict):
@@ -102,8 +103,9 @@ class MCPSchemaGenerator(SchemaGenerator):
                 tags = operation.get("tags", [])
                 if self.MCP_TAG in tags:
                     filtered_operations[method] = self._transform_for_mcp(operation)
+                    has_any_mcp_tag = True
 
-            if any(isinstance(op, dict) for op in filtered_operations.values()):
+            if has_any_mcp_tag:
                 filtered_paths[path] = filtered_operations
 
         return filtered_paths
