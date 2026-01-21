@@ -68,7 +68,7 @@ docker-build:
 		../
 
 .PHONY: test
-test:
+test: docker-up
 	poetry run pytest $(opts)
 
 .PHONY: django-make-migrations

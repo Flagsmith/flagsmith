@@ -10,10 +10,24 @@ services:
     image: postgres:15.5-alpine
     pull_policy: always
     restart: unless-stopped
+    command: ["-c", "max_locks_per_transaction=256"]
     volumes:
       - pg_11_data:/var/lib/postgresql/data
     ports:
       - 5432:5432
     environment:
       POSTGRES_DB: flagsmith
+      POSTGRES_PASSWORD: password
+
+  analytics-db:
+    image: postgres:15.5-alpine
+    pull_policy: always
+    restart: unless-stopped
+    command: ["-c", "max_locks_per_transaction=256"]
+    volumes:
+      - pg_11_data_analytics:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_DB: analytics
       POSTGRES_PASSWORD: password
