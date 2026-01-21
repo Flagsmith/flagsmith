@@ -96,7 +96,7 @@ def test_list_organisations_search_by_name(
     # Then
     assert response.status_code == 200
 
-    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[attr-defined]
+    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
 def test_list_organisations_search_by_subscription_id(
@@ -114,7 +114,7 @@ def test_list_organisations_search_by_subscription_id(
 
     # Then
     assert response.status_code == 200
-    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[attr-defined]
+    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
 def test_list_organisations_search_by_user_email(
@@ -132,7 +132,7 @@ def test_list_organisations_search_by_user_email(
 
     # Then
     assert response.status_code == 200
-    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[attr-defined]
+    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
 def test_list_organisations_search_by_user_email_for_non_existent_user(
@@ -152,7 +152,7 @@ def test_list_organisations_search_by_user_email_for_non_existent_user(
 
     # Then
     assert response.status_code == 200
-    assert list(response.context_data["organisation_list"]) == []  # type: ignore[attr-defined]
+    assert list(response.context_data["organisation_list"]) == []  # type: ignore[index]
 
 
 def test_list_organisations_search_by_domain(
@@ -171,7 +171,7 @@ def test_list_organisations_search_by_domain(
 
     # Then
     assert response.status_code == 200
-    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[attr-defined]
+    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
 def test_list_organisations_filter_plan(
@@ -190,7 +190,7 @@ def test_list_organisations_filter_plan(
 
     # Then
     assert response.status_code == 200
-    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[attr-defined]
+    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
 def test_list_organisations_fails_if_not_staff(

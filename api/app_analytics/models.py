@@ -62,7 +62,7 @@ class APIUsageRaw(models.Model):
     labels = HStoreField(default=dict)
 
     class Meta:
-        index_together = (("environment_id", "created_at"),)
+        indexes = [models.Index(fields=["environment_id", "created_at"])]
 
 
 class AbstractBucket(LifecycleModelMixin, models.Model):  # type: ignore[misc]

@@ -11,7 +11,7 @@ class EnvironmentManager(SoftDeleteManager):  # type: ignore[misc]
         self,
         *args,
         extra_select_related: list[str] | None = None,
-        extra_prefetch_related: list[Prefetch | str] | None = None,
+        extra_prefetch_related: list[Prefetch | str] | None = None,  # type: ignore[type-arg]
         **kwargs,
     ):
         return (
