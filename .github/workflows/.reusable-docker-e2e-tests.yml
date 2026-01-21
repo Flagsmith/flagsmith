@@ -56,7 +56,7 @@ jobs:
       - name: Determine test type
         id: test-type
         run: |
-          if [[ "${{ inputs.args }}" == *"@enterprise"* ]]; then
+          if [[ '${{ inputs.args }}' == *"@enterprise"* ]]; then
             echo "type=private-cloud" >> $GITHUB_OUTPUT
             echo "label=private-cloud" >> $GITHUB_OUTPUT
           else
