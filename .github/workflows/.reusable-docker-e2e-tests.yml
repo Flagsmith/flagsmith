@@ -114,13 +114,24 @@ jobs:
           if-no-files-found: warn
 
       - name: Set artifact URL
-        if: always() && github.event_name == 'pull_request'
+        if: failure() && github.event_name == 'pull_request'
         id: artifact-url
         run: |
           echo "url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts" >> $GITHUB_OUTPUT
 
-      - name: Comment PR with test results
-        if: always() && github.event_name == 'pull_request'
+      - name: Comment PR with test results (success)
+        if: success() && github.event_name == 'pull_request'
+        uses: daun/playwright-report-summary@v3
+        with:
+          report-file: frontend/e2e/playwright-report/results.json
+          comment-title: 'Playwright Test Results (${{ steps.test-type.outputs.label }})'
+          custom-info: |
+            **🖥️ Runner:** ${{ inputs.runs-on }}
+            **🔄 Run:** #${{ github.run_number }} (attempt ${{ github.run_attempt }})
+            **📋 Test Type:** ${{ steps.test-type.outputs.label }}
+
+      - name: Comment PR with test results (failure)
+        if: failure() && github.event_name == 'pull_request'
         uses: daun/playwright-report-summary@v3
         with:
           report-file: frontend/e2e/playwright-report/results.json

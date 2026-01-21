@@ -71,6 +71,10 @@ export const setupBrowserLogging = (page: Page) => {
       // Change requests is an enterprise feature, 404s are expected in OSS
       return;
     }
+    if (status === 404 && url.includes('/roles/')) {
+      // Roles endpoint may not exist in certain configurations
+      return;
+    }
     if (status === 400 && url.includes('/organisations/undefined/')) {
       // Happens during initial page load before org is selected
       return;
