@@ -116,8 +116,9 @@ serve-with-task-processor:
 .PHONY: generate-flagsmith-sdk-openapi
 generate-flagsmith-sdk-openapi:
 	poetry run python manage.py spectacular | \
-	  npx openapi-format /dev/fd/0 \
-	    --filterFile openapi-filter-flagsmith-sdk.yml
+	  npx openapi-format@1.23.0 /dev/fd/0 \
+	    --filterFile openapi-filter-flagsmith-sdk.yml \
+	    --output ../sdk/openapi.yml
 
 .PHONY: generate-ld-client-types
 generate-ld-client-types:
