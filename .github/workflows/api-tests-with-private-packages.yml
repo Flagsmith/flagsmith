@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - api/**
+      - docker/api/**
       - .github/**
       - .release-please-manifest.json
     branches:
