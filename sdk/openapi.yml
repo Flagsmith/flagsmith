@@ -1,0 +1,568 @@
+openapi: 3.1.0
+info:
+  title: Flagsmith API
+  version: v1
+  description: 'Flagsmith''s Core and SDK APIs. Check out <a href=''https://docs.flagsmith.com''>Flagsmith documentation</a>.'
+  contact:
+    email: support@flagsmith.com
+  license:
+    name: BSD License
+    identifier: BSD-3-Clause
+paths:
+  /api/v1/environment-document/:
+    get:
+      operationId: api_v1_environment_document_retrieve
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1EnvironmentDocumentResponse'
+      security:
+        - Private: []
+        - Public: []
+      tags:
+        - sdk
+  /api/v1/flags/:
+    get:
+      operationId: get_flags
+      description: |-
+        USING THIS ENDPOINT WITH AN IDENTIFIER IS DEPRECATED.
+        Please use `/identities/?identifier=<identifier>` instead.
+        ---
+        Note that when providing the `feature` query argument, this endpoint will
+        return either a single object or a 404 (if the feature does not exist) rather
+        than a list.
+      parameters:
+        - name: feature
+          in: query
+          description: Name of the feature to get the state of
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeatureStateSerializerFull'
+      security:
+        - Private: []
+        - Public: []
+      tags:
+        - sdk
+  /api/v1/identities/:
+    get:
+      operationId: identify_user
+      parameters:
+        - name: identifier
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: transient
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SDKIdentitiesResponse'
+      security:
+        - Private: []
+        - Public: []
+      tags:
+        - sdk
+    post:
+      operationId: identify_user_with_traits
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentifyWithTraits'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IdentifyWithTraits'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IdentifyWithTraits'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SDKIdentitiesResponse'
+      security:
+        - Private: []
+        - Public: []
+      tags:
+        - sdk
+components:
+  schemas:
+    Feature:
+      description: 'Represents a Flagsmith feature, defined at project level.'
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        type:
+          allOf:
+            - $ref: '#/components/schemas/FeatureTypeEnum'
+          title: Type
+      required:
+        - id
+        - name
+        - type
+      title: Feature
+    FeatureSegment:
+      description: Represents data specific to a segment feature override.
+      type: object
+      properties:
+        priority:
+          anyOf:
+            - type: integer
+            - type: 'null'
+          title: Priority
+      required:
+        - priority
+      title: FeatureSegment
+    FeatureState:
+      description: 'Used to define the state of a feature for an environment, segment overrides, and identity overrides.'
+      type: object
+      properties:
+        feature:
+          $ref: '#/components/schemas/Feature'
+        enabled:
+          type: boolean
+          title: Enabled
+        feature_state_value:
+          anyOf:
+            - type: integer
+            - type: boolean
+            - type: string
+            - type: 'null'
+          title: Feature State Value
+        featurestate_uuid:
+          type: string
+          format: uuid
+          title: Featurestate Uuid
+        feature_segment:
+          anyOf:
+            - $ref: '#/components/schemas/FeatureSegment'
+            - type: 'null'
+        multivariate_feature_state_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/MultivariateFeatureStateValue'
+          title: Multivariate Feature State Values
+      required:
+        - feature
+        - enabled
+        - feature_state_value
+        - featurestate_uuid
+        - feature_segment
+        - multivariate_feature_state_values
+      title: FeatureState
+    FeatureStateSerializerFull:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        feature:
+          $ref: '#/components/schemas/Feature'
+        feature_state_value:
+          type:
+            - string
+            - integer
+            - number
+            - boolean
+            - 'null'
+          readOnly: true
+        environment:
+          type:
+            - integer
+            - 'null'
+        identity:
+          type:
+            - integer
+            - 'null'
+        feature_segment:
+          type:
+            - integer
+            - 'null'
+        enabled:
+          type: boolean
+      required:
+        - feature
+        - feature_state_value
+        - id
+    FeatureTypeEnum:
+      type: string
+      enum:
+        - STANDARD
+        - MULTIVARIATE
+    IdentifyWithTraits:
+      type: object
+      properties:
+        identifier:
+          type:
+            - string
+            - 'null'
+        transient:
+          type: boolean
+          default: false
+          writeOnly: true
+        traits:
+          type: array
+          items:
+            $ref: '#/components/schemas/TraitSerializerBasic'
+        flags:
+          type: array
+          items:
+            $ref: '#/components/schemas/SDKFeatureState'
+          readOnly: true
+      required:
+        - flags
+    IdentityOverride:
+      description: 'Represents an identity override, defining feature states specific to an identity.'
+      type: object
+      properties:
+        identifier:
+          type: string
+          title: Identifier
+        identity_features:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureState'
+          title: Identity Features
+      required:
+        - identifier
+        - identity_features
+      title: IdentityOverride
+    MultivariateFeatureOption:
+      description: Represents a single multivariate feature option in the Flagsmith UI.
+      type: object
+      properties:
+        value:
+          type: string
+          title: Value
+      required:
+        - value
+      title: MultivariateFeatureOption
+    MultivariateFeatureStateValue:
+      description: Represents a multivariate feature state value.
+      type: object
+      properties:
+        id:
+          anyOf:
+            - type: integer
+            - type: 'null'
+          title: Id
+        mv_fs_value_uuid:
+          anyOf:
+            - format: uuid
+              type: string
+            - type: 'null'
+          title: Mv Fs Value Uuid
+        percentage_allocation:
+          type: number
+          title: Percentage Allocation
+        multivariate_feature_option:
+          $ref: '#/components/schemas/MultivariateFeatureOption'
+      required:
+        - id
+        - mv_fs_value_uuid
+        - percentage_allocation
+        - multivariate_feature_option
+      title: MultivariateFeatureStateValue
+    OperatorEnum:
+      type: string
+      enum:
+        - EQUAL
+        - GREATER_THAN
+        - LESS_THAN
+        - LESS_THAN_INCLUSIVE
+        - CONTAINS
+        - GREATER_THAN_INCLUSIVE
+        - NOT_CONTAINS
+        - NOT_EQUAL
+        - REGEX
+        - PERCENTAGE_SPLIT
+        - MODULO
+        - IS_SET
+        - IS_NOT_SET
+        - IN
+    Project:
+      description: 'Represents a Flagsmith project. For SDKs, this is mainly used to convey segment data.'
+      type: object
+      properties:
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Segment'
+          title: Segments
+      required:
+        - segments
+      title: Project
+    SDKFeature:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 2000
+        created_date:
+          type: string
+          format: date-time
+          readOnly: true
+          title: DateCreated
+        description:
+          type:
+            - string
+            - 'null'
+        initial_value:
+          type:
+            - string
+            - 'null'
+          maxLength: 20000
+        default_enabled:
+          type: boolean
+        type:
+          type: string
+          maxLength: 50
+      required:
+        - created_date
+        - id
+        - name
+    SDKFeatureState:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        feature:
+          $ref: '#/components/schemas/SDKFeature'
+        feature_state_value:
+          type:
+            - string
+            - integer
+            - number
+            - boolean
+            - 'null'
+          readOnly: true
+        environment:
+          type:
+            - integer
+            - 'null'
+        identity:
+          type:
+            - integer
+            - 'null'
+        feature_segment:
+          type:
+            - integer
+            - 'null'
+        enabled:
+          type: boolean
+      required:
+        - feature
+        - feature_state_value
+        - id
+    SDKIdentitiesResponse:
+      type: object
+      properties:
+        identifier:
+          type: string
+        flags:
+          type: array
+          items:
+            $ref: '#/components/schemas/SDKFeatureState'
+        traits:
+          type: array
+          items:
+            $ref: '#/components/schemas/_Trait'
+      required:
+        - flags
+        - identifier
+        - traits
+    Segment:
+      description: Represents a Flagsmith segment. Carries rules and feature overrides.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/SegmentRule'
+          title: Rules
+        feature_states:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureState'
+          title: Feature States
+      required:
+        - id
+        - name
+        - rules
+      title: Segment
+    SegmentCondition:
+      description: Represents a condition within a segment rule used by Flagsmith engine.
+      type: object
+      properties:
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/OperatorEnum'
+          title: Operator
+        value:
+          type: string
+          title: Value
+        property_:
+          type: string
+          title: Property
+      required:
+        - operator
+        - value
+        - property_
+      title: SegmentCondition
+    SegmentRule:
+      description: Represents a rule within a segment used by Flagsmith engine. Root rules usually contain nested rules.
+      type: object
+      properties:
+        type:
+          allOf:
+            - $ref: '#/components/schemas/SegmentRuleTypeEnum'
+          title: Type
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/SegmentRule'
+          title: Rules
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SegmentCondition'
+          title: Conditions
+      required:
+        - type
+        - rules
+        - conditions
+      title: SegmentRule
+    SegmentRuleTypeEnum:
+      type: string
+      enum:
+        - ALL
+        - ANY
+        - NONE
+    TraitSerializerBasic:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        trait_key:
+          type: string
+          maxLength: 200
+        trait_value:
+          description: 'Can be string, integer, float, or boolean'
+          type:
+            - string
+            - integer
+            - number
+            - boolean
+            - 'null'
+        transient:
+          type: boolean
+          default: false
+      required:
+        - id
+        - trait_key
+        - trait_value
+    V1EnvironmentDocumentResponse:
+      description: |-
+        `/api/v1/environment-documents/` response.
+
+        Powers Flagsmith SDK's local evaluation mode.
+      type: object
+      properties:
+        api_key:
+          type: string
+          title: Api Key
+        feature_states:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureState'
+          title: Feature States
+        identity_overrides:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentityOverride'
+          title: Identity Overrides
+        name:
+          type: string
+          title: Name
+        project:
+          $ref: '#/components/schemas/Project'
+      required:
+        - api_key
+        - feature_states
+        - identity_overrides
+        - name
+        - project
+      title: V1EnvironmentDocumentResponse
+    _Trait:
+      type: object
+      properties:
+        trait_key:
+          type: string
+        trait_value:
+          description: 'Can be string, integer, float, or boolean'
+          type:
+            - string
+            - integer
+            - number
+            - boolean
+      required:
+        - trait_key
+        - trait_value
+  securitySchemes:
+    Private:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'For Private Endpoints. <a href=''https://docs.flagsmith.com/clients/rest#private-api-endpoints''>Find out more</a>.'
+    Public:
+      type: apiKey
+      in: header
+      name: X-Environment-Key
+      description: 'For Public Endpoints. <a href=''https://docs.flagsmith.com/clients/rest#public-api-endpoints''>Find out more</a>.'
+    basicAuth:
+      type: http
+      scheme: basic
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
+$schema: 'https://spec.openapis.org/oas/3.1/dialect/base'
