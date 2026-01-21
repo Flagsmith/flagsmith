@@ -67,23 +67,27 @@ docker-build:
 		--target=oss-api \
 		../
 
+.PHONY: wait-for-db
+wait-for-db:
+	poetry run python manage.py waitfordb 
+	poetry run python manage.py waitfordb --database analytics
+
 .PHONY: test
-test: docker-up
-	poetry run python manage.py waitfordb
+test: docker-up wait-for-db
 	poetry run pytest $(opts)
 
 .PHONY: django-make-migrations
-django-make-migrations: docker-up
+django-make-migrations: docker-up wait-for-db
 	poetry run python manage.py waitfordb
 	poetry run python manage.py makemigrations $(opts)
 
 .PHONY: django-squash-migrations
-django-squash-migrations: docker-up
+django-squash-migrations: docker-up wait-for-db
 	poetry run python manage.py waitfordb
 	poetry run python manage.py squashmigrations $(opts)
 
 .PHONY: django-migrate
-django-migrate: docker-up
+django-migrate: docker-up wait-for-db
 	poetry run python manage.py waitfordb
 	poetry run python manage.py migrate
 	poetry run python manage.py createcachetable
@@ -97,11 +101,11 @@ django-collect-static:
 	poetry run python manage.py collectstatic --noinput
 
 .PHONY: serve
-serve: docker-up
+serve: docker-up wait-for-db
 	poetry run flagsmith start --reload api
 
 .PHONY: run-task-processor
-run-task-processor: docker-up
+run-task-processor: docker-up wait-for-db
 	poetry run flagsmith start --reload --bind 0.0.0.0:8001 task-processor
 
 .PHONY: serve-with-task-processor
