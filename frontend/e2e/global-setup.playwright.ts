@@ -7,14 +7,9 @@ async function globalSetup(config: FullConfig) {
   console.log('Starting global setup for E2E tests...');
 
   const e2eTestApi = `${process.env.FLAGSMITH_API_URL || Project.api}e2etests/teardown/`;
-  let token = process.env.E2E_TEST_TOKEN
-    ? process.env.E2E_TEST_TOKEN
-    : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`];
-
-  // For local/dev testing, use the default token from docker-compose if not set
-  if (!token && (process.env.E2E_LOCAL === 'true' || process.env.E2E_DEV === 'true')) {
-    token = 'some-token';
-  }
+  const token = process.env.E2E_TEST_TOKEN
+      ? process.env.E2E_TEST_TOKEN
+      : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`]
 
   console.log(
     '\n',
