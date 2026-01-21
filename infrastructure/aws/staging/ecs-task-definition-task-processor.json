@@ -9,6 +9,11 @@
             "command": ["run-task-processor"],
             "portMappings": [
                 {
+                    "containerPort": 9100,
+                    "hostPort": 9100,
+                    "protocol": "tcp"
+                },
+                {
                     "containerPort": 8000,
                     "hostPort": 8000,
                     "protocol": "tcp"
@@ -162,6 +167,10 @@
                 {
                     "name": "TASK_PROCESSOR_NUM_THREADS",
                     "value": "12"
+                },
+                {
+                    "name": "LOG_LEVEL",
+                    "value": "INFO"
                 }
             ],
             "secrets": [

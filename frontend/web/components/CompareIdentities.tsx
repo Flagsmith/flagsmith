@@ -59,10 +59,14 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
 }) => {
   const [leftId, setLeftId] = useState<IdentitySelectType['value']>()
   const [rightId, setRightId] = useState<IdentitySelectType['value']>()
-  const { data: projectFlags, refetch } = useGetProjectFlagsQuery({
-    environment: ProjectStore.getEnvironmentIdFromKey(_environmentId),
-    project: projectId,
-  })
+  const envId = ProjectStore.getEnvironmentIdFromKey(_environmentId)
+  const { data: projectFlags, refetch } = useGetProjectFlagsQuery(
+    {
+      environment: envId,
+      project: projectId,
+    },
+    { skip: !envId || !projectId },
+  )
   const [environmentId, setEnvironmentId] = useState(_environmentId)
   const [showArchived, setShowArchived] = useState(false)
 
@@ -74,11 +78,11 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
 
   const { data: leftUser } = useGetIdentityFeatureStatesAllQuery(
     { environment: environmentId, user: `${leftId?.value}` },
-    { skip: !leftId },
+    { skip: !leftId || !environmentId },
   )
   const { data: rightUser } = useGetIdentityFeatureStatesAllQuery(
     { environment: environmentId, user: `${rightId?.value}` },
-    { skip: !rightId },
+    { skip: !rightId || !environmentId },
   )
   const [createCloneIdentityFeatureStates] =
     useCreateCloneIdentityFeatureStatesMutation()
