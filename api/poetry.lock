@@ -2062,8 +2062,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-private/"
-reference = "v0.4.2"
-resolved_reference = "f916a53421cf40c41620aabd79bafa8fad4d55b4"
+reference = "v0.4.4"
+resolved_reference = "a5318e69b5712307e3204a57ecebb64995526200"
 
 [[package]]
 name = "freezegun"
@@ -5136,7 +5136,7 @@ test = ["pytest"]
 
 [[package]]
 name = "workflows-logic"
-version = "3.2.0"
+version = "3.3.0"
 description = "Workflows logic plugin for Flagsmith application."
 optional = false
 python-versions = ">=3.11,<4.0"
@@ -5153,8 +5153,8 @@ flagsmith-flag-engine = "*"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "v3.2.0"
-resolved_reference = "ef5a73a5e821353df97e930ad630bc63fc68bcac"
+reference = "v3.3.0"
+resolved_reference = "51536f8c6aefa68f87959aaafdbb869f096c7e44"
 
 [[package]]
 name = "wrapt"
@@ -5276,4 +5276,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "72dbf4f3b3548cd029f61ef80b3f7812f99b4ff064f5e9f23107922bfc274901"
+content-hash = "0b5db19e7a5d56ccade9f2d2e9fafd5840f7d70381add829953b4fa0a1c06da1"

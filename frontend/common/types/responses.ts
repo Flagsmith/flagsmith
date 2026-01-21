@@ -348,13 +348,13 @@ export type AuditLogItem = {
   related_object_uuid?: number
   related_feature_id?: number
   related_object_type:
-  | 'FEATURE'
-  | 'FEATURE_STATE'
-  | 'ENVIRONMENT'
-  | 'CHANGE_REQUEST'
-  | 'SEGMENT'
-  | 'EF_VERSION'
-  | 'EDGE_IDENTITY'
+    | 'FEATURE'
+    | 'FEATURE_STATE'
+    | 'ENVIRONMENT'
+    | 'CHANGE_REQUEST'
+    | 'SEGMENT'
+    | 'EF_VERSION'
+    | 'EDGE_IDENTITY'
   is_system_event: boolean
 }
 
