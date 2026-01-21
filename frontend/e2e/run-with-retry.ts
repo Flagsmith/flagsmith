@@ -62,8 +62,13 @@ async function runTeardown() {
 
 function runPlaywright(args: string[], quietMode: boolean): boolean {
   try {
-    // Quote arguments that contain spaces
-    const quotedArgs = args.map(arg => arg.includes(' ') ? `"${arg}"` : arg);
+    // Quote arguments that contain spaces or special shell characters
+    const quotedArgs = args.map(arg => {
+      if (arg.includes(' ') || arg.includes('|') || arg.includes('&') || arg.includes(';')) {
+        return `"${arg}"`;
+      }
+      return arg;
+    });
     const playwrightCmd = ['npx', 'cross-env', 'NODE_ENV=production', 'E2E=true', 'playwright', 'test', ...quotedArgs];
     if (!quietMode) console.log('Running:', playwrightCmd.join(' '));
     execSync(playwrightCmd.join(' '), {
