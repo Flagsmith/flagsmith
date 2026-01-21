@@ -72,17 +72,17 @@ test: docker-up
 	poetry run pytest $(opts)
 
 .PHONY: django-make-migrations
-django-make-migrations:
+django-make-migrations: docker-up
 	poetry run python manage.py waitfordb
 	poetry run python manage.py makemigrations $(opts)
 
 .PHONY: django-squash-migrations
-django-squash-migrations:
+django-squash-migrations: docker-up
 	poetry run python manage.py waitfordb
 	poetry run python manage.py squashmigrations $(opts)
 
 .PHONY: django-migrate
-django-migrate:
+django-migrate: docker-up
 	poetry run python manage.py waitfordb
 	poetry run python manage.py migrate
 	poetry run python manage.py createcachetable
