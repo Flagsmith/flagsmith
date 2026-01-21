@@ -2014,6 +2014,8 @@ environs = {version = "<15", optional = true, markers = "extra == \"common-core\
 gunicorn = {version = ">=19.1", optional = true, markers = "extra == \"common-core\""}
 prometheus-client = {version = ">=0.0.16", optional = true, markers = "extra == \"common-core\" or extra == \"task-processor\""}
 psycopg2-binary = {version = ">=2.9,<3", optional = true, markers = "extra == \"common-core\""}
+pyfakefs = {version = ">=5,<6", optional = true, markers = "extra == \"test-tools\""}
+pytest-django = {version = ">=4,<5", optional = true, markers = "extra == \"test-tools\""}
 requests = {version = "*", optional = true, markers = "extra == \"common-core\""}
 simplejson = {version = ">=3,<4", optional = true, markers = "extra == \"common-core\""}
 
@@ -5286,4 +5288,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "339f191acb6e99a53f7f53adda39699982543182301aa8e47088bed0ef87d7bb"
+content-hash = "0bb3b3343eb02e2d63cd01e5e3d36d08b7d230758aa2ecf4421d487a31db0f16"
