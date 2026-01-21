@@ -88,14 +88,10 @@ jobs:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-      - name: Upload test results
+      - name: Copy results.json to HTML report
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-test-results-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index }}
-          path: frontend/e2e/test-results/
-          retention-days: 30
-          if-no-files-found: warn
+        run: |
+          cp frontend/e2e/test-results/results.json frontend/e2e/playwright-report/ || true
 
       - name: Upload HTML report
         if: always()
@@ -106,14 +102,20 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
+      - name: Set artifact URL
+        if: always() && github.event_name == 'pull_request'
+        id: artifact-url
+        run: |
+          echo "url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts" >> $GITHUB_OUTPUT
+
       - name: Comment PR with test results
         if: always() && github.event_name == 'pull_request'
         uses: daun/playwright-report-summary@v3
         with:
-          report-file: frontend/e2e/test-results/results.json
+          report-file: frontend/e2e/playwright-report/results.json
           comment-title: 'Playwright Test Results'
           custom-info: |
-            **📦 Artifacts:** [View test results and HTML report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)
+            **📦 Artifacts:** [View test results and HTML report](${{ steps.artifact-url.outputs.url }})
 
             **🖥️ Runner:** ${{ inputs.runs-on }}
             **🔄 Run:** #${{ github.run_number }} (attempt ${{ github.run_attempt }})
