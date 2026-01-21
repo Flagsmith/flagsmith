@@ -118,6 +118,9 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
   await gotoTraits(page)
   await createTrait(page, 0, 'age', 18)
 
+  // Wait for trait to be applied and feature values to load
+  await waitAndRefresh(page)
+  await helpers.waitForElementVisible(byId('user-feature-value-0'))
   await assertTextContent(page, byId('user-feature-value-0'), '"medium"')
   await helpers.gotoFeatures()
   await gotoFeature(page, 0)

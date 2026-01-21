@@ -80,6 +80,11 @@ test.describe('Flag Tests', () => {
   log('Switch environment')
   // Navigate back to features list so environment switcher is visible in navbar
   await helpers.gotoFeatures()
+  // Add a wait to ensure the page has fully loaded and environment switcher is ready
+  await page.waitForTimeout(1500)
+  await helpers.waitForElementVisible(byId('switch-environment-production'))
+  // Additional wait to ensure element is interactive
+  await page.waitForTimeout(500)
   await helpers.click(byId('switch-environment-production'))
 
   log('Feature should be off under different environment')

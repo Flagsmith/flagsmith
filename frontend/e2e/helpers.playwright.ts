@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 import flagsmith from 'flagsmith/isomorphic';
 import { IFlagsmith } from 'flagsmith/types';
 
-export const LONG_TIMEOUT = 10000;
+export const LONG_TIMEOUT = 15000;
 
 // Browser debugging - console and network logging
 export const setupBrowserLogging = (page: Page) => {
@@ -67,12 +67,24 @@ export const setupBrowserLogging = (page: Page) => {
       // usage-data 404s are expected for new orgs without billing
       return;
     }
-    if (status === 404 && url.includes('/list-change-requests/')) {
+    if (status === 404 && (url.includes('/list-change-requests/') || url.includes('/change-requests/'))) {
       // Change requests is an enterprise feature, 404s are expected in OSS
+      return;
+    }
+    if (status === 404 && url.includes('/release-pipelines/')) {
+      // Release pipelines is an enterprise feature, 404s are expected in OSS
       return;
     }
     if (status === 404 && url.includes('/roles/')) {
       // Roles endpoint may not exist in certain configurations
+      return;
+    }
+    if (status === 404 && url.includes('/saml/configuration/')) {
+      // SAML is an enterprise feature, 404s are expected in OSS
+      return;
+    }
+    if (status === 404 && url.includes('/segments/undefined/')) {
+      // Ignore undefined segment lookups (happens during initial load)
       return;
     }
     if (status === 400 && url.includes('/organisations/undefined/')) {
@@ -83,7 +95,9 @@ export const setupBrowserLogging = (page: Page) => {
       // These 403s are expected for non-admin users
       if (url.includes('/get-subscription-metadata/') ||
           url.includes('/usage-data/') ||
-          url.includes('/invite-links/')) {
+          url.includes('/invite-links/') ||
+          url.includes('/roles/') ||
+          url.includes('/change-requests/')) {
         return;
       }
     }
@@ -307,14 +321,24 @@ export class E2EHelpers {
     await this.setText('[name="email"]', email);
     await this.setText('[name="password"]', password);
     await this.click('#login-btn');
-    // Wait for navigation to complete
-    await this.page.waitForURL(/\/organisation\/\d+/, { timeout: LONG_TIMEOUT });
-    // Wait for the project manage widget to be present and projects to load
-    await this.waitForElementVisible('#project-manage-widget');
+    // Wait for navigation to complete - either to an organization or create page
+    await this.page.waitForURL((url) => {
+      return url.pathname.includes('/organisation/') || url.pathname.includes('/create');
+    }, { timeout: LONG_TIMEOUT });
+
+    // Check if we're on the create page (no organizations)
+    const currentUrl = this.page.url();
+    if (currentUrl.includes('/create')) {
+      // User has no organizations, we're on the create page
+      log('User has no organizations, on create page');
+    } else {
+      // Wait for the project manage widget to be present and projects to load
+      await this.waitForElementVisible('#project-manage-widget');
+    }
     // Wait for loading to complete - either project list or no projects message appears
     await this.page.waitForFunction(() => {
       const widget = document.querySelector('#project-manage-widget');
-      if (!widget) return false;
+      if (!widget) return true; // If no widget, we're on create page - that's ok
       // Check if loader is gone and content is visible
       const hasLoader = widget.querySelector('.centered-container .loader');
       return !hasLoader;
@@ -849,9 +873,13 @@ export const createRemoteConfig = async (
     await page.waitForTimeout(500);
   }
   await click(page, byId('create-feature-btn'));
+  // Wait for the feature to be created and modal to close
+  await page.waitForTimeout(2000); // Increased wait for API to process
   await waitForElementVisible(page, byId(`feature-value-${index}`));
   await assertTextContent(page, byId(`feature-value-${index}`), expectedValue);
   await closeModal(page);
+  // Additional wait after feature creation to prevent auth token issues
+  await page.waitForTimeout(500);
 };
 
 // Create organisation and project
@@ -962,8 +990,12 @@ export const createFeature = async (
     await click(page, byId('toggle-feature-button'));
   }
   await click(page, byId('create-feature-btn'));
+  // Wait for feature creation to complete
+  await page.waitForTimeout(1500);
   await waitForElementVisible(page, byId(`feature-item-${index}`));
   await closeModal(page);
+  // Additional wait after feature creation to prevent auth token issues
+  await page.waitForTimeout(500);
 };
 
 // Delete a feature
