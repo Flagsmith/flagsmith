@@ -8,6 +8,7 @@ on:
       - .release-please-manifest.json
     branches:
       - main
+      - ci/private-packages-test-improvements # branch for testing only
 
 defaults:
   run:
