@@ -29,7 +29,8 @@ export const setupBrowserLogging = (page: Page) => {
         }
       }
     } else if (type === 'warning') {
-      console.warn('\n🟡 [CONSOLE WARNING]', text);
+      // Disabled to reduce noise
+      // console.warn('\n🟡 [CONSOLE WARNING]', text);
     }
   });
 
@@ -542,8 +543,15 @@ export const addSegmentOverrideConfig = async (
   value: string | boolean | number,
   selectionIndex: number = 0,
 ) => {
-  await click(page, byId('segment_overrides'));
-  await click(page, byId(`select-segment-option-${selectionIndex}`));
+  // Check if dropdown is already visible, only click if it's not
+  const dropdownSelector = byId(`select-segment-option-${selectionIndex}`);
+  const isDropdownVisible = await page.locator(dropdownSelector).isVisible().catch(() => false);
+
+  if (!isDropdownVisible) {
+    await click(page, byId('segment_overrides'));
+  }
+
+  await click(page, dropdownSelector);
   await waitForElementVisible(page, byId(`segment-override-value-${index}`));
   await setText(page, byId(`segment-override-value-${index}`), `${value}`);
   await click(page, byId(`segment-override-toggle-${index}`));
@@ -557,8 +565,15 @@ export const addSegmentOverride = async (
   selectionIndex: number = 0,
   mvs: MultiVariate[] = [],
 ) => {
-  await click(page, byId('segment_overrides'));
-  await click(page, byId(`select-segment-option-${selectionIndex}`));
+  // Check if dropdown is already visible, only click if it's not
+  const dropdownSelector = byId(`select-segment-option-${selectionIndex}`);
+  const isDropdownVisible = await page.locator(dropdownSelector).isVisible().catch(() => false);
+
+  if (!isDropdownVisible) {
+    await click(page, byId('segment_overrides'));
+  }
+
+  await click(page, dropdownSelector);
   await waitForElementVisible(page, byId(`segment-override-value-${index}`));
 
   // Set multivariate weights first before enabling the switch
@@ -577,25 +592,10 @@ export const addSegmentOverride = async (
     await page.waitForTimeout(500);
   }
 
-  // Now enable the switch after weights are set
+  // For boolean flags, simply click the toggle if the value is truthy
+  // This matches the TestCafe behavior exactly
   if (value) {
-    const switchSelector = `${byId(`segment-override-${index}`)} [role="switch"]`;
-    await waitForElementVisible(page, switchSelector);
-
-    // Click the switch to toggle it on
-    await click(page, switchSelector);
-
-    // Wait a moment for the React state to update
-    await page.waitForTimeout(500);
-
-    // Verify the switch was actually toggled on
-    const isChecked = await page.locator(switchSelector).getAttribute('aria-checked');
-    if (isChecked !== 'true') {
-      // Try clicking again if it didn't work the first time
-      await page.waitForTimeout(200);
-      await click(page, switchSelector);
-      await page.waitForTimeout(500);
-    }
+    await click(page, byId(`segment-override-toggle-${index}`));
   }
 };
 
