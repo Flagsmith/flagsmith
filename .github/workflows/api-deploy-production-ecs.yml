@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - '*'
+    branches:
+      - ci/fix-workflow-syntax
     paths:
       - api/**
       - .github/**

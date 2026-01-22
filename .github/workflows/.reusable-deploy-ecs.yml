@@ -67,73 +67,73 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  deploy:
-    needs: docker-build-saas-api
-    environment: ${{ inputs.environment }}
-    runs-on: depot-ubuntu-latest
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v5
-
-      - name: Deploy API to ${{ inputs.environment }}
-        id: deploy-api
-        uses: ./.github/actions/api-deploy-ecs
-        with:
-          aws_access_key_id: ${{ vars.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_ecs_cluster_name: ${{ vars.AWS_ECS_CLUSTER_NAME }}
-          aws_ecs_cluster_arn: ${{ vars.AWS_ECS_CLUSTER_ARN }}
-          aws_ecs_service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
-          aws_ecs_sdk_service_name: ${{ vars.AWS_ECS_SDK_SERVICE_NAME }}
-          aws_vpc_subnet_id: ${{ vars.AWS_VPC_SUBNET_ID }}
-          aws_ecs_security_group_id: ${{ vars.AWS_ECS_SECURITY_GROUP_ID }}
-          aws_identity_migration_event_bus_name: ${{ vars.AWS_IDENTITY_MIGRATION_EVENT_BUS_NAME }}
-          aws_identity_migration_event_bus_rule_id: ${{ vars.AWS_IDENTITY_MIGRATION_EVENT_BUS_RULE_ID }}
-          aws_identity_migration_task_role_arn: ${{ vars.AWS_IDENTITY_MIGRATION_TASK_ROLE_ARN }}
-          aws_task_definitions_directory_path: infrastructure/aws/${{ inputs.environment }}
-          api_ecr_image_url: ${{ needs.docker-build-saas-api.outputs.image-url }}
-
-      - name: Deploy Task processor to ${{ inputs.environment }}
-        uses: ./.github/actions/task-processor-deploy-ecs
-        with:
-          aws_access_key_id: ${{ vars.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_ecs_cluster_name: ${{ vars.AWS_ECS_CLUSTER_NAME }}
-          aws_ecs_service_name: ${{ vars.AWS_ECS_TASK_PROCESSOR_SERVICE_NAME }}
-          aws_task_definitions_directory_path: infrastructure/aws/${{ inputs.environment }}
-          api_ecr_image_url: ${{ needs.docker-build-saas-api.outputs.image-url }}
-
-  run-tests:
-    needs: deploy
-    runs-on: depot-ubuntu-latest
-    name: Run E2E Tests
-    environment: ${{ inputs.environment }}
-    concurrency:
-      group: e2e-tests-${{ inputs.environment }}
-      cancel-in-progress: true
-
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v5
-
-      # Temporarily install Firefox 143.0 to avoid test failures as superior versions cause frontend e2e tests to hang
-      # To be removed once upstream issue correctly resolved
-      - name: Install Firefox 143.0
-        run: |
-          sudo apt-get remove -y firefox || true
-          sudo rm -rf /usr/bin/firefox /usr/lib/firefox*
-          
-          ARCH=$(uname -m)
-          wget -O /tmp/firefox.tar.xz "https://ftp.mozilla.org/pub/firefox/releases/143.0/linux-${ARCH}/en-US/firefox-143.0.tar.xz"
-          sudo tar -xJf /tmp/firefox.tar.xz -C /opt
-          sudo ln -s /opt/firefox/firefox /usr/local/bin/firefox
-          rm /tmp/firefox.tar.xz
-          
-          firefox --version
-
-      - name: Run E2E tests against ${{ inputs.environment }}
-        uses: ./.github/actions/e2e-tests
-        with:
-          e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
-          slack_token: ${{ secrets.SLACK_TOKEN }}
-          environment: ${{ inputs.environment }}
+#  deploy:
+#    needs: docker-build-saas-api
+#    environment: ${{ inputs.environment }}
+#    runs-on: depot-ubuntu-latest
+#    steps:
+#      - name: Cloning repo
+#        uses: actions/checkout@v5
+#
+#      - name: Deploy API to ${{ inputs.environment }}
+#        id: deploy-api
+#        uses: ./.github/actions/api-deploy-ecs
+#        with:
+#          aws_access_key_id: ${{ vars.AWS_ACCESS_KEY_ID }}
+#          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws_ecs_cluster_name: ${{ vars.AWS_ECS_CLUSTER_NAME }}
+#          aws_ecs_cluster_arn: ${{ vars.AWS_ECS_CLUSTER_ARN }}
+#          aws_ecs_service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
+#          aws_ecs_sdk_service_name: ${{ vars.AWS_ECS_SDK_SERVICE_NAME }}
+#          aws_vpc_subnet_id: ${{ vars.AWS_VPC_SUBNET_ID }}
+#          aws_ecs_security_group_id: ${{ vars.AWS_ECS_SECURITY_GROUP_ID }}
+#          aws_identity_migration_event_bus_name: ${{ vars.AWS_IDENTITY_MIGRATION_EVENT_BUS_NAME }}
+#          aws_identity_migration_event_bus_rule_id: ${{ vars.AWS_IDENTITY_MIGRATION_EVENT_BUS_RULE_ID }}
+#          aws_identity_migration_task_role_arn: ${{ vars.AWS_IDENTITY_MIGRATION_TASK_ROLE_ARN }}
+#          aws_task_definitions_directory_path: infrastructure/aws/${{ inputs.environment }}
+#          api_ecr_image_url: ${{ needs.docker-build-saas-api.outputs.image-url }}
+#
+#      - name: Deploy Task processor to ${{ inputs.environment }}
+#        uses: ./.github/actions/task-processor-deploy-ecs
+#        with:
+#          aws_access_key_id: ${{ vars.AWS_ACCESS_KEY_ID }}
+#          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws_ecs_cluster_name: ${{ vars.AWS_ECS_CLUSTER_NAME }}
+#          aws_ecs_service_name: ${{ vars.AWS_ECS_TASK_PROCESSOR_SERVICE_NAME }}
+#          aws_task_definitions_directory_path: infrastructure/aws/${{ inputs.environment }}
+#          api_ecr_image_url: ${{ needs.docker-build-saas-api.outputs.image-url }}
+#
+#  run-tests:
+#    needs: deploy
+#    runs-on: depot-ubuntu-latest
+#    name: Run E2E Tests
+#    environment: ${{ inputs.environment }}
+#    concurrency:
+#      group: e2e-tests-${{ inputs.environment }}
+#      cancel-in-progress: true
+#
+#    steps:
+#      - name: Cloning repo
+#        uses: actions/checkout@v5
+#
+#      # Temporarily install Firefox 143.0 to avoid test failures as superior versions cause frontend e2e tests to hang
+#      # To be removed once upstream issue correctly resolved
+#      - name: Install Firefox 143.0
+#        run: |
+#          sudo apt-get remove -y firefox || true
+#          sudo rm -rf /usr/bin/firefox /usr/lib/firefox*
+#
+#          ARCH=$(uname -m)
+#          wget -O /tmp/firefox.tar.xz "https://ftp.mozilla.org/pub/firefox/releases/143.0/linux-${ARCH}/en-US/firefox-143.0.tar.xz"
+#          sudo tar -xJf /tmp/firefox.tar.xz -C /opt
+#          sudo ln -s /opt/firefox/firefox /usr/local/bin/firefox
+#          rm /tmp/firefox.tar.xz
+#
+#          firefox --version
+#
+#      - name: Run E2E tests against ${{ inputs.environment }}
+#        uses: ./.github/actions/e2e-tests
+#        with:
+#          e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
+#          slack_token: ${{ secrets.SLACK_TOKEN }}
+#          environment: ${{ inputs.environment }}
