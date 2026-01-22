@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.211.0](https://github.com/Flagsmith/flagsmith/compare/v2.210.0...v2.211.0) (2026-01-21)
+
+
+### Features
+
+* Edit Change Requests ([#6356](https://github.com/Flagsmith/flagsmith/issues/6356)) ([00085cd](https://github.com/Flagsmith/flagsmith/commit/00085cdefc6266174c5e1e10e8cfb36b402c4d8e))
+* **frontend:** add Jest unit testing infrastructure ([#6432](https://github.com/Flagsmith/flagsmith/issues/6432)) ([9468354](https://github.com/Flagsmith/flagsmith/commit/9468354eb1a26541cfcf1048fc2ede39e014a1b1))
+* **frontend:** add reusable EmptyState component for empty pages ([#6538](https://github.com/Flagsmith/flagsmith/issues/6538)) ([cd64f1d](https://github.com/Flagsmith/flagsmith/commit/cd64f1de4aa2594f7b0166d2ea6b37f7af5062c2))
+* **frontend:** add subscription limit info to Usage and Billing pages ([#6539](https://github.com/Flagsmith/flagsmith/issues/6539)) ([7e2d9fb](https://github.com/Flagsmith/flagsmith/commit/7e2d9fb55a8c9f9fd8eaff5722281466a8d0f2c6))
+* synchronize-openapi-schema-with-gram ([#6499](https://github.com/Flagsmith/flagsmith/issues/6499)) ([31d64ad](https://github.com/Flagsmith/flagsmith/commit/31d64ad2c8346dd67aaf349a78dcbf79970d833d))
+* use-default-allocation-from-flag ([#6558](https://github.com/Flagsmith/flagsmith/issues/6558)) ([fcae6b4](https://github.com/Flagsmith/flagsmith/commit/fcae6b4e6769499a63b764ab4cd3c0c377680ffb))
+
+
+### Bug Fixes
+
+* add null checks for multivariate_options in feature-list-store ([#6561](https://github.com/Flagsmith/flagsmith/issues/6561)) ([aae7f77](https://github.com/Flagsmith/flagsmith/commit/aae7f77d108d54c863f0c74d4cbe663320fc6daa))
+* add skip conditions for undefined environment ID queries on Compare feat ([#6557](https://github.com/Flagsmith/flagsmith/issues/6557)) ([2b832fa](https://github.com/Flagsmith/flagsmith/commit/2b832facc1e35705383b76d842c36349e349c433))
+* reviewed-dependencies-and-mutualize-components ([#6567](https://github.com/Flagsmith/flagsmith/issues/6567)) ([7350f3d](https://github.com/Flagsmith/flagsmith/commit/7350f3dd07c7ed44cb5a437872ead25e93d2d4c9))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* **Monitoring:** Expose /metrics to new port ([#6533](https://github.com/Flagsmith/flagsmith/issues/6533)) ([007ff8a](https://github.com/Flagsmith/flagsmith/commit/007ff8a7f3f9ee446205d59f961e51aa98629a2c))
+
+
+### Dependency Updates
+
+* bump werkzeug from 3.1.4 to 3.1.5 in /api ([#6505](https://github.com/Flagsmith/flagsmith/issues/6505)) ([86a243d](https://github.com/Flagsmith/flagsmith/commit/86a243dbe4f921cd98791fd3ae097f8dad323ce2))
+
 ## [2.210.0](https://github.com/Flagsmith/flagsmith/compare/v2.209.1...v2.210.0) (2026-01-19)
 
 
