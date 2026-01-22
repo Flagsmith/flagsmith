@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.211.2](https://github.com/Flagsmith/flagsmith/compare/v2.211.1...v2.211.2) (2026-01-22)
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* **Monitoring:** Expose production /metrics to :9100 ([#6578](https://github.com/Flagsmith/flagsmith/issues/6578)) ([783b762](https://github.com/Flagsmith/flagsmith/commit/783b762911f258e306f54a3aabefb996908c540e))
+
 ## [2.211.1](https://github.com/Flagsmith/flagsmith/compare/v2.211.0...v2.211.1) (2026-01-22)
 
 
