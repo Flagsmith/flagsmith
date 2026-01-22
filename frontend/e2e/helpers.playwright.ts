@@ -485,13 +485,11 @@ export const setText = async (page: Page, selector: string, text: string) => {
   logUsingLastSection(`Set text ${selector} : ${text}`);
   const element = page.locator(selector);
   await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-  await element.clear();
-  // Small wait after clearing to let React state update
-  await page.waitForTimeout(50);
+  // Use Playwright's built-in fill() which handles focus automatically
+  // fill() will: wait for actionability, scroll into view, focus, and fill
+  await element.fill('');
   if (text) {
     await element.fill(text);
-    // Small wait after filling to let React state update
-    await page.waitForTimeout(50);
   }
 };
 
@@ -502,6 +500,20 @@ export const waitForElementVisible = async (page: Page, selector: string, timeou
     state: 'visible',
     timeout
   });
+};
+
+// Wait for an element to be focused (useful for autofocus scenarios)
+export const waitForElementFocused = async (page: Page, selector: string, timeout: number = 5000) => {
+  logUsingLastSection(`Waiting for element to be focused ${selector}`);
+
+  // First ensure the element exists and is visible
+  await page.locator(selector).first().waitFor({ state: 'visible', timeout });
+
+  // Then wait for it to be focused
+  await page.waitForFunction((sel) => {
+    const element = document.querySelector(sel);
+    return element === document.activeElement;
+  }, selector, { timeout });
 };
 
 // Wait for an element to not be clickable (disabled)
@@ -660,12 +672,12 @@ export const createTrait = async (
   await page.waitForTimeout(2000);
   await page.reload();
 
-  // Find the trait by name using the js-trait-key class
-  const traitElement = page.locator('[class*="js-trait-key-"]').filter({ hasText: new RegExp(`^${traitName}$`) });
-  await traitElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+  // Find the trait name element
+  const traitNameElement = page.locator('[class*="js-trait-key-"]').filter({ hasText: new RegExp(`^${traitName}$`) });
+  await traitNameElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
 
-  // Get the index from the class attribute
-  const className = await traitElement.getAttribute('class');
+  // Get the index from the class to find the value element
+  const className = await traitNameElement.getAttribute('class');
   const index = className?.match(/js-trait-key-(\d+)/)?.[1];
 
   const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
@@ -687,12 +699,6 @@ export const deleteTrait = async (page: Page, traitName: string) => {
   await waitForElementNotExist(page, byId(`user-trait-${index}`));
 };
 
-// View a feature by index
-export const viewFeature = async (page: Page, index: number) => {
-  await click(page, byId(`feature-item-${index}`));
-  await waitForElementVisible(page, '#create-feature-modal');
-};
-
 // Get user feature value by feature name
 export const getUserFeatureValue = async (page: Page, featureName: string): Promise<string> => {
   // Find the feature row by looking for the FeatureName component with the text
@@ -702,11 +708,8 @@ export const getUserFeatureValue = async (page: Page, featureName: string): Prom
 
   await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
 
-  // Get the index from the data-test attribute
-  const dataTest = await featureRow.getAttribute('data-test');
-  const index = dataTest?.match(/user-feature-(\d+)/)?.[1];
-
-  const valueElement = page.locator(byId(`user-feature-value-${index}`));
+  // Find the value element within the feature row
+  const valueElement = featureRow.locator('[data-test^="user-feature-value-"]');
   return (await valueElement.textContent()) || '';
 };
 
@@ -719,11 +722,9 @@ export const assertUserFeatureValue = async (page: Page, featureName: string, ex
 
   await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
 
-  // Get the index from the data-test attribute
-  const dataTest = await featureRow.getAttribute('data-test');
-  const index = dataTest?.match(/user-feature-(\d+)/)?.[1];
-
-  await assertTextContent(page, byId(`user-feature-value-${index}`), expectedValue);
+  // Find the value element within the feature row
+  const valueElement = featureRow.locator('[data-test^="user-feature-value-"]');
+  await expect(valueElement).toHaveText(expectedValue, { timeout: LONG_TIMEOUT });
 };
 
 // Click on a user feature by name (to open the edit modal)
@@ -733,11 +734,7 @@ export const clickUserFeature = async (page: Page, featureName: string) => {
   }).first();
 
   await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-
-  const dataTest = await featureRow.getAttribute('data-test');
-  const index = dataTest?.match(/user-feature-(\d+)/)?.[1];
-
-  await click(page, byId(`user-feature-${index}`));
+  await featureRow.click();
 };
 
 // Wait for user feature switch state by feature name
@@ -764,6 +761,56 @@ export const clickUserFeatureSwitch = async (page: Page, featureName: string, st
   // Find and click the switch within the feature row with the specific state
   const switchElement = featureRow.locator(`[data-test^="user-feature-switch-"][data-test$="-${state}"]`);
   await switchElement.click();
+};
+
+// Wait for regular feature switch state by feature name (in features list)
+export const waitForFeatureSwitch = async (page: Page, featureName: string, state: 'on' | 'off') => {
+  // Find feature by name in the features list
+  const featureRow = page.locator('[data-test^="feature-item-"]').filter({
+    has: page.locator(`span:text-is("${featureName}")`)
+  }).first();
+
+  await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+
+  // Find the switch within the feature row with the specific state
+  const switchElement = featureRow.locator(`[data-test^="feature-switch-"][data-test$="-${state}"]`);
+  await switchElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+};
+
+// Get feature index by name
+export const getFeatureIndexByName = async (page: Page, featureName: string): Promise<number> => {
+  const featureRow = page.locator('[data-test^="feature-item-"]').filter({
+    has: page.locator(`span:text-is("${featureName}")`)
+  }).first();
+
+  await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+
+  const dataTest = await featureRow.getAttribute('data-test');
+  const index = dataTest?.match(/feature-item-(\d+)/)?.[1];
+
+  if (!index) {
+    throw new Error(`Could not find index for feature: ${featureName}`);
+  }
+
+  return parseInt(index, 10);
+};
+
+// Click feature action button by feature name
+export const clickFeatureAction = async (page: Page, featureName: string) => {
+  const index = await getFeatureIndexByName(page, featureName);
+  await click(page, byId(`feature-action-${index}`));
+};
+
+// Wait for feature switch by name and state to be clickable or not clickable
+export const waitForFeatureSwitchClickable = async (page: Page, featureName: string, state: 'on' | 'off', clickable: boolean = true) => {
+  const index = await getFeatureIndexByName(page, featureName);
+  const element = page.locator(byId(`feature-switch-${index}-${state}`)).first();
+  await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+  if (clickable) {
+    await expect(element).toBeEnabled({ timeout: LONG_TIMEOUT });
+  } else {
+    await expect(element).toBeDisabled({ timeout: LONG_TIMEOUT });
+  }
 };
 
 // Add segment override configuration
@@ -810,9 +857,12 @@ export const addSegmentOverride = async (
   if (mvs && mvs.length > 0) {
     // Set weights sequentially instead of in parallel to avoid race conditions
     for (const v of mvs) {
+      const weightSelector = `.segment-overrides ${byId(`featureVariationWeight${v.value}`)}`;
+      // Wait for the weight input to be visible before trying to set it
+      await waitForElementVisible(page, weightSelector);
       await setText(
         page,
-        `.segment-overrides ${byId(`featureVariationWeight${v.value}`)}`,
+        weightSelector,
         `${v.weight}`,
       );
       // Small wait between each weight change
@@ -867,8 +917,12 @@ export const goToUser = async (page: Page, index: number) => {
 };
 
 // Navigate to a feature
-export const gotoFeature = async (page: Page, index: number) => {
-  await click(page, byId(`feature-item-${index}`));
+export const gotoFeature = async (page: Page, featureName: string) => {
+  const featureRow = page.locator('[data-test^="feature-item-"]').filter({
+    has: page.locator(`text="${featureName}"`)
+  }).first();
+  await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+  await featureRow.click();
   await waitForElementVisible(page, '#create-feature-modal');
 };
 
@@ -966,8 +1020,8 @@ export const logout = async (page: Page) => {
 };
 
 // Navigate to feature versions
-export const goToFeatureVersions = async (page: Page, featureIndex: number) => {
-  await gotoFeature(page, featureIndex);
+export const goToFeatureVersions = async (page: Page, featureName: string) => {
+  await gotoFeature(page, featureName);
   if (await isElementExists(page, 'change-history')) {
     await click(page, byId('change-history'));
   } else {
@@ -979,7 +1033,7 @@ export const goToFeatureVersions = async (page: Page, featureIndex: number) => {
 // Compare version
 export const compareVersion = async (
   page: Page,
-  featureIndex: number,
+  featureName: string,
   versionIndex: number,
   compareOption: 'LIVE' | 'PREVIOUS' | null,
   oldEnabled: boolean,
@@ -987,7 +1041,7 @@ export const compareVersion = async (
   oldValue?: any,
   newValue?: any,
 ) => {
-  await goToFeatureVersions(page, featureIndex);
+  await goToFeatureVersions(page, featureName);
   await click(page, byId(`history-item-${versionIndex}-compare`));
   if (compareOption === 'LIVE') {
     await click(page, byId(`history-item-${versionIndex}-compare-live`));
@@ -1017,10 +1071,10 @@ export const compareVersion = async (
 // Assert number of versions
 export const assertNumberOfVersions = async (
   page: Page,
-  index: number,
+  featureName: string,
   versions: number,
 ) => {
-  await goToFeatureVersions(page, index);
+  await goToFeatureVersions(page, featureName);
   await waitForElementVisible(page, byId(`history-item-${versions - 2}-compare`));
   await closeModal(page);
 };
@@ -1105,14 +1159,20 @@ export const createOrganisationAndProject = async (
 // Edit remote config
 export const editRemoteConfig = async (
   page: Page,
-  index: number,
+  featureName: string,
   value: string | number | boolean,
   toggleFeature: boolean = false,
   mvs: MultiVariate[] = [],
 ) => {
   const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
   await gotoFeatures(page);
-  await click(page, byId(`feature-item-${index}`));
+
+  // Find and click the feature by name
+  const featureRow = page.locator('[data-test^="feature-item-"]').filter({
+    has: page.locator(`text="${featureName}"`)
+  }).first();
+  await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+  await featureRow.click();
 
   // Change the value field first (if needed) to match TestCafe behavior
   if (value !== '') {
@@ -1153,8 +1213,13 @@ export const editRemoteConfig = async (
   // Use button text to avoid strict mode violation (multiple buttons with same ID)
   await click(page, 'button:has-text("Update Feature Value")');
   if (value) {
-    await waitForElementVisible(page, byId(`feature-value-${index}`));
-    await assertTextContent(page, byId(`feature-value-${index}`), expectedValue);
+    // Find the feature value element in the features list by name
+    const updatedFeatureRow = page.locator('[data-test^="feature-item-"]').filter({
+      has: page.locator(`text="${featureName}"`)
+    }).first();
+    const valueElement = updatedFeatureRow.locator('[data-test^="feature-value-"]');
+    await expect(valueElement).toBeVisible({ timeout: LONG_TIMEOUT });
+    await expect(valueElement).toHaveText(expectedValue, { timeout: LONG_TIMEOUT });
   }
   await closeModal(page);
 };
@@ -1195,17 +1260,58 @@ export const createFeature = async (
 };
 
 // Delete a feature
-export const deleteFeature = async (page: Page, index: number, name: string) => {
+export const deleteFeature = async (page: Page, name: string) => {
+  // Find the feature row by name
+  const featureRow = page.locator('[data-test^="feature-item-"]').filter({
+    has: page.locator(`span:text-is("${name}")`)
+  }).first();
+
+  await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+
+  // Get the index from the feature row's data-test attribute
+  const dataTest = await featureRow.getAttribute('data-test');
+  const index = dataTest?.match(/feature-item-(\d+)/)?.[1];
+
+  if (!index) {
+    throw new Error(`Could not find index for feature: ${name}`);
+  }
+
   await click(page, byId(`feature-action-${index}`));
   await waitForElementVisible(page, byId(`feature-remove-${index}`));
   await click(page, byId(`feature-remove-${index}`));
   await setText(page, '[name="confirm-feature-name"]', name);
   await click(page, '#confirm-remove-feature-btn');
-  await waitForElementNotExist(page, `feature-remove-${index}`);
+
+  // Wait for the feature to be removed from the list
+  await page.waitForFunction((featureName) => {
+    const features = document.querySelectorAll('[data-test^="feature-item-"]');
+    for (const feature of features) {
+      const nameSpan = feature.querySelector('span');
+      if (nameSpan && nameSpan.textContent === featureName) {
+        return false;
+      }
+    }
+    return true;
+  }, name, { timeout: LONG_TIMEOUT });
 };
 
 // Toggle a feature on/off
-export const toggleFeature = async (page: Page, index: number, toValue: boolean) => {
+export const toggleFeature = async (page: Page, name: string, toValue: boolean) => {
+  // Find the feature row by name
+  const featureRow = page.locator('[data-test^="feature-item-"]').filter({
+    has: page.locator(`span:text-is("${name}")`)
+  }).first();
+
+  await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+
+  // Get the index from the feature row's data-test attribute
+  const dataTest = await featureRow.getAttribute('data-test');
+  const index = dataTest?.match(/feature-item-(\d+)/)?.[1];
+
+  if (!index) {
+    throw new Error(`Could not find index for feature: ${name}`);
+  }
+
   await click(page, byId(`feature-switch-${index}-${toValue ? 'off' : 'on'}`));
   await click(page, '#confirm-toggle-feature-btn');
   await waitForElementVisible(

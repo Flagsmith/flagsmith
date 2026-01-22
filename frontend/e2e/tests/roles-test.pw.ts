@@ -58,7 +58,7 @@ test.describe('Roles Tests', () => {
   await helpers.click(byId(rolesProject))
   log('User with permissions can Handle the Features')
   const flagName = 'test_feature'
-  await deleteFeature(page, 0, flagName)
+  await deleteFeature(page, flagName)
 
   log('User with permissions can See the Identities')
   await gotoTraits(page)

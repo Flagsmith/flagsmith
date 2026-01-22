@@ -8,9 +8,11 @@ import {
     createRemoteConfig,
     editRemoteConfig,
     getFlagsmith,
+    getFeatureIndexByName,
     log,
     parseTryItResults,
     toggleFeature,
+    waitForFeatureSwitch,
     createHelpers,
 } from '../helpers.playwright';
 import { E2E_USER, PASSWORD } from '../config';
@@ -40,7 +42,7 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     log('Create feature 1')
     await createRemoteConfig(page, 0, 'a', 'small')
     log('Edit feature 1')
-    await editRemoteConfig(page, 0,'medium')
+    await editRemoteConfig(page, 'a','medium')
 
     log('Create feature 2')
     await createRemoteConfig(page, 1, 'b', 'small', null, null, [
@@ -48,7 +50,7 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
         { value: 'big', weight: 0 },
     ])
     log('Edit feature 2')
-    await editRemoteConfig(page, 1,'small',false,[
+    await editRemoteConfig(page, 'b','small',false,[
         { value: 'medium', weight: 0 },
         { value: 'big', weight: 100 },
     ])
@@ -56,15 +58,15 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     log('Create feature 3')
     await createFeature(page, 2, 'c', false)
     log('Edit feature 3')
-    await editRemoteConfig(page, 2,'',true)
+    await editRemoteConfig(page, 'c','',true)
 
     log('Assert version counts')
-    await assertNumberOfVersions(page, 0, 2)
-    await assertNumberOfVersions(page, 1, 2)
-    await assertNumberOfVersions(page, 2, 2)
-    await compareVersion(page, 0,0,null,true,true, 'small','medium')
-    await compareVersion(page, 1,0,null,true,true, 'small','small')
-    await compareVersion(page, 2,0,null,false,true, null,null)
+    await assertNumberOfVersions(page, 'a', 2)
+    await assertNumberOfVersions(page, 'b', 2)
+    await assertNumberOfVersions(page, 'c', 2)
+    await compareVersion(page, 'a',0,null,true,true, 'small','medium')
+    await compareVersion(page, 'b',0,null,true,true, 'small','small')
+    await compareVersion(page, 'c',0,null,false,true, null,null)
 
     // ===================================================================================
     // Test: Row toggle in versioned environment
@@ -75,12 +77,12 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     // ===================================================================================
     log('Test row toggle in versioned environment')
 
-    // Feature 'c' (index 2) is currently ON - toggle it OFF
+    // Feature 'c' is currently ON - toggle it OFF
     log('Toggle feature OFF via row switch (versioned env)')
-    await toggleFeature(page, 2, false)
+    await toggleFeature(page, 'c', false)
 
     // Verify: Switch shows OFF state on features list
-    await helpers.waitForElementVisible(byId('feature-switch-2-off'))
+    await waitForFeatureSwitch(page, 'c', 'off')
 
     // Verify: API returns correct state (feature disabled)
     log('Verify API returns disabled state')
@@ -94,14 +96,14 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     log('Refresh page to verify toggle OFF persisted')
     await page.reload()
     await helpers.waitForElementVisible(byId('features-page'))
-    await helpers.waitForElementVisible(byId('feature-switch-2-off'))
+    await waitForFeatureSwitch(page, 'c', 'off')
 
     // Toggle feature 'c' back ON using row switch
     log('Toggle feature ON via row switch (versioned env)')
-    await toggleFeature(page, 2, true)
+    await toggleFeature(page, 'c', true)
 
     // Verify: Switch shows ON state on features list
-    await helpers.waitForElementVisible(byId('feature-switch-2-on'))
+    await waitForFeatureSwitch(page, 'c', 'on')
 
     // Verify: API returns correct state (feature enabled)
     log('Verify API returns enabled state')
@@ -125,7 +127,7 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     log('Refresh page to verify toggle ON persisted')
     await page.reload()
     await helpers.waitForElementVisible(byId('features-page'));
-    await helpers.waitForElementVisible(byId('feature-switch-2-on'));
+    await waitForFeatureSwitch(page, 'c', 'on');
 
     log('Versioned toggle test passed');
 })

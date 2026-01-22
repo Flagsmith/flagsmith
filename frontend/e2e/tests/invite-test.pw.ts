@@ -19,8 +19,9 @@ test.describe('Invite Tests', () => {
   const inviteLink = await getInputValue(page, byId('invite-link'))
   log('Accept invite')
   await page.goto(inviteLink)
-  await helpers.setText('[name="email"]', inviteEmail)
-  await helpers.setText(byId('firstName'), 'Bullet') // visit the url
+  // Wait for the form to load
+  await helpers.waitForElementVisible(byId('firstName'))
+  await helpers.setText(byId('firstName'), 'Bullet')
   await helpers.setText(byId('lastName'), 'Train')
   await helpers.setText(byId('email'), inviteEmail)
   await helpers.setText(byId('password'), PASSWORD)

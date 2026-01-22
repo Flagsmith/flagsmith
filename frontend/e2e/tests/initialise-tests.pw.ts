@@ -20,11 +20,16 @@ test.describe('Signup', () => {
 
     log('Create Organisation');
     await helpers.click(byId('jsSignup'));
+    // Wait for firstName field to be visible after modal opens
+    await helpers.waitForElementVisible(byId('firstName'));
     await helpers.setText(byId('firstName'), 'Bullet');
     await helpers.setText(byId('lastName'), 'Train');
     await helpers.setText(byId('email'), E2E_SIGN_UP_USER);
     await helpers.setText(byId('password'), PASSWORD);
     await helpers.click(byId('signup-btn'));
+    // Wait for navigation and form to load after signup
+    await page.waitForURL(/\/create/, { timeout: 20000 });
+    await helpers.waitForElementVisible('[name="orgName"]');
     await helpers.setText('[name="orgName"]', 'Flagsmith Ltd 0');
     await helpers.click('#create-org-btn');
 

@@ -2,8 +2,10 @@ import { test, expect } from '../test-setup';
 import {
   byId,
   click,
+  clickFeatureAction,
   createEnvironment,
   createFeature,
+  getFeatureIndexByName,
   gotoSegments,
   log,
   login,
@@ -13,6 +15,7 @@ import {
   waitForElementNotClickable,
   waitForElementNotExist,
   waitForElementVisible,
+  waitForFeatureSwitch,
   waitForPageFullyLoaded,
   createHelpers,
 } from '../helpers.playwright';
@@ -52,7 +55,7 @@ test.describe('Project Permission Tests', () => {
   await helpers.login(E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, PASSWORD)
   await helpers.click('#project-select-0')
   await createFeature(page, 0, 'test_feature', false)
-  await toggleFeature(page, 0, true)
+  await toggleFeature(page, 'test_feature', true)
   await helpers.logout()
   log('Remove CREATE_FEATURE permissions')
   await helpers.login(E2E_USER, PASSWORD)
@@ -97,10 +100,11 @@ test.describe('Project Permission Tests', () => {
   await helpers.click('#project-select-0')
   await waitForPageFullyLoaded(page)
   await waitForElementVisible(page, '#features-page')
-  await waitForElementVisible(page, byId('feature-switch-0-off'))
-  await helpers.click(byId('feature-action-0'))
-  await helpers.waitForElementVisible(byId('feature-remove-0'))
-  await expect(page.locator(byId('feature-remove-0'))).toHaveClass(
+  await waitForFeatureSwitch(page, 'test_feature', 'on')
+  await clickFeatureAction(page, 'test_feature')
+  const featureIndex = await getFeatureIndexByName(page, 'test_feature')
+  await helpers.waitForElementVisible(byId(`feature-remove-${featureIndex}`))
+  await expect(page.locator(byId(`feature-remove-${featureIndex}`))).toHaveClass(
     /feature-action__item_disabled/,
   )
   await helpers.logout()
@@ -111,9 +115,10 @@ test.describe('Project Permission Tests', () => {
   log('User with permissions can Delete any feature')
   await helpers.login(E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, PASSWORD)
   await helpers.click('#project-select-0')
-  await helpers.click(byId('feature-action-0'))
-  await helpers.waitForElementVisible(byId('feature-remove-0'))
-  await expect(page.locator(byId('feature-remove-0'))).not.toHaveClass(
+  await clickFeatureAction(page, 'test_feature')
+  const featureIndex2 = await getFeatureIndexByName(page, 'test_feature')
+  await helpers.waitForElementVisible(byId(`feature-remove-${featureIndex2}`))
+  await expect(page.locator(byId(`feature-remove-${featureIndex2}`))).not.toHaveClass(
     /feature-action__item_disabled/,
   )
   await helpers.logout()

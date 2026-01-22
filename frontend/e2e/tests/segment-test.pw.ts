@@ -21,7 +21,6 @@ import {
   log,
   saveFeatureSegments,
   setSegmentOverrideIndex,
-  viewFeature,
   waitAndRefresh,
   waitForUserFeatureSwitch,
   cloneSegment,
@@ -125,7 +124,7 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
   await waitAndRefresh(page)
   await assertUserFeatureValue(page, 'mv_flag', '"medium"')
   await helpers.gotoFeatures()
-  await gotoFeature(page, 0)
+  await gotoFeature(page, 'mv_flag')
 
   await addSegmentOverride(page, 0, true, 0, [
     { value: 'medium', weight: 0 },
@@ -170,7 +169,7 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
   await helpers.gotoSegments()
   await deleteSegment(page, 0, '18_or_19')
   await helpers.gotoFeatures()
-  await deleteFeature(page, 0, 'mv_flag')
+  await deleteFeature(page, 'mv_flag')
 })
 
 test('Segment test 2 - Test segment priority and overrides @oss', async ({ page }) => {
@@ -211,12 +210,12 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
   await createRemoteConfig(page, 0, 'config', 0)
 
   log('Set segment overrides features')
-  await viewFeature(page, 0)
+  await gotoFeature(page, 'config')
   await addSegmentOverrideConfig(page, 0, 1, 0)
   await addSegmentOverrideConfig(page, 1, 2, 0)
   await addSegmentOverrideConfig(page, 2, 3, 0)
   await saveFeatureSegments(page)
-  await viewFeature(page, 1)
+  await gotoFeature(page, 'flag')
   await addSegmentOverride(page, 0, true, 0)
   await addSegmentOverride(page, 1, false, 0)
   await addSegmentOverride(page, 2, true, 0)
@@ -235,10 +234,10 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
 
   log('Prioritise segment 2')
   await helpers.gotoFeatures()
-  await gotoFeature(page, 0)
+  await gotoFeature(page, 'config')
   await setSegmentOverrideIndex(page, 1, 0)
   await saveFeatureSegments(page)
-  await gotoFeature(page, 1)
+  await gotoFeature(page, 'flag')
   await setSegmentOverrideIndex(page, 1, 0)
   await saveFeatureSegments(page)
   await goToUser(page, 0)
@@ -247,10 +246,10 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
 
   log('Prioritise segment 3')
   await helpers.gotoFeatures()
-  await gotoFeature(page, 0)
+  await gotoFeature(page, 'config')
   await setSegmentOverrideIndex(page, 2, 0)
   await saveFeatureSegments(page)
-  await gotoFeature(page, 1)
+  await gotoFeature(page, 'flag')
   await setSegmentOverrideIndex(page, 2, 0)
   await saveFeatureSegments(page)
   await goToUser(page, 0)
@@ -259,8 +258,8 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
 
   log('Clear down features')
   await helpers.gotoFeatures()
-  await deleteFeature(page, 1, 'flag')
-  await deleteFeature(page, 0, 'config')
+  await deleteFeature(page, 'flag')
+  await deleteFeature(page, 'config')
 })
 
 test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page }) => {

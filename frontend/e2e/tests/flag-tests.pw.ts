@@ -13,6 +13,7 @@ import {
   scrollBy,
   toggleFeature,
   waitForElementVisible,
+  waitForFeatureSwitch,
   waitForNetworkIdle,
   createHelpers,
 } from '../helpers.playwright';
@@ -40,11 +41,11 @@ test.describe('Flag Tests', () => {
   await scrollBy(page, 0, 15000)
 
   log('Delete Short Life Feature')
-  await deleteFeature(page, 3, 'short_life_feature')
+  await deleteFeature(page, 'short_life_feature')
   await scrollBy(page, 0, 30000)
 
   log('Toggle Feature')
-  await toggleFeature(page, 0, true)
+  await toggleFeature(page, 'header_enabled', true)
 
   log('Try it')
   await page.waitForTimeout(2000)
@@ -56,7 +57,7 @@ test.describe('Flag Tests', () => {
   await expect(json.header_enabled.enabled).toBe(true)
 
   log('Update feature')
-  await editRemoteConfig(page, 1,12)
+  await editRemoteConfig(page, 'header_size', 12)
 
   log('Try it again')
   await page.waitForTimeout(5000)
@@ -66,7 +67,7 @@ test.describe('Flag Tests', () => {
   await expect(json.header_size.value).toBe(12)
 
   log('Change feature value to boolean')
-  await editRemoteConfig(page, 1,false)
+  await editRemoteConfig(page, 'header_size', false)
 
   log('Try it again 2')
   await page.waitForTimeout(5000)
@@ -81,18 +82,28 @@ test.describe('Flag Tests', () => {
   // Wait for page to be fully loaded and features page to be ready
   await page.waitForLoadState('load')
   await helpers.waitForElementVisible('#show-create-feature-btn')
-  // Wait for environment switcher to be visible and clickable
+
+  // Check if we're already in production, if so switch to development first
+  const isProductionActive = await page.locator(byId('switch-environment-production-active')).isVisible().catch(() => false)
+  if (isProductionActive) {
+    // We're in production, switch to development
+    await helpers.waitForElementClickable(byId('switch-environment-development'))
+    await helpers.click(byId('switch-environment-development'))
+    await helpers.waitForElementVisible(byId('switch-environment-development-active'))
+  }
+
+  // Now switch to production
   await helpers.waitForElementClickable(byId('switch-environment-production'))
   await helpers.click(byId('switch-environment-production'))
 
   log('Feature should be off under different environment')
   await helpers.waitForElementVisible(byId('switch-environment-production-active'))
-  await helpers.waitForElementVisible(byId('feature-switch-0-off'))
+  await waitForFeatureSwitch(page, 'header_enabled', 'off')
 
   log('Clear down features')
   // Ensure features list is fully loaded before attempting to delete
-  await helpers.waitForElementVisible(byId('feature-item-0'))
-  await deleteFeature(page, 1, 'header_size')
-  await deleteFeature(page, 0, 'header_enabled')
+  await waitForFeatureSwitch(page, 'header_enabled', 'off')
+  await deleteFeature(page, 'header_size')
+  await deleteFeature(page, 'header_enabled')
   });
 });

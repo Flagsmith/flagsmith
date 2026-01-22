@@ -3,10 +3,12 @@ import {
   byId,
   click, clickByText, closeModal, createEnvironment,
   createFeature, editRemoteConfig,
+  gotoFeature,
   gotoTraits,
   log,
   login, logout, setUserPermission,
   toggleFeature, waitForElementClickable, waitForElementNotClickable, waitForElementNotExist, waitForElementVisible,
+  waitForFeatureSwitchClickable,
   createHelpers,
 } from '../helpers.playwright';
 import {
@@ -30,7 +32,7 @@ test.describe('Environment Permission Tests', () => {
   await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
   await helpers.click('#project-select-0')
   await createFeature(page, 0, 'test_feature', false)
-  await toggleFeature(page, 0, true)
+  await toggleFeature(page, 'test_feature', true)
   await helpers.logout()
 
   log('User without permissions cannot create traits')
@@ -75,12 +77,12 @@ test.describe('Environment Permission Tests', () => {
   await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
   await helpers.click('#project-select-0')
   await createFeature(page, 0,'my_feature',"foo",'A test feature')
-  await editRemoteConfig(page, 0, 'bar')
+  await editRemoteConfig(page, 'my_feature', 'bar')
   await helpers.logout()
   log('User without permission cannot create a segment override')
   await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
   await helpers.click('#project-select-0')
-  await helpers.click(byId('feature-item-0'))
+  await gotoFeature(page, 'my_feature')
   await helpers.click(byId('segment_overrides'))
   await waitForElementNotClickable(page, '#update-feature-segments-btn')
   await closeModal(page)
@@ -92,7 +94,7 @@ test.describe('Environment Permission Tests', () => {
   log('User with permission can create a segment override')
   await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
   await helpers.click('#project-select-0')
-  await helpers.click(byId('feature-item-0'))
+  await gotoFeature(page, 'my_feature')
   await helpers.click(byId('segment_overrides'))
   await waitForElementClickable(page, '#update-feature-segments-btn')
   await closeModal(page)
@@ -101,10 +103,10 @@ test.describe('Environment Permission Tests', () => {
   log('User without permissions cannot update feature state')
   await helpers.login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
   await helpers.click('#project-select-0')
-  await waitForElementClickable(page, byId('feature-switch-0-on'))
+  await waitForFeatureSwitchClickable(page, 'test_feature', 'on', true)
   await helpers.click(byId('switch-environment-production'))
-  await waitForElementNotClickable(page, byId('feature-switch-0-on'))
-  await helpers.click(byId('feature-item-0'))
+  await waitForFeatureSwitchClickable(page, 'test_feature', 'on', false)
+  await gotoFeature(page, 'test_feature')
   await waitForElementNotClickable(page, byId('update-feature-btn'))
   await closeModal(page)
   await helpers.logout()
