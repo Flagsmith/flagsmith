@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.211.1](https://github.com/Flagsmith/flagsmith/compare/v2.211.0...v2.211.1) (2026-01-22)
+
+
+### Dependency Updates
+
+* bump diff from 5.2.0 to 5.2.2 in /docs ([#6564](https://github.com/Flagsmith/flagsmith/issues/6564)) ([9643968](https://github.com/Flagsmith/flagsmith/commit/96439684727e4790e2ebd4ce50f7e8d7d1184909))
+
 ## [2.211.0](https://github.com/Flagsmith/flagsmith/compare/v2.210.0...v2.211.0) (2026-01-21)
 
 
