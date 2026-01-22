@@ -14,9 +14,13 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Run tests in files in parallel */
   fullyParallel: true,
+
   /* Global setup and teardown */
   globalSetup: require.resolve('./e2e/global-setup.playwright.ts'),
+
   globalTeardown: require.resolve('./e2e/global-teardown.playwright.ts'),
+  /* Stop after first failure when E2E_RETRIES=0 (fail fast mode) */
+  maxFailures: process.env.E2E_RETRIES === '0' ? 1 : undefined,
   /* Output directory for test results */
   outputDir: './e2e/test-results',
   /* Configure projects for major browsers */

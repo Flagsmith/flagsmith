@@ -2,19 +2,8 @@
 
 Create a new E2E test following the existing patterns in the codebase.
 
-## Context
-
-- Test files location: `frontend/e2e/tests/*.pw.ts`
-- Test helpers: `frontend/e2e/helpers.playwright.ts`
-- Test results: Individual test directories in `frontend/e2e/test-results/`
-- **For EACH failed test**, a directory is created with these files:
-  - `failed.json` - Summary of failures with error messages and stack traces
-  - `error-context.md` - **MOST VALUABLE** - Page snapshot showing DOM state, field values, button states
-  - `trace.zip` - Detailed execution trace (unzip to get action logs)
-  - Screenshots (`.png`) and videos (`.webm`)
-- Existing tests to reference for patterns
-- Tests use Playwright with Firefox
-- Tests are tagged with `@oss` or `@enterprise`
+## Prerequisites
+Read `.claude/context/e2e.md` for full E2E configuration details, test structure, and debugging guides.
 
 ## Workflow
 

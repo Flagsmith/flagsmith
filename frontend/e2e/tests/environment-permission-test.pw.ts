@@ -105,7 +105,7 @@ test.describe('Environment Permission Tests', () => {
   await helpers.click('#project-select-0')
   await waitForFeatureSwitchClickable(page, 'test_feature', 'on', true)
   await helpers.click(byId('switch-environment-production'))
-  await waitForFeatureSwitchClickable(page, 'test_feature', 'on', false)
+  await waitForFeatureSwitchClickable(page, 'test_feature', 'off', false)
   await gotoFeature(page, 'test_feature')
   await waitForElementNotClickable(page, byId('update-feature-btn'))
   await closeModal(page)

@@ -22,6 +22,12 @@ function runPlaywright(args: string[], quietMode: boolean, isRetry: boolean): bo
     }
 
     playwrightCmd.push('playwright', 'test', ...quotedArgs);
+
+    // Add -x flag for fail-fast mode when E2E_RETRIES=0
+    if (process.env.E2E_RETRIES === '0' && !quotedArgs.includes('-x')) {
+      playwrightCmd.push('-x');
+    }
+
     if (!quietMode) console.log('Running:', playwrightCmd.join(' '));
     execSync(playwrightCmd.join(' '), {
       stdio: 'inherit',

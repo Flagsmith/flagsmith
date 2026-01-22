@@ -614,6 +614,8 @@ export const gotoFeatures = async (page: Page) => {
 export const click = async (page: Page, selector: string) => {
   await waitForElementVisible(page, selector);
   const element = page.locator(selector).first();
+  // Wait for element to be attached before scrolling to avoid "not attached to DOM" errors
+  await element.waitFor({ state: 'attached', timeout: LONG_TIMEOUT });
   await element.scrollIntoViewIfNeeded();
   await expect(element).toBeEnabled({ timeout: LONG_TIMEOUT });
   await element.hover();
@@ -647,6 +649,7 @@ export const createRole = async (
   await click(page, byId('create-role'));
   await setText(page, byId('role-name'), roleName);
   await click(page, byId('save-role'));
+  await closeModal(page);
   await click(page, byId(`role-${index}`));
   await click(page, byId('members-tab'));
   await click(page, byId('assigned-users'));
@@ -819,8 +822,15 @@ export const clickFeatureAction = async (page: Page, featureName: string) => {
 
 // Wait for feature switch by name and state to be clickable or not clickable
 export const waitForFeatureSwitchClickable = async (page: Page, featureName: string, state: 'on' | 'off', clickable: boolean = true) => {
-  const index = await getFeatureIndexByName(page, featureName);
-  const element = page.locator(byId(`feature-switch-${index}-${state}`)).first();
+  // Find feature by name in the features list
+  const featureRow = page.locator('[data-test^="feature-item-"]').filter({
+    has: page.locator(`span:text-is("${featureName}")`)
+  }).first();
+
+  await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+
+  // Find the switch within the feature row with the specific state
+  const element = featureRow.locator(`[data-test^="feature-switch-"][data-test$="-${state}"]`).first();
   await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
   if (clickable) {
     await expect(element).toBeEnabled({ timeout: LONG_TIMEOUT });
@@ -1244,6 +1254,11 @@ export const editRemoteConfig = async (
 export const closeModal = async (page: Page) => {
   log('Close Modal');
   await page.mouse.click(50, 50);
+  // Wait for modal to fully close by checking body no longer has modal-open class
+  await page.waitForFunction(
+    () => !document.body.classList.contains('modal-open'),
+    { timeout: LONG_TIMEOUT }
+  );
 };
 
 // Create a feature (flag)
@@ -1320,20 +1335,15 @@ export const toggleFeature = async (page: Page, name: string, toValue: boolean) 
 
   await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
 
-  // Get the index from the feature row's data-test attribute
-  const dataTest = await featureRow.getAttribute('data-test');
-  const index = dataTest?.match(/feature-item-(\d+)/)?.[1];
+  // Find and click the switch within the feature row (click the opposite state to toggle)
+  const switchToClick = featureRow.locator(`[data-test^="feature-switch-"][data-test$="-${toValue ? 'off' : 'on'}"]`).first();
+  await switchToClick.click();
 
-  if (!index) {
-    throw new Error(`Could not find index for feature: ${name}`);
-  }
-
-  await click(page, byId(`feature-switch-${index}-${toValue ? 'off' : 'on'}`));
   await click(page, '#confirm-toggle-feature-btn');
-  await waitForElementVisible(
-    page,
-    byId(`feature-switch-${index}-${toValue ? 'on' : 'off'}`),
-  );
+
+  // Wait for the new state to appear
+  const newSwitch = featureRow.locator(`[data-test^="feature-switch-"][data-test$="-${toValue ? 'on' : 'off'}"]`).first();
+  await newSwitch.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
 };
 
 // Set user permissions

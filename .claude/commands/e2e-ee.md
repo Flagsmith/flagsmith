@@ -1,6 +1,6 @@
-# E2E Test Runner with Auto-Fix
+# E2E Enterprise Test Runner with Auto-Fix
 
-Run OSS (non-enterprise) E2E tests with automatic failure analysis and fixing.
+Run enterprise E2E tests (tagged with @enterprise) with automatic failure analysis and fixing.
 
 ## Prerequisites
 Read `.claude/context/e2e.md` for full E2E configuration details and setup requirements.
@@ -12,7 +12,7 @@ Read `.claude/context/e2e.md` for full E2E configuration details and setup requi
 1. **Run tests** from the frontend directory:
    ```bash
    cd frontend
-   SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep-invert @enterprise --quiet
+   SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep @enterprise --quiet
    ```
 
 2. **ALWAYS check for flaky tests after test run completes:**
@@ -62,10 +62,11 @@ Read `.claude/context/e2e.md` for full E2E configuration details and setup requi
    d. **After making fixes**, re-run ONLY the failed tests:
       ```bash
       cd frontend
-      SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/flag-tests.pw.ts tests/invite-test.pw.ts
+      SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/flag-tests.pw.ts tests/invite-test.pw.ts --grep @enterprise
       ```
       - Use concurrency=1 to avoid race conditions
       - Only run the specific test files that failed
+      - Include `--grep @enterprise` to ensure only enterprise tests run
 
    e. **If tests still fail after fixes:**
       - Try a second round of fixes if the error changed

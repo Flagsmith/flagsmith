@@ -1,6 +1,6 @@
-# E2E Test Runner with Auto-Fix
+# E2E Test Runner - All Tests (OSS + Enterprise)
 
-Run OSS (non-enterprise) E2E tests with automatic failure analysis and fixing.
+Run all E2E tests (both OSS and enterprise) with automatic failure analysis and fixing.
 
 ## Prerequisites
 Read `.claude/context/e2e.md` for full E2E configuration details and setup requirements.
@@ -12,7 +12,7 @@ Read `.claude/context/e2e.md` for full E2E configuration details and setup requi
 1. **Run tests** from the frontend directory:
    ```bash
    cd frontend
-   SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep-invert @enterprise --quiet
+   SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --quiet
    ```
 
 2. **ALWAYS check for flaky tests after test run completes:**
@@ -29,7 +29,7 @@ Read `.claude/context/e2e.md` for full E2E configuration details and setup requi
         * Stack trace showing the call chain
       - Read the test file at the failing line number to understand what was being tested
       - **Report these as FLAKY TESTS** - they indicate timing issues, race conditions, or environmental problems
-      - **Analyze the root cause**:
+      - **Analyse the root cause**:
         * Timeout errors → likely missing waits or race conditions
         * Assertion errors → check if value is correct or if timing is off
         * Element not found → selector may have changed or element loads slowly
@@ -51,7 +51,7 @@ Read `.claude/context/e2e.md` for full E2E configuration details and setup requi
          grep -i "error\|failed" 0-trace.network  # Check for network errors
          ```
 
-      3. **Only after analyzing traces**, read the test file and fix:
+      3. **Only after analysing traces**, read the test file and fix:
         - Wrong selector → Update to match actual DOM from error-context.md
         - Missing `data-test` attribute → Add it to the component
         - Element hidden → Filter for visible elements or wait for visibility
@@ -73,6 +73,10 @@ Read `.claude/context/e2e.md` for full E2E configuration details and setup requi
 
 3. **Report final results:**
    - **ALWAYS report flaky tests first** (tests that failed initially but passed on retry)
+   - Break down results by category:
+     - OSS tests: X passed / Y failed
+     - Enterprise tests: X passed / Y failed
+     - Total: X passed / Y failed
    - List which tests passed/failed after all retries
    - Document any fixes that were applied
    - For unfixable issues, explain why and suggest manual investigation
