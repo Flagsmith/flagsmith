@@ -13,23 +13,10 @@ async function globalSetup(config: FullConfig) {
   const reportDir = path.join(__dirname, 'playwright-report');
 
   if (!process.env.E2E_SKIP_CLEANUP) {
+    // Clean up test-results completely on fresh runs
     if (fs.existsSync(testResultsDir)) {
-      // Preserve error-context.md files from previous runs for debugging
-      // Only delete test result directories that don't contain error-context.md
-      const entries = fs.readdirSync(testResultsDir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isDirectory()) {
-          const errorContextPath = path.join(testResultsDir, entry.name, 'error-context.md');
-          if (!fs.existsSync(errorContextPath)) {
-            // No error context - safe to delete
-            fs.rmSync(path.join(testResultsDir, entry.name), { recursive: true, force: true });
-          }
-        } else {
-          // Delete files in test-results root (like .last-run.json, results.json)
-          fs.unlinkSync(path.join(testResultsDir, entry.name));
-        }
-      }
-      console.log('Cleared previous test results (preserved error contexts)');
+      fs.rmSync(testResultsDir, { recursive: true, force: true });
+      console.log('Cleared previous test results');
     }
 
     if (fs.existsSync(reportDir)) {

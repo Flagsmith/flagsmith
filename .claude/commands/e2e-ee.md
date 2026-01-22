@@ -1,6 +1,6 @@
 # E2E Enterprise Test Runner with Auto-Fix
 
-Run enterprise E2E tests (tagged with @enterprise) with automatic failure analysis and fixing.
+**IMMEDIATELY run enterprise E2E tests (tagged with @enterprise), analyze failures, fix them, and re-run failed tests until all pass or unfixable issues are identified.**
 
 ## Prerequisites
 Read `.claude/context/e2e.md` for full E2E configuration details and setup requirements.
@@ -9,11 +9,13 @@ Read `.claude/context/e2e.md` for full E2E configuration details and setup requi
 
 **IMPORTANT: Always start by changing to the frontend directory** - the `.env` file and dependencies are located there.
 
-1. **Run tests** from the frontend directory:
+1. **RUN TESTS NOW** from the frontend directory:
    ```bash
    cd frontend
-   SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep @enterprise --quiet
+   E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep @enterprise --quiet
    ```
+
+   **Note:** Using `E2E_RETRIES=0` to fail fast on first failure for immediate analysis and fixing.
 
 2. **ALWAYS check for flaky tests after test run completes:**
 
@@ -62,15 +64,18 @@ Read `.claude/context/e2e.md` for full E2E configuration details and setup requi
    d. **After making fixes**, re-run ONLY the failed tests:
       ```bash
       cd frontend
-      SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/flag-tests.pw.ts tests/invite-test.pw.ts --grep @enterprise
+      E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/flag-tests.pw.ts tests/invite-test.pw.ts --grep @enterprise
       ```
+      - Use `E2E_RETRIES=0` to fail fast and see if the fix worked
       - Use concurrency=1 to avoid race conditions
       - Only run the specific test files that failed
       - Include `--grep @enterprise` to ensure only enterprise tests run
 
-   e. **If tests still fail after fixes:**
-      - Try a second round of fixes if the error changed
-      - Otherwise, report the issue with details on what was attempted
+   e. **Repeat the fix/re-run cycle:**
+      - If tests still fail after fixes but the error changed, analyze the new error and fix again
+      - Re-run failed tests after each fix attempt
+      - Continue until all tests pass or you've identified unfixable issues
+      - Maximum 3 fix/re-run cycles per test before reporting as unfixable
 
 3. **Report final results:**
    - **ALWAYS report flaky tests first** (tests that failed initially but passed on retry)
