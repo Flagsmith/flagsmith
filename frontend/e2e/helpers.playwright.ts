@@ -365,6 +365,12 @@ export class E2EHelpers {
     password: string = process.env.E2E_PASS || '',
   ) {
     await this.page.goto('/login');
+    // Wait for both fields to be visible
+    await this.waitForElementVisible('[name="email"]');
+    await this.waitForElementVisible('[name="password"]');
+    // Small delay to let any autofocus logic complete
+    await this.page.waitForTimeout(500);
+    // Now fill the fields - fill() handles focus internally
     await this.setText('[name="email"]', email);
     await this.setText('[name="password"]', password);
     await this.click('#login-btn');
@@ -696,7 +702,17 @@ export const deleteTrait = async (page: Page, traitName: string) => {
 
   await click(page, byId(`delete-user-trait-${index}`));
   await click(page, '#confirm-btn-yes');
-  await waitForElementNotExist(page, byId(`user-trait-${index}`));
+
+  // Wait for the trait name to disappear (not the index, as indices shift after deletion)
+  await page.waitForFunction((name) => {
+    const traitElements = document.querySelectorAll('[class*="js-trait-key-"]');
+    for (const element of traitElements) {
+      if (element.textContent?.trim() === name) {
+        return false;
+      }
+    }
+    return true;
+  }, traitName, { timeout: LONG_TIMEOUT });
 };
 
 // Get user feature value by feature name

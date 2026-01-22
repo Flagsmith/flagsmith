@@ -21,12 +21,23 @@ import { E2E_USER, PASSWORD } from '../config';
 
 test.describe('Flag Tests', () => {
   test('test description @oss', async ({ page }) => {
-    const helpers = createHelpers(page);
+  const helpers = createHelpers(page);
   log('Login')
   await helpers.login(E2E_USER, PASSWORD)
   await helpers.click('#project-select-0')
 
-  log('Create Features')
+  // Check if we're already in production by checking if development is clickable
+  const isProductionActive = await page.locator(byId('switch-environment-development')).isVisible().catch(() => true)
+
+  if (isProductionActive) {
+    // We're not in development (might be in production), switch to development first
+    log('Switching to development first')
+    await helpers.waitForElementClickable(byId('switch-environment-development'))
+    await helpers.click(byId('switch-environment-development'))
+    await page.waitForTimeout(500)
+  }
+
+    log('Create Features')
   await helpers.click('#features-link')
 
   await createFeature(page, 0, 'header_enabled', false)
@@ -83,16 +94,11 @@ test.describe('Flag Tests', () => {
   await page.waitForLoadState('load')
   await helpers.waitForElementVisible('#show-create-feature-btn')
 
-  // Check if we're already in production, if so switch to development first
-  const isProductionActive = await page.locator(byId('switch-environment-production-active')).isVisible().catch(() => false)
-  if (isProductionActive) {
-    // We're in production, switch to development
-    await helpers.waitForElementClickable(byId('switch-environment-development'))
-    await helpers.click(byId('switch-environment-development'))
-    await helpers.waitForElementVisible(byId('switch-environment-development-active'))
-  }
+  // Wait a moment for environment switcher to render
+  await page.waitForTimeout(500)
 
-  // Now switch to production
+  // Now we're definitely in development, switch to production
+  log('Switching to production')
   await helpers.waitForElementClickable(byId('switch-environment-production'))
   await helpers.click(byId('switch-environment-production'))
 
