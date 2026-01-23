@@ -113,7 +113,15 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     <>
       <InfoMessage>
         Import operations will overwrite existing environments and flags in your
-        project.
+        project.{' '}
+        <a
+          target='_blank'
+          href='https://docs.flagsmith.com/system-administration/importing-and-exporting/launchdarkly'
+          rel='noreferrer'
+          onClick={(e) => e.stopPropagation()}
+        >
+          <strong>Visit the documentation for more details.</strong>
+        </a>
       </InfoMessage>
       <h5>Import LaunchDarkly Projects</h5>
       <label>Set LaunchDarkly key</label>
