@@ -53,17 +53,22 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
     useConditionInputType(operator, property)
 
   if (showMultiEnvironmentSelect) {
+    const isLoading = !projectId || !data?.results
+
     return (
       <div className={className}>
         <MultiSelect
-          selectedValues={safeParseArray(value)}
+          selectedValues={isLoading ? [] : safeParseArray(value)}
           onSelectionChange={(selectedValues: string[]) => {
             onChange?.(selectedValues.join(','))
           }}
-          placeholder='Select environments...'
+          placeholder={
+            isLoading ? 'Loading environments...' : 'Select environments...'
+          }
           options={environmentOptions}
           className='w-100'
           hideSelectedOptions={false}
+          disabled={isLoading}
           inline
         />
       </div>
