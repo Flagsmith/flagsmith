@@ -56,7 +56,6 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "unknown",
         "5.0.0",
         "5.1.0",
-    
     ],
     "flagsmith-python-sdk": [
         "unknown",
