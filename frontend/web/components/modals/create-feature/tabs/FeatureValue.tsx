@@ -238,7 +238,7 @@ const FeatureValue: FC<EditFeatureValueProps> = ({
                   select
                   controlValue={
                     projectFlag.environment_feature_state
-                      ?.feature_state_value ?? projectFlag.initial_value
+                      ?.feature_state_value ?? null
                   }
                   controlPercentage={controlPercentage}
                   variationOverrides={identityVariations}
