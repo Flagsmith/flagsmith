@@ -236,7 +236,10 @@ const FeatureValue: FC<EditFeatureValueProps> = ({
                 <VariationOptions
                   disabled
                   select
-                  controlValue={featureState.feature_state_value}
+                  controlValue={
+                    projectFlag.environment_feature_state
+                      ?.feature_state_value ?? projectFlag.initial_value
+                  }
                   controlPercentage={controlPercentage}
                   variationOverrides={identityVariations}
                   setVariations={(multivariate_feature_state_values) =>
