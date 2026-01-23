@@ -1,0 +1,16 @@
+name: Collect code references
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  collect-code-references:
+    uses: Flagsmith/ci/.github/workflows/collect-code-references.yml@feat/github-code-references-reusable-workflow
+    with:
+      flagsmith_project_id: 12
+      flagsmith_admin_api_url: https://api.flagsmith.com
+      exclude_patterns: node_modules,venv,.git,cache,build,htmlcov,docs,.json,tests
+    secrets:
+      flagsmith_admin_api_key: ${{ secrets.FLAGSMITH_CODE_REFERENCES_API_KEY }}
