@@ -88,7 +88,7 @@ FROM wolfi-base AS build-python
 WORKDIR /build
 
 ARG PYTHON_VERSION
-RUN apk add build-base linux-headers curl git \
+RUN apk add build-base linux-headers curl git postgresql \
   python-${PYTHON_VERSION} \
   python-${PYTHON_VERSION}-dev \
   py${PYTHON_VERSION}-pip
