@@ -1,4 +1,8 @@
-name: Run API tests with private package
+name: API Pull Request with Private Packages
+
+permissions:
+  contents: read     # For actions/checkout
+  id-token: write    # For Codecov OIDC
 
 on:
   pull_request:
@@ -24,7 +28,12 @@ defaults:
 jobs:
   test:
     runs-on: depot-ubuntu-latest-16
-    name: API Tests
+    name: API Unit Tests
+
+    strategy:
+      max-parallel: 2
+      matrix:
+        python-version: ["3.11", "3.12"]
 
     steps:
       - name: Cloning repo
@@ -35,7 +44,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
           cache: poetry
 
       - name: Install SAML Dependencies
@@ -55,3 +64,12 @@ jobs:
         env:
           DOTENV_OVERRIDE_FILE: .env-ci
         run: make test
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v4
+        env:
+          PRIVATE_PACKAGES: "true"
+          PYTHON: ${{ matrix.python-version }}
+        with:
+          env_vars: PRIVATE_PACKAGES,PYTHON
+          use_oidc: true
