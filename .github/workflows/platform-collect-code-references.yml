@@ -1,4 +1,4 @@
-name: Collect code references
+name: Code references
 
 on:
   schedule:
@@ -8,6 +8,7 @@ on:
 
 jobs:
   collect-code-references:
+    name: Collect
     uses: Flagsmith/ci/.github/workflows/collect-code-references.yml@feat/github-code-references-reusable-workflow
     with:
       flagsmith_project_id: 12
