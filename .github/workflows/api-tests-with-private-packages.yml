@@ -1,10 +1,25 @@
-name: Run API tests with private package
+name: API Pull Request with Private Packages
+
+permissions:
+  contents: read     # For actions/checkout
+  id-token: write    # For Codecov OIDC
 
 on:
   pull_request:
+    paths:
+      - api/**
+      - docker/api/**
+      - .github/**
+      - .release-please-manifest.json
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    paths:
+      - api/**
+      - docker/api/**
+      - .github/**
+      - .release-please-manifest.json
     branches:
       - main
-    types: [labeled]
 
 defaults:
   run:
@@ -12,19 +27,13 @@ defaults:
 
 jobs:
   test:
-    if: ${{ github.event.label.name == 'api' }}
-    runs-on: depot-ubuntu-latest
-    name: API Tests
+    runs-on: depot-ubuntu-latest-16
+    name: API Unit Tests
 
-    services:
-      postgres:
-        image: postgres:15.5-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports: ['5432:5432']
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    strategy:
+      max-parallel: 2
+      matrix:
+        python-version: ["3.11", "3.12"]
 
     steps:
       - name: Cloning repo
@@ -35,7 +44,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version }}
           cache: poetry
 
       - name: Install SAML Dependencies
@@ -55,3 +64,12 @@ jobs:
         env:
           DOTENV_OVERRIDE_FILE: .env-ci
         run: make test
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v4
+        env:
+          PRIVATE_PACKAGES: "true"
+          PYTHON: ${{ matrix.python-version }}
+        with:
+          env_vars: PRIVATE_PACKAGES,PYTHON
+          use_oidc: true

@@ -451,7 +451,11 @@ export type MultivariateOption = {
 }
 
 export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
-export type TagStrategy = 'INTERSECTION' | 'UNION'
+
+export enum TagStrategy {
+  INTERSECTION = 'INTERSECTION',
+  UNION = 'UNION',
+}
 
 export type IdentityFeatureState = {
   feature: {
@@ -530,6 +534,7 @@ export type ProjectFlag = {
     last_successful_repository_scanned_at: string
     last_feature_found_at: string
   }[]
+  environment_feature_state?: FeatureState
 }
 
 export type FeatureListProviderData = {
@@ -541,12 +546,12 @@ export type FeatureListProviderData = {
 
 export type FeatureListProviderActions = {
   toggleFlag: (
-    projectId: string,
+    projectId: number,
     environmentId: string,
     projectFlag: ProjectFlag,
     environmentFlags: FeatureState | undefined,
   ) => void
-  removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
+  removeFlag: (projectId: number, projectFlag: ProjectFlag) => void
 }
 
 export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'
@@ -719,21 +724,6 @@ export type SAMLAttributeMapping = {
   django_attribute_name: AttributeName
   idp_attribute_name: string
 }
-export type ServersideSplitTestResult = {
-  conversion_count: number
-  evaluation_count: number
-  feature: {
-    created_date: string
-    default_enabled: boolean
-    description: any
-    id: number
-    initial_value: string
-    name: string
-    type: string
-  }
-  pvalue: number
-  value_data: FeatureStateValue
-}
 
 export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
 
@@ -789,36 +779,6 @@ export type Version = {
       'has_logins': boolean
     }
   }
-}
-
-export type PConfidence =
-  | 'VERY_LOW'
-  | 'LOW'
-  | 'REASONABLE'
-  | 'HIGH'
-  | 'VERY_HIGH'
-export type SplitTestResult = {
-  results: {
-    conversion_count: number
-    evaluation_count: number
-    conversion_percentage: number
-    pvalue: number
-    confidence: PConfidence
-    value_data: FeatureStateValue
-  }[]
-  feature: {
-    created_date: string
-    default_enabled: boolean
-    description: any
-    id: number
-    initial_value: string
-    name: string
-    type: string
-  }
-  max_conversion_percentage: number
-  max_conversion_count: number
-  conversion_variance: number
-  max_conversion_pvalue: number
 }
 
 export type ConversionEvent = {
@@ -1099,7 +1059,6 @@ export type Res = {
   identityTrait: { id: string }
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>
-  splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
   environmentMetrics: {
     metrics: {
@@ -1126,5 +1085,20 @@ export type Res = {
     day: string
     count: number
   }[]
+  featureList: {
+    results: ProjectFlag[]
+    count: number
+    next: string | null
+    previous: string | null
+    environmentStates: Record<number, FeatureState>
+    pagination: {
+      count: number
+      next: string | null
+      previous: string | null
+      currentPage: number
+      pageSize: number
+    }
+  }
+  featureState: FeatureState
   // END OF TYPES
 }

@@ -9,8 +9,8 @@ DOTENV_OVERRIDE_FILE ?= .env
 
 POETRY_VERSION ?= 2.2.1
 
-SAML_REVISION ?= v1.6.5
-RBAC_REVISION ?= v0.11.6
+SAML_REVISION ?= v1.6.6
+RBAC_REVISION ?= v0.13.0
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
@@ -30,6 +30,7 @@ install-packages:
 .PHONY: install-private-modules
 install-private-modules:
 	$(eval SITE_PACKAGES_DIR := $(shell poetry run python -c 'import site; print(site.getsitepackages()[0])'))
+	rm -rf $(SITE_PACKAGES_DIR)/saml $(SITE_PACKAGES_DIR)/rbac
 	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && mv ./flagsmith-saml/saml $(SITE_PACKAGES_DIR)
 	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/rbac $(SITE_PACKAGES_DIR)
 	rm -rf ./flagsmith-saml ./flagsmith-rbac
@@ -66,22 +67,27 @@ docker-build:
 		--target=oss-api \
 		../
 
+.PHONY: wait-for-db
+wait-for-db:
+	poetry run python manage.py waitfordb 
+	poetry run python manage.py waitfordb --database analytics
+
 .PHONY: test
-test:
+test: docker-up wait-for-db
 	poetry run pytest $(opts)
 
 .PHONY: django-make-migrations
-django-make-migrations:
+django-make-migrations: docker-up wait-for-db
 	poetry run python manage.py waitfordb
 	poetry run python manage.py makemigrations $(opts)
 
 .PHONY: django-squash-migrations
-django-squash-migrations:
+django-squash-migrations: docker-up wait-for-db
 	poetry run python manage.py waitfordb
 	poetry run python manage.py squashmigrations $(opts)
 
 .PHONY: django-migrate
-django-migrate:
+django-migrate: docker-up wait-for-db
 	poetry run python manage.py waitfordb
 	poetry run python manage.py migrate
 	poetry run python manage.py createcachetable
@@ -95,11 +101,11 @@ django-collect-static:
 	poetry run python manage.py collectstatic --noinput
 
 .PHONY: serve
-serve: docker-up
+serve: docker-up wait-for-db
 	poetry run flagsmith start --reload api
 
 .PHONY: run-task-processor
-run-task-processor: docker-up
+run-task-processor: docker-up wait-for-db
 	poetry run flagsmith start --reload --bind 0.0.0.0:8001 task-processor
 
 .PHONY: serve-with-task-processor
@@ -153,3 +159,7 @@ generate-docs:
 .PHONY: add-known-sdk-version
 add-known-sdk-version:
 	poetry run python scripts/add-known-sdk-version.py $(opts)
+
+.PHONY: generate-mcp-spec
+generate-mcp-spec:
+	poetry run python manage.py spectacular --generator-class api.openapi.MCPSchemaGenerator --file mcp_openapi.yaml

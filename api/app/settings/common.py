@@ -15,6 +15,7 @@ import json
 import os
 import warnings
 from datetime import datetime, time, timedelta
+from typing import Any
 
 import dj_database_url
 import django_stubs_ext
@@ -302,6 +303,7 @@ TASK_PROCESSOR_DATABASES = env.list(
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
+MASTER_API_KEY_THROTTLE_RATE = env("MASTER_API_KEY_THROTTLE_RATE", USER_THROTTLE_RATE)
 DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", subcast=str, default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -317,6 +319,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
+        "master_api_key": MASTER_API_KEY_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
         "user": USER_THROTTLE_RATE,
@@ -347,25 +350,6 @@ MIDDLEWARE = [
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
 if ADD_NEVER_CACHE_HEADERS:
     MIDDLEWARE.append("core.middleware.cache_control.NeverCacheMiddleware")
-
-APPLICATION_INSIGHTS_CONNECTION_STRING = env.str(
-    "APPLICATION_INSIGHTS_CONNECTION_STRING", default=None
-)
-OPENCENSUS_SAMPLING_RATE = env.float("OPENCENSUS_SAMPLING_RATE", 1.0)
-
-if APPLICATION_INSIGHTS_CONNECTION_STRING:
-    MIDDLEWARE.insert(
-        0, "integrations.opencensus.middleware.OpenCensusDbTraceMiddleware"
-    )
-    MIDDLEWARE.insert(0, "opencensus.ext.django.middleware.OpencensusMiddleware")
-    OPENCENSUS = {
-        "TRACE": {
-            "SAMPLER": f"opencensus.trace.samplers.ProbabilitySampler(rate={OPENCENSUS_SAMPLING_RATE})",
-            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
-                connection_string='{APPLICATION_INSIGHTS_CONNECTION_STRING}',
-            )""",
-        }
-    }
 
 if ENABLE_GZIP_COMPRESSION:
     # ref: https://docs.djangoproject.com/en/2.2/ref/middleware/#middleware-ordering
@@ -699,15 +683,6 @@ else:
         },
     }
 
-if APPLICATION_INSIGHTS_CONNECTION_STRING:
-    LOGGING["handlers"]["azure"] = {
-        "level": "DEBUG",
-        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
-        "connection_string": APPLICATION_INSIGHTS_CONNECTION_STRING,
-    }
-
-    LOGGING["loggers"][""]["handlers"].append("azure")
-
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
 if ENABLE_DB_LOGGING:
     if not DEBUG:
@@ -808,7 +783,7 @@ USER_THROTTLE_CACHE_BACKEND = env.str(
     "USER_THROTTLE_CACHE_BACKEND", "django.core.cache.backends.locmem.LocMemCache"
 )
 USER_THROTTLE_CACHE_LOCATION = env.str("USER_THROTTLE_CACHE_LOCATION", "admin-throttle")
-USER_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
+USER_THROTTLE_CACHE_OPTIONS: dict[str, Any] = env.dict(
     "USER_THROTTLE_CACHE_OPTIONS", default={}
 )
 
@@ -840,6 +815,12 @@ DJANGO_REDIS_IGNORE_EXCEPTIONS = env.bool(
 # ref:https://github.com/jazzband/django-redis/tree/5.4.0#log-ignored-exceptions
 DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = env.bool(
     "DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS", True
+)
+
+# Enable reading from replicas in Redis Cluster mode.
+# Distributes read traffic to replica nodes (port 6380 on ElastiCache Serverless).
+REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
+    "REDIS_CLUSTER_READ_FROM_REPLICAS", default=True
 )
 
 CACHES = {
@@ -1422,10 +1403,6 @@ SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED = env.bool(
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
 WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 
-# Split Testing settings
-SPLIT_TESTING_INSTALLED = importlib.util.find_spec("split_testing")
-if SPLIT_TESTING_INSTALLED:
-    INSTALLED_APPS += ("split_testing",)
 
 ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)
 

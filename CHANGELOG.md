@@ -1,5 +1,121 @@
 # Changelog
 
+## [2.211.3](https://github.com/Flagsmith/flagsmith/compare/v2.211.2...v2.211.3) (2026-01-26)
+
+
+### Bug Fixes
+
+* add loading state for MultiSelect in Create Segment modal ([#6565](https://github.com/Flagsmith/flagsmith/issues/6565)) ([8fd3be3](https://github.com/Flagsmith/flagsmith/commit/8fd3be34d5e33fefd1d7ced54020f5f451796cbc))
+* **frontend:** add docs link to LaunchDarkly import screen ([#6587](https://github.com/Flagsmith/flagsmith/issues/6587)) ([2881817](https://github.com/Flagsmith/flagsmith/commit/28818175a28bf18f68f7721e736f2c2e92341ef6))
+* **frontend:** hide 'Enabled by default' toggle when editing identity override ([#6584](https://github.com/Flagsmith/flagsmith/issues/6584)) ([141d69c](https://github.com/Flagsmith/flagsmith/commit/141d69cf923bae3bb676dfc5fa532feb7489103a))
+
+
+### Dependency Updates
+
+* bump influxdb-client from 1.28.0 to 1.50.0 in /api ([#6593](https://github.com/Flagsmith/flagsmith/issues/6593)) ([da17d1a](https://github.com/Flagsmith/flagsmith/commit/da17d1ad03ff1c77b145e540572c43e207ac5c2a))
+
+## [2.211.2](https://github.com/Flagsmith/flagsmith/compare/v2.211.1...v2.211.2) (2026-01-22)
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* **Monitoring:** Expose production /metrics to :9100 ([#6578](https://github.com/Flagsmith/flagsmith/issues/6578)) ([783b762](https://github.com/Flagsmith/flagsmith/commit/783b762911f258e306f54a3aabefb996908c540e))
+
+## [2.211.1](https://github.com/Flagsmith/flagsmith/compare/v2.211.0...v2.211.1) (2026-01-22)
+
+
+### Dependency Updates
+
+* bump diff from 5.2.0 to 5.2.2 in /docs ([#6564](https://github.com/Flagsmith/flagsmith/issues/6564)) ([9643968](https://github.com/Flagsmith/flagsmith/commit/96439684727e4790e2ebd4ce50f7e8d7d1184909))
+
+## [2.211.0](https://github.com/Flagsmith/flagsmith/compare/v2.210.0...v2.211.0) (2026-01-21)
+
+
+### Features
+
+* Edit Change Requests ([#6356](https://github.com/Flagsmith/flagsmith/issues/6356)) ([00085cd](https://github.com/Flagsmith/flagsmith/commit/00085cdefc6266174c5e1e10e8cfb36b402c4d8e))
+* **frontend:** add Jest unit testing infrastructure ([#6432](https://github.com/Flagsmith/flagsmith/issues/6432)) ([9468354](https://github.com/Flagsmith/flagsmith/commit/9468354eb1a26541cfcf1048fc2ede39e014a1b1))
+* **frontend:** add reusable EmptyState component for empty pages ([#6538](https://github.com/Flagsmith/flagsmith/issues/6538)) ([cd64f1d](https://github.com/Flagsmith/flagsmith/commit/cd64f1de4aa2594f7b0166d2ea6b37f7af5062c2))
+* **frontend:** add subscription limit info to Usage and Billing pages ([#6539](https://github.com/Flagsmith/flagsmith/issues/6539)) ([7e2d9fb](https://github.com/Flagsmith/flagsmith/commit/7e2d9fb55a8c9f9fd8eaff5722281466a8d0f2c6))
+* synchronize-openapi-schema-with-gram ([#6499](https://github.com/Flagsmith/flagsmith/issues/6499)) ([31d64ad](https://github.com/Flagsmith/flagsmith/commit/31d64ad2c8346dd67aaf349a78dcbf79970d833d))
+* use-default-allocation-from-flag ([#6558](https://github.com/Flagsmith/flagsmith/issues/6558)) ([fcae6b4](https://github.com/Flagsmith/flagsmith/commit/fcae6b4e6769499a63b764ab4cd3c0c377680ffb))
+
+
+### Bug Fixes
+
+* add null checks for multivariate_options in feature-list-store ([#6561](https://github.com/Flagsmith/flagsmith/issues/6561)) ([aae7f77](https://github.com/Flagsmith/flagsmith/commit/aae7f77d108d54c863f0c74d4cbe663320fc6daa))
+* add skip conditions for undefined environment ID queries on Compare feat ([#6557](https://github.com/Flagsmith/flagsmith/issues/6557)) ([2b832fa](https://github.com/Flagsmith/flagsmith/commit/2b832facc1e35705383b76d842c36349e349c433))
+* reviewed-dependencies-and-mutualize-components ([#6567](https://github.com/Flagsmith/flagsmith/issues/6567)) ([7350f3d](https://github.com/Flagsmith/flagsmith/commit/7350f3dd07c7ed44cb5a437872ead25e93d2d4c9))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* **Monitoring:** Expose /metrics to new port ([#6533](https://github.com/Flagsmith/flagsmith/issues/6533)) ([007ff8a](https://github.com/Flagsmith/flagsmith/commit/007ff8a7f3f9ee446205d59f961e51aa98629a2c))
+
+
+### Dependency Updates
+
+* bump werkzeug from 3.1.4 to 3.1.5 in /api ([#6505](https://github.com/Flagsmith/flagsmith/issues/6505)) ([86a243d](https://github.com/Flagsmith/flagsmith/commit/86a243dbe4f921cd98791fd3ae097f8dad323ce2))
+
+## [2.210.0](https://github.com/Flagsmith/flagsmith/compare/v2.209.1...v2.210.0) (2026-01-19)
+
+
+### Features
+
+* Retire split-testing ([#6542](https://github.com/Flagsmith/flagsmith/issues/6542)) ([4ce72ad](https://github.com/Flagsmith/flagsmith/commit/4ce72adc0aa0667ad3a1b989eea35c3e9398ae86))
+
+
+### Bug Fixes
+
+* **CI:** Run tests with private modules ([#6540](https://github.com/Flagsmith/flagsmith/issues/6540)) ([c1ffe45](https://github.com/Flagsmith/flagsmith/commit/c1ffe459790d5be90934fe1d8b0891366bab274a))
+* create change request with mv in v2 ([#6515](https://github.com/Flagsmith/flagsmith/issues/6515)) ([f3bd96c](https://github.com/Flagsmith/flagsmith/commit/f3bd96cbfbbc3c39c49f4809430867c05d58bd1c))
+* improve _is_user_object_admin query performance ([#6537](https://github.com/Flagsmith/flagsmith/issues/6537)) ([04df8d5](https://github.com/Flagsmith/flagsmith/commit/04df8d5294b74124ee917c694c639d5a86e460fd))
+* remove Azure Application Insights integration ([#6530](https://github.com/Flagsmith/flagsmith/issues/6530)) ([e6174c6](https://github.com/Flagsmith/flagsmith/commit/e6174c6e8ca510b7819d179a32f31921e7b27204))
+* removed-hover-class-on-color ([#6531](https://github.com/Flagsmith/flagsmith/issues/6531)) ([670b241](https://github.com/Flagsmith/flagsmith/commit/670b241f0283a5bd0f13f55a501d121bdc18ebbe))
+* update permission test query counts for RBAC ([#6547](https://github.com/Flagsmith/flagsmith/issues/6547)) ([e2e77b0](https://github.com/Flagsmith/flagsmith/commit/e2e77b0a5d2c293dfacadff0b754d5fc6522930e))
+
+
+### Dependency Updates
+
+* bump filelock from 3.20.1 to 3.20.3 in /api ([#6527](https://github.com/Flagsmith/flagsmith/issues/6527)) ([0fd330a](https://github.com/Flagsmith/flagsmith/commit/0fd330a70be66a1deeccd5ba98c5674d476fb4f1))
+* bump urllib3 from 2.6.2 to 2.6.3 in /api ([#6494](https://github.com/Flagsmith/flagsmith/issues/6494)) ([c2e18bc](https://github.com/Flagsmith/flagsmith/commit/c2e18bc33608b062d5215e3b9b832ed86782b499))
+* bump virtualenv from 20.28.0 to 20.36.1 in /api ([#6526](https://github.com/Flagsmith/flagsmith/issues/6526)) ([40a70b9](https://github.com/Flagsmith/flagsmith/commit/40a70b99e1f5595fbfd5ad1fa3b43cb917d7d484))
+* upgrade-flagsmith-to-latest-version ([#6405](https://github.com/Flagsmith/flagsmith/issues/6405)) ([bcb557b](https://github.com/Flagsmith/flagsmith/commit/bcb557b7fff4b5929a1389341d60f58556151721))
+
+## [2.209.1](https://github.com/Flagsmith/flagsmith/compare/v2.209.0...v2.209.1) (2026-01-13)
+
+
+### Bug Fixes
+
+* **infra:** increase MASTER_API_KEY_THROTTLE_RATE to 100/sec ([#6521](https://github.com/Flagsmith/flagsmith/issues/6521)) ([d557800](https://github.com/Flagsmith/flagsmith/commit/d557800406a7d66e38d151063830fe670986a66f))
+
+## [2.209.0](https://github.com/Flagsmith/flagsmith/compare/v2.208.0...v2.209.0) (2026-01-12)
+
+
+### Features
+
+* **throttling:** Throttle only requests authorised by master API keys ([#6513](https://github.com/Flagsmith/flagsmith/issues/6513)) ([e1afc88](https://github.com/Flagsmith/flagsmith/commit/e1afc883bd9f9a861edcbfc741a34f3c5b2496a1))
+
+## [2.208.0](https://github.com/Flagsmith/flagsmith/compare/v2.207.1...v2.208.0) (2026-01-12)
+
+
+### Features
+
+* **redis:** enable read_from_replicas for Redis Cluster by default ([#6506](https://github.com/Flagsmith/flagsmith/issues/6506)) ([b53e0cf](https://github.com/Flagsmith/flagsmith/commit/b53e0cf57a88c22f2eb42dce5529363af377b1a5))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Revert to default Redis pool settings ([#6507](https://github.com/Flagsmith/flagsmith/issues/6507)) ([dbaf16e](https://github.com/Flagsmith/flagsmith/commit/dbaf16e24571f7f0e95be62fb5414de12e0e8820))
+* Set per-user rate limit to 500/min for Admin API ([#6502](https://github.com/Flagsmith/flagsmith/issues/6502)) ([6c1f175](https://github.com/Flagsmith/flagsmith/commit/6c1f175d98394f088ed043daac6c646bd4ebcc48))
+
+## [2.207.1](https://github.com/Flagsmith/flagsmith/compare/v2.207.0...v2.207.1) (2026-01-08)
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Use blocking Redis pool for throttle cache, limit max connections ([#6500](https://github.com/Flagsmith/flagsmith/issues/6500)) ([cb049bf](https://github.com/Flagsmith/flagsmith/commit/cb049bfa5ec35ac37d75cbc69d90825eff54d902))
+
 ## [2.207.0](https://github.com/Flagsmith/flagsmith/compare/v2.206.0...v2.207.0) (2026-01-08)
 
 

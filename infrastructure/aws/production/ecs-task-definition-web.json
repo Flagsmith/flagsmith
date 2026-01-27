@@ -12,6 +12,11 @@
             "cpu": 0,
             "portMappings": [
                 {
+                    "containerPort": 9100,
+                    "hostPort": 9100,
+                    "protocol": "tcp"
+                },
+                {
                     "containerPort": 8000,
                     "hostPort": 8000,
                     "protocol": "tcp"
@@ -127,7 +132,7 @@
                 },
                 {
                     "name": "DEFAULT_THROTTLE_CLASSES",
-                    "value": "core.throttling.UserRateThrottle"
+                    "value": "core.throttling.UserRateThrottle,core.throttling.MasterAPIKeyUserRateThrottle"
                 },
                 {
                     "name": "USER_THROTTLE_CACHE_BACKEND",
@@ -142,8 +147,8 @@
                     "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient"
                 },
                 {
-                    "name": "USER_THROTTLE_RATE",
-                    "value": "10/sec"
+                    "name": "MASTER_API_KEY_THROTTLE_RATE",
+                    "value": "100/sec"
                 },
                 {
                     "name": "OAUTH_CLIENT_ID",

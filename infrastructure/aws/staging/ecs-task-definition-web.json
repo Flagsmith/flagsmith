@@ -12,6 +12,11 @@
             "cpu": 0,
             "portMappings": [
                 {
+                    "containerPort": 9100,
+                    "hostPort": 9100,
+                    "protocol": "tcp"
+                },
+                {
                     "containerPort": 8000,
                     "hostPort": 8000,
                     "protocol": "tcp"
@@ -29,10 +34,6 @@
             },
             "essential": true,
             "environment": [
-                {
-                    "name": "LOG_LEVEL",
-                    "value": "INFO"
-                },
                 {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
@@ -195,7 +196,7 @@
                 },
                 {
                     "name": "DEFAULT_THROTTLE_CLASSES",
-                    "value": "core.throttling.UserRateThrottle"
+                    "value": "core.throttling.UserRateThrottle,core.throttling.MasterAPIKeyUserRateThrottle"
                 },
                 {
                     "name": "USER_THROTTLE_CACHE_BACKEND",
@@ -208,6 +209,10 @@
                 {
                     "name": "USER_THROTTLE_CACHE_OPTIONS",
                     "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient"
+                },
+                {
+                    "name": "MASTER_API_KEY_THROTTLE_RATE",
+                    "value": "10/sec"
                 },
                 {
                     "name": "GITHUB_APP_ID",
