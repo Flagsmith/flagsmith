@@ -47,7 +47,13 @@ For a full list of frontend environment variables, see the [Flagsmith documentat
 
 #### Testing
 
-This codebase uses TestCafe for end-to-end testing. Tests are located in the `e2e/` directory.
+**Unit tests** use Jest and are located in `__tests__/` directories next to source files.
+
+To run unit tests, run `npm run test:unit`.
+
+To run a specific test file: `npm run test:unit -- --testPathPatterns={filename}`
+
+**E2E tests** use TestCafe and are located in the `e2e/` directory.
 
 To run E2E tests (requires the API running on localhost:8000), run `npm run test`.
 
