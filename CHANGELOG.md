@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.211.3](https://github.com/Flagsmith/flagsmith/compare/v2.211.2...v2.211.3) (2026-01-26)
+
+
+### Bug Fixes
+
+* add loading state for MultiSelect in Create Segment modal ([#6565](https://github.com/Flagsmith/flagsmith/issues/6565)) ([8fd3be3](https://github.com/Flagsmith/flagsmith/commit/8fd3be34d5e33fefd1d7ced54020f5f451796cbc))
+* **frontend:** add docs link to LaunchDarkly import screen ([#6587](https://github.com/Flagsmith/flagsmith/issues/6587)) ([2881817](https://github.com/Flagsmith/flagsmith/commit/28818175a28bf18f68f7721e736f2c2e92341ef6))
+* **frontend:** hide 'Enabled by default' toggle when editing identity override ([#6584](https://github.com/Flagsmith/flagsmith/issues/6584)) ([141d69c](https://github.com/Flagsmith/flagsmith/commit/141d69cf923bae3bb676dfc5fa532feb7489103a))
+
+
+### Dependency Updates
+
+* bump influxdb-client from 1.28.0 to 1.50.0 in /api ([#6593](https://github.com/Flagsmith/flagsmith/issues/6593)) ([da17d1a](https://github.com/Flagsmith/flagsmith/commit/da17d1ad03ff1c77b145e540572c43e207ac5c2a))
+
 ## [2.211.2](https://github.com/Flagsmith/flagsmith/compare/v2.211.1...v2.211.2) (2026-01-22)
 
 
