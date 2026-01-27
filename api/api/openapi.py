@@ -165,14 +165,14 @@ class TypedDictSchemaExtension(
     ) -> dict[str, Any]:
         model_json_schema = TypeAdapter(self.target).json_schema(
             mode="serialization",
-            ref_template="#/components/schemas/{model}",
+            ref_template="#/components/schemas/%s{model}" % self.get_name(),
         )
 
         # Register nested definitions as components
         if "$defs" in model_json_schema:
             for ref_name, schema_kwargs in model_json_schema.pop("$defs").items():
                 component = ResolvedComponent(  # type: ignore[no-untyped-call]
-                    name=ref_name,
+                    name=self.get_name() + ref_name,
                     type=ResolvedComponent.SCHEMA,
                     object=ref_name,
                     schema=schema_kwargs,
