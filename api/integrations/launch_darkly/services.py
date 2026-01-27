@@ -1103,7 +1103,10 @@ def process_import_request(
 
         try:
             ld_environments = ld_client.get_environments(project_key=ld_project_key)
-            ld_flags = ld_client.get_flags(project_key=ld_project_key)
+            ld_flags = ld_client.get_flags(
+                project_key=ld_project_key,
+                environment_keys=[env["key"] for env in ld_environments],
+            )
             ld_flag_tags = ld_client.get_flag_tags()
             # ld_segment_tags = ld_client.get_segment_tags()
             # Keyed by (segment, environment)

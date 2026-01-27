@@ -111,7 +111,7 @@ def test_launch_darkly_client__get_flags__return_expected(
         new=api_version,
     )
     mocker.patch(
-        "integrations.launch_darkly.client.LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE",
+        "integrations.launch_darkly.client.LAUNCH_DARKLY_API_FLAGS_LIMIT_PER_PAGE",
         new=3,
     )
 

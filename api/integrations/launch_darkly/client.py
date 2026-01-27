@@ -12,6 +12,7 @@ from integrations.launch_darkly.constants import (
     BACKOFF_DEFAULT_RETRY_AFTER_SECONDS,
     BACKOFF_MAX_RETRIES,
     LAUNCH_DARKLY_API_BASE_URL,
+    LAUNCH_DARKLY_API_FLAGS_LIMIT_PER_PAGE,
     LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE,
     LAUNCH_DARKLY_API_VERSION,
 )
@@ -172,15 +173,32 @@ class LaunchDarklyClient:
             )
         )
 
-    def get_flags(self, project_key: str) -> list[ld_types.FeatureFlag]:
-        """operationId: getFeatureFlags"""
+    def get_flags(
+        self,
+        project_key: str,
+        environment_keys: list[str] | None = None,
+    ) -> list[ld_types.FeatureFlag]:
+        """operationId: getFeatureFlags
+
+        :param environment_keys: List of environment keys to include configs for.
+            In API v20240415, the environments field is only returned when the environment is provided in the request.
+            Supports multiple values
+        """
+
         endpoint = f"/api/v2/flags/{project_key}"
+        params: dict[str, Any] = {
+            # Summary should be set to 0 in order to get the full flag data including rules.
+            # https://apidocs.launchdarkly.com/tag/Feature-flags#operation/getFeatureFlags!in=query&path=summary&t=request
+            "summary": "0",
+            "limit": LAUNCH_DARKLY_API_FLAGS_LIMIT_PER_PAGE,
+        }
+        if environment_keys:
+            # requests library handles list -> repeated params (env=a&env=b)
+            params["env"] = environment_keys
         return list(
             self._iter_paginated_items(
                 collection_endpoint=endpoint,
-                # Summary should be set to 0 in order to get the full flag data including rules.
-                # https://apidocs.launchdarkly.com/tag/Feature-flags#operation/getFeatureFlags!in=query&path=summary&t=request
-                additional_params={"summary": "0"},
+                additional_params=params,
             )
         )
 
