@@ -46,7 +46,7 @@ MCP_FLAGSMITH_TOKEN_AUTH="Api-Key YOUR_API_KEY_HERE"
 Running your own Flagsmith instance? Point the MCP Server at your API:
 
 ```bash
-MCP_FLAGSMITH_API_URL="https://your-flagsmith-instance.com/api/v1"
+MCP_FLAGSMITH_SERVER_URL="https://your-flagsmith-instance.com"
 ```
 
 ## Example Use Cases
