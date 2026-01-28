@@ -506,7 +506,7 @@ export class E2EHelpers {
     await this.click('#confirm-btn-yes');
     await this.page.waitForFunction((traitName) => {
       const traitElements = document.querySelectorAll('[class*="js-trait-key-"]');
-      for (const element of traitElements) {
+      for (const element of traitElements as any) {
         if (element.textContent?.trim() === traitName) {
           return false;
         }
@@ -548,15 +548,6 @@ export class E2EHelpers {
       () => !document.body.classList.contains('modal-open'),
       { timeout: LONG_TIMEOUT }
     );
-  }
-
-  // Save feature
-  async saveFeature() {
-    await this.click(byId('update-feature-btn'));
-    await this.waitForElementVisible('.toast-message', 10000);
-    await this.page.locator('.toast-message').waitFor({ state: 'hidden', timeout: 10000 });
-    await this.closeModal();
-    await this.waitForElementNotExist('#create-feature-modal');
   }
 
   // Save feature segments
@@ -693,8 +684,8 @@ export class E2EHelpers {
     await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
   }
 
-  // Add segment override for boolean flags
-  async addSegmentOverride(index: number, value: boolean, selectionIndex: number = 0, mvs: MultiVariate[] = []) {
+  // Open segment override dropdown and select a segment
+  private async openSegmentOverride(index: number, selectionIndex: number = 0) {
     const dropdownSelector = byId(`select-segment-option-${selectionIndex}`);
     const isDropdownVisible = await this.page.locator(dropdownSelector).isVisible().catch(() => false);
     if (!isDropdownVisible) {
@@ -702,6 +693,11 @@ export class E2EHelpers {
     }
     await this.click(dropdownSelector);
     await this.waitForElementVisible(byId(`segment-override-value-${index}`));
+  }
+
+  // Add segment override for boolean flags
+  async addSegmentOverride(index: number, value: boolean, selectionIndex: number = 0, mvs: MultiVariate[] = []) {
+    await this.openSegmentOverride(index, selectionIndex);
     if (mvs && mvs.length > 0) {
       for (const v of mvs) {
         const weightSelector = `.segment-overrides ${byId(`featureVariationWeight${v.value}`)}`;
@@ -718,13 +714,7 @@ export class E2EHelpers {
 
   // Add segment override for remote configs
   async addSegmentOverrideConfig(index: number, value: string | number | boolean, selectionIndex: number = 0) {
-    const dropdownSelector = byId(`select-segment-option-${selectionIndex}`);
-    const isDropdownVisible = await this.page.locator(dropdownSelector).isVisible().catch(() => false);
-    if (!isDropdownVisible) {
-      await this.click(byId('segment_overrides'));
-    }
-    await this.click(dropdownSelector);
-    await this.waitForElementVisible(byId(`segment-override-value-${index}`));
+    await this.openSegmentOverride(index, selectionIndex);
     await this.setText(byId(`segment-override-value-${index}`), `${value}`);
     await this.click(byId(`segment-override-toggle-${index}`));
   }
@@ -737,7 +727,6 @@ export class E2EHelpers {
 
   // Edit remote config
   async editRemoteConfig(featureName: string, value: string | number | boolean, toggleFeature: boolean = false, mvs: MultiVariate[] = []) {
-    const expectedValue = typeof value === 'string' ? `"${value}"` : `${value}`;
     await this.gotoFeatures();
     const featureRow = this.page.locator('[data-test^="feature-item-"]').filter({
       has: this.page.locator(`text="${featureName}"`)

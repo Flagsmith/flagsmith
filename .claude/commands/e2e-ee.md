@@ -2,6 +2,13 @@
 
 **IMMEDIATELY run enterprise E2E tests (tagged with @enterprise), analyze failures, fix them, and re-run failed tests until all pass or unfixable issues are identified.**
 
+## Arguments
+
+If an argument is provided (e.g., `/e2e-ee 5`), it sets `E2E_REPEAT` to run tests multiple times to detect flakiness.
+
+- `$ARGUMENTS` = "" → Run tests once (default)
+- `$ARGUMENTS` = "5" → Run tests, then repeat 5 additional times if they pass
+
 ## Prerequisites
 Read `.claude/context/e2e.md` for full E2E configuration details and setup requirements.
 
@@ -12,7 +19,7 @@ Read `.claude/context/e2e.md` for full E2E configuration details and setup requi
 1. **RUN TESTS NOW** from the frontend directory:
    ```bash
    cd frontend
-   E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep @enterprise --quiet
+   E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 E2E_REPEAT=${ARGUMENTS:-0} npm run test -- --grep @enterprise --quiet
    ```
 
    **Note:** Using `E2E_RETRIES=0` to fail fast on first failure for immediate analysis and fixing.

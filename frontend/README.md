@@ -77,7 +77,9 @@ E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/flag-tests.p
 
 When using Claude Code, these commands are available for e2e testing:
 
-- `/e2e` - Run OSS tests, auto-fix failures, re-run until passing
-- `/e2e-ee` - Run Enterprise tests, auto-fix failures, re-run until passing
-- `/e2e-all` - Run all tests (OSS + Enterprise)
-- `/e2e-create` - Create a new test following existing patterns
+- `/e2e [N]` - Run all tests (OSS + Enterprise), auto-fix failures, re-run until passing
+- `/e2e-oss [N]` - Run OSS tests only, auto-fix failures, re-run until passing
+- `/e2e-ee [N]` - Run Enterprise tests only, auto-fix failures, re-run until passing
+- `/e2e-create [description]` - Create a new test following existing patterns
+
+The optional `[N]` argument sets `E2E_REPEAT` to run tests N additional times after passing (defaults to 0). E.g., `/e2e 5` runs tests, then repeats 5 more times to detect flakiness.

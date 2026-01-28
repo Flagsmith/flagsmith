@@ -2,6 +2,13 @@
 
 Create a new E2E test following the existing patterns in the codebase.
 
+## Arguments
+
+If an argument is provided (e.g., `/e2e-create segment creation flow`), use it as the test description instead of asking.
+
+- `$ARGUMENTS` = "" → Ask the user what to test
+- `$ARGUMENTS` = "segment creation flow" → Create a test for segment creation
+
 ## Prerequisites
 Read `.claude/context/e2e.md` for full E2E configuration details, test structure, and debugging guides.
 
@@ -9,9 +16,11 @@ Read `.claude/context/e2e.md` for full E2E configuration details, test structure
 
 **IMPORTANT: Always start by changing to the frontend directory** - the `.env` file and dependencies are located there.
 
-1. **Ask the user what they want to test:**
-   - What feature/page/flow to test
-   - Any specific scenarios or edge cases
+1. **Determine what to test:**
+   - If `$ARGUMENTS` is provided, use that as the test description
+   - Otherwise, ask the user:
+     - What feature/page/flow to test
+     - Any specific scenarios or edge cases
 
 2. **Determine if this is OSS or Enterprise:**
    - Check if the feature being tested exists in enterprise-only code paths
@@ -45,10 +54,10 @@ Read `.claude/context/e2e.md` for full E2E configuration details, test structure
    - Add comments explaining complex test logic
 
 6. **Run the new test to verify it works:**
-   - Run the test 2-3 times to ensure it's stable:
+   - Run the test with `E2E_REPEAT=2` to check for flakiness:
      ```bash
      cd frontend
-     SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/new-test.pw.ts --quiet
+     SKIP_BUNDLE=1 E2E_CONCURRENCY=1 E2E_REPEAT=2 npm run test -- tests/new-test.pw.ts --quiet
      ```
    - **If the test fails, ALWAYS READ TRACES FIRST:**
      1. **Read error-context.md** in the failed test directory:

@@ -96,10 +96,19 @@ E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- --grep @enterprise
 - `SKIP_BUNDLE=1` - Skip webpack bundle build for faster iteration
 - `E2E_CONCURRENCY=20` - Number of parallel test workers (reduce to 1 for debugging)
 - `E2E_RETRIES=0` - Disable retries and enable fail-fast mode (stop on first failure)
+- `E2E_REPEAT=N` - After tests pass, run them N additional times to detect flakiness
 - `--quiet` - Minimal output
 - `--grep @enterprise` - Run only enterprise tests
 - `--grep-invert @enterprise` - Run only OSS tests
 - `-x` - Stop after first failure (automatically added when `E2E_RETRIES=0`)
+
+#### Flakiness Detection Mode
+To check for flaky tests, use `E2E_REPEAT` to run tests multiple times:
+```bash
+cd frontend
+SKIP_BUNDLE=1 E2E_CONCURRENCY=20 E2E_REPEAT=5 npm run test -- --quiet
+```
+This runs tests once, then if they pass, repeats 5 more times. If any repeat fails, the test is flagged as flaky.
 
 ## Backend E2E Implementation
 
