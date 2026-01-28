@@ -70,9 +70,7 @@ def test_export_organisation(db):  # type: ignore[no-untyped-def]
     export = export_organisation(organisation.id)
 
     # Then
-    assert export
-
-    # TODO: test whether the export is importable
+    assert list(export)
 
 
 def test_export_project(organisation):  # type: ignore[no-untyped-def]

@@ -10,7 +10,7 @@ from organisations.models import Organisation
 
 
 @mock_s3
-def test_import_organisation(organisation):  # type: ignore[no-untyped-def]
+def test_import_organisation(organisation: Organisation) -> None:
     # Given
     bucket_name = "test-bucket"
     file_key = "organisation-exports/org-1.json"
@@ -22,7 +22,7 @@ def test_import_organisation(organisation):  # type: ignore[no-untyped-def]
     )
 
     body = json.dumps(
-        export_organisation(organisation.id), cls=DjangoJSONEncoder
+        list(export_organisation(organisation.id)), cls=DjangoJSONEncoder
     ).encode("utf-8")
 
     s3_client = boto3.client("s3")
