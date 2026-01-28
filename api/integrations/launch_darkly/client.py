@@ -12,6 +12,7 @@ from integrations.launch_darkly.constants import (
     BACKOFF_DEFAULT_RETRY_AFTER_SECONDS,
     BACKOFF_MAX_RETRIES,
     LAUNCH_DARKLY_API_BASE_URL,
+    LAUNCH_DARKLY_API_ENV_FILTER_MAX,
     LAUNCH_DARKLY_API_FLAGS_LIMIT_PER_PAGE,
     LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE,
     LAUNCH_DARKLY_API_VERSION,
@@ -173,6 +174,38 @@ class LaunchDarklyClient:
             )
         )
 
+    def _get_flags_by_envs(
+        self,
+        project_key: str,
+        environment_keys: list[str],
+    ) -> list[ld_types.FeatureFlag]:
+        endpoint = f"/api/v2/flags/{project_key}"
+        base_params: dict[str, Any] = {
+            "summary": "0",
+            "limit": LAUNCH_DARKLY_API_FLAGS_LIMIT_PER_PAGE,
+        }
+
+        flags_by_key: dict[str, ld_types.FeatureFlag] = {}
+        for i in range(0, len(environment_keys), LAUNCH_DARKLY_API_ENV_FILTER_MAX):
+            batch = environment_keys[i : i + LAUNCH_DARKLY_API_ENV_FILTER_MAX]
+            params = {**base_params, "env": batch}
+
+            flags: list[ld_types.FeatureFlag] = list(
+                self._iter_paginated_items(
+                    collection_endpoint=endpoint,
+                    additional_params=params,
+                )
+            )
+
+            for flag in flags:
+                key = flag["key"]
+                if key in flags_by_key:
+                    flags_by_key[key]["environments"].update(flag["environments"])
+                else:
+                    flags_by_key[key] = flag
+
+        return list(flags_by_key.values())
+
     def get_flags(
         self,
         project_key: str,
@@ -181,20 +214,22 @@ class LaunchDarklyClient:
         """operationId: getFeatureFlags
 
         :param environment_keys: List of environment keys to include configs for.
-            In API v20240415, the environments field is only returned when the environment is provided in the request.
-            Supports multiple values
+            In API v20240415, the environments field is only returned when filtering.
+            Number of environment keys in one single request is limited to 3.
         """
+        if (
+            environment_keys
+            and len(environment_keys) > LAUNCH_DARKLY_API_ENV_FILTER_MAX
+        ):
+            return self._get_flags_by_envs(project_key, environment_keys)
 
         endpoint = f"/api/v2/flags/{project_key}"
         params: dict[str, Any] = {
-            # Summary should be set to 0 in order to get the full flag data including rules.
-            # https://apidocs.launchdarkly.com/tag/Feature-flags#operation/getFeatureFlags!in=query&path=summary&t=request
             "summary": "0",
             "limit": LAUNCH_DARKLY_API_FLAGS_LIMIT_PER_PAGE,
         }
-        if environment_keys:
-            # requests library handles list -> repeated params (env=a&env=b)
-            params["env"] = environment_keys
+
+        params["env"] = environment_keys
         return list(
             self._iter_paginated_items(
                 collection_endpoint=endpoint,
