@@ -1,6 +1,6 @@
 Thanks for submitting a PR! Please check the boxes below:
 
-- [ ] I have read the [Contributing Guide](/CONTRIBUTING.md).
+- [ ] I have read the [Contributing Guide](CONTRIBUTING.md).
 - [ ] I have added information to `docs/` if required so people know about the feature.
 - [ ] I have filled in the "Changes" section below.
 - [ ] I have filled in the "How did you test this code" section below.
