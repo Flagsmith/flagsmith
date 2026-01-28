@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import pytest
 from pytest_mock import MockerFixture
@@ -478,11 +479,12 @@ def test_launch_darkly_client__get_flags_with_env_keys_batching__merges_environm
     # Then
     assert len(result) == 1
     assert result[0]["key"] == "flag1"
-    assert result[0]["environments"] == {
+    environments: Any = result[0]["environments"]
+    assert environments == {
         "env1": {"on": True},
         "env2": {"on": False},
         "env3": {"on": True},
         "env4": {"on": False},
     }
-    # Verify two requests were made (batched)
+
     assert len(requests_mock.request_history) == 2
