@@ -7,8 +7,8 @@ const RETRIES = parseInt(process.env.E2E_RETRIES || '1', 10);
 const REPEAT = parseInt(process.env.E2E_REPEAT || '0', 10);
 
 function exitWithReport(code: number): never {
-  // Only open the report locally, not in CI (it blocks waiting for user input)
-  if (!process.env.CI) {
+  // Only open the report locally on failure (it blocks waiting for user input)
+  if (!process.env.CI && code !== 0) {
     try {
       console.log('\nOpening test report...');
       execSync('npm run test:report', { stdio: 'inherit' });
