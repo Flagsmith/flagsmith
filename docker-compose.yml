@@ -21,7 +21,7 @@ services:
       start_period: 20s
 
   flagsmith:
-    image: docker.flagsmith.com/flagsmith/flagsmith:latest
+    image: flagsmith/flagsmith-private-cloud:latest
     environment:
       # All environments variables are available here:
       # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
@@ -40,6 +40,10 @@ services:
       # Enable Task Processor
       TASK_RUN_METHOD: TASK_PROCESSOR # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
       PROMETHEUS_ENABLED: 'true'
+
+      # E2E Testing
+      E2E_TEST_AUTH_TOKEN: 'some-token'
+      ENABLE_FE_E2E: 'true'
 
       # Uncomment if you want to enable Google OAuth. Note this does not turn Google OAuth on. You still need to use
       # Flagsmith on Flagsmith to enable it - https://docs.flagsmith.com/deployment/#oauth_google
@@ -63,7 +67,7 @@ services:
   # The flagsmith_processor service is only needed if TASK_RUN_METHOD set to TASK_PROCESSOR
   # in the application environment
   flagsmith-task-processor:
-    image: docker.flagsmith.com/flagsmith/flagsmith:latest
+    image: flagsmith/flagsmith-private-cloud:latest
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
       USE_POSTGRES_FOR_ANALYTICS: 'true'

@@ -1,136 +1,134 @@
 import { test, expect } from '../test-setup';
-import {
-  assertTextContent,
-  byId,
-  click,
-  closeModal,
-  getText,
-  log,
-  login,
-  setText,
-  waitForElementVisible,
-  waitForElementNotExist,
-  clickByText,
-  createHelpers,
-} from '../helpers.playwright'
+import { byId, log, createHelpers } from '../helpers.playwright'
 import { E2E_SEPARATE_TEST_USER, PASSWORD } from '../config'
 
 test.describe('Organisation Tests', () => {
   test('test description @oss', async ({ page }) => {
-    const helpers = createHelpers(page);
-  log('Login')
-  await helpers.login(E2E_SEPARATE_TEST_USER, PASSWORD)
+    const {
+      assertTextContent,
+      click,
+      clickByText,
+      closeModal,
+      getInputValue,
+      login,
+      setText,
+      waitForElementNotExist,
+      waitForElementVisible,
+    } = createHelpers(page);
 
-  log('Navigate to Organisation Settings')
-  await helpers.waitForElementVisible(byId('organisation-link'))
-  await helpers.click(byId('organisation-link'))
-  await helpers.waitForElementVisible(byId('org-settings-link'))
-  await helpers.click(byId('org-settings-link'))
+    log('Login')
+    await login(E2E_SEPARATE_TEST_USER, PASSWORD)
 
-  log('Edit Organisation Name')
-  await helpers.waitForElementVisible("[data-test='organisation-name']")
-  await helpers.setText("[data-test='organisation-name']", 'Test Organisation')
-  await helpers.click('#save-org-btn')
+    log('Navigate to Organisation Settings')
+    await waitForElementVisible(byId('organisation-link'))
+    await click(byId('organisation-link'))
+    await waitForElementVisible(byId('org-settings-link'))
+    await click(byId('org-settings-link'))
 
-  log('Verify Organisation Name Updated in Breadcrumb')
-  await helpers.click('#projects-link')
-  await assertTextContent(page, '#organisation-link', 'Test Organisation')
+    log('Edit Organisation Name')
+    await waitForElementVisible("[data-test='organisation-name']")
+    await setText("[data-test='organisation-name']", 'Test Organisation')
+    await click('#save-org-btn')
 
-  log('Verify Organisation Name Persisted in Settings')
-  await helpers.click(byId('organisation-link'))
-  await helpers.waitForElementVisible(byId('org-settings-link'))
-  await helpers.click(byId('org-settings-link'))
-  await helpers.waitForElementVisible("[data-test='organisation-name']")
+    log('Verify Organisation Name Updated in Breadcrumb')
+    await click('#projects-link')
+    await assertTextContent('#organisation-link', 'Test Organisation')
 
-  log('Test 2: Create and Delete Organisation, Verify Next Org in Nav')
-  log('Navigate to create organisation')
-  await helpers.click(byId('home-link'))
-  await helpers.waitForElementVisible(byId('create-organisation-btn'))
-  await helpers.click(byId('create-organisation-btn'))
+    log('Verify Organisation Name Persisted in Settings')
+    await click(byId('organisation-link'))
+    await waitForElementVisible(byId('org-settings-link'))
+    await click(byId('org-settings-link'))
+    await waitForElementVisible("[data-test='organisation-name']")
 
-  log('Create New Organisation')
-  await helpers.waitForElementVisible("[name='orgName']")
-  await helpers.setText("[name='orgName']", 'E2E Test Org to Delete')
-  await helpers.click('#create-org-btn')
+    log('Test 2: Create and Delete Organisation, Verify Next Org in Nav')
+    log('Navigate to create organisation')
+    await click(byId('home-link'))
+    await waitForElementVisible(byId('create-organisation-btn'))
+    await click(byId('create-organisation-btn'))
 
-  log('Verify New Organisation Created and appears in nav')
-  await helpers.waitForElementVisible(byId('organisation-link'))
-  await assertTextContent(page, '#organisation-link', 'E2E Test Org to Delete')
+    log('Create New Organisation')
+    await waitForElementVisible("[name='orgName']")
+    await setText("[name='orgName']", 'E2E Test Org to Delete')
+    await click('#create-org-btn')
 
-  log('Navigate back to the org we want to delete')
-  await helpers.waitForElementVisible(byId('org-settings-link'))
-  await helpers.click(byId('org-settings-link'))
+    log('Verify New Organisation Created and appears in nav')
+    await waitForElementVisible(byId('organisation-link'))
+    await assertTextContent('#organisation-link', 'E2E Test Org to Delete')
 
-  log('Delete Organisation')
-  await helpers.waitForElementVisible('#delete-org-btn')
-  await helpers.click('#delete-org-btn')
-  await helpers.setText("[name='confirm-org-name']", 'E2E Test Org to Delete')
-  await helpers.clickByText('Confirm')
+    log('Navigate back to the org we want to delete')
+    await waitForElementVisible(byId('org-settings-link'))
+    await click(byId('org-settings-link'))
 
-  log('Verify Redirected to Next Organisation in Nav')
-  await helpers.waitForElementVisible(byId('organisation-link'))
-  log('Current org in nav after deletion: Test Organisation')
+    log('Delete Organisation')
+    await waitForElementVisible('#delete-org-btn')
+    await click('#delete-org-btn')
+    await setText("[name='confirm-org-name']", 'E2E Test Org to Delete')
+    await clickByText('Confirm')
 
-  log('Verify deleted org name does not appear in nav')
-  // Wait for the organisation link to update to the new org before asserting
-  await assertTextContent(page, '#organisation-link', 'Test Organisation')
-  await expect(page.locator('#organisation-link')).not.toContainText('E2E Test Org to Delete')
+    log('Verify Redirected to Next Organisation in Nav')
+    await waitForElementVisible(byId('organisation-link'))
+    log('Current org in nav after deletion: Test Organisation')
 
-  log('Test 3: Cancel Organisation Deletion')
-  log('Create temporary organisation for cancel test')
-  await helpers.click(byId('home-link'))
-  await helpers.waitForElementVisible(byId('create-organisation-btn'))
-  await helpers.click(byId('create-organisation-btn'))
-  await helpers.waitForElementVisible("[name='orgName']")
-  await helpers.setText("[name='orgName']", 'E2E Cancel Test Org')
-  await helpers.click('#create-org-btn')
+    log('Verify deleted org name does not appear in nav')
+    // Wait for the organisation link to update to the new org before asserting
+    await assertTextContent('#organisation-link', 'Test Organisation')
+    await expect(page.locator('#organisation-link')).not.toContainText('E2E Test Org to Delete')
 
-  log('Navigate to org settings and open delete modal')
-  await helpers.waitForElementVisible(byId('organisation-link'))
-  await assertTextContent(page, '#organisation-link', 'E2E Cancel Test Org')
-  await helpers.waitForElementVisible(byId('org-settings-link'))
-  await helpers.click(byId('org-settings-link'))
-  await helpers.waitForElementVisible('#delete-org-btn')
-  await helpers.click('#delete-org-btn')
-  await helpers.waitForElementVisible("[name='confirm-org-name']")
-  await helpers.setText("[name='confirm-org-name']", 'E2E Cancel Test Org')
+    log('Test 3: Cancel Organisation Deletion')
+    log('Create temporary organisation for cancel test')
+    await click(byId('home-link'))
+    await waitForElementVisible(byId('create-organisation-btn'))
+    await click(byId('create-organisation-btn'))
+    await waitForElementVisible("[name='orgName']")
+    await setText("[name='orgName']", 'E2E Cancel Test Org')
+    await click('#create-org-btn')
 
-  log('Close modal without confirming deletion')
-  await closeModal(page)
-  await helpers.waitForElementNotExist('.modal')
+    log('Navigate to org settings and open delete modal')
+    await waitForElementVisible(byId('organisation-link'))
+    await assertTextContent('#organisation-link', 'E2E Cancel Test Org')
+    await waitForElementVisible(byId('org-settings-link'))
+    await click(byId('org-settings-link'))
+    await waitForElementVisible('#delete-org-btn')
+    await click('#delete-org-btn')
+    await waitForElementVisible("[name='confirm-org-name']")
+    await setText("[name='confirm-org-name']", 'E2E Cancel Test Org')
 
-  log('Verify organisation still exists in navbar')
-  await helpers.waitForElementVisible(byId('organisation-link'))
-  await assertTextContent(page, '#organisation-link', 'E2E Cancel Test Org')
+    log('Close modal without confirming deletion')
+    await closeModal()
+    await waitForElementNotExist('.modal')
 
-  log('Clean up: Delete the test organisation')
-  await helpers.click('#delete-org-btn')
-  await helpers.setText("[name='confirm-org-name']", 'E2E Cancel Test Org')
-  await helpers.clickByText('Confirm')
-  await helpers.waitForElementNotExist('.modal')
-  await helpers.waitForElementVisible(byId('organisation-link'))
-  await assertTextContent(page, '#organisation-link', 'Test Organisation')
+    log('Verify organisation still exists in navbar')
+    await waitForElementVisible(byId('organisation-link'))
+    await assertTextContent('#organisation-link', 'E2E Cancel Test Org')
 
-  log('Test 4: Organisation Name Validation')
-  log('Navigate to Test Organisation settings')
-  await helpers.waitForElementVisible(byId('org-settings-link'))
-  await helpers.click(byId('org-settings-link'))
+    log('Clean up: Delete the test organisation')
+    await click('#delete-org-btn')
+    await setText("[name='confirm-org-name']", 'E2E Cancel Test Org')
+    await clickByText('Confirm')
+    await waitForElementNotExist('.modal')
+    await waitForElementVisible(byId('organisation-link'))
+    await assertTextContent('#organisation-link', 'Test Organisation')
 
-  log('Test empty organisation name validation')
-  await helpers.waitForElementVisible("[data-test='organisation-name']")
-  const originalName = await helpers.getInputValue("[data-test='organisation-name']")
+    log('Test 4: Organisation Name Validation')
+    log('Navigate to Test Organisation settings')
+    await waitForElementVisible(byId('org-settings-link'))
+    await click(byId('org-settings-link'))
 
-  log('Clear organisation name')
-  await helpers.setText("[data-test='organisation-name']", '')
+    log('Test empty organisation name validation')
+    await waitForElementVisible("[data-test='organisation-name']")
+    const originalName = await getInputValue("[data-test='organisation-name']")
 
-  log('Verify save button is disabled')
-  const saveButton = page.locator('#save-org-btn')
-  await expect(saveButton).toBeDisabled()
+    log('Clear organisation name')
+    await setText("[data-test='organisation-name']", '')
 
-  log('Restore original name')
-  await helpers.setText("[data-test='organisation-name']", originalName)
+    log('Verify save button is disabled')
+    const saveButton = page.locator('#save-org-btn')
+    await expect(saveButton).toBeDisabled()
 
-  log('Verify save button is enabled')
-  await expect(saveButton).not.toBeDisabled()
+    log('Restore original name')
+    await setText("[data-test='organisation-name']", originalName)
+
+    log('Verify save button is enabled')
+    await expect(saveButton).not.toBeDisabled()
   });
 });
