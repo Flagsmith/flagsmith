@@ -86,7 +86,7 @@ jobs:
           API_IMAGE: ${{ inputs.api-image }}
           E2E_IMAGE: ${{ inputs.e2e-image }}
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
-          E2E_RETRIES: 1
+          E2E_RETRIES: 2
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         timeout-minutes: 20
