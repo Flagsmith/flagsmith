@@ -43,18 +43,49 @@ Pick a naming format and apply it consistently across your project. Common conve
 | `camelCase` | `enableDarkMode` | Matches JavaScript conventions |
 | `SCREAMING_SNAKE_CASE` | `ENABLE_DARK_MODE` | Often used for constants |
 
-### Consider prefixes for organisation
+### Consider prefixes and suffixes for organisation
 
-Prefixes can help group related flags and make searching easier:
+Prefixes and suffixes can help group related flags and make searching easier:
 
+**Common prefixes:**
 - `feature_` for new functionality: `feature_new_checkout_flow`
 - `experiment_` for A/B tests: `experiment_pricing_page_variant`
 - `ops_` for operational flags: `ops_maintenance_mode`
 - `kill_` for kill switches: `kill_external_api_calls`
 
+**Common suffixes:**
+- `_enabled` for feature availability flags: `fb_ads_enabled`, `dark_mode_enabled`
+- `_limit` or `_max` for configuration values: `upload_size_limit`, `retry_max`
+
 ### Keep names concise but meaningful
 
 Aim for names that are long enough to be descriptive but short enough to be practical. A good rule of thumb is 2-5 words.
+
+### Think about impact and context
+
+When naming a flag, consider what information future maintainers need to know. A well-chosen name should help answer:
+
+- **Which feature** does this flag relate to?
+- **What happens** when the flag is changed?
+- **Which users** are affected by this flag?
+- **Which components** or services use this flag?
+
+For example, `checkout_guest_users_enabled` clearly indicates it affects the checkout feature, relates to guest users, and can be toggled on or off.
+
+## Add descriptions to your flags
+
+Whilst flag names cannot be changed after creation, descriptions can be updated at any time. Use the description field to provide context that doesn't fit in the name:
+
+- **Purpose**: Why was this flag created?
+- **Scope**: Which features, services, or components does it affect?
+- **Timeline**: Is this temporary or permanent?
+- **Dependencies**: Does it relate to other flags or external systems?
+
+A clear description helps team members understand the flag's purpose even after 6 months, reducing the need to search through code or documentation.
+
+:::tip
+Treat flag descriptions like code comments—they should explain the "why" and "what", not just repeat the flag name.
+:::
 
 ## Enforcing naming conventions
 
