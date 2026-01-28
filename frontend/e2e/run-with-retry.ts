@@ -7,11 +7,14 @@ const RETRIES = parseInt(process.env.E2E_RETRIES || '1', 10);
 const REPEAT = parseInt(process.env.E2E_REPEAT || '0', 10);
 
 function exitWithReport(code: number): never {
-  try {
-    console.log('\nGenerating test report...');
-    execSync('npm run test:report', { stdio: 'inherit' });
-  } catch (error) {
-    console.error('Failed to generate test report');
+  // Only open the report locally, not in CI (it blocks waiting for user input)
+  if (!process.env.CI) {
+    try {
+      console.log('\nOpening test report...');
+      execSync('npm run test:report', { stdio: 'inherit' });
+    } catch (error) {
+      console.error('Failed to open test report');
+    }
   }
   process.exit(code);
 }
