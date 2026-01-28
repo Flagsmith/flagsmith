@@ -372,7 +372,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             <FeatureName name={projectFlag.name} />
             <FeatureTags editFeature={editFeature} projectFlag={projectFlag} />
           </div>
-                    <div
+          <div
             onClick={(e) => {
               e.stopPropagation()
             }}
