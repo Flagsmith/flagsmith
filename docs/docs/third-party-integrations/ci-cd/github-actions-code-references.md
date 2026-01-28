@@ -6,7 +6,7 @@ sidebar_position: 1
 
 GitHub Actions Code References integration automatically scans your codebase to find exactly where your feature flags are used in your source code. When you open a feature flag in Flagsmith, you'll see a list of all the files and line numbers where that flag is referenced, helping you understand the flag's impact and identify when flags can be safely removed.
 
-The integration runs entirely in your GitHub Actions workflows, ensuring your code never leaves your CI environment. You can configure it to run on a schedule, on push events, on pull requests, on releases, or manually trigger it as needed. The scanning process uses a Docker image that runs locally in your CI runners—your source code stays within your infrastructure, and only reference metadata (file paths, line numbers, and context) is sent to Flagsmith.
+The integration runs entirely in your GitHub Actions workflows, ensuring your code never leaves your CI environment. You can configure it to run on a schedule, on push events, on pull requests, on releases, or manually trigger it as needed. All scanning happens inside your GitHub Actions runners—your source code stays within your infrastructure, and only reference metadata (file paths, line numbers, and context) is sent to Flagsmith.
 
 ## Architecture Overview
 
@@ -14,12 +14,12 @@ The integration uses a reusable GitHub Action workflow to scan your codebase. He
 
 1. **Your repository** triggers a GitHub Actions workflow (via schedule, push, pull request, or release)
 2. **Reusable workflow** from `github.com/Flagsmith/ci` (`.github/workflows/collect-code-references.yml`) is invoked
-3. **Code scanning** happens locally—composite actions search your repository files for feature flag references using pattern matching
+3. **Code scanning** happens locally—a composite action searches your repository files for feature flag references using pattern matching
 4. **Code references** (file paths, line numbers, and context) are collected and uploaded to the Flagsmith API
 5. **Flagsmith dashboard** displays the references in each feature flag's details, showing exactly where each flag is used in your codebase
 
 :::important
-**Privacy and Security**: The Docker image runs entirely within your CI runners (GitHub-hosted or self-hosted), ensuring your source code never leaves your infrastructure. Only reference metadata (file paths, line numbers, and context snippets) is sent to Flagsmith—your actual source code is never transmitted.
+**Privacy and Security**: The workflow runs entirely within your CI runners (GitHub-hosted or self-hosted), ensuring your source code never leaves your infrastructure. Only reference metadata (file paths, line numbers, and context snippets) is sent to Flagsmith—your actual source code is never transmitted.
 :::
 
 ## Prerequisites
@@ -104,8 +104,6 @@ The scanner uses regex pattern matching to find feature flag references in your 
 - Build artifacts: `node_modules`, `.git`, `venv`, `.venv`, `__pycache__`, `.tox`, `.mypy_cache`, `.pytest_cache`, `.ruff_cache`, `dist`, `build`, `target`, `out`, `bin`, `obj`
 - Framework-specific: `.next`, `.nuxt`, `.cache`
 - Test coverage: `coverage`, `htmlcov`, `.nyc_output`
-
-You can customize exclusions using the `exclude_patterns` parameter in your workflow configuration.
 
 ## Advanced Setup
 
@@ -276,18 +274,18 @@ jobs:
 
 Choose trigger types based on when and why you want to scan your code:
 
-- **Daily crontab (scheduled)**: Proactively finds references and helps identify stale flags in Flagsmith that may no longer be used in your codebase. Running daily ensures you catch flags that have been removed from code but still exist in Flagsmith.
+- **Daily crontab (scheduled)**: Runs regular scans of your default branch so code references stay reasonably fresh over time.
 
-- **Pull request**: Scans code changes in pull requests to keep code references up-to-date with your development workflow.
+- **Pull request**: Runs scans on pull requests so references stay aligned with your review and merge workflow.
 
 - **Release**: Tracks code references at release points, helping you understand which flags were active in each release.
 
-- **Push events**: Keeps references up-to-date as code changes are pushed to your repository. This ensures your code references stay current with the latest code changes.
+- **Push events**: Keeps references up to date as code changes are pushed to your repository.
 
-- **Manual trigger** (`workflow_dispatch`): Allows you to run scans on-demand for testing, immediate updates, or when you need to verify references after making changes.
+- **Manual trigger** (`workflow_dispatch`): Lets you run scans on demand for testing, immediate updates, or when you need to verify references after making changes.
 
 :::tip
-For most use cases, a combination of **daily scheduled scans** (to catch stale flags) and **pull request or push triggers** provides good coverage without excessive CI usage.
+For most use cases, a combination of **daily scheduled scans** and **pull request or push triggers** provides good coverage without excessive CI usage.
 :::
 
 ## How It Works
@@ -307,16 +305,6 @@ In the Flagsmith dashboard, you'll see code references listed under each feature
 - File paths where the flag is referenced
 - Line numbers for each reference  
 - Code context snippets
-
-## Verifying Your Setup
-
-After setting up the integration, verify it's working correctly:
-
-1. **Check workflow execution**: Go to your repository's **Actions** tab and verify the workflow runs successfully. Look for logs showing the number of features fetched, files scanned, and references found.
-
-2. **Verify in Flagsmith**: Open a feature flag in Flagsmith that you know is used in your codebase. Navigate to the **Code References** tab and confirm you see the file paths, line numbers, and code snippets where the flag is referenced.
-
-3. **Test with a new flag**: Create a test feature flag, add a reference to it in your code, and trigger a manual workflow run. Verify the reference appears in Flagsmith within a few minutes.
 
 ## Next Steps
 
