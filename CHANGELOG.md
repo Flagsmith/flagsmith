@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.211.4](https://github.com/Flagsmith/flagsmith/compare/v2.211.3...v2.211.4) (2026-01-27)
+
+
+### Bug Fixes
+
+* display correct control value in identity override variation list ([#6585](https://github.com/Flagsmith/flagsmith/issues/6585)) ([93ffc6c](https://github.com/Flagsmith/flagsmith/commit/93ffc6cb5076960c456e0227da72d5c9b70f1d3f))
+
 ## [2.211.3](https://github.com/Flagsmith/flagsmith/compare/v2.211.2...v2.211.3) (2026-01-26)
 
 
