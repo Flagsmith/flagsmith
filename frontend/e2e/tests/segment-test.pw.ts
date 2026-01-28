@@ -2,6 +2,9 @@ import { test, expect } from '../test-setup';
 import { byId, log, createHelpers } from '../helpers.playwright';
 import { E2E_USER, PASSWORD, E2E_TEST_IDENTITY } from '../config'
 
+const REMOTE_CONFIG_FEATURE = 'remote_config'
+const FLAG_FEATURE = 'flag'
+
 // Keep the last rule simple to facilitate update testing
 const segmentRules =  [
   // rule 2 =18 || =17
@@ -284,6 +287,7 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
     clickUserFeatureSwitch,
     createFeature,
     createRemoteConfig,
+    deleteFeature,
     gotoFeatures,
     goToUser,
     login,
@@ -300,26 +304,31 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
 
   log('Create features')
   await gotoFeatures()
-  await createFeature({ name: 'flag', value: true })
-  await createRemoteConfig({ name: 'config', value: 0, description: 'Description' })
+  await createFeature({ name: FLAG_FEATURE, value: true })
+  await createRemoteConfig({ name: REMOTE_CONFIG_FEATURE, value: 0, description: 'Description' })
 
   log('Toggle flag for user')
   await goToUser(E2E_TEST_IDENTITY)
-  await clickUserFeatureSwitch('flag', 'on')
+  await clickUserFeatureSwitch(FLAG_FEATURE, 'on')
   await click('#confirm-toggle-feature-btn')
   await waitAndRefresh() // wait and refresh to avoid issues with data sync from UK -> US in github workflows
-  await waitForUserFeatureSwitch('flag', 'off')
+  await waitForUserFeatureSwitch(FLAG_FEATURE, 'off')
 
   log('Edit flag for user')
-  await clickUserFeature('config')
+  await clickUserFeature(REMOTE_CONFIG_FEATURE)
   await setText(byId('featureValue'), 'small')
   await click('#update-feature-btn')
   await waitAndRefresh() // wait and refresh to avoid issues with data sync from UK -> US in github workflows
-  await assertUserFeatureValue('config', '"small"')
+  await assertUserFeatureValue(REMOTE_CONFIG_FEATURE, '"small"')
 
   log('Toggle flag for user again')
-  await clickUserFeatureSwitch('flag', 'off');
+  await clickUserFeatureSwitch(FLAG_FEATURE, 'off');
   await click('#confirm-toggle-feature-btn');
   await waitAndRefresh(); // wait and refresh to avoid issues with data sync from UK -> US in github workflows
-  await waitForUserFeatureSwitch('flag', 'on');
+  await waitForUserFeatureSwitch(FLAG_FEATURE, 'on');
+
+  log('Clear down features')
+  await gotoFeatures()
+  await deleteFeature(FLAG_FEATURE)
+  await deleteFeature(REMOTE_CONFIG_FEATURE)
 })
