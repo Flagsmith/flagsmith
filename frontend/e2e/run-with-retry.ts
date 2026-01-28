@@ -4,6 +4,7 @@ import { runTeardown } from './teardown';
 require('dotenv').config();
 
 const RETRIES = parseInt(process.env.E2E_RETRIES || '1', 10);
+const REPEAT = parseInt(process.env.E2E_REPEAT || '0', 10);
 
 function runPlaywright(args: string[], quietMode: boolean, isRetry: boolean): boolean {
   try {
@@ -91,6 +92,44 @@ async function main() {
           : `Tests passed on attempt ${attempt}`);
         console.log('==========================================\n');
       }
+
+      // If REPEAT is set and this is the first successful run, repeat the tests
+      if (REPEAT > 0 && attempt === 0) {
+        if (!quietMode) {
+          console.log('\n==========================================');
+          console.log(`Tests passed! Running ${REPEAT} additional time(s) to check for flakiness...`);
+          console.log('==========================================\n');
+        }
+
+        for (let repeatAttempt = 1; repeatAttempt <= REPEAT; repeatAttempt++) {
+          if (!quietMode) {
+            console.log(`\nRepeat attempt ${repeatAttempt} of ${REPEAT}...`);
+          }
+
+          // Run the same tests again with the original arguments
+          const repeatSuccess = runPlaywright(extraArgs, quietMode, false);
+
+          if (!repeatSuccess) {
+            if (!quietMode) {
+              console.log('\n==========================================');
+              console.log(`FLAKY TEST DETECTED: Tests failed on repeat attempt ${repeatAttempt} of ${REPEAT}`);
+              console.log('==========================================\n');
+            }
+            process.exit(1);
+          }
+
+          if (!quietMode) {
+            console.log(`Repeat attempt ${repeatAttempt} of ${REPEAT} passed`);
+          }
+        }
+
+        if (!quietMode) {
+          console.log('\n==========================================');
+          console.log(`All tests passed ${REPEAT + 1} time(s) - no flakiness detected!`);
+          console.log('==========================================\n');
+        }
+      }
+
       process.exit(0);
     }
 

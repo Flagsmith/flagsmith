@@ -70,11 +70,10 @@ Read `.claude/context/e2e.md` for full E2E configuration details and setup requi
 
 ## Important Notes
 
-- **DO NOT** just report that retries passed - if tests failed initially, investigate and fix the root cause
 - **DO** modify test files to fix timing issues, missing waits, or broken selectors
 - **DO** add `data-test` attributes to components if they're missing
 - **DON'T** modify test assertions or business logic unless the test is clearly wrong
 - If the failure is in application code (not test code), report it as a bug but don't try to fix it
 - Always explain what fixes you're attempting and why
 - Test files are in TypeScript and use the `helpers.playwright.ts` helper functions
-- The built-in retry mechanism is a safety net, not a substitute for fixing flaky tests
+- With `E2E_RETRIES=0`, tests fail immediately without retries, preserving all error-context.md files in `test-results/`
