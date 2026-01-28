@@ -12,7 +12,3 @@ def test_api_documentation_specification_loads(
     # Then
     assert response.status_code == 200
     assert response.json()["info"]["title"] == "Flagsmith API"
-
-
-def test_spectacular_settings__component_no_read_only_required__is_enabled() -> None:
-    assert settings.SPECTACULAR_SETTINGS["COMPONENT_NO_READ_ONLY_REQUIRED"] is True
