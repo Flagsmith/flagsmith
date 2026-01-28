@@ -573,8 +573,10 @@ export class E2EHelpers {
     await this.setText(byId('role-name'), name);
     await this.click(byId('save-role'));
     await this.closeModal();
-    // Click on the first role (index 0) - we just created it
-    await this.click(byId('role-0'));
+    // Click on the role by its name
+    const roleRow = this.page.locator('[data-test^="role-"]').filter({ hasText: name }).first();
+    await roleRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await roleRow.click();
     await this.click(byId('members-tab'));
     await this.click(byId('assigned-users'));
     for (const userId of users) {
