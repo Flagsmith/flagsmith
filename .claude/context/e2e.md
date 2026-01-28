@@ -1,5 +1,7 @@
 # E2E Testing Configuration and Context
 
+**CRITICAL: This file MUST be read before running any E2E commands. It contains essential configuration, debugging guides, and workflow instructions that all E2E commands depend on.**
+
 ## Docker Configuration
 
 To run E2E tests, the following environment variables must be set in `docker-compose.yml` for the `flagsmith` service:
@@ -26,8 +28,9 @@ E2E_TEST_TOKEN_PROD=<prod-token>
 ### Test Files
 - Location: `frontend/e2e/tests/*.pw.ts`
 - Test categories:
-  - OSS tests: Default tests (use `--grep-invert @enterprise`)
+  - OSS tests: Tagged with `@oss` (use `--grep @oss`)
   - Enterprise tests: Tagged with `@enterprise` (use `--grep @enterprise`)
+  - All tests: `--grep "@oss|@enterprise"`
 
 ### Test Results
 - Results directory: `frontend/e2e/test-results/`
@@ -41,161 +44,118 @@ E2E_TEST_TOKEN_PROD=<prod-token>
 
 ### HTML Report
 - Location: `frontend/e2e/playwright-report/`
-- Browsable interface for viewing test results
+- View with: `npm run test:report`
 
-## Running E2E Tests
+## Environment Variables
 
-### Prerequisites
-1. Ensure Docker is running
-2. Start Flagsmith services: `docker compose up -d`
-3. Verify E2E is configured:
-   ```bash
-   docker exec flagsmith-flagsmith-1 python -c "import os; print('E2E_TEST_AUTH_TOKEN:', os.getenv('E2E_TEST_AUTH_TOKEN')); print('ENABLE_FE_E2E:', os.getenv('ENABLE_FE_E2E'))"
-   ```
-
-### Test Commands
-
-#### Run OSS Tests
-```bash
-cd frontend
-SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep-invert @enterprise --quiet
-```
-
-#### Run Enterprise Tests
-```bash
-cd frontend
-SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep @enterprise --quiet
-```
-
-#### Run Specific Test Files
-```bash
-cd frontend
-SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/flag-tests.pw.ts tests/invite-test.pw.ts
-```
-
-#### Run All Tests (OSS + Enterprise)
-```bash
-cd frontend
-SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --quiet
-```
-
-#### Fail-Fast Mode (Stop on First Failure)
-When debugging, use `E2E_RETRIES=0` to stop immediately after the first test failure without running remaining tests or retrying:
-```bash
-cd frontend
-E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep @enterprise --quiet
-```
-
-**Note**: Playwright will finish running tests that are already in progress (due to parallel execution), but won't start any new tests after the first failure. For truly immediate failure (one test at a time), combine with `E2E_CONCURRENCY=1`:
-```bash
-cd frontend
-E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- --grep @enterprise --quiet
-```
-
-### Environment Variables
 - `SKIP_BUNDLE=1` - Skip webpack bundle build for faster iteration
 - `E2E_CONCURRENCY=20` - Number of parallel test workers (reduce to 1 for debugging)
 - `E2E_RETRIES=0` - Disable retries and enable fail-fast mode (stop on first failure)
-- `E2E_REPEAT=N` - After tests pass, run them N additional times to detect flakiness
 - `--quiet` - Minimal output
 - `--grep @enterprise` - Run only enterprise tests
-- `--grep-invert @enterprise` - Run only OSS tests
+- `--grep @oss` - Run only OSS tests
+- `--grep "@oss|@enterprise"` - Run all tests
 - `-x` - Stop after first failure (automatically added when `E2E_RETRIES=0`)
 
-#### Flakiness Detection Mode
-To check for flaky tests, use `E2E_REPEAT` to run tests multiple times:
-```bash
-cd frontend
-SKIP_BUNDLE=1 E2E_CONCURRENCY=20 E2E_REPEAT=5 npm run test -- --quiet
-```
-This runs tests once, then if they pass, repeats 5 more times. If any repeat fails, the test is flagged as flaky.
+## CRITICAL: Multiple Iterations
 
-## Backend E2E Implementation
+**NEVER use `E2E_REPEAT` environment variable.** It runs tests automatically without control and clears reports on each iteration, destroying error context needed for debugging.
 
-### Teardown Endpoint
-- URL: `/api/v1/e2etests/teardown/`
-- Method: POST
-- Authentication: Via `X-E2E-Test-Auth-Token` header
-- Purpose: Clears test data and re-seeds database between test runs
+When running multiple iterations:
+1. Run tests **one iteration at a time** using separate bash commands
+2. **STOP IMMEDIATELY** on any failure - do not continue to next iteration
+3. Analyze error-context.md and report the failure
+4. **Ask user for consent** before running additional iterations
+5. Track iteration count: "Iteration X of Y passed"
 
-### Middleware
-The backend uses `E2ETestMiddleware` to:
-1. Check for `X-E2E-Test-Auth-Token` header
-2. Compare against `E2E_TEST_AUTH_TOKEN` environment variable
-3. Set `request.is_e2e = True` if authenticated
+## CRITICAL: Failure Analysis Workflow
 
-### Settings Required
-- `E2E_TEST_AUTH_TOKEN`: Token for authentication
-- `ENABLE_FE_E2E`: Must be `True` to enable endpoints
+**On ANY test failure, you MUST:**
+1. Read error-context.md for the failed test
+2. **STOP and report the failure summary to the user**
+3. **Ask for user consent before doing ANYTHING else** (no investigating, no fixing, no additional iterations)
 
-## Debugging Test Failures
+Only proceed with investigation/fixes after the user explicitly approves.
 
 ### Reading Order for Failed Tests
-1. **`failed.json`** - Start here for error summary
-2. **`error-context.md`** - DOM snapshot showing exact page state
+
+1. **`error-context.md`** - Start here for DOM snapshot showing exact page state
+2. **`failed.json`** - Error summary
 3. **`trace.zip`** - Detailed trace if needed
 
-### Common Issues and Solutions
+### Analyzing Traces
 
-#### Authentication Errors (401)
-- Verify `E2E_TEST_AUTH_TOKEN` is set in docker-compose.yml
-- Check token matches in frontend `.env` file
-- Restart containers after configuration changes
+```bash
+cd frontend/e2e/test-results/<failed-test-directory>
+unzip -q trace.zip
+grep -i "error\|failed" 0-trace.network  # Check for network errors
+```
 
-#### Bad Request Errors (400)
-- Ensure `ENABLE_FE_E2E: 'true'` is set in docker-compose.yml
-- Restart containers to apply settings
+### Common Fix Patterns
 
-#### Flaky Tests
-- Tests that fail initially but pass on retry indicate:
-  - Missing waits or race conditions
-  - Timing issues with element visibility
-  - Network request timing issues
-- Always investigate and fix root causes
+- **Wrong selector** → Update to match actual DOM from error-context.md
+- **Missing `data-test` attribute** → Add it to the component
+- **Element hidden** → Filter for visible elements or wait for visibility
+- **Missing wait** → Add appropriate `waitFor*` calls
+- **Race condition** → Add network waits, increase timeouts, or use more specific waits
+- **Flaky element interaction** → Add `scrollIntoView` or `waitForVisible` before clicking
 
-### Test Helpers
-- Helper functions: `frontend/e2e/helpers.playwright.ts`
-- Use data-test attributes for reliable selectors
-- Prefer explicit waits over arbitrary delays
+### Re-running Failed Tests
+
+After making fixes, re-run ONLY the failed tests:
+```bash
+cd frontend
+E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/specific-test.pw.ts
+```
+
+Maximum 3 fix/re-run cycles per test before reporting as unfixable.
+
+## CRITICAL: Flaky Test Policy
+
+Tests that fail initially but pass on retry are FLAKY and MUST be investigated, even if the final result shows all tests passed.
+
+- **DO NOT** just report that retries passed
+- **DO** investigate and fix the root cause
+- The built-in retry mechanism is a safety net, not a substitute for fixing flaky tests
+
+## Important Rules
+
+- **DO** modify test files to fix timing issues, missing waits, or broken selectors
+- **DO** add `data-test` attributes to components if they're missing
+- **DON'T** modify test assertions or business logic unless the test is clearly wrong
+- If the failure is in application code (not test code), report it as a bug but don't try to fix it
+- Always explain what fixes you're attempting and why
 
 ## Test Infrastructure
 
 ### Playwright Configuration
 - Browser: Firefox
 - Test runner: `frontend/e2e/run-with-retry.ts`
+- Helper functions: `frontend/e2e/helpers.playwright.ts`
 - Global setup: `frontend/e2e/global-setup.playwright.ts`
 - Global teardown: `frontend/e2e/global-teardown.playwright.ts`
 
-### Retry Logic
-- Built-in retry mechanism in `run-with-retry.ts`
-- Retries are a safety net, not a solution for flaky tests
-- All flaky tests must be investigated and fixed
+### Backend E2E Implementation
 
-## Best Practices
+#### Teardown Endpoint
+- URL: `/api/v1/e2etests/teardown/`
+- Method: POST
+- Authentication: Via `X-E2E-Test-Auth-Token` header
+- Purpose: Clears test data and re-seeds database between test runs
 
-1. **Always run from frontend directory** - Dependencies and .env file are there
-2. **Check for flaky tests** - Even if they pass on retry
-3. **Read error-context.md first** - Shows exact DOM state at failure
-4. **Use low concurrency for debugging** - Set E2E_CONCURRENCY=1
-5. **Don't ignore timing issues** - Fix root causes of flakiness
-6. **Add data-test attributes** - For reliable element selection
-7. **Document fixes** - Explain what was changed and why
+#### Middleware
+The backend uses `E2ETestMiddleware` to:
+1. Check for `X-E2E-Test-Auth-Token` header
+2. Compare against `E2E_TEST_AUTH_TOKEN` environment variable
+3. Set `request.is_e2e = True` if authenticated
 
-## Claude-Specific Instructions
+## Common Issues and Solutions
 
-**CRITICAL: Never use E2E_REPEAT environment variable.** It runs tests automatically without control and clears reports on each iteration, destroying error context needed for debugging.
+### Authentication Errors (401)
+- Verify `E2E_TEST_AUTH_TOKEN` is set in docker-compose.yml
+- Check token matches in frontend `.env` file
+- Restart containers after configuration changes
 
-When asked to run tests multiple times (e.g., `/e2e 5`):
-1. Run tests **one iteration at a time** using separate bash commands
-2. **Stop immediately** on any failure - do not continue to the next iteration
-3. **Report the failure** and analyze error-context.md before proceeding
-4. **Ask for user consent** before running additional iterations
-5. Preserve test artifacts by never running commands that clear reports after a failure
-
-Example for 5 iterations:
-```bash
-# Run iteration 1
-FLAGSMITH_API_URL="http://localhost:8000/api/v1/" E2E_TEST_TOKEN=some-token E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep-invert @enterprise --quiet
-# If passed, report and ask user before running iteration 2
-# If failed, STOP and analyze - do not continue
-```
+### Bad Request Errors (400)
+- Ensure `ENABLE_FE_E2E: 'true'` is set in docker-compose.yml
+- Restart containers to apply settings
