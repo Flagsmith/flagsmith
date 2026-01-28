@@ -1,7 +1,8 @@
+import json
 import logging
 import re
 from contextlib import contextmanager
-from typing import Callable, Generator, Optional, Tuple
+from typing import Any, Callable, Generator, Optional, Tuple
 
 from django.conf import settings
 from django.core import signing
@@ -54,6 +55,12 @@ def _unsign_ld_value(value: str, user_id: int) -> str:
         value,
         salt=f"ld_import_{user_id}",
     )
+
+
+def _serialize_variation_value(value: Any) -> str:
+    if isinstance(value, (dict, list)):
+        return json.dumps(value)
+    return str(value)
 
 
 def _log_error(
@@ -710,7 +717,9 @@ def _create_string_feature_states_with_segments_identities(
             enabled_variations = ld_flag_config_summary.get("variations") or {}
             for idx, variation_config in enabled_variations.items():
                 if variation_config.get(variation_config_key):
-                    string_value = variations_by_idx[idx]["value"]
+                    string_value = _serialize_variation_value(
+                        variations_by_idx[idx]["value"]
+                    )
                     break
 
         feature_state, _ = FeatureState.objects.update_or_create(
@@ -758,7 +767,7 @@ def _create_mv_feature_states_with_segments_identities(
 
     for idx, variation in enumerate(variations):
         variation_idx = str(idx)
-        variation_value = variation["value"]
+        variation_value = _serialize_variation_value(variation["value"])
         variation_values_by_idx[variation_idx] = variation_value
         (
             mv_feature_options_by_variation[str(idx)],
