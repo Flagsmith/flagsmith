@@ -567,6 +567,7 @@ SPECTACULAR_SETTINGS = {
         "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
         "FeatureValueTypeEnum": ["integer", "string", "boolean"],
     },
+    "COMPONENT_SPLIT_REQUEST": True,
 }
 
 
