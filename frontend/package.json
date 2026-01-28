@@ -19,6 +19,7 @@
     "test:unit": "jest",
     "test:unit:watch": "jest --watch",
     "test:unit:coverage": "jest --coverage",
+    "test:report": "npx playwright show-report e2e/playwright-report",
     "env": "node ./bin/env.js",
     "lint": "eslint .",
     "lint:fix": "npx eslint --fix .",

@@ -6,6 +6,16 @@ require('dotenv').config();
 const RETRIES = parseInt(process.env.E2E_RETRIES || '1', 10);
 const REPEAT = parseInt(process.env.E2E_REPEAT || '0', 10);
 
+function exitWithReport(code: number): never {
+  try {
+    console.log('\nGenerating test report...');
+    execSync('npm run test:report', { stdio: 'inherit' });
+  } catch (error) {
+    console.error('Failed to generate test report');
+  }
+  process.exit(code);
+}
+
 function runPlaywright(args: string[], quietMode: boolean, isRetry: boolean): boolean {
   try {
     // Quote arguments that contain spaces or special shell characters
@@ -75,7 +85,7 @@ async function main() {
         execSync('npm run test:bundle', { stdio: quietMode ? 'ignore' : 'inherit' });
       } catch (error) {
         console.error('Failed to build test bundle');
-        process.exit(1);
+        exitWithReport(1);
       }
     } else if (attempt === 0 && process.env.SKIP_BUNDLE) {
       if (!quietMode) console.log('Skipping bundle build (SKIP_BUNDLE=1)');
@@ -115,7 +125,7 @@ async function main() {
               console.log(`FLAKY TEST DETECTED: Tests failed on repeat attempt ${repeatAttempt} of ${REPEAT}`);
               console.log('==========================================\n');
             }
-            process.exit(1);
+            exitWithReport(1);
           }
 
           if (!quietMode) {
@@ -130,7 +140,7 @@ async function main() {
         }
       }
 
-      process.exit(0);
+      exitWithReport(0);
     }
 
     attempt++;
@@ -141,7 +151,7 @@ async function main() {
     console.log(`Tests failed after ${RETRIES} retries`);
     console.log('==========================================\n');
   }
-  process.exit(1);
+  exitWithReport(1);
 }
 
 main();

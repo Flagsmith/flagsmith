@@ -54,11 +54,14 @@ Read `.claude/context/e2e.md` for full E2E configuration details, test structure
    - Add comments explaining complex test logic
 
 6. **Run the new test to verify it works:**
-   - Run the test with `E2E_REPEAT=2` to check for flakiness:
+   - Run the test multiple times to check for flakiness (run each iteration separately, stopping on failure):
      ```bash
      cd frontend
-     SKIP_BUNDLE=1 E2E_CONCURRENCY=1 E2E_REPEAT=2 npm run test -- tests/new-test.pw.ts --quiet
+     SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/new-test.pw.ts --quiet
+     # If passed, run again to verify stability
+     SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/new-test.pw.ts --quiet
      ```
+   - **NEVER use E2E_REPEAT** - it clears reports and destroys error context
    - **If the test fails, ALWAYS READ TRACES FIRST:**
      1. **Read error-context.md** in the failed test directory:
         - Shows exact DOM state when test failed

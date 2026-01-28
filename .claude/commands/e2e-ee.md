@@ -4,25 +4,38 @@
 
 ## Arguments
 
-If an argument is provided (e.g., `/e2e-ee 5`), it sets `E2E_REPEAT` to run tests multiple times to detect flakiness.
+If an argument is provided (e.g., `/e2e-ee 5`), run tests that many times to detect flakiness.
 
 - `$ARGUMENTS` = "" → Run tests once (default)
-- `$ARGUMENTS` = "5" → Run tests, then repeat 5 additional times if they pass
+- `$ARGUMENTS` = "5" → Run tests 5 times, stopping on first failure
 
 ## Prerequisites
 Read `.claude/context/e2e.md` for full E2E configuration details and setup requirements.
+
+## CRITICAL: Multiple Iterations
+
+**NEVER use `E2E_REPEAT` environment variable.** It runs automatically and clears reports, destroying error context.
+
+When running multiple iterations:
+1. Run tests **one iteration at a time** using separate bash commands
+2. **STOP IMMEDIATELY** on any failure - do not continue to next iteration
+3. Analyze error-context.md and report the failure
+4. **Ask user for consent** before running additional iterations
+5. Track iteration count: "Iteration X of Y passed"
 
 ## Workflow
 
 **IMPORTANT: Always start by changing to the frontend directory** - the `.env` file and dependencies are located there.
 
-1. **RUN TESTS NOW** from the frontend directory:
+1. **RUN TESTS NOW** from the frontend directory (ONE iteration):
    ```bash
    cd frontend
-   E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 E2E_REPEAT=${ARGUMENTS:-0} npm run test -- --grep @enterprise --quiet
+   E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep @enterprise --quiet
    ```
 
    **Note:** Using `E2E_RETRIES=0` to fail fast on first failure for immediate analysis and fixing.
+
+   If multiple iterations requested and tests pass, report "Iteration 1 of N passed" and ask before continuing.
 
 2. **ALWAYS check for flaky tests after test run completes:**
 

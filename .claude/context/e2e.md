@@ -180,3 +180,22 @@ The backend uses `E2ETestMiddleware` to:
 5. **Don't ignore timing issues** - Fix root causes of flakiness
 6. **Add data-test attributes** - For reliable element selection
 7. **Document fixes** - Explain what was changed and why
+
+## Claude-Specific Instructions
+
+**CRITICAL: Never use E2E_REPEAT environment variable.** It runs tests automatically without control and clears reports on each iteration, destroying error context needed for debugging.
+
+When asked to run tests multiple times (e.g., `/e2e 5`):
+1. Run tests **one iteration at a time** using separate bash commands
+2. **Stop immediately** on any failure - do not continue to the next iteration
+3. **Report the failure** and analyze error-context.md before proceeding
+4. **Ask for user consent** before running additional iterations
+5. Preserve test artifacts by never running commands that clear reports after a failure
+
+Example for 5 iterations:
+```bash
+# Run iteration 1
+FLAGSMITH_API_URL="http://localhost:8000/api/v1/" E2E_TEST_TOKEN=some-token E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep-invert @enterprise --quiet
+# If passed, report and ask user before running iteration 2
+# If failed, STOP and analyze - do not continue
+```
