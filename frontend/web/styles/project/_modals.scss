@@ -149,8 +149,20 @@ $side-width: 750px;
 }
 
 .disable-transitions {
-  .modal-dialog {
+  .modal,
+  .modal-dialog,
+  .modal-content,
+  .modal-backdrop {
     transition: none !important;
+    animation: none !important;
+  }
+
+  .modal-backdrop {
+    opacity: 0.5 !important;
+  }
+
+  .modal.fade {
+    opacity: 1 !important;
   }
 }
 
