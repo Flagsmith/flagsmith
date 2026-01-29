@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+from flagsmith_schemas import api as api_schemas
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import (
     action,
@@ -76,7 +77,6 @@ from .serializers import (  # type: ignore[attr-defined]
     FeatureQuerySerializer,
     FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
-    FeatureStateSerializerFull,
     FeatureStateSerializerWithIdentity,
     FeatureStateValueSerializer,
     GetInfluxDataQuerySerializer,
@@ -871,7 +871,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
 
     @extend_schema(
         parameters=[SDKFeatureStatesQuerySerializer],
-        responses={200: FeatureStateSerializerFull(many=True)},
+        responses={200: api_schemas.V1FlagsResponse},
         operation_id="get_flags",
     )
     @method_decorator(vary_on_headers(SDK_ENVIRONMENT_KEY_HEADER))

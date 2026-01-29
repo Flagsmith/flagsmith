@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
 from drf_spectacular.utils import extend_schema
+from flagsmith_schemas import api as api_schemas
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -25,7 +26,6 @@ from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentitySerializer,
     SDKIdentitiesQuerySerializer,
-    SDKIdentitiesResponseSerializer,
 )
 from environments.models import Environment
 from environments.permissions.permissions import NestedEnvironmentPermissions
@@ -151,7 +151,7 @@ class SDKIdentities(SDKAPIView):
     throttle_classes = []
 
     @extend_schema(
-        responses={200: SDKIdentitiesResponseSerializer},
+        responses={200: api_schemas.V1IdentitiesResponse},
         parameters=[SDKIdentitiesQuerySerializer],
         operation_id="identify_user",
     )
@@ -234,8 +234,8 @@ class SDKIdentities(SDKAPIView):
         return context
 
     @extend_schema(
-        request=IdentifyWithTraitsSerializer,
-        responses={200: SDKIdentitiesResponseSerializer},
+        request=api_schemas.V1IdentitiesRequest,
+        responses={200: api_schemas.V1IdentitiesResponse},
         operation_id="identify_user_with_traits",
     )
     def post(self, request):  # type: ignore[no-untyped-def]
