@@ -11,6 +11,8 @@ jobs:
   collect-code-references:
     name: Collect
     uses: Flagsmith/ci/.github/workflows/collect-code-references.yml@feat/github-code-references-reusable-workflow
+    permissions:
+      contents: read  # For scanning feature flag code references
     with:
       flagsmith_project_id: 12
       flagsmith_admin_api_url: https://api.flagsmith.com
