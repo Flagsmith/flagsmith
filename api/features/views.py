@@ -872,7 +872,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
     @extend_schema(
         parameters=[SDKFeatureStatesQuerySerializer],
         responses={200: api_schemas.V1FlagsResponse},
-        operation_id="get_flags",
+        operation_id="sdk_v1_flags",
     )
     @method_decorator(vary_on_headers(SDK_ENVIRONMENT_KEY_HEADER))
     @method_decorator(
@@ -883,12 +883,16 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
     )
     def get(self, request, identifier=None, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
-        USING THIS ENDPOINT WITH AN IDENTIFIER IS DEPRECATED.
-        Please use `/identities/?identifier=<identifier>` instead.
+        Retrieve the flags for an environment.
+
         ---
-        Note that when providing the `feature` query argument, this endpoint will
+        *Note*: when providing the `feature` query argument, this endpoint will
         return either a single object or a 404 (if the feature does not exist) rather
         than a list.
+
+        ---
+        *Note*: using this endpoint with an identifier is deprecated.
+        Please use `/api/v1/identities/?identifier=<identifier>` instead.
         """
         if identifier:
             return self._get_flags_response_with_identifier(request, identifier)

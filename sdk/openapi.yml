@@ -8,10 +8,18 @@ info:
   license:
     name: BSD License
     identifier: BSD-3-Clause
+servers:
+  - url: 'https://api.flagsmith.com/'
+    description: Flagsmith Core API
+  - url: 'https://edge.flagsmith.com/'
+    description: Flagsmith Edge API
 paths:
   /api/v1/environment-document/:
     get:
-      operationId: api_v1_environment_document_retrieve
+      operationId: sdk_v1_environment_document
+      description: |-
+        Retrieve the environment document.
+        Used by SDKs in local evaluation mode, and Edge Proxy.
       responses:
         '200':
           description: ''
@@ -26,14 +34,18 @@ paths:
         - sdk
   /api/v1/flags/:
     get:
-      operationId: get_flags
+      operationId: sdk_v1_flags
       description: |-
-        USING THIS ENDPOINT WITH AN IDENTIFIER IS DEPRECATED.
-        Please use `/identities/?identifier=<identifier>` instead.
+        Retrieve the flags for an environment.
+
         ---
-        Note that when providing the `feature` query argument, this endpoint will
+        *Note*: when providing the `feature` query argument, this endpoint will
         return either a single object or a 404 (if the feature does not exist) rather
         than a list.
+
+        ---
+        *Note*: using this endpoint with an identifier is deprecated.
+        Please use `/api/v1/identities/?identifier=<identifier>` instead.
       parameters:
         - name: feature
           in: query
@@ -88,7 +100,8 @@ paths:
         - sdk
   /api/v1/identities/:
     get:
-      operationId: identify_user
+      operationId: sdk_v1_get_identities
+      description: Retrieve the flags and traits for an identity.
       parameters:
         - name: identifier
           in: query
@@ -114,7 +127,8 @@ paths:
       tags:
         - sdk
     post:
-      operationId: identify_user_with_traits
+      operationId: sdk_v1_post_identities
+      description: 'Identify a user, set their traits, and retrieve their flags.'
       requestBody:
         required: true
         content:

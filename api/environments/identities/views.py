@@ -153,7 +153,7 @@ class SDKIdentities(SDKAPIView):
     @extend_schema(
         responses={200: api_schemas.V1IdentitiesResponse},
         parameters=[SDKIdentitiesQuerySerializer],
-        operation_id="identify_user",
+        operation_id="sdk_v1_get_identities",
     )
     @method_decorator(vary_on_headers(SDK_ENVIRONMENT_KEY_HEADER))
     @method_decorator(
@@ -163,6 +163,9 @@ class SDKIdentities(SDKAPIView):
         )
     )
     def get(self, request):  # type: ignore[no-untyped-def]
+        """
+        Retrieve the flags and traits for an identity.
+        """
         identifier = request.query_params.get("identifier")
         if not identifier:
             return Response(
@@ -236,9 +239,12 @@ class SDKIdentities(SDKAPIView):
     @extend_schema(
         request=api_schemas.V1IdentitiesRequest,
         responses={200: api_schemas.V1IdentitiesResponse},
-        operation_id="identify_user_with_traits",
+        operation_id="sdk_v1_post_identities",
     )
     def post(self, request):  # type: ignore[no-untyped-def]
+        """
+        Identify a user, set their traits, and retrieve their flags.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()

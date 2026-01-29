@@ -114,6 +114,7 @@ serve-with-task-processor:
 	make -j2 serve run-task-processor
 
 .PHONY: generate-flagsmith-sdk-openapi
+generate-flagsmith-sdk-openapi: OPENAPI_SERVERS=[{"url": "https://api.flagsmith.com/", "description": "Flagsmith Core API"}, {"url": "https://edge.api.flagsmith.com/", "description": "Flagsmith Edge API"}]
 generate-flagsmith-sdk-openapi:
 	poetry run python manage.py spectacular | \
 	  npx openapi-format@1.23.0 /dev/fd/0 \

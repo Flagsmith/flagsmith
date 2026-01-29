@@ -30,9 +30,16 @@ class SDKEnvironmentAPIView(APIView):
     def get_authenticators(self):  # type: ignore[no-untyped-def]
         return [EnvironmentKeyAuthentication(required_key_prefix="ser.")]
 
-    @extend_schema(responses={200: V1EnvironmentDocumentResponse})
+    @extend_schema(
+        responses={200: V1EnvironmentDocumentResponse},
+        operation_id="sdk_v1_environment_document",
+    )
     @method_decorator(condition(last_modified_func=get_last_modified))
     def get(self, request: Request) -> Response:
+        """
+        Retrieve the environment document.
+        Used by SDKs in local evaluation mode, and Edge Proxy.
+        """
         environment_document = Environment.get_environment_document(
             request.environment.api_key,
         )

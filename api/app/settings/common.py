@@ -534,6 +534,7 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_SETTINGS": {
         "deepLinking": True,
     },
+    "SERVERS": env.json("OPENAPI_SERVERS", default=[]),
     "SECURITY": [
         {"Private": []},
         {"Public": []},
