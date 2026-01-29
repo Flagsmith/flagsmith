@@ -1,8 +1,9 @@
 name: Code references
 
 on:
-  schedule:
-    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+  push:
+    branches:
+      - main
   workflow_dispatch:
   pull_request:  # DROPME
 
