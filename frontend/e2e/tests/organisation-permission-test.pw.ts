@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup';
-import { byId, log, createHelpers } from '../helpers.playwright';
+import { byId, log, createHelpers } from '../helpers';
 import {
   PASSWORD,
   E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS,

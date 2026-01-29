@@ -3,7 +3,7 @@ import {
   byId,
   log,
   createHelpers,
-} from '../helpers.playwright';
+} from '../helpers';
 import {
   PASSWORD,
   E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS,

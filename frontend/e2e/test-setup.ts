@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test';
-import { setupBrowserLogging } from './helpers.playwright';
+import { setupBrowserLogging } from './helpers';
 
 // Extend base test to automatically setup browser logging
 export const test = base.extend({
