@@ -9,7 +9,7 @@ from import_export.import_ import OrganisationImporter
 from organisations.models import Organisation
 
 
-@mock_s3
+@mock_s3  # type: ignore[misc]
 def test_import_organisation(organisation: Organisation) -> None:
     # Given
     bucket_name = "test-bucket"
