@@ -4,8 +4,12 @@ import logging
 import typing
 from collections.abc import Iterator
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import boto3
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3.client import S3Client
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import F, Model, Q
@@ -54,8 +58,8 @@ logger = logging.getLogger(__name__)
 
 
 class S3OrganisationExporter:
-    def __init__(self, s3_client: typing.Any = None) -> None:
-        self.s3_client = s3_client or boto3.client("s3")
+    def __init__(self, s3_client: "S3Client | None" = None) -> None:
+        self.s3_client: "S3Client" = s3_client or boto3.client("s3")
 
     def export_to_s3(
         self,

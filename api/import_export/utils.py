@@ -2,6 +2,10 @@ import io
 import logging
 import typing
 
+if typing.TYPE_CHECKING:
+    from mypy_boto3_s3.client import S3Client
+    from mypy_boto3_s3.type_defs import CompletedPartTypeDef
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,7 +23,7 @@ class S3MultipartUploadWriter:
 
     def __init__(
         self,
-        s3_client: typing.Any,
+        s3_client: "S3Client",
         bucket_name: str,
         key: str,
     ) -> None:
@@ -27,7 +31,7 @@ class S3MultipartUploadWriter:
         self._bucket_name = bucket_name
         self._key = key
         self._buffer = io.BytesIO()
-        self._parts: list[dict[str, typing.Any]] = []
+        self._parts: list[CompletedPartTypeDef] = []
         self._part_number = 1
         self._upload_id: str | None = None
 
@@ -61,6 +65,7 @@ class S3MultipartUploadWriter:
         if self._buffer.tell() > 0:
             self._upload_part()
 
+        assert self._upload_id
         # Complete the multipart upload
         self._s3_client.complete_multipart_upload(
             Bucket=self._bucket_name,
@@ -76,6 +81,7 @@ class S3MultipartUploadWriter:
             self._upload_part()
 
     def _upload_part(self) -> None:
+        assert self._upload_id
         self._buffer.seek(0)
         response = self._s3_client.upload_part(
             Bucket=self._bucket_name,
