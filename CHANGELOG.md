@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.211.5](https://github.com/Flagsmith/flagsmith/compare/v2.211.4...v2.211.5) (2026-01-28)
+
+
+### Bug Fixes
+
+* **api-docs:** Avoid `readOnly` properties with `required` ([#6608](https://github.com/Flagsmith/flagsmith/issues/6608)) ([31ee000](https://github.com/Flagsmith/flagsmith/commit/31ee000451172bdc33d3909f0e8a6f51325e3216))
+
+## [2.211.4](https://github.com/Flagsmith/flagsmith/compare/v2.211.3...v2.211.4) (2026-01-27)
+
+
+### Bug Fixes
+
+* display correct control value in identity override variation list ([#6585](https://github.com/Flagsmith/flagsmith/issues/6585)) ([93ffc6c](https://github.com/Flagsmith/flagsmith/commit/93ffc6cb5076960c456e0227da72d5c9b70f1d3f))
+
 ## [2.211.3](https://github.com/Flagsmith/flagsmith/compare/v2.211.2...v2.211.3) (2026-01-26)
 
 
