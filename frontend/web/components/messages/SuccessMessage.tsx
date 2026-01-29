@@ -36,12 +36,12 @@ const SuccessMessage: React.FC<SuccessMessageProps> = ({
   const titleDescClass = infoMessageClass ? `${infoMessageClass} body mr-2` : ''
 
   return (
-    <div className={infoMessageClassName} style={{ ...successStyles }}>
+    <div className={infoMessageClassName} style={successStyles}>
       <span className={`icon-alert ${infoMessageClass} info-icon`}>
         <Icon fill='#27AB95' name='checkmark-circle' />
       </span>
       <div className={titleDescClass}>
-        <div style={{ fontWeight: 'semi-bold' }}>{title}</div>
+        <div className='title'>{title}</div>
         {children}
       </div>
       {url && (
@@ -50,8 +50,8 @@ const SuccessMessage: React.FC<SuccessMessageProps> = ({
         </Button>
       )}
       {isClosable && (
-        <a onClick={close} className='mt-n2 mr-n2 pl-2'>
-          <span className={`icon ${infoMessageClass} close-btn`}>
+        <a onClick={close} className='close-btn'>
+          <span className={`icon ${infoMessageClass}`}>
             <IonIcon icon={closeIcon} />
           </span>
         </a>

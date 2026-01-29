@@ -66,6 +66,7 @@
   }
 }
 .alert-success {
+  position: relative;
   background-color: $alert-success-bg;
   border-color: $alert-success-border-color;
   .title {
@@ -80,6 +81,12 @@
   strong {
     font-weight: 500;
     color: $body-color;
+  }
+  .close-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    cursor: pointer;
   }
 }
 
