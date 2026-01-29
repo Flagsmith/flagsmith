@@ -35,7 +35,6 @@ Create a new E2E test following the existing patterns in the codebase.
 
 6. **Verify the test works:**
    ```bash
-   cd frontend
    SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/new-test.pw.ts --quiet
    ```
    Run twice to check for flakiness. On failure, follow the analysis workflow in context/e2e.md.

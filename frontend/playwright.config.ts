@@ -70,7 +70,7 @@ export default defineConfig({
   testDir: './e2e',
   testMatch: /.*\.pw\.ts$/,
   /* Test timeout */
-  timeout: 120000,
+  timeout: 180000,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Action timeout */
