@@ -365,13 +365,12 @@ def test_launch_darkly_client__rate_limit_no_headers__waits_expected(
 
 
 def test_launch_darkly_client__get_flags_with_env_keys__return_expected(
-    request: pytest.FixtureRequest,
     mocker: MockerFixture,
     requests_mock: RequestsMockerFixture,
 ) -> None:
     # Given
     token = "test-token"
-    project_key = "test-project-key"
+    project_key = "test-project-env-keys"
     api_version = "20240415"
     environment_keys = ["production", "test"]
 
@@ -384,15 +383,24 @@ def test_launch_darkly_client__get_flags_with_env_keys__return_expected(
         100,
     )
 
-    example_response_content = (
-        request.path.parent / "example_api_responses/getFeatureFlags_1.json"
-    ).read_text()
-
-    expected_result = json.loads(example_response_content)["items"]
+    response_data = {
+        "items": [
+            {
+                "key": "test-flag",
+                "name": "Test Flag",
+                "kind": "boolean",
+                "environments": {
+                    "production": {"on": True},
+                    "test": {"on": False},
+                },
+            }
+        ],
+        "totalCount": 1,
+    }
 
     requests_mock.get(
-        "https://app.launchdarkly.com/api/v2/flags/test-project-key",
-        text=example_response_content,
+        f"https://app.launchdarkly.com/api/v2/flags/{project_key}",
+        json=response_data,
         request_headers={"Authorization": token, "LD-API-Version": api_version},
     )
 
@@ -405,7 +413,7 @@ def test_launch_darkly_client__get_flags_with_env_keys__return_expected(
     )
 
     # Then
-    assert result == expected_result
+    assert result == response_data["items"]
     assert "env=production" in requests_mock.request_history[0].url
     assert "env=test" in requests_mock.request_history[0].url
 
@@ -416,7 +424,7 @@ def test_launch_darkly_client__get_flags_with_env_keys_batching__merges_environm
 ) -> None:
     # Given
     token = "test-token"
-    project_key = "test-project-key"
+    project_key = "test-project-batching"
     api_version = "20240415"
     environment_keys = ["env1", "env2", "env3", "env4"]
 
@@ -460,7 +468,7 @@ def test_launch_darkly_client__get_flags_with_env_keys_batching__merges_environm
     }
 
     requests_mock.get(
-        "https://app.launchdarkly.com/api/v2/flags/test-project-key",
+        f"https://app.launchdarkly.com/api/v2/flags/{project_key}",
         [
             {"json": batch1_response},
             {"json": batch2_response},
