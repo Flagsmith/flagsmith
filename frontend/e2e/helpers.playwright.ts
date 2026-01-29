@@ -6,6 +6,33 @@ import { IFlagsmith } from 'flagsmith/types';
 
 export const LONG_TIMEOUT = 20000;
 
+// Map of status codes to URL patterns that should be ignored in logs
+const IGNORE_RESPONSE_ERRORS: Record<number, string[]> = {
+  404: [
+    '/usage-data/', // Expected for new orgs without billing
+    '/list-change-requests/', // Enterprise feature, expected in OSS
+    '/change-requests/', // Enterprise feature, expected in OSS
+    '/release-pipelines/', // Enterprise feature, expected in OSS
+    '/roles/', // May not exist in certain configurations
+    '/saml/configuration/', // Enterprise feature, expected in OSS
+  ],
+  400: [
+  ],
+  403: [
+    '/get-subscription-metadata/', // Expected for non-admin users
+    '/usage-data/', // Expected for non-admin users
+    '/invite-links/', // Expected for non-admin users
+    '/roles/', // Expected for non-admin users
+    '/change-requests/', // Expected for non-admin users
+    '/api-keys/', // Expected for non-admin users
+    '/metrics/', // Expected for non-admin users
+    '/invites/', // Expected for non-admin users
+  ],
+  429: [
+    '/usage-data/', // Usage data endpoint has rate limiting, throttling is expected
+  ],
+};
+
 // Browser debugging - console and network logging
 export const setupBrowserLogging = (page: Page) => {
   // Track console messages
@@ -63,49 +90,8 @@ export const setupBrowserLogging = (page: Page) => {
     }
 
     // Ignore false positive errors that are expected/harmless
-    if (status === 404 && url.includes('/usage-data/')) {
-      // usage-data 404s are expected for new orgs without billing
-      return;
-    }
-    if (status === 404 && (url.includes('/list-change-requests/') || url.includes('/change-requests/'))) {
-      // Change requests is an enterprise feature, 404s are expected in OSS
-      return;
-    }
-    if (status === 404 && url.includes('/release-pipelines/')) {
-      // Release pipelines is an enterprise feature, 404s are expected in OSS
-      return;
-    }
-    if (status === 404 && url.includes('/roles/')) {
-      // Roles endpoint may not exist in certain configurations
-      return;
-    }
-    if (status === 404 && url.includes('/saml/configuration/')) {
-      // SAML is an enterprise feature, 404s are expected in OSS
-      return;
-    }
-    if (status === 404 && url.includes('/segments/undefined/')) {
-      // Ignore undefined segment lookups (happens during initial load)
-      return;
-    }
-    if (status === 400 && url.includes('/organisations/undefined/')) {
-      // Happens during initial page load before org is selected
-      return;
-    }
-    if (status === 403) {
-      // These 403s are expected for non-admin users
-      if (url.includes('/get-subscription-metadata/') ||
-          url.includes('/usage-data/') ||
-          url.includes('/invite-links/') ||
-          url.includes('/roles/') ||
-          url.includes('/change-requests/') ||
-          url.includes('/api-keys/') ||
-          url.includes('/metrics/') ||
-          url.includes('/invites/')) {
-        return;
-      }
-    }
-    if (status === 429 && url.includes('/usage-data/')) {
-      // Usage data endpoint has rate limiting, throttling is expected
+    const ignoreUrls = IGNORE_RESPONSE_ERRORS[status];
+    if (ignoreUrls && ignoreUrls.some(pattern => url.includes(pattern))) {
       return;
     }
 
