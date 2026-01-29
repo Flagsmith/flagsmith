@@ -43,10 +43,13 @@ MCP_FLAGSMITH_TOKEN_AUTH="Api-Key YOUR_API_KEY_HERE"
 
 ### Self-Hosted Flagsmith
 
-Running your own Flagsmith instance? Point the MCP Server at your API:
+Running your own Flagsmith instance? Point the MCP Server at your API by adding the following header during installation:
 
 ```bash
-MCP_FLAGSMITH_SERVER_URL="https://your-flagsmith-instance.com"
+claude mcp add --transport http "flagsmith" \
+    "https://app.getgram.ai/mcp/flagsmith-mcp" \
+    --header 'Mcp-Flagsmith-Token-Auth:${MCP_FLAGSMITH_TOKEN_AUTH}'
+    --header 'Mcp-Flagsmith-Server-Url:https://your-flagsmith-instance.com'
 ```
 
 ## Example Use Cases
