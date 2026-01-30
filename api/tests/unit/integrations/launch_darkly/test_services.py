@@ -17,6 +17,7 @@ from environments.models import Environment
 from features.models import Feature, FeatureState
 from integrations.launch_darkly.models import LaunchDarklyImportRequest
 from integrations.launch_darkly.services import (
+    _serialize_variation_value,
     create_import_request,
     process_import_request,
 )
@@ -63,7 +64,8 @@ def test_create_import_request__return_expected(
 
 
 @pytest.mark.parametrize(
-    "failing_ld_client_method_name", ["get_environments", "get_flags", "get_flag_tags"]
+    "failing_ld_client_method_name",
+    ["get_environments", "get_flags_by_envs", "get_flag_tags"],
 )
 @pytest.mark.parametrize(
     "exception, expected_error_message",
@@ -611,3 +613,27 @@ def test_process_import_request__large_segments__correctly_imported(
         ]
     )
     assert buf.getvalue() == expected_condition_data_snapshot
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (
+            {"enabled": True, "description": "test"},
+            '{"enabled": true, "description": "test"}',
+        ),
+        ([1, 2, 3], "[1, 2, 3]"),
+        ("string_value", "string_value"),
+        (123, "123"),
+        (True, "True"),
+    ],
+)
+def test_serialize_variation_value__return_expected(
+    value: object,
+    expected: str,
+) -> None:
+    # When
+    result = _serialize_variation_value(value)
+
+    # Then
+    assert result == expected
