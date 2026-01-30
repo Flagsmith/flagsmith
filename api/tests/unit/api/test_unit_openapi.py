@@ -5,7 +5,7 @@ from typing_extensions import TypedDict
 from api.openapi import TypedDictSchemaExtension
 
 
-def test_pydantic_schema_extension__renders_expected() -> None:
+def test_typeddict_schema_extension__renders_expected() -> None:
     # Given
     class Nested(TypedDict):
         usual_str: str
@@ -43,7 +43,7 @@ def test_pydantic_schema_extension__renders_expected() -> None:
     assert "$ref" in schema["properties"]["nested_once"]
 
 
-def test_pydantic_schema_extension__registers_nested_components() -> None:
+def test_typeddict_schema_extension__registers_nested_components() -> None:
     # Given
     class Nested(TypedDict):
         usual_str: str
@@ -71,7 +71,7 @@ def test_pydantic_schema_extension__registers_nested_components() -> None:
     assert "Nested" in registered_schemas
 
 
-def test_pydantic_schema_extension__get_name() -> None:
+def test_typeddict_schema_extension__get_name() -> None:
     # Given
     class MyModel(TypedDict):
         field: str
