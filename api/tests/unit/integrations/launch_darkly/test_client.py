@@ -142,7 +142,10 @@ def test_launch_darkly_client__get_flags__return_expected(
     client = LaunchDarklyClient(token=token)
 
     # When
-    result = client.get_flags(project_key=project_key)
+    result = client.get_flags_by_envs(
+        project_key=project_key,
+        environment_keys=["env1", "env2", "env3"],
+    )
 
     # Then
     assert result == expected_result
@@ -365,23 +368,12 @@ def test_launch_darkly_client__rate_limit_no_headers__waits_expected(
 
 
 def test_launch_darkly_client__get_flags_with_env_keys__return_expected(
-    mocker: MockerFixture,
     requests_mock: RequestsMockerFixture,
 ) -> None:
     # Given
     token = "test-token"
     project_key = "test-project-env-keys"
-    api_version = "20240415"
     environment_keys = ["production", "test"]
-
-    mocker.patch(
-        "integrations.launch_darkly.client.LAUNCH_DARKLY_API_VERSION",
-        api_version,
-    )
-    mocker.patch(
-        "integrations.launch_darkly.client.LAUNCH_DARKLY_API_FLAGS_LIMIT_PER_PAGE",
-        100,
-    )
 
     response_data = {
         "items": [
@@ -401,13 +393,13 @@ def test_launch_darkly_client__get_flags_with_env_keys__return_expected(
     requests_mock.get(
         f"https://app.launchdarkly.com/api/v2/flags/{project_key}",
         json=response_data,
-        request_headers={"Authorization": token, "LD-API-Version": api_version},
+        request_headers={"Authorization": token},
     )
 
     client = LaunchDarklyClient(token=token)
 
     # When
-    result = client.get_flags(
+    result = client.get_flags_by_envs(
         project_key=project_key,
         environment_keys=environment_keys,
     )
@@ -419,27 +411,12 @@ def test_launch_darkly_client__get_flags_with_env_keys__return_expected(
 
 
 def test_launch_darkly_client__get_flags_with_env_keys_batching__merges_environments(
-    mocker: MockerFixture,
     requests_mock: RequestsMockerFixture,
 ) -> None:
     # Given
     token = "test-token"
     project_key = "test-project-batching"
-    api_version = "20240415"
     environment_keys = ["env1", "env2", "env3", "env4"]
-
-    mocker.patch(
-        "integrations.launch_darkly.client.LAUNCH_DARKLY_API_VERSION",
-        api_version,
-    )
-    mocker.patch(
-        "integrations.launch_darkly.client.LAUNCH_DARKLY_API_FLAGS_LIMIT_PER_PAGE",
-        100,
-    )
-    mocker.patch(
-        "integrations.launch_darkly.client.LAUNCH_DARKLY_API_ENV_FILTER_MAX",
-        3,
-    )
 
     batch1_response = {
         "items": [
@@ -473,13 +450,13 @@ def test_launch_darkly_client__get_flags_with_env_keys_batching__merges_environm
             {"json": batch1_response},
             {"json": batch2_response},
         ],
-        request_headers={"Authorization": token, "LD-API-Version": api_version},
+        request_headers={"Authorization": token},
     )
 
     client = LaunchDarklyClient(token=token)
 
     # When
-    result = client.get_flags(
+    result = client.get_flags_by_envs(
         project_key=project_key,
         environment_keys=environment_keys,
     )

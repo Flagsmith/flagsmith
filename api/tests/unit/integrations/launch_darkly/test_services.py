@@ -64,7 +64,7 @@ def test_create_import_request__return_expected(
 
 
 @pytest.mark.parametrize(
-    "failing_ld_client_method_name", ["get_environments", "get_flags", "get_flag_tags"]
+    "failing_ld_client_method_name", ["get_environments", "get_flags_by_envs", "get_flag_tags"]
 )
 @pytest.mark.parametrize(
     "exception, expected_error_message",
