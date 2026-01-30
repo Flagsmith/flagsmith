@@ -4,41 +4,35 @@ const sidebar: SidebarsConfig = {
   apisidebar: [
     {
       type: "doc",
-      id: "edge-api/edge-api",
+      id: "edge-api/flagsmith-api",
     },
     {
       type: "category",
-      label: "Edge API",
+      label: "sdk",
       items: [
         {
           type: "doc",
-          id: "edge-api/get-flags",
-          label: "Get flags",
+          id: "edge-api/sdk-v-1-environment-document",
+          label: "sdk_v1_environment_document",
           className: "api-method get",
         },
         {
           type: "doc",
-          id: "edge-api/get-identity-flags-and-traits",
-          label: "Get identity flags and traits",
+          id: "edge-api/sdk-v-1-flags",
+          label: "sdk_v1_flags",
           className: "api-method get",
         },
         {
           type: "doc",
-          id: "edge-api/identify-user",
-          label: "Identify user",
-          className: "api-method post",
+          id: "edge-api/sdk-v-1-get-identities",
+          label: "sdk_v1_get_identities",
+          className: "api-method get",
         },
         {
           type: "doc",
-          id: "edge-api/bulk-insert-identities-overwrite",
-          label: "Bulk insert identities (overwrite)",
+          id: "edge-api/sdk-v-1-post-identities",
+          label: "sdk_v1_post_identities",
           className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "edge-api/bulk-insert-identities-update",
-          label: "Bulk insert identities (update)",
-          className: "api-method put",
         },
       ],
     },

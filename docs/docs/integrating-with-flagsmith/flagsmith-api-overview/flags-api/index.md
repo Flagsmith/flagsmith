@@ -14,4 +14,4 @@ The two main endpoints you will interact with via the SDKs are:
 -   `/flags/`: Get all flags for a given environment.
 -   `/identities/`: Get all flags and traits for a specific user identity.
 
-For SaaS customers, the base URL for the Flags API is `https://edge.api.flagsmith.com/`. Our Edge API specification is detailed [here](/edge-api/overview). 
+For SaaS customers, the base URL for the Flags API is `https://edge.api.flagsmith.com/`. Our Edge API specification is detailed [here](/edge-api/). 

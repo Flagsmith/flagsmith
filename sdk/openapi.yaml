@@ -9,9 +9,9 @@ info:
     name: BSD License
     identifier: BSD-3-Clause
 servers:
-  - url: 'https://api.flagsmith.com/'
+  - url: 'https://api.flagsmith.com'
     description: Flagsmith Core API
-  - url: 'https://edge.flagsmith.com/'
+  - url: 'https://edge.api.flagsmith.com'
     description: Flagsmith Edge API
 paths:
   /api/v1/environment-document/:
@@ -28,8 +28,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/V1EnvironmentDocumentResponse'
       security:
-        - Private: []
-        - Public: []
+        - Environment API Key: []
       tags:
         - sdk
   /api/v1/flags/:
@@ -94,8 +93,7 @@ paths:
                     - feature
                     - feature_state_value
       security:
-        - Private: []
-        - Public: []
+        - Environment API Key: []
       tags:
         - sdk
   /api/v1/identities/:
@@ -122,8 +120,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/V1IdentitiesResponse'
       security:
-        - Private: []
-        - Public: []
+        - Environment API Key: []
       tags:
         - sdk
     post:
@@ -149,8 +146,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/V1IdentitiesResponse'
       security:
-        - Private: []
-        - Public: []
+        - Environment API Key: []
       tags:
         - sdk
 components:
@@ -550,16 +546,16 @@ components:
         - feature_state_value
       title: V1Flag
   securitySchemes:
-    Private:
-      type: apiKey
-      in: header
-      name: Authorization
-      description: 'For Private Endpoints. <a href=''https://docs.flagsmith.com/clients/rest#private-api-endpoints''>Find out more</a>.'
-    Public:
+    Environment API Key:
       type: apiKey
       in: header
       name: X-Environment-Key
-      description: 'For Public Endpoints. <a href=''https://docs.flagsmith.com/clients/rest#public-api-endpoints''>Find out more</a>.'
+      description: 'For SDK endpoints. <a href=''https://docs.flagsmith.com/clients/rest#public-api-endpoints''>Find out more</a>.'
+    Master API Key:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: '<a href=''https://docs.flagsmith.com/clients/rest#private-api-endpoints''>Find out more</a>.'
     basicAuth:
       type: http
       scheme: basic

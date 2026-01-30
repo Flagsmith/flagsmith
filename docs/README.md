@@ -40,8 +40,8 @@ npx prettier <YOUR_DOC> --write
 
 ### OpenAPI generator
 
-We are using the https://github.com/PaloAltoNetworks/docusaurus-openapi-docs plugin to generate the OpenAPI docs. If
-`static/api-static/edge-api.yaml` changes you will need to rebuild the static files with:
+We are using the https://github.com/PaloAltoNetworks/docusaurus-openapi-docs plugin to generate the OpenAPI docs.
+The source schema is located in `sdk/openapi.yaml`.
 
 ```bash
 npm run docusaurus clean-api-docs all

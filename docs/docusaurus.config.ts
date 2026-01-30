@@ -72,7 +72,7 @@ const config: Config = {
                     label: 'Docs',
                 },
                 {
-                    label: 'Edge API Specification',
+                    label: 'SDK API Specification',
                     position: 'left',
                     to: '/edge-api/',
                 },
@@ -289,7 +289,7 @@ const config: Config = {
                 docsPluginId: 'classic',
                 config: {
                     partner: {
-                        specPath: 'static/openapi/edge-api.yaml',
+                        specPath: '../sdk/openapi.yaml',
                         outputDir: 'docs/edge-api',
                         sidebarOptions: {
                             groupPathsBy: 'tag',
