@@ -23,12 +23,12 @@ Flagsmith Code References provide visibility into where feature flags are evalua
 
 Code References are populated by a scanning tool that identifies flag evaluations within your repository.
 
-1. **Local Scan**: The runner searches your repository for feature flag evaluations. The scanner utilizes `git ls-files` to identify relevant files, ensuring it only scans code tracked by your version control system.
-2. **Metadata Sync**: The scanner identifies the file path and line number for each evaluation and sends this metadata to the Flagsmith Admin API.
-3. **Visualization**: These references are displayed within the **Code References** tab of the corresponding feature flag in the Flagsmith dashboard.
+1. **CI code scan**: The CI runner searches your repository (`git ls-files`) for feature flag evaluations.
+2. **Code references upload**: file path and line number for each evaluation is sent to your Flagsmith project.
+3. **Visualisation**: Code references are displayed in Features list, and expanded in Feature detail — look for the "Code References" tab.
 
 :::important Security and Privacy
-**Your source code never leaves your runner.** Flagsmith does not receive, store, or have access to your actual code. Only file paths and line numbers are transmitted to map the evaluations to your dashboard. No context snippets or surrounding lines of code are ever sent to Flagsmith.
+**Your source code never leaves your CI runner.** Flagsmith does not receive, store, or have access to your source code. Only file paths and line numbers are transmitted to map code references to your dashboard.
 :::
 
 # Set up Code References
@@ -62,7 +62,7 @@ jobs:
     name: Collect
     uses: Flagsmith/ci/.github/workflows/collect-code-references.yml@v1.0.0
     with:
-      flagsmith_project_id: ${{ vars.FLAGSMITH_PROJECT_ID }}
+      flagsmith_project_id: ${{ fromJSON(vars.FLAGSMITH_PROJECT_ID) }}
       # Required for self-hosted Flagsmith instances:
       flagsmith_admin_api_url: https://api.flagsmith.com 
     secrets:
