@@ -29,18 +29,19 @@ def test_typeddict_schema_extension__renders_expected() -> None:
     schema = extension.map_serializer(auto_schema, direction="response")
 
     # Then
-    assert schema["title"] == "ResponseModel"
-    assert schema["type"] == "object"
-    assert "nested_once" in schema["properties"]
-    assert "nested_list" in schema["properties"]
-    assert schema["required"] == ["nested_once", "nested_list"]
-
-    # Check nested_list is an array with reference
-    assert schema["properties"]["nested_list"]["type"] == "array"
-    assert "$ref" in schema["properties"]["nested_list"]["items"]
-
-    # Check nested_once is a reference
-    assert "$ref" in schema["properties"]["nested_once"]
+    assert schema == {
+        "properties": {
+            "nested_list": {
+                "items": {"$ref": "#/components/schemas/ResponseModelNested"},
+                "title": "Nested List",
+                "type": "array",
+            },
+            "nested_once": {"$ref": "#/components/schemas/ResponseModelNested"},
+        },
+        "required": ["nested_once", "nested_list"],
+        "title": "ResponseModel",
+        "type": "object",
+    }
 
 
 def test_typeddict_schema_extension__registers_nested_components() -> None:
@@ -62,13 +63,27 @@ def test_typeddict_schema_extension__registers_nested_components() -> None:
 
     # When
     extension.map_serializer(auto_schema, direction="response")
+    schema = auto_schema.registry.build({})
 
     # Then
-    # Check that the Nested model was registered as a component
-    registered_schemas = {
-        component.name for component in auto_schema.registry._components.values()
+    # the Nested model was registered as a component
+    # with a prefixed name
+    assert schema == {
+        "schemas": {
+            "ResponseModelNested": {
+                "properties": {
+                    "optional_int": {
+                        "anyOf": [{"type": "integer"}, {"type": "null"}],
+                        "title": "Optional Int",
+                    },
+                    "usual_str": {"title": "Usual Str", "type": "string"},
+                },
+                "required": ["usual_str", "optional_int"],
+                "title": "Nested",
+                "type": "object",
+            }
+        },
     }
-    assert "Nested" in registered_schemas
 
 
 def test_typeddict_schema_extension__get_name() -> None:
