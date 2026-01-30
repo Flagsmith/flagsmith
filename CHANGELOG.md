@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.211.6](https://github.com/Flagsmith/flagsmith/compare/v2.211.5...v2.211.6) (2026-01-30)
+
+
+### Bug Fixes
+
+* **docs:** Invalid link to Contributing Guide in the PR template ([#6613](https://github.com/Flagsmith/flagsmith/issues/6613)) ([a0d5aa9](https://github.com/Flagsmith/flagsmith/commit/a0d5aa9e5b62ecbcadbb5f6701a12fce9d55d738))
+* **LaunchDarkly importer:** Update API version to 20240415 ([#6603](https://github.com/Flagsmith/flagsmith/issues/6603)) ([2d31fb4](https://github.com/Flagsmith/flagsmith/commit/2d31fb477643ce65e188a6c536bdf132b22e4165))
+
 ## [2.211.5](https://github.com/Flagsmith/flagsmith/compare/v2.211.4...v2.211.5) (2026-01-28)
 
 
