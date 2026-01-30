@@ -183,7 +183,7 @@ class TypedDictSchemaExtension(
         return model_json_schema
 
 
-class EnvironmentKeyAuthenticationExtension(OpenApiAuthenticationExtension):
+class EnvironmentKeyAuthenticationExtension(OpenApiAuthenticationExtension):  # type: ignore[no-untyped-call]
     target_class = "environments.authentication.EnvironmentKeyAuthentication"
     name = "Environment API Key"
 
@@ -198,7 +198,7 @@ class EnvironmentKeyAuthenticationExtension(OpenApiAuthenticationExtension):
         }
 
 
-class MasterAPIKeyAuthenticationExtension(OpenApiAuthenticationExtension):
+class MasterAPIKeyAuthenticationExtension(OpenApiAuthenticationExtension):  # type: ignore[no-untyped-call]
     target_class = "api_keys.authentication.MasterAPIKeyAuthentication"
     name = "Master API Key"
 
