@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, Callable, Generator, Iterator, Optional, TypeVar
+from typing import Any, Callable, Generator, Iterable, Iterator, Optional, TypeVar
 
 import backoff
 from backoff.types import Details
@@ -12,9 +12,9 @@ from integrations.launch_darkly.constants import (
     BACKOFF_DEFAULT_RETRY_AFTER_SECONDS,
     BACKOFF_MAX_RETRIES,
     LAUNCH_DARKLY_API_BASE_URL,
-    LAUNCH_DARKLY_API_MAX_ENVIRONMENTS_PER_REQUEST,
     LAUNCH_DARKLY_API_FLAGS_LIMIT_PER_PAGE,
     LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE,
+    LAUNCH_DARKLY_API_MAX_ENVIRONMENTS_PER_REQUEST,
     LAUNCH_DARKLY_API_VERSION,
 )
 from integrations.launch_darkly.exceptions import LaunchDarklyRateLimitError
@@ -178,7 +178,7 @@ class LaunchDarklyClient:
         self,
         project_key: str,
         environment_keys: list[str],
-    ) -> list[ld_types.FeatureFlag]:
+    ) -> Iterable[ld_types.FeatureFlag]:
         """
         Get flags by environment keys.
 
@@ -202,21 +202,18 @@ class LaunchDarklyClient:
             ]
             params = {**base_params, "env": batch}
 
-            flags: list[ld_types.FeatureFlag] = list(
-                self._iter_paginated_items(
-                    collection_endpoint=endpoint,
-                    additional_params=params,
-                )
+            flags_iter: Iterator[ld_types.FeatureFlag] = self._iter_paginated_items(
+                collection_endpoint=endpoint,
+                additional_params=params,
             )
-
-            for flag in flags:
+            for flag in flags_iter:
                 key = flag["key"]
                 if key in flags_by_key:
                     flags_by_key[key]["environments"].update(flag["environments"])
                 else:
                     flags_by_key[key] = flag
 
-        return list(flags_by_key.values())
+        return flags_by_key.values()
 
     def get_flag_count(self, project_key: str) -> int:
         """operationId: getFeatureFlags

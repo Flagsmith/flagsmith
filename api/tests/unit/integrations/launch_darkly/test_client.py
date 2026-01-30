@@ -142,9 +142,11 @@ def test_launch_darkly_client__get_flags__return_expected(
     client = LaunchDarklyClient(token=token)
 
     # When
-    result = client.get_flags_by_envs(
-        project_key=project_key,
-        environment_keys=["env1", "env2", "env3"],
+    result = list(
+        client.get_flags_by_envs(
+            project_key=project_key,
+            environment_keys=["env1", "env2", "env3"],
+        )
     )
 
     # Then
@@ -399,9 +401,11 @@ def test_launch_darkly_client__get_flags_with_env_keys__return_expected(
     client = LaunchDarklyClient(token=token)
 
     # When
-    result = client.get_flags_by_envs(
-        project_key=project_key,
-        environment_keys=environment_keys,
+    result = list(
+        client.get_flags_by_envs(
+            project_key=project_key,
+            environment_keys=environment_keys,
+        )
     )
 
     # Then
@@ -456,9 +460,11 @@ def test_launch_darkly_client__get_flags_with_env_keys_batching__merges_environm
     client = LaunchDarklyClient(token=token)
 
     # When
-    result = client.get_flags_by_envs(
-        project_key=project_key,
-        environment_keys=environment_keys,
+    result = list(
+        client.get_flags_by_envs(
+            project_key=project_key,
+            environment_keys=environment_keys,
+        )
     )
 
     # Then

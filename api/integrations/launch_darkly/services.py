@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from contextlib import contextmanager
-from typing import Any, Callable, Generator, Optional, Tuple
+from typing import Any, Callable, Generator, Iterable, Optional, Tuple
 
 from django.conf import settings
 from django.core import signing
@@ -929,7 +929,7 @@ def _create_feature_from_ld(
 
 def _create_features_from_ld(
     import_request: LaunchDarklyImportRequest,
-    ld_flags: list[ld_types.FeatureFlag],
+    ld_flags: Iterable[ld_types.FeatureFlag],
     environments_by_ld_environment_key: dict[str, Environment],
     tags_by_ld_tag: dict[str, Tag],
     segments_by_ld_key: dict[str, Segment],
