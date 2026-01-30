@@ -10,7 +10,7 @@ on:
 jobs:
   collect-code-references:
     name: Collect
-    uses: Flagsmith/ci/.github/workflows/collect-code-references.yml@feat/github-code-references-reusable-workflow
+    uses: Flagsmith/ci/.github/workflows/collect-code-references.yml@v1.0.0
     permissions:
       contents: read  # For scanning feature flag code references
     with:
