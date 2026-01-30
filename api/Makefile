@@ -161,7 +161,7 @@ integrate-private-tests:
 	rm -rf ./flagsmith-saml ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller
 
 .PHONY: generate-docs
-generate-docs:
+generate-docs: generate-flagsmith-sdk-openapi
 	poetry run flagsmith docgen metrics > ../docs/docs/administration-and-security/platform-configuration/metrics.md
 
 .PHONY: add-known-sdk-version
