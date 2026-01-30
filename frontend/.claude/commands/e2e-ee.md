@@ -1,6 +1,6 @@
-# E2E OSS Test Runner
+# E2E Enterprise Test Runner
 
-Run OSS (non-enterprise) E2E tests, analyze failures, fix them, and re-run until all pass.
+Run enterprise E2E tests (tagged with @enterprise) and report results.
 
 ## Arguments
 
@@ -14,8 +14,14 @@ Run OSS (non-enterprise) E2E tests, analyze failures, fix them, and re-run until
 ## Run Command
 
 ```bash
-cd frontend
-E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep @oss --quiet
+E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep @enterprise --quiet
+```
+
+## Re-running Failed Enterprise Tests
+
+When re-running specific failed tests, include the grep flag:
+```bash
+E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/specific-test.pw.ts --grep @enterprise
 ```
 
 ## Workflow

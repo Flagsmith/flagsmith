@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup';
-import { byId, log, createHelpers } from '../helpers.playwright'
+import { byId, log, createHelpers } from '../helpers'
 import { E2E_SEPARATE_TEST_USER, PASSWORD } from '../config'
 
 test.describe('Organisation Tests', () => {

@@ -4,7 +4,7 @@ import {
     getFlagsmith,
     log,
     createHelpers,
-} from '../helpers.playwright';
+} from '../helpers';
 import { E2E_USER, PASSWORD } from '../config';
 
 test('Versioning tests - Create, edit, and compare feature versions @oss', async ({ page }) => {

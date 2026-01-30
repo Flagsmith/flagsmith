@@ -1,6 +1,6 @@
 # E2E Test Runner (All Tests)
 
-Run all E2E tests (both OSS and enterprise), analyze failures, fix them, and re-run until all pass.
+Run all E2E tests (both OSS and enterprise) and report results.
 
 ## Arguments
 
@@ -14,7 +14,6 @@ Run all E2E tests (both OSS and enterprise), analyze failures, fix them, and re-
 ## Run Command
 
 ```bash
-cd frontend
 E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep "@oss|@enterprise" --quiet
 ```
 

@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup';
-import { byId, getFlagsmith, log, createHelpers } from '../helpers.playwright';
+import { byId, getFlagsmith, log, createHelpers } from '../helpers';
 import { E2E_USER, PASSWORD } from '../config'
 
 test.describe('Project Tests', () => {

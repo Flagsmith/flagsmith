@@ -11,7 +11,7 @@ export async function runTeardown(): Promise<boolean> {
   const token = process.env.E2E_TEST_TOKEN
     ? process.env.E2E_TEST_TOKEN
     : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`];
-
+     console.log(`Teardown target host ${e2eTestApi}`)
   if (!token) {
     console.error('\x1b[31m%s\x1b[0m\n', 'Error: No E2E_TEST_TOKEN found');
     return false;
