@@ -5,7 +5,7 @@ import { extractFailedTests } from './extract-failed-tests';
 
 let notifyFailure: ((failedCount: number) => Promise<void>) | null = null;
 try {
-  const slackModule = require('../bin/upload-file');
+  const slackModule = require('./helpers/upload-file');
   notifyFailure = slackModule.notifyFailure;
 } catch (e) {
   console.log('Slack module not available:', e.message);
