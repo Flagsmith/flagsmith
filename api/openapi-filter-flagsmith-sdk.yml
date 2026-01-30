@@ -1,5 +1,5 @@
 operationIds:
-  - get_flags_2
+  - sdk_v1_flags_2
 inverseTags:
   - sdk
 unusedComponents:
