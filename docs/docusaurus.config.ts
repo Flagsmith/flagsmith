@@ -74,7 +74,7 @@ const config: Config = {
                 {
                     label: 'SDK API Specification',
                     position: 'left',
-                    to: '/edge-api/',
+                    to: '/sdk-api/',
                 },
                 {
                     href: 'https://flagsmith.com',
@@ -290,7 +290,7 @@ const config: Config = {
                 config: {
                     partner: {
                         specPath: '../sdk/openapi.yaml',
-                        outputDir: 'docs/edge-api',
+                        outputDir: 'docs/sdk-api',
                         sidebarOptions: {
                             groupPathsBy: 'tag',
                             categoryLinkSource: 'tag',
