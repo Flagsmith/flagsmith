@@ -3,7 +3,7 @@ import { byId, getFlagsmith, log, createHelpers } from '../helpers';
 import { E2E_USER, PASSWORD } from '../config'
 
 test.describe('Project Tests', () => {
-  test('Projects can be created and renamed with configurable change request approvals @oss', async ({ page }) => {
+  test('Additional Projects can be created and renamed with configurable change request approvals @enterprise', async ({ page }) => {
     const {
       assertInputValue,
       assertTextContent,
