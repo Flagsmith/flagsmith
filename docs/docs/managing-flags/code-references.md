@@ -8,16 +8,13 @@ sidebar_position: 30
 
 Flagsmith Code References provide visibility into where feature flags are evaluated in your codebase. By linking your source code metadata to the Flagsmith dashboard, you can identify stale flags, simplify audits, and safely manage technical debt.
 
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-  <a href="/img/code-references-feature-health.png" target="_blank" rel="noopener noreferrer" title="Click to expand">
-    <img src="/img/code-references-feature-health.png" alt="Code References in Feature Health tab" style={{ width: '100%', cursor: 'pointer' }} />
-  </a>
-  <a href="/img/code-references-features-list.png" target="_blank" rel="noopener noreferrer" title="Click to expand">
-    <img src="/img/code-references-features-list.png" alt="Features list with code reference badges" style={{ width: '100%', cursor: 'pointer' }} />
-  </a>
-</div>
+Features list with code reference counts (GitHub badge) next to each flag:
 
-<div style={{ textAlign: 'center' }}>*Click an image to open it at full size.*</div>
+![Features list with code reference badges](/img/code-references-features-list.png)
+
+Code References in the Feature Health tab (open a feature's ⋮ menu → Feature Health → Code References):
+
+![Code References in Feature Health tab](/img/code-references-feature-health.png)
 
 ## How it Works
 
@@ -46,6 +43,10 @@ To authorize the scan, you must first configure your project credentials within 
 
 The quickest way to get started is using the Flagsmith reusable workflow. This handles the identification and synchronization of references automatically.
 
+:::note
+Note the use of `fromJSON` for the Project ID; GitHub Actions variables are stored as strings, but the Flagsmith API requires an integer.
+:::
+
 ```yaml
 # .github/workflows/flagsmith-code-references.yml
 name: Flagsmith Code References
@@ -54,8 +55,7 @@ on:
   push:
     branches:
       - main
-  schedule:
-    - cron: '0 8 * * *' # Daily sync
+  workflow_dispatch:
 
 jobs:
   collect-code-references:
@@ -63,8 +63,7 @@ jobs:
     uses: Flagsmith/ci/.github/workflows/collect-code-references.yml@v1.0.0
     with:
       flagsmith_project_id: ${{ fromJSON(vars.FLAGSMITH_PROJECT_ID) }}
-      # Required for self-hosted Flagsmith instances:
-      flagsmith_admin_api_url: https://api.flagsmith.com 
+      flagsmith_admin_api_url: https://api.flagsmith.com/api/v1/ 
     secrets:
       flagsmith_admin_api_key: ${{ secrets.FLAGSMITH_CODE_REFERENCES_API_KEY }}
 
@@ -81,6 +80,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   collect-code-references:
@@ -96,7 +96,7 @@ jobs:
 
       - name: Fetch feature names
         id: fetch-feature-names
-        uses: Flagsmith/ci/fetch-feature-names@v1.0.0
+        uses: Flagsmith/ci/.github/actions/fetch-feature-names@main
         with:
           flagsmith_project_id: ${{ vars.FLAGSMITH_PROJECT_ID }}
           flagsmith_admin_api_url: ${{ env.FLAGSMITH_API_URL }}
@@ -104,12 +104,12 @@ jobs:
 
       - name: Scan code references
         id: scan-code-references
-        uses: Flagsmith/ci/scan-code-references@v1.0.0
+        uses: Flagsmith/ci/.github/actions/scan-code-references@main
         with:
           feature_names: ${{ steps.fetch-feature-names.outputs.feature_names }}
 
       - name: Upload code references
-        uses: Flagsmith/ci/upload-code-references@v1.0.0
+        uses: Flagsmith/ci/.github/actions/upload-code-references@main
         with:
           code_references: ${{ steps.scan-code-references.outputs.code_references }}
           flagsmith_project_id: ${{ vars.FLAGSMITH_PROJECT_ID }}
@@ -117,6 +117,7 @@ jobs:
           flagsmith_admin_api_key: ${{ secrets.FLAGSMITH_CODE_REFERENCES_API_KEY }}
           repository_url: ${{ github.server_url }}/${{ github.repository }}
           revision: ${{ github.sha }}
+
 
 ```
 ## Related Documentation
