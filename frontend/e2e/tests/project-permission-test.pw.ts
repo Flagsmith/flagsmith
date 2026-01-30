@@ -3,7 +3,7 @@ import {
   byId,
   log,
   createHelpers,
-} from '../helpers.playwright';
+} from '../helpers';
 import { E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, E2E_USER, PASSWORD, E2E_PROJECT_WITH_PROJECT_PERMISSIONS } from '../config';
 
 test.describe('Project Permission Tests', () => {

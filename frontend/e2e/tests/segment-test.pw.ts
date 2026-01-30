@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup';
-import { byId, log, createHelpers } from '../helpers.playwright';
+import { byId, log, createHelpers } from '../helpers';
 import { E2E_USER, PASSWORD, E2E_TEST_IDENTITY, E2E_SEGMENT_PROJECT_1, E2E_SEGMENT_PROJECT_2, E2E_SEGMENT_PROJECT_3 } from '../config'
 
 const REMOTE_CONFIG_FEATURE = 'remote_config'

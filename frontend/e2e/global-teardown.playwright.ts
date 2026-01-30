@@ -2,7 +2,14 @@ import { FullConfig } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 import { extractFailedTests } from './extract-failed-tests';
-import { notifyFailure } from './helpers.playwright';
+
+let notifyFailure: ((failedCount: number) => Promise<void>) | null = null;
+try {
+  const slackModule = require('../bin/upload-file');
+  notifyFailure = slackModule.notifyFailure;
+} catch (e) {
+  console.log('Slack module not available:', e.message);
+}
 
 async function globalTeardown(config: FullConfig) {
   console.log('Running global teardown for E2E tests...');
@@ -18,7 +25,7 @@ async function globalTeardown(config: FullConfig) {
       const failedData = JSON.parse(fs.readFileSync(failedJsonPath, 'utf-8'));
       const failedCount = failedData.tests?.length || 0;
 
-      if (failedCount > 0) {
+      if (failedCount > 0 && notifyFailure) {
         console.log(`Notifying Slack about ${failedCount} failed test(s)...`);
         await notifyFailure(failedCount);
         console.log('Slack notification sent');
