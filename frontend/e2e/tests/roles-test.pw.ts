@@ -1,4 +1,4 @@
-import { test, expect } from '../test-setup';
+import { test } from '../test-setup';
 import { byId, log, createHelpers } from '../helpers';
 import {
   PASSWORD,

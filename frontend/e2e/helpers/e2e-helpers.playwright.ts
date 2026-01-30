@@ -1,11 +1,9 @@
 import { Page, expect } from '@playwright/test';
-import Project from '../common/project';
-import fetch from 'node-fetch';
-import flagsmith from 'flagsmith/isomorphic';
-import { IFlagsmith } from 'flagsmith/types';
 import { WebClient } from '@slack/web-api';
+import { LONG_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith } from './utils.playwright';
 
-export const LONG_TIMEOUT = 20000;
+// Re-export for backwards compatibility
+export { LONG_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith };
 
 // Slack notification functions
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
@@ -36,141 +34,6 @@ export function notifyFailure(failedCount: number): Promise<unknown> {
   return postMessage(message);
 }
 
-// Browser debugging - console and network logging
-export const setupBrowserLogging = (page: Page) => {
-  // Track console messages
-  page.on('console', async (msg) => {
-    const type = msg.type();
-    const text = msg.text();
-
-    // Only log errors and warnings
-    if (type === 'error') {
-      console.error('\n🔴 [CONSOLE ERROR]', text);
-      // Try to get stack trace if available
-      const args = msg.args();
-      for (const arg of args) {
-        try {
-          const val = await arg.jsonValue();
-          if (val && typeof val === 'object' && val.stack) {
-            console.error('  Stack:', val.stack);
-          }
-        } catch (e) {
-          // Ignore if we can't get the value
-        }
-      }
-    } else if (type === 'warning') {
-      // Disabled to reduce noise
-      // console.warn('\n🟡 [CONSOLE WARNING]', text);
-    }
-  });
-
-  // Track page errors
-  page.on('pageerror', (error) => {
-    console.error('\n🔴 [PAGE ERROR]', error.message);
-    if (error.stack) {
-      console.error('  Stack:', error.stack);
-    }
-  });
-
-  // Track failed network requests
-  page.on('requestfailed', (request) => {
-    const url = request.url();
-    const failure = request.failure();
-    console.error('\n🔴 [NETWORK FAILED]', request.method(), url);
-    if (failure) {
-      console.error('  Error:', failure.errorText);
-    }
-  });
-
-  // Track API responses with errors
-  page.on('response', async (response) => {
-    const url = response.url();
-    const status = response.status();
-
-    // Only log API calls (not static assets)
-    if (!url.includes('/api/') && !url.includes('/e2etests/')) {
-      return;
-    }
-
-    // Ignore false positive errors that are expected/harmless
-    if (status === 404 && url.includes('/usage-data/')) {
-      // usage-data 404s are expected for new orgs without billing
-      return;
-    }
-    if (status === 404 && (url.includes('/list-change-requests/') || url.includes('/change-requests/'))) {
-      // Change requests is an enterprise feature, 404s are expected in OSS
-      return;
-    }
-    if (status === 404 && url.includes('/release-pipelines/')) {
-      // Release pipelines is an enterprise feature, 404s are expected in OSS
-      return;
-    }
-    if (status === 404 && url.includes('/roles/')) {
-      // Roles endpoint may not exist in certain configurations
-      return;
-    }
-    if (status === 404 && url.includes('/saml/configuration/')) {
-      // SAML is an enterprise feature, 404s are expected in OSS
-      return;
-    }
-    if (status === 404 && url.includes('/segments/undefined/')) {
-      // Ignore undefined segment lookups (happens during initial load)
-      return;
-    }
-    if (status === 400 && url.includes('/organisations/undefined/')) {
-      // Happens during initial page load before org is selected
-      return;
-    }
-    if (status === 403) {
-      // These 403s are expected for non-admin users
-      if (url.includes('/get-subscription-metadata/') ||
-          url.includes('/usage-data/') ||
-          url.includes('/invite-links/') ||
-          url.includes('/roles/') ||
-          url.includes('/change-requests/') ||
-          url.includes('/api-keys/') ||
-          url.includes('/metrics/') ||
-          url.includes('/invites/')) {
-        return;
-      }
-    }
-    if (status === 429 && url.includes('/usage-data/')) {
-      // Usage data endpoint has rate limiting, throttling is expected
-      return;
-    }
-
-    // Log throttling, rate limiting, and server errors
-    if (status === 429) {
-      console.error('\n🔴 [API THROTTLED]', response.request().method(), url);
-      try {
-        const body = await response.text();
-        console.error('  Response:', body);
-      } catch (e) {
-        // Ignore if we can't read the body
-      }
-    } else if (status >= 400 && status < 500) {
-      console.error(`\n🔴 [API CLIENT ERROR ${status}]`, response.request().method(), url);
-      try {
-        const body = await response.text();
-        console.error('  Response:', body);
-      } catch (e) {
-        // Ignore if we can't read the body
-      }
-    } else if (status >= 500) {
-      console.error(`\n🔴 [API SERVER ERROR ${status}]`, response.request().method(), url);
-      try {
-        const body = await response.text();
-        console.error('  Response:', body);
-      } catch (e) {
-        // Ignore if we can't read the body
-      }
-    }
-  });
-
-  console.log('✅ Browser logging enabled (console errors, network failures, API errors)');
-};
-
-export const byId = (id: string) => `[data-test="${id}"]`;
 
 export type MultiVariate = { value: string; weight: number };
 
@@ -179,39 +42,6 @@ export type Rule = {
   operator: string;
   value: string | number | boolean;
   ors?: Rule[];
-};
-
-// Initialize Flagsmith once
-const initProm = flagsmith.init({
-  api: Project.flagsmithClientAPI,
-  environmentID: Project.flagsmith,
-  fetch,
-});
-
-export const getFlagsmith = async function (): Promise<IFlagsmith> {
-  await initProm;
-  return flagsmith as IFlagsmith;
-};
-
-// Logging functions
-let currentSection = '';
-
-export const log = (section?: string, message?: string) => {
-  if (section) {
-    currentSection = section;
-    console.log(`\n[${section}]`);
-  }
-  if (message) {
-    console.log(message);
-  }
-};
-
-export const logUsingLastSection = (message: string) => {
-  if (currentSection) {
-    console.log(`[${currentSection}] ${message}`);
-  } else {
-    console.log(message);
-  }
 };
 
 // Page-based helper functions
