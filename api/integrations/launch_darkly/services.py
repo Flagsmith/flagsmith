@@ -1,7 +1,8 @@
+import json
 import logging
 import re
 from contextlib import contextmanager
-from typing import Callable, Generator, Optional, Tuple
+from typing import Any, Callable, Generator, Iterable, Optional, Tuple
 
 from django.conf import settings
 from django.core import signing
@@ -54,6 +55,12 @@ def _unsign_ld_value(value: str, user_id: int) -> str:
         value,
         salt=f"ld_import_{user_id}",
     )
+
+
+def _serialize_variation_value(value: Any) -> str:
+    if isinstance(value, (dict, list)):
+        return json.dumps(value)
+    return str(value)
 
 
 def _log_error(
@@ -710,7 +717,9 @@ def _create_string_feature_states_with_segments_identities(
             enabled_variations = ld_flag_config_summary.get("variations") or {}
             for idx, variation_config in enabled_variations.items():
                 if variation_config.get(variation_config_key):
-                    string_value = variations_by_idx[idx]["value"]
+                    string_value = _serialize_variation_value(
+                        variations_by_idx[idx]["value"]
+                    )
                     break
 
         feature_state, _ = FeatureState.objects.update_or_create(
@@ -758,7 +767,7 @@ def _create_mv_feature_states_with_segments_identities(
 
     for idx, variation in enumerate(variations):
         variation_idx = str(idx)
-        variation_value = variation["value"]
+        variation_value = _serialize_variation_value(variation["value"])
         variation_values_by_idx[variation_idx] = variation_value
         (
             mv_feature_options_by_variation[str(idx)],
@@ -920,7 +929,7 @@ def _create_feature_from_ld(
 
 def _create_features_from_ld(
     import_request: LaunchDarklyImportRequest,
-    ld_flags: list[ld_types.FeatureFlag],
+    ld_flags: Iterable[ld_types.FeatureFlag],
     environments_by_ld_environment_key: dict[str, Environment],
     tags_by_ld_tag: dict[str, Tag],
     segments_by_ld_key: dict[str, Segment],
@@ -1103,7 +1112,10 @@ def process_import_request(
 
         try:
             ld_environments = ld_client.get_environments(project_key=ld_project_key)
-            ld_flags = ld_client.get_flags(project_key=ld_project_key)
+            ld_flags = ld_client.get_flags_by_envs(
+                project_key=ld_project_key,
+                environment_keys=[env["key"] for env in ld_environments],
+            )
             ld_flag_tags = ld_client.get_flag_tags()
             # ld_segment_tags = ld_client.get_segment_tags()
             # Keyed by (segment, environment)
