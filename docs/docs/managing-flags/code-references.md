@@ -8,11 +8,9 @@ sidebar_position: 30
 
 Flagsmith Code References provide visibility into where feature flags are evaluated in your codebase. By linking your source code metadata to the Flagsmith dashboard, you can identify stale flags, simplify audits, and safely manage technical debt.
 
-Features list with code reference counts (GitHub badge) next to each flag:
 
 ![Features list with code reference badges](/img/code-references-features-list.png)
 
-Code References in the Feature Health tab (open a feature's ⋮ menu → Feature Health → Code References):
 
 ![Code References in Feature Health tab](/img/code-references-feature-health.png)
 
@@ -60,10 +58,9 @@ on:
 jobs:
   collect-code-references:
     name: Collect
-    uses: Flagsmith/ci/.github/workflows/collect-code-references.yml@v1.0.0
+    uses: Flagsmith/ci/.github/workflows/collect-code-references.yml@main
     with:
       flagsmith_project_id: ${{ fromJSON(vars.FLAGSMITH_PROJECT_ID) }}
-      flagsmith_admin_api_url: https://api.flagsmith.com/api/v1/ 
     secrets:
       flagsmith_admin_api_key: ${{ secrets.FLAGSMITH_CODE_REFERENCES_API_KEY }}
 
