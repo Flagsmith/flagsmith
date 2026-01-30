@@ -12,6 +12,8 @@ Integrate with Code References to track feature flag usage in your codebase, and
 
 ![Code References badges displayed in the Features list, each containing a count of references of that feature](./code-references/feature-list.png)
 
+<p style={{textAlign: 'center', fontSize: '0.9em', color: 'gray', marginTop: '-1.5rem'}}>Code Reference counts displayed in Features list</p>
+
 :::info
 
 We currently only offer integrating with GitHub. Support to other VCS platforms is coming soon.
@@ -124,6 +126,8 @@ Code References rely on CI scripts isolated to three steps:
 Integrating with Code References **does not** expose your source code to Flagsmith. Our API only collects file paths, and line numbers, of code locations likely containing a feature flag evaluation. Code scanning is performed locally on the CI runner.
 
 :::
+
+Feature details will expand on the _Code References_ tab, and list locations of each code reference:
 
 ![Code References listed for each repository within Feature details](./code-references/feature-details.png)
 
