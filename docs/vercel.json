@@ -554,7 +554,7 @@
         },
         {
             "source": "/advanced-use/edge-api",
-            "destination": "/edge-api/"
+            "destination": "/performance/edge-api"
         },
         {
             "source": "/advanced-use/feature-health",
