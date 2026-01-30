@@ -113,6 +113,14 @@ serve-with-task-processor: TASK_RUN_METHOD=TASK_PROCESSOR
 serve-with-task-processor:
 	make -j2 serve run-task-processor
 
+.PHONY: generate-flagsmith-sdk-openapi
+generate-flagsmith-sdk-openapi: OPENAPI_SERVERS=[{"url": "https://edge.api.flagsmith.com", "description": "Flagsmith Edge API"}]
+generate-flagsmith-sdk-openapi:
+	poetry run python manage.py spectacular | \
+	  npx openapi-format@1.23.0 /dev/fd/0 \
+	    --filterFile openapi-filter-flagsmith-sdk.yml \
+	    --output ../sdk/openapi.yaml
+
 .PHONY: generate-ld-client-types
 generate-ld-client-types:
 	curl -sSL https://app.launchdarkly.com/api/v2/openapi.json | \
@@ -153,7 +161,7 @@ integrate-private-tests:
 	rm -rf ./flagsmith-saml ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller
 
 .PHONY: generate-docs
-generate-docs:
+generate-docs: generate-flagsmith-sdk-openapi
 	poetry run flagsmith docgen metrics > ../docs/docs/administration-and-security/platform-configuration/metrics.md
 
 .PHONY: add-known-sdk-version

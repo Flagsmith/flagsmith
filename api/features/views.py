@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+from flagsmith_schemas import api as api_schemas
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import (
     action,
@@ -76,7 +77,6 @@ from .serializers import (  # type: ignore[attr-defined]
     FeatureQuerySerializer,
     FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
-    FeatureStateSerializerFull,
     FeatureStateSerializerWithIdentity,
     FeatureStateValueSerializer,
     GetInfluxDataQuerySerializer,
@@ -871,8 +871,8 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
 
     @extend_schema(
         parameters=[SDKFeatureStatesQuerySerializer],
-        responses={200: FeatureStateSerializerFull(many=True)},
-        operation_id="get_flags",
+        responses={200: api_schemas.V1FlagsResponse},
+        operation_id="sdk_v1_flags",
     )
     @method_decorator(vary_on_headers(SDK_ENVIRONMENT_KEY_HEADER))
     @method_decorator(
@@ -883,12 +883,16 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
     )
     def get(self, request, identifier=None, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
-        USING THIS ENDPOINT WITH AN IDENTIFIER IS DEPRECATED.
-        Please use `/identities/?identifier=<identifier>` instead.
+        Retrieve the flags for an environment.
+
         ---
-        Note that when providing the `feature` query argument, this endpoint will
+        *Note*: when providing the `feature` query argument, this endpoint will
         return either a single object or a 404 (if the feature does not exist) rather
         than a list.
+
+        ---
+        *Note*: using this endpoint with an identifier is deprecated.
+        Please use `/api/v1/identities/?identifier=<identifier>` instead.
         """
         if identifier:
             return self._get_flags_response_with_identifier(request, identifier)
