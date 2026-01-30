@@ -9,8 +9,6 @@ info:
     name: BSD License
     identifier: BSD-3-Clause
 servers:
-  - url: 'https://api.flagsmith.com'
-    description: Flagsmith Core API
   - url: 'https://edge.api.flagsmith.com'
     description: Flagsmith Edge API
 paths:
@@ -555,7 +553,7 @@ components:
       type: apiKey
       in: header
       name: Authorization
-      description: '<a href=''https://docs.flagsmith.com/clients/rest#private-api-endpoints''>Find out more</a>.'
+      description: 'For Admin API endpoints. <a href=''https://docs.flagsmith.com/clients/rest#private-api-endpoints''>Find out more</a>.'
     basicAuth:
       type: http
       scheme: basic
