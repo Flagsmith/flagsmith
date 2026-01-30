@@ -10,166 +10,21 @@ custom_edit_url: null
 
 import ApiLogo from "@theme/ApiLogo";
 import Heading from "@theme/Heading";
-import SchemaTabs from "@theme/SchemaTabs";
-import TabItem from "@theme/TabItem";
-import Export from "@theme/ApiExplorer/Export";
 
-<span
-  className={"theme-doc-version-badge badge badge--secondary"}
-  children={"Version: v1"}
->
-</span>
+# Flagsmith SDK API
 
-<Heading
-  as={"h1"}
-  className={"openapi__heading"}
-  children={"Flagsmith API"}
->
-</Heading>
+The SDK API is designed to be used by Flagsmith SDKs to evaluate feature flags and retrieve environment data.
 
+## Authentication
 
+The SDK API is designed to be publicly accessible. Calls need to have an environment key supplied with each request.
+This is provided as an HTTP header, with the name `X-Environment-Key` and the value of the Environment Key that you can
+find within the Flagsmith administrative area. See [Flags API Authentication](/integrating-with-flagsmith/flagsmith-api-overview/flags-api/authentication) for more details.
 
-Flagsmith's Core and SDK APIs. Check out <a href='https://docs.flagsmith.com'>Flagsmith documentation</a>.
+## Core API
 
-<div
-  style={{"marginBottom":"2rem"}}
->
-  <Heading
-    id={"authentication"}
-    as={"h2"}
-    className={"openapi-tabs__heading"}
-    children={"Authentication"}
-  >
-  </Heading><SchemaTabs
-    className={"openapi-tabs__security-schemes"}
-  >
-    <TabItem
-      label={"API Key: Environment API Key"}
-      value={"Environment API Key"}
-    >
-      
-      
-      For SDK endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.
-      
-      <div>
-        <table>
-          <tbody>
-            <tr>
-              <th>
-                Security Scheme Type:
-              </th><td>
-                apiKey
-              </td>
-            </tr><tr>
-              <th>
-                Header parameter name:
-              </th><td>
-                X-Environment-Key
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </TabItem><TabItem
-      label={"API Key: Master API Key"}
-      value={"Master API Key"}
-    >
-      
-      
-      <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.
-      
-      <div>
-        <table>
-          <tbody>
-            <tr>
-              <th>
-                Security Scheme Type:
-              </th><td>
-                apiKey
-              </td>
-            </tr><tr>
-              <th>
-                Header parameter name:
-              </th><td>
-                Authorization
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </TabItem><TabItem
-      label={"HTTP: Basic Auth"}
-      value={"basicAuth"}
-    >
-      
-      
-      
-      
-      <div>
-        <table>
-          <tbody>
-            <tr>
-              <th>
-                Security Scheme Type:
-              </th><td>
-                http
-              </td>
-            </tr><tr>
-              <th>
-                HTTP Authorization Scheme:
-              </th><td>
-                basic
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </TabItem><TabItem
-      label={"API Key: tokenAuth"}
-      value={"tokenAuth"}
-    >
-      
-      
-      Token-based authentication with required prefix "Token"
-      
-      <div>
-        <table>
-          <tbody>
-            <tr>
-              <th>
-                Security Scheme Type:
-              </th><td>
-                apiKey
-              </td>
-            </tr><tr>
-              <th>
-                Header parameter name:
-              </th><td>
-                Authorization
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </TabItem>
-  </SchemaTabs>
-</div><div
-  style={{"display":"flex","flexDirection":"column","marginBottom":"var(--ifm-paragraph-margin-bottom)"}}
->
-  <h3
-    style={{"marginBottom":"0.25rem"}}
-  >
-    Contact
-  </h3><span>
-    [support@flagsmith.com](mailto:support@flagsmith.com)
-  </span>
-</div><div
-  style={{"marginBottom":"var(--ifm-paragraph-margin-bottom)"}}
->
-  <h3
-    style={{"marginBottom":"0.25rem"}}
-  >
-    License
-  </h3>
-</div>
+Please note that the SDK API is specifically to be used with our [SDKs](/integrating-with-flagsmith/integration-overview). If you want to drive aspects of
+Flagsmith programmatically, you need to use our private [Core API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api).
+
+You can find the full spec to our Core API [here](https://api.flagsmith.com/api/v1/docs/).
       
