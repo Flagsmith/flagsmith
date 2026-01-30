@@ -210,6 +210,7 @@ class MasterAPIKeyAuthenticationExtension(OpenApiAuthenticationExtension):  # ty
             "in": "header",
             "name": "Authorization",
             "description": (
+                "For Admin API endpoints. "
                 "<a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>."
             ),
         }
