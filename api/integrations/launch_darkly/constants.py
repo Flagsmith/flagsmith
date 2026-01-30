@@ -4,8 +4,8 @@ LAUNCH_DARKLY_API_VERSION = "20240415"
 LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE = 1000
 # Maximum limit for /api/v2/flags/ is now 100 by launchdarkly API design
 LAUNCH_DARKLY_API_FLAGS_LIMIT_PER_PAGE = 100
-# Maximum number of environment keys allowed in a single request
-LAUNCH_DARKLY_API_ENV_FILTER_MAX = 3
+# Maximum limit for env query parameter values in /api/v2/flags/
+LAUNCH_DARKLY_API_MAX_ENVIRONMENTS_PER_REQUEST = 3
 
 LAUNCH_DARKLY_IMPORTED_TAG_COLOR = "#3d4db6"
 LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL = "Imported"
