@@ -4,23 +4,32 @@ import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
 import Utils from 'common/utils/utils'
+import { FlagsmithValue, MultivariateOption } from 'common/types/responses'
+
+type VariationOverride = {
+  id?: number
+  multivariate_feature_option: number
+  percentage_allocation: number
+  multivariate_feature_option_index?: number
+}
+
 interface VariationOptionsProps {
   canCreateFeature: boolean
   controlPercentage: number
-  controlValue: any
+  controlValue: FlagsmithValue
   disabled: boolean
-  multivariateOptions: any[]
+  multivariateOptions: MultivariateOption[]
   readOnly?: boolean
   removeVariation: (i: number) => void
   select?: boolean
-  setValue: (value: any) => void
-  setVariations: (variations: any[]) => void
+  setValue: (value: FlagsmithValue) => void
+  setVariations: (variations: VariationOverride[]) => void
   updateVariation: (
     index: number,
-    value: any,
-    variationOverrides: any[],
+    value: MultivariateOption,
+    variationOverrides: VariationOverride[],
   ) => void
-  variationOverrides: any[]
+  variationOverrides: VariationOverride[]
   weightTitle: string
 }
 

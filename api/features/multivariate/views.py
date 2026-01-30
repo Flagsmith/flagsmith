@@ -2,6 +2,7 @@ from common.projects.permissions import (
     CREATE_FEATURE,
     VIEW_PROJECT,
 )
+from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -15,6 +16,54 @@ from .models import MultivariateFeatureOption
 from .serializers import MultivariateFeatureOptionSerializer
 
 
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "list_feature_multivariate_options",
+                "description": "Retrieves all multivariate options for a feature flag.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "create_feature_multivariate_option",
+                "description": "Creates a new multivariate option for a feature flag.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "update_feature_multivariate_option",
+                "description": "Updates an existing multivariate option.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="destroy",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "delete_feature_multivariate_option",
+                "description": "Deletes a multivariate option.",
+            },
+        },
+    ),
+)
 class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = MultivariateFeatureOptionSerializer
 
