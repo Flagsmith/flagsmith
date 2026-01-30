@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from drf_spectacular import generators, openapi
 from drf_spectacular.extensions import (
+    OpenApiAuthenticationExtension,
     OpenApiSerializerExtension,
 )
 from drf_spectacular.plumbing import ResolvedComponent, safe_ref
@@ -180,3 +181,35 @@ class TypedDictSchemaExtension(
                 auto_schema.registry.register_on_missing(component)
 
         return model_json_schema
+
+
+class EnvironmentKeyAuthenticationExtension(OpenApiAuthenticationExtension):
+    target_class = "environments.authentication.EnvironmentKeyAuthentication"
+    name = "Environment API Key"
+
+    def get_security_definition(
+        self, auto_schema: openapi.AutoSchema | None = None
+    ) -> dict[str, Any]:
+        return {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Environment-Key",
+            "description": "For SDK endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",
+        }
+
+
+class MasterAPIKeyAuthenticationExtension(OpenApiAuthenticationExtension):
+    target_class = "api_keys.authentication.MasterAPIKeyAuthentication"
+    name = "Master API Key"
+
+    def get_security_definition(
+        self, auto_schema: openapi.AutoSchema | None = None
+    ) -> dict[str, Any]:
+        return {
+            "type": "apiKey",
+            "in": "header",
+            "name": "Authorization",
+            "description": (
+                "<a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>."
+            ),
+        }

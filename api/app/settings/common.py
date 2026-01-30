@@ -535,26 +535,6 @@ SPECTACULAR_SETTINGS = {
         "deepLinking": True,
     },
     "SERVERS": env.json("OPENAPI_SERVERS", default=[]),
-    "SECURITY": [
-        {"Private": []},
-        {"Public": []},
-    ],
-    "APPEND_COMPONENTS": {
-        "securitySchemes": {
-            "Private": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "Authorization",
-                "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",
-            },
-            "Public": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "X-Environment-Key",
-                "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",
-            },
-        },
-    },
     "DEFAULT_GENERATOR_CLASS": "api.openapi.SchemaGenerator",
     "EXTENSIONS": [
         "api.openapi",
