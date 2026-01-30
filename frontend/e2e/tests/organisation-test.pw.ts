@@ -3,7 +3,7 @@ import { byId, log, createHelpers } from '../helpers.playwright'
 import { E2E_SEPARATE_TEST_USER, PASSWORD } from '../config'
 
 test.describe('Organisation Tests', () => {
-  test('test description @oss', async ({ page }) => {
+  test('Organisations can be created, renamed, and deleted with name validation @oss', async ({ page }) => {
     const {
       assertTextContent,
       click,

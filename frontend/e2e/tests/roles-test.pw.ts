@@ -8,7 +8,7 @@ import {
 } from '../config'
 
 test.describe('Roles Tests', () => {
-  test('test description @enterprise', async ({ page }) => {
+  test('Roles can be created with project and environment permissions @enterprise', async ({ page }) => {
     const {
       click,
       closeModal,

@@ -1,12 +1,13 @@
 import { test, expect } from '../test-setup';
 import { byId, log, createHelpers } from '../helpers.playwright';
-import { PASSWORD, E2E_USER } from '../config'
+import { PASSWORD, E2E_USER, E2E_TEST_PROJECT } from '../config'
 
 test.describe('Environment Tests', () => {
-  test('test description @oss', async ({ page }) => {
+  test('Environments can be created, renamed, and deleted @oss', async ({ page }) => {
     const {
       click,
       createEnvironment,
+      gotoProject,
       login,
       setText,
       waitForElementVisible,
@@ -14,7 +15,7 @@ test.describe('Environment Tests', () => {
 
     log('Login')
     await login(E2E_USER, PASSWORD)
-    await click('#project-select-0')
+    await gotoProject(E2E_TEST_PROJECT)
     log('Create environment')
     await click('#create-env-link')
     await createEnvironment('Staging')

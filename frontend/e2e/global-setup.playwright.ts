@@ -8,24 +8,7 @@ import * as path from 'path';
 async function globalSetup(config: FullConfig) {
   console.log('Starting global setup for E2E tests...');
 
-  // Clear previous test results and reports (skip on retries to preserve failed.json)
   const testResultsDir = path.join(__dirname, 'test-results');
-  const reportDir = path.join(__dirname, 'playwright-report');
-
-  if (!process.env.E2E_SKIP_CLEANUP) {
-    // Clean up test-results completely on fresh runs
-    if (fs.existsSync(testResultsDir)) {
-      fs.rmSync(testResultsDir, { recursive: true, force: true });
-      console.log('Cleared previous test results');
-    }
-
-    if (fs.existsSync(reportDir)) {
-      fs.rmSync(reportDir, { recursive: true, force: true });
-      console.log('Cleared previous HTML report');
-    }
-  } else {
-    console.log('Skipping cleanup (retry attempt)');
-  }
 
   // Ensure test-results directory exists for the JSON reporter
   if (!fs.existsSync(testResultsDir)) {

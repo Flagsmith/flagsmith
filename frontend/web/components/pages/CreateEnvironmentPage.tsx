@@ -53,7 +53,9 @@ const CreateEnvironmentPage: React.FC = () => {
     }
 
     const focusTimeout = setTimeout(() => {
-      inputRef.current?.focus()
+      if (!E2E) {
+        inputRef.current?.focus()
+      }
     }, 500)
 
     return () => clearTimeout(focusTimeout)

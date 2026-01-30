@@ -7,7 +7,7 @@ import {
 } from '../config';
 
 test.describe('Organisation Permission Tests', () => {
-  test('test description @enterprise', async ({ page }) => {
+  test('Organisation-level permissions control project creation and group management @enterprise', async ({ page }) => {
     const {
       click,
       clickByText,

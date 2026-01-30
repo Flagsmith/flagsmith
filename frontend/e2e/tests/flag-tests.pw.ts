@@ -1,9 +1,9 @@
 import { test, expect } from '../test-setup';
 import { byId, log, createHelpers } from '../helpers.playwright';
-import { E2E_USER, PASSWORD } from '../config';
+import { E2E_USER, PASSWORD, E2E_TEST_PROJECT } from '../config';
 
 test.describe('Flag Tests', () => {
-  test('test description @oss', async ({ page }) => {
+  test('Feature flags can be created, toggled, edited, and deleted across environments @oss', async ({ page }) => {
     const {
       click,
       createFeature,
@@ -11,6 +11,7 @@ test.describe('Flag Tests', () => {
       deleteFeature,
       editRemoteConfig,
       gotoFeatures,
+      gotoProject,
       login,
       parseTryItResults,
       scrollBy,
@@ -22,7 +23,7 @@ test.describe('Flag Tests', () => {
 
     log('Login')
     await login(E2E_USER, PASSWORD)
-    await click('#project-select-0')
+    await gotoProject(E2E_TEST_PROJECT)
 
     // Check if we're already in production by checking if development is clickable
     const isProductionActive = await page.locator(byId('switch-environment-development')).isVisible().catch(() => true)

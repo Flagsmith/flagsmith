@@ -3,7 +3,7 @@ import { byId, getFlagsmith, log, createHelpers } from '../helpers.playwright';
 import { E2E_USER, PASSWORD } from '../config'
 
 test.describe('Project Tests', () => {
-  test('test description @oss', async ({ page }) => {
+  test('Projects can be created and renamed with configurable change request approvals @oss', async ({ page }) => {
     const {
       assertInputValue,
       assertTextContent,
@@ -18,13 +18,20 @@ test.describe('Project Tests', () => {
 
     log('Login')
     await login(E2E_USER, PASSWORD)
-    await click('#project-select-0')
+
+    log('Create test project')
+    await click('.btn-project-create')
+    await waitForElementVisible(byId('projectName'))
+    await setText(byId('projectName'), 'Project Settings Test')
+    await click(byId('create-project-btn'))
+    await waitForElementVisible(byId('features-page'))
+
     log('Edit Project')
     await click('#project-link')
     await click('#project-settings-link')
-    await setText("[name='proj-name']", 'Test Project')
+    await setText("[name='proj-name']", 'Project Settings Test Renamed')
     await click('#save-proj-btn')
-    await assertTextContent(`#project-link`, 'Test Project')
+    await assertTextContent(`#project-link`, 'Project Settings Test Renamed')
 
     if (hasSegmentChangeRequests) {
       log('Test Change Requests Approvals Setting')
@@ -66,5 +73,7 @@ test.describe('Project Tests', () => {
       await waitForElementVisible('[name="env-name"]')
       await assertInputValue('[name="env-name"]', '5')
     }
+
+    // Project will be cleaned up by E2E teardown
   });
 });

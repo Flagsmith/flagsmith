@@ -3,8 +3,38 @@ import Project from '../common/project';
 import fetch from 'node-fetch';
 import flagsmith from 'flagsmith/isomorphic';
 import { IFlagsmith } from 'flagsmith/types';
+import { WebClient } from '@slack/web-api';
 
 export const LONG_TIMEOUT = 20000;
+
+// Slack notification functions
+const SLACK_TOKEN = process.env.SLACK_TOKEN;
+const CHANNEL_ID = 'C0102JZRG3G'; // infra_tests channel ID
+
+export function postMessage(message: string): Promise<unknown> {
+  if (!SLACK_TOKEN) {
+    console.log('Slack token not specified, skipping message');
+    return Promise.resolve();
+  }
+
+  const slackClient = new WebClient(SLACK_TOKEN);
+
+  return slackClient.chat.postMessage({
+    channel: CHANNEL_ID,
+    text: message,
+  });
+}
+
+export function notifyFailure(failedCount: number): Promise<unknown> {
+  const actionUrl = process.env.GITHUB_ACTION_URL || '';
+  if (!actionUrl) {
+    console.log('No GITHUB_ACTION_URL set, skipping Slack notification');
+    return Promise.resolve();
+  }
+
+  const message = `❌ E2E Tests Failed: ${failedCount} test(s) failed\n\n📦 View artifacts: ${actionUrl}`;
+  return postMessage(message);
+}
 
 // Browser debugging - console and network logging
 export const setupBrowserLogging = (page: Page) => {
@@ -237,21 +267,19 @@ export class E2EHelpers {
     await expect(this.page.locator(selector)).toHaveCount(0, { timeout: 10000 });
   }
 
-  async waitForNetworkIdle() {
-    await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
-      // Silently continue if timeout - page might already be idle
-    });
-  }
-
-  async waitForDomContentLoaded() {
+  async waitForPageFullyLoaded() {
     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {
       // Silently continue if timeout - DOM might already be loaded
     });
   }
 
-  async waitForPageFullyLoaded() {
-    await this.waitForDomContentLoaded();
-    await this.waitForNetworkIdle();
+  async waitForToastsToClear() {
+    await expect(this.page.locator('.toast-message')).toHaveCount(0, { timeout: LONG_TIMEOUT });
+  }
+
+  async waitForToast() {
+    await this.waitForElementVisible('.toast-message', LONG_TIMEOUT);
+    await this.waitForToastsToClear();
   }
 
   async getInputValue(selector: string): Promise<string> {
@@ -277,7 +305,6 @@ export class E2EHelpers {
     const element = this.page.locator(selector).first();
     await element.scrollIntoViewIfNeeded();
     await expect(element).toBeEnabled({ timeout: LONG_TIMEOUT });
-    await element.hover();
     await element.click();
   }
 
@@ -295,6 +322,17 @@ export class E2EHelpers {
     await this.waitForElementVisible(byId('show-create-segment-btn'));
   }
 
+  async gotoProject(projectName: string) {
+    logUsingLastSection(`Navigate to project: ${projectName}`);
+    // Use exact text matching (quoted string) to avoid substring matches like "Test Project" matching "My Test Project 2"
+    const projectLink = this.page.locator('a').filter({ has: this.page.locator(`text="${projectName}"`) }).first();
+    await projectLink.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await projectLink.click();
+    // Wait for project page to load - could be features page or create environment page
+    await this.page.waitForURL(/\/project\/\d+/, { timeout: LONG_TIMEOUT });
+    await this.waitForPageFullyLoaded();
+  }
+
   async login(
     email: string = process.env.E2E_USER || '',
     password: string = process.env.E2E_PASS || '',
@@ -303,9 +341,6 @@ export class E2EHelpers {
     // Wait for both fields to be visible
     await this.waitForElementVisible('[name="email"]');
     await this.waitForElementVisible('[name="password"]');
-    // Small delay to let any autofocus logic complete
-    await this.page.waitForTimeout(500);
-    // Now fill the fields - fill() handles focus internally
     await this.setText('[name="email"]', email);
     await this.setText('[name="password"]', password);
     await this.click('#login-btn');
@@ -338,7 +373,6 @@ export class E2EHelpers {
       await this.click('#account-settings-link');
       await this.click('#logout-link');
       await this.waitForElementVisible('#login-page');
-      await this.page.waitForTimeout(500);
     } catch (e) {
       console.log('Could not log out:', e);
     }
@@ -398,15 +432,12 @@ export class E2EHelpers {
     if (value) {
       await this.click(byId('toggle-feature-button'));
     }
-    await this.page.waitForTimeout(500);
     await this.click(byId('create-feature-btn'));
-    await this.page.waitForTimeout(1500);
     const featureElement = this.page.locator('[data-test^="feature-item-"]').filter({
       has: this.page.locator(`span:text-is("${name}")`)
     }).first();
     await featureElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await this.closeModal();
-    await this.page.waitForTimeout(500);
   }
 
   // Create a remote config
@@ -428,9 +459,7 @@ export class E2EHelpers {
       await this.setText(byId(`featureVariationWeight${v.value}`), `${v.weight}`);
       await this.page.waitForTimeout(100);
     }
-    await this.page.waitForTimeout(500);
     await this.click(byId('create-feature-btn'));
-    await this.page.waitForTimeout(2000);
     const timeout = mvs.length > 0 ? 45000 : 20000;
     const featureElement = this.page.locator('[data-test^="feature-item-"]').filter({
       has: this.page.locator(`span:text-is("${name}")`)
@@ -439,7 +468,6 @@ export class E2EHelpers {
     const valueElement = featureElement.locator('[data-test^="feature-value-"]');
     await expect(valueElement).toHaveText(expectedValue, { timeout });
     await this.closeModal();
-    await this.page.waitForTimeout(500);
   }
 
   // Delete a feature
@@ -458,6 +486,7 @@ export class E2EHelpers {
     await this.click(byId(`feature-remove-${index}`));
     await this.setText('[name="confirm-feature-name"]', name);
     await this.click('#confirm-remove-feature-btn');
+    await this.waitForElementNotExist('.modal-open');
     await expect(this.page.locator('[data-test^="feature-item-"]').filter({
       has: this.page.locator(`span:text-is("${name}")`)
     })).toHaveCount(0, { timeout: LONG_TIMEOUT });
@@ -542,19 +571,15 @@ export class E2EHelpers {
   // Close modal
   async closeModal() {
     log('Close Modal');
-    await this.page.mouse.click(50, 50);
-    // Wait for modal to fully close by checking body no longer has modal-open class
-    await this.page.waitForFunction(
-      () => !document.body.classList.contains('modal-open'),
-      { timeout: LONG_TIMEOUT }
-    );
+    // Click top-left (on modal backdrop) to close
+    await this.page.mouse.click(10, 10);
+    await this.waitForElementNotExist('.modal-open');
   }
 
   // Save feature segments
   async saveFeatureSegments() {
     await this.click('#update-feature-segments-btn');
-    await this.waitForElementVisible('.toast-message', 10000);
-    await this.page.locator('.toast-message').waitFor({ state: 'hidden', timeout: 10000 });
+    await this.waitForToast();
     await this.closeModal();
     await this.waitForElementNotExist('#create-feature-modal');
   }
@@ -573,10 +598,14 @@ export class E2EHelpers {
     await this.setText(byId('role-name'), name);
     await this.click(byId('save-role'));
     await this.closeModal();
+    // Wait for any toast messages to clear before continuing
+    await this.waitForToastsToClear();
     // Click on the role by its name
     const roleRow = this.page.locator('[data-test^="role-"]').filter({ hasText: name }).first();
     await roleRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await roleRow.click();
+    // Wait for modal to be visible before clicking tabs
+    await this.waitForElementVisible('.modal-open');
     await this.click(byId('members-tab'));
     await this.click(byId('assigned-users'));
     for (const userId of users) {
@@ -759,8 +788,7 @@ export class E2EHelpers {
       await this.page.waitForTimeout(1500);
     }
     await this.click(byId('update-feature-btn'));
-    await this.waitForElementVisible('.toast-message', 10000);
-    await this.page.locator('.toast-message').waitFor({ state: 'hidden', timeout: 10000 });
+    await this.waitForToast();
     await this.closeModal();
     await this.waitForElementNotExist('#create-feature-modal');
   }

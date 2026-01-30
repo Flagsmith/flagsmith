@@ -1,15 +1,8 @@
-import { test as base } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { setupBrowserLogging } from './helpers.playwright';
 
-// Extend base test to automatically setup browser logging
-export const test = base.extend({
-  page: async ({ page }, use) => {
-    // Setup logging before each test
-    setupBrowserLogging(page);
-
-    // Use the page in the test
-    await use(page);
-  },
+test.beforeEach(async ({ page }) => {
+  setupBrowserLogging(page);
 });
 
-export { expect } from '@playwright/test';
+export { test, expect };

@@ -1,6 +1,6 @@
 import { test, expect } from '../test-setup';
 import { byId, log, createHelpers } from '../helpers.playwright';
-import { E2E_USER, PASSWORD, E2E_TEST_IDENTITY } from '../config'
+import { E2E_USER, PASSWORD, E2E_TEST_IDENTITY, E2E_SEGMENT_PROJECT_1, E2E_SEGMENT_PROJECT_2, E2E_SEGMENT_PROJECT_3 } from '../config'
 
 const REMOTE_CONFIG_FEATURE = 'remote_config'
 const FLAG_FEATURE = 'flag'
@@ -71,6 +71,7 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
     deleteTrait,
     gotoFeature,
     gotoFeatures,
+    gotoProject,
     gotoSegments,
     gotoTraits,
     login,
@@ -78,11 +79,12 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
     setSegmentRule,
     waitAndRefresh,
     waitForElementVisible,
+    waitForToast,
   } = createHelpers(page)
 
   log('Login')
   await login(E2E_USER, PASSWORD)
-  await click('#project-select-1')
+  await gotoProject(E2E_SEGMENT_PROJECT_1)
   await waitForElementVisible(byId('features-page'))
 
   log('Create Feature')
@@ -130,13 +132,7 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
   ])
 
   await click('#update-feature-segments-btn')
-
-  // Wait for success message to appear indicating save completed
-  await waitForElementVisible('.toast-message', 10000)
-
-  // Wait for toast to disappear
-  await page.waitForSelector('.toast-message', { state: 'hidden', timeout: 10000 })
-
+  await waitForToast()
   await closeModal()
 
   await gotoTraits(E2E_TEST_IDENTITY)
@@ -175,7 +171,6 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
     addSegmentOverride,
     addSegmentOverrideConfig,
     assertUserFeatureValue,
-    click,
     createFeature,
     createRemoteConfig,
     createSegment,
@@ -183,6 +178,7 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
     deleteFeature,
     gotoFeature,
     gotoFeatures,
+    gotoProject,
     gotoSegments,
     goToUser,
     login,
@@ -194,7 +190,7 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
 
   log('Login')
   await login(E2E_USER, PASSWORD)
-  await click('#project-select-2')
+  await gotoProject(E2E_SEGMENT_PROJECT_2)
   await waitForElementVisible(byId('features-page'))
 
   log('Create segments')
@@ -243,7 +239,6 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
   await createTrait('trait', 1)
   await createTrait('trait2', 2)
   await createTrait('trait3', 3)
-  // await assertTextContent(page, byId('segment-0-name'), 'segment_1'); todo: view user segments disabled in edge
   await waitForUserFeatureSwitch('flag', 'on')
   // Wait for feature values to update after trait creation
   await page.waitForTimeout(1000)
@@ -289,6 +284,7 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
     createRemoteConfig,
     deleteFeature,
     gotoFeatures,
+    gotoProject,
     goToUser,
     login,
     setText,
@@ -299,7 +295,7 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
 
   log('Login')
   await login(E2E_USER, PASSWORD)
-  await click('#project-select-3')
+  await gotoProject(E2E_SEGMENT_PROJECT_3)
   await waitForElementVisible(byId('features-page'))
 
   log('Create features')

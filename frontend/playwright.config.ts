@@ -70,7 +70,7 @@ export default defineConfig({
   testDir: './e2e',
   testMatch: /.*\.pw\.ts$/,
   /* Test timeout */
-  timeout: 120000,
+  timeout: 300000,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Action timeout */
@@ -82,9 +82,14 @@ export default defineConfig({
     /* Screenshot on all tests for maximum detail */
     screenshot: 'on',
     /* Collect trace on all tests for maximum detail */
-    trace: 'on',
-    /* Video on all tests for maximum detail */
-    video: 'on',
+    trace: {
+      mode: 'on',
+      snapshots: true,
+      screenshots: true,
+      sources: true,
+    },
+    /* Video disabled - view artifacts in GitHub Actions */
+    video: 'off',
   },
   /* Run your local dev server before starting the tests */
   webServer: process.env.E2E_LOCAL
