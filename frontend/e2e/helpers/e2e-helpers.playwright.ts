@@ -302,17 +302,8 @@ export class E2EHelpers {
 
   // Delete a feature
   async deleteFeature(name: string) {
-    const featureRow = this.page.locator('[data-test^="feature-item-"]').filter({
-      has: this.page.locator(`span:text-is("${name}")`)
-    }).first();
-    await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-    const dataTest = await featureRow.getAttribute('data-test');
-    const index = dataTest?.match(/feature-item-(\d+)/)?.[1];
-    if (!index) {
-      throw new Error(`Could not find index for feature: ${name}`);
-    }
-    await this.click(byId(`feature-action-${index}`));
-    await this.waitForElementVisible(byId(`feature-remove-${index}`));
+    const index = await this.getFeatureIndexByName(name);
+    await this.clickFeatureAction(name);
     await this.click(byId(`feature-remove-${index}`));
     await this.setText('[name="confirm-feature-name"]', name);
     await this.click('#confirm-remove-feature-btn');
@@ -742,10 +733,56 @@ export class E2EHelpers {
     return parseInt(index, 10);
   }
 
-  // Click feature action button
-  async clickFeatureAction(featureName: string) {
+  /**
+   * Click a feature's action button (3-dot menu) and wait for the dropdown to open.
+   *
+   * This helper includes retry logic to handle a race condition in Firefox where
+   * clicking the action button sometimes fails to open the dropdown menu. The issue
+   * occurs due to a timing conflict between:
+   * 1. Playwright's scroll-into-view behavior causing element instability
+   * 2. The useOutsideClick hook listening for mouseup events
+   * 3. React's state update after the button click
+   *
+   * When the element is "not stable" (moving due to scroll), Playwright waits and
+   * retries. However, there's a small timing window where the click can complete
+   * successfully (React receives the click event) but the dropdown immediately
+   * closes due to a spurious outside-click detection.
+   *
+   * The retry mechanism works around this by:
+   * 1. Attempting to click the action button
+   * 2. Waiting briefly for the dropdown to appear
+   * 3. If the dropdown doesn't appear, retrying the click (up to maxRetries times)
+   */
+  async clickFeatureAction(featureName: string, maxRetries: number = 3): Promise<void> {
     const index = await this.getFeatureIndexByName(featureName);
-    await this.click(byId(`feature-action-${index}`));
+    const actionButtonSelector = byId(`feature-action-${index}`);
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      logUsingLastSection(`Clicking feature action button (attempt ${attempt}/${maxRetries})`);
+
+      await this.click(actionButtonSelector);
+
+      try {
+        // Use a shorter timeout for the dropdown check since we'll retry if it fails
+        await this.page.locator('.feature-action__list').first().waitFor({
+          state: 'visible',
+          timeout: 2000
+        });
+        // Dropdown appeared, we're done
+        return;
+      } catch {
+        if (attempt === maxRetries) {
+          // Final attempt failed, throw with helpful context
+          throw new Error(
+            `Feature action dropdown for "${featureName}" did not open after ${maxRetries} attempts. ` +
+            `This may indicate a race condition with the useOutsideClick hook.`
+          );
+        }
+        // Dropdown didn't appear, wait a moment before retrying
+        logUsingLastSection(`Dropdown did not appear, retrying...`);
+        await this.page.waitForTimeout(100);
+      }
+    }
   }
 
   // Wait for feature switch by name and state to be clickable or not clickable
