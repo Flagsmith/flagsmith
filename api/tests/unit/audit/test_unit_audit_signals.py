@@ -379,7 +379,7 @@ def test_trigger_feature_state_webhooks__feature_state_update__triggers_webhook(
     )
 
     # When
-    trigger_feature_state_webhooks(sender=audit_log, feature_state=feature_state)
+    trigger_feature_state_webhooks(sender=feature_state, audit_log=audit_log)
 
     # Then
     mock_trigger_webhooks.assert_called_once()
@@ -410,7 +410,7 @@ def test_trigger_feature_state_webhooks__versioned_environment__skips_webhook(
     )
 
     # When
-    trigger_feature_state_webhooks(sender=audit_log, feature_state=feature_state)
+    trigger_feature_state_webhooks(sender=feature_state, audit_log=audit_log)
 
     # Then
     mock_trigger_webhooks.assert_not_called()
@@ -441,7 +441,7 @@ def test_trigger_feature_state_webhooks__deleted_feature_state__skips_webhook(
     )
 
     # When
-    trigger_feature_state_webhooks(sender=audit_log, feature_state=feature_state)
+    trigger_feature_state_webhooks(sender=feature_state, audit_log=audit_log)
 
     # Then
     mock_trigger_webhooks.assert_not_called()
@@ -478,7 +478,7 @@ def test_trigger_feature_state_webhooks__feature_state_value_update__triggers_we
     )
 
     # When
-    trigger_feature_state_webhooks(sender=audit_log, feature_state=feature_state)
+    trigger_feature_state_webhooks(sender=feature_state, audit_log=audit_log)
 
     # Then
     mock_trigger_webhooks.assert_called_once()
@@ -521,7 +521,7 @@ def test_trigger_feature_state_webhooks__feature_state_does_not_exist__skips_web
 
     # When
     # Pass the stale feature_state - the function will try to fetch fresh and fail
-    trigger_feature_state_webhooks(sender=audit_log, feature_state=stale_feature_state)
+    trigger_feature_state_webhooks(sender=stale_feature_state, audit_log=audit_log)
 
     # Then
     mock_trigger_webhooks.assert_not_called()
@@ -551,7 +551,7 @@ def test_send_feature_flag_went_live_signal__feature_state__sends_signal(
     send_feature_flag_went_live_signal(sender=AuditLog, instance=audit_log)
 
     # Then
-    mock_signal_send.assert_called_once_with(audit_log, feature_state=feature_state)
+    mock_signal_send.assert_called_once_with(feature_state, audit_log=audit_log)
 
 
 def test_send_feature_flag_went_live_signal__feature_state_value__sends_signal(
@@ -580,7 +580,7 @@ def test_send_feature_flag_went_live_signal__feature_state_value__sends_signal(
 
     # Then
     # The signal should be called with the parent FeatureState extracted from FeatureStateValue
-    mock_signal_send.assert_called_once_with(audit_log, feature_state=feature_state)
+    mock_signal_send.assert_called_once_with(feature_state, audit_log=audit_log)
 
 
 def test_send_feature_flag_went_live_signal__scheduled_feature_state__skips_signal(

@@ -226,14 +226,16 @@ def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ign
     if feature_state.is_scheduled:
         return  # This is handled by audit.tasks.create_feature_state_went_live_audit_log
 
-    feature_state_change_went_live.send(instance, feature_state=feature_state)
+    feature_state_change_went_live.send(feature_state, audit_log=instance)
 
 
 @receiver(feature_state_change_went_live)
-def send_audit_log_event_to_sentry(sender: AuditLog, **kwargs: Any) -> None:
+def send_audit_log_event_to_sentry(
+    sender: FeatureState, audit_log: AuditLog, **kwargs: Any
+) -> None:
     try:
         sentry_configuration = SentryChangeTrackingConfiguration.objects.get(
-            environment=sender.environment,
+            environment=audit_log.environment,
             deleted_at__isnull=True,
         )
     except SentryChangeTrackingConfiguration.DoesNotExist:
@@ -244,13 +246,12 @@ def send_audit_log_event_to_sentry(sender: AuditLog, **kwargs: Any) -> None:
         secret=sentry_configuration.secret,
     )
 
-    _track_event_async(sender, sentry_change_tracking)  # type: ignore[no-untyped-call]
+    _track_event_async(audit_log, sentry_change_tracking)  # type: ignore[no-untyped-call]
 
 
 @receiver(feature_state_change_went_live)
 def trigger_feature_state_webhooks(
-    sender: AuditLog,
-    feature_state: FeatureState,
+    sender: FeatureState,
     **kwargs: Any,
 ) -> None:
     """
@@ -267,9 +268,7 @@ def trigger_feature_state_webhooks(
     # 1. drf-writable-nested saves FeatureState before FeatureStateValue
     # 2. The history record's instance may have stale cached values
     try:
-        fresh_feature_state = FeatureState.objects.all_with_deleted().get(
-            id=feature_state.id
-        )
+        fresh_feature_state = FeatureState.objects.all_with_deleted().get(id=sender.id)
     except FeatureState.DoesNotExist:
         return
 
