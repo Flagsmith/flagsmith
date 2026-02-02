@@ -9,13 +9,13 @@ version = "2.68.0"
 description = "The API component for the Flagsmith application."
 authors = [{ name = "Flagsmith", email = "support@flagsmith.com" }]
 readme = "readme.md"
-requires-python = ">=3.11, <3.13"
+requires-python = ">=3.11, <3.14"
 dynamic = ["dependencies"]
 
 [tool.ruff]
 line-length = 88
 indent-width = 4
-target-version = "py311"
+target-version = "py313"
 extend-exclude = ["migrations"]
 
 [tool.ruff.format]
@@ -101,7 +101,7 @@ django_settings_module = "app.settings.local"
 enabled = true
 
 [tool.poetry.dependencies]
-python = ">3.11,<3.13"
+python = ">3.11,<3.14"
 django = ">=5,<6"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
