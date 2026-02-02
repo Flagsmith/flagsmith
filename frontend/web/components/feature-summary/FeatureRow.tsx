@@ -372,6 +372,11 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             <FeatureName name={projectFlag.name} />
             <FeatureTags editFeature={editFeature} projectFlag={projectFlag} />
           </div>
+          <div
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+          >
           <Switch
             disabled={!permission || isReadOnly || isLoading}
             data-test={`feature-switch-${index}${
@@ -380,6 +385,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             checked={displayEnabled}
             onChange={onChange}
           />
+          </div>
           <FeatureAction {...featureActionProps} disableE2E={true} />
         </div>
       </div>
