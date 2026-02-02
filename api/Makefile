@@ -12,6 +12,8 @@ POETRY_VERSION ?= 2.2.1
 SAML_REVISION ?= v1.6.6
 RBAC_REVISION ?= v0.13.0
 
+OPENAPI_FORMAT_VERSION ?= 1.23.0
+
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
 
@@ -113,10 +115,18 @@ serve-with-task-processor: TASK_RUN_METHOD=TASK_PROCESSOR
 serve-with-task-processor:
 	make -j2 serve run-task-processor
 
+.PHONY: generate-flagsmith-sdk-openapi
+generate-flagsmith-sdk-openapi: OPENAPI_SERVERS=[{"url": "https://edge.api.flagsmith.com", "description": "Flagsmith Edge API"}]
+generate-flagsmith-sdk-openapi:
+	poetry run python manage.py spectacular | \
+	  npx openapi-format@${OPENAPI_FORMAT_VERSION} /dev/fd/0 \
+	    --filterFile openapi-filter-flagsmith-sdk.yml \
+	    --output ../sdk/openapi.yaml
+
 .PHONY: generate-ld-client-types
 generate-ld-client-types:
 	curl -sSL https://app.launchdarkly.com/api/v2/openapi.json | \
-	npx openapi-format /dev/fd/0 \
+	npx openapi-format@${OPENAPI_FORMAT_VERSION} /dev/fd/0 \
 		--filterFile openapi-filter-launchdarkly.yaml | \
 	datamodel-codegen \
 		--output integrations/launch_darkly/types.py \
@@ -130,7 +140,7 @@ generate-ld-client-types:
 .PHONY: generate-grafana-client-types
 generate-grafana-client-types:
 	curl -sSL https://raw.githubusercontent.com/grafana/grafana/refs/heads/main/public/openapi3.json | \
-	npx openapi-format /dev/fd/0 \
+	npx openapi-format@${OPENAPI_FORMAT_VERSION} /dev/fd/0 \
 		--filterFile openapi-filter-grafana.yaml | \
 	datamodel-codegen \
 		--output integrations/grafana/types.py \
@@ -153,7 +163,7 @@ integrate-private-tests:
 	rm -rf ./flagsmith-saml ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller
 
 .PHONY: generate-docs
-generate-docs:
+generate-docs: generate-flagsmith-sdk-openapi
 	poetry run flagsmith docgen metrics > ../docs/docs/administration-and-security/platform-configuration/metrics.md
 
 .PHONY: add-known-sdk-version

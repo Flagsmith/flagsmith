@@ -18,14 +18,14 @@ const sidebars: SidebarsConfig = {
     openApiSidebar: [
         {
             type: 'category',
-            label: 'Flagsmith API',
+            label: 'Flagsmith SDK API',
             link: {
                 type: 'generated-index',
-                title: 'Edge API Specification',
-                slug: '/edge-api',
+                title: 'SDK API Specification',
+                slug: '/sdk-api',
             },
             // @ts-ignore
-            items: require('./docs/edge-api/sidebar.ts'),
+            items: require('./docs/sdk-api/sidebar.ts'),
         },
     ],
 };

@@ -104,10 +104,6 @@ If you need to store 64 bit integers or very high precision floats we suggest st
 
 In some privacy-sensitive cases, you may want to evaluate flags based on traits without persisting those traits in Flagsmith long term. Transient traits and identities let you send data for evaluation while avoiding long-lived storage in the platform. See your SDK documentation for how to mark traits or identities as transient when evaluating flags.
 
-## Bulk Uploading Identities and Traits
-
-Identities are lazily created within Flagsmith. There might be instances where you want to push identity and trait data into the platform outside of a user session. We have [bulk upload API endpoints](/edge-api/bulk-insert-identities-update) for this.
-
 For more information, see:
 
 - [Managing identities](/flagsmith-concepts/identities).

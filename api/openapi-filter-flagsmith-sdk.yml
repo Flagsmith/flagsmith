@@ -1,0 +1,11 @@
+operationIds:
+  - sdk_v1_flags_2
+inverseTags:
+  - sdk
+unusedComponents:
+  - schemas
+  - parameters
+  - examples
+  - headers
+  - requestBodies
+  - responses

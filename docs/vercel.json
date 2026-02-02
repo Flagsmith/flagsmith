@@ -9,8 +9,36 @@
             "destination": "https://docs.flagsmith.com/best-practices/when-to-use-flags#staged-rollouts"
         },
         {
+            "source": "/edge-api/",
+            "destination": "https://docs.flagsmith.com/sdk-api/"
+        },
+        {
+            "source": "/edge-api/edge-api/",
+            "destination": "https://docs.flagsmith.com/sdk-api/flagsmith-api"
+        },
+        {
             "source": "/api/bulk-insert-identities-update",
-            "destination": "https://docs.flagsmith.com/edge-api/bulk-insert-identities-update"
+            "destination": "https://docs.flagsmith.com/sdk-api/"
+        },
+        {
+            "source": "/edge-api/bulk-insert-identities-overwrite",
+            "destination": "https://docs.flagsmith.com/sdk-api/"
+        },
+        {
+            "source": "/edge-api/bulk-insert-identities-update",
+            "destination": "https://docs.flagsmith.com/sdk-api/"
+        },
+        {
+            "source": "/edge-api/get-flags",
+            "destination": "https://docs.flagsmith.com/sdk-api/sdk-v-1-get-flags"
+        },
+        {
+            "source": "/edge-api/get-identity-flags-and-traits",
+            "destination": "https://docs.flagsmith.com/sdk-api/sdk-v-1-get-identities"
+        },
+        {
+            "source": "/edge-api/identify-user",
+            "destination": "https://docs.flagsmith.com/sdk-api/sdk-v-1-post-identities"
         },
         {
             "source": "/clients/3rd-party",
@@ -526,7 +554,7 @@
         },
         {
             "source": "/advanced-use/edge-api",
-            "destination": "/edge-api/"
+            "destination": "/performance/edge-api"
         },
         {
             "source": "/advanced-use/feature-health",
