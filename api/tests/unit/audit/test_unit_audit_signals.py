@@ -498,29 +498,24 @@ def test_trigger_feature_state_webhooks__feature_state_does_not_exist__skips_web
     feature_state = FeatureState.objects.get(
         environment=environment, feature=feature, feature_segment__isnull=True
     )
-    feature_state_id = feature_state.id
-    history_record = feature_state.history.first()
 
-    # Create audit log before deleting the feature state
     audit_log = AuditLog.objects.create(
         environment=environment,
-        related_object_id=feature_state_id,
+        related_object_id=feature_state.id,
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
-        history_record_id=history_record.history_id,
+        history_record_id=feature_state.history.first().history_id,
         history_record_class_path=feature_state.history_record_class_path,
     )
 
-    # Hard delete the feature state (not soft delete)
-    # Keep a reference to the stale object to pass to the function
+    # Hard delete the feature state so it's fully removed from the database
     stale_feature_state = feature_state
-    FeatureState.objects.filter(id=feature_state_id).delete()
+    feature_state.hard_delete()
 
     mock_trigger_webhooks = mocker.patch(
         "features.tasks.trigger_feature_state_change_webhooks"
     )
 
     # When
-    # Pass the stale feature_state - the function will try to fetch fresh and fail
     trigger_feature_state_webhooks(sender=stale_feature_state, audit_log=audit_log)
 
     # Then
