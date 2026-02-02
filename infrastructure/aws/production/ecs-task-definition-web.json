@@ -131,26 +131,6 @@
                     "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
                 },
                 {
-                    "name": "DEFAULT_THROTTLE_CLASSES",
-                    "value": "core.throttling.UserRateThrottle,core.throttling.MasterAPIKeyUserRateThrottle"
-                },
-                {
-                    "name": "USER_THROTTLE_CACHE_BACKEND",
-                    "value": "django_redis.cache.RedisCache"
-                },
-                {
-                    "name": "USER_THROTTLE_CACHE_LOCATION",
-                    "value": "rediss://serverless-redis-cache-c4q8sw.serverless.euw2.cache.amazonaws.com:6379"
-                },
-                {
-                    "name": "USER_THROTTLE_CACHE_OPTIONS",
-                    "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient"
-                },
-                {
-                    "name": "MASTER_API_KEY_THROTTLE_RATE",
-                    "value": "100/sec"
-                },
-                {
                     "name": "OAUTH_CLIENT_ID",
                     "value": "232959427810-br6ltnrgouktp0ngsbs04o14ueb9rch0.apps.googleusercontent.com"
                 },
