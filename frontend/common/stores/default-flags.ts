@@ -188,8 +188,7 @@ const defaultFlags = {
       'title': 'Segment',
     },
     'sentry': {
-      'description':
-        'Sends feature flag change events to Sentry for change tracking.',
+      'description': 'Send flag change events to Sentry.',
       'docs': 'https://docs.flagsmith.com/integrations/apm/sentry',
       'fields': [
         {
@@ -204,7 +203,7 @@ const defaultFlags = {
       ],
       'image': '/static/images/integrations/sentry.svg',
       'perEnvironment': true,
-      'tags': ['logging'],
+      'tags': ['Monitoring'],
       'title': 'Sentry',
     },
     'slack': {
