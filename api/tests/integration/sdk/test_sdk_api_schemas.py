@@ -1,6 +1,5 @@
 import json
 
-from django.urls import reverse
 from flagsmith_schemas import api as schemas
 from pydantic import TypeAdapter
 from rest_framework import status
@@ -16,7 +15,7 @@ def test_get_identities__valid_request__returns_response_conforming_to_schema(
 ) -> None:
     # Given
     identifier = "test-user-123"
-    url = reverse("api-v1:sdk-identities")
+    url = "/api/v1/identities/"
 
     # When
     response = sdk_client.get(f"{url}?identifier={identifier}")
@@ -53,7 +52,7 @@ def test_post_identities__with_traits__returns_response_conforming_to_schema(
     request_adapter = TypeAdapter(schemas.V1IdentitiesRequest)
     request_adapter.validate_python(request_data, extra="ignore")
 
-    url = reverse("api-v1:sdk-identities")
+    url = "/api/v1/identities/"
 
     # When
     response = sdk_client.post(
@@ -81,7 +80,7 @@ def test_get_identities__with_feature_filter__returns_single_flag_conforming_to_
 ) -> None:
     # Given
     identifier = "test-user"
-    url = reverse("api-v1:sdk-identities")
+    url = "/api/v1/identities/"
 
     # When
     response = sdk_client.get(f"{url}?identifier={identifier}&feature={feature_name}")
@@ -105,7 +104,7 @@ def test_get_environment_document__valid_request__returns_response_conforming_to
     environment: int,
 ) -> None:
     # Given
-    url = reverse("api-v1:environment-document")
+    url = "/api/v1/environment-document/"
 
     # When
     response = server_side_sdk_client.get(url)
@@ -129,7 +128,7 @@ def test_get_flags__valid_request__returns_list_conforming_to_schema(
     environment: int,
 ) -> None:
     # Given
-    url = reverse("api-v1:flags")
+    url = "/api/v1/flags/"
 
     # When
     response = sdk_client.get(url)
