@@ -2,12 +2,14 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from drf_spectacular import generators, openapi
 from drf_spectacular.extensions import (
+    OpenApiAuthenticationExtension,
     OpenApiSerializerExtension,
 )
 from drf_spectacular.plumbing import ResolvedComponent, safe_ref
 from drf_spectacular.plumbing import append_meta as append_meta_orig
-from pydantic import BaseModel
+from pydantic import TypeAdapter
 from rest_framework.request import Request
+from typing_extensions import is_typeddict
 
 
 def append_meta(schema: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
@@ -135,44 +137,42 @@ class MCPSchemaGenerator(SchemaGenerator):
         return schema
 
 
-class PydanticSchemaExtension(
-    OpenApiSerializerExtension  # type: ignore[no-untyped-call]
-):
+class TypedDictSchemaExtension(OpenApiSerializerExtension):
     """
     An OpenAPI extension that allows drf-spectacular to generate schema documentation
-    from Pydantic models.
+    from TypedDicts via Pydantic.
 
-    This extension is automatically used when a Pydantic BaseModel subclass is passed
+    This extension is automatically used when a TypedDict subclass is passed
     as a response type in @extend_schema decorators.
     """
 
-    target_class = "pydantic.BaseModel"
-    match_subclasses = True
+    @classmethod
+    def _matches(cls, target: type[Any]) -> bool:
+        return is_typeddict(target)
 
     def get_name(
         self,
         auto_schema: openapi.AutoSchema | None = None,
         direction: Literal["request", "response"] | None = None,
-    ) -> str | None:
-        return self.target.__name__  # type: ignore[no-any-return]
+    ) -> str:
+        name: str = self.target.__name__
+        return name
 
     def map_serializer(
         self,
         auto_schema: openapi.AutoSchema,
         direction: str,
     ) -> dict[str, Any]:
-        model_cls: type[BaseModel] = self.target
-
-        model_json_schema = model_cls.model_json_schema(
+        model_json_schema = TypeAdapter(self.target).json_schema(
             mode="serialization",
-            ref_template="#/components/schemas/{model}",
+            ref_template="#/components/schemas/%s{model}" % self.get_name(),
         )
 
         # Register nested definitions as components
         if "$defs" in model_json_schema:
             for ref_name, schema_kwargs in model_json_schema.pop("$defs").items():
                 component = ResolvedComponent(  # type: ignore[no-untyped-call]
-                    name=ref_name,
+                    name=self.get_name() + ref_name,
                     type=ResolvedComponent.SCHEMA,
                     object=ref_name,
                     schema=schema_kwargs,
@@ -180,3 +180,36 @@ class PydanticSchemaExtension(
                 auto_schema.registry.register_on_missing(component)
 
         return model_json_schema
+
+
+class EnvironmentKeyAuthenticationExtension(OpenApiAuthenticationExtension):  # type: ignore[no-untyped-call]
+    target_class = "environments.authentication.EnvironmentKeyAuthentication"
+    name = "Environment API Key"
+
+    def get_security_definition(
+        self, auto_schema: openapi.AutoSchema | None = None
+    ) -> dict[str, Any]:
+        return {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-Environment-Key",
+            "description": "For SDK endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",
+        }
+
+
+class MasterAPIKeyAuthenticationExtension(OpenApiAuthenticationExtension):  # type: ignore[no-untyped-call]
+    target_class = "api_keys.authentication.MasterAPIKeyAuthentication"
+    name = "Master API Key"
+
+    def get_security_definition(
+        self, auto_schema: openapi.AutoSchema | None = None
+    ) -> dict[str, Any]:
+        return {
+            "type": "apiKey",
+            "in": "header",
+            "name": "Authorization",
+            "description": (
+                "For Admin API endpoints. "
+                "<a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>."
+            ),
+        }

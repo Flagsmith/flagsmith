@@ -185,5 +185,5 @@ From here, some areas of the documentation you might want to check out are:
 - [SDKs & Integrations](/integrating-with-flagsmith/integration-overview): Explore all supported SDKs for integrating Flagsmith with your technology stack.
 
 ### Automation & API Access
-- [REST API Reference](/edge-api/): Learn how to manage flags programmatically and automate flag changes.
+- [REST API Reference](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/): Learn how to manage flags programmatically and automate flag changes.
 
