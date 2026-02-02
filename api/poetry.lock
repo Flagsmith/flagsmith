@@ -1975,8 +1975,8 @@ django-multiselectfield = ">=1.0.1,<2"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-auth-controller"
-reference = "deps/support-django-5"
-resolved_reference = "08877b230160cb02435cb5af7591058afde7643c"
+reference = "v0.2.0"
+resolved_reference = "b7fa1f42c333b443763548ea1fe0054f07cdf641"
 
 [[package]]
 name = "flagsmith-common"
@@ -5326,4 +5326,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "ee07277fa35935cb78666020c68b974a7deb3bce5eb990b4217117d87c71aba4"
+content-hash = "dc124122fbec690a393443bd3b099130f2aa23c1bdc20f03ad7ced83f549f8c4"
