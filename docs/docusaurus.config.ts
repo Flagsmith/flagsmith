@@ -1,6 +1,9 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+import fs from 'fs';
+import path from 'path';
+
 import type * as Preset from '@docusaurus/preset-classic';
 import type { Config } from '@docusaurus/types';
 import type * as Plugin from '@docusaurus/types/src/plugin';
@@ -297,26 +300,10 @@ const config: Config = {
                         },
                         markdownGenerators: {
                             createInfoPageMD: () => {
-                                // Return a simple markdown string for the info page
-                                return `import ApiLogo from "@theme/ApiLogo";
-import Heading from "@theme/Heading";
-
-# Flagsmith SDK API
-
-The SDK API is designed to be used by Flagsmith SDKs to evaluate feature flags and retrieve environment data.
-
-## Authentication
-
-The SDK API is designed to be publicly accessible. Calls need to have an environment key supplied with each request.
-This is provided as an HTTP header, with the name \`X-Environment-Key\` and the value of the Environment Key that you can
-find within the Flagsmith administrative area. See [Flags API Authentication](/integrating-with-flagsmith/flagsmith-api-overview/flags-api/authentication) for more details.
-
-## Core API
-
-Please note that the SDK API is specifically to be used with our [SDKs](/integrating-with-flagsmith/integration-overview). If you want to drive aspects of
-Flagsmith programmatically, you need to use our private [Core API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api).
-
-You can find the full spec to our Core API [here](https://api.flagsmith.com/api/v1/docs/).`;
+                                return fs.readFileSync(
+                                    path.join(__dirname, 'sdk/sdk-api-info.mdx'),
+                                    'utf-8',
+                                );
                             },
                         },
                     } satisfies OpenApiPlugin.Options,
