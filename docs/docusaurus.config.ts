@@ -1,6 +1,9 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+import fs from 'fs';
+import path from 'path';
+
 import type * as Preset from '@docusaurus/preset-classic';
 import type { Config } from '@docusaurus/types';
 import type * as Plugin from '@docusaurus/types/src/plugin';
@@ -72,9 +75,9 @@ const config: Config = {
                     label: 'Docs',
                 },
                 {
-                    label: 'Edge API Specification',
+                    label: 'SDK API Specification',
                     position: 'left',
-                    to: '/edge-api/',
+                    to: '/sdk-api/',
                 },
                 {
                     href: 'https://flagsmith.com',
@@ -289,11 +292,19 @@ const config: Config = {
                 docsPluginId: 'classic',
                 config: {
                     partner: {
-                        specPath: 'static/openapi/edge-api.yaml',
-                        outputDir: 'docs/edge-api',
+                        specPath: '../sdk/openapi.yaml',
+                        outputDir: 'docs/sdk-api',
                         sidebarOptions: {
                             groupPathsBy: 'tag',
                             categoryLinkSource: 'tag',
+                        },
+                        markdownGenerators: {
+                            createInfoPageMD: () => {
+                                return fs.readFileSync(
+                                    path.join(__dirname, 'sdk/sdk-api-info.mdx'),
+                                    'utf-8',
+                                );
+                            },
                         },
                     } satisfies OpenApiPlugin.Options,
                 } satisfies Plugin.PluginOptions,
