@@ -137,9 +137,7 @@ class MCPSchemaGenerator(SchemaGenerator):
         return schema
 
 
-class TypedDictSchemaExtension(
-    OpenApiSerializerExtension  # type: ignore[no-untyped-call]
-):
+class TypedDictSchemaExtension(OpenApiSerializerExtension):
     """
     An OpenAPI extension that allows drf-spectacular to generate schema documentation
     from TypedDicts via Pydantic.
@@ -156,8 +154,9 @@ class TypedDictSchemaExtension(
         self,
         auto_schema: openapi.AutoSchema | None = None,
         direction: Literal["request", "response"] | None = None,
-    ) -> str | None:
-        return self.target.__name__  # type: ignore[no-any-return]
+    ) -> str:
+        name: str = self.target.__name__
+        return name
 
     def map_serializer(
         self,
