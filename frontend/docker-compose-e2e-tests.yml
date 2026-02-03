@@ -44,7 +44,6 @@ services:
       context: ../
       dockerfile: frontend/Dockerfile.e2e
     environment:
-      E2E_TEST_TOKEN: some-token
       E2E_TEST_TOKEN_DEV: some-token
       DISABLE_ANALYTICS_FEATURES: 'true'
       FLAGSMITH_API: flagsmith-api:8000/api/v1/
