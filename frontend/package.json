@@ -12,7 +12,7 @@
     "test": "npx -y tsx e2e/run-with-retry.ts",
     "test:run": "npm run test:bundle && cross-env NODE_ENV=production E2E=true npx playwright test",
     "test:dev": "cross-env NODE_ENV=production E2E=true E2E_DEV=true npx playwright test --ui",
-    "test:devlocal": "cross-env NODE_ENV=production E2E_LOCAL=true E2E_CONCURRENCY=1 E2E=true E2E_DEV=true npx playwright test --ui",
+    "test:devlocal": "cross-env NODE_ENV=production E2E=true E2E_DEV=true E2E_LOCAL=true E2E_CONCURRENCY=1 npx playwright test --ui",
     "test:devBundle": "npm run test:bundle && npm run test:dev",
     "test:install": "npx playwright install firefox",
     "test:teardown": "npx tsx e2e/teardown.ts",

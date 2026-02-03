@@ -36,65 +36,53 @@ async function globalSetup(config: FullConfig) {
   });
 
   // Teardown previous test data with retry logic
-  if (token) {
-    const maxAttempts = 3;
-    const delayMs = 2000;
-    let teardownSuccess = false;
+  if (!token) {
+    const errorMsg = 'e2e teardown failed - no available token (set E2E_TEST_TOKEN or E2E_TEST_TOKEN_<ENV>)';
+    console.error('\n', '\x1b[31m', errorMsg, '\x1b[0m', '\n');
+    throw new Error(errorMsg);
+  }
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      if (attempt > 0) {
-        console.log(`\x1b[33m%s\x1b[0m`, `Retrying teardown (attempt ${attempt + 1}/${maxAttempts})...`);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-      }
+  const maxAttempts = 3;
+  const delayMs = 2000;
 
-      try {
-        const res = await fetch(e2eTestApi, {
-          body: JSON.stringify({}),
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'X-E2E-Test-Auth-Token': token.trim(),
-          },
-          method: 'POST',
-        });
-
-        if (res.ok) {
-          console.log('\n', '\x1b[32m', 'e2e teardown successful', '\x1b[0m', '\n');
-          teardownSuccess = true;
-          break;
-        } else {
-          console.error('\x1b[31m%s\x1b[0m', `✗ E2E teardown failed: ${res.status}`);
-          if (attempt < maxAttempts - 1) {
-            console.log('');
-          }
-        }
-      } catch (error) {
-        console.error('\x1b[31m%s\x1b[0m', `✗ E2E teardown error: ${error.message || String(error)}`);
-        if (attempt < maxAttempts - 1) {
-          console.log('');
-        }
-      }
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    if (attempt > 0) {
+      console.log(`\x1b[33m%s\x1b[0m`, `Retrying teardown (attempt ${attempt + 1}/${maxAttempts})...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
     }
 
-    if (!teardownSuccess) {
-      const errorMsg = `e2e teardown failed after ${maxAttempts} attempts`;
-      console.error('\n', '\x1b[31m', errorMsg, '\x1b[0m', '\n');
-      if (process.env.E2E_LOCAL !== 'true' && process.env.E2E_DEV !== 'true') {
-        throw new Error(errorMsg); // Fail tests early in CI if teardown fails
+    try {
+      const res = await fetch(e2eTestApi, {
+        body: JSON.stringify({}),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-E2E-Test-Auth-Token': token.trim(),
+        },
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        console.log('\n', '\x1b[32m', 'e2e teardown successful', '\x1b[0m', '\n');
+        console.log('Starting E2E tests');
+        return;
       }
-    }
-  } else {
-    // Only warn for local/dev testing, don't fail
-    if (process.env.E2E_LOCAL === 'true' || process.env.E2E_DEV === 'true') {
-      console.log('\n', '\x1b[33m', 'e2e teardown skipped (no token) - OK for local testing', '\x1b[0m', '\n');
-    } else {
-      const errorMsg = 'e2e teardown failed - no available token (set E2E_TEST_TOKEN or E2E_TEST_TOKEN_<ENV>)';
-      console.error('\n', '\x1b[31m', errorMsg, '\x1b[0m', '\n');
-      throw new Error(errorMsg); // Fail tests in CI if token is missing
+
+      console.error('\x1b[31m%s\x1b[0m', `✗ E2E teardown failed: ${res.status}`);
+      if (attempt < maxAttempts - 1) {
+        console.log('');
+      }
+    } catch (error) {
+      console.error('\x1b[31m%s\x1b[0m', `✗ E2E teardown error: ${error.message || String(error)}`);
+      if (attempt < maxAttempts - 1) {
+        console.log('');
+      }
     }
   }
 
-  console.log('Starting E2E tests');
+  const errorMsg = `e2e teardown failed after ${maxAttempts} attempts`;
+  console.error('\n', '\x1b[31m', errorMsg, '\x1b[0m', '\n');
+  throw new Error(errorMsg);
 }
 
 export default globalSetup;
