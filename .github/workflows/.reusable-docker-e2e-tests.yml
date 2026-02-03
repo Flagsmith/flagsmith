@@ -132,6 +132,9 @@ jobs:
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_HEAD_REF: ${{ github.head_ref }}
           TEST_TYPE: ${{ steps.test-type.outputs.label }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
 
       - name: Comment PR with test results (success)
         if: success() && github.event_name == 'pull_request'

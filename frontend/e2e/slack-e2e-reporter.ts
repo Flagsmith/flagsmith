@@ -62,6 +62,14 @@ function notifyFailure(
 
   const branch = process.env.GITHUB_REF_NAME || process.env.GITHUB_HEAD_REF || 'unknown';
   const testType = process.env.TEST_TYPE || 'unknown';
+  const prNumber = process.env.PR_NUMBER;
+  const prTitle = process.env.PR_TITLE;
+  const prUrl = process.env.PR_URL;
+
+  // Build PR info line
+  const prInfo = prNumber && prUrl
+    ? `*PR:* <${prUrl}|#${prNumber}>${prTitle ? ` - ${prTitle}` : ''}\n`
+    : '';
 
   // Build failed tests list (limit to first 5 to avoid huge messages)
   const testList = failedTests
@@ -72,7 +80,7 @@ function notifyFailure(
 
   const message = `❌ E2E Tests Failed
 
-*Branch:* ${branch}
+${prInfo}*Branch:* ${branch}
 *Test Type:* ${testType}
 *Failed:* ${failedCount} test(s)
 
