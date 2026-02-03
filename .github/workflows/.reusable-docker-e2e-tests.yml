@@ -117,17 +117,13 @@ jobs:
         run: |
           echo "url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts" >> $GITHUB_OUTPUT
 
-      - name: Zip HTML report for Slack upload
+      - name: Send Slack notification and upload report
         if: failure()
         working-directory: frontend
         run: |
           cd e2e
           zip -r playwright-report.zip playwright-report/ || echo "Failed to zip report"
-
-      - name: Send Slack notification on failure
-        if: failure()
-        working-directory: frontend
-        run: |
+          cd ..
           npm install --no-save @slack/web-api
           npx -y tsx e2e/slack-e2e-reporter.ts
         env:
