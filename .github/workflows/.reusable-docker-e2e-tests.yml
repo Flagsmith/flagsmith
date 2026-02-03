@@ -124,8 +124,10 @@ jobs:
           FAILED_COUNT=$(jq '.failedTests | length' e2e/test-results/failed.json 2>/dev/null || echo "0")
           if [ "$FAILED_COUNT" -gt 0 ]; then
             npx tsx -e "
-              import { notifyFailure } from './e2e/helpers/slack';
-              await notifyFailure($FAILED_COUNT);
+              (async () => {
+                const { notifyFailure } = await import('./e2e/helpers/slack.js');
+                await notifyFailure($FAILED_COUNT);
+              })();
             "
           fi
         env:
