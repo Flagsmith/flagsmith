@@ -4,6 +4,38 @@ import { WebClient } from '@slack/web-api';
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN;
 const CHANNEL_ID = 'C0102JZRG3G'; // infra_tests channel ID
+const failedJsonPath = path.join(__dirname, 'test-results', 'failed.json');
+const failedData = JSON.parse(fs.readFileSync(failedJsonPath, 'utf-8'));
+const failedCount = failedData.failedTests?.length || 0;
+
+async function uploadFile(filePath: string): Promise<void> {
+  if (!SLACK_TOKEN) {
+    console.log('Slack token not specified, skipping upload');
+    return;
+  }
+
+  const epoch = Date.now();
+  const ext = path.extname(filePath);
+  const basename = path.basename(filePath);
+
+  const isPlaywrightReport = basename === 'playwright-report.zip';
+  const filename = isPlaywrightReport
+    ? `playwright-report-${epoch}.zip`
+    : `e2e-artifact-${epoch}${ext}`;
+  const comment = isPlaywrightReport
+    ? `📊 Playwright HTML Report ${process.env.GITHUB_ACTION_URL || ''}`
+    : `✖ Test Run ${process.env.GITHUB_ACTION_URL || ''}`;
+
+  console.log(`Uploading ${filePath}`);
+
+  const slackClient = new WebClient(SLACK_TOKEN);
+  await slackClient.files.uploadV2({
+    channel_id: CHANNEL_ID,
+    file: fs.createReadStream(filePath),
+    filename,
+    initial_comment: comment,
+  });
+}
 
 function postMessage(message: string): Promise<unknown> {
   if (!SLACK_TOKEN) {
@@ -29,27 +61,32 @@ function notifyFailure(failedCount: number): Promise<unknown> {
   return postMessage(message);
 }
 
-const failedJsonPath = path.join(__dirname, 'test-results', 'failed.json');
-
 if (!fs.existsSync(failedJsonPath)) {
   console.log('No failed.json found, skipping Slack notification');
   process.exit(0);
 }
-
-const failedData = JSON.parse(fs.readFileSync(failedJsonPath, 'utf-8'));
-const failedCount = failedData.failedTests?.length || 0;
 
 if (failedCount === 0) {
   console.log('No failed tests, skipping Slack notification');
   process.exit(0);
 }
 
-console.log(`Sending Slack notification for ${failedCount} failed test(s)...`);
-notifyFailure(failedCount)
-  .then(() => {
-    console.log('Slack notification sent successfully');
-    process.exit(0);
-  })
+async function main() {
+  console.log(`Sending Slack notification for ${failedCount} failed test(s)...`);
+  await notifyFailure(failedCount);
+  console.log('Slack notification sent successfully');
+
+  // Upload HTML report if zip file exists
+  const reportZipPath = path.join(__dirname, 'playwright-report.zip');
+  if (fs.existsSync(reportZipPath)) {
+    console.log('Uploading HTML report...');
+    await uploadFile(reportZipPath);
+    console.log('HTML report uploaded successfully');
+  }
+}
+
+main()
+  .then(() => process.exit(0))
   .catch((error) => {
     console.error('Failed to send Slack notification:', error);
     process.exit(1);
