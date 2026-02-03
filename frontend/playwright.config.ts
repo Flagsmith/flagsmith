@@ -27,7 +27,7 @@ export default defineConfig({
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'],
-        headless: !process.env.E2E_DEV,
+        headless: !process.env.E2E_SHOW_BROWSER,
 
         // Launch options for Firefox
         launchOptions: {
@@ -91,7 +91,7 @@ export default defineConfig({
     video: 'off',
   },
   /* Run your local dev server before starting the tests */
-  webServer: process.env.E2E_LOCAL
+  webServer: process.env.E2E_SKIP_RUN_FRONTEND
     ? undefined
     : {
         command: 'npm run start',
