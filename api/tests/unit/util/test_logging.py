@@ -2,6 +2,7 @@ import json
 import logging
 import logging.config
 import os
+import sys
 from datetime import datetime
 
 import pytest
@@ -29,7 +30,7 @@ def test_json_formatter__outputs_expected(
     expected_tb_string = (
         "Traceback (most recent call last):\n"
         f'  File "{expected_module_path}",'
-        " line 38, in _log_traceback\n"
+        " line 39, in _log_traceback\n"
         "    raise Exception()\nException"
     )
 
@@ -56,7 +57,7 @@ def test_json_formatter__outputs_expected(
         {
             "levelname": "ERROR",
             "message": "this is an error",
-            "timestamp": "2023-12-08 06:05:47,320",
+            "timestamp": f"2023-12-08 06:05:47,{320 if sys.version_info >= (3, 13) else 319}",
             "logger_name": "test_json_formatter__outputs_expected",
             "process_id": expected_pid,
             "thread_name": "MainThread",
@@ -120,7 +121,7 @@ def test_gunicorn_access_log_json_formatter__outputs_expected() -> None:
         "status": "200",
         "thread_name": "MainThread",
         "time": "2023-12-08T06:05:47+00:00",
-        "timestamp": "2023-12-08 06:05:47,320",
+        "timestamp": f"2023-12-08 06:05:47,{320 if sys.version_info >= (3, 13) else 319}",
         "user_agent": "requests",
     }
 
