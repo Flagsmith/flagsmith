@@ -41,3 +41,11 @@ test:
 		echo "\n=== Frontend logs (includes test results) ===" && docker compose logs frontend && \
 		exit 1; \
 	fi
+
+.PHONY: test-oss
+test-oss:
+	@$(MAKE) test opts="--grep @oss"
+
+.PHONY: test-enterprise
+test-enterprise:
+	@$(MAKE) test opts="--grep @enterprise"

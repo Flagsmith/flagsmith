@@ -46,7 +46,7 @@ services:
     environment:
       E2E_TEST_TOKEN_DEV: some-token
       DISABLE_ANALYTICS_FEATURES: 'true'
-      FLAGSMITH_API: flagsmith-api:8000/api/v1/
+      FLAGSMITH_API_URL: flagsmith-api:8000/api/v1/
       SLACK_TOKEN: ${SLACK_TOKEN}
       GITHUB_ACTION_URL: ${GITHUB_ACTION_URL}
     ports:
