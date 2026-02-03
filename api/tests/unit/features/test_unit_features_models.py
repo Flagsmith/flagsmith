@@ -502,20 +502,26 @@ def test_feature_state_str__returns_expected(
     assert str(feature_state) == expected_result
 
 
-@mock.patch("features.signals.trigger_feature_state_change_webhooks")
+@mock.patch("features.tasks.trigger_feature_state_change_webhooks")
 def test_feature_state_save_calls_trigger_webhooks(
     mock_trigger_webhooks: mock.MagicMock,
     feature: Feature,
     environment: Environment,
+    admin_history: None,
 ) -> None:
     # Given
     feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+    # Make an actual change so the webhook is triggered
+    feature_state.enabled = not feature_state.enabled
 
     # When
+    # Feature state saved with admin history thread context
     feature_state.save()
 
-    # Then
-    mock_trigger_webhooks.assert_called_with(feature_state)
+    # Then - Webhook is triggered via AuditLog signal chain
+    mock_trigger_webhooks.assert_called_once()
+    called_feature_state = mock_trigger_webhooks.call_args[0][0]
+    assert called_feature_state.id == feature_state.id
 
 
 def test_delete_feature_should_not_trigger_fs_change_webhooks(
@@ -525,7 +531,7 @@ def test_delete_feature_should_not_trigger_fs_change_webhooks(
 ) -> None:
     # Given
     mock_trigger_webhooks = mocker.patch(
-        "features.signals.trigger_feature_state_change_webhooks"
+        "features.tasks.trigger_feature_state_change_webhooks"
     )
 
     # When
@@ -1117,19 +1123,24 @@ def test_create_feature_creates_feature_states_in_all_environments_and_environme
 
 
 def test_webhooks_are_called_when_feature_state_is_updated(
-    mocker: MockerFixture, feature_state: FeatureState
+    mocker: MockerFixture,
+    feature_state: FeatureState,
+    admin_history: None,
 ) -> None:
     # Given
     mock_trigger_feature_state_change_webhooks = mocker.patch(
-        "features.signals.trigger_feature_state_change_webhooks"
+        "features.tasks.trigger_feature_state_change_webhooks"
     )
 
     # When
     feature_state.enabled = not feature_state.enabled
+    # Feature state saved with admin history thread context
     feature_state.save()
 
-    # Then
-    mock_trigger_feature_state_change_webhooks.assert_called_once_with(feature_state)
+    # Then - Webhook is triggered via AuditLog signal chain
+    mock_trigger_feature_state_change_webhooks.assert_called_once()
+    called_feature_state = mock_trigger_feature_state_change_webhooks.call_args[0][0]
+    assert called_feature_state.id == feature_state.id
 
 
 def test_webhooks_are_called_when_feature_state_is_created(
@@ -1137,19 +1148,33 @@ def test_webhooks_are_called_when_feature_state_is_created(
     feature: Feature,
     environment: Environment,
     feature_segment: FeatureSegment,
+    admin_history: None,
 ) -> None:
     # Given
     mock_trigger_feature_state_change_webhooks = mocker.patch(
-        "features.signals.trigger_feature_state_change_webhooks"
+        "features.tasks.trigger_feature_state_change_webhooks"
     )
+    # Get the environment default enabled state and create with the opposite
+    # to ensure an AuditLog is created (otherwise no AuditLog is created for
+    # segment overrides that match the environment default)
+    env_default = FeatureState.objects.get(
+        feature=feature, environment=environment, feature_segment__isnull=True
+    )
+    override_enabled = not env_default.enabled
 
     # When
+    # Feature state created with admin history thread context
     feature_state = FeatureState.objects.create(
-        feature=feature, environment=environment, feature_segment=feature_segment
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        enabled=override_enabled,
     )
 
-    # Then
-    mock_trigger_feature_state_change_webhooks.assert_called_once_with(feature_state)
+    # Then - Webhook is triggered via AuditLog signal chain
+    mock_trigger_feature_state_change_webhooks.assert_called_once()
+    called_feature_state = mock_trigger_feature_state_change_webhooks.call_args[0][0]
+    assert called_feature_state.id == feature_state.id
 
 
 def test_webhooks_are_not_called_for_feature_state_with_environment_feature_version(
@@ -1161,7 +1186,7 @@ def test_webhooks_are_not_called_for_feature_state_with_environment_feature_vers
 ) -> None:
     # Given
     mock_trigger_feature_state_change_webhooks = mocker.patch(
-        "features.signals.trigger_feature_state_change_webhooks"
+        "features.tasks.trigger_feature_state_change_webhooks"
     )
 
     # When
@@ -1182,5 +1207,6 @@ def test_webhooks_are_not_called_for_feature_state_with_environment_feature_vers
     )
     new_version.publish(admin_user)
 
-    # Then
+    # Then - Webhooks are not triggered for versioned environments
+    # (handled by trigger_update_version_webhooks instead)
     mock_trigger_feature_state_change_webhooks.assert_not_called()
