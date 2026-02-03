@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.212.1](https://github.com/Flagsmith/flagsmith/compare/v2.212.0...v2.212.1) (2026-02-03)
+
+
+### Dependency Updates
+
+* update to django5 ([#6452](https://github.com/Flagsmith/flagsmith/issues/6452)) ([7c76777](https://github.com/Flagsmith/flagsmith/commit/7c7677777606e36429c9d0f8fb63e29c8aaa4140))
+
 ## [2.212.0](https://github.com/Flagsmith/flagsmith/compare/v2.211.5...v2.212.0) (2026-02-02)
 
 
