@@ -110,7 +110,7 @@ export class E2EHelpers {
 
   async clickByText(text: string, element: string = 'button') {
     logUsingLastSection(`Click by text ${text} ${element}`);
-    const selector = this.page.locator(element).filter({ hasText: text });
+    const selector = this.page.locator(element).filter({ hasText: text }).first();
     await selector.scrollIntoViewIfNeeded();
     await expect(selector).toBeEnabled({ timeout: 5000 });
     await selector.hover();
@@ -815,6 +815,250 @@ export class E2EHelpers {
       await this.click(byId(`permission-switch-${permission}`));
     }
     await this.closeModal();
+  }
+
+  // Create a tag
+  async createTag(label: string, color: string = '#FF6B6B') {
+    logUsingLastSection(`Creating tag: ${label}`);
+    // Open a feature modal to access tag creation
+    await this.click('#show-create-feature-btn');
+    await this.waitForElementVisible('#create-feature-modal');
+
+    // Click the "Add Tag" button to open tag interface
+    const addTagButton = this.page.locator('button').filter({ hasText: 'Add Tag' });
+    await addTagButton.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await addTagButton.scrollIntoViewIfNeeded();
+    await addTagButton.click();
+    await this.page.waitForTimeout(1000);
+
+    // Check if "Add New Tag" button exists (when there are existing tags)
+    // If not, we're already in the create tag modal (when there are no tags yet)
+    const addNewTagButton = this.page.locator('button').filter({ hasText: 'Add New Tag' });
+    const hasAddNewTagButton = await addNewTagButton.count() > 0;
+    if (hasAddNewTagButton) {
+      await addNewTagButton.click();
+      await this.page.waitForTimeout(500);
+    }
+
+    // Fill in tag details
+    await this.setText(byId('tag-label'), label);
+    await this.page.waitForTimeout(300);
+
+    // Click the first available color
+    const firstColor = this.page.locator('.tag--select').first();
+    await firstColor.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await firstColor.click();
+    await this.page.waitForTimeout(300);
+
+    // Save the tag
+    const saveButton = this.page.locator('button').filter({ hasText: 'Save Tag' });
+    await saveButton.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await expect(saveButton).toBeEnabled({ timeout: LONG_TIMEOUT });
+    await saveButton.click();
+    await this.page.waitForTimeout(1000);
+
+    // Close the modals by clicking outside
+    await this.closeModal();
+  }
+
+  // Add a tag to a feature (must be called when feature modal is open)
+  async addTagToFeature(tagLabel: string) {
+    logUsingLastSection(`Adding tag to feature: ${tagLabel}`);
+
+    // Wait for feature modal to be visible
+    await this.waitForElementVisible('#create-feature-modal');
+
+    // Navigate to Settings tab
+    const settingsTab = this.page.locator('[data-test="settings"]');
+    const isSettingsVisible = await settingsTab.isVisible().catch(() => false);
+    if (isSettingsVisible) {
+      await settingsTab.click();
+      await this.page.waitForTimeout(500);
+    }
+
+    // Scroll to and click on the tags area to open tag selection
+    const tagInput = this.page.locator('.inline-tags').first();
+    await tagInput.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await tagInput.scrollIntoViewIfNeeded();
+    await tagInput.click();
+    await this.page.waitForTimeout(800);
+
+    // Click the tag to select it - look for the tag in the tag list
+    const tagInList = this.page.locator('.tag-list').getByText(tagLabel, { exact: false }).first();
+    await tagInList.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await tagInList.click();
+
+    await this.page.waitForTimeout(500);
+
+    // Close the tag selection modal by clicking outside
+    await this.page.mouse.click(10, 10);
+    await this.page.waitForTimeout(500);
+
+    // Save the feature settings
+    await this.click(byId('update-feature-btn'));
+  }
+
+  // Archive a feature (must be called when feature modal is open)
+  async archiveFeature() {
+    logUsingLastSection('Archiving feature');
+
+    // Wait for feature modal to be visible
+    await this.waitForElementVisible('#create-feature-modal');
+
+    // Navigate to Settings tab if not already there
+    const settingsTab = this.page.locator('[data-test="settings"]');
+    const isVisible = await settingsTab.isVisible().catch(() => false);
+    if (isVisible) {
+      await settingsTab.click();
+      await this.page.waitForTimeout(500);
+    }
+
+    // Find the FormGroup containing "Archived" text and click the switch within it
+    const archiveFormGroup = this.page.locator('.setting').filter({ hasText: 'Archived' });
+    await archiveFormGroup.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+
+    const archiveSwitch = archiveFormGroup.locator('.switch').first();
+    await archiveSwitch.scrollIntoViewIfNeeded();
+    await archiveSwitch.click();
+
+    await this.page.waitForTimeout(500);
+
+    // Save the feature settings
+    await this.click(byId('update-feature-btn'));
+  }
+
+  // Navigate to a project by name
+  // Navigate to change requests page
+  async gotoChangeRequests() {
+    log('Navigate to change requests');
+    await this.click('#change-requests-link');
+  }
+
+  // Create a change request from feature modal
+  async createChangeRequest(title: string, description: string) {
+    log(`Create change request: ${title}`);
+
+    // Click the update/create change request button
+    // When 4-eyes is enabled, this button says "Create Change Request"
+    await this.click('#update-feature-btn');
+    await this.page.waitForTimeout(1000);
+
+    // Fill in title using placeholder
+    const titleField = this.page.locator('input[placeholder="My Change Request"]');
+    await titleField.waitFor({ state: 'visible' });
+    await titleField.fill(title);
+
+    // Fill in description using placeholder
+    const descField = this.page.locator('textarea[placeholder="Add an optional description..."]');
+    await descField.fill(description);
+
+    // The date picker needs to be set - click on it to trigger current date/time
+    // Find the date input and click it
+    const dateInput = this.page.locator('.react-datepicker__input-container input').first();
+    await dateInput.click();
+    await this.page.waitForTimeout(300);
+
+    // Click "Now" or today's date to set it
+    // The datepicker should appear - click on today
+    const todayButton = this.page.locator('.react-datepicker__today-button, .react-datepicker__day--today').first();
+    await todayButton.click();
+    await this.page.waitForTimeout(500);
+
+    // Click create/save button - look for enabled button
+    const saveButton = this.page.locator('button').filter({ hasText: /Save|Create/ }).filter({ hasNotText: 'Cancel' }).last();
+    await saveButton.waitFor({ state: 'visible' });
+
+    // Wait for button to be enabled
+    await expect(saveButton).toBeEnabled({ timeout: 5000 });
+    await saveButton.click();
+
+    await this.waitForToast();
+  }
+
+  // Open a change request from the list
+  async openChangeRequest(index: number = 0) {
+    log(`Open change request at index ${index}`);
+    await this.waitForElementVisible('.list-item.clickable');
+    const changeRequestItem = this.page.locator('.list-item.clickable').nth(index);
+    await changeRequestItem.click();
+  }
+
+  // Approve a change request
+  async approveChangeRequest() {
+    log('Approve change request');
+    await this.click(byId('approve-change-request-btn'));
+    // Wait for button state to change to verify approval
+    await this.page.locator('button:has-text("Approved")').waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+  }
+
+  // Publish a change request
+  async publishChangeRequest() {
+    log('Publish change request');
+    await this.click(byId('publish-change-request-btn'));
+    await this.click('#confirm-btn-yes'); // Confirm publish
+    // Wait for "Committed at" text to appear to verify publish succeeded
+    await this.page.locator('text=/Committed at/').waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+  }
+
+  // Enable change requests for an environment
+  async enableChangeRequests(minimumApprovals: number = 1) {
+    log(`Enable change requests with ${minimumApprovals} approval(s) for environment`);
+
+    // Navigate to environment settings
+    await this.click('#env-settings-link');
+    await this.page.waitForTimeout(500);
+
+    // Wait for the settings page to load
+    await this.waitForElementVisible('h5:has-text("Feature Change Requests")');
+
+    // Get all visible switches - Feature Change Requests should be the last visible one
+    const allSwitches = this.page.locator('button[role="switch"]:visible');
+    const switchCount = await allSwitches.count();
+    log(`Found ${switchCount} visible switches on page`);
+
+    const changeRequestToggle = allSwitches.last();
+
+    // Check if it's already on by checking aria-checked attribute
+    const isChecked = await changeRequestToggle.getAttribute('aria-checked');
+    log(`Change request toggle aria-checked: "${isChecked}"`);
+
+    // Click if it's off
+    if (isChecked !== 'true') {
+      log('Clicking change request toggle to turn ON');
+      await changeRequestToggle.scrollIntoViewIfNeeded();
+      await changeRequestToggle.click({ force: true });
+      await this.page.waitForTimeout(2000);
+
+      // Log new state
+      const newChecked = await changeRequestToggle.getAttribute('aria-checked');
+      log(`After click, aria-checked: "${newChecked}"`);
+    } else {
+      log('Toggle already ON, skipping click');
+    }
+
+    // Set minimum approvals - the input appears after toggling on
+    const approvalInput = this.page.locator('input[placeholder="Minimum number of approvals"]');
+    await approvalInput.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await approvalInput.fill(minimumApprovals.toString());
+
+    // Save environment settings
+    await this.click('#save-env-btn');
+    await this.waitForToast();
+    await this.page.waitForTimeout(1000);
+  }
+
+  // Verify change request count
+  async assertChangeRequestCount(count: number) {
+    log(`Assert change request count: ${count}`);
+    if (count === 0) {
+      await this.page.waitForTimeout(1000);
+      const changeRequests = this.page.locator('.change-request-item');
+      await expect(changeRequests).toHaveCount(0);
+    } else {
+      await this.waitForElementVisible('.change-request-item');
+      const changeRequests = this.page.locator('.change-request-item');
+      await expect(changeRequests).toHaveCount(count);
+    }
   }
 }
 

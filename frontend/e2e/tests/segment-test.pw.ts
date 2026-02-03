@@ -283,6 +283,7 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
     createFeature,
     createRemoteConfig,
     deleteFeature,
+    gotoFeature,
     gotoFeatures,
     gotoProject,
     goToUser,
@@ -317,7 +318,28 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
   await waitAndRefresh() // wait and refresh to avoid issues with data sync from UK -> US in github workflows
   await assertUserFeatureValue(REMOTE_CONFIG_FEATURE, '"small"')
 
+  log('Verify identity override appears in feature modal')
+  await gotoFeatures()
+  await gotoFeature(REMOTE_CONFIG_FEATURE)
+  await click('[data-test="identity_overrides"]')
+  await page.waitForTimeout(1000) // Wait for identity overrides to load
+
+  // Check that the test identity appears in the list
+  const identityRow = page.locator('[id="users-list"]').locator('.list-item').filter({
+    hasText: E2E_TEST_IDENTITY
+  })
+  await expect(identityRow).toBeVisible()
+
+  // Check that the override value is displayed correctly
+  const valueInList = identityRow.locator('.table-column').filter({ hasText: 'small' })
+  await expect(valueInList).toBeVisible()
+
+  log('Close modal')
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(500)
+
   log('Toggle flag for user again')
+  await goToUser(E2E_TEST_IDENTITY)
   await clickUserFeatureSwitch(FLAG_FEATURE, 'off');
   await click('#confirm-toggle-feature-btn');
   await waitAndRefresh(); // wait and refresh to avoid issues with data sync from UK -> US in github workflows

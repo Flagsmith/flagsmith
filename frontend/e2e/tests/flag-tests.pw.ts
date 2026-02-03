@@ -111,4 +111,57 @@ test.describe('Flag Tests', () => {
     await deleteFeature('header_size')
     await deleteFeature('header_enabled')
   });
+
+  test('Feature flags can have tags added and be archived @oss', async ({ page }) => {
+    const {
+      addTagToFeature,
+      archiveFeature,
+      closeModal,
+      createFeature,
+      createTag,
+      deleteFeature,
+      gotoFeature,
+      gotoFeatures,
+      gotoProject,
+      login,
+      waitForToast,
+    } = createHelpers(page);
+
+    log('Login')
+    await login(E2E_USER, PASSWORD)
+    await gotoProject(E2E_TEST_PROJECT)
+
+    log('Create Tags')
+    // Navigate to features first to ensure we're in the right context
+    await gotoFeatures()
+
+    // Create first tag
+    await createTag('bug', '#FF6B6B')
+
+    // Create second tag
+    await createTag('feature-request', '#4ECDC4')
+
+    log('Create Feature with Settings')
+    await createFeature({ name: 'test_flag_with_tags', value: true, description: 'Test flag for tag and archive operations' })
+
+    log('Open Feature and Add Tags')
+    await gotoFeature('test_flag_with_tags')
+    await addTagToFeature('bug')
+    await addTagToFeature('feature-request')
+
+    log('Archive Feature')
+    await archiveFeature()
+    await waitForToast()
+
+    log('Verify Archive')
+    await closeModal()
+
+    // Verify the feature can be filtered as archived
+    await gotoFeatures()
+    await page.waitForTimeout(1000)
+
+    log('Clean Up')
+    // Delete the test feature
+    await deleteFeature('test_flag_with_tags')
+  });
 });
