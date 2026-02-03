@@ -61,8 +61,9 @@ class S3MultipartUploadWriter:
                 logger.warning("Aborted multipart upload due to error: %s", exc_val)
             return
 
-        # Upload any remaining data in the buffer
-        if self._buffer.tell() > 0:
+        # Upload any remaining data in the buffer (or an empty part if no data)
+        # S3 requires at least one part to complete a multipart upload
+        if self._buffer.tell() > 0 or not self._parts:
             self._upload_part()
 
         assert self._upload_id
