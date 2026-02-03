@@ -534,26 +534,7 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_SETTINGS": {
         "deepLinking": True,
     },
-    "SECURITY": [
-        {"Private": []},
-        {"Public": []},
-    ],
-    "APPEND_COMPONENTS": {
-        "securitySchemes": {
-            "Private": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "Authorization",
-                "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",
-            },
-            "Public": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "X-Environment-Key",
-                "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",
-            },
-        },
-    },
+    "SERVERS": env.json("OPENAPI_SERVERS", default=[]),
     "DEFAULT_GENERATOR_CLASS": "api.openapi.SchemaGenerator",
     "EXTENSIONS": [
         "api.openapi",
@@ -567,6 +548,7 @@ SPECTACULAR_SETTINGS = {
         "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
         "FeatureValueTypeEnum": ["integer", "string", "boolean"],
     },
+    "COMPONENT_NO_READ_ONLY_REQUIRED": True,
 }
 
 

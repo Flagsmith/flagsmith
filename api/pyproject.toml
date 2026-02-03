@@ -56,9 +56,7 @@ unfixable = []
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
-exclude_also = [
-  '@(abc\\.)?abstractmethod',
-]
+exclude_also = ['@(abc\\.)?abstractmethod']
 
 [tool.coverage.run]
 omit = [
@@ -104,7 +102,7 @@ enabled = true
 
 [tool.poetry.dependencies]
 python = ">3.11,<3.13"
-django = "~4.2.27"
+django = ">=5,<6"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
 backoff = "~2.2.1"
@@ -131,30 +129,29 @@ python-http-client = "~3.3.7"
 django-health-check = "~3.18.2"
 django-admin-sso = "~5.2.0"
 drf-spectacular = "~0.28.0"
-django-debug-toolbar = "~3.2.1"
 sentry-sdk = "~2.8.0"
 environs = "^14.1.1"
 django-lifecycle = "~1.2.4"
 drf-writable-nested = "~0.6.2"
 django-filter = "~2.4.0"
-flagsmith-flag-engine = "^6.0.2"
+flagsmith-flag-engine = { git = "https://github.com/Flagsmith/flagsmith-engine", branch = "fix/missing-export" }
 boto3 = "~1.35.95"
 slack-sdk = "~3.9.0"
 asgiref = "~3.8.1"
 djangorestframework-api-key = "~2.2.0"
 pymemcache = "~4.0.0"
 google-re2 = "^1.0"
-django-softdelete = "~0.10.5"
+django-softdelete = "^0.11.5"
 simplejson = "~3.19.1"
-djoser = "~2.3.0"
+djoser = "^2.3.0"
 django-storages = "~1.10.1"
 django-environ = "~0.4.5"
-influxdb-client = "~1.28.0"
+influxdb-client = "~1.50.0"
 django-ordered-model = "~3.4.1"
 django-ses = "~3.5.0"
 django-axes = "~5.32.0"
-pydantic = "^2.3.0"
-pyngo = "~2.2.1"
+pydantic = "^2.12.0"
+pyngo = "~2.4.1"
 flagsmith = "^3.10.0"
 python-gnupg = "^0.5.1"
 django-redis = "^5.4.0"
@@ -162,7 +159,11 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-common = {version = "^3.3.0", extras = ["common_core", "task_processor"]}
+flagsmith-common = { version = "^3.3.0", extras = [
+  "common-core",
+  "flagsmith-schemas",
+  "task-processor",
+] }
 django-stubs = "^5.1.3"
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.5.1"
@@ -174,7 +175,7 @@ django_cockroachdb = "~4.2"
 optional = true
 
 [tool.poetry.group.auth-controller.dependencies]
-flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.1.4" }
+flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.2.0" }
 
 [tool.poetry.group.saml]
 optional = true
@@ -192,7 +193,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.2.0" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.3.0" }
 
 [tool.poetry.group.licensing]
 optional = true
@@ -204,7 +205,7 @@ licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.2.1" }
 optional = true
 
 [tool.poetry.group.release-pipelines.dependencies]
-flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.4.2" }
+flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.4.4" }
 
 
 [tool.poetry.group.dev.dependencies]
@@ -243,6 +244,7 @@ ruff = "^0.9.7"
 flagsmith-common = { version = "*", extras = ["test-tools"] }
 pytest-responses = "^0.5.1"
 diff-cover = "^10.1.0"
+django-debug-toolbar = "*"
 
 [build-system]
 requires = ["poetry>=2.0.0"]

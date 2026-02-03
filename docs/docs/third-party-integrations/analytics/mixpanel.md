@@ -81,4 +81,4 @@ to copy the relevant data from Mixpanel into Flagsmith.
 Set up a webhook that accepts Mixpanel cohort data as described
 [here](https://developer.mixpanel.com/docs/cohort-webhooks), then write the cohorts as traits within the relevant
 identities. You can send trait data either using our SDKs or with a REST query as defined in our
-[API docs](/edge-api/identify-user). 
+[SDK API docs](/sdk-api/sdk-v-1-post-identities). 

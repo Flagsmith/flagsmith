@@ -219,9 +219,10 @@ const controller = {
         : flag
     Promise.all(
       (flag.multivariate_options || []).map((v, i) => {
-        const originalMV = v.id
-          ? originalFlag.multivariate_options.find((m) => m.id === v.id)
-          : null
+        const originalMV =
+          v.id && originalFlag?.multivariate_options
+            ? originalFlag.multivariate_options.find((m) => m.id === v.id)
+            : null
         const url = `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`
         const mvData = {
           ...v,
@@ -243,7 +244,7 @@ const controller = {
       }),
     )
       .then(() => {
-        const deletedMv = originalFlag.multivariate_options.filter(
+        const deletedMv = (originalFlag?.multivariate_options || []).filter(
           (v) => !flag.multivariate_options.find((x) => v.id === x.id),
         )
         return Promise.all(

@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+from flagsmith_schemas import api as api_schemas
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import (
     action,
@@ -76,7 +77,6 @@ from .serializers import (  # type: ignore[attr-defined]
     FeatureQuerySerializer,
     FeatureStateSerializerBasic,
     FeatureStateSerializerCreate,
-    FeatureStateSerializerFull,
     FeatureStateSerializerWithIdentity,
     FeatureStateValueSerializer,
     GetInfluxDataQuerySerializer,
@@ -114,7 +114,52 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
 
 @method_decorator(
     name="list",
-    decorator=extend_schema(parameters=[FeatureQuerySerializer]),
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[FeatureQuerySerializer],
+        extensions={
+            "x-gram": {
+                "name": "list_project_features",
+                "description": "Retrieves all feature flags within the specified project with pagination.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "create_feature",
+                "description": "Creates a new feature flag in the specified project with default settings.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="retrieve",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "get_feature_flag",
+                "description": "Retrieves detailed information about a specific feature flag.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "update_feature",
+                "description": "Updates feature flag properties such as name and description.",
+            },
+        },
+    ),
 )
 class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [FeaturePermissions]
@@ -412,8 +457,15 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return Response(serializer.data)
 
     @extend_schema(
+        tags=["mcp"],
         parameters=[GetUsageDataQuerySerializer],
         responses={200: FeatureEvaluationDataSerializer()},
+        extensions={
+            "x-gram": {
+                "name": "get_feature_evaluation_data",
+                "description": "Retrieves evaluation data and analytics for a specific feature flag.",
+            },
+        },
     )
     @action(detail=True, methods=["GET"], url_path="evaluation-data")
     @throttle_classes([InfluxQueryThrottle])
@@ -819,8 +871,8 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
 
     @extend_schema(
         parameters=[SDKFeatureStatesQuerySerializer],
-        responses={200: FeatureStateSerializerFull(many=True)},
-        operation_id="get_flags",
+        responses={200: api_schemas.V1FlagsResponse},
+        operation_id="sdk_v1_flags",
     )
     @method_decorator(vary_on_headers(SDK_ENVIRONMENT_KEY_HEADER))
     @method_decorator(
@@ -831,12 +883,16 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
     )
     def get(self, request, identifier=None, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
-        USING THIS ENDPOINT WITH AN IDENTIFIER IS DEPRECATED.
-        Please use `/identities/?identifier=<identifier>` instead.
+        Retrieve the flags for an environment.
+
         ---
-        Note that when providing the `feature` query argument, this endpoint will
+        *Note*: when providing the `feature` query argument, this endpoint will
         return either a single object or a 404 (if the feature does not exist) rather
         than a list.
+
+        ---
+        *Note*: using this endpoint with an identifier is deprecated.
+        Please use `/api/v1/identities/?identifier=<identifier>` instead.
         """
         if identifier:
             return self._get_flags_response_with_identifier(request, identifier)
