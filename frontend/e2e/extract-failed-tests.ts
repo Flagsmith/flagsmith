@@ -71,24 +71,17 @@ function formatFailedSpec(
   };
 }
 
-export function extractFailedTests(baseDir: string = __dirname): void {
+export function extractFailedTests(baseDir: string = __dirname): number {
   const resultsPath = path.join(baseDir, 'test-results', 'results.json');
   const failedPath = path.join(baseDir, 'test-results', 'failed.json');
   const testResultsDir = path.join(baseDir, 'test-results');
 
   if (!fs.existsSync(resultsPath)) {
     console.log('No results.json found at:', resultsPath);
-    return;
+    return 0;
   }
-
-  console.log('Extracting failed tests from:', resultsPath);
 
   const errorContextFiles = findErrorContextFiles(testResultsDir);
-  if (Object.keys(errorContextFiles).length > 0) {
-    console.log(
-      `Found ${Object.keys(errorContextFiles).length} error-context.md file(s)`,
-    );
-  }
 
   try {
     const results = JSON.parse(fs.readFileSync(resultsPath, 'utf-8'));
@@ -109,15 +102,13 @@ export function extractFailedTests(baseDir: string = __dirname): void {
           2,
         ),
       );
-      console.log(
-        `Created failed.json with ${failedTests.length} failed test(s) at:`,
-        failedPath,
-      );
-    } else {
-      console.log('No failed tests found - all tests passed!');
+      console.log(`Found ${failedTests.length} failed test(s)`);
     }
+
+    return failedTests.length;
   } catch (error) {
-    console.log('Error creating failed.json:', error);
+    console.log('Error extracting failed tests:', error);
+    return 0;
   }
 }
 
