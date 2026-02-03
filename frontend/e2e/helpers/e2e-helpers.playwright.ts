@@ -1,38 +1,8 @@
 import { Page, expect } from '@playwright/test';
-import { WebClient } from '@slack/web-api';
 import { LONG_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith } from './utils.playwright';
 
 // Re-export for backwards compatibility
 export { LONG_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith };
-
-// Slack notification functions
-const SLACK_TOKEN = process.env.SLACK_TOKEN;
-const CHANNEL_ID = 'C0102JZRG3G'; // infra_tests channel ID
-
-export function postMessage(message: string): Promise<unknown> {
-  if (!SLACK_TOKEN) {
-    console.log('Slack token not specified, skipping message');
-    return Promise.resolve();
-  }
-
-  const slackClient = new WebClient(SLACK_TOKEN);
-
-  return slackClient.chat.postMessage({
-    channel: CHANNEL_ID,
-    text: message,
-  });
-}
-
-export function notifyFailure(failedCount: number): Promise<unknown> {
-  const actionUrl = process.env.GITHUB_ACTION_URL || '';
-  if (!actionUrl) {
-    console.log('No GITHUB_ACTION_URL set, skipping Slack notification');
-    return Promise.resolve();
-  }
-
-  const message = `❌ E2E Tests Failed: ${failedCount} test(s) failed\n\n📦 View artifacts: ${actionUrl}`;
-  return postMessage(message);
-}
 
 
 export type MultiVariate = { value: string; weight: number };
