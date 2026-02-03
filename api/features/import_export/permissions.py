@@ -29,7 +29,7 @@ class CreateFeatureExportPermissions(IsAuthenticated):
             return False
 
         environment = Environment.objects.get(id=request.data["environment_id"])
-        return request.user.is_environment_admin(environment)  # type: ignore[union-attr]
+        return request.user.is_environment_admin(environment)  # type: ignore[union-attr,no-any-return]
 
 
 class DownloadFeatureExportPermissions(IsAuthenticated):
@@ -39,7 +39,7 @@ class DownloadFeatureExportPermissions(IsAuthenticated):
 
         feature_export = FeatureExport.objects.get(id=view.kwargs["feature_export_id"])
 
-        return request.user.is_environment_admin(feature_export.environment)  # type: ignore[union-attr]
+        return request.user.is_environment_admin(feature_export.environment)  # type: ignore[union-attr,no-any-return]
 
 
 class FeatureExportListPermissions(IsAuthenticated):
@@ -50,7 +50,7 @@ class FeatureExportListPermissions(IsAuthenticated):
         project = Project.objects.get(id=view.kwargs["project_pk"])
         # The user will only see environment feature exports
         # that the user is an environment admin.
-        return request.user.has_project_permission(VIEW_PROJECT, project)  # type: ignore[union-attr]
+        return request.user.has_project_permission(VIEW_PROJECT, project)  # type: ignore[union-attr,no-any-return]
 
 
 class FeatureImportListPermissions(IsAuthenticated):
@@ -61,4 +61,4 @@ class FeatureImportListPermissions(IsAuthenticated):
         project = Project.objects.get(id=view.kwargs["project_pk"])
         # The user will only see environment feature imports
         # that the user is an environment admin.
-        return request.user.has_project_permission(VIEW_PROJECT, project)  # type: ignore[union-attr]
+        return request.user.has_project_permission(VIEW_PROJECT, project)  # type: ignore[union-attr,no-any-return]

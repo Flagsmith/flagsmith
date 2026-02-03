@@ -120,10 +120,10 @@ class FeatureStatePermissions(IsAuthenticated):
 
                     tag_ids = list(feature.tags.values_list("id", flat=True))
 
-                return request.user.has_environment_permission(  # type: ignore[union-attr]
+                return request.user.has_environment_permission(  # type: ignore[union-attr,no-any-return]
                     required_permission,
                     environment,
-                    tag_ids=tag_ids,  # type: ignore[arg-type]
+                    tag_ids=tag_ids,
                 )
             return False
 
@@ -144,10 +144,10 @@ class FeatureStatePermissions(IsAuthenticated):
         if permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
             tag_ids = list(obj.feature.tags.values_list("id", flat=True))
 
-        return request.user.has_environment_permission(  # type: ignore[union-attr]
+        return request.user.has_environment_permission(  # type: ignore[union-attr,no-any-return]
             permission,
-            environment=obj.environment,  # type: ignore[arg-type]
-            tag_ids=tag_ids,  # type: ignore[arg-type]
+            environment=obj.environment,
+            tag_ids=tag_ids,
         )
 
 

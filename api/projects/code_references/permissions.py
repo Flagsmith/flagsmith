@@ -14,7 +14,7 @@ class _BaseCodeReferencePermission(IsAuthenticated):
         assert not isinstance(request.user, AnonymousUser)
 
         project = Project.objects.get(id=view.kwargs["project_pk"])
-        return request.user.has_project_permission(VIEW_PROJECT, project)
+        return request.user.has_project_permission(VIEW_PROJECT, project)  # type: ignore[no-any-return]
 
 
 class SubmitFeatureFlagCodeReferences(_BaseCodeReferencePermission):

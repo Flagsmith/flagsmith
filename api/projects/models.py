@@ -113,7 +113,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[d
     class Meta:
         ordering = ["id"]
 
-    def __str__(self):  # type: ignore[no-untyped-def]
+    def __str__(self):  # type: ignore[no-untyped-def]  # pragma: no cover
         return "Project %s" % self.name
 
     @property
