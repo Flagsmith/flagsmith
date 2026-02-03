@@ -11,7 +11,7 @@ from audit.signals import (
     send_audit_log_event_to_dynatrace,
     send_audit_log_event_to_grafana,
     send_feature_flag_went_live_signal,
-    trigger_feature_state_webhooks,
+    trigger_feature_state_change_webhooks,
 )
 from environments.models import Environment
 from features.models import Feature, FeatureState
@@ -356,7 +356,7 @@ def _create_and_publish_environment_feature_version(
     return version, audit_log_record
 
 
-def test_trigger_feature_state_webhooks__feature_state_update__triggers_webhook(
+def test_trigger_feature_state_change_webhooks__feature_state_update__triggers_webhook(
     environment: Environment,
     feature: Feature,
     mocker: MockerFixture,
@@ -379,13 +379,13 @@ def test_trigger_feature_state_webhooks__feature_state_update__triggers_webhook(
     )
 
     # When
-    trigger_feature_state_webhooks(sender=feature_state, audit_log=audit_log)
+    trigger_feature_state_change_webhooks(sender=feature_state, audit_log=audit_log)
 
     # Then
     mock_trigger_webhooks.assert_called_once()
 
 
-def test_trigger_feature_state_webhooks__versioned_environment__skips_webhook(
+def test_trigger_feature_state_change_webhooks__versioned_environment__skips_webhook(
     environment_v2_versioning: Environment,
     feature: Feature,
     mocker: MockerFixture,
@@ -410,13 +410,13 @@ def test_trigger_feature_state_webhooks__versioned_environment__skips_webhook(
     )
 
     # When
-    trigger_feature_state_webhooks(sender=feature_state, audit_log=audit_log)
+    trigger_feature_state_change_webhooks(sender=feature_state, audit_log=audit_log)
 
     # Then
     mock_trigger_webhooks.assert_not_called()
 
 
-def test_trigger_feature_state_webhooks__deleted_feature_state__skips_webhook(
+def test_trigger_feature_state_change_webhooks__deleted_feature_state__skips_webhook(
     environment: Environment,
     feature: Feature,
     mocker: MockerFixture,
@@ -441,13 +441,13 @@ def test_trigger_feature_state_webhooks__deleted_feature_state__skips_webhook(
     )
 
     # When
-    trigger_feature_state_webhooks(sender=feature_state, audit_log=audit_log)
+    trigger_feature_state_change_webhooks(sender=feature_state, audit_log=audit_log)
 
     # Then
     mock_trigger_webhooks.assert_not_called()
 
 
-def test_trigger_feature_state_webhooks__feature_state_value_update__triggers_webhook(
+def test_trigger_feature_state_change_webhooks__feature_state_value_update__triggers_webhook(
     environment: Environment,
     feature: Feature,
     mocker: MockerFixture,
@@ -478,7 +478,7 @@ def test_trigger_feature_state_webhooks__feature_state_value_update__triggers_we
     )
 
     # When
-    trigger_feature_state_webhooks(sender=feature_state, audit_log=audit_log)
+    trigger_feature_state_change_webhooks(sender=feature_state, audit_log=audit_log)
 
     # Then
     mock_trigger_webhooks.assert_called_once()

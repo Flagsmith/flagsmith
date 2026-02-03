@@ -250,7 +250,7 @@ def send_audit_log_event_to_sentry(
 
 
 @receiver(feature_state_change_went_live)
-def trigger_feature_state_webhooks(
+def trigger_feature_state_change_webhooks(
     sender: FeatureState,
     **kwargs: Any,
 ) -> None:
@@ -261,7 +261,7 @@ def trigger_feature_state_webhooks(
     database to ensure we get the latest data (including FeatureStateValue),
     since drf-writable-nested saves the parent before nested objects.
     """
-    from features.tasks import trigger_feature_state_change_webhooks
+    from features import tasks
 
     # Fetch fresh data from the database to ensure we have the latest state
     # This is necessary because:
@@ -277,4 +277,4 @@ def trigger_feature_state_webhooks(
     if fresh_feature_state.environment_feature_version_id:
         return
 
-    trigger_feature_state_change_webhooks(fresh_feature_state)
+    tasks.trigger_feature_state_change_webhooks(fresh_feature_state)
