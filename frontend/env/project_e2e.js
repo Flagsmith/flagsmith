@@ -13,9 +13,9 @@ module.exports = global.Project = {
 
   flagsmith: 'ENktaJnfLVbLifybz34JmX',
 
-  flagsmithClientAPI: 'https://edge.api.flagsmith.com/api/v1/',
+  flagsmithClientAPI: 'http://flagsmith-api:8000/api/v1/',
 
-  flagsmithClientEdgeAPI: 'https://edge.api.flagsmith.com/api/v1/',
+  flagsmithClientEdgeAPI: 'http://flagsmith-api:8000/api/v1/',
   // This is used for Sentry tracking
   maintenance: false,
   useSecureCookies: true,

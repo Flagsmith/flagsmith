@@ -53,10 +53,12 @@ async function main() {
     if (attempt > 0) {
       if (!quietMode) {
         console.log('\n==========================================');
-        console.log(`Test attempt ${attempt} failed, running teardown and retrying failed tests only...`);
+        console.log(`Test attempt ${attempt} failed, retrying failed tests only...`);
         console.log('==========================================\n');
       }
-      await runTeardown();
+      // Note: Removed manual teardown call to prevent database deadlock
+      // Teardown is handled by globalSetup.playwright.ts before each test run
+      // await runTeardown();
     }
 
     // On retry, use --last-failed only if there were actual test failures
