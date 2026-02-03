@@ -1,6 +1,10 @@
+from typing import Generator
+
 import pytest
+from pytest_mock import MockerFixture
 
 from features.models import FeatureState
+from users.models import FFAdminUser
 
 
 @pytest.fixture()
@@ -26,3 +30,22 @@ def feature_state_version_generator(environment, feature, request):  # type: ign
         ),
         expected_result,
     )
+
+
+@pytest.fixture
+def admin_history(
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+) -> Generator[None, None, None]:
+    """
+    Fixture to patch `simple_history` to set the user on historical records to an admin user.
+    """
+
+    historical_records_thread_mock = mocker.MagicMock()
+    historical_records_thread_mock.request.user = admin_user
+
+    with mocker.patch(
+        "simple_history.models.HistoricalRecords.thread",
+        historical_records_thread_mock,
+    ):
+        yield

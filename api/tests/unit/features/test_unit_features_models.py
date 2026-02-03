@@ -507,19 +507,16 @@ def test_feature_state_save_calls_trigger_webhooks(
     mock_trigger_webhooks: mock.MagicMock,
     feature: Feature,
     environment: Environment,
-    admin_user: FFAdminUser,
+    admin_history: None,
 ) -> None:
     # Given
     feature_state = FeatureState.objects.get(feature=feature, environment=environment)
     # Make an actual change so the webhook is triggered
     feature_state.enabled = not feature_state.enabled
 
-    # When - Use request context to set the history user
-    with mock.patch(
-        "simple_history.models.HistoricalRecords.thread",
-        mock.MagicMock(request=mock.MagicMock(user=admin_user)),
-    ):
-        feature_state.save()
+    # When
+    # Feature state saved with admin history thread context
+    feature_state.save()
 
     # Then - Webhook is triggered via AuditLog signal chain
     mock_trigger_webhooks.assert_called_once()
@@ -1126,20 +1123,19 @@ def test_create_feature_creates_feature_states_in_all_environments_and_environme
 
 
 def test_webhooks_are_called_when_feature_state_is_updated(
-    mocker: MockerFixture, feature_state: FeatureState, admin_user: FFAdminUser
+    mocker: MockerFixture,
+    feature_state: FeatureState,
+    admin_history: None,
 ) -> None:
     # Given
     mock_trigger_feature_state_change_webhooks = mocker.patch(
         "features.tasks.trigger_feature_state_change_webhooks"
     )
 
-    # When - Use request context to set the history user
+    # When
     feature_state.enabled = not feature_state.enabled
-    with mock.patch(
-        "simple_history.models.HistoricalRecords.thread",
-        mock.MagicMock(request=mock.MagicMock(user=admin_user)),
-    ):
-        feature_state.save()
+    # Feature state saved with admin history thread context
+    feature_state.save()
 
     # Then - Webhook is triggered via AuditLog signal chain
     mock_trigger_feature_state_change_webhooks.assert_called_once()
@@ -1152,7 +1148,7 @@ def test_webhooks_are_called_when_feature_state_is_created(
     feature: Feature,
     environment: Environment,
     feature_segment: FeatureSegment,
-    admin_user: FFAdminUser,
+    admin_history: None,
 ) -> None:
     # Given
     mock_trigger_feature_state_change_webhooks = mocker.patch(
@@ -1166,17 +1162,14 @@ def test_webhooks_are_called_when_feature_state_is_created(
     )
     override_enabled = not env_default.enabled
 
-    # When - Use request context to set the history user
-    with mock.patch(
-        "simple_history.models.HistoricalRecords.thread",
-        mock.MagicMock(request=mock.MagicMock(user=admin_user)),
-    ):
-        feature_state = FeatureState.objects.create(
-            feature=feature,
-            environment=environment,
-            feature_segment=feature_segment,
-            enabled=override_enabled,
-        )
+    # When
+    # Feature state created with admin history thread context
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        enabled=override_enabled,
+    )
 
     # Then - Webhook is triggered via AuditLog signal chain
     mock_trigger_feature_state_change_webhooks.assert_called_once()
