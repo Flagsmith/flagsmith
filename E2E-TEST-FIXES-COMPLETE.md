@@ -19,7 +19,7 @@ These caused 6 out of 10 tests to fail consistently.
 
 ## Solution Applied
 
-### 5 Files Modified
+### 3 Files Modified
 
 All changes are on the `chore/playwright` branch and ready to be incorporated into PR #6562.
 
@@ -137,45 +137,6 @@ def seed_data() -> None:
 
 ---
 
-## 4. Docker Compose Compatibility (Infrastructure)
-
-**File:** `frontend/Makefile`
-
-**Problem:** Hardcoded `docker compose` command failed on systems using standalone `docker-compose` binary.
-
-**Solution:** Auto-detect which command is available.
-
-**Changes:**
-```diff
-+ # Auto-detect Docker Compose command (V2 plugin or standalone)
-+ DOCKER_COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
-
-  test:
-    @echo "Running E2E tests..."
--   @docker compose run --name e2e-test-run frontend \
-+   @$(DOCKER_COMPOSE) run --name e2e-test-run frontend \
-```
-
----
-
-## 5. E2E Token Configuration (Infrastructure)
-
-**File:** `frontend/docker-compose-e2e-tests.yml`
-
-**Problem:** Missing `E2E_TEST_TOKEN` caused 401 errors from teardown endpoint.
-
-**Solution:** Added token to frontend service environment.
-
-**Changes:**
-```diff
-  frontend:
-    environment:
-+     E2E_TEST_TOKEN: some-token
-      E2E_TEST_TOKEN_DEV: some-token
-```
-
----
-
 ## Test Results
 
 ### Before Fixes
@@ -278,8 +239,8 @@ make test opts="tests/flag-tests.pw.ts"
 ## Environment Requirements
 
 - **Node**: v22.18.0 (from `.nvmrc`)
-- **Docker**: Any version with Compose support
-- **Memory**: 6GB recommended for Docker (Colima: `colima start --memory 6`)
+- **Docker**: Docker Desktop or any Docker installation with Compose V2 plugin support
+- **Memory**: 6GB recommended for Docker
 - **macOS/Linux**: Tested and working
 
 ---
@@ -289,29 +250,13 @@ make test opts="tests/flag-tests.pw.ts"
 ### Critical Issues Fixed ✅
 1. Database deadlock during teardown
 2. Edge API misconfiguration causing 6 test failures
-3. Docker Compose compatibility
+3. Redundant teardown causing race conditions
 
 ### Remaining Issues (Not Addressed)
 These are out of scope for this fix but should be considered:
 - **Firefox-only testing** - Chrome removed from test configuration
 - **Browser install** - `test:install` only installs Firefox
 - Consider adding Chrome back for cross-browser testing
-
----
-
-## For Wadii
-
-All setup issues resolved! Here's what was wrong:
-
-1. **Deadlock** - Backend needed advisory locks
-2. **Network errors** - Tests were trying to reach production API
-3. **Docker compatibility** - Makefile needed auto-detection
-
-Tests now pass reliably at 10/10 (100%). You can run the standard command:
-```bash
-cd frontend
-make test opts="--grep @oss"
-```
 
 ---
 
@@ -345,8 +290,6 @@ docker logs flagsmith-e2e-frontend-1 | grep "edge.api.flagsmith.com"
 | `api/e2etests/e2e_seed_data.py` | Backend | Added advisory locks |
 | `frontend/env/project_e2e.js` | Frontend | Fixed API endpoint |
 | `frontend/e2e/run-with-retry.ts` | Frontend | Removed redundant teardown |
-| `frontend/Makefile` | Infrastructure | Docker Compose compat |
-| `frontend/docker-compose-e2e-tests.yml` | Infrastructure | Added E2E token |
 
 All changes are minimal, targeted, and production-ready.
 
