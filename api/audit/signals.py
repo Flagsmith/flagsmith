@@ -268,16 +268,13 @@ def trigger_feature_state_webhooks(
     # 1. drf-writable-nested saves FeatureState before FeatureStateValue
     # 2. The history record's instance may have stale cached values
     try:
-        fresh_feature_state = FeatureState.objects.all_with_deleted().get(id=sender.id)
+        fresh_feature_state = FeatureState.objects.get(id=sender.id)
     except FeatureState.DoesNotExist:
+        # Skip deleted feature states - handled in views
         return
 
     # Skip versioned environments - handled by trigger_update_version_webhooks
     if fresh_feature_state.environment_feature_version_id:
-        return
-
-    # Skip deleted feature states - handled in views
-    if fresh_feature_state.deleted_at:
         return
 
     trigger_feature_state_change_webhooks(fresh_feature_state)

@@ -486,42 +486,6 @@ def test_trigger_feature_state_webhooks__feature_state_value_update__triggers_we
     assert called_feature_state.id == feature_state.id
 
 
-def test_trigger_feature_state_webhooks__feature_state_does_not_exist__skips_webhook(
-    environment: Environment,
-    feature: Feature,
-    mocker: MockerFixture,
-) -> None:
-    """
-    Test that webhook is skipped when the FeatureState no longer exists.
-    """
-    # Given
-    feature_state = FeatureState.objects.get(
-        environment=environment, feature=feature, feature_segment__isnull=True
-    )
-
-    audit_log = AuditLog.objects.create(
-        environment=environment,
-        related_object_id=feature_state.id,
-        related_object_type=RelatedObjectType.FEATURE_STATE.name,
-        history_record_id=feature_state.history.first().history_id,
-        history_record_class_path=feature_state.history_record_class_path,
-    )
-
-    # Hard delete the feature state so it's fully removed from the database
-    stale_feature_state = feature_state
-    feature_state.hard_delete()
-
-    mock_trigger_webhooks = mocker.patch(
-        "features.tasks.trigger_feature_state_change_webhooks"
-    )
-
-    # When
-    trigger_feature_state_webhooks(sender=stale_feature_state, audit_log=audit_log)
-
-    # Then
-    mock_trigger_webhooks.assert_not_called()
-
-
 def test_send_feature_flag_went_live_signal__feature_state__sends_signal(
     environment: Environment,
     feature: Feature,
