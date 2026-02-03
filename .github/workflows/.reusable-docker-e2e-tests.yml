@@ -127,7 +127,9 @@ jobs:
       - name: Send Slack notification on failure
         if: failure()
         working-directory: frontend
-        run: npx -y tsx e2e/slack-e2e-reporter.ts
+        run: |
+          npm install --no-save @slack/web-api
+          npx -y tsx e2e/slack-e2e-reporter.ts
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
