@@ -71,21 +71,18 @@ function notifyFailure(
     ? `*PR:* <${prUrl}|#${prNumber}>${prTitle ? ` - ${prTitle}` : ''}\n`
     : '';
 
-  // Build failed tests list (limit to first 5 to avoid huge messages)
-  const testList = failedTests
-    .slice(0, 5)
-    .map((test) => `• ${test.file}: ${test.title}`)
-    .join('\n');
-  const moreTests = failedCount > 5 ? `\n...and ${failedCount - 5} more` : '';
+  // Build failed tests list (inline, limit to first 3)
+  const testNames = failedTests
+    .slice(0, 3)
+    .map((test) => test.title)
+    .join(', ');
+  const moreTests = failedCount > 3 ? ` +${failedCount - 3} more` : '';
 
   const message = `❌ E2E Tests Failed
 
 ${prInfo}*Branch:* ${branch}
 *Test Type:* ${testType}
-*Failed:* ${failedCount} test(s)
-
-*Failed Tests:*
-${testList}${moreTests}
+*Failed:* ${failedCount} test(s) - ${testNames}${moreTests}
 
 📦 View artifacts: ${actionUrl}`;
 
