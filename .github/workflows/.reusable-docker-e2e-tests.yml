@@ -120,30 +120,7 @@ jobs:
       - name: Send Slack notification on failure
         if: failure()
         working-directory: frontend
-        run: |
-          echo "Checking for failed tests..."
-          if [ -f e2e/test-results/failed.json ]; then
-            echo "failed.json exists"
-            cat e2e/test-results/failed.json
-          else
-            echo "failed.json does NOT exist"
-          fi
-
-          FAILED_COUNT=$(jq '.failedTests | length' e2e/test-results/failed.json 2>/dev/null || echo "0")
-          echo "Failed test count: $FAILED_COUNT"
-
-          if [ "$FAILED_COUNT" -gt 0 ]; then
-            echo "Sending Slack notification..."
-            npx tsx -e "
-              (async () => {
-                const { notifyFailure } = await import('./e2e/helpers/e2e-helpers.playwright.ts');
-                await notifyFailure($FAILED_COUNT);
-              })();
-            "
-            echo "Slack notification completed"
-          else
-            echo "No failed tests to report"
-          fi
+        run: npx -y tsx e2e/slack-e2e-reporter.ts
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
