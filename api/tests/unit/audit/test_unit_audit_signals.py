@@ -1,6 +1,8 @@
 import json
+from datetime import timedelta
 
 import responses
+from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
@@ -548,10 +550,6 @@ def test_send_feature_flag_went_live_signal__scheduled_feature_state__skips_sign
     mocker: MockerFixture,
 ) -> None:
     # Given
-    from datetime import timedelta
-
-    from django.utils import timezone
-
     feature_state = FeatureState.objects.get(
         environment=environment, feature=feature, feature_segment__isnull=True
     )
