@@ -15,16 +15,7 @@ async function uploadFile(filePath: string): Promise<void> {
   }
 
   const epoch = Date.now();
-  const ext = path.extname(filePath);
-  const basename = path.basename(filePath);
-
-  const isPlaywrightReport = basename === 'playwright-report.zip';
-  const filename = isPlaywrightReport
-    ? `playwright-report-${epoch}.zip`
-    : `e2e-artifact-${epoch}${ext}`;
-  const comment = isPlaywrightReport
-    ? `📊 Playwright HTML Report ${process.env.GITHUB_ACTION_URL || ''}`
-    : `✖ Test Run ${process.env.GITHUB_ACTION_URL || ''}`;
+  const filename = `playwright-report-${epoch}.zip`;
 
   console.log(`Uploading ${filePath}`);
 
@@ -33,7 +24,6 @@ async function uploadFile(filePath: string): Promise<void> {
     channel_id: CHANNEL_ID,
     file: fs.createReadStream(filePath),
     filename,
-    initial_comment: comment,
   });
 }
 
