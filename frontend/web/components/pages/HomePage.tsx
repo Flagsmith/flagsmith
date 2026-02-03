@@ -48,8 +48,6 @@ const HomePage: React.FC = () => {
     {},
   )
 
-  return <div>I know all the JavaScripts</div>
-
   // Note that we are explicitly setting marketing consent to true
   // here to reduce the complexity of the change. This is due to
   // the addition of wording in our ToS and the move from Pipedrive

@@ -39,7 +39,6 @@ jobs:
   run-e2e:
     name: "E2E${{ inputs.tests && format(': {0}', inputs.tests) || '' }}"
     runs-on: ${{ inputs.runs-on }}
-    environment: staging  # TEMPORARY: testing Slack notifications
 
     permissions:
       contents: read
