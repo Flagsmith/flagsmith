@@ -50,14 +50,37 @@ function postMessage(message: string): Promise<unknown> {
   });
 }
 
-function notifyFailure(failedCount: number): Promise<unknown> {
+function notifyFailure(
+  failedCount: number,
+  failedTests: any[],
+): Promise<unknown> {
   const actionUrl = process.env.GITHUB_ACTION_URL || '';
   if (!actionUrl) {
     console.log('No GITHUB_ACTION_URL set, skipping Slack notification');
     return Promise.resolve();
   }
 
-  const message = `❌ E2E Tests Failed: ${failedCount} test(s) failed\n\n📦 View artifacts: ${actionUrl}`;
+  const branch = process.env.GITHUB_REF_NAME || process.env.GITHUB_HEAD_REF || 'unknown';
+  const testType = process.env.TEST_TYPE || 'unknown';
+
+  // Build failed tests list (limit to first 5 to avoid huge messages)
+  const testList = failedTests
+    .slice(0, 5)
+    .map((test) => `• ${test.file}: ${test.title}`)
+    .join('\n');
+  const moreTests = failedCount > 5 ? `\n...and ${failedCount - 5} more` : '';
+
+  const message = `❌ E2E Tests Failed
+
+*Branch:* ${branch}
+*Test Type:* ${testType}
+*Failed:* ${failedCount} test(s)
+
+*Failed Tests:*
+${testList}${moreTests}
+
+📦 View artifacts: ${actionUrl}`;
+
   return postMessage(message);
 }
 
@@ -73,7 +96,7 @@ if (failedCount === 0) {
 
 async function main() {
   console.log(`Sending Slack notification for ${failedCount} failed test(s)...`);
-  await notifyFailure(failedCount);
+  await notifyFailure(failedCount, failedData.failedTests || []);
   console.log('Slack notification sent successfully');
 
   // Upload HTML report if zip file exists

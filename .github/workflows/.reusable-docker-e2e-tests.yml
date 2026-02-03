@@ -129,6 +129,9 @@ jobs:
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+          TEST_TYPE: ${{ steps.test-type.outputs.label }}
 
       - name: Comment PR with test results (success)
         if: success() && github.event_name == 'pull_request'
