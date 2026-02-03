@@ -100,6 +100,9 @@ django_settings_module = "app.settings.local"
 [tool.drf-stubs]
 enabled = true
 
+[tool.poetry]
+package-mode = false
+
 [tool.poetry.dependencies]
 python = ">3.11,<3.14"
 django = ">=5,<6"
