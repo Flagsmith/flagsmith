@@ -117,6 +117,21 @@ jobs:
         run: |
           echo "url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts" >> $GITHUB_OUTPUT
 
+      - name: Send Slack notification on failure
+        if: failure()
+        working-directory: frontend
+        run: |
+          FAILED_COUNT=$(jq '.failedTests | length' e2e/test-results/failed.json 2>/dev/null || echo "0")
+          if [ "$FAILED_COUNT" -gt 0 ]; then
+            npx tsx -e "
+              import { notifyFailure } from './e2e/helpers/slack';
+              await notifyFailure($FAILED_COUNT);
+            "
+          fi
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
       - name: Comment PR with test results (success)
         if: success() && github.event_name == 'pull_request'
         uses: daun/playwright-report-summary@v3

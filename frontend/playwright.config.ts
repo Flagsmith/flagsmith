@@ -64,6 +64,7 @@ export default defineConfig({
     ],
     ['json', { outputFile: './e2e/test-results/results.json' }],
     ['list', { printSteps: false }], // Only shows test names with pass/fail status
+    ['./e2e/failed-tests-reporter.ts'], // Writes failed.json for CI
   ],
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
@@ -84,8 +85,8 @@ export default defineConfig({
     /* Collect trace on all tests for maximum detail */
     trace: {
       mode: 'on',
-      snapshots: true,
       screenshots: true,
+      snapshots: true,
       sources: true,
     },
     /* Video disabled - view artifacts in GitHub Actions */
