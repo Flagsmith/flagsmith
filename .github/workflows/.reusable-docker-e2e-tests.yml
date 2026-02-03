@@ -136,7 +136,7 @@ jobs:
             echo "Sending Slack notification..."
             npx tsx -e "
               (async () => {
-                const { notifyFailure } = await import('./e2e/helpers/slack.js');
+                const { notifyFailure } = await import('./e2e/helpers/e2e-helpers.playwright.ts');
                 await notifyFailure($FAILED_COUNT);
               })();
             "
