@@ -8,11 +8,14 @@ From the `frontend/` directory:
 # Run all tests in Docker (like CI)
 make test
 
-# Run specific tests
-make test opts="--grep @oss"
+# Run OSS tests only
+make test-oss
+
+# Run enterprise tests only
+make test-enterprise
 
 # Run with custom concurrency
-E2E_CONCURRENCY=1 make test
+E2E_CONCURRENCY=1 make test-oss
 ```
 
 ## Environment Variables
@@ -26,8 +29,11 @@ E2E_CONCURRENCY=1 make test
 
 ### Docker (matches CI exactly)
 ```bash
-# All OSS tests
-make test opts="--grep @oss"
+# OSS tests only
+make test-oss
+
+# Enterprise tests only
+make test-enterprise
 
 # All tests (OSS + Enterprise)
 make test opts="--grep '@oss|@enterprise'"
@@ -39,7 +45,7 @@ make test opts="tests/flag-tests.pw.ts"
 SKIP_BUNDLE=1 make test opts="tests/flag-tests.pw.ts"
 
 # Verbose output
-VERBOSE=1 make test
+VERBOSE=1 make test-oss
 ```
 
 ### Keep Services Running
