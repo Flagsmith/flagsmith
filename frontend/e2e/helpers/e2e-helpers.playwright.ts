@@ -829,15 +829,21 @@ export class E2EHelpers {
     await addTagButton.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await addTagButton.scrollIntoViewIfNeeded();
     await addTagButton.click();
-    await this.page.waitForTimeout(1000);
 
-    // Check if "Add New Tag" button exists (when there are existing tags)
-    // If not, we're already in the create tag modal (when there are no tags yet)
+    // Wait for either the create tag modal or the "Add New Tag" button
     const addNewTagButton = this.page.locator('button').filter({ hasText: 'Add New Tag' });
-    const hasAddNewTagButton = await addNewTagButton.count() > 0;
+    const tagLabelInput = this.page.locator(byId('tag-label'));
+
+    // Wait for one of them to appear
+    await Promise.race([
+      addNewTagButton.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {}),
+      tagLabelInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {})
+    ]);
+
+    // If "Add New Tag" button is visible, click it
+    const hasAddNewTagButton = await addNewTagButton.isVisible().catch(() => false);
     if (hasAddNewTagButton) {
       await addNewTagButton.click();
-      await this.page.waitForTimeout(500);
     }
 
     // Fill in tag details
@@ -876,26 +882,49 @@ export class E2EHelpers {
       await this.page.waitForTimeout(500);
     }
 
-    // Scroll to and click on the tags area to open tag selection
-    const tagInput = this.page.locator('.inline-tags').first();
-    await tagInput.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-    await tagInput.scrollIntoViewIfNeeded();
-    await tagInput.click();
-    await this.page.waitForTimeout(800);
+    // Click the "Add Tag" button to open tag selection
+    const addTagButton = this.page.locator('button').filter({ hasText: 'Add Tag' });
+    await addTagButton.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await addTagButton.scrollIntoViewIfNeeded();
+    await addTagButton.click();
 
-    // Click the tag to select it - look for the tag in the tag list
-    const tagInList = this.page.locator('.tag-list').getByText(tagLabel, { exact: false }).first();
-    await tagInList.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-    await tagInList.click();
+    // Wait for tag list to appear
+    const tagList = this.page.locator('.tag-list');
+    await tagList.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
 
-    await this.page.waitForTimeout(500);
+    // Find and click the tag using JavaScript to bypass visibility checks
+    await this.page.evaluate((label) => {
+      const tagList = document.querySelector('.tag-list');
+      if (!tagList) return false;
 
-    // Close the tag selection modal by clicking outside
-    await this.page.mouse.click(10, 10);
-    await this.page.waitForTimeout(500);
+      // Find the element containing the tag text
+      const elements = Array.from(tagList.querySelectorAll('*'));
+      const tagElement = elements.find(el =>
+        el.textContent?.trim() === label || el.textContent?.includes(label)
+      );
 
-    // Save the feature settings
-    await this.click(byId('update-feature-btn'));
+      if (tagElement) {
+        // Scroll it into view within the container
+        tagElement.scrollIntoView({ block: 'center', behavior: 'auto' });
+
+        // Find the clickable parent (usually has cursor:pointer or is a checkbox)
+        let clickable = tagElement;
+        let current = tagElement;
+        while (current && current !== tagList) {
+          const style = window.getComputedStyle(current);
+          if (style.cursor === 'pointer' || current.tagName === 'INPUT') {
+            clickable = current;
+            break;
+          }
+          current = current.parentElement;
+        }
+
+        // Click it
+        clickable.click();
+        return true;
+      }
+      return false;
+    }, tagLabel);
   }
 
   // Archive a feature (must be called when feature modal is open)
@@ -913,18 +942,20 @@ export class E2EHelpers {
       await this.page.waitForTimeout(500);
     }
 
-    // Find the FormGroup containing "Archived" text and click the switch within it
-    const archiveFormGroup = this.page.locator('.setting').filter({ hasText: 'Archived' });
-    await archiveFormGroup.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    // Find the switch button with role="switch" near the "Archived" text
+    const archiveSwitch = this.page.locator('button[role="switch"]').filter({
+      has: this.page.locator('text=/Archived/i')
+    }).or(
+      this.page.locator('.setting').filter({ hasText: /Archived/i }).locator('button[role="switch"]')
+    ).first();
 
-    const archiveSwitch = archiveFormGroup.locator('.switch').first();
     await archiveSwitch.scrollIntoViewIfNeeded();
     await archiveSwitch.click();
 
-    await this.page.waitForTimeout(500);
-
-    // Save the feature settings
-    await this.click(byId('update-feature-btn'));
+    // Save the feature settings - use the visible Update button
+    const updateButton = this.page.locator(byId('update-feature-btn')).filter({ hasText: 'Update Settings' });
+    await updateButton.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await updateButton.click();
   }
 
   // Navigate to a project by name

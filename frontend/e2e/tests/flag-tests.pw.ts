@@ -149,7 +149,14 @@ test.describe('Flag Tests', () => {
     await addTagToFeature('bug')
     await addTagToFeature('feature-request')
 
+    // Save the feature settings
+    const updateButton = page.locator(byId('update-feature-btn')).filter({ hasText: 'Update Settings' });
+    await updateButton.scrollIntoViewIfNeeded();
+    await updateButton.click();
+    await closeModal()
+
     log('Archive Feature')
+    await gotoFeature('test_flag_with_tags')
     await archiveFeature()
     await waitForToast()
 
@@ -158,10 +165,5 @@ test.describe('Flag Tests', () => {
 
     // Verify the feature can be filtered as archived
     await gotoFeatures()
-    await page.waitForTimeout(1000)
-
-    log('Clean Up')
-    // Delete the test feature
-    await deleteFeature('test_flag_with_tags')
   });
 });
