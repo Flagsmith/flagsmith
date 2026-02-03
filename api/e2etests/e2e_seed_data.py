@@ -62,7 +62,9 @@ def teardown() -> None:
                 # Delete users and their orgs created for e2e test by front end
                 delete_user_and_its_organisations(user_email=settings.E2E_SIGNUP_USER)
                 delete_user_and_its_organisations(user_email=settings.E2E_USER)
-                delete_user_and_its_organisations(user_email=settings.E2E_CHANGE_EMAIL_USER)
+                delete_user_and_its_organisations(
+                    user_email=settings.E2E_CHANGE_EMAIL_USER
+                )
                 delete_user_and_its_organisations(
                     user_email=settings.E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS
                 )
@@ -75,7 +77,9 @@ def teardown() -> None:
                 delete_user_and_its_organisations(
                     user_email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE
                 )
-                delete_user_and_its_organisations(user_email=settings.E2E_SEPARATE_TEST_USER)
+                delete_user_and_its_organisations(
+                    user_email=settings.E2E_SEPARATE_TEST_USER
+                )
         finally:
             # Always release the lock, even if an error occurred
             cursor.execute("SELECT pg_advisory_unlock(%s)", [E2E_TEARDOWN_LOCK_ID])
@@ -94,16 +98,20 @@ def seed_data() -> None:
             # Perform all seed operations atomically
             with transaction.atomic():
                 # create user and organisation for e2e test by front end
-                organisation: Organisation = Organisation.objects.create(name="Bullet Train Ltd")
+                organisation: Organisation = Organisation.objects.create(
+                    name="Bullet Train Ltd"
+                )
                 org_admin: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
                     email=settings.E2E_USER,
                     password=PASSWORD,
                     username=settings.E2E_USER,
                 )
                 org_admin.add_organisation(organisation, OrganisationRole.ADMIN)
-                non_admin_user_with_org_permissions: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]  # noqa: E501
-                    email=settings.E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS,
-                    password=PASSWORD,
+                non_admin_user_with_org_permissions: FFAdminUser = (
+                    FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]  # noqa: E501
+                        email=settings.E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS,
+                        password=PASSWORD,
+                    )
                 )
                 non_admin_user_with_project_permissions: FFAdminUser = (
                     FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
@@ -111,13 +119,17 @@ def seed_data() -> None:
                         password=PASSWORD,
                     )
                 )
-                non_admin_user_with_env_permissions: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]  # noqa: E501
-                    email=settings.E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS,
-                    password=PASSWORD,
+                non_admin_user_with_env_permissions: FFAdminUser = (
+                    FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]  # noqa: E501
+                        email=settings.E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS,
+                        password=PASSWORD,
+                    )
                 )
-                non_admin_user_with_a_role: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
-                    email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE,
-                    password=PASSWORD,
+                non_admin_user_with_a_role: FFAdminUser = (
+                    FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
+                        email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE,
+                        password=PASSWORD,
+                    )
                 )
                 non_admin_user_with_org_permissions.add_organisation(organisation)
                 non_admin_user_with_project_permissions.add_organisation(organisation)
@@ -130,14 +142,20 @@ def seed_data() -> None:
                 )
                 user_org_permission.add_permission(CREATE_PROJECT)
                 user_org_permission.add_permission(MANAGE_USER_GROUPS)
-                UserPermissionGroup.objects.create(name="TestGroup", organisation=organisation)
+                UserPermissionGroup.objects.create(
+                    name="TestGroup", organisation=organisation
+                )
 
-                separate_org: Organisation = Organisation.objects.create(name="E2E Separate Org")
+                separate_org: Organisation = Organisation.objects.create(
+                    name="E2E Separate Org"
+                )
                 separate_test_user: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
                     email=settings.E2E_SEPARATE_TEST_USER,
                     password=PASSWORD,
                 )
-                separate_test_user.add_organisation(separate_org, OrganisationRole.ADMIN)
+                separate_test_user.add_organisation(
+                    separate_org, OrganisationRole.ADMIN
+                )
 
                 # We add different projects and environments to give each e2e test its own isolated context.
                 project_test_data = [
@@ -159,7 +177,9 @@ def seed_data() -> None:
                     {"name": "My Test Project 7 Role", "environments": ["Development"]},
                 ]
                 # Upgrade organisation seats
-                Subscription.objects.filter(organisation__in=org_admin.organisations.all()).update(
+                Subscription.objects.filter(
+                    organisation__in=org_admin.organisations.all()
+                ).update(
                     max_seats=8, plan=ENTERPRISE, subscription_id="test_subscription_id"
                 )
 
@@ -174,7 +194,8 @@ def seed_data() -> None:
                         # Add permissions to the non-admin user with project permissions
                         user_proj_permission: UserProjectPermission = (
                             UserProjectPermission.objects.create(
-                                user=non_admin_user_with_project_permissions, project=project
+                                user=non_admin_user_with_project_permissions,
+                                project=project,
                             )
                         )
                         [
@@ -189,16 +210,22 @@ def seed_data() -> None:
                     projects.append(project)
 
                     for env_name in project_info["environments"]:
-                        environment = Environment.objects.create(name=env_name, project=project)
+                        environment = Environment.objects.create(
+                            name=env_name, project=project
+                        )
 
                         if project_info["name"] == ENV_PERMISSION_PROJECT:
                             # Add permissions to the non-admin user with env permissions
-                            user_env_permission = UserEnvironmentPermission.objects.create(
-                                user=non_admin_user_with_env_permissions, environment=environment
+                            user_env_permission = (
+                                UserEnvironmentPermission.objects.create(
+                                    user=non_admin_user_with_env_permissions,
+                                    environment=environment,
+                                )
                             )
                             user_env_proj_permission: UserProjectPermission = (
                                 UserProjectPermission.objects.create(
-                                    user=non_admin_user_with_env_permissions, project=project
+                                    user=non_admin_user_with_env_permissions,
+                                    project=project,
                                 )
                             )
                             user_env_proj_permission.add_permission(VIEW_PROJECT)
@@ -217,12 +244,30 @@ def seed_data() -> None:
                 # they are necessary for the environments created above and to keep
                 # the e2e tests isolated."
                 identities_test_data = [
-                    {"identifier": settings.E2E_IDENTITY, "environment": environments[2]},
-                    {"identifier": settings.E2E_IDENTITY, "environment": environments[3]},
-                    {"identifier": settings.E2E_IDENTITY, "environment": environments[4]},
-                    {"identifier": settings.E2E_IDENTITY, "environment": environments[5]},
-                    {"identifier": settings.E2E_IDENTITY, "environment": environments[6]},
-                    {"identifier": settings.E2E_IDENTITY, "environment": environments[7]},
+                    {
+                        "identifier": settings.E2E_IDENTITY,
+                        "environment": environments[2],
+                    },
+                    {
+                        "identifier": settings.E2E_IDENTITY,
+                        "environment": environments[3],
+                    },
+                    {
+                        "identifier": settings.E2E_IDENTITY,
+                        "environment": environments[4],
+                    },
+                    {
+                        "identifier": settings.E2E_IDENTITY,
+                        "environment": environments[5],
+                    },
+                    {
+                        "identifier": settings.E2E_IDENTITY,
+                        "environment": environments[6],
+                    },
+                    {
+                        "identifier": settings.E2E_IDENTITY,
+                        "environment": environments[7],
+                    },
                 ]
 
                 for identity_info in identities_test_data:
