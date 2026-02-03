@@ -72,7 +72,7 @@ async function main() {
     if (attempt === 0 && !process.env.SKIP_BUNDLE) {
       if (!quietMode) console.log('Building test bundle...');
       try {
-        execSync('npm run test:bundle', { stdio: quietMode ? 'ignore' : 'inherit' });
+        execSync('npm run bundle', { stdio: quietMode ? 'ignore' : 'inherit' });
       } catch (error) {
         console.error('Failed to build test bundle');
         process.exit(1);
