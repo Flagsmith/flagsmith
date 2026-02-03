@@ -245,6 +245,7 @@ flagsmith-common = { version = "*", extras = ["test-tools"] }
 pytest-responses = "^0.5.1"
 diff-cover = "^10.1.0"
 django-debug-toolbar = "*"
+ipython = "^9.10.0"
 
 [build-system]
 requires = ["poetry>=2.0.0"]
