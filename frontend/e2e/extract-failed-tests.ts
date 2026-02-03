@@ -1,26 +1,74 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-function findErrorContextFiles(testResultsDir: string): Record<string, string> {
-  const errorContextMap: Record<string, string> = {};
+type ErrorContextMap = Record<string, string>;
 
+const isFailedResult = (result: any) =>
+  result.status === 'failed' || result.status === 'timedOut';
+
+const hasFailedTests = (spec: any) =>
+  spec.tests?.some((test: any) => test.results?.some(isFailedResult));
+
+const getFailedSpecs = (suite: any) =>
+  suite.specs?.filter(hasFailedTests) || [];
+
+function findErrorContextFiles(testResultsDir: string): ErrorContextMap {
   if (!fs.existsSync(testResultsDir)) {
-    return errorContextMap;
+    return {};
   }
 
   const entries = fs.readdirSync(testResultsDir, { withFileTypes: true });
+  const errorContextMap: ErrorContextMap = {};
 
   for (const entry of entries) {
     if (entry.isDirectory()) {
       const errorContextPath = path.join(testResultsDir, entry.name, 'error-context.md');
       if (fs.existsSync(errorContextPath)) {
-        // Use directory name as key - it usually contains the test file name
         errorContextMap[entry.name] = errorContextPath;
       }
     }
   }
 
   return errorContextMap;
+}
+
+function findErrorContextPath(
+  suiteFile: string,
+  errorContextFiles: ErrorContextMap,
+): string | undefined {
+  const testFileName = suiteFile.replace(/^tests\//, '').replace(/\.pw\.ts$/, '');
+  for (const [dirName, contextPath] of Object.entries(errorContextFiles)) {
+    if (dirName.includes(testFileName)) {
+      return contextPath;
+    }
+  }
+  return undefined;
+}
+
+function formatFailedSpec(
+  spec: any,
+  suite: any,
+  errorContextFiles: ErrorContextMap,
+  testResultsDir: string,
+) {
+  const errorContextPath = findErrorContextPath(suite.file, errorContextFiles);
+
+  return {
+    file: suite.file,
+    title: spec.title,
+    errorContextPath: errorContextPath
+      ? path.relative(testResultsDir, errorContextPath)
+      : undefined,
+    tests: spec.tests.flatMap(
+      (test: any) =>
+        test.results?.filter(isFailedResult).map((result: any) => ({
+          status: result.status,
+          error: result.error,
+          duration: result.duration,
+          retry: result.retry,
+        })) || [],
+    ),
+  };
 }
 
 export function extractFailedTests(baseDir: string = __dirname): void {
@@ -35,54 +83,36 @@ export function extractFailedTests(baseDir: string = __dirname): void {
 
   console.log('Extracting failed tests from:', resultsPath);
 
-  // Find all error-context.md files
   const errorContextFiles = findErrorContextFiles(testResultsDir);
   if (Object.keys(errorContextFiles).length > 0) {
-    console.log(`Found ${Object.keys(errorContextFiles).length} error-context.md file(s)`);
+    console.log(
+      `Found ${Object.keys(errorContextFiles).length} error-context.md file(s)`,
+    );
   }
 
   try {
     const results = JSON.parse(fs.readFileSync(resultsPath, 'utf-8'));
-    const failedTests = results.suites?.flatMap((suite: any) =>
-      suite.specs?.filter((spec: any) =>
-        spec.tests?.some((test: any) =>
-          test.results?.some((result: any) =>
-            result.status === 'failed' || result.status === 'timedOut'
-          )
-        )
-      ).map((spec: any) => {
-        // Try to find matching error-context.md file
-        let errorContextPath: string | undefined;
-        const testFileName = suite.file.replace(/^tests\//, '').replace(/\.pw\.ts$/, '');
 
-        for (const [dirName, contextPath] of Object.entries(errorContextFiles)) {
-          if (dirName.includes(testFileName)) {
-            errorContextPath = contextPath;
-            break;
-          }
-        }
-
-        return {
-          file: suite.file,
-          title: spec.title,
-          errorContextPath: errorContextPath ? path.relative(testResultsDir, errorContextPath) : undefined,
-          tests: spec.tests.flatMap((test: any) =>
-            test.results
-              ?.filter((result: any) => result.status === 'failed' || result.status === 'timedOut')
-              .map((result: any) => ({
-                status: result.status,
-                error: result.error,
-                duration: result.duration,
-                retry: result.retry,
-              })) || []
-          )
-        };
-      })
-    ).filter(Boolean) || [];
+    const failedTests =
+      results.suites?.flatMap((suite: any) =>
+        getFailedSpecs(suite).map((spec: any) =>
+          formatFailedSpec(spec, suite, errorContextFiles, testResultsDir),
+        ),
+      ) || [];
 
     if (failedTests.length > 0) {
-      fs.writeFileSync(failedPath, JSON.stringify({ failedTests, timestamp: new Date().toISOString() }, null, 2));
-      console.log(`Created failed.json with ${failedTests.length} failed test(s) at:`, failedPath);
+      fs.writeFileSync(
+        failedPath,
+        JSON.stringify(
+          { failedTests, timestamp: new Date().toISOString() },
+          null,
+          2,
+        ),
+      );
+      console.log(
+        `Created failed.json with ${failedTests.length} failed test(s) at:`,
+        failedPath,
+      );
     } else {
       console.log('No failed tests found - all tests passed!');
     }
