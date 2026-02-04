@@ -20,7 +20,7 @@ def get_hashed_percentage_for_object_ids(
     hashed_value_as_int = int(hashed_value.hexdigest(), base=16)
     value = ((hashed_value_as_int % 9999) / 9998) * 100
 
-    if value == 100:
+    if value == 100:  # pragma: no cover
         # since we want a number between 0 (inclusive) and 100 (exclusive), in the
         # unlikely case that we get the exact number 100, we call the method again
         # and increase the number of iterations to ensure we get a different result

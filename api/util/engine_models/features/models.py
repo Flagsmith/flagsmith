@@ -15,12 +15,6 @@ class FeatureModel(BaseModel):
     name: str
     type: str
 
-    def __eq__(self, other: object) -> bool:
-        return isinstance(other, FeatureModel) and self.id == other.id
-
-    def __hash__(self) -> int:
-        return hash(self.id)
-
 
 class MultivariateFeatureOptionModel(BaseModel):
     value: typing.Any
@@ -126,4 +120,4 @@ class FeatureStateModel(BaseModel, validate_assignment=True):
 
         # default to return the control value if no MV values found, although this
         # should never happen
-        return self.feature_state_value
+        return self.feature_state_value  # pragma: no cover

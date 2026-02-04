@@ -19,12 +19,6 @@ class EnvironmentAPIKeyModel(BaseModel):
     expires_at: typing.Optional[datetime] = None
     active: bool = True
 
-    @property
-    def is_valid(self) -> bool:
-        return self.active and (
-            not self.expires_at or self.expires_at > utcnow_with_tz()
-        )
-
 
 class WebhookModel(BaseModel):
     url: str
