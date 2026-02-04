@@ -280,6 +280,7 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
     click,
     clickUserFeature,
     clickUserFeatureSwitch,
+    closeModal,
     createFeature,
     createRemoteConfig,
     deleteFeature,
@@ -335,8 +336,7 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
   await expect(valueInList).toBeVisible()
 
   log('Close modal')
-  await page.keyboard.press('Escape')
-  await page.waitForTimeout(500)
+  await closeModal()
 
   log('Toggle flag for user again')
   await goToUser(E2E_TEST_IDENTITY)

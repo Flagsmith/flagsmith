@@ -116,6 +116,8 @@ test.describe('Flag Tests', () => {
     const {
       addTagToFeature,
       archiveFeature,
+      click,
+      clickByText,
       closeModal,
       createFeature,
       createTag,
@@ -150,9 +152,7 @@ test.describe('Flag Tests', () => {
     await addTagToFeature('feature-request')
 
     // Save the feature settings
-    const updateButton = page.locator(byId('update-feature-btn')).filter({ hasText: 'Update Settings' });
-    await updateButton.scrollIntoViewIfNeeded();
-    await updateButton.click();
+    await clickByText('Update Settings');
     await closeModal()
 
     log('Archive Feature')
@@ -165,5 +165,31 @@ test.describe('Flag Tests', () => {
 
     // Verify the feature can be filtered as archived
     await gotoFeatures()
+
+    // Verify archived feature is not visible by default
+    const archivedFeatureHidden = await page.locator('[data-test^="feature-item-"]').filter({
+      has: page.locator(`span:text-is("test_flag_with_tags")`)
+    }).count()
+    expect(archivedFeatureHidden).toBe(0)
+
+    log('Enable archived filter')
+    // Click on Tags filter button
+    await click(byId('table-filter-tags'))
+
+    // Click on archived filter option
+    await clickByText(/^archived/, '.table-filter-item')
+
+    // Close the filter dropdown
+    await click(byId('table-filter-tags'))
+
+    log('Verify archived feature is now visible')
+    // Wait for the features list to update and verify archived feature appears
+    const archivedFeature = page.locator('[data-test^="feature-item-"]').filter({
+      has: page.locator(`span:text-is("test_flag_with_tags")`)
+    }).first()
+    await archivedFeature.waitFor({ state: 'visible', timeout: 5000 })
+
+    // Clean up - delete the archived feature
+    await deleteFeature('test_flag_with_tags')
   });
 });
