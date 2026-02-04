@@ -313,7 +313,6 @@ const config: Config = {
     ],
 
     scripts: [
-        '/js/crisp-chat.js',
         {
             src: '//js-eu1.hs-scripts.com/143451822.js',
             async: true,
