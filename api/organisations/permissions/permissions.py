@@ -230,4 +230,4 @@ class OrganisationAPIUsageNotificationPermission(IsAuthenticated):
             return False
 
         # All organisation users can see api usage notifications.
-        return request.user.belongs_to(view.kwargs.get("organisation_pk"))  # type: ignore[union-attr]
+        return request.user.belongs_to(view.kwargs.get("organisation_pk"))  # type: ignore[union-attr,no-any-return]

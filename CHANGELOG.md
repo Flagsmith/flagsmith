@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.212.1](https://github.com/Flagsmith/flagsmith/compare/v2.212.0...v2.212.1) (2026-02-03)
+
+
+### Dependency Updates
+
+* update to django5 ([#6452](https://github.com/Flagsmith/flagsmith/issues/6452)) ([7c76777](https://github.com/Flagsmith/flagsmith/commit/7c7677777606e36429c9d0f8fb63e29c8aaa4140))
+
+## [2.212.0](https://github.com/Flagsmith/flagsmith/compare/v2.211.5...v2.212.0) (2026-02-02)
+
+
+### Features
+
+* Add Sentry to default integration data ([#6643](https://github.com/Flagsmith/flagsmith/issues/6643)) ([e64c093](https://github.com/Flagsmith/flagsmith/commit/e64c0936f5a47f482d9ace834431ef75986e8944))
+* **api-docs:** Improve SDK API documentation ([#6626](https://github.com/Flagsmith/flagsmith/issues/6626)) ([cdd3386](https://github.com/Flagsmith/flagsmith/commit/cdd3386c7d9e81614e7e1c165c0b8efac5d48735))
+
+
+### Bug Fixes
+
+* [#6397](https://github.com/Flagsmith/flagsmith/issues/6397) - Inconsistent feature toggle behavior corrected ([#6601](https://github.com/Flagsmith/flagsmith/issues/6601)) ([88e448b](https://github.com/Flagsmith/flagsmith/commit/88e448b3d47de922185092acb9f2bbdf399209e8))
+* **docs:** Invalid link to Contributing Guide in the PR template ([#6613](https://github.com/Flagsmith/flagsmith/issues/6613)) ([a0d5aa9](https://github.com/Flagsmith/flagsmith/commit/a0d5aa9e5b62ecbcadbb5f6701a12fce9d55d738))
+* **LaunchDarkly importer:** Update API version to 20240415 ([#6603](https://github.com/Flagsmith/flagsmith/issues/6603)) ([2d31fb4](https://github.com/Flagsmith/flagsmith/commit/2d31fb477643ce65e188a6c536bdf132b22e4165))
+
+
+### Dependency Updates
+
+* bump protobuf from 4.25.8 to 6.33.5 in /api ([#6631](https://github.com/Flagsmith/flagsmith/issues/6631)) ([608ef49](https://github.com/Flagsmith/flagsmith/commit/608ef49d315a393acf30c44a5971f5f93203587c))
+
 ## [2.211.5](https://github.com/Flagsmith/flagsmith/compare/v2.211.4...v2.211.5) (2026-01-28)
 
 

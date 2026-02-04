@@ -102,7 +102,7 @@ enabled = true
 
 [tool.poetry.dependencies]
 python = ">3.11,<3.13"
-django = "~4.2.27"
+django = ">=5,<6"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
 backoff = "~2.2.1"
@@ -129,7 +129,6 @@ python-http-client = "~3.3.7"
 django-health-check = "~3.18.2"
 django-admin-sso = "~5.2.0"
 drf-spectacular = "~0.28.0"
-django-debug-toolbar = "~3.2.1"
 sentry-sdk = "~2.8.0"
 environs = "^14.1.1"
 django-lifecycle = "~1.2.4"
@@ -142,9 +141,9 @@ asgiref = "~3.8.1"
 djangorestframework-api-key = "~2.2.0"
 pymemcache = "~4.0.0"
 google-re2 = "^1.0"
-django-softdelete = "~0.10.5"
+django-softdelete = "^0.11.5"
 simplejson = "~3.19.1"
-djoser = "~2.3.0"
+djoser = "^2.3.0"
 django-storages = "~1.10.1"
 django-environ = "~0.4.5"
 influxdb-client = "~1.50.0"
@@ -177,7 +176,7 @@ django_cockroachdb = "~4.2"
 optional = true
 
 [tool.poetry.group.auth-controller.dependencies]
-flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.1.4" }
+flagsmith-auth-controller = { git = "https://github.com/flagsmith/flagsmith-auth-controller", tag = "v0.2.0" }
 
 [tool.poetry.group.saml]
 optional = true
@@ -246,6 +245,8 @@ ruff = "^0.9.7"
 flagsmith-common = { version = "*", extras = ["test-tools"] }
 pytest-responses = "^0.5.1"
 diff-cover = "^10.1.0"
+django-debug-toolbar = "*"
+ipython = "^9.10.0"
 
 [build-system]
 requires = ["poetry>=2.0.0"]
