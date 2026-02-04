@@ -12,6 +12,7 @@ test.describe('Project Tests', () => {
       setText,
       waitForElementNotExist,
       waitForElementVisible,
+      waitForToast,
     } = createHelpers(page);
     const flagsmith = await getFlagsmith()
     const hasSegmentChangeRequests = flagsmith.hasFeature('segment_change_requests')
