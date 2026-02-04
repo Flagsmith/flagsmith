@@ -108,8 +108,10 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
 
     // Verify: API returns correct state (feature enabled)
     log('Verify API returns enabled state')
-    // In versioned environments, changes may take longer to propagate to the edge API
-    // Wait for the API response to ensure versioning has completed
+    // In versioned environments, changes may take MUCH longer to propagate to the edge API
+    // Versioning requires backend processing that can take several seconds
+    await page.waitForTimeout(10000)
+
     // Click "Try it" button and wait for network request to complete
     const responsePromise = page.waitForResponse(response =>
       response.url().includes('/flags/') && response.request().method() === 'GET'
