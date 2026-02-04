@@ -313,23 +313,12 @@ const config: Config = {
     ],
 
     scripts: [
+        '/js/crisp-chat.js',
         {
             src: '//js-eu1.hs-scripts.com/143451822.js',
             async: true,
             defer: true,
             id: 'hs-script-loader',
-        },
-        {
-            src: "https://widget.kapa.ai/kapa-widget.bundle.js",
-            "data-website-id": "bbb5a478-1363-4c1e-84b5-cdba2c58e5ad",
-            "data-project-name": "Flagsmith",
-            "data-project-color": "#6633FF",
-            "data-project-logo": "http://docs.flagsmith.com/img/logo.svg",
-            "data-answer-cta-button-enabled": "true",
-            "data-answer-cta-button-link": "/support/",
-            "data-answer-cta-button-text": "Still need help? Reach out to our support team",
-            "data-modal-disclaimer": "Results are AI generated from our product documentation. [Contact Support to speak to a human](/support).",
-            async: true,
         },
     ],
 
