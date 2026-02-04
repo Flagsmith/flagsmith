@@ -1,0 +1,71 @@
+{
+  "autoApprovalSettings": {
+    "enabled": true,
+    "rules": [
+      {
+        "tool": "Read",
+        "pattern": "**/*"
+      },
+      {
+        "tool": "Bash",
+        "pattern": "npm run typecheck:*"
+      },
+      {
+        "tool": "Bash",
+        "pattern": "npm run typecheck:staged"
+      },
+      {
+        "tool": "Bash",
+        "pattern": "node:*"
+      },
+      {
+        "tool": "Bash",
+        "pattern": "npm run lint:fix:*"
+      },
+      {
+        "tool": "Bash",
+        "pattern": "npm run build:*"
+      },
+      {
+        "tool": "Bash",
+        "pattern": "npm run lint*"
+      },
+      {
+        "tool": "Bash",
+        "pattern": "npm run check:staged"
+      },
+      {
+        "tool": "Bash",
+        "pattern": "npm run test*"
+      },
+      {
+        "tool": "Bash",
+        "pattern": "git diff*"
+      },
+      {
+        "tool": "Bash",
+        "pattern": "git log*"
+      },
+      {
+        "tool": "Bash",
+        "pattern": "git status*"
+      },
+      {
+        "tool": "Bash",
+        "pattern": "npx ssg*"
+      },
+      {
+        "tool": "WebSearch",
+        "pattern": "*"
+      },
+      {
+        "tool": "Glob",
+        "pattern": "*"
+      },
+      {
+        "tool": "Grep",
+        "pattern": "*"
+      }
+    ]
+  }
+}
