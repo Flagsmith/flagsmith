@@ -829,9 +829,6 @@ const Index = class extends Component {
                     >
                       {({ permission: projectAdmin }) => {
                         this.state.skipSaveProjectFeature = !createFeature
-                        const _hasMetadataRequired =
-                          this.state.hasMetadataRequired &&
-                          !projectFlag.metadata?.length
 
                         return (
                           <div id='create-feature-modal'>
@@ -1706,11 +1703,15 @@ const Index = class extends Component {
                                         }}
                                         onHasMetadataRequiredChange={(
                                           hasMetadataRequired,
-                                        ) =>
+                                        ) => {
+                                          console.log(
+                                            'hasMetadataRequired',
+                                            hasMetadataRequired,
+                                          )
                                           this.setState({
                                             hasMetadataRequired,
                                           })
-                                        }
+                                        }}
                                       />
                                       <JSONReference
                                         className='mb-3'
@@ -1739,7 +1740,7 @@ const Index = class extends Component {
                                                   isSaving ||
                                                   !projectFlag.name ||
                                                   invalid ||
-                                                  _hasMetadataRequired
+                                                  this.state.hasMetadataRequired
                                                 }
                                               >
                                                 {isSaving
@@ -1820,11 +1821,15 @@ const Index = class extends Component {
                                   }
                                   onHasMetadataRequiredChange={(
                                     hasMetadataRequired,
-                                  ) =>
+                                  ) => {
+                                    console.log(
+                                      'hasMetadataRequired',
+                                      hasMetadataRequired,
+                                    )
                                     this.setState({
                                       hasMetadataRequired,
                                     })
-                                  }
+                                  }}
                                   featureError={
                                     this.parseError(error).featureError
                                   }
@@ -1842,7 +1847,9 @@ const Index = class extends Component {
                                   featureLimitPercentage={
                                     this.state.featureLimitAlert.percentage
                                   }
-                                  hasMetadataRequired={_hasMetadataRequired}
+                                  hasMetadataRequired={
+                                    this.state.hasMetadataRequired
+                                  }
                                 />
                               </div>
                             )}

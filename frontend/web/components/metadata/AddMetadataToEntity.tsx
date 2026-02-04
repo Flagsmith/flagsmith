@@ -104,6 +104,24 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
 
   const [metadataChanged, setMetadataChanged] = useState<boolean>(false)
 
+  // Compute hasMetadataRequired reactively when state changes
+  useEffect(() => {
+    if (!metadataFieldsAssociatedtoEntity) return
+
+    const totalRequired = metadataFieldsAssociatedtoEntity.filter(
+      (m) => m.isRequiredFor,
+    ).length
+    const totalFilledRequired = metadataFieldsAssociatedtoEntity.filter(
+      (m) => m.field_value && m.field_value !== '' && m.isRequiredFor,
+    ).length
+
+    // hasMetadataRequired = true means "there are unfilled required fields"
+    setHasMetadataRequired?.(
+      totalRequired > 0 && totalFilledRequired < totalRequired,
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [metadataFieldsAssociatedtoEntity])
+
   const mergeMetadataEntityWithMetadataField = (
     metadata: Metadata[], // Metadata array
     metadataField: CustomMetadataField[], // Custom metadata field array
@@ -158,11 +176,11 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           })
           // Determine if isRequiredFor should be true or false based on is_required_for array
           const isRequiredFor = !!matchingItem?.is_required_for.length
-          setHasMetadataRequired?.(isRequiredFor)
+
           // Return the metadata field with additional metadata model field information including isRequiredFor
           return {
             ...meta,
-            isRequiredFor: isRequiredFor || false,
+            isRequiredFor,
             metadataModelFieldId: matchingItem ? matchingItem.id : null,
           }
         })
