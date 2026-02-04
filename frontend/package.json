@@ -34,7 +34,8 @@
   },
   "overrides": {
     "react": "16.14.0",
-    "@material-ui/core": "4.12.4"
+    "@material-ui/core": "4.12.4",
+    "qs": "^6.14.1"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.11.3",
