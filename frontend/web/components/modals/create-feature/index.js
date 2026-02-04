@@ -1818,10 +1818,6 @@ const Index = class extends Component {
                                   onHasMetadataRequiredChange={(
                                     hasMetadataRequired,
                                   ) => {
-                                    console.log(
-                                      'hasMetadataRequired',
-                                      hasMetadataRequired,
-                                    )
                                     this.setState({
                                       hasMetadataRequired,
                                     })
