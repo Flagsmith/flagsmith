@@ -12,9 +12,6 @@ import Project from 'common/project'
 import AccountStore from 'common/stores/account-store'
 import data from 'common/data/base/_data'
 
-// Set E2E flag default (overridden by Playwright in E2E tests)
-window.E2E = window.E2E || false
-
 window.Utils = Utils
 window.openModal = require('./components/modals/base/Modal').openModal
 window.openModal2 = require('./components/modals/base/Modal').openModal2
