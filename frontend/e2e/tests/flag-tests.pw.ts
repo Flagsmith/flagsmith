@@ -146,6 +146,9 @@ test.describe('Flag Tests', () => {
     log('Create Feature with Settings')
     await createFeature({ name: 'test_flag_with_tags', value: true, description: 'Test flag for tag and archive operations' })
 
+    log('Create additional feature to keep filters visible')
+    await createFeature({ name: 'keep_filters_visible', value: false })
+
     log('Open Feature and Add Tags')
     await gotoFeature('test_flag_with_tags')
     await addTagToFeature('bug')
@@ -189,7 +192,5 @@ test.describe('Flag Tests', () => {
     }).first()
     await archivedFeature.waitFor({ state: 'visible', timeout: 5000 })
 
-    // Clean up - delete the archived feature
-    await deleteFeature('test_flag_with_tags')
   });
 });
