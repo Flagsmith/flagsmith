@@ -67,9 +67,7 @@ test.describe('Change Request Tests', () => {
     })
 
     log('Verify initial value via API')
-    await page.waitForTimeout(2000)
     await page.click('#try-it-btn')
-    await page.waitForTimeout(500)
     let json = await parseTryItResults()
     expect(json[featureName].value).toBe('initial_value')
 
@@ -77,7 +75,6 @@ test.describe('Change Request Tests', () => {
     await gotoFeatures()
     await gotoFeature(featureName)
     await setText(byId('featureValue'), 'updated_value')
-    await page.waitForTimeout(500)
 
     await createChangeRequest(
       'Update feature value',
@@ -85,7 +82,6 @@ test.describe('Change Request Tests', () => {
     )
 
     log('Verify change request was created')
-    await page.waitForTimeout(1000)
     await closeModal()
 
     log('Verify value has NOT changed yet (change request not approved)')
