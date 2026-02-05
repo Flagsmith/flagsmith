@@ -1,37 +1,32 @@
-import React, { FC } from 'react'
+import React, { FC, useState } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
-import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
+import FeatureLimitAlert from 'components/modals/create-feature/FeatureLimitAlert'
 
 type FeaturesPageHeaderProps = {
-  totalFeatures: number
-  maxFeaturesAllowed: number | null
   onCreateFeature: () => void
   readOnly: boolean
   projectId: number
 }
 
 export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
-  maxFeaturesAllowed,
   onCreateFeature,
   projectId,
   readOnly,
-  totalFeatures,
 }) => {
-  const featureLimitAlert = Utils.calculateRemainingLimitsPercentage(
-    totalFeatures,
-    maxFeaturesAllowed,
-  )
-
-  const featureLimitWarningBanner = featureLimitAlert.percentage
-    ? Utils.displayLimitAlert('features', featureLimitAlert.percentage)
-    : null
+  const [featureLimitAlert, setFeatureLimitAlert] = useState({
+    limit: 0,
+    percentage: 0,
+  })
 
   return (
     <>
-      {featureLimitWarningBanner}
+      <FeatureLimitAlert
+        projectId={projectId}
+        onChange={setFeatureLimitAlert}
+      />
       <PageTitle
         title={'Features'}
         cta={

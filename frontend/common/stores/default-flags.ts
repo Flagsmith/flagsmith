@@ -187,6 +187,25 @@ const defaultFlags = {
       'tags': ['analytics'],
       'title': 'Segment',
     },
+    'sentry': {
+      'description': 'Send flag change events to Sentry.',
+      'docs': 'https://docs.flagsmith.com/integrations/apm/sentry',
+      'fields': [
+        {
+          'key': 'webhook_url',
+          'label': 'Webhook URL',
+        },
+        {
+          'hidden': true,
+          'key': 'secret',
+          'label': 'Secret',
+        },
+      ],
+      'image': '/static/images/integrations/sentry.svg',
+      'perEnvironment': true,
+      'tags': ['Monitoring'],
+      'title': 'Sentry',
+    },
     'slack': {
       'description':
         'Sends messages to Slack when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',

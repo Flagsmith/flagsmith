@@ -14,6 +14,6 @@ class EnvironmentUpdateFeatureStatePermission(BasePermission):
         except Environment.DoesNotExist:
             return False
 
-        return request.user.has_environment_permission(  # type: ignore[union-attr]
+        return request.user.has_environment_permission(  # type: ignore[union-attr,no-any-return]
             UPDATE_FEATURE_STATE, environment
         )

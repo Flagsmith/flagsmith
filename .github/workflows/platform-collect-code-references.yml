@@ -1,0 +1,19 @@
+name: Code references
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  collect-code-references:
+    name: Collect
+    uses: Flagsmith/ci/.github/workflows/collect-code-references.yml@v1.0.0
+    permissions:
+      contents: read  # For scanning feature flag code references
+    with:
+      flagsmith_project_id: ${{ fromJSON(vars.FLAGSMITH_PROJECT_ID) }}
+      flagsmith_admin_api_url: https://api.flagsmith.com
+    secrets:
+      flagsmith_admin_api_key: ${{ secrets.FLAGSMITH_CODE_REFERENCES_API_KEY }}

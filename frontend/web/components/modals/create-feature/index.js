@@ -38,12 +38,9 @@ import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import { getPermission } from 'common/services/usePermission'
 import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
-import { IonIcon } from '@ionic/react'
-import { warning } from 'ionicons/icons'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
-import BetaFlag from 'components/BetaFlag'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import CreateFeature from './tabs/CreateFeature'
 import FeatureSettings from './tabs/FeatureSettings'
@@ -629,6 +626,8 @@ const Index = class extends Component {
     const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
       'git_code_references',
     )
+    const hasCodeReferences =
+      isCodeReferencesEnabled || projectFlag?.code_references_counts?.length > 0
 
     try {
       if (!isEdit && projectFlag.name && regex) {
@@ -775,22 +774,7 @@ const Index = class extends Component {
                                   this.props.changeRequest.id,
                                 ignore_conflicts,
                                 live_from,
-                                multivariate_options: this.props
-                                  .multivariate_options
-                                  ? this.props.multivariate_options.map((v) => {
-                                      const matching =
-                                        projectFlag.multivariate_options.find(
-                                          (m) =>
-                                            m.id ===
-                                            v.multivariate_feature_option,
-                                        )
-                                      return {
-                                        ...v,
-                                        percentage_allocation:
-                                          matching.default_percentage_allocation,
-                                      }
-                                    })
-                                  : projectFlag.multivariate_options,
+                                multivariate_options: flag.multivariate_options,
                                 title,
                               },
                               !is4Eyes,
@@ -1582,41 +1566,65 @@ const Index = class extends Component {
                                       )
                                     }
                                   </Permission>
-                                  {!Project.disableAnalytics && (
-                                    <TabItem tabLabel={'Analytics'}>
-                                      <div className='mb-4'>
-                                        <FeatureAnalytics
-                                          projectId={`${project.id}`}
-                                          featureId={`${projectFlag.id}`}
-                                          defaultEnvironmentIds={[
-                                            `${environment.id}`,
-                                          ]}
-                                        />
-                                      </div>
+                                  {(!Project.disableAnalytics ||
+                                    hasCodeReferences) && (
+                                    <TabItem
+                                      tabLabelString='Usage'
+                                      tabLabel={
+                                        <Row className='justify-content-center'>
+                                          Usage
+                                        </Row>
+                                      }
+                                    >
+                                      {!Project.disableAnalytics && (
+                                        <div className='mb-4'>
+                                          <FeatureAnalytics
+                                            projectId={`${project.id}`}
+                                            featureId={`${projectFlag.id}`}
+                                            defaultEnvironmentIds={[
+                                              `${environment.id}`,
+                                            ]}
+                                          />
+                                        </div>
+                                      )}
+                                      {hasCodeReferences && (
+                                        <FormGroup className='mb-4'>
+                                          <div className='d-flex align-items-center gap-2 mb-2'>
+                                            <h5 className='mb-0'>
+                                              Code references
+                                            </h5>
+                                            <span
+                                              className='chip chip--xs bg-primary text-white'
+                                              style={{ border: 'none' }}
+                                            >
+                                              New
+                                            </span>
+                                          </div>
+                                          <div className='text-muted mb-2'>
+                                            Code references allow you to track
+                                            where feature flags are being used
+                                            within your code.{' '}
+                                            <a
+                                              target='_blank'
+                                              href='https://docs.flagsmith.com/managing-flags/code-references'
+                                              rel='noreferrer'
+                                            >
+                                              Learn more
+                                            </a>
+                                          </div>
+                                          <FeatureCodeReferencesContainer
+                                            featureId={projectFlag.id}
+                                            projectId={this.props.projectId}
+                                          />
+                                        </FormGroup>
+                                      )}
                                     </TabItem>
                                   )}
                                   {
                                     <TabItem
                                       data-test='feature_health'
-                                      tabLabelString='Feature Health'
-                                      tabLabel={
-                                        <Row className='d-flex justify-content-center align-items-center pr-1 gap-1'>
-                                          <BetaFlag flagName={'feature_health'}>
-                                            Feature Health
-                                            {this.props.hasUnhealthyEvents && (
-                                              <IonIcon
-                                                icon={warning}
-                                                style={{
-                                                  color:
-                                                    Constants.featureHealth
-                                                      .unhealthyColor,
-                                                  marginBottom: -2,
-                                                }}
-                                              />
-                                            )}
-                                          </BetaFlag>
-                                        </Row>
-                                      }
+                                      tabLabelString='Health'
+                                      tabLabel={'Health'}
                                     >
                                       <FeatureHealthTabContent
                                         projectId={projectFlag.project}
@@ -1625,20 +1633,6 @@ const Index = class extends Component {
                                       />
                                     </TabItem>
                                   }
-                                  {isCodeReferencesEnabled && (
-                                    <TabItem
-                                      tabLabel={
-                                        <Row className='justify-content-center'>
-                                          Code References
-                                        </Row>
-                                      }
-                                    >
-                                      <FeatureCodeReferencesContainer
-                                        featureId={projectFlag.id}
-                                        projectId={this.props.projectId}
-                                      />
-                                    </TabItem>
-                                  )}
                                   {hasIntegrationWithGithub &&
                                     projectFlag?.id && (
                                       <TabItem

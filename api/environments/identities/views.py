@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
 from drf_spectacular.utils import extend_schema
+from flagsmith_schemas import api as api_schemas
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -26,7 +27,6 @@ from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentitySerializer,
     SDKIdentitiesQuerySerializer,
-    SDKIdentitiesResponseSerializer,
 )
 from environments.models import Environment
 from environments.permissions.permissions import NestedEnvironmentPermissions
@@ -162,9 +162,9 @@ class SDKIdentities(SDKAPIView):
     throttle_classes = []
 
     @extend_schema(
-        responses={200: SDKIdentitiesResponseSerializer},
+        responses={200: api_schemas.V1IdentitiesResponse},
         parameters=[SDKIdentitiesQuerySerializer],
-        operation_id="identify_user",
+        operation_id="sdk_v1_get_identities",
     )
     @method_decorator(vary_on_headers(SDK_ENVIRONMENT_KEY_HEADER))
     @method_decorator(
@@ -174,6 +174,9 @@ class SDKIdentities(SDKAPIView):
         )
     )
     def get(self, request):  # type: ignore[no-untyped-def]
+        """
+        Retrieve the flags and traits for an identity.
+        """
         identifier = request.query_params.get("identifier")
         if not identifier:
             return Response(
@@ -245,11 +248,14 @@ class SDKIdentities(SDKAPIView):
         return context
 
     @extend_schema(
-        request=IdentifyWithTraitsSerializer,
-        responses={200: SDKIdentitiesResponseSerializer},
-        operation_id="identify_user_with_traits",
+        request=api_schemas.V1IdentitiesRequest,
+        responses={200: api_schemas.V1IdentitiesResponse},
+        operation_id="sdk_v1_post_identities",
     )
     def post(self, request):  # type: ignore[no-untyped-def]
+        """
+        Identify a user, set their traits, and retrieve their flags.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()

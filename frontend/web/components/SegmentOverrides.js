@@ -454,7 +454,9 @@ class TheComponent extends Component {
     const { highlightSegmentId, projectId, value } = this.props
     if (!highlightSegmentId) return
 
-    const existingOverride = value?.find((v) => v.segment === highlightSegmentId)
+    const existingOverride = value?.find(
+      (v) => v.segment === highlightSegmentId,
+    )
     if (existingOverride) {
       return
     }
@@ -613,7 +615,7 @@ class TheComponent extends Component {
               <Row className='text-left gap-2'>
                 <div className='flex-1'>
                   <SegmentSelect
-                    className="w-100"
+                    className='w-100'
                     disabled={!!isLimitReached}
                     projectId={this.props.projectId}
                     data-test='select-segment'

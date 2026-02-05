@@ -72,8 +72,6 @@ from webhooks.webhooks import WebhookEventType
 if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.service_resource import Table
 
-# patch this function as it's triggering extra threads and causing errors
-mock.patch("features.signals.trigger_feature_state_change_webhooks").start()
 
 now = timezone.now()
 two_hours_ago = now - timedelta(hours=2)

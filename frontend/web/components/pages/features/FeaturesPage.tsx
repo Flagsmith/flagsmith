@@ -123,7 +123,6 @@ const FeaturesPage: FC = () => {
     }
   }, [refetch])
 
-  const maxFeaturesAllowed = project?.max_features_allowed ?? null
   const currentEnvironment = getEnvironment(environmentId)
   const minimumChangeRequestApprovals =
     currentEnvironment?.minimum_change_request_approvals
@@ -164,7 +163,6 @@ const FeaturesPage: FC = () => {
     () => data?.pagination ?? DEFAULT_PAGINATION,
     [data?.pagination],
   )
-  const totalFeatures = useMemo(() => data?.count ?? 0, [data?.count])
 
   usePageTracking({
     context: {
@@ -357,8 +355,6 @@ const FeaturesPage: FC = () => {
             />
 
             <FeaturesPageHeader
-              totalFeatures={totalFeatures}
-              maxFeaturesAllowed={maxFeaturesAllowed}
               onCreateFeature={openNewFlagModal}
               readOnly={readOnly}
               projectId={projectId}
