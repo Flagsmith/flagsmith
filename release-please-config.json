@@ -51,7 +51,8 @@
         },
         {
             "type": "chore",
-            "section": "Other"
+            "section": "Other",
+            "hidden": true
         }
     ]
 }
