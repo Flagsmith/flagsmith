@@ -75,7 +75,7 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
       )}
       {metadataEnable && featureContentType?.id && !identity && (
         <>
-          {/* <label className='mt-1'>Custom Fields</label> */}
+          <label className='mt-1'>Custom Fields</label>
           <AddMetadataToEntity
             organisationId={AccountStore.getOrganisation().id}
             projectId={projectId}

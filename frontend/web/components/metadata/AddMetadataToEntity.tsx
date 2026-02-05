@@ -1,43 +1,57 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useCallback, useEffect, useState } from 'react'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
-import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
-import { useGetMetadataFieldListQuery } from 'common/services/useMetadataField'
-import { useGetSegmentQuery } from 'common/services/useSegment'
-import {
-  useGetEnvironmentQuery,
-  useUpdateEnvironmentMutation,
-} from 'common/services/useEnvironment'
-import { MetadataField, Metadata } from 'common/types/responses'
+import { useUpdateEnvironmentMutation } from 'common/services/useEnvironment'
+import { Metadata } from 'common/types/responses'
 import Utils from 'common/utils/utils'
-import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
-import { sortBy } from 'lodash'
 import Switch from 'components/Switch'
 import InputGroup from 'components/base/forms/InputGroup'
+import {
+  useEntityMetadataFields,
+  CustomMetadataField,
+} from 'common/hooks/useEntityMetadataFields'
+import { useGlobalMetadataValidation } from 'common/utils/metadataValidation'
 
-export type CustomMetadataField = MetadataField & {
-  metadataModelFieldId: number | string | null
-  isRequiredFor: boolean
-  model_field?: string | number
-  metadataEntity?: boolean
-  field_value?: string
-}
+export type { CustomMetadataField }
 
-type CustomMetadata = (Metadata & CustomMetadataField) | null
-
-type AddMetadataToEntityType = {
+type AddMetadataToEntityProps = {
   isCloningEnvironment?: boolean
-  organisationId: string
-  projectId: string | number
+  organisationId: number
+  projectId: number
   entityContentType: number
-  entityId: string
+  entityId?: number
   entity: string
   envName?: string
-  onChange?: (m: CustomMetadataField[]) => void
+  onChange?: (metadata: Metadata[]) => void
   setHasMetadataRequired?: (b: boolean) => void
 }
 
-const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
+function formatMetadataToApi(fields: CustomMetadataField[]): Metadata[] {
+  return fields
+    .filter((f) => f.hasValue)
+    .map(({ field_value, metadataModelFieldId }) => ({
+      field_value: field_value ?? '',
+      model_field: metadataModelFieldId as number,
+    }))
+}
+
+type MetadataErrorResponse = {
+  data?: {
+    metadata?: Array<{
+      non_field_errors?: string[]
+      [key: string]: unknown
+    }>
+  }
+}
+
+function getMetadataErrors(error: MetadataErrorResponse): string {
+  const metadataErrors = error?.data?.metadata
+  if (!metadataErrors) return ''
+
+  return metadataErrors.flatMap((m) => m.non_field_errors ?? []).join('\n')
+}
+
+const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
   entity,
   entityContentType,
   entityId,
@@ -48,364 +62,172 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
   projectId,
   setHasMetadataRequired,
 }) => {
-  const { data: metadataFieldList, isSuccess: metadataFieldListLoaded } =
-    useGetMetadataFieldListQuery({
-      organisation: organisationId,
-    })
-  const {
-    data: metadataModelFieldList,
-    isSuccess: metadataModelFieldListLoaded,
-  } = useGetMetadataModelFieldListQuery({
-    organisation_id: organisationId,
+  const { isLoading, metadataFields: initialFields } = useEntityMetadataFields({
+    entityContentType,
+    entityId: entityId,
+    entityType: entity as 'feature' | 'segment' | 'environment',
+    organisationId,
+    projectId,
   })
 
-  const { data: projectFeatureData, isSuccess: projectFeatureDataLoaded } =
-    useGetProjectFlagQuery(
-      {
-        id: entityId,
-        project: projectId,
-      },
-      { skip: entity !== 'feature' || !entityId },
-    )
+  const [metadataFields, setMetadataFields] = useState<CustomMetadataField[]>(
+    [],
+  )
+  const [hasChanges, setHasChanges] = useState(false)
 
-  const { data: segmentData, isSuccess: segmentDataLoaded } =
-    useGetSegmentQuery(
-      {
-        id: `${entityId}`,
-        projectId: `${projectId}`,
-      },
-      { skip: entity !== 'segment' || !entityId },
-    )
+  const { hasUnfilledRequired } = useGlobalMetadataValidation(metadataFields)
 
-  const { data: envData, isSuccess: envDataLoaded } = useGetEnvironmentQuery(
-    { id: entityId },
-    { skip: entity !== 'environment' || !entityId },
+  useEffect(() => {
+    if (initialFields.length > 0 && metadataFields.length === 0) {
+      setMetadataFields(initialFields)
+    }
+  }, [initialFields, metadataFields.length])
+
+  useEffect(() => {
+    setHasMetadataRequired?.(hasUnfilledRequired)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasUnfilledRequired])
+
+  const handleFieldChange = useCallback(
+    (fieldId: number, newValue: string) => {
+      setMetadataFields((prev) => {
+        const updatedMetadataFields = prev.map((field) =>
+          field.id === fieldId
+            ? { ...field, field_value: newValue, hasValue: !!newValue }
+            : field,
+        )
+
+        // Propagate the change to upstream parents
+        if (entity !== 'environment' || isCloningEnvironment) {
+          const formattedMetadata = formatMetadataToApi(updatedMetadataFields)
+          onChange?.(formattedMetadata)
+        }
+
+        return updatedMetadataFields
+      })
+      setHasChanges(true)
+    },
+    [entity, isCloningEnvironment, onChange],
   )
 
   const [updateEnvironment] = useUpdateEnvironmentMutation()
 
-  const [
-    metadataFieldsAssociatedtoEntity,
-    setMetadataFieldsAssociatedtoEntity,
-  ] = useState<CustomMetadataField[]>()
+  const handleEnvironmentSave = async () => {
+    if (!envName || !entityId) return
 
-  useEffect(() => {
-    if (metadataFieldsAssociatedtoEntity?.length && metadataChanged) {
-      const metadataParsed = metadataFieldsAssociatedtoEntity
-        .filter((m) => m.metadataEntity)
-        .map((i) => {
-          const { metadataModelFieldId, ...rest } = i
-          return { model_field: metadataModelFieldId, ...rest }
-        })
-      onChange?.(metadataParsed as CustomMetadataField[])
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [metadataFieldsAssociatedtoEntity])
-
-  const [metadataChanged, setMetadataChanged] = useState<boolean>(false)
-
-  useEffect(() => {
-    if (!metadataFieldsAssociatedtoEntity) return
-
-    const totalRequired = metadataFieldsAssociatedtoEntity.filter(
-      (m) => m.isRequiredFor,
-    ).length
-    const totalFilledRequired = metadataFieldsAssociatedtoEntity.filter(
-      (m) => m.field_value && m.field_value !== '' && m.isRequiredFor,
-    ).length
-
-    setHasMetadataRequired?.(
-      totalRequired > 0 && totalFilledRequired < totalRequired,
-    )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [metadataFieldsAssociatedtoEntity])
-
-  const mergeMetadataEntityWithMetadataField = (
-    metadata: Metadata[], // Metadata array
-    metadataField: CustomMetadataField[], // Custom metadata field array
-  ) => {
-    // Create a map of metadata fields using metadataModelFieldId as key
-    const map = new Map(
-      metadataField.map((item) => [item.metadataModelFieldId, item]),
-    )
-
-    // Merge metadata fields with metadata entities
-    return metadataField.map((item) => {
-      const mergedItem = {
-        ...item, // Spread the properties of the metadata field
-        ...(map.get(item.model_field!) || {}), // Get the corresponding metadata field from the map
-        ...(metadata.find((m) => m.model_field === item.metadataModelFieldId) ||
-          {}), // Find the corresponding metadata entity
-      }
-
-      // Determine if metadata entity exists
-      mergedItem.metadataEntity =
-        mergedItem.metadataModelFieldId !== undefined &&
-        mergedItem.model_field !== undefined
-
-      return mergedItem // Return the merged item
+    const result = await updateEnvironment({
+      body: {
+        metadata: formatMetadataToApi(metadataFields),
+        name: envName,
+        project: projectId,
+      },
+      id: entityId,
     })
-  }
 
-  useEffect(() => {
-    if (
-      metadataFieldList &&
-      metadataFieldListLoaded &&
-      metadataModelFieldList &&
-      metadataModelFieldListLoaded
-    ) {
-      // Filter metadata fields based on the provided content type
-      const metadataForContentType = metadataFieldList.results
-        // Filter metadata fields that have corresponding entries in the metadata model field list
-        .filter((meta) => {
-          return metadataModelFieldList.results.some((item) => {
-            return (
-              item.field === meta.id && item.content_type === entityContentType
-            )
-          })
-        })
-        // Map each filtered metadata field to include additional information from the metadata model field list
-        .map((meta) => {
-          // Find the matching item in the metadata model field list
-          const matchingItem = metadataModelFieldList.results.find((item) => {
-            return (
-              item.field === meta.id && item.content_type === entityContentType
-            )
-          })
-          // Determine if isRequiredFor should be true or false based on is_required_for array
-          const isRequiredFor = !!matchingItem?.is_required_for.length
-
-          // Return the metadata field with additional metadata model field information including isRequiredFor
-          return {
-            ...meta,
-            isRequiredFor,
-            metadataModelFieldId: matchingItem ? matchingItem.id : null,
-          }
-        })
-      if (projectFeatureData?.metadata && projectFeatureDataLoaded) {
-        const mergedFeatureEntity = mergeMetadataEntityWithMetadataField(
-          projectFeatureData?.metadata,
-          metadataForContentType,
-        )
-        const sortedArray = sortBy(mergedFeatureEntity, (m) =>
-          m.isRequiredFor ? -1 : 1,
-        )
-        setMetadataFieldsAssociatedtoEntity(sortedArray)
-      } else if (segmentData?.metadata && segmentDataLoaded) {
-        const mergedSegmentEntity = mergeMetadataEntityWithMetadataField(
-          segmentData?.metadata,
-          metadataForContentType,
-        )
-        const sortedArray = sortBy(mergedSegmentEntity, (m) =>
-          m.isRequiredFor ? -1 : 1,
-        )
-        setMetadataFieldsAssociatedtoEntity(sortedArray)
-      } else if (envData?.metadata && envDataLoaded) {
-        const mergedEnvEntity = mergeMetadataEntityWithMetadataField(
-          envData?.metadata,
-          metadataForContentType,
-        )
-        const sortedArray = sortBy(mergedEnvEntity, (m) =>
-          m.isRequiredFor ? -1 : 1,
-        )
-        setMetadataFieldsAssociatedtoEntity(sortedArray)
-      } else {
-        const sortedArray = sortBy(metadataForContentType, (m) =>
-          m.isRequiredFor ? -1 : 1,
-        )
-        setMetadataFieldsAssociatedtoEntity(sortedArray)
-      }
+    if ('error' in result) {
+      toast(getMetadataErrors(result.error as MetadataErrorResponse), 'danger')
+    } else {
+      toast('Environment Field Updated')
+      setHasChanges(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    metadataFieldList,
-    metadataFieldListLoaded,
-    metadataModelFieldList,
-    metadataModelFieldListLoaded,
-    projectFeatureDataLoaded,
-    projectFeatureData,
-    entityId,
-    envData,
-    envDataLoaded,
-    segmentData,
-    segmentDataLoaded,
-  ])
-
-  const getMetadataErrors = (error: any) => {
-    const nonFieldErrors =
-      error?.data?.metadata?.map(
-        (metadata: any) => metadata?.non_field_errors,
-      ) || []
-    const fieldErrors =
-      error?.data?.metadata?.map((metadata: any) => metadata) || []
-
-    const allErrors = [...nonFieldErrors, ...fieldErrors]
-
-    return allErrors.join('\n')
   }
 
   return (
-    <>
-      <FormGroup className='setting'>
-        <PanelSearch
-          className='mt-1 no-pad'
-          header={
-            <Row className='table-header'>
-              <Row className='table-column flex-1'>Field </Row>
-              <Flex className='table-column'>Value</Flex>
-            </Row>
-          }
-          items={metadataFieldsAssociatedtoEntity}
-          renderRow={(m) => {
-            return (
-              <MetadataRow
-                metadata={m}
-                entity={entity}
-                getMetadataValue={(m: CustomMetadata) => {
-                  setMetadataFieldsAssociatedtoEntity((prevState) =>
-                    prevState?.map((metadata) => {
-                      if (metadata.id === m?.id) {
-                        return {
-                          ...metadata,
-                          field_value: m?.field_value,
-                          metadataEntity: !!m?.field_value,
-                        }
-                      }
-                      return metadata
-                    }),
-                  )
-                  setMetadataChanged(true)
-                }}
-              />
-            )
-          }}
-          renderNoResults={
-            <FormGroup>
-              No custom fields configured for {entity}s. Add custom fields in
-              your{' '}
-              <a
-                href={`/organisation/${organisationId}/settings?tab=custom-fields`}
-                target='_blank'
-                rel='noreferrer'
-              >
-                Organisation Settings
-              </a>
-              .
-            </FormGroup>
-          }
-        />
-        {entity === 'environment' && !isCloningEnvironment && (
-          <div className='text-right'>
-            <Button
-              theme='primary'
-              className='mt-2'
-              disabled={
-                !metadataFieldsAssociatedtoEntity?.length || !metadataChanged
-              }
-              onClick={() => {
-                updateEnvironment({
-                  body: {
-                    metadata: metadataFieldsAssociatedtoEntity
-                      ?.filter((i) => i.metadataEntity)
-                      ?.map((i) => {
-                        const { field_value, ...rest } = i
-                        return {
-                          field_value,
-                          model_field: i.metadataModelFieldId,
-                          ...rest,
-                        }
-                      }) as Metadata[],
-                    name: envName!,
-                    project: parseInt(`${projectId}`),
-                  },
-                  id: entityId,
-                }).then((res) => {
-                  if (res?.error) {
-                    toast(getMetadataErrors(res?.error), 'danger')
-                  } else {
-                    toast('Environment Field Updated')
-                  }
-                })
-              }}
-            >
-              Save Custom Field
-            </Button>
-          </div>
+    <FormGroup className='setting'>
+      <PanelSearch
+        className='mt-1 no-pad'
+        isLoading={isLoading}
+        header={
+          <Row className='table-header'>
+            <Row className='table-column flex-1'>Field </Row>
+            <Flex className='table-column'>Value</Flex>
+          </Row>
+        }
+        items={metadataFields}
+        renderRow={(field: CustomMetadataField) => (
+          <MetadataRow
+            key={field.id}
+            metadata={field}
+            onFieldChange={handleFieldChange}
+          />
         )}
-      </FormGroup>
-    </>
+        renderNoResults={
+          <FormGroup>
+            No custom fields configured for {entity}s. Add custom fields in your{' '}
+            <a
+              href={`/organisation/${organisationId}/settings?tab=custom-fields`}
+              target='_blank'
+              rel='noreferrer'
+            >
+              Organisation Settings
+            </a>
+            .
+          </FormGroup>
+        }
+      />
+      {entity === 'environment' && !isCloningEnvironment && (
+        <div className='text-right'>
+          <Button
+            theme='primary'
+            className='mt-2'
+            disabled={!metadataFields.length || !hasChanges}
+            onClick={handleEnvironmentSave}
+          >
+            Save Custom Field
+          </Button>
+        </div>
+      )}
+    </FormGroup>
   )
 }
 
-type MetadataRowType = {
+type MetadataRowProps = {
   metadata: CustomMetadataField
-  getMetadataValue?: (metadata: CustomMetadata) => void
-  entity: string
+  onFieldChange: (fieldId: number, value: string) => void
 }
-const MetadataRow: FC<MetadataRowType> = ({
-  entity,
-  getMetadataValue,
-  metadata,
-}) => {
-  const [metadataValueChanged, setMetadataValueChanged] =
-    useState<boolean>(false)
-  const metadataValue =
-    metadata?.type === 'bool'
-      ? metadata?.field_value === 'true'
-      : metadata?.field_value || ''
 
-  const handleChange = (newMetadataValue: string | boolean) => {
-    setMetadataValueChanged(false)
-    const updatedMetadataObject = { ...metadata }
-    updatedMetadataObject.field_value =
-      metadata?.type === 'bool' ? `${!newMetadataValue}` : `${newMetadataValue}`
-    getMetadataValue?.(updatedMetadataObject as CustomMetadata)
+const MetadataRow: FC<MetadataRowProps> = ({ metadata, onFieldChange }) => {
+  const displayValue =
+    metadata.type === 'bool'
+      ? metadata.field_value === 'true'
+      : metadata.field_value || ''
+
+  const handleChange = (newValue: string | boolean) => {
+    const stringValue = metadata.type === 'bool' ? `${newValue}` : `${newValue}`
+    onFieldChange(metadata.id, stringValue)
   }
-
-  const isRequiredForAndCorrectType =
-    metadata?.isRequiredFor &&
-    Utils.validateMetadataType(metadata?.type, metadataValue)
-  const isNotRequiredAndCorrectType =
-    !!metadataValue && Utils.validateMetadataType(metadata?.type, metadataValue)
-  const isEmptyAuthorized = !metadataValue && !metadata?.isRequiredFor
+  const isEmpty = !displayValue || displayValue === ''
+  const isValidType = Utils.validateMetadataType(metadata.type, displayValue)
+  const isValid = isEmpty ? !metadata.isRequiredFor : isValidType
 
   return (
     <Row className='space list-item clickable py-2'>
-      {metadataValueChanged && entity !== 'segment' && (
-        <div className='unread ml-2 px-1'>{'*'}</div>
-      )}
-      <Flex className='table-column'>{`${metadata?.name} ${
-        metadata?.isRequiredFor ? '*' : ''
-      }`}</Flex>
-      {metadata?.type === 'bool' ? (
+      <Flex className='table-column'>{metadata.name}</Flex>
+      {metadata.type === 'bool' ? (
         <Flex className='flex-row'>
           <Switch
-            checked={[true, 'true'].includes(metadataValue)}
+            checked={[true, 'true'].includes(displayValue)}
             onChange={() => {
-              setMetadataValueChanged(true)
-              handleChange(!metadataValue)
+              const currentBool =
+                displayValue === true || displayValue === 'true'
+              handleChange(!currentBool)
             }}
           />
         </Flex>
       ) : (
         <Flex className='flex-row mt-1' style={{ minWidth: '300px' }}>
           <InputGroup
-            textarea={metadata?.type === 'multiline_str'}
-            value={metadataValue}
+            textarea={metadata.type === 'multiline_str'}
+            value={displayValue}
             inputProps={{
               style: {
-                height: metadata?.type === 'multiline_str' ? '65px' : '44px',
+                height: metadata.type === 'multiline_str' ? '65px' : '44px',
                 width: '250px',
               },
             }}
             noMargin
-            isValid={
-              isRequiredForAndCorrectType ||
-              isNotRequiredAndCorrectType ||
-              isEmptyAuthorized
-            }
+            isValid={isValid}
             onChange={(e: InputEvent) => {
-              setMetadataValueChanged(true)
               handleChange(Utils.safeParseEventValue(e))
             }}
             type='text'
