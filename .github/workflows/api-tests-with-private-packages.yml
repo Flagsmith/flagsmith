@@ -65,11 +65,12 @@ jobs:
           DOTENV_OVERRIDE_FILE: .env-ci
         run: make test
 
-      - name: Upload Coverage
-        uses: codecov/codecov-action@v4
-        env:
-          PRIVATE_PACKAGES: "true"
-          PYTHON: ${{ matrix.python-version }}
-        with:
-          env_vars: PRIVATE_PACKAGES,PYTHON
-          use_oidc: true
+      # Temporarily disabled to test codecov hypothesis
+      # - name: Upload Coverage
+      #   uses: codecov/codecov-action@v4
+      #   env:
+      #     PRIVATE_PACKAGES: "true"
+      #     PYTHON: ${{ matrix.python-version }}
+      #   with:
+      #     env_vars: PRIVATE_PACKAGES,PYTHON
+      #     use_oidc: true
