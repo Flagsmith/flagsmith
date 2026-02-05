@@ -8,7 +8,7 @@ sidebar_position: 20
 
 Flag analytics allow you to track how often individual flags are evaluated within the Flagsmith SDK.
 
-To view Analytics for a particular flag, browse to the relevant environment and click on a single flag to edit that flag.
+To view Analytics for a particular flag, browse to the relevant environment and click on a single flag to edit that flag. Analytics are displayed in the _Usage_ tab alongside Code References.
 
 ![Image](/img/flag-analytics.png)
 

@@ -71,11 +71,19 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
       {isCodeReferencesEnabled && hasScannedCodeReferences && (
         <Tooltip
           title={
-            <VCSProviderTag
-              count={codeReferencesCounts}
-              isWarning={codeReferencesCounts === 0}
-              vcsProvider={VCSProvider.GITHUB}
-            />
+            <div
+              onClick={(e) => {
+                e.stopPropagation()
+                editFeature(Constants.featurePanelTabs.USAGE)
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              <VCSProviderTag
+                count={codeReferencesCounts}
+                isWarning={codeReferencesCounts === 0}
+                vcsProvider={VCSProvider.GITHUB}
+              />
+            </div>
           }
           place='top'
         >
