@@ -6,13 +6,9 @@ import { Metadata } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import Switch from 'components/Switch'
 import InputGroup from 'components/base/forms/InputGroup'
-import {
-  useEntityMetadataFields,
-  CustomMetadataField,
-} from 'common/hooks/useEntityMetadataFields'
+import { useGetEntityMetadataFieldsQuery } from 'common/services/useMetadataField'
+import { CustomMetadataField } from 'common/types/metadata-field'
 import { useGlobalMetadataValidation } from 'common/utils/metadataValidation'
-
-export type { CustomMetadataField }
 
 type AddMetadataToEntityProps = {
   isCloningEnvironment?: boolean
@@ -62,13 +58,14 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
   projectId,
   setHasMetadataRequired,
 }) => {
-  const { isLoading, metadataFields: initialFields } = useEntityMetadataFields({
-    entityContentType,
-    entityId: entityId,
-    entityType: entity as 'feature' | 'segment' | 'environment',
-    organisationId,
-    projectId,
-  })
+  const { data: initialFields = [], isLoading } =
+    useGetEntityMetadataFieldsQuery({
+      entityContentType,
+      entityId,
+      entityType: entity as 'feature' | 'segment' | 'environment',
+      organisationId,
+      projectId,
+    })
 
   const [metadataFields, setMetadataFields] = useState<CustomMetadataField[]>(
     [],
@@ -170,7 +167,9 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
           <Button
             theme='primary'
             className='mt-2'
-            disabled={!metadataFields.length || !hasChanges}
+            disabled={
+              !metadataFields.length || !hasChanges || hasUnfilledRequired
+            }
             onClick={handleEnvironmentSave}
           >
             Save Custom Field
@@ -202,7 +201,10 @@ const MetadataRow: FC<MetadataRowProps> = ({ metadata, onFieldChange }) => {
 
   return (
     <Row className='space list-item clickable py-2'>
-      <Flex className='table-column'>{metadata.name}</Flex>
+      <Flex className='table-column'>
+        {metadata.name}
+        {metadata.isRequiredFor && '*'}
+      </Flex>
       {metadata.type === 'bool' ? (
         <Flex className='flex-row'>
           <Switch

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { CustomMetadataField } from 'common/hooks/useEntityMetadataFields'
+import { CustomMetadataField } from 'common/types/metadata-field'
 
 export type MetadataValidationState = {
   hasUnfilledRequired: boolean

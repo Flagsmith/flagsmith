@@ -1,5 +1,5 @@
 import { getGlobalMetadataValidationState } from 'common/utils/metadataValidation'
-import { CustomMetadataField } from 'common/hooks/useEntityMetadataFields'
+import { CustomMetadataField } from 'common/types/metadata-field'
 
 const createField = (
   partialField: Partial<CustomMetadataField> = {},
