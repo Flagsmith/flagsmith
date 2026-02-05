@@ -4,6 +4,7 @@ import pytest
 import responses
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -133,7 +134,9 @@ def test_update_multivariate_percentage__webhook_payload_includes_multivariate_v
     environment: int,
     feature: int,
     mv_option_50_percent: int,
+    mv_option_value: str,
     webhook: str,
+    mocker: MockerFixture,
 ) -> None:
     """
     Test for issue #6190: Webhook payloads do not include multivariate values.
@@ -143,8 +146,6 @@ def test_update_multivariate_percentage__webhook_payload_includes_multivariate_v
     with their percentage allocations.
     """
     # Given
-    responses.add(responses.POST, webhook, status=200)
-
     # Get the feature state for this environment
     feature_states_url = reverse("api-v1:features:featurestates-list")
     feature_states_response = admin_client.get(
@@ -160,7 +161,10 @@ def test_update_multivariate_percentage__webhook_payload_includes_multivariate_v
     old_percentage = mv_fs_value["percentage_allocation"]
     new_percentage = 75
 
-    # When - update only the multivariate percentage allocation
+    responses.add(responses.POST, webhook, status=200)
+
+    # When
+    # update only the multivariate percentage allocation
     url = reverse("api-v1:features:featurestates-detail", args=[feature_state_id])
     data = {
         "id": feature_state_id,
@@ -178,28 +182,39 @@ def test_update_multivariate_percentage__webhook_payload_includes_multivariate_v
             }
         ],
     }
-    response = admin_client.put(
-        url, data=json.dumps(data), content_type="application/json"
-    )
+    admin_client.put(url, data=json.dumps(data), content_type="application/json")
 
     # Then
-    assert response.status_code == status.HTTP_200_OK
+    # `FLAG_UPDATED`` webhook was called
+    # (should be the last sent event)
+    last_call = responses.calls[-1]
+    assert not isinstance(last_call, list)
+    webhook_payload = json.loads(last_call.request.body)
+    assert webhook_payload["event_type"] == "FLAG_UPDATED"
 
-    # Verify webhook was called
-    assert len(responses.calls) >= 1
-    webhook_payload = json.loads(responses.calls[0].request.body)["data"]  # type: ignore[union-attr]
+    # the payload includes multivariate values
+    event_data = webhook_payload["data"]
 
-    # Verify the payload includes multivariate values
-    # This currently fails - issue #6190
-    assert "multivariate_feature_state_values" in webhook_payload["new_state"]
-    assert "multivariate_feature_state_values" in webhook_payload["previous_state"]
+    assert "multivariate_feature_state_values" in event_data["new_state"]
+    assert "multivariate_feature_state_values" in event_data["previous_state"]
 
-    new_mv_values = webhook_payload["new_state"]["multivariate_feature_state_values"]
-    previous_mv_values = webhook_payload["previous_state"][
-        "multivariate_feature_state_values"
+    assert event_data["new_state"]["multivariate_feature_state_values"] == [
+        {
+            "id": mocker.ANY,
+            "multivariate_feature_option": {
+                "id": mv_option_50_percent,
+                "value": mv_option_value,
+            },
+            "percentage_allocation": new_percentage,
+        },
     ]
-
-    assert len(new_mv_values) == 1
-    assert len(previous_mv_values) == 1
-    assert new_mv_values[0]["percentage_allocation"] == new_percentage
-    assert previous_mv_values[0]["percentage_allocation"] == old_percentage
+    assert event_data["previous_state"]["multivariate_feature_state_values"] == [
+        {
+            "id": mocker.ANY,
+            "multivariate_feature_option": {
+                "id": mv_option_50_percent,
+                "value": mv_option_value,
+            },
+            "percentage_allocation": old_percentage,
+        },
+    ]
