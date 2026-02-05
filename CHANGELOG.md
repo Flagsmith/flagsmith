@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.213.0](https://github.com/Flagsmith/flagsmith/compare/v2.212.1...v2.213.0) (2026-02-05)
+
+
+### Features
+
+* **Local env:** Enhance local Django shell devex ([#6650](https://github.com/Flagsmith/flagsmith/issues/6650)) ([a75564b](https://github.com/Flagsmith/flagsmith/commit/a75564b9f2b476a00f50c7eea87f91584d930181))
+
+
+### Bug Fixes
+
+* disable blanket API throttling in favour of WAF ([#6642](https://github.com/Flagsmith/flagsmith/issues/6642)) ([9d53063](https://github.com/Flagsmith/flagsmith/commit/9d53063790015980a6777e2d0a892dd255c2fac8))
+* Flagsmith Environment Webhook incorrect payload values ([#6646](https://github.com/Flagsmith/flagsmith/issues/6646)) ([196ebf3](https://github.com/Flagsmith/flagsmith/commit/196ebf392032f22eaa422bf7e8af9bc1896ef8a3))
+
+
+### Dependency Updates
+
+* bump django from 5.2.10 to 5.2.11 in /api ([#6651](https://github.com/Flagsmith/flagsmith/issues/6651)) ([04431e9](https://github.com/Flagsmith/flagsmith/commit/04431e9dd9aa11adae52dda98d8243d450a43e75))
+* bump social-auth-app-django from 5.4.1 to 5.6.0 in /api ([#6657](https://github.com/Flagsmith/flagsmith/issues/6657)) ([2230ec6](https://github.com/Flagsmith/flagsmith/commit/2230ec6581beee7533824f3b76735e37842bede2))
+* update `express` + `body-parser` to bump transitive `qs` dependency and fix CVE-2025-15284 ([#6656](https://github.com/Flagsmith/flagsmith/issues/6656)) ([7b1cebd](https://github.com/Flagsmith/flagsmith/commit/7b1cebd2821942895ac988e824ec0f9cb545bfc9))
+
 ## [2.212.1](https://github.com/Flagsmith/flagsmith/compare/v2.212.0...v2.212.1) (2026-02-03)
 
 
