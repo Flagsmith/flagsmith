@@ -49,7 +49,7 @@ def test_json_formatter__outputs_expected(
         {
             "levelname": "INFO",
             "message": "hello arg1, 22",
-            "timestamp": "2023-12-08 06:05:47,320",
+            "timestamp": f"2023-12-08 06:05:47,{320 if sys.version_info >= (3, 13) else 319}",
             "logger_name": "test_json_formatter__outputs_expected",
             "process_id": expected_pid,
             "thread_name": "MainThread",
