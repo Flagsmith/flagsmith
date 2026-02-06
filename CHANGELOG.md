@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.213.1](https://github.com/Flagsmith/flagsmith/compare/v2.213.0...v2.213.1) (2026-02-06)
+
+
+### Bug Fixes
+
+* **CD:** Fix changelog transparency ([#6661](https://github.com/Flagsmith/flagsmith/issues/6661)) ([e33ca38](https://github.com/Flagsmith/flagsmith/commit/e33ca3876058f084eeb8b47d63a72cae28cb45cc))
+
+
+### Dependency Updates
+
+* bump diff in /frontend ([#6563](https://github.com/Flagsmith/flagsmith/issues/6563)) ([93a4256](https://github.com/Flagsmith/flagsmith/commit/93a4256d419ce2a798409bae8f82d1c9a05ed430))
+* bump protobuf from 4.25.8 to 5.29.6 in /api ([#6664](https://github.com/Flagsmith/flagsmith/issues/6664)) ([6a97300](https://github.com/Flagsmith/flagsmith/commit/6a973008ba325b28765e0fab1b0a14e009958064))
+* update protobuf and setuptools ([#6670](https://github.com/Flagsmith/flagsmith/issues/6670)) ([af5e144](https://github.com/Flagsmith/flagsmith/commit/af5e144fad44f897b963ca25162dbca0cd6148c9))
+
 ## [2.213.0](https://github.com/Flagsmith/flagsmith/compare/v2.212.1...v2.213.0) (2026-02-05)
 
 
