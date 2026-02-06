@@ -1,5 +1,39 @@
 # Changelog
 
+## [2.213.1](https://github.com/Flagsmith/flagsmith/compare/v2.213.0...v2.213.1) (2026-02-06)
+
+
+### Bug Fixes
+
+* **CD:** Fix changelog transparency ([#6661](https://github.com/Flagsmith/flagsmith/issues/6661)) ([e33ca38](https://github.com/Flagsmith/flagsmith/commit/e33ca3876058f084eeb8b47d63a72cae28cb45cc))
+
+
+### Dependency Updates
+
+* bump diff in /frontend ([#6563](https://github.com/Flagsmith/flagsmith/issues/6563)) ([93a4256](https://github.com/Flagsmith/flagsmith/commit/93a4256d419ce2a798409bae8f82d1c9a05ed430))
+* bump protobuf from 4.25.8 to 5.29.6 in /api ([#6664](https://github.com/Flagsmith/flagsmith/issues/6664)) ([6a97300](https://github.com/Flagsmith/flagsmith/commit/6a973008ba325b28765e0fab1b0a14e009958064))
+* update protobuf and setuptools ([#6670](https://github.com/Flagsmith/flagsmith/issues/6670)) ([af5e144](https://github.com/Flagsmith/flagsmith/commit/af5e144fad44f897b963ca25162dbca0cd6148c9))
+
+## [2.213.0](https://github.com/Flagsmith/flagsmith/compare/v2.212.1...v2.213.0) (2026-02-05)
+
+
+### Features
+
+* **Local env:** Enhance local Django shell devex ([#6650](https://github.com/Flagsmith/flagsmith/issues/6650)) ([a75564b](https://github.com/Flagsmith/flagsmith/commit/a75564b9f2b476a00f50c7eea87f91584d930181))
+
+
+### Bug Fixes
+
+* disable blanket API throttling in favour of WAF ([#6642](https://github.com/Flagsmith/flagsmith/issues/6642)) ([9d53063](https://github.com/Flagsmith/flagsmith/commit/9d53063790015980a6777e2d0a892dd255c2fac8))
+* Flagsmith Environment Webhook incorrect payload values ([#6646](https://github.com/Flagsmith/flagsmith/issues/6646)) ([196ebf3](https://github.com/Flagsmith/flagsmith/commit/196ebf392032f22eaa422bf7e8af9bc1896ef8a3))
+
+
+### Dependency Updates
+
+* bump django from 5.2.10 to 5.2.11 in /api ([#6651](https://github.com/Flagsmith/flagsmith/issues/6651)) ([04431e9](https://github.com/Flagsmith/flagsmith/commit/04431e9dd9aa11adae52dda98d8243d450a43e75))
+* bump social-auth-app-django from 5.4.1 to 5.6.0 in /api ([#6657](https://github.com/Flagsmith/flagsmith/issues/6657)) ([2230ec6](https://github.com/Flagsmith/flagsmith/commit/2230ec6581beee7533824f3b76735e37842bede2))
+* update `express` + `body-parser` to bump transitive `qs` dependency and fix CVE-2025-15284 ([#6656](https://github.com/Flagsmith/flagsmith/issues/6656)) ([7b1cebd](https://github.com/Flagsmith/flagsmith/commit/7b1cebd2821942895ac988e824ec0f9cb545bfc9))
+
 ## [2.212.1](https://github.com/Flagsmith/flagsmith/compare/v2.212.0...v2.212.1) (2026-02-03)
 
 

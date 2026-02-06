@@ -1,0 +1,207 @@
+# API Service Patterns
+
+## Query vs Mutation Rule
+
+- **GET requests** → `builder.query`
+- **POST/PUT/PATCH/DELETE requests** → `builder.mutation`
+
+```typescript
+// ✅ Correct: GET endpoint
+getMailItem: builder.query<Res['mailItem'], Req['getMailItem']>({
+  providesTags: (res, _, req) => [{ id: req?.id, type: 'MailItem' }],
+  query: (query: Req['getMailItem']) => ({
+    url: `mailbox/mails/${query.id}`,
+  }),
+}),
+
+// ✅ Correct: POST endpoint
+createScanMail: builder.mutation<Res['scanMail'], Req['createScanMail']>({
+  invalidatesTags: [{ id: 'LIST', type: 'ScanMail' }],
+  query: (query: Req['createScanMail']) => ({
+    body: query,
+    method: 'POST',
+    url: `mailbox/mails/${query.id}/actions/scan`,
+  }),
+}),
+```
+
+## File Download Pattern
+
+Use the reusable `handleFileDownload` utility for endpoints that return files:
+
+```typescript
+import { handleFileDownload } from 'common/utils/fileDownload'
+
+getInvoiceDownload: builder.query<Res['invoiceDownload'], Req['getInvoiceDownload']>({
+  query: (query: Req['getInvoiceDownload']) => ({
+    url: `customers/invoices/${query.id}/download`,
+    responseHandler: (response) => handleFileDownload(response, 'invoice.pdf'),
+  }),
+}),
+```
+
+## Pagination Pattern
+
+Use `useInfiniteScroll` hook for paginated lists:
+
+```typescript
+import useInfiniteScroll from 'common/hooks/useInfiniteScroll'
+import { useGetMailQuery } from 'common/services/useMail'
+
+const MailList = ({ subscription_id }: Props) => {
+  const {
+    data,
+    isLoading,
+    isFetching,
+    loadMore,
+    refresh,
+    searchItems,
+  } = useInfiniteScroll(
+    useGetMailQuery,
+    { subscription_id, page_size: 20 },
+  )
+
+  return (
+    <InfiniteScroll
+      dataLength={data?.results?.length || 0}
+      next={loadMore}
+      hasMore={!!data?.next}
+      loader={<Spinner />}
+      refreshFunction={refresh}
+      pullDownToRefresh
+    >
+      {data?.results.map(item => <MailCard key={item.id} {...item} />)}
+    </InfiniteScroll>
+  )
+}
+```
+
+## Error Handling
+
+### RTK Query Error Pattern
+
+```typescript
+const [createMail, { isLoading, error }] = useCreateMailMutation()
+
+const handleSubmit = async () => {
+  try {
+    const result = await createMail(data).unwrap()
+    // Success - result contains the response
+    toast.success('Mail created successfully')
+  } catch (err) {
+    // Error handling
+    if ('status' in err) {
+      // FetchBaseQueryError
+      const errMsg = 'error' in err ? err.error : JSON.stringify(err.data)
+      toast.error(errMsg)
+    } else {
+      // SerializedError
+      toast.error(err.message || 'An error occurred')
+    }
+  }
+}
+```
+
+### Query Refetching
+
+```typescript
+const { data, refetch } = useGetMailQuery({ id: '123' })
+
+// Refetch on demand
+const handleRefresh = () => {
+  refetch()
+}
+
+// Automatic refetch on focus/reconnect is enabled by default in common/service.ts
+```
+
+## Cache Invalidation
+
+### Manual Cache Clearing
+
+```typescript
+import { getStore } from 'common/store'
+import { mailItemService } from 'common/services/useMailItem'
+
+export const clearMailCache = () => {
+  getStore().dispatch(
+    mailItemService.util.invalidateTags([{ type: 'MailItem', id: 'LIST' }])
+  )
+}
+```
+
+### Automatic Invalidation
+
+Cache invalidation is handled automatically through RTK Query tags:
+
+```typescript
+// Mutation invalidates the list
+createMail: builder.mutation<Res['mail'], Req['createMail']>({
+  invalidatesTags: [{ type: 'Mail', id: 'LIST' }],
+  // This will automatically refetch any active queries with matching tags
+}),
+```
+
+## Type Organization
+
+### Request and Response Types
+
+All API types go in `common/types/`:
+
+```typescript
+// common/types/requests.ts
+export type Req = {
+  getMail: PagedRequest<{
+    subscription_id: string
+    q?: string
+  }>
+  createMail: {
+    id: string
+    content: string
+  }
+  // END OF TYPES
+}
+
+// common/types/responses.ts
+export type Res = {
+  mail: PagedResponse<Mail>
+  mailItem: MailItem
+  // END OF TYPES
+}
+```
+
+### Shared Types
+
+For types used across requests AND responses, keep them in their respective files but document the shared usage:
+
+```typescript
+// common/types/requests.ts
+export type Address = {
+  address_line_1: string
+  address_line_2: string | null
+  postal_code: string
+  city: string
+  country: string
+}
+```
+
+## SSG CLI Usage
+
+Always use `npx ssg` to generate new API services:
+
+```bash
+# Interactive mode
+npx ssg
+
+# Follow prompts to:
+# 1. Choose action type (get/create/update/delete)
+# 2. Enter resource name
+# 3. Enter API endpoint URL
+# 4. Configure cache invalidation
+```
+
+The CLI will:
+- Create/update service file in `common/services/`
+- Add types to `common/types/requests.ts` and `responses.ts`
+- Generate appropriate hooks (Query or Mutation)
+- Use correct import paths (no relative imports)
