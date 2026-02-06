@@ -75,7 +75,17 @@ Flagsmith will send a `POST` request to your webhook URL with the following payl
    "feature_segment": null,
    "feature_state_value": "<strong>\nYou are using the develop environment.\n</strong>",
    "identity": null,
-   "identity_identifier": null
+   "identity_identifier": null,
+   "multivariate_feature_state_values": [
+    {
+     "id": 1,
+     "multivariate_feature_option": {
+      "id": 10,
+      "value": "variant_a"
+     },
+     "percentage_allocation": 50
+    }
+   ]
   },
   "previous_state": {
    "enabled": false,
