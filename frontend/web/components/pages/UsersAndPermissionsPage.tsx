@@ -121,9 +121,10 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const meta = subscriptionMeta || organisation.subscription || { max_seats: 1 }
   const max_seats = meta.max_seats || 1
   const isAWS = AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
-  const autoSeats = !isAWS && Utils.getPlansPermission('AUTO_SEATS')
-  const usedSeats = paymentsEnabled && organisation.num_seats >= max_seats
-  const overSeats = paymentsEnabled && organisation.num_seats > max_seats
+  const autoSeats =
+    paymentsEnabled && !isAWS && Utils.getPlansPermission('AUTO_SEATS')
+  const usedSeats = organisation.num_seats >= max_seats
+  const overSeats = organisation.num_seats > max_seats
   const [role, setRole] = useState<'ADMIN' | 'USER'>('ADMIN')
 
   const deleteInvite = (id: number) => {
@@ -218,7 +219,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         )}
                       </Row>
                       <FormGroup className='mt-2'>
-                        {paymentsEnabled && !isLoading && (
+                        {!isLoading && (
                           <div className='col-md-6 mt-3 mb-4'>
                             <InfoMessage>
                               {'You are currently using '}
