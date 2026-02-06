@@ -71,9 +71,3 @@ Values set to serve when targeting is off will be imported as control values.
 Archived flags in LaunchDarkly are imported as archived flags in Flagsmith.
 
 Deprecated flags in LaunchDarkly are also imported as archived flags in Flagsmith. They receive a "Deprecated" tag to distinguish them from flags that were archived in LaunchDarkly.
-
-:::note
-
-In both LaunchDarkly and Flagsmith, archived flags continue to evaluate normally for SDKs. Archiving a flag hides it from the dashboard but does not affect evaluation.
-
-:::
