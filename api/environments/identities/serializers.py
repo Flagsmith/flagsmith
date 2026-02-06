@@ -1,7 +1,6 @@
 import typing
 
 from drf_spectacular.utils import extend_schema_field
-from flag_engine.features.models import FeatureStateModel
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -10,6 +9,7 @@ from environments.models import Environment
 from environments.serializers import EnvironmentSerializerFull
 from features.models import FeatureState
 from features.serializers import FeatureStateSerializerFull
+from util.engine_models.features.models import FeatureStateModel
 
 
 class IdentifierOnlyIdentitySerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
