@@ -117,9 +117,6 @@ def _get_previous_multivariate_values(
         history = mv.history.first()
         if history and history.prev_record:
             mv_values.append(history.prev_record.instance)
-        else:
-            # No previous record, use current value
-            mv_values.append(mv)
     return mv_values
 
 
