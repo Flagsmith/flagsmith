@@ -442,11 +442,10 @@ components:
           title: Trait Key
         trait_value:
           anyOf:
-            - type: boolean
-            - type: number
             - type: integer
-            - maxLength: 2000
-              type: string
+            - type: number
+            - type: boolean
+            - type: string
             - type: 'null'
           title: Trait Value
         transient:
@@ -511,11 +510,10 @@ components:
           title: Trait Key
         trait_value:
           anyOf:
-            - type: boolean
-            - type: number
             - type: integer
-            - maxLength: 2000
-              type: string
+            - type: number
+            - type: boolean
+            - type: string
             - type: 'null'
           title: Trait Value
       required:
