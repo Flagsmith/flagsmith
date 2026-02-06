@@ -68,6 +68,7 @@ const Message: FC<MessageProps> = ({
 }) => {
   const theme = _theme || 'success'
   useEffect(() => {
+    if (!expiry) return
     const timeout = setTimeout(remove, expiry)
     return () => clearTimeout(timeout)
   }, [remove, expiry])
