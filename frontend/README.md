@@ -27,17 +27,18 @@ E2E tests use Playwright with Firefox and include videos, traces, and HTML repor
 #### Running Tests
 
 ```bash
-# Run all tests
+# Run all tests (builds bundle automatically)
 npm run test
 
-# Run with Playwright UI (for debugging)
+# Run with Playwright UI (for debugging - build bundle first)
+npm run bundle
 npm run test:dev
 
 # Run specific test file
 npm run test -- tests/flag-tests.pw.ts
 
 # Run only OSS tests
-npm run test -- --grep-invert @enterprise
+npm run test -- --grep @oss
 
 # Run only Enterprise tests
 npm run test -- --grep @enterprise
