@@ -6,6 +6,7 @@ return v10's EvaluationContext TypedDict instead of the original return type.
 """
 
 import typing
+from typing import Protocol
 
 from flag_engine.context.types import (
     EvaluationContext,
@@ -23,8 +24,13 @@ from util.engine_models.identities.traits.models import TraitModel
 from util.engine_models.segments.models import SegmentModel, SegmentRuleModel
 
 
+class EnvironmentProtocol(Protocol):
+    api_key: str
+    name: str | None
+
+
 def map_environment_identity_to_context(
-    environment: typing.Any,  # Accepts both Django Environment and Pydantic EnvironmentModel
+    environment: EnvironmentProtocol,
     identity: IdentityModel,
     override_traits: typing.Optional[typing.List[TraitModel]],
 ) -> EvaluationContext:
@@ -34,11 +40,8 @@ def map_environment_identity_to_context(
     Vendored from flagsmith-flag-engine's fix/missing-export branch and adapted
     to return v10's EvaluationContext TypedDict.
 
-    This function uses duck typing - it only accesses `api_key` and `name`
-    attributes from the environment, which exist on both Django Environment
-    models and Pydantic EnvironmentModel objects.
-
-    :param environment: The environment object (Django or Pydantic).
+    :param environment: Any object with `api_key` and `name` attributes
+        (e.g. Django Environment or Pydantic EnvironmentModel).
     :param identity: The identity model object (Pydantic IdentityModel).
     :param override_traits: A list of TraitModel objects, to be used in place of
         `identity.identity_traits` if provided.
@@ -160,6 +163,7 @@ def map_segment_to_segment_context(segment: SegmentModel) -> SegmentContext:
     return segment_ctx
 
 
+# TODO: Migrate to get_evaluation_result - see #6669
 def is_context_in_segment(
     context: EvaluationContext,
     segment: SegmentModel,
