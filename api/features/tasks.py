@@ -87,7 +87,11 @@ def _get_feature_state_webhook_data(
         mv_values = _get_previous_multivariate_values(feature_state)
     else:
         value = feature_state.get_feature_state_value()
-        mv_values = list(feature_state.multivariate_feature_state_values.all())
+        mv_values = list(
+            feature_state.multivariate_feature_state_values.select_related(
+                "multivariate_feature_option"
+            ).all()
+        )
 
     assert feature_state.environment is not None
     return Webhook.generate_webhook_feature_state_data(
@@ -109,7 +113,7 @@ def _get_previous_multivariate_values(
     mv_values: list[MultivariateFeatureStateValue] = []
     for mv in MultivariateFeatureStateValue.objects.filter(
         feature_state_id=feature_state.id
-    ):
+    ).select_related("multivariate_feature_option"):
         history = mv.history.first()
         if history and history.prev_record:
             mv_values.append(history.prev_record.instance)
