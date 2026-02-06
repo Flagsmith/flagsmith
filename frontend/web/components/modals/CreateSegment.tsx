@@ -493,7 +493,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           segmentId={`${segment.id}`}
         />
       )}
-      {isEdit && !condensed ? (
+      {isEdit && !condensed && (
         <Tabs
           value={tab}
           theme='pill'
@@ -576,7 +576,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </TabItem>
           )}
         </Tabs>
-      ) : metadataEnable && segmentContentType?.id ? (
+      )}
+      {!(isEdit && !condensed) && metadataEnable && segmentContentType?.id && (
         <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
           <TabItem
             tabLabelString='Basic configuration'
@@ -618,32 +619,34 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>
         </Tabs>
-      ) : (
-        <div className={className || 'my-3 mx-4'}>
-          <CreateSegmentRulesTabForm
-            save={save}
-            condensed={condensed}
-            segmentsLimitAlert={segmentsLimitAlert}
-            name={name}
-            setName={setName}
-            setValueChanged={setValueChanged}
-            description={description}
-            setDescription={setDescription}
-            identity={identity}
-            readOnly={readOnly}
-            showDescriptions={showDescriptions}
-            setShowDescriptions={setShowDescriptions}
-            allWarnings={allWarnings}
-            rulesEl={rulesEl}
-            isEdit={isEdit}
-            segment={segment}
-            isSaving={isSaving}
-            isValid={isValid}
-            isLimitReached={isLimitReached}
-            onCancel={onCancel}
-          />
-        </div>
       )}
+      {!(isEdit && !condensed) &&
+        !(metadataEnable && segmentContentType?.id) && (
+          <div className={className || 'my-3 mx-4'}>
+            <CreateSegmentRulesTabForm
+              save={save}
+              condensed={condensed}
+              segmentsLimitAlert={segmentsLimitAlert}
+              name={name}
+              setName={setName}
+              setValueChanged={setValueChanged}
+              description={description}
+              setDescription={setDescription}
+              identity={identity}
+              readOnly={readOnly}
+              showDescriptions={showDescriptions}
+              setShowDescriptions={setShowDescriptions}
+              allWarnings={allWarnings}
+              rulesEl={rulesEl}
+              isEdit={isEdit}
+              segment={segment}
+              isSaving={isSaving}
+              isValid={isValid}
+              isLimitReached={isLimitReached}
+              onCancel={onCancel}
+            />
+          </div>
+        )}
     </>
   )
 }
