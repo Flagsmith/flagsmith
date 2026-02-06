@@ -441,13 +441,13 @@ const Constants = {
     unhealthyColor: '#D35400',
   },
   featurePanelTabs: {
-    ANALYTICS: 'analytics',
     FEATURE_HEALTH: 'feature-health',
     HISTORY: 'history',
     IDENTITY_OVERRIDES: 'identity-overrides',
     LINKS: 'links',
     SEGMENT_OVERRIDES: 'segment-overrides',
     SETTINGS: 'settings',
+    USAGE: 'usage',
     VALUE: 'value',
   },
   forms: {
