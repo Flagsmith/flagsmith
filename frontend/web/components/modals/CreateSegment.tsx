@@ -347,7 +347,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   useEffect(() => {
     setTimeout(() => {
-      document.getElementById('segmentID')?.focus()
+      if (!E2E) {
+        document.getElementById('segmentID')?.focus()
+      }
     }, 500)
   }, [])
   useEffect(() => {

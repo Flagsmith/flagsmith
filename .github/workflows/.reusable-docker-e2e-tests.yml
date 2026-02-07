@@ -14,7 +14,7 @@ on:
         required: true
       args:
         type: string
-        description: Additional arguments to testcafe
+        description: Additional arguments to playwright
         required: false
         default: ''
       concurrency:
@@ -44,6 +44,7 @@ jobs:
       contents: read
       packages: read
       id-token: write
+      pull-requests: write
 
     env:
       GCR_TOKEN: ${{ secrets.GCR_TOKEN }}
@@ -51,6 +52,17 @@ jobs:
     steps:
       - name: Cloning repo
         uses: actions/checkout@v5
+
+      - name: Determine test type
+        id: test-type
+        run: |
+          if [[ '${{ inputs.args }}' == *"@enterprise"* ]]; then
+            echo "type=private-cloud" >> $GITHUB_OUTPUT
+            echo "label=private-cloud" >> $GITHUB_OUTPUT
+          else
+            echo "type=oss" >> $GITHUB_OUTPUT
+            echo "label=oss" >> $GITHUB_OUTPUT
+          fi
 
       - name: Login to Github Container Registry
         if: ${{ env.GCR_TOKEN }}
@@ -67,22 +79,79 @@ jobs:
         run: depot pull-token | docker login -u x-token --password-stdin registry.depot.dev
 
       - name: Run tests on dockerised frontend
-        uses: nick-fields/retry@v3
-        with:
-          shell: bash
-          command: |
-            cd frontend
-            make test
-          max_attempts: 2
-          retry_on: error
-          timeout_minutes: 20
-          on_retry_command: |
-            cd frontend
-            docker compose down --remove-orphans || true
+        working-directory: frontend
+        run: make test
         env:
           opts: ${{ inputs.args }}
           API_IMAGE: ${{ inputs.api-image }}
           E2E_IMAGE: ${{ inputs.e2e-image }}
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
+          E2E_RETRIES: 2
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        timeout-minutes: 20
+
+      - name: Cleanup E2E services
+        if: always()
+        working-directory: frontend
+        run: docker compose down --remove-orphans || true
+
+      - name: Copy results.json to HTML report
+        if: always()
+        run: |
+          cp frontend/e2e/test-results/results.json frontend/e2e/playwright-report/ || true
+
+      - name: Upload HTML report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report-${{ steps.test-type.outputs.type }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index }}
+          path: frontend/e2e/playwright-report/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Set artifact URL
+        if: failure() && github.event_name == 'pull_request'
+        id: artifact-url
+        run: |
+          echo "url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts" >> $GITHUB_OUTPUT
+
+      - name: Send Slack notification and upload report
+        if: failure()
+        working-directory: frontend
+        run: |
+          cd e2e
+          zip -r playwright-report.zip playwright-report/ || echo "Failed to zip report"
+          cd ..
+          npm install --no-save @slack/web-api
+          npx -y tsx e2e/slack-e2e-reporter.ts
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+          TEST_TYPE: ${{ steps.test-type.outputs.label }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+
+      - name: Comment PR with test results (success)
+        if: success() && github.event_name == 'pull_request'
+        uses: daun/playwright-report-summary@v3
+        with:
+          report-file: frontend/e2e/playwright-report/results.json
+          comment-title: 'Playwright Test Results (${{ steps.test-type.outputs.label }} - ${{ inputs.runs-on }})'
+          report-tag: 'playwright-${{ steps.test-type.outputs.label }}-${{ inputs.runs-on }}'
+          custom-info: |
+            **🔄 Run:** [#${{ github.run_number }} (attempt ${{ github.run_attempt }})](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+      - name: Comment PR with test results (failure)
+        if: failure() && github.event_name == 'pull_request'
+        uses: daun/playwright-report-summary@v3
+        with:
+          report-file: frontend/e2e/playwright-report/results.json
+          comment-title: 'Playwright Test Results (${{ steps.test-type.outputs.label }} - ${{ inputs.runs-on }})'
+          report-tag: 'playwright-${{ steps.test-type.outputs.label }}-${{ inputs.runs-on }}'
+          custom-info: |
+            **📦 Artifacts:** [View test results and HTML report](${{ steps.artifact-url.outputs.url }})
+            **🔄 Run:** [#${{ github.run_number }} (attempt ${{ github.run_attempt }})](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
