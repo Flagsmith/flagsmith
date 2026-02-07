@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.214.0](https://github.com/Flagsmith/flagsmith/compare/v2.213.1...v2.214.0) (2026-02-07)
+
+
+### Features
+
+* upgrade flagsmith-flag-engine to v10 ([#6653](https://github.com/Flagsmith/flagsmith/issues/6653)) ([0a2464b](https://github.com/Flagsmith/flagsmith/commit/0a2464b2e51349877e6140c42ba6d7d290501fbe))
+
+
+### Bug Fixes
+
+* Webhook payloads do not include multivariate values ([#6666](https://github.com/Flagsmith/flagsmith/issues/6666)) ([cf16f3d](https://github.com/Flagsmith/flagsmith/commit/cf16f3d1fdac2462fefcd9c0226fca722f11dff8))
+
 ## [2.213.1](https://github.com/Flagsmith/flagsmith/compare/v2.213.0...v2.213.1) (2026-02-06)
 
 
