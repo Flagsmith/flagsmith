@@ -89,9 +89,7 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
 
     // Verify: API returns correct state (feature disabled)
     log('Verify API returns disabled state')
-    await page.waitForTimeout(500)
     await click('#try-it-btn')
-    await page.waitForTimeout(500)
     let json = await parseTryItResults()
     expect(json.c.enabled).toBe(false)
 
@@ -121,8 +119,6 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     await click('#try-it-btn')
     await responsePromise
 
-    // Additional wait for UI to update with results
-    await page.waitForTimeout(1000)
     json = await parseTryItResults()
     expect(json.c.enabled).toBe(true)
 
