@@ -86,7 +86,9 @@ class SDKAnalyticsFlags(CreateAPIView):  # type: ignore[type-arg]
 
             def save(self, **kwargs: typing.Any) -> None:
                 request = self.context["request"]
-                for feature_name, evaluation_count in self.validated_data.items():
+                # validated_data splits out request body with '.' in feature name (e.g a.b.c).
+                # Instead, it's safe to use self.data as keys are not altered.
+                for feature_name, evaluation_count in self.data.items():
                     feature_evaluation_cache.track_feature_evaluation(
                         environment_id=request.environment.id,
                         feature_name=feature_name,
