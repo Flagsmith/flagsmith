@@ -10,6 +10,7 @@ from audit.related_object_type import RelatedObjectType
 from audit.serializers import AuditLogListSerializer
 from audit.services import get_audited_instance_from_audit_log_record
 from features.models import FeatureState, FeatureStateValue
+from features.multivariate.models import MultivariateFeatureStateValue
 from features.signals import feature_state_change_went_live
 from integrations.common.models import IntegrationsModel
 from integrations.datadog.datadog import DataDogWrapper
@@ -214,9 +215,9 @@ def send_audit_log_event_to_slack(sender, instance, **kwargs):  # type: ignore[n
 def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
     audited_instance = get_audited_instance_from_audit_log_record(instance)
 
-    # Handle both FeatureState and FeatureStateValue audit logs
-    # FeatureStateValue changes also have related_object_type=FEATURE_STATE
-    if isinstance(audited_instance, FeatureStateValue):
+    # Handle FeatureState, FeatureStateValue, and MultivariateFeatureStateValue audit logs
+    # All these types have related_object_type=FEATURE_STATE
+    if isinstance(audited_instance, (FeatureStateValue, MultivariateFeatureStateValue)):
         feature_state = audited_instance.feature_state
     elif isinstance(audited_instance, FeatureState):
         feature_state = audited_instance
