@@ -34,9 +34,9 @@ jobs:
     name: API Unit Tests
 
     strategy:
-      max-parallel: 2
+      max-parallel: 3
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - name: Cloning repo
