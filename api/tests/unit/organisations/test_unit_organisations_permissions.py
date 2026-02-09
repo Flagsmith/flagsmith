@@ -61,8 +61,8 @@ def test_user_organisation_permissions_has_permission_permits_users_with_manage_
     mock_request = mocker.MagicMock(user=mock_user)
     mock_view = mocker.MagicMock(kwargs={"organisation_pk": organisation.id})
 
-    mock_user.has_organisation_permission.side_effect = (
-        lambda o, perm: o == organisation and perm == MANAGE_USER_GROUPS
+    mock_user.has_organisation_permission.side_effect = lambda o, perm: (
+        o == organisation and perm == MANAGE_USER_GROUPS
     )
 
     # When
@@ -82,8 +82,8 @@ def test_user_organisation_permissions_has_object_permission_permits_users_with_
     mock_request = mocker.MagicMock(user=mock_user)
     mock_view = mocker.MagicMock(kwargs={"organisation_pk": organisation.id})
 
-    mock_user.has_organisation_permission.side_effect = (
-        lambda o, perm: o == organisation and perm == MANAGE_USER_GROUPS
+    mock_user.has_organisation_permission.side_effect = lambda o, perm: (
+        o == organisation and perm == MANAGE_USER_GROUPS
     )
 
     # When
