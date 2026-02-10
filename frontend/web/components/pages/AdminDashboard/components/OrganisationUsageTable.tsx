@@ -6,12 +6,23 @@ import PanelSearch from 'components/PanelSearch'
 import Icon from 'components/Icon'
 
 interface OrganisationUsageTableProps {
+  days: 30 | 60 | 90
   organisations: OrganisationMetrics[]
-  days?: number
+}
+
+const overageCell = (value: number) => {
+  if (value > 0) {
+    return (
+      <span style={{ color: '#e74c3c', fontWeight: 600 }}>
+        +{Utils.numberWithCommas(value)}
+      </span>
+    )
+  }
+  return <span className='text-muted'>—</span>
 }
 
 const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
-  days = 30,
+  days,
   organisations,
 }) => {
   const [expandedOrgs, setExpandedOrgs] = useState<number[]>([])
@@ -42,16 +53,15 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
               {env.name}
             </span>
           </div>
-          <div style={{ width: 140 }} />
-          <div style={{ width: 140 }} />
+          <div style={{ width: 120 }} />
+          <div style={{ width: 120 }} />
           <div
             className='table-column text-muted'
-            style={{ fontSize: 13, width: 180 }}
+            style={{ fontSize: 13, width: 160 }}
           >
             {Utils.numberWithCommas(env.api_calls_30d)}
           </div>
-          <div style={{ width: 120 }} />
-          <div style={{ width: 100 }} />
+          <div style={{ width: 140 }} />
         </div>
       ))}
     </div>
@@ -87,19 +97,18 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
             </div>
             <div
               className='table-column text-muted'
-              style={{ fontSize: 13, width: 140 }}
+              style={{ fontSize: 13, width: 120 }}
             >
               {project.flags}
             </div>
-            <div style={{ width: 140 }} />
+            <div style={{ width: 120 }} />
             <div
               className='table-column text-muted'
-              style={{ fontSize: 13, width: 180 }}
+              style={{ fontSize: 13, width: 160 }}
             >
               {Utils.numberWithCommas(project.api_calls_30d)}
             </div>
-            <div style={{ width: 120 }} />
-            <div style={{ width: 100 }} />
+            <div style={{ width: 140 }} />
           </div>
           {expandedProjects.includes(project.id) && renderEnvironments(project)}
         </div>
@@ -118,20 +127,17 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
           <div className='table-column flex-fill' style={{ paddingLeft: 20 }}>
             Organisation
           </div>
-          <div className='table-column' style={{ width: 140 }}>
+          <div className='table-column' style={{ width: 120 }}>
             Flags
           </div>
-          <div className='table-column' style={{ width: 140 }}>
+          <div className='table-column' style={{ width: 120 }}>
             Seats
           </div>
-          <div className='table-column' style={{ width: 180 }}>
+          <div className='table-column' style={{ width: 160 }}>
             API Calls ({days}d)
           </div>
-          <div className='table-column' style={{ width: 120 }}>
-            Integrations
-          </div>
-          <div className='table-column' style={{ width: 100 }}>
-            Projects
+          <div className='table-column' style={{ width: 140 }}>
+            Overage ({days}d)
           </div>
         </div>
       }
@@ -168,7 +174,7 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
             </div>
             <div
               className='table-column d-flex flex-column align-items-start'
-              style={{ width: 140 }}
+              style={{ width: 120 }}
             >
               <div className='font-weight-medium'>
                 {Utils.numberWithCommas(org.total_flags)}
@@ -181,7 +187,7 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
             </div>
             <div
               className='table-column d-flex flex-column align-items-start'
-              style={{ width: 140 }}
+              style={{ width: 120 }}
             >
               <div className='font-weight-medium'>
                 {Utils.numberWithCommas(org.total_users)}
@@ -192,21 +198,14 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
             </div>
             <div
               className='table-column font-weight-medium'
-              style={{ width: 180 }}
+              style={{ width: 160 }}
             >
               {Utils.numberWithCommas(org.api_calls_30d)}
             </div>
-            <div
-              className='table-column font-weight-medium'
-              style={{ width: 120 }}
-            >
-              {org.integration_count}
-            </div>
-            <div
-              className='table-column font-weight-medium'
-              style={{ width: 100 }}
-            >
-              {org.project_count}
+            <div className='table-column' style={{ fontSize: 13, width: 140 }}>
+              {overageCell(
+                org[`overage_${days}d` as keyof OrganisationMetrics] as number,
+              )}
             </div>
           </div>
           {expandedOrgs.includes(org.id) && renderProjects(org)}
@@ -223,6 +222,11 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
           label: 'API Calls',
           order: SortOrder.DESC,
           value: 'api_calls_30d',
+        },
+        {
+          label: 'Overage',
+          order: SortOrder.DESC,
+          value: `overage_${days}d`,
         },
         { label: 'Flags', order: SortOrder.DESC, value: 'total_flags' },
         { label: 'Seats', order: SortOrder.DESC, value: 'total_users' },

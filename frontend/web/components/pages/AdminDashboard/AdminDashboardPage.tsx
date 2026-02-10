@@ -4,7 +4,7 @@ import OrganisationUsageTable from './components/OrganisationUsageTable'
 import UsageTrendsChart from './components/UsageTrendsChart'
 import ReleasePipelineStatsTable from './components/ReleasePipelineStatsTable'
 import StaleFlagsTable from './components/StaleFlagsTable'
-import IntegrationBreakdownTable from './components/IntegrationBreakdownTable'
+
 import AccountStore from 'common/stores/account-store'
 import { getMockAdminDashboardData } from 'common/services/mockAdminDashboardData'
 import Button from 'components/base/forms/Button'
@@ -77,27 +77,24 @@ const AdminDashboardPage: FC = () => {
               <UsageTrendsChart trends={data.usage_trends} days={days} />
             </div>
             <OrganisationUsageTable
-              organisations={data.organisations}
               days={days}
+              organisations={data.organisations}
             />
           </div>
         </TabItem>
 
         <TabItem tabLabel='Release Pipeline'>
           <div className='mt-4'>
-            <ReleasePipelineStatsTable stats={data.release_pipeline_stats} />
+            <ReleasePipelineStatsTable
+              stats={data.release_pipeline_stats}
+              totalProjects={data.summary.total_projects}
+            />
           </div>
         </TabItem>
 
         <TabItem tabLabel='Flag Lifecycle'>
           <div className='mt-4'>
             <StaleFlagsTable data={data.stale_flags_per_project} />
-          </div>
-        </TabItem>
-
-        <TabItem tabLabel='Integrations'>
-          <div className='mt-4'>
-            <IntegrationBreakdownTable data={data.integration_breakdown} />
           </div>
         </TabItem>
       </Tabs>

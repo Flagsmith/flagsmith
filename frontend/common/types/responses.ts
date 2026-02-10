@@ -47,8 +47,14 @@ export type OrganisationMetrics = {
   active_users_30d: number
   admin_users: number
   api_calls_30d: number
+  api_calls_60d: number
+  api_calls_90d: number
+  api_calls_allowed: number
   flag_evaluations_30d: number
   identity_requests_30d: number
+  overage_30d: number
+  overage_60d: number
+  overage_90d: number
   project_count: number
   environment_count: number
   integration_count: number
@@ -62,13 +68,27 @@ export type UsageTrend = {
   identity_requests: number
 }
 
-export type ReleasePipelineStats = {
+export type ReleasePipelineStageStats = {
+  stage_name: string
+  environment_name: string
+  order: number
+  features_in_stage: number
+  features_completed: number
+  action_description: string
+  trigger_description: string
+}
+
+export type ReleasePipelineOverview = {
   organisation_id: number
   organisation_name: string
   project_id: number
   project_name: string
-  stage: string
-  flag_count: number
+  pipeline_id: number
+  pipeline_name: string
+  is_published: boolean
+  total_features: number
+  completed_features: number
+  stages: ReleasePipelineStageStats[]
 }
 
 export type StaleFlagsPerProject = {
@@ -84,6 +104,7 @@ export type IntegrationBreakdown = {
   organisation_id: number
   organisation_name: string
   integration_type: string
+  scope: 'organisation' | 'project' | 'environment'
   count: number
 }
 
@@ -1181,7 +1202,7 @@ export type Res = {
     }
     organisations: OrganisationMetrics[]
     usage_trends: UsageTrend[]
-    release_pipeline_stats: ReleasePipelineStats[]
+    release_pipeline_stats: ReleasePipelineOverview[]
     stale_flags_per_project: StaleFlagsPerProject[]
     integration_breakdown: IntegrationBreakdown[]
   }

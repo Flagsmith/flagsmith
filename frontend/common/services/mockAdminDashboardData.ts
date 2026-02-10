@@ -110,7 +110,34 @@ const generateMockOrganisationMetrics = () => {
       admin_users: isHeavyUser
         ? Math.floor(Math.random() * 6) + 2
         : Math.floor(Math.random() * 2) + 1,
-      api_calls_30d: totalApiCalls,
+      ...((): Pick<
+        ReturnType<typeof generateMockOrganisationMetrics>[0],
+        | 'api_calls_30d'
+        | 'api_calls_60d'
+        | 'api_calls_90d'
+        | 'api_calls_allowed'
+        | 'overage_30d'
+        | 'overage_60d'
+        | 'overage_90d'
+      > => {
+        // Set the allowed limit relative to actual usage so overages are realistic.
+        // ~60% of orgs are within limit, ~40% slightly over (1-5%).
+        const isOverLimit = Math.random() < 0.4
+        const allowed = isOverLimit
+          ? Math.floor(totalApiCalls * (Math.random() * 0.04 + 0.96)) // 96-100% of usage → overage is 0-4%
+          : Math.floor(totalApiCalls * (Math.random() * 0.5 + 1.1)) // 110-160% of usage → within limit
+        const calls60d = Math.floor(totalApiCalls * (Math.random() * 0.4 + 1.8))
+        const calls90d = Math.floor(totalApiCalls * (Math.random() * 0.6 + 2.5))
+        return {
+          api_calls_30d: totalApiCalls,
+          api_calls_60d: calls60d,
+          api_calls_90d: calls90d,
+          api_calls_allowed: allowed,
+          overage_30d: Math.max(0, totalApiCalls - allowed),
+          overage_60d: Math.max(0, calls60d - allowed * 2),
+          overage_90d: Math.max(0, calls90d - allowed * 3),
+        }
+      })(),
       created_date: new Date(
         Date.now() - Math.floor(Math.random() * 730) * 24 * 60 * 60 * 1000,
       ).toISOString(),
@@ -190,7 +217,6 @@ const getMockInstanceSummary = (
   }
 }
 
-const pipelineStages = ['Development', 'Staging', 'Production', 'Rollback']
 const projectNames = [
   'Web App',
   'Mobile API',
@@ -202,28 +228,197 @@ const projectNames = [
   'Data Pipeline',
 ]
 
+// Realistic pipeline templates — stages have custom names, actions, and triggers.
+// Multiple stages can target the same environment (e.g. progressive rollout in Production).
+const pipelineTemplates = [
+  {
+    name: 'Progressive rollout',
+    stages: [
+      {
+        action: 'Enable flag for segment beta_users',
+        env: 'Staging',
+        name: 'Beta testing',
+        trigger: 'When flag is added to this stage',
+      },
+      {
+        action: 'Enable flag for segment 10_percent_split',
+        env: 'Production',
+        name: 'Canary release (10%)',
+        trigger: 'Wait for 3 days to proceed',
+      },
+      {
+        action: 'Enable flag for everyone',
+        env: 'Production',
+        name: 'Full rollout',
+        trigger: 'Wait for 7 days to proceed',
+      },
+    ],
+  },
+  {
+    name: 'Standard release',
+    stages: [
+      {
+        action: 'Enable flag for everyone',
+        env: 'Development',
+        name: 'Enable in dev',
+        trigger: 'When flag is added to this stage',
+      },
+      {
+        action: 'Enable flag for everyone',
+        env: 'Staging',
+        name: 'Enable in staging',
+        trigger: 'Wait for 1 day to proceed',
+      },
+      {
+        action: 'Enable flag for everyone',
+        env: 'Production',
+        name: 'Enable in production',
+        trigger: 'Wait for 3 days to proceed',
+      },
+    ],
+  },
+  {
+    name: 'Phased rollout (20%)',
+    stages: [
+      {
+        action: 'Enable flag for segment 20_percent_split',
+        env: 'Production',
+        name: 'Activate 20% split segment',
+        trigger: 'When flag is added to this stage',
+      },
+      {
+        action: 'Enable flag for everyone',
+        env: 'Production',
+        name: 'Activate for all users',
+        trigger: 'Wait for 14 days to proceed',
+      },
+    ],
+  },
+  {
+    name: 'QA-gated release',
+    stages: [
+      {
+        action: 'Enable flag for everyone',
+        env: 'Development',
+        name: 'Development',
+        trigger: 'When flag is added to this stage',
+      },
+      {
+        action: 'Enable flag for segment qa_testers',
+        env: 'QA',
+        name: 'QA validation',
+        trigger: 'Wait for 2 days to proceed',
+      },
+      {
+        action: 'Enable flag for everyone',
+        env: 'Staging',
+        name: 'Staging sign-off',
+        trigger: 'Wait for 1 day to proceed',
+      },
+      {
+        action: 'Enable flag for everyone',
+        env: 'Production',
+        name: 'Production release',
+        trigger: 'Wait for 3 days to proceed',
+      },
+    ],
+  },
+  {
+    name: 'Ring Deployment',
+    stages: [
+      {
+        action: 'Enable flag for segment flagsmith_team',
+        env: 'Production',
+        name: 'Release to Internal Users',
+        trigger: 'When flag is added to this stage',
+      },
+      {
+        action: 'Enable flag for segment beta_users',
+        env: 'Production',
+        name: 'Release to Beta Users',
+        trigger: 'Wait for 7 days to proceed to next action',
+      },
+      {
+        action: 'Enable flag for segment uk_region',
+        env: 'Production',
+        name: 'Release to UK Region',
+        trigger: 'Wait for 14 days to proceed to next action',
+      },
+      {
+        action: 'Enable flag for everyone',
+        env: 'Production',
+        name: 'Production',
+        trigger: 'Wait for 14 days to proceed to next action',
+      },
+    ],
+  },
+]
+
 const generateMockReleasePipelineStats = (
   orgMetrics: ReturnType<typeof generateMockOrganisationMetrics>,
 ) => {
   const stats: Res['adminDashboardMetrics']['release_pipeline_stats'] = []
-  let projectId = 1
+  let pipelineId = 1
 
   orgMetrics.forEach((org) => {
-    const numProjects = Math.min(org.project_count, 3)
-    for (let p = 0; p < numProjects; p++) {
-      const name = projectNames[(projectId - 1) % projectNames.length]
-      pipelineStages.forEach((stage) => {
-        stats.push({
-          flag_count: Math.floor(Math.random() * 30) + 1,
-          organisation_id: org.id,
-          organisation_name: org.name,
-          project_id: projectId,
-          project_name: name,
-          stage,
-        })
+    // ~40% of projects get a pipeline (opt-in feature)
+    org.projects.forEach((project) => {
+      if (Math.random() > 0.4) return
+
+      const template = pipelineTemplates[pipelineId % pipelineTemplates.length]
+
+      const totalFeatures = Math.floor(Math.random() * 15) + 5
+
+      // Distribute features across stages so they add up correctly:
+      // features_in_stage[0] + features_in_stage[1] + ... + completedFeatures = totalFeatures
+      const stageCount = template.stages.length
+      let remaining = totalFeatures
+
+      // First, decide how many completed the full pipeline (launched)
+      const completedFeatures = Math.floor(
+        remaining * (Math.random() * 0.4 + 0.1),
+      )
+      remaining -= completedFeatures
+
+      // Distribute remaining features across stages (more in early stages)
+      const inStageValues: number[] = []
+      for (let s = 0; s < stageCount; s++) {
+        if (s === stageCount - 1) {
+          // Last stage gets whatever is left
+          inStageValues.push(remaining)
+        } else {
+          // Earlier stages get a portion of what's left
+          const portion = Math.floor(remaining * (Math.random() * 0.3 + 0.2))
+          inStageValues.push(portion)
+          remaining -= portion
+        }
+      }
+
+      const stages = template.stages.map((tmpl, s) => ({
+        action_description: tmpl.action,
+        environment_name: tmpl.env,
+        features_completed: 0,
+        features_in_stage: inStageValues[s],
+        order: s,
+        stage_name: tmpl.name,
+        trigger_description: tmpl.trigger,
+      }))
+
+      stats.push({
+        completed_features: completedFeatures,
+        is_published: Math.random() > 0.3,
+        organisation_id: org.id,
+        organisation_name: org.name,
+        pipeline_id: pipelineId,
+        pipeline_name: template.name,
+        project_id: project.id,
+        project_name: project.name,
+        stages,
+        total_features: totalFeatures,
       })
-      projectId++
-    }
+
+      pipelineId++
+    })
   })
 
   return stats
@@ -256,16 +451,29 @@ const generateMockStaleFlagsPerProject = (
   return data
 }
 
-const integrationTypes = [
-  'Slack',
-  'Datadog',
-  'Segment',
-  'Webhook',
-  'Jira',
-  'GitHub',
-  'New Relic',
-  'Amplitude',
-]
+// Integration definitions with scopes, derived from the platform config.
+// Each row the API returns is org + integration + scope + count.
+const integrationScopes: Record<
+  string,
+  ('organisation' | 'project' | 'environment')[]
+> = {
+  'amplitude': ['project', 'environment'],
+  'datadog': ['project'],
+  'dynatrace': ['project', 'environment'],
+  'github': ['project'],
+  'grafana': ['organisation', 'project'],
+  'heap': ['project', 'environment'],
+  'jira': ['organisation', 'project'],
+  'mixpanel': ['project', 'environment'],
+  'new-relic': ['project'],
+  'rudderstack': ['project', 'environment'],
+  'segment': ['project', 'environment'],
+  'sentry': ['environment'],
+  'slack': ['project', 'environment'],
+  'webhook': ['project', 'environment'],
+}
+
+const integrationKeys = Object.keys(integrationScopes)
 
 const generateMockIntegrationBreakdown = (
   orgMetrics: ReturnType<typeof generateMockOrganisationMetrics>,
@@ -277,18 +485,31 @@ const generateMockIntegrationBreakdown = (
 
     const numTypes = Math.min(
       org.integration_count,
-      Math.floor(Math.random() * 4) + 1,
+      Math.floor(Math.random() * 5) + 1,
     )
-    const shuffled = [...integrationTypes]
+    const shuffled = [...integrationKeys]
       .sort(() => Math.random() - 0.5)
       .slice(0, numTypes)
 
-    shuffled.forEach((type) => {
-      data.push({
-        count: Math.floor(Math.random() * 3) + 1,
-        integration_type: type,
-        organisation_id: org.id,
-        organisation_name: org.name,
+    shuffled.forEach((key) => {
+      const scopes = integrationScopes[key]
+      scopes.forEach((scope) => {
+        let count: number
+        if (scope === 'organisation') {
+          count = 1
+        } else if (scope === 'project') {
+          count = Math.floor(Math.random() * Math.min(org.project_count, 4)) + 1
+        } else {
+          count =
+            Math.floor(Math.random() * Math.min(org.environment_count, 6)) + 1
+        }
+        data.push({
+          count,
+          integration_type: key,
+          organisation_id: org.id,
+          organisation_name: org.name,
+          scope,
+        })
       })
     })
   })
