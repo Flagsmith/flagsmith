@@ -1,5 +1,5 @@
-import React, { FC, useMemo } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import React, { FC, useMemo, useState } from 'react'
+import { Link, useHistory, useLocation, useParams } from 'react-router-dom'
 import PageTitle from 'components/PageTitle'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
@@ -10,16 +10,130 @@ import Icon from 'components/Icon'
 import TagValues from 'components/tags/TagValues'
 import Switch from 'components/Switch'
 import Button from 'components/base/forms/Button'
+import { Environment, ProjectFlag } from 'common/types/responses'
+import Constants from 'common/constants'
+import CreateFlagModal from 'components/modals/create-feature'
 
 type RouteParams = {
   projectId: string
   flagId: string
 }
 
+type EnvironmentRowProps = {
+  environment: Environment
+  flag: ProjectFlag
+  projectId: string
+  onManage: (environmentId: string, tab?: string) => void
+}
+
+const EnvironmentRow: FC<EnvironmentRowProps> = ({
+  environment,
+  flag,
+  projectId,
+  onManage,
+}) => {
+  // Fetch feature states for this specific environment to get the current state
+  const { data: featureStates, isLoading } = useGetFeatureStatesQuery(
+    {
+      environment: environment.id,
+      feature: flag.id,
+    },
+    { skip: !environment.id || !flag.id },
+  )
+
+  const currentState = useMemo(() => {
+    if (!featureStates?.results) return null
+    // Find the current state (without live_from or scheduled)
+    return featureStates.results.find((fs) => !fs.live_from && !fs.feature_segment && !fs.identity)
+  }, [featureStates])
+
+  const enabled = currentState?.enabled ?? flag.default_enabled
+  const value = currentState?.feature_state_value ?? flag.initial_value
+
+  // Use project-level counts (not per-environment, but better than nothing)
+  const segmentOverridesCount = flag.num_segment_overrides || 0
+  const identityOverridesCount = flag.num_identity_overrides || 0
+
+  return (
+    <tr>
+      <td>
+        <div className='d-flex align-items-center gap-2'>
+          <Icon name='environment' width={16} fill='#9DA4AE' />
+          <strong>{environment.name}</strong>
+        </div>
+      </td>
+      <td className='text-center'>
+        {isLoading ? (
+          <small className='text-muted'>...</small>
+        ) : (
+          <Switch checked={enabled} disabled className='switch-sm' />
+        )}
+      </td>
+      <td className='text-center'>
+        {value !== null && value !== undefined
+          ? typeof value === 'object'
+            ? JSON.stringify(value)
+            : String(value)
+          : flag.initial_value !== null && flag.initial_value !== undefined
+          ? typeof flag.initial_value === 'object'
+            ? JSON.stringify(flag.initial_value)
+            : String(flag.initial_value)
+          : '-'}
+      </td>
+      <td className='text-center'>
+        {segmentOverridesCount > 0 ? (
+          <button
+            onClick={() =>
+              onManage(
+                environment.api_key,
+                Constants.featurePanelTabs.SEGMENT_OVERRIDES,
+              )
+            }
+            className='btn btn-link text-decoration-none p-0'
+          >
+            {segmentOverridesCount} segment
+            {segmentOverridesCount > 1 ? 's' : ''}
+          </button>
+        ) : (
+          '-'
+        )}
+      </td>
+      <td className='text-center'>
+        {identityOverridesCount > 0 ? (
+          <button
+            onClick={() =>
+              onManage(
+                environment.api_key,
+                Constants.featurePanelTabs.IDENTITY_OVERRIDES,
+              )
+            }
+            className='btn btn-link text-decoration-none p-0'
+          >
+            {identityOverridesCount}{' '}
+            {identityOverridesCount > 1 ? 'identities' : 'identity'}
+          </button>
+        ) : (
+          '-'
+        )}
+      </td>
+      <td className='text-center'>
+        <Button
+          onClick={() => onManage(environment.api_key)}
+          size='small'
+          theme='outline'
+        >
+          Manage
+        </Button>
+      </td>
+    </tr>
+  )
+}
+
 const FlagEnvironmentsPage: FC = () => {
   const { projectId, flagId } = useParams<RouteParams>()
   const location = useLocation<{ searchQuery?: string }>()
   const searchQuery = location.state?.searchQuery
+  const history = useHistory()
 
   // Fetch project to get organisation
   const { data: project } = useGetProjectQuery(
@@ -43,45 +157,22 @@ const FlagEnvironmentsPage: FC = () => {
       { skip: !projectId },
     )
 
-  // Fetch all feature states for this flag across all environments
-  const { data: featureStates, isLoading: featureStatesLoading } =
-    useGetFeatureStatesQuery(
-      {
-        feature: Number(flagId),
-      },
-      { skip: !flagId },
+  const isLoading = flagLoading || environmentsLoading
+
+  const handleManage = (environmentId: string, tab?: string) => {
+    openModal(
+      flag?.name || 'Edit Feature',
+      <CreateFlagModal
+        environmentId={environmentId}
+        projectId={projectId}
+        projectFlag={flag}
+        history={history}
+        isEdit
+        tab={tab}
+      />,
+      'side-modal create-feature-modal',
     )
-
-  // Map environments with their feature states
-  const environmentStates = useMemo(() => {
-    if (!environments?.results) return []
-
-    return environments.results.map((env) => {
-      const state = featureStates?.results?.find(
-        (fs) => fs.environment === env.id && !fs.live_from,
-      )
-      return {
-        environment: env,
-        enabled: state?.enabled ?? flag?.default_enabled ?? false,
-        value: state?.feature_state_value,
-        featureState: state,
-      }
-    })
-  }, [environments, featureStates, flag])
-
-  // Get scheduled changes
-  const scheduledChanges = useMemo(() => {
-    if (!featureStates?.results) return []
-
-    const now = new Date()
-    return featureStates.results
-      .filter((fs) => fs.live_from && new Date(fs.live_from) > now)
-      .sort((a, b) =>
-        new Date(a.live_from!).getTime() - new Date(b.live_from!).getTime()
-      )
-  }, [featureStates])
-
-  const isLoading = flagLoading || environmentsLoading || featureStatesLoading
+  }
 
   if (isLoading) {
     return (
@@ -260,57 +351,16 @@ const FlagEnvironmentsPage: FC = () => {
               </tr>
             </thead>
             <tbody>
-              {environmentStates.map(({ environment, enabled, value }) => (
-                <tr key={environment.id}>
-                  <td>
-                    <div className='d-flex align-items-center gap-2'>
-                      <Icon name='environment' width={16} fill='#9DA4AE' />
-                      <strong>{environment.name}</strong>
-                    </div>
-                  </td>
-                  <td className='text-center'>
-                    <Switch checked={enabled} disabled className='switch-sm' />
-                  </td>
-                  <td className='text-center'>
-                    {value !== null && value !== undefined
-                      ? typeof value === 'object'
-                        ? JSON.stringify(value)
-                        : String(value)
-                      : flag.initial_value !== null &&
-                        flag.initial_value !== undefined
-                      ? typeof flag.initial_value === 'object'
-                        ? JSON.stringify(flag.initial_value)
-                        : String(flag.initial_value)
-                      : '-'}
-                  </td>
-                  <td className='text-center'>
-                    {flag.num_segment_overrides && flag.num_segment_overrides > 0
-                      ? `${flag.num_segment_overrides} segment${
-                          flag.num_segment_overrides > 1 ? 's' : ''
-                        }`
-                      : '-'}
-                  </td>
-                  <td className='text-center'>
-                    {flag.num_identity_overrides &&
-                    flag.num_identity_overrides > 0
-                      ? `${flag.num_identity_overrides} ${
-                          flag.num_identity_overrides > 1
-                            ? 'identities'
-                            : 'identity'
-                        }`
-                      : '-'}
-                  </td>
-                  <td className='text-center'>
-                    <Link
-                      to={`/project/${projectId}/environment/${environment.api_key}/features?feature=${flag.id}`}
-                      className='btn btn-sm btn-outline-primary'
-                    >
-                      Manage
-                    </Link>
-                  </td>
-                </tr>
+              {environments?.results?.map((environment) => (
+                <EnvironmentRow
+                  key={environment.id}
+                  environment={environment}
+                  flag={flag}
+                  projectId={projectId}
+                  onManage={handleManage}
+                />
               ))}
-              {environmentStates.length === 0 && (
+              {(!environments?.results || environments.results.length === 0) && (
                 <tr>
                   <td colSpan={6} className='text-center text-muted py-4'>
                     No environments found
@@ -321,69 +371,6 @@ const FlagEnvironmentsPage: FC = () => {
           </table>
         </div>
       </Panel>
-
-      {scheduledChanges.length > 0 && (
-        <Panel
-          title={
-            <div className='d-flex align-items-center gap-2'>
-              <Icon name='calendar' width={20} fill='#9DA4AE' />
-              <span>Scheduled Changes</span>
-              <span className='badge badge-primary'>{scheduledChanges.length}</span>
-            </div>
-          }
-          className='mt-4'
-        >
-          <div className='table-responsive'>
-            <table className='table table-hover mb-0'>
-              <thead>
-                <tr>
-                  <th>Environment</th>
-                  <th className='text-center'>Scheduled For</th>
-                  <th className='text-center'>New Status</th>
-                  <th className='text-center'>New Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {scheduledChanges.map((change) => {
-                  const env = environments?.results?.find(
-                    (e) => e.id === change.environment,
-                  )
-                  return (
-                    <tr key={change.id}>
-                      <td>
-                        <div className='d-flex align-items-center gap-2'>
-                          <Icon name='environment' width={16} fill='#9DA4AE' />
-                          <strong>{env?.name || 'Unknown'}</strong>
-                        </div>
-                      </td>
-                      <td className='text-center'>
-                        {change.live_from
-                          ? new Date(change.live_from).toLocaleString()
-                          : '-'}
-                      </td>
-                      <td className='text-center'>
-                        <Switch
-                          checked={change.enabled}
-                          disabled
-                          className='switch-sm'
-                        />
-                      </td>
-                      <td className='text-center'>
-                        {change.feature_state_value !== null &&
-                        change.feature_state_value !== undefined
-                          ? typeof change.feature_state_value === 'object'
-                            ? JSON.stringify(change.feature_state_value)
-                            : String(change.feature_state_value)
-                          : '-'}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
-      )}
     </div>
   )
 }
