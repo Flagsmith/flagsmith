@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useState } from 'react'
 import InstanceMetricsCards from './components/InstanceMetricsCards'
 import OrganisationUsageTable from './components/OrganisationUsageTable'
 import UsageTrendsChart from './components/UsageTrendsChart'
@@ -7,18 +7,16 @@ import StaleFlagsTable from './components/StaleFlagsTable'
 
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
-import { getMockAdminDashboardData } from 'common/services/mockAdminDashboardData'
+import { useGetAdminDashboardMetricsQuery } from 'common/services/useAdminDashboard'
 import Button from 'components/base/forms/Button'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
+import ErrorMessage from 'components/ErrorMessage'
 
 const AdminDashboardPage: FC = () => {
   const [days, setDays] = useState<30 | 60 | 90>(30)
 
-  // Using mock data for MVP demo
-  // TODO: Replace with real API call when backend is ready:
-  // const { data, error, isLoading } = useGetAdminDashboardMetricsQuery({ days })
-  const data = useMemo(() => getMockAdminDashboardData(days), [days])
+  const { data, error, isLoading } = useGetAdminDashboardMetricsQuery({ days })
 
   // Security & feature flag check
   if (
@@ -70,38 +68,50 @@ const AdminDashboardPage: FC = () => {
         </div>
       </div>
 
-      {/* KPI Cards — always visible */}
-      <InstanceMetricsCards summary={data.summary} days={days} />
+      {isLoading && (
+        <div className='centered-container'>
+          <Loader />
+        </div>
+      )}
 
-      {/* Tabbed sections */}
-      <Tabs urlParam='tab' uncontrolled>
-        <TabItem tabLabel='Usage'>
-          <div className='mt-4'>
-            <div className='mb-4'>
-              <UsageTrendsChart trends={data.usage_trends} days={days} />
-            </div>
-            <OrganisationUsageTable
-              days={days}
-              organisations={data.organisations}
-            />
-          </div>
-        </TabItem>
+      <ErrorMessage>{error}</ErrorMessage>
 
-        <TabItem tabLabel='Release Pipeline'>
-          <div className='mt-4'>
-            <ReleasePipelineStatsTable
-              stats={data.release_pipeline_stats}
-              totalProjects={data.summary.total_projects}
-            />
-          </div>
-        </TabItem>
+      {data && (
+        <>
+          {/* KPI Cards — always visible */}
+          <InstanceMetricsCards summary={data.summary} days={days} />
 
-        <TabItem tabLabel='Flag Lifecycle'>
-          <div className='mt-4'>
-            <StaleFlagsTable data={data.stale_flags_per_project} />
-          </div>
-        </TabItem>
-      </Tabs>
+          {/* Tabbed sections */}
+          <Tabs urlParam='tab' uncontrolled>
+            <TabItem tabLabel='Usage'>
+              <div className='mt-4'>
+                <div className='mb-4'>
+                  <UsageTrendsChart trends={data.usage_trends} days={days} />
+                </div>
+                <OrganisationUsageTable
+                  days={days}
+                  organisations={data.organisations}
+                />
+              </div>
+            </TabItem>
+
+            <TabItem tabLabel='Release Pipeline'>
+              <div className='mt-4'>
+                <ReleasePipelineStatsTable
+                  stats={data.release_pipeline_stats}
+                  totalProjects={data.summary.total_projects}
+                />
+              </div>
+            </TabItem>
+
+            <TabItem tabLabel='Flag Lifecycle'>
+              <div className='mt-4'>
+                <StaleFlagsTable data={data.stale_flags_per_project} />
+              </div>
+            </TabItem>
+          </Tabs>
+        </>
+      )}
     </div>
   )
 }
