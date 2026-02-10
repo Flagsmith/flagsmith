@@ -865,5 +865,8 @@ export type Req = {
     environmentFlagId: number
     body: UpdateFeatureStateBody
   }
+  getAdminDashboardMetrics: {
+    days?: number
+  }
   // END OF TYPES
 }

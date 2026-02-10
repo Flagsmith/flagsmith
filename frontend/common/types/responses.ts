@@ -20,6 +20,73 @@ export interface GitHubPagedResponse<T> extends PagedResponse<T> {
 }
 export type FlagsmithValue = string | number | boolean | null
 
+export type EnvironmentMetrics = {
+  id: number
+  name: string
+  api_calls_30d: number
+  flag_evaluations_30d: number
+}
+
+export type ProjectMetrics = {
+  id: number
+  name: string
+  api_calls_30d: number
+  flag_evaluations_30d: number
+  flags: number
+  environments: EnvironmentMetrics[]
+}
+
+export type OrganisationMetrics = {
+  id: number
+  name: string
+  created_date: string
+  total_flags: number
+  active_flags: number
+  stale_flags: number
+  total_users: number
+  active_users_30d: number
+  admin_users: number
+  api_calls_30d: number
+  flag_evaluations_30d: number
+  identity_requests_30d: number
+  project_count: number
+  environment_count: number
+  integration_count: number
+  projects: ProjectMetrics[]
+}
+
+export type UsageTrend = {
+  date: string
+  api_calls: number
+  flag_evaluations: number
+  identity_requests: number
+}
+
+export type ReleasePipelineStats = {
+  organisation_id: number
+  organisation_name: string
+  project_id: number
+  project_name: string
+  stage: string
+  flag_count: number
+}
+
+export type StaleFlagsPerProject = {
+  organisation_id: number
+  organisation_name: string
+  project_id: number
+  project_name: string
+  stale_flags: number
+  total_flags: number
+}
+
+export type IntegrationBreakdown = {
+  organisation_id: number
+  organisation_name: string
+  integration_type: string
+  count: number
+}
+
 export type FeatureVersionState = {
   enabled: boolean
   feature: number
@@ -1100,5 +1167,23 @@ export type Res = {
     }
   }
   featureState: FeatureState
+  adminDashboardMetrics: {
+    summary: {
+      total_organisations: number
+      total_flags: number
+      total_users: number
+      total_api_calls_30d: number
+      active_organisations: number
+      total_projects: number
+      total_environments: number
+      total_integrations: number
+      active_users: number
+    }
+    organisations: OrganisationMetrics[]
+    usage_trends: UsageTrend[]
+    release_pipeline_stats: ReleasePipelineStats[]
+    stale_flags_per_project: StaleFlagsPerProject[]
+    integration_breakdown: IntegrationBreakdown[]
+  }
   // END OF TYPES
 }
