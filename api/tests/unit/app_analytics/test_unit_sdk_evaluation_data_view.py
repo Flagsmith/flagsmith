@@ -182,7 +182,7 @@ def test_sdk_evaluation_data_view__missing_required_field__returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_sdk_evaluation_data_view__no_environment_key__returns_401(
+def test_sdk_evaluation_data_view__no_environment_key__returns_403(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -207,10 +207,10 @@ def test_sdk_evaluation_data_view__no_environment_key__returns_401(
     )
 
     # Then
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_sdk_evaluation_data_view__invalid_environment_key__returns_401(
+def test_sdk_evaluation_data_view__invalid_environment_key__returns_403(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -236,7 +236,7 @@ def test_sdk_evaluation_data_view__invalid_environment_key__returns_401(
     )
 
     # Then
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_sdk_evaluation_data_view__empty_evaluations_list__returns_202(
