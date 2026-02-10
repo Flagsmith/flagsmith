@@ -1,13 +1,10 @@
 import json
 from datetime import datetime, timezone
 
-import pytest
 from django.urls import reverse
-from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature
 
@@ -247,7 +244,7 @@ def test_sdk_evaluation_data_view__empty_evaluations_list__returns_202(
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     url = reverse("api-v2:analytics-evaluations")
 
-    data = {"evaluations": []}
+    data: dict[str, list[dict[str, str]]] = {"evaluations": []}
 
     # When
     response = api_client.post(
