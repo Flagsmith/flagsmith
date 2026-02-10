@@ -360,7 +360,10 @@ const FlagRow: FC<FlagRowProps> = ({
     <tr>
       <td>
         <Link
-          to={`/project/${flag.projectId}/flag/${flag.id}/environments`}
+          to={{
+            pathname: `/project/${flag.projectId}/flag/${flag.id}/environments`,
+            state: { searchQuery },
+          }}
           className='text-decoration-none'
         >
           <div className='d-flex align-items-center gap-2'>

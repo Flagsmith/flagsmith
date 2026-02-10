@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import PageTitle from 'components/PageTitle'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
@@ -9,7 +9,6 @@ import Panel from 'components/base/grid/Panel'
 import Icon from 'components/Icon'
 import TagValues from 'components/tags/TagValues'
 import Switch from 'components/Switch'
-import { Link } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 
 type RouteParams = {
@@ -19,6 +18,8 @@ type RouteParams = {
 
 const FlagEnvironmentsPage: FC = () => {
   const { projectId, flagId } = useParams<RouteParams>()
+  const location = useLocation<{ searchQuery?: string }>()
+  const searchQuery = location.state?.searchQuery
 
   // Fetch project to get organisation
   const { data: project } = useGetProjectQuery(
@@ -104,7 +105,12 @@ const FlagEnvironmentsPage: FC = () => {
     <div className='app-container container'>
       {project?.organisation && (
         <div className='mb-4'>
-          <Link to={`/organisation/${project.organisation}/release-manager`}>
+          <Link
+            to={{
+              pathname: `/organisation/${project.organisation}/release-manager`,
+              search: searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : '',
+            }}
+          >
             <Button theme='text' size='small' iconLeft='arrow-left'>
               Back to Release Manager
             </Button>
