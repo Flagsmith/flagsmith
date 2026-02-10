@@ -30,29 +30,30 @@ const OrganisationsPage: FC = () => {
       {({ user }: { user: User & { organisations: Organisation[] } }) => {
         return (
           <div className='app-container container'>
-            {AccountStore.isSuper() && (
-              <div className='mb-4'>
-                <h5 className='mb-3'>Instance Administration</h5>
-                <div className='row'>
-                  <div className='col-md-6 col-xl-3'>
-                    <Button
-                      data-test='admin-dashboard-btn'
-                      onClick={() => history.push(routes['admin-dashboard'])}
-                      className='btn-project btn-project-create'
-                    >
-                      <Row className='flex-nowrap'>
-                        <div className='btn-project-icon'>
-                          <Icon name='bar-chart' width={32} fill='#9DA4AE' />
-                        </div>
-                        <div className='font-weight-medium btn-project-title'>
-                          Platform Hub
-                        </div>
-                      </Row>
-                    </Button>
+            {AccountStore.isSuper() &&
+              Utils.getFlagsmithHasFeature('platform_hub') && (
+                <div className='mb-4'>
+                  <h5 className='mb-3'>Instance Administration</h5>
+                  <div className='row'>
+                    <div className='col-md-6 col-xl-3'>
+                      <Button
+                        data-test='admin-dashboard-btn'
+                        onClick={() => history.push(routes['admin-dashboard'])}
+                        className='btn-project btn-project-create'
+                      >
+                        <Row className='flex-nowrap'>
+                          <div className='btn-project-icon'>
+                            <Icon name='bar-chart' width={32} fill='#9DA4AE' />
+                          </div>
+                          <div className='font-weight-medium btn-project-title'>
+                            Platform Hub
+                          </div>
+                        </Row>
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
             <PanelSearch
               id='organisation-list'
               className='no-pad panel-projects'

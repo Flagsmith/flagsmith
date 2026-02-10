@@ -6,6 +6,7 @@ import ReleasePipelineStatsTable from './components/ReleasePipelineStatsTable'
 import StaleFlagsTable from './components/StaleFlagsTable'
 
 import AccountStore from 'common/stores/account-store'
+import Utils from 'common/utils/utils'
 import { getMockAdminDashboardData } from 'common/services/mockAdminDashboardData'
 import Button from 'components/base/forms/Button'
 import Tabs from 'components/navigation/TabMenu/Tabs'
@@ -19,8 +20,11 @@ const AdminDashboardPage: FC = () => {
   // const { data, error, isLoading } = useGetAdminDashboardMetricsQuery({ days })
   const data = useMemo(() => getMockAdminDashboardData(days), [days])
 
-  // Security check
-  if (!AccountStore.isSuper()) {
+  // Security & feature flag check
+  if (
+    !AccountStore.isSuper() ||
+    !Utils.getFlagsmithHasFeature('platform_hub')
+  ) {
     return (
       <div className='app-container text-center py-5'>
         <h3>Access Denied</h3>
