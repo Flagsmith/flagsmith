@@ -47,7 +47,7 @@ import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
 import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
-import AdminDashboardPage from './components/pages/AdminDashboard/AdminDashboardPage'
+import AdminDashboardPage from './components/pages/admin-dashboard/AdminDashboardPage'
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
