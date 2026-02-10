@@ -30,6 +30,7 @@ from telemetry.serializers import TelemetrySerializer
 from .permissions import UsageDataPermission
 from .serializers import (
     SDKAnalyticsFlagsSerializer,
+    SDKEvaluationDataSerializer,
     UsageDataQuerySerializer,
     UsageDataSerializer,
     UsageTotalCountSerializer,
@@ -54,6 +55,47 @@ class SDKAnalyticsFlagsV2(CreateAPIView):  # type: ignore[type-arg]
         serializer.is_valid(raise_exception=True)
         serializer.save(environment=self.request.environment)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SDKEvaluationDataView(CreateAPIView):  # type: ignore[type-arg]
+    """
+    API endpoint for SDKs to send detailed evaluation data.
+
+    This endpoint accepts batches of evaluation events from SDKs, including:
+    - Feature name and evaluation state
+    - Feature value
+    - Evaluation timestamp
+    - Identity information (identifier, traits)
+    - Segment membership
+
+    Note: This is an alpha release. The schema is expected to change in future versions.
+    """
+
+    permission_classes = (EnvironmentKeyPermissions,)
+    authentication_classes = (EnvironmentKeyAuthentication,)
+    serializer_class = SDKEvaluationDataSerializer
+    throttle_classes = []
+
+    @extend_schema(
+        request=SDKEvaluationDataSerializer,
+        responses={202: None},
+        summary="Send SDK evaluation data",
+        description=(
+            "Submit batch evaluation data from SDKs. "
+            "This is an alpha endpoint and the schema may change in future releases."
+        ),
+    )
+    def create(self, request: Request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
+        """
+        Accept and process batch evaluation data from SDKs.
+
+        Returns 202 Accepted to indicate the data has been received and
+        will be processed asynchronously.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(environment=self.request.environment)
+        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 class SDKAnalyticsFlags(CreateAPIView):  # type: ignore[type-arg]
