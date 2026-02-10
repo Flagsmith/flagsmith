@@ -32,13 +32,19 @@ const AccountDropdown: React.FC = () => {
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode)
     setCurrentViewMode(mode)
-    
+
     // Navigate to the appropriate page based on view mode
     const organisationId = AccountStore.getOrganisation()?.id
-    if (mode === 'release-manager' && organisationId) {
-      history.push(`/organisation/${organisationId}/release-manager`)
+    if (organisationId) {
+      if (mode === 'release-manager') {
+        history.push(`/organisation/${organisationId}/release-manager`)
+      } else if (mode === 'executive') {
+        history.push(`/organisation/${organisationId}/executive-view`)
+      } else if (mode === 'dev') {
+        history.push(`/organisation/${organisationId}/dev-view`)
+      }
     }
-    
+
     setIsOpen(false)
   }
 

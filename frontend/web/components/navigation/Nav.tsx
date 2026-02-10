@@ -54,9 +54,17 @@ const Nav: FC<NavType> = ({
     pathname === '/github-setup' ||
     pathname.includes('/invite')
 
+  // Check if we're on a persona view page where nav should be hidden
+  const isPersonaViewPage =
+    pathname.includes('/release-manager') ||
+    pathname.includes('/executive-view') ||
+    pathname.includes('/dev-view') ||
+    /\/project\/\d+\/flag\/\d+\/environments/.test(pathname)
+
   const showNav =
     !isOrganisationSelect &&
     !isCreateOrganisation &&
+    !isPersonaViewPage &&
     !!AccountStore.getOrganisation()?.id
 
   return (
