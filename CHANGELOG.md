@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.214.0](https://github.com/Flagsmith/flagsmith/compare/v2.213.1...v2.214.0) (2026-02-10)
+
+
+### Features
+
+* upgrade flagsmith-flag-engine to v10 ([#6653](https://github.com/Flagsmith/flagsmith/issues/6653)) ([0a2464b](https://github.com/Flagsmith/flagsmith/commit/0a2464b2e51349877e6140c42ba6d7d290501fbe))
+
+
+### Bug Fixes
+
+* **revert:** Revert upgrade flagsmith-flag-engine to v10 ([#6653](https://github.com/Flagsmith/flagsmith/issues/6653)) ([#6674](https://github.com/Flagsmith/flagsmith/issues/6674)) ([faa031c](https://github.com/Flagsmith/flagsmith/commit/faa031c5cdf40d362c704a9219b714519a91ebce))
+* Webhook payloads do not include multivariate values ([#6666](https://github.com/Flagsmith/flagsmith/issues/6666)) ([cf16f3d](https://github.com/Flagsmith/flagsmith/commit/cf16f3d1fdac2462fefcd9c0226fca722f11dff8))
+
+
+### Dependency Updates
+
+* Bump codecov-action from 4 to 5 ([#6680](https://github.com/Flagsmith/flagsmith/issues/6680)) ([20215d5](https://github.com/Flagsmith/flagsmith/commit/20215d5108e6822b79dc6565543f8f37c83f5947))
+* upgrade to python 3.13 ([#6645](https://github.com/Flagsmith/flagsmith/issues/6645)) ([7d39204](https://github.com/Flagsmith/flagsmith/commit/7d392043051f707be8ccef1cb9ddba3812f65fbd))
+
 ## [2.213.1](https://github.com/Flagsmith/flagsmith/compare/v2.213.0...v2.213.1) (2026-02-06)
 
 
