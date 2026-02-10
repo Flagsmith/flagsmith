@@ -209,6 +209,10 @@ class SDKEvaluationDataSerializer(serializers.Serializer):  # type: ignore[type-
         """
         Process and store the evaluation data.
 
+        Args:
+            environment: The Environment instance for which evaluations are being recorded.
+                        This is passed by the view to identify the environment context.
+
         Note: This is a placeholder implementation. In production, this would
         store the data in the analytics backend (Postgres or InfluxDB).
         """

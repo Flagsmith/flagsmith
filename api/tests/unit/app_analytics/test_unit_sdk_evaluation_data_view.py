@@ -244,7 +244,7 @@ def test_sdk_evaluation_data_view__empty_evaluations_list__returns_202(
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     url = reverse("api-v2:analytics-evaluations")
 
-    data: dict[str, list[dict[str, str]]] = {"evaluations": []}
+    data: dict[str, list[object]] = {"evaluations": []}
 
     # When
     response = api_client.post(
