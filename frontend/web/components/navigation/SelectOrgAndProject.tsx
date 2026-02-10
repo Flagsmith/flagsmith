@@ -16,8 +16,8 @@ const SelectOrgAndProject: FC<SelectOrgAndProjectType> = ({
   activeProject,
   projectId,
 }) => {
-  const isOrganisationSelect = document.location.pathname === '/organisations'
-  const isCreateOrganisation = document.location.pathname === '/create'
+  const appLevelPaths = ['/organisations', '/create', '/admin/dashboard']
+  const isAppLevelPage = appLevelPaths.includes(document.location.pathname)
 
   const organisationId = AccountStore.getOrganisation()?.id
   const { data: organisation } = useGetOrganisationQuery(
@@ -36,7 +36,7 @@ const SelectOrgAndProject: FC<SelectOrgAndProjectType> = ({
           src='/static/images/nav-logo.png'
         />
       </Link>
-      {!(isOrganisationSelect || isCreateOrganisation) && (
+      {!isAppLevelPage && (
         <div className='d-flex gap-1 ml-1 align-items-center'>
           <div
             className={
