@@ -1,6 +1,9 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+import fs from 'fs';
+import path from 'path';
+
 import type * as Preset from '@docusaurus/preset-classic';
 import type { Config } from '@docusaurus/types';
 import type * as Plugin from '@docusaurus/types/src/plugin';
@@ -72,9 +75,9 @@ const config: Config = {
                     label: 'Docs',
                 },
                 {
-                    label: 'Edge API Specification',
+                    label: 'SDK API Specification',
                     position: 'left',
-                    to: '/edge-api/',
+                    to: '/sdk-api/',
                 },
                 {
                     href: 'https://flagsmith.com',
@@ -289,11 +292,19 @@ const config: Config = {
                 docsPluginId: 'classic',
                 config: {
                     partner: {
-                        specPath: 'static/openapi/edge-api.yaml',
-                        outputDir: 'docs/edge-api',
+                        specPath: '../sdk/openapi.yaml',
+                        outputDir: 'docs/sdk-api',
                         sidebarOptions: {
                             groupPathsBy: 'tag',
                             categoryLinkSource: 'tag',
+                        },
+                        markdownGenerators: {
+                            createInfoPageMD: () => {
+                                return fs.readFileSync(
+                                    path.join(__dirname, 'sdk/sdk-api-info.mdx'),
+                                    'utf-8',
+                                );
+                            },
                         },
                     } satisfies OpenApiPlugin.Options,
                 } satisfies Plugin.PluginOptions,
@@ -307,18 +318,6 @@ const config: Config = {
             async: true,
             defer: true,
             id: 'hs-script-loader',
-        },
-        {
-            src: "https://widget.kapa.ai/kapa-widget.bundle.js",
-            "data-website-id": "bbb5a478-1363-4c1e-84b5-cdba2c58e5ad",
-            "data-project-name": "Flagsmith",
-            "data-project-color": "#6633FF",
-            "data-project-logo": "http://docs.flagsmith.com/img/logo.svg",
-            "data-answer-cta-button-enabled": "true",
-            "data-answer-cta-button-link": "/support/",
-            "data-answer-cta-button-text": "Still need help? Reach out to our support team",
-            "data-modal-disclaimer": "Results are AI generated from our product documentation. [Contact Support to speak to a human](/support).",
-            async: true,
         },
     ],
 

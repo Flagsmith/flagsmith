@@ -1,6 +1,8 @@
 import json
+from datetime import timedelta
 
 import responses
+from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
@@ -10,9 +12,11 @@ from audit.signals import (
     call_webhooks,
     send_audit_log_event_to_dynatrace,
     send_audit_log_event_to_grafana,
+    send_feature_flag_went_live_signal,
+    trigger_feature_state_change_webhooks,
 )
 from environments.models import Environment
-from features.models import Feature
+from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.dynatrace.dynatrace import EVENTS_API_URI
 from integrations.dynatrace.models import DynatraceConfiguration
@@ -352,3 +356,243 @@ def _create_and_publish_environment_feature_version(
         .first()
     )
     return version, audit_log_record
+
+
+def test_trigger_feature_state_change_webhooks__feature_state_update__triggers_webhook(
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment__isnull=True
+    )
+
+    audit_log = AuditLog.objects.create(
+        environment=environment,
+        related_object_id=feature_state.id,
+        related_object_type=RelatedObjectType.FEATURE_STATE.name,
+        history_record_id=feature_state.history.first().history_id,
+        history_record_class_path=feature_state.history_record_class_path,
+    )
+
+    mock_trigger_webhooks = mocker.patch(
+        "features.tasks.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    trigger_feature_state_change_webhooks(sender=feature_state, audit_log=audit_log)
+
+    # Then
+    mock_trigger_webhooks.assert_called_once()
+
+
+def test_trigger_feature_state_change_webhooks__versioned_environment__skips_webhook(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.get(
+        environment=environment_v2_versioning,
+        feature=feature,
+        feature_segment__isnull=True,
+    )
+
+    audit_log = AuditLog.objects.create(
+        environment=environment_v2_versioning,
+        related_object_id=feature_state.id,
+        related_object_type=RelatedObjectType.FEATURE_STATE.name,
+        history_record_id=feature_state.history.first().history_id,
+        history_record_class_path=feature_state.history_record_class_path,
+    )
+
+    mock_trigger_webhooks = mocker.patch(
+        "features.tasks.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    trigger_feature_state_change_webhooks(sender=feature_state, audit_log=audit_log)
+
+    # Then
+    mock_trigger_webhooks.assert_not_called()
+
+
+def test_trigger_feature_state_change_webhooks__deleted_feature_state__skips_webhook(
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment__isnull=True
+    )
+    feature_state.deleted_at = feature_state.updated_at
+    feature_state.save()
+
+    audit_log = AuditLog.objects.create(
+        environment=environment,
+        related_object_id=feature_state.id,
+        related_object_type=RelatedObjectType.FEATURE_STATE.name,
+        history_record_id=feature_state.history.first().history_id,
+        history_record_class_path=feature_state.history_record_class_path,
+    )
+
+    mock_trigger_webhooks = mocker.patch(
+        "features.tasks.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    trigger_feature_state_change_webhooks(sender=feature_state, audit_log=audit_log)
+
+    # Then
+    mock_trigger_webhooks.assert_not_called()
+
+
+def test_trigger_feature_state_change_webhooks__feature_state_value_update__triggers_webhook(
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    """
+    Test that webhook is triggered for FeatureStateValue changes.
+
+    This is important for issue #6050 where updating a segment override
+    creates an AuditLog for the FeatureStateValue, not the FeatureState.
+    """
+    # Given
+    feature_state = FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment__isnull=True
+    )
+    feature_state_value = feature_state.feature_state_value
+
+    # Create an AuditLog as if it was created for a FeatureStateValue update
+    audit_log = AuditLog.objects.create(
+        environment=environment,
+        related_object_id=feature_state.id,  # Note: still points to FeatureState
+        related_object_type=RelatedObjectType.FEATURE_STATE.name,
+        history_record_id=feature_state_value.history.first().history_id,
+        history_record_class_path=feature_state_value.history_record_class_path,
+    )
+
+    mock_trigger_webhooks = mocker.patch(
+        "features.tasks.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    trigger_feature_state_change_webhooks(sender=feature_state, audit_log=audit_log)
+
+    # Then
+    mock_trigger_webhooks.assert_called_once()
+    called_feature_state = mock_trigger_webhooks.call_args[0][0]
+    assert called_feature_state.id == feature_state.id
+
+
+def test_send_feature_flag_went_live_signal__feature_state__sends_signal(
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment__isnull=True
+    )
+
+    audit_log = AuditLog.objects.create(
+        environment=environment,
+        related_object_id=feature_state.id,
+        related_object_type=RelatedObjectType.FEATURE_STATE.name,
+        history_record_id=feature_state.history.first().history_id,
+        history_record_class_path=feature_state.history_record_class_path,
+    )
+
+    mock_signal_send = mocker.patch("audit.signals.feature_state_change_went_live.send")
+
+    # When
+    send_feature_flag_went_live_signal(sender=AuditLog, instance=audit_log)
+
+    # Then
+    mock_signal_send.assert_called_once_with(feature_state, audit_log=audit_log)
+
+
+def test_send_feature_flag_went_live_signal__feature_state_value__sends_signal(
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment__isnull=True
+    )
+    feature_state_value = feature_state.feature_state_value
+
+    audit_log = AuditLog.objects.create(
+        environment=environment,
+        related_object_id=feature_state.id,
+        related_object_type=RelatedObjectType.FEATURE_STATE.name,
+        history_record_id=feature_state_value.history.first().history_id,
+        history_record_class_path=feature_state_value.history_record_class_path,
+    )
+
+    mock_signal_send = mocker.patch("audit.signals.feature_state_change_went_live.send")
+
+    # When
+    send_feature_flag_went_live_signal(sender=AuditLog, instance=audit_log)
+
+    # Then
+    # The signal should be called with the parent FeatureState extracted from FeatureStateValue
+    mock_signal_send.assert_called_once_with(feature_state, audit_log=audit_log)
+
+
+def test_send_feature_flag_went_live_signal__scheduled_feature_state__skips_signal(
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.get(
+        environment=environment, feature=feature, feature_segment__isnull=True
+    )
+    # Make the feature state scheduled (live_from in the future)
+    feature_state.live_from = timezone.now() + timedelta(days=1)
+    feature_state.save()
+
+    audit_log = AuditLog.objects.create(
+        environment=environment,
+        related_object_id=feature_state.id,
+        related_object_type=RelatedObjectType.FEATURE_STATE.name,
+        history_record_id=feature_state.history.first().history_id,
+        history_record_class_path=feature_state.history_record_class_path,
+    )
+
+    mock_signal_send = mocker.patch("audit.signals.feature_state_change_went_live.send")
+
+    # When
+    send_feature_flag_went_live_signal(sender=AuditLog, instance=audit_log)
+
+    # Then
+    mock_signal_send.assert_not_called()
+
+
+def test_send_feature_flag_went_live_signal__non_feature_state_instance__skips_signal(
+    project: Project,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    # Create an audit log for a Feature (not FeatureState)
+    audit_log = AuditLog.objects.create(
+        project=project,
+        related_object_id=feature.id,
+        related_object_type=RelatedObjectType.FEATURE.name,
+        history_record_id=feature.history.first().history_id,
+        history_record_class_path=feature.history_record_class_path,
+    )
+
+    mock_signal_send = mocker.patch("audit.signals.feature_state_change_went_live.send")
+
+    # When
+    send_feature_flag_went_live_signal(sender=AuditLog, instance=audit_log)
+
+    # Then
+    mock_signal_send.assert_not_called()

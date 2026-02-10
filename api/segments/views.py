@@ -3,7 +3,7 @@ from typing import Any
 
 from common.projects.permissions import VIEW_PROJECT
 from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.generics import get_object_or_404
@@ -36,7 +36,52 @@ logger = logging.getLogger()
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(query_serializer=SegmentListQuerySerializer()),
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[SegmentListQuerySerializer],
+        extensions={
+            "x-gram": {
+                "name": "list_project_segments",
+                "description": "Retrieves all user segments defined for audience targeting within the project.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "create_project_segment",
+                "description": "Creates a new user segment for audience targeting within the project.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="retrieve",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "get_project_segment",
+                "description": "Retrieves detailed information about a specific user segment.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "update_project_segment",
+                "description": "Updates an existing user segment's properties and rules.",
+            },
+        },
+    ),
 )
 class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = SegmentSerializer
@@ -90,7 +135,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         return queryset
 
-    @swagger_auto_schema(query_serializer=AssociatedFeaturesQuerySerializer())
+    @extend_schema(parameters=[AssociatedFeaturesQuerySerializer])
     @action(
         detail=True,
         methods=["GET"],
@@ -130,11 +175,10 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         delete_segment(segment, author=author)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @swagger_auto_schema(
-        request_body=CloneSegmentSerializer,
-        responses={201: SegmentSerializer()},
-        method="post",
-    )  # type: ignore[misc]
+    @extend_schema(
+        request=CloneSegmentSerializer,
+        responses={201: SegmentSerializer},
+    )
     @action(
         detail=True,
         methods=["POST"],
@@ -149,7 +193,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return Response(SegmentSerializer(clone).data, status=status.HTTP_201_CREATED)
 
 
-@swagger_auto_schema(responses={200: SegmentSerializer()}, method="get")
+@extend_schema(responses={200: SegmentSerializer})
 @api_view(["GET"])
 def get_segment_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)

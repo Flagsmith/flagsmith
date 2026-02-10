@@ -39,7 +39,7 @@ class Identity(models.Model):
         # Note that the environment / created_date index is added only to postgres, so we can add it concurrently to
         # avoid any downtime. If people using MySQL / Oracle have issues with poor performance on the identities table,
         # we can provide them the SQL to add it manually in a small window of downtime.
-        index_together = (("environment", "created_date"),)
+        indexes = [models.Index(fields=["environment", "created_date"])]
 
     def natural_key(self):  # type: ignore[no-untyped-def]
         return self.identifier, self.environment.api_key

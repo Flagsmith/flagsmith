@@ -76,6 +76,9 @@ jobs:
           max_attempts: 2
           retry_on: error
           timeout_minutes: 20
+          on_retry_command: |
+            cd frontend
+            docker compose down --remove-orphans || true
         env:
           opts: ${{ inputs.args }}
           API_IMAGE: ${{ inputs.api-image }}

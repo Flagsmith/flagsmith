@@ -9,10 +9,9 @@ from django.http import (
     JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect
-from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import FormView
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
@@ -94,10 +93,6 @@ class AdminInitView(View):
         )
 
 
-@method_decorator(
-    decorator=swagger_auto_schema(query_serializer=ListUsersQuerySerializer()),
-    name="list",
-)
 class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):  # type: ignore[type-arg]
     permission_classes = (IsAuthenticated, OrganisationUsersPermission)
     pagination_class = None
@@ -165,6 +160,17 @@ def password_reset_redirect(
     return redirect(f"{current_site_url}/password-reset/{uidb64}/{token}")
 
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "list_organization_groups",
+                "description": "Retrieves all permission groups within the organization.",
+            },
+        },
+    ),
+)
 class UserPermissionGroupViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
 
@@ -228,8 +234,8 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         serializer.save(organisation_id=self.kwargs["organisation_pk"])
 
-    @swagger_auto_schema(
-        request_body=UserIdsSerializer,
+    @extend_schema(
+        request=UserIdsSerializer,
         responses={200: UserPermissionGroupSerializerDetail},
     )
     @action(detail=True, methods=["POST"], url_path="add-users")
@@ -253,8 +259,8 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
 
         return Response(UserPermissionGroupSerializerDetail(instance=group).data)
 
-    @swagger_auto_schema(
-        request_body=UserIdsSerializer,
+    @extend_schema(
+        request=UserIdsSerializer,
         responses={200: UserPermissionGroupSerializerDetail},
     )
     @action(detail=True, methods=["POST"], url_path="remove-users")

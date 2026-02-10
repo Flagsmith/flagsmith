@@ -43,7 +43,7 @@ def test_api_usage_cache(
         assert not mocked_track_request_task.called
 
         # Now, let's move the time forward
-        frozen_time.tick(settings.API_USAGE_CACHE_SECONDS + 1)  # type: ignore[arg-type]
+        frozen_time.tick(settings.API_USAGE_CACHE_SECONDS + 1)
 
         # let's track another request(to trigger flush)
         cache.track_request(
@@ -136,7 +136,7 @@ def test_feature_evaluation_cache(
             )
 
         # Now, let's move the time forward
-        frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)  # type: ignore[arg-type]
+        frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)
 
         # track another evaluation(to trigger cache flush)
         cache.track_feature_evaluation(
@@ -154,7 +154,7 @@ def test_feature_evaluation_cache(
         )
 
         # move time forward again
-        frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)  # type: ignore[arg-type]
+        frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)
 
         # track another one(to trigger cache flush)
         cache.track_feature_evaluation(

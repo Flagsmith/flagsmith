@@ -1,6 +1,8 @@
 import re
 
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
@@ -17,11 +19,26 @@ from .models import FeatureExternalResource
 from .serializers import FeatureExternalResourceSerializer
 
 
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "get_feature_external_resources",
+                "description": "Retrieves external resources linked to the feature flag.",
+            },
+        },
+    ),
+)
 class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = FeatureExternalResourceSerializer
     permission_classes = [FeatureExternalResourcePermissions]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureExternalResource.objects.none()
+
         if "pk" in self.kwargs:
             return FeatureExternalResource.objects.filter(id=self.kwargs["pk"])
         else:

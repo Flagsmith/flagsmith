@@ -49,7 +49,7 @@ if not settings.TASK_PROCESSOR_MODE:
         ),
     ]
 
-if settings.DEBUG:
+if settings.DEBUG:  # pragma: no cover
     urlpatterns = [
         re_path(r"^__debug__/", include("debug_toolbar.urls")),
     ] + urlpatterns

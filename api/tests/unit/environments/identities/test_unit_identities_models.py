@@ -1024,3 +1024,18 @@ def test_identity_get_all_feature_states__returns_identity_override__when_v2_fea
     # Then
     assert len(all_feature_states) == 1
     assert all_feature_states[0] == identity_override
+
+
+def test_identity_str__returns_account_identifier(
+    environment: Environment,
+) -> None:
+    # Given
+    identity = Identity.objects.create(
+        identifier="test-identity", environment=environment
+    )
+
+    # When
+    result = str(identity)
+
+    # Then
+    assert result == "Account test-identity"

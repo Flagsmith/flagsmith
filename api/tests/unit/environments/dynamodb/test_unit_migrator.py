@@ -1,4 +1,4 @@
-from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
+from pytest_django.asserts import assertQuerySetEqual as assert_queryset_equal
 
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.dynamodb.types import (

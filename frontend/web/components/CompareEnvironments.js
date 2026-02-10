@@ -44,6 +44,9 @@ class CompareEnvironments extends Component {
   }
 
   fetch = () => {
+    if (!this.state.environmentLeft || !this.state.environmentRight) {
+      return
+    }
     this.setState({ isLoading: true })
     return Promise.all([
       data.get(
@@ -66,70 +69,76 @@ class CompareEnvironments extends Component {
       data.get(
         `${Project.api}environments/${this.state.environmentRight}/featurestates/?page_size=999`,
       ),
-    ]).then(
-      ([
-        environmentLeftProjectFlags,
-        environmentRightProjectFlags,
-        environmentLeftFlags,
-        environmentRightFlags,
-      ]) => {
-        const changes = []
-        const same = []
-        _.each(
-          _.sortBy(environmentLeftProjectFlags.results, (p) => p.name),
-          (projectFlagLeft) => {
-            const projectFlagRight = environmentRightProjectFlags.results?.find(
-              (projectFlagRight) => projectFlagRight.id === projectFlagLeft.id,
-            )
-            const leftSide = environmentLeftFlags.results.find(
-              (v) => v.feature === projectFlagLeft.id,
-            )
-            const rightSide = environmentRightFlags.results.find(
-              (v) => v.feature === projectFlagLeft.id,
-            )
-            const change = {
-              leftEnabled: leftSide.enabled,
-              leftEnvironmentFlag: leftSide,
-              leftValue: leftSide.feature_state_value,
-              projectFlagLeft,
-              projectFlagRight,
-              rightEnabled: rightSide.enabled,
-              rightEnvironmentFlag: rightSide,
-              rightValue: rightSide.feature_state_value,
-            }
-            change.enabledChanged = change.rightEnabled !== change.leftEnabled
-            change.valueChanged = change.rightValue !== change.leftValue
-            if (
-              change.enabledChanged ||
-              change.valueChanged ||
-              projectFlagLeft.num_identity_overrides ||
-              projectFlagLeft.num_segment_overrides ||
-              projectFlagRight.num_identity_overrides ||
-              projectFlagRight.num_segment_overrides
-            ) {
-              changes.push(change)
-            } else {
-              same.push(change)
-            }
-          },
-        )
-        this.setState({
-          changes,
-          environmentLeftFlags: _.keyBy(
-            environmentLeftFlags.results,
-            'feature',
-          ),
-          environmentRightFlags: _.keyBy(
-            environmentRightFlags.results,
-            'feature',
-          ),
-          isLoading: false,
-          projectFlagsLeft: environmentLeftProjectFlags.results,
-          projectFlagsRight: environmentLeftProjectFlags.results,
-          same,
-        })
-      },
-    )
+    ])
+      .then(
+        ([
+          environmentLeftProjectFlags,
+          environmentRightProjectFlags,
+          environmentLeftFlags,
+          environmentRightFlags,
+        ]) => {
+          const changes = []
+          const same = []
+          _.each(
+            _.sortBy(environmentLeftProjectFlags.results, (p) => p.name),
+            (projectFlagLeft) => {
+              const projectFlagRight =
+                environmentRightProjectFlags.results?.find(
+                  (projectFlagRight) =>
+                    projectFlagRight.id === projectFlagLeft.id,
+                )
+              const leftSide = environmentLeftFlags.results.find(
+                (v) => v.feature === projectFlagLeft.id,
+              )
+              const rightSide = environmentRightFlags.results.find(
+                (v) => v.feature === projectFlagLeft.id,
+              )
+              const change = {
+                leftEnabled: leftSide.enabled,
+                leftEnvironmentFlag: leftSide,
+                leftValue: leftSide.feature_state_value,
+                projectFlagLeft,
+                projectFlagRight,
+                rightEnabled: rightSide.enabled,
+                rightEnvironmentFlag: rightSide,
+                rightValue: rightSide.feature_state_value,
+              }
+              change.enabledChanged = change.rightEnabled !== change.leftEnabled
+              change.valueChanged = change.rightValue !== change.leftValue
+              if (
+                change.enabledChanged ||
+                change.valueChanged ||
+                projectFlagLeft.num_identity_overrides ||
+                projectFlagLeft.num_segment_overrides ||
+                projectFlagRight.num_identity_overrides ||
+                projectFlagRight.num_segment_overrides
+              ) {
+                changes.push(change)
+              } else {
+                same.push(change)
+              }
+            },
+          )
+          this.setState({
+            changes,
+            environmentLeftFlags: _.keyBy(
+              environmentLeftFlags.results,
+              'feature',
+            ),
+            environmentRightFlags: _.keyBy(
+              environmentRightFlags.results,
+              'feature',
+            ),
+            isLoading: false,
+            projectFlagsLeft: environmentLeftProjectFlags.results,
+            projectFlagsRight: environmentLeftProjectFlags.results,
+            same,
+          })
+        },
+      )
+      .catch(() => {
+        this.setState({ isLoading: false })
+      })
   }
 
   onSave = () => this.fetch()
@@ -199,6 +208,20 @@ class CompareEnvironments extends Component {
         {this.state.environmentLeft && this.state.environmentRight ? (
           <FeatureListProvider onSave={this.onSave} onError={this.onError}>
             {({}, { removeFlag, toggleFlag }) => {
+              // Adapt old FeatureListProvider signatures to new FeatureRow signatures
+              const adaptedToggleFlag =
+                (environmentId) => (projectFlag, environmentFlag, onError) => {
+                  toggleFlag(
+                    this.props.projectId,
+                    environmentId,
+                    projectFlag,
+                    environmentFlag,
+                    onError,
+                  )
+                }
+              const adaptedRemoveFlag = (projectFlag) => {
+                removeFlag(this.props.projectId, projectFlag)
+              }
               const renderRow = (p, i, fadeEnabled, fadeValue) => {
                 const environmentLeft = ProjectStore.getEnvironment(
                   this.state.environmentLeft,
@@ -260,8 +283,10 @@ class CompareEnvironments extends Component {
                           projectId={this.props.projectId}
                           index={i}
                           canDelete={permission}
-                          toggleFlag={toggleFlag}
-                          removeFlag={removeFlag}
+                          toggleFlag={adaptedToggleFlag(
+                            this.state.environmentLeft,
+                          )}
+                          removeFlag={adaptedRemoveFlag}
                           projectFlag={p.projectFlagLeft}
                         />
                       )}
@@ -290,8 +315,10 @@ class CompareEnvironments extends Component {
                           projectId={this.props.projectId}
                           index={i}
                           canDelete={permission}
-                          toggleFlag={toggleFlag}
-                          removeFlag={removeFlag}
+                          toggleFlag={adaptedToggleFlag(
+                            this.state.environmentRight,
+                          )}
+                          removeFlag={adaptedRemoveFlag}
                           projectFlag={p.projectFlagRight}
                         />
                       )}

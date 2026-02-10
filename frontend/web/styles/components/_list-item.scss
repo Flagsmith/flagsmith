@@ -3,6 +3,11 @@
   min-height: $panel-list-item-min-height;
   transition: all 0.2s ease-in;
   color: $panel-list-item-color;
+
+  &--toggling {
+    opacity: 0.6;
+    pointer-events: none;
+  }
   .btn-link {
     font-weight: bold;
     svg {

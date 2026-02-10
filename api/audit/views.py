@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
 
@@ -24,7 +24,7 @@ from organisations.models import Organisation, OrganisationRole
 
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(query_serializer=AuditLogsQueryParamSerializer()),
+    decorator=extend_schema(parameters=[AuditLogsQueryParamSerializer]),
 )
 class _BaseAuditLogViewSet(
     mixins.ListModelMixin,
@@ -34,6 +34,9 @@ class _BaseAuditLogViewSet(
     pagination_class = CustomPagination
 
     def get_queryset(self) -> QuerySet[AuditLog]:
+        if getattr(self, "swagger_fake_view", False):
+            return AuditLog.objects.none()  # type: ignore[no-any-return]
+
         q = self._get_base_filters()
 
         serializer = AuditLogsQueryParamSerializer(data=self.request.GET)
@@ -105,7 +108,7 @@ class AllAuditLogViewSet(_BaseAuditLogViewSet):
 
         Since we're applying the base filters to the query set
         """
-        return (
+        return (  # type: ignore[no-any-return]
             self.request.user.organisations.filter(  # type: ignore[union-attr]
                 userorganisation__role=OrganisationRole.ADMIN
             )

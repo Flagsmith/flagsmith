@@ -9,8 +9,10 @@ DOTENV_OVERRIDE_FILE ?= .env
 
 POETRY_VERSION ?= 2.2.1
 
-SAML_REVISION ?= v1.6.5
-RBAC_REVISION ?= v0.11.6
+SAML_REVISION ?= v1.6.6
+RBAC_REVISION ?= v0.13.0
+
+OPENAPI_FORMAT_VERSION ?= 1.23.0
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
@@ -30,6 +32,7 @@ install-packages:
 .PHONY: install-private-modules
 install-private-modules:
 	$(eval SITE_PACKAGES_DIR := $(shell poetry run python -c 'import site; print(site.getsitepackages()[0])'))
+	rm -rf $(SITE_PACKAGES_DIR)/saml $(SITE_PACKAGES_DIR)/rbac
 	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && mv ./flagsmith-saml/saml $(SITE_PACKAGES_DIR)
 	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/rbac $(SITE_PACKAGES_DIR)
 	rm -rf ./flagsmith-saml ./flagsmith-rbac
@@ -66,40 +69,45 @@ docker-build:
 		--target=oss-api \
 		../
 
+.PHONY: wait-for-db
+wait-for-db:
+	poetry run python manage.py waitfordb 
+	poetry run python manage.py waitfordb --database analytics
+
 .PHONY: test
-test:
+test: docker-up wait-for-db
 	poetry run pytest $(opts)
 
 .PHONY: django-make-migrations
-django-make-migrations:
+django-make-migrations: docker-up wait-for-db
 	poetry run python manage.py waitfordb
 	poetry run python manage.py makemigrations $(opts)
 
 .PHONY: django-squash-migrations
-django-squash-migrations:
+django-squash-migrations: docker-up wait-for-db
 	poetry run python manage.py waitfordb
 	poetry run python manage.py squashmigrations $(opts)
 
 .PHONY: django-migrate
-django-migrate:
+django-migrate: docker-up wait-for-db
 	poetry run python manage.py waitfordb
 	poetry run python manage.py migrate
 	poetry run python manage.py createcachetable
 
 .PHONY: django-shell
 django-shell:
-	poetry run python manage.py shell
+	poetry run python manage.py shell_plus
 
 .PHONY: django-collect-static
 django-collect-static:
 	poetry run python manage.py collectstatic --noinput
 
 .PHONY: serve
-serve: docker-up
+serve: docker-up wait-for-db
 	poetry run flagsmith start --reload api
 
 .PHONY: run-task-processor
-run-task-processor: docker-up
+run-task-processor: docker-up wait-for-db
 	poetry run flagsmith start --reload --bind 0.0.0.0:8001 task-processor
 
 .PHONY: serve-with-task-processor
@@ -107,10 +115,18 @@ serve-with-task-processor: TASK_RUN_METHOD=TASK_PROCESSOR
 serve-with-task-processor:
 	make -j2 serve run-task-processor
 
+.PHONY: generate-flagsmith-sdk-openapi
+generate-flagsmith-sdk-openapi: OPENAPI_SERVERS=[{"url": "https://edge.api.flagsmith.com", "description": "Flagsmith Edge API"}]
+generate-flagsmith-sdk-openapi:
+	poetry run python manage.py spectacular | \
+	  npx openapi-format@${OPENAPI_FORMAT_VERSION} /dev/fd/0 \
+	    --filterFile openapi-filter-flagsmith-sdk.yml \
+	    --output ../sdk/openapi.yaml
+
 .PHONY: generate-ld-client-types
 generate-ld-client-types:
 	curl -sSL https://app.launchdarkly.com/api/v2/openapi.json | \
-	npx openapi-format /dev/fd/0 \
+	npx openapi-format@${OPENAPI_FORMAT_VERSION} /dev/fd/0 \
 		--filterFile openapi-filter-launchdarkly.yaml | \
 	datamodel-codegen \
 		--output integrations/launch_darkly/types.py \
@@ -124,7 +140,7 @@ generate-ld-client-types:
 .PHONY: generate-grafana-client-types
 generate-grafana-client-types:
 	curl -sSL https://raw.githubusercontent.com/grafana/grafana/refs/heads/main/public/openapi3.json | \
-	npx openapi-format /dev/fd/0 \
+	npx openapi-format@${OPENAPI_FORMAT_VERSION} /dev/fd/0 \
 		--filterFile openapi-filter-grafana.yaml | \
 	datamodel-codegen \
 		--output integrations/grafana/types.py \
@@ -138,21 +154,22 @@ generate-grafana-client-types:
 .PHONY: integrate-private-tests
 integrate-private-tests:
 	$(eval WORKFLOW_REVISION := $(shell grep -A 1 "\[tool.poetry.group.workflows.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'))
-	$(eval TASK_PROCESSOR_REVISION := $(shell grep -A 0 "flagsmith-task-processor" pyproject.toml | awk -F '"' '{printf $$4}'))
 	$(eval AUTH_CONTROLLER_REVISION := $(shell grep -A 1 "\[tool.poetry.group.auth-controller.dependencies\]" pyproject.toml | awk -F '"' '{printf $$4}'))
 
 	git clone https://github.com/flagsmith/flagsmith-saml --depth 1 --branch ${SAML_REVISION} && mv ./flagsmith-saml/tests tests/saml_tests
 	git clone https://github.com/flagsmith/flagsmith-rbac --depth 1 --branch ${RBAC_REVISION} && mv ./flagsmith-rbac/tests tests/rbac_tests
 	git clone https://github.com/flagsmith/flagsmith-workflows --depth 1 --branch ${WORKFLOW_REVISION} && mv ./flagsmith-workflows/tests tests/workflow_tests
 	git clone https://github.com/flagsmith/flagsmith-auth-controller --depth 1 --branch ${AUTH_CONTROLLER_REVISION} && mv ./flagsmith-auth-controller/tests tests/auth_controller_tests
-
-	git clone https://github.com/flagsmith/flagsmith-task-processor --depth 1 --branch ${TASK_PROCESSOR_REVISION} && mv ./flagsmith-task-processor/tests tests/task_processor_tests
-	rm -rf ./flagsmith-saml ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller ./flagsmith-task-processor
+	rm -rf ./flagsmith-saml ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller
 
 .PHONY: generate-docs
-generate-docs:
+generate-docs: generate-flagsmith-sdk-openapi
 	poetry run flagsmith docgen metrics > ../docs/docs/administration-and-security/platform-configuration/metrics.md
 
 .PHONY: add-known-sdk-version
 add-known-sdk-version:
 	poetry run python scripts/add-known-sdk-version.py $(opts)
+
+.PHONY: generate-mcp-spec
+generate-mcp-spec:
+	poetry run python manage.py spectacular --generator-class api.openapi.MCPSchemaGenerator --file mcp_openapi.yaml
