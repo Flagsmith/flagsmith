@@ -54,5 +54,6 @@
             "section": "Other",
             "hidden": true
         }
-    ]
+    ],
+    "pull-request-title-pattern": "chore${scope}: Release${component} ${version}"
 }
