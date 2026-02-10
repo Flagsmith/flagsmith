@@ -1100,5 +1100,9 @@ export type Res = {
     }
   }
   featureState: FeatureState
+  createCleanupIssue: {
+    feature_external_resource_id: number
+    html_url: string
+  }
   // END OF TYPES
 }

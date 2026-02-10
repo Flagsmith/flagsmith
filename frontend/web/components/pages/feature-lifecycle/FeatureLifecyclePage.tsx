@@ -6,7 +6,9 @@ import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { hasActiveFilters } from 'common/utils/featureFilterParams'
 import PageTitle from 'components/PageTitle'
 import Icon from 'components/Icon'
+import Button from 'components/base/forms/Button'
 import EnvironmentSelect from 'components/EnvironmentTagSelect'
+import CreateFlagModal from 'components/modals/create-feature'
 import LifecycleSidebar from './components/LifecycleSidebar'
 import EvaluationChecker from './components/EvaluationChecker'
 import NewSection from './components/NewSection'
@@ -19,6 +21,7 @@ import { useLifecycleData } from './hooks/useLifecycleData'
 import { useEvaluationCounts } from './hooks/useEvaluationCounts'
 import {
   DEFAULT_FILTER_STATE,
+  MONITOR_TOOLTIP,
   SECTIONS,
   STALE_TOOLTIP,
   buildPeriodOptions,
@@ -174,6 +177,7 @@ const FeatureLifecyclePage: FC = () => {
             flags={staleFlags}
             isLoading={isLoading}
             error={error}
+            organisationId={routeContext.organisationId!}
             {...filterProps}
           />
         )
@@ -248,7 +252,28 @@ const FeatureLifecyclePage: FC = () => {
         <div className='aside-container'>
           <div className='app-container container'>
             <div className=' mb-0'>
-              <PageTitle title={`${activeSection.label} Features`}>
+              <PageTitle
+                title={`${activeSection.label} Features`}
+                cta={
+                  section === 'new' ? (
+                    <Button
+                      onClick={() => {
+                        openModal(
+                          'New Feature',
+                          <CreateFlagModal
+                            environmentId={defaultEnvironmentApiKey}
+                            projectId={projectId}
+                          />,
+                          'side-modal create-feature-modal',
+                        )
+                      }}
+                      data-test='create-feature-btn'
+                    >
+                      Create Feature
+                    </Button>
+                  ) : undefined
+                }
+              >
                 {activeSection.subtitle}
                 {activeSection.staleTooltip && (
                   <Tooltip
@@ -259,6 +284,21 @@ const FeatureLifecyclePage: FC = () => {
                     }
                   >
                     {STALE_TOOLTIP}
+                  </Tooltip>
+                )}
+                {activeSection.monitorTooltip && (
+                  <Tooltip
+                    title={
+                      <a
+                        className='d-inline-flex align-items-center gap-1'
+                        href='#'
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        Why am I seeing this?
+                      </a>
+                    }
+                  >
+                    {MONITOR_TOOLTIP}
                   </Tooltip>
                 )}
               </PageTitle>

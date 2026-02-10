@@ -1,15 +1,22 @@
 import React, { FC, useCallback, useState } from 'react'
 import Button from 'components/base/forms/Button'
+import DropdownMenu from 'components/base/DropdownMenu'
 import SectionShell from './SectionShell'
 import { useClientPagination } from 'components/pages/feature-lifecycle/hooks/useClientPagination'
+import { useCreateCleanupIssueMutation } from 'common/services/useGithubIntegration'
+import { useLazyGetFeatureCodeReferencesQuery } from 'common/services/useCodeReferences'
+import Utils from 'common/utils/utils'
 import type { ProjectFlag } from 'common/types/responses'
 import type { FilterState } from 'common/types/featureFilters'
+
+const REPOSITORY_URL = 'https://github.com/flagsmith/flagsmith'
 
 type StaleSectionProps = {
   flags: ProjectFlag[]
   isLoading: boolean
   error: unknown
   projectId: number
+  organisationId: number
   filters: FilterState
   hasFilters: boolean
   onFilterChange: (updates: Partial<FilterState>) => void
@@ -24,9 +31,12 @@ const StaleSection: FC<StaleSectionProps> = ({
   isLoading,
   onClearFilters,
   onFilterChange,
+  organisationId,
   projectId,
 }) => {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [createCleanupIssue] = useCreateCleanupIssueMutation()
+  const [triggerGetCodeReferences] = useLazyGetFeatureCodeReferencesQuery()
 
   const { goToPage, nextPage, pageItems, paging, prevPage } =
     useClientPagination({ items: flags })
@@ -48,6 +58,85 @@ const StaleSection: FC<StaleSectionProps> = ({
     [selectedIds],
   )
 
+  const handleCopyCleanupPrompt = useCallback(
+    async (flag: ProjectFlag) => {
+      try {
+        const { data } = await triggerGetCodeReferences({
+          featureId: flag.id,
+          projectId,
+        })
+
+        const codeReferences =
+          data
+            ?.flatMap((repo) =>
+              repo.code_references.map(
+                (ref) => `- ${ref.file_path}:${ref.line_number}`,
+              ),
+            )
+            .join('\n') || 'No code references found.'
+
+        const prompt = [
+          'We need to clean up feature flag usage in the code.',
+          `Our goal is to delete references of the "${flag.name}" feature.`,
+          'We need to delete the feature flag check so that the code path is no longer guarded by the feature flag.',
+          '',
+          'These are the occurrences of this feature flag in this repository:',
+          codeReferences,
+        ].join('\n')
+
+        Utils.copyToClipboard(prompt, 'Cleanup prompt copied to clipboard')
+      } catch {
+        toast('Failed to fetch code references', 'danger')
+      }
+    },
+    [triggerGetCodeReferences, projectId],
+  )
+
+  const handleCreateCleanupIssue = useCallback(
+    (flag: ProjectFlag) => {
+      openConfirm({
+        body: (
+          <div>
+            This will create a GitHub issue in{' '}
+            <strong>flagsmith/flagsmith</strong> to clean up{' '}
+            <strong>{flag.name}</strong>. Cleaning up a feature flag means
+            removing the flag checks from code so that the code behaves as if
+            the flag were enabled for everyone, allowing you to then delete the
+            feature in Flagsmith.
+          </div>
+        ),
+        onYes: async () => {
+          try {
+            const result = await createCleanupIssue({
+              body: {
+                feature_id: flag.id,
+                repository_url: REPOSITORY_URL,
+              },
+              organisation_id: organisationId,
+            }).unwrap()
+            toast(
+              <span>
+                Cleanup issue created.{' '}
+                <a
+                  href={result.html_url}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
+                  View on GitHub
+                </a>
+              </span>,
+            )
+          } catch {
+            toast('Failed to create cleanup issue', 'danger')
+          }
+        },
+        title: 'Create Cleanup Issue',
+        yesText: 'Create Issue',
+      })
+    },
+    [createCleanupIssue, organisationId],
+  )
+
   return (
     <SectionShell
       id='stale-list'
@@ -66,6 +155,22 @@ const StaleSection: FC<StaleSectionProps> = ({
       goToPage={goToPage}
       isSelected={isSelected}
       onSelect={handleSelect}
+      renderActions={(flag) => (
+        <DropdownMenu
+          items={[
+            {
+              icon: 'github',
+              label: 'Create Cleanup Issue',
+              onClick: () => handleCreateCleanupIssue(flag),
+            },
+            {
+              icon: 'copy',
+              label: 'Copy Cleanup AI Prompt',
+              onClick: () => handleCopyCleanupPrompt(flag),
+            },
+          ]}
+        />
+      )}
       header={
         selectedIds.size > 0 ? (
           <Row className='mb-2 justify-content-end'>

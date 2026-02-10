@@ -23,6 +23,7 @@ type SectionShellProps = {
   header?: ReactNode
   isSelected?: (flag: ProjectFlag) => boolean
   onSelect?: (flag: ProjectFlag) => void
+  renderActions?: (flag: ProjectFlag) => ReactNode
 }
 
 const SectionShell: FC<SectionShellProps> = ({
@@ -43,6 +44,7 @@ const SectionShell: FC<SectionShellProps> = ({
   paging,
   prevPage,
   projectId,
+  renderActions,
 }) => {
   const renderHeader = useCallback(
     () => (
@@ -66,9 +68,10 @@ const SectionShell: FC<SectionShellProps> = ({
         index={i}
         isSelected={isSelected?.(projectFlag)}
         onSelect={onSelect}
+        actions={renderActions?.(projectFlag)}
       />
     ),
-    [isSelected, onSelect],
+    [isSelected, onSelect, renderActions],
   )
 
   if (error) {

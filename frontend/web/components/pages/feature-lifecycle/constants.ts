@@ -32,12 +32,16 @@ export function buildPeriodOptions(prefix: string) {
 export const STALE_TOOLTIP =
   'If no changes have been made to a feature in any environment within the configured threshold, the feature will be tagged as stale. You will need to enable feature versioning in your environments for stale features to be detected.'
 
+export const MONITOR_TOOLTIP =
+  'There could be several reasons:\n\n• Cached deployments — your application may still be running an older version that references this feature.\n• Not all repositories linked — code references scanning may not cover every repository that uses this feature.\n• Are you forcing users to use the latest version of your application? Older client versions may still evaluate this feature.'
+
 export const SECTIONS: {
   key: Section
   icon: IconName
   label: string
   subtitle: string
   staleTooltip?: boolean
+  monitorTooltip?: boolean
 }[] = [
   {
     icon: 'rocket',
@@ -71,6 +75,7 @@ export const SECTIONS: {
     icon: 'shield',
     key: 'monitor',
     label: 'Needs Monitoring',
+    monitorTooltip: true,
     subtitle: 'No code references found but still receiving evaluations.',
   },
   {
