@@ -120,6 +120,103 @@ class SDKAnalyticsFlagsSerializer(serializers.Serializer):  # type: ignore[type-
             )
 
 
+class SDKTraitSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    """
+    Serializer for identity traits in evaluation data.
+    """
+
+    trait_key = serializers.CharField()
+    trait_value = serializers.JSONField()
+
+
+class SDKEvaluationDataDetail(serializers.Serializer):  # type: ignore[type-arg]
+    """
+    Serializer for individual evaluation data from SDKs.
+
+    This is an alpha release schema and is expected to change in the future.
+    """
+
+    feature_name = serializers.CharField(
+        help_text="Name of the feature that was evaluated"
+    )
+    enabled = serializers.BooleanField(
+        help_text="Enabled state of the feature when evaluated"
+    )
+    value = serializers.JSONField(
+        required=False,
+        allow_null=True,
+        default=None,
+        help_text="Value of the feature when evaluated",
+    )
+    evaluation_timestamp = serializers.DateTimeField(
+        help_text="Timestamp when the evaluation occurred"
+    )
+    identity_identifier = serializers.CharField(
+        required=False,
+        allow_null=True,
+        default=None,
+        help_text="Identifier for the identity that evaluated the feature",
+    )
+    identity_traits = SDKTraitSerializer(
+        many=True,
+        required=False,
+        default=list,
+        help_text="List of traits for the identity at the time of evaluation",
+    )
+    segment_names = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        default=list,
+        help_text="List of segment names the identity belongs to at the time of evaluation",
+    )
+
+
+class SDKEvaluationDataSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    """
+    Serializer for batch evaluation data from SDKs.
+
+    This endpoint consumes batches of evaluations, not individual evaluations.
+    This is an alpha release schema and is expected to change in the future.
+    """
+
+    evaluations = SDKEvaluationDataDetail(
+        many=True, help_text="Batch of evaluation events"
+    )
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        """
+        Filter out evaluations for features that don't exist in the environment.
+        """
+        request = self.context["request"]
+        environment_feature_names = set(
+            using_database_replica(FeatureState.objects)
+            .filter(
+                environment=request.environment,
+                feature_segment=None,
+                identity=None,
+            )
+            .values_list("feature__name", flat=True)
+        )
+        return {
+            "evaluations": [
+                evaluation
+                for evaluation in attrs["evaluations"]
+                if evaluation["feature_name"] in environment_feature_names
+            ]
+        }
+
+    def save(self, **kwargs: Any) -> None:
+        """
+        Process and store the evaluation data.
+
+        Note: This is a placeholder implementation. In production, this would
+        store the data in the analytics backend (Postgres or InfluxDB).
+        """
+        # TODO: Implement storage logic based on backend configuration
+        # For now, this is a no-op as this is a schema definition task
+        pass
+
+
 def _get_label_fields() -> dict[str, serializers.Field[Any, Any, Any, Any]]:
     return {
         str(label): serializers.CharField(allow_null=True, required=False)
