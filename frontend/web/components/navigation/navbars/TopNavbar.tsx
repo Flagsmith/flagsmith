@@ -6,6 +6,7 @@ import { NavLink } from 'react-router-dom'
 import Icon from 'components/Icon'
 import Headway from 'components/Headway'
 import { Project } from 'common/types/responses'
+import AccountDropdown from 'components/navigation/AccountDropdown'
 
 type TopNavType = {
   activeProject: Project | undefined
@@ -45,18 +46,22 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
           </a>
           <Headway className='cursor-pointer ps-3' />
 
-          <NavLink
-            className='d-flex ps-3 lh-1 align-items-center'
-            id='account-settings-link'
-            data-test='account-settings-link'
-            activeClassName='active'
-            to={'/account'}
-          >
-            <span className='mr-1'>
-              <Icon name='person' width={20} fill='#9DA4AE' />
-            </span>
-            <span className='d-none d-md-block'>Account</span>
-          </NavLink>
+          {Utils.getFlagsmithHasFeature('ui_new_view_modes') ? (
+            <AccountDropdown />
+          ) : (
+            <NavLink
+              className='d-flex ps-3 lh-1 align-items-center'
+              id='account-settings-link'
+              data-test='account-settings-link'
+              activeClassName='active'
+              to={'/account'}
+            >
+              <span className='mr-1'>
+                <Icon name='person' width={20} fill='#9DA4AE' />
+              </span>
+              <span className='d-none d-md-block'>Account</span>
+            </NavLink>
+          )}
         </Row>
       </nav>
     </React.Fragment>

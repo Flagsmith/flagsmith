@@ -48,6 +48,8 @@ import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
 import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
+import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
+import FlagEnvironmentsPage from './components/pages/FlagEnvironmentsPage'
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
@@ -93,6 +95,8 @@ export const routes = {
   'project-settings': '/project/:projectId/settings',
   'project-settings-in-environment':
     '/project/:projectId/environment/:environmentId/project-settings',
+  'release-manager': '/organisation/:organisationId/release-manager',
+  'flag-environments': '/project/:projectId/flag/:flagId/environments',
   'release-pipelines': '/project/:projectId/release-pipelines',
   'release-pipelines-detail': '/project/:projectId/release-pipelines/:id',
   'release-pipelines-detail-edit':
@@ -248,6 +252,16 @@ export default (
         path={routes['organisation-usage']}
         exact
         component={OrganisationUsagePage}
+      />
+      <ParameterizedRoute
+        path={routes['release-manager']}
+        exact
+        component={ReleaseManagerPage}
+      />
+      <ParameterizedRoute
+        path={routes['flag-environments']}
+        exact
+        component={FlagEnvironmentsPage}
       />
       <Route
         path={routes['organisation-settings-redirect']}
