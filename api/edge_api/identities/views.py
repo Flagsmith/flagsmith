@@ -9,6 +9,8 @@ from common.environments.permissions import (
 )
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
+from flag_engine.identities.models import IdentityFeaturesList, IdentityModel
+from flag_engine.identities.traits.models import TraitModel
 from pyngo import drf_error_details
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -54,8 +56,6 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import FeatureState
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
-from util.engine_models.identities.models import IdentityFeaturesList, IdentityModel
-from util.engine_models.identities.traits.models import TraitModel
 
 from . import edge_identity_service
 from .exceptions import TraitPersistenceError

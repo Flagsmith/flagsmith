@@ -5,9 +5,8 @@ from datetime import datetime
 
 import boto3
 from django.conf import settings
+from flag_engine.features.models import FeatureStateModel
 from pydantic import BaseModel
-
-from util.engine_models.features.models import FeatureStateModel
 
 if typing.TYPE_CHECKING:
     from projects.models import EdgeV2MigrationStatus

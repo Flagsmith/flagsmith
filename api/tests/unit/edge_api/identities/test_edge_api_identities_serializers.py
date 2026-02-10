@@ -1,6 +1,7 @@
 import pytest
 from django.test import RequestFactory
 from django.utils import timezone
+from flag_engine.features.models import FeatureModel, FeatureStateModel
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 
@@ -14,7 +15,6 @@ from environments.identities.serializers import (
 from features.feature_types import STANDARD
 from features.models import Feature, FeatureState
 from users.models import FFAdminUser
-from util.engine_models.features.models import FeatureModel, FeatureStateModel
 from util.mappers import map_identity_to_identity_document
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 

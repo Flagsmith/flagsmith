@@ -1,6 +1,6 @@
 import typing
 
-from util.engine_models.features.models import FeatureStateModel
+from flag_engine.features.models import FeatureStateModel
 
 if typing.TYPE_CHECKING:
     from edge_api.identities.types import ChangeType, FeatureStateChangeDetails

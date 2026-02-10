@@ -2,13 +2,13 @@ from typing import Any
 
 import pytest
 from boto3.dynamodb.conditions import Key
+from flag_engine.identities.models import IdentityModel
 
 from edge_api.identities.models import EdgeIdentity
 from environments.dynamodb.wrappers.environment_wrapper import (
     DynamoEnvironmentV2Wrapper,
 )
 from users.models import FFAdminUser
-from util.engine_models.identities.models import IdentityModel
 
 
 @pytest.fixture()

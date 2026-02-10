@@ -1,6 +1,7 @@
 import typing
 
 from django.db.models import Q
+from flag_engine.segments.evaluator import is_context_in_segment
 from rest_framework import serializers
 
 from features.serializers import FeatureStateSerializerFull
@@ -8,7 +9,6 @@ from integrations.common.serializers import (
     BaseEnvironmentIntegrationModelSerializer,
 )
 from segments.models import Segment
-from util.engine_models.context.mappers import is_context_in_segment
 from util.mappers.engine import (
     map_engine_identity_to_context,
     map_identity_to_engine,

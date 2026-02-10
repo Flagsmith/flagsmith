@@ -14,6 +14,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     LifecycleModelMixin,
     hook,
 )
+from flag_engine.identities.traits.types import TraitValue
 from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
 
 from core.models import SoftDeleteExportableModel
@@ -52,7 +53,6 @@ from organisations.subscriptions.exceptions import (
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
-from util.engine_models.identities.traits.types import TraitValue
 from webhooks.models import AbstractBaseExportableWebhookModel
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]

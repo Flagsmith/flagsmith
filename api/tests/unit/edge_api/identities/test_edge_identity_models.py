@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 import shortuuid
 from django.utils import timezone
+from flag_engine.features.models import FeatureModel, FeatureStateModel
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
@@ -17,7 +18,6 @@ from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
 from segments.models import Segment
 from users.models import FFAdminUser
-from util.engine_models.features.models import FeatureModel, FeatureStateModel
 
 
 def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(  # type: ignore[no-untyped-def]
