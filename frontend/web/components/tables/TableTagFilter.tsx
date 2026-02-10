@@ -19,10 +19,12 @@ type TableFilterType = {
   className?: string
   tagStrategy: TagStrategy
   onChangeStrategy: (value: TagStrategy) => void
+  excludeTag?: (tag: { type: string; is_permanent: boolean }) => boolean
 }
 
 const TableTagFilter: FC<TableFilterType> = ({
   className,
+  excludeTag,
   isLoading,
   onChange,
   onChangeStrategy,
@@ -40,11 +42,12 @@ const TableTagFilter: FC<TableFilterType> = ({
 
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
   const flagGatedTags = useMemo(() => {
+    let tags = data
     if (!isFeatureHealthEnabled)
-      return data?.filter((tag) => tag.type !== 'UNHEALTHY')
-
-    return data
-  }, [data, isFeatureHealthEnabled])
+      tags = tags?.filter((tag) => tag.type !== 'UNHEALTHY')
+    if (excludeTag) tags = tags?.filter((tag) => !excludeTag(tag))
+    return tags
+  }, [data, isFeatureHealthEnabled, excludeTag])
 
   const filteredTags = useMemo(() => {
     return filter
