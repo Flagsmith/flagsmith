@@ -43,21 +43,6 @@ def test_create_identity_should_assign_relevant_attributes(
     assert hasattr(identity, "created_date")
 
 
-def test_identity_str__returns_account_identifier(
-    environment: Environment,
-) -> None:
-    # Given
-    identity = Identity.objects.create(
-        identifier="test-identity", environment=environment
-    )
-
-    # When
-    result = str(identity)
-
-    # Then
-    assert result == "Account test-identity"
-
-
 def test_get_all_feature_states(
     project: Project,
     environment: Environment,

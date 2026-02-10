@@ -4,31 +4,33 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 from uuid import UUID
 
 from flag_engine.context.types import EvaluationContext
-
-from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
-from features.versioning.models import EnvironmentFeatureVersion
-from util.engine_models.environments.integrations.models import IntegrationModel
-from util.engine_models.environments.models import (
+from flag_engine.environments.integrations.models import IntegrationModel
+from flag_engine.environments.models import (
     EnvironmentAPIKeyModel,
     EnvironmentModel,
     WebhookModel,
 )
-from util.engine_models.features.models import (
+from flag_engine.features.models import (
     FeatureModel,
     FeatureSegmentModel,
     FeatureStateModel,
     MultivariateFeatureOptionModel,
     MultivariateFeatureStateValueModel,
 )
-from util.engine_models.identities.models import IdentityModel
-from util.engine_models.identities.traits.models import TraitModel
-from util.engine_models.organisations.models import OrganisationModel
-from util.engine_models.projects.models import ProjectModel
-from util.engine_models.segments.models import (
+from flag_engine.identities.models import (  # type: ignore[attr-defined]
+    IdentityModel,
+    TraitModel,
+)
+from flag_engine.organisations.models import OrganisationModel
+from flag_engine.projects.models import ProjectModel
+from flag_engine.segments.models import (
     SegmentConditionModel,
     SegmentModel,
     SegmentRuleModel,
 )
+
+from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
+from features.versioning.models import EnvironmentFeatureVersion
 
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import (  # type: ignore[attr-defined]
