@@ -99,14 +99,34 @@ def test_get_summary__postgres_backend__uses_subscription_cache(
     assert result["total_api_calls_30d"] == 3000
 
 
+def test_get_summary__no_analytics__returns_zero_api_calls(
+    platform_hub_organisation: Organisation,
+    platform_hub_admin_user: FFAdminUser,
+    settings: pytest.FixtureRequest,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False  # type: ignore[attr-defined]
+    settings.INFLUXDB_TOKEN = ""  # type: ignore[attr-defined]
+    orgs = Organisation.objects.filter(id=platform_hub_organisation.id)
+
+    # When
+    result = services.get_summary(orgs)
+
+    # Then
+    assert result["total_api_calls_30d"] == 0
+
+
 def test_get_organisation_metrics__returns_nested_structure(
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
     platform_hub_environment: Environment,
     platform_hub_feature: Feature,
     platform_hub_admin_user: FFAdminUser,
+    settings: pytest.FixtureRequest,
 ) -> None:
     # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False  # type: ignore[attr-defined]
+    settings.INFLUXDB_TOKEN = ""  # type: ignore[attr-defined]
     orgs = Organisation.objects.filter(id=platform_hub_organisation.id)
 
     # When
@@ -164,8 +184,11 @@ def test_get_organisation_metrics__filters_to_given_orgs(
     other_org_project: Project,
     other_org_environment: Environment,
     other_org_feature: Feature,
+    settings: pytest.FixtureRequest,
 ) -> None:
     # Given — only filter to the first org
+    settings.USE_POSTGRES_FOR_ANALYTICS = False  # type: ignore[attr-defined]
+    settings.INFLUXDB_TOKEN = ""  # type: ignore[attr-defined]
     orgs = Organisation.objects.filter(id=platform_hub_organisation.id)
 
     # When
@@ -174,6 +197,101 @@ def test_get_organisation_metrics__filters_to_given_orgs(
     # Then
     assert len(result) == 1
     assert result[0]["id"] == platform_hub_organisation.id
+
+
+@pytest.mark.use_analytics_db
+def test_get_organisation_metrics__postgres__returns_env_usage(
+    platform_hub_organisation: Organisation,
+    platform_hub_project: Project,
+    platform_hub_environment: Environment,
+    platform_hub_feature: Feature,
+    platform_hub_admin_user: FFAdminUser,
+    settings: pytest.FixtureRequest,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True  # type: ignore[attr-defined]
+    from app_analytics import constants as analytics_constants
+    from app_analytics.models import APIUsageBucket, Resource
+
+    yesterday = timezone.now() - timedelta(days=1)
+    APIUsageBucket.objects.create(
+        environment_id=platform_hub_environment.id,
+        resource=Resource.FLAGS,
+        total_count=200,
+        created_at=yesterday,
+        bucket_size=analytics_constants.ANALYTICS_READ_BUCKET_SIZE,
+    )
+    APIUsageBucket.objects.create(
+        environment_id=platform_hub_environment.id,
+        resource=Resource.IDENTITIES,
+        total_count=100,
+        created_at=yesterday,
+        bucket_size=analytics_constants.ANALYTICS_READ_BUCKET_SIZE,
+    )
+    orgs = Organisation.objects.filter(id=platform_hub_organisation.id)
+
+    # When
+    result = services.get_organisation_metrics(orgs)
+
+    # Then
+    assert len(result) == 1
+    org_data = result[0]
+    assert org_data["api_calls_30d"] > 0
+    assert org_data["flag_evaluations_30d"] == 200
+    assert org_data["identity_requests_30d"] == 100
+
+
+def test_get_organisation_metrics__influxdb__returns_org_usage(
+    platform_hub_organisation: Organisation,
+    platform_hub_project: Project,
+    platform_hub_environment: Environment,
+    platform_hub_admin_user: FFAdminUser,
+    mocker: MockerFixture,
+    settings: pytest.FixtureRequest,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False  # type: ignore[attr-defined]
+    settings.INFLUXDB_TOKEN = "test-token"  # type: ignore[attr-defined]
+    org_id = platform_hub_organisation.id
+    mocker.patch(
+        "platform_hub.services.get_top_organisations",
+        return_value={org_id: 1000},
+    )
+    orgs = Organisation.objects.filter(id=org_id)
+
+    # When
+    result = services.get_organisation_metrics(orgs)
+
+    # Then
+    assert len(result) == 1
+    org_data = result[0]
+    assert org_data["api_calls_30d"] == 1000
+
+
+def test_get_organisation_metrics__with_integrations__counts_per_org(
+    platform_hub_organisation: Organisation,
+    platform_hub_project: Project,
+    platform_hub_environment: Environment,
+    platform_hub_admin_user: FFAdminUser,
+    settings: pytest.FixtureRequest,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False  # type: ignore[attr-defined]
+    settings.INFLUXDB_TOKEN = ""  # type: ignore[attr-defined]
+    from integrations.webhook.models import WebhookConfiguration
+
+    WebhookConfiguration.objects.create(
+        environment=platform_hub_environment,
+        url="https://example.com/webhook",
+    )
+    orgs = Organisation.objects.filter(id=platform_hub_organisation.id)
+
+    # When
+    result = services.get_organisation_metrics(orgs)
+
+    # Then
+    assert len(result) == 1
+    assert result[0]["integration_count"] == 1
 
 
 def test_get_usage_trends__influxdb__pivots_resources_correctly(
@@ -250,6 +368,23 @@ def test_get_usage_trends__postgres__pivots_resources_correctly(
     assert day["api_calls"] == 150
 
 
+def test_get_usage_trends__no_analytics__returns_empty(
+    platform_hub_organisation: Organisation,
+    platform_hub_admin_user: FFAdminUser,
+    settings: pytest.FixtureRequest,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False  # type: ignore[attr-defined]
+    settings.INFLUXDB_TOKEN = ""  # type: ignore[attr-defined]
+    orgs = Organisation.objects.filter(id=platform_hub_organisation.id)
+
+    # When
+    result = services.get_usage_trends(orgs, days=30)
+
+    # Then
+    assert result == []
+
+
 def test_get_stale_flags_per_project__different_thresholds__counts_correctly(
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
@@ -282,6 +417,22 @@ def test_get_stale_flags_per_project__different_thresholds__counts_correctly(
     assert result[0]["project_id"] == platform_hub_project.id
     assert result[0]["stale_flags"] == 1
     assert result[0]["total_flags"] == 1
+
+
+def test_get_stale_flags_per_project__no_flags__skips_project(
+    platform_hub_organisation: Organisation,
+    platform_hub_project: Project,
+    platform_hub_environment: Environment,
+    platform_hub_admin_user: FFAdminUser,
+) -> None:
+    # Given — project has no features (environment created but no features)
+    orgs = Organisation.objects.filter(id=platform_hub_organisation.id)
+
+    # When
+    result = services.get_stale_flags_per_project(orgs)
+
+    # Then — project with 0 flags should be skipped
+    assert result == []
 
 
 def test_get_stale_flags_per_project__filters_to_given_orgs(
@@ -375,10 +526,12 @@ def test_get_release_pipeline_stats__returns_stage_hierarchy(
         order=0,
         environment=platform_hub_environment,
     )
-    PipelineStageTrigger.objects.create(
+    trigger = PipelineStageTrigger.objects.create(
         stage=stage,
         trigger_type="ON_ENTER",
     )
+    trigger.trigger_body = {"wait_for": "2 days"}
+    trigger.save()
     PipelineStageAction.objects.create(
         stage=stage,
         action_type="TOGGLE_FEATURE",
@@ -401,3 +554,43 @@ def test_get_release_pipeline_stats__returns_stage_hierarchy(
     assert stage_data["stage_name"] == "Stage 1"
     assert stage_data["environment_name"] == "Hub Environment"
     assert stage_data["order"] == 0
+    assert stage_data["action_description"] != ""
+    assert "2 days" in stage_data["trigger_description"]
+
+
+@pytest.mark.skipif(
+    not getattr(settings, "RELEASE_PIPELINES_LOGIC_INSTALLED", False),
+    reason="Release pipelines not installed",
+)
+def test_get_release_pipeline_stats__stage_without_trigger__returns_empty_description(
+    platform_hub_organisation: Organisation,
+    platform_hub_project: Project,
+    platform_hub_environment: Environment,
+    platform_hub_admin_user: FFAdminUser,
+) -> None:
+    # Given
+    from features.release_pipelines.core.models import (
+        PipelineStage,
+        ReleasePipeline,
+    )
+
+    pipeline = ReleasePipeline.objects.create(
+        name="No Trigger Pipeline",
+        project=platform_hub_project,
+    )
+    PipelineStage.objects.create(
+        name="Stage No Trigger",
+        pipeline=pipeline,
+        order=0,
+        environment=platform_hub_environment,
+    )
+    orgs = Organisation.objects.filter(id=platform_hub_organisation.id)
+
+    # When
+    result = services.get_release_pipeline_stats(orgs)
+
+    # Then
+    assert len(result) == 1
+    stage_data = result[0]["stages"][0]
+    assert stage_data["trigger_description"] == ""
+    assert stage_data["action_description"] == ""

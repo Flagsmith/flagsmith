@@ -128,8 +128,11 @@ def test_organisations_view__user_admin_of_one_org__returns_only_that_org(
     other_org_project: Project,
     other_org_environment: Environment,
     other_org_feature: Feature,
+    settings: pytest.FixtureRequest,
 ) -> None:
     # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False  # type: ignore[attr-defined]
+    settings.INFLUXDB_TOKEN = ""  # type: ignore[attr-defined]
     url = reverse("api-v1:platform-hub:organisations")
 
     # When
@@ -150,8 +153,11 @@ def test_organisations_view__other_orgs_data_not_visible(
     other_org_project: Project,
     other_org_environment: Environment,
     other_org_feature: Feature,
+    settings: pytest.FixtureRequest,
 ) -> None:
     # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False  # type: ignore[attr-defined]
+    settings.INFLUXDB_TOKEN = ""  # type: ignore[attr-defined]
     url = reverse("api-v1:platform-hub:organisations")
 
     # When
@@ -170,8 +176,11 @@ def test_organisations_view__returns_nested_projects_and_environments(
     platform_hub_project: Project,
     platform_hub_environment: Environment,
     platform_hub_feature: Feature,
+    settings: pytest.FixtureRequest,
 ) -> None:
     # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False  # type: ignore[attr-defined]
+    settings.INFLUXDB_TOKEN = ""  # type: ignore[attr-defined]
     url = reverse("api-v1:platform-hub:organisations")
 
     # When
@@ -193,8 +202,11 @@ def test_organisations_view__includes_overage_fields(
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
     platform_hub_environment: Environment,
+    settings: pytest.FixtureRequest,
 ) -> None:
     # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False  # type: ignore[attr-defined]
+    settings.INFLUXDB_TOKEN = ""  # type: ignore[attr-defined]
     url = reverse("api-v1:platform-hub:organisations")
 
     # When
@@ -253,9 +265,17 @@ def test_stale_flags_view__returns_stale_flags_for_admin_orgs_only(
 def test_integrations_view__returns_integrations_for_admin_orgs_only(
     platform_hub_admin_client: APIClient,
     platform_hub_organisation: Organisation,
+    platform_hub_project: Project,
+    platform_hub_environment: Environment,
     other_organisation: Organisation,
 ) -> None:
     # Given
+    from integrations.webhook.models import WebhookConfiguration
+
+    WebhookConfiguration.objects.create(
+        environment=platform_hub_environment,
+        url="https://example.com/webhook",
+    )
     url = reverse("api-v1:platform-hub:integrations")
 
     # When
@@ -264,6 +284,7 @@ def test_integrations_view__returns_integrations_for_admin_orgs_only(
     # Then
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
+    assert len(data) >= 1
     for item in data:
         assert item["organisation_id"] != other_organisation.id
 

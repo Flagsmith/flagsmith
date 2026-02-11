@@ -1,5 +1,4 @@
 import pytest
-from django.conf import settings
 from rest_framework.test import APIClient
 
 from environments.models import Environment
@@ -7,21 +6,6 @@ from features.models import Feature
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from users.models import FFAdminUser
-
-
-@pytest.fixture
-def use_analytics_db(request: pytest.FixtureRequest) -> None:
-    if "analytics" not in settings.DATABASES:  # pragma: no cover
-        pytest.skip("No analytics database configured, skipping")
-        return
-    request.applymarker(pytest.mark.django_db(databases=["default", "analytics"]))
-    request.getfixturevalue("db")
-
-
-@pytest.fixture(autouse=True)
-def use_analytics_db_marked(request: pytest.FixtureRequest) -> None:
-    if request.node.get_closest_marker("use_analytics_db"):
-        request.getfixturevalue("use_analytics_db")
 
 
 @pytest.fixture()
