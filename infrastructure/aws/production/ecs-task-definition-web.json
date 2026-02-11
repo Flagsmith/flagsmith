@@ -295,6 +295,10 @@
                 {
                     "name": "PYLON_IDENTITY_VERIFICATION_SECRET",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:PYLON_IDENTITY_VERIFICATION_SECRET::"
+                },
+                {
+                    "name": "FEATURE_LIFECYCLE_GITHUB_PAT",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:FEATURE_LIFECYCLE_GITHUB_PAT-tjvYW4"
                 }
             ],
             "logConfiguration": {

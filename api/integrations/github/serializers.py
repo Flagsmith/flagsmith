@@ -35,6 +35,10 @@ class GithubRepositorySerializer(ModelSerializer):  # type: ignore[type-arg]
         )
 
 
+class CreateCleanupIssueSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    feature_id = serializers.IntegerField()
+
+
 class PaginatedQueryParamsSerializer(DataclassSerializer):  # type: ignore[type-arg]
     class Meta:
         dataclass = PaginatedQueryParams
