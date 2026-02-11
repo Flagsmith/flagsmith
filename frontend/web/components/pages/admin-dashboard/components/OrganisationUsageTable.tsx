@@ -49,81 +49,107 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
     )
   }
 
-  const renderEnvironments = (project: ProjectMetrics) => (
+  const renderEnvironments = (project: ProjectMetrics, orgApiCalls: number) => (
     <div style={{ background: '#f8f9fa', borderTop: '1px solid #eee' }}>
-      {project.environments.map((env) => (
-        <div
-          key={env.id}
-          className='d-flex flex-row align-items-center'
-          style={{ paddingBottom: 8, paddingLeft: 80, paddingTop: 8 }}
-        >
-          <div className='flex-fill'>
-            <span className='text-muted' style={{ fontSize: 13 }}>
-              {env.name}
-            </span>
-          </div>
-          <div style={{ width: 120 }} />
-          <div style={{ width: 120 }} />
+      {project.environments.map((env) => {
+        const envPct =
+          orgApiCalls > 0
+            ? Math.round((env.api_calls_30d / orgApiCalls) * 100)
+            : 0
+        return (
           <div
-            className='table-column text-muted'
-            style={{ fontSize: 13, width: 160 }}
+            key={env.id}
+            className='d-flex flex-row align-items-center'
+            style={{ paddingBottom: 8, paddingLeft: 80, paddingTop: 8 }}
           >
-            {Utils.numberWithCommas(env.api_calls_30d)}
-          </div>
-          <div style={{ width: 140 }} />
-        </div>
-      ))}
-    </div>
-  )
-
-  const renderProjects = (org: OrganisationMetrics) => (
-    <div style={{ background: '#fafbfc', borderTop: '1px solid #eee' }}>
-      {org.projects.map((project) => (
-        <div key={project.id}>
-          <div
-            className='d-flex flex-row align-items-center clickable'
-            onClick={() => toggleProject(project.id)}
-            style={{ paddingBottom: 10, paddingLeft: 48, paddingTop: 10 }}
-          >
-            <div
-              className='flex-fill d-flex align-items-center'
-              style={{ gap: 6 }}
-            >
-              <Icon
-                name={
-                  expandedProjects.includes(project.id)
-                    ? 'chevron-down'
-                    : 'chevron-right'
-                }
-                width={14}
-              />
-              <span className='font-weight-medium' style={{ fontSize: 13 }}>
-                {project.name}
-              </span>
-              <span className='text-muted' style={{ fontSize: 12 }}>
-                ({project.environments.length} environments)
+            <div className='flex-fill'>
+              <span className='text-muted' style={{ fontSize: 13 }}>
+                {env.name}
               </span>
             </div>
-            <div
-              className='table-column text-muted'
-              style={{ fontSize: 13, width: 120 }}
-            >
-              {project.flags}
-            </div>
+            <div style={{ width: 120 }} />
             <div style={{ width: 120 }} />
             <div
               className='table-column text-muted'
               style={{ fontSize: 13, width: 160 }}
             >
-              {Utils.numberWithCommas(project.api_calls_30d)}
+              {Utils.numberWithCommas(env.api_calls_30d)}
             </div>
-            <div style={{ width: 140 }} />
+            <div
+              className='table-column text-muted'
+              style={{ fontSize: 13, width: 140 }}
+            >
+              {envPct}% of org usage
+            </div>
           </div>
-          {expandedProjects.includes(project.id) && renderEnvironments(project)}
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
+
+  const renderProjects = (org: OrganisationMetrics) => {
+    const orgApiCalls = org.api_calls_30d
+    return (
+      <div style={{ background: '#fafbfc', borderTop: '1px solid #eee' }}>
+        {org.projects.map((project) => {
+          const projectPct =
+            orgApiCalls > 0
+              ? Math.round((project.api_calls_30d / orgApiCalls) * 100)
+              : 0
+          return (
+            <div key={project.id}>
+              <div
+                className='d-flex flex-row align-items-center clickable'
+                onClick={() => toggleProject(project.id)}
+                style={{ paddingBottom: 10, paddingLeft: 48, paddingTop: 10 }}
+              >
+                <div
+                  className='flex-fill d-flex align-items-center'
+                  style={{ gap: 6 }}
+                >
+                  <Icon
+                    name={
+                      expandedProjects.includes(project.id)
+                        ? 'chevron-down'
+                        : 'chevron-right'
+                    }
+                    width={14}
+                  />
+                  <span className='font-weight-medium' style={{ fontSize: 13 }}>
+                    {project.name}
+                  </span>
+                  <span className='text-muted' style={{ fontSize: 12 }}>
+                    ({project.environments.length} environments)
+                  </span>
+                </div>
+                <div
+                  className='table-column text-muted'
+                  style={{ fontSize: 13, width: 120 }}
+                >
+                  {project.flags}
+                </div>
+                <div style={{ width: 120 }} />
+                <div
+                  className='table-column text-muted'
+                  style={{ fontSize: 13, width: 160 }}
+                >
+                  {Utils.numberWithCommas(project.api_calls_30d)}
+                </div>
+                <div
+                  className='table-column text-muted'
+                  style={{ fontSize: 13, width: 140 }}
+                >
+                  {projectPct}% of org usage
+                </div>
+              </div>
+              {expandedProjects.includes(project.id) &&
+                renderEnvironments(project, orgApiCalls)}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
 
   return (
     <PanelSearch
@@ -211,14 +237,14 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
             >
               {Utils.numberWithCommas(
                 org[
-                  `api_calls_${days}d` as keyof OrganisationMetrics
+                `api_calls_${days}d` as keyof OrganisationMetrics
                 ] as number,
               )}
             </div>
             <div className='table-column' style={{ fontSize: 13, width: 140 }}>
               {overageCell(
                 org[
-                  `api_calls_${days}d` as keyof OrganisationMetrics
+                `api_calls_${days}d` as keyof OrganisationMetrics
                 ] as number,
                 org.api_calls_allowed * (days / 30),
               )}
