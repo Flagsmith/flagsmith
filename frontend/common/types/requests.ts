@@ -869,7 +869,6 @@ export type Req = {
     organisation_id: number
     body: {
       feature_id: number
-      repository_url: string
     }
   }
   // END OF TYPES

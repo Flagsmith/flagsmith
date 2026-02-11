@@ -15,11 +15,17 @@ type LifecycleSidebarProps = {
   counts: LifecycleCounts
   monitorCount: number | undefined
   removeCount: number | undefined
+  isLoading: boolean
+  isCheckingMonitor: boolean
+  isCheckingRemove: boolean
 }
 
 const LifecycleSidebar: FC<LifecycleSidebarProps> = ({
   activeSection,
   counts,
+  isCheckingMonitor,
+  isCheckingRemove,
+  isLoading,
   monitorCount,
   projectId,
   removeCount,
@@ -40,12 +46,16 @@ const LifecycleSidebar: FC<LifecycleSidebarProps> = ({
         <div className='d-flex flex-column mx-0 py-1 py-md-0 gap-1'>
           {SECTIONS.map((s) => {
             let count: number | undefined
+            let loading = false
             if (s.key === 'monitor') {
               count = monitorCount
+              loading = isLoading || isCheckingMonitor
             } else if (s.key === 'remove') {
               count = removeCount
+              loading = isLoading || isCheckingRemove
             } else {
               count = counts[s.key]
+              loading = isLoading
             }
 
             return (
@@ -58,18 +68,13 @@ const LifecycleSidebar: FC<LifecycleSidebarProps> = ({
               >
                 <div className='d-flex align-items-center'>
                   {s.label}
-                  {count !== undefined && (
-                    <span
-                      className={classNames(
-                        'ms-1 px-2 unread rounded d-inline',
-                        {
-                          'bg-light300 text-muted': activeSection !== s.key,
-                        },
-                      )}
-                    >
-                      {count}
-                    </span>
-                  )}
+                  <span
+                    className={classNames('ms-1 px-2 unread rounded d-inline', {
+                      'bg-light300 text-muted': activeSection !== s.key,
+                    })}
+                  >
+                    {loading ? '...' : count ?? 0}
+                  </span>
                 </div>
               </SidebarLink>
             )

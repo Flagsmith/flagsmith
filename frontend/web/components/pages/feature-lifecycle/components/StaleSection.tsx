@@ -5,18 +5,17 @@ import SectionShell from './SectionShell'
 import { useClientPagination } from 'components/pages/feature-lifecycle/hooks/useClientPagination'
 import { useCreateCleanupIssueMutation } from 'common/services/useGithubIntegration'
 import { useLazyGetFeatureCodeReferencesQuery } from 'common/services/useCodeReferences'
+import WarningMessage from 'components/WarningMessage'
+import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
 import type { ProjectFlag } from 'common/types/responses'
 import type { FilterState } from 'common/types/featureFilters'
-
-const REPOSITORY_URL = 'https://github.com/flagsmith/flagsmith'
 
 type StaleSectionProps = {
   flags: ProjectFlag[]
   isLoading: boolean
   error: unknown
   projectId: number
-  organisationId: number
   filters: FilterState
   hasFilters: boolean
   onFilterChange: (updates: Partial<FilterState>) => void
@@ -31,7 +30,6 @@ const StaleSection: FC<StaleSectionProps> = ({
   isLoading,
   onClearFilters,
   onFilterChange,
-  organisationId,
   projectId,
 }) => {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
@@ -99,10 +97,18 @@ const StaleSection: FC<StaleSectionProps> = ({
           <div>
             This will create a GitHub issue in{' '}
             <strong>flagsmith/flagsmith</strong> to clean up{' '}
-            <strong>{flag.name}</strong>. Cleaning up a feature flag means
-            removing the flag checks from code so that the code behaves as if
-            the flag were enabled for everyone, allowing you to then delete the
-            feature in Flagsmith.
+            <strong>{flag.name}</strong>.
+            <WarningMessage
+              warningMessageClass='mt-4'
+              warningMessage={
+                <>
+                  Cleaning up a feature flag means removing the flag checks from
+                  code so that the code behaves as if the flag were{' '}
+                  <strong>enabled for everyone</strong>, allowing you to then
+                  delete the feature in Flagsmith.
+                </>
+              }
+            />
           </div>
         ),
         onYes: async () => {
@@ -110,9 +116,8 @@ const StaleSection: FC<StaleSectionProps> = ({
             const result = await createCleanupIssue({
               body: {
                 feature_id: flag.id,
-                repository_url: REPOSITORY_URL,
               },
-              organisation_id: organisationId,
+              organisation_id: AccountStore.getOrganisation()?.id,
             }).unwrap()
             toast(
               <span>
@@ -134,7 +139,7 @@ const StaleSection: FC<StaleSectionProps> = ({
         yesText: 'Create Issue',
       })
     },
-    [createCleanupIssue, organisationId],
+    [createCleanupIssue],
   )
 
   return (

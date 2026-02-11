@@ -177,7 +177,6 @@ const FeatureLifecyclePage: FC = () => {
             flags={staleFlags}
             isLoading={isLoading}
             error={error}
-            organisationId={routeContext.organisationId!}
             {...filterProps}
           />
         )
@@ -248,6 +247,9 @@ const FeatureLifecyclePage: FC = () => {
           counts={counts}
           monitorCount={monitorCount}
           removeCount={removeCount}
+          isLoading={isLoading}
+          isCheckingMonitor={isCheckingMonitor}
+          isCheckingRemove={isCheckingRemove}
         />
         <div className='aside-container'>
           <div className='app-container container'>
