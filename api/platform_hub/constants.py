@@ -1,10 +1,8 @@
-from __future__ import annotations
-
 from typing import Any
 
 # Each entry: (ModelClass, org_lookup_path, scope)
 # Using Any for model class to avoid mypy issues with Django model managers.
-type IntegrationEntry = tuple[Any, str, str]
+IntegrationEntry = tuple[Any, str, str]
 
 
 def get_integration_registry() -> dict[str, IntegrationEntry]:
