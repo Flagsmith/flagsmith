@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 import pytest
-from django.conf import settings
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
@@ -498,17 +497,15 @@ def test_get_release_pipeline_stats__not_installed__returns_empty(
     assert result == []
 
 
-@pytest.mark.skipif(
-    not getattr(settings, "RELEASE_PIPELINES_LOGIC_INSTALLED", False),
-    reason="Release pipelines not installed",
-)
 def test_get_release_pipeline_stats__returns_stage_hierarchy(
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
     platform_hub_environment: Environment,
     platform_hub_admin_user: FFAdminUser,
+    settings: pytest.FixtureRequest,
 ) -> None:
     # Given
+    settings.RELEASE_PIPELINES_LOGIC_INSTALLED = True  # type: ignore[attr-defined]
     from features.release_pipelines.core.models import (
         PipelineStage,
         PipelineStageAction,
@@ -558,17 +555,15 @@ def test_get_release_pipeline_stats__returns_stage_hierarchy(
     assert "2 days" in stage_data["trigger_description"]
 
 
-@pytest.mark.skipif(
-    not getattr(settings, "RELEASE_PIPELINES_LOGIC_INSTALLED", False),
-    reason="Release pipelines not installed",
-)
 def test_get_release_pipeline_stats__stage_without_trigger__returns_empty_description(
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
     platform_hub_environment: Environment,
     platform_hub_admin_user: FFAdminUser,
+    settings: pytest.FixtureRequest,
 ) -> None:
     # Given
+    settings.RELEASE_PIPELINES_LOGIC_INSTALLED = True  # type: ignore[attr-defined]
     from features.release_pipelines.core.models import (
         PipelineStage,
         ReleasePipeline,
