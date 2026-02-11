@@ -29,10 +29,13 @@ const AdminDashboardPage: FC = () => {
     return () => observer.disconnect()
   }, [])
 
-  const { data, error, isLoading } = useGetAdminDashboardMetricsQuery({ days })
+  const isEnabled = Utils.getFlagsmithHasFeature('platform_hub')
+  const { data, error, isLoading } = useGetAdminDashboardMetricsQuery(
+    { days },
+    { skip: !isEnabled },
+  )
 
-  // Security & feature flag check
-  if (!Utils.getFlagsmithHasFeature('platform_hub')) {
+  if (!isEnabled) {
     return (
       <div className='app-container text-center py-5'>
         <h3>Access Denied</h3>
