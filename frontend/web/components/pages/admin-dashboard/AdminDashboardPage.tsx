@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import InstanceMetricsCards from './components/InstanceMetricsCards'
 import OrganisationUsageTable from './components/OrganisationUsageTable'
 import UsageTrendsChart from './components/UsageTrendsChart'
@@ -6,7 +6,6 @@ import ReleasePipelineStatsTable from './components/ReleasePipelineStatsTable'
 import StaleFlagsTable from './components/StaleFlagsTable'
 import IntegrationAdoptionTable from './components/IntegrationAdoptionTable'
 
-import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
 import { useGetAdminDashboardMetricsQuery } from 'common/services/useAdminDashboard'
 import Button from 'components/base/forms/Button'
@@ -16,13 +15,24 @@ import ErrorMessage from 'components/ErrorMessage'
 
 const AdminDashboardPage: FC = () => {
   const [days, setDays] = useState<30 | 60 | 90>(30)
+  const [isStuck, setIsStuck] = useState(false)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsStuck(!entry.isIntersecting),
+      { threshold: 0 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const { data, error, isLoading } = useGetAdminDashboardMetricsQuery({ days })
 
   // Security & feature flag check
-  if (
-    !Utils.getFlagsmithHasFeature('platform_hub')
-  ) {
+  if (!Utils.getFlagsmithHasFeature('platform_hub')) {
     return (
       <div className='app-container text-center py-5'>
         <h3>Access Denied</h3>
@@ -35,15 +45,32 @@ const AdminDashboardPage: FC = () => {
 
   return (
     <div className='app-container container'>
-      <div className='mb-4 d-flex flex-row justify-content-between align-items-start'>
-        <div>
-          <h2>Platform Hub</h2>
-          <p className='text-muted'>
-            Centralised view of platform-wide usage, lifecycle, and adoption
-            data
-          </p>
-        </div>
-        <div className='d-flex gap-2'>
+      <div className='py-2' style={{ marginBottom: -48 }}>
+        <h2 className='mb-0'>Platform Hub</h2>
+        <p className='text-muted mb-0'>
+          Centralised view of platform-wide usage, lifecycle, and adoption data
+        </p>
+      </div>
+      <div ref={sentinelRef} />
+      <div
+        className='d-flex justify-content-end mb-2'
+        style={{
+          minHeight: 48,
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+        }}
+      >
+        <div
+          className='d-flex gap-2 align-items-center'
+          style={{
+            background: isStuck ? 'var(--body-bg, #fff)' : 'transparent',
+            borderRadius: isStuck ? '0 0 8px 8px' : 0,
+            boxShadow: isStuck ? '0 4px 8px rgba(0,0,0,0.12)' : 'none',
+            padding: '8px 16px',
+            transition: 'background 0.2s, box-shadow 0.2s, border-radius 0.2s',
+          }}
+        >
           <Button
             onClick={() => setDays(30)}
             className={days === 30 ? 'btn-primary' : 'btn-secondary'}
@@ -79,7 +106,9 @@ const AdminDashboardPage: FC = () => {
       {data && (
         <>
           {/* KPI Cards — always visible */}
-          <InstanceMetricsCards summary={data.summary} days={days} />
+          <div className='mt-3'>
+            <InstanceMetricsCards summary={data.summary} days={days} />
+          </div>
 
           {/* Tabbed sections */}
           <Tabs urlParam='tab' uncontrolled>
