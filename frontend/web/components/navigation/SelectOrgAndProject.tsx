@@ -6,6 +6,7 @@ import classNames from 'classnames'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
+import { appLevelPaths } from './constants'
 
 type SelectOrgAndProjectType = {
   activeProject: Project | undefined
@@ -16,7 +17,6 @@ const SelectOrgAndProject: FC<SelectOrgAndProjectType> = ({
   activeProject,
   projectId,
 }) => {
-  const appLevelPaths = ['/organisations', '/create', '/admin/dashboard']
   const isAppLevelPage = appLevelPaths.includes(document.location.pathname)
 
   const organisationId = AccountStore.getOrganisation()?.id

@@ -7,6 +7,7 @@ import { AsyncStorage } from 'polyfill-react-native'
 import ProjectNavbar from './navbars/ProjectNavbar'
 import OrganisationNavbar from './navbars/OrganisationNavbar'
 import TopNavbar from './navbars/TopNavbar'
+import { appLevelPaths } from './constants'
 
 type NavType = {
   environmentId: string | undefined
@@ -25,7 +26,6 @@ const Nav: FC<NavType> = ({
   const [lastEnvironmentId, setLastEnvironmentId] = useState()
   const [lastProjectId, setLastProjectId] = useState()
 
-  const appLevelPaths = ['/organisations', '/create', '/admin/dashboard']
   const isAppLevelPage = appLevelPaths.includes(document.location.pathname)
   const history = useHistory()
   const location = useLocation()
