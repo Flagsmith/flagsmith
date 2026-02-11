@@ -21,7 +21,8 @@ from projects.code_references.types import (
 from users.models import FFAdminUser
 
 REPOSITORY_URL_1 = "https://github.com/myorg/myrepo"
-REPOSITORY_URL_2 = "https://github.com/myorg/other-repo"
+REPOSITORY_URL_2 = "https://github.example.com/myorg/other-repo"
+ENTERPRISE_API_URL = "https://github.example.com/api/v3/"
 
 
 @pytest.fixture()
@@ -101,7 +102,7 @@ def test_create_cleanup_issue__valid_request__returns_204(
     )
     responses.add(
         method="POST",
-        url=f"{GITHUB_API_URL}repos/myorg/other-repo/issues",
+        url=f"{ENTERPRISE_API_URL}repos/myorg/other-repo/issues",
         status=201,
         json=github_issue_response_2,
     )
@@ -158,7 +159,7 @@ def test_create_cleanup_issue__duplicate_link__skips_silently(
     )
     responses.add(
         method="POST",
-        url=f"{GITHUB_API_URL}repos/myorg/other-repo/issues",
+        url=f"{ENTERPRISE_API_URL}repos/myorg/other-repo/issues",
         status=201,
         json={
             "html_url": f"{REPOSITORY_URL_2}/issues/10",
