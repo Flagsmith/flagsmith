@@ -55,8 +55,6 @@ export interface FeatureRowProps {
   releasePipelines?: ReleasePipeline[]
   onCloseEditModal?: () => void
   isCompact?: boolean
-  isSelected?: boolean
-  onSelect?: (projectFlag: ProjectFlag) => void
 }
 
 const width = [220, 50, 55, 70, 450]
@@ -74,9 +72,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     hideRemove = false,
     index,
     isCompact = false,
-    isSelected,
     onCloseEditModal,
-    onSelect,
     permission,
     projectFlag,
     projectId,
@@ -314,20 +310,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         data-test={`feature-item-${index}`}
         onClick={() => !isReadOnly && editFeature()}
       >
-        {onSelect && (
-          <div
-            className='table-column px-2 align-items-center'
-            onClick={(e) => {
-              e.stopPropagation()
-            }}
-          >
-            <input
-              type='checkbox'
-              checked={!!isSelected}
-              onChange={() => onSelect(projectFlag)}
-            />
-          </div>
-        )}
         <div className='table-column ps-2 px-0 align-items-center flex-1'>
           <div className='mx-0 flex-1 flex-column'>
             <div className='d-flex align-items-center'>
@@ -386,19 +368,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         )}
       >
         <div className='d-flex gap-2 align-items-center'>
-          {onSelect && (
-            <div
-              onClick={(e) => {
-                e.stopPropagation()
-              }}
-            >
-              <input
-                type='checkbox'
-                checked={!!isSelected}
-                onChange={() => onSelect(projectFlag)}
-              />
-            </div>
-          )}
           <div className='flex-1 align-items-center flex-wrap'>
             <FeatureName name={projectFlag.name} />
             <FeatureTags editFeature={editFeature} projectFlag={projectFlag} />

@@ -218,7 +218,9 @@ const FeatureLifecyclePage: FC = () => {
       {staleNoCodeFlags.map((flag) =>
         selectedEnvironments.map((envId) => (
           <EvaluationChecker
-            key={`monitor-${flag.id}-${envId}-${monitorPeriod}`}
+            key={`monitor-${
+              flag.id
+            }-${envId}-${monitorPeriod}-${selectedEnvironments.join()}`}
             featureId={flag.id}
             projectId={projectId}
             environmentId={envId}
@@ -231,7 +233,9 @@ const FeatureLifecyclePage: FC = () => {
       {staleNoCodeFlags.map((flag) =>
         selectedEnvironments.map((envId) => (
           <EvaluationChecker
-            key={`remove-${flag.id}-${envId}-${removePeriod}`}
+            key={`remove-${
+              flag.id
+            }-${envId}-${removePeriod}-${selectedEnvironments.join()}`}
             featureId={flag.id}
             projectId={projectId}
             environmentId={envId}

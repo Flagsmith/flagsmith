@@ -1,3 +1,4 @@
+import React from 'react'
 import type { IconName } from 'components/Icon'
 import type { FilterState } from 'common/types/featureFilters'
 import type { Section } from './types'
@@ -32,8 +33,25 @@ export function buildPeriodOptions(prefix: string) {
 export const STALE_TOOLTIP =
   'If no changes have been made to a feature in any environment within the configured threshold, the feature will be tagged as stale. You will need to enable feature versioning in your environments for stale features to be detected.'
 
-export const MONITOR_TOOLTIP =
-  'There could be several reasons:\n\n• Cached deployments — your application may still be running an older version that references this feature.\n• Not all repositories linked — code references scanning may not cover every repository that uses this feature.\n• Are you forcing users to use the latest version of your application? Older client versions may still evaluate this feature.'
+export const MONITOR_TOOLTIP = (
+  <div>
+    There could be several reasons:
+    <ul className='mt-1 mb-0 ps-3'>
+      <li>
+        Cached deployments — your application may still be running an older
+        version that references this feature.
+      </li>
+      <li>
+        Not all repositories linked — code references scanning may not cover
+        every repository that uses this feature.
+      </li>
+      <li>
+        Are you forcing users to use the latest version of your application?
+        Older client versions may still evaluate this feature.
+      </li>
+    </ul>
+  </div>
+)
 
 export const SECTIONS: {
   key: Section
@@ -47,14 +65,14 @@ export const SECTIONS: {
     icon: 'rocket',
     key: 'new',
     label: 'New',
-    subtitle: 'Recently created features with no code references yet.',
+    subtitle: 'Features with no code references and not yet marked as stale.',
   },
   {
     icon: 'checkmark-circle',
     key: 'live',
     label: 'Live',
     subtitle:
-      'Features with code references that are actively being evaluated.',
+      'Features with code references that have not been marked as stale.',
   },
   {
     icon: 'lock',
@@ -76,7 +94,8 @@ export const SECTIONS: {
     key: 'monitor',
     label: 'Needs Monitoring',
     monitorTooltip: true,
-    subtitle: 'No code references found but still receiving evaluations.',
+    subtitle:
+      'Stale features with no code references but still receiving evaluations.',
   },
   {
     icon: 'trash-2',

@@ -1,14 +1,13 @@
 import { useEffect, useMemo } from 'react'
 import { skipToken } from '@reduxjs/toolkit/query'
-import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
+import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import { useGetTagsQuery } from 'common/services/useTag'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import FeatureListStore from 'common/stores/feature-list-store'
 import type { ProjectFlag } from 'common/types/responses'
+import type { Req } from 'common/types/requests'
 import type { FilterState } from 'common/types/featureFilters'
 import type { LifecycleCounts } from 'components/pages/feature-lifecycle/types'
-
-const ALL_FEATURES_PAGE_SIZE = 999
 
 type UseLifecycleDataOptions = {
   projectId: number
@@ -41,25 +40,27 @@ export function useLifecycleData({
     ? getEnvironmentIdFromKey(environmentApiKey)
     : undefined
 
-  // Build base query params shared by both calls
-  const baseParams = useMemo(() => {
+  // Build base query params shared by both calls.
+  // Uses getProjectFlags which recursively fetches all pages, so no
+  // page/page_size needed. Lifecycle classification still happens
+  // client-side based on code_references_counts (new vs live, stale vs
+  // monitor/remove) since the backend doesn't support filtering by
+  // code-reference presence.
+  const baseParams = useMemo((): Req['getProjectFlags'] | null => {
     if (!environmentId) return null
 
-    const params: Record<string, string | number | boolean> = {
-      environmentId: String(environmentId),
-      is_archived: 'false',
-      page: 1,
-      page_size: ALL_FEATURES_PAGE_SIZE,
-      projectId,
+    const params: Req['getProjectFlags'] = {
+      environment: environmentId,
+      is_archived: false,
+      project: String(projectId),
       sort_direction: filters.sort.sortOrder,
       sort_field: filters.sort.sortBy,
       tag_strategy: filters.tag_strategy,
     }
 
     if (filters.search) params.search = filters.search
-    if (filters.owners?.length) params.owners = filters.owners.join(',')
-    if (filters.group_owners?.length)
-      params.group_owners = filters.group_owners.join(',')
+    if (filters.owners?.length) params.owners = filters.owners
+    if (filters.group_owners?.length) params.group_owners = filters.group_owners
     if (filters.is_enabled !== null) params.is_enabled = filters.is_enabled
     if (filters.value_search) params.value_search = filters.value_search
 
@@ -71,7 +72,7 @@ export function useLifecycleData({
   }, [environmentId, projectId, filters])
 
   // Query 1: All features (no stale tag filter) — for new, live, permanent
-  const allQuery = useGetFeatureListQuery(baseParams ?? skipToken, {
+  const allQuery = useGetProjectFlagsQuery(baseParams ?? skipToken, {
     refetchOnMountOrArgChange: true,
   })
 
@@ -85,7 +86,7 @@ export function useLifecycleData({
     return { ...baseParams, tags: mergedTags.join(',') }
   }, [baseParams, staleTagId, filters.tags])
 
-  const staleQuery = useGetFeatureListQuery(staleParams ?? skipToken, {
+  const staleQuery = useGetProjectFlagsQuery(staleParams ?? skipToken, {
     refetchOnMountOrArgChange: true,
   })
 
