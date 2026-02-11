@@ -200,7 +200,11 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
               className='table-column font-weight-medium'
               style={{ width: 160 }}
             >
-              {Utils.numberWithCommas(org.api_calls_30d)}
+              {Utils.numberWithCommas(
+                org[
+                  `api_calls_${days}d` as keyof OrganisationMetrics
+                ] as number,
+              )}
             </div>
             <div className='table-column' style={{ fontSize: 13, width: 140 }}>
               {overageCell(
@@ -221,7 +225,7 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
         {
           label: 'API Calls',
           order: SortOrder.DESC,
-          value: 'api_calls_30d',
+          value: `api_calls_${days}d`,
         },
         {
           label: 'Overage',
