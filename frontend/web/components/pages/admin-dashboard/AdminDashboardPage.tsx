@@ -4,6 +4,7 @@ import OrganisationUsageTable from './components/OrganisationUsageTable'
 import UsageTrendsChart from './components/UsageTrendsChart'
 import ReleasePipelineStatsTable from './components/ReleasePipelineStatsTable'
 import StaleFlagsTable from './components/StaleFlagsTable'
+import IntegrationAdoptionTable from './components/IntegrationAdoptionTable'
 
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
@@ -107,6 +108,18 @@ const AdminDashboardPage: FC = () => {
             <TabItem tabLabel='Flag Lifecycle'>
               <div className='mt-4'>
                 <StaleFlagsTable data={data.stale_flags_per_project} />
+              </div>
+            </TabItem>
+
+            <TabItem tabLabel='Integrations'>
+              <div className='mt-4'>
+                <IntegrationAdoptionTable
+                  data={data.integration_breakdown}
+                  organisations={data.organisations}
+                  totalEnvironments={data.summary.total_environments}
+                  totalOrganisations={data.summary.total_organisations}
+                  totalProjects={data.summary.total_projects}
+                />
               </div>
             </TabItem>
           </Tabs>
