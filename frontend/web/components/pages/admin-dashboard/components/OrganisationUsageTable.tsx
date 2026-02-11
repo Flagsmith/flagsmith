@@ -10,15 +10,24 @@ interface OrganisationUsageTableProps {
   organisations: OrganisationMetrics[]
 }
 
-const overageCell = (value: number) => {
-  if (value > 0) {
+const overageCell = (apiCalls: number, allowed: number) => {
+  if (allowed === 0) {
+    return <span className='text-muted'>—</span>
+  }
+  const diff = apiCalls - allowed
+  const pct = Math.round((diff / allowed) * 100)
+  if (diff > 0) {
     return (
       <span style={{ color: '#e74c3c', fontWeight: 600 }}>
-        +{Utils.numberWithCommas(value)}
+        +{pct}% (+{Utils.numberWithCommas(diff)})
       </span>
     )
   }
-  return <span className='text-muted'>—</span>
+  return (
+    <span style={{ color: '#27AB95', fontWeight: 600 }}>
+      {pct}% (-{Utils.numberWithCommas(Math.abs(diff))})
+    </span>
+  )
 }
 
 const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
@@ -208,7 +217,10 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
             </div>
             <div className='table-column' style={{ fontSize: 13, width: 140 }}>
               {overageCell(
-                org[`overage_${days}d` as keyof OrganisationMetrics] as number,
+                org[
+                  `api_calls_${days}d` as keyof OrganisationMetrics
+                ] as number,
+                org.api_calls_allowed * (days / 30),
               )}
             </div>
           </div>
