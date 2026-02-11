@@ -1206,5 +1206,9 @@ export type Res = {
     stale_flags_per_project: StaleFlagsPerProject[]
     integration_breakdown: IntegrationBreakdown[]
   }
+  createCleanupIssue: {
+    feature_external_resource_id: number
+    html_url: string
+  }
   // END OF TYPES
 }

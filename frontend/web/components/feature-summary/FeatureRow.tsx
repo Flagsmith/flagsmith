@@ -377,14 +377,14 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
               e.stopPropagation()
             }}
           >
-          <Switch
-            disabled={!permission || isReadOnly || isLoading}
-            data-test={`feature-switch-${index}${
-              displayEnabled ? '-on' : '-off'
-            }`}
-            checked={displayEnabled}
-            onChange={onChange}
-          />
+            <Switch
+              disabled={!permission || isReadOnly || isLoading}
+              data-test={`feature-switch-${index}${
+                displayEnabled ? '-on' : '-off'
+              }`}
+              checked={displayEnabled}
+              onChange={onChange}
+            />
           </div>
           <FeatureAction {...featureActionProps} disableE2E={true} />
         </div>

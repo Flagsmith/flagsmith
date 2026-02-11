@@ -1,8 +1,8 @@
 name: API Pull Request
 
 permissions:
-  contents: read     # For actions/checkout
-  id-token: write    # For Codecov OIDC
+  contents: read # For actions/checkout
+  id-token: write # For Codecov OIDC
 
 on:
   pull_request:
@@ -80,7 +80,7 @@ jobs:
         run: make test
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           PYTHON: ${{ matrix.python-version }}
         with:
