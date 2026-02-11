@@ -1029,6 +1029,7 @@ SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
 GITHUB_PEM = env.str("GITHUB_PEM", default="")
 GITHUB_APP_ID: int = env.int("GITHUB_APP_ID", default=0)
 GITHUB_WEBHOOK_SECRET = env.str("GITHUB_WEBHOOK_SECRET", default="")
+FEATURE_LIFECYCLE_GITHUB_PAT = env.str("FEATURE_LIFECYCLE_GITHUB_PAT", default="")
 
 # Additional functionality for using SAML in Flagsmith SaaS
 SAML_INSTALLED = importlib.util.find_spec("saml") is not None
