@@ -66,6 +66,7 @@ export type IconName =
   | 'shield'
   | 'star'
   | 'link'
+  | 'lock'
   | 'sun'
   | 'timer'
   | 'trash-2'
@@ -128,11 +129,28 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
         </svg>
       )
     }
+    case 'lock': {
+      return (
+        <svg
+          xmlns='http://www.w3.org/2000/svg'
+          width={width || '24'}
+          height={height || width || '24'}
+          viewBox='0 0 512 512'
+          fill='none'
+          {...rest}
+        >
+          <path
+            d='M368 192h-16v-80a96 96 0 10-192 0v80h-16a64.07 64.07 0 00-64 64v176a64.07 64.07 0 0064 64h224a64.07 64.07 0 0064-64V256a64.07 64.07 0 00-64-64zm-48 0H192v-80a64 64 0 11128 0z'
+            fill={fill}
+          />
+        </svg>
+      )
+    }
     case 'shield': {
       return (
         <svg
-          width='24'
-          height='24'
+          width={width || '24'}
+          height={height || '24'}
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'

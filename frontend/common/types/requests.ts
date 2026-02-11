@@ -865,5 +865,11 @@ export type Req = {
     environmentFlagId: number
     body: UpdateFeatureStateBody
   }
+  createCleanupIssue: {
+    organisation_id: number
+    body: {
+      feature_id: number
+    }
+  }
   // END OF TYPES
 }
