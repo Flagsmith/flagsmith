@@ -494,8 +494,6 @@ def get_platform_usage_trends(
             "environment",
             "environment_id",
             "host",
-            "_start",
-            "_stop",
         ),
         extra=(
             '|> group(columns: ["resource"])'
