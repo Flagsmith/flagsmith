@@ -47,6 +47,7 @@ import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
 import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
+import CleanupPage from './components/pages/feature-lifecycle'
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
@@ -75,6 +76,7 @@ export const routes = {
   'integrations': '/project/:projectId/integrations',
   'invite': '/invite/:id',
   'invite-link': '/invite-link/:id',
+  'lifecycle': '/project/:projectId/lifecycle/:section?',
   'login': '/login',
   'maintenance': '/maintenance',
   'not-found': '/404',
@@ -128,6 +130,11 @@ export default (
         component={PasswordResetPage}
       />
       <ParameterizedRoute path={routes.features} exact component={FlagsPage} />
+      <ParameterizedRoute
+        path={routes.lifecycle}
+        exact
+        component={CleanupPage}
+      />
       <ParameterizedRoute
         path={routes['change-requests']}
         exact
