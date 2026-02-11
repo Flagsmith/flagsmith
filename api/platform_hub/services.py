@@ -173,6 +173,7 @@ def get_organisation_metrics(
     org_usage_60d: dict[int, int] = {}
     org_usage_90d: dict[int, int] = {}
     env_usage: dict[int, dict[str, int]] = {}
+    env_usage_30d: dict[int, dict[str, int]] = {}
 
     if settings.USE_POSTGRES_FOR_ANALYTICS:
         env_usage = _get_api_usage_for_envs_postgres(all_env_ids, days=90)
@@ -249,7 +250,7 @@ def get_organisation_metrics(
     # Per-env usage for nested project/environment data
     per_env_usage_30d: dict[int, dict[str, int]] = {}
     if settings.USE_POSTGRES_FOR_ANALYTICS:
-        per_env_usage_30d = _get_api_usage_for_envs_postgres(all_env_ids, days=30)
+        per_env_usage_30d = env_usage_30d
     elif settings.INFLUXDB_TOKEN:
         # InfluxDB doesn't provide per-environment data easily.
         per_env_usage_30d = {}
