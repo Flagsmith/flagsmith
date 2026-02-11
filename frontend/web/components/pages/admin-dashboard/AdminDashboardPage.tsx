@@ -21,7 +21,6 @@ const AdminDashboardPage: FC = () => {
 
   // Security & feature flag check
   if (
-    !AccountStore.isSuper() ||
     !Utils.getFlagsmithHasFeature('platform_hub')
   ) {
     return (
