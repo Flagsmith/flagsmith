@@ -47,10 +47,12 @@ import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
 import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
+import AdminDashboardPage from './components/pages/admin-dashboard/AdminDashboardPage'
 import CleanupPage from './components/pages/feature-lifecycle'
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
+  'admin-dashboard': '/admin/dashboard',
   'audit-log': '/project/:projectId/audit-log',
   'audit-log-item': '/project/:projectId/audit-log/:id',
   'broken': '/broken',
@@ -311,6 +313,11 @@ export default (
         path={routes['create-organisation']}
         exact
         component={CreateOrganisationPage}
+      />
+      <Route
+        path={routes['admin-dashboard']}
+        exact
+        component={AdminDashboardPage}
       />
       <Route path='*' component={NotFoundPage} />
     </Switch>

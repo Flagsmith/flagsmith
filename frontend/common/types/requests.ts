@@ -865,6 +865,9 @@ export type Req = {
     environmentFlagId: number
     body: UpdateFeatureStateBody
   }
+  getAdminDashboardMetrics: {
+    days?: number
+  }
   createCleanupIssue: {
     organisation_id: number
     body: {

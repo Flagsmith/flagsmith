@@ -130,6 +130,7 @@ INSTALLED_APPS = [
     "webhooks",
     "metrics",
     "onboarding",
+    "platform_hub",
     # 2FA
     "custom_auth.mfa.trench",
     # health check plugins
