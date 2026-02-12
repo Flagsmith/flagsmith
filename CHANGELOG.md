@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.217.0](https://github.com/Flagsmith/flagsmith/compare/v2.216.0...v2.217.0) (2026-02-12)
+
+
+### Features
+
+* **Hackathon:** Persona-based views ([#6699](https://github.com/Flagsmith/flagsmith/issues/6699)) ([5dd0918](https://github.com/Flagsmith/flagsmith/commit/5dd0918f08d7151037df0db4b5a925aca0a1c9b8))
+* **hackaton:** experimental-flags-frontend ([#6710](https://github.com/Flagsmith/flagsmith/issues/6710)) ([0ac6208](https://github.com/Flagsmith/flagsmith/commit/0ac62086fe9f93e2349a9e41faa066f656071add))
+
+
+### Bug Fixes
+
+* **Hackathon:** Platform Hub: inverted stale counts ([#6715](https://github.com/Flagsmith/flagsmith/issues/6715)) ([b3d5a33](https://github.com/Flagsmith/flagsmith/commit/b3d5a33a933b0114a15d8ad81b70b89bd529808e))
+* **Platform Hub:** Invert stale flags count in admin dashboard ([#6711](https://github.com/Flagsmith/flagsmith/issues/6711)) ([ac6dd43](https://github.com/Flagsmith/flagsmith/commit/ac6dd43c4e37eea4ef964defce841153ef9afe4e))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Add a new specific task definition for the admin API to enable sentry tracing for admin requests ([#6496](https://github.com/Flagsmith/flagsmith/issues/6496)) ([262e4f4](https://github.com/Flagsmith/flagsmith/commit/262e4f4a66e9a6f7735dcec965301bf32ade9bf2))
+
 ## [2.216.0](https://github.com/Flagsmith/flagsmith/compare/v2.215.1...v2.216.0) (2026-02-12)
 
 
