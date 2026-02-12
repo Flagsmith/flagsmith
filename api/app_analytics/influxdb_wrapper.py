@@ -459,6 +459,58 @@ def get_current_api_usage(
     return 0
 
 
+def get_platform_usage_trends(
+    date_start: datetime,
+    date_stop: datetime,
+    organisation_ids: list[int],
+) -> dict[str, dict[str, int]]:
+    """
+    Query InfluxDB for platform-wide usage trends grouped by day and resource.
+
+    Returns a dict of {date_str: {resource_name: count}}.
+    """
+    if not organisation_ids:
+        return {}
+
+    org_id_set = ", ".join(f'"{oid}"' for oid in organisation_ids)
+
+    bucket = get_range_bucket_mappings(date_start)
+    results = InfluxDBWrapper.influx_query_manager(
+        date_start=date_start,
+        date_stop=date_stop,
+        bucket=bucket,
+        filters=build_filter_string(
+            [
+                'r._measurement == "api_call"',
+                'r["_field"] == "request_count"',
+                f"contains(value: r.organisation_id, set: [{org_id_set}])",
+            ]
+        ),
+        drop_columns=(
+            "organisation",
+            "organisation_id",
+            "project",
+            "project_id",
+            "environment",
+            "environment_id",
+            "host",
+        ),
+        extra=(
+            '|> group(columns: ["resource"])'
+            ' |> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
+        ),
+    )
+
+    daily: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for table in results:
+        for record in table.records:
+            date_str = record.values["_time"].strftime("%Y-%m-%d")
+            resource_name = record.values.get("resource", "unknown")
+            daily[date_str][resource_name] += record.get_value() or 0
+
+    return daily
+
+
 def build_filter_string(filter_expressions: typing.List[str]) -> str:
     return "|> ".join(
         ["", *[f"filter(fn: (r) => {exp})" for exp in filter_expressions]]

@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.215.0](https://github.com/Flagsmith/flagsmith/compare/v2.214.0...v2.215.0) (2026-02-12)
+
+
+### Features
+
+* **CI:** Update the local envdoc when we need it ([#6686](https://github.com/Flagsmith/flagsmith/issues/6686)) ([8ba9171](https://github.com/Flagsmith/flagsmith/commit/8ba9171c01f53ca6e83eeb7bc3f2a2d8f1c2b3b9))
+* **Hackathon:** Feature lifecycle ([#6684](https://github.com/Flagsmith/flagsmith/issues/6684)) ([88c4294](https://github.com/Flagsmith/flagsmith/commit/88c429479e661ca60f3958c094be59f7c3f2665c))
+* **Hackathon:** Platform Hub ([#6692](https://github.com/Flagsmith/flagsmith/issues/6692)) ([264d1f9](https://github.com/Flagsmith/flagsmith/commit/264d1f985461f40583b56ef0e485866b4b28a02a))
+* **Hackathon:** Submit a GitHub issue to clean up a stale feature ([#6691](https://github.com/Flagsmith/flagsmith/issues/6691)) ([34624a3](https://github.com/Flagsmith/flagsmith/commit/34624a3c196dacf3c9af02f2f1675f91584e8ecb))
+
+
+### Bug Fixes
+
+* **Hackathon:** Platform Hub: N+1 query for feature counts per project ([#6697](https://github.com/Flagsmith/flagsmith/issues/6697)) ([cdb168c](https://github.com/Flagsmith/flagsmith/commit/cdb168c746d6ed549fa82217e6a1b2c28f12c579))
+* **Hackathon:** Platform Hub: Pipeline count incorrectly presented as project adoption count ([#6696](https://github.com/Flagsmith/flagsmith/issues/6696)) ([a76598f](https://github.com/Flagsmith/flagsmith/commit/a76598fd1ab36d65309d3132f2780576006c3968))
+* **UI:** Fix copy button triggering feature detail dialog ([#6690](https://github.com/Flagsmith/flagsmith/issues/6690)) ([f644651](https://github.com/Flagsmith/flagsmith/commit/f6446517b47091e942f4e0a344e0bad009dd8f5d))
+
 ## [2.214.0](https://github.com/Flagsmith/flagsmith/compare/v2.213.1...v2.214.0) (2026-02-10)
 
 

@@ -51,9 +51,12 @@ import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
 import FlagEnvironmentsPage from './components/pages/FlagEnvironmentsPage'
 import ExecutiveViewPage from './components/pages/ExecutiveViewPage'
 import DevViewPage from './components/pages/DevViewPage'
+import AdminDashboardPage from './components/pages/admin-dashboard/AdminDashboardPage'
+import CleanupPage from './components/pages/feature-lifecycle'
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
+  'admin-dashboard': '/admin/dashboard',
   'audit-log': '/project/:projectId/audit-log',
   'audit-log-item': '/project/:projectId/audit-log/:id',
   'broken': '/broken',
@@ -82,6 +85,7 @@ export const routes = {
   'integrations': '/project/:projectId/integrations',
   'invite': '/invite/:id',
   'invite-link': '/invite-link/:id',
+  'lifecycle': '/project/:projectId/lifecycle/:section?',
   'login': '/login',
   'maintenance': '/maintenance',
   'not-found': '/404',
@@ -136,6 +140,11 @@ export default (
         component={PasswordResetPage}
       />
       <ParameterizedRoute path={routes.features} exact component={FlagsPage} />
+      <ParameterizedRoute
+        path={routes.lifecycle}
+        exact
+        component={CleanupPage}
+      />
       <ParameterizedRoute
         path={routes['change-requests']}
         exact
@@ -332,6 +341,11 @@ export default (
         path={routes['create-organisation']}
         exact
         component={CreateOrganisationPage}
+      />
+      <Route
+        path={routes['admin-dashboard']}
+        exact
+        component={AdminDashboardPage}
       />
       <Route path='*' component={NotFoundPage} />
     </Switch>
