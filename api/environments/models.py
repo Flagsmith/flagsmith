@@ -8,7 +8,7 @@ from common.core.utils import using_database_replica
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
-from django.db import models
+from django.db import connection, models, transaction
 from django.db.models import Max, Prefetch, Q, QuerySet
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
@@ -514,20 +514,40 @@ class Environment(
     def get_segments_from_cache(self) -> typing.List[Segment]:
         """
         Get any segments that have been overridden in this environment.
+
+        Uses REPEATABLE READ isolation for PostgreSQL to ensure all prefetch
+        queries see the same database snapshot, avoiding race conditions
+        during concurrent segment updates.
         """
         segments = environment_segments_cache.get(self.id)
         if not segments:
-            segments = list(
-                Segment.live_objects.filter(
-                    feature_segments__feature_states__environment=self
-                ).prefetch_related(
-                    "rules",
-                    "rules__conditions",
-                    "rules__rules",
-                    "rules__rules__conditions",
-                    "rules__rules__rules",
-                )
+            # Use REPEATABLE READ isolation to ensure prefetch queries
+            # see a consistent snapshot, preventing race conditions where
+            # rules are fetched but their conditions are deleted by a
+            # concurrent PATCH before they can be prefetched.
+            #
+            # Only attempt to set isolation level if we're not already in an
+            # atomic block (nested transactions can't change isolation level).
+            use_repeatable_read = (
+                connection.vendor == "postgresql" and not connection.in_atomic_block
             )
+            with transaction.atomic():
+                if use_repeatable_read:
+                    with connection.cursor() as cursor:
+                        cursor.execute(
+                            "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ"
+                        )
+                segments = list(
+                    Segment.live_objects.filter(
+                        feature_segments__feature_states__environment=self
+                    ).prefetch_related(
+                        "rules",
+                        "rules__conditions",
+                        "rules__rules",
+                        "rules__rules__conditions",
+                        "rules__rules__rules",
+                    )
+                )
             environment_segments_cache.set(self.id, segments)
         return segments  # type: ignore[no-any-return]
 
