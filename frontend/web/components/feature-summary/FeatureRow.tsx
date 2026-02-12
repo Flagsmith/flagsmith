@@ -2,6 +2,7 @@ import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateFlagModal from 'components/modals/create-feature'
+import CreateExperimentModal from 'components/modals/create-experiment'
 import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
@@ -55,6 +56,7 @@ export interface FeatureRowProps {
   releasePipelines?: ReleasePipeline[]
   onCloseEditModal?: () => void
   isCompact?: boolean
+  experimentMode?: boolean
 }
 
 const width = [220, 50, 55, 70, 450]
@@ -66,6 +68,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     disableControls,
     environmentFlags,
     environmentId,
+    experimentMode = false,
     fadeEnabled,
     fadeValue,
     hideAudit = false,
@@ -104,9 +107,9 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     const { feature } = Utils.fromParam()
     const { id } = projectFlag
 
-    const isModalOpen = !!document?.getElementsByClassName(
-      'create-feature-modal',
-    )?.length
+    const isModalOpen =
+      !!document?.getElementsByClassName('create-feature-modal')?.length ||
+      !!document?.getElementsByClassName('create-experiment-modal')?.length
     if (`${id}` === feature && !isModalOpen) {
       editFeature()
     }
@@ -192,6 +195,38 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       search: `?feature=${projectFlag.id}&tab=${tabValue}`,
     })
 
+    const ModalComponent = experimentMode
+      ? CreateExperimentModal
+      : CreateFlagModal
+    const modalCssClass = experimentMode
+      ? 'side-modal create-feature-modal create-experiment-modal'
+      : 'side-modal create-feature-modal'
+
+    const modalProps = experimentMode
+      ? {
+          environmentFlag,
+          environmentId,
+          flagId: environmentFlag?.id,
+          history,
+          noPermissions: !permission,
+          projectFlag,
+          projectId,
+          tab,
+        }
+      : {
+          environmentFlag,
+          environmentId,
+          flagId: environmentFlag?.id,
+          hasUnhealthyEvents:
+            isFeatureHealthEnabled && !!featureUnhealthyEvents?.length,
+          hideTagsByType: ['UNHEALTHY'],
+          history,
+          noPermissions: !permission,
+          projectFlag,
+          projectId,
+          tab,
+        }
+
     openModal(
       <Row>
         {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
@@ -205,21 +240,8 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
           <Icon name='copy' />
         </Button>
       </Row>,
-      <CreateFlagModal
-        hideTagsByType={['UNHEALTHY']}
-        hasUnhealthyEvents={
-          isFeatureHealthEnabled && !!featureUnhealthyEvents?.length
-        }
-        history={history}
-        environmentId={environmentId}
-        projectId={projectId}
-        projectFlag={projectFlag}
-        noPermissions={!permission}
-        environmentFlag={environmentFlag}
-        tab={tab}
-        flagId={environmentFlag?.id}
-      />,
-      'side-modal create-feature-modal',
+      <ModalComponent {...modalProps} />,
+      modalCssClass,
       () => {
         if (onCloseEditModal) {
           return onCloseEditModal()

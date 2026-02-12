@@ -113,7 +113,7 @@ const StaleSection: FC<StaleSectionProps> = ({
         ),
         onYes: async () => {
           try {
-            const result = await createCleanupIssue({
+            await createCleanupIssue({
               body: {
                 feature_id: flag.id,
               },

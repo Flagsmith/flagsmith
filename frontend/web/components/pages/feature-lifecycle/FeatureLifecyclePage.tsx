@@ -46,7 +46,7 @@ function useSectionParam(): Section {
 
 const FeatureLifecyclePage: FC = () => {
   const routeContext = useRouteContext()
-  const projectId = routeContext.projectId!
+  const projectId = routeContext.projectId as string
   const { environments } = useProjectEnvironments(projectId)
   const defaultEnvironmentApiKey = environments[0]?.api_key
 
@@ -72,7 +72,9 @@ const FeatureLifecyclePage: FC = () => {
   const hasFilters = hasActiveFilters(filters)
 
   const section = useSectionParam()
-  const activeSection = SECTIONS.find((s) => s.key === section)!
+  const activeSection = SECTIONS.find(
+    (s) => s.key === section,
+  ) as (typeof SECTIONS)[number]
 
   const [monitorPeriod, setMonitorPeriod] = useState(1)
   const [removePeriod, setRemovePeriod] = useState(7)
