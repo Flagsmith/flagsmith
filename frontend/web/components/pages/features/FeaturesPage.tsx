@@ -46,7 +46,17 @@ function isSkeletonItem(
   return 'isSkeleton' in item && item.isSkeleton === true
 }
 
-const FeaturesPage: FC = () => {
+type FeaturesPageProps = {
+  pageTitle?: string
+  forcedTagIds?: number[]
+  defaultExperiment?: boolean
+}
+
+const FeaturesPage: FC<FeaturesPageProps> = ({
+  defaultExperiment,
+  forcedTagIds,
+  pageTitle,
+}) => {
   const history = useHistory()
   const routeContext = useRouteContext()
   const projectId = routeContext.projectId!
@@ -66,13 +76,19 @@ const FeaturesPage: FC = () => {
     viewMode,
   } = useViewMode()
 
+  const effectiveFilters = useMemo(() => {
+    if (!forcedTagIds) return filters
+    const mergedTags = [...new Set([...(filters.tags || []), ...forcedTagIds])]
+    return { ...filters, tags: mergedTags }
+  }, [filters, forcedTagIds])
+
   const {
     error: projectEnvError,
     getEnvironment,
     project,
   } = useProjectEnvironments(projectId)
   const { data, error, isFetching, isLoading, refetch } =
-    useFeatureListWithApiKey(filters, page, environmentId, projectId)
+    useFeatureListWithApiKey(effectiveFilters, page, environmentId, projectId)
 
   // Backward compatibility: Populate ProjectStore for legacy components (CreateFlag)
   // TODO: Remove this when CreateFlag is migrated to RTK Query
@@ -92,21 +108,21 @@ const FeaturesPage: FC = () => {
         projectId,
         environmentId,
         true,
-        filters.search,
-        filters.sort,
+        effectiveFilters.search,
+        effectiveFilters.sort,
         page,
         {
-          group_owners: filters.group_owners?.join(',') || undefined,
-          is_archived: filters.showArchived,
-          is_enabled: filters.is_enabled,
-          owners: filters.owners?.join(',') || undefined,
-          tag_strategy: filters.tag_strategy,
-          tags: filters.tags?.join(',') || undefined,
-          value_search: filters.value_search,
+          group_owners: effectiveFilters.group_owners?.join(',') || undefined,
+          is_archived: effectiveFilters.showArchived,
+          is_enabled: effectiveFilters.is_enabled,
+          owners: effectiveFilters.owners?.join(',') || undefined,
+          tag_strategy: effectiveFilters.tag_strategy,
+          tags: effectiveFilters.tags?.join(',') || undefined,
+          value_search: effectiveFilters.value_search,
         },
       )
     }
-  }, [projectId, environmentId, page, filters])
+  }, [projectId, environmentId, page, effectiveFilters])
 
   // Force re-fetch when legacy Flux store updates features
   // TODO: Remove when all feature mutations use RTK Query
@@ -181,6 +197,7 @@ const FeaturesPage: FC = () => {
         environmentId={environmentId}
         history={history}
         projectId={projectId}
+        defaultExperiment={defaultExperiment}
       />,
       'side-modal create-feature-modal',
     )
@@ -358,6 +375,7 @@ const FeaturesPage: FC = () => {
               onCreateFeature={openNewFlagModal}
               readOnly={readOnly}
               projectId={projectId}
+              title={pageTitle}
             />
 
             <FormGroup className='mb-4'>{renderFeaturesList()}</FormGroup>
