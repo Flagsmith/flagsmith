@@ -33,7 +33,7 @@ read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
 retries = Retry(connect=3, read=3, redirect=3)
 # Set a timeout to prevent threads being potentially stuck open due to network weirdness
 influxdb_client = InfluxDBClient(
-    url=url, token=token, org=influx_org, retries=retries, timeout=3000
+    url=url, token=token, org=influx_org, retries=retries, timeout=30000
 )
 
 DEFAULT_DROP_COLUMNS = (
