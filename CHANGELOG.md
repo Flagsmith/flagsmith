@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.216.0](https://github.com/Flagsmith/flagsmith/compare/v2.215.1...v2.216.0) (2026-02-12)
+
+
+### Features
+
+* **hackathon-be:** A/B experiment analytics endpoint ([#6702](https://github.com/Flagsmith/flagsmith/issues/6702)) ([1e2c498](https://github.com/Flagsmith/flagsmith/commit/1e2c4986c27042b04a47d7870227d9794b7c2183))
+
+
+### Bug Fixes
+
+* cleanup flag toast ([#6709](https://github.com/Flagsmith/flagsmith/issues/6709)) ([3df61cd](https://github.com/Flagsmith/flagsmith/commit/3df61cdb8e0830945822af862051880eed199636))
+
 ## [2.215.1](https://github.com/Flagsmith/flagsmith/compare/v2.215.0...v2.215.1) (2026-02-12)
 
 
