@@ -99,7 +99,7 @@ const StaleSection: FC<StaleSectionProps> = ({
             <strong>flagsmith/flagsmith</strong> to clean up{' '}
             <strong>{flag.name}</strong>.
             <WarningMessage
-              warningMessageClass='mt-4'
+              warningMessageClass='d-block mt-4'
               warningMessage={
                 <>
                   Cleaning up a feature flag means removing the flag checks from
@@ -113,24 +113,13 @@ const StaleSection: FC<StaleSectionProps> = ({
         ),
         onYes: async () => {
           try {
-            const result = await createCleanupIssue({
+            await createCleanupIssue({
               body: {
                 feature_id: flag.id,
               },
               organisation_id: AccountStore.getOrganisation()?.id,
             }).unwrap()
-            toast(
-              <span>
-                Cleanup issue created.{' '}
-                <a
-                  href={result.html_url}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  View on GitHub
-                </a>
-              </span>,
-            )
+            toast(<span>Cleanup issue created.</span>)
           } catch {
             toast('Failed to create cleanup issue', 'danger')
           }

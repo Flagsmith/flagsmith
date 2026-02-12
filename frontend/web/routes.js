@@ -47,6 +47,7 @@ import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
 import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
+import ExperimentsPage from './components/pages/ExperimentsPage'
 import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
 import FlagEnvironmentsPage from './components/pages/FlagEnvironmentsPage'
 import ExecutiveViewPage from './components/pages/ExecutiveViewPage'
@@ -73,6 +74,7 @@ export const routes = {
   'dev-view': '/organisation/:organisationId/dev-view',
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
+  'experiments': '/project/:projectId/environment/:environmentId/experiments',
   'executive-view': '/organisation/:organisationId/executive-view',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
   'feature-history-detail':
@@ -118,7 +120,6 @@ export const routes = {
   'segment': '/project/:projectId/segments/:id',
   'segments': '/project/:projectId/segments',
   'signup': '/signup',
-  'split-tests': '/project/:projectId/environment/:environmentId/split-tests',
   'user': '/project/:projectId/environment/:environmentId/users/:identity/:id',
   'user-id': '/project/:projectId/environment/:environmentId/users/:identity',
   'users': '/project/:projectId/environment/:environmentId/users',
@@ -140,6 +141,11 @@ export default (
         component={PasswordResetPage}
       />
       <ParameterizedRoute path={routes.features} exact component={FlagsPage} />
+      <ParameterizedRoute
+        path={routes.experiments}
+        exact
+        component={ExperimentsPage}
+      />
       <ParameterizedRoute
         path={routes.lifecycle}
         exact

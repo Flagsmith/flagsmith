@@ -245,8 +245,8 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
         const completionPct =
           pipeline.total_features > 0
             ? Math.round(
-              (pipeline.completed_features / pipeline.total_features) * 100,
-            )
+                (pipeline.completed_features / pipeline.total_features) * 100,
+              )
             : 0
         const inFlightTotal = pipeline.stages.reduce(
           (sum, s) => sum + s.features_in_stage,

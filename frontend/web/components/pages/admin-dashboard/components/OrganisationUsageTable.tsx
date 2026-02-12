@@ -237,14 +237,14 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
             >
               {Utils.numberWithCommas(
                 org[
-                `api_calls_${days}d` as keyof OrganisationMetrics
+                  `api_calls_${days}d` as keyof OrganisationMetrics
                 ] as number,
               )}
             </div>
             <div className='table-column' style={{ fontSize: 13, width: 140 }}>
               {overageCell(
                 org[
-                `api_calls_${days}d` as keyof OrganisationMetrics
+                  `api_calls_${days}d` as keyof OrganisationMetrics
                 ] as number,
                 org.api_calls_allowed * (days / 30),
               )}
