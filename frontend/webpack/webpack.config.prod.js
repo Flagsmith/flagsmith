@@ -27,7 +27,7 @@ const extraPlugins = [
 
 module.exports = {
     ...base,
-    devtool: process.env.E2E ? false : 'source-map',
+    devtool: 'source-map',
     mode: 'production',
     entry: {
         main: './web/main.js',
