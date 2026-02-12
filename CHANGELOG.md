@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.215.1](https://github.com/Flagsmith/flagsmith/compare/v2.215.0...v2.215.1) (2026-02-12)
+
+
+### Bug Fixes
+
+* **Hackathon:** Platform Hub usage trends timing out ([#6700](https://github.com/Flagsmith/flagsmith/issues/6700)) ([08c6e0e](https://github.com/Flagsmith/flagsmith/commit/08c6e0e29685ead93dc487ec6142bc03ee3a08cc))
+
 ## [2.215.0](https://github.com/Flagsmith/flagsmith/compare/v2.214.0...v2.215.0) (2026-02-12)
 
 
