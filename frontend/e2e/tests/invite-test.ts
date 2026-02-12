@@ -1,12 +1,12 @@
 import {
   assertTextContent,
   byId,
-  click,
+  click, goToAccountSettings,
   log,
   login,
   setText,
   waitForElementVisible,
-} from '../helpers.cafe'
+} from '../helpers.cafe';
 import { Selector, t } from 'testcafe'
 import { E2E_CHANGE_MAIL, E2E_USER, PASSWORD } from '../config'
 
@@ -33,7 +33,7 @@ export default async function () {
   await waitForElementVisible(byId('signup-btn'))
   await click(byId('signup-btn'))
   log('Change email')
-  await click(byId('account-settings-link'))
+  await goToAccountSettings()
   await click(byId('change-email-button'))
   await setText("[name='EmailAddress']", E2E_CHANGE_MAIL)
   await setText("[name='newPassword']", PASSWORD)
@@ -41,7 +41,7 @@ export default async function () {
   await login(E2E_CHANGE_MAIL, PASSWORD)
   log('Delete invite user')
   await assertTextContent('[id=account-settings-link]', 'Account')
-  await click(byId('account-settings-link'))
+  await goToAccountSettings()
   await click(byId('delete-user-btn'))
   await setText("[name='currentPassword']", PASSWORD)
   await click(byId('delete-account'))

@@ -48,6 +48,10 @@ import CreateReleasePipelinePage from './components/pages/CreateReleasePipelineP
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
 import ExperimentsPage from './components/pages/ExperimentsPage'
+import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
+import FlagEnvironmentsPage from './components/pages/FlagEnvironmentsPage'
+import ExecutiveViewPage from './components/pages/ExecutiveViewPage'
+import DevViewPage from './components/pages/DevViewPage'
 import AdminDashboardPage from './components/pages/admin-dashboard/AdminDashboardPage'
 import CleanupPage from './components/pages/feature-lifecycle'
 export const routes = {
@@ -67,13 +71,16 @@ export const routes = {
   'create-environment': '/project/:projectId/environment/create',
   'create-organisation': '/create',
   'create-release-pipeline': '/project/:projectId/release-pipelines/create',
+  'dev-view': '/organisation/:organisationId/dev-view',
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
   'experiments': '/project/:projectId/environment/:environmentId/experiments',
+  'executive-view': '/organisation/:organisationId/executive-view',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
   'feature-history-detail':
     '/project/:projectId/environment/:environmentId/history/:id/',
   'features': '/project/:projectId/environment/:environmentId/features',
+  'flag-environments': '/project/:projectId/flag/:flagId/environments',
   'gettingStarted': '/getting-started',
   'github-setup': '/github-setup',
   'home': '/home',
@@ -98,6 +105,7 @@ export const routes = {
   'project-settings': '/project/:projectId/settings',
   'project-settings-in-environment':
     '/project/:projectId/environment/:environmentId/project-settings',
+  'release-manager': '/organisation/:organisationId/release-manager',
   'release-pipelines': '/project/:projectId/release-pipelines',
   'release-pipelines-detail': '/project/:projectId/release-pipelines/:id',
   'release-pipelines-detail-edit':
@@ -257,6 +265,26 @@ export default (
         path={routes['organisation-usage']}
         exact
         component={OrganisationUsagePage}
+      />
+      <ParameterizedRoute
+        path={routes['release-manager']}
+        exact
+        component={ReleaseManagerPage}
+      />
+      <ParameterizedRoute
+        path={routes['executive-view']}
+        exact
+        component={ExecutiveViewPage}
+      />
+      <ParameterizedRoute
+        path={routes['dev-view']}
+        exact
+        component={DevViewPage}
+      />
+      <ParameterizedRoute
+        path={routes['flag-environments']}
+        exact
+        component={FlagEnvironmentsPage}
       />
       <Route
         path={routes['organisation-settings-redirect']}
