@@ -23,7 +23,7 @@ type EnvironmentRowProps = {
   environment: Environment
   flag: ProjectFlag
   projectId: string
-  onManage: (environmentId: string, tab?: string) => void
+  onManage: (environmentId: string, environmentFlag: any, tab?: string) => void
 }
 
 const EnvironmentRow: FC<EnvironmentRowProps> = ({
@@ -41,18 +41,67 @@ const EnvironmentRow: FC<EnvironmentRowProps> = ({
     { skip: !environment.id || !flag.id },
   )
 
-  const currentState = useMemo(() => {
-    if (!featureStates?.results) return null
+  const { currentState, segmentOverridesCount, identityOverridesCount } = useMemo(() => {
+    if (!featureStates?.results) {
+      return {
+        currentState: null,
+        identityOverridesCount: 0,
+        segmentOverridesCount: 0,
+      }
+    }
+
     // Find the current state (without live_from or scheduled)
-    return featureStates.results.find((fs) => !fs.live_from && !fs.feature_segment && !fs.identity)
+    const current = featureStates.results.find(
+      (fs) => !fs.live_from && !fs.feature_segment && !fs.identity,
+    )
+
+    // Count segment overrides (feature states with feature_segment)
+    const segmentCount = featureStates.results.filter(
+      (fs) => fs.feature_segment && !fs.live_from,
+    ).length
+
+    // Count identity overrides (feature states with identity)
+    const identityCount = featureStates.results.filter(
+      (fs) => fs.identity && !fs.live_from,
+    ).length
+
+    return {
+      currentState: current,
+      identityOverridesCount: identityCount,
+      segmentOverridesCount: segmentCount,
+    }
   }, [featureStates])
 
   const enabled = currentState?.enabled ?? flag.default_enabled
-  const value = currentState?.feature_state_value ?? flag.initial_value
 
-  // Use project-level counts (not per-environment, but better than nothing)
-  const segmentOverridesCount = flag.num_segment_overrides || 0
-  const identityOverridesCount = flag.num_identity_overrides || 0
+  // Extract the actual value from feature_state_value object
+  const getDisplayValue = (featureStateValue: any) => {
+    if (!featureStateValue) return null
+
+    // If it's already a primitive value, return it
+    if (typeof featureStateValue !== 'object') return featureStateValue
+
+    // Extract value based on type
+    const { type, string_value, integer_value, boolean_value, float_value } =
+      featureStateValue
+
+    switch (type) {
+      case 'unicode':
+        return string_value
+      case 'int':
+        return integer_value
+      case 'bool':
+        return boolean_value
+      case 'float':
+        return float_value
+      default:
+        return null
+    }
+  }
+
+  const value = getDisplayValue(
+    currentState?.feature_state_value ?? flag.initial_value,
+  )
 
   return (
     <tr>
@@ -70,15 +119,7 @@ const EnvironmentRow: FC<EnvironmentRowProps> = ({
         )}
       </td>
       <td className='text-center'>
-        {value !== null && value !== undefined
-          ? typeof value === 'object'
-            ? JSON.stringify(value)
-            : String(value)
-          : flag.initial_value !== null && flag.initial_value !== undefined
-          ? typeof flag.initial_value === 'object'
-            ? JSON.stringify(flag.initial_value)
-            : String(flag.initial_value)
-          : '-'}
+        {value !== null && value !== undefined ? String(value) : '-'}
       </td>
       <td className='text-center'>
         {segmentOverridesCount > 0 ? (
@@ -86,6 +127,7 @@ const EnvironmentRow: FC<EnvironmentRowProps> = ({
             onClick={() =>
               onManage(
                 environment.api_key,
+                currentState,
                 Constants.featurePanelTabs.SEGMENT_OVERRIDES,
               )
             }
@@ -104,6 +146,7 @@ const EnvironmentRow: FC<EnvironmentRowProps> = ({
             onClick={() =>
               onManage(
                 environment.api_key,
+                currentState,
                 Constants.featurePanelTabs.IDENTITY_OVERRIDES,
               )
             }
@@ -118,7 +161,7 @@ const EnvironmentRow: FC<EnvironmentRowProps> = ({
       </td>
       <td className='text-center'>
         <Button
-          onClick={() => onManage(environment.api_key)}
+          onClick={() => onManage(environment.api_key, currentState)}
           size='small'
           theme='outline'
         >
@@ -159,18 +202,41 @@ const FlagEnvironmentsPage: FC = () => {
 
   const isLoading = flagLoading || environmentsLoading
 
-  const handleManage = (environmentId: string, tab?: string) => {
+  const handleManage = (
+    environmentId: string,
+    environmentFlag: any,
+    tab?: string,
+  ) => {
+    // Update URL to include tab parameter if specified
+    if (tab) {
+      const searchParams = new URLSearchParams(location.search)
+      searchParams.set('tab', tab)
+      history.replace({
+        pathname: location.pathname,
+        search: searchParams.toString(),
+      })
+    }
+
     openModal(
       flag?.name || 'Edit Feature',
       <CreateFlagModal
         environmentId={environmentId}
         projectId={projectId}
         projectFlag={flag}
+        environmentFlag={environmentFlag}
         history={history}
         isEdit
-        tab={tab}
       />,
       'side-modal create-feature-modal',
+      () => {
+        // Clear tab parameter when modal closes
+        const searchParams = new URLSearchParams(location.search)
+        searchParams.delete('tab')
+        history.replace({
+          pathname: location.pathname,
+          search: searchParams.toString(),
+        })
+      },
     )
   }
 
