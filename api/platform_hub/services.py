@@ -30,6 +30,7 @@ from platform_hub.types import (
     UsageTrendData,
 )
 from projects.models import Project
+from projects.tags.models import TagType
 from users.models import FFAdminUser
 
 logger = structlog.get_logger("platform_hub")
@@ -355,29 +356,34 @@ def get_organisation_metrics(
     return results
 
 
+def _get_stale_flag_counts_by_project(
+    organisations: QuerySet[Organisation],
+) -> dict[int, int]:
+    """Return a mapping of project_id -> stale flag count."""
+    return dict(
+        Feature.objects.filter(
+            project__organisation__in=organisations,
+            tags__type=TagType.STALE,
+        )
+        .values("project_id")
+        .annotate(count=Count("id", distinct=True))
+        .values_list("project_id", "count")
+    )
+
+
 def _get_stale_flag_counts_by_org(
     organisations: QuerySet[Organisation],
 ) -> dict[int, int]:
     """Return a mapping of organisation_id -> stale flag count."""
-    projects = Project.objects.filter(
-        organisation__in=organisations,
-    ).values("id", "organisation_id", "stale_flags_limit_days")
-
-    result: dict[int, int] = defaultdict(int)
-    for project in projects:
-        cutoff = timezone.now() - timedelta(days=project["stale_flags_limit_days"])
-
-        stale_count = (
-            Feature.objects.filter(project_id=project["id"])
-            .exclude(
-                feature_states__updated_at__gte=cutoff,
-            )
-            .distinct()
-            .count()
+    return dict(
+        Feature.objects.filter(
+            project__organisation__in=organisations,
+            tags__type=TagType.STALE,
         )
-        result[project["organisation_id"]] += stale_count
-
-    return result
+        .values("project__organisation_id")
+        .annotate(count=Count("id", distinct=True))
+        .values_list("project__organisation_id", "count")
+    )
 
 
 def _get_integration_counts_by_org(
@@ -501,19 +507,13 @@ def get_stale_flags_per_project(
         .values_list("project_id", "count")
     )
 
+    stale_counts_by_project = _get_stale_flag_counts_by_project(organisations)
+
     results: list[StaleFlagsPerProjectData] = []
     for project in projects:
         total_flags = flag_counts_by_project.get(project.id, 0)
         if total_flags == 0:
             continue
-
-        cutoff = timezone.now() - timedelta(days=project.stale_flags_limit_days)
-        stale_flags = (
-            Feature.objects.filter(project=project)
-            .exclude(feature_states__updated_at__gte=cutoff)
-            .distinct()
-            .count()
-        )
 
         results.append(
             StaleFlagsPerProjectData(
@@ -521,7 +521,7 @@ def get_stale_flags_per_project(
                 organisation_name=project.organisation.name,
                 project_id=project.id,
                 project_name=project.name,
-                stale_flags=stale_flags,
+                stale_flags=stale_counts_by_project.get(project.id, 0),
                 total_flags=total_flags,
             )
         )
