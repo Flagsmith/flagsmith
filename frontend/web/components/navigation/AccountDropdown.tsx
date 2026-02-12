@@ -83,6 +83,7 @@ const AccountDropdown: React.FC = () => {
                 fontWeight: 600,
                 padding: '8px 16px',
               }}
+              id={'account-settings-view-mode'}
             >
               View Mode
             </div>

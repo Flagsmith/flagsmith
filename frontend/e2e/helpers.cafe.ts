@@ -389,7 +389,7 @@ export const login = async (email: string, password: string) => {
 
 export const goToAccountSettings = async () => {
   await click('#account-settings-link')
-  if (await isElementExists('account-settings-link')) {
+  if (await isElementExists('account-settings-view-mode')) {
     await click('#account-settings')
   }
 }
