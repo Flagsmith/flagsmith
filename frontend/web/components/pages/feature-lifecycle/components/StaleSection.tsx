@@ -119,18 +119,7 @@ const StaleSection: FC<StaleSectionProps> = ({
               },
               organisation_id: AccountStore.getOrganisation()?.id,
             }).unwrap()
-            toast(
-              <span>
-                Cleanup issue created.{' '}
-                <a
-                  href={result.html_url}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  View on GitHub
-                </a>
-              </span>,
-            )
+            toast(<span>Cleanup issue created.</span>)
           } catch {
             toast('Failed to create cleanup issue', 'danger')
           }
