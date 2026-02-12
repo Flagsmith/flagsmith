@@ -386,8 +386,16 @@ export const login = async (email: string, password: string) => {
   await click('#login-btn')
   await waitForElementVisible('#project-manage-widget')
 }
-export const logout = async () => {
+
+export const goToAccountSettings = async () => {
   await click('#account-settings-link')
+  if (await isElementExists('account-settings-view-mode')) {
+    await click('#account-settings')
+  }
+}
+
+export const logout = async () => {
+  await goToAccountSettings()
   await click('#logout-link')
   await waitForElementVisible('#login-page')
   await t.wait(500)
