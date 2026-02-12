@@ -78,6 +78,15 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               >
                 Features
               </SidebarLink>
+              {Utils.getFlagsmithHasFeature('experimental_flags') && (
+                <SidebarLink
+                  id={mobile ? undefined : 'experiments-link'}
+                  icon='flask'
+                  to={`/project/${projectId}/environment/${environmentId}/experiments`}
+                >
+                  Experiments
+                </SidebarLink>
+              )}
               <SidebarLink
                 id='change-requests-link'
                 icon='timer'
@@ -120,16 +129,6 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               >
                 SDK Keys
               </SidebarLink>
-              {Utils.getFlagsmithHasFeature('split_testing') && (
-                <SidebarLink
-                  id={mobile ? undefined : 'split-tests-link'}
-                  exact
-                  icon='flask'
-                  to={`/project/${projectId}/environment/${environmentId}/split-tests`}
-                >
-                  Split Tests
-                </SidebarLink>
-              )}
               {environmentAdmin && (
                 <SidebarLink
                   icon='setting'

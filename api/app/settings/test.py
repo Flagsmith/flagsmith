@@ -11,6 +11,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "invite": "10/min",
     "signup": "100/min",
     "user": "100000/day",
+    "master_api_key": "100000/day",
     "influx_query": "50/min",
 }
 
@@ -65,5 +66,3 @@ PAhkbx1Jf3FftZf4YL9X3W3ghczPPatemfylyAFiTGH5FrjlhlRJn+8owfWjK3zN
 """
 
 ENABLE_POSTPONE_DECORATOR = False
-
-DEBUG = True

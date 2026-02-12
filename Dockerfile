@@ -39,6 +39,7 @@
 
 # - Internal stages
 # * api-test [build-python]
+# * api-private-test [build-python-private]
 
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]
@@ -52,7 +53,7 @@ ARG CI_COMMIT_SHA=dev
 
 # Pin runtimes versions
 ARG NODE_VERSION=22
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION=3.13
 
 FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm AS node
 FROM cgr.dev/chainguard/wolfi-base:latest AS wolfi-base
@@ -158,13 +159,23 @@ RUN apk add xmlsec
 # * api-test [build-python]
 FROM build-python AS api-test
 
+COPY api /build/
+
 RUN make install-packages opts='--with dev'
 
-WORKDIR /app
+CMD ["make", "test"]
 
-COPY api /app/
+# * api-private-test [build-python-private]
+FROM build-python-private AS api-private-test
 
-CMD ["make test"]
+COPY api /build/
+
+RUN make install-packages opts='--with dev' && \
+  make integrate-private-tests && \
+  git config --global --unset credential.helper && \
+  rm -f ${HOME}/.git-credentials
+
+CMD ["make", "test"]
 
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]

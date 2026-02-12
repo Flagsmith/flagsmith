@@ -159,3 +159,28 @@ runs:
         aws ecs wait services-stable --cluster ${{ inputs.aws_ecs_cluster_name }} --services ${{ inputs.aws_ecs_service_name }}
         aws ecs wait services-stable --cluster ${{ inputs.aws_ecs_cluster_name }} --services ${{ inputs.aws_ecs_sdk_service_name }}
       shell: bash
+
+    - name: Verify correct version is running
+      shell: bash
+      run: |
+        EXPECTED_TASK_DEF=${{ steps.deploy-api-task-def.outputs.task-definition-arn }}
+        RUNNING_ADMIN_API_TASK_DEF=$(aws ecs describe-services \
+          --cluster ${{ inputs.aws_ecs_cluster_name }} \
+          --services ${{ inputs.aws_ecs_service_name }} \
+          --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition' \
+          --output text)
+        RUNNING_SDK_API_TASK_DEF=$(aws ecs describe-services \
+          --cluster ${{ inputs.aws_ecs_cluster_name }} \
+          --services ${{ inputs.aws_ecs_sdk_service_name }} \
+          --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition' \
+          --output text)
+        if [[ "$RUNNING_ADMIN_API_TASK_DEF" == "$EXPECTED_TASK_DEF" && \
+              "$RUNNING_SDK_API_TASK_DEF" == "$EXPECTED_TASK_DEF" ]]; then
+          exit 0
+        else
+          echo "Task definition mismatch detected"
+          echo "Expected: $EXPECTED_TASK_DEF"
+          echo "Admin API running: $RUNNING_ADMIN_API_TASK_DEF"
+          echo "SDK API running: $RUNNING_SDK_API_TASK_DEF"
+          exit 1
+        fi

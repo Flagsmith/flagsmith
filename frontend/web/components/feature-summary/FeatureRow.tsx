@@ -1,19 +1,18 @@
-import React, { FC, useEffect, useMemo } from 'react'
+import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
-import CreateFlagModal from 'components/modals/CreateFlag'
+import CreateFlagModal from 'components/modals/create-feature'
+import CreateExperimentModal from 'components/modals/create-experiment'
 import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
 import Icon from 'components/Icon'
 import FeatureValue from './FeatureValue'
 import FeatureAction, { FeatureActionProps } from './FeatureAction'
-import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
 import Button from 'components/base/forms/Button'
 import {
   Environment,
-  FeatureListProviderActions,
   FeatureListProviderData,
   ProjectFlag,
   ReleasePipeline,
@@ -28,6 +27,7 @@ import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import FeatureName from './FeatureName'
 import FeatureDescription from './FeatureDescription'
 import FeatureTags from './FeatureTags'
+import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
 
 export interface FeatureRowProps {
   disableControls?: boolean
@@ -35,9 +35,15 @@ export interface FeatureRowProps {
   environmentId: string
   permission?: boolean
   projectFlag: ProjectFlag
-  projectId: string
-  removeFlag?: FeatureListProviderActions['removeFlag']
-  toggleFlag?: FeatureListProviderActions['toggleFlag']
+  projectId: number
+  removeFlag?: (projectFlag: ProjectFlag) => void | Promise<void>
+  toggleFlag?: (
+    projectFlag: ProjectFlag,
+    environmentFlag:
+      | FeatureListProviderData['environmentFlags'][number]
+      | undefined,
+    onError?: () => void,
+  ) => void | Promise<void>
   index: number
   readOnly?: boolean
   condensed?: boolean
@@ -49,6 +55,8 @@ export interface FeatureRowProps {
   hideRemove?: boolean
   releasePipelines?: ReleasePipeline[]
   onCloseEditModal?: () => void
+  isCompact?: boolean
+  experimentMode?: boolean
 }
 
 const width = [220, 50, 55, 70, 450]
@@ -60,11 +68,13 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     disableControls,
     environmentFlags,
     environmentId,
+    experimentMode = false,
     fadeEnabled,
     fadeValue,
     hideAudit = false,
     hideRemove = false,
     index,
+    isCompact = false,
     onCloseEditModal,
     permission,
     projectFlag,
@@ -76,6 +86,17 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   } = props
   const protectedTags = useProtectedTags(projectFlag, projectId)
   const history = useHistory()
+  const { id } = projectFlag
+
+  const actualEnabled = environmentFlags?.[id]?.enabled
+  const {
+    displayEnabled,
+    isLoading,
+    revertToggle,
+    startRemoving,
+    startToggle,
+    stopRemoving,
+  } = useFeatureRowState(actualEnabled)
 
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: String(projectFlag.project) },
@@ -86,9 +107,9 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     const { feature } = Utils.fromParam()
     const { id } = projectFlag
 
-    const isModalOpen = !!document?.getElementsByClassName(
-      'create-feature-modal',
-    )?.length
+    const isModalOpen =
+      !!document?.getElementsByClassName('create-feature-modal')?.length ||
+      !!document?.getElementsByClassName('create-experiment-modal')?.length
     if (`${id}` === feature && !isModalOpen) {
       editFeature()
     }
@@ -117,7 +138,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   }
 
   const confirmToggle = () => {
-    const { id } = projectFlag
     openModal(
       'Toggle Feature',
       <ConfirmToggleFeature
@@ -125,17 +145,26 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         projectFlag={projectFlag}
         environmentFlag={environmentFlags?.[id]}
         cb={() => {
-          toggleFlag?.(
-            projectId,
-            environmentId,
-            projectFlag,
-            environmentFlags?.[id],
-          )
+          handleToggle()
         }}
       />,
       'p-0',
     )
   }
+
+  const handleToggle = useCallback(() => {
+    const canToggle = startToggle(!actualEnabled)
+    if (!canToggle) return // Prevent rapid toggling
+    toggleFlag?.(projectFlag, environmentFlags?.[id], revertToggle)
+  }, [
+    actualEnabled,
+    environmentFlags,
+    id,
+    projectFlag,
+    revertToggle,
+    startToggle,
+    toggleFlag,
+  ])
 
   const onChange = () => {
     if (disableControls) {
@@ -166,6 +195,38 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       search: `?feature=${projectFlag.id}&tab=${tabValue}`,
     })
 
+    const ModalComponent = experimentMode
+      ? CreateExperimentModal
+      : CreateFlagModal
+    const modalCssClass = experimentMode
+      ? 'side-modal create-feature-modal create-experiment-modal'
+      : 'side-modal create-feature-modal'
+
+    const modalProps = experimentMode
+      ? {
+          environmentFlag,
+          environmentId,
+          flagId: environmentFlag?.id,
+          history,
+          noPermissions: !permission,
+          projectFlag,
+          projectId,
+          tab,
+        }
+      : {
+          environmentFlag,
+          environmentId,
+          flagId: environmentFlag?.id,
+          hasUnhealthyEvents:
+            isFeatureHealthEnabled && !!featureUnhealthyEvents?.length,
+          hideTagsByType: ['UNHEALTHY'],
+          history,
+          noPermissions: !permission,
+          projectFlag,
+          projectId,
+          tab,
+        }
+
     openModal(
       <Row>
         {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
@@ -179,21 +240,8 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
           <Icon name='copy' />
         </Button>
       </Row>,
-      <CreateFlagModal
-        hideTagsByType={['UNHEALTHY']}
-        hasUnhealthyEvents={
-          isFeatureHealthEnabled && !!featureUnhealthyEvents?.length
-        }
-        history={history}
-        environmentId={environmentId}
-        projectId={projectId}
-        projectFlag={projectFlag}
-        noPermissions={!permission}
-        environmentFlag={environmentFlag}
-        tab={tab}
-        flagId={environmentFlag?.id}
-      />,
-      'side-modal create-feature-modal',
+      <ModalComponent {...modalProps} />,
+      modalCssClass,
       () => {
         if (onCloseEditModal) {
           return onCloseEditModal()
@@ -210,12 +258,10 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   const isReadOnly = readOnly || Utils.getFlagsmithHasFeature('read_only_mode')
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
 
-  const { description, id } = projectFlag
+  const { description } = projectFlag
   const environment = ProjectStore.getEnvironment(
     environmentId,
   ) as Environment | null
-
-  const isCompact = getViewMode() === 'compact'
 
   if (condensed) {
     return (
@@ -247,8 +293,13 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     onCopyName: copyFeature,
     onRemove: () => {
       if (disableControls) return
-      confirmRemove(projectFlag, () => {
-        removeFlag?.(projectId, projectFlag)
+      confirmRemove(projectFlag, async () => {
+        startRemoving()
+        try {
+          await removeFlag?.(projectFlag)
+        } catch {
+          stopRemoving()
+        }
       })
     },
     onShowAudit: () => {
@@ -275,6 +326,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             isReadOnly ? '' : 'clickable'
           }`,
           className,
+          { 'list-item--toggling': isLoading },
         )}
         key={id}
         data-test={`feature-item-${index}`}
@@ -310,11 +362,11 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
               }}
             >
               <Switch
-                disabled={!permission || isReadOnly}
+                disabled={!permission || isReadOnly || isLoading}
                 data-test={`feature-switch-${index}${
-                  environmentFlags?.[id]?.enabled ? '-on' : '-off'
+                  displayEnabled ? '-on' : '-off'
                 }`}
-                checked={environmentFlags?.[id]?.enabled}
+                checked={displayEnabled}
                 onChange={onChange}
               />
             </div>
@@ -332,21 +384,30 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       </div>
       <div
         onClick={() => !isReadOnly && editFeature()}
-        className='d-flex cursor-pointer flex-column justify-content-center px-2 list-item py-1  d-lg-none'
+        className={classNames(
+          'd-flex cursor-pointer flex-column justify-content-center px-2 list-item py-1 d-lg-none',
+          { 'list-item--toggling': isLoading },
+        )}
       >
         <div className='d-flex gap-2 align-items-center'>
           <div className='flex-1 align-items-center flex-wrap'>
             <FeatureName name={projectFlag.name} />
             <FeatureTags editFeature={editFeature} projectFlag={projectFlag} />
           </div>
-          <Switch
-            disabled={!permission || isReadOnly}
-            data-test={`feature-switch-${index}${
-              environmentFlags?.[id]?.enabled ? '-on' : '-off'
-            }`}
-            checked={environmentFlags?.[id]?.enabled}
-            onChange={onChange}
-          />
+          <div
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+          >
+            <Switch
+              disabled={!permission || isReadOnly || isLoading}
+              data-test={`feature-switch-${index}${
+                displayEnabled ? '-on' : '-off'
+              }`}
+              checked={displayEnabled}
+              onChange={onChange}
+            />
+          </div>
           <FeatureAction {...featureActionProps} disableE2E={true} />
         </div>
       </div>

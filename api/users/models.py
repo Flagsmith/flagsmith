@@ -1,4 +1,6 @@
 import logging
+import secrets
+import string
 import typing
 import uuid
 
@@ -104,6 +106,13 @@ class UserManager(BaseUserManager):  # type: ignore[type-arg]
     def get_by_natural_key(self, email):  # type: ignore[no-untyped-def]
         # Used to allow case insensitive login
         return self.get(email__iexact=email)
+
+    def make_random_password(
+        self,
+        length: int = 10,
+        allowed_chars: str = string.ascii_letters + string.digits,
+    ) -> str:
+        return "".join(secrets.choice(allowed_chars) for _ in range(length))
 
 
 class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-missing,misc]

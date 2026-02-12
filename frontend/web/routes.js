@@ -10,7 +10,7 @@ import UsersPage from './components/pages/UsersPage'
 import UserPage from './components/pages/UserPage'
 import UserIdPage from './components/pages/UserIdPage'
 import IntegrationsPage from './components/pages/IntegrationsPage'
-import FlagsPage from './components/pages/FeaturesPage'
+import FlagsPage from './components/pages/features'
 import SegmentsPage from './components/pages/SegmentsPage'
 import OrganisationSettingsPage from './components/pages/organisation-settings'
 import AccountSettingsPage from './components/pages/AccountSettingsPage'
@@ -38,7 +38,6 @@ import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
 import SDKKeysPage from './components/SDKKeysPage'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
-import SplitTestPage from './components/pages/SplitTestPage'
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
 import ProjectChangeRequestsPage from './components/pages/ProjectChangeRequestsPage'
 import ProjectChangeRequestPage from './components/pages/ProjectChangeRequestDetailPage'
@@ -48,9 +47,17 @@ import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
 import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
+import ExperimentsPage from './components/pages/ExperimentsPage'
+import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
+import FlagEnvironmentsPage from './components/pages/FlagEnvironmentsPage'
+import ExecutiveViewPage from './components/pages/ExecutiveViewPage'
+import DevViewPage from './components/pages/DevViewPage'
+import AdminDashboardPage from './components/pages/admin-dashboard/AdminDashboardPage'
+import CleanupPage from './components/pages/feature-lifecycle'
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
+  'admin-dashboard': '/admin/dashboard',
   'audit-log': '/project/:projectId/audit-log',
   'audit-log-item': '/project/:projectId/audit-log/:id',
   'broken': '/broken',
@@ -64,18 +71,23 @@ export const routes = {
   'create-environment': '/project/:projectId/environment/create',
   'create-organisation': '/create',
   'create-release-pipeline': '/project/:projectId/release-pipelines/create',
+  'dev-view': '/organisation/:organisationId/dev-view',
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
+  'experiments': '/project/:projectId/environment/:environmentId/experiments',
+  'executive-view': '/organisation/:organisationId/executive-view',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
   'feature-history-detail':
     '/project/:projectId/environment/:environmentId/history/:id/',
   'features': '/project/:projectId/environment/:environmentId/features',
+  'flag-environments': '/project/:projectId/flag/:flagId/environments',
   'gettingStarted': '/getting-started',
   'github-setup': '/github-setup',
   'home': '/home',
   'integrations': '/project/:projectId/integrations',
   'invite': '/invite/:id',
   'invite-link': '/invite-link/:id',
+  'lifecycle': '/project/:projectId/lifecycle/:section?',
   'login': '/login',
   'maintenance': '/maintenance',
   'not-found': '/404',
@@ -93,6 +105,7 @@ export const routes = {
   'project-settings': '/project/:projectId/settings',
   'project-settings-in-environment':
     '/project/:projectId/environment/:environmentId/project-settings',
+  'release-manager': '/organisation/:organisationId/release-manager',
   'release-pipelines': '/project/:projectId/release-pipelines',
   'release-pipelines-detail': '/project/:projectId/release-pipelines/:id',
   'release-pipelines-detail-edit':
@@ -107,7 +120,6 @@ export const routes = {
   'segment': '/project/:projectId/segments/:id',
   'segments': '/project/:projectId/segments',
   'signup': '/signup',
-  'split-tests': '/project/:projectId/environment/:environmentId/split-tests',
   'user': '/project/:projectId/environment/:environmentId/users/:identity/:id',
   'user-id': '/project/:projectId/environment/:environmentId/users/:identity',
   'users': '/project/:projectId/environment/:environmentId/users',
@@ -129,6 +141,16 @@ export default (
         component={PasswordResetPage}
       />
       <ParameterizedRoute path={routes.features} exact component={FlagsPage} />
+      <ParameterizedRoute
+        path={routes.experiments}
+        exact
+        component={ExperimentsPage}
+      />
+      <ParameterizedRoute
+        path={routes.lifecycle}
+        exact
+        component={CleanupPage}
+      />
       <ParameterizedRoute
         path={routes['change-requests']}
         exact
@@ -169,11 +191,6 @@ export default (
         path={routes['environment-settings']}
         exact
         component={EnvironmentSettingsPage}
-      />
-      <ParameterizedRoute
-        path={routes['split-tests']}
-        exact
-        component={SplitTestPage}
       />
       <ParameterizedRoute
         path={routes['sdk-keys']}
@@ -249,6 +266,26 @@ export default (
         exact
         component={OrganisationUsagePage}
       />
+      <ParameterizedRoute
+        path={routes['release-manager']}
+        exact
+        component={ReleaseManagerPage}
+      />
+      <ParameterizedRoute
+        path={routes['executive-view']}
+        exact
+        component={ExecutiveViewPage}
+      />
+      <ParameterizedRoute
+        path={routes['dev-view']}
+        exact
+        component={DevViewPage}
+      />
+      <ParameterizedRoute
+        path={routes['flag-environments']}
+        exact
+        component={FlagEnvironmentsPage}
+      />
       <Route
         path={routes['organisation-settings-redirect']}
         exact
@@ -310,6 +347,11 @@ export default (
         path={routes['create-organisation']}
         exact
         component={CreateOrganisationPage}
+      />
+      <Route
+        path={routes['admin-dashboard']}
+        exact
+        component={AdminDashboardPage}
       />
       <Route path='*' component={NotFoundPage} />
     </Switch>

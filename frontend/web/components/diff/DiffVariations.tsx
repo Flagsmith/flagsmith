@@ -1,5 +1,5 @@
 import { TDiffVariation } from './diff-utils'
-import React, { FC } from 'react'
+import React, { FC, useMemo } from 'react'
 import DiffString from './DiffString'
 import { DiffMethod } from 'react-diff-viewer-continued'
 import { ProjectFlag } from 'common/types/responses'
@@ -12,6 +12,18 @@ type DiffVariationsType = {
   projectFlag: ProjectFlag | undefined
 }
 const DiffVariations: FC<DiffVariationsType> = ({ diffs, projectFlag }) => {
+  const sortedDiffs = useMemo(() => {
+    if (!diffs || !projectFlag?.multivariate_options) return diffs
+    return [...diffs].sort((a, b) => {
+      const indexA = projectFlag.multivariate_options.findIndex(
+        (mv) => mv.id === a.variationOption,
+      )
+      const indexB = projectFlag.multivariate_options.findIndex(
+        (mv) => mv.id === b.variationOption,
+      )
+      return indexA - indexB
+    })
+  }, [diffs, projectFlag])
   const tableHeader = (
     <Row className='table-header mt-4'>
       <div className='table-column flex-fill'>Value</div>
@@ -24,7 +36,7 @@ const DiffVariations: FC<DiffVariationsType> = ({ diffs, projectFlag }) => {
   return (
     <>
       {tableHeader}
-      {diffs?.map((diff, i) => {
+      {sortedDiffs?.map((diff, i) => {
         const variation = projectFlag?.multivariate_options?.find(
           (v) => v.id === diff.variationOption,
         )

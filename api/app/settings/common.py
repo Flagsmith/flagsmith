@@ -130,6 +130,7 @@ INSTALLED_APPS = [
     "webhooks",
     "metrics",
     "onboarding",
+    "platform_hub",
     # 2FA
     "custom_auth.mfa.trench",
     # health check plugins
@@ -302,7 +303,8 @@ TASK_PROCESSOR_DATABASES = env.list(
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
-USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
+USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", default=None)
+MASTER_API_KEY_THROTTLE_RATE = env("MASTER_API_KEY_THROTTLE_RATE", default=None)
 DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", subcast=str, default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -318,6 +320,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "login": LOGIN_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
+        "master_api_key": MASTER_API_KEY_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
         "user": USER_THROTTLE_RATE,
@@ -348,25 +351,6 @@ MIDDLEWARE = [
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)
 if ADD_NEVER_CACHE_HEADERS:
     MIDDLEWARE.append("core.middleware.cache_control.NeverCacheMiddleware")
-
-APPLICATION_INSIGHTS_CONNECTION_STRING = env.str(
-    "APPLICATION_INSIGHTS_CONNECTION_STRING", default=None
-)
-OPENCENSUS_SAMPLING_RATE = env.float("OPENCENSUS_SAMPLING_RATE", 1.0)
-
-if APPLICATION_INSIGHTS_CONNECTION_STRING:
-    MIDDLEWARE.insert(
-        0, "integrations.opencensus.middleware.OpenCensusDbTraceMiddleware"
-    )
-    MIDDLEWARE.insert(0, "opencensus.ext.django.middleware.OpencensusMiddleware")
-    OPENCENSUS = {
-        "TRACE": {
-            "SAMPLER": f"opencensus.trace.samplers.ProbabilitySampler(rate={OPENCENSUS_SAMPLING_RATE})",
-            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
-                connection_string='{APPLICATION_INSIGHTS_CONNECTION_STRING}',
-            )""",
-        }
-    }
 
 if ENABLE_GZIP_COMPRESSION:
     # ref: https://docs.djangoproject.com/en/2.2/ref/middleware/#middleware-ordering
@@ -551,26 +535,7 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_SETTINGS": {
         "deepLinking": True,
     },
-    "SECURITY": [
-        {"Private": []},
-        {"Public": []},
-    ],
-    "APPEND_COMPONENTS": {
-        "securitySchemes": {
-            "Private": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "Authorization",
-                "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",
-            },
-            "Public": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "X-Environment-Key",
-                "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",
-            },
-        },
-    },
+    "SERVERS": env.json("OPENAPI_SERVERS", default=[]),
     "DEFAULT_GENERATOR_CLASS": "api.openapi.SchemaGenerator",
     "EXTENSIONS": [
         "api.openapi",
@@ -584,6 +549,7 @@ SPECTACULAR_SETTINGS = {
         "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
         "FeatureValueTypeEnum": ["integer", "string", "boolean"],
     },
+    "COMPONENT_NO_READ_ONLY_REQUIRED": True,
 }
 
 
@@ -699,15 +665,6 @@ else:
             },
         },
     }
-
-if APPLICATION_INSIGHTS_CONNECTION_STRING:
-    LOGGING["handlers"]["azure"] = {
-        "level": "DEBUG",
-        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
-        "connection_string": APPLICATION_INSIGHTS_CONNECTION_STRING,
-    }
-
-    LOGGING["loggers"][""]["handlers"].append("azure")
 
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
 if ENABLE_DB_LOGGING:
@@ -1073,6 +1030,7 @@ SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
 GITHUB_PEM = env.str("GITHUB_PEM", default="")
 GITHUB_APP_ID: int = env.int("GITHUB_APP_ID", default=0)
 GITHUB_WEBHOOK_SECRET = env.str("GITHUB_WEBHOOK_SECRET", default="")
+FEATURE_LIFECYCLE_GITHUB_PAT = env.str("FEATURE_LIFECYCLE_GITHUB_PAT", default="")
 
 # Additional functionality for using SAML in Flagsmith SaaS
 SAML_INSTALLED = importlib.util.find_spec("saml") is not None
@@ -1429,10 +1387,6 @@ SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED = env.bool(
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
 WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 
-# Split Testing settings
-SPLIT_TESTING_INSTALLED = importlib.util.find_spec("split_testing")
-if SPLIT_TESTING_INSTALLED:
-    INSTALLED_APPS += ("split_testing",)
 
 ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)
 
