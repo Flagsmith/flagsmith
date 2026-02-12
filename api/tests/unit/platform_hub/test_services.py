@@ -7,13 +7,14 @@ from django.utils import timezone
 from pytest_mock import MockerFixture
 
 from environments.models import Environment
-from features.models import Feature, FeatureState
+from features.models import Feature
 from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
 )
 from platform_hub import services
 from projects.models import Project
+from projects.tags.models import Tag, TagType
 from users.models import FFAdminUser
 
 
@@ -429,7 +430,7 @@ def test_get_stale_flags_per_project__query_count_stable_across_projects(
     platform_hub_organisation: Organisation,
     platform_hub_admin_user: FFAdminUser,
 ) -> None:
-    """Flag counts use a single batched query, not one per project."""
+    """Flag and stale counts use batched queries, not one per project."""
     # Given
     project1 = Project.objects.create(
         name="Project A",
@@ -456,33 +457,36 @@ def test_get_stale_flags_per_project__query_count_stable_across_projects(
     with CaptureQueriesContext(connection) as ctx_two:
         result = services.get_stale_flags_per_project(orgs)
 
-    # Then — the flag_counts_by_project query is batched, so only +1
-    # for the additional project's stale flag query.
-    assert len(ctx_two) <= baseline + 1
+    # Then — both flag counts and stale counts are batched, so query
+    # count should not increase when adding more projects.
+    assert len(ctx_two) <= baseline
     assert len(result) == 2
 
 
-def test_get_stale_flags_per_project__different_thresholds__counts_correctly(
+def test_get_stale_flags_per_project__stale_tagged_feature__counts_correctly(
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
     platform_hub_environment: Environment,
     platform_hub_admin_user: FFAdminUser,
 ) -> None:
-    # Given — create a feature with a feature state updated long ago
-    feature = Feature.objects.create(
+    # Given — create a feature tagged as STALE
+    stale_tag = Tag.objects.create(
+        label="Stale",
+        project=platform_hub_project,
+        is_system_tag=True,
+        type=TagType.STALE,
+    )
+    stale_feature = Feature.objects.create(
         name="stale_feature",
         project=platform_hub_project,
     )
-    fs = FeatureState.objects.get(
-        feature=feature,
-        environment=platform_hub_environment,
-    )
-    # Make the feature state old
-    old_date = timezone.now() - timedelta(days=60)
-    FeatureState.objects.filter(id=fs.id).update(updated_at=old_date)
+    stale_feature.tags.add(stale_tag)
 
-    platform_hub_project.stale_flags_limit_days = 30
-    platform_hub_project.save()
+    # Also create a non-stale feature
+    Feature.objects.create(
+        name="active_feature",
+        project=platform_hub_project,
+    )
 
     orgs = Organisation.objects.filter(id=platform_hub_organisation.id)
 
@@ -493,7 +497,7 @@ def test_get_stale_flags_per_project__different_thresholds__counts_correctly(
     assert len(result) == 1
     assert result[0]["project_id"] == platform_hub_project.id
     assert result[0]["stale_flags"] == 1
-    assert result[0]["total_flags"] == 1
+    assert result[0]["total_flags"] == 2
 
 
 def test_get_stale_flags_per_project__no_flags__skips_project(
