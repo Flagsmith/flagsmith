@@ -83,7 +83,8 @@ const AccountDropdown: React.FC = () => {
                 fontWeight: 600,
                 padding: '8px 16px',
               }}
-              id={'account-settings-view-mode'}
+              id='account-settings-view-mode'
+              data-test='account-settings-view-mode'
             >
               View Mode
             </div>
@@ -127,6 +128,7 @@ const AccountDropdown: React.FC = () => {
               className='feature-action__item'
               onClick={handleAccountSettings}
               id='account-settings'
+              data-test='account-settings'
             >
               <Icon name='setting' width={18} fill='#9DA4AE' />
               Account Settings
