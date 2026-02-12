@@ -63,8 +63,6 @@ const Nav: FC<NavType> = ({
 
   const showNav =
     !isAppLevelPage &&
-    !isOrganisationSelect &&
-    !isCreateOrganisation &&
     !isPersonaViewPage &&
     !!AccountStore.getOrganisation()?.id
 
