@@ -99,7 +99,7 @@ const StaleSection: FC<StaleSectionProps> = ({
             <strong>flagsmith/flagsmith</strong> to clean up{' '}
             <strong>{flag.name}</strong>.
             <WarningMessage
-              warningMessageClass='mt-4'
+              warningMessageClass='d-block mt-4'
               warningMessage={
                 <>
                   Cleaning up a feature flag means removing the flag checks from
