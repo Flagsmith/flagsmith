@@ -98,6 +98,28 @@ def build_paginated_response(
     return data
 
 
+def create_github_issue(
+    github_pat: str,
+    api_url: str,
+    owner: str,
+    repo: str,
+    title: str,
+    body: str,
+) -> dict[str, Any]:
+    url = f"{api_url}repos/{owner}/{repo}/issues"
+    headers = {
+        "X-GitHub-Api-Version": GITHUB_API_VERSION,
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {github_pat}",
+    }
+    payload = {"title": title, "body": body}
+    response = requests.post(
+        url, json=payload, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
+    )
+    response.raise_for_status()
+    return response.json()  # type: ignore[no-any-return]
+
+
 def post_comment_to_github(
     installation_id: str, owner: str, repo: str, issue: str, body: str
 ) -> dict[str, Any]:
