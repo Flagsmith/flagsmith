@@ -276,6 +276,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
               removeFlag={removeFlag}
               projectFlag={projectFlag}
               isCompact={isCompact}
+              experimentMode={defaultExperiment}
             />
           )}
         </Permission>
@@ -289,6 +290,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
       toggleFlag,
       removeFlag,
       isCompact,
+      defaultExperiment,
     ],
   )
 

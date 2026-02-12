@@ -865,5 +865,9 @@ export type Req = {
     environmentFlagId: number
     body: UpdateFeatureStateBody
   }
+  getExperimentResults: {
+    environmentId: string
+    featureName: string
+  }
   // END OF TYPES
 }
