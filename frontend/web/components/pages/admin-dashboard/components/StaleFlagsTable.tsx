@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { StaleFlagsPerProject } from 'common/types/responses'
 import { SortOrder } from 'common/types/requests'
 import PanelSearch from 'components/PanelSearch'
@@ -8,6 +8,18 @@ interface StaleFlagsTableProps {
 }
 
 const StaleFlagsTable: FC<StaleFlagsTableProps> = ({ data }) => {
+  // TODO: The backend returns non-stale (active) flag counts in the stale_flags
+  // field. This should be fixed in the backend (platform_hub/services.py) to
+  // return the actual stale count, and this inversion removed.
+  const items = useMemo(
+    () =>
+      data.map((row) => ({
+        ...row,
+        stale_flags: row.total_flags - row.stale_flags,
+      })),
+    [data],
+  )
+
   return (
     <PanelSearch
       className='no-pad'
@@ -32,8 +44,8 @@ const StaleFlagsTable: FC<StaleFlagsTableProps> = ({ data }) => {
         </div>
       }
       id='stale-flags-table'
-      items={data}
-      paging={data.length > 10 ? { goToPage: 1, pageSize: 10 } : undefined}
+      items={items}
+      paging={items.length > 10 ? { goToPage: 1, pageSize: 10 } : undefined}
       renderRow={(row: StaleFlagsPerProject) => (
         <div
           className='flex-row list-item'
