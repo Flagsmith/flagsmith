@@ -46,7 +46,7 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
           </a>
           <Headway className='cursor-pointer ps-3' />
 
-          {Utils.getFlagsmithHasFeature('ui_new_view_modes') ? (
+          {Utils.getFlagsmithHasFeature('persona_based_views') ? (
             <AccountDropdown />
           ) : (
             <NavLink
