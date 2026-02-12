@@ -91,9 +91,11 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
     return Object.values(byOrg)
   }, [stats])
 
-  const pipelineCount = stats.length
+  const projectsWithPipelines = new Set(stats.map((s) => s.project_id)).size
   const adoptionPct =
-    totalProjects > 0 ? Math.round((pipelineCount / totalProjects) * 100) : 0
+    totalProjects > 0
+      ? Math.round((projectsWithPipelines / totalProjects) * 100)
+      : 0
 
   const renderStages = (
     stages: ReleasePipelineStageStats[],
@@ -243,8 +245,8 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
         const completionPct =
           pipeline.total_features > 0
             ? Math.round(
-                (pipeline.completed_features / pipeline.total_features) * 100,
-              )
+              (pipeline.completed_features / pipeline.total_features) * 100,
+            )
             : 0
         const inFlightTotal = pipeline.stages.reduce(
           (sum, s) => sum + s.features_in_stage,
@@ -414,8 +416,8 @@ const ReleasePipelineStatsTable: FC<ReleasePipelineStatsTableProps> = ({
   return (
     <div>
       <div className='text-muted mb-3' style={{ fontSize: 13, paddingLeft: 4 }}>
-        {pipelineCount} of {totalProjects} projects use release pipelines (
-        {adoptionPct}%)
+        {projectsWithPipelines} of {totalProjects} projects use release
+        pipelines ({adoptionPct}%)
       </div>
 
       <PanelSearch
