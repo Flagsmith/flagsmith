@@ -1,6 +1,8 @@
 from datetime import timedelta
 
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
@@ -382,6 +384,82 @@ def test_get_usage_trends__no_analytics__returns_empty(
 
     # Then
     assert result == []
+
+
+def test_get_organisation_metrics__query_count_stable_across_projects(
+    platform_hub_organisation: Organisation,
+    platform_hub_project: Project,
+    platform_hub_environment: Environment,
+    platform_hub_feature: Feature,
+    platform_hub_admin_user: FFAdminUser,
+    settings: pytest.FixtureRequest,
+) -> None:
+    """Flag counts use a single batched query, not one per project."""
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False  # type: ignore[attr-defined]
+    settings.INFLUXDB_TOKEN = ""  # type: ignore[attr-defined]
+    orgs = Organisation.objects.filter(id=platform_hub_organisation.id)
+
+    # Measure baseline query count with 1 project.
+    with CaptureQueriesContext(connection) as ctx_one:
+        services.get_organisation_metrics(orgs)
+    baseline = len(ctx_one)
+
+    # Add a second project with its own environment and feature.
+    project2 = Project.objects.create(
+        name="Second Project",
+        organisation=platform_hub_organisation,
+    )
+    Environment.objects.create(name="Second Env", project=project2)
+    Feature.objects.create(name="second_feature", project=project2)
+
+    # When — measure query count with 2 projects.
+    with CaptureQueriesContext(connection) as ctx_two:
+        result = services.get_organisation_metrics(orgs)
+
+    # Then — query count should not grow per project.
+    # The stale flag count still runs one query per project, so we allow
+    # exactly +1 for the additional project's stale flag query.
+    assert len(ctx_two) <= baseline + 1
+    assert len(result) == 1
+    assert result[0]["project_count"] == 2
+
+
+def test_get_stale_flags_per_project__query_count_stable_across_projects(
+    platform_hub_organisation: Organisation,
+    platform_hub_admin_user: FFAdminUser,
+) -> None:
+    """Flag counts use a single batched query, not one per project."""
+    # Given
+    project1 = Project.objects.create(
+        name="Project A",
+        organisation=platform_hub_organisation,
+    )
+    Environment.objects.create(name="Env A", project=project1)
+    Feature.objects.create(name="feat_a", project=project1)
+
+    orgs = Organisation.objects.filter(id=platform_hub_organisation.id)
+
+    with CaptureQueriesContext(connection) as ctx_one:
+        services.get_stale_flags_per_project(orgs)
+    baseline = len(ctx_one)
+
+    # Add a second project.
+    project2 = Project.objects.create(
+        name="Project B",
+        organisation=platform_hub_organisation,
+    )
+    Environment.objects.create(name="Env B", project=project2)
+    Feature.objects.create(name="feat_b", project=project2)
+
+    # When
+    with CaptureQueriesContext(connection) as ctx_two:
+        result = services.get_stale_flags_per_project(orgs)
+
+    # Then — the flag_counts_by_project query is batched, so only +1
+    # for the additional project's stale flag query.
+    assert len(ctx_two) <= baseline + 1
+    assert len(result) == 2
 
 
 def test_get_stale_flags_per_project__different_thresholds__counts_correctly(

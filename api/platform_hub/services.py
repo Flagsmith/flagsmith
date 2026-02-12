@@ -213,6 +213,14 @@ def get_organisation_metrics(
         .values_list("project__organisation_id", "count")
     )
 
+    # Flag counts per project (single query instead of N per-project queries)
+    flag_counts_by_project = dict(
+        Feature.objects.filter(project__organisation__in=organisations)
+        .values("project_id")
+        .annotate(count=Count("id"))
+        .values_list("project_id", "count")
+    )
+
     # Stale flag counts per org
     stale_flag_counts = _get_stale_flag_counts_by_org(organisations)
 
@@ -292,7 +300,7 @@ def get_organisation_metrics(
                 per_env_usage_30d.get(eid, {}).get("flags", 0)
                 for eid in project_env_ids
             )
-            project_flags = Feature.objects.filter(project=project).count()
+            project_flags = flag_counts_by_project.get(project.id, 0)
 
             envs_data: list[EnvironmentMetricsData] = []
             for env in project.environments.all():
@@ -486,9 +494,16 @@ def get_stale_flags_per_project(
         .order_by("organisation__name", "name")
     )
 
+    flag_counts_by_project = dict(
+        Feature.objects.filter(project__organisation__in=organisations)
+        .values("project_id")
+        .annotate(count=Count("id"))
+        .values_list("project_id", "count")
+    )
+
     results: list[StaleFlagsPerProjectData] = []
     for project in projects:
-        total_flags = Feature.objects.filter(project=project).count()
+        total_flags = flag_counts_by_project.get(project.id, 0)
         if total_flags == 0:
             continue
 
