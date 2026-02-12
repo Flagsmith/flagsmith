@@ -388,6 +388,9 @@ export const login = async (email: string, password: string) => {
 }
 export const logout = async () => {
   await click('#account-settings-link')
+  if (await isElementExists('account-settings-link')) {
+    await click('#account-settings')
+  }
   await click('#logout-link')
   await waitForElementVisible('#login-page')
   await t.wait(500)

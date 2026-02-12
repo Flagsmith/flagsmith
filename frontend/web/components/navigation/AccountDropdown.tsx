@@ -125,6 +125,7 @@ const AccountDropdown: React.FC = () => {
             <div
               className='feature-action__item'
               onClick={handleAccountSettings}
+              id='account-settings'
             >
               <Icon name='setting' width={18} fill='#9DA4AE' />
               Account Settings
