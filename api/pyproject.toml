@@ -173,6 +173,8 @@ djangorestframework-simplejwt = "^5.5.1"
 structlog = "^24.4.0"
 prometheus-client = "^0.21.1"
 django_cockroachdb = "~4.2"
+numpy = "^2.4.2"
+scipy = "^1.17.0"
 
 [tool.poetry.group.auth-controller]
 optional = true
