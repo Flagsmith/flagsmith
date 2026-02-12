@@ -9,7 +9,7 @@ type FeatureNameType = {
 
 const FeatureName: FC<FeatureNameType> = ({ name }) => {
   const copyFeature = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation()
     Utils.copyToClipboard(name)
   }
   return (

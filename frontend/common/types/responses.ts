@@ -1013,6 +1013,29 @@ export interface UsageEventsList extends AggregateUsageDataItem {
   }
 }
 
+export type ExperimentVariantResult = {
+  variant: string
+  evaluations: number
+  conversions: number
+  conversion_rate: number
+}
+
+export type ExperimentStatistics = {
+  p_value: number
+  significant: boolean
+  chance_to_win: Record<string, number>
+  lift: string
+  winner: string | null
+  recommendation: string
+  sample_size_warning: string | null
+}
+
+export type ExperimentResults = {
+  feature: string
+  variants: ExperimentVariantResult[]
+  statistics: ExperimentStatistics
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -1188,6 +1211,7 @@ export type Res = {
     }
   }
   featureState: FeatureState
+  experimentResults: ExperimentResults
   adminDashboardMetrics: {
     summary: {
       total_organisations: number

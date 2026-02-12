@@ -1802,6 +1802,9 @@ const Index = class extends Component {
                                   projectFlag={projectFlag}
                                   featureContentType={featureContentType}
                                   identity={identity}
+                                  defaultExperiment={
+                                    this.props.defaultExperiment
+                                  }
                                   overrideFeatureState={
                                     this.props.identityFlag
                                       ? this.state.environmentFlag
