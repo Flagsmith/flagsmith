@@ -159,7 +159,7 @@ def test_update_invite_link_returns_405(invite_link, admin_client, organisation)
 def test_join_organisation_with_permission_groups(
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
-    subscription: Subscription,
+    enterprise_subscription: Subscription,
     api_client: APIClient,
 ) -> None:
     # Given
@@ -172,8 +172,9 @@ def test_join_organisation_with_permission_groups(
     invite.permission_groups.add(user_permission_group)
 
     # update subscription to add another seat
-    subscription.max_seats = 2
-    subscription.save()
+    current_seats = organisation.users.count()
+    enterprise_subscription.max_seats += current_seats + 1
+    enterprise_subscription.save()
 
     url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
     data = {"hubspotutk": "somehubspotdata"}

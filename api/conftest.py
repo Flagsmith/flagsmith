@@ -330,6 +330,7 @@ def system_tag(project: Project) -> Tag:
     )
 
 
+@pytest.mark.enterprise_mode
 @pytest.fixture()
 def enterprise_subscription(organisation: Organisation) -> Subscription:
     Subscription.objects.filter(organisation=organisation).update(
