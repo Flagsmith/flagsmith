@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - fix(ci)/task-def-version-check-failures
     paths:
       - api/**
       - .github/**
