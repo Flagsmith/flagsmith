@@ -237,9 +237,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     def join_organisation_from_invite(self, invite: "AbstractBaseInviteModel"):  # type: ignore[no-untyped-def]
         organisation = invite.organisation
 
-        if settings.ENABLE_CHARGEBEE and organisation.over_plan_seats_limit(
-            additional_seats=1
-        ):
+        if organisation.over_plan_seats_limit(additional_seats=1):
             if organisation.is_auto_seat_upgrade_available():
                 organisation.subscription.add_single_seat()  # type: ignore[no-untyped-call]
             else:
