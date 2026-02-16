@@ -72,7 +72,6 @@ runs:
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-admin-api.json
-        task-definition-family: admin-api
         container-name: flagsmith-api
         image: ${{ inputs.api_ecr_image_url }}
 
@@ -82,7 +81,6 @@ runs:
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-migration.json
-        task-definition-family: sdk-api
         container-name: flagsmith-api-migration
         image: ${{ inputs.api_ecr_image_url }}
 
