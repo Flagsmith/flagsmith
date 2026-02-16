@@ -106,7 +106,7 @@ runs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         cluster: ${{ inputs.aws_ecs_cluster_name }}
-        service: ${{ inputs.aws_ecs_service_name }}
+        service: ${{ inputs.aws_ecs_sdk_service_name }}
         task-definition: ${{ steps.task-def-sdk-api.outputs.task-definition }}
 
     - name: Deploy Amazon ECS Admin API service
@@ -114,7 +114,7 @@ runs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         cluster: ${{ inputs.aws_ecs_cluster_name }}
-        service: ${{ inputs.aws_ecs_sdk_service_name }}
+        service: ${{ inputs.aws_ecs_service_name }}
         task-definition: ${{ steps.task-def-admin-api.outputs.task-definition }}
 
     # The DynamoDB Identity Migrator uses the same task definition as the SQL schema migrator but overrides the container definition
