@@ -90,6 +90,11 @@ urlpatterns = [
         ),
         name="schema-swagger-ui",
     ),
+    # Platform Hub dashboard
+    re_path(
+        r"^admin/dashboard/",
+        include("platform_hub.urls", namespace="platform-hub"),
+    ),
     # Test webhook url
     re_path(r"^webhooks/", include("webhooks.urls", namespace="webhooks")),
     path("", include("projects.code_references.urls", namespace="code_references")),

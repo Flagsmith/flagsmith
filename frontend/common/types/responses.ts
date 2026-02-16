@@ -20,6 +20,94 @@ export interface GitHubPagedResponse<T> extends PagedResponse<T> {
 }
 export type FlagsmithValue = string | number | boolean | null
 
+export type EnvironmentMetrics = {
+  id: number
+  name: string
+  api_calls_30d: number
+  flag_evaluations_30d: number
+}
+
+export type ProjectMetrics = {
+  id: number
+  name: string
+  api_calls_30d: number
+  flag_evaluations_30d: number
+  flags: number
+  environments: EnvironmentMetrics[]
+}
+
+export type OrganisationMetrics = {
+  id: number
+  name: string
+  created_date: string
+  total_flags: number
+  active_flags: number
+  stale_flags: number
+  total_users: number
+  active_users_30d: number
+  admin_users: number
+  api_calls_30d: number
+  api_calls_60d: number
+  api_calls_90d: number
+  api_calls_allowed: number
+  flag_evaluations_30d: number
+  identity_requests_30d: number
+  overage_30d: number
+  overage_60d: number
+  overage_90d: number
+  project_count: number
+  environment_count: number
+  integration_count: number
+  projects: ProjectMetrics[]
+}
+
+export type UsageTrend = {
+  date: string
+  api_calls: number
+  flag_evaluations: number
+  identity_requests: number
+}
+
+export type ReleasePipelineStageStats = {
+  stage_name: string
+  environment_name: string
+  order: number
+  features_in_stage: number
+  features_completed: number
+  action_description: string
+  trigger_description: string
+}
+
+export type ReleasePipelineOverview = {
+  organisation_id: number
+  organisation_name: string
+  project_id: number
+  project_name: string
+  pipeline_id: number
+  pipeline_name: string
+  is_published: boolean
+  total_features: number
+  completed_features: number
+  stages: ReleasePipelineStageStats[]
+}
+
+export type StaleFlagsPerProject = {
+  organisation_id: number
+  organisation_name: string
+  project_id: number
+  project_name: string
+  stale_flags: number
+  total_flags: number
+}
+
+export type IntegrationBreakdown = {
+  organisation_id: number
+  organisation_name: string
+  integration_type: string
+  scope: 'organisation' | 'project' | 'environment'
+  count: number
+}
+
 export type FeatureVersionState = {
   enabled: boolean
   feature: number
@@ -925,6 +1013,29 @@ export interface UsageEventsList extends AggregateUsageDataItem {
   }
 }
 
+export type ExperimentVariantResult = {
+  variant: string
+  evaluations: number
+  conversions: number
+  conversion_rate: number
+}
+
+export type ExperimentStatistics = {
+  p_value: number
+  significant: boolean
+  chance_to_win: Record<string, number>
+  lift: string
+  winner: string | null
+  recommendation: string
+  sample_size_warning: string | null
+}
+
+export type ExperimentResults = {
+  feature: string
+  variants: ExperimentVariantResult[]
+  statistics: ExperimentStatistics
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -1100,5 +1211,28 @@ export type Res = {
     }
   }
   featureState: FeatureState
+  experimentResults: ExperimentResults
+  adminDashboardMetrics: {
+    summary: {
+      total_organisations: number
+      total_flags: number
+      total_users: number
+      total_api_calls_30d: number
+      active_organisations: number
+      total_projects: number
+      total_environments: number
+      total_integrations: number
+      active_users: number
+    }
+    organisations: OrganisationMetrics[]
+    usage_trends: UsageTrend[]
+    release_pipeline_stats: ReleasePipelineOverview[]
+    stale_flags_per_project: StaleFlagsPerProject[]
+    integration_breakdown: IntegrationBreakdown[]
+  }
+  createCleanupIssue: {
+    feature_external_resource_id: number
+    html_url: string
+  }
   // END OF TYPES
 }
