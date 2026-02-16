@@ -16,7 +16,7 @@ const createField = (
   ...partialField,
 })
 
-describe('getMetadataValidationState', () => {
+describe('getGlobalMetadataValidationState', () => {
   it('returns all zeros for empty fields array', () => {
     const result = getGlobalMetadataValidationState([])
 
