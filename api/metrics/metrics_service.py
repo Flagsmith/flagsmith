@@ -67,7 +67,9 @@ class EnvironmentMetricsService:
         Returns a callable that counts the number of segment overrides for the environment.
         """
         return {
-            EnvMetricsName.SEGMENT_OVERRIDES: lambda: self.environment.get_segment_metrics_queryset().count(),
+            EnvMetricsName.SEGMENT_OVERRIDES: lambda: (
+                self.environment.get_segment_metrics_queryset().count()
+            ),
         }
 
     def _get_identity_metrics(self) -> dict[EnvMetricsName, Callable[[], int]]:
@@ -129,8 +131,12 @@ class EnvironmentMetricsService:
         Returns callables that counts the number of open change requests and scheduled changes for the environment.
         """
         return {
-            EnvMetricsName.OPEN_CHANGE_REQUESTS: lambda: self.environment.get_change_requests_metrics_queryset().count(),
-            EnvMetricsName.TOTAL_SCHEDULED_CHANGES: lambda: self.environment.get_scheduled_metrics_queryset().count(),
+            EnvMetricsName.OPEN_CHANGE_REQUESTS: lambda: (
+                self.environment.get_change_requests_metrics_queryset().count()
+            ),
+            EnvMetricsName.TOTAL_SCHEDULED_CHANGES: lambda: (
+                self.environment.get_scheduled_metrics_queryset().count()
+            ),
         }
 
     def _build_payload(

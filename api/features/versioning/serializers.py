@@ -279,8 +279,10 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             )
             updated_mvfsv_dict = next(
                 filter(
-                    lambda d: d["multivariate_feature_option"]
-                    == existing_mvfsv.multivariate_feature_option_id,
+                    lambda d: (
+                        d["multivariate_feature_option"]
+                        == existing_mvfsv.multivariate_feature_option_id
+                    ),
                     updated_mvfsv_dicts,
                 ),
                 None,

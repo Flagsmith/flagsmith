@@ -415,8 +415,9 @@ def test_send_test_request_to_webhook_returns_correct_response(
         ),
         (
             "",
-            lambda headers, expected_signature: FLAGSMITH_SIGNATURE_HEADER
-            not in headers,
+            lambda headers, expected_signature: (
+                FLAGSMITH_SIGNATURE_HEADER not in headers
+            ),
         ),
     ],
 )
