@@ -7,7 +7,7 @@ from common.core.utils import is_database_replica_setup, using_database_replica
 from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from django.core.cache import caches
-from django.db.models import Max, Q, QuerySet
+from django.db.models import Exists, Max, OuterRef, Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -56,7 +56,7 @@ from webhooks.webhooks import WebhookEventType
 
 from .constants import INTERSECTION, UNION
 from .features_service import get_overrides_data
-from .models import Feature, FeatureState
+from .models import Feature, FeatureSegment, FeatureState
 from .multivariate.serializers import (
     FeatureMVOptionsValuesResponseSerializer,
 )
@@ -224,7 +224,18 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             "-" if query_data["sort_direction"] == "DESC" else "",
             query_data["sort_field"],
         )
-        queryset = queryset.order_by(sort)
+        if segment_id := query_data.get("segment"):
+            queryset = queryset.annotate(
+                has_segment_override=Exists(
+                    FeatureSegment.objects.filter(
+                        feature=OuterRef("pk"),
+                        segment_id=segment_id,
+                    )
+                ),
+            )
+            queryset = queryset.order_by("-has_segment_override", sort)
+        else:
+            queryset = queryset.order_by(sort)
 
         if environment_id:
             page = self.paginate_queryset(queryset)
