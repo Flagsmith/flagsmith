@@ -4184,6 +4184,40 @@ def test_list_features__segment_query__sorts_by_field_with_overrides_first(
     assert result_names[1:] == ["feature_a", "feature_b"]
 
 
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__identity_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    identity: Identity,
+    sort_field: str,
+) -> None:
+    # Given
+    Feature.objects.create(project=project, name="feature_a")
+    Feature.objects.create(project=project, name="feature_b")
+    feature_c = Feature.objects.create(project=project, name="feature_c")
+
+    # feature_c has an identity override
+    FeatureState.objects.create(
+        feature=feature_c, environment=environment, identity=identity
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity={identity.id}"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    results = response.json()["results"]
+    result_names = [r["name"] for r in results]
+    assert result_names[0] == "feature_c"
+    assert result_names[1:] == ["feature_a", "feature_b"]
+
+
 def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
     admin_client_new: APIClient,
     project: Project,

@@ -224,6 +224,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             "-" if query_data["sort_direction"] == "DESC" else "",
             query_data["sort_field"],
         )
+        override_ordering: list[str] = []
         if segment_id := query_data.get("segment"):
             queryset = queryset.annotate(
                 has_segment_override=Exists(
@@ -233,9 +234,18 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                     )
                 ),
             )
-            queryset = queryset.order_by("-has_segment_override", sort)
-        else:
-            queryset = queryset.order_by(sort)
+            override_ordering.append("-has_segment_override")
+        if identity_id := query_data.get("identity"):
+            queryset = queryset.annotate(
+                has_identity_override=Exists(
+                    FeatureState.objects.filter(
+                        feature=OuterRef("pk"),
+                        identity_id=identity_id,
+                    )
+                ),
+            )
+            override_ordering.append("-has_identity_override")
+        queryset = queryset.order_by(*override_ordering, sort)
 
         if environment_id:
             page = self.paginate_queryset(queryset)
