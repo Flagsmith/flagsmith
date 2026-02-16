@@ -16,6 +16,7 @@ from common.projects.permissions import (
     VIEW_PROJECT,
 )
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
@@ -49,7 +50,11 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.versioning.models import EnvironmentFeatureVersion
-from metadata.models import MetadataModelField
+from metadata.models import (
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.code_references.models import FeatureFlagCodeReferencesScan
@@ -4240,3 +4245,34 @@ def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
     second_feature_metadata_after = second_feature_check.json()["metadata"]
     assert len(second_feature_metadata_after) == 1
     assert second_feature_metadata_after[0]["field_value"] == "200"
+
+
+def test_create_feature__required_metadata_on_other_project__returns_201(
+    admin_client: APIClient,
+    project: Project,
+    project_b: Project,
+    organisation: Organisation,
+    a_metadata_field: MetadataField,
+    feature_content_type: ContentType,
+    project_content_type: ContentType,
+) -> None:
+    # Given - a required metadata field scoped to project_b
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=feature_content_type,
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type,
+        object_id=project_b.id,
+        model_field=model_field,
+    )
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "Test feature cross project", "description": "desc"}
+
+    # When - creating a feature in project (not project_b)
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then - should succeed because the requirement is on project_b, not project
+    assert response.status_code == status.HTTP_201_CREATED

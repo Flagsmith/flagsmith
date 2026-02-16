@@ -3,7 +3,7 @@ from typing import Any
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Model
+from django.db.models import Model, Q
 from rest_framework import serializers
 
 from metadata.models import (
@@ -13,6 +13,7 @@ from metadata.models import (
     MetadataModelFieldRequirement,
 )
 from organisations.models import Organisation
+from projects.models import Project
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
@@ -22,6 +23,9 @@ class MetadataFieldQuerySerializer(serializers.Serializer):  # type: ignore[type
     organisation = serializers.IntegerField(
         required=True, help_text="Organisation ID to filter by"
     )
+    project = serializers.IntegerField(
+        required=False, help_text="Project ID to filter by"
+    )
 
 
 class SupportedRequiredForModelQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -29,9 +33,45 @@ class SupportedRequiredForModelQuerySerializer(serializers.Serializer):  # type:
 
 
 class MetadataFieldSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    project = serializers.IntegerField(
+        required=False, allow_null=True, default=None, source="project_id"
+    )
+
     class Meta:
         model = MetadataField
-        fields = ("id", "name", "type", "description", "organisation")
+        fields = ("id", "name", "type", "description", "organisation", "project")
+        # Disable auto-generated unique validators — conditional
+        # UniqueConstraints are enforced at the database level.
+        validators: list[object] = []
+
+    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
+        data = super().validate(data)
+        project_id = data.get("project_id")
+        organisation = data.get("organisation")
+
+        if project_id is not None:
+            if not Project.objects.filter(
+                id=project_id, organisation=organisation
+            ).exists():
+                raise serializers.ValidationError(
+                    {"project": "Project must belong to the specified organisation."}
+                )
+
+        # Replicate uniqueness checks that DRF can't auto-generate
+        # from conditional UniqueConstraints.
+        qs = MetadataField.objects.filter(
+            name=data.get("name"),
+            organisation=organisation,
+            project_id=project_id,
+        )
+        if self.instance is not None:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError(
+                {"name": "A metadata field with this name already exists."}
+            )
+
+        return data
 
 
 class MetadataModelFieldQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -109,12 +149,35 @@ class MetadataSerializerMixin:
     """
 
     def _validate_required_metadata(
-        self, organisation: Organisation, metadata: list[dict[str, Any]]
+        self,
+        organisation: Organisation,
+        metadata: list[dict[str, Any]],
+        project: Project | None = None,
     ) -> None:
         content_type = ContentType.objects.get_for_model(self.Meta.model)  # type: ignore[attr-defined]
-        requirements = MetadataModelFieldRequirement.objects.filter(
+        org_ct = ContentType.objects.get_for_model(Organisation)
+
+        # Field scoping: org-level fields + this project's fields
+        field_scope = Q(
             model_field__content_type=content_type,
             model_field__field__organisation=organisation,
+            model_field__field__project__isnull=True,
+        )
+        if project is not None:
+            field_scope |= Q(
+                model_field__content_type=content_type,
+                model_field__field__organisation=organisation,
+                model_field__field__project=project,
+            )
+
+        # Requirement scoping: org-level + this project's requirements
+        req_scope = Q(content_type=org_ct, object_id=organisation.id)
+        if project is not None:
+            project_ct = ContentType.objects.get_for_model(Project)
+            req_scope |= Q(content_type=project_ct, object_id=project.id)
+
+        requirements = MetadataModelFieldRequirement.objects.filter(
+            field_scope & req_scope,
         ).select_related("model_field__field")
 
         metadata_fields = {field["model_field"] for field in metadata}

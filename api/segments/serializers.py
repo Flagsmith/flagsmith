@@ -118,7 +118,9 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         project = self.instance.project if self.instance else attrs["project"]  # type: ignore[union-attr]
         organisation = project.organisation
 
-        self._validate_required_metadata(organisation, attrs.get("metadata", []))
+        self._validate_required_metadata(
+            organisation, attrs.get("metadata", []), project=project
+        )
         self._validate_segment_rules_conditions_limit(attrs["rules"])
         self._validate_project_segment_limit(project)
         return attrs

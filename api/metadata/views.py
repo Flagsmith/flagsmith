@@ -1,6 +1,7 @@
 from itertools import chain
 
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
@@ -48,6 +49,12 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             if organisation_id is None:
                 raise ValidationError("organisation parameter is required")
             queryset = queryset.filter(organisation__id=organisation_id)
+
+            project_id = serializer.validated_data.get("project")
+            if project_id is not None:
+                queryset = queryset.filter(
+                    Q(project__isnull=True) | Q(project_id=project_id)
+                )
 
         return queryset
 

@@ -1,6 +1,7 @@
 import json
 from itertools import chain
 
+import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from rest_framework import status
@@ -14,6 +15,7 @@ from metadata.models import (
 from metadata.views import SUPPORTED_REQUIREMENTS_MAPPING  # type: ignore[attr-defined]
 from organisations.models import Organisation
 from projects.models import Project
+from users.models import FFAdminUser
 
 
 def test_can_create_metadata_field(admin_client, organisation):  # type: ignore[no-untyped-def]
@@ -439,3 +441,225 @@ def test_get_supported_required_for_models(admin_client, organisation):  # type:
     assert len(response.json()) == 2
     assert response.json()[0]["model"] == "organisation"
     assert response.json()[1]["model"] == "project"
+
+
+def test_create_metadata_field__with_project__returns_201(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:metadata:metadata-fields-list")
+    data = {
+        "name": "project_field",
+        "type": "str",
+        "organisation": organisation.id,
+        "project": project.id,
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["project"] == project.id
+    assert response.json()["organisation"] == organisation.id
+
+
+def test_create_metadata_field__project_from_different_org__returns_400(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+) -> None:
+    # Given
+    other_org = Organisation.objects.create(name="Other Org")
+    other_project = Project.objects.create(name="Other Project", organisation=other_org)
+    url = reverse("api-v1:metadata:metadata-fields-list")
+    data = {
+        "name": "bad_field",
+        "type": "str",
+        "organisation": organisation.id,
+        "project": other_project.id,
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_create_metadata_field__project_admin__returns_201(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+) -> None:
+    # Given
+    from projects.models import UserProjectPermission
+
+    UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
+
+    url = reverse("api-v1:metadata:metadata-fields-list")
+    data = {
+        "name": "project_admin_field",
+        "type": "str",
+        "organisation": organisation.id,
+        "project": project.id,
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_list_metadata_fields__filter_by_project__returns_org_and_project_fields(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+) -> None:
+    # Given
+    org_field = MetadataField.objects.create(
+        name="org_field", type="str", organisation=organisation
+    )
+    project_field = MetadataField.objects.create(
+        name="project_field", type="str", organisation=organisation, project=project
+    )
+    base_url = reverse("api-v1:metadata:metadata-fields-list")
+    url = f"{base_url}?organisation={organisation.id}&project={project.id}"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    returned_ids = {r["id"] for r in response.json()["results"]}
+    assert org_field.id in returned_ids
+    assert project_field.id in returned_ids
+
+
+def test_list_metadata_fields__filter_by_project__excludes_other_project_fields(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    project_b: Project,
+) -> None:
+    # Given
+    org_field = MetadataField.objects.create(
+        name="org_field", type="str", organisation=organisation
+    )
+    project_a_field = MetadataField.objects.create(
+        name="proj_a_field", type="str", organisation=organisation, project=project
+    )
+    project_b_field = MetadataField.objects.create(
+        name="proj_b_field", type="str", organisation=organisation, project=project_b
+    )
+    base_url = reverse("api-v1:metadata:metadata-fields-list")
+    url = f"{base_url}?organisation={organisation.id}&project={project.id}"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    returned_ids = {r["id"] for r in response.json()["results"]}
+    assert org_field.id in returned_ids
+    assert project_a_field.id in returned_ids
+    assert project_b_field.id not in returned_ids
+
+
+def test_list_metadata_fields__no_project_filter__returns_all(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    project_b: Project,
+) -> None:
+    # Given
+    org_field = MetadataField.objects.create(
+        name="org_field", type="str", organisation=organisation
+    )
+    project_a_field = MetadataField.objects.create(
+        name="proj_a_field", type="str", organisation=organisation, project=project
+    )
+    project_b_field = MetadataField.objects.create(
+        name="proj_b_field", type="str", organisation=organisation, project=project_b
+    )
+    base_url = reverse("api-v1:metadata:metadata-fields-list")
+    url = f"{base_url}?organisation={organisation.id}"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    returned_ids = {r["id"] for r in response.json()["results"]}
+    assert org_field.id in returned_ids
+    assert project_a_field.id in returned_ids
+    assert project_b_field.id in returned_ids
+
+
+@pytest.mark.parametrize(
+    "existing_project_attr, new_project_attr, expected_status",
+    [
+        (None, None, status.HTTP_400_BAD_REQUEST),
+        ("project", "project", status.HTTP_400_BAD_REQUEST),
+        ("project", "project_b", status.HTTP_201_CREATED),
+        (None, "project", status.HTTP_201_CREATED),
+    ],
+    ids=[
+        "duplicate_org_level",
+        "duplicate_project_level",
+        "same_name_different_projects",
+        "same_name_org_and_project_level",
+    ],
+)
+def test_create_metadata_field__uniqueness(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    project_b: Project,
+    existing_project_attr: str | None,
+    new_project_attr: str | None,
+    expected_status: int,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given - a field already exists
+    existing_project = (
+        request.getfixturevalue(existing_project_attr)
+        if existing_project_attr
+        else None
+    )
+    MetadataField.objects.create(
+        name="the_field",
+        type="str",
+        organisation=organisation,
+        project=existing_project,
+    )
+
+    new_project = (
+        request.getfixturevalue(new_project_attr) if new_project_attr else None
+    )
+    url = reverse("api-v1:metadata:metadata-fields-list")
+    data: dict[str, object] = {
+        "name": "the_field",
+        "type": "str",
+        "organisation": organisation.id,
+    }
+    if new_project is not None:
+        data["project"] = new_project.id
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == expected_status

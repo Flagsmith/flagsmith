@@ -24,7 +24,12 @@ from environments.models import Environment, EnvironmentAPIKey, Webhook
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
-from metadata.models import Metadata, MetadataModelField
+from metadata.models import (
+    Metadata,
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
 from organisations.models import Organisation
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
@@ -1325,3 +1330,32 @@ def test_total_segment_overrides_correctly_ignores_old_versions(
 
     # Then
     assert response.json()["total_segment_overrides"] == 1
+
+
+def test_create_environment__required_metadata_on_other_project__returns_201(
+    admin_client: APIClient,
+    project: Project,
+    project_b: Project,
+    organisation: Organisation,
+    a_metadata_field: MetadataField,
+    environment_content_type: ContentType,
+    project_content_type: ContentType,
+) -> None:
+    # Given - a required metadata field scoped to project_b
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=environment_content_type,
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type,
+        object_id=project_b.id,
+        model_field=model_field,
+    )
+    url = reverse("api-v1:environments:environment-list")
+    data = {"name": "New env", "project": project.id}
+
+    # When - creating an environment in project (not project_b)
+    response = admin_client.post(url, data=data)
+
+    # Then - should succeed because the requirement is on project_b, not project
+    assert response.status_code == status.HTTP_201_CREATED

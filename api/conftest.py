@@ -372,6 +372,11 @@ def project(organisation):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
+def project_b(organisation: Organisation) -> Project:
+    return Project.objects.create(name="Test Project B", organisation=organisation)  # type: ignore[no-any-return]
+
+
+@pytest.fixture()
 def segment(project: Project) -> Segment:
     segment: Segment = Segment.objects.create(name="segment", project=project)
     return segment
