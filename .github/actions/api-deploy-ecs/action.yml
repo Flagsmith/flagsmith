@@ -64,7 +64,7 @@ runs:
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-sdk-api.json
-        container-name: flagsmith-sdk-api
+        container-name: flagsmith-api
         image: ${{ inputs.api_ecr_image_url }}
 
     - name: Render Admin API task definition
@@ -72,7 +72,8 @@ runs:
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-admin-api.json
-        container-name: flagsmith-admin-api
+        task-definition-family: admin-api
+        container-name: flagsmith-api
         image: ${{ inputs.api_ecr_image_url }}
 
     # This is used in both the SQL migrations and the Dynamo Identity Migrations
@@ -81,6 +82,7 @@ runs:
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-migration.json
+        task-definition-family: sdk-api
         container-name: flagsmith-api-migration
         image: ${{ inputs.api_ecr_image_url }}
 
