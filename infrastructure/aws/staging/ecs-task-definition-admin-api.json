@@ -1,5 +1,5 @@
 {
-    "family": "flagsmith-api",
+    "family": "admin-api",
     "networkMode": "awsvpc",
     "executionRoleArn": "arn:aws:iam::302456015006:role/task-exec-role-6fb76f6",
     "taskRoleArn": "arn:aws:iam::302456015006:role/task-exec-role-6fb76f6",
