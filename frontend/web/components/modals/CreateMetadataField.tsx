@@ -32,6 +32,7 @@ type CreateMetadataFieldType = {
   metadataModelFieldList?: MetadataModelField[]
   onComplete?: () => void
   organisationId: string
+  projectId?: string
 }
 
 type QueryBody = Omit<MetadataModelField, 'id'>
@@ -64,6 +65,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   metadataModelFieldList,
   onComplete,
   organisationId,
+  projectId,
 }) => {
   const metadataTypes: MetadataType[] = [
     { id: 1, label: 'int', value: 'int' },
@@ -96,7 +98,9 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
     Utils.getContentType(
       supportedContentTypes,
       'model',
-      MetadataContentType.ORGANISATION,
+      projectId
+        ? MetadataContentType.PROJECT
+        : MetadataContentType.ORGANISATION,
     )
 
   useEffect(() => {
@@ -151,7 +155,9 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           ? ([
               {
                 content_type: metadataContentType.id,
-                object_id: parseInt(organisationId),
+                object_id: projectId
+                  ? parseInt(projectId)
+                  : parseInt(organisationId),
               } as isRequiredFor,
             ] as isRequiredFor[])
           : [],
@@ -175,6 +181,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           name,
           organisation: organisationId,
           type: `${typeValue?.value}`,
+          ...(projectId ? { project: parseInt(projectId) } : {}),
         },
         id: id!,
       }).then(() => {
@@ -228,6 +235,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           name,
           organisation: organisationId,
           type: `${typeValue?.value}`,
+          ...(projectId ? { project: parseInt(projectId) } : {}),
         },
       }).then((res) => {
         Promise.all(

@@ -16,6 +16,7 @@ import PlanBasedBanner from 'components/PlanBasedAccess'
 const metadataWidth = [200, 150, 150, 90]
 type MetadataPageType = {
   organisationId: string
+  projectId?: string
 }
 
 type MergeMetadata = {
@@ -25,11 +26,13 @@ type MergeMetadata = {
   type: string
   description: string
   organisation: number
+  project: number | null
 }
 
-const MetadataPage: FC<MetadataPageType> = ({ organisationId }) => {
+const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   const { data: metadataFieldList } = useGetMetadataFieldListQuery({
     organisation: organisationId,
+    ...(projectId ? { project: parseInt(projectId) } : {}),
   })
 
   const { data: MetadataModelFieldList } = useGetMetadataModelFieldListQuery({
@@ -55,16 +58,27 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId }) => {
     return null
   }, [metadataFieldList, MetadataModelFieldList])
 
+  const orgFields = useMemo(() => {
+    if (!projectId || !mergeMetadata) return null
+    return mergeMetadata.filter((item) => item.project === null)
+  }, [mergeMetadata, projectId])
+
+  const projectFields = useMemo(() => {
+    if (!projectId || !mergeMetadata) return null
+    return mergeMetadata.filter((item) => item.project !== null)
+  }, [mergeMetadata, projectId])
+
   const metadataCreatedToast = () => {
     toast('Custom Field Created')
     closeModal()
   }
-  const createMetadataField = () => {
+  const openCreateMetadataField = () => {
     openModal(
       `Create Custom Field`,
       <CreateMetadataField
         onComplete={metadataCreatedToast}
         organisationId={organisationId}
+        projectId={projectId}
         isEdit={false}
       />,
       'side-modal create-feature-modal',
@@ -82,6 +96,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId }) => {
           toast('Custom Field Updated')
         }}
         organisationId={organisationId}
+        projectId={projectId}
       />,
       'side-modal create-feature-modal',
     )
@@ -104,13 +119,137 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId }) => {
     })
   }
 
+  const renderFieldRow = (
+    metadata: MergeMetadata,
+    { readOnly }: { readOnly: boolean },
+  ) => (
+    <Row
+      space
+      className={`list-item${readOnly ? '' : ' clickable cursor-pointer'}`}
+      key={metadata.id}
+      onClick={
+        readOnly
+          ? undefined
+          : () => {
+              editMetadata(`${metadata.id}`, metadata.content_type_fields)
+            }
+      }
+    >
+      <Flex className='table-column px-3'>
+        <div className='font-weight-medium mb-1'>
+          {metadata.name}
+          {readOnly && <span className='chip chip--xs ms-2'>Inherited</span>}
+        </div>
+        <ContentTypesValues
+          contentTypes={metadata.content_type_fields}
+          organisationId={organisationId}
+        />
+      </Flex>
+      {!readOnly && (
+        <div className='table-column' style={{ width: '86px' }}>
+          <Button
+            id='delete-invite'
+            type='button'
+            onClick={(e) => {
+              e.stopPropagation()
+              _deleteMetadata(`${metadata.id}`, metadata.name)
+            }}
+            className='btn btn-with-icon'
+          >
+            <Icon name='trash-2' width={20} fill='#656D7B' />
+          </Button>
+        </div>
+      )}
+    </Row>
+  )
+
+  const renderTableHeader = ({ showRemove }: { showRemove: boolean }) => (
+    <Row className='table-header'>
+      <Flex className='table-column px-3'>Name</Flex>
+      {showRemove && (
+        <div className='table-column' style={{ width: metadataWidth[3] }}>
+          Remove
+        </div>
+      )}
+    </Row>
+  )
+
+  if (projectId) {
+    return (
+      <PlanBasedBanner className='mt-4' feature={'METADATA'} theme={'page'}>
+        <Row space className='mb-2'>
+          <Row>
+            <h5>Custom Fields</h5>
+          </Row>
+          <Button className='mt-2' onClick={() => openCreateMetadataField()}>
+            {'Create Custom Field'}
+          </Button>
+        </Row>
+        <p className='fs-small lh-sm'>
+          Manage project-level custom fields and view inherited organisation
+          fields.{' '}
+          <Button
+            theme='text'
+            target='_blank'
+            href='https://docs.flagsmith.com/advanced-use/custom-fields/'
+            className='fw-normal'
+          >
+            Learn more
+          </Button>
+        </p>
+
+        <FormGroup className='mt-4'>
+          <h6 className='mb-2'>Organisation Fields</h6>
+          <PanelSearch
+            id='org-fields-list'
+            items={orgFields}
+            header={renderTableHeader({ showRemove: false })}
+            renderRow={(metadata: MergeMetadata) =>
+              renderFieldRow(metadata, { readOnly: true })
+            }
+            renderNoResults={
+              <Panel className='no-pad' title={'Organisation Fields'}>
+                <div className='search-list'>
+                  <Row className='list-item p-3 text-muted'>
+                    No organisation-level custom fields configured.
+                  </Row>
+                </div>
+              </Panel>
+            }
+          />
+        </FormGroup>
+
+        <FormGroup className='mt-4'>
+          <h6 className='mb-2'>Project Fields</h6>
+          <PanelSearch
+            id='project-fields-list'
+            items={projectFields}
+            header={renderTableHeader({ showRemove: true })}
+            renderRow={(metadata: MergeMetadata) =>
+              renderFieldRow(metadata, { readOnly: false })
+            }
+            renderNoResults={
+              <Panel className='no-pad' title={'Project Fields'}>
+                <div className='search-list'>
+                  <Row className='list-item p-3 text-muted'>
+                    No project-level custom fields configured.
+                  </Row>
+                </div>
+              </Panel>
+            }
+          />
+        </FormGroup>
+      </PlanBasedBanner>
+    )
+  }
+
   return (
     <PlanBasedBanner className='mt-4' feature={'METADATA'} theme={'page'}>
       <Row space className='mb-2'>
         <Row>
           <h5>Custom Fields</h5>
         </Row>
-        <Button className='mt-2' onClick={() => createMetadataField()}>
+        <Button className='mt-2' onClick={() => openCreateMetadataField()}>
           {'Create Custom Field'}
         </Button>
       </Row>
@@ -129,45 +268,10 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId }) => {
         <PanelSearch
           id='webhook-list'
           items={mergeMetadata}
-          header={
-            <Row className='table-header'>
-              <Flex className='table-column px-3'>Name</Flex>
-              <div className='table-column' style={{ width: metadataWidth[3] }}>
-                Remove
-              </div>
-            </Row>
+          header={renderTableHeader({ showRemove: true })}
+          renderRow={(metadata: MergeMetadata) =>
+            renderFieldRow(metadata, { readOnly: false })
           }
-          renderRow={(metadata) => (
-            <Row
-              space
-              className='list-item clickable cursor-pointer'
-              key={metadata.id}
-              onClick={() => {
-                editMetadata(`${metadata.id}`, metadata.content_type_fields)
-              }}
-            >
-              <Flex className='table-column px-3'>
-                <div className='font-weight-medium mb-1'>{metadata.name}</div>
-                <ContentTypesValues
-                  contentTypes={metadata.content_type_fields}
-                  organisationId={organisationId}
-                />
-              </Flex>
-              <div className='table-column' style={{ width: '86px' }}>
-                <Button
-                  id='delete-invite'
-                  type='button'
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    _deleteMetadata(`${metadata.id}`, metadata.name)
-                  }}
-                  className='btn btn-with-icon'
-                >
-                  <Icon name='trash-2' width={20} fill='#656D7B' />
-                </Button>
-              </div>
-            </Row>
-          )}
           renderNoResults={
             <Panel className='no-pad' title={'Custom Fields'}>
               <div className='search-list'>
