@@ -606,6 +606,31 @@ def test_list_metadata_fields__no_project_filter__returns_all(
     assert project_b_field.id in returned_ids
 
 
+def test_list_metadata_fields__project_field_overrides_org_field__org_field_excluded(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+) -> None:
+    # Given
+    org_field = MetadataField.objects.create(
+        name="shared_name", type="str", organisation=organisation
+    )
+    project_field = MetadataField.objects.create(
+        name="shared_name", type="int", organisation=organisation, project=project
+    )
+    base_url = reverse("api-v1:metadata:metadata-fields-list")
+    url = f"{base_url}?organisation={organisation.id}&project={project.id}"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    returned_ids = {r["id"] for r in response.json()["results"]}
+    assert project_field.id in returned_ids
+    assert org_field.id not in returned_ids
+
+
 @pytest.mark.parametrize(
     "existing_project_attr, new_project_attr, expected_status",
     [

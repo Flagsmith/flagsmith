@@ -287,3 +287,33 @@ def test_validate_required_metadata__project_level_field_with_requirement__only_
         serializer._validate_required_metadata(organisation, [], project=project)
 
     serializer._validate_required_metadata(organisation, [], project=project_b)
+
+
+@pytest.mark.django_db
+def test_validate_required_metadata__project_field_overrides_required_org_field__org_requirement_skipped(
+    organisation: Organisation,
+    project: Project,
+    a_metadata_field: MetadataField,
+    segment_content_type: ContentType,
+    organisation_content_type: ContentType,
+) -> None:
+    # Given
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=segment_content_type,
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=organisation_content_type,
+        object_id=organisation.id,
+        model_field=model_field,
+    )
+    MetadataField.objects.create(
+        name=a_metadata_field.name,
+        type=a_metadata_field.type,
+        organisation=organisation,
+        project=project,
+    )
+    serializer = _DummySegmentSerializer()
+
+    # When / Then
+    serializer._validate_required_metadata(organisation, [], project=project)
