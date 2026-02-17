@@ -3,10 +3,9 @@ import json
 from collections import OrderedDict
 from typing import Any
 
+from flag_engine.identities.models import IdentityModel
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-
-from util.engine_models.identities.models import IdentityModel
 
 
 class CustomPagination(PageNumberPagination):

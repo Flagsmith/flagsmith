@@ -27,51 +27,43 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
   const [LDKey, setLDKey] = useState<string>('')
   const [importId, setImportId] = useState<number>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [isAppLoading, setAppIsLoading] = useState<boolean>(false)
   const [projects, setProjects] = useState<{ key: string; name: string }[]>([])
   const [createLaunchDarklyProjectImport, { data, isSuccess }] =
     useCreateLaunchDarklyProjectImportMutation()
 
-  const {
-    data: status,
-    isSuccess: statusLoaded,
-    isUninitialized,
-    refetch,
-  } = useGetLaunchDarklyProjectImportQuery(
+  const { data: status } = useGetLaunchDarklyProjectImportQuery(
     {
       import_id: `${importId}`,
       project_id: projectId,
     },
-    { skip: !importId },
+    {
+      pollingInterval: importId ? 1000 : 0,
+      skip: !importId,
+    },
   )
-
-  useEffect(() => {
-    const checkImportStatus = async () => {
-      setAppIsLoading(true)
-      const intervalId = setInterval(async () => {
-        await refetch()
-
-        if (statusLoaded && status && status.status.result === 'success') {
-          clearInterval(intervalId)
-          setAppIsLoading(false)
-          window.location.reload()
-        }
-      }, 1000)
-    }
-
-    if (statusLoaded) {
-      checkImportStatus()
-    }
-  }, [statusLoaded, status, refetch])
 
   useEffect(() => {
     if (isSuccess && data?.id) {
       setImportId(data.id)
-      if (!isUninitialized) {
-        refetch()
-      }
     }
-  }, [isSuccess, data, refetch, isUninitialized])
+  }, [isSuccess, data])
+
+  useEffect(() => {
+    if (status?.status?.result === 'success') {
+      const count = status.status.requested_flag_count
+      const deprecated = status.status.deprecated_flag_count ?? 0
+      let message = `Imported ${count} flag${count !== 1 ? 's' : ''} from LaunchDarkly.`
+      if (deprecated > 0) {
+        message += ` ${deprecated} deprecated flag${deprecated !== 1 ? 's were' : ' was'} archived.`
+      }
+      toast(message, 'success', 20000)
+      history.push(`/project/${projectId}`)
+    } else if (status?.status?.result === 'failure') {
+      const errors = status.status.error_messages.join('; ')
+      toast(`Importing from LaunchDarkly failed: ${errors}`, 'danger', 20000)
+      setImportId(undefined)
+    }
+  }, [status, projectId, history])
 
   const getProjectList = (LDKey: string) => {
     setIsLoading(true)
@@ -218,11 +210,12 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     </>
   )
 
+  const isImporting = !!importId && status?.status?.result !== 'success'
+
   return (
     <>
-      {isAppLoading && (
+      {isImporting && (
         <div className='overlay'>
-          <div className='title'>Importing Project</div>
           <AppLoader />
         </div>
       )}

@@ -6,6 +6,7 @@ import classNames from 'classnames'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
+import { appLevelPaths } from './constants'
 
 type SelectOrgAndProjectType = {
   activeProject: Project | undefined
@@ -16,8 +17,7 @@ const SelectOrgAndProject: FC<SelectOrgAndProjectType> = ({
   activeProject,
   projectId,
 }) => {
-  const isOrganisationSelect = document.location.pathname === '/organisations'
-  const isCreateOrganisation = document.location.pathname === '/create'
+  const isAppLevelPage = appLevelPaths.includes(document.location.pathname)
 
   const organisationId = AccountStore.getOrganisation()?.id
   const { data: organisation } = useGetOrganisationQuery(
@@ -36,7 +36,7 @@ const SelectOrgAndProject: FC<SelectOrgAndProjectType> = ({
           src='/static/images/nav-logo.png'
         />
       </Link>
-      {!(isOrganisationSelect || isCreateOrganisation) && (
+      {!isAppLevelPage && (
         <div className='d-flex gap-1 ml-1 align-items-center'>
           <div
             className={

@@ -2,6 +2,8 @@ from itertools import chain
 
 from django.db import models
 from django.db.models import Prefetch, Q
+from flag_engine.context.mappers import map_environment_identity_to_context
+from flag_engine.segments.evaluator import is_context_in_segment
 
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
@@ -11,10 +13,6 @@ from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.versioning_service import get_environment_flags_list
 from segments.models import Segment
-from util.engine_models.context.mappers import (
-    is_context_in_segment,
-    map_environment_identity_to_context,
-)
 from util.mappers.engine import (
     map_identity_to_engine,
     map_segment_to_engine,
