@@ -12,6 +12,7 @@ import {
 } from 'common/services/useMetadataField'
 import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 import PlanBasedBanner from 'components/PlanBasedAccess'
+import RedirectCreateCustomFields from './RedirectCreateCustomFields'
 
 const metadataWidth = [200, 150, 150, 90]
 type MetadataPageType = {
@@ -208,13 +209,14 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
               renderFieldRow(metadata, { readOnly: true })
             }
             renderNoResults={
-              <Panel className='no-pad' title={'Organisation Fields'}>
-                <div className='search-list'>
-                  <Row className='list-item p-3 text-muted'>
-                    No organisation-level custom fields configured.
-                  </Row>
-                </div>
-              </Panel>
+              <div className='search-list'>
+                <Row className='list-item p-3 text-muted'>
+                  <RedirectCreateCustomFields
+                    organisationId={parseInt(organisationId)}
+                    organisationOnly
+                  />
+                </Row>
+              </div>
             }
           />
         </FormGroup>
@@ -229,13 +231,11 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
               renderFieldRow(metadata, { readOnly: false })
             }
             renderNoResults={
-              <Panel className='no-pad' title={'Project Fields'}>
-                <div className='search-list'>
-                  <Row className='list-item p-3 text-muted'>
-                    No project-level custom fields configured.
-                  </Row>
-                </div>
-              </Panel>
+              <div className='search-list'>
+                <Row className='list-item p-3 text-muted'>
+                  No project-level custom fields configured.
+                </Row>
+              </div>
             }
           />
         </FormGroup>
