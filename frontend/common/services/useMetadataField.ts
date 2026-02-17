@@ -59,7 +59,7 @@ export const metadataService = service
         Res['metadataField'],
         Req['deleteMetadataField']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'Metadata' }],
+        invalidatesTags: [{ type: 'Metadata' }],
         query: (query: Req['deleteMetadataField']) => ({
           method: 'DELETE',
           url: `metadata/fields/${query.id}/`,
