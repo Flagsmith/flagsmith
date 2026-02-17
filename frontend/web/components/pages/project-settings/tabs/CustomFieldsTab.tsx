@@ -1,12 +1,16 @@
 import InfoMessage from 'components/InfoMessage'
-import WarningMessage from 'components/WarningMessage'
+import MetadataPage from 'components/metadata/MetadataPage'
 import React from 'react'
 
 type CustomFieldsTabProps = {
   organisationId: number
+  projectId: number
 }
 
-export const CustomFieldsTab = ({ organisationId }: CustomFieldsTabProps) => {
+export const CustomFieldsTab = ({
+  organisationId,
+  projectId,
+}: CustomFieldsTabProps) => {
   if (!organisationId) {
     return (
       <div className='mt-4'>
@@ -16,23 +20,9 @@ export const CustomFieldsTab = ({ organisationId }: CustomFieldsTabProps) => {
   }
 
   return (
-    <div className='mt-4'>
-      <h5>Custom Fields</h5>
-
-      <WarningMessage
-        warningMessage={
-          <span>
-            Custom fields have been moved to{' '}
-            <a
-              href={`/organisation/${organisationId}/settings?tab=custom-fields`}
-              rel='noreferrer'
-            >
-              Organisation Settings
-            </a>
-            .
-          </span>
-        }
-      />
-    </div>
+    <MetadataPage
+      organisationId={`${organisationId}`}
+      projectId={`${projectId}`}
+    />
   )
 }
