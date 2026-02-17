@@ -93,7 +93,7 @@ export const metadataService = service
           ]
 
           // Only fetch entity data if we have an entityId
-          if (entityUrl) {
+          if (arg.entityId && entityUrl) {
             queries.push(baseQuery({ url: entityUrl }))
           }
 
