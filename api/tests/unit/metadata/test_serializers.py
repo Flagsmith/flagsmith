@@ -192,7 +192,7 @@ def test_validate_required_metadata__requirement_on_project_a__not_enforced_in_p
     segment_content_type: ContentType,
     project_content_type: ContentType,
 ) -> None:
-    # Given - a required metadata field scoped to project A
+    # Given
     model_field = MetadataModelField.objects.create(
         field=a_metadata_field,
         content_type=segment_content_type,
@@ -204,7 +204,7 @@ def test_validate_required_metadata__requirement_on_project_a__not_enforced_in_p
     )
     serializer = _DummySegmentSerializer()
 
-    # When / Then - no error when validating for project B (no metadata provided)
+    # When / Then
     serializer._validate_required_metadata(organisation, [], project=project_b)
 
 
@@ -215,7 +215,7 @@ def test_validate_required_metadata__requirement_on_project_a__enforced_in_proje
     segment_content_type: ContentType,
     project_content_type: ContentType,
 ) -> None:
-    # Given - a required metadata field scoped to project A
+    # Given
     model_field = MetadataModelField.objects.create(
         field=a_metadata_field,
         content_type=segment_content_type,
@@ -227,7 +227,7 @@ def test_validate_required_metadata__requirement_on_project_a__enforced_in_proje
     )
     serializer = _DummySegmentSerializer()
 
-    # When / Then - error when validating for project A without required metadata
+    # When / Then
     with pytest.raises(serializers.ValidationError, match="Missing required metadata"):
         serializer._validate_required_metadata(organisation, [], project=project)
 
@@ -240,7 +240,7 @@ def test_validate_required_metadata__org_level_requirement__enforced_in_all_proj
     segment_content_type: ContentType,
     organisation_content_type: ContentType,
 ) -> None:
-    # Given - an org-level required metadata field
+    # Given
     model_field = MetadataModelField.objects.create(
         field=a_metadata_field,
         content_type=segment_content_type,
@@ -252,11 +252,10 @@ def test_validate_required_metadata__org_level_requirement__enforced_in_all_proj
     )
     serializer = _DummySegmentSerializer()
 
-    # When / Then - error in project A
+    # When / Then
     with pytest.raises(serializers.ValidationError, match="Missing required metadata"):
         serializer._validate_required_metadata(organisation, [], project=project)
 
-    # When / Then - also error in project B
     with pytest.raises(serializers.ValidationError, match="Missing required metadata"):
         serializer._validate_required_metadata(organisation, [], project=project_b)
 
@@ -268,7 +267,7 @@ def test_validate_required_metadata__project_level_field_with_requirement__only_
     segment_content_type: ContentType,
     project_content_type: ContentType,
 ) -> None:
-    # Given - a project-scoped metadata field required for project A
+    # Given
     project_field = MetadataField.objects.create(
         name="proj_field", type="str", organisation=organisation, project=project
     )
@@ -283,9 +282,8 @@ def test_validate_required_metadata__project_level_field_with_requirement__only_
     )
     serializer = _DummySegmentSerializer()
 
-    # When / Then - enforced in project A
+    # When / Then
     with pytest.raises(serializers.ValidationError, match="Missing required metadata"):
         serializer._validate_required_metadata(organisation, [], project=project)
 
-    # When / Then - NOT enforced in project B
     serializer._validate_required_metadata(organisation, [], project=project_b)

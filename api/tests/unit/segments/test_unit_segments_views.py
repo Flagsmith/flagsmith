@@ -1859,7 +1859,7 @@ def test_create_segment__required_metadata_on_other_project__returns_201(
     segment_content_type: ContentType,
     project_content_type: ContentType,
 ) -> None:
-    # Given - a required metadata field scoped to project_b
+    # Given
     model_field = MetadataModelField.objects.create(
         field=a_metadata_field,
         content_type=segment_content_type,
@@ -1876,10 +1876,10 @@ def test_create_segment__required_metadata_on_other_project__returns_201(
         "rules": [{"type": "ALL", "rules": [], "conditions": []}],
     }
 
-    # When - creating a segment in project (not project_b)
+    # When
     response = admin_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
-    # Then - should succeed because the requirement is on project_b, not project
+    # Then
     assert response.status_code == status.HTTP_201_CREATED

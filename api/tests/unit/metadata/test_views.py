@@ -631,7 +631,7 @@ def test_create_metadata_field__uniqueness(
     expected_status: int,
     request: pytest.FixtureRequest,
 ) -> None:
-    # Given - a field already exists
+    # Given
     existing_project = (
         request.getfixturevalue(existing_project_attr)
         if existing_project_attr
