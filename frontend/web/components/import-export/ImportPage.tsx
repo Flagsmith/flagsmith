@@ -56,11 +56,11 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
       if (deprecated > 0) {
         message += ` ${deprecated} deprecated flag${deprecated !== 1 ? 's were' : ' was'} archived.`
       }
-      toast(message, 'success', 0)
+      toast(message, 'success', 20000)
       history.push(`/project/${projectId}`)
     } else if (status?.status?.result === 'failure') {
       const errors = status.status.error_messages.join('; ')
-      toast(`Importing from LaunchDarkly failed: ${errors}`, 'danger', 0)
+      toast(`Importing from LaunchDarkly failed: ${errors}`, 'danger', 20000)
       setImportId(undefined)
     }
   }, [status, projectId, history])
