@@ -225,12 +225,13 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             query_data["sort_field"],
         )
         override_ordering: list[str] = []
-        if segment_id := query_data.get("segment"):
+        if environment_id and (segment_id := query_data.get("segment")):
             queryset = queryset.annotate(
                 has_segment_override=Exists(
                     FeatureSegment.objects.filter(
                         feature=OuterRef("pk"),
                         segment_id=segment_id,
+                        environment_id=environment_id,
                     )
                 ),
             )

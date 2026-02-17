@@ -4160,12 +4160,19 @@ def test_list_features__segment_query__sorts_by_field_with_overrides_first(
 ) -> None:
     # Given
     Feature.objects.create(project=project, name="feature_a")
-    Feature.objects.create(project=project, name="feature_b")
+    feature_b = Feature.objects.create(project=project, name="feature_b")
     feature_c = Feature.objects.create(project=project, name="feature_c")
+    other_environment = Environment.objects.create(
+        project=project, name="other_environment"
+    )
 
-    # feature_c has a segment override
+    # feature_c has a segment override in the requested environment
     FeatureSegment.objects.create(
         feature=feature_c, segment=segment, environment=environment
+    )
+    # feature_b has a segment override in a different environment
+    FeatureSegment.objects.create(
+        feature=feature_b, segment=segment, environment=other_environment
     )
 
     # When
