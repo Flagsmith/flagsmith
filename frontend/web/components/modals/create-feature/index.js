@@ -498,7 +498,11 @@ const Index = class extends Component {
   }
   parseError = (error) => {
     const { projectFlag } = this.props
-    let featureError = error?.message || error?.name?.[0] || error
+    let featureError =
+      error?.metadata?.flatMap((m) => m.non_field_errors ?? []).join('\n') ||
+      error?.message ||
+      error?.name?.[0] ||
+      error
     let featureWarning = ''
     //Treat multivariate no changes as warnings
     if (

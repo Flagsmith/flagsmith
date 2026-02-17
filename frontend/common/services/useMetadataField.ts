@@ -48,7 +48,7 @@ export const metadataService = service
         Res['metadataField'],
         Req['createMetadataField']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'Metadata' }],
+        invalidatesTags: [{ type: 'Metadata' }],
         query: (query: Req['createMetadataField']) => ({
           body: query.body,
           method: 'POST',
@@ -59,7 +59,7 @@ export const metadataService = service
         Res['metadataField'],
         Req['deleteMetadataField']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'Metadata' }],
+        invalidatesTags: [{ type: 'Metadata' }],
         query: (query: Req['deleteMetadataField']) => ({
           method: 'DELETE',
           url: `metadata/fields/${query.id}/`,
@@ -148,10 +148,7 @@ export const metadataService = service
         Res['metadataField'],
         Req['updateMetadataField']
       >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'Metadata' },
-          { id: res?.id, type: 'Metadata' },
-        ],
+        invalidatesTags: [{ type: 'Metadata' }],
         query: (query: Req['updateMetadataField']) => ({
           body: query.body,
           method: 'PUT',
