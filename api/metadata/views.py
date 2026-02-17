@@ -59,6 +59,8 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 queryset = queryset.filter(
                     Q(project__isnull=True) | Q(project_id=project_id)
                 ).exclude(project__isnull=True, name__in=overridden_names)
+            elif not serializer.validated_data.get("include_projects"):
+                queryset = queryset.filter(project__isnull=True)
 
         return queryset
 
