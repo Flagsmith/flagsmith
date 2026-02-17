@@ -85,6 +85,7 @@ export const metadataService = service
             baseQuery({
               url: `metadata/fields/?${Utils.toParam({
                 organisation: arg.organisationId,
+                project: arg.projectId,
               })}`,
             }),
             baseQuery({

@@ -777,6 +777,7 @@ export type MetadataField = {
   type: string
   description: string
   organisation: number
+  project: number | null
 }
 
 export type ContentType = {
