@@ -85,7 +85,6 @@ export const metadataService = service
             baseQuery({
               url: `metadata/fields/?${Utils.toParam({
                 organisation: arg.organisationId,
-                project: arg.projectId,
               })}`,
             }),
             baseQuery({
@@ -112,6 +111,7 @@ export const metadataService = service
               error: modelFieldsRes.error as Res['metadataModelFieldList'],
             }
           }
+
           if (entityRes?.error) {
             return { error: entityRes.error as EntityData }
           }
@@ -123,7 +123,6 @@ export const metadataService = service
             entityRes?.data as EntityData | null,
             arg.entityContentType,
           )
-
           return { data: mergedMetadata }
         },
       }),

@@ -136,9 +136,9 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
       }
     >
       <Flex className='table-column px-3'>
-        <div className='font-weight-medium mb-1'>
-          {metadata.name}
-          {readOnly && <span className='chip chip--xs ms-2'>Inherited</span>}
+        <div className='d-flex align-items-center gap-x-2 mb-1'>
+          <span className='font-weight-medium'>{metadata.name}</span>
+          {readOnly && <span className='chip chip--xs'>Inherited</span>}
         </div>
         <ContentTypesValues
           contentTypes={metadata.content_type_fields}
