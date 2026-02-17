@@ -180,12 +180,22 @@ class MetadataSerializerMixin:
             field_scope & req_scope,
         ).select_related("model_field__field")
 
+        overridden_names: set[str] = set()
+        if project is not None:
+            overridden_names = set(
+                MetadataField.objects.filter(
+                    organisation=organisation, project=project
+                ).values_list("name", flat=True)
+            )
+
         metadata_fields = {field["model_field"] for field in metadata}
         for requirement in requirements:
+            field = requirement.model_field.field
+            if field.project is None and field.name in overridden_names:
+                continue
             if requirement.model_field not in metadata_fields:
-                field_name = requirement.model_field.field.name
                 raise serializers.ValidationError(
-                    {"metadata": f"Missing required metadata field: {field_name}"}
+                    {"metadata": f"Missing required metadata field: {field.name}"}
                 )
 
     def _update_metadata(
