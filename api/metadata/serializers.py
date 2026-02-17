@@ -24,7 +24,13 @@ class MetadataFieldQuerySerializer(serializers.Serializer):  # type: ignore[type
         required=True, help_text="Organisation ID to filter by"
     )
     project = serializers.IntegerField(
-        required=False, help_text="Project ID to filter by"
+        required=False,
+        help_text="Project ID. Returns organisation-level fields plus this project's fields.",
+    )
+    include_projects = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text="Include fields from all projects. Ignored when project is specified.",
     )
 
 
