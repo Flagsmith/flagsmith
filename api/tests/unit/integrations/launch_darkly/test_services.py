@@ -143,13 +143,11 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
         ("testtag", "#3d4db6"),
         ("testtag2", "#3d4db6"),
         ("Imported", "#3d4db6"),
-        ("Deprecated", "#3d4db6"),
     }
     assert set(
         Feature.objects.filter(project=project).values_list("name", "tags__label")
     ) == {
         ("flag1", "Imported"),
-        ("flag1", "Deprecated"),
         ("flag2_value", "Imported"),
         ("flag3_multivalue", "Imported"),
         ("flag4_multivalue", "Imported"),

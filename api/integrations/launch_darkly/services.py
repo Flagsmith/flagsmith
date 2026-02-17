@@ -28,7 +28,6 @@ from integrations.launch_darkly import types as ld_types
 from integrations.launch_darkly.client import LaunchDarklyClient
 from integrations.launch_darkly.constants import (
     LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL,
-    LAUNCH_DARKLY_IMPORTED_DEPRECATED_TAG_LABEL,
     LAUNCH_DARKLY_IMPORTED_TAG_COLOR,
 )
 from integrations.launch_darkly.exceptions import LaunchDarklyRateLimitError
@@ -128,7 +127,6 @@ def _create_tags_from_ld(
     for ld_tag in (
         *ld_tags,
         LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL,
-        LAUNCH_DARKLY_IMPORTED_DEPRECATED_TAG_LABEL,
     ):
         tags_by_ld_tag[ld_tag], _ = Tag.objects.update_or_create(
             label=ld_tag,
@@ -908,8 +906,6 @@ def _create_feature_from_ld(
         tags_by_ld_tag[LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL],
         *(tags_by_ld_tag[ld_tag] for ld_tag in ld_flag["tags"]),
     ]
-    if ld_flag["deprecated"]:
-        tags.append(tags_by_ld_tag[LAUNCH_DARKLY_IMPORTED_DEPRECATED_TAG_LABEL])
 
     feature, _ = Feature.objects.update_or_create(
         project_id=project_id,
