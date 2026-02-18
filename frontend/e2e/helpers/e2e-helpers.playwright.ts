@@ -171,6 +171,7 @@ export class E2EHelpers {
   async logout() {
     try {
       await this.click('#account-settings-link');
+      await this.click('#account-settings');
       await this.click('#logout-link');
       await this.waitForElementVisible('#login-page');
     } catch (e) {

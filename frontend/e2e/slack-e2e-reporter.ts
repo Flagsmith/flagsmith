@@ -107,5 +107,5 @@ main()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error('Failed to send Slack notification:', error);
-    process.exit(1);
+    process.exit(0);
   });
