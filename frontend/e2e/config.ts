@@ -11,3 +11,13 @@ export const E2E_NON_ADMIN_USER_WITH_A_ROLE = `e2e_non_admin_user_with_a_role@${
 export const E2E_CHANGE_MAIL = `e2e_change_email@${E2E_EMAIL_DOMAIN}`
 export const E2E_SEPARATE_TEST_USER = `e2e_separate_test_user@${E2E_EMAIL_DOMAIN}`
 export const PASSWORD = 'Str0ngp4ssw0rd!'
+export const E2E_TEST_IDENTITY = 'test-identity'
+
+// Project names (seeded by backend)
+export const E2E_TEST_PROJECT = 'My Test Project'
+export const E2E_SEGMENT_PROJECT_1 = 'My Test Project 2'
+export const E2E_SEGMENT_PROJECT_2 = 'My Test Project 3'
+export const E2E_SEGMENT_PROJECT_3 = 'My Test Project 4'
+export const E2E_PROJECT_WITH_PROJECT_PERMISSIONS = 'My Test Project 5 Project Permission'
+export const E2E_PROJECT_WITH_ENV_PERMISSIONS = 'My Test Project 6 Env Permission'
+export const E2E_PROJECT_WITH_ROLE = 'My Test Project 7 Role'

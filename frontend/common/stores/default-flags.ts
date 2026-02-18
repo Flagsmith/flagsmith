@@ -189,7 +189,8 @@ const defaultFlags = {
     },
     'sentry': {
       'description': 'Send flag change events to Sentry.',
-      'docs': 'https://docs.flagsmith.com/third-party-integrations/observability-and-monitoring/sentry',
+      'docs':
+        'https://docs.flagsmith.com/third-party-integrations/observability-and-monitoring/sentry',
       'fields': [
         {
           'key': 'webhook_url',

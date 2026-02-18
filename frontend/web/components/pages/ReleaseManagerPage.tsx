@@ -184,7 +184,7 @@ const FlagsTable: FC<FlagsTableProps> = ({ projects, searchQuery }) => {
   }, [projectsData])
 
   // Get unique environment names and create a map of environments by project
-  const { uniqueEnvNames, environmentsByProject } = useMemo(() => {
+  const { environmentsByProject, uniqueEnvNames } = useMemo(() => {
     const envsByProject: Record<
       number,
       Array<{ id: number; name: string }>

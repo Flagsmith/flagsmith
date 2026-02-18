@@ -70,9 +70,11 @@ const HomePage: React.FC = () => {
   }
 
   useEffect(() => {
-    const emailField = (document.querySelector('input[name="firstName"]') ||
-      document.querySelector('input[name="email"]')) as HTMLInputElement
-    emailField?.focus()
+    if (!E2E) {
+      const emailField = (document.querySelector('input[name="firstName"]') ||
+        document.querySelector('input[name="email"]')) as HTMLInputElement
+      emailField?.focus()
+    }
 
     if (Project.albacross && location.pathname.indexOf('signup') !== -1) {
       addAlbacross()
@@ -109,11 +111,13 @@ const HomePage: React.FC = () => {
       }
     }
 
-    setTimeout(() => {
-      const emailField = (document.querySelector('input[name="firstName"]') ||
-        document.querySelector('input[name="email"]')) as HTMLInputElement
-      emailField?.focus()
-    }, 1000)
+    if (!E2E) {
+      setTimeout(() => {
+        const emailField = (document.querySelector('input[name="firstName"]') ||
+          document.querySelector('input[name="email"]')) as HTMLInputElement
+        emailField?.focus()
+      }, 1000)
+    }
 
     if (document.location.href.includes('saml')) {
       const access_token = params.code
