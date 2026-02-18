@@ -23,14 +23,14 @@ class MetadataFieldQuerySerializer(serializers.Serializer):  # type: ignore[type
     organisation = serializers.IntegerField(
         required=True, help_text="Organisation ID to filter by"
     )
-    project = serializers.IntegerField(
-        required=False,
-        help_text="Project ID. Returns organisation-level fields plus this project's fields.",
-    )
-    include_projects = serializers.BooleanField(
+
+
+class ProjectMetadataFieldQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+    include_organisation = serializers.BooleanField(
         required=False,
         default=False,
-        help_text="Include fields from all projects. Ignored when project is specified.",
+        help_text="Include inherited organisation-level fields. "
+        "Project-level fields override same-named org fields.",
     )
 
 
@@ -38,14 +38,45 @@ class SupportedRequiredForModelQuerySerializer(serializers.Serializer):  # type:
     model_name = serializers.CharField(required=True)
 
 
+class MetadataModelFieldQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+    content_type = serializers.IntegerField(
+        required=False, help_text="Content type of the model to filter by."
+    )
+
+
+class MetadataModelFieldRequirementSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    class Meta:
+        model = MetadataModelFieldRequirement
+        fields = ("content_type", "object_id")
+
+
+class MetadataModelFieldNestedSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    is_required_for = MetadataModelFieldRequirementSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = MetadataModelField
+        fields = ("id", "content_type", "is_required_for")
+
+
 class MetadataFieldSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     project = serializers.IntegerField(
         required=False, allow_null=True, default=None, source="project_id"
     )
+    model_fields = MetadataModelFieldNestedSerializer(
+        source="metadatamodelfield_set", many=True, read_only=True
+    )
 
     class Meta:
         model = MetadataField
-        fields = ("id", "name", "type", "description", "organisation", "project")
+        fields = (
+            "id",
+            "name",
+            "type",
+            "description",
+            "organisation",
+            "project",
+            "model_fields",
+        )
         # Disable auto-generated unique validators — conditional
         # UniqueConstraints are enforced at the database level.
         validators: list[object] = []
@@ -78,18 +109,6 @@ class MetadataFieldSerializer(serializers.ModelSerializer):  # type: ignore[type
             )
 
         return data
-
-
-class MetadataModelFieldQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
-    content_type = serializers.IntegerField(
-        required=False, help_text="Content type of the model to filter by."
-    )
-
-
-class MetadataModelFieldRequirementSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
-    class Meta:
-        model = MetadataModelFieldRequirement
-        fields = ("content_type", "object_id")
 
 
 class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
