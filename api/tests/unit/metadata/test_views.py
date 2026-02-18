@@ -521,32 +521,7 @@ def test_create_metadata_field__project_admin__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_list_metadata_fields__filter_by_project__returns_org_and_project_fields(
-    admin_client: APIClient,
-    organisation: Organisation,
-    project: Project,
-) -> None:
-    # Given
-    org_field = MetadataField.objects.create(
-        name="org_field", type="str", organisation=organisation
-    )
-    project_field = MetadataField.objects.create(
-        name="project_field", type="str", organisation=organisation, project=project
-    )
-    base_url = reverse("api-v1:metadata:metadata-fields-list")
-    url = f"{base_url}?organisation={organisation.id}&project={project.id}"
-
-    # When
-    response = admin_client.get(url)
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    returned_ids = {r["id"] for r in response.json()["results"]}
-    assert org_field.id in returned_ids
-    assert project_field.id in returned_ids
-
-
-def test_list_metadata_fields__filter_by_project__excludes_other_project_fields(
+def test_list_metadata_fields__returns_org_level_only(
     admin_client: APIClient,
     organisation: Organisation,
     project: Project,
@@ -556,40 +531,10 @@ def test_list_metadata_fields__filter_by_project__excludes_other_project_fields(
     org_field = MetadataField.objects.create(
         name="org_field", type="str", organisation=organisation
     )
-    project_a_field = MetadataField.objects.create(
+    MetadataField.objects.create(
         name="proj_a_field", type="str", organisation=organisation, project=project
     )
-    project_b_field = MetadataField.objects.create(
-        name="proj_b_field", type="str", organisation=organisation, project=project_b
-    )
-    base_url = reverse("api-v1:metadata:metadata-fields-list")
-    url = f"{base_url}?organisation={organisation.id}&project={project.id}"
-
-    # When
-    response = admin_client.get(url)
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    returned_ids = {r["id"] for r in response.json()["results"]}
-    assert org_field.id in returned_ids
-    assert project_a_field.id in returned_ids
-    assert project_b_field.id not in returned_ids
-
-
-def test_list_metadata_fields__no_project_filter__returns_org_level_only(
-    admin_client: APIClient,
-    organisation: Organisation,
-    project: Project,
-    project_b: Project,
-) -> None:
-    # Given
-    org_field = MetadataField.objects.create(
-        name="org_field", type="str", organisation=organisation
-    )
-    project_a_field = MetadataField.objects.create(
-        name="proj_a_field", type="str", organisation=organisation, project=project
-    )
-    project_b_field = MetadataField.objects.create(
+    MetadataField.objects.create(
         name="proj_b_field", type="str", organisation=organisation, project=project_b
     )
     base_url = reverse("api-v1:metadata:metadata-fields-list")
@@ -601,29 +546,69 @@ def test_list_metadata_fields__no_project_filter__returns_org_level_only(
     # Then
     assert response.status_code == status.HTTP_200_OK
     returned_ids = {r["id"] for r in response.json()["results"]}
-    assert org_field.id in returned_ids
-    assert project_a_field.id not in returned_ids
-    assert project_b_field.id not in returned_ids
+    assert returned_ids == {org_field.id}
 
 
-def test_list_metadata_fields__include_projects__returns_all(
+def test_list_metadata_fields__response_includes_nested_model_fields(
+    admin_client: APIClient,
+    organisation: Organisation,
+    environment_content_type: ContentType,
+    project_content_type: ContentType,
+    project: Project,
+) -> None:
+    # Given
+    field = MetadataField.objects.create(
+        name="my_field", type="str", organisation=organisation
+    )
+    model_field = MetadataModelField.objects.create(
+        field=field, content_type=environment_content_type
+    )
+    requirement = MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type,
+        object_id=project.id,
+        model_field=model_field,
+    )
+    base_url = reverse("api-v1:metadata:metadata-fields-list")
+    url = f"{base_url}?organisation={organisation.id}"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    results = response.json()["results"]
+    assert len(results) == 1
+    assert results[0]["model_fields"] == [
+        {
+            "id": model_field.id,
+            "content_type": environment_content_type.id,
+            "is_required_for": [
+                {
+                    "content_type": project_content_type.id,
+                    "object_id": project.id,
+                }
+            ],
+        }
+    ]
+
+
+def test_list_project_metadata_fields__returns_project_fields_only(
     admin_client: APIClient,
     organisation: Organisation,
     project: Project,
     project_b: Project,
 ) -> None:
     # Given
-    org_field = MetadataField.objects.create(
+    MetadataField.objects.create(
         name="org_field", type="str", organisation=organisation
     )
-    project_a_field = MetadataField.objects.create(
+    project_field = MetadataField.objects.create(
         name="proj_a_field", type="str", organisation=organisation, project=project
     )
-    project_b_field = MetadataField.objects.create(
+    MetadataField.objects.create(
         name="proj_b_field", type="str", organisation=organisation, project=project_b
     )
-    base_url = reverse("api-v1:metadata:metadata-fields-list")
-    url = f"{base_url}?organisation={organisation.id}&include_projects=true"
+    url = reverse("api-v1:projects:project-metadata-fields-list", args=[project.id])
 
     # When
     response = admin_client.get(url)
@@ -631,12 +616,34 @@ def test_list_metadata_fields__include_projects__returns_all(
     # Then
     assert response.status_code == status.HTTP_200_OK
     returned_ids = {r["id"] for r in response.json()["results"]}
+    assert returned_ids == {project_field.id}
+
+
+def test_list_project_metadata_fields__include_organisation__returns_both(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+) -> None:
+    # Given
+    org_field = MetadataField.objects.create(
+        name="org_field", type="str", organisation=organisation
+    )
+    project_field = MetadataField.objects.create(
+        name="project_field", type="str", organisation=organisation, project=project
+    )
+    url = reverse("api-v1:projects:project-metadata-fields-list", args=[project.id])
+
+    # When
+    response = admin_client.get(f"{url}?include_organisation=true")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    returned_ids = {r["id"] for r in response.json()["results"]}
     assert org_field.id in returned_ids
-    assert project_a_field.id in returned_ids
-    assert project_b_field.id in returned_ids
+    assert project_field.id in returned_ids
 
 
-def test_list_metadata_fields__project_field_overrides_org_field__org_field_excluded(
+def test_list_project_metadata_fields__include_organisation__project_overrides_org(
     admin_client: APIClient,
     organisation: Organisation,
     project: Project,
@@ -648,17 +655,43 @@ def test_list_metadata_fields__project_field_overrides_org_field__org_field_excl
     project_field = MetadataField.objects.create(
         name="shared_name", type="int", organisation=organisation, project=project
     )
-    base_url = reverse("api-v1:metadata:metadata-fields-list")
-    url = f"{base_url}?organisation={organisation.id}&project={project.id}"
+    url = reverse("api-v1:projects:project-metadata-fields-list", args=[project.id])
 
     # When
-    response = admin_client.get(url)
+    response = admin_client.get(f"{url}?include_organisation=true")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
     returned_ids = {r["id"] for r in response.json()["results"]}
     assert project_field.id in returned_ids
     assert org_field.id not in returned_ids
+
+
+def test_list_project_metadata_fields__excludes_other_project_fields(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    project_b: Project,
+) -> None:
+    # Given
+    project_a_field = MetadataField.objects.create(
+        name="proj_a_field", type="str", organisation=organisation, project=project
+    )
+    MetadataField.objects.create(
+        name="proj_b_field", type="str", organisation=organisation, project=project_b
+    )
+    url = reverse("api-v1:projects:project-metadata-fields-list", args=[project.id])
+
+    # When
+    response = admin_client.get(f"{url}?include_organisation=true")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    returned_ids = {r["id"] for r in response.json()["results"]}
+    assert project_a_field.id in returned_ids
+    assert all(
+        r["project"] in (project.id, None) for r in response.json()["results"]
+    )
 
 
 @pytest.mark.parametrize(
