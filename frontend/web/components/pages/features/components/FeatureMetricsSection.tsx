@@ -1,6 +1,5 @@
 import React, { FC } from 'react'
 import EnvironmentMetricsList from 'components/metrics/EnvironmentMetricsList'
-import Utils from 'common/utils/utils'
 
 type FeatureMetricsSectionProps = {
   environmentId?: string
@@ -11,11 +10,7 @@ export const FeatureMetricsSection: FC<FeatureMetricsSectionProps> = ({
   environmentId,
   projectId,
 }) => {
-  const environmentMetricsEnabled = Utils.getFlagsmithHasFeature(
-    'environment_metrics',
-  )
-
-  if (!environmentMetricsEnabled || !environmentId) {
+  if (!environmentId) {
     return null
   }
 
