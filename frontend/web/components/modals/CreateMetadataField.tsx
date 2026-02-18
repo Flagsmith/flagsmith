@@ -7,10 +7,12 @@ import SupportedContentTypesSelect, {
 } from 'components/metadata/SupportedContentTypesSelect'
 
 import {
+  metadataService,
   useCreateMetadataFieldMutation,
   useGetMetadataFieldQuery,
   useUpdateMetadataFieldMutation,
 } from 'common/services/useMetadataField'
+import { getStore } from 'common/store'
 
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 
@@ -87,12 +89,9 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
     organisation_id: `${organisationId}`,
   })
-  const [
-    createMetadataField,
-    { error: errorCreating, isLoading: creating, isSuccess: created },
-  ] = useCreateMetadataFieldMutation()
-  const [updateMetadataField, { isLoading: updating, isSuccess: updated }] =
-    useUpdateMetadataFieldMutation()
+  const [createMetadataField, { error: errorCreating }] =
+    useCreateMetadataFieldMutation()
+  const [updateMetadataField] = useUpdateMetadataFieldMutation()
 
   const [createMetadataModelField] = useCreateMetadataModelFieldMutation()
   const [updateMetadataModelField] = useUpdateMetadataModelFieldMutation()
@@ -121,20 +120,6 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, isLoading])
-
-  useEffect(() => {
-    if (!updating && updated) {
-      onComplete?.()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [updating, updated])
-
-  useEffect(() => {
-    if (created && !creating) {
-      onComplete?.()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [creating, created])
 
   const [typeValue, setTypeValue] = useState<MetadataType>()
   const [name, setName] = useState<string>('')
@@ -178,9 +163,9 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
     return query
   }
 
-  const save = () => {
+  const save = async () => {
     if (isEdit) {
-      updateMetadataField({
+      await updateMetadataField({
         body: {
           description,
           name,
@@ -189,65 +174,13 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           ...(projectId ? { project: parseInt(projectId) } : {}),
         },
         id: id!,
-      }).then(() => {
-        if (metadataFieldSelectList.length) {
-          Promise.all(
-            metadataFieldSelectList.map(async (m) => {
-              const query = generateDataQuery(
-                m.value,
-                parseInt(id!),
-                !!m?.isRequired,
-                0,
-                true,
-              )
-              await createMetadataModelField(query)
-            }),
-          )
-        }
-        if (metadataUpdatedSelectList.length) {
-          Promise.all(
-            metadataUpdatedSelectList?.map(
-              async (m: metadataFieldUpdatedSelectListType) => {
-                const query = generateDataQuery(
-                  m.content_type,
-                  m.field,
-                  !!m.is_required_for,
-                  m.id,
-                  m.new,
-                )
-                if (!m.removed && !m.new) {
-                  await updateMetadataModelField(query)
-                } else if (m.removed) {
-                  await deleteMetadataModelField({
-                    id: m.id,
-                    organisation_id: organisationId,
-                  })
-                } else if (m.new) {
-                  const newQuery = { ...query }
-                  delete newQuery.id
-                  await createMetadataModelField(newQuery)
-                }
-              },
-            ),
-          )
-        }
-        closeModal()
       })
-    } else {
-      createMetadataField({
-        body: {
-          description,
-          name,
-          organisation: organisationId,
-          type: `${typeValue?.value}`,
-          ...(projectId ? { project: parseInt(projectId) } : {}),
-        },
-      }).then((res) => {
-        Promise.all(
+      if (metadataFieldSelectList.length) {
+        await Promise.all(
           metadataFieldSelectList.map(async (m) => {
             const query = generateDataQuery(
               m.value,
-              res?.data.id,
+              parseInt(id!),
               !!m?.isRequired,
               0,
               true,
@@ -255,7 +188,68 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
             await createMetadataModelField(query)
           }),
         )
+      }
+      if (metadataUpdatedSelectList.length) {
+        await Promise.all(
+          metadataUpdatedSelectList?.map(
+            async (m: metadataFieldUpdatedSelectListType) => {
+              const query = generateDataQuery(
+                m.content_type,
+                m.field,
+                !!m.is_required_for,
+                m.id,
+                m.new,
+              )
+              if (!m.removed && !m.new) {
+                await updateMetadataModelField(query)
+              } else if (m.removed) {
+                await deleteMetadataModelField({
+                  id: m.id,
+                  organisation_id: organisationId,
+                })
+              } else if (m.new) {
+                const newQuery = { ...query }
+                delete newQuery.id
+                await createMetadataModelField(newQuery)
+              }
+            },
+          ),
+        )
+      }
+      getStore().dispatch(
+        metadataService.util.invalidateTags([{ type: 'Metadata' }]),
+      )
+      onComplete?.()
+      closeModal()
+    } else {
+      const res = await createMetadataField({
+        body: {
+          description,
+          name,
+          organisation: organisationId,
+          type: `${typeValue?.value}`,
+          ...(projectId ? { project: parseInt(projectId) } : {}),
+        },
       })
+      if (res?.data?.id) {
+        await Promise.all(
+          metadataFieldSelectList.map(async (m) => {
+            const query = generateDataQuery(
+              m.value,
+              res.data.id,
+              !!m?.isRequired,
+              0,
+              true,
+            )
+            await createMetadataModelField(query)
+          }),
+        )
+      }
+      getStore().dispatch(
+        metadataService.util.invalidateTags([{ type: 'Metadata' }]),
+      )
+      onComplete?.()
+      closeModal()
     }
   }
 
