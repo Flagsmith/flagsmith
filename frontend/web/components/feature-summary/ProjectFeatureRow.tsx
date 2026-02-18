@@ -5,7 +5,6 @@ import FeatureName from './FeatureName'
 import FeatureDescription from './FeatureDescription'
 import TagValues from 'components/tags/TagValues'
 import VCSProviderTag from 'components/tags/VCSProviderTag'
-import Utils from 'common/utils/utils'
 
 export interface ProjectFeatureRowProps {
   projectFlag: ProjectFlag
@@ -26,17 +25,13 @@ const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
 }) => {
   const { description } = projectFlag
 
-  const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
-    'git_code_references',
-  )
   const hasScannedCodeReferences =
-    isCodeReferencesEnabled && projectFlag?.code_references_counts?.length > 0
-  const codeReferencesCounts = isCodeReferencesEnabled
-    ? projectFlag?.code_references_counts?.reduce(
-        (acc, curr) => acc + curr.count,
-        0,
-      ) || 0
-    : 0
+    projectFlag?.code_references_counts?.length > 0
+  const codeReferencesCounts =
+    projectFlag?.code_references_counts?.reduce(
+      (acc, curr) => acc + curr.count,
+      0,
+    ) || 0
 
   return (
     <>
@@ -66,7 +61,7 @@ const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
           <div className='mx-0 flex-1 flex-column'>
             <div className='d-flex align-items-center'>
               <FeatureName name={projectFlag.name} />
-              {isCodeReferencesEnabled && hasScannedCodeReferences && (
+              {hasScannedCodeReferences && (
                 <Tooltip
                   title={
                     <VCSProviderTag
@@ -115,7 +110,7 @@ const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
           )}
           <div className='flex-1 align-items-center flex-wrap'>
             <FeatureName name={projectFlag.name} />
-            {isCodeReferencesEnabled && hasScannedCodeReferences && (
+            {hasScannedCodeReferences && (
               <Tooltip
                 title={
                   <VCSProviderTag

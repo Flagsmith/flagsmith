@@ -623,11 +623,7 @@ const Index = class extends Component {
     const noPermissions = this.props.noPermissions
     let regexValid = true
 
-    const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
-      'git_code_references',
-    )
-    const hasCodeReferences =
-      isCodeReferencesEnabled || projectFlag?.code_references_counts?.length > 0
+    const hasCodeReferences = projectFlag?.code_references_counts?.length > 0
 
     try {
       if (!isEdit && projectFlag.name && regex) {
