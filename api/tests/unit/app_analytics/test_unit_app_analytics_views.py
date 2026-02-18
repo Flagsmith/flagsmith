@@ -23,7 +23,13 @@ from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
 )
+from projects.models import Project
 from tests.types import EnableFeaturesFixture
+
+
+@pytest.fixture()
+def feature_with_dots(project: Project) -> Feature:
+    return Feature.objects.create(name="feature.with.dots", project=project)  # type: ignore[no-any-return]
 
 
 def test_sdk_analytics_ignores_bad_data(
@@ -55,6 +61,39 @@ def test_sdk_analytics_ignores_bad_data(
         environment_id=environment.id,
         feature_name=feature.name,
         evaluation_count=data[feature.name],
+        labels={},
+    )
+
+
+def test_sdk_analytics_ignores_feature_data_with_dots(
+    mocker: MockerFixture,
+    environment: Environment,
+    feature_with_dots: Feature,
+    api_client: APIClient,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    data = {feature_with_dots.name: 20}
+    mocked_feature_eval_cache = mocker.patch(
+        "app_analytics.views.feature_evaluation_cache"
+    )
+
+    url = reverse("api-v1:analytics-flags")
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert mocked_feature_eval_cache.track_feature_evaluation.call_count == 1
+
+    mocked_feature_eval_cache.track_feature_evaluation.assert_called_once_with(
+        environment_id=environment.id,
+        feature_name=feature_with_dots.name,
+        evaluation_count=data[feature_with_dots.name],
         labels={},
     )
 
