@@ -192,6 +192,13 @@ def call_webhook_with_failure_mail_after_retries(  # type: ignore[no-untyped-def
         )
         res.raise_for_status()
     except requests.exceptions.RequestException as exc:
+        logger.warning(
+            "Webhook call failed for webhook %d (attempt %d/%d): %s",
+            webhook_id,
+            try_count,
+            max_retries,
+            exc,
+        )
         if try_count == max_retries or not settings.RETRY_WEBHOOKS:
             if send_failure_mail:
                 send_failure_email(
