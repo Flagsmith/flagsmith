@@ -19,7 +19,7 @@ function runPlaywright(args: string[], quietMode: boolean, isRetry: boolean, att
       }
       return arg;
     });
-    const playwrightCmd = ['npx', 'cross-env', 'NODE_ENV=production'];
+    const playwrightCmd = ['npx', 'cross-env', 'NODE_ENV=production', 'E2E=true'];
 
     // Skip cleanup on retries to preserve failed.json and test artifacts
     if (isRetry) {

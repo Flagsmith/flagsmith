@@ -94,7 +94,7 @@ export default defineConfig({
   webServer: process.env.E2E_SKIP_RUN_FRONTEND
     ? undefined
     : {
-        command: 'npm run start',
+        command: 'cross-env E2E=true npm run start',
         port: 8080,
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,

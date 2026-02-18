@@ -152,9 +152,11 @@ $side-width: 800px;
   .modal,
   .modal-dialog,
   .modal-content,
-  .modal-backdrop {
+  .modal-backdrop,
+  .side-modal .modal-dialog {
     transition: none !important;
     animation: none !important;
+    transform: none !important;
   }
 
   .modal-backdrop {

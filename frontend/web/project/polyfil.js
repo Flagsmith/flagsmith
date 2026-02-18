@@ -1,8 +1,8 @@
 import $ from 'jquery'
 global.jQuery = $
 global.$ = $
-// Set E2E flag default (overridden by Playwright in E2E tests)
-global.E2E = typeof E2E !== 'undefined' ? E2E : false
+// Set E2E flag - check window.E2E first (set by Playwright via addInitScript or injected <script>)
+global.E2E = (typeof window !== 'undefined' && window.E2E) || false
 import Promise from 'promise-polyfill'
 import 'whatwg-fetch'
 import {
