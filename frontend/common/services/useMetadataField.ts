@@ -3,6 +3,7 @@ import { sortBy } from 'lodash'
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+import transformCorePaging from 'common/transformCorePaging'
 import Utils from 'common/utils/utils'
 import { CustomMetadataField } from 'common/types/metadata-field'
 import {
@@ -174,6 +175,8 @@ export const metadataService = service
         query: (query: Req['getMetadataList']) => ({
           url: `metadata/fields/?${Utils.toParam(query)}`,
         }),
+        transformResponse: (res: Res['metadataList'], _, req) =>
+          transformCorePaging(req, res),
       }),
       getProjectMetadataFieldList: builder.query<
         Res['projectMetadataFieldList'],
@@ -185,8 +188,12 @@ export const metadataService = service
             ...(query.include_organisation
               ? { include_organisation: true }
               : {}),
+            page: query.page,
+            page_size: query.page_size,
           })}`,
         }),
+        transformResponse: (res: Res['projectMetadataFieldList'], _, req) =>
+          transformCorePaging(req, res),
       }),
       updateMetadataField: builder.mutation<
         Res['metadataField'],

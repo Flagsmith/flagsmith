@@ -1,4 +1,4 @@
-import React, { FC, useMemo } from 'react'
+import React, { FC, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
 import Icon from 'components/Icon'
@@ -14,6 +14,7 @@ import {
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import RedirectCreateCustomFields from './RedirectCreateCustomFields'
 
+const PAGE_SIZE = 20
 const metadataWidth = [200, 150, 150, 90]
 type MetadataPageType = {
   organisationId: string
@@ -31,15 +32,23 @@ type MergeMetadata = {
 }
 
 const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
+  const [orgPage, setOrgPage] = useState(1)
+  const [projectPage, setProjectPage] = useState(1)
+
   const { data: orgMetadataFieldList } = useGetMetadataFieldListQuery(
-    { organisation: parseInt(organisationId) },
-    { skip: !!projectId },
+    {
+      organisation: parseInt(organisationId),
+      page: orgPage,
+      page_size: PAGE_SIZE,
+    },
+    { skip: false },
   )
 
   const { data: projectMetadataFieldList } =
     useGetProjectMetadataFieldListQuery(
       {
-        include_organisation: true,
+        page: projectPage,
+        page_size: PAGE_SIZE,
         project_id: parseInt(projectId!),
       },
       { skip: !projectId },
@@ -47,28 +56,8 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
 
   const [deleteMetadata] = useDeleteMetadataFieldMutation()
 
-  const mergeMetadata = useMemo(() => {
-    const fieldList = projectId
-      ? projectMetadataFieldList
-      : orgMetadataFieldList
-    if (!fieldList) return null
-    return fieldList.results
-      .map((item) => ({
-        ...item,
-        model_fields: item.model_fields,
-      }))
-      .sort((a, b) => a.id - b.id)
-  }, [orgMetadataFieldList, projectMetadataFieldList, projectId])
-
-  const orgFields = useMemo(() => {
-    if (!projectId || !mergeMetadata) return null
-    return mergeMetadata.filter((item) => item.project === null)
-  }, [mergeMetadata, projectId])
-
-  const projectFields = useMemo(() => {
-    if (!projectId || !mergeMetadata) return null
-    return mergeMetadata.filter((item) => item.project !== null)
-  }, [mergeMetadata, projectId])
+  const orgFields = orgMetadataFieldList?.results ?? undefined
+  const projectFields = projectMetadataFieldList?.results ?? undefined
 
   const metadataCreatedToast = () => {
     toast('Custom Field Created')
@@ -212,6 +201,10 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
             renderRow={(metadata: MergeMetadata) =>
               renderFieldRow(metadata, { readOnly: true })
             }
+            paging={orgMetadataFieldList}
+            nextPage={() => setOrgPage(orgPage + 1)}
+            prevPage={() => setOrgPage(orgPage - 1)}
+            goToPage={(p: number) => setOrgPage(p)}
             renderNoResults={
               <div className='search-list'>
                 <Row className='list-item p-3 text-muted'>
@@ -234,6 +227,10 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
             renderRow={(metadata: MergeMetadata) =>
               renderFieldRow(metadata, { readOnly: false })
             }
+            paging={projectMetadataFieldList}
+            nextPage={() => setProjectPage(projectPage + 1)}
+            prevPage={() => setProjectPage(projectPage - 1)}
+            goToPage={(p: number) => setProjectPage(p)}
             renderNoResults={
               <div className='search-list'>
                 <Row className='list-item p-3 text-muted'>
@@ -271,11 +268,15 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
       <FormGroup className='mt-4'>
         <PanelSearch
           id='webhook-list'
-          items={mergeMetadata}
+          items={orgFields}
           header={renderTableHeader({ showRemove: true })}
           renderRow={(metadata: MergeMetadata) =>
             renderFieldRow(metadata, { readOnly: false })
           }
+          paging={orgMetadataFieldList}
+          nextPage={() => setOrgPage(orgPage + 1)}
+          prevPage={() => setOrgPage(orgPage - 1)}
+          goToPage={(p: number) => setOrgPage(p)}
           renderNoResults={
             <Panel className='no-pad' title={'Custom Fields'}>
               <div className='search-list'>
