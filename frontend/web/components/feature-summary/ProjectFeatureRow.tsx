@@ -1,0 +1,144 @@
+import React, { FC } from 'react'
+import classNames from 'classnames'
+import { ProjectFlag, VCSProvider } from 'common/types/responses'
+import FeatureName from './FeatureName'
+import FeatureDescription from './FeatureDescription'
+import TagValues from 'components/tags/TagValues'
+import VCSProviderTag from 'components/tags/VCSProviderTag'
+import Utils from 'common/utils/utils'
+
+export interface ProjectFeatureRowProps {
+  projectFlag: ProjectFlag
+  index: number
+  isSelected?: boolean
+  onSelect?: (projectFlag: ProjectFlag) => void
+  className?: string
+  actions?: React.ReactNode
+}
+
+const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
+  actions,
+  className,
+  index,
+  isSelected,
+  onSelect,
+  projectFlag,
+}) => {
+  const { description } = projectFlag
+
+  const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
+    'git_code_references',
+  )
+  const hasScannedCodeReferences =
+    isCodeReferencesEnabled && projectFlag?.code_references_counts?.length > 0
+  const codeReferencesCounts = isCodeReferencesEnabled
+    ? projectFlag?.code_references_counts?.reduce(
+        (acc, curr) => acc + curr.count,
+        0,
+      ) || 0
+    : 0
+
+  return (
+    <>
+      {/* Desktop */}
+      <div
+        className={classNames(
+          'd-none d-lg-flex align-items-lg-center flex-lg-row list-item py-0 list-item-xs fs-small',
+          className,
+        )}
+        data-test={`cleanup-feature-item-${index}`}
+      >
+        {onSelect && (
+          <div
+            className='table-column px-2 align-items-center'
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+          >
+            <input
+              type='checkbox'
+              checked={!!isSelected}
+              onChange={() => onSelect(projectFlag)}
+            />
+          </div>
+        )}
+        <div className='table-column ps-2 px-0 align-items-center flex-1'>
+          <div className='mx-0 flex-1 flex-column'>
+            <div className='d-flex align-items-center'>
+              <FeatureName name={projectFlag.name} />
+              {isCodeReferencesEnabled && hasScannedCodeReferences && (
+                <Tooltip
+                  title={
+                    <VCSProviderTag
+                      count={codeReferencesCounts}
+                      isWarning={codeReferencesCounts === 0}
+                      vcsProvider={VCSProvider.GITHUB}
+                    />
+                  }
+                  place='top'
+                >
+                  {`Scanned ${codeReferencesCounts} times in ${projectFlag?.code_references_counts?.length} repositories`}
+                </Tooltip>
+              )}
+              <TagValues
+                projectId={`${projectFlag.project}`}
+                value={projectFlag.tags}
+              />
+            </div>
+            <FeatureDescription description={description} />
+          </div>
+        </div>
+        {actions && (
+          <div className='table-column px-2 align-items-center'>{actions}</div>
+        )}
+      </div>
+
+      {/* Mobile */}
+      <div
+        className={classNames(
+          'd-flex flex-column justify-content-center px-2 list-item py-1 d-lg-none',
+        )}
+      >
+        <div className='d-flex gap-2 align-items-center'>
+          {onSelect && (
+            <div
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
+              <input
+                type='checkbox'
+                checked={!!isSelected}
+                onChange={() => onSelect(projectFlag)}
+              />
+            </div>
+          )}
+          <div className='flex-1 align-items-center flex-wrap'>
+            <FeatureName name={projectFlag.name} />
+            {isCodeReferencesEnabled && hasScannedCodeReferences && (
+              <Tooltip
+                title={
+                  <VCSProviderTag
+                    count={codeReferencesCounts}
+                    isWarning={codeReferencesCounts === 0}
+                    vcsProvider={VCSProvider.GITHUB}
+                  />
+                }
+                place='top'
+              >
+                {`Scanned ${codeReferencesCounts} times in ${projectFlag?.code_references_counts?.length} repositories`}
+              </Tooltip>
+            )}
+            <TagValues
+              projectId={`${projectFlag.project}`}
+              value={projectFlag.tags}
+            />
+          </div>
+          {actions}
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default ProjectFeatureRow

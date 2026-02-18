@@ -1,12 +1,21 @@
 import flagsmith from 'flagsmith'
 import { useState, useCallback } from 'react'
 
-export type ViewMode = 'compact' | 'default'
-
-export function getViewMode(): ViewMode {
+export type ViewMode =
+  | 'compact'
+  | 'default'
+  | 'release-manager'
+  | 'executive'
+  | 'dev'
+export function getViewMode() {
   const viewMode = flagsmith.getTrait('view_mode')
-  if (viewMode === 'compact') {
-    return 'compact'
+  if (
+    viewMode === 'compact' ||
+    viewMode === 'release-manager' ||
+    viewMode === 'executive' ||
+    viewMode === 'dev'
+  ) {
+    return viewMode as ViewMode
   }
   return 'default'
 }

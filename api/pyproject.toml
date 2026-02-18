@@ -9,13 +9,13 @@ version = "2.68.0"
 description = "The API component for the Flagsmith application."
 authors = [{ name = "Flagsmith", email = "support@flagsmith.com" }]
 readme = "readme.md"
-requires-python = ">=3.11, <3.13"
+requires-python = ">=3.11, <3.14"
 dynamic = ["dependencies"]
 
 [tool.ruff]
 line-length = 88
 indent-width = 4
-target-version = "py311"
+target-version = "py313"
 extend-exclude = ["migrations"]
 
 [tool.ruff.format]
@@ -100,8 +100,11 @@ django_settings_module = "app.settings.local"
 [tool.drf-stubs]
 enabled = true
 
+[tool.poetry]
+package-mode = false
+
 [tool.poetry.dependencies]
-python = ">3.11,<3.13"
+python = ">3.11,<3.14"
 django = ">=5,<6"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
@@ -134,7 +137,7 @@ environs = "^14.1.1"
 django-lifecycle = "~1.2.4"
 drf-writable-nested = "~0.6.2"
 django-filter = "~2.4.0"
-flagsmith-flag-engine = "^10.0.3"
+flagsmith-flag-engine = { git = "https://github.com/Flagsmith/flagsmith-engine", branch = "fix/missing-export" }
 boto3 = "~1.35.95"
 slack-sdk = "~3.9.0"
 asgiref = "~3.8.1"
@@ -149,11 +152,10 @@ django-environ = "~0.4.5"
 influxdb-client = "~1.50.0"
 django-ordered-model = "~3.4.1"
 django-ses = "~3.5.0"
-django-axes = "~5.32.0"
+django-axes = "^8.1.0"
 pydantic = "^2.12.0"
-pydantic-collections = "^0.6.0"
 pyngo = "~2.4.1"
-flagsmith = "^5.1.1"
+flagsmith = "^3.10.0"
 python-gnupg = "^0.5.1"
 django-redis = "^5.4.0"
 pygithub = "2.1.1"
@@ -171,6 +173,8 @@ djangorestframework-simplejwt = "^5.5.1"
 structlog = "^24.4.0"
 prometheus-client = "^0.21.1"
 django_cockroachdb = "~4.2"
+numpy = "^2.4.2"
+scipy = "^1.17.0"
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -216,7 +220,9 @@ pre-commit = "^4.0.1"
 pytest-mock = "~3.10.0"
 pytest-lazy-fixture = "~0.6.3"
 moto = "~4.1.3"
-pytest-freezegun = "~0.4.2"
+# TODO: move to https://github.com/adamchainz/time-machine
+pytest-freezegun = "^0.4.2"
+setuptools = "*"  # this only exists because pytest-freezegun fails without it
 pytest-xdist = "~3.6.1"
 pylint = "~2.16.2"
 pep8 = "~1.7.1"

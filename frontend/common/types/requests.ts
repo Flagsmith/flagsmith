@@ -865,5 +865,18 @@ export type Req = {
     environmentFlagId: number
     body: UpdateFeatureStateBody
   }
+  getExperimentResults: {
+    environmentId: string
+    featureName: string
+    getAdminDashboardMetrics: {
+      days?: number
+    }
+    createCleanupIssue: {
+      organisation_id: number
+      body: {
+        feature_id: number
+      }
+    }
+  }
   // END OF TYPES
 }

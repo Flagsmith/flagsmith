@@ -10,6 +10,7 @@ from common.projects.permissions import (
     VIEW_PROJECT,
 )
 from django.conf import settings
+from flag_engine.identities.models import IdentityModel as EngineIdentity
 
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
@@ -24,7 +25,6 @@ from organisations.permissions.permissions import (
 from organisations.subscriptions.constants import ENTERPRISE
 from projects.models import Project, UserProjectPermission
 from users.models import FFAdminUser, UserPermissionGroup
-from util.engine_models.identities.models import IdentityModel as EngineIdentity
 
 # Password used by all the test users
 PASSWORD = "Str0ngp4ssw0rd!"

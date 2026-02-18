@@ -35,6 +35,7 @@
       "offVariation": 1,
       "onVariation": 0
     },
+    "deprecated": true,
     "description": "",
     "environments": {
       "production": {
@@ -162,6 +163,7 @@
       "offVariation": 1,
       "onVariation": 0
     },
+    "deprecated": false,
     "description": "",
     "environments": {
       "production": {
@@ -289,6 +291,7 @@
       "offVariation": 1,
       "onVariation": 0
     },
+    "deprecated": false,
     "description": "",
     "environments": {
       "production": {
@@ -420,6 +423,7 @@
       "offVariation": 1,
       "onVariation": 0
     },
+    "deprecated": false,
     "description": "",
     "environments": {
       "production": {
@@ -558,6 +562,7 @@
       "offVariation": 1,
       "onVariation": 0
     },
+    "deprecated": false,
     "description": "",
     "environments": {
       "production": {

@@ -1,4 +1,5 @@
 {
+  "deprecated_flag_count": 1,
   "error_messages": [
     "Targeting key 'user-...63a49' exceeds the limit of 1000 characters, skipping for segment 'Large User List (Override for test)'",
     "Segment condition value '.*1a6...\\.com' for property 'email' exceeds the limit of 1000 characters, skipping for segment 'Large Dynamic List (Override for test)'",
