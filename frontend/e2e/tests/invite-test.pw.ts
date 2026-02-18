@@ -10,6 +10,7 @@ test.describe('Invite Tests', () => {
       assertTextContent,
       click,
       getInputValue,
+      gotoAccountSettings,
       login,
       setText,
       waitForElementNotExist,
@@ -39,8 +40,7 @@ test.describe('Invite Tests', () => {
     await page.waitForTimeout(500)
     await click(byId('signup-btn'))
     log('Change email')
-    await click(byId('account-settings-link'))
-    await click(byId('account-settings'))
+    await gotoAccountSettings()
     await click(byId('change-email-button'))
     await setText("[name='EmailAddress']", E2E_CHANGE_MAIL)
     await setText("[name='newPassword']", PASSWORD)
@@ -49,8 +49,7 @@ test.describe('Invite Tests', () => {
     await login(E2E_CHANGE_MAIL, PASSWORD)
     log('Delete invite user')
     await assertTextContent('[id=account-settings-link]', 'Account')
-    await click(byId('account-settings-link'))
-    await click(byId('account-settings'))
+    await gotoAccountSettings()
     await click(byId('delete-user-btn'))
     await setText("[name='currentPassword']", PASSWORD)
     await click(byId('delete-account'))

@@ -675,7 +675,10 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
     { id: `${props.projectId}` },
     { skip: !props.projectId },
   )
-  const isLoading = projectLoading || segmentLoading
+  const { isLoading: contentTypesLoading } = useGetSupportedContentTypeQuery({
+    organisation_id: AccountStore.getOrganisation().id,
+  })
+  const isLoading = projectLoading || segmentLoading || contentTypesLoading
   const [page, setPage] = useState<PageType>({
     number: 1,
     pageType: undefined,

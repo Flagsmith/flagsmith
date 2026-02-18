@@ -67,6 +67,10 @@ export class E2EHelpers {
     await expect(this.page.locator(selector)).toHaveCount(0, { timeout: 10000 });
   }
 
+  async waitForModalToClose() {
+    await this.waitForElementNotExist('.modal-backdrop');
+  }
+
   async waitForPageFullyLoaded() {
     await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {
       // Silently continue if timeout - DOM might already be loaded
@@ -103,6 +107,7 @@ export class E2EHelpers {
   async click(selector: string) {
     await this.waitForElementVisible(selector);
     const element = this.page.locator(selector).first();
+    await expect(element).toBeAttached({ timeout: LONG_TIMEOUT });
     await element.scrollIntoViewIfNeeded();
     await expect(element).toBeEnabled({ timeout: LONG_TIMEOUT });
     await element.click();
@@ -137,7 +142,13 @@ export class E2EHelpers {
     email: string = process.env.E2E_USER || '',
     password: string = process.env.E2E_PASS || '',
   ) {
-    await this.page.goto('/login');
+    if (!this.page.url().includes('/login')) {
+      try {
+        await this.page.goto('/login', { waitUntil: 'domcontentloaded' });
+      } catch {
+        await this.page.goto('/login', { waitUntil: 'domcontentloaded' });
+      }
+    }
     // Wait for both fields to be visible
     await this.waitForElementVisible('[name="email"]');
     await this.waitForElementVisible('[name="password"]');
@@ -168,10 +179,18 @@ export class E2EHelpers {
     }, { timeout: LONG_TIMEOUT });
   }
 
+  async gotoAccountSettings() {
+    const flagsmith = await getFlagsmith()
+    const hasPersonas = flagsmith.hasFeature('persona_based_views')
+    await this.click('#account-settings-link');
+    if (hasPersonas) {
+      await this.click('#account-settings');
+    }
+  }
+
   async logout() {
     try {
-      await this.click('#account-settings-link');
-      await this.click('#account-settings');
+      await this.gotoAccountSettings();
       await this.click('#logout-link');
       await this.waitForElementVisible('#login-page');
     } catch (e) {
@@ -201,7 +220,7 @@ export class E2EHelpers {
     await this.click('#users-link');
     const userRow = this.page.locator('[data-test^="user-item-"]').filter({ hasText: identifier }).first();
     await userRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-    await userRow.click();
+    await userRow.locator('a').first().click();
     await this.waitForElementVisible('#add-trait');
   }
 
@@ -211,16 +230,16 @@ export class E2EHelpers {
     await this.click('#users-link');
     const userRow = this.page.locator('[data-test^="user-item-"]').filter({ hasText: identifier }).first();
     await userRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-    await userRow.click();
+    await userRow.locator('a').first().click();
   }
 
   // Navigate to a feature
   async gotoFeature(name: string) {
     const featureRow = this.page.locator('[data-test^="feature-item-"]').filter({
-      has: this.page.locator(`text="${name}"`)
+      has: this.page.locator(`span:text-is("${name}")`)
     }).first();
     await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-    await featureRow.click();
+    await featureRow.dispatchEvent('click');
     await this.waitForElementVisible('#create-feature-modal');
   }
 
@@ -234,9 +253,7 @@ export class E2EHelpers {
       await this.click(byId('toggle-feature-button'));
     }
     await this.click(byId('create-feature-btn'));
-    const featureElement = this.page.locator('[data-test^="feature-item-"]').filter({
-      has: this.page.locator(`span:text-is("${name}")`)
-    }).first();
+    const featureElement = this.page.locator('[data-test^="feature-item-"]', { hasText: name }).first();
     await featureElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await this.closeModal();
   }
@@ -295,6 +312,7 @@ export class E2EHelpers {
     await switchElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await switchElement.click();
     await this.click('#confirm-toggle-feature-btn');
+    await this.waitForModalToClose();
     const newState = value ? 'on' : 'off';
     const newSwitchElement = featureRow.locator(`[data-test^="feature-switch-"][data-test$="-${newState}"]`).first();
     await newSwitchElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
@@ -357,6 +375,7 @@ export class E2EHelpers {
     await removeButton.click();
     await this.setText('[name="confirm-segment-name"]', name);
     await this.click('#confirm-remove-segment-btn');
+    await this.waitForModalToClose();
     await expect(this.page.locator('.list-item').filter({ hasText: name })).toHaveCount(0, { timeout: LONG_TIMEOUT });
   }
 
@@ -408,9 +427,7 @@ export class E2EHelpers {
 
   // Assert user feature value
   async assertUserFeatureValue(name: string, expectedValue: string) {
-    const featureRow = this.page.locator('[data-test^="user-feature-"]').filter({
-      has: this.page.locator(`text="${name}"`)
-    }).first();
+    const featureRow = this.page.locator('[data-test^="user-feature-"]', { hasText: name }).first();
     await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     const valueElement = featureRow.locator('[data-test^="user-feature-value-"]');
     await expect(valueElement).toHaveText(expectedValue, { timeout: LONG_TIMEOUT });
@@ -418,9 +435,7 @@ export class E2EHelpers {
 
   // Wait for user feature switch state
   async waitForUserFeatureSwitch(name: string, state: 'on' | 'off') {
-    const featureRow = this.page.locator('[data-test^="user-feature-"]').filter({
-      has: this.page.locator(`text="${name}"`)
-    }).first();
+    const featureRow = this.page.locator('[data-test^="user-feature-"]', { hasText: name }).first();
     await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     const switchElement = featureRow.locator(`[data-test^="user-feature-switch-"][data-test$="-${state}"]`);
     await switchElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
@@ -428,22 +443,18 @@ export class E2EHelpers {
 
   // Click user feature switch
   async clickUserFeatureSwitch(name: string, state: 'on' | 'off') {
-    const featureRow = this.page.locator('[data-test^="user-feature-"]').filter({
-      has: this.page.locator(`text="${name}"`)
-    }).first();
+    const featureRow = this.page.locator('[data-test^="user-feature-"]', { hasText: name }).first();
     await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     const switchElement = featureRow.locator(`[data-test^="user-feature-switch-"][data-test$="-${state}"]`).first();
     await switchElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-    await switchElement.click();
+    await switchElement.dispatchEvent('click');
   }
 
   // Click user feature (to open edit modal)
   async clickUserFeature(name: string) {
-    const featureRow = this.page.locator('[data-test^="user-feature-"]').filter({
-      has: this.page.locator(`text="${name}"`)
-    }).first();
+    const featureRow = this.page.locator('[data-test^="user-feature-"]', { hasText: name }).first();
     await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-    await featureRow.click();
+    await featureRow.dispatchEvent('click');
   }
 
   // Assert input value
@@ -466,6 +477,7 @@ export class E2EHelpers {
     await this.click(byId('remove-segment-btn'));
     await this.setText('[name="confirm-segment-name"]', name);
     await this.click('#confirm-remove-segment-btn');
+    await this.waitForModalToClose();
     await this.waitForElementVisible(byId('show-create-segment-btn'));
   }
 
@@ -503,6 +515,7 @@ export class E2EHelpers {
       }
     }
     await this.click(byId('create-segment'));
+    await this.waitForModalToClose();
     const element = this.page.locator('[data-test^="segment-"][data-test$="-name"]').filter({ hasText: name });
     await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
   }
@@ -552,10 +565,10 @@ export class E2EHelpers {
   async editRemoteConfig(featureName: string, value: string | number | boolean, toggleFeature: boolean = false, mvs: MultiVariate[] = []) {
     await this.gotoFeatures();
     const featureRow = this.page.locator('[data-test^="feature-item-"]').filter({
-      has: this.page.locator(`text="${featureName}"`)
+      has: this.page.locator(`span:text-is("${featureName}")`)
     }).first();
     await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-    await featureRow.click();
+    await featureRow.dispatchEvent('click');
     if (value !== '') {
       await this.setText(byId('featureValue'), `${value}`);
     }

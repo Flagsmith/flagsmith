@@ -115,7 +115,7 @@ app.get('/config/project-overrides', (req, res) => {
     },
     {
       name: 'e2eToken',
-      value: process.env.E2E_TEST_TOKEN || process.env[`E2E_TEST_TOKEN_${(process.env.ENV || 'dev').toUpperCase()}`] || '',
+      value: process.env[`E2E_TEST_TOKEN_${(process.env.ENV || 'dev').toUpperCase()}`] || process.env.E2E_TEST_TOKEN || '',
     },
   ]
   let output = values.map(getVariable).join('')
