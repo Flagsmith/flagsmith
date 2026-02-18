@@ -13,6 +13,7 @@ import { CustomFieldsTab } from './tabs/CustomFieldsTab'
 import { APIKeysTab } from './tabs/APIKeysTab'
 import { WebhooksTab } from './tabs/WebhooksTab'
 import { SAMLTab } from './tabs/SAMLTab'
+import { OIDCTab } from './tabs/OIDCTab'
 
 type OrganisationSettingsTab = {
   component: ReactNode
@@ -115,6 +116,12 @@ const OrganisationSettingsPage: FC = () => {
       isVisible: true,
       key: 'saml',
       label: 'SAML',
+    },
+    {
+      component: <OIDCTab organisationId={organisation.id} />,
+      isVisible: true,
+      key: 'oidc',
+      label: 'OIDC',
     },
   ].filter(({ isVisible }) => isVisible)
 

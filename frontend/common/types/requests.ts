@@ -7,6 +7,7 @@ import {
   Approval,
   MultivariateOption,
   SAMLConfiguration,
+  OIDCConfiguration,
   Segment,
   Tag,
   ProjectFlag,
@@ -689,6 +690,11 @@ export type Req = {
       idp_attribute_name: string
     }
   }
+  getOidcConfiguration: { name: string }
+  getOidcConfigurations: { organisation_id: number }
+  updateOidcConfiguration: { name: string; body: OIDCConfiguration }
+  deleteOidcConfiguration: { name: string }
+  createOidcConfiguration: Omit<OIDCConfiguration, 'id'> & { client_secret: string }
   updateIdentity: {
     environmentId: string
     data: Identity

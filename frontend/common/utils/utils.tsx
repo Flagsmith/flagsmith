@@ -45,6 +45,7 @@ export type PaidFeature =
   | 'METADATA'
   | 'REALTIME'
   | 'SAML'
+  | 'OIDC'
   | 'SCHEDULE_FLAGS'
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
@@ -511,7 +512,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'REALTIME':
       case 'METADATA':
       case 'RELEASE_PIPELINES':
-      case 'SAML': {
+      case 'SAML':
+      case 'OIDC': {
         plan = 'enterprise'
         break
       }

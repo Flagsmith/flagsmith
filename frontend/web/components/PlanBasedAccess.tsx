@@ -87,6 +87,12 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     docs: 'https://docs.flagsmith.com/system-administration/authentication/',
     title: 'Enterprise single sign-on',
   },
+  'OIDC': {
+    description:
+      'Configure OpenID Connect (OIDC) single sign-on with providers such as Keycloak.',
+    docs: 'https://docs.flagsmith.com/system-administration/authentication/',
+    title: 'OIDC Single Sign-On',
+  },
   'SCHEDULE_FLAGS': {
     description:
       'Manage feature state changes that have been scheduled to go live.',

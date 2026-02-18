@@ -719,6 +719,16 @@ export type SAMLAttributeMapping = {
   django_attribute_name: AttributeName
   idp_attribute_name: string
 }
+
+export type OIDCConfiguration = {
+  id: number
+  organisation: number
+  name: string
+  provider_url: string
+  client_id: string
+  frontend_url: string
+  allow_idp_initiated?: boolean
+}
 export type ServersideSplitTestResult = {
   conversion_count: number
   evaluation_count: number
@@ -1091,6 +1101,8 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  oidcConfiguration: OIDCConfiguration
+  oidcConfigurations: PagedResponse<OIDCConfiguration>
   identitySegments: PagedResponse<Segment>
   organisationWebhooks: PagedResponse<Webhook>
   projectChangeRequests: PagedResponse<ChangeRequestSummary>

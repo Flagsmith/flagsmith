@@ -145,3 +145,23 @@ class GithubLoginSerializer(OAuthLoginSerializer):
     def get_user_info(self):  # type: ignore[no-untyped-def]
         github_user = GithubUser(code=self.validated_data["access_token"])
         return github_user.get_user_info()
+
+
+class OIDCConfigurationSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    class Meta:
+        from custom_auth.models import OIDCConfiguration
+
+        model = OIDCConfiguration
+        fields = [
+            "id",
+            "name",
+            "organisation",
+            "provider_url",
+            "client_id",
+            "client_secret",
+            "frontend_url",
+            "allow_idp_initiated",
+        ]
+        extra_kwargs = {
+            "client_secret": {"write_only": True},
+        }

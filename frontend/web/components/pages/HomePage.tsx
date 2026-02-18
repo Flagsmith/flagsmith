@@ -25,6 +25,7 @@ import data from 'common/data/base/_data'
 import AppActions from 'common/dispatcher/app-actions'
 import GoogleButton from 'components/GoogleButton'
 import SamlForm from 'components/SamlForm'
+import OidcForm from 'components/OidcForm'
 import AccountProvider from 'common/providers/AccountProvider'
 import AccountStore from 'common/stores/account-store'
 import { LoginRequest, RegisterRequest } from 'common/types/requests'
@@ -124,6 +125,11 @@ const HomePage: React.FC = () => {
         })
         history.replace('/')
       }
+    }
+
+    if (params.oidc_token) {
+      AppActions.setToken(params.oidc_token)
+      history.replace('/')
     }
 
     API.trackPage(Constants.pages.HOME)
@@ -273,6 +279,37 @@ const HomePage: React.FC = () => {
             className='w-100'
           >
             Single Sign-On
+          </Button>
+        </div>,
+      )
+    }
+
+    if (
+      !Utils.flagsmithFeatureExists('oidc') ||
+      Utils.getFlagsmithHasFeature('oidc')
+    ) {
+      oauths.push(
+        <div className={oauthClasses}>
+          <Button
+            theme='secondary'
+            onClick={() => {
+              if (!Utils.getFlagsmithValue('oidc_idp')) {
+                openModal(
+                  'OIDC Single Sign-On',
+                  <OidcForm />,
+                  'p-0 modal-sm',
+                )
+              } else {
+                const authorizeUrl = new URL(
+                  `./auth/oauth/oidc/${Utils.getFlagsmithValue('oidc_idp')}/authorize/`,
+                  new Request(Project.api).url,
+                ).href
+                document.location.href = authorizeUrl
+              }
+            }}
+            className='w-100'
+          >
+            OIDC Single Sign-On
           </Button>
         </div>,
       )

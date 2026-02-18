@@ -8,3 +8,7 @@ class GoogleError(Exception):
 
 class OAuthError(Exception):
     pass
+
+
+class OIDCError(Exception):
+    pass
