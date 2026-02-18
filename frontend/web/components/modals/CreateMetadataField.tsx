@@ -21,7 +21,7 @@ import {
 } from 'common/services/useMetadataModelField'
 import {
   ContentType,
-  MetadataModelField,
+  MetadataFieldModelField,
   isRequiredFor,
 } from 'common/types/responses'
 import ErrorMessage from 'components/ErrorMessage'
@@ -29,13 +29,17 @@ import ErrorMessage from 'components/ErrorMessage'
 type CreateMetadataFieldType = {
   id?: string
   isEdit: boolean
-  metadataModelFieldList?: MetadataModelField[]
+  metadataModelFieldList?: MetadataFieldModelField[]
   onComplete?: () => void
   organisationId: string
   projectId?: string
 }
 
-type QueryBody = Omit<MetadataModelField, 'id'>
+type QueryBody = {
+  content_type: number | string
+  field: number
+  is_required_for: isRequiredFor[]
+}
 
 type Query = {
   body: QueryBody
@@ -49,7 +53,8 @@ type MetadataType = {
   label: string
 }
 
-type metadataFieldUpdatedSelectListType = MetadataModelField & {
+type metadataFieldUpdatedSelectListType = MetadataFieldModelField & {
+  field: number
   removed: boolean
   new: boolean
 }
@@ -207,7 +212,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
                   m.content_type,
                   m.field,
                   !!m.is_required_for,
-                  parseInt(m.id),
+                  m.id,
                   m.new,
                 )
                 if (!m.removed && !m.new) {
@@ -321,12 +326,14 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
                   if (isRequiredLength !== isRequired) {
                     newMetadataFieldArray.push({
                       ...item1,
+                      field: parseInt(id!),
                       is_required_for: isRequired,
                     })
                   }
                 } else {
                   newMetadataFieldArray.push({
                     ...item1,
+                    field: parseInt(id!),
                     new: false,
                     removed: true,
                   })
@@ -339,6 +346,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
                     newMetadataFieldArray.push({
                       ...item1,
                       content_type: item.value,
+                      field: parseInt(id!),
                       is_required_for: m?.isRequired,
                       new: true,
                       removed: false,

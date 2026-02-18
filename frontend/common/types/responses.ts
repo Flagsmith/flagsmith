@@ -771,6 +771,12 @@ export type Metadata = {
   field_value: string
 }
 
+export type MetadataFieldModelField = {
+  id: number
+  content_type: number
+  is_required_for: isRequiredFor[]
+}
+
 export type MetadataField = {
   id: number
   name: string
@@ -778,6 +784,7 @@ export type MetadataField = {
   description: string
   organisation: number
   project: number | null
+  model_fields: MetadataFieldModelField[]
 }
 
 export type ContentType = {
@@ -789,6 +796,7 @@ export type ContentType = {
 
 export type isRequiredFor = {
   content_type: number
+  object_id: number
 }
 
 export type MetadataModelField = {
@@ -1120,6 +1128,7 @@ export type Res = {
   metadataModelFieldList: PagedResponse<MetadataModelField>
   metadataModelField: MetadataModelField
   metadataList: PagedResponse<MetadataField>
+  projectMetadataFieldList: PagedResponse<MetadataField>
   metadataField: MetadataField
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]

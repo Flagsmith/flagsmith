@@ -5,12 +5,12 @@ import Icon from 'components/Icon'
 import Panel from 'components/base/grid/Panel'
 import CreateMetadataField from 'components/modals/CreateMetadataField'
 import ContentTypesValues from './ContentTypesValues'
-import { MetadataModelField } from 'common/types/responses'
+import { MetadataFieldModelField } from 'common/types/responses'
 import {
   useGetMetadataFieldListQuery,
+  useGetProjectMetadataFieldListQuery,
   useDeleteMetadataFieldMutation,
 } from 'common/services/useMetadataField'
-import { useGetMetadataModelFieldListQuery } from 'common/services/useMetadataModelField'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import RedirectCreateCustomFields from './RedirectCreateCustomFields'
 
@@ -21,7 +21,7 @@ type MetadataPageType = {
 }
 
 type MergeMetadata = {
-  content_type_fields: MetadataModelField[]
+  model_fields: MetadataFieldModelField[]
   id: number
   name: string
   type: string
@@ -31,33 +31,34 @@ type MergeMetadata = {
 }
 
 const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
-  const { data: metadataFieldList } = useGetMetadataFieldListQuery({
-    organisation: organisationId,
-    ...(projectId ? { project: parseInt(projectId) } : {}),
-  })
+  const { data: orgMetadataFieldList } = useGetMetadataFieldListQuery(
+    { organisation: parseInt(organisationId) },
+    { skip: !!projectId },
+  )
 
-  const { data: MetadataModelFieldList } = useGetMetadataModelFieldListQuery({
-    organisation_id: organisationId,
-  })
+  const { data: projectMetadataFieldList } =
+    useGetProjectMetadataFieldListQuery(
+      {
+        include_organisation: true,
+        project_id: parseInt(projectId!),
+      },
+      { skip: !projectId },
+    )
 
   const [deleteMetadata] = useDeleteMetadataFieldMutation()
 
   const mergeMetadata = useMemo(() => {
-    if (metadataFieldList && MetadataModelFieldList) {
-      return metadataFieldList.results
-        .map((item1) => {
-          const matchingItems2 = MetadataModelFieldList.results.filter(
-            (item2) => item2.field === item1.id,
-          )
-          return {
-            ...item1,
-            content_type_fields: matchingItems2,
-          }
-        })
-        ?.sort((a, b) => a.id - b.id)
-    }
-    return null
-  }, [metadataFieldList, MetadataModelFieldList])
+    const fieldList = projectId
+      ? projectMetadataFieldList
+      : orgMetadataFieldList
+    if (!fieldList) return null
+    return fieldList.results
+      .map((item) => ({
+        ...item,
+        model_fields: item.model_fields,
+      }))
+      .sort((a, b) => a.id - b.id)
+  }, [orgMetadataFieldList, projectMetadataFieldList, projectId])
 
   const orgFields = useMemo(() => {
     if (!projectId || !mergeMetadata) return null
@@ -86,7 +87,10 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
     )
   }
 
-  const editMetadata = (id: string, contentTypeList: MetadataModelField[]) => {
+  const editMetadata = (
+    id: string,
+    contentTypeList: MetadataFieldModelField[],
+  ) => {
     openModal(
       `Edit Custom Field`,
       <CreateMetadataField
@@ -132,7 +136,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         readOnly
           ? undefined
           : () => {
-              editMetadata(`${metadata.id}`, metadata.content_type_fields)
+              editMetadata(`${metadata.id}`, metadata.model_fields)
             }
       }
     >
@@ -142,7 +146,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
           {readOnly && <span className='chip chip--xs'>Inherited</span>}
         </div>
         <ContentTypesValues
-          contentTypes={metadata.content_type_fields}
+          contentTypes={metadata.model_fields}
           organisationId={organisationId}
         />
       </Flex>

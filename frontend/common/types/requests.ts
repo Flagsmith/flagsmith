@@ -425,7 +425,11 @@ export type Req = {
     }
   }
   getMetadataField: { organisation_id: number }
-  getMetadataList: { organisation: number; project?: number }
+  getMetadataList: { organisation: number }
+  getProjectMetadataFieldList: {
+    project_id: number
+    include_organisation?: boolean
+  }
   updateMetadataField: {
     id: number
     body: {
