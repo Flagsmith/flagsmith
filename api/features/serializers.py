@@ -23,7 +23,10 @@ from environments.sdk.serializers_mixins import (
 )
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
-from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
+from metadata.serializers import (
+    MetadataSerializer,
+    with_metadata,
+)
 from projects.code_references.serializers import (
     FeatureFlagCodeReferencesRepositoryCountSerializer,
 )
@@ -341,7 +344,12 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         return getattr(instance, "last_modified_in_current_environment", None)
 
 
-class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerializer):
+@with_metadata(
+    lambda self, attrs: (
+        self.instance.project if self.instance else self.context["project"]
+    ).organisation
+)
+class FeatureSerializerWithMetadata(CreateFeatureSerializer):
     metadata = MetadataSerializer(required=False, many=True)
 
     code_references_counts = FeatureFlagCodeReferencesRepositoryCountSerializer(
@@ -354,25 +362,6 @@ class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerial
             "metadata",
             "code_references_counts",
         )
-
-    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        attrs = super().validate(attrs)
-        project = self.instance.project if self.instance else self.context["project"]  # type: ignore[union-attr]
-        organisation = project.organisation
-        self._validate_required_metadata(organisation, attrs.get("metadata", []))
-        return attrs
-
-    def create(self, validated_data: dict[str, Any]) -> Feature:
-        metadata_data = validated_data.pop("metadata", [])
-        feature = super().create(validated_data)
-        self._update_metadata(feature, metadata_data)
-        return feature
-
-    def update(self, feature: Feature, validated_data: dict[str, Any]) -> Feature:
-        metadata = validated_data.pop("metadata", [])
-        feature = super().update(feature, validated_data)
-        self._update_metadata(feature, metadata)
-        return feature
 
 
 class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
