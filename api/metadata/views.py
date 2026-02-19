@@ -39,6 +39,7 @@ from .serializers import (
 class MetadataFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [MetadataFieldPermissions]
     serializer_class = MetadataFieldSerializer
+    pagination_class = CustomPagination
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
