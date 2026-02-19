@@ -192,8 +192,7 @@ const MetadataRow: FC<MetadataRowProps> = ({ metadata, onFieldChange }) => {
       : metadata.field_value || ''
 
   const handleChange = (newValue: string | boolean) => {
-    const stringValue = metadata.type === 'bool' ? `${newValue}` : `${newValue}`
-    onFieldChange(metadata.id, stringValue)
+    onFieldChange(metadata.id, `${newValue}`)
   }
   const isEmpty = !displayValue || displayValue === ''
   const isValidType = Utils.validateMetadataType(metadata.type, displayValue)
