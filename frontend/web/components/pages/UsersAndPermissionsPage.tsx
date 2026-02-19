@@ -239,11 +239,24 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                     <strong>
                                       If you wish to invite any additional
                                       members, please{' '}
-                                      {
-                                        <a href='#' onClick={openChat}>
-                                          Contact us
+                                      {Utils.isSaas() ? (
+                                        <a
+                                          href='#'
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            openChat()
+                                          }}
+                                        >
+                                          contact us
                                         </a>
-                                      }
+                                      ) : (
+                                        <a
+                                          href='mailto:support@flagsmith.com'
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          contact us
+                                        </a>
+                                      )}
                                       .
                                     </strong>
                                   ) : needsUpgradeForAdditionalSeats ? (
@@ -255,7 +268,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           href='#'
                                           onClick={() => {
                                             history.replace(
-                                              Constants.getUpgradeUrl(),
+                                              '/organisation-settings?tab=billing',
                                             )
                                           }}
                                         >
