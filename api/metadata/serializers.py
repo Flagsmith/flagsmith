@@ -32,6 +32,11 @@ class ProjectMetadataFieldQuerySerializer(serializers.Serializer):  # type: igno
         help_text="Include inherited organisation-level fields. "
         "Project-level fields override same-named org fields.",
     )
+    entity = serializers.ChoiceField(
+        required=False,
+        choices=["feature", "segment", "environment"],
+        help_text="Filter by entity type (feature, segment, or environment).",
+    )
 
 
 class SupportedRequiredForModelQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
