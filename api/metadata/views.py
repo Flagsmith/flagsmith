@@ -9,7 +9,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
-from projects.permissions import VIEW_PROJECT, NestedProjectPermissions
+from common.projects.permissions import VIEW_PROJECT
+from projects.permissions import NestedProjectPermissions
 
 from .models import (
     SUPPORTED_REQUIREMENTS_MAPPING,
@@ -134,7 +135,7 @@ class ProjectMetadataFieldViewSet(viewsets.ReadOnlyModelViewSet):  # type: ignor
             return MetadataField.objects.none()
 
         project = get_object_or_404(
-            self.request.user.get_permitted_projects(VIEW_PROJECT),
+            self.request.user.get_permitted_projects(VIEW_PROJECT),  # type: ignore[union-attr]
             pk=self.kwargs["project_pk"],
         )
 
@@ -156,7 +157,7 @@ class ProjectMetadataFieldViewSet(viewsets.ReadOnlyModelViewSet):  # type: ignor
 
         entity = serializer.validated_data.get("entity")
         if entity:
-            content_type = ContentType.objects.get(model=entity)
+            content_type = get_object_or_404(ContentType, model=entity)
             queryset = queryset.filter(
                 metadatamodelfield__content_type=content_type,
             )

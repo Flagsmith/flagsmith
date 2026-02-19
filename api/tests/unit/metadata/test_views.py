@@ -906,3 +906,55 @@ def test_list_project_metadata_fields__entity_filter_with_include_organisation__
     assert response.status_code == status.HTTP_200_OK
     returned_ids = {r["id"] for r in response.json()["results"]}
     assert returned_ids == {org_field.id, project_field.id}
+
+
+@pytest.mark.parametrize(
+    "field_project_attr, action, expected_status",
+    [
+        ("project", "put", status.HTTP_200_OK),
+        ("project", "delete", status.HTTP_204_NO_CONTENT),
+        (None, "put", status.HTTP_403_FORBIDDEN),
+        (None, "delete", status.HTTP_403_FORBIDDEN),
+        ("project_b", "put", status.HTTP_403_FORBIDDEN),
+        ("project_b", "delete", status.HTTP_403_FORBIDDEN),
+    ],
+)
+def test_modify_metadata_field__project_admin__permission_check(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    project_b: Project,
+    field_project_attr: str | None,
+    action: str,
+    expected_status: int,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given
+    from projects.models import UserProjectPermission
+
+    UserProjectPermission.objects.create(user=staff_user, project=project, admin=True)
+    field_project = (
+        request.getfixturevalue(field_project_attr) if field_project_attr else None
+    )
+    field = MetadataField.objects.create(
+        name="the_field", type="str", organisation=organisation, project=field_project
+    )
+    url = reverse("api-v1:metadata:metadata-fields-detail", args=[field.id])
+
+    # When
+    if action == "put":
+        data = {
+            "name": "the_field_updated",
+            "type": "str",
+            "organisation": organisation.id,
+            **({"project": field_project.id} if field_project else {}),
+        }
+        response = staff_client.put(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+    else:
+        response = staff_client.delete(url)
+
+    # Then
+    assert response.status_code == expected_status

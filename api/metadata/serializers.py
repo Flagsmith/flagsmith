@@ -107,6 +107,7 @@ class MetadataFieldSerializer(serializers.ModelSerializer):  # type: ignore[type
             project_id=project_id,
         )
         if self.instance is not None:
+            assert isinstance(self.instance, MetadataField)
             qs = qs.exclude(pk=self.instance.pk)
         if qs.exists():
             raise serializers.ValidationError(
