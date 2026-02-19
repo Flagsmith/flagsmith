@@ -563,7 +563,7 @@ def test_list_metadata_fields__response_includes_nested_model_fields(
     model_field = MetadataModelField.objects.create(
         field=field, content_type=environment_content_type
     )
-    requirement = MetadataModelFieldRequirement.objects.create(
+    MetadataModelFieldRequirement.objects.create(
         content_type=project_content_type,
         object_id=project.id,
         model_field=model_field,
