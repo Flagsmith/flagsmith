@@ -3,12 +3,31 @@ import json
 import pytest
 import responses
 from django.urls import reverse
+from freezegun import freeze_time
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.tasks import create_feature_state_went_live_audit_log
+from features.models import FeatureState
+from features.workflows.core.models import ChangeRequest
+from users.models import FFAdminUser
+
 WEBHOOK_URL = "https://example.com/webhook"
+
+
+def _extract_webhook_payloads(event_type: str | None):
+    """Extract webhook payloads from responses cache"""
+    return (
+        payload
+        for payload in (
+            json.loads(r.request.body)
+            for r in responses.calls
+            if r.request.url == WEBHOOK_URL
+        )
+        if event_type is None or payload["event_type"] == event_type
+    )
 
 
 @pytest.fixture
@@ -218,3 +237,101 @@ def test_update_multivariate_percentage__webhook_payload_includes_multivariate_v
             "percentage_allocation": old_percentage,
         },
     ]
+
+
+@pytest.mark.parametrize(
+    "webhook",
+    [lazy_fixture("environment_webhook"), lazy_fixture("organisation_webhook")],
+)
+@responses.activate
+def test_update_feature_live__legacy_versioning__webhook_payload_has_correct_previous_and_new_states(
+    admin_client: APIClient,
+    environment: int,
+    feature: int,
+    webhook: str,
+):
+    # Given
+    feature_state_json = admin_client.get(
+        f"/api/v1/features/featurestates/?environment={environment}&feature={feature}"
+    ).json()["results"][0]
+    feature_state_id = feature_state_json["id"]
+    previous_state = feature_state_json["enabled"]
+    previous_value = feature_state_json["feature_state_value"]["string_value"]
+
+    # When
+    responses.add(responses.POST, webhook, status=200)
+    response = admin_client.put(
+        f"/api/v1/features/featurestates/{feature_state_id}/",
+        data={
+            **feature_state_json,
+            "feature_state_value": {"string_value": "new_value"},
+            "enabled": True,
+        },
+        format="json",
+    )
+    assert response.status_code == 200
+
+    # Then
+    payload = list(_extract_webhook_payloads("FLAG_UPDATED"))[-1]
+    assert payload["data"]["previous_state"]["enabled"] is previous_state
+    assert payload["data"]["previous_state"]["feature_state_value"] == previous_value
+    assert payload["data"]["new_state"]["enabled"] is True
+    assert payload["data"]["new_state"]["feature_state_value"] == "new_value"
+
+
+@pytest.mark.parametrize(
+    "webhook",
+    [lazy_fixture("environment_webhook"), lazy_fixture("organisation_webhook")],
+)
+@responses.activate
+def test_update_feature_scheduled__legacy_versioning__webhook_payload_has_correct_previous_and_new_states(
+    admin_user: FFAdminUser,
+    environment: int,
+    feature: int,
+    webhook: str,
+):
+    """Covers https://github.com/Flagsmith/flagsmith/issues/2063"""
+    # Given
+    previous_feature_state = FeatureState.objects.get(feature_id=feature)
+    previous_state = previous_feature_state.enabled
+    previous_value = previous_feature_state.get_feature_state_value()
+
+    # Simulate scheduled update in the frontend
+    with freeze_time("2048-02-29T02:00:00+0000"):
+        # POST create-change-request
+        change_request = ChangeRequest.objects.create(
+            environment=previous_feature_state.environment,
+            title="Scheduled update",
+            user=admin_user,
+        )
+        new_feature_state = FeatureState.objects.create(
+            environment=previous_feature_state.environment,
+            feature=previous_feature_state.feature,
+            change_request=change_request,
+            enabled=True,
+            live_from="2048-02-29T06:00:00+0000",
+            version=None,
+        )
+        new_feature_state.feature_state_value.string_value = "new_value"
+        new_feature_state.feature_state_value.save()
+
+    with freeze_time("2048-02-29T02:00:01+0000"):
+        # PUT workflows:change-requests-detail pk={change_request.id}
+        new_feature_state.save()
+        new_feature_state.feature_state_value.save()
+
+    responses.calls.reset()
+
+    # When
+    responses.add(responses.POST, webhook, status=200)
+    change_request.commit(committed_by=admin_user)
+    assert not any(_extract_webhook_payloads("FLAG_UPDATED"))
+    with freeze_time("2048-02-29T06:00:00+0000"):
+        create_feature_state_went_live_audit_log(new_feature_state.id)
+
+    # Then
+    payload = list(_extract_webhook_payloads("FLAG_UPDATED"))[-1]
+    assert payload["data"]["previous_state"]["enabled"] is previous_state
+    assert payload["data"]["previous_state"]["feature_state_value"] == previous_value
+    assert payload["data"]["new_state"]["enabled"] is True
+    assert payload["data"]["new_state"]["feature_state_value"] == "new_value"
