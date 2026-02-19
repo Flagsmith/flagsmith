@@ -285,7 +285,7 @@ def test_create_invite_returns_400_if_seats_are_over(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["detail"]
-        == "Please Upgrade your plan to add additional seats/users"
+        == "Please upgrade your plan to add additional seats/users"
     )
 
 
@@ -353,7 +353,7 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit_for_saas(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["detail"]
-        == "Please Upgrade your plan to add additional seats/users"
+        == "Please upgrade your plan to add additional seats/users"
     )
 
 
@@ -382,7 +382,7 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit_for_self_hosted_fre
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["detail"]
-        == "Please Upgrade your plan to add additional seats/users"
+        == "Please upgrade your plan to add additional seats/users"
     )
 
 
@@ -414,7 +414,7 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit_for_self_hosted_ent
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["detail"]
-        == "Please Upgrade your plan to add additional seats/users"
+        == "Please upgrade your plan to add additional seats/users"
     )
 
 

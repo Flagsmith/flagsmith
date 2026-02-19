@@ -36,4 +36,4 @@ class UpgradeAPIUsagePaymentFailure(APIException):
 
 class SubscriptionDoesNotSupportSeatUpgrade(APIException):
     status_code = 400
-    default_detail = "Please Upgrade your plan to add additional seats/users"
+    default_detail = "Please upgrade your plan to add additional seats/users"

@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import Constants from 'common/constants'
 import { withRouter } from 'react-router-dom'
+import AccountProvider from 'common/providers/AccountProvider';
 const InvitePage = class extends Component {
   static displayName = 'InvitePage'
 
@@ -19,6 +20,17 @@ const InvitePage = class extends Component {
     this.props.history.replace(Utils.getOrganisationHomePage(id))
   }
 
+  getErrorMessage(detail) {
+    switch (detail) {
+      case 'Not found.':
+        return 'We could not validate your invite, please check the invite URL and email address you have entered is correct.'
+      case 'Please upgrade your plan to add additional seats/users':
+        return 'The organisation you have been invited to has no seats available. Please contact the organisation administrator to resolve this before trying again.'
+      default:
+        return detail
+    }
+  }
+
   render() {
     return (
       <div className='app-container'>
@@ -29,11 +41,7 @@ const InvitePage = class extends Component {
                 {error ? (
                   <div>
                     <h3 className='pt-5'>Oops</h3>
-                    <p>
-                      {error.detail === 'Not found.'
-                        ? 'We could not validate your invite, please check the invite URL and email address you have entered is correct.'
-                        : error.detail}
-                    </p>
+                    <p>{this.getErrorMessage(error.detail)}</p>
                   </div>
                 ) : (
                   <Loader />
