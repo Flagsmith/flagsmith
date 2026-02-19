@@ -1,10 +1,10 @@
 import React, { FC } from 'react'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
-import { MetadataModelField } from 'common/types/responses'
+import { MetadataFieldModelField } from 'common/types/responses'
 import classNames from 'classnames'
 
 type ContentTypesValuesType = {
-  contentTypes: MetadataModelField[]
+  contentTypes: MetadataFieldModelField[]
   organisationId: string
 }
 

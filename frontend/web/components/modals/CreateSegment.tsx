@@ -466,7 +466,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           <AddMetadataToEntity
             organisationId={AccountStore.getOrganisation().id}
             projectId={projectId}
-            entityId={`${segment.id}` || ''}
+            entityId={segment.id}
             entityContentType={segmentContentType?.id}
             entity={segmentContentType?.model}
             onChange={(m) => {
