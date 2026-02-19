@@ -88,7 +88,9 @@ class EnvironmentSerializerWithMetadata(
         attrs = super().validate(attrs)
         project = self.instance.project if self.instance else attrs["project"]  # type: ignore[union-attr]
         organisation = project.organisation
-        self._validate_required_metadata(organisation, attrs.get("metadata", []))
+        self._validate_required_metadata(
+            organisation, attrs.get("metadata", []), project=project
+        )
         return attrs
 
     def create(self, validated_data: dict[str, Any]) -> Environment:

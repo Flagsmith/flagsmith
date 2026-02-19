@@ -1,12 +1,16 @@
 from itertools import chain
 
+from common.projects.permissions import VIEW_PROJECT
 from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+
+from app.pagination import CustomPagination
+from projects.permissions import NestedProjectPermissions
 
 from .models import (
     SUPPORTED_REQUIREMENTS_MAPPING,
@@ -23,6 +27,7 @@ from .serializers import (
     MetadataFieldSerializer,
     MetadataModelFieldQuerySerializer,
     MetaDataModelFieldSerializer,
+    ProjectMetadataFieldQuerySerializer,
     SupportedRequiredForModelQuerySerializer,
 )
 
@@ -34,6 +39,7 @@ from .serializers import (
 class MetadataFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [MetadataFieldPermissions]
     serializer_class = MetadataFieldSerializer
+    pagination_class = CustomPagination
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
@@ -45,11 +51,12 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             serializer.is_valid(raise_exception=True)
             organisation_id = serializer.validated_data["organisation"]
 
-            if organisation_id is None:
-                raise ValidationError("organisation parameter is required")
-            queryset = queryset.filter(organisation__id=organisation_id)
+            queryset = queryset.filter(
+                organisation_id=organisation_id,
+                project__isnull=True,
+            )
 
-        return queryset
+        return queryset.prefetch_related("metadatamodelfield_set__is_required_for")
 
 
 class MetaDataModelFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
@@ -113,3 +120,47 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg
         serializer = ContentTypeSerializer(qs, many=True)  # type: ignore[assignment]
 
         return Response(serializer.data)
+
+
+@method_decorator(
+    name="list",
+    decorator=extend_schema(parameters=[ProjectMetadataFieldQuerySerializer]),
+)
+class ProjectMetadataFieldViewSet(viewsets.ReadOnlyModelViewSet):  # type: ignore[type-arg]
+    serializer_class = MetadataFieldSerializer
+    permission_classes = [NestedProjectPermissions]
+    pagination_class = CustomPagination
+
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return MetadataField.objects.none()
+
+        project = get_object_or_404(
+            self.request.user.get_permitted_projects(VIEW_PROJECT),  # type: ignore[union-attr]
+            pk=self.kwargs["project_pk"],
+        )
+
+        queryset = MetadataField.objects.filter(
+            organisation=project.organisation,
+            project_id=project.id,
+        )
+
+        serializer = ProjectMetadataFieldQuerySerializer(data=self.request.query_params)
+        serializer.is_valid(raise_exception=True)
+
+        if serializer.validated_data.get("include_organisation"):
+            overridden_names = queryset.values_list("name", flat=True)
+            org_fields = MetadataField.objects.filter(
+                organisation=project.organisation,
+                project__isnull=True,
+            ).exclude(name__in=overridden_names)
+            queryset = queryset | org_fields
+
+        entity = serializer.validated_data.get("entity")
+        if entity:
+            content_type = get_object_or_404(ContentType, model=entity)
+            queryset = queryset.filter(
+                metadatamodelfield__content_type=content_type,
+            )
+
+        return queryset.prefetch_related("metadatamodelfield_set__is_required_for")

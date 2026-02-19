@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from metadata.models import MetadataField
 from organisations.models import Organisation
+from projects.models import Project
 
 
 class MetadataFieldPermissions(IsAuthenticated):
@@ -19,7 +20,16 @@ class MetadataFieldPermissions(IsAuthenticated):
             with suppress(Organisation.DoesNotExist):
                 organisation_id = request.data.get("organisation")
                 organisation = Organisation.objects.get(id=organisation_id)
-                return request.user.is_organisation_admin(organisation)
+
+                if request.user.is_organisation_admin(organisation):
+                    return True
+
+                project_id = request.data.get("project")
+                if project_id is not None:
+                    with suppress(Project.DoesNotExist):
+                        project = Project.objects.get(id=project_id)
+                        if project.organisation_id == organisation.id:
+                            return request.user.is_project_admin(project)
 
         return False
 
@@ -32,7 +42,11 @@ class MetadataFieldPermissions(IsAuthenticated):
             "destroy",
             "partial_update",
         ):
-            return request.user.is_organisation_admin(obj.organisation)
+            if request.user.is_organisation_admin(obj.organisation):
+                return True
+
+            if obj.project is not None:
+                return request.user.is_project_admin(obj.project)
 
         return False
 

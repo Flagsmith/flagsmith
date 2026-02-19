@@ -22,6 +22,7 @@ from integrations.datadog.views import DataDogConfigurationViewSet
 from integrations.grafana.views import GrafanaProjectConfigurationViewSet
 from integrations.launch_darkly.views import LaunchDarklyImportRequestViewSet
 from integrations.new_relic.views import NewRelicConfigurationViewSet
+from metadata.views import ProjectMetadataFieldViewSet
 from projects.tags.views import TagViewSet
 from segments.views import SegmentViewSet
 
@@ -83,6 +84,11 @@ projects_router.register(
     "feature-health/events",
     FeatureHealthEventViewSet,
     basename="feature-health-events",
+)
+projects_router.register(
+    r"metadata/fields",
+    ProjectMetadataFieldViewSet,
+    basename="project-metadata-fields",
 )
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover

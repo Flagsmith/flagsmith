@@ -3,7 +3,7 @@ from typing import Any
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Model
+from django.db.models import Model, Q
 from rest_framework import serializers
 
 from metadata.models import (
@@ -13,6 +13,7 @@ from metadata.models import (
     MetadataModelFieldRequirement,
 )
 from organisations.models import Organisation
+from projects.models import Project
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
@@ -24,14 +25,22 @@ class MetadataFieldQuerySerializer(serializers.Serializer):  # type: ignore[type
     )
 
 
+class ProjectMetadataFieldQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+    include_organisation = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text="Include inherited organisation-level fields. "
+        "Project-level fields override same-named org fields.",
+    )
+    entity = serializers.ChoiceField(
+        required=False,
+        choices=["feature", "segment", "environment"],
+        help_text="Filter by entity type (feature, segment, or environment).",
+    )
+
+
 class SupportedRequiredForModelQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     model_name = serializers.CharField(required=True)
-
-
-class MetadataFieldSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
-    class Meta:
-        model = MetadataField
-        fields = ("id", "name", "type", "description", "organisation")
 
 
 class MetadataModelFieldQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -44,6 +53,70 @@ class MetadataModelFieldRequirementSerializer(serializers.ModelSerializer):  # t
     class Meta:
         model = MetadataModelFieldRequirement
         fields = ("content_type", "object_id")
+
+
+class MetadataModelFieldNestedSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    is_required_for = MetadataModelFieldRequirementSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = MetadataModelField
+        fields = ("id", "content_type", "is_required_for")
+
+
+class MetadataFieldSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    project = serializers.IntegerField(
+        required=False, allow_null=True, default=None, source="project_id"
+    )
+    model_fields = MetadataModelFieldNestedSerializer(
+        source="metadatamodelfield_set", many=True, read_only=True
+    )
+
+    class Meta:
+        model = MetadataField
+        fields = (
+            "id",
+            "name",
+            "type",
+            "description",
+            "organisation",
+            "project",
+            "model_fields",
+        )
+        # Disable auto-generated unique validators — conditional
+        # UniqueConstraints are enforced at the database level.
+        validators: list[object] = []
+
+    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
+        data = super().validate(data)
+        project_id = data.get("project_id")
+        organisation = data.get("organisation")
+
+        if (
+            project_id is not None
+            and not Project.objects.filter(
+                id=project_id, organisation=organisation
+            ).exists()
+        ):
+            raise serializers.ValidationError(
+                {"project": "Project must belong to the specified organisation."}
+            )
+
+        # Replicate uniqueness checks that DRF can't auto-generate
+        # from conditional UniqueConstraints.
+        qs = MetadataField.objects.filter(
+            name=data.get("name"),
+            organisation=organisation,
+            project_id=project_id,
+        )
+        if self.instance is not None:
+            assert isinstance(self.instance, MetadataField)
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError(
+                {"name": "A metadata field with this name already exists."}
+            )
+
+        return data
 
 
 class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
@@ -109,20 +182,50 @@ class MetadataSerializerMixin:
     """
 
     def _validate_required_metadata(
-        self, organisation: Organisation, metadata: list[dict[str, Any]]
+        self,
+        organisation: Organisation,
+        metadata: list[dict[str, Any]],
+        project: Project | None = None,
     ) -> None:
         content_type = ContentType.objects.get_for_model(self.Meta.model)  # type: ignore[attr-defined]
-        requirements = MetadataModelFieldRequirement.objects.filter(
+        org_ct = ContentType.objects.get_for_model(Organisation)
+
+        # Field scoping: org-level fields + this project's fields
+        field_scope = Q(
             model_field__content_type=content_type,
             model_field__field__organisation=organisation,
+            model_field__field__project__isnull=True,
+        )
+        # Requirement scoping: org-level + this project's requirements
+        req_scope = Q(content_type=org_ct, object_id=organisation.id)
+
+        overridden_names: set[str] = set()
+        if project is not None:
+            field_scope |= Q(
+                model_field__content_type=content_type,
+                model_field__field__organisation=organisation,
+                model_field__field__project=project,
+            )
+            project_ct = ContentType.objects.get_for_model(Project)
+            req_scope |= Q(content_type=project_ct, object_id=project.id)
+            overridden_names = set(
+                MetadataField.objects.filter(
+                    organisation=organisation, project=project
+                ).values_list("name", flat=True)
+            )
+
+        requirements = MetadataModelFieldRequirement.objects.filter(
+            field_scope & req_scope,
         ).select_related("model_field__field")
 
         metadata_fields = {field["model_field"] for field in metadata}
         for requirement in requirements:
+            field = requirement.model_field.field
+            if field.project is None and field.name in overridden_names:
+                continue
             if requirement.model_field not in metadata_fields:
-                field_name = requirement.model_field.field.name
                 raise serializers.ValidationError(
-                    {"metadata": f"Missing required metadata field: {field_name}"}
+                    {"metadata": f"Missing required metadata field: {field.name}"}
                 )
 
     def _update_metadata(
