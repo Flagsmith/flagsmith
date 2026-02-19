@@ -75,10 +75,10 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
   const { hasUnfilledRequired } = useGlobalMetadataValidation(metadataFields)
 
   useEffect(() => {
-    if (initialFields.length > 0) {
+    if (initialFields.length > 0 && !hasChanges) {
       setMetadataFields(initialFields)
     }
-  }, [initialFields])
+  }, [initialFields, hasChanges])
 
   useEffect(() => {
     setHasMetadataRequired?.(hasUnfilledRequired)
