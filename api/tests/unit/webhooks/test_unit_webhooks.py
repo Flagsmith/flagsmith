@@ -265,6 +265,37 @@ def test_call_organisation_webhooks__multiple_webhooks__failure__calls_expected(
     )
 
 
+def test_call_webhook_with_failure_mail_after_retries__non_2xx_response__logs_warning(
+    mocker: MockerFixture, organisation: Organisation
+) -> None:
+    # Given
+    mock_response = MagicMock()
+    mock_response.ok = False
+    mock_response.status_code = 301
+    mocker.patch("webhooks.webhooks.requests.post", return_value=mock_response)
+    mock_logger = mocker.patch("webhooks.webhooks.logger")
+
+    webhook = OrganisationWebhook.objects.create(
+        url="http://url.1.com", enabled=True, organisation=organisation
+    )
+
+    # When
+    call_webhook_with_failure_mail_after_retries(
+        webhook.id,
+        data={},
+        webhook_type=WebhookType.ORGANISATION.value,
+    )
+
+    # Then
+    mock_logger.warning.assert_called_once_with(
+        "Webhook %d returned HTTP %d (attempt %d/%d)",
+        webhook.id,
+        301,
+        1,
+        3,
+    )
+
+
 def test_call_webhook_with_failure_mail_after_retries_raises_error_on_invalid_args():  # type: ignore[no-untyped-def]
     try_count = 10
     with pytest.raises(ValueError):

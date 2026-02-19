@@ -190,7 +190,14 @@ def call_webhook_with_failure_mail_after_retries(  # type: ignore[no-untyped-def
         res = requests.post(
             str(webhook.url), data=json_data, headers=headers, timeout=10
         )
-        res.raise_for_status()
+        if not res.ok:
+            logger.warning(
+                "Webhook %d returned HTTP %d (attempt %d/%d)",
+                webhook_id,
+                res.status_code,
+                try_count,
+                max_retries,
+            )
     except requests.exceptions.RequestException as exc:
         logger.warning(
             "Webhook call failed for webhook %d (attempt %d/%d): %s",
