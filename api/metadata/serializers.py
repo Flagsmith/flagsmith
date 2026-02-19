@@ -91,13 +91,15 @@ class MetadataFieldSerializer(serializers.ModelSerializer):  # type: ignore[type
         project_id = data.get("project_id")
         organisation = data.get("organisation")
 
-        if project_id is not None:
-            if not Project.objects.filter(
+        if (
+            project_id is not None
+            and not Project.objects.filter(
                 id=project_id, organisation=organisation
-            ).exists():
-                raise serializers.ValidationError(
-                    {"project": "Project must belong to the specified organisation."}
-                )
+            ).exists()
+        ):
+            raise serializers.ValidationError(
+                {"project": "Project must belong to the specified organisation."}
+            )
 
         # Replicate uniqueness checks that DRF can't auto-generate
         # from conditional UniqueConstraints.
@@ -107,6 +109,7 @@ class MetadataFieldSerializer(serializers.ModelSerializer):  # type: ignore[type
             project_id=project_id,
         )
         if self.instance is not None:
+            assert isinstance(self.instance, MetadataField)
             qs = qs.exclude(pk=self.instance.pk)
         if qs.exists():
             raise serializers.ValidationError(
@@ -193,30 +196,27 @@ class MetadataSerializerMixin:
             model_field__field__organisation=organisation,
             model_field__field__project__isnull=True,
         )
+        # Requirement scoping: org-level + this project's requirements
+        req_scope = Q(content_type=org_ct, object_id=organisation.id)
+
+        overridden_names: set[str] = set()
         if project is not None:
             field_scope |= Q(
                 model_field__content_type=content_type,
                 model_field__field__organisation=organisation,
                 model_field__field__project=project,
             )
-
-        # Requirement scoping: org-level + this project's requirements
-        req_scope = Q(content_type=org_ct, object_id=organisation.id)
-        if project is not None:
             project_ct = ContentType.objects.get_for_model(Project)
             req_scope |= Q(content_type=project_ct, object_id=project.id)
-
-        requirements = MetadataModelFieldRequirement.objects.filter(
-            field_scope & req_scope,
-        ).select_related("model_field__field")
-
-        overridden_names: set[str] = set()
-        if project is not None:
             overridden_names = set(
                 MetadataField.objects.filter(
                     organisation=organisation, project=project
                 ).values_list("name", flat=True)
             )
+
+        requirements = MetadataModelFieldRequirement.objects.filter(
+            field_scope & req_scope,
+        ).select_related("model_field__field")
 
         metadata_fields = {field["model_field"] for field in metadata}
         for requirement in requirements:

@@ -42,7 +42,11 @@ class MetadataFieldPermissions(IsAuthenticated):
             "destroy",
             "partial_update",
         ):
-            return request.user.is_organisation_admin(obj.organisation)
+            if request.user.is_organisation_admin(obj.organisation):
+                return True
+
+            if obj.project is not None:
+                return request.user.is_project_admin(obj.project)
 
         return False
 
