@@ -90,6 +90,7 @@ export const metadataService = service
           const queries: Promise<{ data?: unknown; error?: unknown }>[] = [
             baseQuery({
               url: `projects/${arg.projectId}/metadata/fields/?${Utils.toParam({
+                entity: arg.entityType,
                 include_organisation: true,
                 page_size: 100,
               })}`,
@@ -119,14 +120,9 @@ export const metadataService = service
           const entityData = (entityRes?.data ??
             null) as EntityWithMetadata | null
 
-          // Filter fields that apply to this content type using nested model_fields
-          const fieldsForContentType: CustomMetadataField[] = fieldList.results
-            .filter((meta) =>
-              meta.model_fields.some(
-                (mf) => mf.content_type === arg.entityContentType,
-              ),
-            )
-            .map((meta) => {
+          // Map fields to custom metadata fields with required status
+          const fieldsForContentType: CustomMetadataField[] =
+            fieldList.results.map((meta) => {
               const matchingModelField = meta.model_fields.find(
                 (mf) => mf.content_type === arg.entityContentType,
               )
