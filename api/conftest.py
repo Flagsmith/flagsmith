@@ -305,6 +305,7 @@ def xero_subscription(organisation):  # type: ignore[no-untyped-def]
     return subscription
 
 
+@pytest.mark.saas_mode
 @pytest.fixture()
 def chargebee_subscription(organisation: Organisation) -> Subscription:
     subscription = Subscription.objects.get(organisation=organisation)
@@ -330,7 +331,6 @@ def system_tag(project: Project) -> Tag:
     )
 
 
-@pytest.mark.enterprise_mode
 @pytest.fixture()
 def enterprise_subscription(organisation: Organisation) -> Subscription:
     Subscription.objects.filter(organisation=organisation).update(

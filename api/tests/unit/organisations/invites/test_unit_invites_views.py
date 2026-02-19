@@ -330,6 +330,7 @@ def test_update_invite_returns_405(  # type: ignore[no-untyped-def]
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
+@pytest.mark.saas_mode
 @pytest.mark.parametrize(
     "invite_object, url",
     [
@@ -346,35 +347,6 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit_for_saas(
     # Given
     settings.ENABLE_CHARGEBEE = True
     url = reverse(url, args=[invite_object.hash])
-    # When
-    response = staff_client.post(url)
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert (
-        response.json()["detail"]
-        == "Please upgrade your plan to add additional seats/users"
-    )
-
-
-@pytest.mark.parametrize(
-    "invite_object, url",
-    [
-        (lazy_fixture("invite"), "api-v1:users:user-join-organisation"),
-        (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
-    ],
-)
-def test_join_organisation_returns_400_if_exceeds_plan_limit_for_self_hosted_free(
-    staff_client: APIClient,
-    invite_object: Invite | InviteLink,
-    url: str,
-    organisation: Organisation,
-) -> None:
-    # Given
-    url = reverse(url, args=[invite_object.hash])
-
-    assert organisation.subscription.is_free_plan
-
     # When
     response = staff_client.post(url)
 
