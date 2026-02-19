@@ -1,5 +1,6 @@
 from itertools import chain
 
+from common.projects.permissions import VIEW_PROJECT
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
@@ -9,7 +10,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
-from common.projects.permissions import VIEW_PROJECT
 from projects.permissions import NestedProjectPermissions
 
 from .models import (

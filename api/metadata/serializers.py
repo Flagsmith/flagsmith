@@ -91,9 +91,12 @@ class MetadataFieldSerializer(serializers.ModelSerializer):  # type: ignore[type
         project_id = data.get("project_id")
         organisation = data.get("organisation")
 
-        if project_id is not None and not Project.objects.filter(
-            id=project_id, organisation=organisation
-        ).exists():
+        if (
+            project_id is not None
+            and not Project.objects.filter(
+                id=project_id, organisation=organisation
+            ).exists()
+        ):
             raise serializers.ValidationError(
                 {"project": "Project must belong to the specified organisation."}
             )
