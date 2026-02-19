@@ -164,92 +164,91 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   }
 
   const save = async () => {
-    if (isEdit) {
-      await updateMetadataField({
-        body: {
-          description,
-          name,
-          organisation: organisationId,
-          type: `${typeValue?.value}`,
-          ...(projectId ? { project: parseInt(projectId) } : {}),
-        },
-        id: id!,
-      })
-      if (metadataFieldSelectList.length) {
-        await Promise.all(
-          metadataFieldSelectList.map(async (m) => {
-            const query = generateDataQuery(
-              m.value,
-              parseInt(id!),
-              !!m?.isRequired,
-              0,
-              true,
-            )
-            await createMetadataModelField(query)
-          }),
-        )
-      }
-      if (metadataUpdatedSelectList.length) {
-        await Promise.all(
-          metadataUpdatedSelectList?.map(
-            async (m: metadataFieldUpdatedSelectListType) => {
+    try {
+      if (isEdit) {
+        await updateMetadataField({
+          body: {
+            description,
+            name,
+            organisation: organisationId,
+            type: `${typeValue?.value}`,
+            ...(projectId ? { project: parseInt(projectId) } : {}),
+          },
+          id: id!,
+        }).unwrap()
+        if (metadataFieldSelectList.length) {
+          await Promise.all(
+            metadataFieldSelectList.map(async (m) => {
               const query = generateDataQuery(
-                m.content_type,
-                m.field,
-                !!m.is_required_for,
-                m.id,
-                m.new,
+                m.value,
+                parseInt(id!),
+                !!m?.isRequired,
+                0,
+                true,
               )
-              if (!m.removed && !m.new) {
-                await updateMetadataModelField(query)
-              } else if (m.removed) {
-                await deleteMetadataModelField({
-                  id: m.id,
-                  organisation_id: organisationId,
-                })
-              } else if (m.new) {
-                const newQuery = { ...query }
-                delete newQuery.id
-                await createMetadataModelField(newQuery)
-              }
-            },
-          ),
-        )
+              await createMetadataModelField(query).unwrap()
+            }),
+          )
+        }
+        if (metadataUpdatedSelectList.length) {
+          await Promise.all(
+            metadataUpdatedSelectList?.map(
+              async (m: metadataFieldUpdatedSelectListType) => {
+                const query = generateDataQuery(
+                  m.content_type,
+                  m.field,
+                  !!m.is_required_for,
+                  m.id,
+                  m.new,
+                )
+                if (!m.removed && !m.new) {
+                  await updateMetadataModelField(query).unwrap()
+                } else if (m.removed) {
+                  await deleteMetadataModelField({
+                    id: m.id,
+                    organisation_id: organisationId,
+                  }).unwrap()
+                } else if (m.new) {
+                  const newQuery = { ...query }
+                  delete newQuery.id
+                  await createMetadataModelField(newQuery).unwrap()
+                }
+              },
+            ),
+          )
+        }
+      } else {
+        const res = await createMetadataField({
+          body: {
+            description,
+            name,
+            organisation: organisationId,
+            type: `${typeValue?.value}`,
+            ...(projectId ? { project: parseInt(projectId) } : {}),
+          },
+        }).unwrap()
+        if (res?.id) {
+          await Promise.all(
+            metadataFieldSelectList.map(async (m) => {
+              const query = generateDataQuery(
+                m.value,
+                res.id,
+                !!m?.isRequired,
+                0,
+                true,
+              )
+              await createMetadataModelField(query).unwrap()
+            }),
+          )
+        }
       }
       getStore().dispatch(
         metadataService.util.invalidateTags([{ type: 'Metadata' }]),
       )
       onComplete?.()
       closeModal()
-    } else {
-      const res = await createMetadataField({
-        body: {
-          description,
-          name,
-          organisation: organisationId,
-          type: `${typeValue?.value}`,
-          ...(projectId ? { project: parseInt(projectId) } : {}),
-        },
-      })
-      if (res?.data?.id) {
-        await Promise.all(
-          metadataFieldSelectList.map(async (m) => {
-            const query = generateDataQuery(
-              m.value,
-              res.data.id,
-              !!m?.isRequired,
-              0,
-              true,
-            )
-            await createMetadataModelField(query)
-          }),
-        )
-      }
-      getStore().dispatch(
-        metadataService.util.invalidateTags([{ type: 'Metadata' }]),
-      )
-      onComplete?.()
-      closeModal()
+    } catch (e) {
+      toast('Failed to save custom field', 'danger')
     }
   }
 
