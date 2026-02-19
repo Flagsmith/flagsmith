@@ -65,3 +65,7 @@ Multivariate LaunchDarkly flags will be imported into Flagsmith as MultiVariate 
 Multivariate values will be taken from the `variations` field of within LaunchDarkly.
 
 Values set to serve when targeting is off will be imported as control values.
+
+#### Archived and deprecated flags
+
+Archived and deprecated flags in LaunchDarkly are imported as archived flags in Flagsmith.
