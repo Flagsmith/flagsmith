@@ -689,9 +689,7 @@ def test_list_project_metadata_fields__excludes_other_project_fields(
     assert response.status_code == status.HTTP_200_OK
     returned_ids = {r["id"] for r in response.json()["results"]}
     assert project_a_field.id in returned_ids
-    assert all(
-        r["project"] in (project.id, None) for r in response.json()["results"]
-    )
+    assert all(r["project"] in (project.id, None) for r in response.json()["results"])
 
 
 @pytest.mark.parametrize(
@@ -751,3 +749,160 @@ def test_create_metadata_field__uniqueness(
 
     # Then
     assert response.status_code == expected_status
+
+
+def test_list_project_metadata_fields__page_size__returns_all(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    feature_content_type: ContentType,
+) -> None:
+    # Given - create 15 fields to exceed the default page size of 10
+    fields = []
+    for i in range(15):
+        field = MetadataField.objects.create(
+            name=f"field_{i}", type="str", organisation=organisation, project=project
+        )
+        MetadataModelField.objects.create(
+            field=field, content_type=feature_content_type
+        )
+        fields.append(field)
+
+    url = reverse("api-v1:projects:project-metadata-fields-list", args=[project.id])
+
+    # When
+    response = admin_client.get(f"{url}?page_size=100")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()["results"]) == 15
+
+
+@pytest.mark.parametrize(
+    "entity",
+    ["feature", "segment", "environment"],
+)
+def test_list_project_metadata_fields__entity_filter__returns_matching_only(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    feature_content_type: ContentType,
+    segment_content_type: ContentType,
+    environment_content_type: ContentType,
+    entity: str,
+) -> None:
+    # Given
+    content_types = {
+        "feature": feature_content_type,
+        "segment": segment_content_type,
+        "environment": environment_content_type,
+    }
+
+    created_fields: dict[str, MetadataField] = {}
+    for name, ct in content_types.items():
+        field = MetadataField.objects.create(
+            name=f"{name}_only_field",
+            type="str",
+            organisation=organisation,
+            project=project,
+        )
+        MetadataModelField.objects.create(field=field, content_type=ct)
+        created_fields[name] = field
+
+    url = reverse("api-v1:projects:project-metadata-fields-list", args=[project.id])
+
+    # When
+    response = admin_client.get(f"{url}?entity={entity}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    returned_ids = {r["id"] for r in response.json()["results"]}
+    assert returned_ids == {created_fields[entity].id}
+
+
+def test_list_project_metadata_fields__entity_filter__includes_multi_entity_fields(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    feature_content_type: ContentType,
+    segment_content_type: ContentType,
+    environment_content_type: ContentType,
+) -> None:
+    # Given - a field assigned to all three entities
+    all_entities_field = MetadataField.objects.create(
+        name="all_entities_field",
+        type="str",
+        organisation=organisation,
+        project=project,
+    )
+    for ct in [feature_content_type, segment_content_type, environment_content_type]:
+        MetadataModelField.objects.create(field=all_entities_field, content_type=ct)
+
+    # And a field assigned only to feature
+    feature_only_field = MetadataField.objects.create(
+        name="feature_only_field",
+        type="str",
+        organisation=organisation,
+        project=project,
+    )
+    MetadataModelField.objects.create(
+        field=feature_only_field, content_type=feature_content_type
+    )
+
+    url = reverse("api-v1:projects:project-metadata-fields-list", args=[project.id])
+
+    # When - filtering by segment
+    response = admin_client.get(f"{url}?entity=segment")
+
+    # Then - only the all_entities_field is returned
+    assert response.status_code == status.HTTP_200_OK
+    returned_ids = {r["id"] for r in response.json()["results"]}
+    assert returned_ids == {all_entities_field.id}
+
+
+def test_list_project_metadata_fields__entity_filter_with_include_organisation__returns_both(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    feature_content_type: ContentType,
+    segment_content_type: ContentType,
+) -> None:
+    # Given - an org-level field for feature
+    org_field = MetadataField.objects.create(
+        name="org_feature_field", type="str", organisation=organisation
+    )
+    MetadataModelField.objects.create(
+        field=org_field, content_type=feature_content_type
+    )
+
+    # And a project-level field for feature
+    project_field = MetadataField.objects.create(
+        name="project_feature_field",
+        type="str",
+        organisation=organisation,
+        project=project,
+    )
+    MetadataModelField.objects.create(
+        field=project_field, content_type=feature_content_type
+    )
+
+    # And a project-level field for segment (should be excluded)
+    segment_field = MetadataField.objects.create(
+        name="project_segment_field",
+        type="str",
+        organisation=organisation,
+        project=project,
+    )
+    MetadataModelField.objects.create(
+        field=segment_field, content_type=segment_content_type
+    )
+
+    url = reverse("api-v1:projects:project-metadata-fields-list", args=[project.id])
+
+    # When
+    response = admin_client.get(f"{url}?include_organisation=true&entity=feature")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    returned_ids = {r["id"] for r in response.json()["results"]}
+    assert returned_ids == {org_field.id, project_field.id}
