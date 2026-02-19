@@ -91,6 +91,7 @@ export const metadataService = service
             baseQuery({
               url: `projects/${arg.projectId}/metadata/fields/?${Utils.toParam({
                 include_organisation: true,
+                page_size: 100,
               })}`,
             }),
           ]
