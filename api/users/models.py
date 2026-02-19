@@ -4,6 +4,7 @@ import string
 import typing
 import uuid
 
+from common.core.utils import is_enterprise, is_saas
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -237,7 +238,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     def join_organisation_from_invite(self, invite: "AbstractBaseInviteModel"):  # type: ignore[no-untyped-def]
         organisation = invite.organisation
 
-        if organisation.over_plan_seats_limit(additional_seats=1):
+        # We purposefully allow self-hosted open source users to have unlimited users,
+        # but any paid or SaaS subscriptions must respect the seats limit.
+        # Ref: https://github.com/Flagsmith/flagsmith-private/issues/105
+        if (is_saas() or is_enterprise()) and organisation.over_plan_seats_limit(
+            additional_seats=1
+        ):
             if organisation.is_auto_seat_upgrade_available():
                 organisation.subscription.add_single_seat()  # type: ignore[no-untyped-call]
             else:
