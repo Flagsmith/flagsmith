@@ -3,16 +3,6 @@ import typing
 
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
-from flag_engine.features.models import FeatureModel as EngineFeatureModel
-from flag_engine.features.models import FeatureStateModel as EngineFeatureStateModel
-from flag_engine.features.models import (
-    MultivariateFeatureOptionModel as EngineMultivariateFeatureOptionModel,
-)
-from flag_engine.features.models import (
-    MultivariateFeatureStateValueModel as EngineMultivariateFeatureStateValueModel,
-)
-from flag_engine.identities.models import IdentityModel as EngineIdentity
-from flag_engine.utils.exceptions import DuplicateFeatureState
 from pydantic import ValidationError as PydanticValidationError
 from pyngo import drf_error_details
 from rest_framework import serializers
@@ -25,6 +15,18 @@ from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import (  # type: ignore[attr-defined]
     FeatureStateValueSerializer,
 )
+from util.engine_models.features.models import FeatureModel as EngineFeatureModel
+from util.engine_models.features.models import (
+    FeatureStateModel as EngineFeatureStateModel,
+)
+from util.engine_models.features.models import (
+    MultivariateFeatureOptionModel as EngineMultivariateFeatureOptionModel,
+)
+from util.engine_models.features.models import (
+    MultivariateFeatureStateValueModel as EngineMultivariateFeatureStateValueModel,
+)
+from util.engine_models.identities.models import IdentityModel as EngineIdentity
+from util.engine_models.utils.exceptions import DuplicateFeatureState
 from util.mappers import (
     map_engine_identity_to_identity_document,
     map_feature_to_engine,
