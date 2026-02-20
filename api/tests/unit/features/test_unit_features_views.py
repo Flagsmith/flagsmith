@@ -4185,10 +4185,9 @@ def test_list_features__segment_query__sorts_by_field_with_overrides_first(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    results = response.json()["results"]
-    result_names = [r["name"] for r in results]
-    assert result_names[0] == "feature_c"
-    assert result_names[1:] == ["feature_a", "feature_b"]
+    assert ["feature_c", "feature_a", "feature_b"] == [
+        f["name"] for f in response.json()["results"]
+    ]
 
 
 @pytest.mark.parametrize("sort_field", ["name", "created_date"])
@@ -4219,14 +4218,13 @@ def test_list_features__identity_query__sorts_by_field_with_overrides_first(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    results = response.json()["results"]
-    result_names = [r["name"] for r in results]
-    assert result_names[0] == "feature_c"
-    assert result_names[1:] == ["feature_a", "feature_b"]
+    assert ["feature_c", "feature_a", "feature_b"] == [
+        f["name"] for f in response.json()["results"]
+    ]
 
 
 @pytest.mark.parametrize("sort_field", ["name", "created_date"])
-def test_list_features__edge_identity_query__sorts_with_overrides_first(
+def test_list_features__edge_identity_query__sorts_by_field_with_overrides_first(
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -4256,9 +4254,9 @@ def test_list_features__edge_identity_query__sorts_with_overrides_first(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    results = response.json()["results"]
-    result_names = [r["name"] for r in results]
-    assert result_names == ["feature_b", "feature_a", "feature_c"]
+    assert ["feature_b", "feature_a", "feature_c"] == [
+        f["name"] for f in response.json()["results"]
+    ]
 
 
 def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
