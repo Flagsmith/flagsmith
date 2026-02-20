@@ -53,7 +53,7 @@ from metadata.models import MetadataModelField
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.code_references.models import FeatureFlagCodeReferencesScan
-from projects.models import Project, UserProjectPermission
+from projects.models import EdgeV2MigrationStatus, Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
 from tests.types import (
@@ -4240,3 +4240,49 @@ def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
     second_feature_metadata_after = second_feature_check.json()["metadata"]
     assert len(second_feature_metadata_after) == 1
     assert second_feature_metadata_after[0]["field_value"] == "200"
+
+
+def test_list_features__edge_v2_project__makes_one_dynamo_query(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    # Set up project as a DynamoDB edge project with v2 migration complete,
+    # which is the path that triggers per-feature DynamoDB queries.
+    project.enable_dynamo_db = True
+    project.edge_v2_migration_status = EdgeV2MigrationStatus.COMPLETE
+    project.save()
+
+    # Create two additional features so we have 3 in total (including the fixture feature).
+    Feature.objects.create(name="feature_2", project=project)
+    Feature.objects.create(name="feature_3", project=project)
+
+    # Inject a mock DynamoDB table directly on the module-level wrapper singleton so
+    # we can count raw table.query calls regardless of how the implementation
+    # structures its requests. query() must return a valid shape.
+    mock_table = mocker.MagicMock()
+    mock_table.query.return_value = {"Items": [], "Count": 0}
+
+    from edge_api.identities import edge_identity_service
+
+    mocker.patch.object(
+        edge_identity_service.ddb_environment_v2_wrapper,
+        "_table",
+        mock_table,
+    )
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = admin_client_new.get(f"{url}?environment={environment.id}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    feature_count = Feature.objects.filter(project=project).count()
+    assert feature_count == 3
+
+    # Check for N+1 dynamo query issues
+    assert mock_table.query.call_count == 1
