@@ -1,4 +1,6 @@
 import json
+from collections.abc import Generator
+from typing import Any
 
 import pytest
 import responses
@@ -17,7 +19,7 @@ from users.models import FFAdminUser
 WEBHOOK_URL = "https://example.com/webhook"
 
 
-def _extract_webhook_payloads(event_type: str | None):
+def _extract_webhook_payloads(event_type: str | None) -> Generator[dict[str, Any]]:
     """Extract webhook payloads from responses cache"""
     return (
         payload
@@ -249,7 +251,7 @@ def test_update_feature_live__legacy_versioning__webhook_payload_has_correct_pre
     environment: int,
     feature: int,
     webhook: str,
-):
+) -> None:
     # Given
     feature_state_json = admin_client.get(
         f"/api/v1/features/featurestates/?environment={environment}&feature={feature}"
@@ -289,7 +291,7 @@ def test_update_feature_scheduled__legacy_versioning__webhook_payload_has_correc
     environment: int,
     feature: int,
     webhook: str,
-):
+) -> None:
     """Covers https://github.com/Flagsmith/flagsmith/issues/2063"""
     # Given
     previous_feature_state = FeatureState.objects.get(feature_id=feature)

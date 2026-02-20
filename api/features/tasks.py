@@ -90,7 +90,7 @@ def _get_previous_feature_state_for_change_request(
     instance: FeatureState,
 ) -> FeatureState | None:
     """Find the previous live FeatureState for a change request (legacy versioning)."""
-    return (
+    result: FeatureState | None = (
         FeatureState.objects.exclude(
             change_request_id=instance.change_request_id,
         )
@@ -112,6 +112,7 @@ def _get_previous_feature_state_for_change_request(
         )
         .first()
     )
+    return result
 
 
 def _get_feature_state_webhook_data(
