@@ -20,14 +20,15 @@ const InvitePage = class extends Component {
     this.props.history.replace(Utils.getOrganisationHomePage(id))
   }
 
-  getErrorMessage(detail) {
-    switch (detail) {
+  getErrorMessage(error) {
+    switch (error) {
+      case 'No Invite matches the given query.':
       case 'Not found.':
         return 'We could not validate your invite, please check the invite URL and email address you have entered is correct.'
       case 'Please upgrade your plan to add additional seats/users':
         return 'The organisation you have been invited to has no seats available. Please contact the organisation administrator to resolve this before trying again.'
       default:
-        return detail
+        return error
     }
   }
 
@@ -41,7 +42,7 @@ const InvitePage = class extends Component {
                 {error ? (
                   <div>
                     <h3 className='pt-5'>Oops</h3>
-                    <p>{this.getErrorMessage(error.detail)}</p>
+                    <p>{this.getErrorMessage(error)}</p>
                   </div>
                 ) : (
                   <Loader />
