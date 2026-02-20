@@ -5,16 +5,18 @@ import { caretDown } from 'ionicons/icons'
 import classNames from 'classnames'
 
 type TableFilterType = {
-  title: string
+  title: string | ReactNode
   hideTitle?: boolean
   dropdownTitle?: ReactNode | string
   className?: string
   children: ReactNode
+  'data-test'?: string
 }
 
 const TableFilter: FC<TableFilterType> = ({
   children,
   className,
+  'data-test': dataTest,
   dropdownTitle,
   hideTitle,
   title,
@@ -28,6 +30,12 @@ const TableFilter: FC<TableFilterType> = ({
   return (
     <>
       <Row
+        data-test={
+          dataTest ||
+          (typeof title === 'string'
+            ? `table-filter-${title.toLowerCase()}`
+            : undefined)
+        }
         onClick={toggle}
         className={classNames(
           'cursor-pointer py-2 py-lg-0 user-select-none',

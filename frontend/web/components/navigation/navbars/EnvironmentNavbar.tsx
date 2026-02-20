@@ -88,7 +88,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                 </SidebarLink>
               )}
               <SidebarLink
-                id='change-requests-link'
+                id='scheduled-link'
                 icon='timer'
                 to={`/project/${projectId}/environment/${environmentId}/scheduled-changes/`}
               >
