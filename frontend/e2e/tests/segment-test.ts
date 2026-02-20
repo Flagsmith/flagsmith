@@ -258,7 +258,8 @@ export const testSegment3 = async () => {
   await click(byId('user-feature-switch-1-on'))
   await click('#confirm-toggle-feature-btn')
   await waitAndRefresh() // wait and refresh to avoid issues with data sync from UK -> US in github workflows
-  await waitForElementVisible(byId('user-feature-switch-1-off'))
+  // After toggling, 'flag' has an identity override and sorts first (index 0).
+  await waitForElementVisible(byId('user-feature-switch-0-off'))
 
   log('Edit flag for user')
   await click(byId('user-feature-0'))
@@ -268,8 +269,8 @@ export const testSegment3 = async () => {
   await assertTextContent(byId('user-feature-value-0'), '"small"')
 
   log('Toggle flag for user again')
-  await click(byId('user-feature-switch-1-off'))
+  await click(byId('user-feature-switch-0-off'))
   await click('#confirm-toggle-feature-btn')
   await waitAndRefresh() // wait and refresh to avoid issues with data sync from UK -> US in github workflows
-  await waitForElementVisible(byId('user-feature-switch-1-on'))
+  await waitForElementVisible(byId('user-feature-switch-0-on'))
 }

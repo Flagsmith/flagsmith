@@ -4150,6 +4150,115 @@ def test_list_features_segment_query_param_with_invalid_segment(
     assert feature_data["segment_feature_state"] is None
 
 
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__segment_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    sort_field: str,
+) -> None:
+    # Given
+    Feature.objects.create(project=project, name="feature_a")
+    feature_b = Feature.objects.create(project=project, name="feature_b")
+    feature_c = Feature.objects.create(project=project, name="feature_c")
+    other_environment = Environment.objects.create(
+        project=project, name="other_environment"
+    )
+
+    # feature_c has a segment override in the requested environment
+    FeatureSegment.objects.create(
+        feature=feature_c, segment=segment, environment=environment
+    )
+    # feature_b has a segment override in a different environment
+    FeatureSegment.objects.create(
+        feature=feature_b, segment=segment, environment=other_environment
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&segment={segment.id}"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_c", "feature_a", "feature_b"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__identity_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    identity: Identity,
+    sort_field: str,
+) -> None:
+    # Given
+    Feature.objects.create(project=project, name="feature_a")
+    Feature.objects.create(project=project, name="feature_b")
+    feature_c = Feature.objects.create(project=project, name="feature_c")
+
+    # feature_c has an identity override
+    FeatureState.objects.create(
+        feature=feature_c, environment=environment, identity=identity
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity={identity.id}"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_c", "feature_a", "feature_b"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__edge_identity_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    sort_field: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    project.enable_dynamo_db = True
+    project.save()
+
+    Feature.objects.create(project=project, name="feature_a")
+    feature_b = Feature.objects.create(project=project, name="feature_b")
+    Feature.objects.create(project=project, name="feature_c")
+    mocker.patch.object(
+        views,
+        "get_overridden_feature_ids_for_edge_identity",
+        return_value={feature_b.id},
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity=59efa2a7-6a45-46d6-b953-a7073a90eacf"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_b", "feature_a", "feature_c"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
 def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
     admin_client_new: APIClient,
     project: Project,

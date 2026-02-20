@@ -7,7 +7,17 @@ from common.core.utils import is_database_replica_setup, using_database_replica
 from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from django.core.cache import caches
-from django.db.models import Max, Q, QuerySet
+from django.db.models import (
+    BooleanField,
+    Case,
+    Exists,
+    Max,
+    OuterRef,
+    Q,
+    QuerySet,
+    Value,
+    When,
+)
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -35,6 +45,9 @@ from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from app_analytics.throttles import InfluxQueryThrottle
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
 from core.request_origin import RequestOrigin
+from edge_api.identities.edge_identity_service import (
+    get_overridden_feature_ids_for_edge_identity,
+)
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.identities.serializers import (
@@ -56,7 +69,7 @@ from webhooks.webhooks import WebhookEventType
 
 from .constants import INTERSECTION, UNION
 from .features_service import get_overrides_data
-from .models import Feature, FeatureState
+from .models import Feature, FeatureSegment, FeatureState
 from .multivariate.serializers import (
     FeatureMVOptionsValuesResponseSerializer,
 )
@@ -224,7 +237,42 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             "-" if query_data["sort_direction"] == "DESC" else "",
             query_data["sort_field"],
         )
-        queryset = queryset.order_by(sort)
+        override_ordering: list[str] = []
+        if environment_id and (segment_id := query_data.get("segment")):
+            queryset = queryset.annotate(
+                has_segment_override=Exists(
+                    FeatureSegment.objects.filter(
+                        feature=OuterRef("pk"),
+                        segment_id=segment_id,
+                        environment_id=environment_id,
+                    )
+                ),
+            )
+            override_ordering.append("-has_segment_override")
+        if identity := query_data.get("identity"):
+            if project.enable_dynamo_db:
+                # Bounded by Project.max_features_allowed
+                override_feature_ids = get_overridden_feature_ids_for_edge_identity(
+                    identity
+                )
+                queryset = queryset.annotate(
+                    has_identity_override=Case(
+                        When(pk__in=override_feature_ids, then=Value(True)),
+                        default=Value(False),
+                        output_field=BooleanField(),
+                    ),
+                )
+            else:
+                queryset = queryset.annotate(
+                    has_identity_override=Exists(
+                        FeatureState.objects.filter(
+                            feature=OuterRef("pk"),
+                            identity_id=identity,
+                        )
+                    ),
+                )
+            override_ordering.append("-has_identity_override")
+        queryset = queryset.order_by(*override_ordering, sort)
 
         if environment_id:
             page = self.paginate_queryset(queryset)

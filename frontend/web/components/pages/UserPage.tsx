@@ -88,9 +88,9 @@ const UserPage: FC = () => {
       true,
       search,
       sort,
-      getServerFilter(filter),
+      { ...getServerFilter(filter), identity: id },
     )
-  }, [filter, environmentId, projectId])
+  }, [filter, environmentId, projectId, id])
 
   useEffect(() => {
     AppActions.getIdentity(environmentId, id)
@@ -141,10 +141,10 @@ const UserPage: FC = () => {
         search,
         sort,
         pageNumber,
-        getServerFilter(filter),
+        { ...getServerFilter(filter), identity: id },
       )
     },
-    [environmentId, projectId, filter],
+    [environmentId, projectId, filter, id],
   )
 
   return (
