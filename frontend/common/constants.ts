@@ -470,6 +470,9 @@ const Constants = {
       : apiUrl
   },
   getUpgradeUrl: (feature?: string) => {
+    // TODO: deprecate usages of this helper function without
+    //  providing feature since the billing page self hosted
+    //  has links to the pricing page anyway.
     return Utils.isSaas()
       ? '/organisation-settings?tab=billing'
       : `https://www.flagsmith.com/pricing${

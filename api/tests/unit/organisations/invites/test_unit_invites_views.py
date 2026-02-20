@@ -159,7 +159,7 @@ def test_update_invite_link_returns_405(invite_link, admin_client, organisation)
 def test_join_organisation_with_permission_groups(
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
-    subscription: Subscription,
+    enterprise_subscription: Subscription,
     api_client: APIClient,
 ) -> None:
     # Given
@@ -172,8 +172,9 @@ def test_join_organisation_with_permission_groups(
     invite.permission_groups.add(user_permission_group)
 
     # update subscription to add another seat
-    subscription.max_seats = 2
-    subscription.save()
+    current_seats = organisation.users.count()
+    enterprise_subscription.max_seats += current_seats + 1
+    enterprise_subscription.save()
 
     url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
     data = {"hubspotutk": "somehubspotdata"}
@@ -284,7 +285,7 @@ def test_create_invite_returns_400_if_seats_are_over(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["detail"]
-        == "Please Upgrade your plan to add additional seats/users"
+        == "Please upgrade your plan to add additional seats/users"
     )
 
 
@@ -329,6 +330,7 @@ def test_update_invite_returns_405(  # type: ignore[no-untyped-def]
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
+@pytest.mark.saas_mode
 @pytest.mark.parametrize(
     "invite_object, url",
     [
@@ -336,7 +338,7 @@ def test_update_invite_returns_405(  # type: ignore[no-untyped-def]
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation_returns_400_if_exceeds_plan_limit(
+def test_join_organisation_returns_400_if_exceeds_plan_limit_for_saas(
     staff_client: APIClient,
     invite_object: Invite | InviteLink,
     url: str,
@@ -352,7 +354,39 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["detail"]
-        == "Please Upgrade your plan to add additional seats/users"
+        == "Please upgrade your plan to add additional seats/users"
+    )
+
+
+@pytest.mark.enterprise_mode
+@pytest.mark.parametrize(
+    "invite_object, url",
+    [
+        (lazy_fixture("invite"), "api-v1:users:user-join-organisation"),
+        (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
+    ],
+)
+def test_join_organisation_returns_400_if_exceeds_plan_limit_for_self_hosted_enterprise(
+    staff_client: APIClient,
+    invite_object: Invite | InviteLink,
+    url: str,
+    organisation: Organisation,
+    enterprise_subscription: Subscription,
+) -> None:
+    # Given
+    url = reverse(url, args=[invite_object.hash])
+
+    enterprise_subscription.max_seats = 1
+    enterprise_subscription.save()
+
+    # When
+    response = staff_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["detail"]
+        == "Please upgrade your plan to add additional seats/users"
     )
 
 
