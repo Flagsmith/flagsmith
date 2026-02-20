@@ -14,7 +14,7 @@ export const buildVersionService = service
         queryFn: async (args, _, _2, baseQuery) => {
           try {
             const [frontendRes, backendRes] = await Promise.all([
-              data.get(`/version/`).catch(() => ({})),
+              data.get(`/_frontend_version`).catch(() => ({})),
               data.get(`${Project.api.replace('api/v1/', '')}version/`),
             ])
 

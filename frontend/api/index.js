@@ -139,6 +139,14 @@ if (process.env.FLAGSMITH_PROXY_API_URL) {
       xfwd: true,
     }),
   )
+  app.use(
+    '/version/',
+    createProxyMiddleware({
+      changeOrigin: true,
+      target: process.env.FLAGSMITH_PROXY_API_URL,
+      xfwd: true,
+    }),
+  )
 }
 
 if (isDev) {
@@ -179,7 +187,7 @@ app.get('/health', (req, res) => {
   res.send('OK')
 })
 
-app.get('/version', (req, res) => {
+app.get('/_frontend_version', (req, res) => {
   let commitSha = 'Unknown'
   let imageTag = 'Unknown'
 
