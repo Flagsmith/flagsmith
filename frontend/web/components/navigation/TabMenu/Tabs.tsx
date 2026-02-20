@@ -181,28 +181,10 @@ const Tabs: React.FC<TabsProps> = ({
                 const actualIndex = i + visibleCount
                 const active = value === actualIndex
                 return {
-                  className: classNames('', [
-                    active
-                      ? 'text-primary fw-semibold bg-primary-opacity-5 fill-primary'
-                      : 'hover-color-primary',
-                  ]),
-                  label: (
-                    <div className='d-flex align-items-center text-nowrap tabs-nav full-width'>
-                      <TabButton
-                        key={`overflow-${actualIndex}`}
-                        isSelected={false}
-                        className={classNames(
-                          'full-width btn-no-focus width-100',
-                          active && 'text-primary fw-semibold fill-primary',
-                        )}
-                        noFocus={noFocus}
-                        child={child}
-                        buttonTheme={buttonTheme}
-                      >
-                        {child.props.tabLabel}
-                      </TabButton>
-                    </div>
-                  ) as React.ReactNode,
+                  className: classNames(
+                    active ? 'text-primary fw-semibold' : '',
+                  ),
+                  label: child.props.tabLabel,
                   onClick: (e: any) => {
                     handleChange(
                       e,
