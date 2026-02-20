@@ -173,7 +173,7 @@ def test_join_organisation_with_permission_groups(
 
     # update subscription to add another seat
     current_seats = organisation.users.count()
-    enterprise_subscription.max_seats += current_seats + 1
+    enterprise_subscription.max_seats = current_seats + 1
     enterprise_subscription.save()
 
     url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
