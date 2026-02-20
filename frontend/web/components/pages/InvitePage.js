@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import Constants from 'common/constants'
 import { withRouter } from 'react-router-dom'
-import AccountProvider from 'common/providers/AccountProvider';
+import AccountProvider from 'common/providers/AccountProvider'
 const InvitePage = class extends Component {
   static displayName = 'InvitePage'
 
