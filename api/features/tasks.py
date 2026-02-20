@@ -68,14 +68,50 @@ def _get_previous_state(
     instance: FeatureState,
     history_instance: HistoricalFeatureState,
     event_type: WebhookEventType,
-) -> dict:  # type: ignore[type-arg]
+) -> dict[str, Any] | None:
     if event_type == WebhookEventType.FLAG_DELETED:
         return _get_feature_state_webhook_data(instance)
+
+    # Change requests create a new FeatureState with its own history
+    if instance.change_request_id is not None:
+        previous_fs = _get_previous_feature_state_for_change_request(instance)
+        if previous_fs:
+            return _get_feature_state_webhook_data(previous_fs)
+        return None
+
     if history_instance and history_instance.prev_record:
         return _get_feature_state_webhook_data(
             history_instance.prev_record.instance, previous=True
         )
-    return None  # type: ignore[return-value]
+    return None
+
+
+def _get_previous_feature_state_for_change_request(
+    instance: FeatureState,
+) -> FeatureState | None:
+    """Find the previous live FeatureState for a change request (legacy versioning)."""
+    return (
+        FeatureState.objects.exclude(
+            change_request_id=instance.change_request_id,
+        )
+        .filter(
+            environment_id=instance.environment_id,
+            feature_id=instance.feature_id,
+            feature_segment=instance.feature_segment,
+            identity=instance.identity,
+            version__isnull=False,
+            live_from__lt=instance.live_from,
+        )
+        .order_by("-live_from")
+        .select_related(
+            "feature",
+            "environment",
+            "feature_state_value",
+            "feature_segment",
+            "identity",
+        )
+        .first()
+    )
 
 
 def _get_feature_state_webhook_data(
