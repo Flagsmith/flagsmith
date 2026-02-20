@@ -95,9 +95,9 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
         required=False,
         help_text="Integer ID of the segment to retrieve segment overrides for.",
     )
-    identity = serializers.IntegerField(
+    identity = serializers.CharField(
         required=False,
-        help_text="Integer ID of the identity to sort features with identity overrides first.",
+        help_text="ID of the identity to sort features with identity overrides first.",
     )
     is_enabled = serializers.BooleanField(
         allow_null=True,

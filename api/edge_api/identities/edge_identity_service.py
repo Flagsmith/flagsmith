@@ -1,10 +1,16 @@
-from environments.dynamodb import DynamoEnvironmentV2Wrapper
+from flag_engine.identities.models import IdentityModel
+
+from environments.dynamodb import (
+    DynamoEnvironmentV2Wrapper,
+    DynamoIdentityWrapper,
+)
 from environments.dynamodb.types import (
     IdentityOverridesV2List,
     IdentityOverrideV2,
 )
 
 ddb_environment_v2_wrapper = DynamoEnvironmentV2Wrapper()
+ddb_identity_wrapper = DynamoIdentityWrapper()
 
 
 def get_edge_identity_overrides(
@@ -53,3 +59,9 @@ def get_edge_identity_overrides_for_feature_ids(
         )
 
     return results
+
+
+def get_overridden_feature_ids_for_edge_identity(identity_uuid: str) -> set[int]:
+    identity_document = ddb_identity_wrapper.get_item_from_uuid_or_404(identity_uuid)
+    identity_model = IdentityModel.model_validate(identity_document)
+    return {fs.feature.id for fs in identity_model.identity_features}
