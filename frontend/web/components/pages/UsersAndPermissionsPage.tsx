@@ -80,7 +80,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const [resendUserInvite] = useResendUserInviteMutation()
 
   const invites = userInvitesData?.results
-  const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
   const verifySeatsLimit = Utils.getFlagsmithHasFeature(
     'verify_seats_limit_for_invite_links',
   )
@@ -122,9 +121,10 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const max_seats = meta.max_seats || 1
   const isAWS = AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
   const autoSeats =
-    paymentsEnabled && !isAWS && Utils.getPlansPermission('AUTO_SEATS')
-  const usedSeats = organisation.num_seats >= max_seats
-  const overSeats = organisation.num_seats > max_seats
+    Utils.isSaas() && !isAWS && Utils.getPlansPermission('AUTO_SEATS')
+  const isSaasOrEnterprise = Utils.isSaas() || Utils.isEnterpriseImage()
+  const usedSeats = isSaasOrEnterprise && organisation.num_seats >= max_seats
+  const overSeats = isSaasOrEnterprise && organisation.num_seats > max_seats
   const [role, setRole] = useState<'ADMIN' | 'USER'>('ADMIN')
 
   const deleteInvite = (id: number) => {
@@ -219,7 +219,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         )}
                       </Row>
                       <FormGroup className='mt-2'>
-                        {!isLoading && (
+                        {!isLoading && isSaasOrEnterprise && (
                           <div className='col-md-6 mt-3 mb-4'>
                             <InfoMessage>
                               {'You are currently using '}
