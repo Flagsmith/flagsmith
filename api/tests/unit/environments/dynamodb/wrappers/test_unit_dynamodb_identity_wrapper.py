@@ -4,7 +4,6 @@ from decimal import Decimal
 import pytest
 from boto3.dynamodb.conditions import Key
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.identities.models import IdentityModel
 from flag_engine.segments.constants import IN
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_mock import MockerFixture
@@ -20,7 +19,13 @@ from environments.dynamodb import DynamoIdentityWrapper
 from environments.dynamodb.wrappers.exceptions import CapacityBudgetExceeded
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
+from features.models import Feature, FeatureSegment, FeatureState
+from features.multivariate.models import (
+    MultivariateFeatureOption,
+    MultivariateFeatureStateValue,
+)
 from segments.models import Condition, Segment, SegmentRule
+from util.engine_models.identities.models import IdentityModel
 from util.mappers import (
     map_environment_to_environment_document,
     map_identity_to_identity_document,
@@ -328,6 +333,76 @@ def test_get_segment_ids_returns_correct_segment_ids(  # type: ignore[no-untyped
     mocked_environment_wrapper.return_value.get_item.assert_called_with(
         environment.api_key
     )
+
+
+def test_get_segment_ids_with_segment_feature_overrides(
+    project: "Project",
+    environment: "Environment",
+    feature: "Feature",
+    identity: "Identity",
+    identity_matching_segment: "Segment",
+    mocker: "MockerFixture",
+) -> None:
+    # Given - a segment with two feature overrides:
+    # one simple override and one with multivariate values
+    simple_feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=identity_matching_segment,
+        environment=environment,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=simple_feature_segment,
+        enabled=True,
+    )
+
+    mv_feature = Feature.objects.create(
+        name="mv_feature",
+        project=project,
+        type="MULTIVARIATE",
+    )
+    mv_option = MultivariateFeatureOption.objects.create(
+        feature=mv_feature,
+        default_percentage_allocation=30,
+        type="unicode",
+        string_value="variant_a",
+    )
+    mv_feature_segment = FeatureSegment.objects.create(
+        feature=mv_feature,
+        segment=identity_matching_segment,
+        environment=environment,
+    )
+    mv_feature_state = FeatureState.objects.create(
+        feature=mv_feature,
+        environment=environment,
+        feature_segment=mv_feature_segment,
+        enabled=True,
+    )
+    MultivariateFeatureStateValue.objects.create(
+        feature_state=mv_feature_state,
+        multivariate_feature_option=mv_option,
+        percentage_allocation=30,
+    )
+
+    identity_document = map_identity_to_identity_document(identity)
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
+    )
+    identity_uuid = identity_document["identity_uuid"]
+
+    environment_document = map_environment_to_environment_document(environment)
+    mocked_environment_wrapper = mocker.patch(
+        "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
+    )
+    mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+
+    # When
+    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)  # type: ignore[arg-type]
+
+    # Then
+    assert segment_ids == [identity_matching_segment.id]
 
 
 def test_get_segment_ids_returns_segment_using_in_operator_for_integer_traits(
