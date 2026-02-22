@@ -28,7 +28,7 @@
     "@ionic/react": "^8.7.7",
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
-    "docusaurus-plugin-openapi-docs": "^4.2.0",
+    "docusaurus-plugin-openapi-docs": "^4.7.1",
     "docusaurus-theme-openapi-docs": "^4.2.0",
     "ionicons": "^8.0.13",
     "prism-react-renderer": "^2.3.0",
