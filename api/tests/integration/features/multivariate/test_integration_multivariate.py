@@ -73,6 +73,38 @@ def test_create_mv_option_without_default_percentage_allocation_uses_default(
     assert response.json()["id"]
     assert response.json()["default_percentage_allocation"] == 100
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_partial_update_mv_option_without_default_percentage_allocation_uses_existing_value(
+    client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+    data = {
+        "string_value": "updated_value",
+        # Note: default_percentage_allocation is intentionally omitted
+    }
+
+    # When
+    response = client.patch(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["string_value"] == "updated_value"
+    # Should retain original 50% allocation, not default to 100
+    assert response.json()["default_percentage_allocation"] == 50
 
 @pytest.mark.parametrize(
     "client, feature_id",

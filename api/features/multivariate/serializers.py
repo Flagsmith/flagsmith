@@ -58,14 +58,21 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
+
+        # For updates, use existing instance value; for creates, use model default
+        default_allocation = (
+            self.instance.default_percentage_allocation if self.instance else 100
+        )
+
         total_sibling_percentage_allocation = (
             self._get_siblings(attrs["feature"]).aggregate(
                 total_percentage_allocation=Sum("default_percentage_allocation")
             )["total_percentage_allocation"]
             or 0
         )
-        total_percentage_allocation = total_sibling_percentage_allocation + attrs.get(
-            "default_percentage_allocation", 100
+        total_percentage_allocation = (
+            total_sibling_percentage_allocation
+            + attrs.get("default_percentage_allocation", default_allocation)
         )
 
         if total_percentage_allocation > 100:
