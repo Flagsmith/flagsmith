@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from django.core.exceptions import ObjectDoesNotExist
 from pytest_mock import MockerFixture
 
 from edge_api.identities.edge_identity_service import (
@@ -67,9 +68,7 @@ def test_get_overridden_feature_ids_for_edge_identity__identity_with_overrides__
             },
         ],
     )
-    _mock_ddb_identity_wrapper.get_item_from_uuid_or_404.return_value = (
-        identity_document
-    )
+    _mock_ddb_identity_wrapper.get_item_from_uuid.return_value = identity_document
 
     # When
     result = get_overridden_feature_ids_for_edge_identity(
@@ -78,7 +77,7 @@ def test_get_overridden_feature_ids_for_edge_identity__identity_with_overrides__
 
     # Then
     assert result == {feature_a_id, feature_b_id}
-    _mock_ddb_identity_wrapper.get_item_from_uuid_or_404.assert_called_once_with(
+    _mock_ddb_identity_wrapper.get_item_from_uuid.assert_called_once_with(
         "59efa2a7-6a45-46d6-b953-a7073a90eacf"
     )
 
@@ -91,9 +90,22 @@ def test_get_overridden_feature_ids_for_edge_identity__identity_without_override
         environment_api_key="test_key",
         identity_features=[],
     )
-    _mock_ddb_identity_wrapper.get_item_from_uuid_or_404.return_value = (
-        identity_document
+    _mock_ddb_identity_wrapper.get_item_from_uuid.return_value = identity_document
+
+    # When
+    result = get_overridden_feature_ids_for_edge_identity(
+        "59efa2a7-6a45-46d6-b953-a7073a90eacf"
     )
+
+    # Then
+    assert result == set()
+
+
+def test_get_overridden_feature_ids_for_edge_identity__nonexistent_identity__returns_empty_set(
+    _mock_ddb_identity_wrapper: MagicMock,
+) -> None:
+    # Given
+    _mock_ddb_identity_wrapper.get_item_from_uuid.side_effect = ObjectDoesNotExist()
 
     # When
     result = get_overridden_feature_ids_for_edge_identity(

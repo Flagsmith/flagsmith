@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 import django.core.exceptions
 from common.features.multivariate.serializers import (
@@ -99,6 +100,18 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
         required=False,
         help_text="ID of the identity to sort features with identity overrides first.",
     )
+
+    def validate_identity(self, value: str) -> str:
+        project = self.context.get("project")
+        if project and project.enable_dynamo_db:
+            try:
+                UUID(value)
+            except ValueError:
+                raise serializers.ValidationError("Must be a valid UUID.")
+        elif not value.isdigit():
+            raise serializers.ValidationError("Must be a valid integer.")
+        return value
+
     is_enabled = serializers.BooleanField(
         allow_null=True,
         required=False,

@@ -4259,6 +4259,68 @@ def test_list_features__edge_identity_query__sorts_by_field_with_overrides_first
     ]
 
 
+@pytest.mark.parametrize(
+    "enable_dynamo_db, identity_value",
+    [
+        (False, "not-an-integer"),
+        (True, "0"),
+    ],
+)
+def test_list_features__identity_query__invalid_format__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    enable_dynamo_db: bool,
+    identity_value: str,
+) -> None:
+    # Given
+    project.enable_dynamo_db = enable_dynamo_db
+    project.save()
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity={identity_value}"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_list_features__edge_identity_query__nonexistent_identity__returns_features_unsorted(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    project.enable_dynamo_db = True
+    project.save()
+    Feature.objects.create(project=project, name="feature_a")
+    Feature.objects.create(project=project, name="feature_b")
+    Feature.objects.create(project=project, name="feature_c")
+    mocker.patch.object(
+        views,
+        "get_overridden_feature_ids_for_edge_identity",
+        return_value=set(),
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity=59efa2a7-6a45-46d6-b953-a7073a90eacf"
+        f"&sort_field=name&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_a", "feature_b", "feature_c"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
 def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
     admin_client_new: APIClient,
     project: Project,

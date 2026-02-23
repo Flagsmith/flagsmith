@@ -210,7 +210,10 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             )
         )
 
-        query_serializer = FeatureQuerySerializer(data=self.request.query_params)
+        query_serializer = FeatureQuerySerializer(
+            data=self.request.query_params,
+            context={"project": project},
+        )
         query_serializer.is_valid(raise_exception=True)
         query_data = query_serializer.validated_data
 
@@ -218,7 +221,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             queryset, project.id
         )
 
-        queryset = self._filter_queryset(queryset)
+        queryset = self._filter_queryset(queryset, query_serializer)
 
         if environment_id := query_data.get("environment"):
             queryset = queryset.annotate(
@@ -557,9 +560,11 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         return queryset.filter(owners_q | group_owners_q)
 
-    def _filter_queryset(self, queryset: QuerySet[Feature]) -> QuerySet[Feature]:
-        query_serializer = FeatureQuerySerializer(data=self.request.query_params)
-        query_serializer.is_valid(raise_exception=True)
+    def _filter_queryset(
+        self,
+        queryset: QuerySet[Feature],
+        query_serializer: FeatureQuerySerializer,
+    ) -> QuerySet[Feature]:
         query_data = query_serializer.validated_data
 
         if query_data.get("search"):
