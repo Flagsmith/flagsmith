@@ -2,7 +2,7 @@ from contextlib import suppress
 
 from django.conf import settings
 
-NON_FUNCTIONAL_ENDPOINTS = ("/health", "")
+NON_FUNCTIONAL_ENDPOINTS = ("/health", "", "/api/v1/analytics/telemetry/")
 SDK_ENDPOINTS = {
     "/api/v1/flags",
     "/api/v1/identities",
