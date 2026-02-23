@@ -310,6 +310,7 @@ def test_partial_update_default_percentage_allocation_that_pushes_the_total_perc
         data=json.dumps(data),
         content_type="application/json",
     )
+    assert response.status_code == status.HTTP_201_CREATED
     mv_option_30_percent = response.json()["id"]
 
     # Next, let's partially update the 30 percent mv option to 51 percent
