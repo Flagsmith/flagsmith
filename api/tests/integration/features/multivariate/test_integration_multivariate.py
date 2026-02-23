@@ -39,7 +39,6 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):  
     assert response.json()["id"]
     assert set(data.items()).issubset(set(response.json().items()))
 
-
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
@@ -58,7 +57,6 @@ def test_create_mv_option_without_default_percentage_allocation_uses_default(
         "type": "unicode",
         "feature": feature,
         "string_value": "test_value",
-        # Note: default_percentage_allocation is intentionally omitted
     }
 
     # When
@@ -78,7 +76,7 @@ def test_create_mv_option_without_default_percentage_allocation_uses_default(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_partial_update_mv_option_without_default_percentage_allocation_uses_existing_value(
+def test_partial_update_mv_option_without_feature_and_allocation_uses_existing_values(
     client: APIClient,
     project: int,
     feature: int,
@@ -91,7 +89,6 @@ def test_partial_update_mv_option_without_default_percentage_allocation_uses_exi
     )
     data = {
         "string_value": "updated_value",
-        # Note: default_percentage_allocation is intentionally omitted
     }
 
     # When
@@ -104,9 +101,8 @@ def test_partial_update_mv_option_without_default_percentage_allocation_uses_exi
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["string_value"] == "updated_value"
-    # Should retain original 50% allocation, not default to 100
     assert response.json()["default_percentage_allocation"] == 50
-
+    assert response.json()["feature"] == feature
 
 @pytest.mark.parametrize(
     "client, feature_id",
