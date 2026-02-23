@@ -80,7 +80,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const [resendUserInvite] = useResendUserInviteMutation()
 
   const invites = userInvitesData?.results
-  const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
   const verifySeatsLimit = Utils.getFlagsmithHasFeature(
     'verify_seats_limit_for_invite_links',
   )
@@ -121,9 +120,11 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const meta = subscriptionMeta || organisation.subscription || { max_seats: 1 }
   const max_seats = meta.max_seats || 1
   const isAWS = AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
-  const autoSeats = !isAWS && Utils.getPlansPermission('AUTO_SEATS')
-  const usedSeats = paymentsEnabled && organisation.num_seats >= max_seats
-  const overSeats = paymentsEnabled && organisation.num_seats > max_seats
+  const autoSeats =
+    Utils.isSaas() && !isAWS && Utils.getPlansPermission('AUTO_SEATS')
+  const isSaasOrEnterprise = Utils.isSaas() || Utils.isEnterpriseImage()
+  const usedSeats = isSaasOrEnterprise && organisation.num_seats >= max_seats
+  const overSeats = isSaasOrEnterprise && organisation.num_seats > max_seats
   const [role, setRole] = useState<'ADMIN' | 'USER'>('ADMIN')
 
   const deleteInvite = (id: number) => {
@@ -218,7 +219,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         )}
                       </Row>
                       <FormGroup className='mt-2'>
-                        {paymentsEnabled && !isLoading && (
+                        {!isLoading && isSaasOrEnterprise && (
                           <div className='col-md-6 mt-3 mb-4'>
                             <InfoMessage>
                               {'You are currently using '}
@@ -238,11 +239,24 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                     <strong>
                                       If you wish to invite any additional
                                       members, please{' '}
-                                      {
-                                        <a href='#' onClick={openChat}>
-                                          Contact us
+                                      {Utils.isSaas() ? (
+                                        <a
+                                          href='#'
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            openChat()
+                                          }}
+                                        >
+                                          contact us
                                         </a>
-                                      }
+                                      ) : (
+                                        <a
+                                          href='mailto:support@flagsmith.com'
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          contact us
+                                        </a>
+                                      )}
                                       .
                                     </strong>
                                   ) : needsUpgradeForAdditionalSeats ? (
@@ -254,7 +268,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           href='#'
                                           onClick={() => {
                                             history.replace(
-                                              Constants.getUpgradeUrl(),
+                                              '/organisation-settings?tab=billing',
                                             )
                                           }}
                                         >
