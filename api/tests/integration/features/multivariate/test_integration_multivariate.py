@@ -39,6 +39,39 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):  
     assert response.json()["id"]
     assert set(data.items()).issubset(set(response.json().items()))
 
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_mv_option_without_default_percentage_allocation_uses_default(
+    client: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "test_value",
+        # Note: default_percentage_allocation is intentionally omitted
+    }
+
+    # When
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["id"]
+    assert response.json()["default_percentage_allocation"] == 100
+
 
 @pytest.mark.parametrize(
     "client, feature_id",
