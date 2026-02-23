@@ -63,7 +63,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
         feature = attrs.get("feature", self.instance.feature if self.instance else None)
         default_allocation = attrs.get(
             "default_percentage_allocation",
-            self.instance.default_percentage_allocation if self.instance else 100
+            self.instance.default_percentage_allocation if self.instance else 100,
         )
 
         total_sibling_percentage_allocation = (
