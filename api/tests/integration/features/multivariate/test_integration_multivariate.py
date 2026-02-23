@@ -77,6 +77,41 @@ def test_create_mv_option_without_default_percentage_allocation_uses_default(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
+def test_create_mv_option_without_default_percentage_allocation_with_existing_sibling_and_total_gt_100_returns_400(  # type: ignore[no-untyped-def]  # noqa: E501
+    client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "another_value",
+    }
+
+    # When
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["default_percentage_allocation"] == [
+        "Invalid percentage allocation"
+    ]
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_partial_update_mv_option_without_feature_and_allocation_uses_existing_values(
     client: APIClient,
     project: int,
@@ -247,6 +282,55 @@ def test_can_update_default_percentage_allocation(  # type: ignore[no-untyped-de
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["id"] == mv_option_50_percent
     assert set(data.items()).issubset(set(response.json().items()))
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_partial_update_default_percentage_allocation_that_pushes_the_total_percentage_allocation_over_100_returns_400(  # type: ignore[no-untyped-def]  # noqa: E501
+    project,
+    mv_option_50_percent,
+    client,
+    feature,
+):
+    # First let's create another mv_option with 30 percent allocation
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 30,
+    }
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    mv_option_30_percent = response.json()["id"]
+
+    # Next, let's partially update the 30 percent mv option to 51 percent
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_30_percent],
+    )
+    data = {
+        "default_percentage_allocation": 51,
+    }
+    # When
+    response = client.patch(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["default_percentage_allocation"] == [
+        "Invalid percentage allocation"
+    ]
 
 
 @pytest.mark.parametrize(
