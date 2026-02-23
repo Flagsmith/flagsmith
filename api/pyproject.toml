@@ -9,13 +9,13 @@ version = "2.68.0"
 description = "The API component for the Flagsmith application."
 authors = [{ name = "Flagsmith", email = "support@flagsmith.com" }]
 readme = "readme.md"
-requires-python = ">=3.11, <3.14"
+requires-python = ">=3.11, <3.13"
 dynamic = ["dependencies"]
 
 [tool.ruff]
 line-length = 88
 indent-width = 4
-target-version = "py313"
+target-version = "py311"
 extend-exclude = ["migrations"]
 
 [tool.ruff.format]
@@ -100,11 +100,8 @@ django_settings_module = "app.settings.local"
 [tool.drf-stubs]
 enabled = true
 
-[tool.poetry]
-package-mode = false
-
 [tool.poetry.dependencies]
-python = ">3.11,<3.14"
+python = ">3.11,<3.13"
 django = ">=5,<6"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
@@ -121,7 +118,7 @@ dj-database-url = "~3.0.1"
 drf-nested-routers = "~0.92.1"
 shortuuid = "~1.0.1"
 sendgrid-django = "~4.2.0"
-psycopg2-binary = "~2.9.5"
+psycopg2-binary = "2.9.9"
 coreapi = "~2.3.3"
 django-simple-history = "~2.12.0"
 google-api-python-client = "~1.12.5"
