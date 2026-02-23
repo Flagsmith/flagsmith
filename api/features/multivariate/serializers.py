@@ -64,9 +64,8 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
             )["total_percentage_allocation"]
             or 0
         )
-        total_percentage_allocation = (
-            total_sibling_percentage_allocation
-            + attrs.get("default_percentage_allocation", 100)
+        total_percentage_allocation = total_sibling_percentage_allocation + attrs.get(
+            "default_percentage_allocation", 100
         )
 
         if total_percentage_allocation > 100:

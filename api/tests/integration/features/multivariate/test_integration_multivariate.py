@@ -39,6 +39,7 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):  
     assert response.json()["id"]
     assert set(data.items()).issubset(set(response.json().items()))
 
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
