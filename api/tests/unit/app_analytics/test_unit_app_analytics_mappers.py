@@ -1,11 +1,13 @@
 from datetime import date, datetime
 
+import pytest
 from influxdb_client.client.flux_table import FluxRecord, FluxTable
 
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
 from app_analytics.mappers import (
     map_flux_tables_to_feature_evaluation_data,
     map_flux_tables_to_usage_data,
+    map_influx_record_values_to_labels,
 )
 
 
@@ -79,3 +81,25 @@ def test_map_flux_tables_to_usage_data__returns_expected() -> None:
             labels={"client_application_name": "test-app"},
         )
     ]
+
+
+@pytest.mark.parametrize(
+    "values, expected",
+    [
+        ({"user_agent": "50001"}, {"user_agent": "flagsmith-js-sdk/9.3.1"}),
+        ({"user_agent": "0"}, {"user_agent": "flagsmith-dotnet-sdk/unknown"}),
+        ({"user_agent": "90000"}, {"user_agent": "flagsmith-python-sdk/unknown"}),
+        ({}, {}),
+        ({"user_agent": "99999"}, {}),
+        ({"user_agent": "not-a-number"}, {}),
+    ],
+)
+def test_map_influx_record_values_to_labels(
+    values: dict[str, str],
+    expected: dict[str, str],
+) -> None:
+    # Given / When
+    result = map_influx_record_values_to_labels(values)
+
+    # Then
+    assert result == expected
