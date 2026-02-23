@@ -1,5 +1,40 @@
 # Changelog
 
+## [2.217.0](https://github.com/Flagsmith/flagsmith/compare/v2.216.0...v2.217.0) (2026-02-19)
+
+
+### Features
+
+* **Hackathon:** Persona-based views ([#6699](https://github.com/Flagsmith/flagsmith/issues/6699)) ([5dd0918](https://github.com/Flagsmith/flagsmith/commit/5dd0918f08d7151037df0db4b5a925aca0a1c9b8))
+* **hackaton:** experimental-flags-frontend ([#6710](https://github.com/Flagsmith/flagsmith/issues/6710)) ([0ac6208](https://github.com/Flagsmith/flagsmith/commit/0ac62086fe9f93e2349a9e41faa066f656071add))
+* log-error-on-webhook-request ([#6731](https://github.com/Flagsmith/flagsmith/issues/6731)) ([8dc90f6](https://github.com/Flagsmith/flagsmith/commit/8dc90f63cbf0fad3867dd9bec227093ecdbb79d0))
+
+
+### Bug Fixes
+
+* **ci:** Fix ECS deployment following attempted task definition separation ([#6719](https://github.com/Flagsmith/flagsmith/issues/6719)) ([79b7724](https://github.com/Flagsmith/flagsmith/commit/79b772439c1093c5b63ab107f6c396cde31ffc23))
+* docs link for sentry integration ([#6718](https://github.com/Flagsmith/flagsmith/issues/6718)) ([5251f04](https://github.com/Flagsmith/flagsmith/commit/5251f044b6cda813af1ae8d24730e2eb526431f9))
+* **Hackathon:** Platform Hub: inverted stale counts ([#6715](https://github.com/Flagsmith/flagsmith/issues/6715)) ([b3d5a33](https://github.com/Flagsmith/flagsmith/commit/b3d5a33a933b0114a15d8ad81b70b89bd529808e))
+* **LD Importer:** Archive deprecated LaunchDarkly flags on import ([#6447](https://github.com/Flagsmith/flagsmith/issues/6447)) ([f8cbc64](https://github.com/Flagsmith/flagsmith/commit/f8cbc6422c85f44c7afd753f36572f9cf012b93d))
+* log warning for non-2xx webhook responses ([#6732](https://github.com/Flagsmith/flagsmith/issues/6732)) ([7c0bf27](https://github.com/Flagsmith/flagsmith/commit/7c0bf276b1554de07f2db2789007ef411eba8b20))
+* **Platform Hub:** Invert stale flags count in admin dashboard ([#6711](https://github.com/Flagsmith/flagsmith/issues/6711)) ([ac6dd43](https://github.com/Flagsmith/flagsmith/commit/ac6dd43c4e37eea4ef964defce841153ef9afe4e))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Add a new specific task definition for the admin API to enable sentry tracing for admin requests ([#6496](https://github.com/Flagsmith/flagsmith/issues/6496)) ([262e4f4](https://github.com/Flagsmith/flagsmith/commit/262e4f4a66e9a6f7735dcec965301bf32ade9bf2))
+
+
+### Dependency Updates
+
+* Bump axios from 1.12.0 to 1.13.5 in /frontend ([#6681](https://github.com/Flagsmith/flagsmith/issues/6681)) ([72eec9d](https://github.com/Flagsmith/flagsmith/commit/72eec9d7879df7a7dad244aee1a0ae4f48690dec))
+* bump cryptography from 45.0.7 to 46.0.5 in /api ([#6687](https://github.com/Flagsmith/flagsmith/issues/6687)) ([b10b2bc](https://github.com/Flagsmith/flagsmith/commit/b10b2bc9279004ec0ea747364b4446a1ef3f2871))
+* bump qs from 6.14.1 to 6.14.2 in /frontend ([#6721](https://github.com/Flagsmith/flagsmith/issues/6721)) ([93c2ef5](https://github.com/Flagsmith/flagsmith/commit/93c2ef552da46ac9db7005980b026b0c3bc37c77))
+* bump sqlparse from 0.5.0 to 0.5.4 in /api ([#6720](https://github.com/Flagsmith/flagsmith/issues/6720)) ([0b4a7a5](https://github.com/Flagsmith/flagsmith/commit/0b4a7a5c1871173e3e9a721c7c1c27848c8724c6))
+* bump webpack from 5.94.0 to 5.105.0 in /frontend ([#6667](https://github.com/Flagsmith/flagsmith/issues/6667)) ([2c004db](https://github.com/Flagsmith/flagsmith/commit/2c004dbf19e3e6bf7a51905b92042108b5d816bf))
+* bump webpack from 5.95.0 to 5.105.0 in /docs ([#6668](https://github.com/Flagsmith/flagsmith/issues/6668)) ([33493b2](https://github.com/Flagsmith/flagsmith/commit/33493b25e8b4d5599601ac9b2fae89fc55c197bc))
+* Update django-axes ([#6671](https://github.com/Flagsmith/flagsmith/issues/6671)) ([68f853c](https://github.com/Flagsmith/flagsmith/commit/68f853c38586b9a81e36e7455992f8d5c47ec0c0))
+
 ## [2.216.0](https://github.com/Flagsmith/flagsmith/compare/v2.215.1...v2.216.0) (2026-02-12)
 
 
