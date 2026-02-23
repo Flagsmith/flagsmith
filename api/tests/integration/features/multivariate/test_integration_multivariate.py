@@ -73,6 +73,7 @@ def test_create_mv_option_without_default_percentage_allocation_uses_default(
     assert response.json()["id"]
     assert response.json()["default_percentage_allocation"] == 100
 
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
@@ -105,6 +106,7 @@ def test_partial_update_mv_option_without_default_percentage_allocation_uses_exi
     assert response.json()["string_value"] == "updated_value"
     # Should retain original 50% allocation, not default to 100
     assert response.json()["default_percentage_allocation"] == 50
+
 
 @pytest.mark.parametrize(
     "client, feature_id",
