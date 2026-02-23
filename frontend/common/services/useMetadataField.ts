@@ -28,6 +28,10 @@ type EntityData = ProjectFlag | Segment | Environment
 function getEntityUrl(params: EntityMetadataParams): string | null {
   const { entityId, entityType, projectId } = params
 
+  if (!entityId) {
+    return null
+  }
+
   switch (entityType) {
     case 'feature':
       return `projects/${projectId}/features/${entityId}/`

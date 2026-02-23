@@ -6,7 +6,11 @@ import { Metadata } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import Switch from 'components/Switch'
 import InputGroup from 'components/base/forms/InputGroup'
-import { useGetEntityMetadataFieldsQuery } from 'common/services/useMetadataField'
+import {
+  metadataService,
+  useGetEntityMetadataFieldsQuery,
+} from 'common/services/useMetadataField'
+import { getStore } from 'common/store'
 import { CustomMetadataField } from 'common/types/metadata-field'
 import { useGlobalMetadataValidation } from 'common/utils/metadataValidation'
 
@@ -75,10 +79,11 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
   const { hasUnfilledRequired } = useGlobalMetadataValidation(metadataFields)
 
   useEffect(() => {
-    if (initialFields.length > 0 && !hasChanges) {
+    if (initialFields.length > 0) {
       setMetadataFields(initialFields)
+      setHasChanges(false)
     }
-  }, [initialFields, hasChanges])
+  }, [initialFields])
 
   useEffect(() => {
     setHasMetadataRequired?.(hasUnfilledRequired)
@@ -125,7 +130,9 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
       toast(getMetadataErrors(result.error as MetadataErrorResponse), 'danger')
     } else {
       toast('Environment Field Updated')
-      setHasChanges(false)
+      getStore().dispatch(
+        metadataService.util.invalidateTags([{ type: 'Metadata' }]),
+      )
     }
   }
 
