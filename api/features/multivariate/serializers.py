@@ -62,12 +62,8 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
         # For partial updated, use existing instance value as fallback
         feature = attrs.get("feature", self.instance.feature if self.instance else None)
         if feature is None:
-            raise serializers.ValidationError(
-                {
-                    "feature": "Feature is required"
-                }
-            )
-        
+            raise serializers.ValidationError({"feature": "Feature is required"})
+
         default_allocation = attrs.get(
             "default_percentage_allocation",
             self.instance.default_percentage_allocation if self.instance else 100,
