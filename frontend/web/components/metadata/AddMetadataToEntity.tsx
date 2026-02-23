@@ -14,6 +14,8 @@ import { getStore } from 'common/store'
 import { CustomMetadataField } from 'common/types/metadata-field'
 import { useGlobalMetadataValidation } from 'common/utils/metadataValidation'
 
+const EMPTY_FIELDS: CustomMetadataField[] = []
+
 type AddMetadataToEntityProps = {
   isCloningEnvironment?: boolean
   organisationId: number
@@ -62,7 +64,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
   projectId,
   setHasMetadataRequired,
 }) => {
-  const { data: initialFields = [], isLoading } =
+  const { data: initialFields = EMPTY_FIELDS, isLoading } =
     useGetEntityMetadataFieldsQuery({
       entityContentType,
       entityId,
@@ -79,10 +81,8 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
   const { hasUnfilledRequired } = useGlobalMetadataValidation(metadataFields)
 
   useEffect(() => {
-    if (initialFields.length > 0) {
-      setMetadataFields(initialFields)
-      setHasChanges(false)
-    }
+    setMetadataFields(initialFields)
+    setHasChanges(false)
   }, [initialFields])
 
   useEffect(() => {
