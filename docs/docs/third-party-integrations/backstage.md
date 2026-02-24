@@ -18,6 +18,13 @@ observability directly into your [Backstage](https://backstage.io/) developer po
 - Your Flagsmith organisation **Admin API Key**: obtain from _Organisation Settings > API Keys_ in Flagsmith.
 - Your Flagsmith **Project ID**: obtain from the Flagsmith dashboard URL, e.g. `/project/<id>/...`.
 
+:::note
+
+**Enterprise users:** when generating the Organisation API key, select permissions **View Project** and **View
+Environment**, so that Backstage can see your _Environments_ and _Features_ in Flagsmith.
+
+:::
+
 ## Installation
 
 Install the plugin from your Backstage app root:
@@ -27,15 +34,6 @@ yarn --cwd packages/app add @flagsmith/backstage-plugin
 ```
 
 ## Configuration
-
-### Setting Up Your API Key
-
-You need **View Project** and **View Environment** permissions to create an API key.
-
-1. Log in to [Flagsmith](https://app.flagsmith.com/).
-2. Navigate to **Organisation Settings → API Keys**.
-3. Click **Create API Key** and ensure **Is admin** is enabled.
-4. Copy your **Admin API Key**.
 
 ### Configuring the Proxy
 
