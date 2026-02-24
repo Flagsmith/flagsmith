@@ -35,14 +35,11 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   const [orgPage, setOrgPage] = useState(1)
   const [projectPage, setProjectPage] = useState(1)
 
-  const { data: orgMetadataFieldList } = useGetMetadataFieldListQuery(
-    {
-      organisation: parseInt(organisationId),
-      page: orgPage,
-      page_size: PAGE_SIZE,
-    },
-    { skip: false },
-  )
+  const { data: orgMetadataFieldList } = useGetMetadataFieldListQuery({
+    organisation: parseInt(organisationId),
+    page: orgPage,
+    page_size: PAGE_SIZE,
+  })
 
   const { data: projectMetadataFieldList } =
     useGetProjectMetadataFieldListQuery(
@@ -116,46 +113,45 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   const renderFieldRow = (
     metadata: MergeMetadata,
     { readOnly }: { readOnly: boolean },
-  ) => (
-    <Row
-      space
-      className={`list-item${readOnly ? '' : ' clickable cursor-pointer'}`}
-      key={metadata.id}
-      onClick={
-        readOnly
-          ? undefined
-          : () => {
-              editMetadata(`${metadata.id}`, metadata.model_fields)
-            }
-      }
-    >
-      <Flex className='table-column px-3'>
-        <div className='d-flex align-items-center gap-x-2 mb-1'>
-          <span className='font-weight-medium'>{metadata.name}</span>
-          {readOnly && <span className='chip chip--xs'>Inherited</span>}
-        </div>
-        <ContentTypesValues
-          contentTypes={metadata.model_fields}
-          organisationId={organisationId}
-        />
-      </Flex>
-      {!readOnly && (
-        <div className='table-column' style={{ width: '86px' }}>
-          <Button
-            id='delete-invite'
-            type='button'
-            onClick={(e) => {
-              e.stopPropagation()
-              _deleteMetadata(`${metadata.id}`, metadata.name)
-            }}
-            className='btn btn-with-icon'
-          >
-            <Icon name='trash-2' width={20} fill='#656D7B' />
-          </Button>
-        </div>
-      )}
-    </Row>
-  )
+  ) => {
+    const handleEdit = () =>
+      editMetadata(`${metadata.id}`, metadata.model_fields)
+
+    return (
+      <Row
+        space
+        className={`list-item${readOnly ? '' : ' clickable cursor-pointer'}`}
+        key={metadata.id}
+        onClick={readOnly ? undefined : handleEdit}
+      >
+        <Flex className='table-column px-3'>
+          <div className='d-flex align-items-center gap-x-2 mb-1'>
+            <span className='font-weight-medium'>{metadata.name}</span>
+            {readOnly && <span className='chip chip--xs'>Inherited</span>}
+          </div>
+          <ContentTypesValues
+            contentTypes={metadata.model_fields}
+            organisationId={organisationId}
+          />
+        </Flex>
+        {!readOnly && (
+          <div className='table-column' style={{ width: '86px' }}>
+            <Button
+              id='delete-invite'
+              type='button'
+              onClick={(e) => {
+                e.stopPropagation()
+                _deleteMetadata(`${metadata.id}`, metadata.name)
+              }}
+              className='btn btn-with-icon'
+            >
+              <Icon name='trash-2' width={20} fill='#656D7B' />
+            </Button>
+          </div>
+        )}
+      </Row>
+    )
+  }
 
   const renderTableHeader = ({ showRemove }: { showRemove: boolean }) => (
     <Row className='table-header'>
