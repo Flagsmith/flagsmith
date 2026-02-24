@@ -66,6 +66,8 @@ import { FlagsTab } from '@flagsmith/backstage-plugin';
 
 ![Feature Flags Tab](/img/integrations/backstage/flags-tab.png)
 
+![Flag Details Expanded](/img/integrations/backstage/flag-details-expanded.png)
+
 ### Overview Card
 
 Add the `FlagsmithOverviewCard` to your entity overview page:
