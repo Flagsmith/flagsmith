@@ -34,6 +34,8 @@ serve() {
              --keep-alive ${GUNICORN_KEEP_ALIVE:-2} \
              ${STATSD_HOST:+--statsd-host $STATSD_HOST:$STATSD_PORT} \
              ${STATSD_HOST:+--statsd-prefix $STATSD_PREFIX} \
+             --max-requests ${GUNICORN_MAX_REQUESTS:-1000} \
+             --max-requests-jitter ${GUNICORN_MAX_REQUESTS_JITTER:-100} \
              api
 }
 run_task_processor() {

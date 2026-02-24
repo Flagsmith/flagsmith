@@ -24,7 +24,7 @@ class APIUsageCache:
         self._last_flushed_at = timezone.now()
         self._lock = Lock()
 
-    def _flush(self) -> None:
+    def _flush_through_thread(self) -> None:
         for key, value in self._cache.items():
             track_request.run_in_thread(
                 kwargs={
@@ -38,6 +38,24 @@ class APIUsageCache:
 
         self._cache = {}
         self._last_flushed_at = timezone.now()
+
+    def _flush_through_task_processor(self) -> None:
+        for key, value in self._cache.items():
+            track_request.delay(
+                kwargs={
+                    "resource": key.resource.value,
+                    "host": key.host,
+                    "environment_key": key.environment_key,
+                    "count": value,
+                    "labels": dict(key.labels),
+                }
+            )
+        self._cache = {}
+        self._last_flushed_at = timezone.now()
+
+    def flush_on_shutdown(self) -> None:
+        with self._lock:
+            self._flush_through_task_processor()
 
     def track_request(
         self,
@@ -60,7 +78,7 @@ class APIUsageCache:
             if (
                 timezone.now() - self._last_flushed_at
             ).seconds > settings.API_USAGE_CACHE_SECONDS:
-                self._flush()
+                self._flush_through_thread()
 
 
 class FeatureEvaluationCache:
@@ -69,7 +87,7 @@ class FeatureEvaluationCache:
         self._last_flushed_at = timezone.now()
         self._lock = Lock()
 
-    def _flush(self) -> None:
+    def _flush_through_task_processor(self) -> None:
         for kwargs in map_feature_evaluation_cache_to_track_feature_evaluations_by_environment_kwargs(
             self._cache
         ):
@@ -77,6 +95,10 @@ class FeatureEvaluationCache:
 
         self._cache = {}
         self._last_flushed_at = timezone.now()
+
+    def flush_on_shutdown(self) -> None:
+        with self._lock:
+            self._flush_through_task_processor()
 
     def track_feature_evaluation(
         self,
@@ -99,4 +121,4 @@ class FeatureEvaluationCache:
             if (
                 timezone.now() - self._last_flushed_at
             ).seconds > settings.FEATURE_EVALUATION_CACHE_SECONDS:
-                self._flush()
+                self._flush_through_task_processor()

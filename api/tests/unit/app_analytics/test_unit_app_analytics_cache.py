@@ -95,6 +95,153 @@ def test_api_usage_cache(
         assert not mocked_track_request_task.called
 
 
+def test_api_usage_cache__flush_on_shutdown__delegates_to_delay(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    cache = APIUsageCache()
+    mocked_track_request_task = mocker.patch("app_analytics.cache.track_request")
+
+    cache.track_request(
+        resource=Resource.FLAGS,
+        host="host",
+        environment_key="env_key_1",
+        labels={},
+    )
+    cache.track_request(
+        resource=Resource.FLAGS,
+        host="host",
+        environment_key="env_key_1",
+        labels={},
+    )
+    cache.track_request(
+        resource=Resource.IDENTITIES,
+        host="host",
+        environment_key="env_key_2",
+        labels={},
+    )
+
+    # When
+    cache.flush_on_shutdown()
+
+    # Then
+    mocked_track_request_task.delay.assert_has_calls(
+        [
+            mocker.call(
+                kwargs={
+                    "resource": Resource.FLAGS.value,
+                    "host": "host",
+                    "environment_key": "env_key_1",
+                    "count": 2,
+                    "labels": {},
+                }
+            ),
+            mocker.call(
+                kwargs={
+                    "resource": Resource.IDENTITIES.value,
+                    "host": "host",
+                    "environment_key": "env_key_2",
+                    "count": 1,
+                    "labels": {},
+                }
+            ),
+        ],
+        any_order=True,
+    )
+    mocked_track_request_task.run_in_thread.assert_not_called()
+    assert cache._cache == {}
+
+
+def test_api_usage_cache__flush_on_shutdown__empty_cache__no_calls(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    cache = APIUsageCache()
+    mocked_track_request_task = mocker.patch("app_analytics.cache.track_request")
+
+    # When
+    cache.flush_on_shutdown()
+
+    # Then
+    mocked_track_request_task.delay.assert_not_called()
+    assert cache._cache == {}
+
+
+def test_feature_evaluation_cache__flush_on_shutdown__delegates_to_delay(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    cache = FeatureEvaluationCache()
+    mocked_track_evaluation_task = mocker.patch(
+        "app_analytics.cache.track_feature_evaluations_by_environment"
+    )
+
+    cache.track_feature_evaluation(
+        environment_id=1,
+        feature_name="feature_1",
+        evaluation_count=5,
+        labels={},
+    )
+    cache.track_feature_evaluation(
+        environment_id=2,
+        feature_name="feature_2",
+        evaluation_count=3,
+        labels={},
+    )
+
+    # When
+    cache.flush_on_shutdown()
+
+    # Then
+    mocked_track_evaluation_task.delay.assert_has_calls(
+        [
+            mocker.call(
+                kwargs={
+                    "environment_id": 1,
+                    "feature_evaluations": [
+                        TrackFeatureEvaluationsByEnvironmentData(
+                            feature_name="feature_1",
+                            labels={},
+                            evaluation_count=5,
+                        ),
+                    ],
+                }
+            ),
+            mocker.call(
+                kwargs={
+                    "environment_id": 2,
+                    "feature_evaluations": [
+                        TrackFeatureEvaluationsByEnvironmentData(
+                            feature_name="feature_2",
+                            labels={},
+                            evaluation_count=3,
+                        ),
+                    ],
+                }
+            ),
+        ],
+        any_order=True,
+    )
+    assert cache._cache == {}
+
+
+def test_feature_evaluation_cache__flush_on_shutdown__empty_cache__no_calls(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    cache = FeatureEvaluationCache()
+    mocked_track_evaluation_task = mocker.patch(
+        "app_analytics.cache.track_feature_evaluations_by_environment"
+    )
+
+    # When
+    cache.flush_on_shutdown()
+
+    # Then
+    mocked_track_evaluation_task.delay.assert_not_called()
+    assert cache._cache == {}
+
+
 def test_feature_evaluation_cache(
     mocker: MockerFixture,
     settings: SettingsWrapper,
