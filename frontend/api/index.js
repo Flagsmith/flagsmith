@@ -139,14 +139,6 @@ if (process.env.FLAGSMITH_PROXY_API_URL) {
       xfwd: true,
     }),
   )
-  app.use(
-    '/version/',
-    createProxyMiddleware({
-      changeOrigin: true,
-      target: process.env.FLAGSMITH_PROXY_API_URL,
-      xfwd: true,
-    }),
-  )
 }
 
 if (isDev) {
@@ -187,7 +179,7 @@ app.get('/health', (req, res) => {
   res.send('OK')
 })
 
-app.get('/_frontend_version', (req, res) => {
+app.get('/version', (req, res) => {
   let commitSha = 'Unknown'
   let imageTag = 'Unknown'
 
@@ -215,6 +207,22 @@ app.get('/_frontend_version', (req, res) => {
     res.send({ 'ci_commit_sha': commitSha, 'image_tag': imageTag })
   }
 })
+
+if (process.env.FLAGSMITH_PROXY_API_URL) {
+  app.get('/_backend_version', async (req, res) => {
+    try {
+      const response = await fetch(
+        `${process.env.FLAGSMITH_PROXY_API_URL.replace(/\/?$/, '/')}version/`,
+      )
+      const data = await response.json()
+      res.json(data)
+    } catch (err) {
+      // eslint-disable-next-line
+      console.log('Unable to fetch backend version:', err)
+      res.status(502).json({})
+    }
+  })
+}
 
 app.use(bodyParser.json())
 app.use(spm)
