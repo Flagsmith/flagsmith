@@ -1,6 +1,6 @@
 {
   "presets": [
-    "@babel/preset-react",
+    ["@babel/preset-react", { "runtime": "automatic" }],
     "@babel/preset-typescript",
     [
       "@babel/preset-env",
@@ -33,8 +33,7 @@
     "production": {
       "plugins": [
         "transform-react-remove-prop-types",
-        "@babel/transform-react-constant-elements",
-        "@babel/transform-react-inline-elements"
+        "@babel/transform-react-constant-elements"
       ]
     }
   }

@@ -86,14 +86,15 @@ setTimeout(() => {
     )
   }
 
-  ReactDOM.render(
-    <Router basename={Project.basename || ''}>{routes}</Router>,
-    rootElement,
-  )
+  const { createRoot } = require('react-dom/client')
+  const root = createRoot(rootElement)
+  root.render(<Router basename={Project.basename || ''}>{routes}</Router>)
 }, 1)
 
 // Setup for toast messages
-ReactDOM.render(<ToastMessages />, document.getElementById('toast'))
+const { createRoot: createToastRoot } = require('react-dom/client')
+const toastRoot = createToastRoot(document.getElementById('toast'))
+toastRoot.render(<ToastMessages />)
 
 if (E2E) {
   document.body.classList.add('disable-transitions')
