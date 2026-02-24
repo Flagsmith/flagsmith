@@ -122,9 +122,14 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
         help_text="Comma separated list of group owner ids to filter on",
     )
 
+    @property
+    def project(self) -> Project:
+        if isinstance(project := self.context.get("project"), Project):
+            return project
+        raise RuntimeError(f"{type(self)} requires 'project' in context.")
+
     def validate_identity(self, value: str) -> str:
-        project = self.context.get("project")
-        if project and project.enable_dynamo_db:
+        if self.project.enable_dynamo_db:
             try:
                 UUID(value)
             except ValueError:
