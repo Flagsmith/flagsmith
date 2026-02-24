@@ -130,7 +130,10 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
     })
 
     if ('error' in result) {
-      toast(getMetadataErrors(result.error as MetadataErrorResponse), 'danger')
+      const errorMessage = getMetadataErrors(
+        result.error as MetadataErrorResponse,
+      )
+      toast(errorMessage || 'Failed to update custom fields', 'danger')
     } else {
       toast('Environment Field Updated')
       getStore().dispatch(
