@@ -78,6 +78,15 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               >
                 Features
               </SidebarLink>
+              {Utils.getFlagsmithHasFeature('experimental_flags') && (
+                <SidebarLink
+                  id={mobile ? undefined : 'experiments-link'}
+                  icon='flask'
+                  to={`/project/${projectId}/environment/${environmentId}/experiments`}
+                >
+                  Experiments
+                </SidebarLink>
+              )}
               <SidebarLink
                 id='change-requests-link'
                 icon='timer'
