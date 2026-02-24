@@ -1,10 +1,10 @@
 ---
-title: Backstage Plugin
+title: Backstage
 description: 'Integrate Flagsmith feature flags into your Backstage developer portal'
 ---
 
-The [Flagsmith Backstage Plugin](https://github.com/Flagsmith/flagsmith-backstage-plugin) brings feature flag observability
-directly into your [Backstage](https://backstage.io/) developer portal. It provides three components:
+The [Flagsmith Backstage Plugin](https://github.com/Flagsmith/flagsmith-backstage-plugin) brings feature flag
+observability directly into your [Backstage](https://backstage.io/) developer portal. It provides three components:
 
 - **Feature Flags Tab** — A full-page table listing all flags, their tags, and environment states.
 - **Overview Card** — A quick summary of your feature flags for entity overview pages.
@@ -43,11 +43,11 @@ Add the Flagsmith proxy configuration to your `app-config.yaml`:
 
 ```yaml
 proxy:
-  endpoints:
-    '/flagsmith':
-      target: 'https://api.flagsmith.com/api/v1'
-      headers:
-        Authorization: Api-Key ${FLAGSMITH_API_TOKEN}
+ endpoints:
+  '/flagsmith':
+   target: 'https://api.flagsmith.com/api/v1'
+   headers:
+    Authorization: Api-Key ${FLAGSMITH_API_TOKEN}
 ```
 
 :::tip
@@ -65,22 +65,23 @@ Annotate your entities in `catalog-info.yaml` so the plugin knows which Flagsmit
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: my-service
-  annotations:
-    flagsmith.com/project-id: '<YOUR_PROJECT_ID>'
+ name: my-service
+ annotations:
+  flagsmith.com/project-id: '<YOUR_PROJECT_ID>'
 spec:
-  type: service
-  owner: my-team
-  lifecycle: production
+ type: service
+ owner: my-team
+ lifecycle: production
 ```
 
-| Annotation                 | Required | Description                                   |
-| -------------------------- | -------- | --------------------------------------------- |
-| `flagsmith.com/project-id` | Yes      | The numeric ID of your Flagsmith project.     |
+| Annotation                 | Required | Description                               |
+| -------------------------- | -------- | ----------------------------------------- |
+| `flagsmith.com/project-id` | Yes      | The numeric ID of your Flagsmith project. |
 
 :::note Finding Your Project ID
 
 To find your Project ID:
+
 1. Go to **Project Settings → General** in your Flagsmith project
 2. Click the **JSON data** dropdown and select **Project**
 3. Look for the numeric `id` value (not the `uuid`)
@@ -102,8 +103,8 @@ import { FlagsTab } from '@flagsmith/backstage-plugin';
 
 // Inside your entity page layout, add a new tab:
 <EntityLayout.Route path="/feature-flags" title="Feature Flags">
-  <FlagsTab />
-</EntityLayout.Route>
+ <FlagsTab />
+</EntityLayout.Route>;
 ```
 
 ![Feature Flags Tab](/img/integrations/backstage/flags-tab.png)
@@ -121,8 +122,8 @@ import { FlagsmithOverviewCard } from '@flagsmith/backstage-plugin';
 
 // Inside your overview grid:
 <Grid item md={6}>
-  <FlagsmithOverviewCard />
-</Grid>
+ <FlagsmithOverviewCard />
+</Grid>;
 ```
 
 ![Overview Card](/img/integrations/backstage/overview-card.png)
@@ -136,8 +137,8 @@ import { FlagsmithUsageCard } from '@flagsmith/backstage-plugin';
 
 // Inside your overview grid:
 <Grid item md={6}>
-  <FlagsmithUsageCard />
-</Grid>
+ <FlagsmithUsageCard />
+</Grid>;
 ```
 
 ![Usage Card](/img/integrations/backstage/usage-card.png)
