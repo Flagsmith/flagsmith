@@ -82,11 +82,11 @@ import { FlagsTab } from '@flagsmith/backstage-plugin';
 </EntityLayout.Route>;
 ```
 
-![Feature Flags Tab](/img/integrations/backstage/flags-tab.png)
+![A list of feature flags from Flagsmith along with their tags, and states per environment, displayed in Backstage](/img/integrations/backstage/flags-tab.png)
 
 Click a feature in the list to reveal its usage graphs and detailed information:
 
-![Flag details expanded view showing usage metrics](/img/integrations/backstage/flag-details-expanded.png)
+![The expanded Flagsmith feature, showing the details and usage metrics](/img/integrations/backstage/flag-details-expanded.png)
 
 ### Overview Card
 
@@ -101,7 +101,7 @@ import { FlagsmithOverviewCard } from '@flagsmith/backstage-plugin';
 </Grid>;
 ```
 
-![Overview Card](/img/integrations/backstage/overview-card.png)
+![A compact list of features displaying their states per environment](/img/integrations/backstage/overview-card.png)
 
 ### Usage Card
 
@@ -116,4 +116,4 @@ import { FlagsmithUsageCard } from '@flagsmith/backstage-plugin';
 </Grid>;
 ```
 
-![Usage Card](/img/integrations/backstage/usage-card.png)
+![A bar chart displaying the usage metrics for the past 30 days](/img/integrations/backstage/usage-card.png)
