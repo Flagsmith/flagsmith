@@ -123,7 +123,7 @@
     "react-router": "5.3.3",
     "react-router-dom": "5.3.3",
     "react-select": "^5.9.0",
-    "react-tooltip": "4.5.1",
+    "react-tooltip": "^5.30.0",
     "react-virtualized": "^9.22.5",
     "reactstrap": "^9.2.3",
     "recharts": "^2.1.14",

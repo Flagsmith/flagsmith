@@ -352,6 +352,8 @@ const SegmentOverrideInner = class Override extends React.Component {
   }
 }
 
+const SortableSegmentOverrideInner = ConfigProvider(SegmentOverrideInner)
+
 const SortableSegmentOverride = (props) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: props.sortId })
@@ -363,9 +365,7 @@ const SortableSegmentOverride = (props) => {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <ConfigProvider>
-        {(configProps) => <SegmentOverrideInner {...props} {...configProps} />}
-      </ConfigProvider>
+      <SortableSegmentOverrideInner {...props} />
     </div>
   )
 }

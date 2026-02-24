@@ -55,17 +55,12 @@ const AccordionCard: FC<AccordionCardProps> = ({
           {isLoading && <Loader width='15px' height='15px' />}
         </div>
         {!isLoading && (
-          <button
-            type='button'
-            className='btn btn-sm p-1'
-            tabIndex={-1}
-            aria-label={open ? 'Collapse' : 'Expand'}
-          >
+          <span className='p-1' aria-label={open ? 'Collapse' : 'Expand'}>
             <IonIcon
               className='fs-small me-2 text-muted'
               icon={open ? chevronUp : chevronDown}
             />
-          </button>
+          </span>
         )}
       </div>
       <div

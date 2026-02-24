@@ -11,7 +11,6 @@ import Confirm from './ModalConfirm'
 import ModalDefault, { interceptClose, setInterceptClose } from './ModalDefault'
 import { getStore } from 'common/store'
 import { Provider } from 'react-redux'
-import Utils from 'common/utils/utils'
 
 type OpenConfirmParams = {
   title: ReactNode
@@ -30,7 +29,13 @@ export const ModalBody = _ModalBody
 
 const withModal = (
   WrappedComponent: JSXElementConstructor<any>,
-  { closePointer = 'closeModal', shouldInterceptClose = false } = {},
+  {
+    closePointer = 'closeModal',
+    shouldInterceptClose = false,
+  }: {
+    closePointer?: string
+    shouldInterceptClose?: boolean
+  } = {},
 ) => {
   return (props: ModalProps) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -51,33 +56,45 @@ const withModal = (
     // @ts-ignore
     global[closePointer] = toggle
 
+    const onClosed = () => {
+      if (props.onClosed) {
+        props.onClosed()
+      }
+    }
+
     return (
       <Provider store={getStore()}>
-        <WrappedComponent toggle={toggle} {...props} isOpen={isOpen} />
+        <WrappedComponent
+          toggle={toggle}
+          {...props}
+          isOpen={isOpen}
+          onClosed={onClosed}
+        />
       </Provider>
     )
   }
 }
 
-const _Confirm = withModal(Confirm)
-const _ModalDefault2 = withModal(ModalDefault, { closePointer: 'closeModal2' })
-const _ModalDefault = withModal(ModalDefault, { shouldInterceptClose: true })
-
-function getOrCreateRoot(
+function createFreshRoot(
   elementId: string,
   rootRef: { current: Root | null },
 ): Root {
-  if (!rootRef.current) {
-    const el = document.getElementById(elementId)
-    if (!el) throw new Error(`Element #${elementId} not found`)
-    rootRef.current = createRoot(el)
+  if (rootRef.current) {
+    rootRef.current.unmount()
   }
+  const el = document.getElementById(elementId)
+  if (!el) throw new Error(`Element #${elementId} not found`)
+  rootRef.current = createRoot(el)
   return rootRef.current
 }
 
 const confirmRootRef: { current: Root | null } = { current: null }
 const modalRootRef: { current: Root | null } = { current: null }
 const modal2RootRef: { current: Root | null } = { current: null }
+
+const _Confirm = withModal(Confirm)
+const _ModalDefault2 = withModal(ModalDefault, { closePointer: 'closeModal2' })
+const _ModalDefault = withModal(ModalDefault, { shouldInterceptClose: true })
 
 export const openConfirm = (global.openConfirm = ({
   body,
@@ -88,7 +105,7 @@ export const openConfirm = (global.openConfirm = ({
   title,
   yesText,
 }: OpenConfirmParams) => {
-  const root = getOrCreateRoot('confirm', confirmRootRef)
+  const root = createFreshRoot('confirm', confirmRootRef)
   root.render(
     <_Confirm
       isOpen
@@ -110,10 +127,9 @@ export const openModal = (global.openModal = (
   className?: string,
   onClose?: () => void,
 ) => {
-  const root = getOrCreateRoot('modal', modalRootRef)
+  const root = createFreshRoot('modal', modalRootRef)
   root.render(
     <_ModalDefault
-      key={Utils.GUID()}
       isOpen
       className={className}
       onClosed={onClose}
@@ -131,7 +147,7 @@ export const openModal2 = (global.openModal2 = (
   className?: string,
   onClose?: () => void,
 ) => {
-  const root = getOrCreateRoot('modal2', modal2RootRef)
+  const root = createFreshRoot('modal2', modal2RootRef)
   root.render(
     <_ModalDefault2
       isOpen
