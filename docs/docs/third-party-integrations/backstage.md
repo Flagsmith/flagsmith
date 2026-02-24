@@ -12,20 +12,9 @@ observability directly into your [Backstage](https://backstage.io/) developer po
 
 ![A canvas displaying all components of the Flagsmith Backstage plugin](/img/integrations/backstage/components-overview.png)
 
-## Prerequisites
+## Integrate with Backstage
 
-- A running [Backstage](https://backstage.io/) instance.
-- Your Flagsmith organisation **Admin API Key**: obtain from _Organisation Settings > API Keys_ in Flagsmith.
-- Your Flagsmith **Project ID**: obtain from the Flagsmith dashboard URL, e.g. `/project/<id>/...`.
-
-:::note
-
-**Enterprise users:** when generating the Organisation API key, select permissions **View Project** and **View
-Environment**, so that Backstage can see your _Environments_ and _Features_ in Flagsmith.
-
-:::
-
-## Installation
+### 1. Install the plugin
 
 Install the plugin from your Backstage app root:
 
@@ -33,9 +22,7 @@ Install the plugin from your Backstage app root:
 yarn --cwd packages/app add @flagsmith/backstage-plugin
 ```
 
-## Configuration
-
-### Configuring the Proxy
+### 2. Configure the proxy
 
 Add the Flagsmith proxy configuration to your `app-config.yaml`:
 
@@ -45,17 +32,21 @@ proxy:
   '/flagsmith':
    target: 'https://api.flagsmith.com/api/v1'
    headers:
-    Authorization: Api-Key ${FLAGSMITH_API_TOKEN}
+    Authorization: Api-Key FLAGSMITH_API_TOKEN
 ```
 
-:::tip
+- `FLAGSMITH_API_TOKEN`: obtain from Organisation Settings > API Keys in Flagsmith.
+- If you are self-hosting Flagsmith, replace the `target` URL with your own Flagsmith API address, e.g.
+  `https://flagsmith.example.com/api/v1`.
 
-If you are self-hosting Flagsmith, replace the `target` URL with your own Flagsmith API address, e.g.
-`https://flagsmith.example.com/api/v1`.
+:::note
+
+**Enterprise users:** when generating the Organisation API key, select permissions **View Project** and **View
+Environment**, so that Backstage can see your _Environments_ and _Features_ in Flagsmith.
 
 :::
 
-### Annotating Your Entities
+### 3. Set up entity annotation
 
 Annotate your entities in `catalog-info.yaml` so the plugin knows which Flagsmith project to display:
 
@@ -65,30 +56,16 @@ kind: Component
 metadata:
  name: my-service
  annotations:
-  flagsmith.com/project-id: '<YOUR_PROJECT_ID>'
+  flagsmith.com/project-id: 'PROJECT_ID'
 spec:
  type: service
  owner: my-team
  lifecycle: production
 ```
 
-| Annotation                 | Required | Description                               |
-| -------------------------- | -------- | ----------------------------------------- |
-| `flagsmith.com/project-id` | Yes      | The numeric ID of your Flagsmith project. |
+- `PROJECT_ID`: obtain from the Flagsmith dashboard URL, e.g. `/project/<id>/...`.
 
-:::note Finding Your Project ID
-
-To find your Project ID:
-
-1. Go to **Project Settings → General** in your Flagsmith project
-2. Click the **JSON data** dropdown and select **Project**
-3. Look for the numeric `id` value (not the `uuid`)
-
-You may need to enable **JSON references** in your **Account Settings** to see this option.
-
-:::
-
-## Adding Components to Entity Pages
+## Add Components to Backstage
 
 Edit your `packages/app/src/components/catalog/EntityPage.tsx` to add the Flagsmith components.
 
