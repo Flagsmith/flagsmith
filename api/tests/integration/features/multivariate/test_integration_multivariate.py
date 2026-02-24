@@ -44,7 +44,7 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):  
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_mv_option_without_default_percentage_allocation_uses_default(
+def test_create_mv_option__without_default_percentage_allocation__uses_default(
     client: APIClient,
     project: int,
     feature: int,
@@ -77,7 +77,7 @@ def test_create_mv_option_without_default_percentage_allocation_uses_default(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_mv_option_without_default_percentage_allocation_with_existing_sibling_and_total_gt_100_returns_400(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_create_mv_option__without_default_percentage_allocation_with_existing_sibling_and_total_gt_100__returns_400(  # noqa: E501
     client: APIClient,
     project: int,
     feature: int,
@@ -112,7 +112,7 @@ def test_create_mv_option_without_default_percentage_allocation_with_existing_si
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_partial_update_mv_option_without_feature_and_allocation_uses_existing_values(
+def test_partial_update_mv_option__without_feature_and_allocation__uses_existing_values(
     client: APIClient,
     project: int,
     feature: int,
@@ -288,12 +288,12 @@ def test_can_update_default_percentage_allocation(  # type: ignore[no-untyped-de
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_partial_update_default_percentage_allocation_that_pushes_the_total_percentage_allocation_over_100_returns_400(  # type: ignore[no-untyped-def]  # noqa: E501
-    project,
-    mv_option_50_percent,
-    client,
-    feature,
-):
+def test_partial_update_default_percentage_allocation__sibling_total_gt_100__returns_400(  # noqa: E501
+    project: int,
+    mv_option_50_percent: int,
+    client: APIClient,
+    feature: int,
+) -> None:
     # First let's create another mv_option with 30 percent allocation
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
