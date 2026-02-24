@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.217.1](https://github.com/Flagsmith/flagsmith/compare/v2.217.0...v2.217.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* Enforce seat limit self hosted ([#6663](https://github.com/Flagsmith/flagsmith/issues/6663)) ([17671d0](https://github.com/Flagsmith/flagsmith/commit/17671d08d649223513360a601a6b4830a0fbbca8))
+* parse-string-user-agents-to-int-in-mapper ([#6756](https://github.com/Flagsmith/flagsmith/issues/6756)) ([deee405](https://github.com/Flagsmith/flagsmith/commit/deee4050f24a209fb55eaea514b6c7406e8bf0bd))
+* Revert flag-engine v10 revert to re-apply engine upgrade ([#6741](https://github.com/Flagsmith/flagsmith/issues/6741)) ([cccf7bd](https://github.com/Flagsmith/flagsmith/commit/cccf7bd52360d0be691097e0b528be899c97db14))
+* **Webhooks:** Correct previous_state for scheduled feature updates ([#6740](https://github.com/Flagsmith/flagsmith/issues/6740)) ([9094867](https://github.com/Flagsmith/flagsmith/commit/9094867e8341df8c12ff774109d24dd2c245f9b8))
+
+
+### Dependency Updates
+
+* bump werkzeug from 3.1.5 to 3.1.6 in /api ([#6738](https://github.com/Flagsmith/flagsmith/issues/6738)) ([a67e9db](https://github.com/Flagsmith/flagsmith/commit/a67e9db2fd4abeda2d01f581f860d290f38adee7))
+
 ## [2.217.0](https://github.com/Flagsmith/flagsmith/compare/v2.216.0...v2.217.0) (2026-02-19)
 
 
