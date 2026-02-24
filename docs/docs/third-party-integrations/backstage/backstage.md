@@ -4,10 +4,10 @@ sidebar_position: 50
 description: 'Integrate Flagsmith feature flags into your Backstage developer portal'
 ---
 
-The [Flagsmith Backstage Plugin](https://github.com/Flagsmith/flagsmith-backstage-plugin) brings feature flag management
+The [Flagsmith Backstage Plugin](https://github.com/Flagsmith/flagsmith-backstage-plugin) brings feature flag observability
 directly into your [Backstage](https://backstage.io/) developer portal. It provides three components:
 
-- **Feature Flags Tab** — A full flag list with environment states, tags, and toggle status.
+- **Feature Flags Tab** — A full-page table listing all flags, with their environment states, tags, and status.
 - **Overview Card** — A quick summary of your feature flags for entity overview pages.
 - **Usage Card** — A chart showing flag usage metrics over time.
 
