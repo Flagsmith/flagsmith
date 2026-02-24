@@ -4,6 +4,57 @@ Tests to confirm that Django's `loaddata` works with the output of
 to a separate Flagsmith installation.
 
 See: https://github.com/Flagsmith/flagsmith/issues/6760
+
+Spike findings
+==============
+
+v2 feature versioning
+---------------------
+EnvironmentFeatureVersionManager (features/versioning/managers.py)
+inherits from SoftDeleteManager but is missing UUIDNaturalKeyManagerMixin.
+When use_natural_foreign_keys=True, FKs to EnvironmentFeatureVersion
+are serialised as ["<uuid>"] (natural key list). Without
+get_by_natural_key on the manager, Django cannot resolve the list back
+to an object and raises DeserializationError.
+
+Fix: add UUIDNaturalKeyManagerMixin to EnvironmentFeatureVersionManager,
+     the same pattern used by every other exportable manager. This is a
+     one-line change in features/versioning/managers.py:
+
+         class EnvironmentFeatureVersionManager(
+             UUIDNaturalKeyManagerMixin, SoftDeleteManager,
+         ): ...
+
+     FeatureState.environment_feature_version and
+     FeatureSegment.environment_feature_version are the two FK fields
+     affected.
+
+Deletions not propagated
+------------------------
+loaddata only upserts — it never removes objects absent from the dump.
+The impact differs by model deletion strategy:
+
+Soft-deletable models (deleted_at is set, row kept):
+  Organisation, Subscription, Project, Segment, SegmentRule, Condition,
+  Feature, FeatureState, FeatureStateValue, EnvironmentFeatureVersion,
+  Environment, DataDogConfiguration, NewRelicConfiguration,
+  SlackConfiguration, HeapConfiguration, MixpanelConfiguration,
+  SegmentConfiguration, RudderstackConfiguration, WebhookConfiguration.
+
+  For these, loaddata can "undelete" a soft-deleted row by setting
+  deleted_at back to null. However, it cannot soft-delete a row that
+  is absent from the dump.
+
+Hard-deletable models (row removed permanently):
+  InviteLink, OrganisationWebhook, Tag, SlackEnvironment,
+  EnvironmentAPIKey, Webhook, Identity, Trait,
+  MultivariateFeatureOption, FeatureSegment,
+  MultivariateFeatureStateValue, MetadataField, MetadataModelField,
+  MetadataModelFieldRequirement, Metadata.
+
+  Once deleted on the source, these are simply absent from the dump.
+  loaddata will not remove the corresponding rows on the target.
+  A separate cleanup step is needed.
 """
 
 import json
@@ -12,9 +63,7 @@ import uuid
 
 import pytest
 from django.core.management import call_command
-from django.core.serializers.base import DeserializationError
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.utils import IntegrityError
 from flag_engine.segments.constants import ALL_RULE, EQUAL
 
 from core.constants import STRING
@@ -27,6 +76,7 @@ from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
+from features.versioning.models import EnvironmentFeatureVersion
 from import_export.export import full_export
 from integrations.datadog.models import DataDogConfiguration
 from integrations.heap.models import HeapConfiguration
@@ -498,90 +548,119 @@ def test_full_export_loaddata__only_live_segments_exported(  # type: ignore[no-u
 # ================================================================
 
 
-def test_full_export_loaddata__trait_reload_fails__no_get_by_natural_key(  # type: ignore[no-untyped-def]
+@pytest.mark.xfail(
+    reason="Trait manager lacks get_by_natural_key — loaddata tries INSERT instead of UPDATE",
+    strict=True,
+)
+def test_full_export_loaddata__trait_roundtrip(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     project: Project,
     environment: Environment,
 ):
-    """KNOWN LIMITATION: Trait model lacks get_by_natural_key on its
-    manager. When loaddata encounters an existing trait, it attempts
-    an INSERT (instead of UPDATE) and fails with IntegrityError.
+    """Traits should survive a loaddata roundtrip when the same
+    identity + trait already exists on the target.
 
-    This means incremental updates to organisations that include
-    identities with traits will fail unless the traits are deleted
-    from the target first."""
+    Fix: add a custom manager to Trait with get_by_natural_key
+    that looks up by (trait_key, identifier, api_key)."""
     # Given - an identity with a trait
     identity = Identity.objects.create(identifier="trait_user", environment=environment)
     Trait.objects.create(identity=identity, trait_key="plan", string_value="enterprise")
 
     # When - export and reload into the same DB
     data = full_export(organisation.id)
+    _dump_and_load(data)
 
-    # Then - loaddata fails with IntegrityError on the trait
-    with pytest.raises(IntegrityError, match="environments_trait"):
-        _dump_and_load(data)
+    # Then - trait still exists, no duplicates
+    assert Trait.objects.filter(identity=identity, trait_key="plan").count() == 1
 
 
-def test_full_export_loaddata__environment_api_key_reload_fails__no_get_by_natural_key(  # type: ignore[no-untyped-def]
+@pytest.mark.xfail(
+    reason="EnvironmentAPIKey manager lacks get_by_natural_key — loaddata tries INSERT instead of UPDATE",
+    strict=True,
+)
+def test_full_export_loaddata__environment_api_key_roundtrip(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     project: Project,
     environment: Environment,
 ):
-    """KNOWN LIMITATION: EnvironmentAPIKey model lacks
-    get_by_natural_key on its manager. When loaddata encounters an
-    existing API key, it attempts an INSERT and fails with
-    IntegrityError.
+    """EnvironmentAPIKey should survive a loaddata roundtrip when
+    the same key already exists on the target.
 
-    This means incremental updates to organisations that include
-    server-side API keys will fail unless the keys are deleted
-    from the target first."""
+    Fix: add get_by_natural_key(key) to EnvironmentAPIKey's manager."""
     # Given - an environment with a server-side API key
-    EnvironmentAPIKey.objects.create(environment=environment)
+    api_key = EnvironmentAPIKey.objects.create(environment=environment)
 
     # When - export and reload into the same DB
     data = full_export(organisation.id)
+    _dump_and_load(data)
 
-    # Then - loaddata fails with IntegrityError on the API key
-    with pytest.raises(IntegrityError, match="environmentapikey"):
-        _dump_and_load(data)
+    # Then - API key still exists, no duplicates
+    assert EnvironmentAPIKey.objects.filter(key=api_key.key).count() == 1
 
 
-def test_full_export_loaddata__v2_versioning_fails__uuid_natural_key_conflict(  # type: ignore[no-untyped-def]
+@pytest.mark.xfail(
+    reason=(
+        "EnvironmentFeatureVersionManager is missing UUIDNaturalKeyManagerMixin — "
+        "fix: one-line change in features/versioning/managers.py"
+    ),
+    strict=True,
+)
+def test_full_export_loaddata__v2_versioning_roundtrip(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     project: Project,
     environment: Environment,
 ):
-    """KNOWN LIMITATION: v2 feature versioning export produces data
-    that loaddata cannot deserialise. The EnvironmentFeatureVersion
-    UUID natural key is serialised as a list (e.g. ['uuid-string'])
-    rather than a plain UUID string, causing a ValidationError during
-    deserialisation."""
+    """v2 feature versioning data should survive a loaddata roundtrip.
+
+    Root cause: EnvironmentFeatureVersionManager inherits from
+    SoftDeleteManager but is missing UUIDNaturalKeyManagerMixin.
+    With use_natural_foreign_keys=True, FKs to
+    EnvironmentFeatureVersion (on FeatureState and FeatureSegment)
+    are serialised as ["<uuid>"] (a natural key list). Without
+    get_by_natural_key on the manager, Django cannot resolve the
+    reference and raises DeserializationError.
+
+    Fix: add UUIDNaturalKeyManagerMixin to the manager class in
+    features/versioning/managers.py (one-line change)."""
     # Given - v2 versioning enabled
     environment.use_v2_feature_versioning = True
     environment.save()
 
-    Feature.objects.create(project=project, name="v2_feature")
+    feature = Feature.objects.create(project=project, name="v2_feature")
 
-    # When - export
+    efv = EnvironmentFeatureVersion.objects.filter(
+        feature=feature, environment=environment
+    ).first()
+    assert efv is not None
+
+    # When
     data = full_export(organisation.id)
+    _dump_and_load(data)
 
-    # Then - loaddata fails with DeserializationError
-    with pytest.raises(DeserializationError):
-        _dump_and_load(data)
+    # Then - version record and associated feature state survive
+    assert EnvironmentFeatureVersion.objects.filter(uuid=efv.uuid).exists()
+    loaded_efv = EnvironmentFeatureVersion.objects.get(uuid=efv.uuid)
+    assert loaded_efv.feature == feature
+    assert loaded_efv.environment == environment
 
 
-def test_full_export_loaddata__deletion_not_propagated(  # type: ignore[no-untyped-def]
+@pytest.mark.xfail(
+    reason="loaddata only upserts — it never removes objects absent from the fixture",
+    strict=True,
+)
+def test_full_export_loaddata__deletion_propagated(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     project: Project,
     environment: Environment,
 ):
-    """KNOWN LIMITATION: loaddata does NOT remove objects absent from
-    the dump. A feature deleted on the source will still exist on the
-    target after re-loading. Deletions must be handled separately.
+    """Loading a dump that lacks a feature should remove it from the
+    target. This affects both soft-deletable models (Organisation,
+    Project, Feature, FeatureState, Segment, etc.) and hard-deletable
+    models (Identity, Trait, Tag, EnvironmentAPIKey, FeatureSegment,
+    MultivariateFeatureOption, Metadata, etc.).
 
-    To simulate this on a single database: first export with only
-    feature_a, then verify that loading this export does not remove
-    feature_b which was created separately on the 'target'."""
+    Fix: a custom management command that diffs the dump against the
+    target DB and removes/soft-deletes stale records."""
     # Given - on the "source", only feature_a exists
     feature_a = Feature.objects.create(
         project=project, name="feature_a", initial_value="a"
@@ -592,11 +671,10 @@ def test_full_export_loaddata__deletion_not_propagated(  # type: ignore[no-untyp
     feature_b = Feature.objects.create(
         project=project, name="feature_b", initial_value="b"
     )
-    feature_b_uuid = feature_b.uuid
 
     # When - load the source data (which lacks feature_b) into the target
     _dump_and_load(source_data)
 
-    # Then - feature_b still exists (loaddata never deletes)
-    assert Feature.objects.filter(uuid=feature_b_uuid).exists()
+    # Then - feature_b should be gone, only feature_a remains
     assert Feature.objects.filter(uuid=feature_a.uuid).exists()
+    assert not Feature.objects.filter(uuid=feature_b.uuid).exists()
