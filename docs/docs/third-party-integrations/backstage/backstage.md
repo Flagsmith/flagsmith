@@ -17,7 +17,7 @@ directly into your [Backstage](https://backstage.io/) developer portal. It provi
 
 - A running [Backstage](https://backstage.io/) instance.
 - A Flagsmith account with an **Admin API Key**.
-- Your Flagsmith **Project ID** and **Organisation ID**.
+- Your Flagsmith **Project ID**.
 
 ## Installation
 
@@ -107,17 +107,15 @@ metadata:
   name: my-service
   annotations:
     flagsmith.com/project-id: '<YOUR_PROJECT_ID>'
-    flagsmith.com/org-id: '<YOUR_ORG_ID>'
 spec:
   type: service
   owner: my-team
   lifecycle: production
 ```
 
-| Annotation                 | Required | Description                                                        |
-| -------------------------- | -------- | ------------------------------------------------------------------ |
-| `flagsmith.com/project-id` | Yes      | The numeric ID of your Flagsmith project.                          |
-| `flagsmith.com/org-id`     | Yes      | The numeric ID of your Flagsmith organisation.                     |
+| Annotation                 | Required | Description                                   |
+| -------------------------- | -------- | --------------------------------------------- |
+| `flagsmith.com/project-id` | Yes      | The numeric ID of your Flagsmith project.     |
 
 ## Getting Your Credentials
 
@@ -132,12 +130,11 @@ spec:
 
 1. Open your Flagsmith project.
 2. Go to **Project Settings → General**.
-3. Enable **JSON references** in your **Account Settings** if not already enabled.
-4. Click the **JSON data** dropdown and select **Project**.
-5. The **Project ID** is shown as the `id` field in the JSON (e.g., `"id": 1`).
+3. In the **JSON data** dropdown at the top, select **Project**.
+4. The **Project ID** is the numeric `id` value (not the `uuid`). For example, if you see `"id": 1`, your Project ID is `1`.
 
-### Organisation ID
+:::note
 
-1. In **Project Settings → General**, click the **JSON data** dropdown and select **Project**.
-2. The **Organisation ID** is shown as the `organisation` field in the JSON (e.g., `"organisation": 1`).
-3. Alternatively, go to **Organisation Settings → General** and view the JSON data there.
+You may need to enable **JSON references** in your **Account Settings** to see the JSON data dropdown.
+
+:::
