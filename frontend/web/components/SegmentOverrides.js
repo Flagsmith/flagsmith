@@ -1,6 +1,21 @@
 // import propTypes from 'prop-types';
 import React, { Component, Fragment } from 'react'
-import { SortableContainer, SortableElement } from 'react-sortable-hoc'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import ProjectStore from 'common/stores/project-store'
 import ValueEditor from './ValueEditor'
 import { VariationOptions } from './mv/VariationOptions'
@@ -22,15 +37,6 @@ import SegmentsIcon from './svg/SegmentsIcon'
 import SegmentOverrideActions from './SegmentOverrideActions'
 import Button from './base/forms/Button'
 
-const arrayMoveMutate = (array, from, to) => {
-  array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])
-}
-
-const arrayMove = (array, from, to) => {
-  array = array.slice()
-  arrayMoveMutate(array, from, to)
-  return array
-}
 const SegmentOverrideInner = class Override extends React.Component {
   constructor(props) {
     super(props)
@@ -345,7 +351,25 @@ const SegmentOverrideInner = class Override extends React.Component {
     )
   }
 }
-const SegmentOverride = ConfigProvider(SortableElement(SegmentOverrideInner))
+
+const SortableSegmentOverride = (props) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: props.sortId })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <ConfigProvider>
+        {(configProps) => <SegmentOverrideInner {...props} {...configProps} />}
+      </ConfigProvider>
+    </div>
+  )
+}
+
 const SegmentOverrideListInner = ({
   confirmRemove,
   controlValue,
@@ -368,58 +392,157 @@ const SegmentOverrideListInner = ({
   showEditSegment,
   toggle,
 }) => {
-  const InnerComponent = id || disabled ? SegmentOverrideInner : SegmentOverride
+  const useSortable = !id && !disabled
   return (
     <div>
-      {items.map((value, index) => (
-        <Fragment key={value.segment.name}>
-          <InnerComponent
-            id={id}
-            name={name}
-            segment={value.segment}
-            hideViewSegment={hideViewSegment}
-            highlightSegmentId={highlightSegmentId}
-            onSortEnd={onSortEnd}
-            disabled={disabled}
-            showEditSegment={showEditSegment}
-            environmentId={environmentId}
-            projectId={projectId}
-            multivariateOptions={multivariateOptions}
-            index={index}
-            readOnly={readOnly}
-            value={value}
-            setSegmentEditId={setSegmentEditId}
-            setShowCreateSegment={setShowCreateSegment}
-            confirmRemove={() => confirmRemove(index)}
-            controlValue={controlValue}
-            toggle={() => toggle(index)}
-            setValue={(value) => {
-              setValue(index, value)
-            }}
-            setVariations={(i, override, mvOptions) => {
-              const newValue = _.cloneDeep(mvOptions)
-              newValue[i] = {
-                ...newValue[i],
-                percentage_allocation: override.default_percentage_allocation,
-              }
-              setVariations(index, newValue)
-            }}
-            projectFlag={projectFlag}
-          />
-          <div className='text-left'>
-            <JSONReference
-              showNamesButton
-              title={'Segment Override'}
-              json={value}
+      {items.map((value, index) => {
+        const sortId = `segment-${value.segment}-${index}`
+        if (useSortable) {
+          return (
+            <Fragment key={value.segment.name || sortId}>
+              <SortableSegmentOverride
+                sortId={sortId}
+                id={id}
+                name={name}
+                segment={value.segment}
+                hideViewSegment={hideViewSegment}
+                highlightSegmentId={highlightSegmentId}
+                onSortEnd={onSortEnd}
+                disabled={disabled}
+                showEditSegment={showEditSegment}
+                environmentId={environmentId}
+                projectId={projectId}
+                multivariateOptions={multivariateOptions}
+                index={index}
+                readOnly={readOnly}
+                value={value}
+                setSegmentEditId={setSegmentEditId}
+                setShowCreateSegment={setShowCreateSegment}
+                confirmRemove={() => confirmRemove(index)}
+                controlValue={controlValue}
+                toggle={() => toggle(index)}
+                setValue={(value) => {
+                  setValue(index, value)
+                }}
+                setVariations={(i, override, mvOptions) => {
+                  const newValue = _.cloneDeep(mvOptions)
+                  newValue[i] = {
+                    ...newValue[i],
+                    percentage_allocation:
+                      override.default_percentage_allocation,
+                  }
+                  setVariations(index, newValue)
+                }}
+                projectFlag={projectFlag}
+              />
+              <div className='text-left'>
+                <JSONReference
+                  showNamesButton
+                  title={'Segment Override'}
+                  json={value}
+                />
+              </div>
+            </Fragment>
+          )
+        }
+
+        return (
+          <Fragment key={value.segment.name || sortId}>
+            <SegmentOverrideInner
+              id={id}
+              name={name}
+              segment={value.segment}
+              hideViewSegment={hideViewSegment}
+              highlightSegmentId={highlightSegmentId}
+              onSortEnd={onSortEnd}
+              disabled={disabled}
+              showEditSegment={showEditSegment}
+              environmentId={environmentId}
+              projectId={projectId}
+              multivariateOptions={multivariateOptions}
+              index={index}
+              readOnly={readOnly}
+              value={value}
+              setSegmentEditId={setSegmentEditId}
+              setShowCreateSegment={setShowCreateSegment}
+              confirmRemove={() => confirmRemove(index)}
+              controlValue={controlValue}
+              toggle={() => toggle(index)}
+              setValue={(value) => {
+                setValue(index, value)
+              }}
+              setVariations={(i, override, mvOptions) => {
+                const newValue = _.cloneDeep(mvOptions)
+                newValue[i] = {
+                  ...newValue[i],
+                  percentage_allocation: override.default_percentage_allocation,
+                }
+                setVariations(index, newValue)
+              }}
+              projectFlag={projectFlag}
             />
-          </div>
-        </Fragment>
-      ))}
+            <div className='text-left'>
+              <JSONReference
+                showNamesButton
+                title={'Segment Override'}
+                json={value}
+              />
+            </div>
+          </Fragment>
+        )
+      })}
     </div>
   )
 }
 
-const SegmentOverrideList = SortableContainer(SegmentOverrideListInner)
+const SortableSegmentOverrideList = ({
+  items,
+  onSortEnd: handleSortEnd,
+  ...rest
+}) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  )
+
+  const sortableIds = items.map(
+    (value, index) => `segment-${value.segment}-${index}`,
+  )
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event
+    if (active.id !== over?.id) {
+      const oldIndex = sortableIds.indexOf(active.id)
+      const newIndex = sortableIds.indexOf(over.id)
+      handleSortEnd({ newIndex, oldIndex })
+    }
+  }
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={sortableIds}
+        strategy={verticalListSortingStrategy}
+      >
+        <SegmentOverrideListInner
+          items={items}
+          onSortEnd={handleSortEnd}
+          {...rest}
+        />
+      </SortableContext>
+    </DndContext>
+  )
+}
 
 class TheComponent extends Component {
   static displayName = 'TheComponent'
@@ -593,7 +716,7 @@ class TheComponent extends Component {
     const InnerComponent =
       this.props.id || this.props.readOnly
         ? SegmentOverrideListInner
-        : SegmentOverrideList
+        : SortableSegmentOverrideList
 
     const visibleValues = value && value.filter((v) => !v.toRemove)
 
@@ -723,29 +846,6 @@ class TheComponent extends Component {
                 {value && (
                   <>
                     <InnerComponent
-                      shouldCancelStart={(e) => {
-                        const tagName = e.target.tagName.toLowerCase()
-
-                        // Check if the clicked element is a button, input, or textarea
-                        if (
-                          tagName === 'input' ||
-                          tagName === 'textarea' ||
-                          tagName === 'button'
-                        ) {
-                          return true // Cancel sorting for inputs, buttons, etc.
-                        }
-
-                        // Cancel if the clicked element has class 'feature-action__list'
-                        if (
-                          e.target.closest('.feature-action__item') || // Checks for parent elements with the class
-                          e.target.closest('.hljs')
-                        ) {
-                          return true // Cancel sorting if the target or parent has these classes
-                        }
-
-                        // Otherwise, allow sorting
-                        return false
-                      }} // Here we pass the function to prevent sorting in certain cases
                       disabled={this.props.readOnly}
                       id={this.props.id}
                       name={this.props.name}
