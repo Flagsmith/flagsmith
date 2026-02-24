@@ -65,13 +65,16 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
   setHasMetadataRequired,
 }) => {
   const { data: initialFields = EMPTY_FIELDS, isLoading } =
-    useGetEntityMetadataFieldsQuery({
-      entityContentType,
-      entityId,
-      entityType: entity as 'feature' | 'segment' | 'environment',
-      organisationId,
-      projectId,
-    })
+    useGetEntityMetadataFieldsQuery(
+      {
+        entityContentType,
+        entityId,
+        entityType: entity as 'feature' | 'segment' | 'environment',
+        organisationId,
+        projectId,
+      },
+      { refetchOnMountOrArgChange: true },
+    )
 
   const [metadataFields, setMetadataFields] = useState<CustomMetadataField[]>(
     [],
