@@ -4259,9 +4259,8 @@ def test_list_features__edge_v2_project__makes_one_dynamo_query(
     Feature.objects.create(name="feature_2", project=project)
     Feature.objects.create(name="feature_3", project=project)
 
-    # Inject a mock DynamoDB table directly on the module-level wrapper singleton so
-    # we can count raw table.query calls regardless of how the implementation
-    # structures its requests. query() must return a valid shape.
+    # Inject a mock DynamoDB table directly on the wrapper so we can
+    # verify the number of queries made.
     mock_table = mocker.MagicMock()
     mock_table.query.return_value = {"Items": [], "Count": 0}
 
@@ -4283,5 +4282,6 @@ def test_list_features__edge_v2_project__makes_one_dynamo_query(
     feature_count = Feature.objects.filter(project=project).count()
     assert feature_count == 3
 
-    # Check for N+1 dynamo query issues
+    # Validate that only a single query is made to dynamodb, not one
+    # per feature.
     assert mock_table.query.call_count == 1
