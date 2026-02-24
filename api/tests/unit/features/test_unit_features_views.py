@@ -2446,7 +2446,7 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     assert response_json["results"][0]["num_identity_overrides"] is None
 
 
-def test_list_features_calls_get_overrides_data_with_feature_ids(
+def test_list_features_calls_get_overrides_data(
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
     admin_client_new: APIClient,
@@ -2474,7 +2474,6 @@ def test_list_features_calls_get_overrides_data_with_feature_ids(
     assert response.status_code == status.HTTP_200_OK
     mock_get_overrides_data.assert_called_once_with(
         dynamo_enabled_project_environment_one,
-        [feature.id],
     )
 
 
