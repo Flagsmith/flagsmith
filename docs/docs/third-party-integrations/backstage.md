@@ -1,7 +1,11 @@
 ---
 title: Backstage
 description: 'Integrate Flagsmith feature flags into your Backstage developer portal'
+hide_title: true
 ---
+
+<!-- Logo source: https://github.com/cncf/artwork/tree/main/projects/backstage -->
+![Backstage logo](/img/integrations/backstage/backstage-logo.svg)
 
 The [Flagsmith Backstage Plugin](https://github.com/Flagsmith/flagsmith-backstage-plugin) brings feature flag
 observability directly into your [Backstage](https://backstage.io/) developer portal. It provides three components:
