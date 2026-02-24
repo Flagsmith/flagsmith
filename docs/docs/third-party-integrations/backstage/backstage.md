@@ -79,7 +79,7 @@ import { FlagsmithOverviewCard } from '@flagsmith/backstage-plugin';
 </Grid>
 ```
 
-<img src="/img/integrations/backstage/overview-card.png" alt="Overview Card" width="600" />
+![Overview Card](/img/integrations/backstage/overview-card.png)
 
 ### Usage Card
 
@@ -94,7 +94,7 @@ import { FlagsmithUsageCard } from '@flagsmith/backstage-plugin';
 </Grid>
 ```
 
-<img src="/img/integrations/backstage/usage-card.png" alt="Usage Card" width="600" />
+![Usage Card](/img/integrations/backstage/usage-card.png)
 
 ## Entity Annotations
 
@@ -124,16 +124,20 @@ spec:
 ### Admin API Key
 
 1. Log in to [Flagsmith](https://app.flagsmith.com/).
-2. Navigate to **Account Settings > Keys**.
-3. Copy your **Admin API Key**.
+2. Navigate to **Organisation Settings → API Keys**.
+3. Click **Create API Key** and ensure **Is admin** is enabled.
+4. Copy your **Admin API Key**.
 
 ### Project ID
 
 1. Open your Flagsmith project.
-2. Go to **Project Settings**.
-3. The **Project ID** is displayed at the top of the settings page.
+2. Go to **Project Settings → General**.
+3. Enable **JSON references** in your **Account Settings** if not already enabled.
+4. Click the **JSON data** dropdown and select **Project**.
+5. The **Project ID** is shown as the `id` field in the JSON (e.g., `"id": 1`).
 
 ### Organisation ID
 
-1. Navigate to **Organisation Settings**.
-2. The **Organisation ID** is displayed at the top of the settings page.
+1. In **Project Settings → General**, click the **JSON data** dropdown and select **Project**.
+2. The **Organisation ID** is shown as the `organisation` field in the JSON (e.g., `"organisation": 1`).
+3. Alternatively, go to **Organisation Settings → General** and view the JSON data there.
