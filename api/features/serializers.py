@@ -126,7 +126,8 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     def project(self) -> Project:
         if isinstance(project := self.context.get("project"), Project):
             return project
-        raise RuntimeError(f"{type(self)} requires 'project' in context.")
+        else:  # pragma: no cover
+            raise RuntimeError(f"{type(self)} requires 'project' in context.")
 
     def validate_identity(self, value: str) -> str:
         if self.project.enable_dynamo_db:
