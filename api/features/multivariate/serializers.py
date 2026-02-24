@@ -59,10 +59,26 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
 
-        # For partial updated, use existing instance value as fallback
-        feature = attrs.get("feature", self.instance.feature if self.instance else None)
+        # For partial updates or nested routes, use existing instance or URL value as fallback
+        feature = attrs.get("feature")
+        if feature is None and self.instance is not None:
+            feature = self.instance.feature
+
+        if feature is None:
+            view = self.context.get("view")
+            feature_pk = getattr(view, "kwargs", {}).get("feature_pk") if view else None
+            project_pk = getattr(view, "kwargs", {}).get("project_pk") if view else None
+            if feature_pk is not None:
+                qs = Feature.objects.filter(pk=feature_pk)
+                if project_pk is not None:
+                    qs = qs.filter(project__id=project_pk)
+                feature = qs.first()
+
         if feature is None:
             raise serializers.ValidationError({"feature": "Feature is required"})
+
+        # Ensure feature is always present in validated data (e.g. for creates via nested routes)
+        attrs["feature"] = feature
 
         default_allocation = attrs.get(
             "default_percentage_allocation",
