@@ -2,7 +2,6 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, TypeAlias, TypeVar, Union
 
-from flag_engine.features.models import FeatureStateModel
 from pydantic import BaseModel
 
 from edge_api.identities.types import IdentityChangeset
@@ -16,6 +15,7 @@ from environments.dynamodb.types import (
 from environments.dynamodb.utils import (
     get_environments_v2_identity_override_document_key,
 )
+from util.engine_models.features.models import FeatureStateModel
 from util.mappers.engine import (
     map_environment_api_key_to_engine,
     map_environment_to_engine,
@@ -23,10 +23,9 @@ from util.mappers.engine import (
 )
 
 if TYPE_CHECKING:
-    from flag_engine.identities.models import IdentityModel
-
     from environments.identities.models import Identity
     from environments.models import Environment, EnvironmentAPIKey
+    from util.engine_models.identities.models import IdentityModel
 
 
 __all__ = (

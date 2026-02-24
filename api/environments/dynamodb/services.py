@@ -2,8 +2,6 @@ import logging
 from decimal import Decimal
 from typing import Generator, Iterable
 
-from flag_engine.identities.models import IdentityModel
-
 from environments.dynamodb import (
     CapacityBudgetExceeded,
     DynamoEnvironmentV2Wrapper,
@@ -16,6 +14,7 @@ from environments.dynamodb.types import (
 )
 from environments.models import Environment
 from projects.models import EdgeV2MigrationStatus
+from util.engine_models.identities.models import IdentityModel
 from util.mappers import map_engine_feature_state_to_identity_override
 
 logger = logging.getLogger(__name__)

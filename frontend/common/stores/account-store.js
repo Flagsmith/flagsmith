@@ -25,7 +25,7 @@ const controller = {
           error.status === 400
         ) {
           API.ajaxHandler(store, error)
-          return
+          throw error
         }
         return data.post(`${Project.api}users/join/${id}/`)
       })
