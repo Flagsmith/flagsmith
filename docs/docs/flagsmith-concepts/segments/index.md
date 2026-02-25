@@ -23,7 +23,7 @@ Segments and segment overrides can be used to implement many scenarios. For exam
 
 ## Security and privacy
 
-The Flagsmith API to set user traits, e.g. the `setTraits` method from the JavaScript SDK, does not require authentication or credentials. This means that users can change their own traits, which could be a security problem if you are using segments for authorisation or access control. If you must use segments for access control, make sure to disable the ["Persist traits when using client-side SDK keys" option](/administration-and-security/governance-and-compliance/security) on every environment that needs it, and use server-side SDKs to set traits instead. You can still use client-side SDKs to read traits and flags derived from segments in this case.
+The Flagsmith API to set user traits, e.g. the `setTraits` method from the JavaScript SDK, does not require authentication or credentials. This means that users can change their own traits, which could be a security problem if you are using segments for authorisation or access control. If you must use segments for access control, make sure to disable the ["Allow client-side SDKs to set traits" option](/administration-and-security/governance-and-compliance/security) on every environment that needs it, and use server-side SDKs to set traits instead. You can still use client-side SDKs to read flags for identities whose traits have been set server-side.
 
 Segment names and definitions might include sensitive or proprietary information that you do not wish to expose to your users. Because of this, segments are transparent to applications and are not included in API responses when using [remote evaluation mode](/integrating-with-flagsmith/sdks/server-side#when-running-in-remote-evaluation-mode).
 

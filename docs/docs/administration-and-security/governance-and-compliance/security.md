@@ -4,13 +4,18 @@ sidebar_label: Security
 sidebar_position: 40
 ---
 
-## Preventing Client SDKS from setting Traits
+## Preventing Client SDKs from setting Traits
 
 There may be use-cases where you want to prevent client-side SDKs from setting traits of users. For example, if you are
 setting `plan=silver` as a trait, and then enabling/disabling features based on that plan, a malicious user could, with
 a client-side SDK, update their trait to `plan=gold` and unlock features they have not paid for.
 
-You can prevent this by disabling the "Persist traits when using client-side SDK keys" option. This option defaults to "On". Turning it "Off" will not allow client-side SDKs to write traits to Flagsmith. In order to write traits, you will need to use a [server-side SDK and server-side Key](/integrating-with-flagsmith/integration-overview).
+You can prevent this by disabling the "Allow client-side SDKs to set traits" option. This option defaults to "On".
+Turning it "Off" means any traits sent by client-side SDKs will be completely ignored — they will not be persisted,
+and they will not be used for segment evaluation.
+In order to set traits, you will need to use a
+[server-side SDK and server-side Key](/integrating-with-flagsmith/integration-overview). You can still use client-side
+SDKs to read flags for an identity whose traits have been set server-side.
 
 This is a per-Environment setting.
 
