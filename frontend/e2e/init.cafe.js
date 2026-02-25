@@ -14,14 +14,16 @@ import versioningTests from './tests/versioning-tests'
 import organisationPermissionTest from './tests/organisation-permission-test'
 import projectPermissionTest from './tests/project-permission-test'
 import environmentPermissionTest from './tests/environment-permission-test'
-import flagsmith from 'flagsmith/isomorphic';
+import flagsmith from 'flagsmith/isomorphic'
 import rolesTest from './tests/roles-test'
 import organisationTest from './tests/organisation-test'
 
 require('dotenv').config()
 
 const url = `http://localhost:${process.env.PORT || 8080}/`
-const e2eTestApi = `${process.env.FLAGSMITH_API_URL || Project.api}e2etests/teardown/`
+const e2eTestApi = `${
+  process.env.FLAGSMITH_API_URL || Project.api
+}e2etests/teardown/`
 const logger = getLogger()
 
 console.log(
@@ -32,26 +34,25 @@ console.log(
   '\n',
 )
 
-
 fixture`E2E Tests`.requestHooks(logger).before(async () => {
   const token = process.env.E2E_TEST_TOKEN
     ? process.env.E2E_TEST_TOKEN
     : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`]
-    await flagsmith.init({
-      api:Project.flagsmithClientAPI,
-      environmentID:Project.flagsmith,
-      fetch,
-    })
+  await flagsmith.init({
+    api: Project.flagsmithClientAPI,
+    environmentID: Project.flagsmith,
+    fetch,
+  })
 
   if (token) {
     await fetch(e2eTestApi, {
-      method: 'POST',
+      body: JSON.stringify({}),
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'X-E2E-Test-Auth-Token': token.trim(),
       },
-      body: JSON.stringify({}),
+      method: 'POST',
     }).then((res) => {
       if (res.ok) {
         // eslint-disable-next-line no-console
@@ -97,7 +98,9 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
     await logResults(logger.requests, t)
   })
 
-test('Segment-part-1', async () => await testSegment1(flagsmith)).meta({ category: 'oss' })
+test('Segment-part-1', async () => await testSegment1(flagsmith)).meta({
+  category: 'oss',
+})
 
 test('Segment-part-2', testSegment2).meta({ autoLogout: true, category: 'oss' })
 
@@ -113,14 +116,26 @@ test('Environment', environmentTest).meta({ autoLogout: true, category: 'oss' })
 
 test('Project', projectTest).meta({ autoLogout: true, category: 'oss' })
 
-test('Organization', organisationTest).meta({ autoLogout: true, category: 'oss' })
+test('Organization', organisationTest).meta({
+  autoLogout: true,
+  category: 'oss',
+})
 
 test('Versioning', versioningTests).meta({ autoLogout: true, category: 'oss' })
 
-test('Organisation-permission', organisationPermissionTest).meta({ autoLogout: true, category: 'enterprise' })
+test('Organisation-permission', organisationPermissionTest).meta({
+  autoLogout: true,
+  category: 'enterprise',
+})
 
-test('Project-permission', projectPermissionTest).meta({ autoLogout: true, category: 'enterprise' })
+test('Project-permission', projectPermissionTest).meta({
+  autoLogout: true,
+  category: 'enterprise',
+})
 
-test('Environment-permission', environmentPermissionTest).meta({ autoLogout: true, category: 'enterprise' })
+test('Environment-permission', environmentPermissionTest).meta({
+  autoLogout: true,
+  category: 'enterprise',
+})
 
 test('Roles', rolesTest).meta({ autoLogout: true, category: 'enterprise' })

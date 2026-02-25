@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timedelta
+from datetime import timezone as dttz
 from typing import Type
 from unittest import mock
 from unittest.mock import MagicMock
@@ -201,7 +202,13 @@ def test_saml_users_cannot_create_organisation(
     staff_user: FFAdminUser,
 ) -> None:
     # Given
-    setattr(staff_user, "saml_user", mocker.Mock())
+    mock_user = mocker.Mock(wraps=staff_user)
+    mock_user.saml_user = mocker.Mock()
+    mocker.patch(
+        "organisations.permissions.permissions.Request.user",
+        new_callable=mocker.PropertyMock,
+        return_value=mock_user,
+    )
 
     # When
     response = staff_client.post(
@@ -779,7 +786,7 @@ def test_chargebee_webhook(
         15,
         33,
         9,
-        tzinfo=timezone.utc,  # type: ignore[attr-defined]
+        tzinfo=dttz.utc,
     )
     assert subscription_cache.current_billing_term_starts_at == datetime(
         2023,
@@ -788,7 +795,7 @@ def test_chargebee_webhook(
         15,
         33,
         9,
-        tzinfo=timezone.utc,  # type: ignore[attr-defined]
+        tzinfo=dttz.utc,
     )
     assert subscription_cache.allowed_projects is None
     assert subscription_cache.allowed_30d_api_calls == api_calls
@@ -830,9 +837,7 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
     subscription.refresh_from_db()
     assert subscription.cancellation_date == datetime.utcfromtimestamp(
         current_term_end
-    ).replace(
-        tzinfo=timezone.utc  # type: ignore[attr-defined]
-    )
+    ).replace(tzinfo=dttz.utc)
 
     # and
     assert len(mail.outbox) == 1
@@ -909,9 +914,7 @@ def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sen
     subscription.refresh_from_db()
     assert subscription.cancellation_date == datetime.utcfromtimestamp(
         current_term_end
-    ).replace(
-        tzinfo=timezone.utc  # type: ignore[attr-defined]
-    )
+    ).replace(tzinfo=dttz.utc)
 
     # and
     assert len(mail.outbox) == 1

@@ -7,7 +7,7 @@ from common.projects.permissions import (
 )
 from django.conf import settings
 from django.utils.decorators import method_decorator
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -52,24 +52,27 @@ from users.models import FFAdminUser
 
 
 @method_decorator(
-    name="list",
+    name="retrieve",
     decorator=extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="organisation",
-                location=OpenApiParameter.QUERY,
-                description="ID of the organisation to filter by.",
-                required=False,
-                type=int,
-            ),
-            OpenApiParameter(
-                name="uuid",
-                location=OpenApiParameter.QUERY,
-                description="uuid of the project to filter by.",
-                required=False,
-                type=str,
-            ),
-        ]
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "get_project",
+                "description": "Retrieves comprehensive information about a specific project including configuration and statistics.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "update_project",
+                "description": "Updates project configuration settings such as the project name and feature visibility.",
+            },
+        },
     ),
 )
 class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
@@ -123,6 +126,15 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = self.get_serializer(project)
         return Response(serializer.data)
 
+    @extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "list_project_environments",
+                "description": "Retrieves all environments configured for the specified project.",
+            },
+        },
+    )
     @action(detail=True)
     def environments(self, request, pk):  # type: ignore[no-untyped-def]
         project = self.get_object()

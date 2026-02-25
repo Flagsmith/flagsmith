@@ -1,0 +1,26 @@
+{
+  "failedTests": [
+    {
+      "file": "e2e/tests/project-permission-test.pw.ts",
+      "title": "Project-level permissions control access to features, environments, audit logs, and segments @enterprise",
+      "tests": [
+        {
+          "status": "failed",
+          "error": {
+            "message": "TimeoutError: locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[name=\"envName\"]').first() to be visible\u001b[22m\n",
+            "stack": "TimeoutError: locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[name=\"envName\"]').first() to be visible\u001b[22m\n\n    at E2EHelpers.waitForElementVisible (/Users/kyle/flagsmith/frontend/e2e/helpers/e2e-helpers.playwright.ts:37:47)\n    at E2EHelpers.createEnvironment (/Users/kyle/flagsmith/frontend/e2e/helpers/e2e-helpers.playwright.ts:603:16)\n    at /Users/kyle/flagsmith/frontend/e2e/tests/project-permission-test.pw.ts:40:11",
+            "location": {
+              "file": "/Users/kyle/flagsmith/frontend/e2e/helpers/e2e-helpers.playwright.ts",
+              "column": 47,
+              "line": 37
+            },
+            "snippet": "\u001b[90m   at \u001b[39mhelpers/e2e-helpers.playwright.ts:37\n\n\u001b[0m \u001b[90m 35 |\u001b[39m   \u001b[36masync\u001b[39m waitForElementVisible(selector\u001b[33m:\u001b[39m string\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m number \u001b[33m=\u001b[39m \u001b[33mLONG_TIMEOUT\u001b[39m) {\n \u001b[90m 36 |\u001b[39m     logUsingLastSection(\u001b[32m`Waiting element visible ${selector}`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 37 |\u001b[39m     \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mlocator(selector)\u001b[33m.\u001b[39mfirst()\u001b[33m.\u001b[39mwaitFor({\n \u001b[90m    |\u001b[39m                                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 38 |\u001b[39m       state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m\n \u001b[90m 39 |\u001b[39m       timeout\n \u001b[90m 40 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m"
+          },
+          "duration": 24748,
+          "retry": 0
+        }
+      ]
+    }
+  ],
+  "timestamp": "2026-02-25T10:24:07.062Z"
+}

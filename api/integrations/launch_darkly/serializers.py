@@ -11,6 +11,7 @@ from integrations.launch_darkly.models import (
 class LaunchDarklyImportRequestStatusSerializer(serializers.Serializer):  # type: ignore[type-arg]
     requested_environment_count = serializers.IntegerField(read_only=True)
     requested_flag_count = serializers.IntegerField(read_only=True)
+    deprecated_flag_count = serializers.IntegerField(read_only=True, default=0)
     result = serializers.ChoiceField(
         get_args(LaunchDarklyImportResult),
         read_only=True,

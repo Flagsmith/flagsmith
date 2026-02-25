@@ -13,9 +13,13 @@ export const buildVersionService = service
         providesTags: () => [{ id: 'BuildVersion', type: 'BuildVersion' }],
         queryFn: async (args, _, _2, baseQuery) => {
           try {
+            const backendVersionUrl =
+              Project.api === '/api/v1/'
+                ? '/_backend_version'
+                : `${Project.api.replace('api/v1/', '')}version/`
             const [frontendRes, backendRes] = await Promise.all([
-              data.get(`/version/`).catch(() => ({})),
-              data.get(`${Project.api.replace('api/v1/', '')}version/`),
+              data.get(`/version`).catch(() => ({})),
+              data.get(backendVersionUrl),
             ])
 
             const frontend = (frontendRes || {}) as Version['frontend']

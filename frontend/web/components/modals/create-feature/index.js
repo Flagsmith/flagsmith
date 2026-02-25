@@ -38,12 +38,9 @@ import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import { getPermission } from 'common/services/usePermission'
 import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
-import { IonIcon } from '@ionic/react'
-import { warning } from 'ionicons/icons'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
-import BetaFlag from 'components/BetaFlag'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import CreateFeature from './tabs/CreateFeature'
 import FeatureSettings from './tabs/FeatureSettings'
@@ -52,9 +49,9 @@ import FeatureLimitAlert from './FeatureLimitAlert'
 import FeatureUpdateSummary from './FeatureUpdateSummary'
 import FeatureNameInput from './FeatureNameInput'
 import {
-  EnvironmentPermission,
-  EnvironmentPermissionDescriptions,
-  ProjectPermission,
+    EnvironmentPermission,
+    EnvironmentPermissionDescriptions,
+    ProjectPermission,
 } from 'common/types/permissions.types'
 
 const Index = class extends Component {
@@ -389,9 +386,9 @@ const Index = class extends Component {
     } = this.props
     const { environmentFlag: stateEnvironmentFlag, projectFlag } = this.state
     const hasMultivariate =
-      propsEnvironmentFlag &&
-      propsEnvironmentFlag.multivariate_feature_state_values &&
-      propsEnvironmentFlag.multivariate_feature_state_values.length
+      environmentFlag &&
+      environmentFlag.multivariate_feature_state_values &&
+      environmentFlag.multivariate_feature_state_values.length
     if (identity) {
       !isSaving &&
         projectFlag.name &&
@@ -402,7 +399,7 @@ const Index = class extends Component {
           identityFlag: Object.assign({}, identityFlag || {}, {
             enabled: stateEnvironmentFlag.enabled,
             feature_state_value: hasMultivariate
-              ? propsEnvironmentFlag.feature_state_value
+              ? environmentFlag.feature_state_value
               : this.cleanInputValue(stateEnvironmentFlag.feature_state_value),
             multivariate_options:
               stateEnvironmentFlag.multivariate_feature_state_values,
@@ -439,7 +436,12 @@ const Index = class extends Component {
             skipSaveProjectFeature: this.state.skipSaveProjectFeature,
             ..._projectFlag,
           },
-          propsEnvironmentFlag,
+          {
+            ...environmentFlag,
+            multivariate_feature_state_values:
+              this.props.environmentVariations ||
+              environmentFlag?.multivariate_feature_state_values,
+          },
           segmentOverrides,
         )
     }
@@ -501,7 +503,11 @@ const Index = class extends Component {
   }
   parseError = (error) => {
     const { projectFlag } = this.props
-    let featureError = error?.message || error?.name?.[0] || error
+    let featureError =
+      error?.metadata?.flatMap((m) => m.non_field_errors ?? []).join('\n') ||
+      error?.message ||
+      error?.name?.[0] ||
+      error
     let featureWarning = ''
     //Treat multivariate no changes as warnings
     if (
@@ -626,9 +632,7 @@ const Index = class extends Component {
     const noPermissions = this.props.noPermissions
     let regexValid = true
 
-    const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
-      'git_code_references',
-    )
+    const hasCodeReferences = projectFlag?.code_references_counts?.length > 0
 
     try {
       if (!isEdit && projectFlag.name && regex) {
@@ -719,6 +723,13 @@ const Index = class extends Component {
                     return 'New Change Request'
                   }
 
+                  let modalTitle = 'New Change Request'
+                  if (schedule) {
+                    modalTitle = 'New Scheduled Flag Update'
+                  } else if (this.props.changeRequest) {
+                    modalTitle = 'Update Change Request'
+                  }
+
                   openModal2(
                     getModalTitle(),
                     <ChangeRequestModal
@@ -768,22 +779,7 @@ const Index = class extends Component {
                                   this.props.changeRequest.id,
                                 ignore_conflicts,
                                 live_from,
-                                multivariate_options: this.props
-                                  .multivariate_options
-                                  ? this.props.multivariate_options.map((v) => {
-                                      const matching =
-                                        projectFlag.multivariate_options.find(
-                                          (m) =>
-                                            m.id ===
-                                            v.multivariate_feature_option,
-                                        )
-                                      return {
-                                        ...v,
-                                        percentage_allocation:
-                                          matching.default_percentage_allocation,
-                                      }
-                                    })
-                                  : projectFlag.multivariate_options,
+                                multivariate_options: flag.multivariate_options,
                                 title,
                               },
                               !is4Eyes,
@@ -837,9 +833,6 @@ const Index = class extends Component {
                     >
                       {({ permission: projectAdmin }) => {
                         this.state.skipSaveProjectFeature = !createFeature
-                        const _hasMetadataRequired =
-                          this.state.hasMetadataRequired &&
-                          !projectFlag.metadata?.length
 
                         return (
                           <div id='create-feature-modal'>
@@ -1180,6 +1173,30 @@ const Index = class extends Component {
                                                           permission:
                                                             manageSegmentsOverrides,
                                                         }) => {
+                                                          const getButtonText =
+                                                            () => {
+                                                              if (isSaving) {
+                                                                return existingChangeRequest
+                                                                  ? 'Updating Change Request'
+                                                                  : 'Creating Change Request'
+                                                              }
+                                                              return existingChangeRequest
+                                                                ? 'Update Change Request'
+                                                                : 'Create Change Request'
+                                                            }
+
+                                                          const getScheduleButtonText =
+                                                            () => {
+                                                              if (isSaving) {
+                                                                return existingChangeRequest
+                                                                  ? 'Updating Change Request'
+                                                                  : 'Scheduling Update'
+                                                              }
+                                                              return existingChangeRequest
+                                                                ? 'Update Change Request'
+                                                                : 'Schedule Update'
+                                                            }
+
                                                           if (
                                                             isVersioned &&
                                                             is4Eyes
@@ -1206,18 +1223,7 @@ const Index = class extends Component {
                                                                   !savePermission
                                                                 }
                                                               >
-                                                                {(() => {
-                                                                  if (
-                                                                    isSaving
-                                                                  ) {
-                                                                    return existingChangeRequest
-                                                                      ? 'Updating Change Request'
-                                                                      : 'Creating Change Request'
-                                                                  }
-                                                                  return existingChangeRequest
-                                                                    ? 'Update Change Request'
-                                                                    : 'Create Change Request'
-                                                                })()}
+                                                                {getButtonText()}
                                                               </Button>,
                                                             )
                                                           }
@@ -1250,18 +1256,7 @@ const Index = class extends Component {
                                                                         !savePermission
                                                                       }
                                                                     >
-                                                                      {(() => {
-                                                                        if (
-                                                                          isSaving
-                                                                        ) {
-                                                                          return existingChangeRequest
-                                                                            ? 'Updating Change Request'
-                                                                            : 'Scheduling Update'
-                                                                        }
-                                                                        return existingChangeRequest
-                                                                          ? 'Update Change Request'
-                                                                          : 'Schedule Update'
-                                                                      })()}
+                                                                      {getScheduleButtonText()}
                                                                     </Button>
                                                                   </>
                                                                 )}
@@ -1575,41 +1570,65 @@ const Index = class extends Component {
                                       )
                                     }
                                   </Permission>
-                                  {!Project.disableAnalytics && (
-                                    <TabItem tabLabel={'Analytics'}>
-                                      <div className='mb-4'>
-                                        <FeatureAnalytics
-                                          projectId={`${project.id}`}
-                                          featureId={`${projectFlag.id}`}
-                                          defaultEnvironmentIds={[
-                                            `${environment.id}`,
-                                          ]}
-                                        />
-                                      </div>
+                                  {(!Project.disableAnalytics ||
+                                    hasCodeReferences) && (
+                                    <TabItem
+                                      tabLabelString='Usage'
+                                      tabLabel={
+                                        <Row className='justify-content-center'>
+                                          Usage
+                                        </Row>
+                                      }
+                                    >
+                                      {!Project.disableAnalytics && (
+                                        <div className='mb-4'>
+                                          <FeatureAnalytics
+                                            projectId={`${project.id}`}
+                                            featureId={`${projectFlag.id}`}
+                                            defaultEnvironmentIds={[
+                                              `${environment.id}`,
+                                            ]}
+                                          />
+                                        </div>
+                                      )}
+                                      {hasCodeReferences && (
+                                        <FormGroup className='mb-4'>
+                                          <div className='d-flex align-items-center gap-2 mb-2'>
+                                            <h5 className='mb-0'>
+                                              Code references
+                                            </h5>
+                                            <span
+                                              className='chip chip--xs bg-primary text-white'
+                                              style={{ border: 'none' }}
+                                            >
+                                              New
+                                            </span>
+                                          </div>
+                                          <div className='text-muted mb-2'>
+                                            Code references allow you to track
+                                            where feature flags are being used
+                                            within your code.{' '}
+                                            <a
+                                              target='_blank'
+                                              href='https://docs.flagsmith.com/managing-flags/code-references'
+                                              rel='noreferrer'
+                                            >
+                                              Learn more
+                                            </a>
+                                          </div>
+                                          <FeatureCodeReferencesContainer
+                                            featureId={projectFlag.id}
+                                            projectId={this.props.projectId}
+                                          />
+                                        </FormGroup>
+                                      )}
                                     </TabItem>
                                   )}
                                   {
                                     <TabItem
                                       data-test='feature_health'
-                                      tabLabelString='Feature Health'
-                                      tabLabel={
-                                        <Row className='d-flex justify-content-center align-items-center pr-1 gap-1'>
-                                          <BetaFlag flagName={'feature_health'}>
-                                            Feature Health
-                                            {this.props.hasUnhealthyEvents && (
-                                              <IonIcon
-                                                icon={warning}
-                                                style={{
-                                                  color:
-                                                    Constants.featureHealth
-                                                      .unhealthyColor,
-                                                  marginBottom: -2,
-                                                }}
-                                              />
-                                            )}
-                                          </BetaFlag>
-                                        </Row>
-                                      }
+                                      tabLabelString='Health'
+                                      tabLabel={'Health'}
                                     >
                                       <FeatureHealthTabContent
                                         projectId={projectFlag.project}
@@ -1618,20 +1637,6 @@ const Index = class extends Component {
                                       />
                                     </TabItem>
                                   }
-                                  {isCodeReferencesEnabled && (
-                                    <TabItem
-                                      tabLabel={
-                                        <Row className='justify-content-center'>
-                                          Code References
-                                        </Row>
-                                      }
-                                    >
-                                      <FeatureCodeReferencesContainer
-                                        featureId={projectFlag.id}
-                                        projectId={this.props.projectId}
-                                      />
-                                    </TabItem>
-                                  )}
                                   {hasIntegrationWithGithub &&
                                     projectFlag?.id && (
                                       <TabItem
@@ -1747,7 +1752,7 @@ const Index = class extends Component {
                                                   isSaving ||
                                                   !projectFlag.name ||
                                                   invalid ||
-                                                  _hasMetadataRequired
+                                                  this.state.hasMetadataRequired
                                                 }
                                               >
                                                 {isSaving
@@ -1794,10 +1799,21 @@ const Index = class extends Component {
                                 <CreateFeature
                                   projectId={this.props.projectId}
                                   error={error}
-                                  featureState={environmentFlag}
+                                  featureState={
+                                    this.props.environmentFlag ||
+                                    environmentFlag
+                                  }
                                   projectFlag={projectFlag}
                                   featureContentType={featureContentType}
                                   identity={identity}
+                                  defaultExperiment={
+                                    this.props.defaultExperiment
+                                  }
+                                  overrideFeatureState={
+                                    this.props.identityFlag
+                                      ? this.state.environmentFlag
+                                      : null
+                                  }
                                   onEnvironmentFlagChange={(changes) => {
                                     this.setState({
                                       environmentFlag: {
@@ -1820,11 +1836,11 @@ const Index = class extends Component {
                                   }
                                   onHasMetadataRequiredChange={(
                                     hasMetadataRequired,
-                                  ) =>
+                                  ) => {
                                     this.setState({
                                       hasMetadataRequired,
                                     })
-                                  }
+                                  }}
                                   featureError={
                                     this.parseError(error).featureError
                                   }
@@ -1842,7 +1858,9 @@ const Index = class extends Component {
                                   featureLimitPercentage={
                                     this.state.featureLimitAlert.percentage
                                   }
-                                  hasMetadataRequired={_hasMetadataRequired}
+                                  hasMetadataRequired={
+                                    this.state.hasMetadataRequired
+                                  }
                                 />
                               </div>
                             )}

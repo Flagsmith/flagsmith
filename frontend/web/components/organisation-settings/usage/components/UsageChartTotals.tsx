@@ -1,54 +1,14 @@
 import React, { FC } from 'react'
-import Utils from 'common/utils/utils'
-import { IonIcon } from '@ionic/react'
-import { checkmarkSharp } from 'ionicons/icons'
 import { Res } from 'common/types/responses'
+import { IconName } from 'components/Icon'
+import StatItem from 'components/StatItem'
 
-type LegendItemType = {
+type TotalItem = {
+  colour: string | undefined
+  icon: IconName
+  limit: number | null | undefined
   title: string
   value: number
-  selection: string[]
-  onChange: (v: string) => void
-  colour?: string
-}
-
-const LegendItem: FC<LegendItemType> = ({
-  colour,
-  onChange,
-  selection,
-  title,
-  value,
-}) => {
-  if (!value) {
-    return null
-  }
-  return (
-    <div className='mb-4'>
-      <h3 className='mb-2'>{Utils.numberWithCommas(value)}</h3>
-      <div
-        className='cursor-pointer d-flex align-items-center gap-2'
-        onClick={() => onChange(title)}
-      >
-        {!!colour && (
-          <div
-            className='text-white d-flex align-items-center justify-content-center'
-            style={{
-              backgroundColor: colour,
-              borderRadius: 2,
-              flexShrink: 0,
-              height: 16,
-              width: 16,
-            }}
-          >
-            {selection.includes(title) && (
-              <IonIcon size={'8px'} color='white' icon={checkmarkSharp} />
-            )}
-          </div>
-        )}
-        <span className='text-muted'>{title}</span>
-      </div>
-    </div>
-  )
 }
 
 export interface UsageChartTotalsProps {
@@ -57,11 +17,13 @@ export interface UsageChartTotalsProps {
   updateSelection: (key: string) => void
   colours: string[]
   withColor?: boolean
+  maxApiCalls?: number | null
 }
 
 const UsageChartTotals: FC<UsageChartTotalsProps> = ({
   colours,
   data,
+  maxApiCalls,
   selection,
   updateSelection,
   withColor = true,
@@ -70,47 +32,67 @@ const UsageChartTotals: FC<UsageChartTotalsProps> = ({
     return null
   }
 
-  const totalItems = [
+  const totalItems: TotalItem[] = [
     {
       colour: colours[0],
+      icon: 'features',
+      limit: undefined,
       title: 'Flags',
       value: data.totals.flags,
     },
     {
       colour: colours[1],
+      icon: 'person',
+      limit: undefined,
       title: 'Identities',
       value: data.totals.identities,
     },
     {
       colour: colours[2],
+      icon: 'file-text',
+      limit: undefined,
       title: 'Environment Document',
       value: data.totals.environmentDocument,
     },
     {
       colour: colours[3],
+      icon: 'layers',
+      limit: undefined,
       title: 'Traits',
       value: data.totals.traits,
     },
     {
       colour: undefined,
+      icon: 'bar-chart',
+      limit: maxApiCalls,
       title: 'Total API Calls',
       value: data.totals.total,
     },
   ]
 
   return (
-    <div className='d-flex gap-5 align-items-start'>
-      {totalItems.map((item) => (
-        <LegendItem
-          key={item.title}
-          selection={selection}
-          onChange={updateSelection}
-          colour={!withColor && item.colour ? '#6837fc' : item.colour}
-          value={item.value}
-          title={item.title}
-        />
-      ))}
-    </div>
+    <Row className='plan p-4 mb-4 flex-wrap gap-4'>
+      {totalItems
+        .filter((item) => item.value)
+        .map((item) => (
+          <StatItem
+            key={item.title}
+            icon={item.icon}
+            label={item.title}
+            value={item.value}
+            limit={item.limit}
+            visibilityToggle={
+              withColor && item.colour
+                ? {
+                    colour: item.colour,
+                    isVisible: selection.includes(item.title),
+                    onToggle: () => updateSelection(item.title),
+                  }
+                : undefined
+            }
+          />
+        ))}
+    </Row>
   )
 }
 

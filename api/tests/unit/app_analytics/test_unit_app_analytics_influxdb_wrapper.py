@@ -688,3 +688,73 @@ def test_get_current_api_usage(mocker: MockerFixture) -> None:
 
     # Then
     assert result == 43
+
+
+def test_get_platform_usage_trends__empty_org_ids__returns_empty() -> None:
+    # Given / When
+    from app_analytics.influxdb_wrapper import get_platform_usage_trends
+
+    result = get_platform_usage_trends(
+        date_start=timezone.now() - timedelta(days=30),
+        date_stop=timezone.now(),
+        organisation_ids=[],
+    )
+
+    # Then
+    assert result == {}
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_platform_usage_trends__with_data__returns_daily_breakdown(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    from app_analytics.influxdb_wrapper import get_platform_usage_trends
+
+    record_mock1 = mock.MagicMock()
+    record_mock1.values = {
+        "_time": datetime(2023, 1, 18, 0, 0),
+        "resource": "flags",
+    }
+    record_mock1.get_value.return_value = 100
+
+    record_mock2 = mock.MagicMock()
+    record_mock2.values = {
+        "_time": datetime(2023, 1, 18, 0, 0),
+        "resource": "identities",
+    }
+    record_mock2.get_value.return_value = 50
+
+    record_mock3 = mock.MagicMock()
+    record_mock3.values = {
+        "_time": datetime(2023, 1, 17, 0, 0),
+        "resource": "flags",
+    }
+    record_mock3.get_value.return_value = 75
+
+    table1 = mock.MagicMock()
+    table1.records = [record_mock1, record_mock2]
+    table2 = mock.MagicMock()
+    table2.records = [record_mock3]
+
+    influx_mock = mocker.patch(
+        "app_analytics.influxdb_wrapper.InfluxDBWrapper.influx_query_manager"
+    )
+    influx_mock.return_value = [table1, table2]
+
+    now = timezone.now()
+
+    # When
+    result = get_platform_usage_trends(
+        date_start=now - timedelta(days=30),
+        date_stop=now,
+        organisation_ids=[1, 2],
+    )
+
+    # Then
+    assert "2023-01-18" in result
+    assert result["2023-01-18"]["flags"] == 100
+    assert result["2023-01-18"]["identities"] == 50
+    assert "2023-01-17" in result
+    assert result["2023-01-17"]["flags"] == 75
+    influx_mock.assert_called_once()

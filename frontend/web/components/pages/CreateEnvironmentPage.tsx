@@ -27,6 +27,7 @@ const CreateEnvironmentPage: React.FC = () => {
   const [name, setName] = useState<string>('')
   const [description, setDescription] = useState<string | undefined>()
   const [selectedEnv, setSelectedEnv] = useState<any | undefined>()
+  const [hasMetadataRequired, setHasMetadataRequired] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   const history = useHistory()
@@ -85,10 +86,37 @@ const CreateEnvironmentPage: React.FC = () => {
         permission={ProjectPermission.CREATE_ENVIRONMENT}
         id={projectId}
       >
-        {({ isLoading, permission }) =>
-          isLoading ? (
-            <Loader />
-          ) : permission ? (
+        {({ isLoading, permission }) => {
+          if (isLoading) {
+            return <Loader />
+          }
+          if (!permission) {
+            return (
+              <div>
+                <p className='notification__text'>
+                  Check your project permissions
+                </p>
+                <p>
+                  Although you have been invited to this project, you are not
+                  invited to any environments yet!
+                </p>
+                <p>
+                  Contact your project administrator asking them to either:
+                  <ul>
+                    <li>
+                      Invite you to an environment (e.g. develop) by visiting{' '}
+                      <strong>Environment settings</strong>
+                    </li>
+                    <li>
+                      Grant permissions to create an environment under{' '}
+                      <strong>Project settings</strong>.
+                    </li>
+                  </ul>
+                </p>
+              </div>
+            )
+          }
+          return (
             <ProjectProvider id={projectId} onSave={onSave}>
               {({ createEnv, error, isSaving, project }) => (
                 <form
@@ -158,11 +186,6 @@ const CreateEnvironmentPage: React.FC = () => {
                         />
                       )}
                     </CondensedRow>
-                    {error && (
-                      <CondensedRow>
-                        <ErrorMessage error={error} />
-                      </CondensedRow>
-                    )}
                   </div>
                   {Utils.getPlansPermission('METADATA') &&
                     envContentType?.id && (
@@ -184,19 +207,25 @@ const CreateEnvironmentPage: React.FC = () => {
                                 entity={envContentType.model}
                                 isCloningEnvironment
                                 onChange={setMetadata}
+                                setHasMetadataRequired={setHasMetadataRequired}
                               />
                             }
                           />
                         </FormGroup>
                       </CondensedRow>
                     )}
+                  {error && (
+                    <CondensedRow>
+                      <ErrorMessage error={error} />
+                    </CondensedRow>
+                  )}
                   <CondensedRow>
                     <div className='text-right'>
                       <Button
                         id='create-env-btn'
                         className='mt-3'
                         type='submit'
-                        disabled={isSaving || !name}
+                        disabled={isSaving || !name || hasMetadataRequired}
                       >
                         {isSaving ? 'Creating' : 'Create Environment'}
                       </Button>
@@ -210,31 +239,8 @@ const CreateEnvironmentPage: React.FC = () => {
                 </form>
               )}
             </ProjectProvider>
-          ) : (
-            <div>
-              <p className='notification__text'>
-                Check your project permissions
-              </p>
-              <p>
-                Although you have been invited to this project, you are not
-                invited to any environments yet!
-              </p>
-              <p>
-                Contact your project administrator asking them to either:
-                <ul>
-                  <li>
-                    Invite you to an environment (e.g. develop) by visiting{' '}
-                    <strong>Environment settings</strong>
-                  </li>
-                  <li>
-                    Grant permissions to create an environment under{' '}
-                    <strong>Project settings</strong>.
-                  </li>
-                </ul>
-              </p>
-            </div>
           )
-        }
+        }}
       </Permission>
     </div>
   )

@@ -138,13 +138,16 @@ const FlagValueFooter = ({
                           !savePermission
                         }
                       >
-                        {isSaving
-                          ? existingChangeRequest
-                            ? 'Updating Change Request'
-                            : 'Scheduling Update'
-                          : existingChangeRequest
-                          ? 'Update Change Request'
-                          : 'Schedule Update'}
+                        {(() => {
+                          if (isSaving) {
+                            return existingChangeRequest
+                              ? 'Updating Change Request'
+                              : 'Scheduling Update'
+                          }
+                          return existingChangeRequest
+                            ? 'Update Change Request'
+                            : 'Schedule Update'
+                        })()}
                       </Button>
                     )}
                     <ButtonDropdown
@@ -163,17 +166,22 @@ const FlagValueFooter = ({
                           : []),
                       ]}
                     >
-                      {isSaving
-                        ? is4Eyes
-                          ? existingChangeRequest
-                            ? 'Updating Change Request'
-                            : 'Creating Change Request'
-                          : 'Updating'
-                        : is4Eyes
-                        ? existingChangeRequest
-                          ? 'Update Change Request'
-                          : 'Create Change Request'
-                        : 'Update Feature Value'}
+                      {(() => {
+                        if (isSaving) {
+                          if (is4Eyes) {
+                            return existingChangeRequest
+                              ? 'Updating Change Request'
+                              : 'Creating Change Request'
+                          }
+                          return 'Updating'
+                        }
+                        if (is4Eyes) {
+                          return existingChangeRequest
+                            ? 'Update Change Request'
+                            : 'Create Change Request'
+                        }
+                        return 'Update Feature Value'
+                      })()}
                     </ButtonDropdown>
                   </>,
                 )

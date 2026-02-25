@@ -34,6 +34,7 @@ import {
   changeRequestService,
   updateChangeRequest,
 } from 'common/services/useChangeRequest'
+import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -41,7 +42,6 @@ const data = require('../data/base/_data')
 const { createSegmentOverride } = require('../services/useSegmentOverride')
 const { getStore } = require('../store')
 let createdFirstFeature = false
-const PAGE_SIZE = 50
 
 const convertSegmentOverrideToFeatureState = (
   override,
@@ -60,7 +60,18 @@ const convertSegmentOverrideToFeatureState = (
     feature_state_value: override.value,
     id: override.id,
     live_from: changeRequest?.live_from,
-    multivariate_feature_state_values: override.multivariate_options,
+    multivariate_feature_state_values: changeRequest
+      ? override.multivariate_options?.map((v) => ({
+          id: v.id,
+          multivariate_feature_option: v.multivariate_feature_option ?? v.id,
+          percentage_allocation:
+            v.percentage_allocation ?? v.default_percentage_allocation,
+        }))
+      : override.multivariate_options?.map((v) => ({
+          multivariate_feature_option: v.multivariate_feature_option ?? v.id,
+          percentage_allocation:
+            v.percentage_allocation ?? v.default_percentage_allocation,
+        })),
     toRemove: override.toRemove,
   } as Partial<FeatureState>
 }
@@ -71,8 +82,11 @@ const controller = {
     if (
       !createdFirstFeature &&
       !flagsmith.getTrait('first_feature') &&
+      AccountStore.model &&
       AccountStore.model.organisations.length === 1 &&
+      OrganisationStore.model &&
       OrganisationStore.model.projects.length === 1 &&
+      store.model &&
       (!store.model.features || !store.model.features.length)
     ) {
       createdFirstFeature = true
@@ -203,12 +217,12 @@ const controller = {
       store.model && store.model.features
         ? store.model.features.find((v) => v.id === flag.id)
         : flag
-
     Promise.all(
       (flag.multivariate_options || []).map((v, i) => {
-        const originalMV = v.id
-          ? originalFlag.multivariate_options.find((m) => m.id === v.id)
-          : null
+        const originalMV =
+          v.id && originalFlag?.multivariate_options
+            ? originalFlag.multivariate_options.find((m) => m.id === v.id)
+            : null
         const url = `${Project.api}projects/${projectId}/features/${flag.id}/mv-options/`
         const mvData = {
           ...v,
@@ -230,7 +244,7 @@ const controller = {
       }),
     )
       .then(() => {
-        const deletedMv = originalFlag.multivariate_options.filter(
+        const deletedMv = (originalFlag?.multivariate_options || []).filter(
           (v) => !flag.multivariate_options.find((x) => v.id === x.id),
         )
         return Promise.all(
@@ -631,13 +645,16 @@ const controller = {
                           (v.multivariate_feature_option || v.id) ===
                           (m.multivariate_feature_option || m.id),
                       )
-                      return {
-                        ...v,
-                        percentage_allocation: matching
-                          ? typeof matching.percentage_allocation === 'number'
+                      let percentage_allocation = v.percentage_allocation
+                      if (matching) {
+                        percentage_allocation =
+                          typeof matching.percentage_allocation === 'number'
                             ? matching.percentage_allocation
                             : matching.default_percentage_allocation
-                          : v.percentage_allocation,
+                      }
+                      return {
+                        ...v,
+                        percentage_allocation,
                       }
                     },
                   )
@@ -733,7 +750,7 @@ const controller = {
           getStore().dispatch(
             projectFlagService.util.invalidateTags(['ProjectFlag']),
           )
-          if(!store.model) {
+          if (!store.model) {
             return
           }
           // Fetch and update the latest environment feature state
@@ -745,9 +762,11 @@ const controller = {
             const environmentFeatureState = res.data.find(
               (v) => !v.feature_segment,
             )
-            store.model.keyedEnvironmentFeatures[projectFlag.id] = {
-              ...store.model.keyedEnvironmentFeatures[projectFlag.id],
-              ...environmentFeatureState,
+            if (store.model?.keyedEnvironmentFeatures) {
+              store.model.keyedEnvironmentFeatures[projectFlag.id] = {
+                ...store.model.keyedEnvironmentFeatures[projectFlag.id],
+                ...environmentFeatureState,
+              }
             }
           })
         })
@@ -795,11 +814,13 @@ const controller = {
                 throw version.error
               }
               const featureState = version.data.feature_states[0].data
-              store.model.keyedEnvironmentFeatures[projectFlag.id] = {
-                ...featureState,
-                feature_state_value: Utils.featureStateToValue(
-                  featureState.feature_state_value,
-                ),
+              if (store.model?.keyedEnvironmentFeatures) {
+                store.model.keyedEnvironmentFeatures[projectFlag.id] = {
+                  ...featureState,
+                  feature_state_value: Utils.featureStateToValue(
+                    featureState.feature_state_value,
+                  ),
+                }
               }
             })
           })
@@ -848,7 +869,7 @@ const controller = {
               : `${Project.api}projects/${projectId}/features/?page=${
                   page || 1
                 }&environment=${environment}&page_size=${
-                  pageSize || PAGE_SIZE
+                  pageSize || FEATURES_PAGE_SIZE
                 }${filterUrl}`
           if (store.search) {
             featuresEndpoint += `&search=${store.search}`
@@ -877,7 +898,7 @@ const controller = {
                 return
               }
               store.paging.next = features.next
-              store.paging.pageSize = PAGE_SIZE
+              store.paging.pageSize = FEATURES_PAGE_SIZE
               store.paging.count = features.count
               store.paging.previous = features.previous
               store.paging.currentPage =

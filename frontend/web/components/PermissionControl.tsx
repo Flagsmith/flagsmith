@@ -28,7 +28,7 @@ const SingleValue = (props: any) => {
           <Icon width={18} name='checkmark' fill='#27AB95' />
         )}
         {props.data.value === PermissionRoleType.GRANTED_FOR_TAGS && (
-          <Icon width={18} name='shield' fill='#ff9f43' />
+          <Icon width={18} name='shield' height={18} fill='#ff9f43' />
         )}
         {props.children}
       </div>

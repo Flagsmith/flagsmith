@@ -717,7 +717,7 @@ def test_view_environment_with_staff__query_count_is_expected_without_rbac(
         environment_metadata_b,
         required_a_environment_metadata_field,
         environment_content_type,
-        expected_query_count=9,
+        expected_query_count=11,
     )
 
 
@@ -746,7 +746,7 @@ def test_view_environment_with_staff__query_count_is_expected_with_rbac(
         environment_metadata_b,
         required_a_environment_metadata_field,
         environment_content_type,
-        expected_query_count=10,
+        expected_query_count=13,
     )
 
 

@@ -1,12 +1,9 @@
 from django.conf import settings
 from django.urls import include, path, re_path
-from drf_spectacular.views import (
-    SpectacularJSONAPIView,
-    SpectacularSwaggerView,
-    SpectacularYAMLAPIView,
-)
+from drf_spectacular.views import SpectacularSwaggerView
 from rest_framework import permissions, routers
 
+from api.openapi_views import CustomSpectacularJSONAPIView, CustomSpectacularYAMLAPIView
 from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from environments.identities.traits.views import SDKTraits
 from environments.identities.views import SDKIdentities
@@ -73,14 +70,14 @@ urlpatterns = [
     # API documentation
     path(
         "swagger.json",
-        SpectacularJSONAPIView.as_view(
+        CustomSpectacularJSONAPIView.as_view(
             permission_classes=[schema_view_permission_class],
         ),
         name="schema-json",
     ),
     path(
         "swagger.yaml",
-        SpectacularYAMLAPIView.as_view(
+        CustomSpectacularYAMLAPIView.as_view(
             permission_classes=[schema_view_permission_class],
         ),
         name="schema-yaml",
@@ -93,33 +90,12 @@ urlpatterns = [
         ),
         name="schema-swagger-ui",
     ),
+    # Platform Hub dashboard
+    re_path(
+        r"^admin/dashboard/",
+        include("platform_hub.urls", namespace="platform-hub"),
+    ),
     # Test webhook url
     re_path(r"^webhooks/", include("webhooks.urls", namespace="webhooks")),
     path("", include("projects.code_references.urls", namespace="code_references")),
 ]
-
-if settings.SPLIT_TESTING_INSTALLED:
-    from split_testing.views import (  # type: ignore[import-not-found]
-        ConversionEventTypeView,
-        CreateConversionEventView,
-        SplitTestViewSet,
-    )
-
-    split_testing_router = routers.DefaultRouter()
-    split_testing_router.register(r"", SplitTestViewSet, basename="split-tests")
-
-    urlpatterns += [
-        re_path(
-            r"^split-testing/", include(split_testing_router.urls), name="split-testing"
-        ),
-        re_path(
-            r"^split-testing/conversion-events/",
-            CreateConversionEventView.as_view(),
-            name="conversion-events",
-        ),
-        path(
-            "conversion-event-types/",
-            ConversionEventTypeView.as_view(),
-            name="conversion-event-types",
-        ),
-    ]

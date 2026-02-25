@@ -6,24 +6,24 @@ import { cloneDeep } from 'lodash'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import {
-  ADMIN_PERMISSION,
-  EnvironmentPermission,
-  OrganisationPermission,
-  ProjectPermission,
+    ADMIN_PERMISSION,
+    EnvironmentPermission,
+    OrganisationPermission,
+    ProjectPermission,
 } from 'common/types/permissions.types'
 
 /**
  * Base props shared across all permission levels
  */
 type BasePermissionProps = {
-  id: number | string
-  tags?: number[]
-  children:
-    | ReactNode
-    | ((data: { permission: boolean; isLoading: boolean }) => ReactNode)
-  fallback?: ReactNode
-  permissionName?: string
-  showTooltip?: boolean
+    id: number | string
+    tags?: number[]
+    children:
+        | ReactNode
+        | ((data: { permission: boolean; isLoading: boolean }) => ReactNode)
+    fallback?: ReactNode
+    permissionName?: string
+    showTooltip?: boolean
 }
 
 /**
@@ -31,30 +31,30 @@ type BasePermissionProps = {
  * This means we can detect a mismatch between level and permission
  */
 type OrganisationLevelProps = BasePermissionProps & {
-  level: 'organisation'
-  permission: OrganisationPermission
+    level: 'organisation'
+    permission: OrganisationPermission
 }
 
 type ProjectLevelProps = BasePermissionProps & {
-  level: 'project'
-  permission: ProjectPermission
+    level: 'project'
+    permission: ProjectPermission
 }
 
 type EnvironmentLevelProps = BasePermissionProps & {
-  level: 'environment'
-  permission: EnvironmentPermission
+    level: 'environment'
+    permission: EnvironmentPermission
 }
 
 type PermissionType =
-  | OrganisationLevelProps
-  | ProjectLevelProps
-  | EnvironmentLevelProps
+    | OrganisationLevelProps
+    | ProjectLevelProps
+    | EnvironmentLevelProps
 
 type UseHasPermissionParams = {
-  id: number | string
-  level: 'organisation' | 'project' | 'environment'
-  permission: OrganisationPermission | ProjectPermission | EnvironmentPermission
-  tags?: number[]
+    id: number | string
+    level: 'organisation' | 'project' | 'environment'
+    permission: OrganisationPermission | ProjectPermission | EnvironmentPermission
+    tags?: number[]
 }
 
 /**
@@ -75,38 +75,38 @@ type UseHasPermissionParams = {
  * @returns {boolean} returns.permission - Whether the user has the requested permission
  */
 export const useHasPermission = ({
-  id,
-  level,
-  permission,
-  tags,
-}: UseHasPermissionParams) => {
-  const {
-    data: permissionsData,
-    isLoading,
-    isSuccess,
-  } = useGetPermissionQuery(
-    { id: id as number, level },
-    { skip: !id || !level },
-  )
-  const data = useMemo(() => {
-    if (!tags?.length || !permissionsData?.tag_based_permissions)
-      return permissionsData
-    const addedPermissions = cloneDeep(permissionsData)
-    permissionsData.tag_based_permissions.forEach((tagBasedPermission) => {
-      if (intersection(tagBasedPermission.tags, tags).length) {
-        tagBasedPermission.permissions.forEach((key) => {
-          addedPermissions[key] = true
+                                     id,
+                                     level,
+                                     permission,
+                                     tags,
+                                 }: UseHasPermissionParams) => {
+    const {
+        data: permissionsData,
+        isLoading,
+        isSuccess,
+    } = useGetPermissionQuery(
+        { id: id as number, level },
+        { skip: !id || !level },
+    )
+    const data = useMemo(() => {
+        if (!tags?.length || !permissionsData?.tag_based_permissions)
+            return permissionsData
+        const addedPermissions = cloneDeep(permissionsData)
+        permissionsData.tag_based_permissions.forEach((tagBasedPermission) => {
+            if (intersection(tagBasedPermission.tags, tags).length) {
+                tagBasedPermission.permissions.forEach((key) => {
+                    addedPermissions[key] = true
+                })
+            }
         })
-      }
-    })
-    return addedPermissions
-  }, [permissionsData, tags])
-  const hasPermission = !!data?.[permission] || !!data?.ADMIN
-  return {
-    isLoading,
-    isSuccess,
-    permission: !!hasPermission || !!AccountStore.isAdmin(),
-  }
+        return addedPermissions
+    }, [permissionsData, tags])
+    const hasPermission = !!data?.[permission] || !!data?.ADMIN
+    return {
+        isLoading,
+        isSuccess,
+        permission: !!hasPermission || !!AccountStore.isAdmin(),
+    }
 }
 
 /**
@@ -164,78 +164,78 @@ export const useHasPermission = ({
  * </Permission>
  */
 const Permission: FC<PermissionType> = ({
-  children,
-  fallback,
-  id,
-  level,
-  permission,
-  permissionName,
-  showTooltip = false,
-  tags,
-}) => {
-  const { isLoading, permission: hasPermission } = useHasPermission({
-    id,
-    level,
-    permission,
-    tags,
-  })
-
-  const finalPermission = hasPermission || AccountStore.isAdmin()
-
-  const getPermissionDescription = (): string => {
-    if (permission === ADMIN_PERMISSION) {
-      switch (level) {
-        case 'environment':
-          return Constants.environmentPermissions(ADMIN_PERMISSION)
-        case 'project':
-          return Constants.projectPermissions(ADMIN_PERMISSION)
-        default:
-          return Constants.organisationPermissions(ADMIN_PERMISSION)
-      }
-    }
-
-    switch (level) {
-      case 'environment':
-        return Constants.environmentPermissions(
-          permission as EnvironmentPermission,
-        )
-      case 'project':
-        return Constants.projectPermissions(permission as ProjectPermission)
-      default:
-        return Constants.organisationPermissions(
-          permission as OrganisationPermission,
-        )
-    }
-  }
-
-  const tooltipMessage = permissionName || getPermissionDescription()
-
-  if (typeof children === 'function') {
-    const renderedChildren = children({
-      isLoading,
-      permission: finalPermission,
+                                            children,
+                                            fallback,
+                                            id,
+                                            level,
+                                            permission,
+                                            permissionName,
+                                            showTooltip = false,
+                                            tags,
+                                        }) => {
+    const { isLoading, permission: hasPermission } = useHasPermission({
+        id,
+        level,
+        permission,
+        tags,
     })
 
-    if (finalPermission || !showTooltip) {
-      return <>{renderedChildren || null}</>
+    const finalPermission = hasPermission || AccountStore.isAdmin()
+
+    const getPermissionDescription = (): string => {
+        if (permission === ADMIN_PERMISSION) {
+            switch (level) {
+                case 'environment':
+                    return Constants.environmentPermissions(ADMIN_PERMISSION)
+                case 'project':
+                    return Constants.projectPermissions(ADMIN_PERMISSION)
+                default:
+                    return Constants.organisationPermissions(ADMIN_PERMISSION)
+            }
+        }
+
+        switch (level) {
+            case 'environment':
+                return Constants.environmentPermissions(
+                    permission as EnvironmentPermission,
+                )
+            case 'project':
+                return Constants.projectPermissions(permission as ProjectPermission)
+            default:
+                return Constants.organisationPermissions(
+                    permission as OrganisationPermission,
+                )
+        }
     }
 
-    return Utils.renderWithPermission(
-      finalPermission,
-      tooltipMessage,
-      renderedChildren,
-    )
-  }
+    const tooltipMessage = permissionName || getPermissionDescription()
 
-  if (finalPermission) {
-    return <>{children}</>
-  }
+    if (typeof children === 'function') {
+        const renderedChildren = children({
+            isLoading,
+            permission: finalPermission,
+        })
 
-  if (showTooltip) {
-    return Utils.renderWithPermission(finalPermission, tooltipMessage, children)
-  }
+        if (finalPermission || !showTooltip) {
+            return <>{renderedChildren || null}</>
+        }
 
-  return <>{fallback || null}</>
+        return Utils.renderWithPermission(
+            finalPermission,
+            tooltipMessage,
+            renderedChildren,
+        )
+    }
+
+    if (finalPermission) {
+        return <>{children}</>
+    }
+
+    if (showTooltip) {
+        return Utils.renderWithPermission(finalPermission, tooltipMessage, children)
+    }
+
+    return <>{fallback || null}</>
 }
 
 export default Permission

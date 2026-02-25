@@ -4,31 +4,6 @@ from typing import TYPE_CHECKING
 import pytest
 import pytz
 from django.utils import timezone
-from flag_engine.environments.integrations.models import IntegrationModel
-from flag_engine.environments.models import (
-    EnvironmentAPIKeyModel,
-    EnvironmentModel,
-    WebhookModel,
-)
-from flag_engine.features.models import (
-    FeatureModel,
-    FeatureSegmentModel,
-    FeatureStateModel,
-    MultivariateFeatureOptionModel,
-    MultivariateFeatureStateValueModel,
-)
-from flag_engine.identities.models import (  # type: ignore[attr-defined]
-    IdentityFeaturesList,
-    IdentityModel,
-    TraitModel,
-)
-from flag_engine.organisations.models import OrganisationModel
-from flag_engine.projects.models import ProjectModel
-from flag_engine.segments.models import (
-    SegmentConditionModel,
-    SegmentModel,
-    SegmentRuleModel,
-)
 from pytest_mock import MockerFixture
 
 from environments.models import Environment
@@ -42,6 +17,31 @@ from integrations.segment.models import SegmentConfiguration
 from integrations.webhook.models import WebhookConfiguration
 from segments.models import Segment, SegmentRule
 from users.models import FFAdminUser
+from util.engine_models.environments.integrations.models import IntegrationModel
+from util.engine_models.environments.models import (
+    EnvironmentAPIKeyModel,
+    EnvironmentModel,
+    WebhookModel,
+)
+from util.engine_models.features.models import (
+    FeatureModel,
+    FeatureSegmentModel,
+    FeatureStateModel,
+    MultivariateFeatureOptionModel,
+    MultivariateFeatureStateValueModel,
+)
+from util.engine_models.identities.models import (
+    IdentityFeaturesList,
+    IdentityModel,
+)
+from util.engine_models.identities.traits.models import TraitModel
+from util.engine_models.organisations.models import OrganisationModel
+from util.engine_models.projects.models import ProjectModel
+from util.engine_models.segments.models import (
+    SegmentConditionModel,
+    SegmentModel,
+    SegmentRuleModel,
+)
 from util.mappers import engine
 
 if TYPE_CHECKING:

@@ -9,6 +9,11 @@ DOTENV_OVERRIDE_FILE ?= .env
 install:
 	npm install
 
+.PHONY: generate-sdk-api-docs
+generate-sdk-api-docs:
+	npm run docusaurus clean-api-docs all
+	npm run docusaurus gen-api-docs all
+
 .PHONY: lint-prettier
 lint-prettier:
 	npx prettier --check .
@@ -17,9 +22,9 @@ lint-prettier:
 lint: lint-prettier build
 
 .PHONY: build
-build:
+build: generate-sdk-api-docs
 	npm run build
 
 .PHONY: serve
-serve:
+serve: generate-sdk-api-docs
 	npm run start

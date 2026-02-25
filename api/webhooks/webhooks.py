@@ -18,6 +18,10 @@ from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
 from environments.models import Environment, Webhook
 from features.models import Feature
+from features.multivariate.models import (
+    MultivariateFeatureOption,
+    MultivariateFeatureStateValue,
+)
 from organisations.models import OrganisationWebhook
 from projects.models import (  # type: ignore[attr-defined]
     Organisation,
@@ -186,8 +190,22 @@ def call_webhook_with_failure_mail_after_retries(  # type: ignore[no-untyped-def
         res = requests.post(
             str(webhook.url), data=json_data, headers=headers, timeout=10
         )
-        res.raise_for_status()
+        if not res.ok:
+            logger.warning(
+                "Webhook %d returned HTTP %d (attempt %d/%d)",
+                webhook_id,
+                res.status_code,
+                try_count,
+                max_retries,
+            )
     except requests.exceptions.RequestException as exc:
+        logger.warning(
+            "Webhook call failed for webhook %d (attempt %d/%d): %s",
+            webhook_id,
+            try_count,
+            max_retries,
+            exc,
+        )
         if try_count == max_retries or not settings.RETRY_WEBHOOKS:
             if send_failure_mail:
                 send_failure_email(
@@ -328,6 +346,19 @@ def generate_environment_sample_webhook_data() -> dict[str, Any]:
         ),
     )
 
+    mv_option = MultivariateFeatureOption(
+        id=1,
+        feature=feature,
+        default_percentage_allocation=50,
+        type="unicode",
+        string_value="variant_a",
+    )
+    mv_state_value = MultivariateFeatureStateValue(
+        id=1,
+        multivariate_feature_option=mv_option,
+        percentage_allocation=50,
+    )
+
     data = {
         "changed_by": "user@domain.com",
         "timestamp": "2021-06-18T07:50:26.595298Z",
@@ -338,6 +369,7 @@ def generate_environment_sample_webhook_data() -> dict[str, Any]:
             value="feature_state_value",
             identity_id=1,
             identity_identifier="test_identity",
+            multivariate_feature_state_values=[mv_state_value],
         ),
         "previous_state": Webhook.generate_webhook_feature_state_data(
             feature=feature,
@@ -346,6 +378,7 @@ def generate_environment_sample_webhook_data() -> dict[str, Any]:
             value="old_feature_state_value",
             identity_id=1,
             identity_identifier="test_identity",
+            multivariate_feature_state_values=[mv_state_value],
         ),
     }
 

@@ -2,8 +2,6 @@ from itertools import chain
 
 from django.db import models
 from django.db.models import Prefetch, Q
-from flag_engine.context.mappers import map_environment_identity_to_context
-from flag_engine.segments.evaluator import is_context_in_segment
 
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
@@ -13,6 +11,10 @@ from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.versioning_service import get_environment_flags_list
 from segments.models import Segment
+from util.engine_models.context.mappers import (
+    is_context_in_segment,
+    map_environment_identity_to_context,
+)
 from util.mappers.engine import (
     map_identity_to_engine,
     map_segment_to_engine,
@@ -39,7 +41,7 @@ class Identity(models.Model):
         # Note that the environment / created_date index is added only to postgres, so we can add it concurrently to
         # avoid any downtime. If people using MySQL / Oracle have issues with poor performance on the identities table,
         # we can provide them the SQL to add it manually in a small window of downtime.
-        index_together = (("environment", "created_date"),)
+        indexes = [models.Index(fields=["environment", "created_date"])]
 
     def natural_key(self):  # type: ignore[no-untyped-def]
         return self.identifier, self.environment.api_key

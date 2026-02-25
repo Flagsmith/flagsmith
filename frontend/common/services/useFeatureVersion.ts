@@ -56,9 +56,11 @@ export const getFeatureStateCrud = (
       )
       return !!diff?.totalChanges
     })
-    const newValueFeatureState = featureStates.find((v) => !v.feature_segment)!
+    const newValueFeatureState = featureStates.find(
+      (v) => !v.feature_segment?.segment,
+    )!
     const oldValueFeatureState = oldFeatureStates.find(
-      (v) => !v.feature_segment,
+      (v) => !v.feature_segment?.segment,
     )!
     // return nothing if feature state isn't different
     const valueDiff = getFeatureStateDiff(
@@ -103,15 +105,21 @@ export const getFeatureStateCrud = (
 }
 
 export const featureVersionService = service
-  .enhanceEndpoints({ addTagTypes: ['FeatureVersion', 'Environment'] })
+  .enhanceEndpoints({
+    addTagTypes: ['FeatureVersion', 'Environment', 'FeatureList'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       createAndSetFeatureVersion: builder.mutation<
         Res['featureVersion'],
         Req['createAndSetFeatureVersion']
       >({
-        invalidatesTags: [
+        invalidatesTags: (_result, _error, arg) => [
           { id: 'LIST', type: 'FeatureVersion' },
+          {
+            id: `${arg.projectId}-${arg.environmentId}`,
+            type: 'FeatureList',
+          },
           { id: 'METRICS', type: 'Environment' },
         ],
         queryFn: async (query: Req['createAndSetFeatureVersion']) => {
@@ -143,24 +151,29 @@ export const featureVersionService = service
                   })
                 ).data.results
 
-          const {
-            feature_states_to_create,
-            feature_states_to_update,
-            segment_ids_to_delete_overrides,
-          } = getFeatureStateCrud(
-            query.featureStates.map((v) => ({
-              ...v,
-              feature_state_value: Utils.valueToFeatureState(
-                v.feature_state_value,
-              ),
-            })),
-            oldFeatureStates.data.results.filter((v) => {
+          const newFeatureStates = query.featureStates.map((v) => ({
+            ...v,
+            feature_state_value: Utils.valueToFeatureState(
+              v.feature_state_value,
+            ),
+          }))
+          const oldFeatureStatesFiltered = oldFeatureStates.data.results.filter(
+            (v) => {
               if (mode === 'VALUE') {
                 return !v.feature_segment?.segment
               } else {
                 return !!v.feature_segment?.segment
               }
-            }),
+            },
+          )
+
+          const {
+            feature_states_to_create,
+            feature_states_to_update,
+            segment_ids_to_delete_overrides,
+          } = getFeatureStateCrud(
+            newFeatureStates,
+            oldFeatureStatesFiltered,
             segments,
           )
 
@@ -302,7 +315,6 @@ export async function createAndSetFeatureVersion(
     ),
   )
 }
-
 export async function getFeatureVersions(
   store: any,
   data: Req['getFeatureVersions'],
