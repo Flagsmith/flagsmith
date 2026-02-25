@@ -21,10 +21,7 @@ import Tooltip from './Tooltip'
 import SegmentsIcon from './svg/SegmentsIcon'
 import SegmentOverrideActions from './SegmentOverrideActions'
 import Button from './base/forms/Button'
-import {
-  EnvironmentPermission,
-  EnvironmentPermissionDescriptions,
-} from 'common/types/permissions.types'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
 const arrayMoveMutate = (array, from, to) => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0])

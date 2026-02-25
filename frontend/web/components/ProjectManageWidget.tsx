@@ -123,7 +123,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                               {Utils.renderWithPermission(
                                 canCreateProject,
                                 Constants.organisationPermissions(
-                                  Utils.getCreateProjectPermission(
+                                  Utils.getCreateProjectPermissionDescription(
                                     AccountStore.getOrganisation(),
                                   ),
                                 ),
@@ -198,7 +198,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                         {Utils.renderWithPermission(
                           canCreateProject,
                           Constants.organisationPermissions(
-                            Utils.getCreateProjectPermission(
+                            Utils.getCreateProjectPermissionDescription(
                               organisation,
                             ),
                           ),
