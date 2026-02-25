@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 import django.core.exceptions
 from common.features.multivariate.serializers import (
@@ -95,6 +96,11 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
         required=False,
         help_text="Integer ID of the segment to retrieve segment overrides for.",
     )
+    identity = serializers.CharField(
+        required=False,
+        help_text="ID of the identity to sort features with identity overrides first.",
+    )
+
     is_enabled = serializers.BooleanField(
         allow_null=True,
         required=False,
@@ -115,6 +121,23 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
         required=False,
         help_text="Comma separated list of group owner ids to filter on",
     )
+
+    @property
+    def project(self) -> Project:
+        if isinstance(project := self.context.get("project"), Project):
+            return project
+        else:  # pragma: no cover
+            raise RuntimeError(f"{type(self)} requires 'project' in context.")
+
+    def validate_identity(self, value: str) -> str:
+        if self.project.enable_dynamo_db:
+            try:
+                UUID(value)
+            except ValueError:
+                raise serializers.ValidationError("Must be a valid UUID.")
+        elif not value.isdigit():
+            raise serializers.ValidationError("Must be a valid integer.")
+        return value
 
     def validate_owners(self, owners: str) -> list[int]:
         try:
