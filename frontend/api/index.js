@@ -208,6 +208,22 @@ app.get('/version', (req, res) => {
   }
 })
 
+if (process.env.FLAGSMITH_PROXY_API_URL) {
+  app.get('/_backend_version', async (req, res) => {
+    try {
+      const response = await fetch(
+        `${process.env.FLAGSMITH_PROXY_API_URL.replace(/\/?$/, '/')}version/`,
+      )
+      const data = await response.json()
+      res.json(data)
+    } catch (err) {
+      // eslint-disable-next-line
+      console.log('Unable to fetch backend version:', err)
+      res.status(502).json({})
+    }
+  })
+}
+
 app.use(bodyParser.json())
 app.use(spm)
 const genericWebsite = (url) => {
