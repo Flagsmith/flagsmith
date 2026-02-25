@@ -377,7 +377,7 @@ const Index = class extends Component {
 
   save = (func, isSaving) => {
     const {
-      environmentFlag: propsEnvironmentFlag,
+      environmentFlag,
       environmentId,
       identity,
       identityFlag,
@@ -393,7 +393,7 @@ const Index = class extends Component {
       !isSaving &&
         projectFlag.name &&
         func({
-          environmentFlag: propsEnvironmentFlag,
+          environmentFlag,
           environmentId,
           identity,
           identityFlag: Object.assign({}, identityFlag || {}, {
