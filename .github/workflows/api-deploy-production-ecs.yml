@@ -21,6 +21,7 @@ jobs:
     secrets: inherit
 
   mcp-schema-push:
+    needs: deploy-ecs
     name: Push MCP Schema to Gram
     runs-on: depot-ubuntu-latest
     defaults:
