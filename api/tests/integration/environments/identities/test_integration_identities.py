@@ -590,3 +590,66 @@ def test_get_feature_states_for_identity__transient_identifier__empty_segment__r
     # flag is not being overridden by the segment
     assert flag_data["enabled"] is False
     assert flag_data["feature_state_value"] == default_feature_value
+
+
+@pytest.mark.xfail(reason="https://github.com/Flagsmith/flagsmith/issues/6739")
+def test_get_feature_states_for_identity__trait_persistence_disabled__segment_match_expected(
+    admin_client: APIClient,
+    sdk_client: APIClient,
+    feature: int,
+    segment: int,
+    segment_condition_property: str,
+    segment_condition_value: str,
+    segment_featurestate: int,
+    environment: int,
+    environment_api_key: str,
+) -> None:
+    # Given
+    # trait persistence is disabled for client-side SDK keys
+    admin_client.patch(
+        reverse(
+            "api-v1:environments:environment-detail",
+            args=[environment_api_key],
+        ),
+        data=json.dumps({"allow_client_traits": False}),
+        content_type="application/json",
+    )
+
+    url = reverse("api-v1:sdk-identities")
+
+    # When
+    # flags are requested for a new identity
+    # with traits matching the segment
+    response = sdk_client.post(
+        url,
+        data=json.dumps(
+            {
+                "identifier": "unseen",
+                "traits": [
+                    {
+                        "trait_key": segment_condition_property,
+                        "trait_value": segment_condition_value,
+                    },
+                ],
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    # traits should still be used for segment evaluation
+    # even though persistence is disabled
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert (
+        flag_data := next(
+            (
+                flag
+                for flag in response_json["flags"]
+                if flag["feature"]["id"] == feature
+            ),
+            None,
+        )
+    )
+    assert flag_data["enabled"] is True
+    assert flag_data["feature_state_value"] == "segment override"
