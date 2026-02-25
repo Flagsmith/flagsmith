@@ -6,9 +6,6 @@ import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import CreateFeatureModal from 'components/modals/create-feature'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
-import { mergeChangeSets } from 'common/services/useChangeRequest'
-import { getFeatureStates } from 'common/services/useFeatureState'
-import { getStore } from 'common/store'
 import {
   mergeChangeSets,
   useUpdateChangeRequestMutation,
