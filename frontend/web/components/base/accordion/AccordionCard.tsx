@@ -1,5 +1,4 @@
-import React, { useState, FC } from 'react'
-import { IconButton, Collapse } from '@material-ui/core'
+import React, { useState, FC, useRef, useEffect } from 'react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 
@@ -18,6 +17,26 @@ const AccordionCard: FC<AccordionCardProps> = ({
   title = 'Summary',
 }) => {
   const [open, setOpen] = useState(defaultOpen)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [height, setHeight] = useState<number | undefined>(
+    defaultOpen ? undefined : 0,
+  )
+
+  useEffect(() => {
+    if (!contentRef.current) return
+    if (open) {
+      setHeight(contentRef.current.scrollHeight)
+      const timer = setTimeout(() => setHeight(undefined), 300)
+      return () => clearTimeout(timer)
+    } else {
+      setHeight(contentRef.current.scrollHeight)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setHeight(0)
+        })
+      })
+    }
+  }, [open])
 
   return (
     <div className='d-flex flex-column px-3 py-3 accordion-card m-0'>
@@ -36,17 +55,24 @@ const AccordionCard: FC<AccordionCardProps> = ({
           {isLoading && <Loader width='15px' height='15px' />}
         </div>
         {!isLoading && (
-          <IconButton size='small'>
+          <span className='p-1' aria-label={open ? 'Collapse' : 'Expand'}>
             <IonIcon
               className='fs-small me-2 text-muted'
               icon={open ? chevronUp : chevronDown}
             />
-          </IconButton>
+          </span>
         )}
       </div>
-      <Collapse in={open}>
+      <div
+        ref={contentRef}
+        style={{
+          height: height !== undefined ? `${height}px` : 'auto',
+          overflow: 'hidden',
+          transition: 'height 0.3s ease',
+        }}
+      >
         <div className='mt-2 mb-2'>{children}</div>
-      </Collapse>
+      </div>
     </div>
   )
 }
