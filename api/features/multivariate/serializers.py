@@ -55,6 +55,9 @@ class FeatureMVOptionsValuesResponseSerializer(serializers.Serializer):  # type:
 class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSerializer):
     class Meta(NestedMultivariateFeatureOptionSerializer.Meta):
         fields = NestedMultivariateFeatureOptionSerializer.Meta.fields + ("feature",)  # type: ignore[assignment]
+        extra_kwargs = {
+            "feature": {"required": False},
+        }
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
