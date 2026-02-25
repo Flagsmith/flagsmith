@@ -90,6 +90,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
             "default_percentage_allocation",
             instance_default_allocation,
         )
+        attrs["default_percentage_allocation"] = default_allocation
 
         total_sibling_percentage_allocation = (
             self._get_siblings(feature).aggregate(
