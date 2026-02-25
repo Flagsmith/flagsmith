@@ -1,5 +1,40 @@
 # Changelog
 
+## [2.218.0](https://github.com/Flagsmith/flagsmith/compare/v2.217.1...v2.218.0) (2026-02-25)
+
+
+### Features
+
+* **Integrations:** Add Backstage to default integrations ([#6774](https://github.com/Flagsmith/flagsmith/issues/6774)) ([859803a](https://github.com/Flagsmith/flagsmith/commit/859803ab4ca00a3c70a189f085922aba75e6d7d9))
+
+
+### Bug Fixes
+
+* **Admin API:** Sort features by overrides ([#6722](https://github.com/Flagsmith/flagsmith/issues/6722)) ([b98c31a](https://github.com/Flagsmith/flagsmith/commit/b98c31aafab9fac0a8844e2a1255a96f6660d910))
+* use-proxy-api-url-version-endpoint ([#6743](https://github.com/Flagsmith/flagsmith/issues/6743)) ([064b4bb](https://github.com/Flagsmith/flagsmith/commit/064b4bb37a2292e6c6dfbdfce4ac3f2870a8230d))
+* validate-metadata-required-for-on-all-entities ([#6658](https://github.com/Flagsmith/flagsmith/issues/6658)) ([b67f520](https://github.com/Flagsmith/flagsmith/commit/b67f52063ec3c60793d2cb57680e54cce5cbd661))
+
+
+### Dependency Updates
+
+* bump ajv from 6.12.6 to 6.14.0 in /docs ([#6777](https://github.com/Flagsmith/flagsmith/issues/6777)) ([0ccd80b](https://github.com/Flagsmith/flagsmith/commit/0ccd80b857bf47ace92eb9dbca0998d5da424823))
+* bump ajv from 6.12.6 to 6.14.0 in /frontend ([#6746](https://github.com/Flagsmith/flagsmith/issues/6746)) ([6684dcd](https://github.com/Flagsmith/flagsmith/commit/6684dcd5bb6bb1c354a4df679f7bcfa1064c1e67))
+* bump bn.js in /docs ([#6766](https://github.com/Flagsmith/flagsmith/issues/6766)) ([7f637fc](https://github.com/Flagsmith/flagsmith/commit/7f637fc7ef8d5040b21211a35c5b7865dc3f885f))
+* bump lodash-es and mermaid in /docs ([#6747](https://github.com/Flagsmith/flagsmith/issues/6747)) ([68f2a64](https://github.com/Flagsmith/flagsmith/commit/68f2a64410f343a87f5fbec596be7dccb3cf8bb7))
+* bump minimatch in /frontend ([#6776](https://github.com/Flagsmith/flagsmith/issues/6776)) ([6c31692](https://github.com/Flagsmith/flagsmith/commit/6c316924fb1b263b179bc52ebd90de6a378b6462))
+
+
+### CI
+
+* pre-commit autoupdate ([#6759](https://github.com/Flagsmith/flagsmith/issues/6759)) ([22ed2fd](https://github.com/Flagsmith/flagsmith/commit/22ed2fd5a7f2f9c2348d817a5185c1971fcd9f3d))
+
+
+### Docs
+
+* Add Backstage plugin integration documentation ([#6755](https://github.com/Flagsmith/flagsmith/issues/6755)) ([911d6ce](https://github.com/Flagsmith/flagsmith/commit/911d6ce690b9359761c4fbe91c9834a5323789b9))
+* **Backstage:** Add integration logo ([#6773](https://github.com/Flagsmith/flagsmith/issues/6773)) ([a833207](https://github.com/Flagsmith/flagsmith/commit/a8332078b78127a2b03cb86f49401b2a1c03a8cf))
+* Optimize images ([#6775](https://github.com/Flagsmith/flagsmith/issues/6775)) ([1aa0f3d](https://github.com/Flagsmith/flagsmith/commit/1aa0f3da08ad31880794e49537893f4edfc40048))
+
 ## [2.217.1](https://github.com/Flagsmith/flagsmith/compare/v2.217.0...v2.217.1) (2026-02-24)
 
 
