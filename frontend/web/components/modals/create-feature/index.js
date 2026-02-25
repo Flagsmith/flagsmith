@@ -498,7 +498,11 @@ const Index = class extends Component {
   }
   parseError = (error) => {
     const { projectFlag } = this.props
-    let featureError = error?.message || error?.name?.[0] || error
+    let featureError =
+      error?.metadata?.flatMap((m) => m.non_field_errors ?? []).join('\n') ||
+      error?.message ||
+      error?.name?.[0] ||
+      error
     let featureWarning = ''
     //Treat multivariate no changes as warnings
     if (
@@ -824,9 +828,6 @@ const Index = class extends Component {
                     >
                       {({ permission: projectAdmin }) => {
                         this.state.skipSaveProjectFeature = !createFeature
-                        const _hasMetadataRequired =
-                          this.state.hasMetadataRequired &&
-                          !projectFlag.metadata?.length
 
                         return (
                           <div id='create-feature-modal'>
@@ -1744,7 +1745,7 @@ const Index = class extends Component {
                                                   isSaving ||
                                                   !projectFlag.name ||
                                                   invalid ||
-                                                  _hasMetadataRequired
+                                                  this.state.hasMetadataRequired
                                                 }
                                               >
                                                 {isSaving
@@ -1828,11 +1829,11 @@ const Index = class extends Component {
                                   }
                                   onHasMetadataRequiredChange={(
                                     hasMetadataRequired,
-                                  ) =>
+                                  ) => {
                                     this.setState({
                                       hasMetadataRequired,
                                     })
-                                  }
+                                  }}
                                   featureError={
                                     this.parseError(error).featureError
                                   }
@@ -1850,7 +1851,9 @@ const Index = class extends Component {
                                   featureLimitPercentage={
                                     this.state.featureLimitAlert.percentage
                                   }
-                                  hasMetadataRequired={_hasMetadataRequired}
+                                  hasMetadataRequired={
+                                    this.state.hasMetadataRequired
+                                  }
                                 />
                               </div>
                             )}
