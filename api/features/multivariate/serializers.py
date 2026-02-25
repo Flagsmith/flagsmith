@@ -80,9 +80,15 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
         # Ensure feature is always present in validated data (e.g. for creates via nested routes)
         attrs["feature"] = feature
 
+        # Handle legacy records where default_percentage_allocation may be NULL in the database.
+        if self.instance and self.instance.default_percentage_allocation is not None:
+            instance_default_allocation = self.instance.default_percentage_allocation
+        else:
+            instance_default_allocation = 100
+
         default_allocation = attrs.get(
             "default_percentage_allocation",
-            self.instance.default_percentage_allocation if self.instance else 100,
+            instance_default_allocation,
         )
 
         total_sibling_percentage_allocation = (

@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from features.models import Feature
+from features.multivariate.models import MultivariateFeatureOption
 from organisations.models import Organisation
 from projects.models import Project
 from users.models import FFAdminUser
@@ -173,6 +174,44 @@ def test_partial_update_mv_option__without_feature_and_allocation__uses_existing
     assert response.json()["string_value"] == "updated_value"
     assert response.json()["default_percentage_allocation"] == 50
     assert response.json()["feature"] == feature
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_partial_update_mv_option__handles_legacy_null_default_percentage_allocation(  # noqa: E501
+    client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given
+    # Simulate a legacy database record with a NULL default_percentage_allocation.
+    MultivariateFeatureOption.objects.filter(
+        id=mv_option_50_percent,
+    ).update(default_percentage_allocation=None)
+
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+    data = {
+        "string_value": "updated_legacy_value",
+    }
+
+    # When
+    response = client.patch(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    body = response.json()
+    assert body["string_value"] == "updated_legacy_value"
+    assert body["default_percentage_allocation"] == 100
+    assert body["feature"] == feature
 
 
 @pytest.mark.parametrize(
