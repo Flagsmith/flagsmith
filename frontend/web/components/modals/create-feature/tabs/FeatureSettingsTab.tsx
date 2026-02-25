@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { ProjectFlag } from 'common/types/responses'
 import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
@@ -6,6 +6,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import AddEditTags from 'components/tags/AddEditTags'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import Permission from 'common/providers/Permission'
+import { useHasPermission } from 'common/providers/Permission'
 import FlagOwners from 'components/FlagOwners'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import PlanBasedBanner from 'components/PlanBasedAccess'
@@ -16,29 +17,47 @@ import Utils from 'common/utils/utils'
 import FormGroup from 'components/base/grid/FormGroup'
 import Row from 'components/base/grid/Row'
 import AccountStore from 'common/stores/account-store'
+import { getStore } from 'common/store'
+import { getSupportedContentType } from 'common/services/useSupportedContentType'
+
 type FeatureSettingsTabProps = {
-  projectAdmin: boolean
-  createFeature: boolean
-  featureContentType: any
   identity?: string
-  isEdit: boolean
   projectId: number | string
   projectFlag: ProjectFlag | null
   onChange: (projectFlag: ProjectFlag) => void
   onHasMetadataRequiredChange: (hasMetadataRequired: boolean) => void
 }
 
-const FeatureSettings: FC<FeatureSettingsTabProps> = ({
-  createFeature,
-  featureContentType,
+const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
   identity,
-  isEdit,
   onChange,
   onHasMetadataRequiredChange,
   projectFlag,
   projectId,
 }) => {
+  const [featureContentType, setFeatureContentType] = useState<any>({})
+
   const metadataEnable = Utils.getPlansPermission('METADATA')
+  const isEdit = !!projectFlag?.id
+
+  // Fetch featureContentType
+  useEffect(() => {
+    if (metadataEnable) {
+      getSupportedContentType(getStore(), {
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        const contentType = Utils.getContentType(res.data, 'model', 'feature')
+        setFeatureContentType(contentType)
+      })
+    }
+  }, [metadataEnable])
+
+  // Check CREATE_FEATURE permission
+  const { permission: createFeature } = useHasPermission({
+    id: projectId,
+    level: 'project',
+    permission: 'CREATE_FEATURE',
+  })
 
   if (!createFeature) {
     return (
@@ -55,6 +74,7 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
   if (!projectFlag) {
     return null
   }
+
   return (
     <div className={`${identity ? 'mx-3' : ''}`}>
       {!identity && projectFlag?.tags && (
@@ -78,7 +98,11 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
           <label className='mt-1'>Custom Fields</label>
           <AddMetadataToEntity
             organisationId={AccountStore.getOrganisation().id}
-            projectId={projectId}
+            projectId={
+              typeof projectId === 'string'
+                ? parseInt(projectId, 10)
+                : projectId
+            }
             entityId={projectFlag?.id}
             entityContentType={featureContentType?.id}
             entity={featureContentType?.model}
@@ -182,4 +206,4 @@ const FeatureSettings: FC<FeatureSettingsTabProps> = ({
   )
 }
 
-export default FeatureSettings
+export default FeatureSettingsTab

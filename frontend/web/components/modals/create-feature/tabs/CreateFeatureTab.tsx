@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useEffect, useState } from 'react'
 import { FeatureState, ProjectFlag } from 'common/types/responses'
-import FeatureValue from './FeatureValue'
-import FeatureSettings from './FeatureSettings'
+import FeatureValueTab from './FeatureValueTab'
+import FeatureSettingsTab from './FeatureSettingsTab'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import { useHasPermission } from 'common/providers/Permission'
@@ -17,21 +17,19 @@ type CreateFeatureTabProps = {
   featureState: FeatureState
   overrideFeatureState?: FeatureState
   projectFlag: ProjectFlag | null
-  featureContentType: any
   identity?: string
   defaultExperiment?: boolean
-  onEnvironmentFlagChange: (changes: FeatureState) => void
-  onProjectFlagChange: (changes: ProjectFlag) => void
+  onEnvironmentFlagChange: (changes: Partial<FeatureState>) => void
+  onProjectFlagChange: (changes: Partial<ProjectFlag>) => void
   onRemoveMultivariateOption?: (id: number) => void
   onHasMetadataRequiredChange: (hasMetadataRequired: boolean) => void
   featureError?: string
   featureWarning?: string
 }
 
-const CreateFeature: FC<CreateFeatureTabProps> = ({
+const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
   defaultExperiment,
   error,
-  featureContentType,
   featureError,
   featureState,
   featureWarning,
@@ -135,11 +133,9 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
       <WarningMessage warningMessage={featureWarning} />
       {!!projectFlag && (
         <>
-          <FeatureValue
+          <FeatureValueTab
             error={error}
-            createFeature={createFeature}
-            hideValue={false}
-            isEdit={!!identity}
+            projectId={projectId}
             identity={identity}
             noPermissions={noPermissions}
             featureState={overrideFeatureState || featureState}
@@ -172,12 +168,8 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
               </Tooltip>
             </FormGroup>
           )}
-          <FeatureSettings
-            projectAdmin={projectAdmin}
-            createFeature={createFeature}
-            featureContentType={featureContentType}
+          <FeatureSettingsTab
             identity={identity}
-            isEdit={!!identity}
             projectId={projectId}
             projectFlag={projectFlag}
             onChange={onProjectFlagChange}
@@ -189,4 +181,4 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
   )
 }
 
-export default CreateFeature
+export default CreateFeatureTab

@@ -11,7 +11,9 @@ const FeatureLimitAlert: FC<FeatureLimitAlertType> = ({
   onChange,
   projectId,
 }) => {
-  const { data: project } = useGetProjectQuery({ id: `${projectId}` })
+  const { data: project } = useGetProjectQuery({
+    id: typeof projectId === 'string' ? parseInt(projectId, 10) : projectId,
+  })
 
   const featureLimitAlert = Utils.calculateRemainingLimitsPercentage(
     project?.total_features,

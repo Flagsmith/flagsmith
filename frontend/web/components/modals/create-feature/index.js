@@ -1,4 +1,6 @@
 import React, { Component } from 'react'
+import withSegmentOverrides from 'common/providers/withSegmentOverrides'
+import moment from 'moment'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import FeatureListStore from 'common/stores/feature-list-store'
@@ -13,22 +15,30 @@ import {
   setInterceptClose,
   setModalTitle,
 } from 'components/modals/base/ModalDefault'
+import ModalHR from 'components/modals/ModalHR'
 import { getStore } from 'common/store'
 import Button from 'components/base/forms/Button'
+import { getGithubIntegration } from 'common/services/useGithubIntegration'
+import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
+import FeatureHistory from 'components/FeatureHistory'
 import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import { getChangeRequests } from 'common/services/useChangeRequest'
+import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
+import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import ProjectProvider from 'common/providers/ProjectProvider'
-import CreateFeature from 'components/modals/create-feature/tabs/CreateFeatureTab'
-import FeatureValueTab from 'components/modals/create-feature/tabs/FeatureValueTab'
-import FeatureLimitAlert from 'components/modals/create-feature/FeatureLimitAlert'
-import FeatureUpdateSummary from 'components/modals/create-feature/FeatureUpdateSummary'
-import FeatureNameInput from 'components/modals/create-feature/FeatureNameInput'
-import ExperimentResultsTab from './ExperimentResultsTab'
-import moment from 'moment'
+import CreateFeature from './tabs/CreateFeatureTab'
+import FeatureSettings from './tabs/FeatureSettingsTab'
+import FeatureValueTab from './tabs/FeatureValueTab'
+import IdentityOverridesTab from './tabs/IdentityOverridesTab'
+import SegmentOverridesTab from './tabs/SegmentOverridesTab'
+import UsageTab from './tabs/UsageTab'
+import FeatureLimitAlert from './FeatureLimitAlert'
+import FeatureUpdateSummary from './FeatureUpdateSummary'
+import FeatureNameInput from './FeatureNameInput'
 
 const Index = class extends Component {
-  static displayName = 'create-experiment'
+  static displayName = 'create-feature'
 
   constructor(props, context) {
     super(props, context)
@@ -51,10 +61,18 @@ const Index = class extends Component {
     this.state = {
       changeRequests: [],
       environmentFlag: environmentFlagData,
+      externalResource: {},
+      externalResources: [],
       featureLimitAlert: { percentage: 0 },
+      githubId: '',
+      hasIntegrationWithGithub: false,
+      hasMetadataRequired: false,
       isEdit: !!this.props.projectFlag,
+      period: 30,
       projectFlag: projectFlagData,
       scheduledChangeRequests: [],
+      segmentsChanged: false,
+      settingsChanged: false,
       valueChanged: false,
     }
   }
@@ -131,7 +149,14 @@ const Index = class extends Component {
   onClosing = () => {
     if (this.state.isEdit) {
       return new Promise((resolve) => {
-        if (this.state.valueChanged) {
+        const projectFlagChanged = this.state.settingsChanged
+        const environmentFlagChanged = this.state.valueChanged
+        const segmentOverridesChanged = this.state.segmentsChanged
+        if (
+          projectFlagChanged ||
+          environmentFlagChanged ||
+          segmentOverridesChanged
+        ) {
           openConfirm({
             body: 'Closing this will discard your unsaved changes.',
             noText: 'Cancel',
@@ -152,6 +177,15 @@ const Index = class extends Component {
     setInterceptClose(this.onClosing)
     this.fetchChangeRequests()
     this.fetchScheduledChangeRequests()
+
+    getGithubIntegration(getStore(), {
+      organisation_id: AccountStore.getOrganisation().id,
+    }).then((res) => {
+      this.setState({
+        githubId: res?.data?.results[0]?.id,
+        hasIntegrationWithGithub: !!res?.data?.results?.length,
+      })
+    })
   }
 
   componentWillUnmount() {
@@ -234,8 +268,13 @@ const Index = class extends Component {
 
   parseError = (error) => {
     const { projectFlag } = this.props
-    let featureError = error?.message || error?.name?.[0] || error
+    let featureError =
+      error?.metadata?.flatMap((m) => m.non_field_errors ?? []).join('\n') ||
+      error?.message ||
+      error?.name?.[0] ||
+      error
     let featureWarning = ''
+    //Treat multivariate no changes as warnings
     if (
       featureError?.includes?.('no changes') &&
       projectFlag?.multivariate_options?.length
@@ -245,7 +284,6 @@ const Index = class extends Component {
     }
     return { featureError, featureWarning }
   }
-
   cleanInputValue = (value) => {
     if (value && typeof value === 'string') {
       return value.trim()
@@ -290,7 +328,13 @@ const Index = class extends Component {
   }
 
   render() {
-    const { environmentFlag, isEdit, projectFlag } = this.state
+    const {
+      environmentFlag,
+      githubId,
+      hasIntegrationWithGithub,
+      isEdit,
+      projectFlag,
+    } = this.state
     const { identity, identityName } = this.props
     const Provider = identity ? IdentityProvider : FeatureListProvider
     const environment = ProjectStore.getEnvironment(this.props.environmentId)
@@ -309,8 +353,12 @@ const Index = class extends Component {
       projectFlag.multivariate_options.length &&
       controlValue < 0
     const existingChangeRequest = this.props.changeRequest
+    const isVersionedChangeRequest = existingChangeRequest && isVersioned
+    const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
     let regexValid = true
+
+    const hasCodeReferences = projectFlag?.code_references_counts?.length > 0
 
     try {
       if (!isEdit && projectFlag.name && regex) {
@@ -345,21 +393,51 @@ const Index = class extends Component {
           >
             {(
               { error, isSaving },
-              { createChangeRequest, createFlag, editFeatureValue },
+              {
+                createChangeRequest,
+                createFlag,
+                editFeatureSegments,
+                editFeatureSettings,
+                editFeatureValue,
+              },
             ) => {
               const saveFeatureValue = saveFeatureWithValidation((schedule) => {
                 if ((is4Eyes || schedule) && !identity) {
-                  this.setState({ valueChanged: false })
-                  const featureStates = [
-                    Object.assign({}, this.props.environmentFlag, {
-                      enabled: environmentFlag.enabled,
-                      feature_state_value: Utils.valueToFeatureState(
-                        environmentFlag.feature_state_value,
-                      ),
-                      multivariate_feature_state_values:
-                        environmentFlag.multivariate_feature_state_values,
-                    }),
-                  ]
+                  this.setState({ segmentsChanged: false, valueChanged: false })
+                  // Until this page and feature-list-store are refactored, this is the best way of parsing feature states
+                  const featureStates = (this.props.segmentOverrides || [])
+                    .filter((override) => !override.toRemove)
+                    .map((override) => {
+                      return {
+                        enabled: override.enabled,
+                        feature: override.feature,
+                        feature_segment: {
+                          environment: override.environment,
+                          id: override.id,
+                          is_feature_specific: override.is_feature_specific,
+                          priority: override.priority,
+                          segment: override.segment,
+                          segment_name: override.segment_name,
+                          uuid: override.uuid,
+                        },
+                        feature_state_value: Utils.valueToFeatureState(
+                          override.value,
+                        ),
+                        id: override.id,
+                        multivariate_feature_state_values:
+                          override.multivariate_options,
+                      }
+                    })
+                    .concat([
+                      Object.assign({}, this.props.environmentFlag, {
+                        enabled: environmentFlag.enabled,
+                        feature_state_value: Utils.valueToFeatureState(
+                          environmentFlag.feature_state_value,
+                        ),
+                        multivariate_feature_state_values:
+                          environmentFlag.multivariate_feature_state_values,
+                      }),
+                    ])
 
                   const getModalTitle = () => {
                     if (schedule) {
@@ -436,9 +514,30 @@ const Index = class extends Component {
                 }
               })
 
+              const saveSettings = () => {
+                this.setState({ settingsChanged: false })
+                this.save(editFeatureSettings, isSaving)
+              }
+
+              const saveFeatureSegments = saveFeatureWithValidation(
+                (schedule) => {
+                  this.setState({ segmentsChanged: false })
+
+                  if ((is4Eyes || schedule) && isVersioned && !identity) {
+                    return saveFeatureValue()
+                  } else {
+                    this.save(editFeatureSegments, isSaving)
+                  }
+                },
+              )
+
               const onCreateFeature = saveFeatureWithValidation(() => {
                 this.save(createFlag, isSaving)
               })
+              const _isLimitReached = false
+
+              const { featureError, featureWarning } = this.parseError(error)
+
               return (
                 <Permission
                   level='project'
@@ -458,6 +557,10 @@ const Index = class extends Component {
                           <div id='create-feature-modal'>
                             {isEdit && !identity ? (
                               <>
+                                <FeaturePipelineStatus
+                                  projectId={this.props.projectId}
+                                  featureId={projectFlag?.id}
+                                />
                                 <Tabs
                                   onChange={() => this.forceUpdate()}
                                   urlParam='tab'
@@ -480,9 +583,7 @@ const Index = class extends Component {
                                   >
                                     <FeatureValueTab
                                       error={error}
-                                      createFeature={createFeature}
-                                      hideValue={false}
-                                      isEdit={isEdit}
+                                      projectId={this.props.projectId}
                                       noPermissions={noPermissions}
                                       featureState={environmentFlag}
                                       projectFlag={projectFlag}
@@ -538,20 +639,237 @@ const Index = class extends Component {
                                       onSaveFeatureValue={saveFeatureValue}
                                     />
                                   </TabItem>
-                                  <TabItem
-                                    data-test='results'
-                                    tabLabelString='Results'
-                                    tabLabel={
-                                      <Row className='justify-content-center'>
-                                        Results
-                                      </Row>
-                                    }
-                                  >
-                                    <ExperimentResultsTab
-                                      environmentId={this.props.environmentId}
-                                      featureName={projectFlag.name}
-                                    />
-                                  </TabItem>
+                                  {(!existingChangeRequest ||
+                                    isVersionedChangeRequest) && (
+                                    <TabItem
+                                      data-test='segment_overrides'
+                                      tabLabelString='Segment Overrides'
+                                      tabLabel={
+                                        <Row
+                                          className={`justify-content-center ${
+                                            this.state.segmentsChanged
+                                              ? 'pr-1'
+                                              : ''
+                                          }`}
+                                        >
+                                          Segment Overrides{' '}
+                                          {this.state.segmentsChanged && (
+                                            <div className='unread ml-2 px-2'>
+                                              *
+                                            </div>
+                                          )}
+                                        </Row>
+                                      }
+                                    >
+                                      <SegmentOverridesTab
+                                        projectId={this.props.projectId}
+                                        environmentId={this.props.environmentId}
+                                        projectFlag={projectFlag}
+                                        segmentOverrides={
+                                          this.props.segmentOverrides
+                                        }
+                                        updateSegments={
+                                          this.props.updateSegments
+                                        }
+                                        controlValue={
+                                          environmentFlag.feature_state_value
+                                        }
+                                        onSegmentsChange={() =>
+                                          this.setState({
+                                            segmentsChanged: true,
+                                          })
+                                        }
+                                        saveFeatureSegments={
+                                          saveFeatureSegments
+                                        }
+                                        isSaving={isSaving}
+                                        invalid={invalid}
+                                        featureError={featureError}
+                                        featureWarning={featureWarning}
+                                        existingChangeRequest={
+                                          existingChangeRequest
+                                        }
+                                        noPermissions={noPermissions}
+                                        disableCreate={this.props.disableCreate}
+                                        highlightSegmentId={
+                                          this.props.highlightSegmentId
+                                        }
+                                      />
+                                    </TabItem>
+                                  )}
+                                  {!existingChangeRequest &&
+                                    !hideIdentityOverridesTab && (
+                                      <TabItem
+                                        data-test='identity_overrides'
+                                        tabLabel='Identity Overrides'
+                                      >
+                                        <IdentityOverridesTab
+                                          environmentId={
+                                            this.props.environmentId
+                                          }
+                                          projectId={this.props.projectId}
+                                          projectFlag={projectFlag}
+                                          environmentFlag={
+                                            this.props.environmentFlag
+                                          }
+                                        />
+                                      </TabItem>
+                                    )}
+                                  {(!Project.disableAnalytics ||
+                                    hasCodeReferences) && (
+                                    <TabItem
+                                      tabLabelString='Usage'
+                                      tabLabel={
+                                        <Row className='justify-content-center'>
+                                          Usage
+                                        </Row>
+                                      }
+                                    >
+                                      <UsageTab
+                                        projectId={project.id}
+                                        featureId={projectFlag.id}
+                                        environmentId={environment.id}
+                                        hasCodeReferences={hasCodeReferences}
+                                      />
+                                    </TabItem>
+                                  )}
+                                  {
+                                    <TabItem
+                                      data-test='feature_health'
+                                      tabLabelString='Health'
+                                      tabLabel={'Health'}
+                                    >
+                                      <FeatureHealthTabContent
+                                        projectId={projectFlag.project}
+                                        environmentId={this.props.environmentId}
+                                        featureId={projectFlag.id}
+                                      />
+                                    </TabItem>
+                                  }
+                                  {hasIntegrationWithGithub &&
+                                    projectFlag?.id && (
+                                      <TabItem
+                                        data-test='external-resources-links'
+                                        tabLabelString='Links'
+                                        tabLabel={
+                                          <Row className='justify-content-center'>
+                                            Links
+                                          </Row>
+                                        }
+                                      >
+                                        <ExternalResourcesLinkTab
+                                          githubId={githubId}
+                                          organisationId={
+                                            AccountStore.getOrganisation().id
+                                          }
+                                          featureId={projectFlag.id}
+                                          projectId={`${this.props.projectId}`}
+                                          environmentId={
+                                            this.props.environmentId
+                                          }
+                                        />
+                                      </TabItem>
+                                    )}
+                                  {!existingChangeRequest &&
+                                    this.props.flagId &&
+                                    isVersioned && (
+                                      <TabItem
+                                        data-test='change-history'
+                                        tabLabel='History'
+                                      >
+                                        <FeatureHistory
+                                          feature={projectFlag.id}
+                                          projectId={`${this.props.projectId}`}
+                                          environmentId={environment.id}
+                                          environmentApiKey={
+                                            environment.api_key
+                                          }
+                                        />
+                                      </TabItem>
+                                    )}
+                                  {!existingChangeRequest && (
+                                    <TabItem
+                                      data-test='settings'
+                                      tabLabelString='Settings'
+                                      tabLabel={
+                                        <Row className='justify-content-center'>
+                                          Settings{' '}
+                                          {this.state.settingsChanged && (
+                                            <div className='unread ml-2 px-1'>
+                                              {'*'}
+                                            </div>
+                                          )}
+                                        </Row>
+                                      }
+                                    >
+                                      <FeatureSettings
+                                        identity={identity}
+                                        projectId={this.props.projectId}
+                                        projectFlag={projectFlag}
+                                        onChange={(changes) => {
+                                          const updates = {}
+
+                                          // Update projectFlag with changes
+                                          updates.projectFlag = {
+                                            ...this.state.projectFlag,
+                                            ...changes,
+                                          }
+
+                                          // Set settingsChanged flag unless it's only metadata changing
+                                          if (changes.metadata === undefined) {
+                                            updates.settingsChanged = true
+                                          }
+
+                                          this.setState(updates)
+                                        }}
+                                        onHasMetadataRequiredChange={(
+                                          hasMetadataRequired,
+                                        ) =>
+                                          this.setState({
+                                            hasMetadataRequired,
+                                          })
+                                        }
+                                      />
+                                      <JSONReference
+                                        className='mb-3'
+                                        showNamesButton
+                                        title={'Feature'}
+                                        json={projectFlag}
+                                      />
+                                      <ModalHR className='mt-4' />
+                                      {isEdit && (
+                                        <div className='text-right mt-3'>
+                                          {!!createFeature && (
+                                            <>
+                                              <p className='text-right modal-caption fs-small lh-sm'>
+                                                This will save the above
+                                                settings{' '}
+                                                <strong>
+                                                  all environments
+                                                </strong>
+                                                .
+                                              </p>
+                                              <Button
+                                                onClick={saveSettings}
+                                                data-test='update-feature-btn'
+                                                id='update-feature-btn'
+                                                disabled={
+                                                  isSaving ||
+                                                  !projectFlag.name ||
+                                                  invalid ||
+                                                  this.state.hasMetadataRequired
+                                                }
+                                              >
+                                                {isSaving
+                                                  ? 'Updating'
+                                                  : 'Update Settings'}
+                                              </Button>
+                                            </>
+                                          )}
+                                        </div>
+                                      )}
+                                    </TabItem>
+                                  )}
                                 </Tabs>
                               </>
                             ) : (
@@ -620,6 +938,13 @@ const Index = class extends Component {
                                   onRemoveMultivariateOption={
                                     this.props.removeMultivariateOption
                                   }
+                                  onHasMetadataRequiredChange={(
+                                    hasMetadataRequired,
+                                  ) => {
+                                    this.setState({
+                                      hasMetadataRequired,
+                                    })
+                                  }}
                                   featureError={
                                     this.parseError(error).featureError
                                   }
@@ -636,6 +961,9 @@ const Index = class extends Component {
                                   regexValid={regexValid}
                                   featureLimitPercentage={
                                     this.state.featureLimitAlert.percentage
+                                  }
+                                  hasMetadataRequired={
+                                    this.state.hasMetadataRequired
                                   }
                                 />
                               </div>
@@ -716,6 +1044,7 @@ const FeatureProvider = (WrappedComponent) => {
     }
 
     componentDidMount() {
+      // toast update feature
       ES6Component(this)
       this.listenTo(
         FeatureListStore,
@@ -777,9 +1106,12 @@ const FeatureProvider = (WrappedComponent) => {
                 ...(newEnvironmentFlag || {}),
               },
               projectFlag,
+              segmentsChanged: false,
+              settingsChanged: false,
               valueChanged: false,
             })
           } else if (this.props.projectFlag) {
+            //update the environmentFlag and projectFlag to the new values
             const newEnvironmentFlag =
               envFlags?.[this.props.projectFlag.id] || {}
             const newProjectFlag = FeatureListStore.getProjectFlags()?.find?.(
@@ -791,6 +1123,8 @@ const FeatureProvider = (WrappedComponent) => {
                 ...(newEnvironmentFlag || {}),
               },
               projectFlag: newProjectFlag,
+              segmentsChanged: false,
+              settingsChanged: false,
               valueChanged: false,
             })
           }
@@ -810,6 +1144,6 @@ const FeatureProvider = (WrappedComponent) => {
   return HOC
 }
 
-const WrappedCreateExperiment = ConfigProvider(Index)
+const WrappedCreateFlag = ConfigProvider(withSegmentOverrides(Index))
 
-export default FeatureProvider(WrappedCreateExperiment)
+export default FeatureProvider(WrappedCreateFlag)
