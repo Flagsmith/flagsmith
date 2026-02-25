@@ -3,8 +3,6 @@ import typing
 from contextlib import suppress
 
 from django.db.models import Prefetch, Q
-from flag_engine.features.models import FeatureStateModel
-from flag_engine.identities.models import IdentityFeaturesList, IdentityModel
 
 from api_keys.user import APIKeyUser
 from edge_api.identities.tasks import (
@@ -20,6 +18,8 @@ from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.versioning_service import get_environment_flags_dict
 from users.models import FFAdminUser
+from util.engine_models.features.models import FeatureStateModel
+from util.engine_models.identities.models import IdentityFeaturesList, IdentityModel
 from util.mappers import map_engine_identity_to_identity_document
 
 

@@ -7,15 +7,17 @@ from typing import Iterable
 from boto3.dynamodb.conditions import Attr, Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.context.mappers import map_environment_identity_to_context
-from flag_engine.environments.models import EnvironmentModel
-from flag_engine.identities.models import IdentityModel
-from flag_engine.segments.evaluator import get_context_segments
 from rest_framework.exceptions import NotFound
 
 from edge_api.identities.search import EdgeIdentitySearchData
 from environments.dynamodb.constants import IDENTITIES_PAGINATION_LIMIT
 from environments.dynamodb.wrappers.exceptions import CapacityBudgetExceeded
+from util.engine_models.context.mappers import (
+    get_context_segments,
+    map_environment_identity_to_context,
+)
+from util.engine_models.environments.models import EnvironmentModel
+from util.engine_models.identities.models import IdentityModel
 from util.mappers import map_identity_to_identity_document
 
 from .base import BaseDynamoWrapper
