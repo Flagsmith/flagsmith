@@ -592,7 +592,6 @@ def test_get_feature_states_for_identity__transient_identifier__empty_segment__r
     assert flag_data["feature_state_value"] == default_feature_value
 
 
-@pytest.mark.xfail(reason="https://github.com/Flagsmith/flagsmith/issues/6739")
 def test_get_feature_states_for_identity__trait_persistence_disabled__segment_match_expected(
     admin_client: APIClient,
     sdk_client: APIClient,

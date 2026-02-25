@@ -117,7 +117,7 @@ def test_identify_with_traits_serializer__transient__identity_and_traits_not_per
     assert not Trait.objects.filter(identity__identifier=identity_identifier).exists()
 
 
-def test_identify_with_traits_serializer_validate_traits_returns_empty_list_when_persistence_not_allowed(
+def test_identify_with_traits_serializer__persistence_not_allowed__marks_traits_transient(
     mocker: MockerFixture,
     environment: Environment,
 ) -> None:
@@ -145,8 +145,11 @@ def test_identify_with_traits_serializer_validate_traits_returns_empty_list_when
     validated_traits = serializer.validated_data.get("traits")
 
     serializer.save()  # type: ignore[no-untyped-call]
+
     # Then
-    assert validated_traits == []
+    # traits are kept but marked as transient
+    assert len(validated_traits) == 2
+    assert all(trait["transient"] is True for trait in validated_traits)
 
     assert Identity.objects.filter(identifier="test_user").exists()
     assert not Trait.objects.filter(identity__identifier="test_user").exists()
