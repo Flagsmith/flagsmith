@@ -688,9 +688,9 @@ const EnvironmentSettingsPage: React.FC = () => {
                         </div>
                         <div className='mt-4'>
                           <Setting
-                            title='Persist traits when using client-side SDK keys'
+                            title='Allow client-side SDKs to set traits'
                             description={
-                              'If enabled, Flagsmith will persist any non-transient traits sent by SDKs using client-side keys when remotely evaluating flags.'
+                              'If disabled, any traits sent by SDKs using client-side environment keys will be ignored. Traits will only be accepted from server-side SDK keys. This prevents untrusted clients from setting traits that could influence segment evaluation.'
                             }
                             checked={currentEnv?.allow_client_traits}
                             onChange={(value) => {
