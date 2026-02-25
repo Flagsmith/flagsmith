@@ -6,6 +6,7 @@ COMPOSE_PROJECT_NAME ?= flagsmith-e2e
 DOTENV_OVERRIDE_FILE ?= .env
 
 E2E_CONCURRENCY ?= 3
+E2E_RETRIES ?= 1
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
@@ -30,7 +31,7 @@ serve:
 test:
 	@echo "Running E2E tests..."
 	@docker compose run --name e2e-test-run frontend \
-		sh -c 'npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} npm run test -- $(opts)' \
+		sh -c 'npx cross-env E2E_CONCURRENCY=${E2E_CONCURRENCY} E2E_RETRIES=${E2E_RETRIES} npm run test -- $(opts)' \
 		|| TEST_FAILED=1; \
 	echo "Copying test results from container..."; \
 	docker cp e2e-test-run:/srv/flagsmith/e2e/test-results ./e2e/test-results 2>/dev/null || echo "No test results to copy"; \
