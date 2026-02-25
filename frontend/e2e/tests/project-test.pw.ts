@@ -12,6 +12,7 @@ test.describe('Project Tests', () => {
       setText,
       waitForElementNotExist,
       waitForElementVisible,
+      waitForToast,
     } = createHelpers(page);
     const flagsmith = await getFlagsmith()
     const hasSegmentChangeRequests = flagsmith.hasFeature('segment_change_requests')
@@ -47,8 +48,7 @@ test.describe('Project Tests', () => {
       log('Test 2: Change minimum approvals to 3 (manual save)')
       await setText('[name="env-name"]', '3')
       await click('#save-env-btn')
-      // Wait for save to complete
-      await page.waitForTimeout(1000)
+      await waitForToast()
       log('Verify value 3 persisted after navigation')
       await click('#features-link')
       await click('#project-settings-link')
