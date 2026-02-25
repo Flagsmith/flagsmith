@@ -39,7 +39,7 @@
   left: auto;
   right: 0;
 }
-$side-width: 750px;
+$side-width: 800px;
 .dark {
   .inline-modal {
     background: $modal-bg-dark;
@@ -152,9 +152,11 @@ $side-width: 750px;
   .modal,
   .modal-dialog,
   .modal-content,
-  .modal-backdrop {
+  .modal-backdrop,
+  .side-modal .modal-dialog {
     transition: none !important;
     animation: none !important;
+    transform: none !important;
   }
 
   .modal-backdrop {

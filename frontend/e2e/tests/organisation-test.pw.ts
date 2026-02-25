@@ -14,6 +14,7 @@ test.describe('Organisation Tests', () => {
       setText,
       waitForElementNotExist,
       waitForElementVisible,
+      waitForModalToClose,
     } = createHelpers(page);
 
     log('Login')
@@ -50,6 +51,7 @@ test.describe('Organisation Tests', () => {
     await waitForElementVisible("[name='orgName']")
     await setText("[name='orgName']", 'E2E Test Org to Delete')
     await click('#create-org-btn')
+    await waitForModalToClose()
 
     log('Verify New Organisation Created and appears in nav')
     await waitForElementVisible(byId('organisation-link'))
@@ -62,6 +64,7 @@ test.describe('Organisation Tests', () => {
     log('Delete Organisation')
     await waitForElementVisible('#delete-org-btn')
     await click('#delete-org-btn')
+    await waitForElementVisible("[name='confirm-org-name']")
     await setText("[name='confirm-org-name']", 'E2E Test Org to Delete')
     await clickByText('Confirm')
 
@@ -82,6 +85,7 @@ test.describe('Organisation Tests', () => {
     await waitForElementVisible("[name='orgName']")
     await setText("[name='orgName']", 'E2E Cancel Test Org')
     await click('#create-org-btn')
+    await waitForModalToClose()
 
     log('Navigate to org settings and open delete modal')
     await waitForElementVisible(byId('organisation-link'))
@@ -103,6 +107,7 @@ test.describe('Organisation Tests', () => {
 
     log('Clean up: Delete the test organisation')
     await click('#delete-org-btn')
+    await waitForElementVisible("[name='confirm-org-name']")
     await setText("[name='confirm-org-name']", 'E2E Cancel Test Org')
     await clickByText('Confirm')
     await waitForElementNotExist('.modal')

@@ -15,53 +15,44 @@
     "changelog-sections": [
         {
             "type": "feat",
-            "hidden": false,
             "section": "Features"
         },
         {
             "type": "fix",
-            "hidden": false,
             "section": "Bug Fixes"
         },
         {
             "type": "infra",
-            "hidden": false,
             "section": "Infrastructure (Flagsmith SaaS Only)"
         },
         {
             "type": "deps",
-            "hidden": false,
             "section": "Dependency Updates"
         },
         {
             "type": "ci",
-            "hidden": true,
             "section": "CI"
         },
         {
             "type": "docs",
-            "hidden": true,
             "section": "Docs"
         },
         {
             "type": "perf",
-            "hidden": true,
             "section": "Performance Improvements"
         },
         {
             "type": "refactor",
-            "hidden": true,
             "section": "Refactoring"
         },
         {
             "type": "test",
-            "hidden": true,
             "section": "Tests"
         },
         {
             "type": "chore",
-            "hidden": true,
-            "section": "Other"
+            "section": "Other",
+            "hidden": true
         }
     ]
 }

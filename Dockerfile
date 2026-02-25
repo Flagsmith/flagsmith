@@ -53,7 +53,7 @@ ARG CI_COMMIT_SHA=dev
 
 # Pin runtimes versions
 ARG NODE_VERSION=22
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION=3.13
 
 FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm AS node
 FROM cgr.dev/chainguard/wolfi-base:latest AS wolfi-base

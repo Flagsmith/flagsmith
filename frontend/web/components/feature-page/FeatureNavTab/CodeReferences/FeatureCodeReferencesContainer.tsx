@@ -44,10 +44,8 @@ const FeatureCodeReferencesContainer: React.FC<
 
   if (!data || data.length === 0) {
     return (
-      <div className='d-flex justify-content-center items-center'>
-        <h6 className='text-gray-500'>
-          No code references found for this feature
-        </h6>
+      <div className='text-center text-muted'>
+        No code references found for this feature.
       </div>
     )
   }

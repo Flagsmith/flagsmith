@@ -59,11 +59,19 @@ runs:
         aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
         aws-region: eu-west-2
 
-    - name: Fill in the new image ID in the Amazon ECS API task definition
-      id: task-def-api
+    - name: Render SDK API task definition
+      id: task-def-sdk-api
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
-        task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-web.json
+        task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-sdk-api.json
+        container-name: flagsmith-api
+        image: ${{ inputs.api_ecr_image_url }}
+
+    - name: Render Admin API task definition
+      id: task-def-admin-api
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-admin-api.json
         container-name: flagsmith-api
         image: ${{ inputs.api_ecr_image_url }}
 
@@ -93,21 +101,21 @@ runs:
           }}'
       shell: bash
 
-    - name: Deploy Amazon ECS web task definition
-      id: deploy-api-task-def
+    - name: Deploy new Task Definition to ECS Admin API service
+      id: deploy-admin-api-task-definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         cluster: ${{ inputs.aws_ecs_cluster_name }}
         service: ${{ inputs.aws_ecs_service_name }}
-        task-definition: ${{ steps.task-def-api.outputs.task-definition }}
+        task-definition: ${{ steps.task-def-admin-api.outputs.task-definition }}
 
-    - name: Deploy Amazon ECS SDK service with same task definition
-      run: |
-        aws ecs update-service \
-          --cluster ${{ inputs.aws_ecs_cluster_name }} \
-          --service ${{ inputs.aws_ecs_sdk_service_name }} \
-          --task-definition ${{ steps.deploy-api-task-def.outputs.task-definition-arn }}
-      shell: bash
+    - name: Deploy new Task Definition to ECS SDK API service
+      id: deploy-sdk-api-task-definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      with:
+        cluster: ${{ inputs.aws_ecs_cluster_name }}
+        service: ${{ inputs.aws_ecs_sdk_service_name }}
+        task-definition: ${{ steps.task-def-sdk-api.outputs.task-definition }}
 
     # The DynamoDB Identity Migrator uses the same task definition as the SQL schema migrator but overrides the container definition
     # with the new django execute target
@@ -157,7 +165,8 @@ runs:
     - name: Verify correct version is running
       shell: bash
       run: |
-        EXPECTED_TASK_DEF=${{ steps.deploy-api-task-def.outputs.task-definition-arn }}
+        EXPECTED_ADMIN_API_TASK_DEF=${{ steps.deploy-admin-api-task-definition.outputs.task-definition-arn }}
+        EXPECTED_SDK_API_TASK_DEF=${{ steps.deploy-sdk-api-task-definition.outputs.task-definition-arn }}
         RUNNING_ADMIN_API_TASK_DEF=$(aws ecs describe-services \
           --cluster ${{ inputs.aws_ecs_cluster_name }} \
           --services ${{ inputs.aws_ecs_service_name }} \
@@ -168,13 +177,14 @@ runs:
           --services ${{ inputs.aws_ecs_sdk_service_name }} \
           --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition' \
           --output text)
-        if [[ "$RUNNING_ADMIN_API_TASK_DEF" == "$EXPECTED_TASK_DEF" && \
-              "$RUNNING_SDK_API_TASK_DEF" == "$EXPECTED_TASK_DEF" ]]; then
+        if [[ "$RUNNING_ADMIN_API_TASK_DEF" == "$EXPECTED_ADMIN_API_TASK_DEF" && \
+              "$RUNNING_SDK_API_TASK_DEF" == "$EXPECTED_SDK_API_TASK_DEF" ]]; then
           exit 0
         else
           echo "Task definition mismatch detected"
-          echo "Expected: $EXPECTED_TASK_DEF"
+          echo "Expected Admin API: $EXPECTED_ADMIN_API_TASK_DEF"
           echo "Admin API running: $RUNNING_ADMIN_API_TASK_DEF"
+          echo "Expected SDK API: $EXPECTED_SDK_API_TASK_DEF"
           echo "SDK API running: $RUNNING_SDK_API_TASK_DEF"
           exit 1
         fi

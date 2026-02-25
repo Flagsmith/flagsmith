@@ -1,17 +1,1 @@
-<svg version="1.1" id="Layer_1" xmlns:x="ns_extend;" xmlns:i="ns_ai;" xmlns:graph="ns_graphs;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55.9 56" style="enable-background:new 0 0 55.9 56;" xml:space="preserve">
- <style type="text/css">
-  .st0{fill:#105ED5;}
- </style>
- <metadata>
-  <sfw xmlns="ns_sfw;">
-   <slices>
-   </slices>
-   <sliceSourceBounds bottomLeftOrigin="true" height="56" width="55.9" x="0.7" y="90">
-   </sliceSourceBounds>
-  </sfw>
- </metadata>
- <g>
-  <path class="st0" d="M0,2.7C0,1.2,1.2,0,2.6,0h51.7c0.9,0,1.6,0.7,1.6,1.6v51.7c0,1.5-1.2,2.7-2.7,2.7C23.8,56,0,32.1,0,2.7z">
-  </path>
- </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:graph="ns_graphs;" xmlns:i="ns_ai;" xmlns:x="ns_extend;" xmlns:xlink="http://www.w3.org/1999/xlink" id="Layer_1" x="0" y="0" version="1.1" viewBox="0 0 55.9 56" style="enable-background:new 0 0 55.9 56" xml:space="preserve"><style type="text/css">.st0{fill:#105ed5}</style><metadata><sfw xmlns="ns_sfw;"><slices/><sliceSourceBounds width="55.9" height="56" x=".7" y="90" bottomLeftOrigin="true"/></sfw></metadata><g><path d="M0,2.7C0,1.2,1.2,0,2.6,0h51.7c0.9,0,1.6,0.7,1.6,1.6v51.7c0,1.5-1.2,2.7-2.7,2.7C23.8,56,0,32.1,0,2.7z" class="st0"/></g></svg>

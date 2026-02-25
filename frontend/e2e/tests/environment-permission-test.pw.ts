@@ -69,6 +69,7 @@ test.describe('Environment Permission Tests', () => {
     log('Create new environment')
     await login(E2E_USER, PASSWORD)
     await gotoProject(PROJECT_NAME)
+    await waitForElementVisible(byId('switch-environment-development'))
     await click('#create-env-link')
     await createEnvironment('Production')
     await logout()
@@ -86,7 +87,6 @@ test.describe('Environment Permission Tests', () => {
     log('User with permissions can see environment')
     await login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
     await gotoProject(PROJECT_NAME)
-    await waitForElementVisible(byId('switch-environment-production'))
     await waitForElementVisible(byId('switch-environment-production'))
     await logout()
 

@@ -160,6 +160,10 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
         ("TEST_COMBINED_TARGET", "Imported"),
     }
 
+    # Deprecated flags are archived.
+    deprecated_feature = Feature.objects.get(project=project, name="flag1")
+    assert deprecated_feature.is_archived is True
+
     # Standard feature states have expected values.
     boolean_standard_feature = Feature.objects.get(project=project, name="flag1")
     boolean_standard_feature_states_by_env_name = {

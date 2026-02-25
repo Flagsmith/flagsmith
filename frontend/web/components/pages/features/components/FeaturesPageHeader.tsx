@@ -9,12 +9,14 @@ type FeaturesPageHeaderProps = {
   onCreateFeature: () => void
   readOnly: boolean
   projectId: number
+  title?: string
 }
 
 export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
   onCreateFeature,
   projectId,
   readOnly,
+  title = 'Features',
 }) => {
   const [featureLimitAlert, setFeatureLimitAlert] = useState({
     limit: 0,
@@ -28,7 +30,7 @@ export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
         onChange={setFeatureLimitAlert}
       />
       <PageTitle
-        title={'Features'}
+        title={title}
         cta={
           <Permission
             level='project'

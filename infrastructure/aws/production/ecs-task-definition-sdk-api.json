@@ -1,8 +1,8 @@
 {
-    "family": "flagsmith-api",
+    "family": "sdk-api",
     "networkMode": "awsvpc",
-    "executionRoleArn": "arn:aws:iam::302456015006:role/task-exec-role-6fb76f6",
-    "taskRoleArn": "arn:aws:iam::302456015006:role/task-exec-role-6fb76f6",
+    "executionRoleArn": "arn:aws:iam::084060095745:role/task-exec-role-741a7e3",
+    "taskRoleArn": "arn:aws:iam::084060095745:role/task-exec-role-741a7e3",
     "containerDefinitions": [
         {
             "name": "flagsmith-api",
@@ -35,6 +35,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "LOG_LEVEL",
+                    "value": "INFO"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
@@ -52,15 +56,19 @@
                 },
                 {
                     "name": "CACHE_FLAGS_SECONDS",
-                    "value": "0"
+                    "value": "10"
                 },
                 {
                     "name": "CACHE_PROJECT_SEGMENTS_SECONDS",
-                    "value": "0"
+                    "value": "10"
+                },
+                {
+                    "name": "CACHE_ENVIRONMENT_SEGMENTS_SECONDS",
+                    "value": "30"
                 },
                 {
                     "name": "CHARGEBEE_SITE",
-                    "value": "flagsmith-test"
+                    "value": "flagsmith"
                 },
                 {
                     "name": "DJANGO_SETTINGS_MODULE",
@@ -71,16 +79,12 @@
                     "value": "True"
                 },
                 {
-                    "name": "ENABLE_EMAIL_ACTIVATION",
-                    "value": "False"
-                },
-                {
                     "name": "ENABLE_TELEMETRY",
                     "value": "False"
                 },
                 {
                     "name": "ENVIRONMENT",
-                    "value": "staging"
+                    "value": "production"
                 },
                 {
                     "name": "ENVIRONMENTS_TABLE_NAME_DYNAMO",
@@ -96,7 +100,7 @@
                 },
                 {
                     "name": "GITHUB_CLIENT_ID",
-                    "value": "cd16a9c1574074756876"
+                    "value": "b706a0da3e9d3115ea9d"
                 },
                 {
                     "name": "GUNICORN_WORKERS",
@@ -107,8 +111,24 @@
                     "value": "15"
                 },
                 {
+                    "name": "GUNICORN_KEEP_ALIVE",
+                    "value": "60"
+                },
+                {
                     "name": "IDENTITIES_TABLE_NAME_DYNAMO",
                     "value": "flagsmith_identities"
+                },
+                {
+                    "name": "INFLUXDB_BUCKET",
+                    "value": "api_prod"
+                },
+                {
+                    "name": "INFLUXDB_ORG",
+                    "value": "ben.rometsch@bullet-train.io"
+                },
+                {
+                    "name": "INFLUXDB_URL",
+                    "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
                 },
                 {
                     "name": "OAUTH_CLIENT_ID",
@@ -128,51 +148,31 @@
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.1"
+                    "value": "0.000003"
+                },
+                {
+                    "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
+                    "value": "0"
                 },
                 {
                     "name": "SLACK_CLIENT_ID",
-                    "value": "937916178726.2904626318658"
+                    "value": "937916178726.1924685747446"
                 },
                 {
                     "name": "IDENTITY_MIGRATION_EVENT_BUS_NAME",
-                    "value": "identity_migration-fb41b5d"
+                    "value": "identity_migration-d46ed1a"
                 },
                 {
                     "name": "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO",
                     "value": "flagsmith_environment_api_key"
                 },
                 {
-                    "name": "EDGE_RELEASE_DATETIME",
-                    "value": "2022-05-18T09:45:00Z"
-                },
-                {
                     "name": "CACHE_BAD_ENVIRONMENTS_SECONDS",
                     "value": "60"
                 },
                 {
-                    "name": "GUNICORN_KEEP_ALIVE",
-                    "value": "60"
-                },
-                {
-                    "name": "TASK_RUN_METHOD",
-                    "value": "TASK_PROCESSOR"
-                },
-                {
-                    "name": "CACHE_ENVIRONMENT_DOCUMENT_SECONDS",
-                    "value": "60"
-                },
-                {
-                    "name": "LOG_LEVEL",
-                    "value": "INFO"
-                },
-                {
-                    "name": "SSE_SERVER_BASE_URL",
-                    "value": "https://origin.realtime-staging.flagsmith.com"
-                },
-                {
-                    "name": "USE_POSTGRES_FOR_ANALYTICS",
-                    "value": "False"
+                    "name": "FEATURE_EVALUATION_CACHE_SECONDS",
+                    "value": "300"
                 },
                 {
                     "name": "USE_CACHE_FOR_USAGE_DATA",
@@ -183,128 +183,128 @@
                     "value": "300"
                 },
                 {
-                    "name": "INFLUXDB_ORG",
-                    "value": "ben.rometsch@bullet-train.io"
+                    "name": "EDGE_RELEASE_DATETIME",
+                    "value": "2022-06-07T10:00:00Z"
                 },
                 {
-                    "name": "INFLUXDB_BUCKET",
-                    "value": "api_staging"
+                    "name": "CACHE_ENVIRONMENT_DOCUMENT_SECONDS",
+                    "value": "60"
                 },
                 {
-                    "name": "INFLUXDB_URL",
-                    "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
+                    "name": "TASK_RUN_METHOD",
+                    "value": "TASK_PROCESSOR"
                 },
                 {
-                    "name": "DEFAULT_THROTTLE_CLASSES",
-                    "value": "core.throttling.UserRateThrottle,core.throttling.MasterAPIKeyUserRateThrottle"
+                    "name": "SSE_SERVER_BASE_URL",
+                    "value": "https://origin.realtime.flagsmith.com"
                 },
                 {
-                    "name": "USER_THROTTLE_CACHE_BACKEND",
-                    "value": "django_redis.cache.RedisCache"
-                },
-                {
-                    "name": "USER_THROTTLE_CACHE_LOCATION",
-                    "value": "rediss://serverless-redis-cache-7u3xil.serverless.euw2.cache.amazonaws.com:6379"
-                },
-                {
-                    "name": "USER_THROTTLE_CACHE_OPTIONS",
-                    "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient"
-                },
-                {
-                    "name": "MASTER_API_KEY_THROTTLE_RATE",
-                    "value": "10/sec"
+                    "name": "ENABLE_HUBSPOT_LEAD_TRACKING",
+                    "value": "True"
                 },
                 {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
                 },
                 {
-                    "name": "PROMETHEUS_ENABLED",
-                    "value": "True"
-                },
-                {
-                    "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
-                    "value": "True"
-                },
-                {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
                     "value": "False"
                 },
                 {
+                    "name": "PROMETHEUS_ENABLED",
+                    "value": "True"
+                },
+                {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
                     "value": "https://edge.api.flagsmith.com/api/v1/"
+                },
+                {
+                    "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
+                    "value": "True"
                 }
             ],
             "secrets": [
                 {
                     "name": "CHARGEBEE_API_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:CHARGEBEE_API_KEY::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:CHARGEBEE_API_KEY::"
                 },
                 {
                     "name": "DATABASE_URL",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DATABASE_URL::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DATABASE_URL::"
                 },
                 {
                     "name": "DJANGO_SECRET_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DJANGO_SECRET_KEY::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
                 },
                 {
                     "name": "E2E_TEST_AUTH_TOKEN",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:E2E_TEST_AUTH_TOKEN::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:E2E_TEST_AUTH_TOKEN::"
                 },
                 {
                     "name": "FORCE_SENTRY_TRACE_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:FORCE_SENTRY_TRACE_KEY::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:FORCE_SENTRY_TRACE_KEY::"
                 },
                 {
                     "name": "GITHUB_CLIENT_SECRET",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:GITHUB_CLIENT_SECRET::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:GITHUB_CLIENT_SECRET::"
                 },
                 {
                     "name": "INFLUXDB_TOKEN",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:INFLUXDB_TOKEN::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:INFLUXDB_TOKEN::"
                 },
                 {
                     "name": "OAUTH_CLIENT_SECRET",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:OAUTH_CLIENT_SECRET::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:OAUTH_CLIENT_SECRET::"
                 },
                 {
                     "name": "SENDGRID_API_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SENDGRID_API_KEY::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SENDGRID_API_KEY::"
                 },
                 {
                     "name": "SENTRY_SDK_DSN",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SENTRY_SDK_DSN::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SENTRY_SDK_DSN::"
                 },
                 {
                     "name": "SLACK_CLIENT_SECRET",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SLACK_CLIENT_SECRET::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SLACK_CLIENT_SECRET::"
                 },
                 {
                     "name": "EDGE_REQUEST_SIGNING_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:EDGE_REQUEST_SIGNING_KEY::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:EDGE_REQUEST_SIGNING_KEY::"
                 },
                 {
                     "name": "SSE_AUTHENTICATION_TOKEN",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:SSE_AUTHENTICATION_TOKEN::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SSE_AUTHENTICATION_TOKEN::"
                 },
                 {
                     "name": "GITHUB_WEBHOOK_SECRET",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:GITHUB_WEBHOOK_SECRET::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:GITHUB_WEBHOOK_SECRET::"
                 },
                 {
                     "name": "GITHUB_PEM",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:GITHUB_PEM-Bfoaql"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:GITHUB_PEM-E1Ot8p"
+                },
+                {
+                    "name": "HUBSPOT_ACCESS_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:HUBSPOT_ACCESS_TOKEN::"
                 },
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
+                },
+                {
+                    "name": "PYLON_IDENTITY_VERIFICATION_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:PYLON_IDENTITY_VERIFICATION_SECRET::"
+                },
+                {
+                    "name": "FEATURE_LIFECYCLE_GITHUB_PAT",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:FEATURE_LIFECYCLE_GITHUB_PAT-tjvYW4"
                 }
             ],
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
-                    "awslogs-group": "flagsmith-fargate-eu-west-2-8e1e329",
+                    "awslogs-group": "flagsmith-fargate-eu-west-2-e815bfd",
                     "awslogs-region": "eu-west-2",
                     "awslogs-stream-prefix": "awslogs-flagsmith"
                 }

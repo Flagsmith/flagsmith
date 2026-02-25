@@ -140,21 +140,18 @@ jobs:
         uses: daun/playwright-report-summary@v3
         with:
           report-file: frontend/e2e/playwright-report/results.json
-          comment-title: 'Playwright Test Results (${{ steps.test-type.outputs.label }})'
+          comment-title: 'Playwright Test Results (${{ steps.test-type.outputs.label }} - ${{ inputs.runs-on }})'
+          report-tag: 'playwright-${{ steps.test-type.outputs.label }}-${{ inputs.runs-on }}'
           custom-info: |
-            **🖥️ Runner:** ${{ inputs.runs-on }}
-            **🔄 Run:** #${{ github.run_number }} (attempt ${{ github.run_attempt }})
-            **📋 Test Type:** ${{ steps.test-type.outputs.label }}
+            **🔄 Run:** [#${{ github.run_number }} (attempt ${{ github.run_attempt }})](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
       - name: Comment PR with test results (failure)
         if: failure() && github.event_name == 'pull_request'
         uses: daun/playwright-report-summary@v3
         with:
           report-file: frontend/e2e/playwright-report/results.json
-          comment-title: 'Playwright Test Results (${{ steps.test-type.outputs.label }})'
+          comment-title: 'Playwright Test Results (${{ steps.test-type.outputs.label }} - ${{ inputs.runs-on }})'
+          report-tag: 'playwright-${{ steps.test-type.outputs.label }}-${{ inputs.runs-on }}'
           custom-info: |
             **📦 Artifacts:** [View test results and HTML report](${{ steps.artifact-url.outputs.url }})
-
-            **🖥️ Runner:** ${{ inputs.runs-on }}
-            **🔄 Run:** #${{ github.run_number }} (attempt ${{ github.run_attempt }})
-            **📋 Test Type:** ${{ steps.test-type.outputs.label }}
+            **🔄 Run:** [#${{ github.run_number }} (attempt ${{ github.run_attempt }})](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})

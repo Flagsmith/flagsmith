@@ -1,8 +1,8 @@
 name: API Pull Request
 
 permissions:
-  contents: read     # For actions/checkout
-  id-token: write    # For Codecov OIDC
+  contents: read # For actions/checkout
+  id-token: write # For Codecov OIDC
 
 on:
   pull_request:
@@ -34,9 +34,9 @@ jobs:
     name: API Unit Tests
 
     strategy:
-      max-parallel: 2
+      max-parallel: 3
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - name: Cloning repo
@@ -80,7 +80,7 @@ jobs:
         run: make test
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           PYTHON: ${{ matrix.python-version }}
         with:

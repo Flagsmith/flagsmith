@@ -58,13 +58,13 @@ module.exports = {
                     'style': 'style.[fullhash].css',
                 },
             });
-        })).concat([
+        })).concat(process.env.SENTRY_AUTH_TOKEN ? [
             sentryWebpackPlugin({
                 org: "flagsmith",
                 project: "flagsmith-frontend",
                 authToken: process.env.SENTRY_AUTH_TOKEN,
             }),
-        ]),
+        ] : []),
 
     module: {
         rules: require('./loaders').concat([

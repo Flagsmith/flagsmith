@@ -638,6 +638,8 @@ class Webhook(AbstractBaseExportableWebhookModel):
         identity_id: int | str | None = None,
         identity_identifier: str | None = None,
         feature_segment: FeatureSegment | None = None,
+        multivariate_feature_state_values: list[MultivariateFeatureStateValue]
+        | None = None,
     ) -> dict:  # type: ignore[type-arg]
         if (identity_id or identity_identifier) and not (
             identity_id and identity_identifier
@@ -647,8 +649,20 @@ class Webhook(AbstractBaseExportableWebhookModel):
         if (identity_id and identity_identifier) and feature_segment:
             raise ValueError("Cannot provide identity information and feature segment")
 
+        mv_values_data = [
+            {
+                "id": mv.id,
+                "multivariate_feature_option": {
+                    "id": mv.multivariate_feature_option_id,
+                    "value": mv.multivariate_feature_option.value,
+                },
+                "percentage_allocation": mv.percentage_allocation,
+            }
+            for mv in (multivariate_feature_state_values or [])
+        ]
+
         # TODO: refactor to use a serializer / schema
-        data = {
+        data: dict[str, typing.Any] = {
             "feature": {
                 "id": feature.id,
                 "created_date": feature.created_date.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -671,6 +685,7 @@ class Webhook(AbstractBaseExportableWebhookModel):
             "feature_segment": None,
             "enabled": enabled,
             "feature_state_value": value,
+            "multivariate_feature_state_values": mv_values_data,
         }
         if feature_segment:
             data["feature_segment"] = {

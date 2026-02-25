@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
+import Project from './common/project'
 
 /**
  * Read environment variables from file.
@@ -27,7 +28,7 @@ export default defineConfig({
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'],
-        headless: !process.env.E2E_DEV,
+        headless: !process.env.E2E_SHOW_BROWSER,
 
         // Launch options for Firefox
         launchOptions: {
@@ -91,10 +92,10 @@ export default defineConfig({
     video: 'off',
   },
   /* Run your local dev server before starting the tests */
-  webServer: process.env.E2E_LOCAL
+  webServer: process.env.E2E_SKIP_RUN_FRONTEND
     ? undefined
     : {
-        command: 'npm run start',
+        command: `cross-env E2E=true ENV=${Project.env} npm run start`,
         port: 8080,
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,

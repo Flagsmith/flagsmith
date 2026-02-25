@@ -1,5 +1,5 @@
 {
-    "family": "flagsmith-api",
+    "family": "admin-api",
     "networkMode": "awsvpc",
     "executionRoleArn": "arn:aws:iam::084060095745:role/task-exec-role-741a7e3",
     "taskRoleArn": "arn:aws:iam::084060095745:role/task-exec-role-741a7e3",
@@ -11,11 +11,6 @@
             ],
             "cpu": 0,
             "portMappings": [
-                {
-                    "containerPort": 9100,
-                    "hostPort": 9100,
-                    "protocol": "tcp"
-                },
                 {
                     "containerPort": 8000,
                     "hostPort": 8000,
@@ -132,23 +127,11 @@
                 },
                 {
                     "name": "DEFAULT_THROTTLE_CLASSES",
-                    "value": "core.throttling.UserRateThrottle,core.throttling.MasterAPIKeyUserRateThrottle"
+                    "value": "core.throttling.UserRateThrottle"
                 },
                 {
-                    "name": "USER_THROTTLE_CACHE_BACKEND",
-                    "value": "django_redis.cache.RedisCache"
-                },
-                {
-                    "name": "USER_THROTTLE_CACHE_LOCATION",
-                    "value": "rediss://serverless-redis-cache-c4q8sw.serverless.euw2.cache.amazonaws.com:6379"
-                },
-                {
-                    "name": "USER_THROTTLE_CACHE_OPTIONS",
-                    "value": "CLIENT_CLASS=core.redis_cluster.SafeRedisClusterClient"
-                },
-                {
-                    "name": "MASTER_API_KEY_THROTTLE_RATE",
-                    "value": "100/sec"
+                    "name": "USER_THROTTLE_RATE",
+                    "value": "10/sec"
                 },
                 {
                     "name": "OAUTH_CLIENT_ID",
@@ -165,14 +148,6 @@
                 {
                     "name": "SENDER_EMAIL",
                     "value": "Flagsmith <support@flagsmith.com>"
-                },
-                {
-                    "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.000003"
-                },
-                {
-                    "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.002"
                 },
                 {
                     "name": "SLACK_CLIENT_ID",
@@ -241,6 +216,10 @@
                 {
                     "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
                     "value": "True"
+                },
+                {
+                    "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
+                    "value": "0.5"
                 }
             ],
             "secrets": [

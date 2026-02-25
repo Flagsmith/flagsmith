@@ -16,6 +16,7 @@ test.describe('Environment Tests', () => {
     log('Login')
     await login(E2E_USER, PASSWORD)
     await gotoProject(E2E_TEST_PROJECT)
+    await waitForElementVisible(byId('switch-environment-development'))
     log('Create environment')
     await click('#create-env-link')
     await createEnvironment('Staging')

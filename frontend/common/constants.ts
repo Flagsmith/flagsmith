@@ -441,13 +441,13 @@ const Constants = {
     unhealthyColor: '#D35400',
   },
   featurePanelTabs: {
-    ANALYTICS: 'analytics',
     FEATURE_HEALTH: 'feature-health',
     HISTORY: 'history',
     IDENTITY_OVERRIDES: 'identity-overrides',
     LINKS: 'links',
     SEGMENT_OVERRIDES: 'segment-overrides',
     SETTINGS: 'settings',
+    USAGE: 'usage',
     VALUE: 'value',
   },
   forms: {
@@ -470,6 +470,9 @@ const Constants = {
       : apiUrl
   },
   getUpgradeUrl: (feature?: string) => {
+    // TODO: deprecate usages of this helper function without
+    //  providing feature since the billing page self hosted
+    //  has links to the pricing page anyway.
     return Utils.isSaas()
       ? '/organisation-settings?tab=billing'
       : `https://www.flagsmith.com/pricing${

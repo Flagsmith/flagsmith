@@ -96,7 +96,7 @@ django-migrate: docker-up wait-for-db
 
 .PHONY: django-shell
 django-shell:
-	poetry run python manage.py shell
+	poetry run python manage.py shell_plus
 
 .PHONY: django-collect-static
 django-collect-static:
