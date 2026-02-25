@@ -88,7 +88,6 @@ test.describe('Environment Permission Tests', () => {
     await login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
     await gotoProject(PROJECT_NAME)
     await waitForElementVisible(byId('switch-environment-production'))
-    await waitForElementVisible(byId('switch-environment-production'))
     await logout()
 
     log('User with permissions can update feature state')

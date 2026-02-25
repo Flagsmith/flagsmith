@@ -35,7 +35,6 @@ test.describe('Roles Tests', () => {
     log('Add project permissions to the Role')
     await click(byId(`role-0`))
     await click(byId('permissions-tab'))
-    await click(byId('permissions-tab'))
     await waitForElementVisible(byId('project-permissions-tab'))
     await click(byId('project-permissions-tab'))
     await click(byId('permissions-my test project 7 role'))
