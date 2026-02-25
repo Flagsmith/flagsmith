@@ -216,6 +216,10 @@
                 {
                     "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
                     "value": "True"
+                },
+                {
+                    "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
+                    "value": "0.5"
                 }
             ],
             "secrets": [

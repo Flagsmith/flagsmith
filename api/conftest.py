@@ -305,6 +305,7 @@ def xero_subscription(organisation):  # type: ignore[no-untyped-def]
     return subscription
 
 
+@pytest.mark.saas_mode
 @pytest.fixture()
 def chargebee_subscription(organisation: Organisation) -> Subscription:
     subscription = Subscription.objects.get(organisation=organisation)
@@ -369,6 +370,11 @@ def free_subscription(organisation: Organisation) -> Subscription:
 @pytest.fixture()
 def project(organisation):  # type: ignore[no-untyped-def]
     return Project.objects.create(name="Test Project", organisation=organisation)
+
+
+@pytest.fixture()
+def project_b(organisation: Organisation) -> Project:
+    return Project.objects.create(name="Test Project B", organisation=organisation)  # type: ignore[no-any-return]
 
 
 @pytest.fixture()

@@ -66,11 +66,13 @@ def map_influx_record_values_to_labels(values: dict[str, Any]) -> Labels:
     labels: Labels = {}
     for label in LABELS:
         if label == "user_agent":
-            user_agent_influx_id: int | None = values.get("user_agent")
-            if user_agent_influx_id and (
-                user_agent := SDK_USER_AGENTS_BY_INFLUX_ID.get(user_agent_influx_id)
-            ):
-                labels["user_agent"] = user_agent
+            try:
+                influx_id = int(values["user_agent"])
+            except (KeyError, ValueError, TypeError):
+                pass
+            else:
+                if user_agent := SDK_USER_AGENTS_BY_INFLUX_ID.get(influx_id):
+                    labels["user_agent"] = user_agent
             continue
         if value := values.get(label):
             labels[label] = value
