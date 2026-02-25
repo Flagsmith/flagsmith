@@ -7,7 +7,7 @@ import { useGetProjectQuery } from 'common/services/useProject'
 import { useRouteContext } from 'components/providers/RouteContext'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
-import ProjectUsage from 'components/ProjectUsage'
+import ProjectUsageTab from './ProjectUsageTab'
 import EditHealthProvider from './tabs/EditHealthProvider'
 import FeatureExport from 'components/import-export/FeatureExport'
 import { GeneralTab } from './tabs/general-tab'
@@ -85,7 +85,7 @@ const ProjectSettingsPage = () => {
       label: 'SDK Settings',
     },
     {
-      component: <ProjectUsage projectId={String(project.id)} />,
+      component: <ProjectUsageTab projectId={String(project.id)} />,
       isVisible: true,
       key: 'usage',
       label: 'Usage',
