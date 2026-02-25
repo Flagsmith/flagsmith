@@ -1,3 +1,6 @@
+from django.core.exceptions import ObjectDoesNotExist
+
+from edge_api.identities.models import EdgeIdentity
 from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.dynamodb.types import (
     IdentityOverrideV2,
@@ -22,3 +25,14 @@ def get_edge_identity_overrides(
         )
         for item in override_items
     ]
+
+
+def get_overridden_feature_ids_for_edge_identity(identity_uuid: str) -> set[int]:
+    try:
+        identity_document = EdgeIdentity.dynamo_wrapper.get_item_from_uuid(
+            identity_uuid
+        )
+    except ObjectDoesNotExist:
+        return set()
+    identity = EdgeIdentity.from_identity_document(identity_document)
+    return {fs.feature.id for fs in identity.feature_overrides}
