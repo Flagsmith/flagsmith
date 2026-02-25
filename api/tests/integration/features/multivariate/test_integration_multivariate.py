@@ -182,6 +182,7 @@ def test_partial_update_mv_option__without_feature_and_allocation__uses_existing
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_partial_update_mv_option__handles_legacy_null_default_percentage_allocation(  # noqa: E501
+    client: APIClient,
     project: int,
     feature: int,
     mv_option_50_percent: int,
