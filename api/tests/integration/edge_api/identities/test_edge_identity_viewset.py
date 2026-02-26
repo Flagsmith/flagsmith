@@ -617,8 +617,10 @@ def test_edge_identities_update_trait(  # type: ignore[no-untyped-def]
     assert name == "put_item"
     assert list(
         filter(
-            lambda trait: trait["trait_key"] == trait_key
-            and trait["trait_value"] == updated_trait_value,
+            lambda trait: (
+                trait["trait_key"] == trait_key
+                and trait["trait_value"] == updated_trait_value
+            ),
             args[0]["identity_traits"],
         )
     )
