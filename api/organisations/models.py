@@ -261,7 +261,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     history = HistoricalRecords()
 
     def update_plan(self, plan_id):  # type: ignore[no-untyped-def]
-        plan_metadata = get_plan_meta_data(plan_id)  # type: ignore[no-untyped-call]
+        plan_metadata = get_plan_meta_data(plan_id)
         self.cancellation_date = None
         self.plan = plan_id
         self.max_seats = get_max_seats_for_plan(plan_metadata)
@@ -375,11 +375,13 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             return None
 
         if not self.customer_id:
-            self.customer_id = get_customer_id_from_subscription_id(  # type: ignore[no-untyped-call]
+            self.customer_id = get_customer_id_from_subscription_id(
                 self.subscription_id
             )
             self.save()
-        return get_portal_url(self.customer_id, redirect_url)  # type: ignore[no-untyped-call]
+        if not self.customer_id:
+            return None
+        return get_portal_url(self.customer_id, redirect_url)
 
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
         if self.is_free_plan:

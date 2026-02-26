@@ -198,7 +198,7 @@ def test_chargebee_get_plan_meta_data_returns_correct_metadata(
     )
 
     # When
-    plan_meta_data = get_plan_meta_data(plan_id)  # type: ignore[no-untyped-call]
+    plan_meta_data = get_plan_meta_data(plan_id)
 
     # Then
     assert plan_meta_data == {
@@ -230,7 +230,7 @@ def test_chargebee_get_subscription_data_from_hosted_page_returns_expected_value
     mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(expected_max_seats)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # When
-    subscription_data = get_subscription_data_from_hosted_page("hosted_page_id")  # type: ignore[no-untyped-call]
+    subscription_data = get_subscription_data_from_hosted_page("hosted_page_id")
 
     # Then
     assert subscription_data["subscription_id"] == subscription_id
@@ -252,7 +252,7 @@ def test_get_chargebee_portal_url(mocker: MockerFixture) -> None:
     )
 
     # When
-    portal_url = get_portal_url("some-customer-id", "https://redirect.url.com")  # type: ignore[no-untyped-call]
+    portal_url = get_portal_url("some-customer-id", "https://redirect.url.com")
 
     # Then
     assert portal_url == access_url
@@ -271,7 +271,7 @@ def test_chargebee_get_customer_id_from_subscription(
     )
 
     # When
-    customer_id = get_customer_id_from_subscription_id("subscription-id")  # type: ignore[no-untyped-call]
+    customer_id = get_customer_id_from_subscription_id("subscription-id")
 
     # Then
     assert customer_id == expected_customer_id
