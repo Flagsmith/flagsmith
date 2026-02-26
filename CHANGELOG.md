@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.219.0](https://github.com/Flagsmith/flagsmith/compare/v2.218.0...v2.219.0) (2026-02-26)
+
+
+### Features
+
+* support project level custom fields ([#6736](https://github.com/Flagsmith/flagsmith/issues/6736)) ([835e9cb](https://github.com/Flagsmith/flagsmith/commit/835e9cbb4469d788d829f745b79389a4ef8ade4f))
+
+
+### Bug Fixes
+
+* breakdown-overrides-limit-in-project-settings ([#6783](https://github.com/Flagsmith/flagsmith/issues/6783)) ([7cc74f4](https://github.com/Flagsmith/flagsmith/commit/7cc74f492ecae78c27c04a0cde3840e23e720043))
+
+
+### Dependency Updates
+
+* Bump chargebee from 2.7.7 to 3.10.0 ([#6788](https://github.com/Flagsmith/flagsmith/issues/6788)) ([9a09772](https://github.com/Flagsmith/flagsmith/commit/9a09772c6b40a8b707ae8be4e4c15cef7a4349a0))
+* Update sentry sdk from 2.8.0 -&gt; 2.53.0 ([#6751](https://github.com/Flagsmith/flagsmith/issues/6751)) ([d90c226](https://github.com/Flagsmith/flagsmith/commit/d90c226d01908aee7e1bf047b8be95d2fb6f89a1))
+
+
+### CI
+
+* added-needs-deploy-ecs-to-push-gram-schema ([#6778](https://github.com/Flagsmith/flagsmith/issues/6778)) ([692d3db](https://github.com/Flagsmith/flagsmith/commit/692d3db22ec33a53a354e59600f729a4208b95e4))
+
 ## [2.218.0](https://github.com/Flagsmith/flagsmith/compare/v2.217.1...v2.218.0) (2026-02-25)
 
 
