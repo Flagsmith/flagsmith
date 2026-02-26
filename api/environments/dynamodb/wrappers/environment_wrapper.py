@@ -1,5 +1,4 @@
 import typing
-from dataclasses import dataclass
 from typing import Any, Iterable
 
 from boto3.dynamodb.conditions import Key
@@ -28,11 +27,6 @@ if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.type_defs import QueryInputRequestTypeDef
 
     from environments.models import Environment
-
-
-@dataclass
-class IdentityOverridesQueryResponse:
-    items: list[dict[str, Any]]
 
 
 class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper):
