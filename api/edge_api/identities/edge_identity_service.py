@@ -28,6 +28,10 @@ def get_edge_identity_overrides(
 
 
 def get_edge_identity_override_keys(environment_id: int) -> list[str]:
+    """
+    Get all the identity overrides for an environment, returning only the document key
+    for optimised performance when the key is all that is needed.
+    """
     override_items = (
         ddb_environment_v2_wrapper.get_identity_overrides_by_environment_id(
             environment_id=environment_id,
