@@ -6,6 +6,15 @@ from datetime import datetime
 from chargebee.api_error import (  # type: ignore[import-untyped]
     APIError as ChargebeeAPIError,
 )
+from chargebee.models.hosted_page.operations import (  # type: ignore[import-untyped]
+    HostedPage as HostedPageOps,
+)
+from chargebee.models.portal_session.operations import (  # type: ignore[import-untyped]
+    PortalSession as PortalSessionOps,
+)
+from chargebee.models.subscription.operations import (  # type: ignore[import-untyped]
+    Subscription as SubscriptionOps,
+)
 from chargebee.models.subscription.responses import (  # type: ignore[import-untyped]
     SubscriptionResponse,
 )
@@ -99,9 +108,9 @@ def get_plan_details(plan_id):  # type: ignore[no-untyped-def]
 
 def get_portal_url(customer_id, redirect_url):  # type: ignore[no-untyped-def]
     result = chargebee_client.PortalSession.create(
-        chargebee_client.PortalSession.CreateParams(
+        PortalSessionOps.CreateParams(
             redirect_url=redirect_url,
-            customer=chargebee_client.PortalSession.CreateCustomerParams(
+            customer=PortalSessionOps.CreateCustomerParams(
                 id=customer_id,
             ),
         )
@@ -120,8 +129,8 @@ def get_hosted_page_url_for_subscription_upgrade(
     subscription_id: str, plan_id: str
 ) -> str:
     checkout_existing_response = chargebee_client.HostedPage.checkout_existing(
-        chargebee_client.HostedPage.CheckoutExistingParams(
-            subscription=chargebee_client.HostedPage.CheckoutExistingSubscriptionParams(
+        HostedPageOps.CheckoutExistingParams(
+            subscription=HostedPageOps.CheckoutExistingSubscriptionParams(
                 id=subscription_id,
                 plan_id=plan_id,
             ),
@@ -173,7 +182,7 @@ def cancel_subscription(subscription_id: str):  # type: ignore[no-untyped-def]
     try:
         chargebee_client.Subscription.cancel(
             subscription_id,
-            chargebee_client.Subscription.CancelParams(end_of_term=True),
+            SubscriptionOps.CancelParams(end_of_term=True),
         )
     except ChargebeeAPIError as e:
         msg = "Cannot cancel CB subscription for subscription id: %s" % subscription_id
@@ -198,9 +207,9 @@ def add_single_seat(subscription_id: str):  # type: ignore[no-untyped-def]
 
         chargebee_client.Subscription.update(
             subscription_id,
-            chargebee_client.Subscription.UpdateParams(
+            SubscriptionOps.UpdateParams(
                 addons=[
-                    chargebee_client.Subscription.UpdateAddonParams(
+                    SubscriptionOps.UpdateAddonParams(
                         id=ADDITIONAL_SEAT_ADDON_ID,
                         quantity=current_seats + 1,
                     )
@@ -251,9 +260,9 @@ def add_100k_api_calls(
     try:
         chargebee_client.Subscription.update(
             subscription_id,
-            chargebee_client.Subscription.UpdateParams(
+            SubscriptionOps.UpdateParams(
                 addons=[
-                    chargebee_client.Subscription.UpdateAddonParams(
+                    SubscriptionOps.UpdateAddonParams(
                         id=addon_id,
                         quantity=count,
                     )

@@ -287,11 +287,6 @@ def test_chargebee_get_hosted_page_url_for_subscription_upgrade(
     mock_cb = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
-    # Restore real TypedDict constructors so we can assert on real dicts
-    mock_cb.HostedPage.CheckoutExistingParams = HostedPageOps.CheckoutExistingParams
-    mock_cb.HostedPage.CheckoutExistingSubscriptionParams = (
-        HostedPageOps.CheckoutExistingSubscriptionParams
-    )
     mock_cb.HostedPage.checkout_existing.return_value = mocker.MagicMock(
         hosted_page=mocker.MagicMock(url=url)
     )
@@ -406,7 +401,6 @@ def test_cancel_subscription(mocker) -> None:  # type: ignore[no-untyped-def]
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
-    mocked_chargebee.Subscription.CancelParams = SubscriptionOps.CancelParams
     subscription_id = "sub-id"
 
     # When
@@ -524,8 +518,6 @@ def test_add_single_seat_with_existing_addon(mocker) -> None:  # type: ignore[no
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
-    mocked_chargebee.Subscription.UpdateParams = SubscriptionOps.UpdateParams
-    mocked_chargebee.Subscription.UpdateAddonParams = SubscriptionOps.UpdateAddonParams
 
     # tie that subscription object to the mocked chargebee object
     mocked_chargebee.Subscription.retrieve.return_value.subscription = (
@@ -563,8 +555,6 @@ def test_add_single_seat_without_existing_addon(mocker) -> None:  # type: ignore
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
-    mocked_chargebee.Subscription.UpdateParams = SubscriptionOps.UpdateParams
-    mocked_chargebee.Subscription.UpdateAddonParams = SubscriptionOps.UpdateAddonParams
 
     # tie that subscription object to the mocked chargebee object
     mocked_chargebee.Subscription.retrieve.return_value.subscription = (
@@ -596,8 +586,6 @@ def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(  # type:
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
-    mocked_chargebee.Subscription.UpdateParams = SubscriptionOps.UpdateParams
-    mocked_chargebee.Subscription.UpdateAddonParams = SubscriptionOps.UpdateAddonParams
 
     # Typical non-payment related error from Chargebee.
     chargebee_response_data = {
