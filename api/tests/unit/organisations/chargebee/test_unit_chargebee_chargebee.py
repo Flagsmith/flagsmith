@@ -27,7 +27,12 @@ from organisations.chargebee import (  # type: ignore[attr-defined]
     get_subscription_data_from_hosted_page,
     get_subscription_metadata_from_id,
 )
-from organisations.chargebee.chargebee import cancel_subscription
+from organisations.chargebee.chargebee import (
+    cancel_subscription,
+    get_customer_id_from_hosted_page,
+    get_plan_details,
+    get_subscription_from_hosted_page,
+)
 from organisations.chargebee.constants import (
     ADDITIONAL_API_SCALE_UP_ADDON_ID,
     ADDITIONAL_SEAT_ADDON_ID,
@@ -198,7 +203,7 @@ def test_chargebee_get_plan_meta_data_returns_correct_metadata(
     )
 
     # When
-    plan_meta_data = get_plan_meta_data(plan_id)  # type: ignore[no-untyped-call]
+    plan_meta_data = get_plan_meta_data(plan_id)
 
     # Then
     assert plan_meta_data == {
@@ -230,7 +235,7 @@ def test_chargebee_get_subscription_data_from_hosted_page_returns_expected_value
     mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(expected_max_seats)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # When
-    subscription_data = get_subscription_data_from_hosted_page("hosted_page_id")  # type: ignore[no-untyped-call]
+    subscription_data = get_subscription_data_from_hosted_page("hosted_page_id")
 
     # Then
     assert subscription_data["subscription_id"] == subscription_id
@@ -252,7 +257,7 @@ def test_get_chargebee_portal_url(mocker: MockerFixture) -> None:
     )
 
     # When
-    portal_url = get_portal_url("some-customer-id", "https://redirect.url.com")  # type: ignore[no-untyped-call]
+    portal_url = get_portal_url("some-customer-id", "https://redirect.url.com")
 
     # Then
     assert portal_url == access_url
@@ -271,7 +276,7 @@ def test_chargebee_get_customer_id_from_subscription(
     )
 
     # When
-    customer_id = get_customer_id_from_subscription_id("subscription-id")  # type: ignore[no-untyped-call]
+    customer_id = get_customer_id_from_subscription_id("subscription-id")
 
     # Then
     assert customer_id == expected_customer_id
@@ -713,3 +718,76 @@ def test_add_100k_api_calls_when_chargebee_api_error_has_no_error_code(
             count=1,
             invoice_immediately=True,
         )
+
+
+def test_get_subscription_from_hosted_page__no_subscription__returns_none(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    hosted_page = mocker.MagicMock(content={"customer": {"id": "cust-1"}})
+
+    # When
+    result = get_subscription_from_hosted_page(hosted_page)
+
+    # Then
+    assert result is None
+
+
+def test_get_customer_id_from_hosted_page__no_customer__returns_none(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    hosted_page = mocker.MagicMock(
+        content={"subscription": {"id": "sub-1", "plan_id": "plan-1"}}
+    )
+
+    # When
+    result = get_customer_id_from_hosted_page(hosted_page)
+
+    # Then
+    assert result is None
+
+
+def test_get_plan_details__empty_plan_id__returns_none() -> None:
+    # Given
+    plan_id = ""
+
+    # When
+    result = get_plan_details(plan_id)
+
+    # Then
+    assert result is None
+
+
+def test_get_portal_url__no_portal_session__returns_none(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    mock_result = mocker.MagicMock(spec=[])  # no attributes at all
+    mock_cb.PortalSession.create.return_value = mock_result
+
+    # When
+    result = get_portal_url("customer-id", "https://redirect.url.com")
+
+    # Then
+    assert result is None
+
+
+def test_get_customer_id_from_subscription_id__no_customer__returns_none(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    mock_response = mocker.MagicMock(spec=[])  # no customer attribute
+    mock_cb.Subscription.retrieve.return_value = mock_response
+
+    # When
+    result = get_customer_id_from_subscription_id("sub-123")
+
+    # Then
+    assert result is None
