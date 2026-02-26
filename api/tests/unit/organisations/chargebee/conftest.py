@@ -42,7 +42,7 @@ def mock_subscription_response(
         addons=None,  # type: ignore[arg-type]
     )
     mocked_chargebee = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee_client"
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
 
     # tie that subscription object to the mocked chargebee object
@@ -74,7 +74,7 @@ def mock_subscription_response_with_addons(
         addons=[MockChargeBeeAddOn(addon_id=addon_id, quantity=1)],
     )
     mocked_chargebee = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee_client"
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
 
     # tie that subscription object to the mocked chargebee object

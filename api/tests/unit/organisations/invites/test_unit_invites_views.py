@@ -418,7 +418,7 @@ def test_join_organisation_returns_400_if_payment_fails(
     mocked_cb_subscription = mocker.MagicMock(addons=[])
 
     mocked_chargebee = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee_client"
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
     mocked_chargebee.Subscription.retrieve.return_value = mocked_cb_subscription
 

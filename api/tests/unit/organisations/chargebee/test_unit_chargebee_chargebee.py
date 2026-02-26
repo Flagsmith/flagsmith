@@ -1,11 +1,15 @@
 from datetime import datetime
-from unittest import mock
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from chargebee import APIError  # type: ignore[import-untyped]
 from chargebee.api_error import (  # type: ignore[import-untyped]
     APIError as ChargebeeAPIError,
+)
+from chargebee.models.hosted_page.operations import (  # type: ignore[import-untyped]
+    HostedPage as HostedPageOps,
+)
+from chargebee.models.subscription.operations import (  # type: ignore[import-untyped]
+    Subscription as SubscriptionOps,
 )
 from pytest_mock import MockerFixture
 from pytz import UTC
@@ -149,12 +153,11 @@ class MockChargeBeePortalSession:
         self.access_url = access_url
 
 
-def test_chargebee_get_max_seats_for_plan_returns_max_seats_for_plan() -> None:
+def test_chargebee_get_max_seats_for_plan_returns_max_seats_for_plan(
+    mocker: MockerFixture,
+) -> None:
     # Given
-    monkeypatch = MonkeyPatch()
-    mock_cb = mock.MagicMock()
-
-    monkeypatch.setattr("organisations.chargebee.chargebee.chargebee_client", mock_cb)
+    mocker.patch("organisations.chargebee.chargebee.chargebee_client", autospec=True)
 
     meta_data = {"seats": 3, "api_calls": 50000}
 
@@ -165,12 +168,11 @@ def test_chargebee_get_max_seats_for_plan_returns_max_seats_for_plan() -> None:
     assert max_seats == meta_data["seats"]
 
 
-def test_chargebee_get_max_api_calls_for_plan_returns_max_api_calls_for_plan() -> None:
+def test_chargebee_get_max_api_calls_for_plan_returns_max_api_calls_for_plan(
+    mocker: MockerFixture,
+) -> None:
     # Given
-    monkeypatch = MonkeyPatch()
-    mock_cb = mock.MagicMock()
-
-    monkeypatch.setattr("organisations.chargebee.chargebee.chargebee_client", mock_cb)
+    mocker.patch("organisations.chargebee.chargebee.chargebee_client", autospec=True)
     meta_data = {"seats": 3, "api_calls": 50000}
 
     # When
@@ -180,15 +182,16 @@ def test_chargebee_get_max_api_calls_for_plan_returns_max_api_calls_for_plan() -
     assert max_api_calls == meta_data["api_calls"]
 
 
-def test_chargebee_get_plan_meta_data_returns_correct_metadata() -> None:
+def test_chargebee_get_plan_meta_data_returns_correct_metadata(
+    mocker: MockerFixture,
+) -> None:
     # Given
     plan_id = "startup"
     expected_max_seats = 3
     expected_max_api_calls = 50
-    monkeypatch = MonkeyPatch()
-    mock_cb = mock.MagicMock()
-
-    monkeypatch.setattr("organisations.chargebee.chargebee.chargebee_client", mock_cb)
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
 
     mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(  # type: ignore[no-untyped-call]
         expected_max_seats, expected_max_api_calls
@@ -205,19 +208,18 @@ def test_chargebee_get_plan_meta_data_returns_correct_metadata() -> None:
     mock_cb.Plan.retrieve.assert_called_with(plan_id)
 
 
-def test_chargebee_get_subscription_data_from_hosted_page_returns_expected_values() -> (
-    None
-):
+def test_chargebee_get_subscription_data_from_hosted_page_returns_expected_values(
+    mocker: MockerFixture,
+) -> None:
     # Given
     subscription_id = "abc123"
     plan_id = "startup"
     expected_max_seats = 3
     created_at = datetime.now(tz=UTC)
     customer_id = "customer-id"
-    monkeypatch = MonkeyPatch()
-    mock_cb = mock.MagicMock()
-
-    monkeypatch.setattr("organisations.chargebee.chargebee.chargebee_client", mock_cb)
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
 
     mock_cb.HostedPage.retrieve.return_value = MockChargeBeeHostedPageResponse(  # type: ignore[no-untyped-call]
         subscription_id=subscription_id,
@@ -238,13 +240,12 @@ def test_chargebee_get_subscription_data_from_hosted_page_returns_expected_value
     assert subscription_data["customer_id"] == customer_id
 
 
-def test_get_chargebee_portal_url() -> None:
+def test_get_chargebee_portal_url(mocker: MockerFixture) -> None:
     # Given
     access_url = "https://test.url.com"
-    monkeypatch = MonkeyPatch()
-    mock_cb = mock.MagicMock()
-
-    monkeypatch.setattr("organisations.chargebee.chargebee.chargebee_client", mock_cb)
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
 
     mock_cb.PortalSession.create.return_value = MockChargeBeePortalSessionResponse(  # type: ignore[no-untyped-call]
         access_url
@@ -257,13 +258,14 @@ def test_get_chargebee_portal_url() -> None:
     assert portal_url == access_url
 
 
-def test_chargebee_get_customer_id_from_subscription() -> None:
+def test_chargebee_get_customer_id_from_subscription(
+    mocker: MockerFixture,
+) -> None:
     # Given
     expected_customer_id = "customer-id"
-    monkeypatch = MonkeyPatch()
-    mock_cb = mock.MagicMock()
-
-    monkeypatch.setattr("organisations.chargebee.chargebee.chargebee_client", mock_cb)
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
     mock_cb.Subscription.retrieve.return_value = MockChargeBeeSubscriptionResponse(
         customer_id=expected_customer_id
     )
@@ -275,17 +277,23 @@ def test_chargebee_get_customer_id_from_subscription() -> None:
     assert customer_id == expected_customer_id
 
 
-def test_chargebee_get_hosted_page_url_for_subscription_upgrade() -> None:
+def test_chargebee_get_hosted_page_url_for_subscription_upgrade(
+    mocker: MockerFixture,
+) -> None:
     # Given
     subscription_id = "test-id"
     plan_id = "plan-id"
     url = "https://some.url.com/some/page/"
-    monkeypatch = MonkeyPatch()
-    mock_cb = mock.MagicMock()
-
-    monkeypatch.setattr("organisations.chargebee.chargebee.chargebee_client", mock_cb)
-    mock_cb.HostedPage.checkout_existing.return_value = mock.MagicMock(
-        hosted_page=mock.MagicMock(url=url)
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    # Restore real TypedDict constructors so we can assert on real dicts
+    mock_cb.HostedPage.CheckoutExistingParams = HostedPageOps.CheckoutExistingParams
+    mock_cb.HostedPage.CheckoutExistingSubscriptionParams = (
+        HostedPageOps.CheckoutExistingSubscriptionParams
+    )
+    mock_cb.HostedPage.checkout_existing.return_value = mocker.MagicMock(
+        hosted_page=mocker.MagicMock(url=url)
     )
 
     # When
@@ -293,7 +301,14 @@ def test_chargebee_get_hosted_page_url_for_subscription_upgrade() -> None:
 
     # Then
     assert response == url
-    mock_cb.HostedPage.checkout_existing.assert_called_once()
+    mock_cb.HostedPage.checkout_existing.assert_called_once_with(
+        HostedPageOps.CheckoutExistingParams(
+            subscription=HostedPageOps.CheckoutExistingSubscriptionParams(
+                id=subscription_id,
+                plan_id=plan_id,
+            ),
+        )
+    )
 
 
 def test_extract_subscription_metadata(
@@ -389,17 +404,19 @@ def test_get_subscription_metadata_from_id(
 def test_cancel_subscription(mocker) -> None:  # type: ignore[no-untyped-def]
     # Given
     mocked_chargebee = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee_client"
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
+    mocked_chargebee.Subscription.CancelParams = SubscriptionOps.CancelParams
     subscription_id = "sub-id"
 
     # When
     cancel_subscription(subscription_id)
 
     # Then
-    mocked_chargebee.Subscription.cancel.assert_called_once()
-    call_args = mocked_chargebee.Subscription.cancel.call_args
-    assert call_args[0][0] == subscription_id
+    mocked_chargebee.Subscription.cancel.assert_called_once_with(
+        subscription_id,
+        SubscriptionOps.CancelParams(end_of_term=True),
+    )
 
 
 def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(  # type: ignore[no-untyped-def]
@@ -407,7 +424,7 @@ def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(  # type: i
 ) -> None:
     # Given
     mocked_chargebee = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee_client"
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
     subscription_id = "sub-id"
 
@@ -439,7 +456,7 @@ def test_get_subscription_metadata_from_id_returns_null_if_chargebee_error(  # t
 ) -> None:
     # Given
     mocked_chargebee = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee_client"
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
     mocked_chargebee.Subscription.retrieve.side_effect = APIError(
         http_code=200, json_obj=mocker.MagicMock()
@@ -463,7 +480,7 @@ def test_get_subscription_metadata_from_id_returns_none_for_invalid_subscription
 ) -> None:
     # Given
     mocked_chargebee = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee_client"
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
 
     # When
@@ -505,8 +522,10 @@ def test_add_single_seat_with_existing_addon(mocker) -> None:  # type: ignore[no
         addons=[mocker.MagicMock(id=addon_id, quantity=addon_quantity)],
     )
     mocked_chargebee = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee_client"
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
+    mocked_chargebee.Subscription.UpdateParams = SubscriptionOps.UpdateParams
+    mocked_chargebee.Subscription.UpdateAddonParams = SubscriptionOps.UpdateAddonParams
 
     # tie that subscription object to the mocked chargebee object
     mocked_chargebee.Subscription.retrieve.return_value.subscription = (
@@ -517,7 +536,18 @@ def test_add_single_seat_with_existing_addon(mocker) -> None:  # type: ignore[no
     add_single_seat(subscription_id)
 
     # Then
-    mocked_chargebee.Subscription.update.assert_called_once()
+    mocked_chargebee.Subscription.update.assert_called_once_with(
+        subscription_id,
+        SubscriptionOps.UpdateParams(
+            addons=[
+                SubscriptionOps.UpdateAddonParams(
+                    id=ADDITIONAL_SEAT_ADDON_ID, quantity=addon_quantity + 1
+                )
+            ],
+            prorate=True,
+            invoice_immediately=False,
+        ),
+    )
 
 
 def test_add_single_seat_without_existing_addon(mocker) -> None:  # type: ignore[no-untyped-def]
@@ -531,8 +561,10 @@ def test_add_single_seat_without_existing_addon(mocker) -> None:  # type: ignore
         addons=[],
     )
     mocked_chargebee = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee_client"
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
+    mocked_chargebee.Subscription.UpdateParams = SubscriptionOps.UpdateParams
+    mocked_chargebee.Subscription.UpdateAddonParams = SubscriptionOps.UpdateAddonParams
 
     # tie that subscription object to the mocked chargebee object
     mocked_chargebee.Subscription.retrieve.return_value.subscription = (
@@ -543,7 +575,18 @@ def test_add_single_seat_without_existing_addon(mocker) -> None:  # type: ignore
     add_single_seat(subscription_id)
 
     # Then
-    mocked_chargebee.Subscription.update.assert_called_once()
+    mocked_chargebee.Subscription.update.assert_called_once_with(
+        subscription_id,
+        SubscriptionOps.UpdateParams(
+            addons=[
+                SubscriptionOps.UpdateAddonParams(
+                    id=ADDITIONAL_SEAT_ADDON_ID, quantity=1
+                )
+            ],
+            prorate=True,
+            invoice_immediately=False,
+        ),
+    )
 
 
 def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(  # type: ignore[no-untyped-def]
@@ -551,8 +594,10 @@ def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(  # type:
 ) -> None:
     # Given
     mocked_chargebee = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee_client"
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
+    mocked_chargebee.Subscription.UpdateParams = SubscriptionOps.UpdateParams
+    mocked_chargebee.Subscription.UpdateAddonParams = SubscriptionOps.UpdateAddonParams
 
     # Typical non-payment related error from Chargebee.
     chargebee_response_data = {
@@ -584,7 +629,18 @@ def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(  # type:
         add_single_seat(subscription_id)
 
     # Then
-    mocked_chargebee.Subscription.update.assert_called_once()
+    mocked_chargebee.Subscription.update.assert_called_once_with(
+        subscription_id,
+        SubscriptionOps.UpdateParams(
+            addons=[
+                SubscriptionOps.UpdateAddonParams(
+                    id=ADDITIONAL_SEAT_ADDON_ID, quantity=1
+                )
+            ],
+            prorate=True,
+            invoice_immediately=False,
+        ),
+    )
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == "ERROR"
     assert (
@@ -597,7 +653,7 @@ def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(  # type:
 def test_add_100k_api_calls_when_count_is_empty(mocker: MockerFixture) -> None:
     # Given
     subscription_mock = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee_client"
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
     )
 
     # When
@@ -617,7 +673,9 @@ def test_add_100k_api_calls_when_chargebee_api_error_has_error_code(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    chargebee_mock = mocker.patch("organisations.chargebee.chargebee.chargebee_client")
+    chargebee_mock = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
     chargebee_response_data = {
         "message": "Subscription cannot be created as the payment collection failed. Gateway Error: Card declined.",
         "type": "payment",
@@ -644,7 +702,9 @@ def test_add_100k_api_calls_when_chargebee_api_error_has_no_error_code(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    chargebee_mock = mocker.patch("organisations.chargebee.chargebee.chargebee_client")
+    chargebee_mock = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
     chargebee_response_data = {
         "message": "Some massive data failure",
         "api_error_code": "halt_and_catch_fire",
