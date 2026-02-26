@@ -58,7 +58,7 @@ from metadata.models import (
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.code_references.models import FeatureFlagCodeReferencesScan
-from projects.models import EdgeV2MigrationStatus, Project, UserProjectPermission
+from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
 from tests.types import (
@@ -4450,17 +4450,13 @@ def test_create_feature__required_metadata_on_other_project__returns_201(
 
 def test_list_features__edge_v2_project__makes_one_dynamo_query(
     admin_client_new: APIClient,
-    project: Project,
+    dynamo_enabled_project: Project,
     environment: Environment,
     feature: Feature,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    # Set up project as a DynamoDB edge project with v2 migration complete,
-    # which is the path that triggers per-feature DynamoDB queries.
-    project.enable_dynamo_db = True
-    project.edge_v2_migration_status = EdgeV2MigrationStatus.COMPLETE
-    project.save()
+    project = dynamo_enabled_project
 
     # Create two additional features so we have 3 in total (including the fixture feature).
     Feature.objects.create(name="feature_2", project=project)
@@ -4486,8 +4482,6 @@ def test_list_features__edge_v2_project__makes_one_dynamo_query(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    feature_count = Feature.objects.filter(project=project).count()
-    assert feature_count == 3
 
     # Validate that only a single query is made to dynamodb, not one
     # per feature.
