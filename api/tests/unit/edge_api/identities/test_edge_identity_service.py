@@ -1,12 +1,22 @@
+import uuid
 from unittest.mock import MagicMock
 
 import pytest
 from django.core.exceptions import ObjectDoesNotExist
+from mypy_boto3_dynamodb.service_resource import Table
 from pytest_mock import MockerFixture
 
 from edge_api.identities.edge_identity_service import (
+    get_edge_identity_override_keys,
     get_overridden_feature_ids_for_edge_identity,
 )
+from environments.dynamodb import DynamoEnvironmentV2Wrapper
+from environments.dynamodb.utils import (
+    get_environments_v2_identity_override_document_key,
+)
+from environments.models import Environment
+from features.models import Feature
+from util.mappers import map_environment_to_environment_v2_document
 
 
 @pytest.fixture()
@@ -114,3 +124,37 @@ def test_get_overridden_feature_ids_for_edge_identity__nonexistent_identity__ret
 
     # Then
     assert result == set()
+
+
+def test_get_edge_identity_override_keys__returns_list_of_document_keys(
+    flagsmith_environments_v2_table: Table,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    environment: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    identity_uuid = str(uuid.uuid4())
+    identifier = "identity1"
+    document_key = get_environments_v2_identity_override_document_key(
+        feature_id=feature.id, identity_uuid=identity_uuid
+    )
+
+    # TODO: this should be a fixture!
+    override_document = {
+        "environment_id": str(environment.id),
+        "document_key": document_key,
+        "environment_api_key": environment.api_key,
+        "identifier": identifier,
+        "feature_state": {},
+    }
+
+    environment_document = map_environment_to_environment_v2_document(environment)
+
+    flagsmith_environments_v2_table.put_item(Item=override_document)
+    flagsmith_environments_v2_table.put_item(Item=environment_document)
+
+    # When
+    document_keys = get_edge_identity_override_keys(environment_id=environment.id)
+
+    # Then
+    assert document_keys == [document_key]

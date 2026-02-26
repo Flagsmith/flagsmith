@@ -72,16 +72,22 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         self,
         environment_id: int,
         feature_id: int | None = None,
+        projection_expression_attributes: list[str] | None = None,
     ) -> list[dict[str, Any]]:
-        try:
-            return list(
-                self.query_iter_all_items(
-                    KeyConditionExpression=self.get_identity_overrides_key_condition_expression(
-                        environment_id=environment_id,
-                        feature_id=feature_id,
-                    )
-                )
+        key_condition_expression = self.get_identity_overrides_key_condition_expression(
+            environment_id=environment_id,
+            feature_id=feature_id,
+        )
+        query_kwargs: dict[str, Any] = {
+            "KeyConditionExpression": key_condition_expression,
+        }
+        if projection_expression_attributes:
+            query_kwargs["ProjectionExpression"] = ",".join(
+                projection_expression_attributes
             )
+
+        try:
+            return list(self.query_iter_all_items(**query_kwargs))
         except KeyError as e:
             raise ObjectDoesNotExist() from e
 

@@ -2,7 +2,10 @@ import typing
 from concurrent.futures import ThreadPoolExecutor
 
 from edge_api.identities.edge_identity_service import (
-    get_edge_identity_overrides,
+    get_edge_identity_override_keys,
+)
+from environments.dynamodb.utils import (
+    get_feature_id_from_identity_override_document_key,
 )
 from features.dataclasses import EnvironmentFeatureOverridesData
 from features.versioning.versioning_service import get_environment_flags_list
@@ -86,7 +89,7 @@ def get_edge_overrides_data(environment: "Environment") -> OverridesData:
             environment,
         )
         get_overrides_data_future = executor.submit(
-            get_edge_identity_overrides,
+            get_edge_identity_override_keys,
             environment_id=environment.id,
         )
     all_overrides_data: OverridesData = {}
@@ -97,11 +100,12 @@ def get_edge_overrides_data(environment: "Environment") -> OverridesData:
         )
         if feature_state.feature_segment_id:
             env_feature_overrides_data.num_segment_overrides += 1
-    for identity_override in get_overrides_data_future.result():
+    for identity_override_key in get_overrides_data_future.result():
+        feature_id = get_feature_id_from_identity_override_document_key(
+            identity_override_key
+        )
         # Only override features that exists in core
-        if identity_override.feature_state.feature.id in all_overrides_data:
-            all_overrides_data[  # type: ignore[no-untyped-call]
-                identity_override.feature_state.feature.id
-            ].add_identity_override()
+        if feature_id in all_overrides_data:
+            all_overrides_data[feature_id].add_identity_override()  # type: ignore[no-untyped-call]
 
     return all_overrides_data

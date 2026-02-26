@@ -27,6 +27,16 @@ def get_edge_identity_overrides(
     ]
 
 
+def get_edge_identity_override_keys(environment_id: int) -> list[str]:
+    override_items = (
+        ddb_environment_v2_wrapper.get_identity_overrides_by_environment_id(
+            environment_id=environment_id,
+            projection_expression_attributes=["document_key"],
+        )
+    )
+    return [item["document_key"] for item in override_items]
+
+
 def get_overridden_feature_ids_for_edge_identity(identity_uuid: str) -> set[int]:
     try:
         identity_document = EdgeIdentity.dynamo_wrapper.get_item_from_uuid(
