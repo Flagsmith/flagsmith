@@ -39,10 +39,10 @@ def test_get_item_generator_fetches_all_items(mocker: MockerFixture) -> None:
     # Then
     assert returned_items == entries
 
-    # We only made two calls
-    assert mocked_chargebee.Plan.list.call_args_list == [
-        mocker.call(mocked_chargebee.Plan.ListParams()),
-        mocker.call(mocked_chargebee.Plan.ListParams()),
+    # We only made two calls with the correct offsets
+    assert mocked_chargebee.Plan.ListParams.call_args_list == [
+        mocker.call(limit=100, offset=None),
+        mocker.call(limit=100, offset=5),
     ]
 
 
