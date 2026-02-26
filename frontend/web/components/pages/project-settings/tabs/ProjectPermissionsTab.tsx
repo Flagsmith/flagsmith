@@ -48,17 +48,15 @@ export const ProjectPermissionsTab = ({
   }
 
   return (
-    <>
-      <EditPermissions
-        tabClassName='flat-panel'
-        id={projectId}
-        level='project'
-        roleTabTitle='Project Permissions'
-        roles={rolesData?.results || []}
-        permissions={permissionsData || []}
-        onSaveUser={handleSaveUser}
-        isEditRolePermission={rolesSuccess && !rolesError && !rolesLoading}
-      />
-    </>
+    <EditPermissions
+      tabClassName='flat-panel'
+      id={projectId}
+      level='project'
+      roleTabTitle='Project Permissions'
+      roles={rolesData?.results || []}
+      permissions={permissionsData || []}
+      onSaveUser={handleSaveUser}
+      isEditRolePermission={rolesSuccess && !rolesError && !rolesLoading}
+    />
   )
 }
