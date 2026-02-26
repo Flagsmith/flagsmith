@@ -7,13 +7,13 @@ from chargebee.api_error import (  # type: ignore[import-untyped]
     APIError as ChargebeeAPIError,
 )
 from chargebee.models.hosted_page.operations import (  # type: ignore[import-untyped]
-    HostedPage as HostedPageOps,
+    HostedPage as ChargebeeHostedPageOps,
 )
 from chargebee.models.hosted_page.responses import (  # type: ignore[import-untyped]
     HostedPageResponse,
 )
 from chargebee.models.plan.responses import (  # type: ignore[import-untyped]
-    RetrieveResponse as PlanRetrieveResponse,
+    RetrieveResponse as ChargebeePlanRetrieveResponse,
 )
 from chargebee.models.portal_session.operations import (  # type: ignore[import-untyped]
     PortalSession as PortalSessionOps,
@@ -112,7 +112,7 @@ def get_plan_meta_data(plan_id: str) -> dict[str, Any]:
     return {}
 
 
-def get_plan_details(plan_id: str) -> PlanRetrieveResponse | None:
+def get_plan_details(plan_id: str) -> ChargebeePlanRetrieveResponse | None:
     if plan_id:
         return chargebee_client.Plan.retrieve(plan_id)
     return None
@@ -143,8 +143,8 @@ def get_hosted_page_url_for_subscription_upgrade(
     subscription_id: str, plan_id: str
 ) -> str:
     checkout_existing_response = chargebee_client.HostedPage.checkout_existing(
-        HostedPageOps.CheckoutExistingParams(
-            subscription=HostedPageOps.CheckoutExistingSubscriptionParams(
+        ChargebeeHostedPageOps.CheckoutExistingParams(
+            subscription=ChargebeeHostedPageOps.CheckoutExistingSubscriptionParams(
                 id=subscription_id,
                 plan_id=plan_id,
             ),
