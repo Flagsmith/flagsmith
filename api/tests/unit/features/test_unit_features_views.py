@@ -4450,13 +4450,14 @@ def test_create_feature__required_metadata_on_other_project__returns_201(
 
 def test_list_features__edge_v2_project__makes_one_dynamo_query(
     admin_client_new: APIClient,
-    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
     environment: Environment,
     feature: Feature,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    project = dynamo_enabled_project
+    environment = dynamo_enabled_project_environment_one
+    project = environment.project
 
     # Create two additional features so we have 3 in total (including the fixture feature).
     Feature.objects.create(name="feature_2", project=project)

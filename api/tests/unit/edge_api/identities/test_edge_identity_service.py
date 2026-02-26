@@ -127,14 +127,10 @@ def test_get_edge_identity_override_keys__returns_list_of_document_keys(
     flagsmith_environments_v2_table: Table,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     dynamo_enabled_project: Project,
-    dynamo_enabled_project_environment_one: Environment,
-    dynamo_enabled_project_environment_one_document: dict[str, Any],
+    environment: Environment,
     feature: Feature,
     identity_override_document: dict[str, Any],
 ) -> None:
-    # Given
-    environment = dynamo_enabled_project_environment_one
-
     # When
     document_keys = get_edge_identity_override_keys(environment_id=environment.id)
 
