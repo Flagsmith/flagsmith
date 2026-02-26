@@ -40,7 +40,10 @@ def test_get_item_generator_fetches_all_items(mocker: MockerFixture) -> None:
     assert returned_items == entries
 
     # We only made two calls
-    assert mocked_chargebee.Plan.list.call_count == 2
+    assert mocked_chargebee.Plan.list.call_args_list == [
+        mocker.call(mocked_chargebee.Plan.ListParams()),
+        mocker.call(mocked_chargebee.Plan.ListParams()),
+    ]
 
 
 def test_chargebee_cache(mocker: MockerFixture, db: None) -> None:
