@@ -4,19 +4,20 @@ import React from 'react'
 import { useGetRolesQuery } from 'common/services/useRole'
 import { useGetProjectPermissionsQuery } from 'common/services/useProject'
 
-type PermissionsTabProps = {
+type ProjectPermissionsTabProps = {
   projectId: number
   organisationId: number
 }
 
-export const PermissionsTab = ({
+export const ProjectPermissionsTab = ({
   organisationId,
   projectId,
-}: PermissionsTabProps) => {
+}: ProjectPermissionsTabProps) => {
   const {
     data: rolesData,
     error: rolesError,
     isLoading: rolesLoading,
+    isSuccess: rolesSuccess,
   } = useGetRolesQuery({ organisation_id: organisationId })
 
   const {
@@ -38,7 +39,7 @@ export const PermissionsTab = ({
     )
   }
 
-  if (rolesError || permissionsError) {
+  if (permissionsError) {
     return (
       <div className='mt-4'>
         <InfoMessage>Error loading permissions data</InfoMessage>
@@ -47,14 +48,17 @@ export const PermissionsTab = ({
   }
 
   return (
-    <EditPermissions
-      tabClassName='flat-panel'
-      id={projectId}
-      level='project'
-      roleTabTitle='Project Permissions'
-      roles={rolesData?.results || []}
-      permissions={permissionsData || []}
-      onSaveUser={handleSaveUser}
-    />
+    <>
+      <EditPermissions
+        tabClassName='flat-panel'
+        id={projectId}
+        level='project'
+        roleTabTitle='Project Permissions'
+        roles={rolesData?.results || []}
+        permissions={permissionsData || []}
+        onSaveUser={handleSaveUser}
+        isEditRolePermission={rolesSuccess && !rolesError && !rolesLoading}
+      />
+    </>
   )
 }

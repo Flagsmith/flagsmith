@@ -12,7 +12,7 @@ import EditHealthProvider from './tabs/EditHealthProvider'
 import FeatureExport from 'components/import-export/FeatureExport'
 import { GeneralTab } from './tabs/general-tab'
 import { SDKSettingsTab } from './tabs/SDKSettingsTab'
-import { PermissionsTab } from './tabs/PermissionsTab'
+import { ProjectPermissionsTab } from './tabs/ProjectPermissionsTab'
 import { CustomFieldsTab } from './tabs/CustomFieldsTab'
 import { ImportTab } from './tabs/ImportTab'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
@@ -32,9 +32,9 @@ const ProjectSettingsPage = () => {
     error,
     isLoading,
     isUninitialized,
-  } = useGetProjectQuery({ id: projectId! }, { skip: !projectId })
+  } = useGetProjectQuery({ id: projectId ?? '' }, { skip: !projectId })
   const { data: environments } = useGetEnvironmentsQuery(
-    { projectId: projectId! },
+    { projectId: projectId ?? '' },
     { skip: !projectId },
   )
 
@@ -101,7 +101,7 @@ const ProjectSettingsPage = () => {
     },
     {
       component: (
-        <PermissionsTab
+        <ProjectPermissionsTab
           projectId={project.id}
           organisationId={organisationId}
         />
