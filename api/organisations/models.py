@@ -370,7 +370,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         self.billing_status = None
         self.save()
 
-    def get_portal_url(self, redirect_url):  # type: ignore[no-untyped-def]
+    def get_portal_url(self, redirect_url: str) -> str | None:
         if not self.subscription_id:
             return None
 
@@ -382,6 +382,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
         if self.customer_id:
             return get_portal_url(self.customer_id, redirect_url)
+        return None
 
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
         if self.is_free_plan:
