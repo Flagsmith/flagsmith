@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.219.1](https://github.com/Flagsmith/flagsmith/compare/v2.219.0...v2.219.1) (2026-02-26)
+
+
+### Bug Fixes
+
+* **Hubspot:** Fix unexpected setuptools dependency ([#6793](https://github.com/Flagsmith/flagsmith/issues/6793)) ([b7a81d5](https://github.com/Flagsmith/flagsmith/commit/b7a81d5eb143d18c714f9c1a6f516215bf6e22c0))
+
 ## [2.219.0](https://github.com/Flagsmith/flagsmith/compare/v2.218.0...v2.219.0) (2026-02-26)
 
 
