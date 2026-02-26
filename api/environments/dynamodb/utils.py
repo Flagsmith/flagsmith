@@ -14,4 +14,4 @@ def get_environments_v2_identity_override_document_key(
 
 
 def get_feature_id_from_identity_override_document_key(document_key: str) -> int:
-    return int(document_key.split(".")[1])
+    return int(document_key.split(":")[1])
