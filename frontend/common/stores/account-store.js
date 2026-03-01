@@ -348,7 +348,7 @@ const controller = {
       store.loaded()
     } else if (!user) {
       store.ephemeral_token = null
-      AsyncStorage.clear()
+      AsyncStorage.removeItem('user')
       if (!data.token) {
         return
       }
