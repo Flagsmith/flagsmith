@@ -78,6 +78,19 @@
       "feature_state_value": "",
       "featurestate_uuid": "b6aacfaf-5b02-4b58-9156-f018ffa85c2d",
       "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1163839,
+      "enabled": false,
+      "feature": {
+        "id": 189491,
+        "name": "compress_dynamo_documents",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "24980799-d96b-4294-8c88-54ee21a7d28e",
+      "multivariate_feature_state_values": []
     }
   ],
   "id": 0,
