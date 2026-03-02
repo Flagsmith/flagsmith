@@ -1,8 +1,11 @@
 import uuid
 
+from boto3.dynamodb.types import Binary
+from common.test_tools import AssertMetricFixture
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 
 from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.dynamodb.types import (
@@ -14,6 +17,7 @@ from environments.dynamodb.utils import (
 )
 from environments.models import Environment
 from features.models import Feature, FeatureState
+from tests.types import EnableFeaturesFixture
 from util.mappers import (
     map_environment_to_environment_v2_document,
     map_feature_state_to_engine,
@@ -279,6 +283,93 @@ def test_environment_v2_wrapper__write_environments__put_expected(
     results = flagsmith_environments_v2_table.scan()["Items"]
     assert len(results) == 1
     assert results[0] == map_environment_to_environment_v2_document(environment)
+
+
+def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_enabled__writes_compressed(
+    environment: Environment,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    flagsmith_environments_v2_table: Table,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("compress_dynamo_documents")
+
+    # When
+    dynamodb_wrapper_v2.write_environments([environment])
+
+    # Then
+    results = flagsmith_environments_v2_table.scan()["Items"]
+    assert len(results) == 1
+    assert results[0]["compressed"] is True
+    assert isinstance(results[0]["project"], Binary)
+    assert isinstance(results[0]["feature_states"], Binary)
+
+
+def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_enabled__observes_metrics(
+    environment: Environment,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    flagsmith_environments_v2_table: Table,
+    enable_features: EnableFeaturesFixture,
+    assert_metric: AssertMetricFixture,
+) -> None:
+    # Given
+    enable_features("compress_dynamo_documents")
+
+    # When
+    dynamodb_wrapper_v2.write_environments([environment])
+
+    # Then
+    assert_metric(
+        name="flagsmith_dynamo_environment_document_size_bytes_count",
+        labels={"table": flagsmith_environments_v2_table.name, "compressed": "true"},
+        value=1.0,
+    )
+    assert_metric(
+        name="flagsmith_dynamo_environment_document_compression_ratio_count",
+        labels={"table": flagsmith_environments_v2_table.name},
+        value=1.0,
+    )
+
+
+def test_environment_v2_wrapper__write_environments__uncompressed__observes_size_metric(
+    environment: Environment,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    flagsmith_environments_v2_table: Table,
+    assert_metric: AssertMetricFixture,
+) -> None:
+    # When
+    dynamodb_wrapper_v2.write_environments([environment])
+
+    # Then
+    assert_metric(
+        name="flagsmith_dynamo_environment_document_size_bytes_count",
+        labels={"table": flagsmith_environments_v2_table.name, "compressed": "false"},
+        value=1.0,
+    )
+
+
+def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_enabled__logs_expected(
+    environment: Environment,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    flagsmith_environments_v2_table: Table,
+    enable_features: EnableFeaturesFixture,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    enable_features("compress_dynamo_documents")
+
+    # When
+    dynamodb_wrapper_v2.write_environments([environment])
+
+    # Then
+    assert log.events == [
+        {
+            "environment_api_key": environment.api_key,
+            "environment_id": environment.id,
+            "event": "environment-document-compressed",
+            "level": "info",
+        },
+    ]
 
 
 def test_environment_v2_wrapper__delete_environment__deletes_related_data_from_dynamodb(
