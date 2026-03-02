@@ -84,14 +84,17 @@ def get_edge_overrides_data(environment: "Environment") -> OverridesData:
     """
 
     with ThreadPoolExecutor() as executor:
-        # To simplify threading concerns in testing, we only
-        # submit the call to dynamo to a new thread, and let
-        # the calls to postgres happen on the main thread.
-        flags_list = get_environment_flags_list(environment)
+        # Note: We intentionally let the get_environment_flags_list
+        # call happen on the main thread to simplify testing.
+        # The call to dynamo happens on a separate thread, which
+        # still gives us the parallelism we need without needing
+        # an extra thread. This does mean that the order of execution
+        # is important here.
         get_overrides_data_future = executor.submit(
             get_edge_identity_override_keys,
             environment_id=environment.id,
         )
+        flags_list = get_environment_flags_list(environment)
     all_overrides_data: OverridesData = {}
 
     for feature_state in flags_list:
