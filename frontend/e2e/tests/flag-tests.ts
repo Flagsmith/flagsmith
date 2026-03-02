@@ -48,7 +48,7 @@ export default async function () {
   log('Try it')
   await t.wait(2000)
   await click('#try-it-btn')
-  await t.wait(500)
+  await waitForElementVisible('#try-it-results')
   let json = await parseTryItResults()
   await t.expect(json.header_size.value).eql('big')
   await t.expect(json.mv_flag.value).eql('big')
@@ -58,9 +58,8 @@ export default async function () {
   await editRemoteConfig(1,12)
 
   log('Try it again')
-  await t.wait(500)
   await click('#try-it-btn')
-  await t.wait(500)
+  await waitForElementVisible('#try-it-results')
   json = await parseTryItResults()
   await t.expect(json.header_size.value).eql(12)
 
@@ -68,9 +67,8 @@ export default async function () {
   await editRemoteConfig(1,false)
 
   log('Try it again 2')
-  await t.wait(500)
   await click('#try-it-btn')
-  await t.wait(500)
+  await waitForElementVisible('#try-it-results')
   json = await parseTryItResults()
   await t.expect(json.header_size.value).eql(false)
 
