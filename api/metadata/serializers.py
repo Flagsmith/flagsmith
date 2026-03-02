@@ -82,8 +82,9 @@ class MetadataFieldSerializer(serializers.ModelSerializer):  # type: ignore[type
             "project",
             "model_fields",
         )
-        # Disable auto-generated unique validators — conditional
-        # UniqueConstraints are enforced at the database level.
+        # Disable auto-generated unique validators — DRF can't generate
+        # them for conditional UniqueConstraints. Uniqueness is validated
+        # manually in validate() below.
         validators: list[object] = []
 
     def validate(self, data: dict[str, Any]) -> dict[str, Any]:

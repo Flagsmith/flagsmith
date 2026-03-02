@@ -6,10 +6,16 @@ import { Metadata } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import Switch from 'components/Switch'
 import InputGroup from 'components/base/forms/InputGroup'
-import { useGetEntityMetadataFieldsQuery } from 'common/services/useMetadataField'
+import {
+  metadataService,
+  useGetEntityMetadataFieldsQuery,
+} from 'common/services/useMetadataField'
+import { getStore } from 'common/store'
 import { CustomMetadataField } from 'common/types/metadata-field'
 import { useGlobalMetadataValidation } from 'common/utils/metadataValidation'
 import RedirectCreateCustomFields from './RedirectCreateCustomFields'
+
+const EMPTY_FIELDS: CustomMetadataField[] = []
 
 type AddMetadataToEntityProps = {
   isCloningEnvironment?: boolean
@@ -59,14 +65,17 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
   projectId,
   setHasMetadataRequired,
 }) => {
-  const { data: initialFields = [], isLoading } =
-    useGetEntityMetadataFieldsQuery({
-      entityContentType,
-      entityId,
-      entityType: entity as 'feature' | 'segment' | 'environment',
-      organisationId,
-      projectId,
-    })
+  const { data: initialFields = EMPTY_FIELDS, isLoading } =
+    useGetEntityMetadataFieldsQuery(
+      {
+        entityContentType,
+        entityId,
+        entityType: entity as 'feature' | 'segment' | 'environment',
+        organisationId,
+        projectId,
+      },
+      { refetchOnMountOrArgChange: true },
+    )
 
   const [metadataFields, setMetadataFields] = useState<CustomMetadataField[]>(
     [],
@@ -76,9 +85,8 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
   const { hasUnfilledRequired } = useGlobalMetadataValidation(metadataFields)
 
   useEffect(() => {
-    if (initialFields.length > 0) {
-      setMetadataFields(initialFields)
-    }
+    setMetadataFields(initialFields)
+    setHasChanges(false)
   }, [initialFields])
 
   useEffect(() => {
@@ -123,10 +131,15 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
     })
 
     if ('error' in result) {
-      toast(getMetadataErrors(result.error as MetadataErrorResponse), 'danger')
+      const errorMessage = getMetadataErrors(
+        result.error as MetadataErrorResponse,
+      )
+      toast(errorMessage || 'Failed to update custom fields', 'danger')
     } else {
       toast('Environment Field Updated')
-      setHasChanges(false)
+      getStore().dispatch(
+        metadataService.util.invalidateTags([{ type: 'Metadata' }]),
+      )
     }
   }
 
@@ -189,8 +202,7 @@ const MetadataRow: FC<MetadataRowProps> = ({ metadata, onFieldChange }) => {
       : metadata.field_value || ''
 
   const handleChange = (newValue: string | boolean) => {
-    const stringValue = metadata.type === 'bool' ? `${newValue}` : `${newValue}`
-    onFieldChange(metadata.id, stringValue)
+    onFieldChange(metadata.id, `${newValue}`)
   }
   const isEmpty = !displayValue || displayValue === ''
   const isValidType = Utils.validateMetadataType(metadata.type, displayValue)

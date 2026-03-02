@@ -27,10 +27,12 @@ const controller = {
       ? data.post(`${Project.api}environments/${cloneId}/clone/`, {
           clone_feature_states_async: cloneFeatureStatesAsync,
           description,
+          metadata: metadata || [],
           name,
         })
       : data.post(`${Project.api}environments/`, {
           description,
+          metadata: metadata || [],
           name,
           project: projectId,
         })
