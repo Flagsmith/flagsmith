@@ -13,7 +13,8 @@ from edge_api.identities.tasks import (
 from edge_api.identities.types import IdentityChangeset
 from edge_api.identities.utils import generate_change_dict
 from environments.dynamodb import DynamoIdentityWrapper
-from environments.models import Environment, environment_wrapper as _environment_wrapper
+from environments.models import Environment
+from environments.models import environment_wrapper as _environment_wrapper
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.versioning_service import get_environment_flags_dict
