@@ -17,8 +17,8 @@ import RedirectCreateCustomFields from './RedirectCreateCustomFields'
 const PAGE_SIZE = 20
 const metadataWidth = [200, 150, 150, 90]
 type MetadataPageType = {
-  organisationId: string
-  projectId?: string
+  organisationId: number
+  projectId?: number
 }
 
 type MergeMetadata = {
@@ -36,7 +36,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
   const [projectPage, setProjectPage] = useState(1)
 
   const { data: orgMetadataFieldList } = useGetMetadataFieldListQuery({
-    organisation: parseInt(organisationId),
+    organisation: organisationId,
     page: orgPage,
     page_size: PAGE_SIZE,
   })
@@ -46,7 +46,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
       {
         page: projectPage,
         page_size: PAGE_SIZE,
-        project_id: parseInt(projectId!),
+        project_id: projectId!,
       },
       { skip: !projectId },
     )
@@ -205,7 +205,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
               <div className='search-list'>
                 <Row className='list-item p-3 text-muted'>
                   <RedirectCreateCustomFields
-                    organisationId={parseInt(organisationId)}
+                    organisationId={organisationId}
                     organisationOnly
                   />
                 </Row>
