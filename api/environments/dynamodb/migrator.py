@@ -60,7 +60,7 @@ class IdentityMigrator:
         api_keys = EnvironmentAPIKey.objects.filter(environment__project_id=project_id)
         api_key_wrapper.write_api_keys(api_keys)
 
-        identity_wrapper = DynamoIdentityWrapper()
+        identity_wrapper = DynamoIdentityWrapper(environment_wrapper=environment_wrapper)
         identities = (
             Identity.objects.filter(environment__project__id=project_id)
             .select_related("environment")
