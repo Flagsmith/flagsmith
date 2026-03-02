@@ -69,9 +69,6 @@ const ProjectSettingsPage = () => {
   // Derive data from project after all early returns
   const hasEnvironments = (environments?.results?.length || 0) > 0
   const hasFeatureHealth = Utils.getFlagsmithHasFeature('feature_health')
-  const hasProjectCustomFields = Utils.getFlagsmithHasFeature(
-    'project_custom_fields',
-  )
   const organisationId = project.organisation
 
   const tabs: ProjectSettingsTab[] = [
@@ -120,7 +117,7 @@ const ProjectSettingsPage = () => {
           projectId={project.id}
         />
       ),
-      isVisible: hasProjectCustomFields,
+      isVisible: true,
       key: 'custom-fields',
       label: 'Custom Fields',
     },
