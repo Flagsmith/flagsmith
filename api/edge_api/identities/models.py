@@ -14,7 +14,6 @@ from edge_api.identities.types import IdentityChangeset
 from edge_api.identities.utils import generate_change_dict
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
-from environments.models import environment_wrapper as _environment_wrapper
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.versioning_service import get_environment_flags_dict
@@ -25,7 +24,7 @@ from util.mappers import map_engine_identity_to_identity_document
 
 
 class EdgeIdentity:
-    dynamo_wrapper = DynamoIdentityWrapper(environment_wrapper=_environment_wrapper)
+    dynamo_wrapper = DynamoIdentityWrapper()
 
     def __init__(self, engine_identity_model: IdentityModel):
         self.engine_identity_model = engine_identity_model
