@@ -2,7 +2,10 @@ import typing
 from concurrent.futures import ThreadPoolExecutor
 
 from edge_api.identities.edge_identity_service import (
-    get_edge_identity_overrides_for_feature_ids,
+    get_edge_identity_override_keys,
+)
+from environments.dynamodb.utils import (
+    get_feature_id_from_identity_override_document_key,
 )
 from features.dataclasses import EnvironmentFeatureOverridesData
 from features.versioning.versioning_service import get_environment_flags_list
@@ -16,12 +19,11 @@ OverridesData = dict[int, EnvironmentFeatureOverridesData]
 
 def get_overrides_data(
     environment: "Environment",
-    feature_ids: None | list[int] = None,
 ) -> OverridesData:
     """
     Get correct overrides counts for a given environment.
 
-    :param project: project to get overrides data for
+    :param environment: environment to get overrides data for
     :return: overrides data getter dictionary of {feature_id: EnvironmentFeatureOverridesData}
     """
     project = environment.project
@@ -30,7 +32,7 @@ def get_overrides_data(
         if project.edge_v2_identity_overrides_migrated:
             # If v2 migration is complete, count segment overrides from Core
             # and identity overrides from DynamoDB.
-            return get_edge_overrides_data(environment, feature_ids)
+            return get_edge_overrides_data(environment)
         # If v2 migration is not started, in progress, or incomplete,
         # only count segment overrides from Core.
         # v1 Edge identity overrides are uncountable.
@@ -71,9 +73,7 @@ def get_core_overrides_data(
     return all_overrides_data
 
 
-def get_edge_overrides_data(
-    environment: "Environment", feature_ids: None | list[int] = None
-) -> OverridesData:
+def get_edge_overrides_data(environment: "Environment") -> OverridesData:
     """
     Get the number of identity / segment overrides in a given environment for each feature in the
     project.
@@ -83,37 +83,32 @@ def get_edge_overrides_data(
     :return OverridesData: dictionary of {feature_id: EnvironmentFeatureOverridesData}
     """
 
-    assert feature_ids is not None
-
     with ThreadPoolExecutor() as executor:
-        get_environment_flags_list_future = executor.submit(
-            get_environment_flags_list,
-            environment,
-        )
+        # Note: We intentionally let the get_environment_flags_list
+        # call happen on the main thread to simplify testing.
+        # The call to dynamo happens on a separate thread, which
+        # still gives us the parallelism we need without needing
+        # an extra thread. This does mean that the order of execution
+        # is important here.
         get_overrides_data_future = executor.submit(
-            get_edge_identity_overrides_for_feature_ids,
+            get_edge_identity_override_keys,
             environment_id=environment.id,
-            feature_ids=feature_ids,
         )
+        flags_list = get_environment_flags_list(environment)
     all_overrides_data: OverridesData = {}
 
-    for feature_state in get_environment_flags_list_future.result():
+    for feature_state in flags_list:
         env_feature_overrides_data = all_overrides_data.setdefault(
             feature_state.feature_id, EnvironmentFeatureOverridesData()
         )
         if feature_state.feature_segment_id:
             env_feature_overrides_data.num_segment_overrides += 1
-    for identity_overrides_v2_list in get_overrides_data_future.result():
-        for identity_override in identity_overrides_v2_list.identity_overrides:
-            # Only override features that exists in core
-            if identity_override.feature_state.feature.id in all_overrides_data:
-                all_overrides_data[  # type: ignore[no-untyped-call]
-                    identity_override.feature_state.feature.id
-                ].add_identity_override()
-                all_overrides_data[
-                    identity_override.feature_state.feature.id
-                ].is_num_identity_overrides_complete = (
-                    identity_overrides_v2_list.is_num_identity_overrides_complete
-                )
+    for identity_override_key in get_overrides_data_future.result():
+        feature_id = get_feature_id_from_identity_override_document_key(
+            identity_override_key
+        )
+        # Only override features that exists in core
+        if feature_id in all_overrides_data:
+            all_overrides_data[feature_id].add_identity_override()  # type: ignore[no-untyped-call]
 
     return all_overrides_data

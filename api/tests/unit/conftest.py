@@ -10,7 +10,7 @@ from environments.enums import EnvironmentDocumentCacheMode
 from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation, OrganisationRole
-from projects.models import Project
+from projects.models import EdgeV2MigrationStatus, Project
 from projects.tags.models import Tag
 from segments.models import Segment
 from users.models import FFAdminUser
@@ -112,6 +112,7 @@ def dynamo_enabled_project(organisation):  # type: ignore[no-untyped-def]
         name="Dynamo enabled project",
         organisation=organisation,
         enable_dynamo_db=True,
+        edge_v2_migration_status=EdgeV2MigrationStatus.COMPLETE,
     )
 
 
