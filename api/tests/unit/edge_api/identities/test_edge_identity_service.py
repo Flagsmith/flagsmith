@@ -1,12 +1,19 @@
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
 from django.core.exceptions import ObjectDoesNotExist
+from mypy_boto3_dynamodb.service_resource import Table
 from pytest_mock import MockerFixture
 
 from edge_api.identities.edge_identity_service import (
+    get_edge_identity_override_keys,
     get_overridden_feature_ids_for_edge_identity,
 )
+from environments.dynamodb import DynamoEnvironmentV2Wrapper
+from environments.models import Environment
+from features.models import Feature
+from projects.models import Project
 
 
 @pytest.fixture()
@@ -114,3 +121,18 @@ def test_get_overridden_feature_ids_for_edge_identity__nonexistent_identity__ret
 
     # Then
     assert result == set()
+
+
+def test_get_edge_identity_override_keys__returns_list_of_document_keys(
+    flagsmith_environments_v2_table: Table,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    dynamo_enabled_project: Project,
+    environment: Environment,
+    feature: Feature,
+    identity_override_document: dict[str, Any],
+) -> None:
+    # When
+    document_keys = get_edge_identity_override_keys(environment_id=environment.id)
+
+    # Then
+    assert document_keys == [identity_override_document["document_key"]]

@@ -1,6 +1,4 @@
 import typing
-from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
 from typing import Any, Iterable
 
 from boto3.dynamodb.conditions import Key
@@ -29,12 +27,6 @@ if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.type_defs import QueryInputRequestTypeDef
 
     from environments.models import Environment
-
-
-@dataclass
-class IdentityOverridesQueryResponse:
-    items: list[dict[str, Any]]
-    is_num_identity_overrides_complete: bool
 
 
 class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper):
@@ -74,51 +66,24 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         self,
         environment_id: int,
         feature_id: int | None = None,
-        feature_ids: None | list[int] = None,
-    ) -> list[dict[str, Any]] | list[IdentityOverridesQueryResponse]:
+        projection_expression_attributes: list[str] | None = None,
+    ) -> list[dict[str, Any]]:
+        key_condition_expression = self.get_identity_overrides_key_condition_expression(
+            environment_id=environment_id,
+            feature_id=feature_id,
+        )
+        query_kwargs: dict[str, Any] = {
+            "KeyConditionExpression": key_condition_expression,
+        }
+        if projection_expression_attributes:
+            query_kwargs["ProjectionExpression"] = ",".join(
+                projection_expression_attributes
+            )
+
         try:
-            if feature_ids is None:
-                return list(
-                    self.query_iter_all_items(
-                        KeyConditionExpression=self.get_identity_overrides_key_condition_expression(
-                            environment_id=environment_id,
-                            feature_id=feature_id,
-                        )
-                    )
-                )
-
-            else:
-                futures = []
-                with ThreadPoolExecutor() as executor:
-                    for feature_id in feature_ids:
-                        futures.append(
-                            executor.submit(
-                                self.get_identity_overrides_page,
-                                environment_id,
-                                feature_id,
-                            )
-                        )
-
-                results = [future.result() for future in futures]
-                return results
-
+            return list(self.query_iter_all_items(**query_kwargs))
         except KeyError as e:
             raise ObjectDoesNotExist() from e
-
-    def get_identity_overrides_page(
-        self, environment_id: int, feature_id: int
-    ) -> IdentityOverridesQueryResponse:
-        query_response = self.table.query(  # type: ignore[union-attr]
-            KeyConditionExpression=self.get_identity_overrides_key_condition_expression(  # type: ignore[arg-type]
-                environment_id=environment_id,
-                feature_id=feature_id,
-            )
-        )
-        last_evaluated_key = query_response.get("LastEvaluatedKey")
-        return IdentityOverridesQueryResponse(
-            items=query_response["Items"],
-            is_num_identity_overrides_complete=last_evaluated_key is None,
-        )
 
     def get_identity_overrides_key_condition_expression(
         self,
