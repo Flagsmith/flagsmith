@@ -61,13 +61,15 @@ def test_estimate_document_size__nested_document__returns_expected() -> None:
 
 def test_estimate_document_size__with_unknown_type__assumes_str() -> None:
     # Given
-    document = {"value": object()}
+    obj = object()
+    document = {"value": obj}
 
     # When
     result = estimate_document_size(document)
 
     # Then
-    assert result == 42
+    expected = len(f'{{"value":"{obj!s}"}}'.encode())
+    assert result == expected
 
 
 def test_estimate_document_size__empty_document__returns_expected() -> None:
