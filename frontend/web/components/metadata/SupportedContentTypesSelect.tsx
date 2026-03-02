@@ -5,7 +5,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import ContentTypesMetadataFieldTable from './ContentTypesMetadataFieldTable'
 
 type SupportedContentTypesSelectType = {
-  organisationId: string
+  organisationId: number
   isEdit: boolean
   getMetadataContentTypes: (m: SelectContentTypesType[]) => void
   metadataModelFieldList: MetadataFieldModelField[]

@@ -21,10 +21,7 @@ export const CustomFieldsTab = ({
 
   return (
     <div className='mt-4'>
-      <MetadataPage
-        organisationId={`${organisationId}`}
-        projectId={`${projectId}`}
-      />
+      <MetadataPage organisationId={organisationId} projectId={projectId} />
     </div>
   )
 }

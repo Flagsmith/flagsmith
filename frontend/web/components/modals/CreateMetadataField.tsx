@@ -33,12 +33,12 @@ type CreateMetadataFieldType = {
   isEdit: boolean
   metadataModelFieldList?: MetadataFieldModelField[]
   onComplete?: () => void
-  organisationId: string
-  projectId?: string
+  organisationId: number
+  projectId?: number
 }
 
 type QueryBody = {
-  content_type: number | string
+  content_type: number
   field: number
   is_required_for: isRequiredFor[]
 }
@@ -46,7 +46,7 @@ type QueryBody = {
 type Query = {
   body: QueryBody
   id?: number
-  organisation_id: string
+  organisation_id: number
 }
 
 type MetadataType = {
@@ -87,7 +87,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   )
 
   const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
-    organisation_id: `${organisationId}`,
+    organisation_id: organisationId,
   })
   const [createMetadataField, { error: errorCreating }] =
     useCreateMetadataFieldMutation()
@@ -131,7 +131,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
     useState<metadataFieldUpdatedSelectListType[]>([])
 
   const generateDataQuery = (
-    contentType: string | number,
+    contentType: number,
     field: number,
     isRequiredFor: boolean,
     id: number,
@@ -145,9 +145,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           ? ([
               {
                 content_type: metadataContentType.id,
-                object_id: projectId
-                  ? parseInt(projectId)
-                  : parseInt(organisationId),
+                object_id: projectId ?? organisationId,
               } as isRequiredFor,
             ] as isRequiredFor[])
           : [],
@@ -172,7 +170,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
             name,
             organisation: organisationId,
             type: `${typeValue?.value}`,
-            ...(projectId ? { project: parseInt(projectId) } : {}),
+            ...(projectId ? { project: projectId } : {}),
           },
           id: id!,
         }).unwrap()
@@ -180,7 +178,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           await Promise.all(
             metadataFieldSelectList.map(async (m) => {
               const query = generateDataQuery(
-                m.value,
+                Number(m.value),
                 parseInt(id!),
                 !!m?.isRequired,
                 0,
@@ -224,14 +222,14 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
             name,
             organisation: organisationId,
             type: `${typeValue?.value}`,
-            ...(projectId ? { project: parseInt(projectId) } : {}),
+            ...(projectId ? { project: projectId } : {}),
           },
         }).unwrap()
         if (res?.id) {
           await Promise.all(
             metadataFieldSelectList.map(async (m) => {
               const query = generateDataQuery(
-                m.value,
+                Number(m.value),
                 res.id,
                 !!m?.isRequired,
                 0,

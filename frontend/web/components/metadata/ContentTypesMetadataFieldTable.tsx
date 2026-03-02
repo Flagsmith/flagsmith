@@ -13,7 +13,7 @@ type selectedContentType = {
 }
 
 type ContentTypesMetadataFieldTableType = {
-  organisationId: string
+  organisationId: number
   selectedContentTypes: selectedContentType[]
   onDelete: (removed: selectedContentType) => void
   isEdit: boolean

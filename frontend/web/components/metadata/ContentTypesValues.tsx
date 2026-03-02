@@ -5,7 +5,7 @@ import classNames from 'classnames'
 
 type ContentTypesValuesType = {
   contentTypes: MetadataFieldModelField[]
-  organisationId: string
+  organisationId: number
 }
 
 const ContentTypesValues: FC<ContentTypesValuesType> = ({
@@ -13,7 +13,7 @@ const ContentTypesValues: FC<ContentTypesValuesType> = ({
   organisationId,
 }) => {
   const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
-    organisation_id: `${organisationId}`,
+    organisation_id: organisationId,
   })
 
   const combinedData = contentTypes.map((contentType) => {
