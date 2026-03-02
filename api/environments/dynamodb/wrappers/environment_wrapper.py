@@ -1,3 +1,4 @@
+import abc
 import typing
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -50,21 +51,24 @@ class IdentityOverridesQueryResponse:
     is_num_identity_overrides_complete: bool
 
 
-class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper):
+class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper, abc.ABC):
     def write_environment(self, environment: "Environment") -> None:
         self.write_environments([environment])
 
     def write_environments(self, environments: Iterable["Environment"]) -> None:
         self._write_environments(environments)
 
-    def _map_environment_document(self, environment: "Environment") -> dict[str, Any]:
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def _map_environment_document(
+        self,
+        environment: "Environment",
+    ) -> dict[str, Any]: ...
 
+    @abc.abstractmethod
     def _map_compressed_environment_document(
         self,
         environment: "Environment",
-    ) -> "CompressedEnvironmentDocument":
-        raise NotImplementedError()
+    ) -> "CompressedEnvironmentDocument": ...
 
     def _write_environments(self, environments: Iterable["Environment"]) -> None:
         flagsmith_client = get_client("local", local_eval=True)
