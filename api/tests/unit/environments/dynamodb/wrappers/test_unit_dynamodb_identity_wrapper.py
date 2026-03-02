@@ -666,7 +666,7 @@ def test_get_segment_ids__called_multiple_times__reuses_environment_wrapper(
         "get_item_from_uuid",
         return_value=identity_document,
     )
-    identity_uuid = identity_document["identity_uuid"]
+    identity_uuid = str(identity_document["identity_uuid"])
 
     # When
     dynamo_identity_wrapper.get_segment_ids(identity_uuid)
