@@ -2413,6 +2413,7 @@ def test_list_features_provides_correct_information_on_number_of_overrides_based
 def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     admin_client_new: APIClient,
 ) -> None:
     # Given
