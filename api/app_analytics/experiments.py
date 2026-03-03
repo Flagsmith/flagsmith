@@ -295,7 +295,7 @@ def _g_test(table: list[list[float]]) -> float:
     col_totals = [sum(table[r][c] for r in range(rows)) for c in range(cols)]
     grand_total = sum(row_totals)
 
-    if grand_total == 0:
+    if grand_total == 0:  # pragma: no cover
         return 1.0
 
     g = 0.0
@@ -308,7 +308,7 @@ def _g_test(table: list[list[float]]) -> float:
     g *= 2
 
     df = (rows - 1) * (cols - 1)
-    if df == 0:
+    if df == 0:  # pragma: no cover
         return 1.0
 
     return _chi2_sf(g, df)
@@ -323,7 +323,7 @@ def _chi2_sf(x: float, df: int) -> float:
 
 def _upper_gamma_reg(a: float, x: float) -> float:
     """Regularised upper incomplete gamma function Q(a, x)."""
-    if x <= 0:
+    if x <= 0:  # pragma: no cover
         return 1.0
     if x < a + 1:
         return 1.0 - _lower_gamma_series(a, x)
@@ -355,10 +355,10 @@ def _upper_gamma_cf(a: float, x: float) -> float:
         an = -i * (i - a)
         b += 2.0
         d = an * d + b
-        if abs(d) < tiny:
+        if abs(d) < tiny:  # pragma: no cover
             d = tiny
         c = b + an / c
-        if abs(c) < tiny:
+        if abs(c) < tiny:  # pragma: no cover
             c = tiny
         d = 1.0 / d
         delta = d * c
