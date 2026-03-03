@@ -126,6 +126,32 @@ Tests that fail initially but pass on retry are FLAKY and MUST be investigated, 
 - If the failure is in application code (not test code), report it as a bug but don't try to fix it
 - Always explain what fixes you're attempting and why
 
+## CRITICAL: Use Helpers, Not Raw Page Methods
+
+**NEVER use `page.waitForTimeout()` or raw `page.locator()` methods.** Always use the helper functions instead:
+
+### Wait Helpers (Use These Instead of waitForTimeout)
+- `waitForElementVisible(selector)` - Wait for element to be visible
+- `waitForElementClickable(selector)` - Wait for element to be clickable
+- `waitForToast()` - Wait for toast notification
+- `waitAndRefresh()` - Wait and refresh page state
+- `waitForFeatureSwitch(name, state)` - Wait for feature switch state
+- `waitForUserFeatureSwitch(name, state)` - Wait for user feature switch state
+
+### Click Helpers (Use These Instead of page.locator().click())
+- `click(selector)` - Click element (handles wait, scroll, enabled check)
+- `clickByText(text, element)` - Click element by text content
+- `clickUserFeature(name)` - Click user feature
+- `clickUserFeatureSwitch(name, state)` - Click user feature switch
+
+### Other Helpers
+- `setText(selector, value)` - Set input text
+- `closeModal()` - Close modal (instead of Escape key)
+- `assertInputValue(selector, value)` - Assert input value
+- `gotoFeatures()`, `gotoFeature(name)`, etc. - Navigation helpers
+
+**Why?** Helpers include proper waiting, error handling, and scrolling. Raw page methods lead to flaky tests.
+
 ## Test Infrastructure
 
 ### Playwright Configuration
