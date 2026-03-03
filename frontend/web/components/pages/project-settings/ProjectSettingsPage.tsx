@@ -111,7 +111,12 @@ const ProjectSettingsPage = () => {
       label: 'Permissions',
     },
     {
-      component: <CustomFieldsTab organisationId={organisationId} />,
+      component: (
+        <CustomFieldsTab
+          organisationId={organisationId}
+          projectId={project.id}
+        />
+      ),
       isVisible: true,
       key: 'custom-fields',
       label: 'Custom Fields',

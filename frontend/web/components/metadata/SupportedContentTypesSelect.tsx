@@ -1,14 +1,14 @@
 import React, { FC, useEffect, useState } from 'react'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
-import { ContentType, MetadataModelField } from 'common/types/responses'
+import { ContentType, MetadataFieldModelField } from 'common/types/responses'
 import InputGroup from 'components/base/forms/InputGroup'
 import ContentTypesMetadataFieldTable from './ContentTypesMetadataFieldTable'
 
 type SupportedContentTypesSelectType = {
-  organisationId: string
+  organisationId: number
   isEdit: boolean
   getMetadataContentTypes: (m: SelectContentTypesType[]) => void
-  metadataModelFieldList: MetadataModelField[]
+  metadataModelFieldList: MetadataFieldModelField[]
 }
 
 export type SelectContentTypesType = {

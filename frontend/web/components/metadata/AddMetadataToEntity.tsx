@@ -13,6 +13,7 @@ import {
 import { getStore } from 'common/store'
 import { CustomMetadataField } from 'common/types/metadata-field'
 import { useGlobalMetadataValidation } from 'common/utils/metadataValidation'
+import RedirectCreateCustomFields from './RedirectCreateCustomFields'
 
 const EMPTY_FIELDS: CustomMetadataField[] = []
 
@@ -163,15 +164,11 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
         )}
         renderNoResults={
           <FormGroup>
-            No custom fields configured for {entity}s. Add custom fields in your{' '}
-            <a
-              href={`/organisation/${organisationId}/settings?tab=custom-fields`}
-              target='_blank'
-              rel='noreferrer'
-            >
-              Organisation Settings
-            </a>
-            .
+            <RedirectCreateCustomFields
+              organisationId={organisationId}
+              projectId={projectId}
+              organisationOnly={false}
+            />
           </FormGroup>
         }
       />
