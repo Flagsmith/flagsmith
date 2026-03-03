@@ -245,7 +245,10 @@ def _calculate_multi_variant_stats(
     # Bayesian chance to win for each variant via Monte Carlo
     n_samples = 10000
     params = [
-        (results[v]["conversions"] + 1, results[v]["total"] - results[v]["conversions"] + 1)
+        (
+            results[v]["conversions"] + 1,
+            results[v]["total"] - results[v]["conversions"] + 1,
+        )
         for v in variants
     ]
     win_counts = [0] * len(variants)

@@ -96,9 +96,7 @@ def test_get_experiment_results__with_data__returns_results(
             string_value=variant,
             value_type="unicode",
         )
-        if (variant == "blue" and i % 5 == 0) or (
-            variant == "green" and i % 3 == 0
-        ):
+        if (variant == "blue" and i % 5 == 0) or (variant == "green" and i % 3 == 0):
             Trait.objects.create(
                 identity=identity,
                 trait_key=f"exp_{feature_name}_converted",
