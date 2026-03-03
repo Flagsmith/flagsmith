@@ -8,3 +8,30 @@ ENVIRONMENTS_V2_SECONDARY_INDEX_PARTITION_KEY = "environment_api_key"
 
 DYNAMODB_MAX_BATCH_WRITE_ITEM_COUNT = 25
 IDENTITIES_PAGINATION_LIMIT = 1000
+
+# DynamoDB max item size is 400 KB (409,600 bytes).
+DOCUMENT_SIZE_HISTOGRAM_BUCKETS = (
+    1_000,
+    5_000,
+    10_000,
+    25_000,
+    50_000,
+    100_000,
+    200_000,
+    300_000,
+    409_600,
+)
+
+COMPRESSION_RATIO_HISTOGRAM_BUCKETS = (
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.25,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.8,
+    1.0,
+)

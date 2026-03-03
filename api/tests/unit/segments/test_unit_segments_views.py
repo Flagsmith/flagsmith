@@ -381,6 +381,7 @@ def test_can_filter_by_edge_identity_to_get_only_matching_segments(  # type: ign
     expected_segment_ids = [identity_matching_segment.id]
     identity_document = map_identity_to_identity_document(identity)
     identity_uuid = identity_document["identity_uuid"]
+    assert isinstance(identity_uuid, str)
 
     edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = (
         expected_segment_ids

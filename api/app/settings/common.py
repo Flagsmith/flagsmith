@@ -986,21 +986,21 @@ ENABLE_ADMIN_ACCESS_USER_PASS = env.bool("ENABLE_ADMIN_ACCESS_USER_PASS", defaul
 DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool("DEFAULT_ORG_STORE_TRAITS_VALUE", True)
 
 # DynamoDB table name for storing environment
-ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", None)
+ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", "")
 
 # V2 was created to improve storage over overrides data.
-ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_V2_TABLE_NAME_DYNAMO", None)
+ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_V2_TABLE_NAME_DYNAMO", "")
 
 # DynamoDB table name for storing identities
-IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
+IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", "")
 
 # DynamoDB table name for storing environment api keys
 ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO = env.str(
-    "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO", None
+    "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO", ""
 )
 
 # DynamoDB table name for storing project metadata(currently only used for identity migration)
-PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO", None)
+PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO", "")
 
 # Front end environment variables
 API_URL = env("API_URL", default="/api/v1/")

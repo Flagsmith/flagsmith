@@ -1,3 +1,5 @@
+import gzip
+import json
 import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -224,6 +226,68 @@ def test_map_identity_override_to_identity_override_document__decimal_feature_st
     )
 
     # Then
-    feature_state_value = result["feature_state"]["feature_state_value"]  # type: ignore[index]
+    feature_state = result["feature_state"]
+    assert isinstance(feature_state, dict)
+    feature_state_value = feature_state["feature_state_value"]
     assert isinstance(feature_state_value, Decimal)
     assert feature_state_value == expected_feature_state_value
+
+
+def test_map_environment_to_compressed_environment_document__returns_expected(
+    environment: "Environment",
+    feature_state: "FeatureState",
+) -> None:
+    # Given
+    uncompressed_document = dynamodb.map_environment_to_environment_document(
+        environment
+    )
+
+    # When
+    result = dynamodb.map_environment_to_compressed_environment_document(environment)
+
+    # Then
+    assert result.compressed_size_bytes > 0
+    assert 0 < result.compression_ratio < 1.0
+
+    compressed_project = result.document["project"]
+    compressed_feature_states = result.document["feature_states"]
+    assert isinstance(compressed_project, bytes)
+    assert isinstance(compressed_feature_states, bytes)
+    assert (
+        json.loads(gzip.decompress(compressed_project).decode("utf-8"))
+        == uncompressed_document["project"]
+    )
+    assert (
+        json.loads(gzip.decompress(compressed_feature_states).decode("utf-8"))
+        == uncompressed_document["feature_states"]
+    )
+
+
+def test_map_environment_to_compressed_environment_v2_document__returns_expected(
+    environment: "Environment",
+    feature_state: "FeatureState",
+) -> None:
+    # Given
+    uncompressed_document = dynamodb.map_environment_to_environment_v2_document(
+        environment
+    )
+
+    # When
+    result = dynamodb.map_environment_to_compressed_environment_v2_document(environment)
+
+    # Then
+    assert result.compressed_size_bytes > 0
+    assert 0 < result.compression_ratio < 1.0
+
+    compressed_project = result.document["project"]
+    compressed_feature_states = result.document["feature_states"]
+    assert isinstance(compressed_project, bytes)
+    assert isinstance(compressed_feature_states, bytes)
+    assert (
+        json.loads(gzip.decompress(compressed_project).decode("utf-8"))
+        == uncompressed_document["project"]
+    )
+    assert (
+        json.loads(gzip.decompress(compressed_feature_states).decode("utf-8"))
+        == uncompressed_document["feature_states"]
+    )

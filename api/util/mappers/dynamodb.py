@@ -1,8 +1,12 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, List, TypeAlias, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, TypeVar, Union, cast
 
-from pydantic import BaseModel
+from flagsmith_schemas.dynamodb import (
+    EnvironmentCompressed,
+    EnvironmentV2MetaCompressed,
+)
+from pydantic import BaseModel, TypeAdapter
 
 from edge_api.identities.types import IdentityChangeset
 from environments.dynamodb.constants import (
@@ -13,14 +17,17 @@ from environments.dynamodb.types import (
     IdentityOverrideV2,
 )
 from environments.dynamodb.utils import (
+    estimate_document_size,
     get_environments_v2_identity_override_document_key,
 )
+from util.dataclasses import CompressedEnvironmentDocument
 from util.engine_models.features.models import FeatureStateModel
 from util.mappers.engine import (
     map_environment_api_key_to_engine,
     map_environment_to_engine,
     map_identity_to_engine,
 )
+from util.mappers.types import Document, DocumentValue
 
 if TYPE_CHECKING:
     from environments.identities.models import Identity
@@ -31,13 +38,20 @@ if TYPE_CHECKING:
 __all__ = (
     "map_engine_identity_to_identity_document",
     "map_environment_api_key_to_environment_api_key_document",
+    "map_environment_to_compressed_environment_document",
+    "map_environment_to_compressed_environment_v2_document",
     "map_environment_to_environment_document",
     "map_environment_to_environment_v2_document",
     "map_identity_to_identity_document",
 )
 
-DocumentValue: TypeAlias = Union[Dict[str, "DocumentValue"], str, bool, None, Decimal]
-Document: TypeAlias = Dict[str, DocumentValue]
+
+_environment_compressed_adapter: TypeAdapter[EnvironmentCompressed] = TypeAdapter(
+    EnvironmentCompressed,
+)
+_environment_v2_meta_compressed_adapter: TypeAdapter[EnvironmentV2MetaCompressed] = (
+    TypeAdapter(EnvironmentV2MetaCompressed)
+)
 
 _NULLABLE_IDENTITY_KEY_ATTRIBUTES = {"dashboard_alias"}
 
@@ -54,6 +68,15 @@ def map_environment_to_environment_document(
     }
 
 
+def map_environment_to_compressed_environment_document(
+    environment: "Environment",
+) -> CompressedEnvironmentDocument:
+    return _get_compressed_environment_document(
+        document=map_environment_to_environment_document(environment),
+        adapter=_environment_compressed_adapter,
+    )
+
+
 def map_environment_to_environment_v2_document(
     environment: "Environment",
 ) -> Document:
@@ -65,6 +88,15 @@ def map_environment_to_environment_v2_document(
         "environment_api_key": environment_api_key,
         "environment_id": str(environment.id),
     }
+
+
+def map_environment_to_compressed_environment_v2_document(
+    environment: "Environment",
+) -> CompressedEnvironmentDocument:
+    return _get_compressed_environment_document(
+        document=map_environment_to_environment_v2_document(environment),
+        adapter=_environment_v2_meta_compressed_adapter,
+    )
 
 
 def map_environment_api_key_to_environment_api_key_document(
@@ -163,6 +195,21 @@ def map_identity_override_to_identity_override_document(
     }
 
 
+def _get_compressed_environment_document(
+    document: Document,
+    adapter: "TypeAdapter[Any]",
+) -> CompressedEnvironmentDocument:
+    uncompressed_size_bytes = estimate_document_size(document)
+    document["compressed"] = True
+    compressed_document = adapter.validate_python(document)
+    compressed_size_bytes = estimate_document_size(compressed_document)
+    return CompressedEnvironmentDocument(
+        document=cast(Document, compressed_document),
+        compressed_size_bytes=compressed_size_bytes,
+        compression_ratio=compressed_size_bytes / uncompressed_size_bytes,
+    )
+
+
 T = TypeVar("T")
 
 
@@ -190,7 +237,7 @@ def _isoformat_encoder(value: datetime) -> str:
     return value.isoformat()
 
 
-DOCUMENT_VALUE_ENCODERS_BY_TYPE = {
+DOCUMENT_VALUE_ENCODERS_BY_TYPE: dict[type, Callable[[Any], DocumentValue]] = {
     BaseModel: _base_model_encoder,
     dict: _dict_encoder,
     list: _list_encoder,
@@ -210,6 +257,6 @@ def _map_value_to_document_value(value: Any) -> DocumentValue:
             encoder = DOCUMENT_VALUE_ENCODERS_BY_TYPE[base]
         except KeyError:
             continue
-        return encoder(value)  # type: ignore[operator,no-any-return]
+        return encoder(value)
     else:
         return str(value)

@@ -23,6 +23,25 @@ Labels:
  - `ci_commit_sha`
  - `version`
 
+### `flagsmith_dynamo_environment_document_compression_ratio`
+
+Histogram.
+
+Compression ratio (compressed_size / uncompressed_size) of environment documents.
+
+Labels:
+ - `table`
+
+### `flagsmith_dynamo_environment_document_size_bytes`
+
+Histogram.
+
+Size of environment documents written to DynamoDB.
+
+Labels:
+ - `table`
+ - `compressed`
+
 ### `flagsmith_environment_document_cache_queries`
 
 Counter.
