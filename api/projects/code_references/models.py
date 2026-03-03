@@ -32,6 +32,6 @@ class FeatureFlagCodeReferencesScan(models.Model):
         indexes = [
             models.Index(
                 fields=["project", "repository_url", "-created_at"],
-                name="code_refs_project_repo_created_idx",
+                name="code_ref_proj_repo_created_idx",
             ),
         ]
