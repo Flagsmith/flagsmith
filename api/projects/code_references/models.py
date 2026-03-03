@@ -29,3 +29,9 @@ class FeatureFlagCodeReferencesScan(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(
+                fields=["project", "repository_url", "-created_at"],
+                name="code_refs_project_repo_created_idx",
+            ),
+        ]
