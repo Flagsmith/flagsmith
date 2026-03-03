@@ -90,7 +90,9 @@ def test_calculate_statistics__equal_rates__returns_not_significant() -> None:
     assert stats["winner"] is None
 
 
-def test_calculate_statistics__two_variants_first_wins__returns_correct_winner() -> None:
+def test_calculate_statistics__two_variants_first_wins__returns_correct_winner() -> (
+    None
+):
     # Given
     random.seed(42)
     results = {
@@ -136,7 +138,9 @@ def test_calculate_statistics__zero_total_variant__returns_insufficient_data() -
     assert "Insufficient data" in stats["recommendation"]
 
 
-def test_calculate_statistics__multi_variant_zero_total__returns_insufficient_data() -> None:
+def test_calculate_statistics__multi_variant_zero_total__returns_insufficient_data() -> (
+    None
+):
     # Given
     results = {
         "blue": {"total": 100, "conversions": 10, "rate": 0.10},
