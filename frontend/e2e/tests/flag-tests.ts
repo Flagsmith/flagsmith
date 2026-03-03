@@ -58,9 +58,9 @@ export default async function () {
   await editRemoteConfig(1,12)
 
   log('Try it again')
-  await t.wait(500)
+  await t.wait(2000)
   await click('#try-it-btn')
-  await t.wait(500)
+  await t.wait(1500)
   json = await parseTryItResults()
   await t.expect(json.header_size.value).eql(12)
 
