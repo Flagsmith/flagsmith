@@ -2413,6 +2413,7 @@ def test_list_features_provides_correct_information_on_number_of_overrides_based
 def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     admin_client_new: APIClient,
 ) -> None:
     # Given
@@ -2451,7 +2452,7 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     assert response_json["results"][0]["num_identity_overrides"] is None
 
 
-def test_list_features_calls_get_overrides_data_with_feature_ids(
+def test_list_features_calls_get_overrides_data(
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
     admin_client_new: APIClient,
@@ -2479,7 +2480,6 @@ def test_list_features_calls_get_overrides_data_with_feature_ids(
     assert response.status_code == status.HTTP_200_OK
     mock_get_overrides_data.assert_called_once_with(
         dynamo_enabled_project_environment_one,
-        [feature.id],
     )
 
 
@@ -4447,3 +4447,44 @@ def test_create_feature__required_metadata_on_other_project__returns_201(
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_list_features__edge_v2_project__makes_one_dynamo_query(
+    admin_client_new: APIClient,
+    dynamo_enabled_project_environment_one: Environment,
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    environment = dynamo_enabled_project_environment_one
+    project = environment.project
+
+    # Create two additional features so we have 3 in total (including the fixture feature).
+    Feature.objects.create(name="feature_2", project=project)
+    Feature.objects.create(name="feature_3", project=project)
+
+    # Inject a mock DynamoDB table directly on the wrapper so we can
+    # verify the number of queries made.
+    mock_table = mocker.MagicMock()
+    mock_table.query.return_value = {"Items": [], "Count": 0}
+
+    from edge_api.identities import edge_identity_service
+
+    mocker.patch.object(
+        edge_identity_service.ddb_environment_v2_wrapper,
+        "_table",
+        mock_table,
+    )
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = admin_client_new.get(f"{url}?environment={environment.id}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # Validate that only a single query is made to dynamodb, not one
+    # per feature.
+    assert mock_table.query.call_count == 1

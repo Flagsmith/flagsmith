@@ -349,9 +349,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             environment = get_object_or_404(
                 Environment, id=self.request.query_params["environment"]
             )
-            context["overrides_data"] = get_overrides_data(
-                environment, self.feature_ids
-            )
+            context["overrides_data"] = get_overrides_data(environment)
 
         return context
 

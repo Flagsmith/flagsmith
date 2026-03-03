@@ -1,5 +1,38 @@
 # Changelog
 
+## [2.220.0](https://github.com/Flagsmith/flagsmith/compare/v2.219.1...v2.220.0) (2026-03-03)
+
+
+### Features
+
+* create custom fields for projects ([#6737](https://github.com/Flagsmith/flagsmith/issues/6737)) ([5d2baa3](https://github.com/Flagsmith/flagsmith/commit/5d2baa377f57d5cb02f50d5fe53dfb6cd1cf147a))
+
+
+### Bug Fixes
+
+* Add composite index to code references to improve query performance ([#6835](https://github.com/Flagsmith/flagsmith/issues/6835)) ([13485ca](https://github.com/Flagsmith/flagsmith/commit/13485ca4f75b82124fa62668360e6f4e17b7b046))
+* dark-mode-on-login-page ([#6810](https://github.com/Flagsmith/flagsmith/issues/6810)) ([44549e2](https://github.com/Flagsmith/flagsmith/commit/44549e29a39d6f8dfd489f1e267f6021c8627235))
+* defer data field in feature import/export list views ([#6811](https://github.com/Flagsmith/flagsmith/issues/6811)) ([380fecd](https://github.com/Flagsmith/flagsmith/commit/380fecd26392d10dccc2f38a534a691e27d28086))
+* hide-roles-tab-only-for-non-org-admin-in-env-project-settings ([#6786](https://github.com/Flagsmith/flagsmith/issues/6786)) ([4712ef4](https://github.com/Flagsmith/flagsmith/commit/4712ef4ebf50d8d976631d643286665ae0722801))
+* N dynamodb queries in feature list endpoint ([#6758](https://github.com/Flagsmith/flagsmith/issues/6758)) ([ede739b](https://github.com/Flagsmith/flagsmith/commit/ede739bcabf7402c1f19b6dfd89b74687eb2bceb))
+* replace numpy/scipy with pure Python in experiment analytics ([#6830](https://github.com/Flagsmith/flagsmith/issues/6830)) ([7617737](https://github.com/Flagsmith/flagsmith/commit/7617737f49d2de80996c3d1c726af7a3544a2c55))
+
+
+### Dependency Updates
+
+* bump minimatch in /frontend ([#6808](https://github.com/Flagsmith/flagsmith/issues/6808)) ([2a7dc57](https://github.com/Flagsmith/flagsmith/commit/2a7dc576ad94198473c1c7a9c8971e8d5d62ef8c))
+
+
+### CI
+
+* Increase flag-tests wait time ([#6827](https://github.com/Flagsmith/flagsmith/issues/6827)) ([b8e3f68](https://github.com/Flagsmith/flagsmith/commit/b8e3f684a84c30e47612017e3e1e2c166bd5e87f))
+* pre-commit autoupdate ([#6826](https://github.com/Flagsmith/flagsmith/issues/6826)) ([473a3d8](https://github.com/Flagsmith/flagsmith/commit/473a3d8537ee819d9790f56d764c4282e181c057))
+
+
+### Docs
+
+* Correct the docs for flags and identities endpoint caches ([#6795](https://github.com/Flagsmith/flagsmith/issues/6795)) ([9460579](https://github.com/Flagsmith/flagsmith/commit/946057942161d56dc899776a49e50164eb48ad0c))
+
 ## [2.219.1](https://github.com/Flagsmith/flagsmith/compare/v2.219.0...v2.219.1) (2026-02-26)
 
 

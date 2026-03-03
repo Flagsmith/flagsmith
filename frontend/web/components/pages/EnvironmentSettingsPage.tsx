@@ -17,7 +17,6 @@ import _ from 'lodash'
 import PageTitle from 'components/PageTitle'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
-import { getRoleEnvironmentPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import { Link, useHistory, useRouteMatch } from 'react-router-dom'
 import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
@@ -27,12 +26,7 @@ import Format from 'common/utils/format'
 import Setting from 'components/Setting'
 import API from 'project/api'
 import AppActions from 'common/dispatcher/app-actions'
-import {
-  Environment,
-  Webhook,
-  Role,
-  RolePermission,
-} from 'common/types/responses'
+import { Environment, Webhook, Role } from 'common/types/responses'
 import PanelSearch from 'components/PanelSearch'
 import moment from 'moment'
 import Panel from 'components/base/grid/Panel'
@@ -73,6 +67,7 @@ const EnvironmentSettingsPage: React.FC = () => {
   const { projectId } = useRouteContext()
   const [currentEnv, setCurrentEnv] = useState<Environment | null>(null)
   const [roles, setRoles] = useState<Role[]>([])
+  const [rolesLoaded, setRolesLoaded] = useState(false)
   const [environmentContentType, setEnvironmentContentType] =
     useState<any>(null)
 
@@ -130,24 +125,10 @@ const EnvironmentSettingsPage: React.FC = () => {
       { organisation_id: AccountStore.getOrganisation().id },
       { forceRefetch: true },
     )
-    if (!roles?.data?.results?.length) return
-
-    const roleEnvironmentPermissions = await getRoleEnvironmentPermissions(
-      store,
-      {
-        env_id: env.id,
-        organisation_id: AccountStore.getOrganisation().id,
-        role_id: roles.data.results[0].id,
-      },
-      { forceRefetch: true },
-    )
-
-    const matchingItems: Role[] = roles.data.results.filter((item1: Role) =>
-      roleEnvironmentPermissions.data.results.some(
-        (item2: RolePermission) => item2.role === item1.id,
-      ),
-    )
-    setRoles(matchingItems)
+    if (roles?.data?.results) {
+      setRoles(roles.data.results)
+      setRolesLoaded(true)
+    }
 
     if (Utils.getPlansPermission('METADATA')) {
       const supportedContentType = await getSupportedContentType(getStore(), {
@@ -804,6 +785,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                         level='environment'
                         roleTabTitle='Environment Permissions'
                         roles={roles}
+                        isEditRolePermission={rolesLoaded}
                       />
                     </FormGroup>
                   </TabItem>
