@@ -142,11 +142,12 @@ export class E2EHelpers {
     email: string = process.env.E2E_USER || '',
     password: string = process.env.E2E_PASS || '',
   ) {
-    if (!this.page.url().includes('/login')) {
+    for (let i = 0; i < 3; i++) {
+      if (this.page.url().includes('/login')) break;
       try {
         await this.page.goto('/login', { waitUntil: 'domcontentloaded' });
       } catch {
-        await this.page.goto('/login', { waitUntil: 'domcontentloaded' });
+        // Navigation may be interrupted by a redirect, retry
       }
     }
     // Wait for both fields to be visible
@@ -253,9 +254,10 @@ export class E2EHelpers {
       await this.click(byId('toggle-feature-button'));
     }
     await this.click(byId('create-feature-btn'));
+    await this.waitForElementVisible(byId('update-feature-btn'), LONG_TIMEOUT);
+    await this.closeModal();
     const featureElement = this.page.locator('[data-test^="feature-item-"]', { hasText: name }).first();
     await featureElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-    await this.closeModal();
   }
 
   // Create a remote config
@@ -279,13 +281,14 @@ export class E2EHelpers {
     }
     await this.click(byId('create-feature-btn'));
     const timeout = mvs.length > 0 ? 45000 : 20000;
+    await this.waitForElementVisible(byId('update-feature-btn'), timeout);
+    await this.closeModal();
     const featureElement = this.page.locator('[data-test^="feature-item-"]').filter({
       has: this.page.locator(`span:text-is("${name}")`)
     }).first();
     await featureElement.waitFor({ state: 'visible', timeout });
     const valueElement = featureElement.locator('[data-test^="feature-value-"]');
     await expect(valueElement).toHaveText(expectedValue, { timeout });
-    await this.closeModal();
   }
 
   // Delete a feature
@@ -415,8 +418,9 @@ export class E2EHelpers {
     const roleRow = this.page.locator('[data-test^="role-"]').filter({ hasText: name }).first();
     await roleRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await roleRow.click();
-    // Wait for modal to be visible before clicking tabs
+    // Wait for modal and General tab content to load before switching tabs
     await this.waitForElementVisible('.modal-open');
+    await this.waitForElementVisible(byId('role-name'));
     await this.click(byId('members-tab'));
     await this.click(byId('assigned-users'));
     for (const userId of users) {
@@ -569,6 +573,7 @@ export class E2EHelpers {
     }).first();
     await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await featureRow.dispatchEvent('click');
+    await this.waitForElementVisible(byId('update-feature-btn'));
     if (value !== '') {
       await this.setText(byId('featureValue'), `${value}`);
     }
