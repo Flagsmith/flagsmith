@@ -620,6 +620,7 @@ export class E2EHelpers {
 
   // Create an environment
   async createEnvironment(name: string) {
+    await this.page.waitForLoadState('networkidle');
     await this.waitForElementVisible('[name="envName"]');
     const nameInput = this.page.locator('[name="envName"]').first();
     await nameInput.click();

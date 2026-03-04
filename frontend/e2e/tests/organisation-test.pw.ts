@@ -58,7 +58,7 @@ test.describe('Organisation Tests', () => {
     await assertTextContent('#organisation-link', 'E2E Test Org to Delete')
 
     log('Navigate back to the org we want to delete')
-    const deleteOrgUrl = page.url()
+    const deleteOrgId = page.url().match(/organisation\/(\d+)/)?.[1]
     await waitForElementVisible(byId('org-settings-link'))
     await click(byId('org-settings-link'))
 
@@ -70,7 +70,7 @@ test.describe('Organisation Tests', () => {
     await clickByText('Confirm')
 
     log('Verify Redirected away from deleted Organisation')
-    await page.waitForURL((url) => url.href !== deleteOrgUrl, { timeout: LONG_TIMEOUT })
+    await page.waitForURL((url) => !url.href.includes(`/organisation/${deleteOrgId}`), { timeout: LONG_TIMEOUT })
     await waitForElementVisible(byId('organisation-link'))
     await expect(page.locator('#organisation-link')).not.toContainText('E2E Test Org to Delete')
 
@@ -103,12 +103,12 @@ test.describe('Organisation Tests', () => {
     await assertTextContent('#organisation-link', 'E2E Cancel Test Org')
 
     log('Clean up: Delete the test organisation')
-    const cancelTestOrgUrl = page.url()
+    const cancelTestOrgId = page.url().match(/organisation\/(\d+)/)?.[1]
     await click('#delete-org-btn')
     await waitForElementVisible("[name='confirm-org-name']")
     await setText("[name='confirm-org-name']", 'E2E Cancel Test Org')
     await clickByText('Confirm')
-    await page.waitForURL((url) => url.href !== cancelTestOrgUrl, { timeout: LONG_TIMEOUT })
+    await page.waitForURL((url) => !url.href.includes(`/organisation/${cancelTestOrgId}`), { timeout: LONG_TIMEOUT })
     await waitForElementVisible(byId('organisation-link'))
     await expect(page.locator('#organisation-link')).not.toContainText('E2E Cancel Test Org')
 
