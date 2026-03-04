@@ -1429,7 +1429,6 @@ def test_charge_for_api_call_count_overages_non_standard(
     assert inspecting_handler.messages == [  # type: ignore[attr-defined]
         "Unknown subscription plan when trying to bill for overages "
         f"organisation.id={organisation.id} "
-        f"organisation.name='{organisation.name}' "
         "organisation.subscription.plan='nonstandard-v2'"
     ]
 

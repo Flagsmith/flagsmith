@@ -260,7 +260,7 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
                 case _:
                     logger.error(
                         "Unknown subscription plan when trying to bill for overages"
-                        f" {organisation.id=} {organisation.name=} {organisation.subscription.plan=}"
+                        f" {organisation.id=} {organisation.subscription.plan=}"
                     )
                     continue
         except Exception:
