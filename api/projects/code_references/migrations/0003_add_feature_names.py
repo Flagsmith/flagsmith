@@ -3,7 +3,7 @@ from django.db import migrations, models
 
 
 def _backfill_feature_names(apps: object, schema_editor: object) -> None:
-    FeatureFlagCodeReferencesScan = apps.get_model(  # type: ignore[union-attr]
+    FeatureFlagCodeReferencesScan = apps.get_model(  # type: ignore[attr-defined]
         "code_references", "FeatureFlagCodeReferencesScan"
     )
     scans = list(FeatureFlagCodeReferencesScan.objects.all())
