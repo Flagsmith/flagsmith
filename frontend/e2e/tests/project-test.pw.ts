@@ -32,6 +32,7 @@ test.describe('Project Tests', () => {
     await click('#project-settings-link')
     await setText("[name='proj-name']", 'Project Settings Test Renamed')
     await click('#save-proj-btn')
+    await waitForToast()
     await assertTextContent(`#project-link`, 'Project Settings Test Renamed')
 
     if (hasSegmentChangeRequests) {
