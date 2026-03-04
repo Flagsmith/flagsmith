@@ -126,7 +126,7 @@ def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]
 
     # now let's amend the data so that all identities should receive variant 2
     for mv_value in feature_state_data["multivariate_feature_state_values"]:
-        if mv_value["id"] == variant_2_mvfo_id:
+        if mv_value["multivariate_feature_option"] == variant_2_mvfo_id:
             mv_value["percentage_allocation"] = 100
         else:
             mv_value["percentage_allocation"] = 0
