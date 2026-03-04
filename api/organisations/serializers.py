@@ -200,7 +200,7 @@ class UpdateSubscriptionSerializer(serializers.Serializer):  # type: ignore[type
         organisation = self._get_organisation()  # type: ignore[no-untyped-call]
 
         if settings.ENABLE_CHARGEBEE:
-            subscription_data = get_subscription_data_from_hosted_page(  # type: ignore[no-untyped-call]
+            subscription_data = get_subscription_data_from_hosted_page(
                 hosted_page_id=validated_data["hosted_page_id"]
             )
 
