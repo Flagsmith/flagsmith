@@ -48,14 +48,6 @@ module.exports = {
       options.body = '{}'
     }
 
-    if (E2E && document.getElementById('e2e-request')) {
-      const payload = {
-        options,
-        url,
-      }
-      document.getElementById('e2e-request').innerText = JSON.stringify(payload)
-    }
-
     return fetch(url, options)
       .then((response) => this.status(response, isExternal))
       .then((response) => {
@@ -102,19 +94,6 @@ module.exports = {
     if (!isExternal && response.status === 401) {
       AppActions.setUser(null)
     }
-    response
-      .clone()
-      .text() // cloned so response body can be used downstream
-      .then((err) => {
-        if (E2E && document.getElementById('e2e-error')) {
-          const error = {
-            error: err,
-            status: response.status,
-            url: response.url,
-          }
-          document.getElementById('e2e-error').innerText = JSON.stringify(error)
-        }
-      })
     return Promise.reject(response)
   },
 

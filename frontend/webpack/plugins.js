@@ -5,7 +5,6 @@ const webpack = require('webpack');
 module.exports = [
 
     new webpack.DefinePlugin({
-        E2E: process.env.E2E,
         SENTRY_RELEASE_VERSION: true,
     }),
     // // Fixes warning in moment-with-locales.min.js

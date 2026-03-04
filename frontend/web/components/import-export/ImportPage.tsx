@@ -52,9 +52,13 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     if (status?.status?.result === 'success') {
       const count = status.status.requested_flag_count
       const deprecated = status.status.deprecated_flag_count ?? 0
-      let message = `Imported ${count} flag${count !== 1 ? 's' : ''} from LaunchDarkly.`
+      let message = `Imported ${count} flag${
+        count !== 1 ? 's' : ''
+      } from LaunchDarkly.`
       if (deprecated > 0) {
-        message += ` ${deprecated} deprecated flag${deprecated !== 1 ? 's were' : ' was'} archived.`
+        message += ` ${deprecated} deprecated flag${
+          deprecated !== 1 ? 's were' : ' was'
+        } archived.`
       }
       toast(message, 'success', 20000)
       history.push(`/project/${projectId}`)

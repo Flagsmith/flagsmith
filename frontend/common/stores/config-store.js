@@ -43,7 +43,7 @@ flagsmith
     enableAnalytics: Project.flagsmithAnalytics,
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
-    realtime: Project.flagsmithRealtime,
+    realtime: window.E2E ? false : Project.flagsmithRealtime,
   })
   .catch(() => {
     controller.onError()

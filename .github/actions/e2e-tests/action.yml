@@ -26,13 +26,26 @@ runs:
         node-version-file: frontend/.nvmrc
         cache-dependency-path: frontend/package-lock.json
 
+    - name: Cache Playwright browsers
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('frontend/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
+
     - name: NPM Install
       working-directory: frontend
       run: |
         npm ci
       shell: bash
 
-    - name: Test with Chromedriver
+    - name: Install Playwright browsers
+      working-directory: frontend
+      run: npm run test:install
+      shell: bash
+
+    - name: Run E2E tests
       uses: nick-fields/retry@v3
       with:
         shell: bash

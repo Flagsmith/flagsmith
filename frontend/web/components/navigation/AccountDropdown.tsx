@@ -16,7 +16,7 @@ const AccountDropdown: React.FC = () => {
   const btnRef = useRef<HTMLButtonElement>(null)
   const dropDownRef = useRef<HTMLDivElement>(null)
   const history = useHistory()
-  
+
   useOutsideClick(dropDownRef, () => setIsOpen(false))
 
   useLayoutEffect(() => {

@@ -74,8 +74,8 @@ export const routes = {
   'dev-view': '/organisation/:organisationId/dev-view',
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
-  'experiments': '/project/:projectId/environment/:environmentId/experiments',
   'executive-view': '/organisation/:organisationId/executive-view',
+  'experiments': '/project/:projectId/environment/:environmentId/experiments',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
   'feature-history-detail':
     '/project/:projectId/environment/:environmentId/history/:id/',

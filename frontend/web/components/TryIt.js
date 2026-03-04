@@ -25,14 +25,6 @@ const TryIt = class extends Component {
       headers: { 'X-Environment-Key': environmentId },
     }
 
-    if (E2E && document.getElementById('e2e-request')) {
-      const payload = {
-        options,
-        url,
-      }
-      document.getElementById('e2e-request').innerText = JSON.stringify(payload)
-    }
-
     fetch(url, options)
       .then((res) => res.json())
       .then((data) => {
