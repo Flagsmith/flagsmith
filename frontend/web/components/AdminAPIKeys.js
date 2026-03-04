@@ -2,7 +2,8 @@ import React, { PureComponent } from 'react'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import data from 'common/data/base/_data'
-import InfoMessage from './InfoMessage'
+import OrganisationStore from 'common/stores/organisation-store'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 import Token from './Token'
 import JSONReference from './JSONReference'
 import Button from './base/forms/Button'
@@ -458,6 +459,17 @@ export default class AdminAPIKeys extends PureComponent {
               <Row className='table-header'>
                 <Flex className='table-column px-3'>API Keys</Flex>
                 <Flex className='table-column'>Created</Flex>
+                {Utils.getFlagsmithHasFeature(
+                  'organisation_api_keys_created_by',
+                ) && (
+                  <Flex className='table-column'>
+                    <Tooltip title='Created by' place='right'>
+                      This field may be blank if the key was created before
+                      this information was tracked, or if the user has since
+                      left the organisation.
+                    </Tooltip>
+                  </Flex>
+                )}
                 <Flex className='table-column'>Is Admin</Flex>
                 <Flex className='table-column'>Active</Flex>
                 <div
@@ -468,59 +480,71 @@ export default class AdminAPIKeys extends PureComponent {
                 </div>
               </Row>
             }
-            renderRow={(v) =>
-              !v.revoked && (
-                <Row
-                  className='list-item'
-                  key={v.id}
-                  onClick={() => this.editAPIKey(v.name, v.id, v.prefix)}
-                >
-                  <Flex className='table-column px-3'>
-                    <div className='font-weight-medium mb-1'>{v.name}</div>
-                    <div className='list-item-subtitle'>
-                      <div>{v.prefix}*****************</div>
-                    </div>
-                  </Flex>
-                  <Flex className='table-column fs-small lh-sm'>
-                    {moment(v.created).format('Do MMM YYYY HH:mma')}
-                  </Flex>
-                  <Flex className='table-column fs-small lh-sm'>
-                    <Switch checked={v.is_admin} disabled={true} />
-                  </Flex>
-                  <Flex className='table-column fs-small lh-sm'>
-                    {v.has_expired ? (
-                      <div className='ml-1'>
-                        <Tooltip title={<Icon name='close-circle' />}>
-                          {'This API key has expired'}
-                        </Tooltip>
-                      </div>
-                    ) : (
-                      <span className='ml-1'>
-                        <Icon
-                          name='checkmark-circle'
-                          fill='#27AB95'
-                          width={28}
-                        />
-                      </span>
-                    )}
-                  </Flex>
-                  <div
-                    className='table-column  text-center'
-                    style={{ width: '80px' }}
+            renderRow={(v) => {
+              const orgUsers = OrganisationStore.model?.users
+              const createdByUser =
+                v.created_by && orgUsers?.find((u) => u.id === v.created_by)
+              return (
+                !v.revoked && (
+                  <Row
+                    className='list-item'
+                    key={v.id}
+                    onClick={() => this.editAPIKey(v.name, v.id, v.prefix)}
                   >
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        this.remove(v)
-                      }}
-                      className='btn btn-with-icon'
+                    <Flex className='table-column px-3'>
+                      <div className='font-weight-medium mb-1'>{v.name}</div>
+                      <div className='list-item-subtitle'>
+                        <div>{v.prefix}*****************</div>
+                      </div>
+                    </Flex>
+                    <Flex className='table-column fs-small lh-sm'>
+                      {moment(v.created).format('Do MMM YYYY HH:mma')}
+                    </Flex>
+                    {Utils.getFlagsmithHasFeature(
+                      'organisation_api_keys_created_by',
+                    ) && (
+                      <Flex className='table-column fs-small lh-sm'>
+                        {getUserDisplayName(createdByUser, '-')}
+                      </Flex>
+                    )}
+                    <Flex className='table-column fs-small lh-sm'>
+                      <Switch checked={v.is_admin} disabled={true} />
+                    </Flex>
+                    <Flex className='table-column fs-small lh-sm'>
+                      {v.has_expired ? (
+                        <div className='ml-1'>
+                          <Tooltip title={<Icon name='close-circle' />}>
+                            {'This API key has expired'}
+                          </Tooltip>
+                        </div>
+                      ) : (
+                        <span className='ml-1'>
+                          <Icon
+                            name='checkmark-circle'
+                            fill='#27AB95'
+                            width={28}
+                          />
+                        </span>
+                      )}
+                    </Flex>
+                    <div
+                      className='table-column  text-center'
+                      style={{ width: '80px' }}
                     >
-                      <Icon name='trash-2' width={20} fill='#656D7B' />
-                    </Button>
-                  </div>
-                </Row>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          this.remove(v)
+                        }}
+                        className='btn btn-with-icon'
+                      >
+                        <Icon name='trash-2' width={20} fill='#656D7B' />
+                      </Button>
+                    </div>
+                  </Row>
+                )
               )
-            }
+            }}
           />
         )}
       </div>
