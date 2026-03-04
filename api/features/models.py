@@ -618,6 +618,8 @@ class FeatureState(
     @property
     def is_live(self) -> bool:
         if self.environment.use_v2_feature_versioning:  # type: ignore[union-attr]
+            if self.identity_id is not None:
+                return True
             return (
                 self.environment_feature_version_id is not None
                 and self.environment_feature_version.is_live  # type: ignore[union-attr]
