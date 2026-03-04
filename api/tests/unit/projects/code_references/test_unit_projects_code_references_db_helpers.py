@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Iterator
 
 import pytest
 from django.contrib.postgres.fields import ArrayField
@@ -10,7 +10,7 @@ from projects.code_references.db_helpers import ArrayContains
 
 
 @pytest.fixture()
-def names_model(db: None) -> Generator[type[models.Model]]:
+def names_model(db: None) -> Iterator[type[models.Model]]:
     with isolate_apps("projects.code_references"):
 
         class NamesModel(models.Model):
