@@ -53,13 +53,13 @@ def annotate_feature_queryset_with_code_references_summary(
     last_feature_found_at = (
         FeatureFlagCodeReferencesScan.objects.annotate(
             feature_name=OuterRef("feature_name"),
-            has_feature_name=ArrayContains(F("feature_names"), F("feature_name")),
+            contains_feature_name=ArrayContains(F("feature_names"), F("feature_name")),
         )
         .filter(
             project=OuterRef("project_id"),
             created_at__gte=timezone.now() - history_delta,
             repository_url=OuterRef("repository_url"),
-            has_feature_name=True,
+            contains_feature_name=True,
         )
         .values("created_at")
         .order_by("-created_at")[:1]

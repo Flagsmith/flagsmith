@@ -2,7 +2,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import migrations, models
 
 
-def _backfill_feature_names(apps: object, schema_editor: object) -> None:
+def backfill_feature_names(apps: object, schema_editor: object) -> None:
     FeatureFlagCodeReferencesScan = apps.get_model(  # type: ignore[attr-defined]
         "code_references", "FeatureFlagCodeReferencesScan"
     )
@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
             name="feature_names",
         ),
         migrations.RunPython(
-            _backfill_feature_names,
+            backfill_feature_names,
             reverse_code=migrations.RunPython.noop,
         ),
     ]

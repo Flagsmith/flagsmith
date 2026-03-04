@@ -32,11 +32,11 @@ class FeatureFlagCodeReferencesScan(LifecycleModel):  # type: ignore[misc]
     revision = models.CharField(max_length=100)  # type: ignore[var-annotated]
     code_references = models.JSONField[list[JSONCodeReference]](default=list)
 
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)  # type: ignore[var-annotated]
+
     # Denormalised from code_references for efficient indexed lookups.
     # Populated automatically before save and kept in sorted order.
     feature_names = ArrayField(models.TextField(), default=list)  # type: ignore[var-annotated]
-
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)  # type: ignore[var-annotated]
 
     class Meta:
         ordering = ["-created_at"]
