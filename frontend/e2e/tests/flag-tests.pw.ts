@@ -154,14 +154,10 @@ test.describe('Flag Tests', () => {
     log('Verify Archive')
     await closeModal()
 
-    // Verify the feature can be filtered as archived
-    await gotoFeatures()
-
     // Verify archived feature is not visible by default
-    const archivedFeatureHidden = await page.locator('[data-test^="feature-item-"]').filter({
+    await expect(page.locator('[data-test^="feature-item-"]').filter({
       has: page.locator(`span:text-is("test_flag_with_tags")`)
-    }).count()
-    expect(archivedFeatureHidden).toBe(0)
+    })).toHaveCount(0)
 
     log('Enable archived filter')
     // Click on Tags filter button
