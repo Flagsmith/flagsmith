@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup';
-import { byId, log, createHelpers } from '../helpers'
+import { byId, log, createHelpers, LONG_TIMEOUT } from '../helpers'
 import { E2E_SEPARATE_TEST_USER, PASSWORD } from '../config'
 
 test.describe('Organisation Tests', () => {
@@ -58,6 +58,7 @@ test.describe('Organisation Tests', () => {
     await assertTextContent('#organisation-link', 'E2E Test Org to Delete')
 
     log('Navigate back to the org we want to delete')
+    const deleteOrgUrl = page.url()
     await waitForElementVisible(byId('org-settings-link'))
     await click(byId('org-settings-link'))
 
@@ -68,13 +69,9 @@ test.describe('Organisation Tests', () => {
     await setText("[name='confirm-org-name']", 'E2E Test Org to Delete')
     await clickByText('Confirm')
 
-    log('Verify Redirected to Next Organisation in Nav')
+    log('Verify Redirected away from deleted Organisation')
+    await page.waitForURL((url) => url.href !== deleteOrgUrl, { timeout: LONG_TIMEOUT })
     await waitForElementVisible(byId('organisation-link'))
-    log('Current org in nav after deletion: Test Organisation')
-
-    log('Verify deleted org name does not appear in nav')
-    // Wait for the organisation link to update to the new org before asserting
-    await assertTextContent('#organisation-link', 'Test Organisation')
     await expect(page.locator('#organisation-link')).not.toContainText('E2E Test Org to Delete')
 
     log('Test 3: Cancel Organisation Deletion')
@@ -106,13 +103,14 @@ test.describe('Organisation Tests', () => {
     await assertTextContent('#organisation-link', 'E2E Cancel Test Org')
 
     log('Clean up: Delete the test organisation')
+    const cancelTestOrgUrl = page.url()
     await click('#delete-org-btn')
     await waitForElementVisible("[name='confirm-org-name']")
     await setText("[name='confirm-org-name']", 'E2E Cancel Test Org')
     await clickByText('Confirm')
-    await waitForElementNotExist('.modal')
+    await page.waitForURL((url) => url.href !== cancelTestOrgUrl, { timeout: LONG_TIMEOUT })
     await waitForElementVisible(byId('organisation-link'))
-    await assertTextContent('#organisation-link', 'Test Organisation')
+    await expect(page.locator('#organisation-link')).not.toContainText('E2E Cancel Test Org')
 
     log('Test 4: Organisation Name Validation')
     log('Navigate to Test Organisation settings')

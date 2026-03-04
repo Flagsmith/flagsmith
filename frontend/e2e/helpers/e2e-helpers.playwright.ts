@@ -108,9 +108,15 @@ export class E2EHelpers {
     await this.waitForElementVisible(selector);
     const element = this.page.locator(selector).first();
     await expect(element).toBeAttached({ timeout: LONG_TIMEOUT });
-    await element.scrollIntoViewIfNeeded();
-    await expect(element).toBeEnabled({ timeout: LONG_TIMEOUT });
-    await element.click();
+    try {
+      await element.scrollIntoViewIfNeeded();
+    } catch {
+      // Element may have been re-rendered, re-query and retry
+      await expect(this.page.locator(selector).first()).toBeAttached({ timeout: LONG_TIMEOUT });
+      await this.page.locator(selector).first().scrollIntoViewIfNeeded();
+    }
+    await expect(this.page.locator(selector).first()).toBeEnabled({ timeout: LONG_TIMEOUT });
+    await this.page.locator(selector).first().click();
   }
 
   async clickByText(text: string, element: string = 'button') {
@@ -425,9 +431,10 @@ export class E2EHelpers {
     const roleRow = this.page.locator('[data-test^="role-"]').filter({ hasText: name }).first();
     await roleRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await roleRow.click();
-    // Wait for modal and General tab content to load before switching tabs
+    // Wait for modal and General tab content to fully load before switching tabs
     await this.waitForElementVisible('.modal-open');
     await this.waitForElementVisible(byId('role-name'));
+    await this.page.waitForLoadState('networkidle');
     await this.click(byId('members-tab'));
     await this.click(byId('assigned-users'));
     for (const userId of users) {
@@ -872,6 +879,7 @@ export class E2EHelpers {
     await this.waitForElementVisible('#create-feature-modal');
 
     // Click the "Add Tag" button to open tag interface
+    await this.page.waitForLoadState('networkidle');
     const addTagButton = this.page.locator('button').filter({ hasText: 'Add Tag' });
     await addTagButton.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await addTagButton.scrollIntoViewIfNeeded();
