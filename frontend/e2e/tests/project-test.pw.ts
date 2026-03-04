@@ -57,7 +57,9 @@ test.describe('Project Tests', () => {
       await assertInputValue('[name="env-name"]', '3')
 
       log('Test 3: Disable change requests (auto-save on toggle)')
+      await waitForElementNotExist('.toast')
       await click('[data-test="js-change-request-approvals"]')
+      await waitForToast()
       log('Verify disabled state persisted after navigation')
       await click('#features-link')
       await click('#project-settings-link')

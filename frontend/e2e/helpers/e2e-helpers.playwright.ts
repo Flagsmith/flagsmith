@@ -242,6 +242,7 @@ export class E2EHelpers {
     await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await featureRow.dispatchEvent('click');
     await this.waitForElementVisible('#create-feature-modal');
+    await this.waitForElementVisible(byId('featureValue'));
   }
 
   // Create a feature
@@ -649,6 +650,25 @@ export class E2EHelpers {
     } catch (e) {
       throw new Error('Try it results are not valid JSON');
     }
+  }
+
+  // Click try-it and retry until the result contains the expected key with the expected value.
+  // Uses waitForResponse to know when fresh data has arrived before reading results.
+  async tryItExpect(key: string, field: string, expected: any, maxRetries: number = 10) {
+    for (let i = 0; i < maxRetries; i++) {
+      const responsePromise = this.page.waitForResponse(response =>
+        response.url().includes('/flags/') && response.request().method() === 'GET'
+      );
+      await this.click('#try-it-btn');
+      await responsePromise;
+      await this.waitForElementVisible('#try-it-results');
+      const json = await this.parseTryItResults();
+      if (json[key] && json[key][field] === expected) {
+        return json;
+      }
+      log(`Try-it attempt ${i + 1}: expected ${key}.${field}=${expected}, got ${JSON.stringify(json[key]?.[field])}. Retrying...`);
+    }
+    throw new Error(`Try-it failed after ${maxRetries} attempts: ${key}.${field} never became ${expected}`);
   }
 
   // Go to feature versions

@@ -13,8 +13,8 @@ test.describe('Flag Tests', () => {
       gotoFeatures,
       gotoProject,
       login,
-      parseTryItResults,
       scrollBy,
+      tryItExpect,
       toggleFeature,
       waitForElementClickable,
       waitForElementVisible,
@@ -58,33 +58,21 @@ test.describe('Flag Tests', () => {
     await toggleFeature('header_enabled', true)
 
     log('Try it')
-    await page.waitForTimeout(2000)
-    await click('#try-it-btn')
-    await page.waitForTimeout(500)
-    let json = await parseTryItResults()
-    await expect(json.header_size.value).toBe('big')
-    await expect(json.mv_flag.value).toBe('big')
-    await expect(json.header_enabled.enabled).toBe(true)
+    const json = await tryItExpect('header_enabled', 'enabled', true)
+    expect(json.header_size.value).toBe('big')
+    expect(json.mv_flag.value).toBe('big')
 
     log('Update feature')
     await editRemoteConfig('header_size', 12)
 
     log('Try it again')
-    await page.waitForTimeout(5000)
-    await click('#try-it-btn')
-    await page.waitForTimeout(2000)
-    json = await parseTryItResults()
-    await expect(json.header_size.value).toBe(12)
+    await tryItExpect('header_size', 'value', 12)
 
     log('Change feature value to boolean')
     await editRemoteConfig('header_size', false)
 
     log('Try it again 2')
-    await page.waitForTimeout(5000)
-    await click('#try-it-btn')
-    await page.waitForTimeout(2000)
-    json = await parseTryItResults()
-    await expect(json.header_size.value).toBe(false)
+    await tryItExpect('header_size', 'value', false)
 
     log('Switch environment')
     // Navigate back to features list so environment switcher is visible in navbar
