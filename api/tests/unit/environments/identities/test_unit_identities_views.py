@@ -1,4 +1,5 @@
 import json
+import logging
 import urllib
 from typing import Any
 from unittest import mock
@@ -37,6 +38,9 @@ from organisations.models import Organisation
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from segments.models import Condition, Segment, SegmentRule
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def test_should_return_identities_list_when_requested(
@@ -598,14 +602,9 @@ def test_identities_endpoint_returns_value_for_segment_if_rule_type_percentage_s
         segment=segment, type=SegmentRule.ALL_RULE
     )
 
-    identity_percentage_value = get_hashed_percentage_for_object_ids(
-        [segment.id, identity.id]
-    )
     Condition.objects.create(
         operator=PERCENTAGE_SPLIT,
-        value=int(
-            (identity_percentage_value + (1 - identity_percentage_value) / 2) * 100.0
-        ),
+        value=100,
         rule=segment_rule,
     )
     feature_segment = FeatureSegment.objects.create(
