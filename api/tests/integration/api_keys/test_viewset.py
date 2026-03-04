@@ -3,9 +3,12 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from organisations.models import Organisation
+from users.models import FFAdminUser
 
 
-def test_create_master_api_key_returns_key_in_response(admin_client, organisation):  # type: ignore[no-untyped-def]
+def test_create_master_api_key(
+    admin_user: FFAdminUser, admin_client: APIClient, organisation: Organisation
+) -> None:
     # Given
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-list",
@@ -20,6 +23,7 @@ def test_create_master_api_key_returns_key_in_response(admin_client, organisatio
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["key"] is not None
     assert response.json()["is_admin"] is True
+    assert response.json()["created_by"] == admin_user.id
 
 
 def test_creating_non_admin_master_api_key_without_rbac_returns_400(  # type: ignore[no-untyped-def]
