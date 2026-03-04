@@ -381,3 +381,40 @@ def test_FeatureCodeReferencesDetailAPIView__responds_404_when_feature_not_found
     # Then
     assert response.status_code == 404
     assert response.data["detail"] == "No Feature matches the given query."
+
+
+def test_CodeReferenceCreateAPIView__responds_201__populates_feature_names(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # When
+    response = admin_client_new.post(
+        f"/api/v1/projects/{project.pk}/code-references/",
+        data={
+            "repository_url": "https://svn.flagsmith.com/",
+            "revision": "revision-hash",
+            "code_references": [
+                {
+                    "feature_name": "feature-1",
+                    "file_path": "path/to/file1.py",
+                    "line_number": 10,
+                },
+                {
+                    "feature_name": "feature-1",
+                    "file_path": "path/to/file2.py",
+                    "line_number": 20,
+                },
+                {
+                    "feature_name": "feature-2",
+                    "file_path": "path/to/file3.py",
+                    "line_number": 30,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 201
+    scan = FeatureFlagCodeReferencesScan.objects.get()
+    assert scan.feature_names == ["feature-1", "feature-2"]

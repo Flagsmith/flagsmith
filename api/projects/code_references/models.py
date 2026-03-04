@@ -1,9 +1,16 @@
+from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
+from django_lifecycle import (  # type: ignore[import-untyped]
+    BEFORE_SAVE,
+    LifecycleModel,
+    hook,
+)
 
 from projects.code_references.types import JSONCodeReference, VCSProvider
 
 
-class FeatureFlagCodeReferencesScan(models.Model):
+class FeatureFlagCodeReferencesScan(LifecycleModel):
     """
     A scan of feature flag code references in a repository
     """
@@ -25,6 +32,10 @@ class FeatureFlagCodeReferencesScan(models.Model):
     revision = models.CharField(max_length=100)
     code_references = models.JSONField[list[JSONCodeReference]](default=list)
 
+    # Denormalised from code_references for efficient indexed lookups.
+    # Populated automatically before save and kept in sorted order.
+    feature_names = ArrayField(models.TextField(), default=list)
+
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
@@ -34,4 +45,14 @@ class FeatureFlagCodeReferencesScan(models.Model):
                 fields=["project", "repository_url", "-created_at"],
                 name="code_ref_proj_repo_created_idx",
             ),
+            GinIndex(
+                fields=["feature_names"],
+                name="code_refs_feat_names_gin_idx",
+            ),
         ]
+
+    @hook(BEFORE_SAVE)
+    def populate_feature_names(self) -> None:
+        self.feature_names = sorted(
+            {ref["feature_name"] for ref in self.code_references}
+        )

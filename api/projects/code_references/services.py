@@ -4,7 +4,6 @@ from urllib.parse import urljoin
 from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.postgres.fields import ArrayField
 from django.db.models import (
-    BooleanField,
     F,
     Func,
     JSONField,
@@ -20,6 +19,7 @@ from features.models import Feature
 from projects.code_references.constants import (
     FEATURE_FLAG_CODE_REFERENCES_RETENTION_DAYS,
 )
+from projects.code_references.db_helpers import ArrayContains
 from projects.code_references.models import FeatureFlagCodeReferencesScan
 from projects.code_references.types import (
     CodeReference,
@@ -53,19 +53,13 @@ def annotate_feature_queryset_with_code_references_summary(
     last_feature_found_at = (
         FeatureFlagCodeReferencesScan.objects.annotate(
             feature_name=OuterRef("feature_name"),
-            contains_feature_name=Func(
-                F("code_references"),
-                Value("$[*] ? (@.feature_name == $feature_name)"),
-                JSONObject(feature_name=F("feature_name")),
-                function="jsonb_path_exists",
-                output_field=BooleanField(),
-            ),
+            has_feature_name=ArrayContains(F("feature_names"), F("feature_name")),
         )
         .filter(
             project=OuterRef("project_id"),
             created_at__gte=timezone.now() - history_delta,
             repository_url=OuterRef("repository_url"),
-            contains_feature_name=True,
+            has_feature_name=True,
         )
         .values("created_at")
         .order_by("-created_at")[:1]
@@ -122,7 +116,7 @@ def get_code_references_for_feature_flag(
             project=feature.project,
             created_at__gte=timezone.now() - history_delta,
             repository_url=OuterRef("repository_url"),
-            code_references__contains=[{"feature_name": feature.name}],
+            feature_names__contains=[feature.name],
         )
         .values("created_at")
         .order_by("-created_at")[:1]
