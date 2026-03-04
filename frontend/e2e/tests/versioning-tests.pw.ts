@@ -52,6 +52,8 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
         { value: 'medium', weight: 100 },
         { value: 'big', weight: 0 },
     ]})
+    // Short delay between synchronising mv options and feature creation
+    await page.waitForTimeout(1000)
     log('Edit feature 2')
     await editRemoteConfig('b', 'small', false, [
         { value: 'medium', weight: 0 },

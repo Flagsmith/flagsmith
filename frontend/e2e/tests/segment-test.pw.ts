@@ -80,6 +80,7 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
     waitAndRefresh,
     waitForElementVisible,
     waitForToast,
+    waitForToastsToClear,
   } = createHelpers(page)
 
   log('Login')
@@ -131,6 +132,7 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
     { value: 'small', weight: 100 },
   ])
 
+  await waitForToastsToClear()
   await click('#update-feature-segments-btn')
   await waitForToast()
   await closeModal()

@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup';
-import { byId, log, createHelpers } from '../helpers';
+import { byId, log, createHelpers, LONG_TIMEOUT } from '../helpers';
 import { E2E_USER, PASSWORD, E2E_TEST_PROJECT } from '../config';
 
 test.describe('Flag Tests', () => {
@@ -25,15 +25,14 @@ test.describe('Flag Tests', () => {
     await login(E2E_USER, PASSWORD)
     await gotoProject(E2E_TEST_PROJECT)
 
-    // Check if we're already in production by checking if development is clickable
-    const isProductionActive = await page.locator(byId('switch-environment-development')).isVisible().catch(() => true)
+    // Ensure we're on the Development environment
+    const isDevelopmentActive = await page.locator(byId('switch-environment-development-active')).isVisible().catch(() => false)
 
-    if (isProductionActive) {
-      // We're not in development (might be in production), switch to development first
+    if (!isDevelopmentActive) {
       log('Switching to development first')
       await waitForElementClickable(byId('switch-environment-development'))
       await click(byId('switch-environment-development'))
-      await page.waitForTimeout(500)
+      await waitForElementVisible(byId('switch-environment-development-active'))
     }
 
     log('Create Features')
@@ -115,6 +114,7 @@ test.describe('Flag Tests', () => {
       gotoProject,
       login,
       waitForToast,
+      waitForToastsToClear,
     } = createHelpers(page);
 
     log('Login')
@@ -143,11 +143,14 @@ test.describe('Flag Tests', () => {
     await addTagToFeature('feature-request')
 
     // Save the feature settings
+    await waitForToastsToClear()
     await clickByText('Update Settings');
+    await waitForToast()
     await closeModal()
 
     log('Archive Feature')
     await gotoFeature('test_flag_with_tags')
+    await waitForToastsToClear()
     await archiveFeature()
     await waitForToast()
 
@@ -157,7 +160,7 @@ test.describe('Flag Tests', () => {
     // Verify archived feature is not visible by default
     await expect(page.locator('[data-test^="feature-item-"]').filter({
       has: page.locator(`span:text-is("test_flag_with_tags")`)
-    })).toHaveCount(0)
+    })).toHaveCount(0, { timeout: LONG_TIMEOUT })
 
     log('Enable archived filter')
     // Click on Tags filter button

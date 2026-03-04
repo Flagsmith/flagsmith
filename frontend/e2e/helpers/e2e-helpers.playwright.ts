@@ -222,6 +222,7 @@ export class E2EHelpers {
     const userRow = this.page.locator('[data-test^="user-item-"]').filter({ hasText: identifier }).first();
     await userRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await userRow.locator('a').first().click();
+    await this.page.waitForLoadState('networkidle');
     await this.waitForElementVisible('#add-trait');
   }
 
@@ -256,8 +257,10 @@ export class E2EHelpers {
     }
     await this.click(byId('create-feature-btn'));
     await this.waitForElementVisible(byId('update-feature-btn'), LONG_TIMEOUT);
-    await this.closeModal();
+    // Wait for feature to appear in the list behind the modal before closing
     const featureElement = this.page.locator('[data-test^="feature-item-"]', { hasText: name }).first();
+    await featureElement.waitFor({ state: 'attached', timeout: LONG_TIMEOUT });
+    await this.closeModal();
     await featureElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
   }
 
@@ -283,10 +286,12 @@ export class E2EHelpers {
     await this.click(byId('create-feature-btn'));
     const timeout = mvs.length > 0 ? 45000 : 20000;
     await this.waitForElementVisible(byId('update-feature-btn'), timeout);
-    await this.closeModal();
+    // Wait for feature to appear in the list behind the modal before closing
     const featureElement = this.page.locator('[data-test^="feature-item-"]').filter({
       has: this.page.locator(`span:text-is("${name}")`)
     }).first();
+    await featureElement.waitFor({ state: 'attached', timeout });
+    await this.closeModal();
     await featureElement.waitFor({ state: 'visible', timeout });
     const valueElement = featureElement.locator('[data-test^="feature-value-"]');
     await expect(valueElement).toHaveText(expectedValue, { timeout });
@@ -393,6 +398,7 @@ export class E2EHelpers {
 
   // Save feature segments
   async saveFeatureSegments() {
+    await this.waitForToastsToClear();
     await this.click('#update-feature-segments-btn');
     await this.waitForToast();
     await this.closeModal();
@@ -411,10 +417,10 @@ export class E2EHelpers {
     await this.click(byId('tab-item-roles'));
     await this.click(byId('create-role'));
     await this.setText(byId('role-name'), name);
-    await this.click(byId('save-role'));
-    await this.closeModal();
-    // Wait for any toast messages to clear before continuing
     await this.waitForToastsToClear();
+    await this.click(byId('save-role'));
+    await this.waitForToast();
+    await this.closeModal();
     // Click on the role by its name
     const roleRow = this.page.locator('[data-test^="role-"]').filter({ hasText: name }).first();
     await roleRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
@@ -598,6 +604,7 @@ export class E2EHelpers {
     if (mvs.length > 0 || value !== '') {
       await this.page.waitForTimeout(1500);
     }
+    await this.waitForToastsToClear();
     await this.click(byId('update-feature-btn'));
     await this.waitForToast();
     await this.closeModal();
@@ -667,6 +674,7 @@ export class E2EHelpers {
         return json;
       }
       log(`Try-it attempt ${i + 1}: expected ${key}.${field}=${expected}, got ${JSON.stringify(json[key]?.[field])}. Retrying...`);
+      await this.page.waitForTimeout(1000);
     }
     throw new Error(`Try-it failed after ${maxRetries} attempts: ${key}.${field} never became ${expected}`);
   }
@@ -1040,6 +1048,7 @@ export class E2EHelpers {
 
     // Wait for button to be enabled
     await expect(saveButton).toBeEnabled({ timeout: 5000 });
+    await this.waitForToastsToClear();
     await saveButton.click();
 
     await this.waitForToast();
@@ -1112,6 +1121,7 @@ export class E2EHelpers {
     await approvalInput.fill(minimumApprovals.toString());
 
     // Save environment settings
+    await this.waitForToastsToClear();
     await this.click('#save-env-btn');
     await this.waitForToast();
     await this.page.waitForTimeout(1000);
