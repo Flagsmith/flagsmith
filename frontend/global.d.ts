@@ -93,6 +93,7 @@ declare global {
   const PanelSearch: typeof Component
   const CodeHelp: typeof Component
   interface Window {
+    E2E: boolean
     $crisp: Crisp
     engagement: {
       init(apiKey: string, options?: InitOptions): void
