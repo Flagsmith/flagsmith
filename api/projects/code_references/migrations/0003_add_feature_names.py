@@ -1,9 +1,11 @@
+from django.apps.registry import Apps
 from django.contrib.postgres.fields import ArrayField
 from django.db import migrations, models
+from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 
 
-def backfill_feature_names(apps: object, schema_editor: object) -> None:
-    FeatureFlagCodeReferencesScan = apps.get_model(  # type: ignore[attr-defined]
+def backfill_feature_names(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
+    FeatureFlagCodeReferencesScan = apps.get_model(
         "code_references", "FeatureFlagCodeReferencesScan"
     )
     scans = list(FeatureFlagCodeReferencesScan.objects.all())
