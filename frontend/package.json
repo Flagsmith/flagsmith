@@ -75,7 +75,7 @@
     "cross-env": "7.0.3",
     "css-loader": "6.8.1",
     "data-relay": "^0.0.13",
-    "dompurify": "^3.3.1",
+    "dompurify": "^3.3.2",
     "dotenv": "6.2.0",
     "express": "^4.21.2",
     "express-handlebars": "6.0.5",
