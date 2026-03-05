@@ -312,17 +312,18 @@ def test_get_segment_ids_returns_correct_segment_ids(  # type: ignore[no-untyped
     Segment.objects.create(name="Non matching segment", project=project)
 
     identity_document = map_identity_to_identity_document(identity)
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-    mocked_get_item_from_uuid = mocker.patch.object(
-        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
-    )
     identity_uuid = identity_document["identity_uuid"]
-
     environment_document = map_environment_to_environment_document(environment)
+
     mocked_environment_wrapper = mocker.patch(
         "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocked_get_item_from_uuid = mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
+    )
 
     # When
     segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)  # type: ignore[arg-type]
@@ -386,17 +387,18 @@ def test_get_segment_ids_with_segment_feature_overrides(
     )
 
     identity_document = map_identity_to_identity_document(identity)
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-    mocker.patch.object(
-        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
-    )
     identity_uuid = identity_document["identity_uuid"]
-
     environment_document = map_environment_to_environment_document(environment)
+
     mocked_environment_wrapper = mocker.patch(
         "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
+    )
 
     # When
     segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)  # type: ignore[arg-type]
@@ -427,17 +429,18 @@ def test_get_segment_ids_returns_segment_using_in_operator_for_integer_traits(
     )
 
     identity_document = map_identity_to_identity_document(identity)
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-    mocker.patch.object(
-        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
-    )
     identity_uuid = identity_document["identity_uuid"]
-
     environment_document = map_environment_to_environment_document(environment)
+
     mocked_environment_wrapper = mocker.patch(
         "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
+    )
 
     # When
     segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)  # type: ignore[arg-type]
@@ -490,19 +493,19 @@ def test_get_segment_ids_throws_value_error_if_arguments_not_valid():  # type: i
 
 def test_get_segment_ids_with_identity_model(identity, environment, mocker):  # type: ignore[no-untyped-def]
     # Given
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
     identity_document = map_identity_to_identity_document(identity)
     identity_model = IdentityModel.parse_obj(identity_document)
-
-    mocker.patch.object(
-        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
-    )
-
     environment_document = map_environment_to_environment_document(environment)
+
     mocked_environment_wrapper = mocker.patch(
         "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
     )
     mocked_environment_wrapper.return_value.get_item.return_value = environment_document
+
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
+    )
 
     # When
     segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_model=identity_model)
@@ -638,6 +641,41 @@ def test_identity_wrapper__iter_all_items_paginated__capacity_budget_set__raises
             ),
         ]
     )
+
+
+def test_get_segment_ids__called_multiple_times__reuses_environment_wrapper(
+    project: "Project",
+    environment: "Environment",
+    identity: "Identity",
+    mocker: "MockerFixture",
+) -> None:
+    # Given
+    identity_document = map_identity_to_identity_document(identity)
+    environment_document = map_environment_to_environment_document(environment)
+
+    mocked_environment_wrapper_class = mocker.patch(
+        "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper"
+    )
+    mocked_environment_wrapper_class.return_value.get_item.return_value = (
+        environment_document
+    )
+
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocker.patch.object(
+        dynamo_identity_wrapper,
+        "get_item_from_uuid",
+        return_value=identity_document,
+    )
+    identity_uuid = str(identity_document["identity_uuid"])
+
+    # When
+    dynamo_identity_wrapper.get_segment_ids(identity_uuid)
+    dynamo_identity_wrapper.get_segment_ids(identity_uuid)
+    dynamo_identity_wrapper.get_segment_ids(identity_uuid)
+
+    # Then - DynamoEnvironmentWrapper should be instantiated once
+    # (during DynamoIdentityWrapper.__init__), not once per get_segment_ids call.
+    assert mocked_environment_wrapper_class.call_count == 1
 
 
 def test_delete_all_identities__deletes_all_identities_documents_from_dynamodb(
