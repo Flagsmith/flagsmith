@@ -1,5 +1,4 @@
 import json
-import logging
 import urllib
 from typing import Any
 from unittest import mock
@@ -38,9 +37,6 @@ from organisations.models import Organisation
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from segments.models import Condition, Segment, SegmentRule
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 def test_should_return_identities_list_when_requested(
