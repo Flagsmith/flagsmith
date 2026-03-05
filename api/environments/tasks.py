@@ -50,7 +50,7 @@ def delete_environment_from_dynamo(api_key: str, environment_id: str):  # type: 
     environment_wrapper.delete_environment(api_key)
 
     # Delete identities
-    identity_wrapper = DynamoIdentityWrapper()
+    identity_wrapper = DynamoIdentityWrapper(environment_wrapper=environment_wrapper)
     identity_wrapper.delete_all_identities(api_key)
 
     # Delete environment_v2 documents

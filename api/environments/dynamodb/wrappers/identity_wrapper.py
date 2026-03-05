@@ -37,6 +37,13 @@ logger = logging.getLogger()
 
 
 class DynamoIdentityWrapper(BaseDynamoWrapper):
+    def __init__(
+        self,
+        environment_wrapper: DynamoEnvironmentWrapper | None = None,
+    ) -> None:
+        super().__init__()
+        self._environment_wrapper = environment_wrapper or DynamoEnvironmentWrapper()
+
     def get_table_name(self) -> str | None:  # type: ignore[override]
         return settings.IDENTITIES_TABLE_NAME_DYNAMO
 
@@ -188,9 +195,8 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             identity = identity_model or IdentityModel.model_validate(
                 self.get_item_from_uuid(identity_pk)
             )
-            environment_wrapper = DynamoEnvironmentWrapper()
             environment = EnvironmentModel.model_validate(
-                environment_wrapper.get_item(identity.environment_api_key)
+                self._environment_wrapper.get_item(identity.environment_api_key)
             )
             context = map_environment_identity_to_context(
                 environment=environment,
