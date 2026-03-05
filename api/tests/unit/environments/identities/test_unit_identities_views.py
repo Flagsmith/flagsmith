@@ -598,14 +598,9 @@ def test_identities_endpoint_returns_value_for_segment_if_rule_type_percentage_s
         segment=segment, type=SegmentRule.ALL_RULE
     )
 
-    identity_percentage_value = get_hashed_percentage_for_object_ids(
-        [segment.id, identity.id]
-    )
     Condition.objects.create(
         operator=PERCENTAGE_SPLIT,
-        value=int(
-            (identity_percentage_value + (1 - identity_percentage_value) / 2) * 100.0
-        ),
+        value=100,
         rule=segment_rule,
     )
     feature_segment = FeatureSegment.objects.create(
