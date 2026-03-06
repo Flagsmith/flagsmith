@@ -22,6 +22,7 @@ from features.models import (  # type: ignore[attr-defined]
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
+from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from projects.models import Project
 from segments.models import Segment
@@ -50,8 +51,6 @@ def test_get_environment_document(
         name="Test Environment",
         project=project,
     )
-    if use_v2_feature_versioning:
-        enable_v2_versioning(environment.id)
 
     api_key = EnvironmentAPIKey.objects.create(environment=environment)
     client = APIClient()
@@ -105,6 +104,17 @@ def test_get_environment_document(
             default_percentage_allocation=10,
             string_value="option-2",
         )
+
+    if use_v2_feature_versioning:
+        enable_v2_versioning(environment.id)
+
+        # create new versions of a given featurestate
+        for _ in range(10):
+            efv = EnvironmentFeatureVersion.objects.create(
+                environment=environment,
+                feature=feature,
+            )
+            efv.publish()
 
     # and the relevant URL to get an environment document
     url = reverse("api-v1:environment-document")
