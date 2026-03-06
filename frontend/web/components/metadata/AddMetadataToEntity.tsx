@@ -6,11 +6,7 @@ import { Metadata } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import Switch from 'components/Switch'
 import InputGroup from 'components/base/forms/InputGroup'
-import {
-  metadataService,
-  useGetEntityMetadataFieldsQuery,
-} from 'common/services/useMetadataField'
-import { getStore } from 'common/store'
+import { useGetEntityMetadataFieldsQuery } from 'common/services/useMetadataField'
 import { CustomMetadataField } from 'common/types/metadata-field'
 import { useGlobalMetadataValidation } from 'common/utils/metadataValidation'
 import RedirectCreateCustomFields from './RedirectCreateCustomFields'
@@ -26,6 +22,7 @@ type AddMetadataToEntityProps = {
   entity: string
   envName?: string
   onChange?: (metadata: Metadata[]) => void
+  onMetadataSave?: (metadata: Metadata[]) => void
   setHasMetadataRequired?: (b: boolean) => void
 }
 
@@ -61,6 +58,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
   envName,
   isCloningEnvironment,
   onChange,
+  onMetadataSave,
   organisationId,
   projectId,
   setHasMetadataRequired,
@@ -137,9 +135,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
       toast(errorMessage || 'Failed to update custom fields', 'danger')
     } else {
       toast('Environment Field Updated')
-      getStore().dispatch(
-        metadataService.util.invalidateTags([{ type: 'Metadata' }]),
-      )
+      onMetadataSave?.(formatMetadataToApi(metadataFields))
     }
   }
 

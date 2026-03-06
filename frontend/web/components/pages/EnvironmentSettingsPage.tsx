@@ -920,6 +920,11 @@ const EnvironmentSettingsPage: React.FC = () => {
                               envName={currentEnv?.name}
                               entityContentType={environmentContentType?.id}
                               entity={environmentContentType.model}
+                              onMetadataSave={(metadata) => {
+                                setCurrentEnv((prev) =>
+                                  prev ? { ...prev, metadata } : null,
+                                )
+                              }}
                             />
                           }
                         />
