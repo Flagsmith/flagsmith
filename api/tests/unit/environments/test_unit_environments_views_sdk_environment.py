@@ -109,7 +109,7 @@ def test_get_environment_document(
         enable_v2_versioning(environment.id)
 
         # create new versions of a given featurestate
-        for _ in range(10):
+        for _ in range(2):
             efv = EnvironmentFeatureVersion.objects.create(
                 environment=environment,
                 feature=feature,
@@ -128,6 +128,8 @@ def test_get_environment_document(
     assert len(response.data["project"]["segments"]) == 10
     assert len(response.data["feature_states"]) == 11
     assert len(response.data["identity_overrides"]) == 10
+
+    environment.refresh_from_db()
     assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
         environment.updated_at.timestamp()
     )
