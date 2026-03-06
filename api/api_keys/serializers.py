@@ -24,8 +24,9 @@ class MasterAPIKeySerializer(serializers.ModelSerializer):  # type: ignore[type-
             "key",
             "is_admin",
             "has_expired",
+            "created_by",
         )
-        read_only_fields = ("prefix", "created", "key")
+        read_only_fields = ("prefix", "created", "key", "created_by")
 
     def create(self, validated_data):  # type: ignore[no-untyped-def]
         obj, key = MasterAPIKey.objects.create_key(**validated_data)
