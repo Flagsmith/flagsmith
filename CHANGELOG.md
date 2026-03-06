@@ -1,5 +1,44 @@
 # Changelog
 
+## [2.221.0](https://github.com/Flagsmith/flagsmith/compare/v2.220.0...v2.221.0) (2026-03-06)
+
+
+### Features
+
+* Support gzip compression for DynamoDB environment documents ([#6816](https://github.com/Flagsmith/flagsmith/issues/6816)) ([4e4d835](https://github.com/Flagsmith/flagsmith/commit/4e4d8354a07d27c757d245b42998b43e810c9c1b))
+
+
+### Bug Fixes
+
+* `/api/v1/environment-document` N+1 query issue related to the number of segment overrides in a version ([#6865](https://github.com/Flagsmith/flagsmith/issues/6865)) ([486e240](https://github.com/Flagsmith/flagsmith/commit/486e240db06dfef0bfe0ce05e7a20895c6c50de3))
+* filter for docker-build-test-publish e2e ([#6847](https://github.com/Flagsmith/flagsmith/issues/6847)) ([43bb456](https://github.com/Flagsmith/flagsmith/commit/43bb45619748091c8af9add698efd6bf9086e5c0))
+* Identity overrides empty in SDK document with v2 versioning ([#6840](https://github.com/Flagsmith/flagsmith/issues/6840)) ([877c321](https://github.com/Flagsmith/flagsmith/commit/877c32165aec654d1def6199e7ca5b56cb8ecf6e))
+* **Logging:** Omit org name from logging ([#6842](https://github.com/Flagsmith/flagsmith/issues/6842)) ([74c391b](https://github.com/Flagsmith/flagsmith/commit/74c391bbec1ad0d3336fd984bb7beac14075ef4f))
+* reuse DynamoEnvironmentWrapper in DynamoIdentityWrapper ([#6813](https://github.com/Flagsmith/flagsmith/issues/6813)) ([173e666](https://github.com/Flagsmith/flagsmith/commit/173e66646bb892208d646b8a483a45b5c971bf40))
+* update-env-state-on-metadata-update ([#6831](https://github.com/Flagsmith/flagsmith/issues/6831)) ([26d703e](https://github.com/Flagsmith/flagsmith/commit/26d703e6de3201b68e35717224bff1f37801837d))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* Remove unnecessary throttle rate ([#6843](https://github.com/Flagsmith/flagsmith/issues/6843)) ([eddafb5](https://github.com/Flagsmith/flagsmith/commit/eddafb592319d198d78a0cff390c098b05ffee80))
+
+
+### Dependency Updates
+
+* bump django from 5.2.11 to 5.2.12 in /api ([#6849](https://github.com/Flagsmith/flagsmith/issues/6849)) ([8bc089f](https://github.com/Flagsmith/flagsmith/commit/8bc089f6cdd35fe5145f58d4d24a8892cdea1888))
+* bump dompurify and @types/dompurify in /frontend ([#6850](https://github.com/Flagsmith/flagsmith/issues/6850)) ([458a554](https://github.com/Flagsmith/flagsmith/commit/458a5548ff228e87988fe446679e664fbbd96bc4))
+* bump dompurify from 3.3.0 to 3.3.2 in /docs ([#6860](https://github.com/Flagsmith/flagsmith/issues/6860)) ([3587ef0](https://github.com/Flagsmith/flagsmith/commit/3587ef03a4c0874cc95b26ce1e9daf1e8527e394))
+* bump dompurify from 3.3.1 to 3.3.2 in /frontend ([#6859](https://github.com/Flagsmith/flagsmith/issues/6859)) ([70ba110](https://github.com/Flagsmith/flagsmith/commit/70ba110b512250fd381b4ec92ff7d85b3afca3fa))
+* bump immutable from 4.3.7 to 4.3.8 in /frontend ([#6853](https://github.com/Flagsmith/flagsmith/issues/6853)) ([780f1f1](https://github.com/Flagsmith/flagsmith/commit/780f1f170e9a2be440da4c00b79e2922a07bec58))
+* bump immutable from 5.0.3 to 5.1.5 in /docs ([#6851](https://github.com/Flagsmith/flagsmith/issues/6851)) ([5647282](https://github.com/Flagsmith/flagsmith/commit/5647282ef22d76d30a70260028164576e88defc9))
+* bump minimatch in /frontend ([#6846](https://github.com/Flagsmith/flagsmith/issues/6846)) ([a8154d1](https://github.com/Flagsmith/flagsmith/commit/a8154d16b31af88a72070a9cb5bbd19c0e4b4946))
+* bump svgo from 3.3.2 to 3.3.3 in /docs ([#6852](https://github.com/Flagsmith/flagsmith/issues/6852)) ([b0f6849](https://github.com/Flagsmith/flagsmith/commit/b0f684901514dacce39c01c3449caf8d6a4013f2))
+
+
+### Docs
+
+* **k8s:** add HTTPRoutes support ([#6854](https://github.com/Flagsmith/flagsmith/issues/6854)) ([6a124e6](https://github.com/Flagsmith/flagsmith/commit/6a124e6a3eebb836ba365c576ca23cf26c9c901a))
+
 ## [2.220.0](https://github.com/Flagsmith/flagsmith/compare/v2.219.1...v2.220.0) (2026-03-03)
 
 
