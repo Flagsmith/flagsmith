@@ -145,6 +145,39 @@ def test_project_user_without_create_environment_permission_cannot_create_enviro
     # Then
     assert result is False
 
+# created additional tests to cover edge cases around project ID validation in environment creation
+# 3/7/26
+def test_create_environment__invalid_project_id_string__returns_false(
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    mock_view.action = "create"
+    mock_view.detail = False
+    mock_request.user = admin_user
+    mock_request.data = {"project": "not-a-valid-id", "name": "Test environment"}
+
+    # When
+    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is False
+
+
+def test_create_environment__none_project_id__returns_false(
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    mock_view.action = "create"
+    mock_view.detail = False
+    mock_request.user = admin_user
+    mock_request.data = {"name": "Test environment"}
+
+    # When
+    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is False
+
 
 def test_all_users_can_list_environments_for_project(
     staff_user: FFAdminUser,
