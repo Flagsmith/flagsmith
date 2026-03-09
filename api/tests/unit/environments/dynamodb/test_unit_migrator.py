@@ -1,4 +1,5 @@
 from pytest_django.asserts import assertQuerySetEqual as assert_queryset_equal
+from pytest_django.fixtures import DjangoAssertNumQueries
 
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.dynamodb.types import (
@@ -6,7 +7,9 @@ from environments.dynamodb.types import (
     ProjectIdentityMigrationStatus,
 )
 from environments.identities.models import Identity
+from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
+from projects.models import Project
 
 
 def test_migrate_calls_internal_methods_with_correct_arguments(  # type: ignore[no-untyped-def]
@@ -48,7 +51,7 @@ def test_migrate_calls_internal_methods_with_correct_arguments(  # type: ignore[
     assert kwargs == {}
 
     assert_queryset_equal(
-        args[0], Identity.objects.filter(environment__project__id=project.id)
+        list(args[0]), Identity.objects.filter(environment__project__id=project.id)
     )
     # and
     args, kwargs = mocked_environment_wrapper.return_value.write_environments.call_args
@@ -168,3 +171,70 @@ def test_get_migration_status_returns_correct_migraion_status_for_in_progress_mi
     # Then
     assert status == ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS
     mocked_project_metadata.get_or_new.assert_called_with(project_id)
+
+
+def test_iter_identities_in_chunks__multiple_chunks__yields_all_in_pk_order(
+    project: Project,
+    environment: Environment,
+) -> None:
+    # Given
+    identities = [
+        Identity.objects.create(identifier=f"identity_{i}", environment=environment)
+        for i in range(5)
+    ]
+    for identity in identities:
+        Trait.objects.create(
+            identity=identity,
+            trait_key="key",
+            value_type="unicode",
+            string_value="val",
+        )
+
+    # When
+    result = list(IdentityMigrator.iter_identities_in_chunks(project.id, chunk_size=2))
+
+    # Then
+    expected_pks = sorted(i.pk for i in identities)
+    assert [i.pk for i in result] == expected_pks
+    assert len(result) == 5
+
+
+def test_iter_identities_in_chunks__preserves_prefetch_related(
+    project: Project,
+    environment: Environment,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    identities = [
+        Identity.objects.create(identifier=f"identity_{i}", environment=environment)
+        for i in range(3)
+    ]
+    for identity in identities:
+        Trait.objects.create(
+            identity=identity,
+            trait_key="key",
+            value_type="unicode",
+            string_value="val",
+        )
+
+    result = list(IdentityMigrator.iter_identities_in_chunks(project.id))
+
+    # When — accessing prefetched relations should cause no additional queries.
+    with django_assert_num_queries(0):
+        for identity in result:
+            list(identity.identity_traits.all())
+
+
+def test_iter_identities_in_chunks__empty_queryset__yields_nothing(
+    project: Project,
+    environment: Environment,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given — no identities created.
+
+    # When
+    with django_assert_num_queries(1):
+        result = list(IdentityMigrator.iter_identities_in_chunks(project.id))
+
+    # Then
+    assert result == []
