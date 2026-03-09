@@ -47,7 +47,6 @@ from util.engine_models.segments.models import (
 from util.mappers import engine
 
 if TYPE_CHECKING:
-    from environments.identities import Identity, Trait  # type: ignore[attr-defined]
     from environments.models import EnvironmentAPIKey
     from features.models import Feature
     from projects.models import Project
