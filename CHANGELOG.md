@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.221.1](https://github.com/Flagsmith/flagsmith/compare/v2.221.0...v2.221.1) (2026-03-09)
+
+
+### Bug Fixes
+
+* `Feature.type` field is unbounded ([#6888](https://github.com/Flagsmith/flagsmith/issues/6888)) ([48de147](https://github.com/Flagsmith/flagsmith/commit/48de147fc29015fd0c928e6ed80c716a94a4d8e8))
+
+
+### Dependency Updates
+
+* Remove serialize-javascript dependency ([#6884](https://github.com/Flagsmith/flagsmith/issues/6884)) ([9e60925](https://github.com/Flagsmith/flagsmith/commit/9e60925521a45d2f8ced6581a6441f4a73783043))
+
 ## [2.221.0](https://github.com/Flagsmith/flagsmith/compare/v2.220.0...v2.221.0) (2026-03-09)
 
 
