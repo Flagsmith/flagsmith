@@ -70,7 +70,6 @@
     "clean-webpack-plugin": "0.1.19",
     "color": "3.1.0",
     "colors": "1.4.0",
-    "copy-webpack-plugin": "^9.1.0",
     "cors": "^2.8.3",
     "cross-env": "7.0.3",
     "css-loader": "6.8.1",
