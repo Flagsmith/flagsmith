@@ -10,8 +10,14 @@ class CopyStaticPlugin {
 
     apply(compiler) {
         compiler.hooks.afterEmit.tap('CopyStaticPlugin', () => {
-            fs.cpSync(this.src, this.dest, { recursive: true });
-        });
+            try {
+                fs.cpSync(this.src, this.dest, { recursive: true });
+            } catch (error) {
+                compiler.errors.push(
+                    new Error(`CopyStaticPlugin: Failed to copy ${this.src} to ${this.dest}: ${error.message}`)
+                );
+            }        
+         });
     }
 }
 
