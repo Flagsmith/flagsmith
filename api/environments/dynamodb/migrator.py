@@ -1,3 +1,5 @@
+from collections.abc import Iterator
+
 from django.db.models import Prefetch
 
 from edge_api.identities.events import send_migration_event
@@ -6,7 +8,6 @@ from environments.models import Environment, EnvironmentAPIKey
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from projects.models import Project
-from util.queryset import iterator_with_prefetch
 
 from .types import DynamoProjectMetadata, ProjectIdentityMigrationStatus
 from .wrappers import (
@@ -17,6 +18,53 @@ from .wrappers import (
 
 
 class IdentityMigrator:
+    @staticmethod
+    def iter_identities_in_chunks(
+        project_id: int, chunk_size: int = 2000
+    ) -> Iterator[Identity]:
+        """
+        Yield identities in fixed-size chunks using keyset pagination.
+
+        We don't use Django's built-in QuerySet.iterator() here because
+        it uses server-side cursors (DECLARE/FETCH), which plan the
+        entire result set upfront and can hit statement_timeout on
+        large tables.
+
+        Each chunk issues a WHERE pk > last_pk ORDER BY pk LIMIT N query,
+        which is O(1) via pk index seek regardless of table size.
+        """
+        identities_qs = (
+            Identity.objects.filter(environment__project__id=project_id)
+            .select_related("environment")
+            .prefetch_related(
+                "identity_traits",
+                Prefetch(
+                    "identity_features",
+                    queryset=FeatureState.objects.select_related(
+                        "feature", "feature_state_value"
+                    ),
+                ),
+                Prefetch(
+                    "identity_features__multivariate_feature_state_values",
+                    queryset=MultivariateFeatureStateValue.objects.select_related(
+                        "multivariate_feature_option"
+                    ),
+                ),
+            )
+        )
+        queryset = identities_qs.order_by("pk")
+        last_pk = None
+
+        while True:
+            chunk_qs = (
+                queryset.filter(pk__gt=last_pk) if last_pk is not None else queryset
+            )
+            chunk = list(chunk_qs[:chunk_size])
+            if not chunk:
+                break
+            yield from chunk
+            last_pk = chunk[-1].pk
+
     def __init__(self, project_id):  # type: ignore[no-untyped-def]
         self.project_metadata = DynamoProjectMetadata.get_or_new(project_id)
 
@@ -63,24 +111,5 @@ class IdentityMigrator:
         identity_wrapper = DynamoIdentityWrapper(
             environment_wrapper=environment_wrapper
         )
-        identities = (
-            Identity.objects.filter(environment__project__id=project_id)
-            .select_related("environment")
-            .prefetch_related(
-                "identity_traits",
-                Prefetch(
-                    "identity_features",
-                    queryset=FeatureState.objects.select_related(
-                        "feature", "feature_state_value"
-                    ),
-                ),
-                Prefetch(
-                    "identity_features__multivariate_feature_state_values",
-                    queryset=MultivariateFeatureStateValue.objects.select_related(
-                        "multivariate_feature_option"
-                    ),
-                ),
-            )
-        )
-        identity_wrapper.write_identities(iterator_with_prefetch(identities))  # type: ignore[no-untyped-call]
+        identity_wrapper.write_identities(self.iter_identities_in_chunks(project_id))
         self.project_metadata.finish_identity_migration()  # type: ignore[no-untyped-call]
