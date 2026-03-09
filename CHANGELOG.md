@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.221.2](https://github.com/Flagsmith/flagsmith/compare/v2.221.1...v2.221.2) (2026-03-09)
+
+
+### Bug Fixes
+
+* Wait for all data sources before rendering identity features ([#6899](https://github.com/Flagsmith/flagsmith/issues/6899)) ([69fc5c6](https://github.com/Flagsmith/flagsmith/commit/69fc5c621ce98828d90b7e48f90107262d7a4769))
+
 ## [2.221.1](https://github.com/Flagsmith/flagsmith/compare/v2.221.0...v2.221.1) (2026-03-09)
 
 
