@@ -82,14 +82,10 @@ const UserPage: FC = () => {
 
   useEffect(() => {
     const { search, sort } = filter
-    AppActions.searchFeatures(
-      projectId,
-      environmentId,
-      true,
-      search,
-      sort,
-      { ...getServerFilter(filter), identity: id },
-    )
+    AppActions.searchFeatures(projectId, environmentId, true, search, sort, {
+      ...getServerFilter(filter),
+      identity: id,
+    })
   }, [filter, environmentId, projectId, id])
 
   useEffect(() => {
@@ -167,8 +163,9 @@ const UserPage: FC = () => {
           }) => {
             const identityName =
               (identity && identity.identity.identifier) || id
-            return (isLoading || !projectId) &&
-              (!identityFlags || !actualFlags || !projectFlags) ? (
+            const isDataLoaded =
+              !!actualFlags && !!identityFlags && !!projectFlags && !!projectId
+            return isLoading || !isDataLoaded ? (
               <div className='text-center'>
                 <Loader />
               </div>
