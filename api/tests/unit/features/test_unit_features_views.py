@@ -1816,8 +1816,8 @@ def test_audit_log_created_when_feature_updated(
         args=[project.id, feature.id],
     )
     data = {
-        "name": "Test Feature updated",
-        "type": "FLAG",
+        "name": feature.name,
+        "description": "Updated description",
         "project": project.id,
     }
 
@@ -4506,3 +4506,24 @@ def test_create_feature__type_provided__ignores_type_and_defaults_to_standard(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["type"] == STANDARD
+
+
+def test_create_feature__multivariate_options_provided__sets_type_to_multivariate(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {
+        "name": "test_feature_mv_type",
+        "multivariate_options": [{"type": "unicode", "string_value": "option-a"}],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["type"] == MULTIVARIATE
