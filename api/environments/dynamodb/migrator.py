@@ -8,7 +8,6 @@ from environments.models import Environment, EnvironmentAPIKey
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from projects.models import Project
-
 from .types import DynamoProjectMetadata, ProjectIdentityMigrationStatus
 from .wrappers import (
     DynamoEnvironmentAPIKeyWrapper,
@@ -19,9 +18,7 @@ from .wrappers import (
 
 class IdentityMigrator:
     @staticmethod
-    def iter_identities_in_chunks(
-        project_id: int, chunk_size: int = 2000
-    ) -> Iterator[Identity]:
+    def iter_identities_in_chunks(project_id: int, chunk_size: int = 2000) -> Iterator[Identity]:
         """
         Yield identities in fixed-size chunks using keyset pagination.
 
@@ -56,9 +53,7 @@ class IdentityMigrator:
         last_pk = None
 
         while True:
-            chunk_qs = (
-                queryset.filter(pk__gt=last_pk) if last_pk is not None else queryset
-            )
+            chunk_qs = queryset.filter(pk__gt=last_pk) if last_pk is not None else queryset
             chunk = list(chunk_qs[:chunk_size])
             if not chunk:
                 break
@@ -81,7 +76,7 @@ class IdentityMigrator:
     def can_migrate(self) -> bool:
         return self.migration_status in (
             ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED,
-            ProjectIdentityMigrationStatus.MIGRATION_SCHEDULED,
+        ProjectIdentityMigrationStatus.MIGRATION_SCHEDULED,
         )
 
     def trigger_migration(self):  # type: ignore[no-untyped-def]
@@ -111,5 +106,5 @@ class IdentityMigrator:
         identity_wrapper = DynamoIdentityWrapper(
             environment_wrapper=environment_wrapper
         )
-        identity_wrapper.write_identities(self.iter_identities_in_chunks(project_id))  # type: ignore[no-untyped-call]
+        identity_wrapper.write_identities(self.iter_identities_in_chunks(project_id))
         self.project_metadata.finish_identity_migration()  # type: ignore[no-untyped-call]

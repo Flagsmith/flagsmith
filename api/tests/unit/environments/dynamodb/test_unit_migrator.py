@@ -1,6 +1,8 @@
 from pytest_django.asserts import assertQuerySetEqual as assert_queryset_equal
 from pytest_django.fixtures import DjangoAssertNumQueries
 
+from pytest_django.fixtures import DjangoAssertNumQueries
+
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.dynamodb.types import (
     DynamoProjectMetadata,
