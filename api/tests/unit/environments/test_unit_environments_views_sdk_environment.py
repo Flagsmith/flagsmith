@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+import pytest
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
@@ -9,7 +10,7 @@ from rest_framework.test import APIClient
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from features.feature_types import MULTIVARIATE
-from features.models import (
+from features.models import (  # type: ignore[attr-defined]
     STRING,
     Feature,
     FeatureSegment,
@@ -17,25 +18,36 @@ from features.models import (
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
+from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.tasks import enable_v2_versioning
+from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 
 if TYPE_CHECKING:
     from pytest_django import DjangoAssertNumQueries
 
     from organisations.models import Organisation
-    from projects.models import Project
 
 
+@pytest.mark.parametrize(
+    "use_v2_feature_versioning, total_queries", [(True, 16), (False, 15)]
+)
 def test_get_environment_document(
     organisation_one: "Organisation",
+    organisation_two: "Organisation",
     organisation_one_project_one: "Project",
     django_assert_num_queries: "DjangoAssertNumQueries",
+    use_v2_feature_versioning: bool,
+    total_queries: int,
 ) -> None:
     # Given
     project = organisation_one_project_one
 
-    # an environment
-    environment = Environment.objects.create(name="Test Environment", project=project)
+    environment = Environment.objects.create(
+        name="Test Environment",
+        project=project,
+    )
+
     api_key = EnvironmentAPIKey.objects.create(environment=environment)
     client = APIClient()
     client.credentials(HTTP_X_ENVIRONMENT_KEY=api_key.key)
@@ -89,7 +101,7 @@ def test_get_environment_document(
             type=STRING,
         )
 
-    for i in range(10):
+        # Add a multivariate feature
         mv_feature = Feature.objects.create(
             name=f"mv_feature_{i}", project=project, type=MULTIVARIATE
         )
@@ -104,16 +116,31 @@ def test_get_environment_document(
             string_value="option-2",
         )
 
+    if use_v2_feature_versioning:
+        enable_v2_versioning(environment.id)
+
+        # create new versions of a given featurestate
+        for _ in range(2):
+            efv = EnvironmentFeatureVersion.objects.create(
+                environment=environment,
+                feature=feature,
+            )
+            efv.publish()
+
     # and the relevant URL to get an environment document
     url = reverse("api-v1:environment-document")
 
     # When
-    with django_assert_num_queries(15):
+    with django_assert_num_queries(total_queries):
         response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()
+    assert len(response.data["project"]["segments"]) == 10
+    assert len(response.data["feature_states"]) == 11
+    assert len(response.data["identity_overrides"]) == 10
+
+    environment.refresh_from_db()
     assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
         environment.updated_at.timestamp()
     )
