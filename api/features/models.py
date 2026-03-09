@@ -25,6 +25,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     LifecycleModelMixin,
     hook,
 )
+from flag_engine.utils.hashing import get_hashed_percentage_for_object_ids
 from ordered_model.models import OrderedModelBase  # type: ignore[import-untyped]
 from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
 
@@ -48,9 +49,6 @@ from core.models import (
     AbstractBaseExportableModel,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
-)
-from environments.identities.helpers import (
-    get_hashed_percentage_for_object_ids,
 )
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
 from features.custom_lifecycle import CustomLifecycleModelMixin
@@ -750,8 +748,8 @@ class FeatureState(
         # avoid further queries to the DB
         mv_options = list(self.multivariate_feature_state_values.all())
 
-        percentage_value = (
-            get_hashed_percentage_for_object_ids([self.id, identity_hash_key]) * 100
+        percentage_value = get_hashed_percentage_for_object_ids(
+            [self.id, identity_hash_key]
         )
 
         # Iterate over the mv options in order of id (so we get the same value each

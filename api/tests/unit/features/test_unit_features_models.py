@@ -594,7 +594,7 @@ def test_feature_state_type_feature_segment(
     assert feature_state.type == FEATURE_SEGMENT
 
 
-@pytest.mark.parametrize("hashed_percentage", (0.0, 0.3, 0.5, 0.8, 0.999999))
+@pytest.mark.parametrize("hashed_percentage", (0.0, 30.0, 50.0, 80.0, 99.9999))
 @mock.patch("features.models.get_hashed_percentage_for_object_ids")
 def test_get_multivariate_value_returns_correct_value_when_we_pass_identity(  # type: ignore[no-untyped-def]
     mock_get_hashed_percentage,
