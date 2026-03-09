@@ -3,6 +3,7 @@ from typing import Any
 
 from boto3.dynamodb.types import Binary
 from common.test_tools import AssertMetricFixture
+from freezegun import freeze_time
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -122,6 +123,49 @@ def test_environment_v2_wrapper__update_identity_overrides__put_expected(
     assert results[0] == map_identity_override_to_identity_override_document(
         override_document,
     )
+
+
+@freeze_time("2023-01-01T00:00:00Z")
+def test_environment_v2_wrapper__update_identity_overrides__put__stores_created_date(
+    settings: SettingsWrapper,
+    environment: Environment,
+    flagsmith_environments_v2_table: Table,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
+    wrapper = DynamoEnvironmentV2Wrapper()
+
+    identity_uuid = str(uuid.uuid4())
+    override_document = IdentityOverrideV2.parse_obj(
+        {
+            "environment_id": str(environment.id),
+            "document_key": get_environments_v2_identity_override_document_key(
+                feature_id=feature.id, identity_uuid=identity_uuid
+            ),
+            "environment_api_key": environment.api_key,
+            "feature_state": map_feature_state_to_engine(feature_state),
+            "identifier": "identity1",
+            "identity_uuid": identity_uuid,
+        }
+    )
+
+    # When
+    wrapper.update_identity_overrides(
+        changeset=IdentityOverridesV2Changeset(
+            to_delete=[],
+            to_put=[override_document],
+        ),
+    )
+
+    # Then
+    results = flagsmith_environments_v2_table.scan()["Items"]
+    assert len(results) == 1
+    assert results[0] == map_identity_override_to_identity_override_document(
+        override_document,
+    )
+    assert results[0]["created_date"] == "2023-01-01T00:00:00+00:00"
 
 
 def test_environment_v2_wrapper__update_identity_overrides__delete_expected(
