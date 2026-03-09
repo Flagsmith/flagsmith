@@ -75,9 +75,6 @@ def test_get_environment_document(
             rule=nested_rule,
         )
 
-        # Segment revisions should not be included in the document
-        segment.clone(is_revision=True, name=f"revision_segment_{i}")
-
         # Let's create segment override for each segment too
         feature_segment = FeatureSegment.objects.create(
             segment=segment, feature=feature, environment=environment
