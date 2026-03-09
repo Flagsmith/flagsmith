@@ -224,7 +224,13 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             "last_modified_in_any_environment",
             "last_modified_in_current_environment",
         )
-        read_only_fields = ("feature_segments", "created_date", "uuid", "project")
+        read_only_fields = (
+            "feature_segments",
+            "created_date",
+            "uuid",
+            "project",
+            "type",
+        )
 
     def to_internal_value(self, data):  # type: ignore[no-untyped-def]
         if data.get("initial_value") and not isinstance(data["initial_value"], str):

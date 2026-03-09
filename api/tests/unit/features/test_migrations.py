@@ -226,6 +226,54 @@ def test_fix_feature_type_migration(migrator: Migrator) -> None:
     assert NewFeature.objects.get(id=mv_feature.id).type == MULTIVARIATE
 
 
+def test_constrain_feature_type__invalid_types__fixes_to_standard_or_multivariate(
+    migrator: Migrator,
+) -> None:
+    # Given
+    old_state = migrator.apply_initial_migration(
+        ("features", "0065_make_feature_value_size_configurable")
+    )
+
+    Organisation = old_state.apps.get_model("organisations", "Organisation")
+    Project = old_state.apps.get_model("projects", "Project")
+    Feature = old_state.apps.get_model("features", "Feature")
+    MultivariateFeatureOption = old_state.apps.get_model(
+        "multivariate", "MultivariateFeatureOption"
+    )
+
+    organisation = Organisation.objects.create(name="test org")
+    project = Project.objects.create(
+        name="test project", organisation_id=organisation.id
+    )
+    standard_feature = Feature.objects.create(
+        name="standard_feature", project_id=project.id
+    )
+    mv_feature = Feature.objects.create(
+        name="mv_feature", project_id=project.id, type=MULTIVARIATE
+    )
+    # Feature with an invalid type and no MV options → should become STANDARD.
+    bad_type_feature = Feature.objects.create(
+        name="bad_type_feature", project_id=project.id, type="boolean"
+    )
+    # Feature with an invalid type but has MV options → should become MULTIVARIATE.
+    bad_type_mv_feature = Feature.objects.create(
+        name="bad_type_mv_feature", project_id=project.id, type="flag"
+    )
+    MultivariateFeatureOption.objects.create(feature_id=bad_type_mv_feature.id)
+
+    # When
+    new_state = migrator.apply_tested_migration(
+        ("features", "0066_constrain_feature_type")
+    )
+
+    # Then
+    NewFeature = new_state.apps.get_model("features", "Feature")
+    assert NewFeature.objects.get(id=standard_feature.id).type == STANDARD
+    assert NewFeature.objects.get(id=mv_feature.id).type == MULTIVARIATE
+    assert NewFeature.objects.get(id=bad_type_feature.id).type == STANDARD
+    assert NewFeature.objects.get(id=bad_type_mv_feature.id).type == MULTIVARIATE
+
+
 def test_migrate_sample_to_webhook_forward(migrator: Migrator) -> None:
     # Given
     old_state = migrator.apply_initial_migration(

@@ -150,6 +150,9 @@ paths:
 components:
   schemas:
     TypeD77Enum:
+      description: |-
+        * `STANDARD` - STANDARD
+        * `MULTIVARIATE` - MULTIVARIATE
       type: string
       enum:
         - STANDARD
