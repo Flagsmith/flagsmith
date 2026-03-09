@@ -1,459 +1,296 @@
-# Design System — Actionable Issues
+# Frontend Design System Audit — Findings Report
 
-**Related**: Issue #6606, `DESIGN_SYSTEM_AUDIT.md` (on `chore/design-system-audit-6606` branch), PR #6105 (Tailwind POC — not yet adopted)
-**Date**: 2026-03-05
-**Storybook validation**: Run `npm run storybook` to see issues visually. Available stories:
-- **Design System/Icons** — All Icons, Dark Mode Broken, Hardcoded Fills, Semantic Defaults, Separate SVG Components, Icon System Summary
+**Epic**: [#6882 — Resolve UI inconsistencies and consolidation](https://github.com/Flagsmith/flagsmith/issues/6882)
+**Parent issue**: [#6606 — Audit frontend UI](https://github.com/Flagsmith/flagsmith/issues/6606)
+**Branch**: `chore/design-system-audit-6606`
+**Date**: 2026-03-09
+
+### Related epics
+
+- [#5746 — Modernize UI Codebase With TS and FS components](https://github.com/Flagsmith/flagsmith/issues/5746) — JS → TS migration effort. Overlaps with NP-5 (TypeScript-first) and ME-3 (Input.js). `Payment.js` migration already tracked as [#6319](https://github.com/Flagsmith/flagsmith/issues/6319).
+- [#5921 — Platform UI improvements, fixes and responsiveness](https://github.com/Flagsmith/flagsmith/issues/5921) — UI bug backlog. [#6414](https://github.com/Flagsmith/flagsmith/issues/6414) (inconsistent header font colour) overlaps with ME-10 / NP-8 (typography).
+- [PR #6764 — React 19 migration](https://github.com/Flagsmith/flagsmith/pull/6764) — Handles `ReactDOM.render` removal in modal system and `main.js`. Resolves the React compat concern in NP-3.
+
+## Storybook evidence
+
+Run `npm run storybook` on this branch to see visual evidence for each finding:
+
+- **Design System/Icons** — All Icons, Dark Mode Broken, Hardcoded Fills, Semantic Defaults, Separate SVG Components
 - **Design System/Colours** — Semantic Tokens, Current SCSS Variables
 - **Design System/Colours/Palette Audit** — Tonal Scale Inconsistency, Alpha Colour Mismatches, Orphan Hex Values, Grey Scale Gaps
 - **Design System/Buttons** — All Variants, Dark Mode Gaps, Size Variants
-- **Design System/Dark Mode Issues** — Hardcoded Colours In Components, Dark Mode Implementation Patterns, Theme Token Comparison
+- **Design System/Dark Mode Issues** — Hardcoded Colours In Components, Implementation Patterns, Theme Token Comparison
 - **Design System/Typography** — Type Scale, Hardcoded Font Sizes, Proposed Tokens
 
-Each finding below is a potential GitHub issue. Grouped by size: quick wins first, then medium efforts, then large refactors.
+---
+
+## Quick Wins — GitHub Issues Created
+
+These are small, well-scoped fixes (1–2 hours each). All are sub-issues of epic #6882.
+
+| ID | Title | GitHub | Status |
+|----|-------|--------|--------|
+| QW-1 | Replace hardcoded icon fill with `currentColor` | [#6869](https://github.com/Flagsmith/flagsmith/issues/6869) / [PR #6870](https://github.com/Flagsmith/flagsmith/pull/6870) | In review |
+| QW-3 | Chart axis colours invisible in dark mode | [#6889](https://github.com/Flagsmith/flagsmith/issues/6889) | Open |
+| QW-7 | POC: Evaluate wiring a11y E2E tests into CI | [#6890](https://github.com/Flagsmith/flagsmith/issues/6890) | Open |
+| QW-8 | Fix invalid `fontWeight: 'semi-bold'` in SuccessMessage | [#6872](https://github.com/Flagsmith/flagsmith/issues/6872) / [PR #6873](https://github.com/Flagsmith/flagsmith/pull/6873) | In review |
+| QW-9 | Fix SidebarLink hover state broken in dark mode | [#6868](https://github.com/Flagsmith/flagsmith/issues/6868) / [PR #6871](https://github.com/Flagsmith/flagsmith/pull/6871) | In review |
+| QW-10 | Decouple Button from Redux store (dead feature prop) | [#6866](https://github.com/Flagsmith/flagsmith/issues/6866) | Open |
+| QW-11 | Remove legacy ErrorMessage.js, consolidate imports | [#6891](https://github.com/Flagsmith/flagsmith/issues/6891) | Open |
+| QW-12 | Button dark mode gaps (btn-tertiary, btn-danger, btn--transparent) | [#6892](https://github.com/Flagsmith/flagsmith/issues/6892) | Open |
+| QW-13 | Toast notifications: add dark mode support | [#6893](https://github.com/Flagsmith/flagsmith/issues/6893) | Open |
+| QW-14 | Checkbox and switch dark mode states | [#6894](https://github.com/Flagsmith/flagsmith/issues/6894) | Open |
+
+### Reclassified / absorbed
+
+| Original ID | What happened |
+|--------------|---------------|
+| QW-2 | Absorbed into QW-1 — PR #6870 expanded scope to cover all hardcoded fills |
+| QW-4 | Reclassified to ME — 19 hex values across 8 files, not a quick win |
+| QW-5 (ionicons) | Absorbed into LR-1 — 40+ files import IonIcon, cannot simply uninstall |
+| QW-6 | Absorbed into QW-1 — PR #6870 also fixed icons with hardcoded SVG fills |
 
 ---
 
-## Quick Wins (1–2 hours each)
+## Medium Efforts — Documented for Evaluation
 
-### QW-1: Icon.tsx — Replace `#1A2634` defaults with `currentColor`
+These are half-day to 1-day tasks. Not yet created as GitHub issues — to be evaluated and prioritised by the team.
 
-**Problem**: ~54 SVG icons in `Icon.tsx` default their `fill` to `#1A2634` (dark navy). This colour is invisible on dark mode backgrounds (`$body-bg-dark: #101628`).
+### ~~ME-1~~ → Absorbed into NP-3 (Context-based modal system)
 
-**Files**:
-- `web/components/Icon.tsx` — 46 instances of `fill={fill || '#1A2634'}`, plus `stroke: fill || '#1a2634'` in 3 diff icon paths
+Consolidating the 6 identical ConfirmRemove modals is the first step of introducing the new modal pattern — no point doing it separately.
 
-**Affected icons**: checkmark, chevron-down, chevron-left, chevron-right, chevron-up, arrow-left, arrow-right, clock, code, copy, copy-outlined, dash, diff, edit, edit-outlined, email, file-text, flash, flask, height, bell, calendar, layout, layers, list, lock, minus-circle, more-vertical, people, person, pie-chart, refresh, request, setting, settings-2, shield, star, timer, trash-2, bar-chart, award, options-2, open-external-link, features, rocket, expand, radio, and more.
+### ~~ME-3~~ → Reclassified as NP-10 (Form building blocks)
 
-**Fix**: Replace all `fill={fill || '#1A2634'}` with `fill={fill || 'currentColor'}`. This inherits the text colour from the parent element, working in both light and dark mode automatically.
+### ~~ME-4~~ → First sub-task of NP-7 (Fix dark mode gaps)
 
-**Impact**: Fixes ~54 broken icons in dark mode in one go. Highest ROI fix in the entire audit.
+Release pipeline: 19 raw hex values across 8 files (`#6837FC`, `#9DA4AE`, `#656D7B`, `bg-white`). Good candidate for the first page-by-page token adoption after NP-2 lands.
 
-**Validate**: Storybook → "Design System/Icons/Dark Mode Broken" (toggle dark mode in toolbar).
+### ME-5: Unify dropdown implementations *(nice to have — no ticket)*
 
----
+4 competing dropdown patterns with no clear guidance:
 
-### QW-2: Hardcoded `#1A2634` in components outside Icon.tsx
+1. `base/DropdownMenu.tsx` — canonical action menu
+2. `base/forms/ButtonDropdown.tsx` — split button
+3. `navigation/AccountDropdown.tsx` — duplicates DropdownMenu positioning logic
+4. `segments/Rule/components/EnvironmentSelectDropdown.tsx` — form-integrated
 
-**Problem**: Several components pass `#1A2634` directly to icons or chart elements.
+Not breaking anything — just inconsistent. If touched during other work, consider standardising on `DropdownMenu` as base.
 
-**Files & lines**:
-| File | Line | Code |
-|------|------|------|
-| `web/components/StatItem.tsx` | 43 | `fill='#1A2634'` |
-| `web/components/Switch.tsx` | 57 | `fill={checked ? '#656D7B' : '#1A2634'}` |
-| `web/components/DateSelect.tsx` | 136 | `fill={isOpen ? '#1A2634' : '#9DA4AE'}` |
-| `web/components/pages/ScheduledChangesPage.tsx` | 126 | `fill={'#1A2634'}` |
-| `web/components/organisation-settings/usage/OrganisationUsage.container.tsx` | 63 | `tick={{ fill: '#1A2634' }}` |
-| `web/components/organisation-settings/usage/components/SingleSDKLabelsChart.tsx` | 62 | `tick={{ fill: '#1A2634' }}` |
+### ~~ME-9~~ → Will come as a result of QW-7 (a11y POC)
 
-**Fix**: After QW-1, stop passing `fill` entirely (icons will use `currentColor`). For chart ticks, import `colorTextStandard` from `common/theme` and use it directly.
+Expanding a11y E2E coverage to all key pages (Segments, Audit Log, Integrations, etc.) depends on the QW-7 POC outcome. If the POC recommends wiring tests into CI, the scope and ticket will follow from that.
 
-**Already correct**: `CompareIdentities.tsx:214` and `RuleConditionValueInput.tsx:150` use `getDarkMode()` conditionals.
+### ~~ME-10~~ → Absorbed into NP-8 (Typography tokens)
 
-**Validate**: Storybook → "Design System/Dark Mode Issues/Hardcoded Colours In Components".
+The 58 hardcoded `fontSize` values and competing weight systems are the migration work of NP-8 — same pattern as NP-7/NP-2. No separate ticket needed.
 
----
+**See also**: [#6414](https://github.com/Flagsmith/flagsmith/issues/6414) (inconsistent header font colour) under [#5921](https://github.com/Flagsmith/flagsmith/issues/5921).
 
-### QW-3: Chart axis labels invisible in dark mode
+### ~~ME-11~~ → Deferred to Tailwind adoption
 
-**Problem**: Recharts `<XAxis>` and `<YAxis>` components use hardcoded tick fill colours.
+Off-grid values (`5px`, `6px`, `3px`, `15px`, `19px`) need a spacing scale — but Tailwind ships one out of the box (`p-1` = 4px, `p-2` = 8px, etc.). No point building custom spacing tokens if Tailwind is coming. Clean up hardcoded values with utility classes when Tailwind lands.
 
-**Files**:
-- `web/components/organisation-settings/usage/OrganisationUsage.container.tsx` lines 56, 63
-- `web/components/organisation-settings/usage/components/SingleSDKLabelsChart.tsx` lines 53, 62
-- `web/components/pages/admin-dashboard/components/UsageTrendsChart.tsx`
-- `web/components/feature-page/FeatureNavTab/FeatureAnalytics.tsx`
+### ME-8: @storybook/addon-a11y ✅ Done
 
-**Fix**: Import `colorTextStandard` and `colorTextSecondary` from `common/theme` and use them for tick fills. This automatically adapts to light/dark mode.
+Already installed on this branch. Every story has a WCAG 2.1 AA "Accessibility" panel.
 
 ---
 
-### QW-4: Release pipeline hardcoded colours
+## New Patterns — Documented for Evaluation
 
-**Problem**: Release pipeline status indicators use raw hex values instead of theme variables.
+These introduce new patterns to follow going forward. The key principle: **introduce the pattern once, then migrate incrementally** as you touch files during normal feature work and bug fixes. No big-bang refactors needed.
 
-**Files**:
-- `web/components/release-pipelines/ReleasePipelinesList.tsx:169` — `color: isPublished ? '#6837FC' : '#9DA4AE'`
-- `web/components/release-pipelines/ReleasePipelineDetail.tsx:106` — same pattern
-- `web/components/release-pipelines/StageCard.tsx:8` — `bg-white` hardcoded, no dark mode
+### NP-1: Unified icon system
 
-**Fix**: Use tokens from `common/theme` — `colorBrandPrimary` and `colorTextTertiary`.
+**Current state**: `Icon.tsx` is 1,543 lines with 70+ inline SVGs in a single switch. Three icon systems coexist: `Icon.tsx` (60+ icons), `web/components/svg/` (19 components), and IonIcon (40+ files). No tree-shaking possible.
 
----
+**New pattern**: Individual icon files under `web/components/icons/`, each exporting a component that defaults to `fill="currentColor"`. Barrel export with `IconName` type.
 
-### QW-5: Remove unused `ionicons` dependency
+**Adoption strategy**:
+1. Create the `icons/` directory structure and barrel export
+2. New icons always go in `icons/`
+3. When touching a file that uses `Icon.tsx` or IonIcon, migrate that usage
+4. IonIcon references shrink naturally as files are touched
 
-**Problem**: `ionicons` (v7.2.1) and `@ionic/react` (v7.5.3) are installed in `package.json` but not used anywhere in the codebase.
+**Absorbs**: QW-5 (ionicons), ME-7 (SVG consolidation)
+**After**: QW-1 (currentColor defaults first)
 
-**Fix**: `npm uninstall ionicons @ionic/react`. Saves bundle size and removes a confusing dependency.
+### NP-2: Semantic colour tokens (CSS custom properties) 🔄 In progress
 
----
+**Current state**: Dark mode via 3 parallel mechanisms — `.dark` SCSS selectors (48 rules, 29 files), `getDarkMode()` runtime calls (13 components), `data-bs-theme` (underused).
 
-### QW-6: Fix 9 icons with hardcoded fills that ignore the `fill` prop
+**New pattern**: CSS custom properties as the single source of truth — `:root` for light, `[data-bs-theme='dark']` for dark. Importable in TS: `import { colorTextStandard } from 'common/theme'`.
 
-**Problem**: 9 icons have fills baked directly into SVG path elements, making the `fill` prop useless:
+**Adoption strategy**:
+1. Ship `_tokens.scss` + `tokens.ts` (already drafted on `chore/design-system-tokens`)
+2. New/modified code uses tokens instead of hardcoded values or `getDarkMode()`
+3. Existing `.dark` selectors and `getDarkMode()` calls are replaced when files are touched
+4. No dedicated migration sprint — it happens naturally
 
-| Icon | Colour | Issue |
-|------|--------|-------|
-| `github` | `#1A2634` | Invisible in dark mode |
-| `pr-draft` | `#1A2634` | Invisible in dark mode |
-| `google` | Multi-colour brand | Intentional — keep as-is |
-| `link` | `rgb(104, 55, 252)` | Should use `$primary` / `currentColor` |
-| `pr-merged` | `#8957e5` | GitHub purple — intentional? |
-| `issue-closed` | `#8957e5` | Same |
-| `issue-linked` | `#238636` | GitHub green — intentional? |
-| `pr-linked` | `#238636` | Same |
-| `pr-closed` | `#da3633` | GitHub red — intentional? |
+**After**: NP-6 (colour primitives) should land first.
 
-**Fix**: For `github` and `pr-draft`, switch to `fill={fill || 'currentColor'}`. For GitHub status icons, decide: use `currentColor` (adapts to theme) or keep brand colours (intentional). For `link`, use `currentColor`.
+### NP-3: Context-based modal system
 
-**Validate**: Storybook → "Design System/Icons/Hardcoded Fills".
+**Current state**: `openModal()`, `openModal2()`, `openConfirm()` as globals on `window`. 14 near-identical confirmation modals, 46+ call sites.
 
----
+> **Note**: The deprecated `ReactDOM.render`/`unmountComponentAtNode` usage in the modal system is being resolved in [PR #6764](https://github.com/Flagsmith/flagsmith/pull/6764) (React 19 migration by Wadii). That PR handles the React compatibility issue directly. This pattern is about improving the modal API and reducing duplication — not about unblocking React 19.
 
-### QW-7: Wire accessibility E2E tests into CI
+**New pattern**: `ModalProvider` context with `useModal()` hook. Single `ConfirmModal` component replacing the 14 confirmation variants (~500 lines of duplication).
 
-**Problem**: 6 axe-core/Playwright E2E tests already exist (`e2e/tests/accessibility-tests.pw.ts`) covering WCAG 2.1 AA compliance — light/dark contrast on Features page, Project Settings, Environment Switcher, and Create Feature modal. But they aren't wired into the CI pipeline, so contrast regressions can ship undetected.
+**Adoption strategy**:
+1. Build `ModalProvider` and mount at app root (coexists with old system)
+2. Build `ConfirmModal` as the first component — consolidates the 6 `ConfirmRemove*` modals (absorbs ME-1)
+3. New modals use `useModal()`
+4. When modifying an existing modal, migrate it to the new system
+5. Old `openModal`/`openModal2` calls shrink over time
 
-**Files**:
-- `e2e/tests/accessibility-tests.pw.ts` — existing tests
-- `e2e/helpers/accessibility.playwright.ts` — `checkA11y()` helper
-- CI config (GitHub Actions workflow) — needs accessibility test job
+### NP-4: Composable table/list components *(flagged for future — no ticket)*
 
-**Fix**: Add the accessibility tests to the existing Playwright CI job. Tests only fail on critical/serious violations, so they won't be noisy.
+**Current state**: No unified system — 9 `TableFilter*` components, 5+ `*Row` components, 5+ `*List` components. Each feature area builds its own.
 
-**Impact**: Prevents contrast regressions from shipping. Zero new code needed — just CI config.
+**New pattern**: Composable `<Table>`, `<Table.Header>`, `<Table.Row>`, `<Table.Cell>`, `<List>`, `<List.Item>` with shared empty state and loading skeleton slots.
 
----
+Not a near-term priority. Documented here for when the team is ready to standardise table/list patterns. When started, build one reference implementation first and migrate incrementally.
 
-### QW-8: Fix invalid `fontWeight: 'semi-bold'` in SuccessMessage
+### NP-5: TypeScript-first components
 
-**Problem**: `SuccessMessage.tsx` and `SuccessMessage.js` both use `fontWeight: 'semi-bold'` — this is not a valid CSS value. The browser ignores it entirely, so the text renders at the inherited weight instead of semi-bold.
+**Current state**: 7 components remain as `.js` class components (`Input.js`, `InputGroup.js`, `CreateProject.js`, `CreateWebhook.js`, `Payment.js`, `Flex.js`, `Column.js`).
 
-**Files**:
-- `web/components/messages/SuccessMessage.tsx`
-- `web/components/SuccessMessage.js`
+**New pattern**: All components in TypeScript with full prop types. No new `.js` files.
 
-**Fix**: Replace `'semi-bold'` with `600` (the numeric value for semi-bold).
+**Adoption strategy**:
+1. Delete `CreateWebhook.js` (`.tsx` version already exists)
+2. When modifying a `.js` component, convert it to `.tsx` as part of the PR
+3. Prioritise `Input.js` (ME-3) since it's a widely-used form primitive
 
----
+**See also**: [#5746](https://github.com/Flagsmith/flagsmith/issues/5746) (TS migration epic) — aligns with this pattern. `Payment.js` already tracked as [#6319](https://github.com/Flagsmith/flagsmith/issues/6319).
 
-## Medium Efforts (half-day to 1 day each)
+### NP-6: Formal colour primitive palette 🔄 In progress
 
-### ME-1: Consolidate 6 identical `ConfirmRemove*` modals
+**Current state**: Ad hoc grey definitions, inverted tonal scales, alpha variants using different RGB than solid counterparts, 30+ orphan hex values.
 
-**Problem**: Six deletion confirmation modals follow the exact same "type the name to confirm" pattern with nearly identical code:
+**New pattern**: `_primitives.scss` with `$slate-*`, `$purple-*`, `$red-*`, `$green-*`, `$orange-*`, `$blue-*` scales following the lower-number-is-lighter convention. Already drafted on `chore/design-system-tokens`.
 
-- `modals/ConfirmRemoveFeature.tsx`
-- `modals/ConfirmRemoveSegment.tsx`
-- `modals/ConfirmRemoveProject.tsx`
-- `modals/ConfirmRemoveOrganisation.tsx`
-- `modals/ConfirmRemoveEnvironment.tsx`
-- `modals/ConfirmRemoveWebhook.tsx`
+**Adoption strategy**:
+1. Ship `_primitives.scss` with the complete scale
+2. Map existing `_variables.scss` definitions to reference primitives
+3. When touching a file with orphan hex values, replace with the nearest primitive
+4. Enables NP-2 (semantic tokens reference primitives)
 
-**Fix**: Create a single `ConfirmRemoveModal` component that takes `entityType`, `entityName`, and `onConfirm` props. Replace all 6 files with imports of the shared component.
+### NP-7: Fix dark mode gaps
 
-**Impact**: Removes ~500 lines of duplicated code.
+**Current state**: Only 48 `.dark` CSS selectors across the entire stylesheet. Large areas have zero dark mode support: feature pipeline visualisation, admin dashboard charts, integration cards, and dozens of components with inline light-mode-only hex values. The QW dark mode fixes (QW-1, QW-3, QW-12, QW-13, QW-14) cover specific components but leave most of the surface area untouched.
 
----
+**Work required**: After NP-2 (semantic tokens) lands, go feature-by-feature and replace hardcoded colour values with tokens:
+- 48 `.dark` SCSS selector pairs → replace with token usage
+- 13 `getDarkMode()` call sites → replace with token imports
+- 280+ hardcoded hex values in TSX → replace with tokens
+- Feature pipeline, integration cards, admin dashboard — full dark mode pass
 
-### ME-2: Button variant dark mode gaps
+**Adoption strategy**:
+1. QW dark mode fixes land first (specific, high-impact components)
+2. NP-2 (semantic tokens) lands — the replacement vocabulary exists
+3. Go page by page: Features, Segments, Audit Log, Integrations, Users & Permissions, Organisation Settings, Identities, Release Pipelines, Change Requests
+4. Each page becomes a sub-task — replace hardcoded values with tokens, verify in both themes
 
-**Problem**: `btn-tertiary`, `btn-danger`, and `btn--transparent` have no dark mode overrides despite variables being defined (`$btn-tertiary-bg-dark`, etc.).
+**Blocked by**: NP-2 (semantic colour tokens) — tokens must exist before we can use them
 
-**Files**:
-- `web/styles/project/_buttons.scss` — needs `.dark` overrides for missing variants
-- Variables already exist in `_variables.scss` lines 137–144
+### NP-8: Typography consistency — deferred to Tailwind adoption
 
-**Fix**: Add `.dark` selectors in `_buttons.scss` that use the existing dark mode variables. Test all button variants in both themes.
+**Current state**: Type scale exists in SCSS but is bypassed in 58+ places (13px × 17, 12px × 12, 11px × 7). Fragmented weight system (`.font-weight-medium` vs Bootstrap `fw-*`). 9 inline `fontWeight` values. Opacity-based muted text failing WCAG contrast.
 
-**Validate**: Storybook → "Design System/Buttons/Dark Mode Gaps" (toggle dark mode in toolbar).
+**Decision**: Don't build custom typography tokens. Tailwind ships a complete type scale (`text-xs`, `text-sm`, `text-base`, etc.) and weight utilities (`font-medium`, `font-semibold`, etc.) out of the box. Building a parallel system now means migrating twice.
 
----
+**What to do now**: Avoid adding new hardcoded `fontSize`/`fontWeight` inline styles. When Tailwind lands, replace the 58 hardcoded values with utility classes.
 
-### ME-3: Convert `Input.js` to TypeScript
+**Exception**: Opacity-based muted text (`opacity: 0.4–0.75`) should be replaced with `colorTextSecondary` / `$text-muted` tokens now — that's a colour/accessibility concern, not typography, and is covered by NP-2.
 
-**Problem**: The main form input component `web/components/base/forms/Input.js` is a legacy class component (231 lines) that hasn't been converted to TypeScript. It handles text inputs, passwords, search, checkboxes, and radio buttons in one component.
+**See also**: [#6414](https://github.com/Flagsmith/flagsmith/issues/6414) (inconsistent header font colour) under [#5921](https://github.com/Flagsmith/flagsmith/issues/5921)
 
-**Fix**: Convert to TypeScript functional component. Consider splitting password toggle and search input into separate variants via props rather than internal branching.
+### NP-9: Explicit imports (remove global component registry)
 
----
+**Current state**: `project-components.js` attaches ~15 components to `window` (`Button`, `Row`, `Select`, etc.). Defeats tree-shaking, blocks TypeScript migration, invisible dependencies.
 
-### ME-4: Toast notifications — add dark mode support
+**New pattern**: Explicit imports in every file. No `window.*` globals.
 
-**Problem**: Toast notifications (`web/project/toast.tsx`) have no dark mode styles. The inline SVGs for success/danger icons use hardcoded colours.
+**Adoption strategy**:
+1. When converting a `.js` file to `.tsx` (NP-5), add explicit imports
+2. After adding imports, remove that component's `window.*` assignment
+3. Registry shrinks naturally as files are converted
 
-**Fix**: Add `.dark .toast-message` CSS overrides. Replace hardcoded SVGs with the `Icon` component (after QW-1 is done).
+### NP-10: Form building blocks
 
----
+**Current state**: `Input.js` is a 231-line legacy class component handling text, password, search, checkbox, and radio inputs in a single file. No TypeScript types. `InputGroup.js` wraps it with label + error display. Validation is entirely manual — inline truthiness checks, no schemas, no validation library. Utils like `isValidEmail()`, `isValidURL()`, `isValidNumber()` are scattered in `utils.tsx`.
 
-### ME-5: Unify dropdown implementations
+**New pattern**: Typed form primitives as separate, single-responsibility components: `TextInput`, `SearchInput`, `PasswordInput`, `Checkbox`, `Radio`. Each with built-in validation support (`required`, `pattern`, `validate` props) — no heavy library needed, just a consistent API. `Input.js` is not refactored — it's replaced gradually.
 
-**Problem**: 4 different dropdown patterns exist:
-1. `base/DropdownMenu.tsx` — icon-triggered action menu
-2. `base/forms/ButtonDropdown.tsx` — split button dropdown
-3. `navigation/AccountDropdown.tsx` — account menu (duplicates DropdownMenu positioning logic)
-4. `segments/Rule/components/EnvironmentSelectDropdown.tsx` — form-integrated dropdown
+**Adoption strategy**:
+1. Build the first primitives (`TextInput`, `Checkbox`) with validation API
+2. New forms use the new components
+3. When touching a form that uses `Input.js`, migrate that usage
+4. `Input.js` shrinks naturally until it can be deleted
 
-**Fix**: Standardise on `DropdownMenu` for action menus. Refactor `AccountDropdown` to use `DropdownMenu` as its base. Document when to use `ButtonDropdown` vs `DropdownMenu`.
-
----
-
-### ME-6: Checkbox and switch dark mode states
-
-**Problem**: `Switch.tsx` uses hardcoded colours for sun/moon icons. Form checkboxes/radio buttons in `Input.js` have no dark mode overrides for their custom styles.
-
-**Fix**: Use CSS variables or `currentColor` for Switch icons. Add `.dark` overrides for checkbox/radio custom styles in SCSS.
-
----
-
-### ME-7: Consolidate 23 separate SVG icon components
-
-**Problem**: 23 SVG icon components exist outside of `Icon.tsx` across 3 directories:
-- `web/components/svg/` — 19 navigation/sidebar icons (AuditLogIcon, FeaturesIcon, SegmentsIcon, etc.)
-- `web/components/base/icons/` — 2 icons (GithubIcon, GitlabIcon)
-- `web/components/` — 2 icons (IdentityOverridesIcon, SegmentOverridesIcon)
-
-These are imported directly by components, bypassing the `<Icon name="..." />` API. There is no shared pattern for props, sizing, or colour handling.
-
-**Fix**: Either:
-1. Add these to the `Icon.tsx` switch statement so all icons use one API, or
-2. Extract `Icon.tsx`'s inline SVGs into individual files (part of LR-1) and merge all icons into the same structure.
-
-Option 2 is better long-term. Short-term, document which components import which icons.
-
-**Validate**: Storybook → "Design System/Icons/Separate SVG Components".
-
----
-
-### ME-8: Add `@storybook/addon-a11y` for component-level contrast checks
-
-**Problem**: Storybook is set up with visual stories for icons, buttons, colours, and dark mode issues, but has no automated accessibility checking. Developers can only spot contrast issues by eye.
-
-**Fix**: Install `@storybook/addon-a11y` and add to `.storybook/main.ts`. Every story automatically gets a WCAG 2.1 AA accessibility panel showing contrast failures, missing ARIA attributes, and keyboard issues — at component level, not page level.
-
-**Impact**: Complements the existing E2E axe-core tests (page-level) with a faster component-level feedback loop. Developers see violations while building, not after deployment.
-
-**Validate**: Storybook → any story → "Accessibility" tab in addon panel.
-
----
-
-### ME-9: Expand accessibility E2E coverage to all key pages
-
-**Problem**: The 6 existing axe-core tests only cover: Features page (light + dark), Project Settings, Environment Switcher, Create Feature modal. Many pages have no automated accessibility coverage at all.
-
-**Missing pages**: Segments, Audit Log, Integrations, Users & Permissions, Organisation Settings, Identities, Release Pipelines, Change Requests.
-
-**Fix**: Add light and dark mode contrast tests for each missing page, following the existing pattern in `e2e/tests/accessibility-tests.pw.ts`. Focus on critical/serious violations only.
-
-**Impact**: Catches contrast and ARIA issues across the full app surface area, not just a handful of pages.
-
----
-
-### ME-10: Typography inconsistencies — enforce the existing type scale
-
-**Problem**: An h1–h6 scale and body size variables exist in SCSS, but they're widely bypassed:
-
-**Font sizes** — 58 hardcoded inline `fontSize` values in TSX:
-
-| Value | Occurrences | Where |
-|-------|-------------|-------|
-| `fontSize: 13` | 17 | Admin dashboard, tables, various components |
-| `fontSize: 12` | 12 | Labels, captions, badges |
-| `fontSize: 11` | 7 | Table filters, small labels |
-| `fontSize: 10` | 1 | Icon labels |
-| Other (`14px`, `16px`, `18px`, `0.875rem`) | ~6 | Scattered |
-
-**Font weights** — 4 tiers are used in practice (700, 600, 500, 400) but applied inconsistently:
-- Mixed systems: custom `.font-weight-medium` (500) alongside Bootstrap `fw-bold`/`fw-semibold`/`fw-normal`
-- 9 inline `fontWeight` values in TSX bypassing classes entirely
-- `fontWeight: 'semi-bold'` in `SuccessMessage.tsx` and `SuccessMessage.js` — **invalid CSS** (should be 600)
-
-**"Subtle" text** — achieved via opacity (0.4–0.75) rather than colour tokens, which is an accessibility concern for low-vision users. Classes `.faint`, `.text-muted` exist but compete with ad-hoc opacity values.
-
-**Utility classes** — minimal and inconsistent. Only `.text-small`, `.large-para`, `.font-weight-medium`, `.bold-link`. No systematic set.
-
-**Fix**:
-1. Replace the 58 hardcoded `fontSize` values with existing SCSS variables or CSS classes
-2. Standardise on one weight class system (either custom or Bootstrap, not both)
-3. Replace opacity-based muted text with colour-based approach (`$text-muted` / `colorTextSecondary`)
-4. Fix the `semi-bold` bug in SuccessMessage
-
-**Validate**: Storybook → "Design System/Typography".
-
----
-
-## Large Refactors (multi-day)
-
-### LR-1: Icon.tsx — break up monolithic component
-
-**Problem**: `Icon.tsx` is 1,543 lines containing 70+ inline SVG definitions in a single switch statement. It's the single largest component in the codebase. Adding, modifying, or debugging icons requires navigating this massive file.
-
-One icon (`paste`) is declared in the `IconName` type but has no implementation.
-
-**Fix**: Extract each icon into its own file under `web/components/icons/`. Create an `IconMap` that lazy-loads icons by name. Keep the `<Icon name="..." />` API but back it with individual files.
-
-**Prerequisite**: QW-1 (fix `currentColor` defaults first).
-
----
-
-### LR-2: Introduce semantic colour tokens (CSS custom properties)
-
-**Problem**: Dark mode is implemented via 3 parallel mechanisms that don't compose:
-1. **SCSS `.dark` selectors** (48 rules across 29 files) — compile-time, can't be used in inline styles
-2. **`getDarkMode()` runtime calls** (13 components) — manual ternaries, easy to forget
-3. **Bootstrap `data-bs-theme`** — set but underused, conflicts with manual `.dark` selectors
-
-Variables use a `$component-property-dark` suffix convention (`$input-bg-dark`, `$panel-bg-dark`, etc.) requiring duplicate SCSS rules for every property.
-
-**Fix**: Introduce CSS custom properties via `common/theme/tokens.ts` + `web/styles/_tokens.scss` (already drafted on this branch). These tokens:
-- Define light values on `:root` and dark values on `[data-bs-theme='dark']`
-- Are importable in TS files: `import { colorTextStandard } from 'common/theme'`
-- Eliminate `getDarkMode()` calls entirely
-- Gradually replace `.dark` selector pairs
-
-**Migration path**:
-1. Token files already exist (drafted)
-2. Fix Icon.tsx with `currentColor` (QW-1) — no tokens needed
-3. Migrate `getDarkMode()` callsites (13 files) to use token imports
-4. Migrate `.dark` selectors component-by-component
-5. Remove orphaned `$*-dark` SCSS variables
-
-**Validate**: Storybook → "Design System/Colours/Semantic Tokens" (toggle dark mode to see tokens flip). Also see "Design System/Dark Mode Issues/Theme Token Comparison" for before/after code examples.
-
----
-
-### LR-3: Modal system — migrate from global imperative API
-
-**Problem**: The modal system uses `openModal()`, `openModal2()`, `openConfirm()` as global functions attached to `window`. It uses deprecated `react-dom` `render`/`unmountComponentAtNode` APIs (removed in React 18). `openModal2` exists for stacking modals, acknowledged in code comments as a pattern to avoid.
-
-**Fix**: Migrate to a React context-based modal manager. Replace global imperative calls with `useModal()` hook. This is a large effort but unblocks React 18 compatibility.
-
----
-
-### LR-4: Standardise table/list components
-
-**Problem**: No unified table/list component system. Each feature area builds its own:
-- 9 different `TableFilter*` components
-- 5+ different `*Row` components (FeatureRow, ProjectFeatureRow, FeatureOverrideRow, OrganisationUsersTableRow, etc.)
-- 5+ different `*List` components
-
-**Fix**: Create a composable `<Table>` / `<List>` component system with standardised `Row`, `Cell`, and `Header` sub-components. Migrate feature areas one at a time.
-
----
-
-### LR-5: Remove legacy JS class components
-
-**Problem**: Several components remain as `.js` class components:
-- `base/forms/Input.js`
-- `base/forms/InputGroup.js`
-- `modals/CreateProject.js`
-- `modals/CreateWebhook.js` (coexists with `.tsx` version)
-- `modals/Payment.js`
-- Layout: `Flex.js`, `Column.js`
-
-**Fix**: Convert each to TypeScript functional components. Remove `CreateWebhook.js` duplicate.
-
----
-
-### LR-6: Define a formal colour palette
-
-**Problem**: There is no formal, systematic colour palette. The current state:
-
-1. **Inconsistent tonal scales**: `$primary400` (`#956CFF`) is *lighter* than `$primary` (`#6837FC`), reversing the typical convention where higher numbers = darker. `$bg-dark500` is darker than `$bg-dark100`, but text/grey scales don't follow a pattern at all.
-
-2. **Alpha colour RGB mismatches**: The alpha variants use different base RGB values than their solid counterparts:
-   | Token | Solid hex | Solid RGB | Alpha base RGB |
-   |-------|-----------|-----------|----------------|
-   | `$primary` / `$primary-alfa-*` | `#6837FC` | `(104, 55, 252)` | `(149, 108, 255)` |
-   | `$danger` / `$danger-alfa-*` | `#EF4D56` | `(239, 77, 86)` | `(255, 66, 75)` |
-   | `$warning` / `$warning-alfa-*` | `#FF9F43` | `(255, 159, 67)` | `(255, 159, 0)` |
-
-3. **30+ orphan hex values in components**: Colours used directly in TSX/SCSS that don't exist in `_variables.scss`:
-   - `#9DA4AE` (52 uses) — a grey with no variable
-   - `#656D7B` (44 uses) — has variable `$text-icon-grey` but most callsites use raw hex
-   - `#e74c3c`, `#53af41`, `#767d85`, `#5D6D7E`, `#343a40`, `#1c2840`, `#8957e5`, `#238636`, `#da3633` etc.
-
-4. **Missing scale steps**: No `$danger600`, no `$success700`, no `$info400`, no `$warning200`. Each colour has a different number of tonal variants, making the system unpredictable.
-
-5. **No grey scale**: Greys are named ad hoc (`$text-icon-grey`, `$text-icon-light-grey`, `$bg-light200`, `$footer-grey`) with no numbered scale.
-
-**Fix**: Define a formal primitive palette with consistent naming:
-- Numbered tonal scales (50–900) for each hue, following the convention: lower numbers = lighter
-- Derive alpha variants from the same RGB as the solid colour
-- Create a proper grey/neutral scale
-- Map every orphan hex to a palette token or remove it
-
-**Impact**: This is the prerequisite for semantic tokenisation (LR-2). Without a consistent palette, tokens just paper over the mess.
-
-**Note**: PR #6105 is a Tailwind CSS POC (not yet adopted). If Tailwind is adopted, `theme.extend.colors` could be the home for the palette definition, generating CSS custom properties consumed by both utility classes and the semantic token layer. The palette work itself is Tailwind-agnostic — it needs doing regardless.
-
-**Validate**: Storybook → "Design System/Colours/Palette Audit" — four stories covering tonal scale inconsistency, alpha mismatches, orphan hex values, and grey scale gaps.
-
----
-
-### LR-7: Full dark mode theme audit (umbrella)
-
-**Problem**: Only 48 `.dark` CSS selectors exist across the entire stylesheet. Many component areas have zero dark mode coverage:
-- Feature pipeline visualisation (white circles, grey lines on dark background)
-- Admin dashboard charts
-- Integration cards
-- Numerous inline styles with light-mode-only colours
-
-**Fix**: Systematic page-by-page dark mode audit. For each page:
-1. Toggle dark mode
-2. Screenshot
-3. Identify contrast failures
-4. Add `.dark` overrides or switch to `currentColor` / CSS variables
-
-This is the umbrella issue — all the QW and ME items above contribute to this.
-
-**Validate**: Storybook → "Design System/Dark Mode Issues/Dark Mode Implementation Patterns" — shows all 3 parallel mechanisms and the proposed solution.
-
----
-
-### LR-8: Standardise typography usage across the codebase
-
-**Problem**: The type scale (h1–h6, body sizes, weight tiers) exists in SCSS but is bypassed in 58+ places with inline styles. The weight system is fragmented between custom classes (`.font-weight-medium`) and Bootstrap utilities (`fw-bold`, `fw-semibold`). "Subtle" text uses opacity instead of semantic colour. Without enforcing the existing scale, inconsistencies will keep growing.
-
-**Fix**:
-1. Replace all 58 inline `fontSize` values with existing SCSS variables or utility classes
-2. Pick one weight class system and migrate the other (e.g. standardise on Bootstrap `fw-*` and remove `.font-weight-medium`, or vice versa)
-3. Replace opacity-based muted text patterns with `$text-muted` / `colorTextSecondary`
-4. Optionally introduce a `<Text>` component if the migration shows repeated patterns that would benefit from a constrained API — but only if the need is demonstrated, not upfront
-
-**Prerequisite**: ME-10 (audit and consolidate the type scale first).
+**See also**: [#5746](https://github.com/Flagsmith/flagsmith/issues/5746) (TS migration epic)
 
 ---
 
 ## Summary
 
-| Category | Count | Estimated total effort |
-|----------|-------|----------------------|
-| Quick wins | 8 | 1–2 days |
-| Medium efforts | 10 | 5–10 days |
-| Large refactors | 8 | 4–7 weeks |
+| Category | Count | Status |
+|----------|-------|--------|
+| Quick wins | 10 | GitHub issues created, 3 with PRs in review |
+| Medium efforts | 6 (1 done) | Documented for evaluation |
+| New patterns | 10 (2 in progress) | Documented for evaluation — introduce once, adopt incrementally |
+| **Total** | **27** | |
 
-**Recommended order**: QW-1 → QW-5 → QW-6 → QW-7 → QW-2 → QW-3 → ME-8 → ME-2 → ME-4 → ME-10 → ME-9 → ME-7 → ME-1 → LR-1 → LR-6 → LR-2 → LR-8 → rest.
+### Key dependency chains
 
-**Key dependency chains**:
-- QW-1 (icon currentColor) → QW-2 (component hardcoded colours) → LR-1 (break up Icon.tsx)
-- LR-6 (formal palette) → LR-2 (semantic tokens)
-- ME-10 (typography tokens) → LR-8 (Text/Heading components)
-- QW-7 (CI a11y tests) → ME-9 (expand a11y coverage)
+```
+QW-1 (currentColor) → NP-1 (unified icon system)
+NP-6 (colour primitives) → NP-2 (semantic tokens) → NP-7 (fix dark mode gaps, page by page) using tokens
+NP-8 + ME-11 (typography + spacing) → deferred to Tailwind adoption
+QW-7 (a11y POC) → ME-9 (expand a11y coverage)
+NP-9 (explicit imports) → NP-5 (TypeScript-first components)
+NP-3 (modal system) → cleaner modal API + reduced duplication (React compat handled by PR #6764)
+```
+
+### Recommended priority order
+
+1. **Immediate** (QW with PRs): QW-1, QW-8, QW-9 — already in review
+2. **Next sprint**: QW-3, QW-10, QW-11, QW-12, QW-13, QW-14
+3. **Foundation patterns** (in progress): NP-6 + NP-2 (colour primitives + semantic tokens)
+4. **After tokens land**: ME-4, ME-10, ME-1
+5. **Introduce remaining patterns**: NP-1, NP-3, NP-4, NP-5, NP-8, NP-9 — each introduced once, then adopted progressively
 
 ---
 
 ## Appendix: Icon System Inventory
 
-| Category | Count | Details |
-|----------|-------|---------|
-| Icons in `Icon.tsx` switch | 70 | All inline SVGs, 1,543 lines |
-| Icons declared but not implemented | 1 | `paste` — in type, no case |
-| Separate SVG components | 23 | Across `svg/`, `base/icons/`, root |
-| Integration SVG files | 37 | In `/static/images/integrations/` |
-| Icons defaulting to `#1A2634` | ~54 | Invisible in dark mode |
-| Icons with hardcoded fills | 9 | Cannot be overridden via props |
-| Icons using `currentColor` | 0 | None |
-| Unused icon dependency | `ionicons` v7.2.1 | Installed but never imported |
+| Category | Count |
+|----------|-------|
+| Icons in `Icon.tsx` switch | 70 |
+| Icons declared but not implemented | 1 (`paste`) |
+| Separate SVG components (`svg/`, `base/icons/`) | 23 |
+| Integration SVG files (`/static/images/integrations/`) | 37 |
+| Files importing IonIcon | 40+ |
+| Icons that defaulted to `#1A2634` (pre QW-1) | ~54 |
+| Icons with hardcoded SVG fills (pre QW-1) | 9 |
+
+## Appendix: Highest-Frequency Orphan Hex Values
+
+| Hex | Occurrences | Files | Current variable |
+|-----|-------------|-------|-----------------|
+| `#656D7B` | 75 | 48 | `$text-icon-grey` (but most callsites use raw hex) |
+| `#9DA4AE` | 59 | 35 | None |
+| `#1A2634` | ~54 (in Icon.tsx) | 1 | `$body-color` |
+| `#6837FC` | scattered | pipeline files | `$primary` |
+
+## Appendix: Dark Mode Coverage
+
+| Mechanism | Count | Files |
+|-----------|-------|-------|
+| `.dark` CSS selectors | 48 rules | 29 SCSS files |
+| `getDarkMode()` runtime calls | 13 | 13 TSX files |
+| `data-bs-theme` | 1 (root) | Set but underused |
+| Components with zero dark mode support | Many | Toasts, pipeline viz, integration cards, admin charts |

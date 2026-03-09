@@ -11,7 +11,7 @@ Release pipeline components use raw hex values for status indicator colours inst
 
 - `web/components/release-pipelines/ReleasePipelinesList.tsx:169` — `color: isPublished ? '#6837FC' : '#9DA4AE'`
 - `web/components/release-pipelines/ReleasePipelineDetail.tsx:106` — `color: isPublished ? '#6837FC' : '#9DA4AE'` (same pattern)
-- `web/components/release-pipelines/StageCard.tsx:8` — `bg-white` Tailwind class hardcoded, no dark mode equivalent applied
+- `web/components/release-pipelines/StageCard.tsx:8` — `bg-white` Bootstrap class hardcoded, no dark mode equivalent applied
 
 ## Proposed Fix
 
@@ -27,7 +27,7 @@ color: isPublished ? '#6837FC' : '#9DA4AE'
 color: isPublished ? colorBrandPrimary : colorTextTertiary
 ```
 
-For `StageCard.tsx`, replace the hardcoded `bg-white` Tailwind class with the appropriate themed background token or a dark-mode-aware Tailwind variant (e.g. `bg-white dark:bg-[var(--color-bg-level-1)]`), consistent with how other card components handle their background.
+For `StageCard.tsx`, replace the hardcoded `bg-white` class with the appropriate themed background token (e.g. a CSS custom property via `var(--color-bg-level-1)`), consistent with how other card components handle their background in dark mode.
 
 ## Acceptance Criteria
 

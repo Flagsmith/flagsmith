@@ -1,44 +1,39 @@
 ---
-title: "Wire accessibility E2E tests into CI"
-labels: ["design-system", "quick-win", "accessibility"]
+title: "POC: Evaluate wiring accessibility E2E tests into CI"
+labels: ["design-system", "quick-win", "accessibility", "spike"]
 ---
 
-## Problem
+## Objective
 
-6 axe-core/Playwright accessibility E2E tests exist in the repository but are not included in the CI pipeline. This means contrast ratio regressions and other accessibility violations can be merged to `main` without being caught automatically.
+Evaluate the feasibility of integrating the existing axe-core/Playwright accessibility tests into the CI pipeline. This is a spike/POC — not an implementation commitment.
 
-## Files
+## Context
+
+6 axe-core/Playwright accessibility E2E tests exist in the repository (`e2e/tests/accessibility-tests.pw.ts`) but are not included in the CI pipeline. Before committing to full integration, we need to understand:
+
+1. **CI impact** — How much time do the a11y tests add to the pipeline?
+2. **Noise level** — How many existing violations surface? Are they actionable or overwhelming?
+3. **Severity filtering** — Can we configure axe to fail only on `critical`/`serious` violations?
+4. **Infrastructure** — Do the tests need Docker services running? What's the dependency footprint?
+
+## Files to Investigate
 
 - `e2e/tests/accessibility-tests.pw.ts` — existing axe-core tests (6 tests)
-- `e2e/helpers/accessibility.playwright.ts` — `checkA11y()` helper used by the tests
-- CI config (GitHub Actions workflow file) — needs an accessibility test job added
+- `e2e/helpers/accessibility.playwright.ts` — `checkA11y()` helper
+- `.github/workflows/` — existing CI workflow files
+- `e2e/playwright.config.ts` — test configuration
 
-## Proposed Fix
+## POC Tasks
 
-Add the accessibility tests to the existing Playwright CI job. The tests should be configured to fail only on `critical` and `serious` axe violations, not `moderate` or `minor`, to avoid excessive noise while still blocking regressions.
+- [ ] Run the a11y tests locally and document pass/fail results
+- [ ] Measure execution time
+- [ ] List all current violations by severity level
+- [ ] Draft a CI workflow addition (without merging)
+- [ ] Document findings and recommendation (proceed / defer / adjust scope)
 
-Example configuration in the workflow:
+## Success Criteria
 
-```yaml
-- name: Run accessibility tests
-  run: npm run test -- e2e/tests/accessibility-tests.pw.ts
-  env:
-    E2E_RETRIES: 1
-```
-
-If the existing CI job runs tests by tag, ensure the accessibility tests carry an appropriate tag (e.g. `@a11y`) so they can be targeted or excluded independently.
-
-## Acceptance Criteria
-
-- [ ] CI runs the accessibility tests on every pull request
-- [ ] Tests fail on `critical` and `serious` axe violations
-- [ ] Contrast ratio regressions block merging
-- [ ] CI job name and step are clearly labelled as accessibility tests
-- [ ] Existing test run time is not significantly impacted (accessibility tests are fast)
-
-## Storybook Validation
-
-Not applicable — this is a CI configuration task.
+A short write-up answering: Should we wire these tests into CI now, and if so, with what configuration?
 
 ## Dependencies
 

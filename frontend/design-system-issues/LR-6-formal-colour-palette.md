@@ -27,7 +27,7 @@ Define a formal primitive palette:
 - A systematic grey/neutral scale (e.g. `$grey50` through `$grey900`) replacing ad hoc names
 - Every orphan hex value mapped to a palette token or removed
 
-If Tailwind CSS is adopted (PR #6105 is a POC — not yet committed), the palette can live in `theme.extend.colors`. The palette definition itself is Tailwind-agnostic; this work should not be blocked on or tied to the Tailwind decision.
+The palette definition should be implemented as SCSS variables and CSS custom properties. If a utility-class framework is adopted in the future, the palette can be mapped to it at that point.
 
 ## Acceptance Criteria
 
