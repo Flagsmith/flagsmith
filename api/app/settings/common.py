@@ -543,6 +543,7 @@ SPECTACULAR_SETTINGS = {
         "environments.identities.traits.openapi",
     ],
     "PREPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.preprocess_exclude_path_format",
         "api.openapi.preprocessing_filter_spec",
     ],
     "POSTPROCESSING_HOOKS": [
