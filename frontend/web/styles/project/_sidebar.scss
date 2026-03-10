@@ -1,0 +1,52 @@
+.sidebar-link {
+  color: $body-color;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  svg path {
+    fill: $text-icon-grey;
+    transition: fill 0.15s ease;
+  }
+
+  &:hover,
+  &--active {
+    color: $primary;
+
+    svg path {
+      fill: $primary;
+    }
+  }
+
+  &:hover {
+    background-color: transparentize($primary, 0.92);
+  }
+
+  &--active {
+    background-color: transparentize($primary, 0.95);
+    font-weight: 600;
+  }
+}
+
+.dark .sidebar-link {
+  color: $body-color-dark;
+
+  svg path {
+    fill: $text-icon-light-grey;
+  }
+
+  &:hover,
+  &--active {
+    color: $primary400;
+
+    svg path {
+      fill: $primary400;
+    }
+  }
+
+  &:hover {
+    background-color: transparentize($primary400, 0.88);
+  }
+
+  &--active {
+    background-color: transparentize($primary400, 0.92);
+  }
+}

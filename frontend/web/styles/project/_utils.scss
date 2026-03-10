@@ -243,60 +243,6 @@
     background-color: transparentize($primary, 0.95);
 }
 
-.sidebar-link {
-  color: $body-color;
-  transition: background-color 0.15s ease, color 0.15s ease;
-
-  svg path {
-    fill: $text-icon-grey;
-  }
-
-  &:hover {
-    background-color: transparentize($primary, 0.92);
-    color: $primary;
-
-    svg path {
-      fill: $primary;
-    }
-  }
-
-  &--active {
-    color: $primary;
-    background-color: transparentize($primary, 0.95);
-    font-weight: 600;
-
-    svg path {
-      fill: $primary;
-    }
-  }
-}
-
-.dark .sidebar-link {
-  color: $body-color-dark;
-
-  svg path {
-    fill: $text-icon-light-grey;
-  }
-
-  &:hover {
-    background-color: transparentize($primary400, 0.88);
-    color: $primary400;
-
-    svg path {
-      fill: $primary400;
-    }
-  }
-
-  &--active {
-    color: $primary400;
-    background-color: transparentize($primary400, 0.92);
-
-    svg path {
-      fill: $primary400;
-    }
-  }
-}
-
 .border-primary {
   border-color: $primary !important;
 }
