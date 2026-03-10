@@ -1,0 +1,131 @@
+// =============================================================================
+// Storybook Documentation Styles
+// =============================================================================
+// Shared styles for documentation stories (Colour Palette, Semantic Tokens, etc.)
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// Page layout
+// ---------------------------------------------------------------------------
+
+.docs-page {
+  font-family: 'OpenSans', sans-serif;
+  max-width: 960px;
+}
+
+.docs-page__title {
+  color: var(--color-text-default, #1a2634);
+  margin-bottom: 4px;
+}
+
+.docs-page__description {
+  color: var(--color-text-secondary, #656d7b);
+  font-size: 14px;
+  margin-bottom: 24px;
+
+  code {
+    color: inherit;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Colour palette (swatches)
+// ---------------------------------------------------------------------------
+
+.scale-row {
+  margin-bottom: 32px;
+}
+
+.scale-row__title {
+  color: var(--color-text-default, #1a2634);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.scale-row__swatches {
+  display: flex;
+  gap: 6px;
+}
+
+.swatch-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.swatch-card__colour {
+  align-items: flex-end;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: 8px;
+  display: flex;
+  font-size: 11px;
+  font-weight: 600;
+  height: 56px;
+  padding: 6px;
+}
+
+.swatch-card__hex {
+  color: var(--color-text-secondary, #656d7b);
+  font-size: 10px;
+}
+
+// ---------------------------------------------------------------------------
+// Token table
+// ---------------------------------------------------------------------------
+
+.token-group {
+  margin-bottom: 32px;
+}
+
+.token-group__title {
+  color: var(--color-text-default, #1a2634);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.token-group__header {
+  border-bottom: 2px solid var(--color-border-strong, rgba(101, 109, 123, 0.24));
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 48px 1fr 1fr;
+  padding-bottom: 6px;
+}
+
+.token-group__header-label {
+  color: var(--color-text-secondary, #656d7b);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.token-swatch {
+  align-items: center;
+  border-bottom: 1px solid var(--color-border-default, rgba(101, 109, 123, 0.16));
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 48px 1fr 1fr;
+  padding: 8px 0;
+}
+
+.token-swatch__preview {
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: 8px;
+  height: 40px;
+  width: 40px;
+}
+
+.token-swatch__name {
+  color: var(--color-text-default, #1a2634);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.token-swatch__value {
+  color: var(--color-text-secondary, #656d7b);
+  font-size: 11px;
+}
