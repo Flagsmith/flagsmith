@@ -108,8 +108,6 @@ class IdentityMigrator:
         api_keys = EnvironmentAPIKey.objects.filter(environment__project_id=project_id)
         api_key_wrapper.write_api_keys(api_keys)
 
-        identity_wrapper = DynamoIdentityWrapper(
-            environment_wrapper=environment_wrapper
-        )
+        identity_wrapper = DynamoIdentityWrapper()
         identity_wrapper.write_identities(self.iter_identities_in_chunks(project_id))
         self.project_metadata.finish_identity_migration()  # type: ignore[no-untyped-call]
