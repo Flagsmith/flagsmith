@@ -1,5 +1,6 @@
 .sidebar-link {
   color: $body-color;
+  font-weight: 600;
   transition: background-color 0.15s ease, color 0.15s ease;
 
   svg path {
@@ -22,7 +23,6 @@
 
   &--active {
     background-color: transparentize($primary, 0.95);
-    font-weight: 600;
   }
 }
 
