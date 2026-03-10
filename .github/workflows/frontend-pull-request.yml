@@ -30,7 +30,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run unit tests
         run: npm run test:unit -- --passWithNoTests
