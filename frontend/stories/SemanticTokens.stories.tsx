@@ -210,8 +210,8 @@ const TokensPage: React.FC = () => {
         }}
       >
         Auto-generated from CSS custom properties defined in{' '}
-        <code>web/styles/_tokens.scss</code>. Toggle the theme in the toolbar to
-        see computed values update.
+        <code style={{ color: 'inherit' }}>web/styles/_tokens.scss</code>.
+        Toggle the theme in the toolbar to see computed values update.
       </p>
       {groups.map((group) => (
         <TokenGroupSection key={group.title} group={group} />

@@ -57,7 +57,13 @@ const SwatchCard: React.FC<{ swatch: Swatch }> = ({ swatch }) => {
 
   return (
     <div
-      style={{ display: 'flex', flexDirection: 'column', gap: 4, width: 72 }}
+      style={{
+        display: 'flex',
+        flex: 1,
+        flexDirection: 'column',
+        gap: 4,
+        minWidth: 0,
+      }}
     >
       <div
         style={{
@@ -96,7 +102,7 @@ const ScaleRow: React.FC<{ scale: Scale }> = ({ scale }) => (
     >
       {scale.name}
     </h3>
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+    <div style={{ display: 'flex', gap: 6 }}>
       {scale.swatches.map((s) => (
         <SwatchCard key={s.variable} swatch={s} />
       ))}
@@ -129,8 +135,10 @@ const PalettePage: React.FC = () => {
           marginBottom: 24,
         }}
       >
-        Auto-generated from <code>web/styles/_primitives.scss</code>. Add a new
-        variable to the SCSS file and it will appear here automatically.
+        Auto-generated from{' '}
+        <code style={{ color: 'inherit' }}>web/styles/_primitives.scss</code>.
+        Add a new variable to the SCSS file and it will appear here
+        automatically.
       </p>
       {scales.map((scale) => (
         <ScaleRow key={scale.name} scale={scale} />
