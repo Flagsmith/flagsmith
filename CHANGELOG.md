@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.222.0](https://github.com/Flagsmith/flagsmith/compare/v2.221.2...v2.222.0) (2026-03-10)
+
+
+### Features
+
+* **experiment:** use-flagsmith-internal-client-to-send-evaluation-data ([#6861](https://github.com/Flagsmith/flagsmith/issues/6861)) ([65a3f12](https://github.com/Flagsmith/flagsmith/commit/65a3f12482463f2898e7a508b82f22bd82227b6e))
+
+
+### Bug Fixes
+
+* `/api/v1/projects/{project_pk}/segments/` is broken for compressed environments ([#6913](https://github.com/Flagsmith/flagsmith/issues/6913)) ([0dfa268](https://github.com/Flagsmith/flagsmith/commit/0dfa268bf49e424293ad34070e6c98c5a01ef1d2))
+* remove dead feature prop and store dependency from Button ([#6867](https://github.com/Flagsmith/flagsmith/issues/6867)) ([50e4c2b](https://github.com/Flagsmith/flagsmith/commit/50e4c2b64a1c68787c20bb83805f9bacd6dcab20))
+
 ## [2.221.2](https://github.com/Flagsmith/flagsmith/compare/v2.221.1...v2.221.2) (2026-03-09)
 
 
