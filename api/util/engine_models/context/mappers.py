@@ -37,7 +37,7 @@ def map_environment_identity_to_context(
     Vendored from flagsmith-flag-engine's fix/missing-export branch and adapted
     to return v10's EvaluationContext TypedDict.
 
-    :param environment: A Django Environment ORM model.
+    :param environment: An Environment object.
     :param identity: The identity model object (Pydantic IdentityModel).
     :param override_traits: A list of TraitModel objects, to be used in place of
         `identity.identity_traits` if provided.
