@@ -8,7 +8,6 @@ import { useHasPermission } from 'common/providers/Permission'
 import Switch from 'components/Switch'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/Icon'
-import Utils from 'common/utils/utils'
 import { useCreateTagMutation, useGetTagsQuery } from 'common/services/useTag'
 
 type CreateFeatureTabProps = {

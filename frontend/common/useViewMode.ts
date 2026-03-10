@@ -1,4 +1,4 @@
-import flagsmith from 'flagsmith'
+import flagsmith from '@flagsmith/flagsmith'
 import { useState, useCallback } from 'react'
 
 export type ViewMode =

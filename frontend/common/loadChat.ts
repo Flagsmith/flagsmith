@@ -1,4 +1,4 @@
-import flagsmith from 'flagsmith'
+import flagsmith from '@flagsmith/flagsmith'
 import moment from 'moment'
 import AccountStore from './stores/account-store'
 import { getStore } from './store'
