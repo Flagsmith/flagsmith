@@ -33,12 +33,22 @@
   --color-border-default: rgba(#{red($slate-500)}, #{green($slate-500)}, #{blue($slate-500)}, 0.16);
   --color-border-strong: rgba(#{red($slate-500)}, #{green($slate-500)}, #{blue($slate-500)}, 0.24);
 
+  // Surface – interactive
+  --color-surface-hover: rgba(0, 0, 0, 0.08);
+  --color-surface-active: rgba(0, 0, 0, 0.16);
+
   // Feedback
   --color-danger-default: #{$red-500};
+  --color-danger-hover: #{$red-600};
+  --color-danger-active: #{$red-700};
   --color-danger-subtle: rgba(#{red($red-500)}, #{green($red-500)}, #{blue($red-500)}, 0.08);
   --color-success-default: #{$green-500};
+  --color-success-hover: #{$green-600};
+  --color-success-active: #{$green-700};
   --color-success-subtle: rgba(#{red($green-500)}, #{green($green-500)}, #{blue($green-500)}, 0.08);
   --color-warning-default: #{$orange-500};
+  --color-warning-hover: #{$orange-600};
+  --color-warning-active: #{$orange-700};
   --color-warning-subtle: rgba(#{red($orange-500)}, #{green($orange-500)}, #{blue($orange-500)}, 0.08);
   --color-info-default: #{$blue-500};
   --color-info-subtle: rgba(#{red($blue-500)}, #{green($blue-500)}, #{blue($blue-500)}, 0.08);
@@ -68,12 +78,22 @@
   --color-border-default: rgba(255, 255, 255, 0.16);
   --color-border-strong: rgba(255, 255, 255, 0.24);
 
+  // Surface – interactive
+  --color-surface-hover: rgba(255, 255, 255, 0.08);
+  --color-surface-active: rgba(255, 255, 255, 0.16);
+
   // Feedback
   --color-danger-default: #{$red-500};
+  --color-danger-hover: #{$red-400};
+  --color-danger-active: #{$red-300};
   --color-danger-subtle: rgba(34, 23, 40, 1);
   --color-success-default: #{$green-500};
+  --color-success-hover: #{$green-400};
+  --color-success-active: #{$green-300};
   --color-success-subtle: rgba(17, 32, 46, 1);
   --color-warning-default: #{$orange-500};
+  --color-warning-hover: #{$orange-400};
+  --color-warning-active: #{$orange-300};
   --color-warning-subtle: rgba(34, 31, 39, 1);
   --color-info-default: #{$blue-500};
   --color-info-subtle: rgba(15, 32, 52, 1);
