@@ -6,7 +6,6 @@ return v10's EvaluationContext TypedDict instead of the original return type.
 """
 
 import typing
-from typing import Protocol
 
 from flag_engine.context.types import (
     EvaluationContext,
@@ -23,14 +22,12 @@ from util.engine_models.identities.models import IdentityModel
 from util.engine_models.identities.traits.models import TraitModel
 from util.engine_models.segments.models import SegmentModel, SegmentRuleModel
 
-
-class EnvironmentProtocol(Protocol):
-    api_key: str
-    name: str | None
+if typing.TYPE_CHECKING:
+    from environments.models import Environment
 
 
 def map_environment_identity_to_context(
-    environment: EnvironmentProtocol,
+    environment: "Environment",
     identity: IdentityModel,
     override_traits: typing.Optional[typing.List[TraitModel]],
 ) -> EvaluationContext:
@@ -40,8 +37,7 @@ def map_environment_identity_to_context(
     Vendored from flagsmith-flag-engine's fix/missing-export branch and adapted
     to return v10's EvaluationContext TypedDict.
 
-    :param environment: Any object with `api_key` and `name` attributes
-        (e.g. Django Environment or Pydantic EnvironmentModel).
+    :param environment: An Environment object.
     :param identity: The identity model object (Pydantic IdentityModel).
     :param override_traits: A list of TraitModel objects, to be used in place of
         `identity.identity_traits` if provided.
@@ -184,19 +180,3 @@ def is_context_in_segment(
 
     segment_context = map_segment_to_segment_context(segment)
     return v10_is_context_in_segment(context, segment_context)
-
-
-def get_context_segments(
-    context: EvaluationContext,
-    segments: typing.List[SegmentModel],
-) -> typing.List[SegmentModel]:
-    """
-    Get the list of segments that match a given evaluation context.
-
-    This is a compatibility function for code that expects the old API.
-
-    :param context: The EvaluationContext (TypedDict).
-    :param segments: List of SegmentModel objects to check.
-    :return: List of matching SegmentModel objects.
-    """
-    return [segment for segment in segments if is_context_in_segment(context, segment)]
