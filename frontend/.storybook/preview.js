@@ -40,7 +40,7 @@ const preview = {
         date: /Date$/i,
       },
     },
-    backgrounds: { disabled: true },
+    backgrounds: { disable: true },
   },
 }
 

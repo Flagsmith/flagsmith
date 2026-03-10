@@ -1,5 +1,5 @@
-import { addons } from 'storybook/manager-api'
-import { create } from 'storybook/theming'
+import { addons } from '@storybook/manager-api'
+import { create } from '@storybook/theming'
 
 // Primitive palette — mirrors _primitives.scss
 // Storybook manager runs outside the app, so CSS vars aren't available.
