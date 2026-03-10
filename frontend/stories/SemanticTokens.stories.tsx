@@ -101,8 +101,9 @@ function readTokens(): TokenGroupData[] {
 const TokensPage: React.FC = () => {
   const [groups, setGroups] = useState<TokenGroupData[]>([])
 
+  // No dependency array — re-runs on every render so computed values
+  // update immediately when the theme is toggled via the toolbar.
   useEffect(() => {
-    // Small delay to ensure styles are loaded after theme toggle
     const timer = setTimeout(() => setGroups(readTokens()), 50)
     return () => clearTimeout(timer)
   })
