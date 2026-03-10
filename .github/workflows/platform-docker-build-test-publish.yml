@@ -150,11 +150,12 @@ jobs:
   # Publish to ECR
   docker-publish-ecr-private-cloud:
     needs: [docker-build-private-cloud, run-e2e-tests]
-    uses: ./.github/workflows/.reusable-docker-publish-ecr.yml
+    uses: ./.github/workflows/.reusable-docker-publish.yml
     if: github.event_name == 'release'
     with:
       source-images: ${{ needs.docker-build-private-cloud.outputs.image }}
       target-images: 084060095745.dkr.ecr.eu-west-2.amazonaws.com/private-cloud/flagsmith
+      aws-role-to-assume: ${{ vars.AWS_PUBLISH_ECR_ROLE_ARN }}
       aws-region: eu-west-2
     secrets: inherit
 
