@@ -1,12 +1,15 @@
-const path = require('path')
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /** @type { import('@storybook/react-webpack5').StorybookConfig } */
 const config = {
   stories: ['../stories/**/*.mdx', '../stories/**/*.stories.@(js|jsx|ts|tsx)'],
   addons: [
     '@storybook/addon-webpack5-compiler-swc',
-    '@storybook/addon-essentials',
     '@storybook/addon-a11y',
+    '@storybook/addon-docs',
   ],
   framework: {
     name: '@storybook/react-webpack5',
@@ -48,4 +51,4 @@ const config = {
     return config
   },
 }
-module.exports = config
+export default config
