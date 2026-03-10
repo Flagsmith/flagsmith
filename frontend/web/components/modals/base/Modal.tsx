@@ -75,12 +75,12 @@ const withModal = (
   }
 }
 
-function createFreshRoot(
+function getOrCreateRoot(
   elementId: string,
   rootRef: { current: Root | null },
 ): Root {
   if (rootRef.current) {
-    rootRef.current.unmount()
+    return rootRef.current
   }
   const el = document.getElementById(elementId)
   if (!el) throw new Error(`Element #${elementId} not found`)
@@ -105,7 +105,7 @@ export const openConfirm = (global.openConfirm = ({
   title,
   yesText,
 }: OpenConfirmParams) => {
-  const root = createFreshRoot('confirm', confirmRootRef)
+  const root = getOrCreateRoot('confirm', confirmRootRef)
   root.render(
     <_Confirm
       isOpen
@@ -127,7 +127,7 @@ export const openModal = (global.openModal = (
   className?: string,
   onClose?: () => void,
 ) => {
-  const root = createFreshRoot('modal', modalRootRef)
+  const root = getOrCreateRoot('modal', modalRootRef)
   root.render(
     <_ModalDefault
       isOpen
@@ -147,7 +147,7 @@ export const openModal2 = (global.openModal2 = (
   className?: string,
   onClose?: () => void,
 ) => {
-  const root = createFreshRoot('modal2', modal2RootRef)
+  const root = getOrCreateRoot('modal2', modal2RootRef)
   root.render(
     <_ModalDefault2
       isOpen
