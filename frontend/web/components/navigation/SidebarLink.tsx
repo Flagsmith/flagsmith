@@ -19,31 +19,22 @@ const SidebarLink: FC<SidebarLinkType> = ({
   ...rest
 }) => {
   const Tag = (to ? NavLink : 'div') as any
-  const activeClassName =
-    'text-primary fw-semibold bg-primary-opacity-5 fill-primary'
-  const inactiveClassName = 'text-body fw-semibold'
 
   return (
     <Tag
       {...rest}
       to={to}
-      activeClassName={activeClassName}
-      inactiveClassName={inactiveClassName}
+      activeClassName='sidebar-link--active'
       exact={true}
       className={classNames(
         rest.className,
-        'd-flex hover-color-primary gap-2 cursor-pointer align-items-center p-2 rounded',
+        'sidebar-link d-flex gap-2 cursor-pointer align-items-center p-2 rounded',
         {
-          [activeClassName]: !to && active,
-          [inactiveClassName]: !to && !active,
+          'sidebar-link--active': !to && active,
         },
       )}
     >
-      {!!icon && (
-        <span className='text-muted'>
-          <Icon width={18} name={icon} />
-        </span>
-      )}
+      {!!icon && <Icon width={18} name={icon} />}
       {children}
     </Tag>
   )
