@@ -22,7 +22,6 @@ from edge_api.identities.models import (  # type: ignore[attr-defined]
 )
 from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
-    DynamoEnvironmentWrapper,
     DynamoIdentityWrapper,
 )
 from environments.models import Environment
@@ -1128,7 +1127,6 @@ def test_edge_identity_clone_flag_states_from(
     flagsmith_identities_table: Table,
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
-    dynamo_environment_wrapper: DynamoEnvironmentWrapper,
 ) -> None:
     mocker.patch(
         "environments.dynamodb.services.DynamoIdentityWrapper",
@@ -1139,11 +1137,6 @@ def test_edge_identity_clone_flag_states_from(
         "environments.dynamodb.services.DynamoEnvironmentV2Wrapper",
         autospec=True,
         return_value=dynamodb_wrapper_v2,
-    )
-    mocker.patch(
-        "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper",
-        autospec=True,
-        return_value=dynamo_environment_wrapper,
     )
 
     def create_identity(identifier: str) -> EdgeIdentity:

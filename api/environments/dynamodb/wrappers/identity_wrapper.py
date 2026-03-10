@@ -13,15 +13,13 @@ from edge_api.identities.search import EdgeIdentitySearchData
 from environments.dynamodb.constants import IDENTITIES_PAGINATION_LIMIT
 from environments.dynamodb.wrappers.exceptions import CapacityBudgetExceeded
 from util.engine_models.context.mappers import (
-    get_context_segments,
+    is_context_in_segment,
     map_environment_identity_to_context,
 )
-from util.engine_models.environments.models import EnvironmentModel
 from util.engine_models.identities.models import IdentityModel
 from util.mappers import map_identity_to_identity_document
 
 from .base import BaseDynamoWrapper
-from .environment_wrapper import DynamoEnvironmentWrapper
 
 if typing.TYPE_CHECKING:
     from boto3.dynamodb.conditions import ConditionBase
@@ -37,12 +35,8 @@ logger = logging.getLogger()
 
 
 class DynamoIdentityWrapper(BaseDynamoWrapper):
-    def __init__(
-        self,
-        environment_wrapper: DynamoEnvironmentWrapper | None = None,
-    ) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self._environment_wrapper = environment_wrapper or DynamoEnvironmentWrapper()
 
     def get_table_name(self) -> str | None:  # type: ignore[override]
         return settings.IDENTITIES_TABLE_NAME_DYNAMO
@@ -188,6 +182,9 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         identity_pk: str = None,  # type: ignore[assignment]
         identity_model: IdentityModel = None,  # type: ignore[assignment]
     ) -> list:  # type: ignore[type-arg]
+        from environments.models import Environment
+        from util.mappers.engine import map_segment_to_engine
+
         if not (identity_pk or identity_model):
             raise ValueError("Must provide one of identity_pk or identity_model.")
 
@@ -195,15 +192,19 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             identity = identity_model or IdentityModel.model_validate(
                 self.get_item_from_uuid(identity_pk)
             )
-            environment = EnvironmentModel.model_validate(
-                self._environment_wrapper.get_item(identity.environment_api_key)
+            environment = Environment.objects.select_related("project").get(
+                api_key=identity.environment_api_key,
             )
+            segments = environment.project.get_segments_from_cache()
             context = map_environment_identity_to_context(
                 environment=environment,
                 identity=identity,
                 override_traits=None,
             )
-            segments = get_context_segments(context, environment.project.segments)
-            return [segment.id for segment in segments]
+            return [
+                segment.id
+                for segment in segments
+                if is_context_in_segment(context, map_segment_to_engine(segment))
+            ]
 
         return []

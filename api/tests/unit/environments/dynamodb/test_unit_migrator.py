@@ -43,9 +43,7 @@ def test_migrate_calls_internal_methods_with_correct_arguments(  # type: ignore[
     identity_migrator.migrate()  # type: ignore[no-untyped-call]
 
     # Then
-    mocked_identity_wrapper.assert_called_with(
-        environment_wrapper=mocked_environment_wrapper.return_value
-    )
+    mocked_identity_wrapper.assert_called_once_with()
 
     args, kwargs = mocked_identity_wrapper.return_value.write_identities.call_args
     assert kwargs == {}
