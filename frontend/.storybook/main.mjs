@@ -6,6 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 /** @type { import('@storybook/react-webpack5').StorybookConfig } */
 const config = {
   stories: ['../stories/**/*.mdx', '../stories/**/*.stories.@(js|jsx|ts|tsx)'],
+  staticDirs: ['../web'],
   addons: [
     '@storybook/addon-webpack5-compiler-swc',
     '@storybook/addon-a11y',
