@@ -1,0 +1,80 @@
+// =============================================================================
+// Semantic Colour Tokens
+// =============================================================================
+// CSS custom properties organised by role: Brand, Surface, Text, Border,
+// Feedback. Light values in :root, dark overrides in .dark.
+//
+// Usage:  background-color: var(--color-surface-default);
+// =============================================================================
+
+@import 'primitives';
+
+:root {
+  // Brand
+  --color-brand-default: #{$purple-600};
+  --color-brand-hover: #{$purple-700};
+  --color-brand-active: #{$purple-800};
+  --color-brand-subtle: rgba(#{red($purple-600)}, #{green($purple-600)}, #{blue($purple-600)}, 0.08);
+  --color-brand-muted: rgba(#{red($purple-600)}, #{green($purple-600)}, #{blue($purple-600)}, 0.16);
+
+  // Surface
+  --color-surface-default: #{$slate-0};
+  --color-surface-subtle: #{$slate-50};
+  --color-surface-muted: #{$slate-100};
+  --color-surface-emphasis: #{$slate-200};
+
+  // Text
+  --color-text-default: #{$slate-600};
+  --color-text-secondary: #{$slate-500};
+  --color-text-tertiary: #{$slate-300};
+  --color-text-on-fill: #{$slate-0};
+
+  // Border
+  --color-border-default: rgba(#{red($slate-500)}, #{green($slate-500)}, #{blue($slate-500)}, 0.16);
+  --color-border-strong: rgba(#{red($slate-500)}, #{green($slate-500)}, #{blue($slate-500)}, 0.24);
+
+  // Feedback
+  --color-danger-default: #{$red-500};
+  --color-danger-subtle: rgba(#{red($red-500)}, #{green($red-500)}, #{blue($red-500)}, 0.08);
+  --color-success-default: #{$green-500};
+  --color-success-subtle: rgba(#{red($green-500)}, #{green($green-500)}, #{blue($green-500)}, 0.08);
+  --color-warning-default: #{$orange-500};
+  --color-warning-subtle: rgba(#{red($orange-500)}, #{green($orange-500)}, #{blue($orange-500)}, 0.08);
+  --color-info-default: #{$blue-500};
+  --color-info-subtle: rgba(#{red($blue-500)}, #{green($blue-500)}, #{blue($blue-500)}, 0.08);
+}
+
+.dark {
+  // Brand
+  --color-brand-default: #{$purple-400};
+  --color-brand-hover: #{$purple-600};
+  --color-brand-active: #{$purple-700};
+  --color-brand-subtle: rgba(255, 255, 255, 0.08);
+  --color-brand-muted: rgba(255, 255, 255, 0.16);
+
+  // Surface
+  --color-surface-default: #{$slate-950};
+  --color-surface-subtle: #{$slate-900};
+  --color-surface-muted: #{$slate-850};
+  --color-surface-emphasis: #{$slate-800};
+
+  // Text
+  --color-text-default: #{$slate-0};
+  --color-text-secondary: #{$slate-300};
+  --color-text-tertiary: rgba(255, 255, 255, 0.48);
+  --color-text-on-fill: #{$slate-0};
+
+  // Border
+  --color-border-default: rgba(255, 255, 255, 0.16);
+  --color-border-strong: rgba(255, 255, 255, 0.24);
+
+  // Feedback
+  --color-danger-default: #{$red-500};
+  --color-danger-subtle: rgba(34, 23, 40, 1);
+  --color-success-default: #{$green-500};
+  --color-success-subtle: rgba(17, 32, 46, 1);
+  --color-warning-default: #{$orange-500};
+  --color-warning-subtle: rgba(34, 31, 39, 1);
+  --color-info-default: #{$blue-500};
+  --color-info-subtle: rgba(15, 32, 52, 1);
+}

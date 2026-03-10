@@ -1,0 +1,104 @@
+// =============================================================================
+// Primitive Colour Palette
+// =============================================================================
+// Full tonal scales (50–950) for every colour family.
+// These are NOT for direct use in components — use semantic tokens instead.
+// See _tokens.scss for the semantic layer.
+//
+// Scale structure matches Tailwind convention (11 steps per hue).
+// Anchored values are locked to existing Flagsmith colours; generated steps
+// were interpolated in HSL to fill the gaps.
+// =============================================================================
+
+// Slate (neutrals) — custom scale, not Tailwind-aligned
+$slate-0:   #ffffff;
+$slate-50:  #fafafb;
+$slate-100: #eff1f4;
+$slate-200: #e0e3e9;
+$slate-300: #9da4ae;
+$slate-400: #767d85;
+$slate-500: #656d7b;
+$slate-600: #1a2634;
+$slate-700: #2d3443;
+$slate-800: #202839;
+$slate-850: #161d30;
+$slate-900: #15192b;
+$slate-950: #101628;
+
+// Purple (brand)
+$purple-50:  #f5f0ff;
+$purple-100: #e8dbff;
+$purple-200: #d4bcff;
+$purple-300: #b794ff;
+$purple-400: #906af6;
+$purple-500: #7a4dfc;
+$purple-600: #6837fc;
+$purple-700: #4e25db;
+$purple-800: #3919b7;
+$purple-900: #2a2054;
+$purple-950: #1e163e;
+
+// Red (danger)
+$red-50:  #fef2f1;
+$red-100: #fce5e4;
+$red-200: #f9cbc9;
+$red-300: #f5a5a2;
+$red-400: #f57c78;
+$red-500: #ef4d56;
+$red-600: #e61b26;
+$red-700: #bb1720;
+$red-800: #90141b;
+$red-900: #701116;
+$red-950: #500d11;
+
+// Green (success)
+$green-50:  #eef9f6;
+$green-100: #d6f1eb;
+$green-200: #b5e5da;
+$green-300: #87d4c4;
+$green-400: #56ccad;
+$green-500: #27ab95;
+$green-600: #13787b;
+$green-700: #116163;
+$green-800: #0e4a4c;
+$green-900: #0c3a3b;
+$green-950: #09292a;
+
+// Gold (secondary)
+$gold-50:  #fefbf0;
+$gold-100: #fdf6e0;
+$gold-200: #faeec5;
+$gold-300: #fae392;
+$gold-400: #f9dc80;
+$gold-500: #f7d56e;
+$gold-600: #e5c55f;
+$gold-700: #d4b050;
+$gold-800: #b38f30;
+$gold-900: #8b7027;
+$gold-950: #64511e;
+
+// Blue (info)
+$blue-50:  #eef8fb;
+$blue-100: #d6eef5;
+$blue-200: #b3e0ed;
+$blue-300: #7ecde2;
+$blue-400: #45bce0;
+$blue-500: #0aaddf;
+$blue-600: #0b8bb2;
+$blue-700: #0b7190;
+$blue-800: #0b576e;
+$blue-900: #094456;
+$blue-950: #07313e;
+
+// Orange (warning)
+$orange-50:  #fff5ec;
+$orange-100: #ffe9d4;
+$orange-200: #ffd7b5;
+$orange-300: #ffc08a;
+$orange-400: #efb47c;
+$orange-500: #ff9f43;
+$orange-600: #fa810c;
+$orange-700: #d06907;
+$orange-800: #9f5208;
+$orange-900: #7b4008;
+$orange-950: #592f07;
