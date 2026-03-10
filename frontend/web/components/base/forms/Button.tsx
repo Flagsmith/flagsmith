@@ -2,7 +2,13 @@ import React from 'react'
 import cn from 'classnames'
 import { ButtonHTMLAttributes, HTMLAttributeAnchorTarget } from 'react'
 import Icon, { IconName } from 'components/Icon'
-import Constants from 'common/constants'
+
+const iconColours = {
+  primary: 'var(--color-brand-default, #6837fc)',
+  white: 'var(--color-text-on-fill, #ffffff)',
+} as const
+
+export type IconColour = keyof typeof iconColours
 
 export const themeClassNames = {
   danger: 'btn btn-danger',
@@ -26,8 +32,8 @@ export const sizeClassNames = {
 
 export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
   iconRight?: IconName
-  iconRightColour?: keyof typeof Constants.colours
-  iconLeftColour?: keyof typeof Constants.colours
+  iconRightColour?: IconColour
+  iconLeftColour?: IconColour
   iconLeft?: IconName
   href?: string
   target?: HTMLAttributeAnchorTarget
@@ -71,9 +77,7 @@ export const Button = React.forwardRef<
         <div className='d-flex h-100 align-items-center justify-content-center gap-2'>
           {!!iconLeft && (
             <Icon
-              fill={
-                iconLeftColour ? Constants.colours[iconLeftColour] : undefined
-              }
+              fill={iconLeftColour ? iconColours[iconLeftColour] : undefined}
               name={iconLeft}
               width={iconSize}
             />
@@ -82,9 +86,7 @@ export const Button = React.forwardRef<
         </div>
         {!!iconRight && (
           <Icon
-            fill={
-              iconRightColour ? Constants.colours[iconRightColour] : undefined
-            }
+            fill={iconRightColour ? iconColours[iconRightColour] : undefined}
             className='ml-2'
             name={iconRight}
             width={iconSize}
@@ -106,9 +108,7 @@ export const Button = React.forwardRef<
       >
         {!!iconLeft && (
           <Icon
-            fill={
-              iconLeftColour ? Constants.colours[iconLeftColour] : undefined
-            }
+            fill={iconLeftColour ? iconColours[iconLeftColour] : undefined}
             className='mr-2'
             name={iconLeft}
             width={iconSize}
@@ -117,9 +117,7 @@ export const Button = React.forwardRef<
         {children}
         {!!iconRight && (
           <Icon
-            fill={
-              iconRightColour ? Constants.colours[iconRightColour] : undefined
-            }
+            fill={iconRightColour ? iconColours[iconRightColour] : undefined}
             className='ml-2'
             name={iconRight}
             width={iconSize}
