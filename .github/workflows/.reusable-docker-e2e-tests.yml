@@ -162,5 +162,6 @@ jobs:
         if: always() && github.event_name == 'pull_request' && (steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary)
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          header: playwright-${{ steps.test-type.outputs.label }}-${{ inputs.runs-on }}
+          header: playwright-e2e-results
+          append: true
           message: ${{ steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary }}
