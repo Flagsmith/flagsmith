@@ -44,6 +44,13 @@ flagsmith
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
     realtime: window.E2E ? false : Project.flagsmithRealtime,
+    ...(Project.evaluationAnalyticsServerUrl
+      ? {
+          evaluationAnalyticsConfig: {
+            analyticsServerUrl: Project.evaluationAnalyticsServerUrl,
+          },
+        }
+      : {}),
   })
   .catch(() => {
     controller.onError()

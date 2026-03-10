@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import InfoMessage from './InfoMessage'
-import flagsmith from 'flagsmith'
+import flagsmith from '@flagsmith/flagsmith'
 import Utils from 'common/utils/utils'
 
 export type AnnouncementValueType = {
