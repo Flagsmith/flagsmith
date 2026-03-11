@@ -68,7 +68,6 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 }) => {
   const isEdit = !!projectFlag?.id
 
-  // Check CREATE_FEATURE permission
   const { permission: createFeature } = useHasPermission({
     id: projectId,
     level: 'project',

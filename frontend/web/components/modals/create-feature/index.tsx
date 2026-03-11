@@ -831,4 +831,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   )
 }
 
-export default CreateFeatureModal
+import ConfigProvider from 'common/providers/ConfigProvider'
+import withSegmentOverrides from 'common/providers/withSegmentOverrides'
+import withFeatureProvider from './hoc/FeatureProvider'
+
+export default withFeatureProvider(
+  ConfigProvider(withSegmentOverrides(CreateFeatureModal)),
+)

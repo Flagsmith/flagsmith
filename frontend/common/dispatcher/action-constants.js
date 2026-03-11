@@ -48,5 +48,4 @@ const Actions = Object.assign({}, require('./base/_action-constants'), {
 })
 
 window.Actions = Actions
-module.exports = Actions
 export default Actions
