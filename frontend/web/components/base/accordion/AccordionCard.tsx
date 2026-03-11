@@ -30,11 +30,16 @@ const AccordionCard: FC<AccordionCardProps> = ({
       return () => clearTimeout(timer)
     } else {
       setHeight(contentRef.current.scrollHeight)
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
+      let innerFrameId: number
+      const outerFrameId = requestAnimationFrame(() => {
+        innerFrameId = requestAnimationFrame(() => {
           setHeight(0)
         })
       })
+      return () => {
+        cancelAnimationFrame(outerFrameId)
+        cancelAnimationFrame(innerFrameId)
+      }
     }
   }, [open])
 
