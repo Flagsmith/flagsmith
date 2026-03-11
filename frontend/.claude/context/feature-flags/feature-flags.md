@@ -71,7 +71,7 @@ class MyClassComponent extends Component {
 For reference, the project also supports direct `useFlags` hook, but **Utils.getFlagsmithHasFeature is preferred**:
 
 ```typescript
-import { useFlags } from 'flagsmith/react'
+import { useFlags } from '@flagsmith/flagsmith/react'
 
 const MyComponent = () => {
   const flags = useFlags(['feature_name'])
