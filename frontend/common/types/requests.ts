@@ -428,7 +428,11 @@ export type Req = {
     }
   }
   getMetadataField: { organisation_id: number }
-  getMetadataList: { organisation: number }
+  getMetadataList: PagedRequest<{ organisation: number }>
+  getProjectMetadataFieldList: PagedRequest<{
+    project_id: number
+    include_organisation?: boolean
+  }>
   updateMetadataField: {
     id: number
     body: {
@@ -436,6 +440,7 @@ export type Req = {
       type: string
       description: string
       organisation: number
+      project?: number | null
     }
   }
   deleteMetadataField: { id: number }
@@ -445,6 +450,7 @@ export type Req = {
       name: string
       organisation: number
       type: string
+      project?: number | null
     }
   }
 

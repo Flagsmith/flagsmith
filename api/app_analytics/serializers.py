@@ -4,7 +4,9 @@ from common.core.utils import using_database_replica
 from django.conf import settings
 from rest_framework import serializers
 
+from app_analytics.cache import FeatureEvaluationCache
 from app_analytics.constants import LABELS
+from app_analytics.mappers import map_request_to_labels
 from app_analytics.tasks import (
     track_feature_evaluation_influxdb_v2,
     track_feature_evaluation_v2,
@@ -117,6 +119,55 @@ class SDKAnalyticsFlagsSerializer(serializers.Serializer):  # type: ignore[type-
                     environment.id,
                     self.validated_data["evaluations"],
                 )
+            )
+
+
+class SDKAnalyticsFlagsV1Serializer(serializers.Serializer):  # type: ignore[type-arg]
+    """Serializer for the V1 SDK analytics flags endpoint.
+
+    Accepts a flat ``{feature_name: evaluation_count}`` dict.
+    Unknown feature names and non-integer counts are silently skipped.
+    """
+
+    def to_internal_value(self, data: Any) -> dict[str, int]:
+        if not isinstance(data, dict):
+            raise serializers.ValidationError(
+                {"non_field_errors": ["Expected a JSON object."]}
+            )
+        return {
+            name: count
+            for name, count in data.items()
+            if isinstance(name, str) and type(count) is int
+        }
+
+    def validate(self, attrs: dict[str, int]) -> dict[str, int]:
+        request = self.context["request"]
+        environment_feature_names = set(
+            using_database_replica(FeatureState.objects)
+            .filter(
+                environment=request.environment,
+                feature_segment=None,
+                identity=None,
+            )
+            .values_list("feature__name", flat=True)
+        )
+        return {
+            name: count
+            for name, count in attrs.items()
+            if name in environment_feature_names
+        }
+
+    def save(self, **kwargs: Any) -> None:
+        environment: Environment = kwargs["environment"]
+        cache: FeatureEvaluationCache = kwargs["cache"]
+        request = self.context["request"]
+        labels = map_request_to_labels(request)
+        for feature_name, evaluation_count in self.validated_data.items():
+            cache.track_feature_evaluation(
+                environment_id=environment.id,
+                feature_name=feature_name,
+                evaluation_count=evaluation_count,
+                labels=labels,
             )
 
 

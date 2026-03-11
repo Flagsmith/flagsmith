@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import pytest
 from django.utils import timezone
+from freezegun import freeze_time
 from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
@@ -399,6 +400,7 @@ def test_generate_audit_log_records(  # type: ignore[no-untyped-def]
     ).exists()
 
 
+@freeze_time("2023-01-01T00:00:00Z")
 def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
     mocker: MockerFixture,
     environment: Environment,

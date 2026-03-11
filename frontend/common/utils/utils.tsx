@@ -16,7 +16,7 @@ import {
   PConfidence,
   UserPermissions,
 } from 'common/types/responses'
-import flagsmith from 'flagsmith'
+import flagsmith from '@flagsmith/flagsmith'
 import { ReactNode } from 'react'
 import _ from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'

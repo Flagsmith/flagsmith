@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react'
+import React, { Component } from 'react'
 import { matchPath, withRouter } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
 import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
@@ -349,10 +349,3 @@ App.propTypes = {
 }
 
 export default withRouter(ConfigProvider(App))
-
-if (E2E) {
-  const e2e = document.getElementsByClassName('e2e')
-  if (e2e && e2e[0]) {
-    e2e[0].classList.toggle('display-none')
-  }
-}

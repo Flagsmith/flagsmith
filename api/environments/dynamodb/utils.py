@@ -1,3 +1,33 @@
+import json
+from collections.abc import Mapping
+from decimal import Decimal
+from typing import Any
+
+
+def estimate_document_size(document: Mapping[str, Any]) -> int:
+    """Estimate the size of a DynamoDB item in bytes.
+
+    Uses compact JSON serialization with type-aware encoding
+    for Decimal (numeric) and bytes (binary) values.
+    """
+    return len(
+        json.dumps(document, default=_json_default, separators=(",", ":")).encode()
+    )
+
+
+def _json_default(obj: object) -> Any:
+    if isinstance(obj, bytes):
+        # Binary values: use raw byte length as a placeholder string
+        # to approximate DynamoDB Binary (B) type storage.
+        return "0" * len(obj)
+    if isinstance(obj, Decimal):
+        # Convert to native numeric types for compact JSON serialization.
+        if obj == obj.to_integral_value():
+            return int(obj)
+        return float(obj)
+    return str(obj)
+
+
 def get_environments_v2_identity_override_document_key(
     feature_id: int | None = None,
     identity_uuid: str | None = None,
@@ -11,3 +41,7 @@ def get_environments_v2_identity_override_document_key(
     if identity_uuid is None:
         return f"identity_override:{feature_id}:"
     return f"identity_override:{feature_id}:{identity_uuid}"
+
+
+def get_feature_id_from_identity_override_document_key(document_key: str) -> int:
+    return int(document_key.split(":")[1])
