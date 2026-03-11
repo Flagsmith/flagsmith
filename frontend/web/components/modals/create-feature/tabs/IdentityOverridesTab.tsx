@@ -158,64 +158,36 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
         return
       }
 
-      const envId = project?.environments?.find(
-        (env) => env.api_key === environmentId,
-      )?.id
-      if (!envId) {
-        setUserOverridesNoPermissionState()
-        return
-      }
-      getPermission(
-        getStore(),
-        {
-          id: envId,
-          level: 'environment',
-        },
-        { forceRefetch },
-      )
-        .then((permissions: Record<string, boolean>) => {
-          const hasViewIdentitiesPermission =
-            permissions[EnvironmentPermission.VIEW_IDENTITIES] ||
-            permissions.ADMIN
-          if (!hasViewIdentitiesPermission) {
-            setUserOverridesNoPermissionState()
-            return
-          }
-
-          _data
-            .get(
-              `${
-                Project.api
-              }environments/${environmentId}/${Utils.getFeatureStatesEndpoint()}/?anyIdentity=1&feature=${
-                projectFlag?.id
-              }&page=${page}`,
-            )
-            .then(
-              (res: {
-                results: FeatureState[]
-                count: number
-                next: string | null
-              }) => {
-                setUserOverrides(res.results as IdentityOverride[])
-                setUserOverridesError(false)
-                setUserOverridesNoPermission(false)
-                setUserOverridesPaging({
-                  count: res.count,
-                  currentPage: page,
-                  next: res.next,
-                })
-              },
-            )
-            .catch((response: { status?: number }) => {
-              if (response?.status === 403) {
-                setUserOverridesNoPermissionState()
-              } else {
-                setUserOverridesErrorState()
-              }
+      _data
+        .get(
+          `${
+            Project.api
+          }environments/${environmentId}/${Utils.getFeatureStatesEndpoint()}/?anyIdentity=1&feature=${
+            projectFlag?.id
+          }&page=${page}`,
+        )
+        .then(
+          (res: {
+            results: FeatureState[]
+            count: number
+            next: string | null
+          }) => {
+            setUserOverrides(res.results as IdentityOverride[])
+            setUserOverridesError(false)
+            setUserOverridesNoPermission(false)
+            setUserOverridesPaging({
+              count: res.count,
+              currentPage: page,
+              next: res.next,
             })
-        })
-        .catch(() => {
-          setUserOverridesErrorState()
+          },
+        )
+        .catch((response: { status?: number }) => {
+          if (response?.status === 403) {
+            setUserOverridesNoPermissionState()
+          } else {
+            setUserOverridesErrorState()
+          }
         })
     },
     [
