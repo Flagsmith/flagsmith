@@ -49,9 +49,8 @@ import FeatureLimitAlert from './FeatureLimitAlert'
 import FeatureUpdateSummary from './FeatureUpdateSummary'
 import FeatureNameInput from './FeatureNameInput'
 import {
-    EnvironmentPermission,
-    EnvironmentPermissionDescriptions,
-    ProjectPermission,
+  EnvironmentPermission,
+  ProjectPermission,
 } from 'common/types/permissions.types'
 
 const Index = class extends Component {
@@ -1149,7 +1148,6 @@ const Index = class extends Component {
                                                     tags={projectFlag.tags}
                                                     permission={Utils.getManageFeaturePermission(
                                                       is4Eyes,
-                                                      identity,
                                                     )}
                                                     id={
                                                       this.props.environmentId
@@ -1205,7 +1203,6 @@ const Index = class extends Component {
                                                               savePermission,
                                                               Utils.getManageFeaturePermissionDescription(
                                                                 is4Eyes,
-                                                                identity,
                                                               ),
                                                               <Button
                                                                 onClick={() =>
@@ -1896,14 +1893,17 @@ const Index = class extends Component {
                                       tags={projectFlag.tags}
                                       permission={Utils.getManageFeaturePermission(
                                         is4Eyes,
-                                        identity,
                                       )}
                                       id={this.props.environmentId}
                                     >
                                       {({ permission: savePermission }) =>
                                         Utils.renderWithPermission(
                                           savePermission,
-                                          EnvironmentPermissionDescriptions.UPDATE_FEATURE_STATE,
+                                          Constants.environmentPermissions(
+                                            Utils.getManageFeaturePermission(
+                                              is4Eyes,
+                                            ),
+                                          ),
                                           <div>
                                             <Button
                                               onClick={() => saveFeatureValue()}
