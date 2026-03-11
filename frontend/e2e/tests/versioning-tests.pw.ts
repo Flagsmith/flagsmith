@@ -17,8 +17,8 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
         createRemoteConfig,
         editRemoteConfig,
         login,
-        parseTryItResults,
         toggleFeature,
+        tryItExpect,
         waitForElementVisible,
         waitForFeatureSwitch,
     } = createHelpers(page)
@@ -52,6 +52,8 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
         { value: 'medium', weight: 100 },
         { value: 'big', weight: 0 },
     ]})
+    // Short delay between synchronising mv options and feature creation
+    await page.waitForTimeout(1000)
     log('Edit feature 2')
     await editRemoteConfig('b', 'small', false, [
         { value: 'medium', weight: 0 },
@@ -88,10 +90,9 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     await waitForFeatureSwitch('c', 'off')
 
     // Verify: API returns correct state (feature disabled)
+    // Versioned environments have slower edge API propagation, allow more retries
     log('Verify API returns disabled state')
-    await click('#try-it-btn')
-    let json = await parseTryItResults()
-    expect(json.c.enabled).toBe(false)
+    await tryItExpect('c', 'enabled', false, 20)
 
     // Refresh page to verify state was persisted to backend
     log('Refresh page to verify toggle OFF persisted')
@@ -107,20 +108,9 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     await waitForFeatureSwitch('c', 'on')
 
     // Verify: API returns correct state (feature enabled)
+    // Versioned environments have slower edge API propagation, allow more retries
     log('Verify API returns enabled state')
-    // In versioned environments, changes may take MUCH longer to propagate to the edge API
-    // Versioning requires backend processing that can take several seconds
-    await page.waitForTimeout(10000)
-
-    // Click "Try it" button and wait for network request to complete
-    const responsePromise = page.waitForResponse(response =>
-      response.url().includes('/flags/') && response.request().method() === 'GET'
-    );
-    await click('#try-it-btn')
-    await responsePromise
-
-    json = await parseTryItResults()
-    expect(json.c.enabled).toBe(true)
+    await tryItExpect('c', 'enabled', true, 20)
 
     // Refresh page to verify state was persisted to backend
     log('Refresh page to verify toggle ON persisted')

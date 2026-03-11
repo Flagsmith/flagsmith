@@ -4,7 +4,7 @@ import {
   log,
   createHelpers,
 } from '../helpers';
-import { E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, E2E_USER, PASSWORD, E2E_PROJECT_WITH_PROJECT_PERMISSIONS } from '../config';
+import { E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, E2E_USER, PASSWORD, E2E_PROJECT_WITH_PROJECT_PERMISSIONS, E2E_SEGMENT_PROJECT_1 } from '../config';
 
 test.describe('Project Permission Tests', () => {
   test('Project-level permissions control access to features, environments, audit logs, and segments @enterprise', async ({ page }) => {
@@ -29,9 +29,10 @@ test.describe('Project Permission Tests', () => {
 
     const PROJECT_NAME = E2E_PROJECT_WITH_PROJECT_PERMISSIONS;
 
-    log('User with VIEW_PROJECT can only see their project')
+    log('User with VIEW_PROJECT can see their project but not others')
     await login(E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, PASSWORD)
-    await waitForElementNotExist('#project-select-1')
+    await waitForElementVisible(`a:has-text("${PROJECT_NAME}")`)
+    await waitForElementNotExist(`a:has-text("${E2E_SEGMENT_PROJECT_1}")`)
     await logout()
 
     log('User with CREATE_ENVIRONMENT can create an environment')
@@ -52,7 +53,7 @@ test.describe('Project Permission Tests', () => {
     log('User without VIEW_AUDIT_LOG cannot view the audit log')
     await login(E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, PASSWORD)
     await gotoProject(PROJECT_NAME)
-    await waitForElementNotExist('audit-log-link')
+    await waitForElementNotExist(byId('audit-log-link'))
     await logout()
 
     log('User with CREATE_FEATURE can Handle the Features')

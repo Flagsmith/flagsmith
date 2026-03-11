@@ -33,6 +33,22 @@ async function globalSetup(config: FullConfig) {
     fetch,
   });
 
+  // Verify the server is running with E2E mode enabled
+  const baseURL = `http://localhost:${process.env.PORT || 8080}`;
+  try {
+    const overridesRes = await fetch(`${baseURL}/config/project-overrides`);
+    const overridesBody = await overridesRes.text();
+    if (!overridesBody.includes('window.E2E=true')) {
+      throw new Error(
+        'Server is running WITHOUT E2E mode. Kill the existing server and re-run tests, ' +
+        'or restart it with: cross-env E2E=true npm run start'
+      );
+    }
+  } catch (e: any) {
+    if (e.message?.includes('E2E mode')) throw e;
+    throw new Error(`Cannot reach server at ${baseURL}: ${e.message}`);
+  }
+
   // Teardown previous test data
   const success = await runTeardown();
   if (!success) {

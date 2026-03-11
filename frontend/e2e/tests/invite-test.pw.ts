@@ -1,5 +1,5 @@
-import { test } from '../test-setup';
-import { byId, log, createHelpers } from '../helpers';
+import { test, expect } from '../test-setup';
+import { byId, log, createHelpers, LONG_TIMEOUT } from '../helpers';
 import { E2E_CHANGE_MAIL, E2E_USER, PASSWORD } from '../config';
 
 const invitePrefix = `flagsmith${new Date().valueOf()}`
@@ -9,6 +9,7 @@ test.describe('Invite Tests', () => {
     const {
       assertTextContent,
       click,
+      clickByText,
       getInputValue,
       gotoAccountSettings,
       login,
@@ -26,6 +27,13 @@ test.describe('Invite Tests', () => {
     await click(byId('org-settings-link'))
     await getInputValue(byId('organisation-name'))
     await click(byId('users-and-permissions'))
+    // Wait for invite links section to load, then try to get invite link
+    // ADMIN link may not exist after teardown, fall back to User role
+    const hasAdminLink = await page.locator(byId('invite-link')).waitFor({ state: 'visible', timeout: 5000 }).then(() => true).catch(() => false)
+    if (!hasAdminLink) {
+      await click(byId('invite-role-select-option-1'))
+      await waitForElementVisible(byId('invite-link'))
+    }
     const inviteLink = await getInputValue(byId('invite-link'))
     log('Accept invite')
     await page.goto(inviteLink)
@@ -45,7 +53,7 @@ test.describe('Invite Tests', () => {
     await setText("[name='EmailAddress']", E2E_CHANGE_MAIL)
     await setText("[name='newPassword']", PASSWORD)
     await click('#save-changes')
-    await waitForElementNotExist('.modal')
+    await expect(page.locator('.modal')).toHaveCount(0, { timeout: LONG_TIMEOUT })
     await login(E2E_CHANGE_MAIL, PASSWORD)
     log('Delete invite user')
     await assertTextContent('[id=account-settings-link]', 'Account')

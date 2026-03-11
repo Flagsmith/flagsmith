@@ -71,9 +71,10 @@ When running multiple iterations:
 ## CRITICAL: Failure Analysis Workflow
 
 **On ANY test failure, you MUST:**
-1. Read error-context.md for the failed test
-2. **STOP and report the failure summary to the user**
-3. **Ask for user consent before doing ANYTHING else** (no investigating, no fixing, no additional iterations)
+1. Open the Playwright HTML report: `open e2e/playwright-report/index.html`
+2. Read error-context.md for the failed test
+3. **STOP and report the failure summary to the user**
+4. **Ask for user consent before doing ANYTHING else** (no investigating, no fixing, no additional iterations)
 
 Only proceed with investigation/fixes after the user explicitly approves.
 

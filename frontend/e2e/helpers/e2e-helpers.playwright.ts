@@ -108,9 +108,15 @@ export class E2EHelpers {
     await this.waitForElementVisible(selector);
     const element = this.page.locator(selector).first();
     await expect(element).toBeAttached({ timeout: LONG_TIMEOUT });
-    await element.scrollIntoViewIfNeeded();
-    await expect(element).toBeEnabled({ timeout: LONG_TIMEOUT });
-    await element.click();
+    try {
+      await element.scrollIntoViewIfNeeded();
+    } catch {
+      // Element may have been re-rendered, re-query and retry
+      await expect(this.page.locator(selector).first()).toBeAttached({ timeout: LONG_TIMEOUT });
+      await this.page.locator(selector).first().scrollIntoViewIfNeeded();
+    }
+    await expect(this.page.locator(selector).first()).toBeEnabled({ timeout: LONG_TIMEOUT });
+    await this.page.locator(selector).first().click();
   }
 
   async clickByText(text: string, element: string = 'button') {
@@ -142,11 +148,12 @@ export class E2EHelpers {
     email: string = process.env.E2E_USER || '',
     password: string = process.env.E2E_PASS || '',
   ) {
-    if (!this.page.url().includes('/login')) {
+    for (let i = 0; i < 3; i++) {
+      if (this.page.url().includes('/login')) break;
       try {
         await this.page.goto('/login', { waitUntil: 'domcontentloaded' });
       } catch {
-        await this.page.goto('/login', { waitUntil: 'domcontentloaded' });
+        // Navigation may be interrupted by a redirect, retry
       }
     }
     // Wait for both fields to be visible
@@ -221,6 +228,7 @@ export class E2EHelpers {
     const userRow = this.page.locator('[data-test^="user-item-"]').filter({ hasText: identifier }).first();
     await userRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await userRow.locator('a').first().click();
+    await this.page.waitForLoadState('networkidle');
     await this.waitForElementVisible('#add-trait');
   }
 
@@ -241,6 +249,7 @@ export class E2EHelpers {
     await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await featureRow.dispatchEvent('click');
     await this.waitForElementVisible('#create-feature-modal');
+    await this.waitForElementVisible(byId('featureValue'));
   }
 
   // Create a feature
@@ -253,9 +262,12 @@ export class E2EHelpers {
       await this.click(byId('toggle-feature-button'));
     }
     await this.click(byId('create-feature-btn'));
+    await this.waitForElementVisible(byId('update-feature-btn'), LONG_TIMEOUT);
+    // Wait for feature to appear in the list behind the modal before closing
     const featureElement = this.page.locator('[data-test^="feature-item-"]', { hasText: name }).first();
-    await featureElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await featureElement.waitFor({ state: 'attached', timeout: LONG_TIMEOUT });
     await this.closeModal();
+    await featureElement.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
   }
 
   // Create a remote config
@@ -279,13 +291,16 @@ export class E2EHelpers {
     }
     await this.click(byId('create-feature-btn'));
     const timeout = mvs.length > 0 ? 45000 : 20000;
+    await this.waitForElementVisible(byId('update-feature-btn'), timeout);
+    // Wait for feature to appear in the list behind the modal before closing
     const featureElement = this.page.locator('[data-test^="feature-item-"]').filter({
       has: this.page.locator(`span:text-is("${name}")`)
     }).first();
+    await featureElement.waitFor({ state: 'attached', timeout });
+    await this.closeModal();
     await featureElement.waitFor({ state: 'visible', timeout });
     const valueElement = featureElement.locator('[data-test^="feature-value-"]');
     await expect(valueElement).toHaveText(expectedValue, { timeout });
-    await this.closeModal();
   }
 
   // Delete a feature
@@ -389,6 +404,7 @@ export class E2EHelpers {
 
   // Save feature segments
   async saveFeatureSegments() {
+    await this.waitForToastsToClear();
     await this.click('#update-feature-segments-btn');
     await this.waitForToast();
     await this.closeModal();
@@ -407,16 +423,18 @@ export class E2EHelpers {
     await this.click(byId('tab-item-roles'));
     await this.click(byId('create-role'));
     await this.setText(byId('role-name'), name);
-    await this.click(byId('save-role'));
-    await this.closeModal();
-    // Wait for any toast messages to clear before continuing
     await this.waitForToastsToClear();
+    await this.click(byId('save-role'));
+    await this.waitForToast();
+    await this.closeModal();
     // Click on the role by its name
     const roleRow = this.page.locator('[data-test^="role-"]').filter({ hasText: name }).first();
     await roleRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await roleRow.click();
-    // Wait for modal to be visible before clicking tabs
+    // Wait for modal and General tab content to fully load before switching tabs
     await this.waitForElementVisible('.modal-open');
+    await this.waitForElementVisible(byId('role-name'));
+    await this.page.waitForLoadState('networkidle');
     await this.click(byId('members-tab'));
     await this.click(byId('assigned-users'));
     for (const userId of users) {
@@ -569,6 +587,7 @@ export class E2EHelpers {
     }).first();
     await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await featureRow.dispatchEvent('click');
+    await this.waitForElementVisible(byId('update-feature-btn'));
     if (value !== '') {
       await this.setText(byId('featureValue'), `${value}`);
     }
@@ -592,6 +611,7 @@ export class E2EHelpers {
     if (mvs.length > 0 || value !== '') {
       await this.page.waitForTimeout(1500);
     }
+    await this.waitForToastsToClear();
     await this.click(byId('update-feature-btn'));
     await this.waitForToast();
     await this.closeModal();
@@ -600,6 +620,7 @@ export class E2EHelpers {
 
   // Create an environment
   async createEnvironment(name: string) {
+    await this.page.waitForLoadState('networkidle');
     await this.waitForElementVisible('[name="envName"]');
     const nameInput = this.page.locator('[name="envName"]').first();
     await nameInput.click();
@@ -644,6 +665,26 @@ export class E2EHelpers {
     } catch (e) {
       throw new Error('Try it results are not valid JSON');
     }
+  }
+
+  // Click try-it and retry until the result contains the expected key with the expected value.
+  // Uses waitForResponse to know when fresh data has arrived before reading results.
+  async tryItExpect(key: string, field: string, expected: any, maxRetries: number = 10) {
+    for (let i = 0; i < maxRetries; i++) {
+      const responsePromise = this.page.waitForResponse(response =>
+        response.url().includes('/flags/') && response.request().method() === 'GET'
+      );
+      await this.click('#try-it-btn');
+      await responsePromise;
+      await this.waitForElementVisible('#try-it-results');
+      const json = await this.parseTryItResults();
+      if (json[key] && json[key][field] === expected) {
+        return json;
+      }
+      log(`Try-it attempt ${i + 1}: expected ${key}.${field}=${expected}, got ${JSON.stringify(json[key]?.[field])}. Retrying...`);
+      await this.page.waitForTimeout(1000);
+    }
+    throw new Error(`Try-it failed after ${maxRetries} attempts: ${key}.${field} never became ${expected}`);
   }
 
   // Go to feature versions
@@ -839,6 +880,7 @@ export class E2EHelpers {
     await this.waitForElementVisible('#create-feature-modal');
 
     // Click the "Add Tag" button to open tag interface
+    await this.page.waitForLoadState('networkidle');
     const addTagButton = this.page.locator('button').filter({ hasText: 'Add Tag' });
     await addTagButton.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await addTagButton.scrollIntoViewIfNeeded();
@@ -1015,6 +1057,7 @@ export class E2EHelpers {
 
     // Wait for button to be enabled
     await expect(saveButton).toBeEnabled({ timeout: 5000 });
+    await this.waitForToastsToClear();
     await saveButton.click();
 
     await this.waitForToast();
@@ -1087,6 +1130,7 @@ export class E2EHelpers {
     await approvalInput.fill(minimumApprovals.toString());
 
     // Save environment settings
+    await this.waitForToastsToClear();
     await this.click('#save-env-btn');
     await this.waitForToast();
     await this.page.waitForTimeout(1000);

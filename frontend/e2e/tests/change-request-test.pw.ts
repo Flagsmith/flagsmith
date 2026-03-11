@@ -27,8 +27,8 @@ test.describe('Change Request Tests', () => {
       login,
       logout,
       openChangeRequest,
-      parseTryItResults,
       publishChangeRequest,
+      tryItExpect,
       setText,
       setUserPermission,
       waitForElementVisible,
@@ -67,9 +67,8 @@ test.describe('Change Request Tests', () => {
     })
 
     log('Verify initial value via API')
-    await page.click('#try-it-btn')
-    let json = await parseTryItResults()
-    expect(json[featureName].value).toBe('initial_value')
+    // New environment + feature needs more time for edge API propagation
+    await tryItExpect(featureName, 'value', 'initial_value', 30)
 
     log('Create change request by editing feature value')
     await gotoFeatures()
@@ -85,9 +84,7 @@ test.describe('Change Request Tests', () => {
     await closeModal()
 
     log('Verify value has NOT changed yet (change request not approved)')
-    await page.click('#try-it-btn')
-    json = await parseTryItResults()
-    expect(json[featureName].value).toBe('initial_value') // Still old value
+    await tryItExpect(featureName, 'value', 'initial_value')
 
     log('Grant approver project ADMIN permission')
     await page.click('a:has-text("Bullet Train Ltd")')
@@ -125,14 +122,14 @@ test.describe('Change Request Tests', () => {
 
     log('Verify value has NOW changed (change request published)')
     await gotoFeatures()
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await waitForElementVisible('#show-create-feature-btn')
     await gotoFeature(featureName)
-    await assertInputValue(byId('featureValue'), 'updated_value')
+    await expect(page.locator(byId('featureValue'))).toHaveValue('updated_value', { timeout: 15000 })
     await closeModal()
 
     log('Verify value via API')
-    await page.click('#try-it-btn')
-    json = await parseTryItResults()
-    expect(json[featureName].value).toBe('updated_value')
+    await tryItExpect(featureName, 'value', 'updated_value')
 
     log('Verify change request is no longer in list')
     await gotoChangeRequests()

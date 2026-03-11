@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup';
-import { byId, log, createHelpers } from '../helpers';
+import { byId, log, createHelpers, LONG_TIMEOUT } from '../helpers';
 import { E2E_USER, PASSWORD, E2E_TEST_PROJECT } from '../config';
 
 test.describe('Flag Tests', () => {
@@ -13,8 +13,8 @@ test.describe('Flag Tests', () => {
       gotoFeatures,
       gotoProject,
       login,
-      parseTryItResults,
       scrollBy,
+      tryItExpect,
       toggleFeature,
       waitForElementClickable,
       waitForElementVisible,
@@ -25,15 +25,14 @@ test.describe('Flag Tests', () => {
     await login(E2E_USER, PASSWORD)
     await gotoProject(E2E_TEST_PROJECT)
 
-    // Check if we're already in production by checking if development is clickable
-    const isProductionActive = await page.locator(byId('switch-environment-development')).isVisible().catch(() => true)
+    // Ensure we're on the Development environment
+    const isDevelopmentActive = await page.locator(byId('switch-environment-development-active')).isVisible().catch(() => false)
 
-    if (isProductionActive) {
-      // We're not in development (might be in production), switch to development first
+    if (!isDevelopmentActive) {
       log('Switching to development first')
       await waitForElementClickable(byId('switch-environment-development'))
       await click(byId('switch-environment-development'))
-      await page.waitForTimeout(500)
+      await waitForElementVisible(byId('switch-environment-development-active'))
     }
 
     log('Create Features')
@@ -58,33 +57,21 @@ test.describe('Flag Tests', () => {
     await toggleFeature('header_enabled', true)
 
     log('Try it')
-    await page.waitForTimeout(2000)
-    await click('#try-it-btn')
-    await page.waitForTimeout(500)
-    let json = await parseTryItResults()
-    await expect(json.header_size.value).toBe('big')
-    await expect(json.mv_flag.value).toBe('big')
-    await expect(json.header_enabled.enabled).toBe(true)
+    const json = await tryItExpect('header_enabled', 'enabled', true)
+    expect(json.header_size.value).toBe('big')
+    expect(json.mv_flag.value).toBe('big')
 
     log('Update feature')
     await editRemoteConfig('header_size', 12)
 
     log('Try it again')
-    await page.waitForTimeout(5000)
-    await click('#try-it-btn')
-    await page.waitForTimeout(2000)
-    json = await parseTryItResults()
-    await expect(json.header_size.value).toBe(12)
+    await tryItExpect('header_size', 'value', 12)
 
     log('Change feature value to boolean')
     await editRemoteConfig('header_size', false)
 
     log('Try it again 2')
-    await page.waitForTimeout(5000)
-    await click('#try-it-btn')
-    await page.waitForTimeout(2000)
-    json = await parseTryItResults()
-    await expect(json.header_size.value).toBe(false)
+    await tryItExpect('header_size', 'value', false)
 
     log('Switch environment')
     // Navigate back to features list so environment switcher is visible in navbar
@@ -127,6 +114,7 @@ test.describe('Flag Tests', () => {
       gotoProject,
       login,
       waitForToast,
+      waitForToastsToClear,
     } = createHelpers(page);
 
     log('Login')
@@ -155,25 +143,24 @@ test.describe('Flag Tests', () => {
     await addTagToFeature('feature-request')
 
     // Save the feature settings
+    await waitForToastsToClear()
     await clickByText('Update Settings');
+    await waitForToast()
     await closeModal()
 
     log('Archive Feature')
     await gotoFeature('test_flag_with_tags')
+    await waitForToastsToClear()
     await archiveFeature()
     await waitForToast()
 
     log('Verify Archive')
     await closeModal()
 
-    // Verify the feature can be filtered as archived
-    await gotoFeatures()
-
     // Verify archived feature is not visible by default
-    const archivedFeatureHidden = await page.locator('[data-test^="feature-item-"]').filter({
+    await expect(page.locator('[data-test^="feature-item-"]').filter({
       has: page.locator(`span:text-is("test_flag_with_tags")`)
-    }).count()
-    expect(archivedFeatureHidden).toBe(0)
+    })).toHaveCount(0, { timeout: LONG_TIMEOUT })
 
     log('Enable archived filter')
     // Click on Tags filter button
