@@ -98,7 +98,7 @@ const MyPage = () => {
 When specifically requested, this pattern shows tabs only when feature flag is enabled:
 
 ```typescript
-import { useFlags } from 'flagsmith/react'
+import { useFlags } from '@flagsmith/flagsmith/react'
 import { Tabs } from 'components/base/forms/Tabs'
 import Utils from 'common/utils/utils'
 const MyPage = () => {

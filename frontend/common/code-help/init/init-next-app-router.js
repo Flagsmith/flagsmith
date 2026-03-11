@@ -38,9 +38,9 @@ export default async function RootLayout({
 "use client";
 
 import { ReactNode, useRef } from "react";
-import { FlagsmithProvider } from "flagsmith/react";
-import { IState } from "flagsmith/types";
-import { createFlagsmithInstance } from "flagsmith/isomorphic";
+import { FlagsmithProvider } from "@flagsmith/flagsmith/react";
+import { IState } from "@flagsmith/flagsmith/types";
+import { createFlagsmithInstance } from "@flagsmith/flagsmith/isomorphic";
 
 export const FeatureFlagProvider = ({
   serverState,
@@ -61,7 +61,7 @@ export const FeatureFlagProvider = ({
 // app/page.tsx
 "use client";
 
-import { useFlags } from 'flagsmith/react';
+import { useFlags } from '@flagsmith/flagsmith/react';
 
 export default function HomePage() {
   const flags = useFlags(['${FEATURE_NAME}','${FEATURE_NAME_ALT}']); // only causes re-render if specified flag values / traits change

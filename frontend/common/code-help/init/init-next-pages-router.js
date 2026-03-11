@@ -4,7 +4,7 @@ module.exports = (
   { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_CLIENT },
 ) => `// pages/_app.js
 import ${LIB_NAME} from "${NPM_CLIENT}/isomorphic";
-import { FlagsmithProvider } from 'flagsmith/react';
+import { FlagsmithProvider } from '@flagsmith/flagsmith/react';
 
 export default function App({ Component, pageProps, flagsmithState } {
   return (
@@ -35,8 +35,8 @@ App.getInitialProps = async () => {
 }
 
 // pages/index.js
-import flagsmith from 'flagsmith/isomorphic';
-import { useFlags, useFlagsmith } from 'flagsmith/react';
+import flagsmith from '@flagsmith/flagsmith/isomorphic';
+import { useFlags, useFlagsmith } from '@flagsmith/flagsmith/react';
 
 export default function HomePage() {
   const flags = useFlags(['${FEATURE_NAME}','${FEATURE_NAME_ALT}']); // only causes re-render if specified flag values / traits change

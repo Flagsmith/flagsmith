@@ -1,6 +1,6 @@
 import { FullConfig } from '@playwright/test';
 import fetch from 'node-fetch';
-import flagsmith from 'flagsmith/isomorphic';
+import flagsmith from '@flagsmith/flagsmith/isomorphic';
 import Project from '../common/project';
 import * as fs from 'fs';
 import * as path from 'path';

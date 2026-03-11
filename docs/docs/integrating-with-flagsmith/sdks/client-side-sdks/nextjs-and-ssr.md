@@ -23,7 +23,7 @@ An example application for Next.js middleware can be found
 ### NPM
 
 ```bash
-npm i flagsmith --save
+npm i @flagsmith/flagsmith --save
 ```
 
 ## Basic Usage
@@ -34,7 +34,7 @@ settings page.
 ## Comparing SSR and client-side Flagsmith usage
 
 The SDK is initialised and used in the same way as the [JavaScript](/integrating-with-flagsmith/sdks/client-side-sdks/javascript) and [React](/integrating-with-flagsmith/sdks/client-side-sdks/react)
-SDK. The main difference is that Flagsmith should be imported from `flagsmith/isomorphic`.
+SDK. The main difference is that Flagsmith should be imported from `@flagsmith/flagsmith/isomorphic`.
 
 The main flow with Next.js and any JavaScript-based SSR can be as follows:
 
@@ -56,9 +56,9 @@ state. Below is an example for the **app** router as well as the **pages** route
 
 import { ReactNode, useRef } from "react";
 
-import { FlagsmithProvider } from "flagsmith/react";
-import { IState } from "flagsmith/types";
-import { createFlagsmithInstance } from "flagsmith/isomorphic";
+import { FlagsmithProvider } from "@flagsmith/flagsmith/react";
+import { IState } from "@flagsmith/flagsmith/types";
+import { createFlagsmithInstance } from "@flagsmith/flagsmith/isomorphic";
 
 export const FeatureFlagProvider = ({
   serverState,
@@ -79,7 +79,7 @@ export const FeatureFlagProvider = ({
 // src/app/layout.jsx
 import { ReactNode } from "react";
 import { FeatureFlagProvider } from './components/FeatureFlagProvider';
-import flagsmith from "flagsmith/isomorphic";
+import flagsmith from "@flagsmith/flagsmith/isomorphic";
 
 export default async function RootLayout({
   children,
@@ -111,8 +111,8 @@ export default async function RootLayout({
 
 ```javascript
 // src/pages/_app.jsx
-import { FlagsmithProvider } from 'flagsmith/react';
-import { createFlagsmithInstance } from 'flagsmith/isomorphic';
+import { FlagsmithProvider } from '@flagsmith/flagsmith/react';
+import { createFlagsmithInstance } from '@flagsmith/flagsmith/isomorphic';
 function MyApp({ Component, pageProps, flagsmithState }) {
  const flagsmithRef = useRef(createFlagsmithInstance());
  return (
@@ -140,7 +140,7 @@ export default MyApp;
 ```javascript
 'use client'; // Only required by the app router version.
 
-import { useFlags } from 'flagsmith/react';
+import { useFlags } from '@flagsmith/flagsmith/react';
 
 export function MyComponent() {
  const flags = useFlags(['font_size'], ['example_trait']); // only causes re-render if specified flag values / traits change
@@ -157,14 +157,14 @@ From this point on, the SDK usage is the same as the [React SDK Guide](/integrat
 
 ### Example: Flagsmith with Next.js middleware
 
-The Flagsmith JS client includes `flagsmith/next-middleware`, it can be used just like the regular library within
+The Flagsmith JS client includes `@flagsmith/flagsmith/next-middleware`, it can be used just like the regular library within
 Next.js middleware.
 
 ```javascript
 // middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import flagsmith from 'flagsmith/next-middleware';
+import flagsmith from '@flagsmith/flagsmith/next-middleware';
 
 export async function middleware(request: NextRequest) {
  const identity = request.cookies.get('user');
