@@ -206,7 +206,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       ? {
           environmentFlag,
           environmentId,
-          flagId: environmentFlag?.id,
           history,
           noPermissions: !permission,
           projectFlag,
@@ -216,7 +215,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       : {
           environmentFlag,
           environmentId,
-          flagId: environmentFlag?.id,
           hasUnhealthyEvents:
             isFeatureHealthEnabled && !!featureUnhealthyEvents?.length,
           hideTagsByType: ['UNHEALTHY'],

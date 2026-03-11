@@ -376,5 +376,4 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
   },
 })
 
-module.exports = AppActions
-window.AppActions = AppActions
+export default AppActions

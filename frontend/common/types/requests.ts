@@ -250,7 +250,10 @@ export type Req = {
   getTags: {
     projectId: number
   }
-  createTag: { projectId: number; tag: Omit<Tag, 'id'> }
+  createTag: {
+    projectId: number
+    tag: Omit<Tag, 'id' | 'project' | 'type' | 'is_system_tag' | 'is_permanent'>
+  }
   getSegment: { projectId: number; id: number }
   updateAccount: Account
   deleteAccount: {

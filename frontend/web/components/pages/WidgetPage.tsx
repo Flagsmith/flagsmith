@@ -40,9 +40,9 @@ import AuditLog from 'components/AuditLog'
 import OrgEnvironmentSelect from 'components/OrgEnvironmentSelect'
 import AccountStore from 'common/stores/account-store'
 
-const FeatureListProvider = require('common/providers/FeatureListProvider')
-const AppActions = require('common/dispatcher/app-actions')
-const ES6Component = require('common/ES6Component')
+import FeatureListProvider from 'common/providers/FeatureListProvider'
+import AppActions from 'common/dispatcher/app-actions'
+import ES6Component from 'common/ES6Component'
 let isWidget = false
 export const getIsWidget = () => {
   return isWidget
