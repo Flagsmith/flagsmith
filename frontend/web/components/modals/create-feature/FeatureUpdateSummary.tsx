@@ -5,7 +5,7 @@ import ModalHR from 'components/modals/ModalHR'
 
 type FeatureUpdateSummaryProps = {
   identity?: string
-  onCreateFeature: () => void
+  onCreateFeature: (schedule?: boolean) => void
   isSaving: boolean
   name: string
   invalid: boolean

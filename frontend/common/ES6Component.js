@@ -1,4 +1,4 @@
-module.exports = function es6Component(context, onUnmount) {
+function es6Component(context, onUnmount) {
   context._listeners = []
 
   context.listenTo = function listenTo(store, event, callback) {
@@ -55,3 +55,6 @@ module.exports = function es6Component(context, onUnmount) {
     }
   }
 }
+
+module.exports = es6Component
+export default es6Component

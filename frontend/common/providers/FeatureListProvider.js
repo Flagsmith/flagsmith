@@ -265,3 +265,4 @@ FeatureListProvider.propTypes = {
 }
 
 module.exports = FeatureListProvider
+export default FeatureListProvider

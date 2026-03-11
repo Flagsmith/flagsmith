@@ -143,7 +143,6 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
             noPermissions={noPermissions}
             featureState={overrideFeatureState || featureState}
             projectFlag={projectFlag}
-            featureState={overrideFeatureState || featureState}
             onEnvironmentFlagChange={onEnvironmentFlagChange}
             onProjectFlagChange={onProjectFlagChange}
             onRemoveMultivariateOption={onRemoveMultivariateOption}
