@@ -370,6 +370,16 @@ const SortableSegmentOverride = (props) => {
   )
 }
 
+const getSegmentIdentifier = (segment, fallback) => {
+  if (segment && typeof segment === 'object') {
+    return segment.id || segment.name || fallback
+  }
+  return segment ?? fallback
+}
+
+const getSegmentSortId = (value, index) =>
+  `segment-${getSegmentIdentifier(value.segment, index)}-${index}`
+
 const SegmentOverrideListInner = ({
   confirmRemove,
   controlValue,
@@ -392,14 +402,17 @@ const SegmentOverrideListInner = ({
   showEditSegment,
   toggle,
 }) => {
-  const useSortable = !id && !disabled
+  const isSortable = !id && !disabled
   return (
     <div>
       {items.map((value, index) => {
-        const sortId = `segment-${value.segment}-${index}`
-        if (useSortable) {
+        const sortId = getSegmentSortId(value, index)
+        const segmentName =
+          (typeof value.segment === 'object' && value.segment?.name) ||
+          value.segment_name
+        if (isSortable) {
           return (
-            <Fragment key={value.segment.name || sortId}>
+            <Fragment key={segmentName || sortId}>
               <SortableSegmentOverride
                 sortId={sortId}
                 id={id}
@@ -447,7 +460,7 @@ const SegmentOverrideListInner = ({
         }
 
         return (
-          <Fragment key={value.segment.name || sortId}>
+          <Fragment key={segmentName || sortId}>
             <SegmentOverrideInner
               id={id}
               name={name}
@@ -511,17 +524,19 @@ const SortableSegmentOverrideList = ({
     }),
   )
 
-  const sortableIds = items.map(
-    (value, index) => `segment-${value.segment}-${index}`,
+  const sortableIds = items.map((value, index) =>
+    getSegmentSortId(value, index),
   )
 
   const handleDragEnd = (event) => {
     const { active, over } = event
-    if (active.id !== over?.id) {
-      const oldIndex = sortableIds.indexOf(active.id)
-      const newIndex = sortableIds.indexOf(over.id)
-      handleSortEnd({ newIndex, oldIndex })
-    }
+    if (!over || active.id === over.id) return
+
+    const oldIndex = sortableIds.indexOf(active.id)
+    const newIndex = sortableIds.indexOf(over.id)
+
+    if (oldIndex === -1 || newIndex === -1) return
+    handleSortEnd({ newIndex, oldIndex })
   }
 
   return (
