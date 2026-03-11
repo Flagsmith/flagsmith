@@ -1,4 +1,5 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react'
+import cloneDeep from 'lodash/cloneDeep'
 import { useHistory } from 'react-router-dom'
 import CreateFlagModal from 'components/modals/create-feature'
 import Constants from 'common/constants'
@@ -107,8 +108,8 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
       FeatureListStore.projectId = projectId
       FeatureListStore.environmentId = environmentId
       FeatureListStore.model = {
-        features: [...data.results],
-        keyedEnvironmentFeatures: { ...data.environmentStates },
+        features: cloneDeep(data.results),
+        keyedEnvironmentFeatures: cloneDeep(data.environmentStates),
       }
       FeatureListStore.paging = { ...data.pagination }
       FeatureListStore.loaded()
