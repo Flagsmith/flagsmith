@@ -77,6 +77,31 @@ def test_sdk_analytics_flags_v1__non_dict_payload__returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+def test_sdk_analytics_flags_v1__boolean_count__is_skipped(
+    mocker: MockerFixture,
+    environment: Environment,
+    feature: Feature,
+    api_client: APIClient,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    data = {feature.name: True}
+    mocked_feature_eval_cache = mocker.patch(
+        "app_analytics.views.feature_evaluation_cache"
+    )
+
+    url = reverse("api-v1:analytics-flags")
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mocked_feature_eval_cache.track_feature_evaluation.assert_not_called()
+
+
 def test_sdk_analytics_ignores_bad_data(
     mocker: MockerFixture,
     environment: Environment,

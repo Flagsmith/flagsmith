@@ -137,7 +137,7 @@ class SDKAnalyticsFlagsV1Serializer(serializers.Serializer):  # type: ignore[typ
         return {
             name: count
             for name, count in data.items()
-            if isinstance(name, str) and isinstance(count, int)
+            if isinstance(name, str) and type(count) is int
         }
 
     def validate(self, attrs: dict[str, int]) -> dict[str, int]:
