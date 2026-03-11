@@ -107,10 +107,10 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
       FeatureListStore.projectId = projectId
       FeatureListStore.environmentId = environmentId
       FeatureListStore.model = {
-        features: data.results,
-        keyedEnvironmentFeatures: data.environmentStates,
+        features: [...data.results],
+        keyedEnvironmentFeatures: { ...data.environmentStates },
       }
-      FeatureListStore.paging = data.pagination
+      FeatureListStore.paging = { ...data.pagination }
       FeatureListStore.loaded()
     }
   }, [data, environmentId, projectId])
