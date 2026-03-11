@@ -19,6 +19,7 @@ import Row from 'components/base/grid/Row'
 import AccountStore from 'common/stores/account-store'
 import { getStore } from 'common/store'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type FeatureSettingsTabProps = {
   identity?: string
@@ -64,7 +65,9 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
       <InfoMessage>
         <div
           dangerouslySetInnerHTML={{
-            __html: Constants.projectPermissions('Create Feature'),
+            __html: Constants.projectPermissions(
+              ProjectPermission.CREATE_FEATURE,
+            ),
           }}
         />
       </InfoMessage>
@@ -112,7 +115,11 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
         </>
       )}
       {!identity && projectFlag?.id && (
-        <Permission level='project' permission='CREATE_FEATURE' id={projectId}>
+        <Permission
+          level='project'
+          permission={ProjectPermission.CREATE_FEATURE}
+          id={projectId}
+        >
           {({ permission }) =>
             permission && (
               <>

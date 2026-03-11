@@ -36,6 +36,10 @@ import UsageTab from './tabs/UsageTab'
 import FeatureLimitAlert from './FeatureLimitAlert'
 import FeatureUpdateSummary from './FeatureUpdateSummary'
 import FeatureNameInput from './FeatureNameInput'
+import {
+  EnvironmentPermission,
+  ProjectPermission,
+} from 'common/types/permissions.types'
 
 const Index = class extends Component {
   static displayName = 'create-feature'
@@ -541,7 +545,7 @@ const Index = class extends Component {
               return (
                 <Permission
                   level='project'
-                  permission='CREATE_FEATURE'
+                  permission={ProjectPermission.CREATE_FEATURE}
                   id={this.props.projectId}
                 >
                   {({ permission: createFeature }) => (
@@ -995,22 +999,39 @@ const Index = class extends Component {
 
                                 <div className='text-right mb-2'>
                                   {identity && (
-                                    <div>
-                                      <Button
-                                        onClick={() => saveFeatureValue()}
-                                        data-test='update-feature-btn'
-                                        id='update-feature-btn'
-                                        disabled={
-                                          isSaving ||
-                                          !projectFlag.name ||
-                                          invalid
-                                        }
-                                      >
-                                        {isSaving
-                                          ? 'Updating'
-                                          : 'Update Feature'}
-                                      </Button>
-                                    </div>
+                                    <Permission
+                                      level='environment'
+                                      tags={projectFlag.tags}
+                                      permission={Utils.getManageFeaturePermission(
+                                        is4Eyes,
+                                        identity,
+                                      )}
+                                      id={this.props.environmentId}
+                                    >
+                                      {({ permission: savePermission }) =>
+                                        Utils.renderWithPermission(
+                                          savePermission,
+                                          EnvironmentPermission.UPDATE_FEATURE_STATE,
+                                          <div>
+                                            <Button
+                                              onClick={() => saveFeatureValue()}
+                                              data-test='update-feature-btn'
+                                              id='update-feature-btn'
+                                              disabled={
+                                                !savePermission ||
+                                                isSaving ||
+                                                !projectFlag.name ||
+                                                invalid
+                                              }
+                                            >
+                                              {isSaving
+                                                ? 'Updating'
+                                                : 'Update Feature'}
+                                            </Button>
+                                          </div>,
+                                        )
+                                      }
+                                    </Permission>
                                   )}
                                 </div>
                               </div>

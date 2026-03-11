@@ -5,6 +5,10 @@ import FeatureSettingsTab from './FeatureSettingsTab'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import { useHasPermission } from 'common/providers/Permission'
+import {
+  ADMIN_PERMISSION,
+  ProjectPermission,
+} from 'common/types/permissions.types'
 import Switch from 'components/Switch'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/Icon'
@@ -44,13 +48,13 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
   const { permission: createFeature } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'CREATE_FEATURE',
+    permission: ProjectPermission.CREATE_FEATURE,
   })
 
   const { permission: projectAdmin } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'ADMIN',
+    permission: ADMIN_PERMISSION,
   })
 
   const noPermissions = !createFeature && !projectAdmin
@@ -139,6 +143,7 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
             noPermissions={noPermissions}
             featureState={overrideFeatureState || featureState}
             projectFlag={projectFlag}
+            featureState={overrideFeatureState || featureState}
             onEnvironmentFlagChange={onEnvironmentFlagChange}
             onProjectFlagChange={onProjectFlagChange}
             onRemoveMultivariateOption={onRemoveMultivariateOption}

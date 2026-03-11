@@ -119,7 +119,7 @@ const FlagValueFooter = ({
                 Utils.renderWithPermission(
                   savePermission,
                   Constants.environmentPermissions(
-                    Utils.getManageFeaturePermissionDescription(is4Eyes),
+                    Utils.getManageFeaturePermission(is4Eyes),
                   ),
                   <>
                     {!is4Eyes && (
