@@ -1,5 +1,5 @@
 import { matchPath } from 'react-router-dom'
-
+import { storageGet, storageSet } from 'common/safeLocalStorage'
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
@@ -348,7 +348,11 @@ const controller = {
       store.loaded()
     } else if (!user) {
       store.ephemeral_token = null
+      const darkMode = storageGet('dark_mode')
       AsyncStorage.clear()
+      if (darkMode) {
+        storageSet('dark_mode', darkMode)
+      }
       if (!data.token) {
         return
       }

@@ -1,10 +1,12 @@
 import time
 from typing import TYPE_CHECKING
+from unittest.mock import ANY
 
 import pytest
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import http_date
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -20,6 +22,7 @@ from features.models import (  # type: ignore[attr-defined]
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
+from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from projects.models import Project
 from segments.models import Segment
@@ -48,8 +51,6 @@ def test_get_environment_document(
         name="Test Environment",
         project=project,
     )
-    if use_v2_feature_versioning:
-        enable_v2_versioning(environment.id)
 
     api_key = EnvironmentAPIKey.objects.create(environment=environment)
     client = APIClient()
@@ -104,6 +105,17 @@ def test_get_environment_document(
             string_value="option-2",
         )
 
+    if use_v2_feature_versioning:
+        enable_v2_versioning(environment.id)
+
+        # create new versions of a given featurestate
+        for _ in range(2):
+            efv = EnvironmentFeatureVersion.objects.create(
+                environment=environment,
+                feature=feature,
+            )
+            efv.publish()
+
     # and the relevant URL to get an environment document
     url = reverse("api-v1:environment-document")
 
@@ -116,8 +128,109 @@ def test_get_environment_document(
     assert len(response.data["project"]["segments"]) == 10
     assert len(response.data["feature_states"]) == 11
     assert len(response.data["identity_overrides"]) == 10
+
+    environment.refresh_from_db()
     assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
         environment.updated_at.timestamp()
+    )
+
+
+@pytest.mark.parametrize(
+    "environment_",
+    (
+        lazy_fixture("environment"),
+        lazy_fixture("environment_v2_versioning"),
+    ),
+)
+def test_get_environment_document__identity_overrides(
+    project: Project,
+    environment_: Environment,
+) -> None:
+    # Given
+    api_key = EnvironmentAPIKey.objects.create(environment=environment_)
+    client = APIClient()
+    client.credentials(HTTP_X_ENVIRONMENT_KEY=api_key.key)
+
+    feature = Feature.objects.create(name="test_feature", project=project)
+    for i in range(2):
+        identity = Identity.objects.create(
+            environment=environment_,
+            identifier=f"identity_{i}",
+        )
+        identity_feature_state = FeatureState.objects.create(
+            identity=identity,
+            feature=feature,
+            environment=environment_,
+        )
+        FeatureStateValue.objects.filter(feature_state=identity_feature_state).update(
+            string_value="overridden",
+            type=STRING,
+        )
+
+    url = reverse("api-v1:environment-document")
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert sorted(
+        response.data["identity_overrides"],
+        key=lambda x: x["identifier"],
+    ) == [
+        {
+            "composite_key": ANY,
+            "created_date": ANY,
+            "django_id": ANY,
+            "environment_api_key": environment_.api_key,
+            "identifier": "identity_0",
+            "dashboard_alias": None,
+            "identity_features": [
+                {
+                    "django_id": ANY,
+                    "enabled": False,
+                    "feature": {
+                        "id": feature.id,
+                        "name": "test_feature",
+                        "type": "STANDARD",
+                    },
+                    "feature_segment": None,
+                    "feature_state_value": "overridden",
+                    "featurestate_uuid": ANY,
+                    "multivariate_feature_state_values": [],
+                }
+            ],
+            "identity_traits": [],
+            "identity_uuid": ANY,
+        },
+        {
+            "composite_key": ANY,
+            "created_date": ANY,
+            "django_id": ANY,
+            "environment_api_key": environment_.api_key,
+            "identifier": "identity_1",
+            "dashboard_alias": None,
+            "identity_features": [
+                {
+                    "django_id": ANY,
+                    "enabled": False,
+                    "feature": {
+                        "id": feature.id,
+                        "name": "test_feature",
+                        "type": "STANDARD",
+                    },
+                    "feature_segment": None,
+                    "feature_state_value": "overridden",
+                    "featurestate_uuid": ANY,
+                    "multivariate_feature_state_values": [],
+                }
+            ],
+            "identity_traits": [],
+            "identity_uuid": ANY,
+        },
+    ]
+    assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
+        environment_.updated_at.timestamp()
     )
 
 

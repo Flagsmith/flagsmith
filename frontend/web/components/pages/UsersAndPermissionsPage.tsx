@@ -304,6 +304,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                 <Row>
                                   <div className='mr-3' style={{ width: 257 }}>
                                     <Select
+                                      data-test='invite-role-select'
                                       value={{
                                         label:
                                           role === 'ADMIN'

@@ -55,7 +55,7 @@ from environments.identities.helpers import (
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
 from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
-from features.feature_types import MULTIVARIATE, STANDARD
+from features.feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE, STANDARD
 from features.helpers import get_correctly_typed_value
 from features.managers import (
     FeatureManager,
@@ -115,7 +115,9 @@ class Feature(  # type: ignore[django-manager-missing]
     )
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
-    type = models.CharField(max_length=50, blank=True, default=STANDARD)
+    type = models.CharField(
+        max_length=50, blank=True, default=STANDARD, choices=FEATURE_TYPE_CHOICES
+    )
     tags = models.ManyToManyField(Tag, blank=True)
     is_archived = models.BooleanField(default=False)
     owners = models.ManyToManyField(
@@ -618,6 +620,8 @@ class FeatureState(
     @property
     def is_live(self) -> bool:
         if self.environment.use_v2_feature_versioning:  # type: ignore[union-attr]
+            if self.identity_id is not None:
+                return True
             return (
                 self.environment_feature_version_id is not None
                 and self.environment_feature_version.is_live  # type: ignore[union-attr]

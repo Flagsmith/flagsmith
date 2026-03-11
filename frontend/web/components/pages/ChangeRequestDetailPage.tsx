@@ -703,6 +703,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                         EnvironmentPermission.APPROVE_CHANGE_REQUEST,
                       ),
                       <Button
+                        data-test='approve-change-request-btn'
                         disabled={
                           approved || !approvePermission || isYourChangeRequest
                         }
@@ -716,6 +717,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                     publishPermission,
                     publishPermissionDescription,
                     <Button
+                      data-test='publish-change-request-btn'
                       disabled={
                         approvedBy.length < minApprovals || !publishPermission
                       }
