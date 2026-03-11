@@ -75,18 +75,21 @@ const withModal = (
   }
 }
 
-function createFreshRoot(
+function getOrCreateRoot(
   elementId: string,
   rootRef: { current: Root | null },
 ): Root {
-  if (rootRef.current) {
-    rootRef.current.unmount()
+  if (!rootRef.current) {
+    const el = document.getElementById(elementId)
+    if (!el) throw new Error(`Element #${elementId} not found`)
+    rootRef.current = createRoot(el)
   }
-  const el = document.getElementById(elementId)
-  if (!el) throw new Error(`Element #${elementId} not found`)
-  rootRef.current = createRoot(el)
   return rootRef.current
 }
+
+let modalKey = 0
+let pendingModalOnClose: (() => void) | null = null
+let pendingModal2OnClose: (() => void) | null = null
 
 const confirmRootRef: { current: Root | null } = { current: null }
 const modalRootRef: { current: Root | null } = { current: null }
@@ -105,9 +108,10 @@ export const openConfirm = (global.openConfirm = ({
   title,
   yesText,
 }: OpenConfirmParams) => {
-  const root = createFreshRoot('confirm', confirmRootRef)
+  const root = getOrCreateRoot('confirm', confirmRootRef)
   root.render(
     <_Confirm
+      key={++modalKey}
       isOpen
       isDanger={destructive}
       onNo={onNo}
@@ -127,12 +131,22 @@ export const openModal = (global.openModal = (
   className?: string,
   onClose?: () => void,
 ) => {
-  const root = createFreshRoot('modal', modalRootRef)
+  // If replacing a modal before its close transition completes, fire its
+  // onClosed callback now since the transition will never finish.
+  if (pendingModalOnClose) {
+    pendingModalOnClose()
+  }
+  pendingModalOnClose = onClose ?? null
+  const root = getOrCreateRoot('modal', modalRootRef)
   root.render(
     <_ModalDefault
+      key={++modalKey}
       isOpen
       className={className}
-      onClosed={onClose}
+      onClosed={() => {
+        pendingModalOnClose = null
+        onClose?.()
+      }}
       title={title}
     >
       {body}
@@ -147,12 +161,20 @@ export const openModal2 = (global.openModal2 = (
   className?: string,
   onClose?: () => void,
 ) => {
-  const root = createFreshRoot('modal2', modal2RootRef)
+  if (pendingModal2OnClose) {
+    pendingModal2OnClose()
+  }
+  pendingModal2OnClose = onClose ?? null
+  const root = getOrCreateRoot('modal2', modal2RootRef)
   root.render(
     <_ModalDefault2
+      key={++modalKey}
       isOpen
       className={className}
-      onClosed={onClose}
+      onClosed={() => {
+        pendingModal2OnClose = null
+        onClose?.()
+      }}
       title={title}
     >
       {body}
