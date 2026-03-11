@@ -392,12 +392,12 @@ const SegmentOverrideListInner = ({
   showEditSegment,
   toggle,
 }) => {
-  const useSortable = !id && !disabled
+  const isSortable = !id && !disabled
   return (
     <div>
       {items.map((value, index) => {
-        const sortId = `segment-${value.segment}-${index}`
-        if (useSortable) {
+        const sortId = `segment-${value.segment.id}-${index}`
+        if (isSortable) {
           return (
             <Fragment key={value.segment.name || sortId}>
               <SortableSegmentOverride
@@ -512,16 +512,15 @@ const SortableSegmentOverrideList = ({
   )
 
   const sortableIds = items.map(
-    (value, index) => `segment-${value.segment}-${index}`,
+    (value, index) => `segment-${value.segment.id}-${index}`,
   )
 
   const handleDragEnd = (event) => {
     const { active, over } = event
-    if (active.id !== over?.id) {
-      const oldIndex = sortableIds.indexOf(active.id)
-      const newIndex = sortableIds.indexOf(over.id)
-      handleSortEnd({ newIndex, oldIndex })
-    }
+    if (!over || active.id === over.id) return
+    const oldIndex = sortableIds.indexOf(active.id)
+    const newIndex = sortableIds.indexOf(over.id)
+    handleSortEnd({ newIndex, oldIndex })
   }
 
   return (
