@@ -15,7 +15,7 @@ Example applications for a variety of JavaScript frameworks such as React, Vue a
 ### NPM
 
 ```bash
-npm i flagsmith --save
+npm i @flagsmith/flagsmith --save
 ```
 
 ### NPM for React Native
@@ -29,7 +29,7 @@ AsyncStorage to be provided (e.g. @react-native-community/async-storage) in orde
 :::
 
 ```bash
-npm i react-native-flagsmith --save
+npm i @flagsmith/react-native --save
 ```
 
 ## Basic Usage
@@ -41,7 +41,7 @@ settings page.
 ### Example: Initialising the SDK
 
 ```javascript
-import flagsmith from 'flagsmith or react-native-flagsmith'; //Add this line if you're using flagsmith via npm
+import flagsmith from '@flagsmith/flagsmith or @flagsmith/react-native'; //Add this line if you're using flagsmith via npm
 
 flagsmith.init({
  environmentID: '<YOUR_CLIENT_SIDE_ENVIRONMENT_KEY>',
@@ -82,7 +82,7 @@ You can define default flag values when initialising the SDK. This ensures that 
 the event that it [cannot receive a response from our API](/best-practices/defensive-coding).
 
 ```javascript
-import flagsmith from 'flagsmith or react-native-flagsmith'; //Add this line if you're using flagsmith via npm
+import flagsmith from '@flagsmith/flagsmith or @flagsmith/react-native'; //Add this line if you're using flagsmith via npm
 
 try {
     flagsmith.init({
@@ -136,7 +136,7 @@ When you initialise the client without an identity, it will fetch the flags for 
 `preventFetch:true`).
 
 ```javascript
-import flagsmith from 'flagsmith';
+import flagsmith from '@flagsmith/flagsmith';
 
 flagsmith.init({
  environmentID: '<YOUR_CLIENT_SIDE_ENVIRONMENT_KEY>',
@@ -170,7 +170,7 @@ flagsmith.init({
 });
 
 /*
-Can be called either after you're done initialising the project or in flagsmith.init with its identity and trait properties 
+Can be called either after you're done initialising the project or in flagsmith.init with its identity and trait properties
 to prevent flags being fetched twice.
 */
 flagsmith.identify('flagsmith_sample_user'); //This will create a user in the dashboard if they don't already exist
@@ -182,7 +182,7 @@ Initialising the client with an identity property will retrieve the user's flags
 You can also specify traits at this point which could determine the flags that come back based on segment overrides.
 
 ```javascript
-import flagsmith from 'flagsmith';
+import flagsmith from '@flagsmith/flagsmith';
 
 flagsmith.init({
  environmentID: '<YOUR_CLIENT_SIDE_ENVIRONMENT_KEY>',
@@ -279,7 +279,7 @@ export function createFlagsmithInstance (): IFlagsmith
 Usage:
 
 ```javascript
-import { createFlagsmithInstance } from 'flagsmith';
+import { createFlagsmithInstance } from '@flagsmith/flagsmith';
 const flagsmith = createFlagsmithInstance();
 const flagsmithB = createFlagsmithInstance();
 
@@ -340,7 +340,7 @@ We can now enforce these types:
 
 ```typescript
 // enforces you passing the correct key to flagsmith.getValue(flag:FlagOptions), flagsmith.getTrait(trait:TraitOptions)
-import flagsmith from 'flagsmith';
+import flagsmith from '@flagsmith/flagsmith';
 const typedFlagsmith = flagsmith as IFlagsmith<FlagOptions, TraitOptions>;
 
 // Similarly for the useFlagsmith hook is typed with useFlagsmith(flags:FlagOptions[],traits:TraitOptions[])
