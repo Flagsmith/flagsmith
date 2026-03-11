@@ -5,7 +5,6 @@ import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
 import AddEditTags from 'components/tags/AddEditTags'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
-import Permission from 'common/providers/Permission'
 import { useHasPermission } from 'common/providers/Permission'
 import FlagOwners from 'components/FlagOwners'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
@@ -13,6 +12,9 @@ import PlanBasedBanner from 'components/PlanBasedAccess'
 import Switch from 'components/Switch'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/Icon'
+import JSONReference from 'components/JSONReference'
+import ModalHR from 'components/modals/ModalHR'
+import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 import FormGroup from 'components/base/grid/FormGroup'
 import Row from 'components/base/grid/Row'
@@ -25,14 +27,22 @@ type FeatureSettingsTabProps = {
   identity?: string
   projectId: number | string
   projectFlag: ProjectFlag | null
+  isSaving?: boolean
+  invalid?: boolean
+  hasMetadataRequired?: boolean
   onChange: (projectFlag: ProjectFlag) => void
   onHasMetadataRequiredChange: (hasMetadataRequired: boolean) => void
+  onSaveSettings?: () => void
 }
 
 const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
+  hasMetadataRequired,
   identity,
+  invalid,
+  isSaving,
   onChange,
   onHasMetadataRequiredChange,
+  onSaveSettings,
   projectFlag,
   projectId,
 }) => {
@@ -53,11 +63,10 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
     }
   }, [metadataEnable])
 
-  // Check CREATE_FEATURE permission
   const { permission: createFeature } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'CREATE_FEATURE',
+    permission: ProjectPermission.CREATE_FEATURE,
   })
 
   if (!createFeature) {
@@ -114,30 +123,20 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
           />
         </>
       )}
-      {!identity && projectFlag?.id && (
-        <Permission
-          level='project'
-          permission={ProjectPermission.CREATE_FEATURE}
-          id={projectId}
-        >
-          {({ permission }) =>
-            permission && (
-              <>
-                <FormGroup className='mb-3 setting'>
-                  <FlagOwners projectId={projectId} id={projectFlag.id} />
-                </FormGroup>
-                <FormGroup className='mb-3 setting'>
-                  <FlagOwnerGroups projectId={projectId} id={projectFlag.id} />
-                </FormGroup>
-                <PlanBasedBanner
-                  className='mb-3'
-                  feature={'FLAG_OWNERS'}
-                  theme={'description'}
-                />
-              </>
-            )
-          }
-        </Permission>
+      {!identity && projectFlag?.id && createFeature && (
+        <>
+          <FormGroup className='mb-3 setting'>
+            <FlagOwners projectId={projectId} id={projectFlag.id} />
+          </FormGroup>
+          <FormGroup className='mb-3 setting'>
+            <FlagOwnerGroups projectId={projectId} id={projectFlag.id} />
+          </FormGroup>
+          <PlanBasedBanner
+            className='mb-3'
+            feature={'FLAG_OWNERS'}
+            theme={'description'}
+          />
+        </>
       )}
       <FormGroup className='mb-3 setting'>
         <InputGroup
@@ -208,6 +207,43 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
             </Tooltip>
           </Row>
         </FormGroup>
+      )}
+
+      {onSaveSettings && (
+        <>
+          <JSONReference
+            className='mb-3'
+            showNamesButton
+            title={'Feature'}
+            json={projectFlag}
+          />
+          <ModalHR className='mt-4' />
+          {isEdit && (
+            <div className='text-right mt-3'>
+              {createFeature && (
+                <>
+                  <p className='text-right modal-caption fs-small lh-sm'>
+                    This will save the above settings{' '}
+                    <strong>all environments</strong>.
+                  </p>
+                  <Button
+                    onClick={onSaveSettings}
+                    data-test='update-feature-btn'
+                    id='update-feature-btn'
+                    disabled={
+                      isSaving ||
+                      !projectFlag.name ||
+                      invalid ||
+                      hasMetadataRequired
+                    }
+                  >
+                    {isSaving ? 'Updating' : 'Update Settings'}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   )

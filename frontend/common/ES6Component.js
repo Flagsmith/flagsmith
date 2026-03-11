@@ -56,5 +56,4 @@ function es6Component(context, onUnmount) {
   }
 }
 
-module.exports = es6Component
 export default es6Component

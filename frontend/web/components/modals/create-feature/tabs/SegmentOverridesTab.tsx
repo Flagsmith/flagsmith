@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react'
 import Constants from 'common/constants'
-import ProjectStore from 'common/stores/project-store'
-import Permission from 'common/providers/Permission'
+import { useGetProjectQuery } from 'common/services/useProject'
+import { useHasPermission } from 'common/providers/Permission'
 import SegmentOverrides from 'components/SegmentOverrides'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
@@ -11,9 +11,10 @@ import WarningMessage from 'components/WarningMessage'
 import ModalHR from 'components/modals/ModalHR'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import Utils from 'common/utils/utils'
-import { Environment, ProjectFlag } from 'common/types/responses'
+import { ProjectFlag } from 'common/types/responses'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
-type SegmentOverrideValue = {
+export type SegmentOverrideValue = {
   enabled?: boolean
   [key: string]: unknown
 }
@@ -29,8 +30,7 @@ type SegmentOverridesTabProps = {
   saveFeatureSegments: (schedule: boolean) => void
   isSaving: boolean
   invalid: boolean
-  featureError?: string
-  featureWarning?: string
+  error: any
   existingChangeRequest?: { id: number }
   noPermissions?: boolean
   disableCreate?: boolean
@@ -41,9 +41,8 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
   controlValue,
   disableCreate,
   environmentId,
+  error,
   existingChangeRequest,
-  featureError,
-  featureWarning,
   highlightSegmentId,
   invalid,
   isSaving,
@@ -58,16 +57,27 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
   const [showCreateSegment, setShowCreateSegment] = useState(false)
   const [enabledSegment, setEnabledSegment] = useState(false)
 
-  const environment = ProjectStore.getEnvironment(
-    environmentId,
-  ) as Environment | null
+  const { data: project } = useGetProjectQuery({ id: projectId })
+  const environment = project?.environments?.find(
+    (env) => env.api_key === environmentId,
+  )
   const isVersioned = !!environment?.use_v2_feature_versioning
   const is4Eyes =
     !!environment &&
     Utils.changeRequestsEnabled(environment.minimum_change_request_approvals)
-  const project = ProjectStore.model as {
-    environments?: Array<{ api_key: string; name: string }>
-  } | null
+
+  const { permission: manageSegmentOverrides } = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
+  })
+
+  const { permission: savePermission } = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: Utils.getManageFeaturePermission(is4Eyes, false),
+    tags: projectFlag.tags,
+  })
 
   const changeSegment = (items: SegmentOverrideValue[]) => {
     items.forEach((item) => {
@@ -97,9 +107,22 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
     return existingChangeRequest ? 'Update Change Request' : 'Schedule Update'
   }
 
-  const environmentName =
-    project?.environments?.find((env) => env.api_key === environmentId)?.name ||
-    ''
+  const environmentName = environment?.name || ''
+
+  let featureError =
+    error?.metadata?.flatMap((m: any) => m.non_field_errors ?? []).join('\n') ||
+    error?.message ||
+    error?.name?.[0] ||
+    error
+  let featureWarning = ''
+  if (
+    featureError?.includes?.('no changes') &&
+    projectFlag.multivariate_options?.length
+  ) {
+    featureWarning =
+      'Your feature contains no changes to its value, enabled state or environment weights. If you have adjusted any variation values this will have been saved for all environments.'
+    featureError = ''
+  }
 
   return (
     <FormGroup className='mb-4'>
@@ -130,29 +153,19 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                 {Constants.strings.SEGMENT_OVERRIDES_DESCRIPTION}
               </Tooltip>
             </div>
-            <Permission
-              level='environment'
-              permission={'MANAGE_SEGMENT_OVERRIDES'}
-              id={environmentId}
-            >
-              {({ permission: manageSegmentOverrides }) =>
-                !showCreateSegment &&
-                !!manageSegmentOverrides &&
-                !disableCreate && (
-                  <div className='text-right'>
-                    <Button
-                      size='small'
-                      onClick={() => {
-                        setShowCreateSegment(true)
-                      }}
-                      theme='outline'
-                    >
-                      Create Feature-Specific Segment
-                    </Button>
-                  </div>
-                )
-              }
-            </Permission>
+            {!showCreateSegment && manageSegmentOverrides && !disableCreate && (
+              <div className='text-right'>
+                <Button
+                  size='small'
+                  onClick={() => {
+                    setShowCreateSegment(true)
+                  }}
+                  theme='outline'
+                >
+                  Create Feature-Specific Segment
+                </Button>
+              </div>
+            )}
             {!showCreateSegment && !noPermissions && (
               <Button
                 onClick={() => changeSegment(segmentOverrides || [])}
@@ -165,39 +178,28 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
             )}
           </Row>
           {segmentOverrides ? (
-            <Permission
-              level='environment'
-              permission={'MANAGE_SEGMENT_OVERRIDES'}
-              id={environmentId}
-            >
-              {({ permission: manageSegmentOverrides }) => {
-                const isReadOnly = !manageSegmentOverrides
-                return (
-                  <>
-                    <ErrorMessage error={featureError} />
-                    <WarningMessage warningMessage={featureWarning} />
-                    <SegmentOverrides
-                      setShowCreateSegment={setShowCreateSegment}
-                      readOnly={isReadOnly}
-                      is4Eyes={is4Eyes}
-                      showEditSegment
-                      showCreateSegment={showCreateSegment}
-                      feature={projectFlag.id}
-                      projectId={projectId}
-                      multivariateOptions={projectFlag.multivariate_options}
-                      environmentId={environmentId}
-                      value={segmentOverrides}
-                      controlValue={controlValue}
-                      onChange={(v: SegmentOverrideValue[]) => {
-                        onSegmentsChange()
-                        updateSegments(v)
-                      }}
-                      highlightSegmentId={highlightSegmentId}
-                    />
-                  </>
-                )
-              }}
-            </Permission>
+            <>
+              <ErrorMessage error={featureError} />
+              <WarningMessage warningMessage={featureWarning} />
+              <SegmentOverrides
+                setShowCreateSegment={setShowCreateSegment}
+                readOnly={!manageSegmentOverrides}
+                is4Eyes={is4Eyes}
+                showEditSegment
+                showCreateSegment={showCreateSegment}
+                feature={projectFlag.id}
+                projectId={projectId}
+                multivariateOptions={projectFlag.multivariate_options}
+                environmentId={environmentId}
+                value={segmentOverrides}
+                controlValue={controlValue}
+                onChange={(v: SegmentOverrideValue[]) => {
+                  onSegmentsChange()
+                  updateSegments(v)
+                }}
+                highlightSegmentId={highlightSegmentId}
+              />
+            </>
           ) : (
             <div className='text-center'>
               <Loader />
@@ -213,31 +215,43 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                 <strong>{environmentName}</strong>
               </p>
               <div className='text-right'>
-                <Permission
-                  level='environment'
-                  tags={projectFlag.tags}
-                  permission={Utils.getManageFeaturePermission(is4Eyes, false)}
-                  id={environmentId}
-                >
-                  {({ permission: savePermission }) => (
-                    <Permission
-                      level='environment'
-                      permission={'MANAGE_SEGMENT_OVERRIDES'}
-                      id={environmentId}
-                    >
-                      {({ permission: manageSegmentsOverrides }) => {
-                        if (isVersioned && is4Eyes) {
-                          return Utils.renderWithPermission(
-                            savePermission,
-                            Utils.getManageFeaturePermissionDescription(
-                              is4Eyes,
-                              false,
-                            ),
+                {isVersioned && is4Eyes
+                  ? Utils.renderWithPermission(
+                      savePermission,
+                      Utils.getManageFeaturePermissionDescription(
+                        is4Eyes,
+                        false,
+                      ),
+                      <Button
+                        onClick={() => saveFeatureSegments(false)}
+                        type='button'
+                        data-test='update-feature-segments-btn'
+                        id='update-feature-segments-btn'
+                        disabled={
+                          isSaving ||
+                          !projectFlag.name ||
+                          invalid ||
+                          !savePermission
+                        }
+                      >
+                        {getButtonText()}
+                      </Button>,
+                    )
+                  : Utils.renderWithPermission(
+                      manageSegmentOverrides,
+                      Constants.environmentPermissions(
+                        EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
+                      ),
+                      <>
+                        {!is4Eyes && isVersioned && (
+                          <>
                             <Button
-                              onClick={() => saveFeatureSegments(false)}
+                              theme='secondary'
+                              onClick={() => saveFeatureSegments(true)}
+                              className='mr-2'
                               type='button'
-                              data-test='update-feature-segments-btn'
-                              id='update-feature-segments-btn'
+                              data-test='create-change-request'
+                              id='create-change-request-btn'
                               disabled={
                                 isSaving ||
                                 !projectFlag.name ||
@@ -245,60 +259,26 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                                 !savePermission
                               }
                             >
-                              {getButtonText()}
-                            </Button>,
-                          )
-                        }
-
-                        return Utils.renderWithPermission(
-                          manageSegmentsOverrides,
-                          Constants.environmentPermissions(
-                            'Manage segment overrides',
-                          ),
-                          <>
-                            {!is4Eyes && isVersioned && (
-                              <>
-                                <Button
-                                  feature='SCHEDULE_FLAGS'
-                                  theme='secondary'
-                                  onClick={() => saveFeatureSegments(true)}
-                                  className='mr-2'
-                                  type='button'
-                                  data-test='create-change-request'
-                                  id='create-change-request-btn'
-                                  disabled={
-                                    isSaving ||
-                                    !projectFlag.name ||
-                                    invalid ||
-                                    !savePermission
-                                  }
-                                >
-                                  {getScheduleButtonText()}
-                                </Button>
-                              </>
-                            )}
-                            <Button
-                              onClick={() => saveFeatureSegments(false)}
-                              type='button'
-                              data-test='update-feature-segments-btn'
-                              id='update-feature-segments-btn'
-                              disabled={
-                                isSaving ||
-                                !projectFlag.name ||
-                                invalid ||
-                                !manageSegmentsOverrides
-                              }
-                            >
-                              {isSaving
-                                ? 'Updating'
-                                : 'Update Segment Overrides'}
+                              {getScheduleButtonText()}
                             </Button>
-                          </>,
-                        )
-                      }}
-                    </Permission>
-                  )}
-                </Permission>
+                          </>
+                        )}
+                        <Button
+                          onClick={() => saveFeatureSegments(false)}
+                          type='button'
+                          data-test='update-feature-segments-btn'
+                          id='update-feature-segments-btn'
+                          disabled={
+                            isSaving ||
+                            !projectFlag.name ||
+                            invalid ||
+                            !manageSegmentOverrides
+                          }
+                        >
+                          {isSaving ? 'Updating' : 'Update Segment Overrides'}
+                        </Button>
+                      </>,
+                    )}
               </div>
             </div>
           )}

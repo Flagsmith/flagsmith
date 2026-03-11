@@ -25,3 +25,4 @@ Column.propTypes = {
 }
 
 module.exports = Column
+export default Column

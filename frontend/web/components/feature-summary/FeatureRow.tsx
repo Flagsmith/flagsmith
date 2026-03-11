@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
-import CreateFlagModal from 'components/modals/create-feature'
+import CreateFlagModal from 'components/modals/create-feature/hoc/FeatureProvider'
 import CreateExperimentModal from 'components/modals/create-experiment'
 import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
@@ -206,7 +206,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       ? {
           environmentFlag,
           environmentId,
-          flagId: environmentFlag?.id,
           history,
           noPermissions: !permission,
           projectFlag,
@@ -216,7 +215,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       : {
           environmentFlag,
           environmentId,
-          flagId: environmentFlag?.id,
           hasUnhealthyEvents:
             isFeatureHealthEnabled && !!featureUnhealthyEvents?.length,
           hideTagsByType: ['UNHEALTHY'],

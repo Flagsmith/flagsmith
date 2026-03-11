@@ -12,7 +12,7 @@ import Switch from 'components/Switch'
 import Button from 'components/base/forms/Button'
 import { Environment, ProjectFlag } from 'common/types/responses'
 import Constants from 'common/constants'
-import CreateFlagModal from 'components/modals/create-feature'
+import CreateFlagModal from 'components/modals/create-feature/hoc/FeatureProvider'
 
 type RouteParams = {
   projectId: string

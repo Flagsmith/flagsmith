@@ -102,7 +102,7 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
 
       if (checked) {
         if (!experimentTag) {
-          const result = await createTag({
+          experimentTag = await createTag({
             projectId,
             tag: {
               color: '#6A52CF',
@@ -110,7 +110,6 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
               label: 'experiment',
             },
           }).unwrap()
-          experimentTag = result
         }
         if (experimentTag && !projectFlag.tags.includes(experimentTag.id)) {
           onProjectFlagChange({
@@ -122,7 +121,7 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
         if (experimentTag) {
           onProjectFlagChange({
             ...projectFlag,
-            tags: projectFlag.tags.filter((id) => id !== experimentTag!.id),
+            tags: projectFlag.tags.filter((id) => id !== experimentTag?.id),
           })
         }
       }

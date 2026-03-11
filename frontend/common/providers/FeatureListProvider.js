@@ -264,5 +264,4 @@ FeatureListProvider.propTypes = {
   onSave: OptionalFunc,
 }
 
-module.exports = FeatureListProvider
 export default FeatureListProvider

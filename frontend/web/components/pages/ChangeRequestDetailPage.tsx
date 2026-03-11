@@ -3,7 +3,7 @@ import OrganisationStore from 'common/stores/organisation-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import FeatureListStore from 'common/stores/feature-list-store'
 import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
-import CreateFeatureModal from 'components/modals/create-feature'
+import CreateFeatureModal from 'components/modals/create-feature/hoc/FeatureProvider'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
 import {
@@ -223,7 +223,6 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
                 ?.multivariate_feature_state_values
             : undefined
         }
-        flagId={environmentFlag.id}
       />,
       'side-modal create-feature-modal',
     )

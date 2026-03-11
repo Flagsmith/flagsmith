@@ -25,3 +25,4 @@ Flex.propTypes = {
 }
 
 module.exports = Flex
+export default Flex

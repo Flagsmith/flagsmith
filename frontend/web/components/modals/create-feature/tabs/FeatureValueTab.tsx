@@ -9,9 +9,12 @@ import WarningMessage from 'components/WarningMessage'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/Icon'
 import Switch from 'components/Switch'
+import JSONReference from 'components/JSONReference'
+import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import Utils from 'common/utils/utils'
 import { FeatureState, ProjectFlag } from 'common/types/responses'
 import { useHasPermission } from 'common/providers/Permission'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 function isNegativeNumberString(str: any) {
   if (typeof Utils.getTypedValue(str) !== 'number') {
@@ -31,19 +34,35 @@ type FeatureValueTabProps = {
   noPermissions: boolean
   featureState: FeatureState
   projectFlag: ProjectFlag
+  environmentFlag?: FeatureState
+  environmentId?: string
+  environmentName?: string
+  is4Eyes?: boolean
+  isVersioned?: boolean
+  isSaving?: boolean
+  existingChangeRequest?: boolean
+  onSaveFeatureValue?: (schedule?: boolean) => void
   onEnvironmentFlagChange: (changes: Partial<FeatureState>) => void
   onProjectFlagChange: (changes: Partial<ProjectFlag>) => void
   onRemoveMultivariateOption?: (id: number) => void
 }
 
 const FeatureValueTab: FC<FeatureValueTabProps> = ({
+  environmentFlag,
+  environmentId,
+  environmentName,
   error,
+  existingChangeRequest,
   featureState,
   identity,
+  is4Eyes,
+  isSaving,
+  isVersioned,
   noPermissions,
   onEnvironmentFlagChange,
   onProjectFlagChange,
   onRemoveMultivariateOption,
+  onSaveFeatureValue,
   projectFlag,
   projectId,
 }) => {
@@ -53,7 +72,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   const { permission: createFeature } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'CREATE_FEATURE',
+    permission: ProjectPermission.CREATE_FEATURE,
   })
 
   const default_enabled = featureState.enabled ?? false
@@ -63,6 +82,11 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     featureState.multivariate_feature_state_values ?? []
   const identityVariations =
     featureState.multivariate_feature_state_values ?? []
+  const controlPercentage = Utils.calculateControl(multivariate_options)
+  const invalid =
+    !!multivariate_options &&
+    multivariate_options.length &&
+    controlPercentage < 0
 
   const addVariation = () => {
     const newVariation = {
@@ -131,7 +155,6 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   }
 
   const enabledString = isEdit ? 'Enabled' : 'Enabled by default'
-  const controlPercentage = Utils.calculateControl(multivariate_options)
 
   const getValueString = () => {
     if (multivariate_options && multivariate_options.length) {
@@ -289,7 +312,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
           </FormGroup>
           {Utils.renderWithPermission(
             createFeature,
-            Constants.projectPermissions('Create Feature'),
+            Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
             <AddVariationButton
               multivariateOptions={multivariate_options}
               disabled={!createFeature || noPermissions}
@@ -297,6 +320,39 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
             />,
           )}
         </div>
+      )}
+
+      {environmentId && onSaveFeatureValue && (
+        <>
+          <JSONReference
+            className='mb-3'
+            showNamesButton
+            title={'Feature'}
+            json={projectFlag}
+          />
+          <JSONReference
+            className='mb-3'
+            title={'Feature state'}
+            json={environmentFlag}
+          />
+          <FlagValueFooter
+            is4Eyes={!!is4Eyes}
+            isVersioned={!!isVersioned}
+            projectId={
+              typeof projectId === 'string'
+                ? parseInt(projectId, 10)
+                : projectId
+            }
+            projectFlag={projectFlag}
+            environmentId={environmentId}
+            environmentName={environmentName || ''}
+            isSaving={!!isSaving}
+            featureName={projectFlag.name}
+            isInvalid={!!invalid}
+            existingChangeRequest={!!existingChangeRequest}
+            onSaveFeatureValue={onSaveFeatureValue}
+          />
+        </>
       )}
     </div>
   )
