@@ -51,7 +51,6 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
   const metadataEnable = Utils.getPlansPermission('METADATA')
   const isEdit = !!projectFlag?.id
 
-  // Fetch featureContentType
   useEffect(() => {
     if (metadataEnable) {
       getSupportedContentType(getStore(), {
