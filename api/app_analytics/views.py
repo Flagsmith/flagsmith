@@ -65,7 +65,9 @@ class SDKAnalyticsFlags(CreateAPIView):  # type: ignore[type-arg]
         request=SDKAnalyticsFlagsSerializer,
         responses={200: None},
     )
-    def create(self, request: Request, *args: typing.Any, **kwargs: typing.Any) -> Response:
+    def create(
+        self, request: Request, *args: typing.Any, **kwargs: typing.Any
+    ) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(environment=request.environment, cache=feature_evaluation_cache)
