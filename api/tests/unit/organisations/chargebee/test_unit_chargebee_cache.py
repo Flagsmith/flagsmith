@@ -1,25 +1,32 @@
-from chargebee.list_result import ListResult  # type: ignore[import-untyped]
-from chargebee.models import Addon, Plan  # type: ignore[import-untyped]
+from chargebee.models.addon.responses import (  # type: ignore[import-untyped]
+    AddonResponse,
+    ListAddonResponse,
+)
+from chargebee.models.plan.responses import (  # type: ignore[import-untyped]
+    ListPlanResponse,
+    PlanResponse,
+)
+from pytest_mock import MockerFixture
 
 from organisations.chargebee.cache import ChargebeeCache, get_item_generator
 from organisations.chargebee.metadata import ChargebeeItem
 
 
-def test_get_item_generator_fetches_all_items(mocker):  # type: ignore[no-untyped-def]
+def test_get_item_generator_fetches_all_items(mocker: MockerFixture) -> None:
     # Given
     mocked_chargebee = mocker.patch(
-        "organisations.chargebee.cache.chargebee", autospec=True
+        "organisations.chargebee.cache.chargebee_client", autospec=True
     )
     # Let's generate some entries that we are going to return(in two parts)
     entries = [mocker.MagicMock() for _ in range(10)]
 
-    # in the first call let's return the first 5 entries
-    first_list_result = mocker.MagicMock(spec=ListResult, next_offset=5)
-    first_list_result.__iter__.return_value = entries[:5]
+    # in the first call let's return the first 5 entries with a next_offset
+    first_list_result = mocker.MagicMock(next_offset=5)
+    first_list_result.list = entries[:5]
 
-    # in the second call let's return the last 5 entries
-    second_list_result = mocker.MagicMock(spec=ListResult, next_offset=None)
-    second_list_result.__iter__.return_value = entries[5:]
+    # in the second call let's return the last 5 entries with no next_offset
+    second_list_result = mocker.MagicMock(next_offset=None)
+    second_list_result.list = entries[5:]
 
     mocked_chargebee.Plan.list.side_effect = [
         first_list_result,
@@ -32,24 +39,14 @@ def test_get_item_generator_fetches_all_items(mocker):  # type: ignore[no-untype
     # Then
     assert returned_items == entries
 
-    # We only made two calls
-    assert len(mocked_chargebee.mock_calls) == 2
-    first_call, second_call = mocked_chargebee.mock_calls
-
-    # First call with the offset None
-    name, args, kwargs = first_call
-    assert name == "Plan.list"
-    assert args == ({"limit": 100, "offset": None},)
-    assert kwargs == {}
-
-    # Second call with the offset 5
-    name, args, kwargs = second_call
-    assert name == "Plan.list"
-    assert args == ({"limit": 100, "offset": 5},)
-    assert kwargs == {}
+    # We only made two calls with the correct offsets
+    assert mocked_chargebee.Plan.ListParams.call_args_list == [
+        mocker.call(limit=100, offset=None),
+        mocker.call(limit=100, offset=5),
+    ]
 
 
-def test_chargebee_cache(mocker, db):  # type: ignore[no-untyped-def]
+def test_chargebee_cache(mocker: MockerFixture, db: None) -> None:
     # Given
 
     # a plan
@@ -61,9 +58,12 @@ def test_chargebee_cache(mocker, db):  # type: ignore[no-untyped-def]
     }
     plan_id = "plan_id"
     plan_items = [
-        mocker.MagicMock(
-            plan=Plan.construct(values={"id": plan_id, "meta_data": plan_metadata})
-        )
+        ListPlanResponse(
+            plan=PlanResponse(
+                id=plan_id,
+                meta_data=plan_metadata,
+            ),
+        ),
     ]
     # and an addon
     addon_metadata = {
@@ -74,9 +74,12 @@ def test_chargebee_cache(mocker, db):  # type: ignore[no-untyped-def]
     }
     addon_id = "addon_id"
     addon_items = [
-        mocker.MagicMock(
-            addon=Addon.construct(values={"id": addon_id, "meta_data": addon_metadata})
-        )
+        ListAddonResponse(
+            addon=AddonResponse(
+                id=addon_id,
+                meta_data=addon_metadata,
+            ),
+        ),
     ]
 
     mocker.patch(

@@ -16,6 +16,7 @@ from common.projects.permissions import (
     VIEW_PROJECT,
 )
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
@@ -44,12 +45,16 @@ from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
 from features import views
 from features.dataclasses import EnvironmentFeatureOverridesData
-from features.feature_types import MULTIVARIATE
+from features.feature_types import MULTIVARIATE, STANDARD
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.versioning.models import EnvironmentFeatureVersion
-from metadata.models import MetadataModelField
+from metadata.models import (
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.code_references.models import FeatureFlagCodeReferencesScan
@@ -1811,8 +1816,8 @@ def test_audit_log_created_when_feature_updated(
         args=[project.id, feature.id],
     )
     data = {
-        "name": "Test Feature updated",
-        "type": "FLAG",
+        "name": feature.name,
+        "description": "Updated description",
         "project": project.id,
     }
 
@@ -2408,6 +2413,7 @@ def test_list_features_provides_correct_information_on_number_of_overrides_based
 def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     admin_client_new: APIClient,
 ) -> None:
     # Given
@@ -2446,7 +2452,7 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     assert response_json["results"][0]["num_identity_overrides"] is None
 
 
-def test_list_features_calls_get_overrides_data_with_feature_ids(
+def test_list_features_calls_get_overrides_data(
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
     admin_client_new: APIClient,
@@ -2474,7 +2480,6 @@ def test_list_features_calls_get_overrides_data_with_feature_ids(
     assert response.status_code == status.HTTP_200_OK
     mock_get_overrides_data.assert_called_once_with(
         dynamo_enabled_project_environment_one,
-        [feature.id],
     )
 
 
@@ -4150,6 +4155,177 @@ def test_list_features_segment_query_param_with_invalid_segment(
     assert feature_data["segment_feature_state"] is None
 
 
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__segment_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    sort_field: str,
+) -> None:
+    # Given
+    Feature.objects.create(project=project, name="feature_a")
+    feature_b = Feature.objects.create(project=project, name="feature_b")
+    feature_c = Feature.objects.create(project=project, name="feature_c")
+    other_environment = Environment.objects.create(
+        project=project, name="other_environment"
+    )
+
+    # feature_c has a segment override in the requested environment
+    FeatureSegment.objects.create(
+        feature=feature_c, segment=segment, environment=environment
+    )
+    # feature_b has a segment override in a different environment
+    FeatureSegment.objects.create(
+        feature=feature_b, segment=segment, environment=other_environment
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&segment={segment.id}"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_c", "feature_a", "feature_b"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__identity_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    identity: Identity,
+    sort_field: str,
+) -> None:
+    # Given
+    Feature.objects.create(project=project, name="feature_a")
+    Feature.objects.create(project=project, name="feature_b")
+    feature_c = Feature.objects.create(project=project, name="feature_c")
+
+    # feature_c has an identity override
+    FeatureState.objects.create(
+        feature=feature_c, environment=environment, identity=identity
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity={identity.id}"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_c", "feature_a", "feature_b"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__edge_identity_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    sort_field: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    project.enable_dynamo_db = True
+    project.save()
+
+    Feature.objects.create(project=project, name="feature_a")
+    feature_b = Feature.objects.create(project=project, name="feature_b")
+    Feature.objects.create(project=project, name="feature_c")
+    mocker.patch.object(
+        views,
+        "get_overridden_feature_ids_for_edge_identity",
+        return_value={feature_b.id},
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity=59efa2a7-6a45-46d6-b953-a7073a90eacf"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_b", "feature_a", "feature_c"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
+@pytest.mark.parametrize(
+    "enable_dynamo_db, identity_value",
+    [
+        (False, "not-an-integer"),
+        (True, "0"),
+    ],
+)
+def test_list_features__identity_query__invalid_format__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    enable_dynamo_db: bool,
+    identity_value: str,
+) -> None:
+    # Given
+    project.enable_dynamo_db = enable_dynamo_db
+    project.save()
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity={identity_value}"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_list_features__edge_identity_query__nonexistent_identity__returns_features_unsorted(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    project.enable_dynamo_db = True
+    project.save()
+    Feature.objects.create(project=project, name="feature_a")
+    Feature.objects.create(project=project, name="feature_b")
+    Feature.objects.create(project=project, name="feature_c")
+    mocker.patch.object(
+        views,
+        "get_overridden_feature_ids_for_edge_identity",
+        return_value=set(),
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity=59efa2a7-6a45-46d6-b953-a7073a90eacf"
+        f"&sort_field=name&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_a", "feature_b", "feature_c"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
 def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
     admin_client_new: APIClient,
     project: Project,
@@ -4240,3 +4416,114 @@ def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
     second_feature_metadata_after = second_feature_check.json()["metadata"]
     assert len(second_feature_metadata_after) == 1
     assert second_feature_metadata_after[0]["field_value"] == "200"
+
+
+def test_create_feature__required_metadata_on_other_project__returns_201(
+    admin_client: APIClient,
+    project: Project,
+    project_b: Project,
+    organisation: Organisation,
+    a_metadata_field: MetadataField,
+    feature_content_type: ContentType,
+    project_content_type: ContentType,
+) -> None:
+    # Given
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=feature_content_type,
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type,
+        object_id=project_b.id,
+        model_field=model_field,
+    )
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "Test feature cross project", "description": "desc"}
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_list_features__edge_v2_project__makes_one_dynamo_query(
+    admin_client_new: APIClient,
+    dynamo_enabled_project_environment_one: Environment,
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    environment = dynamo_enabled_project_environment_one
+    project = environment.project
+
+    # Create two additional features so we have 3 in total (including the fixture feature).
+    Feature.objects.create(name="feature_2", project=project)
+    Feature.objects.create(name="feature_3", project=project)
+
+    # Inject a mock DynamoDB table directly on the wrapper so we can
+    # verify the number of queries made.
+    mock_table = mocker.MagicMock()
+    mock_table.query.return_value = {"Items": [], "Count": 0}
+
+    from edge_api.identities import edge_identity_service
+
+    mocker.patch.object(
+        edge_identity_service.ddb_environment_v2_wrapper,
+        "_table",
+        mock_table,
+    )
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = admin_client_new.get(f"{url}?environment={environment.id}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # Validate that only a single query is made to dynamodb, not one
+    # per feature.
+    assert mock_table.query.call_count == 1
+
+
+def test_create_feature__type_provided__ignores_type_and_defaults_to_standard(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "test_feature_type_readonly", "type": "boolean"}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["type"] == STANDARD
+
+
+def test_create_feature__multivariate_options_provided__sets_type_to_multivariate(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {
+        "name": "test_feature_mv_type",
+        "multivariate_options": [{"type": "unicode", "string_value": "option-a"}],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["type"] == MULTIVARIATE

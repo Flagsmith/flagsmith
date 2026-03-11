@@ -720,6 +720,22 @@ def test_feature_state_is_live(version, live_from, expected_is_live, environment
     )
 
 
+def test_feature_state_is_live__identity_override_v2_versioning__returns_true(
+    environment_v2_versioning: Environment,
+    identity: Identity,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.create(
+        identity=identity,
+        feature=feature,
+        environment=environment_v2_versioning,
+    )
+
+    # When / Then
+    assert feature_state.is_live is True
+
+
 def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(  # type: ignore[no-untyped-def]
     project, environment
 ):

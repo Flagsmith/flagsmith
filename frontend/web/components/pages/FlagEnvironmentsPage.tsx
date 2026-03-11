@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from 'react'
+import React, { FC, useMemo } from 'react'
 import { Link, useHistory, useLocation, useParams } from 'react-router-dom'
 import PageTitle from 'components/PageTitle'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
@@ -29,8 +29,8 @@ type EnvironmentRowProps = {
 const EnvironmentRow: FC<EnvironmentRowProps> = ({
   environment,
   flag,
-  projectId,
   onManage,
+  projectId,
 }) => {
   // Fetch feature states for this specific environment to get the current state
   const { data: featureStates, isLoading } = useGetFeatureStatesQuery(
@@ -41,36 +41,37 @@ const EnvironmentRow: FC<EnvironmentRowProps> = ({
     { skip: !environment.id || !flag.id },
   )
 
-  const { currentState, segmentOverridesCount, identityOverridesCount } = useMemo(() => {
-    if (!featureStates?.results) {
-      return {
-        currentState: null,
-        identityOverridesCount: 0,
-        segmentOverridesCount: 0,
+  const { currentState, identityOverridesCount, segmentOverridesCount } =
+    useMemo(() => {
+      if (!featureStates?.results) {
+        return {
+          currentState: null,
+          identityOverridesCount: 0,
+          segmentOverridesCount: 0,
+        }
       }
-    }
 
-    // Find the current state (without live_from or scheduled)
-    const current = featureStates.results.find(
-      (fs) => !fs.live_from && !fs.feature_segment && !fs.identity,
-    )
+      // Find the current state (without live_from or scheduled)
+      const current = featureStates.results.find(
+        (fs) => !fs.live_from && !fs.feature_segment && !fs.identity,
+      )
 
-    // Count segment overrides (feature states with feature_segment)
-    const segmentCount = featureStates.results.filter(
-      (fs) => fs.feature_segment && !fs.live_from,
-    ).length
+      // Count segment overrides (feature states with feature_segment)
+      const segmentCount = featureStates.results.filter(
+        (fs) => fs.feature_segment && !fs.live_from,
+      ).length
 
-    // Count identity overrides (feature states with identity)
-    const identityCount = featureStates.results.filter(
-      (fs) => fs.identity && !fs.live_from,
-    ).length
+      // Count identity overrides (feature states with identity)
+      const identityCount = featureStates.results.filter(
+        (fs) => fs.identity && !fs.live_from,
+      ).length
 
-    return {
-      currentState: current,
-      identityOverridesCount: identityCount,
-      segmentOverridesCount: segmentCount,
-    }
-  }, [featureStates])
+      return {
+        currentState: current,
+        identityOverridesCount: identityCount,
+        segmentOverridesCount: segmentCount,
+      }
+    }, [featureStates])
 
   const enabled = currentState?.enabled ?? flag.default_enabled
 
@@ -82,7 +83,7 @@ const EnvironmentRow: FC<EnvironmentRowProps> = ({
     if (typeof featureStateValue !== 'object') return featureStateValue
 
     // Extract value based on type
-    const { type, string_value, integer_value, boolean_value, float_value } =
+    const { boolean_value, float_value, integer_value, string_value, type } =
       featureStateValue
 
     switch (type) {
@@ -173,7 +174,7 @@ const EnvironmentRow: FC<EnvironmentRowProps> = ({
 }
 
 const FlagEnvironmentsPage: FC = () => {
-  const { projectId, flagId } = useParams<RouteParams>()
+  const { flagId, projectId } = useParams<RouteParams>()
   const location = useLocation<{ searchQuery?: string }>()
   const searchQuery = location.state?.searchQuery
   const history = useHistory()
@@ -265,7 +266,9 @@ const FlagEnvironmentsPage: FC = () => {
           <Link
             to={{
               pathname: `/organisation/${project.organisation}/release-manager`,
-              search: searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : '',
+              search: searchQuery
+                ? `?search=${encodeURIComponent(searchQuery)}`
+                : '',
             }}
           >
             <Button theme='text' size='small' iconLeft='arrow-left'>
@@ -426,7 +429,8 @@ const FlagEnvironmentsPage: FC = () => {
                   onManage={handleManage}
                 />
               ))}
-              {(!environments?.results || environments.results.length === 0) && (
+              {(!environments?.results ||
+                environments.results.length === 0) && (
                 <tr>
                   <td colSpan={6} className='text-center text-muted py-4'>
                     No environments found

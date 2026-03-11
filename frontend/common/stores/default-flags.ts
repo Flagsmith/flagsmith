@@ -19,6 +19,15 @@ const defaultFlags = {
       'tags': ['analytics'],
       'title': 'Amplitude',
     },
+    'backstage': {
+      'description':
+        'View your Flagsmith feature flags inside your Backstage developer portal.',
+      'docs': 'https://docs.flagsmith.com/third-party-integrations/backstage',
+      'external': true,
+      'image': '/static/images/integrations/backstage.svg',
+      'perEnvironment': false,
+      'title': 'Backstage',
+    },
     'datadog': {
       'description':
         'Sends events to Datadog for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
@@ -90,7 +99,6 @@ const defaultFlags = {
       'tags': ['logging'],
       'title': 'Grafana',
     },
-
     'heap': {
       'description': 'Sends data on what flags served to each identity.',
       'docs': 'https://docs.flagsmith.com/integrations/analytics/heap',
@@ -189,7 +197,8 @@ const defaultFlags = {
     },
     'sentry': {
       'description': 'Send flag change events to Sentry.',
-      'docs': 'https://docs.flagsmith.com/third-party-integrations/observability-and-monitoring/sentry',
+      'docs':
+        'https://docs.flagsmith.com/third-party-integrations/observability-and-monitoring/sentry',
       'fields': [
         {
           'key': 'webhook_url',

@@ -24,7 +24,7 @@ import {
 import Utils from 'common/utils/utils'
 import Actions from 'common/dispatcher/action-constants'
 import Project from 'common/project'
-import flagsmith from 'flagsmith'
+import flagsmith from '@flagsmith/flagsmith'
 import API from 'project/api'
 import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
