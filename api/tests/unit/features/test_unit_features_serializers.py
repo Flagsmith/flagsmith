@@ -14,7 +14,7 @@ from features.multivariate.serializers import (
 from features.serializers import FeatureStateSerializerBasic
 
 
-def test_feature_state_serializer_basic__null_environment_with_context__is_valid(  # type: ignore[no-untyped-def]
+def test_feature_state_serializer_basic__null_environment__returns_validation_error(  # type: ignore[no-untyped-def]
     feature, environment
 ):
     # Given
@@ -33,8 +33,9 @@ def test_feature_state_serializer_basic__null_environment_with_context__is_valid
     # When
     is_valid = serializer.is_valid()
 
-    # Then - should not raise AttributeError on environment.id
-    assert is_valid
+    # Then - should reject null environment, not raise AttributeError
+    assert not is_valid
+    assert "environment" in serializer.errors
 
 
 @pytest.mark.parametrize(
