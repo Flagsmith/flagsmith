@@ -1,11 +1,15 @@
 import pytest
+from django.core.exceptions import ObjectDoesNotExist
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 
 from api_keys.models import MasterAPIKey
 from environments.models import Environment
 from features.models import Feature, FeatureState
-from features.tasks import trigger_feature_state_change_webhooks
+from features.tasks import (
+    _get_feature_state_webhook_data,
+    trigger_feature_state_change_webhooks,
+)
 from organisations.models import Organisation
 from projects.models import Project
 from users.models import FFAdminUser
@@ -162,3 +166,26 @@ def test_trigger_feature_state_change_webhooks_for_deleted_flag_uses_fs_instance
 
     assert data["previous_state"]["feature"]["id"] == feature_state.feature.id
     assert event_type == WebhookEventType.FLAG_DELETED.value
+
+
+def test_get_feature_state_webhook_data__deleted_feature_segment__returns_data(
+    mocker: MockerFixture,
+    environment: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+
+    # Simulate the FeatureSegment being deleted after the FeatureState was loaded.
+    mocker.patch.object(
+        type(feature_state),
+        "feature_segment",
+        new_callable=mocker.PropertyMock,
+        side_effect=ObjectDoesNotExist,
+    )
+
+    # When
+    data = _get_feature_state_webhook_data(feature_state)
+
+    # Then - should not raise; feature_segment should be None in the result.
+    assert data["feature_segment"] is None

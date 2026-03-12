@@ -5,7 +5,7 @@ from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
 from environments.models import Environment
-from features.models import Feature, FeatureSegment, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
 from integrations.grafana.mappers import (
     map_audit_log_record_to_grafana_annotation,
 )
@@ -192,6 +192,37 @@ def test_map_audit_log_record_to_grafana_annotation__feature_segment__return_exp
             "segment:segment",
             "Test Tag",
             "Test Tag2",
+        ],
+        "text": "Test event",
+        "time": 1719220187325,
+        "timeEnd": 1719220187325,
+    }
+
+
+def test_map_audit_log_record_to_grafana_annotation__deleted_feature_state__returns_no_instance_tags(
+    mocker: MockerFixture,
+    audit_log_record: AuditLog,
+) -> None:
+    # Given
+    mock_instance = mocker.MagicMock(spec=FeatureStateValue)
+    type(mock_instance).feature_state = mocker.PropertyMock(
+        side_effect=FeatureState.DoesNotExist
+    )
+    mocker.patch(
+        "integrations.grafana.mappers.get_audited_instance_from_audit_log_record",
+        return_value=mock_instance,
+    )
+
+    # When
+    annotation = map_audit_log_record_to_grafana_annotation(audit_log_record)
+
+    # Then
+    assert annotation == {
+        "tags": [
+            "flagsmith",
+            "project:Test Project",
+            "environment:unknown",
+            "by:superuser@example.com",
         ],
         "text": "Test event",
         "time": 1719220187325,
