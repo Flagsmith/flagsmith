@@ -96,7 +96,7 @@ export function buildUrlParams(
     sortOrder: filters.sort.sortOrder === SortOrder.DESC ? 'desc' : 'asc',
     tag_strategy: filters.tag_strategy,
     tags: joinArrayOrUndefined(filters.tags),
-    value_search: filters.value_search || undefined,
+    value_search: filters.value_search?.trim() || undefined,
   }
 }
 
@@ -139,7 +139,8 @@ export function buildApiFilterParams(
   if (owners) params.owners = owners
   if (filters.search) params.search = filters.search
   if (tags) params.tags = tags
-  if (filters.value_search) params.value_search = filters.value_search
+  if (filters.value_search?.trim())
+    params.value_search = filters.value_search.trim()
 
   return params
 }
