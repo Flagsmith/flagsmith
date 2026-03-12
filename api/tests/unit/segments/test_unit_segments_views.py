@@ -1895,7 +1895,7 @@ def test_create_segment__body_project_differs_from_url__does_not_create_in_other
     other_project = Project.objects.create(name="Other Project", organisation=other_org)
 
     # When
-    admin_client.post(
+    response = admin_client.post(
         f"/api/v1/projects/{project.id}/segments/",
         data={
             "name": "a_wild_pokemon",
@@ -1906,4 +1906,6 @@ def test_create_segment__body_project_differs_from_url__does_not_create_in_other
     )
 
     # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["project"] == project.id
     assert not Segment.objects.filter(project=other_project).exists()
