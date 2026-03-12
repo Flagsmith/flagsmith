@@ -37,6 +37,34 @@ import SegmentsIcon from './svg/SegmentsIcon'
 import SegmentOverrideActions from './SegmentOverrideActions'
 import Button from './base/forms/Button'
 
+// Custom PointerSensor that cancels drag when the user interacts with
+// inputs, buttons, textareas, or specific interactive areas — replicating the
+// shouldCancelStart behaviour from the old react-sortable-hoc implementation.
+class InteractiveAwarePointerSensor extends PointerSensor {
+  static activators = [
+    {
+      eventName: 'onPointerDown',
+      handler: ({ nativeEvent: event }) => {
+        const tagName = event.target.tagName.toLowerCase()
+        if (
+          tagName === 'input' ||
+          tagName === 'textarea' ||
+          tagName === 'button'
+        ) {
+          return false
+        }
+        if (
+          event.target.closest('.feature-action__item') ||
+          event.target.closest('.hljs')
+        ) {
+          return false
+        }
+        return true
+      },
+    },
+  ]
+}
+
 const SegmentOverrideInner = class Override extends React.Component {
   constructor(props) {
     super(props)
@@ -501,7 +529,7 @@ const SortableSegmentOverrideList = ({
   ...rest
 }) => {
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(InteractiveAwarePointerSensor, {
       activationConstraint: {
         distance: 5,
       },

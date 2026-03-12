@@ -9,7 +9,8 @@ $shadow-dark: 0 4px 4px 0 #00000029;
   color: $body-color !important;
   text-transform: none;
   text-wrap: wrap;
-  opacity: 1 !important;
+  --rt-opacity: 1;
+  --rt-transition-show-delay: 0.2s;
   background-color: white !important;
   z-index: 9999;
 
