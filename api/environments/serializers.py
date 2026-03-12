@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from rest_framework import serializers
 
@@ -150,6 +150,7 @@ class CreateEnvironmentSerializer(_BaseCreateUpdateEnvironmentSerializer):
         ).get(id=project_id)
 
         return getattr(project.organisation, "subscription", None)
+
 
 class UpdateEnvironmentSerializer(_BaseCreateUpdateEnvironmentSerializer):
     class Meta(_BaseCreateUpdateEnvironmentSerializer.Meta):
