@@ -79,7 +79,6 @@ class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
 
 
 class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
-    instance: Segment | None
     rules = SegmentRuleSerializer(many=True, required=True, allow_empty=False)
     metadata = MetadataSerializer(required=False, many=True)
 
