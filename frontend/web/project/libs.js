@@ -1,4 +1,4 @@
-import flagsmith from 'flagsmith';
+import flagsmith from '@flagsmith/flagsmith';
 import * as Sentry from '@sentry/browser';
 // Optimise lodash
 import each from 'lodash/each';

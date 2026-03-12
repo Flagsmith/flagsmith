@@ -62,7 +62,7 @@ const FeatureListProvider = class extends React.Component {
         multivariate_options: projectFlag.multivariate_options.map((mv) => {
           const matching =
             environmentFlag.multivariate_feature_state_values.find(
-              (v) => v.multivariate_feature_option == mv.id,
+              (v) => v.multivariate_feature_option === mv.id,
             )
           return {
             ...mv,
@@ -216,7 +216,16 @@ const FeatureListProvider = class extends React.Component {
           newProjectFlag,
           {
             ...environmentFlag,
-            multivariate_feature_state_values: flag.multivariate_options,
+            multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
+              newProjectFlag.multivariate_options?.map((opt, i) => ({
+                ...opt,
+                default_percentage_allocation:
+                  flag.multivariate_options?.[i]
+                    ?.default_percentage_allocation ??
+                  opt.default_percentage_allocation,
+              })),
+              environmentFlag.multivariate_feature_state_values,
+            ),
           },
           segmentOverrides,
           changeRequest,

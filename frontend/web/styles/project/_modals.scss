@@ -39,7 +39,7 @@
   left: auto;
   right: 0;
 }
-$side-width: 750px;
+$side-width: 800px;
 .dark {
   .inline-modal {
     background: $modal-bg-dark;
@@ -149,8 +149,22 @@ $side-width: 750px;
 }
 
 .disable-transitions {
-  .modal-dialog {
+  .modal,
+  .modal-dialog,
+  .modal-content,
+  .modal-backdrop,
+  .side-modal .modal-dialog {
     transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .modal-backdrop {
+    opacity: 0.5 !important;
+  }
+
+  .modal.fade {
+    opacity: 1 !important;
   }
 }
 

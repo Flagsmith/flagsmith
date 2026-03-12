@@ -57,4 +57,14 @@ This page provides a comprehensive reference for all the environment variables y
 - `ALBACROSS_CLIENT_ID`: Albacross client ID key for behaviour tracking.
 - `BASE_URL`: Used for specifying a base URL path that's ignored during routing if serving from a subdirectory.
 - `USE_SECURE_COOKIES`: Enable/disable the use of secure cookies. If deploying the frontend in a private network without a domain/SSL cert, disable secure cookies to ensure that session token is persisted. Default: true.
-- `COOKIE_SAME_SITE`: Define the value of the SameSite attribute for the session token cookie set by the frontend. Further reading on this value is available [here](https://web.dev/articles/samesite-cookies-explained). Default: 'none'. 
+- `COOKIE_SAME_SITE`: Define the value of the SameSite attribute for the session token cookie set by the frontend. Further reading on this value is available [here](https://web.dev/articles/samesite-cookies-explained). Default: 'none'.
+
+## OAuth configuration
+
+### Google OAuth {#oauth-google}
+
+To configure Google OAuth, ensure you have set the relevant OAuth client credentials in your deployment platform, and created the **Flagsmith on Flagsmith** flag as described in the [OAuth guide](/administration-and-security/access-control/oauth). This flag controls whether Google SSO is available in your instance.
+
+### GitHub OAuth {#oauth-github}
+
+To configure GitHub OAuth, ensure you have set `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` in your environment, and created the **Flagsmith on Flagsmith** flag as described in the [OAuth guide](/administration-and-security/access-control/oauth). This enables the GitHub SSO option in your instance.

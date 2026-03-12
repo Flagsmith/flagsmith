@@ -159,7 +159,7 @@ def test_update_invite_link_returns_405(invite_link, admin_client, organisation)
 def test_join_organisation_with_permission_groups(
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
-    subscription: Subscription,
+    enterprise_subscription: Subscription,
     api_client: APIClient,
 ) -> None:
     # Given
@@ -172,8 +172,9 @@ def test_join_organisation_with_permission_groups(
     invite.permission_groups.add(user_permission_group)
 
     # update subscription to add another seat
-    subscription.max_seats = 2
-    subscription.save()
+    current_seats = organisation.users.count()
+    enterprise_subscription.max_seats = current_seats + 1
+    enterprise_subscription.save()
 
     url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
     data = {"hubspotutk": "somehubspotdata"}
@@ -224,6 +225,45 @@ def test_create_invite_with_permission_groups(
     assert invite.invited_by == admin_user
 
 
+@pytest.mark.saas_mode
+def test_create_invite_with_permission_groups_fails_if_permission_group_belongs_to_another_organisation(
+    admin_client: APIClient,
+    organisation: Organisation,
+    chargebee_subscription: Subscription,
+) -> None:
+    # Given
+    # update subscription to add another seat
+    chargebee_subscription.max_seats = 2
+    chargebee_subscription.save()
+
+    another_organisation = Organisation.objects.create(name="Another Organisation")
+    user_permission_group = UserPermissionGroup.objects.create(
+        organisation=another_organisation, name="Group"
+    )
+
+    url = reverse(
+        "api-v1:organisations:organisation-invites-list",
+        args=[organisation.pk],
+    )
+    email = "test@example.com"
+    data = {"email": email, "permission_groups": [user_permission_group.id]}
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    response_json = response.json()
+    assert response_json == {
+        "permission_groups": [
+            f'Invalid pk "{user_permission_group.pk}" - object does not exist.'
+        ]
+    }
+
+
 def test_create_invite_returns_400_if_seats_are_over(
     admin_client: APIClient,
     organisation: Organisation,
@@ -245,7 +285,7 @@ def test_create_invite_returns_400_if_seats_are_over(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["detail"]
-        == "Please Upgrade your plan to add additional seats/users"
+        == "Please upgrade your plan to add additional seats/users"
     )
 
 
@@ -290,6 +330,7 @@ def test_update_invite_returns_405(  # type: ignore[no-untyped-def]
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
+@pytest.mark.saas_mode
 @pytest.mark.parametrize(
     "invite_object, url",
     [
@@ -297,7 +338,7 @@ def test_update_invite_returns_405(  # type: ignore[no-untyped-def]
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation_returns_400_if_exceeds_plan_limit(
+def test_join_organisation_returns_400_if_exceeds_plan_limit_for_saas(
     staff_client: APIClient,
     invite_object: Invite | InviteLink,
     url: str,
@@ -313,7 +354,39 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["detail"]
-        == "Please Upgrade your plan to add additional seats/users"
+        == "Please upgrade your plan to add additional seats/users"
+    )
+
+
+@pytest.mark.enterprise_mode
+@pytest.mark.parametrize(
+    "invite_object, url",
+    [
+        (lazy_fixture("invite"), "api-v1:users:user-join-organisation"),
+        (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
+    ],
+)
+def test_join_organisation_returns_400_if_exceeds_plan_limit_for_self_hosted_enterprise(
+    staff_client: APIClient,
+    invite_object: Invite | InviteLink,
+    url: str,
+    organisation: Organisation,
+    enterprise_subscription: Subscription,
+) -> None:
+    # Given
+    url = reverse(url, args=[invite_object.hash])
+
+    enterprise_subscription.max_seats = 1
+    enterprise_subscription.save()
+
+    # When
+    response = staff_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["detail"]
+        == "Please upgrade your plan to add additional seats/users"
     )
 
 
@@ -344,7 +417,9 @@ def test_join_organisation_returns_400_if_payment_fails(
 
     mocked_cb_subscription = mocker.MagicMock(addons=[])
 
-    mocked_chargebee = mocker.patch("organisations.chargebee.chargebee.chargebee")
+    mocked_chargebee = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
     mocked_chargebee.Subscription.retrieve.return_value = mocked_cb_subscription
 
     chargebee_response_data = {

@@ -3,7 +3,7 @@ title: Code Examples
 sidebar_label: Code Examples
 ---
 
-Here are some `curl` examples demonstrating how to interact directly with the Flags API.
+Here are some `curl` examples demonstrating how to interact directly with the Flags API. See [Authentication](/integrating-with-flagsmith/flagsmith-api-overview/flags-api/authentication) for details on how to obtain and use your Environment Key.
 
 ### Get Environment Flags
 

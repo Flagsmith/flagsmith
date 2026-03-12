@@ -26,7 +26,7 @@ from features.versioning.models import (
     EnvironmentFeatureVersion,
     VersionChangeSet,
 )
-from features.versioning.tasks import publish_version_change_set
+from features.versioning.tasks import enable_v2_versioning, publish_version_change_set
 from features.versioning.versioning_service import get_environment_flags_list
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
@@ -1030,3 +1030,56 @@ def test_delete_organisation_with_committed_change_request(
 
     # Then
     assert organisation.deleted_at is not None
+
+
+def test_delete_project_with_v2_versioning_does_not_trigger_audit_log(
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    pre_existing_cr = ChangeRequest.objects.create(
+        environment=environment,
+        title="immediate",
+        user=admin_user,
+    )
+    FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        change_request=pre_existing_cr,
+        version=None,
+    )
+    pre_existing_cr.commit(admin_user)
+
+    scheduled_cr = ChangeRequest.objects.create(
+        environment=environment,
+        title="scheduled",
+        user=admin_user,
+    )
+    FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        change_request=scheduled_cr,
+        live_from=timezone.now() + timedelta(days=2),
+        version=None,
+    )
+    scheduled_cr.commit(admin_user)
+
+    enable_v2_versioning(environment_id=environment.id)
+
+    mock_went_live_task = mocker.patch(
+        "features.workflows.core.models.create_feature_state_went_live_audit_log"
+    )
+    mock_updated_task = mocker.patch(
+        "features.workflows.core.models.create_feature_state_updated_by_change_request_audit_log"
+    )
+
+    # When
+    project.delete()
+
+    # Then
+    assert project.deleted_at is not None
+    mock_went_live_task.delay.assert_not_called()
+    mock_updated_task.delay.assert_not_called()

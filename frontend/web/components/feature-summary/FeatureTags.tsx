@@ -38,18 +38,13 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
   }
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
 
-  const isCodeReferencesEnabled = Utils.getFlagsmithHasFeature(
-    'git_code_references',
-  )
-
   const hasScannedCodeReferences =
-    isCodeReferencesEnabled && projectFlag?.code_references_counts?.length > 0
-  const codeReferencesCounts = isCodeReferencesEnabled
-    ? projectFlag?.code_references_counts?.reduce(
-        (acc, curr) => acc + curr.count,
-        0,
-      ) || 0
-    : 0
+    projectFlag?.code_references_counts?.length > 0
+  const codeReferencesCounts =
+    projectFlag?.code_references_counts?.reduce(
+      (acc, curr) => acc + curr.count,
+      0,
+    ) || 0
 
   return (
     <>
@@ -68,14 +63,22 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
         count={projectFlag.num_identity_overrides}
         showPlusIndicator={showPlusIndicator}
       />
-      {isCodeReferencesEnabled && hasScannedCodeReferences && (
+      {hasScannedCodeReferences && (
         <Tooltip
           title={
-            <VCSProviderTag
-              count={codeReferencesCounts}
-              isWarning={codeReferencesCounts === 0}
-              vcsProvider={VCSProvider.GITHUB}
-            />
+            <div
+              onClick={(e) => {
+                e.stopPropagation()
+                editFeature(Constants.featurePanelTabs.USAGE)
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              <VCSProviderTag
+                count={codeReferencesCounts}
+                isWarning={codeReferencesCounts === 0}
+                vcsProvider={VCSProvider.GITHUB}
+              />
+            </div>
           }
           place='top'
         >

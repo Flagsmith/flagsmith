@@ -18,7 +18,7 @@ const BetaFlag: FC<BetaFlagType> = ({ children, flagName }) => {
         <div>
           <a className='chip cursor-pointer chip--xs d-flex align-items-center fw-semibold text-white bg-primary900'>
             {<IonIcon className='me-1' icon={rocket} />}
-            beta
+            Beta
           </a>
         </div>
       )}

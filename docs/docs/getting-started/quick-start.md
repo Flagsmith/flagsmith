@@ -8,7 +8,9 @@ import CodeBlock from '@theme/CodeBlock'; import { JsVersion } from '@site/src/c
 
 # Flagsmith Quick Start Guide
 
-This tutorial will guide you through the core concepts of integrating Flagsmith into your application.
+This tutorial will guide you through the core concepts of integrating Flagsmith into your application in four simple steps:
+
+![Quickstart steps](/img/quickstart/quickstart-flow.svg)
 
 ## Learning objectives
 
@@ -21,8 +23,7 @@ By the end of this tutorial, you will be able to:
 
 ## Prerequisites
 
-You will need access to a Flagsmith instance (either using the SaaS platform or self-hosted) and a basic understanding of HTML and JavaScript.
-
+You will need access to a Flagsmith instance (either using the SaaS platform or self-hosted) and a basic understanding of HTML and JavaScript. To set up self-hosted easily via Docker follow the instructions available [here](/deployment-self-hosting/hosting-guides/docker).
 :::tip
 If you're using the SaaS platform, log in at [app.flagsmith.com](https://app.flagsmith.com/). If you're self-hosting, log in to your deployed instance.
 :::
@@ -166,6 +167,7 @@ From here, some areas of the documentation you might want to check out are:
 
 - A deeper overview of the application - [Features](/managing-flags/core-management),
   [Identities](/flagsmith-concepts/identities) and [Segments](/flagsmith-concepts/segments).
+- How the different concepts used in the quickstart are related in the [Data Model](/flagsmith-concepts/data-model).
 - More details about our [API and SDKs](/integrating-with-flagsmith/integration-overview).
 - How you can [run Flagsmith yourself](/deployment-self-hosting/) or use our [Hosted API](https://flagsmith.com/).
 
@@ -183,5 +185,5 @@ From here, some areas of the documentation you might want to check out are:
 - [SDKs & Integrations](/integrating-with-flagsmith/integration-overview): Explore all supported SDKs for integrating Flagsmith with your technology stack.
 
 ### Automation & API Access
-- [REST API Reference](/edge-api/): Learn how to manage flags programmatically and automate flag changes.
+- [REST API Reference](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/): Learn how to manage flags programmatically and automate flag changes.
 

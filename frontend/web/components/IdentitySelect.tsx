@@ -28,11 +28,16 @@ const IdentitySelect: FC<IdentitySelectType> = ({
   const { data, isLoading, loadMore, searchItems } = useInfiniteScroll<
     Req['getIdentities'],
     Res['identities']
-  >(useGetIdentitiesQuery, {
-    environmentId,
-    isEdge,
-    page_size: 10,
-  })
+  >(
+    useGetIdentitiesQuery,
+    {
+      environmentId,
+      isEdge,
+      page_size: 10,
+    },
+    500,
+    { skip: !environmentId },
+  )
   const identityOptions = useMemo(() => {
     return filter(
       data?.results,

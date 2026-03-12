@@ -12,7 +12,7 @@ from django.test import override_settings
 from django.utils import timezone
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django import DjangoAssertNumQueries
-from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
+from pytest_django.asserts import assertQuerySetEqual as assert_queryset_equal
 from pytest_mock import MockerFixture
 
 from audit.models import AuditLog

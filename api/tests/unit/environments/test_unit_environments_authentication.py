@@ -1,10 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-from axes.models import AccessAttempt  # type: ignore[import-untyped]
-from django.contrib.auth import authenticate
-from django.http import HttpRequest
-from pytest_django.fixtures import SettingsWrapper
 from rest_framework.exceptions import AuthenticationFailed
 
 from environments.authentication import EnvironmentKeyAuthentication
@@ -64,18 +60,3 @@ def test_authenticate_raises_authentication_failed_if_organisation_set_to_stop_s
     # When / Then
     with pytest.raises(AuthenticationFailed):
         authenticator.authenticate(request)  # type: ignore[no-untyped-call]
-
-
-# TODO: this test should not be here?
-def test_brute_force_access_attempts(db: None, settings: SettingsWrapper) -> None:
-    invalid_user_name = "invalid_user@mail.com"
-    login_attempts_to_make = settings.AXES_FAILURE_LIMIT + 1
-
-    assert AccessAttempt.objects.all().count() == 0
-
-    for _ in range(login_attempts_to_make):
-        request = HttpRequest()
-        request.path = "/api/v1/auth/login/"
-        authenticate(request, username=invalid_user_name, password="invalid_password")
-
-    assert AccessAttempt.objects.filter(username=invalid_user_name).count() == 1

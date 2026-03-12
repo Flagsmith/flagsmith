@@ -41,7 +41,7 @@ const SuccessMessage: React.FC<SuccessMessageProps> = ({
         <Icon fill='#27AB95' name='checkmark-circle' />
       </span>
       <div className={titleDescClass}>
-        <div style={{ fontWeight: 'semi-bold' }}>{title}</div>
+        <div className='fw-semibold'>{title}</div>
         {children}
       </div>
       {url && (

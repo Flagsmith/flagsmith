@@ -145,7 +145,7 @@ def dismiss_feature_health_event(
     FeatureHealthEvent.objects.create(
         feature=feature_health_event.feature,
         environment=feature_health_event.environment,
-        type=FeatureHealthEventType.HEALTHY,
+        type=FeatureHealthEventType.HEALTHY.value,
         reason=json.dumps(reason),
         provider_name=feature_health_event.provider_name,
         external_id=feature_health_event.external_id,

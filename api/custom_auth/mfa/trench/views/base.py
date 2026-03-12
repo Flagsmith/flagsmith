@@ -38,7 +38,7 @@ class MFAMethodActivationView(APIView):
         try:
             user = request.user
             mfa = create_mfa_method_command(
-                user_id=user.id,
+                user_id=user.id,  # type: ignore[arg-type]
                 name=method,
             )
         except MFAValidationError as cause:
@@ -57,7 +57,7 @@ class MFAMethodConfirmActivationView(APIView):
         if not serializer.is_valid():
             return Response(status=HTTP_400_BAD_REQUEST, data=serializer.errors)
         backup_codes = activate_mfa_method_command(
-            user_id=request.user.id,
+            user_id=request.user.id,  # type: ignore[arg-type]
             name=method,
             code=serializer.validated_data["code"],
         )
@@ -71,7 +71,8 @@ class MFAMethodDeactivationView(APIView):
     def post(request: Request, method: str) -> Response:
         try:
             deactivate_mfa_method_command(
-                mfa_method_name=method, user_id=request.user.id
+                mfa_method_name=method,
+                user_id=request.user.id,  # type: ignore[arg-type]
             )
             return Response(status=HTTP_204_NO_CONTENT)
         except MFAValidationError as cause:

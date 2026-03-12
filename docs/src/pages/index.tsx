@@ -118,7 +118,7 @@ export default function Home() {
           <Card 
             title="Flagsmith API" 
             description="REST API reference and usage examples" 
-            link="/edge-api/"
+            link="/integrating-with-flagsmith/flagsmith-api-overview/admin-api/"
             icon={codeWorking} 
           />
         </Section>
@@ -150,12 +150,6 @@ export default function Home() {
             description="What's new in Flagsmith" 
             link="/project-and-community/release-notes/"
             icon={documentText} 
-          />
-          <Card 
-            title="Public Roadmap" 
-            description="Features coming soon" 
-            link="/project-and-community/roadmap/"
-            icon={map} 
           />
           <Card 
             title="Contribute to Flagsmith" 

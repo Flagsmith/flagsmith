@@ -7,6 +7,7 @@ import AppActions from 'common/dispatcher/app-actions'
 import ProjectStore from 'common/stores/project-store'
 import Radio from 'components/base/forms/Radio'
 import { ImportStrategy } from 'common/types/responses'
+import { SortOrder } from 'common/types/requests'
 import JSONUpload from 'components/JSONUpload'
 import PanelSearch from 'components/PanelSearch'
 import {
@@ -22,7 +23,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
 import FeatureListStore from 'common/stores/feature-list-store'
-import SuccessMessage from 'components/SuccessMessage'
+import SuccessMessage from 'components/messages/SuccessMessage'
 import TableSearchFilter from 'components/tables/TableSearchFilter'
 import Utils from 'common/utils/utils'
 import TableTagFilter from 'components/tables/TableTagFilter'
@@ -73,7 +74,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   const [sort, setSort] = useState<SortValue>({
     label: 'Name',
     sortBy: 'name',
-    sortOrder: 'asc',
+    sortOrder: SortOrder.ASC,
   })
 
   useEffect(() => {

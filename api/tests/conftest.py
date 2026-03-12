@@ -1,6 +1,9 @@
 import typing
+import uuid
 
 import pytest
+from django.conf import settings
+from django_test_migrations.migrator import Migrator
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.fixtures import SettingsWrapper
 
@@ -9,10 +12,18 @@ from environments.dynamodb import (
     DynamoEnvironmentWrapper,
     DynamoIdentityWrapper,
 )
+from environments.dynamodb.types import IdentityOverrideV2
+from environments.dynamodb.utils import (
+    get_environments_v2_identity_override_document_key,
+)
 from environments.models import Environment
+from features.models import Feature, FeatureState
+from tests.types import MigratorFactory
 from util.mappers import (
     map_environment_to_environment_document,
     map_environment_to_environment_v2_document,
+    map_feature_state_to_engine,
+    map_identity_override_to_identity_override_document,
 )
 
 
@@ -100,6 +111,39 @@ def dynamo_enabled_project_environment_one_document(
 
 
 @pytest.fixture()
+def identity_override_document(
+    flagsmith_environments_v2_table: Table,
+    environment: Environment,
+    feature: Feature,
+) -> dict[str, typing.Any]:
+    identity_uuid = str(uuid.uuid4())
+    identifier = "identity-with-dynamo-override"
+
+    identity_override = IdentityOverrideV2(
+        environment_id=str(environment.id),
+        environment_api_key=environment.api_key,
+        document_key=get_environments_v2_identity_override_document_key(
+            feature_id=feature.id, identity_uuid=identity_uuid
+        ),
+        identifier=identifier,
+        identity_uuid=identity_uuid,
+        feature_state=map_feature_state_to_engine(
+            FeatureState(
+                feature=feature,
+                enabled=True,
+                environment=environment,
+            ),
+        ),
+    )
+
+    identity_override_document = map_identity_override_to_identity_override_document(
+        identity_override
+    )
+    flagsmith_environments_v2_table.put_item(Item=identity_override_document)
+    return identity_override_document
+
+
+@pytest.fixture()
 def dynamo_environment_wrapper(
     flagsmith_environment_table: Table,
     settings: SettingsWrapper,
@@ -108,3 +152,11 @@ def dynamo_environment_wrapper(
     wrapper = DynamoEnvironmentWrapper()
     wrapper.table_name = flagsmith_environment_table.name
     return wrapper
+
+
+@pytest.fixture()
+def migrator(migrator_factory: MigratorFactory) -> Migrator:
+    if settings.SKIP_MIGRATION_TESTS:  # pragma: no cover
+        pytest.skip("Skip migration tests to speed up tests where necessary")
+    migrator: Migrator = migrator_factory()
+    return migrator

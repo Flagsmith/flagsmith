@@ -1,5 +1,8 @@
+from typing import Any
+
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
 from rest_framework.decorators import action, api_view
 from rest_framework.exceptions import PermissionDenied
@@ -105,6 +108,26 @@ class InviteLinkViewSet(
         serializer.save(organisation_id=self.kwargs.get("organisation_pk"))
 
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "list_organization_invites",
+                "description": "Retrieves all pending invitations for the organization.",
+            },
+        },
+    ),
+    create=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "create_organization_invite",
+                "description": "Send an invitation to join the organization with specified role and permissions.",
+            },
+        },
+    ),
+)
 class InviteViewSet(
     ListModelMixin,
     CreateModelMixin,
@@ -132,6 +155,14 @@ class InviteViewSet(
         return Invite.objects.filter(organisation__in=user.organisations.all()).filter(  # type: ignore[misc,union-attr]  # noqa: E501
             organisation__id=organisation_pk
         )
+
+    def get_serializer_context(self) -> dict[str, Any]:
+        context = super().get_serializer_context()
+        if getattr(self.request, "swagger_fake_view", False):  # pragma: no cover
+            return context
+
+        context["organisation"] = int(self.kwargs["organisation_pk"])
+        return context
 
     @action(detail=True, methods=["POST"], throttle_classes=[ScopedRateThrottle])
     def resend(self, request, organisation_pk, pk):  # type: ignore[no-untyped-def]

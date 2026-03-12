@@ -1,0 +1,150 @@
+.faqCard {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--ifm-color-primary-lightest);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+[data-theme='dark'] .faqCard {
+  background: var(--ifm-background-surface-color);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.faqCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: var(--ifm-color-primary);
+}
+
+.faqCardHeader {
+  width: 100%;
+  padding: 1.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+  transition: background-color 0.2s ease;
+}
+
+.faqCardHeader:hover {
+  background-color: rgba(123, 81, 251, 0.05);
+}
+
+[data-theme='dark'] .faqCardHeader:hover {
+  background-color: rgba(123, 81, 251, 0.1);
+}
+
+.faqCardHeaderOpen {
+  border-bottom: 1px solid var(--ifm-color-primary-lightest);
+}
+
+[data-theme='dark'] .faqCardHeaderOpen {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.faqCardTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+  flex: 1;
+}
+
+.faqCardIcon {
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--ifm-color-primary);
+  line-height: 1;
+  margin-left: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.faqCardContent {
+  padding: 1.5rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.faqQuestion {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.faqQuestion:first-child {
+  margin-top: 0;
+}
+
+.faqQuestionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+  margin-bottom: 0.5rem;
+}
+
+.faqAnswer {
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.faqAnswer p {
+  margin-bottom: 0.5rem;
+}
+
+.faqAnswer p:last-child {
+  margin-bottom: 0;
+}
+
+/* Global styles for FAQ questions and answers used in MDX */
+:global(.faq-question) {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+:global(.faq-question:first-child) {
+  margin-top: 0;
+}
+
+:global(.faq-question-title) {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+  margin-bottom: 0.5rem;
+}
+
+:global(.faq-answer) {
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+:global(.faq-answer p) {
+  margin-bottom: 0.5rem;
+}
+
+:global(.faq-answer p:last-child) {
+  margin-bottom: 0;
+}
+
+:global(.faq-answer code) {
+  background-color: var(--ifm-code-background);
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.2rem;
+  font-size: 0.9em;
+}
+

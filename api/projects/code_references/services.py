@@ -2,7 +2,17 @@ from datetime import timedelta
 from urllib.parse import urljoin
 
 from django.contrib.postgres.expressions import ArraySubquery
-from django.db.models import BooleanField, F, Func, OuterRef, QuerySet, Subquery, Value
+from django.contrib.postgres.fields import ArrayField
+from django.db.models import (
+    BooleanField,
+    F,
+    Func,
+    JSONField,
+    OuterRef,
+    QuerySet,
+    Subquery,
+    Value,
+)
 from django.db.models.functions import JSONObject
 from django.utils import timezone
 
@@ -20,6 +30,7 @@ from projects.code_references.types import (
 
 def annotate_feature_queryset_with_code_references_summary(
     queryset: QuerySet[Feature],
+    project_id: int,
 ) -> QuerySet[Feature]:
     """Extend feature objects with a `code_references_counts`
 
@@ -27,6 +38,18 @@ def annotate_feature_queryset_with_code_references_summary(
     while preventing N+1 queries from the serializer.
     """
     history_delta = timedelta(days=FEATURE_FLAG_CODE_REFERENCES_RETENTION_DAYS)
+    cutoff_date = timezone.now() - history_delta
+
+    # Early exit: if no scans exist for this project, skip the expensive annotation
+    has_scans = FeatureFlagCodeReferencesScan.objects.filter(
+        project_id=project_id,
+        created_at__gte=cutoff_date,
+    ).exists()
+
+    if not has_scans:
+        return queryset.annotate(
+            code_references_counts=Value([], output_field=ArrayField(JSONField()))
+        )
     last_feature_found_at = (
         FeatureFlagCodeReferencesScan.objects.annotate(
             feature_name=OuterRef("feature_name"),

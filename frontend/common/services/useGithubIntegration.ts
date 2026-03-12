@@ -6,6 +6,16 @@ export const githubIntegrationService = service
   .enhanceEndpoints({ addTagTypes: ['GithubIntegration'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      createCleanupIssue: builder.mutation<
+        Res['createCleanupIssue'],
+        Req['createCleanupIssue']
+      >({
+        query: (query: Req['createCleanupIssue']) => ({
+          body: query.body,
+          method: 'POST',
+          url: `organisations/${query.organisation_id}/github/create-cleanup-issue/`,
+        }),
+      }),
       createGithubIntegration: builder.mutation<
         Res['githubIntegrations'],
         Req['createGithubIntegration']
@@ -107,9 +117,24 @@ export async function updateGithubIntegration(
     ),
   )
 }
+export async function createCleanupIssue(
+  store: any,
+  data: Req['createCleanupIssue'],
+  options?: Parameters<
+    typeof githubIntegrationService.endpoints.createCleanupIssue.initiate
+  >[1],
+) {
+  return store.dispatch(
+    githubIntegrationService.endpoints.createCleanupIssue.initiate(
+      data,
+      options,
+    ),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useCreateCleanupIssueMutation,
   useCreateGithubIntegrationMutation,
   useDeleteGithubIntegrationMutation,
   useGetGithubIntegrationQuery,

@@ -1,11 +1,12 @@
+import abc
 import typing
-from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
 from typing import Any, Iterable
 
+import structlog
 from boto3.dynamodb.conditions import Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import prefetch_related_objects
 
 from environments.dynamodb.constants import (
     DYNAMODB_MAX_BATCH_WRITE_ITEM_COUNT,
@@ -14,9 +15,17 @@ from environments.dynamodb.constants import (
 )
 from environments.dynamodb.types import IdentityOverridesV2Changeset
 from environments.dynamodb.utils import (
+    estimate_document_size,
     get_environments_v2_identity_override_document_key,
 )
+from environments.metrics import (
+    flagsmith_dynamo_environment_document_compression_ratio,
+    flagsmith_dynamo_environment_document_size_bytes,
+)
+from integrations.flagsmith.client import get_client
 from util.mappers import (
+    map_environment_to_compressed_environment_document,
+    map_environment_to_compressed_environment_v2_document,
     map_environment_to_environment_document,
     map_environment_to_environment_v2_document,
     map_identity_override_to_identity_override_document,
@@ -29,32 +38,82 @@ if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.type_defs import QueryInputRequestTypeDef
 
     from environments.models import Environment
+    from util.dataclasses import CompressedEnvironmentDocument
+
+logger = structlog.get_logger("dynamodb")
 
 
-@dataclass
-class IdentityOverridesQueryResponse:
-    items: list[dict[str, Any]]
-    is_num_identity_overrides_complete: bool
-
-
-class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper):
+class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper, abc.ABC):
     def write_environment(self, environment: "Environment") -> None:
         self.write_environments([environment])
 
     def write_environments(self, environments: Iterable["Environment"]) -> None:
-        raise NotImplementedError()
+        self._write_environments(environments)
+
+    @abc.abstractmethod
+    def _map_environment_document(
+        self,
+        environment: "Environment",
+    ) -> dict[str, Any]: ...
+
+    @abc.abstractmethod
+    def _map_compressed_environment_document(
+        self,
+        environment: "Environment",
+    ) -> "CompressedEnvironmentDocument": ...
+
+    def _write_environments(self, environments: Iterable["Environment"]) -> None:
+        flagsmith_client = get_client("local", local_eval=True)
+        prefetch_related_objects(
+            environments,
+            "project__organisation",
+            "project__organisation__subscription",
+        )
+
+        assert self.table
+        with self.table.batch_writer() as writer:
+            for environment in environments:
+                organisation = environment.project.organisation
+                if flagsmith_client.get_identity_flags(
+                    organisation.flagsmith_identifier,
+                    traits=organisation.flagsmith_on_flagsmith_api_traits,
+                ).is_feature_enabled("compress_dynamo_documents"):
+                    result = self._map_compressed_environment_document(environment)
+                    writer.put_item(Item=result.document)
+
+                    flagsmith_dynamo_environment_document_size_bytes.labels(
+                        table=self.get_table_name(),
+                        compressed="true",
+                    ).observe(result.compressed_size_bytes)
+                    flagsmith_dynamo_environment_document_compression_ratio.labels(
+                        table=self.get_table_name(),
+                    ).observe(result.compression_ratio)
+                    logger.info(
+                        "environment-document-compressed",
+                        environment_id=environment.id,
+                        environment_api_key=environment.api_key,
+                    )
+                else:
+                    item = self._map_environment_document(environment)
+                    writer.put_item(Item=item)
+
+                    flagsmith_dynamo_environment_document_size_bytes.labels(
+                        table=self.get_table_name(),
+                        compressed="false",
+                    ).observe(estimate_document_size(item))
 
 
 class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
     def get_table_name(self) -> str | None:  # type: ignore[override]
         return settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
 
-    def write_environments(self, environments: Iterable["Environment"]):  # type: ignore[no-untyped-def]
-        with self.table.batch_writer() as writer:  # type: ignore[union-attr]
-            for environment in environments:
-                writer.put_item(
-                    Item=map_environment_to_environment_document(environment),
-                )
+    def _map_environment_document(self, environment: "Environment") -> dict[str, Any]:
+        return map_environment_to_environment_document(environment)
+
+    def _map_compressed_environment_document(
+        self, environment: "Environment"
+    ) -> "CompressedEnvironmentDocument":
+        return map_environment_to_compressed_environment_document(environment)
 
     def get_item(self, api_key: str) -> dict:  # type: ignore[type-arg]
         try:
@@ -67,58 +126,31 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
 
 
 class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
-    def get_table_name(self) -> str | None:  # type: ignore[override]
+    def get_table_name(self) -> str:
         return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
 
     def get_identity_overrides_by_environment_id(
         self,
         environment_id: int,
         feature_id: int | None = None,
-        feature_ids: None | list[int] = None,
-    ) -> list[dict[str, Any]] | list[IdentityOverridesQueryResponse]:
+        projection_expression_attributes: list[str] | None = None,
+    ) -> list[dict[str, Any]]:
+        key_condition_expression = self.get_identity_overrides_key_condition_expression(
+            environment_id=environment_id,
+            feature_id=feature_id,
+        )
+        query_kwargs: dict[str, Any] = {
+            "KeyConditionExpression": key_condition_expression,
+        }
+        if projection_expression_attributes:
+            query_kwargs["ProjectionExpression"] = ",".join(
+                projection_expression_attributes
+            )
+
         try:
-            if feature_ids is None:
-                return list(
-                    self.query_iter_all_items(
-                        KeyConditionExpression=self.get_identity_overrides_key_condition_expression(
-                            environment_id=environment_id,
-                            feature_id=feature_id,
-                        )
-                    )
-                )
-
-            else:
-                futures = []
-                with ThreadPoolExecutor() as executor:
-                    for feature_id in feature_ids:
-                        futures.append(
-                            executor.submit(
-                                self.get_identity_overrides_page,
-                                environment_id,
-                                feature_id,
-                            )
-                        )
-
-                results = [future.result() for future in futures]
-                return results
-
+            return list(self.query_iter_all_items(**query_kwargs))
         except KeyError as e:
             raise ObjectDoesNotExist() from e
-
-    def get_identity_overrides_page(
-        self, environment_id: int, feature_id: int
-    ) -> IdentityOverridesQueryResponse:
-        query_response = self.table.query(  # type: ignore[union-attr]
-            KeyConditionExpression=self.get_identity_overrides_key_condition_expression(  # type: ignore[arg-type]
-                environment_id=environment_id,
-                feature_id=feature_id,
-            )
-        )
-        last_evaluated_key = query_response.get("LastEvaluatedKey")
-        return IdentityOverridesQueryResponse(
-            items=query_response["Items"],
-            is_num_identity_overrides_complete=last_evaluated_key is None,
-        )
 
     def get_identity_overrides_key_condition_expression(
         self,
@@ -157,12 +189,14 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
                         ),
                     )
 
-    def write_environments(self, environments: Iterable["Environment"]) -> None:
-        with self.table.batch_writer() as writer:  # type: ignore[union-attr]
-            for environment in environments:
-                writer.put_item(
-                    Item=map_environment_to_environment_v2_document(environment),
-                )
+    def _map_environment_document(self, environment: "Environment") -> dict[str, Any]:
+        return map_environment_to_environment_v2_document(environment)
+
+    def _map_compressed_environment_document(
+        self,
+        environment: "Environment",
+    ) -> "CompressedEnvironmentDocument":
+        return map_environment_to_compressed_environment_v2_document(environment)
 
     def delete_environment(self, environment_id: int):  # type: ignore[no-untyped-def]
         environment_id = str(environment_id)  # type: ignore[assignment]

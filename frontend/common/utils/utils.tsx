@@ -2,7 +2,6 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
-  AccountModel,
   ContentType,
   FeatureState,
   FeatureStateValue,
@@ -17,7 +16,7 @@ import {
   PConfidence,
   UserPermissions,
 } from 'common/types/responses'
-import flagsmith from 'flagsmith'
+import flagsmith from '@flagsmith/flagsmith'
 import { ReactNode } from 'react'
 import _ from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
@@ -29,7 +28,6 @@ import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
 import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
 import { TimeUnit } from 'components/release-pipelines/constants'
-import getUserDisplayName from './getUserDisplayName'
 
 const semver = require('semver')
 
@@ -81,11 +79,13 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       const variation =
         variations &&
         variations.find((env) => env.multivariate_feature_option === v.id)
-      total += variation
-        ? variation.percentage_allocation
-        : typeof v.default_percentage_allocation === 'number'
-        ? v.default_percentage_allocation
-        : (v as any).percentage_allocation
+      if (variation) {
+        total += variation.percentage_allocation
+      } else if (typeof v.default_percentage_allocation === 'number') {
+        total += v.default_percentage_allocation
+      } else {
+        total += (v as any).percentage_allocation
+      }
       return null
     })
     return 100 - total
@@ -159,15 +159,21 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
       type === 'segment overrides' ? 'environment' : 'project'
-    return percentage >= 100 ? (
-      <ErrorMessage
-        error={`Your ${envOrProject} reached the limit of ${type}, please contact support to discuss increasing this limit.`}
-      />
-    ) : percentage ? (
-      <WarningMessage
-        warningMessage={`Your ${envOrProject} is  using ${percentage}% of the total allowance of ${type}.`}
-      />
-    ) : null
+    if (percentage >= 100) {
+      return (
+        <ErrorMessage
+          error={`Your ${envOrProject} reached the limit of ${type}, please contact support to discuss increasing this limit.`}
+        />
+      )
+    }
+    if (percentage) {
+      return (
+        <WarningMessage
+          warningMessage={`Your ${envOrProject} is  using ${percentage}% of the total allowance of ${type}.`}
+        />
+      )
+    }
+    return null
   },
   escapeHtml(html: string) {
     const text = document.createTextNode(html)
@@ -244,7 +250,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     const timeParts = waitFor.split(':')
 
-    if (timeParts.length != 3) return
+    if (timeParts.length !== 3) return
 
     const [hours, minutes, seconds] = timeParts
 
@@ -425,6 +431,21 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
   },
+  getOverridePermission: (level: 'identity' | 'segment') => {
+    switch (level) {
+      case 'identity':
+        return {
+          permission: Utils.getManageFeaturePermission(false),
+          permissionDescription:
+            Utils.getManageFeaturePermissionDescription(false),
+        }
+      default:
+        return {
+          permission: 'MANAGE_SEGMENT_OVERRIDES',
+          permissionDescription: 'Manage Segment Overrides',
+        }
+    }
+  },
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
       return planNames.free
@@ -464,11 +485,13 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getPlansPermission: (feature: PaidFeature) => {
     const isOrgPermission = feature !== '2FA'
-    const plans = isOrgPermission
-      ? AccountStore.getActiveOrgPlan()
-        ? [AccountStore.getActiveOrgPlan()]
-        : null
-      : AccountStore.getPlans()
+    let plans
+    if (isOrgPermission) {
+      const activeOrgPlan = AccountStore.getActiveOrgPlan()
+      plans = activeOrgPlan ? [activeOrgPlan] : null
+    } else {
+      plans = AccountStore.getPlans()
+    }
 
     if (!plans || !plans.length) {
       return false
@@ -656,6 +679,23 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       head.appendChild(script)
     })
   },
+  mapMvOptionsToStateValues(
+    mvOptions: MultivariateOption[],
+    existingMvFeatureStateValues: MultivariateFeatureStateValue[],
+  ): MultivariateFeatureStateValue[] {
+    return mvOptions?.map((mvOption) => {
+      const existing = existingMvFeatureStateValues?.find(
+        (e) => e.multivariate_feature_option === mvOption.id,
+      )
+      return {
+        id: existing?.id,
+        multivariate_feature_option: mvOption.id,
+        percentage_allocation:
+          mvOption.default_percentage_allocation ??
+          existing?.percentage_allocation,
+      }
+    })
+  },
 
   numberWithCommas(x: number) {
     if (typeof x !== 'number') return ''
@@ -676,7 +716,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   sanitiseDiffString: (value: FlagsmithValue) => {
-    if (value === undefined || value == null) {
+    if (value === undefined || value === null) {
       return ''
     }
     return `${value}`

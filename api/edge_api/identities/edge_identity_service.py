@@ -1,6 +1,8 @@
+from django.core.exceptions import ObjectDoesNotExist
+
+from edge_api.identities.models import EdgeIdentity
 from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.dynamodb.types import (
-    IdentityOverridesV2List,
     IdentityOverrideV2,
 )
 
@@ -19,37 +21,32 @@ def get_edge_identity_overrides(
     )
     return [
         IdentityOverrideV2.model_validate(
-            {**item, "environment_id": str(item["environment_id"])}  # type: ignore[dict-item,index]
+            {**item, "environment_id": str(item["environment_id"])}
         )
         for item in override_items
     ]
 
 
-def get_edge_identity_overrides_for_feature_ids(
-    environment_id: int,
-    feature_ids: None | list[int] = None,
-) -> list[IdentityOverridesV2List]:
-    query_responses = (
+def get_edge_identity_override_keys(environment_id: int) -> list[str]:
+    """
+    Get all the identity overrides for an environment, returning only the document key
+    for optimised performance when the key is all that is needed.
+    """
+    override_items = (
         ddb_environment_v2_wrapper.get_identity_overrides_by_environment_id(
             environment_id=environment_id,
-            feature_ids=feature_ids,
+            projection_expression_attributes=["document_key"],
         )
     )
+    return [item["document_key"] for item in override_items]
 
-    results = []
-    for identity_overrides_query_response in query_responses:
-        identity_overrides = [
-            IdentityOverrideV2.model_validate(
-                {**item, "environment_id": str(item["environment_id"])}
-            )
-            for item in identity_overrides_query_response.items  # type: ignore[union-attr]
-        ]
-        complete = identity_overrides_query_response.is_num_identity_overrides_complete  # type: ignore[union-attr]
-        results.append(
-            IdentityOverridesV2List(
-                identity_overrides=identity_overrides,
-                is_num_identity_overrides_complete=complete,
-            )
+
+def get_overridden_feature_ids_for_edge_identity(identity_uuid: str) -> set[int]:
+    try:
+        identity_document = EdgeIdentity.dynamo_wrapper.get_item_from_uuid(
+            identity_uuid
         )
-
-    return results
+    except ObjectDoesNotExist:
+        return set()
+    identity = EdgeIdentity.from_identity_document(identity_document)
+    return {fs.feature.id for fs in identity.feature_overrides}

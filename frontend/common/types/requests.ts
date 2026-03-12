@@ -23,6 +23,8 @@ import {
   StageTrigger,
   StageActionType,
   StageActionBody,
+  ChangeRequest,
+  TagStrategy,
 } from './responses'
 import { UtmsType } from './utms'
 
@@ -42,6 +44,12 @@ export type UpdateOrganisationBody = {
   force_2fa?: boolean
   restrict_project_create_to_admin?: boolean
   webhook_notification_email?: string | null
+}
+
+export type UpdateFeatureStateBody = {
+  enabled?: boolean
+  feature_state_value?: FeatureStateValue
+  multivariate_feature_state_values?: MultivariateOption[] | null
 }
 
 export type PagedRequest<T> = T & {
@@ -102,7 +110,10 @@ export type RegisterRequest = {
   marketing_consent_given?: boolean
   utm_data?: UtmsType
 }
-
+export enum SortOrder {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
 export interface StageActionRequest {
   action_type: StageActionType | ''
   action_body: StageActionBody
@@ -340,10 +351,21 @@ export type Req = {
     user: string
   }
   getProjectFlags: {
-    project: number
-    environmentId?: string
-    tags?: string[]
+    project: string
+    environment?: number
+    segment?: number
+    search?: string | null
+    releasePipelines?: number[]
+    page?: number
+    tag_strategy?: TagStrategy
+    tags?: string
     is_archived?: boolean
+    value_search?: string | null
+    is_enabled?: boolean | null
+    owners?: number[]
+    group_owners?: number[]
+    sort_field?: string
+    sort_direction?: SortOrder
   }
   getProjectFlag: { project: number; id: number }
   getRolesPermissionUsers: { organisation_id: number; role_id: number }
@@ -403,7 +425,11 @@ export type Req = {
     }
   }
   getMetadataField: { organisation_id: number }
-  getMetadataList: { organisation: number }
+  getMetadataList: PagedRequest<{ organisation: number }>
+  getProjectMetadataFieldList: PagedRequest<{
+    project_id: number
+    include_organisation?: boolean
+  }>
   updateMetadataField: {
     id: number
     body: {
@@ -411,6 +437,7 @@ export type Req = {
       type: string
       description: string
       organisation: number
+      project?: number | null
     }
   }
   deleteMetadataField: { id: number }
@@ -420,6 +447,7 @@ export type Req = {
       name: string
       organisation: number
       type: string
+      project?: number | null
     }
   }
 
@@ -467,14 +495,15 @@ export type Req = {
   deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
   createAndSetFeatureVersion: {
     projectId: number
-    environmentId: string
+    environmentId: number // Numeric ID for getFeatureStates query
+    environmentApiKey?: string // API key for URL endpoints (optional for legacy store)
     featureId: number
     skipPublish?: boolean
     featureStates: FeatureState[]
     liveFrom?: string
   }
   createFeatureVersion: {
-    environmentId: string
+    environmentId: number // Numeric ID for URL
     featureId: number
     live_from?: string
     feature_states_to_create: Omit<FeatureState, 'id'>[]
@@ -495,7 +524,7 @@ export type Req = {
   }
   getVersionFeatureState: {
     sha: string
-    environmentId: string
+    environmentId: number
     featureId: number
   }
   updateSegmentPriorities: { id: number; priority: number }[]
@@ -621,6 +650,10 @@ export type Req = {
     project_id: number
     body: ProjectFlag
   }
+  removeProjectFlag: {
+    project_id: number
+    flag_id: number
+  }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
     environment_id: string
@@ -735,9 +768,6 @@ export type Req = {
     projectId: number
   }>
   getConversionEvents: PagedRequest<{ q?: string; environment_id: string }>
-  getSplitTest: PagedRequest<{
-    conversion_event_type_id: number
-  }>
   testWebhook: {
     webhookUrl: string
     secret?: string
@@ -819,6 +849,40 @@ export type Req = {
     feature_id: number
     period: number
     environment_id: string
+  }
+  getFeatureList: {
+    projectId: number
+    environmentId: string
+    page?: number
+    page_size?: number
+    search?: string | null
+    tags?: string
+    is_archived?: boolean
+    is_enabled?: boolean | null
+    owners?: string
+    group_owners?: string
+    value_search?: string
+    tag_strategy?: TagStrategy
+    sort_field?: string
+    sort_direction?: 'ASC' | 'DESC'
+  }
+  updateFeatureState: {
+    environmentId: string
+    environmentFlagId: number
+    body: UpdateFeatureStateBody
+  }
+  getExperimentResults: {
+    environmentId: string
+    featureName: string
+    getAdminDashboardMetrics: {
+      days?: number
+    }
+    createCleanupIssue: {
+      organisation_id: number
+      body: {
+        feature_id: number
+      }
+    }
   }
   // END OF TYPES
 }

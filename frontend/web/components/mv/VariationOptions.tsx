@@ -4,24 +4,32 @@ import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
 import Utils from 'common/utils/utils'
+import { FlagsmithValue, MultivariateOption } from 'common/types/responses'
+
+type VariationOverride = {
+  id?: number
+  multivariate_feature_option: number
+  percentage_allocation: number
+  multivariate_feature_option_index?: number
+}
+
 interface VariationOptionsProps {
   canCreateFeature: boolean
   controlPercentage: number
-  controlValue: any
+  controlValue: FlagsmithValue
   disabled: boolean
-  multivariateOptions: any[]
-  preventRemove: boolean
-  readOnlyValue: boolean
+  multivariateOptions: MultivariateOption[]
+  readOnly?: boolean
   removeVariation: (i: number) => void
-  select: boolean
-  setValue: (value: any) => void
-  setVariations: (variations: any[]) => void
+  select?: boolean
+  setValue: (value: FlagsmithValue) => void
+  setVariations: (variations: VariationOverride[]) => void
   updateVariation: (
     index: number,
-    value: any,
-    variationOverrides: any[],
+    value: MultivariateOption,
+    variationOverrides: VariationOverride[],
   ) => void
-  variationOverrides: any[]
+  variationOverrides: VariationOverride[]
   weightTitle: string
 }
 
@@ -31,8 +39,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
   controlValue,
   disabled,
   multivariateOptions,
-  preventRemove,
-  readOnlyValue,
+  readOnly,
   removeVariation,
   select,
   setValue,
@@ -56,7 +63,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           error='Your variation percentage splits total to over 100%'
         />
       )}
-      {!preventRemove && (
+      {!readOnly && (
         <p className='mb-4'>
           <InfoMessage collapseId={'variation-value'}>
             Changing a Variation Value will affect{' '}
@@ -90,7 +97,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
                 onMouseDown={(e) => {
                   e.stopPropagation()
                   setVariations([])
-                  setValue(controlValue)
+                  setValue?.(controlValue)
                 }}
                 className={`btn-radio ml-2 ${
                   controlSelected ? 'btn-radio-on' : ''
@@ -101,19 +108,26 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
         </div>
       )}
       {multivariateOptions.map((theValue, i) => {
-        const override = select
-          ? variationOverrides &&
-            variationOverrides[0] &&
+        let override: (typeof variationOverrides)[number] | false | undefined
+        if (select) {
+          const hasIndex =
+            variationOverrides?.[0] &&
             typeof variationOverrides[0].multivariate_feature_option_index ===
               'number'
-            ? i === variationOverrides[0].multivariate_feature_option_index &&
+          if (hasIndex) {
+            override =
+              i === variationOverrides[0].multivariate_feature_option_index &&
               variationOverrides[0]
-            : variationOverrides &&
-              variationOverrides.find(
-                (v) => v.multivariate_feature_option === theValue.id,
-              )
-          : variationOverrides &&
-            variationOverrides.find((v) => v.percentage_allocation === 100)
+          } else {
+            override = variationOverrides?.find(
+              (v) => v.multivariate_feature_option === theValue.id,
+            )
+          }
+        } else {
+          override = variationOverrides?.find(
+            (v) => v.percentage_allocation === 100,
+          )
+        }
         return select ? (
           <div className='panel panel--flat panel-without-heading mb-2'>
             <div className='panel-content'>
@@ -152,7 +166,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
             key={i}
             index={i}
             canCreateFeature={canCreateFeature}
-            readOnlyValue={readOnlyValue}
+            readOnly={readOnly ?? false}
             value={theValue}
             onChange={(e) => {
               updateVariation(i, e, variationOverrides)
@@ -160,7 +174,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
             weightTitle={weightTitle}
             disabled={disabled}
             onRemove={
-              preventRemove || disabled ? undefined : () => removeVariation(i)
+              readOnly || disabled ? undefined : () => removeVariation(i)
             }
           />
         )

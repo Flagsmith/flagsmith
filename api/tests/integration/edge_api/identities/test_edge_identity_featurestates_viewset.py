@@ -6,13 +6,6 @@ from unittest import mock
 
 import pytest
 from django.urls import reverse
-from flag_engine.features.models import (
-    FeatureModel,
-    FeatureStateModel,
-    MultivariateFeatureOptionModel,
-    MultivariateFeatureStateValueList,
-    MultivariateFeatureStateValueModel,
-)
 from mypy_boto3_dynamodb.service_resource import Table
 from mypy_boto3_dynamodb.type_defs import TableAttributeValueTypeDef
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
@@ -29,7 +22,6 @@ from edge_api.identities.models import (  # type: ignore[attr-defined]
 )
 from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
-    DynamoEnvironmentWrapper,
     DynamoIdentityWrapper,
 )
 from environments.models import Environment
@@ -37,6 +29,13 @@ from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
 from projects.models import Project
 from tests.integration.helpers import create_mv_option_with_api
+from util.engine_models.features.models import (
+    FeatureModel,
+    FeatureStateModel,
+    MultivariateFeatureOptionModel,
+    MultivariateFeatureStateValueList,
+    MultivariateFeatureStateValueModel,
+)
 from util.mappers.engine import map_feature_to_engine
 
 
@@ -1128,7 +1127,6 @@ def test_edge_identity_clone_flag_states_from(
     flagsmith_identities_table: Table,
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
-    dynamo_environment_wrapper: DynamoEnvironmentWrapper,
 ) -> None:
     mocker.patch(
         "environments.dynamodb.services.DynamoIdentityWrapper",
@@ -1139,11 +1137,6 @@ def test_edge_identity_clone_flag_states_from(
         "environments.dynamodb.services.DynamoEnvironmentV2Wrapper",
         autospec=True,
         return_value=dynamodb_wrapper_v2,
-    )
-    mocker.patch(
-        "environments.dynamodb.wrappers.identity_wrapper.DynamoEnvironmentWrapper",
-        autospec=True,
-        return_value=dynamo_environment_wrapper,
     )
 
     def create_identity(identifier: str) -> EdgeIdentity:

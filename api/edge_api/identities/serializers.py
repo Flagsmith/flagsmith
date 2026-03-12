@@ -2,16 +2,7 @@ import copy
 import typing
 
 from django.utils import timezone
-from flag_engine.features.models import FeatureModel as EngineFeatureModel
-from flag_engine.features.models import FeatureStateModel as EngineFeatureStateModel
-from flag_engine.features.models import (
-    MultivariateFeatureOptionModel as EngineMultivariateFeatureOptionModel,
-)
-from flag_engine.features.models import (
-    MultivariateFeatureStateValueModel as EngineMultivariateFeatureStateValueModel,
-)
-from flag_engine.identities.models import IdentityModel as EngineIdentity
-from flag_engine.utils.exceptions import DuplicateFeatureState
+from drf_spectacular.utils import extend_schema_field
 from pydantic import ValidationError as PydanticValidationError
 from pyngo import drf_error_details
 from rest_framework import serializers
@@ -24,6 +15,18 @@ from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import (  # type: ignore[attr-defined]
     FeatureStateValueSerializer,
 )
+from util.engine_models.features.models import FeatureModel as EngineFeatureModel
+from util.engine_models.features.models import (
+    FeatureStateModel as EngineFeatureStateModel,
+)
+from util.engine_models.features.models import (
+    MultivariateFeatureOptionModel as EngineMultivariateFeatureOptionModel,
+)
+from util.engine_models.features.models import (
+    MultivariateFeatureStateValueModel as EngineMultivariateFeatureStateValueModel,
+)
+from util.engine_models.identities.models import IdentityModel as EngineIdentity
+from util.engine_models.utils.exceptions import DuplicateFeatureState
 from util.mappers import (
     map_engine_identity_to_identity_document,
     map_feature_to_engine,
@@ -114,6 +117,12 @@ class EdgeMultivariateFeatureStateValueSerializer(serializers.Serializer):  # ty
         return EngineMultivariateFeatureStateValueModel(**data)
 
 
+@extend_schema_field(
+    {
+        "type": ["string", "integer", "boolean"],
+        "description": "Feature state value (string, integer, or boolean)",
+    }
+)
 class FeatureStateValueEdgeIdentityField(serializers.Field):  # type: ignore[type-arg]
     def to_representation(self, obj):  # type: ignore[no-untyped-def]
         identity: EdgeIdentity = self.parent.context["identity"]
@@ -140,17 +149,11 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):  # type: ignore[typ
         return FeatureStateValue(**feature_state_value_dict).value
 
 
-class EdgeFeatureField(serializers.Field):  # type: ignore[type-arg]
-    def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
-        help_text = "ID(integer) or name(string) of the feature"
-        kwargs.setdefault("help_text", help_text)
-
-        return super().__init__(*args, **kwargs)
-
-    def to_representation(self, obj: Feature) -> int:
+class EdgeFeatureField(serializers.Field[EngineFeatureModel, str | int, int, int]):
+    def to_representation(self, obj: EngineFeatureModel) -> int:
         return obj.id
 
-    def to_internal_value(self, data: typing.Union[int, str]) -> EngineFeatureModel:
+    def to_internal_value(self, data: str | int) -> EngineFeatureModel:
         if isinstance(data, int):
             return map_feature_to_engine(Feature.objects.get(id=data))
 
@@ -164,15 +167,12 @@ class EdgeFeatureField(serializers.Field):  # type: ignore[type-arg]
             )
         )
 
-    class Meta:
-        swagger_schema_fields = {"type": "integer/string"}
-
 
 class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):  # type: ignore[type-arg]
     feature_state_value = FeatureStateValueEdgeIdentityField(
         allow_null=True, required=False, default=None
     )
-    feature = EdgeFeatureField()  # type: ignore[no-untyped-call]
+    feature = EdgeFeatureField()
     multivariate_feature_state_values = EdgeMultivariateFeatureStateValueSerializer(
         many=True, required=False
     )
@@ -239,6 +239,7 @@ class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):  # type: i
 class EdgeIdentityFeatureStateSerializer(BaseEdgeIdentityFeatureStateSerializer):
     identity_uuid = serializers.SerializerMethodField()
 
+    @extend_schema_field({"type": "string", "format": "uuid"})
     def get_identity_uuid(self, obj=None):  # type: ignore[no-untyped-def]
         return self.context["view"].identity.identity_uuid
 
@@ -258,7 +259,7 @@ class EdgeIdentityWithIdentifierFeatureStateRequestBody(
 class EdgeIdentityWithIdentifierFeatureStateDeleteRequestBody(
     EdgeIdentityIdentifierSerializer
 ):
-    feature = EdgeFeatureField()  # type: ignore[no-untyped-call]
+    feature = EdgeFeatureField()
 
 
 class EdgeIdentityTraitsSerializer(serializers.Serializer):  # type: ignore[type-arg]

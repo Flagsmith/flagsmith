@@ -8,8 +8,8 @@ from rest_framework.test import APIClient
 @pytest.mark.parametrize(
     "url",
     (
-        reverse("api-v1:schema-json", args=[".json"]),
-        reverse("api-v1:schema-json", args=[".yaml"]),
+        reverse("api-v1:schema-json"),
+        reverse("api-v1:schema-yaml"),
         reverse("api-v1:schema-swagger-ui"),
     ),
 )

@@ -1,15 +1,23 @@
 name: API Pull Request
 
+permissions:
+  contents: read # For actions/checkout
+  id-token: write # For Codecov OIDC
+
 on:
   pull_request:
     paths:
       - api/**
+      - docker/api/**
       - .github/**
+      - .release-please-manifest.json
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     paths:
       - api/**
+      - docker/api/**
       - .github/**
+      - .release-please-manifest.json
     branches:
       - main
 
@@ -25,20 +33,10 @@ jobs:
     runs-on: depot-ubuntu-latest-16
     name: API Unit Tests
 
-    services:
-      postgres:
-        image: postgres:15.5-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports: ['5432:5432']
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
     strategy:
-      max-parallel: 2
+      max-parallel: 3
       matrix:
-        python-version: ['3.11', '3.12']
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - name: Cloning repo
@@ -55,16 +53,10 @@ jobs:
       - name: Install Dependencies
         run: make install-packages
 
-      - name: Create analytics database
-        env:
-          PGPASSWORD: postgres
-        run: createdb -h localhost -U postgres -p 5432 analytics
-
       - name: Check for missing migrations
         env:
           opts: --no-input --dry-run --check
         run: make django-make-migrations
-
 
       - uses: liskin/gh-problem-matcher-wrap@v2
         with:
@@ -83,14 +75,14 @@ jobs:
         uses: nickcharlton/diff-check@v1.0.0
         with:
           command: make -C api generate-docs
-  
+
       - name: Run Tests
         run: make test
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           PYTHON: ${{ matrix.python-version }}
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           env_vars: PYTHON
+          use_oidc: true

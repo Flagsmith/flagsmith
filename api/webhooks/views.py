@@ -1,5 +1,5 @@
 import requests
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -20,14 +20,13 @@ from .webhooks import send_test_request_to_webhook
 class WebhookViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, TriggerSampleWebhookPermission]
 
-    @swagger_auto_schema(
-        request_body=TestWebhookSerializer,
+    @extend_schema(
+        request=TestWebhookSerializer,
         responses={
             200: TestWebhookSuccessResponseSerializer(),
             400: TestWebhookErrorResponseSerializer(),
         },
-        method="post",
-    )  # type: ignore[misc]
+    )
     @action(
         detail=False,
         url_path="test",

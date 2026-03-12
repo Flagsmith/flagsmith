@@ -52,3 +52,32 @@ For more information, see [Traits](/flagsmith-concepts/identities#identity-trait
 Segments define a group of users by traits such as login count, device, location, or any number of custom-defined traits. Similar to individual users, you can override environment defaults for features for a segment. For example, you might show certain features for a "power user" segment.
 
 For more information, see [Segments](/flagsmith-concepts/segments).
+
+## Permissions and the data model
+
+Permissions in Flagsmith are managed at three levels that align with the data hierarchy:
+
+- **Organisation**: User management, project creation
+- **Project**: Feature and segment creation/deletion, environment creation
+- **Environment**: Flag state changes, identity management, change requests
+
+Understanding which level controls what is important when setting up access control:
+
+| Resource       | Defined at    | Values controlled at | Implication for permissions                                                         |
+| -------------- | ------------- | -------------------- | ----------------------------------------------------------------------------------- |
+| Features       | Project       | Environment          | Creating/deleting a feature is project-level; changing its state is environment-level |
+| Segments       | Project       | Project              | Segment rules are project-wide and affect all environments                           |
+| Segment overrides | Environment | Environment       | Override values for a segment can differ per environment                             |
+| Identities     | Environment   | Environment          | Each environment has its own set of identities                                       |
+
+:::tip Key insight
+
+Features and Segments are defined at the **Project level** and shared across all Environments. This means:
+
+- **Creating or deleting** a feature affects all environments simultaneously
+- **Managing segments** is a project-wide capability, not per-environment
+- To control **flag values** per environment, use environment-level permissions
+
+:::
+
+For detailed information on configuring access control, see [Role-based access control](/administration-and-security/access-control/rbac).

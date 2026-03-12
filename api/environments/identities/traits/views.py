@@ -5,8 +5,7 @@ from common.environments.permissions import (
 from django.conf import settings
 from django.core.exceptions import BadRequest
 from django.db.models import Q
-from drf_yasg import openapi  # type: ignore[import-untyped]
-from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -87,13 +86,13 @@ class TraitViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         serializer.save(identity=self.identity)
 
-    @swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "deleteAllMatchingTraits",
-                openapi.IN_QUERY,
-                "Deletes all traits in this environment matching the key of the deleted trait",
-                type=openapi.TYPE_BOOLEAN,
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="deleteAllMatchingTraits",
+                location=OpenApiParameter.QUERY,
+                description="Deletes all traits in this environment matching the key of the deleted trait",
+                type=bool,
             )
         ]
     )
@@ -197,7 +196,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):  # type: igno
         context["environment"] = self.request.environment
         return context
 
-    @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer)
+    @extend_schema(request=SDKCreateUpdateTraitSerializer)
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         response = super(SDKTraits, self).create(request, *args, **kwargs)
         response.status_code = status.HTTP_200_OK
@@ -213,9 +212,9 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):  # type: igno
 
         return response
 
-    @swagger_auto_schema(
+    @extend_schema(
         responses={200: IncrementTraitValueSerializer},
-        request_body=IncrementTraitValueSerializer,
+        request=IncrementTraitValueSerializer,
     )
     @action(detail=False, methods=["POST"], url_path="increment-value")
     def increment_value(self, request):  # type: ignore[no-untyped-def]
@@ -238,7 +237,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):  # type: igno
 
         return Response(serializer.data, status=200)
 
-    @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer(many=True))
+    @extend_schema(request=SDKCreateUpdateTraitSerializer(many=True))
     @action(detail=False, methods=["PUT"], url_path="bulk")
     def bulk_create(self, request):  # type: ignore[no-untyped-def]
         try:

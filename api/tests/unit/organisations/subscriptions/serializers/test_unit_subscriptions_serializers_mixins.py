@@ -69,3 +69,29 @@ def test_read_only_if_not_valid_plan_mixin_does_not_set_read_only_if_plan_valid(
     # Then
     assert "foo" in serializer.validated_data
     assert serializer.fields["foo"].read_only is False
+
+
+def test_read_only_if_not_valid_plan_mixin__no_view_context__returns_fields_unchanged() -> (
+    None
+):
+    # This tests the schema generation scenario where drf-spectacular
+    # doesn't provide a view in the context.
+
+    # Given
+
+    class MySerializer(ReadOnlyIfNotValidPlanMixin, serializers.Serializer[object]):
+        invalid_plans = ("invalid-plan-id",)
+        field_names = ("foo",)
+
+        foo = serializers.CharField()
+
+        def get_subscription(self) -> Subscription:  # pragma: no cover
+            return MagicMock(plan="invalid-plan-id")
+
+    # When
+    # no context provided (simulates schema generation)
+    serializer = MySerializer()  # type: ignore[no-untyped-call]
+
+    # Then
+    # field should NOT be read-only since we're in schema generation mode
+    assert serializer.fields["foo"].read_only is False

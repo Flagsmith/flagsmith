@@ -83,7 +83,17 @@ declare global {
     trackTraits: (traits: Record<string, any>) => void
     [key: string]: any
   }
+  const Utils: typeof Utils
+  const AsyncStorage: {
+    setItem: (key: string, value: string) => void
+    getItem: (key: string) => string | null
+    removeItem: (key: string) => void
+    [key: string]: any
+  }
+  const PanelSearch: typeof Component
+  const CodeHelp: typeof Component
   interface Window {
+    E2E: boolean
     $crisp: Crisp
     engagement: {
       init(apiKey: string, options?: InitOptions): void

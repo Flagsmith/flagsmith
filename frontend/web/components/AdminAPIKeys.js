@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import data from 'common/data/base/_data'
-import InfoMessage from './InfoMessage'
 import Token from './Token'
 import JSONReference from './JSONReference'
 import Button from './base/forms/Button'
@@ -19,7 +18,7 @@ import {
   updateMasterAPIKeyWithMasterAPIKeyRoles,
 } from 'common/services/useMasterAPIKeyWithMasterAPIKeyRole'
 import { setInterceptClose, setModalTitle } from './modals/base/ModalDefault'
-import SuccessMessage from './SuccessMessage'
+import SuccessMessage from './messages/SuccessMessage'
 
 export class CreateAPIKey extends PureComponent {
   state = {

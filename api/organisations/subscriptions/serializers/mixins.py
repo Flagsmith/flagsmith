@@ -37,7 +37,9 @@ class ReadOnlyIfNotValidPlanMixin:
         fields = super().get_fields(*args, **kwargs)  # type: ignore[misc]
 
         if not (self.context and "view" in self.context):  # type: ignore[attr-defined]
-            raise RuntimeError("view must be in the context.")
+            # Return fields unchanged when called during schema generation
+            # (drf-spectacular doesn't provide a view in the context).
+            return fields
 
         subscription = self.get_subscription()
         field_names = self.field_names or []

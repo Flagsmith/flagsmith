@@ -1,14 +1,9 @@
-import pytest
-from django.conf import settings
+from django_test_migrations.migrator import Migrator
 
 
-@pytest.mark.skipif(
-    settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
-def test_migration_creates_default_subscription_for_organisations_without_subscription(  # type: ignore[no-untyped-def]  # noqa: E501
-    migrator,
-):
+def test_migration_creates_default_subscription_for_organisations_without_subscription(  # noqa: E501
+    migrator: Migrator,
+) -> None:
     # Given
     # we use one of the dependencies of the migration we want to test to set the
     # initial state of the database correctly

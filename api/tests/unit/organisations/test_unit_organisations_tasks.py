@@ -319,12 +319,22 @@ def test_handle_api_usage_notification_for_organisation_when_cancellation_date_i
     mocker: MockerFixture,
 ) -> None:
     # Given
+    usage = 25
+    allowance = 1_000_000
+
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.subscription_id = "fancy_id"
     organisation.subscription.cancellation_date = timezone.now()
     organisation.subscription.save()
     mock_api_usage = mocker.patch("organisations.task_helpers.get_current_api_usage")
-    mock_api_usage.return_value = 25
+    mock_api_usage.return_value = usage
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=allowance,
+        api_calls_30d=usage,
+    )
+
     from organisations.task_helpers import logger
 
     logger.addHandler(inspecting_handler)
@@ -353,10 +363,11 @@ def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_i
         organisation=organisation,
         allowed_30d_api_calls=1_000_000,
         current_billing_term_starts_at=billing_term_starts_at,
+        api_calls_30d=1_900_000,
     )
 
     mock_api_usage = mocker.patch("organisations.task_helpers.get_current_api_usage")
-    mock_api_usage.return_value = 25
+    mock_api_usage.return_value = 2_000_000
 
     organisation.refresh_from_db()
 
@@ -379,12 +390,11 @@ def test_handle_api_usage_notifications_when_feature_flag_is_off(
     now = timezone.now()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
-        allowed_seats=10,
-        allowed_projects=3,
         allowed_30d_api_calls=100,
         chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=45),
         current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=110,
     )
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
@@ -431,12 +441,10 @@ def test_handle_api_usage_notifications_below_100(
     organisation.subscription.save()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
-        allowed_seats=10,
-        allowed_projects=3,
         allowed_30d_api_calls=100,
-        chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=45),
         current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=90,
     )
     mock_api_usage = mocker.patch(
         "organisations.task_helpers.get_current_api_usage",
@@ -465,7 +473,7 @@ def test_handle_api_usage_notifications_below_100(
     handle_api_usage_notifications()
 
     # Then
-    assert len(mock_api_usage.call_args_list) == 2
+    assert len(mock_api_usage.call_args_list) == 1
 
     # We only care about the call for the main organisation,
     # not the call for 'another_organisation'
@@ -551,6 +559,7 @@ def test_handle_api_usage_notifications_below_api_usage_alert_thresholds(
         chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=45),
         current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=70,
     )
     mock_api_usage = mocker.patch(
         "organisations.task_helpers.get_current_api_usage",
@@ -571,8 +580,6 @@ def test_handle_api_usage_notifications_below_api_usage_alert_thresholds(
     handle_api_usage_notifications()
 
     # Then
-    mock_api_usage.assert_called_once_with(organisation.id, now - timedelta(days=14))
-
     assert len(mailoutbox) == 0
 
     assert (
@@ -590,23 +597,25 @@ def test_handle_api_usage_notifications_above_100(
     mailoutbox: list[EmailMultiAlternatives],
 ) -> None:
     # Given
+    usage = 105
+    allowance = 100
+
     now = timezone.now()
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.subscription_id = "fancy_id"
     organisation.subscription.save()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
-        allowed_seats=10,
-        allowed_projects=3,
-        allowed_30d_api_calls=100,
+        allowed_30d_api_calls=allowance,
         chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=45),
         current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=usage,
     )
     mock_api_usage = mocker.patch(
         "organisations.task_helpers.get_current_api_usage",
     )
-    mock_api_usage.return_value = 105
+    mock_api_usage.return_value = usage
 
     get_client_mock = mocker.patch("organisations.tasks.get_client")
     client_mock = MagicMock()
@@ -693,12 +702,11 @@ def test_handle_api_usage_notifications_with_error(
     organisation.subscription.save()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
-        allowed_seats=10,
-        allowed_projects=3,
         allowed_30d_api_calls=100,
         chargebee_email="test@example.com",
         current_billing_term_starts_at=now - timedelta(days=45),
         current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=100,
     )
 
     get_client_mock = mocker.patch("organisations.tasks.get_client")
@@ -738,15 +746,24 @@ def test_handle_api_usage_notifications_for_free_accounts(
     mailoutbox: list[EmailMultiAlternatives],
 ) -> None:
     # Given
+    allowance = MAX_SEATS_IN_FREE_PLAN
+    usage = MAX_API_CALLS_IN_FREE_PLAN + 5_000
+
     now = timezone.now()
     assert organisation.is_paid is False
     assert organisation.subscription.is_free_plan is True
     assert organisation.subscription.max_api_calls == MAX_API_CALLS_IN_FREE_PLAN
 
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=allowance,
+        api_calls_30d=usage,
+    )
+
     mock_api_usage = mocker.patch(
         "organisations.task_helpers.get_current_api_usage",
     )
-    mock_api_usage.return_value = MAX_API_CALLS_IN_FREE_PLAN + 5_000
+    mock_api_usage.return_value = usage
 
     get_client_mock = mocker.patch("organisations.tasks.get_client")
     client_mock = MagicMock()
@@ -831,9 +848,6 @@ def test_handle_api_usage_notifications_missing_info_cache(
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.save()
 
-    from organisations.task_helpers import logger
-
-    logger.addHandler(inspecting_handler)
     assert organisation.has_subscription_information_cache() is False
 
     mock_api_usage = mocker.patch(
@@ -859,10 +873,6 @@ def test_handle_api_usage_notifications_missing_info_cache(
     assert not OrganisationAPIUsageNotification.objects.filter(
         organisation=organisation,
     ).exists()
-
-    assert inspecting_handler.messages == [  # type: ignore[attr-defined]
-        f"Paid organisation {organisation.id} is missing subscription information cache"
-    ]
 
 
 @pytest.mark.parametrize("plan", ("scale-up", "scale-up-v2", "scale-up-v3"))
@@ -901,9 +911,13 @@ def test_charge_for_api_call_count_overages_scale_up(
         notified_at=notification_date,
     )
 
-    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
+        autospec=True,
+    )
     mock_chargebee_update = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
     )
 
     get_client_mock = mocker.patch("organisations.tasks.get_client")
@@ -1012,9 +1026,13 @@ def test_charge_for_api_call_count_overages_scale_up_when_flagsmith_client_sets_
         notified_at=now,
     )
 
-    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
+        autospec=True,
+    )
     mock_chargebee_update = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
     )
 
     get_client_mock = mocker.patch("organisations.tasks.get_client")
@@ -1076,7 +1094,8 @@ def test_charge_for_api_call_count_overages_grace_period(
     client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
 
     mock_chargebee_update = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
     )
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
@@ -1126,7 +1145,8 @@ def test_charge_for_api_call_count_overages_grace_period_over(
     client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
 
     mock_chargebee_update = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
     )
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
@@ -1185,9 +1205,13 @@ def test_charge_for_api_call_count_overages_with_not_covered_plan(
     get_client_mock.return_value = client_mock
     client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
 
-    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
+        autospec=True,
+    )
     mock_chargebee_update = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
     )
 
     mock_api_usage = mocker.patch(
@@ -1234,9 +1258,13 @@ def test_charge_for_api_call_count_overages_under_api_limit(
     get_client_mock.return_value = client_mock
     client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
 
-    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
+        autospec=True,
+    )
     mock_chargebee_update = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
     )
 
     mock_api_usage = mocker.patch(
@@ -1283,9 +1311,13 @@ def test_charge_for_api_call_count_overages_start_up(
     client_mock = MagicMock()
     get_client_mock.return_value = client_mock
     client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
-    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
+        autospec=True,
+    )
     mock_chargebee_update = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
     )
 
     mock_api_usage = mocker.patch(
@@ -1375,9 +1407,13 @@ def test_charge_for_api_call_count_overages_non_standard(
     client_mock = MagicMock()
     get_client_mock.return_value = client_mock
     client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
-    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
+        autospec=True,
+    )
     mock_chargebee_update = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
     )
 
     mock_api_usage = mocker.patch(
@@ -1393,7 +1429,6 @@ def test_charge_for_api_call_count_overages_non_standard(
     assert inspecting_handler.messages == [  # type: ignore[attr-defined]
         "Unknown subscription plan when trying to bill for overages "
         f"organisation.id={organisation.id} "
-        f"organisation.name='{organisation.name}' "
         "organisation.subscription.plan='nonstandard-v2'"
     ]
 
@@ -1434,9 +1469,13 @@ def test_charge_for_api_call_count_overages_with_exception(
     client_mock = MagicMock()
     get_client_mock.return_value = client_mock
     client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
-    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
+        autospec=True,
+    )
     mock_chargebee_update = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
     )
 
     mock_api_usage = mocker.patch(
@@ -1495,9 +1534,13 @@ def test_charge_for_api_call_count_overages_start_up_with_api_billing(
     client_mock = MagicMock()
     get_client_mock.return_value = client_mock
     client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
-    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
+        autospec=True,
+    )
     mock_chargebee_update = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
     )
 
     mock_api_usage = mocker.patch(
@@ -1552,9 +1595,13 @@ def test_charge_for_api_call_count_overages_with_yearly_account(
         notified_at=now,
     )
 
-    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
+        autospec=True,
+    )
     mock_chargebee_update = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
     )
 
     mock_api_usage = mocker.patch(
@@ -1597,9 +1644,13 @@ def test_charge_for_api_call_count_overages_with_bad_plan(
         notified_at=now,
     )
 
-    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
+        autospec=True,
+    )
     mock_chargebee_update = mocker.patch(
-        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
     )
 
     mock_api_usage = mocker.patch(

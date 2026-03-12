@@ -27,7 +27,7 @@ import {
   useUpdateSegmentMutation,
 } from 'common/services/useSegment'
 import Utils from 'common/utils/utils'
-import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
+import AssociatedSegmentOverrides from 'components/segments/AssociatedSegmentOverrides'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -145,7 +145,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [description, setDescription] = useState(segment.description)
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
-
+  useEffect(() => {
+    if (_segment) {
+      setSegment(_segment)
+    }
+  }, [_segment])
   useEffect(() => {
     if (segment) {
       setRules(segment.rules)
@@ -180,8 +184,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
       isSuccess: updateSuccess,
     },
   ] = useUpdateSegmentMutation()
-  const [createChangeRequest, { isLoading: isCreatingChangeRequest }] =
-    useCreateProjectChangeRequestMutation({})
+  const [createChangeRequest] = useCreateProjectChangeRequestMutation({})
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
   const [tab, setTab] = useState(UserTabs.RULES)
@@ -253,7 +256,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             },
           }).unwrap()
         } else {
-          const res = await createSegment({
+          await createSegment({
             projectId,
             segment: segmentData,
           }).unwrap()
@@ -284,7 +287,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
         resolve(true)
       }
     })
-  }, [valueChanged, isEdit])
+  }, [valueChanged])
   const onCreateChangeRequest = async (changeRequestData: {
     approvals: []
     description: string
@@ -315,7 +318,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               name,
               project: projectId,
               rules,
-              version_of: segment.id!,
+              version_of: segment.id,
             },
           ],
           title: changeRequestData.title,
@@ -325,7 +328,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
       toast('Created change request')
     } catch (error) {
-      console.error('Failed to create change request:', error)
       toast('Failed to create change request')
     }
   }
@@ -345,7 +347,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   useEffect(() => {
     setTimeout(() => {
-      document.getElementById('segmentID')?.focus()
+      if (!E2E) {
+        document.getElementById('segmentID')?.focus()
+      }
     }, 500)
   }, [])
   useEffect(() => {
@@ -388,7 +392,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             warnings.push(operatorObj.warning)
           }
         })
-        parseRules(v.rules, operators!)
+        parseRules(v.rules, operators || [])
       })
     }
     if (operators) {
@@ -404,7 +408,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
       <div>
         <div className='mb-4'>
           {rules[0].rules.map((rule, i) => {
-            if (rule.delete) {
+            if (rule.delete || !operators) {
               return null
             }
             const displayIndex = rulesToShow.indexOf(rule)
@@ -417,7 +421,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   data-test={`rule-${displayIndex}`}
                   rule={rule}
                   index={i}
-                  operators={operators!}
+                  operators={operators}
                   onChange={(v: SegmentRule) => {
                     setValueChanged(true)
                     updateRule(0, i, v)
@@ -464,7 +468,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           <AddMetadataToEntity
             organisationId={AccountStore.getOrganisation().id}
             projectId={projectId}
-            entityId={`${segment.id}` || ''}
+            entityId={segment.id}
             entityContentType={segmentContentType?.id}
             entity={segmentContentType?.model}
             onChange={(m) => {
@@ -489,13 +493,18 @@ const CreateSegment: FC<CreateSegmentType> = ({
           segmentId={`${segment.id}`}
         />
       )}
-      {isEdit && !condensed ? (
-        <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
+      {isEdit && !condensed && (
+        <Tabs
+          value={tab}
+          theme='pill'
+          urlParam='segmentTab'
+          onChange={(tab: UserTabs) => setTab(tab)}
+        >
           <TabItem
-            tabLabelString='Rules'
+            tabLabelString='General'
             tabLabel={
-              <Row className='justify-content-center'>
-                Rules{' '}
+              <Row className='justify-content-center flex-nowrap'>
+                General{' '}
                 {valueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
               </Row>
             }
@@ -527,27 +536,22 @@ const CreateSegment: FC<CreateSegmentType> = ({
               />
             </div>
           </TabItem>
-          <TabItem tabLabel='Features'>
+          <TabItem tabLabel={segment.feature ? 'Feature' : 'Features'}>
             <div className='my-4'>
               <AssociatedSegmentOverrides
-                onUnsavedChange={() => {
-                  setValueChanged(true)
-                }}
-                feature={segment.feature}
-                projectId={projectId}
-                id={segment.id}
-                environmentId={environmentId}
+                projectId={projectId as number}
+                segmentId={segment.id}
               />
             </div>
           </TabItem>
-          <TabItem tabLabel='Users'>
+          <TabItem tabLabel='Identities'>
             <div className='my-4'>
               <CreateSegmentUsersTabContent
                 projectId={projectId}
                 environmentId={environmentId}
                 setEnvironmentId={setEnvironmentId}
                 identitiesLoading={identitiesLoading}
-                identities={identities!}
+                identities={identities}
                 page={page}
                 setPage={setPage}
                 name={name}
@@ -560,7 +564,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <TabItem
               tabLabelString='Custom Fields'
               tabLabel={
-                <Row className='justify-content-center'>
+                <Row className='justify-content-center flex-nowrap'>
                   Custom Fields
                   {metadataValueChanged && (
                     <div className='unread ml-2 px-1 pt-2'>{'*'}</div>
@@ -572,7 +576,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </TabItem>
           )}
         </Tabs>
-      ) : metadataEnable && segmentContentType?.id ? (
+      )}
+      {!(isEdit && !condensed) && metadataEnable && segmentContentType?.id && (
         <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
           <TabItem
             tabLabelString='Basic configuration'
@@ -614,32 +619,34 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>
         </Tabs>
-      ) : (
-        <div className={className || 'my-3 mx-4'}>
-          <CreateSegmentRulesTabForm
-            save={save}
-            condensed={condensed}
-            segmentsLimitAlert={segmentsLimitAlert}
-            name={name}
-            setName={setName}
-            setValueChanged={setValueChanged}
-            description={description}
-            setDescription={setDescription}
-            identity={identity}
-            readOnly={readOnly}
-            showDescriptions={showDescriptions}
-            setShowDescriptions={setShowDescriptions}
-            allWarnings={allWarnings}
-            rulesEl={rulesEl}
-            isEdit={isEdit}
-            segment={segment}
-            isSaving={isSaving}
-            isValid={isValid}
-            isLimitReached={isLimitReached}
-            onCancel={onCancel}
-          />
-        </div>
       )}
+      {!(isEdit && !condensed) &&
+        !(metadataEnable && segmentContentType?.id) && (
+          <div className={className || 'my-3 mx-4'}>
+            <CreateSegmentRulesTabForm
+              save={save}
+              condensed={condensed}
+              segmentsLimitAlert={segmentsLimitAlert}
+              name={name}
+              setName={setName}
+              setValueChanged={setValueChanged}
+              description={description}
+              setDescription={setDescription}
+              identity={identity}
+              readOnly={readOnly}
+              showDescriptions={showDescriptions}
+              setShowDescriptions={setShowDescriptions}
+              allWarnings={allWarnings}
+              rulesEl={rulesEl}
+              isEdit={isEdit}
+              segment={segment}
+              isSaving={isSaving}
+              isValid={isValid}
+              isLimitReached={isLimitReached}
+              onCancel={onCancel}
+            />
+          </div>
+        )}
     </>
   )
 }
@@ -651,7 +658,7 @@ type LoadingCreateSegmentType = {
   readOnly?: boolean
   onSegmentRetrieved?: (segment: Segment) => void
   onComplete?: (segment: Segment) => void
-  projectId: string
+  projectId: string | number
   segment?: number
 }
 
@@ -668,7 +675,10 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
     { id: `${props.projectId}` },
     { skip: !props.projectId },
   )
-  const isLoading = projectLoading || segmentLoading
+  const { isLoading: contentTypesLoading } = useGetSupportedContentTypeQuery({
+    organisation_id: AccountStore.getOrganisation().id,
+  })
+  const isLoading = projectLoading || segmentLoading || contentTypesLoading
   const [page, setPage] = useState<PageType>({
     number: 1,
     pageType: undefined,
@@ -681,6 +691,7 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
     if (segmentData) {
       props.onSegmentRetrieved?.(segmentData)
     }
+    //eslint-disable-next-line
   }, [segmentData])
 
   const isEdge = Utils.getIsEdge()

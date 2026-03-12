@@ -1,11 +1,10 @@
-from typing import Dict, Generator
+from typing import Any, Dict, Generator
 
-import chargebee  # type: ignore[import-untyped]
-from chargebee.result import Result as ChargebeeResult  # type: ignore[import-untyped]
 from django.conf import settings
 from django.core.cache import caches
 
-from .metadata import ChargebeeItem, ChargebeeObjMetadata
+from organisations.chargebee.client import chargebee_client
+from organisations.chargebee.metadata import ChargebeeItem, ChargebeeObjMetadata
 
 CHARGEBEE_CACHE_KEY = "chargebee_items"
 
@@ -50,13 +49,13 @@ class ChargebeeCache:
         return addons
 
 
-def get_item_generator(item: ChargebeeItem) -> Generator[ChargebeeResult, None, None]:
+def get_item_generator(item: ChargebeeItem) -> Generator[Any, None, None]:
     next_offset = None
     while True:
-        entries = getattr(chargebee, item.value).list(
-            {"limit": 100, "offset": next_offset}
-        )
-        for entry in entries:
+        resource = getattr(chargebee_client, item.value)
+        list_params_cls = resource.ListParams
+        entries = resource.list(list_params_cls(limit=100, offset=next_offset))
+        for entry in entries.list:
             yield entry
 
         if entries.next_offset:

@@ -11,7 +11,7 @@ class EnvironmentManager(SoftDeleteManager):  # type: ignore[misc]
         self,
         *args,
         extra_select_related: list[str] | None = None,
-        extra_prefetch_related: list[Prefetch | str] | None = None,
+        extra_prefetch_related: list[Prefetch | str] | None = None,  # type: ignore[type-arg]
         **kwargs,
     ):
         return (
@@ -38,7 +38,10 @@ class EnvironmentManager(SoftDeleteManager):  # type: ignore[misc]
                 Prefetch(
                     "project__segments__feature_segments__feature_states",
                     queryset=FeatureState.objects.select_related(
-                        "feature", "feature_state_value", "environment"
+                        "feature",
+                        "feature_state_value",
+                        "environment",
+                        "environment_feature_version",
                     ),
                 ),
                 Prefetch(

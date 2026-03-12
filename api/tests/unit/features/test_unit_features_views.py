@@ -16,6 +16,7 @@ from common.projects.permissions import (
     VIEW_PROJECT,
 )
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
@@ -44,12 +45,16 @@ from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
 from features import views
 from features.dataclasses import EnvironmentFeatureOverridesData
-from features.feature_types import MULTIVARIATE
+from features.feature_types import MULTIVARIATE, STANDARD
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
-from features.value_types import BOOLEAN, INTEGER, STRING
+from features.value_types import STRING
 from features.versioning.models import EnvironmentFeatureVersion
-from metadata.models import MetadataModelField
+from metadata.models import (
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.code_references.models import FeatureFlagCodeReferencesScan
@@ -72,8 +77,6 @@ from webhooks.webhooks import WebhookEventType
 if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.service_resource import Table
 
-# patch this function as it's triggering extra threads and causing errors
-mock.patch("features.signals.trigger_feature_state_change_webhooks").start()
 
 now = timezone.now()
 two_hours_ago = now - timedelta(hours=2)
@@ -1813,8 +1816,8 @@ def test_audit_log_created_when_feature_updated(
         args=[project.id, feature.id],
     )
     data = {
-        "name": "Test Feature updated",
-        "type": "FLAG",
+        "name": feature.name,
+        "description": "Updated description",
         "project": project.id,
     }
 
@@ -2410,6 +2413,7 @@ def test_list_features_provides_correct_information_on_number_of_overrides_based
 def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     admin_client_new: APIClient,
 ) -> None:
     # Given
@@ -2448,7 +2452,7 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     assert response_json["results"][0]["num_identity_overrides"] is None
 
 
-def test_list_features_calls_get_overrides_data_with_feature_ids(
+def test_list_features_calls_get_overrides_data(
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
     admin_client_new: APIClient,
@@ -2476,7 +2480,6 @@ def test_list_features_calls_get_overrides_data_with_feature_ids(
     assert response.status_code == status.HTTP_200_OK
     mock_get_overrides_data.assert_called_once_with(
         dynamo_enabled_project_environment_one,
-        [feature.id],
     )
 
 
@@ -3117,7 +3120,7 @@ def test_list_features_n_plus_1_without_rbac(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=17,
+        num_queries=18,
     )
 
 
@@ -3140,7 +3143,7 @@ def test_list_features_n_plus_1_with_rbac(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=18,
+        num_queries=19,
     )
 
 
@@ -3341,9 +3344,7 @@ def test_list_features_with_feature_state(
         version=100,
     )
     feature_state_value_versioned = feature_state_versioned.feature_state_value
-    feature_state_value_versioned.string_value = None
-    feature_state_value_versioned.integer_value = 2005
-    feature_state_value_versioned.type = INTEGER
+    feature_state_value_versioned.set_value("2005", "integer")
     feature_state_value_versioned.save()
 
     feature_state2 = feature2.feature_states.filter(environment=environment).first()
@@ -3351,9 +3352,7 @@ def test_list_features_with_feature_state(
     feature_state2.save()
 
     feature_state_value2 = feature_state2.feature_state_value
-    feature_state_value2.string_value = None
-    feature_state_value2.boolean_value = True
-    feature_state_value2.type = BOOLEAN
+    feature_state_value2.set_value("true", "boolean")
     feature_state_value2.save()
 
     feature_state_value3 = (
@@ -3361,7 +3360,7 @@ def test_list_features_with_feature_state(
         .first()
         .feature_state_value
     )
-    feature_state_value3.string_value = "present"
+    feature_state_value3.set_value("present", "string")
     feature_state_value3.save()
 
     # This should be ignored due to identity being set.
@@ -3470,9 +3469,7 @@ def test_list_features_with_filter_by_value_search_string_and_int(
     environment_feature_version1.publish(staff_user)
 
     feature_state_value1 = feature_state1.feature_state_value
-    feature_state_value1.string_value = None
-    feature_state_value1.integer_value = 1945
-    feature_state_value1.type = INTEGER
+    feature_state_value1.set_value("1945", "integer")
     feature_state_value1.save()
 
     feature_state2 = feature2.feature_states.filter(environment=environment).first()
@@ -3480,9 +3477,7 @@ def test_list_features_with_filter_by_value_search_string_and_int(
     feature_state2.save()
 
     feature_state_value2 = feature_state2.feature_state_value
-    feature_state_value2.string_value = None
-    feature_state_value2.boolean_value = True
-    feature_state_value2.type = BOOLEAN
+    feature_state_value2.set_value("true", "boolean")
     feature_state_value2.save()
 
     feature_state_value3 = (
@@ -3490,8 +3485,7 @@ def test_list_features_with_filter_by_value_search_string_and_int(
         .first()
         .feature_state_value
     )
-    feature_state_value3.string_value = "present"
-    feature_state_value3.type = STRING
+    feature_state_value3.set_value("present", "string")
     feature_state_value3.save()
 
     feature_state4 = feature4.feature_states.filter(environment=environment).first()
@@ -3499,8 +3493,7 @@ def test_list_features_with_filter_by_value_search_string_and_int(
     feature_state4.save()
 
     feature_state_value4 = feature_state4.feature_state_value
-    feature_state_value4.string_value = "year 1945"
-    feature_state_value4.type = STRING
+    feature_state_value4.set_value("year 1945", "string")
     feature_state_value4.save()
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
@@ -3548,9 +3541,7 @@ def test_list_features_with_filter_by_search_value_boolean(
     feature_state1.save()  # type: ignore[union-attr]
 
     feature_state_value1 = feature_state1.feature_state_value  # type: ignore[union-attr]
-    feature_state_value1.string_value = None
-    feature_state_value1.integer_value = 1945
-    feature_state_value1.type = INTEGER
+    feature_state_value1.set_value("1945", "integer")
     feature_state_value1.save()
 
     feature_state2 = feature2.feature_states.filter(environment=environment).first()
@@ -3558,9 +3549,7 @@ def test_list_features_with_filter_by_search_value_boolean(
     feature_state2.save()
 
     feature_state_value2 = feature_state2.feature_state_value
-    feature_state_value2.string_value = None
-    feature_state_value2.boolean_value = True
-    feature_state_value2.type = BOOLEAN
+    feature_state_value2.set_value("true", "boolean")
     feature_state_value2.save()
 
     feature_state_value3 = (
@@ -3568,8 +3557,7 @@ def test_list_features_with_filter_by_search_value_boolean(
         .first()
         .feature_state_value
     )
-    feature_state_value3.string_value = "present"
-    feature_state_value3.type = STRING
+    feature_state_value3.set_value("present", "string")
     feature_state_value3.save()
 
     feature_state4 = feature4.feature_states.filter(environment=environment).first()
@@ -3577,8 +3565,7 @@ def test_list_features_with_filter_by_search_value_boolean(
     feature_state4.save()
 
     feature_state_value4 = feature_state4.feature_state_value
-    feature_state_value4.string_value = "year 1945"
-    feature_state_value4.type = STRING
+    feature_state_value4.set_value("year 1945", "string")
     feature_state_value4.save()
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
@@ -3680,6 +3667,29 @@ def test_FeatureViewSet_list__includes_code_references_counts(
     ]
 
 
+def test_FeatureViewSet_list__no_scans__returns_empty_code_references_counts(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given - project has no code reference scans
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+
+    # When
+    response = staff_client.get(
+        f"/api/v1/projects/{project.id}/features/?environment={environment.id}"
+    )
+
+    # Then - response should include code_references_counts as empty list
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert len(results) == 1
+    assert "code_references_counts" in results[0]
+    assert results[0]["code_references_counts"] == []
+
+
 def test_simple_feature_state_returns_only_latest_versions(
     staff_client: APIClient,
     staff_user: FFAdminUser,
@@ -3753,7 +3763,7 @@ def test_feature_list_last_modified_values_without_rbac(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=19,
+        num_queries=20,
     )
 
 
@@ -3779,7 +3789,7 @@ def test_feature_list_last_modified_values_with_rbac(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=20,
+        num_queries=21,
     )
 
 
@@ -4094,7 +4104,7 @@ def test_list_features_segment_query_param_with_valid_segment(
         environment=environment,
         enabled=True,
     )
-    segment_override.feature_state_value.string_value = "segment_value"
+    segment_override.feature_state_value.set_value("segment_value", "string")
     segment_override.feature_state_value.save()
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
@@ -4143,6 +4153,177 @@ def test_list_features_segment_query_param_with_invalid_segment(
 
     assert "segment_feature_state" in feature_data
     assert feature_data["segment_feature_state"] is None
+
+
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__segment_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    sort_field: str,
+) -> None:
+    # Given
+    Feature.objects.create(project=project, name="feature_a")
+    feature_b = Feature.objects.create(project=project, name="feature_b")
+    feature_c = Feature.objects.create(project=project, name="feature_c")
+    other_environment = Environment.objects.create(
+        project=project, name="other_environment"
+    )
+
+    # feature_c has a segment override in the requested environment
+    FeatureSegment.objects.create(
+        feature=feature_c, segment=segment, environment=environment
+    )
+    # feature_b has a segment override in a different environment
+    FeatureSegment.objects.create(
+        feature=feature_b, segment=segment, environment=other_environment
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&segment={segment.id}"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_c", "feature_a", "feature_b"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__identity_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    identity: Identity,
+    sort_field: str,
+) -> None:
+    # Given
+    Feature.objects.create(project=project, name="feature_a")
+    Feature.objects.create(project=project, name="feature_b")
+    feature_c = Feature.objects.create(project=project, name="feature_c")
+
+    # feature_c has an identity override
+    FeatureState.objects.create(
+        feature=feature_c, environment=environment, identity=identity
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity={identity.id}"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_c", "feature_a", "feature_b"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__edge_identity_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    sort_field: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    project.enable_dynamo_db = True
+    project.save()
+
+    Feature.objects.create(project=project, name="feature_a")
+    feature_b = Feature.objects.create(project=project, name="feature_b")
+    Feature.objects.create(project=project, name="feature_c")
+    mocker.patch.object(
+        views,
+        "get_overridden_feature_ids_for_edge_identity",
+        return_value={feature_b.id},
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity=59efa2a7-6a45-46d6-b953-a7073a90eacf"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_b", "feature_a", "feature_c"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
+@pytest.mark.parametrize(
+    "enable_dynamo_db, identity_value",
+    [
+        (False, "not-an-integer"),
+        (True, "0"),
+    ],
+)
+def test_list_features__identity_query__invalid_format__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    enable_dynamo_db: bool,
+    identity_value: str,
+) -> None:
+    # Given
+    project.enable_dynamo_db = enable_dynamo_db
+    project.save()
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity={identity_value}"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_list_features__edge_identity_query__nonexistent_identity__returns_features_unsorted(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    project.enable_dynamo_db = True
+    project.save()
+    Feature.objects.create(project=project, name="feature_a")
+    Feature.objects.create(project=project, name="feature_b")
+    Feature.objects.create(project=project, name="feature_c")
+    mocker.patch.object(
+        views,
+        "get_overridden_feature_ids_for_edge_identity",
+        return_value=set(),
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity=59efa2a7-6a45-46d6-b953-a7073a90eacf"
+        f"&sort_field=name&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_a", "feature_b", "feature_c"] == [
+        f["name"] for f in response.json()["results"]
+    ]
 
 
 def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
@@ -4235,3 +4416,114 @@ def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
     second_feature_metadata_after = second_feature_check.json()["metadata"]
     assert len(second_feature_metadata_after) == 1
     assert second_feature_metadata_after[0]["field_value"] == "200"
+
+
+def test_create_feature__required_metadata_on_other_project__returns_201(
+    admin_client: APIClient,
+    project: Project,
+    project_b: Project,
+    organisation: Organisation,
+    a_metadata_field: MetadataField,
+    feature_content_type: ContentType,
+    project_content_type: ContentType,
+) -> None:
+    # Given
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=feature_content_type,
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type,
+        object_id=project_b.id,
+        model_field=model_field,
+    )
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "Test feature cross project", "description": "desc"}
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_list_features__edge_v2_project__makes_one_dynamo_query(
+    admin_client_new: APIClient,
+    dynamo_enabled_project_environment_one: Environment,
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    environment = dynamo_enabled_project_environment_one
+    project = environment.project
+
+    # Create two additional features so we have 3 in total (including the fixture feature).
+    Feature.objects.create(name="feature_2", project=project)
+    Feature.objects.create(name="feature_3", project=project)
+
+    # Inject a mock DynamoDB table directly on the wrapper so we can
+    # verify the number of queries made.
+    mock_table = mocker.MagicMock()
+    mock_table.query.return_value = {"Items": [], "Count": 0}
+
+    from edge_api.identities import edge_identity_service
+
+    mocker.patch.object(
+        edge_identity_service.ddb_environment_v2_wrapper,
+        "_table",
+        mock_table,
+    )
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = admin_client_new.get(f"{url}?environment={environment.id}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # Validate that only a single query is made to dynamodb, not one
+    # per feature.
+    assert mock_table.query.call_count == 1
+
+
+def test_create_feature__type_provided__ignores_type_and_defaults_to_standard(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "test_feature_type_readonly", "type": "boolean"}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["type"] == STANDARD
+
+
+def test_create_feature__multivariate_options_provided__sets_type_to_multivariate(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {
+        "name": "test_feature_mv_type",
+        "multivariate_options": [{"type": "unicode", "string_value": "option-a"}],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["type"] == MULTIVARIATE

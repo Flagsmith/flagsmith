@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 import django.core.exceptions
 from common.features.multivariate.serializers import (
@@ -9,10 +10,10 @@ from common.features.serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureStateValueSerializer,
 )
+from drf_spectacular.utils import extend_schema_field
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
 )
-from drf_yasg.utils import swagger_serializer_method  # type: ignore[import-untyped]
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -63,6 +64,7 @@ class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[
             "enabled",
         )
 
+    @extend_schema_field({"type": ["string", "integer", "boolean"], "nullable": True})
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 
@@ -94,6 +96,11 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
         required=False,
         help_text="Integer ID of the segment to retrieve segment overrides for.",
     )
+    identity = serializers.CharField(
+        required=False,
+        help_text="ID of the identity to sort features with identity overrides first.",
+    )
+
     is_enabled = serializers.BooleanField(
         allow_null=True,
         required=False,
@@ -114,6 +121,23 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
         required=False,
         help_text="Comma separated list of group owner ids to filter on",
     )
+
+    @property
+    def project(self) -> Project:
+        if isinstance(project := self.context.get("project"), Project):
+            return project
+        else:  # pragma: no cover
+            raise RuntimeError(f"{type(self)} requires 'project' in context.")
+
+    def validate_identity(self, value: str) -> str:
+        if self.project.enable_dynamo_db:
+            try:
+                UUID(value)
+            except ValueError:
+                raise serializers.ValidationError("Must be a valid UUID.")
+        elif not value.isdigit():
+            raise serializers.ValidationError("Must be a valid integer.")
+        return value
 
     def validate_owners(self, owners: str) -> list[int]:
         try:
@@ -156,11 +180,10 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         "in the environment provided by the `environment` query parameter. "
         "Note: will return null for Edge enabled projects."
     )
-    is_num_identity_overrides_complete = serializers.SerializerMethodField(
-        help_text="A boolean that indicates whether there are more"
-        " identity overrides than are being listed, if `False`. This field is "
-        "`True` when querying overrides data for a features list page and "
-        "exact data has been returned."
+
+    # This is kept for backwards compatibility, but is always true
+    is_num_identity_overrides_complete = serializers.BooleanField(
+        read_only=True, default=True
     )
 
     last_modified_in_any_environment = serializers.SerializerMethodField(
@@ -201,7 +224,13 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             "last_modified_in_any_environment",
             "last_modified_in_current_environment",
         )
-        read_only_fields = ("feature_segments", "created_date", "uuid", "project")
+        read_only_fields = (
+            "feature_segments",
+            "created_date",
+            "uuid",
+            "project",
+            "type",
+        )
 
     def to_internal_value(self, data):  # type: ignore[no-untyped-def]
         if data.get("initial_value") and not isinstance(data["initial_value"], str):
@@ -291,9 +320,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 
         return attrs
 
-    @swagger_serializer_method(  # type: ignore[misc]
-        serializer_or_field=FeatureStateSerializerSmall(allow_null=True)
-    )
+    @extend_schema_field(FeatureStateSerializerSmall(allow_null=True))
     def get_environment_feature_state(  # type: ignore[return]
         self, instance: Feature
     ) -> dict[str, Any] | None:
@@ -302,9 +329,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         ):
             return FeatureStateSerializerSmall(instance=feature_state).data
 
-    @swagger_serializer_method(  # type: ignore[misc]
-        serializer_or_field=FeatureStateSerializerSmall(allow_null=True)
-    )
+    @extend_schema_field(FeatureStateSerializerSmall(allow_null=True))
     def get_segment_feature_state(  # type: ignore[return]
         self, instance: Feature
     ) -> dict[str, Any] | None:
@@ -322,14 +347,6 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     def get_num_identity_overrides(self, instance: Feature) -> int | None:
         try:
             return self.context["overrides_data"][instance.id].num_identity_overrides  # type: ignore[no-any-return]
-        except (KeyError, AttributeError):
-            return None
-
-    def get_is_num_identity_overrides_complete(self, instance: Feature) -> bool | None:
-        try:
-            return self.context["overrides_data"][  # type: ignore[no-any-return]
-                instance.id
-            ].is_num_identity_overrides_complete
         except (KeyError, AttributeError):
             return None
 
@@ -362,7 +379,9 @@ class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerial
         attrs = super().validate(attrs)
         project = self.instance.project if self.instance else self.context["project"]  # type: ignore[union-attr]
         organisation = project.organisation
-        self._validate_required_metadata(organisation, attrs.get("metadata", []))
+        self._validate_required_metadata(
+            organisation, attrs.get("metadata", []), project=project
+        )
         return attrs
 
     def create(self, validated_data: dict[str, Any]) -> Feature:
@@ -446,6 +465,17 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "enabled",
         )
 
+    @extend_schema_field(
+        {
+            "type": [
+                "string",
+                "integer",
+                "number",
+                "boolean",
+            ],
+            "nullable": True,
+        }
+    )
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 
@@ -520,6 +550,17 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         fields = "__all__"
         read_only_fields = ("version", "created_at", "updated_at", "status")
 
+    @extend_schema_field(
+        {
+            "type": [
+                "string",
+                "integer",
+                "number",
+                "boolean",
+                "null",
+            ],
+        }
+    )
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
         return obj.get_feature_state_value(identity=self.context.get("identity"))
 

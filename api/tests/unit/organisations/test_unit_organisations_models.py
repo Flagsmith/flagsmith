@@ -672,3 +672,73 @@ def test_user_organisation_create_calls_hubspot_lead_tracking(
         args=(user.id, organisation.id),
         delay_until=timezone.now() + timedelta(minutes=3),
     )
+
+
+def test_subscription_get_portal_url__customer_id_not_found__returns_none(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription = organisation.subscription
+    subscription.subscription_id = "sub-123"
+    subscription.customer_id = ""
+    subscription.save()
+
+    mocker.patch(
+        "organisations.models.get_customer_id_from_subscription_id",
+        return_value=None,
+    )
+
+    # When
+    result = subscription.get_portal_url("https://example.com")
+
+    # Then
+    assert result is None
+
+
+def test_subscription_get_portal_url__customer_id_exists__returns_url(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription = organisation.subscription
+    subscription.subscription_id = "sub-123"
+    subscription.customer_id = "cust-123"
+    subscription.save()
+
+    expected_url = "https://portal.chargebee.com/session"
+    mocker.patch(
+        "organisations.models.get_portal_url",
+        return_value=expected_url,
+    )
+
+    # When
+    result = subscription.get_portal_url("https://example.com")
+
+    # Then
+    assert result == expected_url
+
+
+def test_subscription_update_plan__updates_fields_from_chargebee(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription = organisation.subscription
+    plan_id = "startup-v2"
+    expected_metadata = {"seats": 5, "api_calls": 500000}
+
+    mocker.patch(
+        "organisations.models.get_plan_meta_data",
+        return_value=expected_metadata,
+    )
+
+    # When
+    subscription.update_plan(plan_id)  # type: ignore[no-untyped-call]
+
+    # Then
+    subscription.refresh_from_db()
+    assert subscription.plan == plan_id
+    assert subscription.max_seats == 5
+    assert subscription.max_api_calls == 500000
+    assert subscription.cancellation_date is None

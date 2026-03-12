@@ -1,4 +1,4 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from rest_framework import serializers
 
@@ -34,7 +34,7 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):  # type: ignore[ty
         )
 
 
-class EnvironmentSerializerLight(serializers.ModelSerializer):  # type: ignore[type-arg]
+class EnvironmentSerializerLight(serializers.ModelSerializer[Environment]):
     use_mv_v2_evaluation = serializers.SerializerMethodField()
 
     class Meta:
@@ -88,7 +88,9 @@ class EnvironmentSerializerWithMetadata(
         attrs = super().validate(attrs)
         project = self.instance.project if self.instance else attrs["project"]  # type: ignore[union-attr]
         organisation = project.organisation
-        self._validate_required_metadata(organisation, attrs.get("metadata", []))
+        self._validate_required_metadata(
+            organisation, attrs.get("metadata", []), project=project
+        )
         return attrs
 
     def create(self, validated_data: dict[str, Any]) -> Environment:
@@ -137,13 +139,17 @@ class CreateEnvironmentSerializer(_BaseCreateUpdateEnvironmentSerializer):
         if getattr(view, "swagger_fake_view", False):
             return None
 
-        project_id = view.request.data["project"]
+        # handle `project` not being part of the data
+        # When request comes from drf-spectacular (as part of schema generation)
+        project_id = view.request.data.get("project")
+        if not project_id:
+            return None
+
         project = Project.objects.select_related(
             "organisation", "organisation__subscription"
         ).get(id=project_id)
 
         return getattr(project.organisation, "subscription", None)
-
 
 class UpdateEnvironmentSerializer(_BaseCreateUpdateEnvironmentSerializer):
     class Meta(_BaseCreateUpdateEnvironmentSerializer.Meta):

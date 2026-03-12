@@ -37,6 +37,7 @@ class SlackGetChannelsViewSet(GenericViewSet):  # type: ignore[type-arg]
     serializer_class = SlackChannelListSerializer
     pagination_class = None  # set here to ensure documentation is correct
     permission_classes = [SlackGetChannelPermissions]
+    queryset = Environment.objects.none()
 
     def get_api_token(self) -> str:
         environment = Environment.objects.get(

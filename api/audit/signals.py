@@ -9,7 +9,8 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from audit.serializers import AuditLogListSerializer
 from audit.services import get_audited_instance_from_audit_log_record
-from features.models import FeatureState
+from features.models import FeatureState, FeatureStateValue
+from features.multivariate.models import MultivariateFeatureStateValue
 from features.signals import feature_state_change_went_live
 from integrations.common.models import IntegrationsModel
 from integrations.datadog.datadog import DataDogWrapper
@@ -212,21 +213,30 @@ def send_audit_log_event_to_slack(sender, instance, **kwargs):  # type: ignore[n
 @receiver(post_save, sender=AuditLog)
 @track_only([RelatedObjectType.FEATURE_STATE])
 def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
-    feature_state = get_audited_instance_from_audit_log_record(instance)
-    if not isinstance(feature_state, FeatureState):
+    audited_instance = get_audited_instance_from_audit_log_record(instance)
+
+    # Handle FeatureState, FeatureStateValue, and MultivariateFeatureStateValue audit logs
+    # All these types have related_object_type=FEATURE_STATE
+    if isinstance(audited_instance, (FeatureStateValue, MultivariateFeatureStateValue)):
+        feature_state = audited_instance.feature_state
+    elif isinstance(audited_instance, FeatureState):
+        feature_state = audited_instance
+    else:
         return
 
     if feature_state.is_scheduled:
         return  # This is handled by audit.tasks.create_feature_state_went_live_audit_log
 
-    feature_state_change_went_live.send(instance)
+    feature_state_change_went_live.send(feature_state, audit_log=instance)
 
 
 @receiver(feature_state_change_went_live)
-def send_audit_log_event_to_sentry(sender: AuditLog, **kwargs: Any) -> None:
+def send_audit_log_event_to_sentry(
+    sender: FeatureState, audit_log: AuditLog, **kwargs: Any
+) -> None:
     try:
         sentry_configuration = SentryChangeTrackingConfiguration.objects.get(
-            environment=sender.environment,
+            environment=audit_log.environment,
             deleted_at__isnull=True,
         )
     except SentryChangeTrackingConfiguration.DoesNotExist:
@@ -237,4 +247,35 @@ def send_audit_log_event_to_sentry(sender: AuditLog, **kwargs: Any) -> None:
         secret=sentry_configuration.secret,
     )
 
-    _track_event_async(sender, sentry_change_tracking)  # type: ignore[no-untyped-call]
+    _track_event_async(audit_log, sentry_change_tracking)  # type: ignore[no-untyped-call]
+
+
+@receiver(feature_state_change_went_live)
+def trigger_feature_state_change_webhooks(
+    sender: FeatureState,
+    **kwargs: Any,
+) -> None:
+    """
+    Trigger FLAG_UPDATED webhooks when a feature state change goes live.
+
+    Triggered from AuditLog post_save. Fetches a fresh feature state from the
+    database to ensure we get the latest data (including FeatureStateValue),
+    since drf-writable-nested saves the parent before nested objects.
+    """
+    from features import tasks
+
+    # Fetch fresh data from the database to ensure we have the latest state
+    # This is necessary because:
+    # 1. drf-writable-nested saves FeatureState before FeatureStateValue
+    # 2. The history record's instance may have stale cached values
+    try:
+        fresh_feature_state = FeatureState.objects.get(id=sender.id)
+    except FeatureState.DoesNotExist:
+        # Skip deleted feature states - handled in views
+        return
+
+    # Skip versioned environments - handled by trigger_update_version_webhooks
+    if fresh_feature_state.environment_feature_version_id:
+        return
+
+    tasks.trigger_feature_state_change_webhooks(fresh_feature_state)

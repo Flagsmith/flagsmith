@@ -2,6 +2,7 @@ import pytest
 from django_redis.exceptions import (  # type: ignore[import-untyped]
     ConnectionInterrupted,
 )
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from redis.exceptions import RedisClusterException
 
@@ -42,8 +43,10 @@ def test_cluster_connection_factory__connect_cache(mocker: MockerFixture):  # ty
 
 def test_cluster_connection_factory__get_connection_with_non_conflicting_params(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
+    settings: SettingsWrapper,
 ):
     # Given
+    settings.REDIS_CLUSTER_READ_FROM_REPLICAS = False
     mockRedisCluster = mocker.patch("core.redis_cluster.RedisCluster")
     connection_factory = ClusterConnectionFactory(
         options={"REDIS_CLIENT_KWARGS": {"decode_responses": False}}
@@ -60,6 +63,7 @@ def test_cluster_connection_factory__get_connection_with_non_conflicting_params(
         port=6379,
         socket_keepalive=True,
         socket_timeout=0.2,
+        read_from_replicas=False,
     )
 
 
