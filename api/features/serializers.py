@@ -598,9 +598,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
 
     def validate_environment(self, environment):  # type: ignore[no-untyped-def]
         if environment is None:
-            raise serializers.ValidationError(
-                "This field may not be null."
-            )
+            raise serializers.ValidationError("This field may not be null.")
         if self.instance and self.instance.environment_id != environment.id:  # type: ignore[union-attr]
             raise serializers.ValidationError(
                 "Cannot change the environment of a feature state"
