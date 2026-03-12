@@ -5,7 +5,7 @@ from users.models import FFAdminUser
 from webhooks import mappers as webhook_mappers
 
 
-def test_datetime_to_webhook_timestamp() -> None:
+def test_datetime_to_webhook_timestamp() -> None:  # noqa: FT003
     # Given
     dt = datetime(2024, 1, 15, 14, 30, 45, 123456)
 
@@ -16,7 +16,7 @@ def test_datetime_to_webhook_timestamp() -> None:
     assert result == "2024-01-15T14:30:45.123456Z"
 
 
-def test_user_or_key_to_changed_by_with_user(
+def test_user_or_key_to_changed_by_with_user(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
 ) -> None:
     # When
@@ -26,7 +26,7 @@ def test_user_or_key_to_changed_by_with_user(
     assert result == staff_user.email
 
 
-def test_user_or_key_to_changed_by_with_api_key(
+def test_user_or_key_to_changed_by_with_api_key(  # noqa: FT003,FT004
     master_api_key_object: MasterAPIKey,
 ) -> None:
     # When
@@ -38,7 +38,7 @@ def test_user_or_key_to_changed_by_with_api_key(
     assert result == master_api_key_object.name
 
 
-def test_user_or_key_to_changed_by_with_both_user_and_api_key_prefers_user(
+def test_user_or_key_to_changed_by_with_both_user_and_api_key_prefers_user(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     master_api_key_object: MasterAPIKey,
 ) -> None:
@@ -51,7 +51,7 @@ def test_user_or_key_to_changed_by_with_both_user_and_api_key_prefers_user(
     assert result == staff_user.email
 
 
-def test_user_or_key_to_changed_by_with_neither_returns_empty_string() -> None:
+def test_user_or_key_to_changed_by_with_neither_returns_empty_string() -> None:  # noqa: FT003,FT004
     # When
     result = webhook_mappers.user_or_key_to_changed_by(user=None, api_key=None)
 

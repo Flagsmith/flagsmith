@@ -45,7 +45,7 @@ def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCach
 
 
 @pytest.mark.use_analytics_db
-def test_get_usage_data_from_local_db(organisation, environment, settings):  # type: ignore[no-untyped-def]
+def test_get_usage_data_from_local_db(organisation, environment, settings):  # type: ignore[no-untyped-def]  # noqa: FT003
     environment_id = environment.id
     now = timezone.now()
     read_bucket_size = 15
@@ -102,7 +102,7 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):  # t
 
 
 @pytest.mark.use_analytics_db
-def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-untyped-def]
+def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-untyped-def]  # noqa: FT003
     organisation: Organisation,
     project: Project,
     project_two: Project,
@@ -267,7 +267,7 @@ def test_get_usage_data_from_local_db__labels_filter__returns_expected(
 
 
 @pytest.mark.use_analytics_db
-def test_get_total_events_count(organisation, environment, settings):  # type: ignore[no-untyped-def]
+def test_get_total_events_count(organisation, environment, settings):  # type: ignore[no-untyped-def]  # noqa: FT003
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = environment.id
     now = timezone.now()
@@ -318,7 +318,7 @@ def test_get_total_events_count(organisation, environment, settings):  # type: i
 
 
 @pytest.mark.use_analytics_db
-def test_get_feature_evaluation_data_from_local_db(
+def test_get_feature_evaluation_data_from_local_db(  # noqa: FT003
     feature: Feature,
     environment: Environment,
     settings: SettingsWrapper,
@@ -454,7 +454,7 @@ def test_get_feature_evaluation_data_from_local_db__labels_filter__returns_expec
     ]
 
 
-def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_configured(
+def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_configured(  # noqa: FT003
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -481,7 +481,7 @@ def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_confi
     )
 
 
-def test_get_usage_data_calls_get_usage_data_from_local_db_if_postgres_is_configured(
+def test_get_usage_data_calls_get_usage_data_from_local_db_if_postgres_is_configured(  # noqa: FT003
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -534,7 +534,7 @@ def test_get_usage_data__no_analytics_configured__no_calls_expected(
     mocked_get_usage_data_from_local_db.assert_not_called()
 
 
-def test_get_total_events_count_calls_influx_method_if_postgres_not_configured(  # type: ignore[no-untyped-def]
+def test_get_total_events_count_calls_influx_method_if_postgres_not_configured(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, settings, organisation
 ):
     # Given
@@ -553,7 +553,7 @@ def test_get_total_events_count_calls_influx_method_if_postgres_not_configured( 
     )
 
 
-def test_get_feature_evaluation_data_calls_influx_method_if_postgres_not_configured(
+def test_get_feature_evaluation_data_calls_influx_method_if_postgres_not_configured(  # noqa: FT003
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -612,7 +612,7 @@ def test_get_feature_evaluation_data__no_analytics_configured__no_calls_expected
     mocked_get_feature_evaluation_data_from_local_db.assert_not_called()
 
 
-def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_local_db_if_configured(
+def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_local_db_if_configured(  # noqa: FT003
     mocker: MockerFixture,
     settings: SettingsWrapper,
     feature: Feature,
@@ -643,7 +643,7 @@ def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_loca
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.parametrize("period", [PREVIOUS_BILLING_PERIOD, CURRENT_BILLING_PERIOD])
-def test_get_usage_data_returns_404_when_organisation_has_no_billing_periods(
+def test_get_usage_data_returns_404_when_organisation_has_no_billing_periods(  # noqa: FT003
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -665,7 +665,7 @@ def test_get_usage_data_returns_404_when_organisation_has_no_billing_periods(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_starts_at_with_current_billing_period(
+def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_starts_at_with_current_billing_period(  # noqa: FT003
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -694,7 +694,7 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_starts_at_with_previous_billing_period(
+def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_starts_at_with_previous_billing_period(  # noqa: FT003
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,

@@ -11,7 +11,7 @@ from projects.code_references.types import VCSProvider
         "https://github.com/Flagsmith/flagsmith/",  # with trailing slash
     ],
 )
-def test_get_permalink_generates_valid_public_github_url(
+def test_get_permalink_generates_valid_public_github_url(  # noqa: FT003,FT004
     repository_url: str,
 ) -> None:
     # When
@@ -36,7 +36,7 @@ def test_get_permalink_generates_valid_public_github_url(
         "https://github.flagsmith.com/flagsmith/backend/",  # with trailing slash
     ],
 )
-def test_get_permalink_generates_valid_private_github_url(
+def test_get_permalink_generates_valid_private_github_url(  # noqa: FT003,FT004
     repository_url: str,
 ) -> None:
     # When

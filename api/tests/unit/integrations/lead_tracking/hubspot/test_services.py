@@ -12,7 +12,7 @@ from integrations.lead_tracking.hubspot.services import (
 @pytest.mark.parametrize(
     "hubspot_cookie, expected_hubspot_cookie", [("", False), ("test_cookie", True)]
 )
-def test_create_self_hosted_onboarding_lead_with_existing_company(
+def test_create_self_hosted_onboarding_lead_with_existing_company(  # noqa: FT003
     mocker: MockerFixture,
     hubspot_cookie: str,
     expected_hubspot_cookie: bool,

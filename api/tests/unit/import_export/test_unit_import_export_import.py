@@ -10,7 +10,7 @@ from organisations.models import Organisation
 
 
 @mock_s3
-def test_import_organisation(organisation):  # type: ignore[no-untyped-def]
+def test_import_organisation(organisation):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     bucket_name = "test-bucket"
     file_key = "organisation-exports/org-1.json"

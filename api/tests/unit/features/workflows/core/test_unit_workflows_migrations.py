@@ -1,7 +1,7 @@
 from django_test_migrations.migrator import Migrator
 
 
-def test_migrate_add_project_to_change_request(migrator: Migrator) -> None:
+def test_migrate_add_project_to_change_request(migrator: Migrator) -> None:  # noqa: FT003,FT004
     old_state = migrator.apply_initial_migration(
         ("workflows_core", "0010_add_ignore_conflicts_option"),
     )

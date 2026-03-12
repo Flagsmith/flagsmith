@@ -21,7 +21,7 @@ from organisations.models import Organisation
 from users.models import FFAdminUser, SignUpType
 
 
-def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
+def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:  # noqa: FT003,FT004
     # try to register without first_name / last_name
     email = "test@example.com"
     password = FFAdminUser.objects.make_random_password()
@@ -95,7 +95,7 @@ def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
 
 
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)  # type: ignore[misc]
-def test_cannot_register_without_invite_if_disabled(
+def test_cannot_register_without_invite_if_disabled(  # noqa: FT003
     db: None, api_client: APIClient
 ) -> None:
     # Given
@@ -117,7 +117,7 @@ def test_cannot_register_without_invite_if_disabled(
 
 
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)  # type: ignore[misc]
-def test_can_register_with_invite_if_registration_disabled_without_invite(
+def test_can_register_with_invite_if_registration_disabled_without_invite(  # noqa: FT003
     db: None,
     api_client: APIClient,
 ) -> None:
@@ -148,7 +148,7 @@ def test_can_register_with_invite_if_registration_disabled_without_invite(
         settings.DJOSER,
     )
 )
-def test_registration_and_login_with_user_activation_flow(
+def test_registration_and_login_with_user_activation_flow(  # noqa: FT003
     db: None,
     api_client: APIClient,
 ) -> None:
@@ -215,7 +215,7 @@ def test_registration_and_login_with_user_activation_flow(
     assert "key" in login_result.data
 
 
-def test_login_workflow_with_mfa_enabled(
+def test_login_workflow_with_mfa_enabled(  # noqa: FT003,FT004
     db: None,
     api_client: APIClient,
 ) -> None:
@@ -293,7 +293,7 @@ def test_login_workflow_with_mfa_enabled(
 
 
 @override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
-def test_register_and_login_workflows__jwt_cookie(
+def test_register_and_login_workflows__jwt_cookie(  # noqa: FT003
     db: None,
     api_client: APIClient,
 ) -> None:
@@ -453,7 +453,7 @@ def test_login_workflow__jwt_cookie__cors_headers_expected(
 
 
 @override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
-def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
+def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(  # noqa: FT003
     db: None,
     api_client: APIClient,
 ) -> None:
@@ -483,7 +483,7 @@ def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
     assert not response.cookies.get("jwt")
 
 
-def test_throttle_login_workflows(
+def test_throttle_login_workflows(  # noqa: FT003,FT004
     api_client: APIClient,
     db: None,
     reset_cache: None,
@@ -524,7 +524,7 @@ def test_throttle_login_workflows(
     assert login_response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
 
-def test_throttle_signup(
+def test_throttle_signup(  # noqa: FT003,FT004
     api_client: APIClient,
     user_password: str,
     db: None,
@@ -560,7 +560,7 @@ def test_throttle_signup(
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
 
-def test_get_user_is_not_throttled(  # type: ignore[no-untyped-def]
+def test_get_user_is_not_throttled(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client: APIClient, reset_cache: None, mocker: MockerFixture
 ):
     # Given
@@ -576,7 +576,7 @@ def test_get_user_is_not_throttled(  # type: ignore[no-untyped-def]
 
 
 @pytest.mark.django_db
-def test_delete_token(api_client: APIClient, db: None) -> None:
+def test_delete_token(api_client: APIClient, db: None) -> None:  # noqa: FT003
     # Given
     register_url = reverse("api-v1:custom_auth:ffadminuser-list")
     password = FFAdminUser.objects.make_random_password()
@@ -606,7 +606,7 @@ def test_delete_token(api_client: APIClient, db: None) -> None:
     assert client.delete(delete_token_url).status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_register_with_sign_up_type(client, db, settings):  # type: ignore[no-untyped-def]
+def test_register_with_sign_up_type(client, db, settings):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     password = FFAdminUser.objects.make_random_password()
     sign_up_type = "NO_INVITE"
@@ -636,7 +636,7 @@ def test_register_with_sign_up_type(client, db, settings):  # type: ignore[no-un
     assert FFAdminUser.objects.filter(email=email, sign_up_type=sign_up_type).exists()
 
 
-def test_can_create_superuser(
+def test_can_create_superuser(  # noqa: FT003
     db: None, api_client: APIClient, mocker: MockerFixture
 ) -> None:
     # Given
@@ -664,7 +664,7 @@ def test_can_create_superuser(
     assert user.superuser is True
 
 
-def test_cannot_create_superuser_on_saas_build(
+def test_cannot_create_superuser_on_saas_build(  # noqa: FT003
     db: None, api_client: APIClient, mocker: MockerFixture
 ) -> None:
     # Given
@@ -691,7 +691,7 @@ def test_cannot_create_superuser_on_saas_build(
     assert user.superuser is False
 
 
-def test_cannot_create_superuser_if_any_user_exists(
+def test_cannot_create_superuser_if_any_user_exists(  # noqa: FT003
     admin_user: FFAdminUser, api_client: APIClient, mocker: MockerFixture
 ) -> None:
     # Given
@@ -721,7 +721,7 @@ def test_cannot_create_superuser_if_any_user_exists(
 
 
 @pytest.mark.parametrize("marketing_consent_given", [None, True, False])
-def test_marketing_consent_given_defaults_to_true(
+def test_marketing_consent_given_defaults_to_true(  # noqa: FT003
     api_client: APIClient,
     marketing_consent_given: bool | None,
     db: None,

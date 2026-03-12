@@ -41,7 +41,7 @@ def _create_api_usage_event(environment_id: int, when: datetime) -> APIUsageRaw:
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.use_analytics_db
-def test_populate_api_usage_bucket_multiple_runs(
+def test_populate_api_usage_bucket_multiple_runs(  # noqa: FT003,FT004
     freezer: FrozenDateTimeFactory,
 ) -> None:
     # Given
@@ -114,7 +114,7 @@ def test_populate_api_usage_bucket_multiple_runs(
 )
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.use_analytics_db
-def test_populate_api_usage_bucket(
+def test_populate_api_usage_bucket(  # noqa: FT003
     freezer: FrozenDateTimeFactory,
     bucket_size: int,
     runs_every: int,
@@ -206,7 +206,7 @@ def test_track_request__influx__calls_expected(
 
 
 @pytest.mark.use_analytics_db
-def test_track_feature_evaluation(settings: SettingsWrapper) -> None:
+def test_track_feature_evaluation(settings: SettingsWrapper) -> None:  # noqa: FT003
     # Given
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = 1
@@ -288,7 +288,7 @@ def test_track_feature_evaluation__influx__calls_expected(
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.use_analytics_db
-def test_populate_feature_evaluation_bucket_15m(freezer: FrozenDateTimeFactory) -> None:
+def test_populate_feature_evaluation_bucket_15m(freezer: FrozenDateTimeFactory) -> None:  # noqa: FT003,FT004
     # Given
     environment_id = 1
     bucket_size = 15
@@ -380,7 +380,7 @@ def test_populate_feature_evaluation_bucket_15m(freezer: FrozenDateTimeFactory) 
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
 @pytest.mark.use_analytics_db
-def test_populate_feature_evaluation_bucket__upserts_buckets(
+def test_populate_feature_evaluation_bucket__upserts_buckets(  # noqa: FT003
     freezer: FrozenDateTimeFactory,
 ) -> None:
     # Given
@@ -466,7 +466,7 @@ def test_populate_feature_evaluation_bucket__source_bucket_size__returns_expecte
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
 @pytest.mark.use_analytics_db
-def test_populate_api_usage_bucket__upserts_buckets(
+def test_populate_api_usage_bucket__upserts_buckets(  # noqa: FT003
     freezer: FrozenDateTimeFactory,
 ) -> None:
     # Given
@@ -502,7 +502,7 @@ def test_populate_api_usage_bucket__upserts_buckets(
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
 @pytest.mark.use_analytics_db
-def test_populate_api_usage_bucket_using_a_bucket(
+def test_populate_api_usage_bucket_using_a_bucket(  # noqa: FT003
     freezer: FrozenDateTimeFactory,
 ) -> None:
     # Given
@@ -549,7 +549,7 @@ def _create_feature_evaluation_event(
 
 
 @pytest.mark.use_analytics_db
-def test_clean_up_old_analytics_data_does_nothing_if_no_data() -> None:
+def test_clean_up_old_analytics_data_does_nothing_if_no_data() -> None:  # noqa: FT003,FT004
     # When
     clean_up_old_analytics_data()
 
@@ -558,7 +558,7 @@ def test_clean_up_old_analytics_data_does_nothing_if_no_data() -> None:
 
 
 @pytest.mark.use_analytics_db
-def test_clean_up_old_analytics_data_removes_old_data(
+def test_clean_up_old_analytics_data_removes_old_data(  # noqa: FT003
     settings: SettingsWrapper,
 ) -> None:
     # Given

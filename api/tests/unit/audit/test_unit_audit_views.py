@@ -33,7 +33,7 @@ def subscription_metadata(mocker: MockerFixture) -> None:
     return metadata  # type: ignore[return-value]
 
 
-def test_audit_log_can_be_filtered_by_environments(
+def test_audit_log_can_be_filtered_by_environments(  # noqa: FT003
     admin_client: APIClient, project: Project, environment: Environment
 ) -> None:
     # Given
@@ -55,7 +55,7 @@ def test_audit_log_can_be_filtered_by_environments(
     assert response.json()["results"][0]["environment"]["id"] == audit_env.id
 
 
-def test_audit_log_can_be_filtered_by_log_text(
+def test_audit_log_can_be_filtered_by_log_text(  # noqa: FT003
     admin_client: APIClient, project: Project, environment: Environment
 ) -> None:
     # Given
@@ -78,7 +78,7 @@ def test_audit_log_can_be_filtered_by_log_text(
     assert response.json()["results"][1]["log"] == flag_state_updated_log
 
 
-def test_audit_log_can_be_filtered_by_project(
+def test_audit_log_can_be_filtered_by_project(  # noqa: FT003
     admin_client: APIClient,
     project: Project,
     environment: Environment,
@@ -104,7 +104,7 @@ def test_audit_log_can_be_filtered_by_project(
     assert response.json()["results"][1]["project"]["id"] == project.id
 
 
-def test_audit_log_can_be_filtered_by_is_system_event(
+def test_audit_log_can_be_filtered_by_is_system_event(  # noqa: FT003
     admin_client: APIClient,
     project: Project,
     environment: Environment,
@@ -127,7 +127,7 @@ def test_audit_log_can_be_filtered_by_is_system_event(
     assert response.json()["results"][0]["is_system_event"] is True
 
 
-def test_regular_user_cannot_list_audit_log(
+def test_regular_user_cannot_list_audit_log(  # noqa: FT003
     project: Project,
     environment: Environment,
     organisation: Organisation,
@@ -148,7 +148,7 @@ def test_regular_user_cannot_list_audit_log(
     assert response.json()["count"] == 0
 
 
-def test_admin_user_cannot_list_audit_log_of_another_organisation(
+def test_admin_user_cannot_list_audit_log_of_another_organisation(  # noqa: FT003
     api_client: APIClient,
     organisation: Organisation,
     project: Project,
@@ -171,7 +171,7 @@ def test_admin_user_cannot_list_audit_log_of_another_organisation(
     assert response.json()["count"] == 0
 
 
-def test_retrieve_environment_feature_version_published_audit_log_record_includes_required_fields(
+def test_retrieve_environment_feature_version_published_audit_log_record_includes_required_fields(  # noqa: FT003
     admin_client: APIClient,
     admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -206,7 +206,7 @@ def test_retrieve_environment_feature_version_published_audit_log_record_include
     )
 
 
-def test_list_audit_log_for_project_limits_logs_returned_for_non_enterprise(
+def test_list_audit_log_for_project_limits_logs_returned_for_non_enterprise(  # noqa: FT003
     subscription_metadata: BaseSubscriptionMetadata,
     project: Project,
     admin_client: APIClient,
@@ -239,7 +239,7 @@ def test_list_audit_log_for_project_limits_logs_returned_for_non_enterprise(
     assert response_json["results"][0]["log"] == "Something that happened today"
 
 
-def test_list_audit_log_for_organisation_limits_logs_returned_for_non_enterprise(
+def test_list_audit_log_for_organisation_limits_logs_returned_for_non_enterprise(  # noqa: FT003
     subscription_metadata: BaseSubscriptionMetadata,
     organisation: Organisation,
     project: Project,

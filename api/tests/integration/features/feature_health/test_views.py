@@ -86,7 +86,7 @@ def test_feature_health_providers__delete__expected_response(
     assert response.json() == []
 
 
-def test_feature_health_events__dismiss__unauthorized__expected_response(
+def test_feature_health_events__dismiss__unauthorized__expected_response(  # noqa: FT003
     project: int,
     unhealthy_feature_health_event: int,
     staff_client: APIClient,
@@ -164,7 +164,7 @@ def test_webhook__invalid_path__expected_response(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_webhook__sample_provider__post__expected_feature_health_event_created__expected_tag_added(
+def test_webhook__sample_provider__post__expected_feature_health_event_created__expected_tag_added(  # noqa: FT003
     feature: int,
     project: int,
     feature_name: str,
@@ -268,7 +268,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_webhook__unhealthy_feature__post__expected_feature_health_event_created__expected_tag_removed(
+def test_webhook__unhealthy_feature__post__expected_feature_health_event_created__expected_tag_removed(  # noqa: FT003
     unhealthy_feature: int,
     project: int,
     feature_name: str,
@@ -330,7 +330,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
 @pytest.mark.parametrize(
     "body", ["invalid", json.dumps({"status": "unhealthy", "feature": "non_existent"})]
 )
-def test_webhook__webhook_provider__post__invalid_payload__expected_response(
+def test_webhook__webhook_provider__post__invalid_payload__expected_response(  # noqa: FT003,FT004
     webhook_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     body: str,
@@ -346,7 +346,7 @@ def test_webhook__webhook_provider__post__invalid_payload__expected_response(
     assert response.status_code == 400
 
 
-def test_webhook__grafana_provider__post__expected_feature_health_event_created(
+def test_webhook__grafana_provider__post__expected_feature_health_event_created(  # noqa: FT003
     project: int,
     feature: int,
     feature_name: str,
@@ -427,7 +427,7 @@ def test_webhook__grafana_provider__post__expected_feature_health_event_created(
     ]
 
 
-def test_webhook__grafana_provider__post__multiple__expected_feature_health_events(
+def test_webhook__grafana_provider__post__multiple__expected_feature_health_events(  # noqa: FT003
     project: int,
     environment: int,
     environment_name: str,

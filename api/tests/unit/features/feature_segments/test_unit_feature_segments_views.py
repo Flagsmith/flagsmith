@@ -46,7 +46,7 @@ from users.models import FFAdminUser
         ),  # one for each for master_api_key
     ],
 )
-def test_list_feature_segments_without_rbac(
+def test_list_feature_segments_without_rbac(  # noqa: FT003
     segment: Segment,
     feature: Feature,
     environment: Environment,
@@ -93,7 +93,7 @@ def test_list_feature_segments_without_rbac(
         ),  # one for each for master_api_key
     ],
 )
-def test_list_feature_segments_with_rbac(
+def test_list_feature_segments_with_rbac(  # noqa: FT003
     segment: Segment,
     feature: Feature,
     environment: Environment,
@@ -147,7 +147,7 @@ def _list_feature_segment_setup_data(
     "client",
     [lazy_fixture("admin_client"), lazy_fixture("admin_master_api_key_client")],
 )
-def test_list_feature_segments_is_feature_specific(  # type: ignore[no-untyped-def]
+def test_list_feature_segments_is_feature_specific(  # type: ignore[no-untyped-def]  # noqa: FT003
     segment,
     feature,
     environment,
@@ -179,7 +179,7 @@ def test_list_feature_segments_is_feature_specific(  # type: ignore[no-untyped-d
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_segment(segment, feature, environment, client):  # type: ignore[no-untyped-def]
+def test_create_feature_segment(segment, feature, environment, client):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     data = {
         "feature": feature.id,
@@ -197,7 +197,7 @@ def test_create_feature_segment(segment, feature, environment, client):  # type:
     assert response_json["id"]
 
 
-def test_create_feature_segment_without_permission_returns_403(
+def test_create_feature_segment_without_permission_returns_403(  # noqa: FT003
     segment: Segment,
     feature: Feature,
     environment: Environment,
@@ -220,7 +220,7 @@ def test_create_feature_segment_without_permission_returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_create_feature_segment_staff_with_permission(
+def test_create_feature_segment_staff_with_permission(  # noqa: FT003
     segment: Segment,
     feature: Feature,
     environment: Environment,
@@ -246,7 +246,7 @@ def test_create_feature_segment_staff_with_permission(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_create_feature_segment_staff_wrong_permission(  # type: ignore[no-untyped-def]
+def test_create_feature_segment_staff_wrong_permission(  # type: ignore[no-untyped-def]  # noqa: FT003
     segment: Segment,
     feature: Feature,
     environment: Environment,
@@ -277,7 +277,7 @@ def test_create_feature_segment_staff_wrong_permission(  # type: ignore[no-untyp
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_delete_feature_segment(segment, feature, environment, client):  # type: ignore[no-untyped-def]
+def test_delete_feature_segment(segment, feature, environment, client):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     feature_segment = FeatureSegment.objects.create(
         feature=feature, environment=environment, segment=segment
@@ -296,7 +296,7 @@ def test_delete_feature_segment(segment, feature, environment, client):  # type:
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_update_priority_of_multiple_feature_segments(  # type: ignore[no-untyped-def]
+def test_update_priority_of_multiple_feature_segments(  # type: ignore[no-untyped-def]  # noqa: FT003
     feature_segment,
     project,
     client,
@@ -332,7 +332,7 @@ def test_update_priority_of_multiple_feature_segments(  # type: ignore[no-untype
     assert json_response[1]["id"] == another_feature_segment.id
 
 
-def test_update_priority_for_staff(
+def test_update_priority_for_staff(  # noqa: FT003
     feature_segment: FeatureSegment,
     project: Project,
     environment: Environment,
@@ -359,7 +359,7 @@ def test_update_priority_for_staff(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_update_priority_returns_403_if_user_does_not_have_permission(  # type: ignore[no-untyped-def]
+def test_update_priority_returns_403_if_user_does_not_have_permission(  # type: ignore[no-untyped-def]  # noqa: FT003
     feature_segment: FeatureSegment,
     project: Project,
     environment: Environment,
@@ -386,7 +386,7 @@ def test_update_priority_returns_403_if_user_does_not_have_permission(  # type: 
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_update_priorities_empty_list(client):  # type: ignore[no-untyped-def]
+def test_update_priorities_empty_list(client):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     url = reverse("api-v1:features:feature-segment-update-priorities")
 
@@ -402,7 +402,7 @@ def test_update_priorities_empty_list(client):  # type: ignore[no-untyped-def]
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_get_feature_segment_by_uuid(  # type: ignore[no-untyped-def]
+def test_get_feature_segment_by_uuid(  # type: ignore[no-untyped-def]  # noqa: FT003
     feature_segment, project, client, environment, feature
 ):
     # Given
@@ -420,7 +420,7 @@ def test_get_feature_segment_by_uuid(  # type: ignore[no-untyped-def]
     assert json_response["uuid"] == str(feature_segment.uuid)
 
 
-def test_get_feature_segment_by_uuid_for_staff(
+def test_get_feature_segment_by_uuid_for_staff(  # noqa: FT003
     feature_segment: FeatureSegment,
     project: Project,
     staff_client: FFAdminUser,
@@ -447,7 +447,7 @@ def test_get_feature_segment_by_uuid_for_staff(
     assert json_response["uuid"] == str(feature_segment.uuid)
 
 
-def test_get_feature_segment_by_uuid_returns_404_if_user_does_not_have_access(
+def test_get_feature_segment_by_uuid_returns_404_if_user_does_not_have_access(  # noqa: FT003
     feature_segment: FeatureSegment,
     project: Project,
     staff_client: APIClient,
@@ -470,7 +470,7 @@ def test_get_feature_segment_by_uuid_returns_404_if_user_does_not_have_access(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_get_feature_segment_by_id(  # type: ignore[no-untyped-def]
+def test_get_feature_segment_by_id(  # type: ignore[no-untyped-def]  # noqa: FT003
     feature_segment, project, client, environment, feature
 ):
     # Given
@@ -486,7 +486,7 @@ def test_get_feature_segment_by_id(  # type: ignore[no-untyped-def]
     assert json_response["uuid"] == str(feature_segment.uuid)
 
 
-def test_get_feature_segment_by_id_for_staff(  # type: ignore[no-untyped-def]
+def test_get_feature_segment_by_id_for_staff(  # type: ignore[no-untyped-def]  # noqa: FT003
     feature_segment: FeatureSegment,
     project: Project,
     staff_client: FFAdminUser,
@@ -518,7 +518,7 @@ def test_get_feature_segment_by_id_for_staff(  # type: ignore[no-untyped-def]
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_creating_segment_override_for_feature_based_segment_returns_400_for_wrong_feature(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_creating_segment_override_for_feature_based_segment_returns_400_for_wrong_feature(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     client, feature_based_segment, project, environment
 ):
     # Given - A different feature
@@ -546,7 +546,7 @@ def test_creating_segment_override_for_feature_based_segment_returns_400_for_wro
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_creating_segment_override_for_feature_based_segment_returns_201_for_correct_feature(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_creating_segment_override_for_feature_based_segment_returns_201_for_correct_feature(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     client, feature_based_segment, project, environment, feature
 ):
     # Given
@@ -567,7 +567,7 @@ def test_creating_segment_override_for_feature_based_segment_returns_201_for_cor
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_creating_segment_override_reaching_max_limit(  # type: ignore[no-untyped-def]
+def test_creating_segment_override_reaching_max_limit(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     client, segment, environment, project, feature, feature_based_segment
 ):
     # Given
@@ -599,7 +599,7 @@ def test_creating_segment_override_reaching_max_limit(  # type: ignore[no-untype
     assert environment.feature_segments.count() == 1
 
 
-def test_get_feature_segments_only_returns_latest_version(
+def test_get_feature_segments_only_returns_latest_version(  # noqa: FT003
     staff_user: FFAdminUser,
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -667,7 +667,7 @@ def test_get_feature_segments_only_returns_latest_version(
     assert response_json["results"][0]["id"] == feature_segment_v2.id
 
 
-def test_delete_feature_segment_does_not_create_audit_log_for_versioning_v2(
+def test_delete_feature_segment_does_not_create_audit_log_for_versioning_v2(  # noqa: FT003
     feature: Feature,
     segment: Segment,
     feature_segment: FeatureSegment,

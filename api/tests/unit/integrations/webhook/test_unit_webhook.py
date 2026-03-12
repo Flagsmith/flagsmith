@@ -10,7 +10,7 @@ from integrations.webhook.webhook import WebhookWrapper
 from segments.models import Segment
 
 
-def test_webhook_generate_user_data_generates_correct_data(  # type: ignore[no-untyped-def]
+def test_webhook_generate_user_data_generates_correct_data(  # type: ignore[no-untyped-def]  # noqa: FT003
     integration_webhook_config, project, identity
 ):
     # Given
@@ -49,7 +49,7 @@ def test_webhook_generate_user_data_generates_correct_data(  # type: ignore[no-u
     assert expected_data == user_data
 
 
-def test_webhook_wrapper_generate_user_data_uses_trait_models_argument_when_provided(  # type: ignore[no-untyped-def]
+def test_webhook_wrapper_generate_user_data_uses_trait_models_argument_when_provided(  # type: ignore[no-untyped-def]  # noqa: FT003
     identity, project, integration_webhook_config
 ):
     # Given

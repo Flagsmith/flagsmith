@@ -46,7 +46,7 @@ now = timezone.now()
 tomorrow = now + timedelta(days=1)
 
 
-def test_get_versions_for_a_feature_and_environment(
+def test_get_versions_for_a_feature_and_environment(  # noqa: FT003
     admin_client: APIClient,
     admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -90,7 +90,7 @@ def test_get_versions_for_a_feature_and_environment(
     )
 
 
-def test_create_new_feature_version(
+def test_create_new_feature_version(  # noqa: FT003
     staff_user: FFAdminUser,
     staff_client: APIClient,
     environment_v2_versioning: Environment,
@@ -118,7 +118,7 @@ def test_create_new_feature_version(
     assert response_json["uuid"]
 
 
-def test_delete_feature_version(
+def test_delete_feature_version(  # noqa: FT003
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -148,7 +148,7 @@ def test_delete_feature_version(
     assert environment_feature_version.deleted is True
 
 
-def test_retrieve_environment_feature_version_permission_denied(
+def test_retrieve_environment_feature_version_permission_denied(  # noqa: FT003
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_client: APIClient,
@@ -165,7 +165,7 @@ def test_retrieve_environment_feature_version_permission_denied(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_retrieve_feature_version_with_no_previous_version(
+def test_retrieve_feature_version_with_no_previous_version(  # noqa: FT003
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_client: APIClient,
@@ -197,7 +197,7 @@ def test_retrieve_feature_version_with_no_previous_version(
     assert response_json["environment"] == environment_v2_versioning.id
 
 
-def test_retrieve_feature_version_with_previous_version(
+def test_retrieve_feature_version_with_previous_version(  # noqa: FT003
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -230,7 +230,7 @@ def test_retrieve_feature_version_with_previous_version(
     assert response_json["previous_version_uuid"] == str(version_1.uuid)
 
 
-def test_retrieve_feature_version_for_unpublished_version(
+def test_retrieve_feature_version_for_unpublished_version(  # noqa: FT003
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -262,7 +262,7 @@ def test_retrieve_feature_version_for_unpublished_version(
     assert response_json["previous_version_uuid"] == str(version_1.uuid)
 
 
-def test_cannot_delete_live_feature_version(
+def test_cannot_delete_live_feature_version(  # noqa: FT003
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -292,7 +292,7 @@ def test_cannot_delete_live_feature_version(
 
 
 @pytest.mark.parametrize("live_from", (None, tomorrow))
-def test_publish_feature_version(
+def test_publish_feature_version(  # noqa: FT003
     admin_client: APIClient,
     admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -339,7 +339,7 @@ def test_publish_feature_version(
 
 
 @pytest.mark.parametrize("live_from", (None, tomorrow))
-def test_publish_feature_version_using_master_api_key(
+def test_publish_feature_version_using_master_api_key(  # noqa: FT003
     admin_master_api_key: MasterAPIKey,
     admin_master_api_key_client: APIClient,
     environment_v2_versioning: Environment,
@@ -378,7 +378,7 @@ def test_publish_feature_version_using_master_api_key(
     )
 
 
-def test_list_environment_feature_version_feature_states(
+def test_list_environment_feature_version_feature_states(  # noqa: FT003
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -407,7 +407,7 @@ def test_list_environment_feature_version_feature_states(
     assert len(response_json) == 1
 
 
-def test_add_environment_feature_version_feature_state(
+def test_add_environment_feature_version_feature_state(  # noqa: FT003
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     segment: Segment,
@@ -448,7 +448,7 @@ def test_add_environment_feature_version_feature_state(
     assert environment_feature_version.feature_segments.count() == 1
 
 
-def test_cannot_add_feature_state_to_published_environment_feature_version(
+def test_cannot_add_feature_state_to_published_environment_feature_version(  # noqa: FT003
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     segment: Segment,
@@ -489,7 +489,7 @@ def test_cannot_add_feature_state_to_published_environment_feature_version(
     assert response.json()["detail"] == "Cannot modify published version."
 
 
-def test_update_environment_feature_version_feature_state(
+def test_update_environment_feature_version_feature_state(  # noqa: FT003
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -531,7 +531,7 @@ def test_update_environment_feature_version_feature_state(
     assert feature_state.enabled is True
 
 
-def test_cannot_update_feature_state_in_published_environment_feature_version(
+def test_cannot_update_feature_state_in_published_environment_feature_version(  # noqa: FT003
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -575,7 +575,7 @@ def test_cannot_update_feature_state_in_published_environment_feature_version(
     assert feature_state.enabled is False
 
 
-def test_delete_environment_feature_version_feature_state(
+def test_delete_environment_feature_version_feature_state(  # noqa: FT003
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     segment: Segment,
@@ -617,7 +617,7 @@ def test_delete_environment_feature_version_feature_state(
     assert segment_override.deleted is True
 
 
-def test_cannot_delete_feature_state_in_published_environment_feature_version(
+def test_cannot_delete_feature_state_in_published_environment_feature_version(  # noqa: FT003
     admin_client: APIClient,
     admin_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -665,7 +665,7 @@ def test_cannot_delete_feature_state_in_published_environment_feature_version(
     assert segment_override.deleted is False
 
 
-def test_cannot_delete_environment_default_feature_state_for_unpublished_environment_feature_version(
+def test_cannot_delete_environment_default_feature_state_for_unpublished_environment_feature_version(  # noqa: FT003
     admin_client: APIClient,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -709,7 +709,7 @@ def test_cannot_delete_environment_default_feature_state_for_unpublished_environ
     assert segment_override.deleted is False
 
 
-def test_filter_versions_by_is_live(
+def test_filter_versions_by_is_live(  # noqa: FT003
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -765,7 +765,7 @@ def test_filter_versions_by_is_live(
     )
 
 
-def test_disable_v2_versioning_returns_bad_request_if_not_using_v2_versioning(
+def test_disable_v2_versioning_returns_bad_request_if_not_using_v2_versioning(  # noqa: FT003
     environment: Environment,
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -787,7 +787,7 @@ def test_disable_v2_versioning_returns_bad_request_if_not_using_v2_versioning(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_create_new_version_with_changes_in_single_request(
+def test_create_new_version_with_changes_in_single_request(  # noqa: FT003
     feature: Feature,
     segment: Segment,
     segment_featurestate: FeatureState,
@@ -884,7 +884,7 @@ def test_create_new_version_with_changes_in_single_request(
     assert new_version.is_live is True
 
 
-def test_update_and_create_segment_override_in_single_request(
+def test_update_and_create_segment_override_in_single_request(  # noqa: FT003
     feature: Feature,
     segment: Segment,
     segment_featurestate: FeatureState,
@@ -963,7 +963,7 @@ def test_update_and_create_segment_override_in_single_request(
     assert new_version.is_live is True
 
 
-def test_create_environment_default_when_creating_new_version_fails(
+def test_create_environment_default_when_creating_new_version_fails(  # noqa: FT003
     environment_v2_versioning: Environment,
     feature: Feature,
     admin_client_new: APIClient,
@@ -1000,7 +1000,7 @@ def test_create_environment_default_when_creating_new_version_fails(
     }
 
 
-def test_create_segment_override_for_existing_override_when_creating_new_version_fails(
+def test_create_segment_override_for_existing_override_when_creating_new_version_fails(  # noqa: FT003
     feature: Feature,
     admin_client_new: APIClient,
     segment: Segment,
@@ -1039,7 +1039,7 @@ def test_create_segment_override_for_existing_override_when_creating_new_version
     }
 
 
-def test_create_new_version_for_multivariate_feature(
+def test_create_new_version_for_multivariate_feature(  # noqa: FT003
     multivariate_feature: Feature,
     multivariate_options: list[MultivariateFeatureOption],
     environment_v2_versioning: Environment,
@@ -1099,7 +1099,7 @@ def test_create_new_version_for_multivariate_feature(
     )
 
 
-def test_create_new_version_delete_segment_override_updates_overrides_immediately(
+def test_create_new_version_delete_segment_override_updates_overrides_immediately(  # noqa: FT003
     feature: Feature,
     segment: Segment,
     feature_segment: FeatureSegment,
@@ -1138,7 +1138,7 @@ def test_create_new_version_delete_segment_override_updates_overrides_immediatel
     assert get_feature_segments_response.json()["count"] == 0
 
 
-def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_priorities(
+def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_priorities(  # noqa: FT003,FT004
     feature: Feature,
     environment_v2_versioning: Environment,
     segment: Segment,
@@ -1221,7 +1221,7 @@ def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_p
     )
 
 
-def test_create_new_version_fails_when_breaching_segment_override_limit(
+def test_create_new_version_fails_when_breaching_segment_override_limit(  # noqa: FT003
     feature: Feature,
     segment: Segment,
     another_segment: Segment,
@@ -1293,7 +1293,7 @@ def test_create_new_version_fails_when_breaching_segment_override_limit(
     )
 
 
-def test_segment_override_limit_excludes_older_versions__when_not_creating_any_new_overrides(
+def test_segment_override_limit_excludes_older_versions__when_not_creating_any_new_overrides(  # noqa: FT003
     feature: Feature,
     segment: Segment,
     environment_v2_versioning: Environment,
@@ -1350,7 +1350,7 @@ def test_segment_override_limit_excludes_older_versions__when_not_creating_any_n
     ).exists()
 
 
-def test_segment_override_limit_excludes_older_versions__when_creating_new_override(
+def test_segment_override_limit_excludes_older_versions__when_creating_new_override(  # noqa: FT003
     feature: Feature,
     segment: Segment,
     another_segment: Segment,
@@ -1425,7 +1425,7 @@ def test_segment_override_limit_excludes_older_versions__when_creating_new_overr
     ).exists()
 
 
-def test_segment_override_limit_excludes_overrides_being_deleted_when_creating_new_override(
+def test_segment_override_limit_excludes_overrides_being_deleted_when_creating_new_override(  # noqa: FT003
     feature: Feature,
     segment: Segment,
     another_segment: Segment,
@@ -1501,7 +1501,7 @@ def test_segment_override_limit_excludes_overrides_being_deleted_when_creating_n
     ).exists()
 
 
-def test_cannot_create_new_version_for_environment_not_enabled_for_versioning_v2(
+def test_cannot_create_new_version_for_environment_not_enabled_for_versioning_v2(  # noqa: FT003
     environment: Environment,
     feature: Feature,
     staff_client: APIClient,
@@ -1533,7 +1533,7 @@ def test_cannot_create_new_version_for_environment_not_enabled_for_versioning_v2
     "plan_id, is_saas",
     (("free", True), ("free", False), ("startup", True), ("scale-up", True)),
 )
-def test_list_versions_only_returns_allowed_amount_for_non_enterprise_plan(
+def test_list_versions_only_returns_allowed_amount_for_non_enterprise_plan(  # noqa: FT003
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -1596,7 +1596,7 @@ def test_list_versions_only_returns_allowed_amount_for_non_enterprise_plan(
 
 
 @pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
-def test_list_versions_always_returns_current_version_even_if_outside_limit(
+def test_list_versions_always_returns_current_version_even_if_outside_limit(  # noqa: FT003
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -1639,7 +1639,7 @@ def test_list_versions_always_returns_current_version_even_if_outside_limit(
 
 
 @pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
-def test_list_versions_returns_all_versions_for_enterprise_plan_when_saas(
+def test_list_versions_returns_all_versions_for_enterprise_plan_when_saas(  # noqa: FT003
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,

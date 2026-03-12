@@ -88,7 +88,7 @@ def test_migrate_to_edge_v2__core_projects__dont_migrate(
     migrate_project_environments_to_v2_mock.assert_not_called()
 
 
-def test_ensure_identity_traits_blanks__calls_expected(
+def test_ensure_identity_traits_blanks__calls_expected(  # noqa: FT003
     flagsmith_identities_table: "Table",
     mocker: "MockerFixture",
 ) -> None:
@@ -148,7 +148,7 @@ def test_ensure_identity_traits_blanks__calls_expected(
     )
 
 
-def test_ensure_identity_traits_blanks__logs_expected(
+def test_ensure_identity_traits_blanks__logs_expected(  # noqa: FT003
     flagsmith_identities_table: "Table",
     log: "StructuredLogCapture",
     mocker: "MockerFixture",

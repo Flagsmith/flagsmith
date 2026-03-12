@@ -69,7 +69,7 @@ def expected_segment_comment_body(
 
 
 @responses.activate
-def test_create_feature_external_resource(
+def test_create_feature_external_resource(  # noqa: FT003
     admin_client_new: APIClient,
     feature_with_value: Feature,
     segment_override_for_feature_with_value: FeatureState,
@@ -185,7 +185,7 @@ def test_create_feature_external_resource(
 
 
 @responses.activate
-def test_create_feature_external_resource_missing_tags(
+def test_create_feature_external_resource_missing_tags(  # noqa: FT003
     admin_client_new: APIClient,
     feature_with_value: Feature,
     segment_override_for_feature_with_value: FeatureState,
@@ -226,7 +226,7 @@ def test_create_feature_external_resource_missing_tags(
     assert tag.label == "Issue Open"  # type: ignore[union-attr]
 
 
-def test_cannot_create_feature_external_resource_with_an_invalid_gh_url(
+def test_cannot_create_feature_external_resource_with_an_invalid_gh_url(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,
@@ -256,7 +256,7 @@ def test_cannot_create_feature_external_resource_with_an_invalid_gh_url(
     assert response.json()["detail"] == "Invalid GitHub Issue/PR URL"
 
 
-def test_cannot_create_feature_external_resource_with_an_incorrect_gh_type(
+def test_cannot_create_feature_external_resource_with_an_incorrect_gh_type(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,
@@ -286,7 +286,7 @@ def test_cannot_create_feature_external_resource_with_an_incorrect_gh_type(
     assert response.json()["detail"] == "Incorrect GitHub type"
 
 
-def test_cannot_create_feature_external_resource_when_doesnt_have_a_valid_github_integration(
+def test_cannot_create_feature_external_resource_when_doesnt_have_a_valid_github_integration(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,
@@ -311,7 +311,7 @@ def test_cannot_create_feature_external_resource_when_doesnt_have_a_valid_github
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_cannot_create_feature_external_resource_when_doesnt_have_permissions(
+def test_cannot_create_feature_external_resource_when_doesnt_have_permissions(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
 ) -> None:
@@ -335,7 +335,7 @@ def test_cannot_create_feature_external_resource_when_doesnt_have_permissions(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_cannot_create_feature_external_resource_when_the_type_is_incorrect(
+def test_cannot_create_feature_external_resource_when_the_type_is_incorrect(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,
@@ -356,7 +356,7 @@ def test_cannot_create_feature_external_resource_when_the_type_is_incorrect(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_cannot_create_feature_external_resource_due_to_unique_constraint(
+def test_cannot_create_feature_external_resource_due_to_unique_constraint(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,
@@ -385,7 +385,7 @@ def test_cannot_create_feature_external_resource_due_to_unique_constraint(
     )
 
 
-def test_update_feature_external_resource(
+def test_update_feature_external_resource(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     feature_external_resource: FeatureExternalResource,
@@ -418,7 +418,7 @@ def test_update_feature_external_resource(
     assert response.json()["url"] == feature_external_resource_data["url"]
 
 
-def test_delete_feature_external_resource(
+def test_delete_feature_external_resource(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,
@@ -457,7 +457,7 @@ def test_delete_feature_external_resource(
 
 
 @responses.activate
-def test_get_feature_external_resources(
+def test_get_feature_external_resources(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,
@@ -486,7 +486,7 @@ def test_get_feature_external_resources(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_get_feature_external_resource(
+def test_get_feature_external_resource(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,
@@ -510,7 +510,7 @@ def test_get_feature_external_resource(
     assert response.data["url"] == feature_external_resource.url
 
 
-def test_create_github_comment_on_feature_state_updated(
+def test_create_github_comment_on_feature_state_updated(  # noqa: FT003
     staff_user: FFAdminUser,
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -571,7 +571,7 @@ def test_create_github_comment_on_feature_state_updated(
     )
 
 
-def test_create_github_comment_on_feature_was_deleted(
+def test_create_github_comment_on_feature_was_deleted(  # noqa: FT003
     admin_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     feature: Feature,
@@ -606,7 +606,7 @@ def test_create_github_comment_on_feature_was_deleted(
     )
 
 
-def test_create_github_comment_on_segment_override_updated(
+def test_create_github_comment_on_segment_override_updated(  # noqa: FT003
     feature_with_value: Feature,
     segment_override_for_feature_with_value: FeatureState,
     project: Project,
@@ -665,7 +665,7 @@ def test_create_github_comment_on_segment_override_updated(
     )
 
 
-def test_create_github_comment_on_segment_override_deleted(
+def test_create_github_comment_on_segment_override_deleted(  # noqa: FT003
     segment_override_for_feature_with_value: FeatureState,
     feature_with_value_segment: FeatureSegment,
     github_configuration: GithubConfiguration,
@@ -702,7 +702,7 @@ def test_create_github_comment_on_segment_override_deleted(
     )
 
 
-def test_create_github_comment_using_v2(
+def test_create_github_comment_using_v2(  # noqa: FT003
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     segment: Segment,
@@ -775,7 +775,7 @@ def test_create_github_comment_using_v2(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_create_github_comment_using_v2_fails_on_wrong_params(
+def test_create_github_comment_using_v2_fails_on_wrong_params(  # noqa: FT003
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     segment: Segment,
@@ -821,7 +821,7 @@ def test_create_github_comment_using_v2_fails_on_wrong_params(
 
 @responses.activate
 @pytest.mark.freeze_time("2024-05-28T09:09:47.325132+00:00")
-def test_create_feature_external_resource_on_environment_with_v2(
+def test_create_feature_external_resource_on_environment_with_v2(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     github_configuration: GithubConfiguration,
@@ -897,7 +897,7 @@ def test_create_feature_external_resource_on_environment_with_v2(
     )
 
 
-def test_cannot_create_feature_external_resource_for_the_same_feature_and_resource_uri(
+def test_cannot_create_feature_external_resource_for_the_same_feature_and_resource_uri(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,

@@ -31,7 +31,7 @@ from tests.types import WithEnvironmentPermissionsCallable
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_by_name(
+def test_update_flag_by_name(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -73,7 +73,7 @@ def test_update_flag_by_name(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_by_id(
+def test_update_flag_by_id(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -112,7 +112,7 @@ def test_update_flag_by_id(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_error_when_both_name_and_id_provided(
+def test_update_flag_error_when_both_name_and_id_provided(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -147,7 +147,7 @@ def test_update_flag_error_when_both_name_and_id_provided(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_error_when_both_name_and_id_provided_for_different_features(
+def test_update_flag_error_when_both_name_and_id_provided_for_different_features(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -189,7 +189,7 @@ def test_update_flag_error_when_both_name_and_id_provided_for_different_features
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_error_when_neither_name_nor_id_provided(
+def test_update_flag_error_when_neither_name_nor_id_provided(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -224,7 +224,7 @@ def test_update_flag_error_when_neither_name_nor_id_provided(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_error_when_feature_not_found_by_name(
+def test_update_flag_error_when_feature_not_found_by_name(  # noqa: FT003
     staff_client: APIClient,
     environment_: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -256,7 +256,7 @@ def test_update_flag_error_when_feature_not_found_by_name(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_error_when_feature_not_found_by_id(
+def test_update_flag_error_when_feature_not_found_by_id(  # noqa: FT003
     staff_client: APIClient,
     environment_: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -288,7 +288,7 @@ def test_update_flag_error_when_feature_not_found_by_id(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_segment_override_by_name(
+def test_update_flag_segment_override_by_name(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -339,7 +339,7 @@ def test_update_flag_segment_override_by_name(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_flag_segment_override_creates_feature_segment_if_not_exists(
+def test_update_flag_segment_override_creates_feature_segment_if_not_exists(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -395,7 +395,7 @@ def test_update_flag_segment_override_creates_feature_segment_if_not_exists(
     assert segment_override.feature_segment.priority == 10
 
 
-def test_create_new_segment_override_reorders_priorities_v1(
+def test_create_new_segment_override_reorders_priorities_v1(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
@@ -459,7 +459,7 @@ def test_create_new_segment_override_reorders_priorities_v1(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_feature_states_creates_new_segment_overrides(
+def test_update_feature_states_creates_new_segment_overrides(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -547,7 +547,7 @@ def test_update_feature_states_creates_new_segment_overrides(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_feature_states_environment_default_only(
+def test_update_feature_states_environment_default_only(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -588,7 +588,7 @@ def test_update_feature_states_environment_default_only(
     assert env_default.get_feature_state_value() == 100
 
 
-def test_update_feature_states_rejects_duplicate_segment_ids(
+def test_update_feature_states_rejects_duplicate_segment_ids(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
@@ -640,7 +640,7 @@ def test_update_feature_states_rejects_duplicate_segment_ids(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_existing_segment_override_with_priority_v1(
+def test_update_existing_segment_override_with_priority_v1(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -702,7 +702,7 @@ def test_update_existing_segment_override_with_priority_v1(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_update_existing_segment_override_with_priority_v2(
+def test_update_existing_segment_override_with_priority_v2(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -768,7 +768,7 @@ def test_update_existing_segment_override_with_priority_v2(
     assert feature_segment.priority == 2
 
 
-def test_create_new_segment_override_reorders_priorities_v2(
+def test_create_new_segment_override_reorders_priorities_v2(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
@@ -834,7 +834,7 @@ def test_create_new_segment_override_reorders_priorities_v2(
     assert feature_segment1.priority == 1
 
 
-def test_update_flag_v1_returns_403_when_workflow_enabled(
+def test_update_flag_v1_returns_403_when_workflow_enabled(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
@@ -866,7 +866,7 @@ def test_update_flag_v1_returns_403_when_workflow_enabled(
     assert "change requests are enabled" in str(response.json())
 
 
-def test_update_flag_v2_returns_403_when_workflow_enabled(
+def test_update_flag_v2_returns_403_when_workflow_enabled(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
@@ -900,7 +900,7 @@ def test_update_flag_v2_returns_403_when_workflow_enabled(
     assert "change requests are enabled" in str(response.json())
 
 
-def test_update_existing_segment_override_v2_versioning(
+def test_update_existing_segment_override_v2_versioning(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_v2_versioning: Environment,
@@ -974,7 +974,7 @@ def test_update_existing_segment_override_v2_versioning(
     assert segment_override.feature_segment.priority == 1
 
 
-def test_update_flag_v1_returns_403_without_permission(
+def test_update_flag_v1_returns_403_without_permission(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
@@ -1000,7 +1000,7 @@ def test_update_flag_v1_returns_403_without_permission(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_update_flag_v2_returns_403_without_permission(
+def test_update_flag_v2_returns_403_without_permission(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment: Environment,
@@ -1028,7 +1028,7 @@ def test_update_flag_v2_returns_403_without_permission(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_update_flag_v1_returns_403_for_nonexistent_environment(
+def test_update_flag_v1_returns_403_for_nonexistent_environment(  # noqa: FT003
     staff_client: APIClient,
 ) -> None:
     # Given
@@ -1056,7 +1056,7 @@ def test_update_flag_v1_returns_403_for_nonexistent_environment(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_delete_segment_override_success(
+def test_delete_segment_override_success(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -1121,7 +1121,7 @@ def test_delete_segment_override_success(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_delete_segment_override_by_feature_id(
+def test_delete_segment_override_by_feature_id(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -1176,7 +1176,7 @@ def test_delete_segment_override_by_feature_id(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_delete_segment_override_feature_not_found(
+def test_delete_segment_override_feature_not_found(  # noqa: FT003
     staff_client: APIClient,
     environment_: Environment,
     project: Project,
@@ -1211,7 +1211,7 @@ def test_delete_segment_override_feature_not_found(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_delete_segment_override_segment_not_in_project(
+def test_delete_segment_override_segment_not_in_project(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -1245,7 +1245,7 @@ def test_delete_segment_override_segment_not_in_project(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_delete_segment_override_not_found(
+def test_delete_segment_override_not_found(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -1282,7 +1282,7 @@ def test_delete_segment_override_not_found(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_delete_segment_override_403_without_permission(
+def test_delete_segment_override_403_without_permission(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -1314,7 +1314,7 @@ def test_delete_segment_override_403_without_permission(
     "environment_",
     (lazy_fixture("environment"), lazy_fixture("environment_v2_versioning")),
 )
-def test_delete_segment_override_403_when_workflow_enabled(
+def test_delete_segment_override_403_when_workflow_enabled(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_: Environment,
@@ -1348,7 +1348,7 @@ def test_delete_segment_override_403_when_workflow_enabled(
     assert "change requests are enabled" in str(response.json())
 
 
-def test_delete_segment_override_v2_versioning_creates_new_version(
+def test_delete_segment_override_v2_versioning_creates_new_version(  # noqa: FT003
     staff_client: APIClient,
     feature: Feature,
     environment_v2_versioning: Environment,

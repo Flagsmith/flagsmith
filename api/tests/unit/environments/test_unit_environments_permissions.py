@@ -8,7 +8,7 @@ from permissions.models import ENVIRONMENT_PERMISSION_TYPE, PermissionModel
 from users.models import FFAdminUser
 
 
-def test_nested_environment_permissions_has_permission_false_if_no_env_key(  # type: ignore[no-untyped-def]
+def test_nested_environment_permissions_has_permission_false_if_no_env_key(  # type: ignore[no-untyped-def]  # noqa: FT003
     rf, mocker, db
 ):
     # Given
@@ -24,7 +24,7 @@ def test_nested_environment_permissions_has_permission_false_if_no_env_key(  # t
     assert result is False
 
 
-def test_nested_environment_permissions_has_permission_true_if_action_in_map(
+def test_nested_environment_permissions_has_permission_true_if_action_in_map(  # noqa: FT003
     rf: RequestFactory,
     mocker: MockerFixture,
     environment: Environment,
@@ -56,7 +56,7 @@ def test_nested_environment_permissions_has_permission_true_if_action_in_map(
     assert has_permission is True
 
 
-def test_nested_environment_permissions_has_permission_if_create_and_user_is_admin(
+def test_nested_environment_permissions_has_permission_if_create_and_user_is_admin(  # noqa: FT003
     rf: RequestFactory,
     mocker: MockerFixture,
     environment: Environment,
@@ -82,7 +82,7 @@ def test_nested_environment_permissions_has_permission_if_create_and_user_is_adm
     assert has_permission is True
 
 
-def test_nested_environment_permissions_has_object_permission_true_if_action_in_map(
+def test_nested_environment_permissions_has_object_permission_true_if_action_in_map(  # noqa: FT003
     rf: RequestFactory,
     mocker: MockerFixture,
     environment: Environment,
@@ -117,7 +117,7 @@ def test_nested_environment_permissions_has_object_permission_true_if_action_in_
     assert has_object_permission is True
 
 
-def test_nested_environment_permissions_has_object_permission_true_if_user_is_admin(
+def test_nested_environment_permissions_has_object_permission_true_if_user_is_admin(  # noqa: FT003
     rf: RequestFactory,
     mocker: MockerFixture,
     environment: Environment,

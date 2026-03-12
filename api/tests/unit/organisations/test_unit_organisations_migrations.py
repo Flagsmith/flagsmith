@@ -1,7 +1,7 @@
 from django_test_migrations.migrator import Migrator
 
 
-def test_migration_creates_default_subscription_for_organisations_without_subscription(  # noqa: E501
+def test_migration_creates_default_subscription_for_organisations_without_subscription(  # noqa: E501,FT003
     migrator: Migrator,
 ) -> None:
     # Given

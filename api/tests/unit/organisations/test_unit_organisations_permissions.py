@@ -10,7 +10,7 @@ from organisations.permissions.permissions import (
 @pytest.mark.parametrize(
     "has_organisation_permission, expected_result", ((True, True), (False, False))
 )
-def test_has_organisation_permission(  # type: ignore[no-untyped-def]
+def test_has_organisation_permission(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, organisation, has_organisation_permission, expected_result
 ):
     # Given
@@ -33,7 +33,7 @@ def test_has_organisation_permission(  # type: ignore[no-untyped-def]
     )
 
 
-def test_user_organisation_permissions_has_permission_allows_organisation_members_to_list_groups(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_user_organisation_permissions_has_permission_allows_organisation_members_to_list_groups(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     organisation_one, organisation_one_user, mocker
 ):
     # Given
@@ -51,7 +51,7 @@ def test_user_organisation_permissions_has_permission_allows_organisation_member
     assert result is True
 
 
-def test_user_organisation_permissions_has_permission_permits_users_with_manage_groups(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_user_organisation_permissions_has_permission_permits_users_with_manage_groups(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     organisation, mocker
 ):
     # Given
@@ -72,7 +72,7 @@ def test_user_organisation_permissions_has_permission_permits_users_with_manage_
     assert result is True
 
 
-def test_user_organisation_permissions_has_object_permission_permits_users_with_manage_groups(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_user_organisation_permissions_has_object_permission_permits_users_with_manage_groups(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     organisation, mocker
 ):
     # Given
@@ -93,7 +93,7 @@ def test_user_organisation_permissions_has_object_permission_permits_users_with_
     assert result is True
 
 
-def test_user_permission_group_permissions_has_object_permission_permits_group_admin(  # type: ignore[no-untyped-def]
+def test_user_permission_group_permissions_has_object_permission_permits_group_admin(  # type: ignore[no-untyped-def]  # noqa: FT003
     organisation, user_permission_group, admin_user, mocker
 ):
     # Given

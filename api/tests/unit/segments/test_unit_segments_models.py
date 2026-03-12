@@ -9,7 +9,7 @@ from pytest_mock import MockerFixture
 from segments.models import Condition, Segment, SegmentRule
 
 
-def test_Condition_str__returns_readable_representation_of_condition(
+def test_Condition_str__returns_readable_representation_of_condition(  # noqa: FT003
     segment: Segment,
     segment_rule: SegmentRule,
 ) -> None:
@@ -83,7 +83,7 @@ def test_Condition_get_skip_create_audit_log__segment_deleted__returns_true(
     assert condition.get_skip_create_audit_log() is True
 
 
-def test_LiveSegmentManager__returns_only_highest_version_of_segments(
+def test_LiveSegmentManager__returns_only_highest_version_of_segments(  # noqa: FT003
     segment: Segment,
 ) -> None:
     # Given
@@ -109,7 +109,7 @@ def test_LiveSegmentManager__returns_only_highest_version_of_segments(
         lambda segment, rule: {"segment": None, "rule": None},
     ],
 )
-def test_SegmentRule_clean__validates_rule_has_only_one_parent(
+def test_SegmentRule_clean__validates_rule_has_only_one_parent(  # noqa: FT003
     get_parents: Callable[[Segment, SegmentRule], dict[str, Any]],
     segment: Segment,
     segment_rule: SegmentRule,
@@ -129,7 +129,7 @@ def test_SegmentRule_clean__validates_rule_has_only_one_parent(
     )
 
 
-def test_SegmentRule_get_skip_create_audit_log__returns_true(
+def test_SegmentRule_get_skip_create_audit_log__returns_true(  # noqa: FT003
     segment: Segment,
 ) -> None:
     # Given
@@ -169,7 +169,7 @@ def test_Segment_delete__multiple_rules_conditions__schedules_audit_log_task_onc
     assert task.delay.call_count == 1
 
 
-def test_Segment_clone__can_create_standalone_segment_clone(
+def test_Segment_clone__can_create_standalone_segment_clone(  # noqa: FT003
     segment: Segment,
 ) -> None:
     # Given
@@ -283,7 +283,7 @@ def test_Segment_clone__segment_with_rules__returns_new_segment_with_copied_rule
     ]
 
 
-def test_Segment_get_skip_create_audit_log__system_segment__returns_true(
+def test_Segment_get_skip_create_audit_log__system_segment__returns_true(  # noqa: FT004
     system_segment: Segment,
 ) -> None:
     # When
