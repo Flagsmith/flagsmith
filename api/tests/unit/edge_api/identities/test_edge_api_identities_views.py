@@ -23,7 +23,7 @@ if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.service_resource import Table
 
 
-def test_edge_identity_view_set_get_permissions() -> None:
+def test_edge_identity_view_set_get_permissions() -> None:  # noqa: FT003
     # Given
     view_set = EdgeIdentityViewSet()
 
@@ -44,7 +44,7 @@ def test_edge_identity_view_set_get_permissions() -> None:
     }
 
 
-def test_user_with_manage_identity_permission_can_delete_identity(
+def test_user_with_manage_identity_permission_can_delete_identity(  # noqa: FT003
     environment: Environment,
     identity_document_without_fs: dict[str, typing.Any],
     staff_client: APIClient,
@@ -74,7 +74,7 @@ def test_user_with_manage_identity_permission_can_delete_identity(
     assert flagsmith_identities_table.get_item(Key={"composite_key": composite_key})
 
 
-def test_edge_identity_viewset_returns_404_for_invalid_environment_key(
+def test_edge_identity_viewset_returns_404_for_invalid_environment_key(  # noqa: FT003
     admin_client: APIClient,
 ) -> None:
     # Given
@@ -90,7 +90,7 @@ def test_edge_identity_viewset_returns_404_for_invalid_environment_key(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_get_edge_identity_overrides_for_a_feature(
+def test_get_edge_identity_overrides_for_a_feature(  # noqa: FT003
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     mocker: MockerFixture,
@@ -160,7 +160,7 @@ def test_get_edge_identity_overrides_for_a_feature(
     )
 
 
-def test_user_without_manage_identities_permission_cannot_get_edge_identity_overrides_for_a_feature(
+def test_user_without_manage_identities_permission_cannot_get_edge_identity_overrides_for_a_feature(  # noqa: FT003
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     feature: Feature,
@@ -180,7 +180,7 @@ def test_user_without_manage_identities_permission_cannot_get_edge_identity_over
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_user_cannot_delete_identity_from_another_project(
+def test_user_cannot_delete_identity_from_another_project(  # noqa: FT003
     identity_document_without_fs: dict[str, typing.Any],
     flagsmith_identities_table: "Table",
     environment: Environment,

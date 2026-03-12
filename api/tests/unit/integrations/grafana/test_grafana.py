@@ -9,7 +9,7 @@ from integrations.grafana.grafana import GrafanaWrapper
 
 
 @pytest.mark.parametrize("base_url", ["test.com", "test.com/"])
-def test_grafana_wrapper__base_url__expected_url(base_url: str) -> None:
+def test_grafana_wrapper__base_url__expected_url(base_url: str) -> None:  # noqa: FT004
     # When
     wrapper = GrafanaWrapper(base_url=base_url, api_key="any")
 

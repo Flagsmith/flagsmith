@@ -93,7 +93,7 @@ def distinct_identity_featurestate(
         ),
     ],
 )
-def test_feature_get_overrides_data__call_expected(
+def test_feature_get_overrides_data__call_expected(  # noqa: FT003
     mocker: "MockerFixture",
     environment: "Environment",
     enable_dynamo_db: bool,
@@ -168,7 +168,7 @@ def test_feature_get_overrides_data__edge_project_not_migrated_to_v2__return_exp
     )
 
 
-def test_feature_get_core_overrides_data(
+def test_feature_get_core_overrides_data(  # noqa: FT003
     feature: Feature,
     environment: "Environment",
     identity: Identity,
@@ -216,7 +216,7 @@ def test_feature_get_core_overrides_data(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_feature_get_edge_overrides_data(
+def test_feature_get_edge_overrides_data(  # noqa: FT003
     feature: Feature,
     environment: "Environment",
     identity: Identity,
@@ -268,7 +268,7 @@ def test_feature_get_edge_overrides_data(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_get_edge_overrides_data_skips_deleted_features(  # type: ignore[no-untyped-def]
+def test_get_edge_overrides_data_skips_deleted_features(  # type: ignore[no-untyped-def]  # noqa: FT003
     feature: Feature,
     environment: "Environment",
     identity: Identity,

@@ -10,7 +10,7 @@ from django_test_migrations.migrator import Migrator
     test_settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_fix_scheduled_fs_data_issue_caused_by_enabling_versioning(
+def test_fix_scheduled_fs_data_issue_caused_by_enabling_versioning(  # noqa: FT003
     migrator: Migrator,
 ) -> None:
     # Given

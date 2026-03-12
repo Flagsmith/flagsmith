@@ -13,7 +13,7 @@ from projects.models import (
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_is_user_project_admin_returns_true_for_org_admin(admin_user, project):  # type: ignore[no-untyped-def]
+def test_is_user_project_admin_returns_true_for_org_admin(admin_user, project):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert is_user_project_admin(admin_user, project) is True
 
 
@@ -24,7 +24,7 @@ def test_is_user_project_admin_returns_true_for_org_admin(admin_user, project): 
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_is_user_project_admin_returns_true_for_project_admin(
+def test_is_user_project_admin_returns_true_for_project_admin(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     project: Project,
     project_admin: typing.Union[
@@ -35,21 +35,21 @@ def test_is_user_project_admin_returns_true_for_project_admin(
     assert is_user_project_admin(staff_user, project) is True
 
 
-def test_is_user_project_admin_returns_false_for_user_with_no_permission(
+def test_is_user_project_admin_returns_false_for_user_with_no_permission(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     project: Project,
 ) -> None:
     assert is_user_project_admin(staff_user, project) is False
 
 
-def test_is_user_project_admin_returns_false_for_user_with_admin_permission_of_other_org(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_is_user_project_admin_returns_false_for_user_with_admin_permission_of_other_org(  # type: ignore[no-untyped-def]  # noqa: E501,FT003,FT004
     admin_user,
     organisation_two_project_one,
 ):
     assert is_user_project_admin(admin_user, organisation_two_project_one) is False
 
 
-def test_is_user_project_admin_returns_false_for_user_with_incorrect_permission(  # type: ignore[no-untyped-def]
+def test_is_user_project_admin_returns_false_for_user_with_incorrect_permission(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_user,
     user_project_permission,
     user_project_permission_group,
@@ -68,7 +68,7 @@ def test_is_user_project_admin_returns_false_for_user_with_incorrect_permission(
     assert is_user_project_admin(admin_user, organisation_two_project_one) is False
 
 
-def test_is_user_project_admin__does_not_return_project_for_orphan_group_permission(
+def test_is_user_project_admin__does_not_return_project_for_orphan_group_permission(  # noqa: FT003
     organisation: Organisation,
     project: Project,
     user_permission_group: UserPermissionGroup,
@@ -98,7 +98,7 @@ def test_is_user_project_admin__does_not_return_project_for_orphan_group_permiss
     assert not is_user_project_admin(user=staff_user, project=project)
 
 
-def test_is_user_project_admin__short_circuits_on_direct_permission(
+def test_is_user_project_admin__short_circuits_on_direct_permission(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     project: Project,
     project_admin_via_user_permission: UserProjectPermission,
@@ -112,7 +112,7 @@ def test_is_user_project_admin__short_circuits_on_direct_permission(
         assert is_user_project_admin(staff_user, project) is True
 
 
-def test_is_user_project_admin__short_circuits_on_group_permission(
+def test_is_user_project_admin__short_circuits_on_group_permission(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     project: Project,
     project_admin_via_user_permission_group: UserPermissionGroupProjectPermission,

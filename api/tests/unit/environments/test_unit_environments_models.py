@@ -47,7 +47,7 @@ if typing.TYPE_CHECKING:
     from django.db.models import Model
 
 
-def test_on_environment_create_makes_feature_states(
+def test_on_environment_create_makes_feature_states(  # noqa: FT003
     organisation: Organisation,
     feature: Feature,
     project: Project,
@@ -63,7 +63,7 @@ def test_on_environment_create_makes_feature_states(
     assert feature.feature_states.count() == 1
 
 
-def test_on_environment_update_feature_states(
+def test_on_environment_update_feature_states(  # noqa: FT003,FT004
     environment: Environment,
     feature: Feature,
 ) -> None:
@@ -76,7 +76,7 @@ def test_on_environment_update_feature_states(
     assert FeatureState.objects.count() == 1
 
 
-def test_environment_clone_does_not_modify_the_original_instance(
+def test_environment_clone_does_not_modify_the_original_instance(  # noqa: FT003,FT004
     environment: Environment,
 ) -> None:
     # When
@@ -87,7 +87,7 @@ def test_environment_clone_does_not_modify_the_original_instance(
     assert clone.api_key != environment.api_key
 
 
-def test_environment_clone_save_creates_feature_states(  # type: ignore[no-untyped-def]
+def test_environment_clone_save_creates_feature_states(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment: Environment, feature: Feature
 ):
     # Given
@@ -102,7 +102,7 @@ def test_environment_clone_save_creates_feature_states(  # type: ignore[no-untyp
     assert feature_states.count() == 1
 
 
-def test_environment_clone_does_not_modify_source_feature_state(  # type: ignore[no-untyped-def]
+def test_environment_clone_does_not_modify_source_feature_state(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment: Environment,
     feature: Feature,
 ):
@@ -119,7 +119,7 @@ def test_environment_clone_does_not_modify_source_feature_state(  # type: ignore
     assert source_feature_state_before_clone == source_feature_state_after_clone
 
 
-def test_environment_clone_does_not_create_identities(  # type: ignore[no-untyped-def]
+def test_environment_clone_does_not_create_identities(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment: Environment,
 ):
     # Given
@@ -132,7 +132,7 @@ def test_environment_clone_does_not_create_identities(  # type: ignore[no-untype
     assert clone.identities.count() == 0
 
 
-def test_environment_clone_clones_the_feature_states(
+def test_environment_clone_clones_the_feature_states(  # noqa: FT003
     environment: Environment,
     feature: Feature,
 ) -> None:
@@ -154,7 +154,7 @@ def test_environment_clone_clones_the_feature_states(
     assert clone.is_creating is False
 
 
-def test_environment_clone_clones_multivariate_feature_state_values(
+def test_environment_clone_clones_multivariate_feature_state_values(  # noqa: FT003
     environment: Environment,
     project: Project,
 ) -> None:
@@ -200,7 +200,7 @@ def test_environment_clone_clones_multivariate_feature_state_values(
 
 
 @mock.patch("environments.models.environment_cache")
-def test_environment_get_from_cache_stores_environment_in_cache_on_success(
+def test_environment_get_from_cache_stores_environment_in_cache_on_success(  # noqa: FT003
     mock_cache: MagicMock,
     environment: Environment,
 ) -> None:
@@ -215,7 +215,7 @@ def test_environment_get_from_cache_stores_environment_in_cache_on_success(
     mock_cache.set.assert_called_with(environment.api_key, environment, timeout=60)
 
 
-def test_environment_get_from_cache_returns_None_if_no_matching_environment(
+def test_environment_get_from_cache_returns_None_if_no_matching_environment(  # noqa: FT003
     environment: Environment,
 ) -> None:
     # Given
@@ -228,7 +228,7 @@ def test_environment_get_from_cache_returns_None_if_no_matching_environment(
     assert env is None
 
 
-def test_environment_get_from_cache_accepts_environment_api_key_model_key(
+def test_environment_get_from_cache_accepts_environment_api_key_model_key(  # noqa: FT003
     environment: Environment,
 ) -> None:
     # Given
@@ -241,7 +241,7 @@ def test_environment_get_from_cache_accepts_environment_api_key_model_key(
     assert environment_from_cache == environment
 
 
-def test_environment_get_from_cache_with_null_environment_key_returns_null(
+def test_environment_get_from_cache_with_null_environment_key_returns_null(  # noqa: FT003,FT004
     environment: Environment,
 ) -> None:
     # When
@@ -254,7 +254,7 @@ def test_environment_get_from_cache_with_null_environment_key_returns_null(
 @override_settings(
     CACHE_BAD_ENVIRONMENTS_SECONDS=60, CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES=1
 )
-def test_environment_get_from_cache_does_not_hit_database_if_api_key_in_bad_env_cache(
+def test_environment_get_from_cache_does_not_hit_database_if_api_key_in_bad_env_cache(  # noqa: FT003,FT004
     django_assert_num_queries: DjangoAssertNumQueries,
     db: None,
 ) -> None:
@@ -266,7 +266,7 @@ def test_environment_get_from_cache_does_not_hit_database_if_api_key_in_bad_env_
         [Environment.get_from_cache(api_key) for _ in range(10)]
 
 
-def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key(  # type: ignore[no-untyped-def]
+def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     environment,
 ):
     assert (
@@ -279,7 +279,7 @@ def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key( 
     )
 
 
-def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key_with_expired_date_in_future(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key_with_expired_date_in_future(  # type: ignore[no-untyped-def]  # noqa: E501,FT003,FT004
     environment,
 ):
     assert (
@@ -293,7 +293,7 @@ def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key_w
     )
 
 
-def test_environment_api_key_model_is_valid_is_false_for_expired_active_key(  # type: ignore[no-untyped-def]
+def test_environment_api_key_model_is_valid_is_false_for_expired_active_key(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     environment,
 ):
     assert (
@@ -307,7 +307,7 @@ def test_environment_api_key_model_is_valid_is_false_for_expired_active_key(  # 
     )
 
 
-def test_environment_api_key_model_is_valid_is_false_for_non_expired_inactive_key(  # type: ignore[no-untyped-def]
+def test_environment_api_key_model_is_valid_is_false_for_non_expired_inactive_key(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     environment,
 ):
     assert (
@@ -318,7 +318,7 @@ def test_environment_api_key_model_is_valid_is_false_for_non_expired_inactive_ke
     )
 
 
-def test_existence_of_multiple_environment_api_keys_does_not_break_get_from_cache(  # type: ignore[no-untyped-def]
+def test_existence_of_multiple_environment_api_keys_does_not_break_get_from_cache(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment,
 ):
     # Given
@@ -343,7 +343,7 @@ def test_existence_of_multiple_environment_api_keys_does_not_break_get_from_cach
     )
 
 
-def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(  # type: ignore[no-untyped-def]
+def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     environment, environment_api_key, mocker
 ):
     # When
@@ -356,7 +356,7 @@ def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(  # ty
     assert environment == environment_cache.get(environment_api_key.key)
 
 
-def test_updated_at_gets_updated_when_environment_audit_log_created(environment):  # type: ignore[no-untyped-def]
+def test_updated_at_gets_updated_when_environment_audit_log_created(environment):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     # When
     audit_log = AuditLog.objects.create(
         environment=environment, project=environment.project, log="random_audit_log"
@@ -367,7 +367,7 @@ def test_updated_at_gets_updated_when_environment_audit_log_created(environment)
     assert environment.updated_at == audit_log.created_date
 
 
-def test_updated_at_gets_updated_when_project_audit_log_created(environment):  # type: ignore[no-untyped-def]
+def test_updated_at_gets_updated_when_project_audit_log_created(environment):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     # When
     audit_log = AuditLog.objects.create(
         project=environment.project, log="random_audit_log"
@@ -377,7 +377,7 @@ def test_updated_at_gets_updated_when_project_audit_log_created(environment):  #
     assert environment.updated_at == audit_log.created_date
 
 
-def test_change_request_audit_logs_does_not_update_updated_at(environment):  # type: ignore[no-untyped-def]
+def test_change_request_audit_logs_does_not_update_updated_at(environment):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     updated_at_before_audit_log = environment.updated_at
 
@@ -393,7 +393,7 @@ def test_change_request_audit_logs_does_not_update_updated_at(environment):  # t
     assert environment.updated_at != audit_log.created_date
 
 
-def test_save_environment_clears_environment_cache(mocker, project):  # type: ignore[no-untyped-def]
+def test_save_environment_clears_environment_cache(mocker, project):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     mock_environment_cache = mocker.patch("environments.models.environment_cache")
     environment = Environment.objects.create(name="test environment", project=project)
@@ -425,7 +425,7 @@ def test_save_environment_clears_environment_cache(mocker, project):  # type: ig
         (False, RequestOrigin.SERVER, True),
     ),
 )
-def test_environment_trait_persistence_allowed(  # type: ignore[no-untyped-def]
+def test_environment_trait_persistence_allowed(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     allow_client_traits, request_origin, expected_result
 ):
     request = MagicMock(originated_from=request_origin)
@@ -437,7 +437,7 @@ def test_environment_trait_persistence_allowed(  # type: ignore[no-untyped-def]
     )
 
 
-def test_write_environments_to_dynamodb_with_environment(  # type: ignore[no-untyped-def]
+def test_write_environments_to_dynamodb_with_environment(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamo_enabled_project,
     dynamo_enabled_project_environment_one,
     mock_dynamo_env_wrapper,
@@ -460,7 +460,7 @@ def test_write_environments_to_dynamodb_with_environment(  # type: ignore[no-unt
     )
 
 
-def test_write_environments_to_dynamodb_project(  # type: ignore[no-untyped-def]
+def test_write_environments_to_dynamodb_project(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamo_enabled_project,
     dynamo_enabled_project_environment_one,
     dynamo_enabled_project_environment_two,
@@ -481,7 +481,7 @@ def test_write_environments_to_dynamodb_project(  # type: ignore[no-untyped-def]
     )
 
 
-def test_write_environments_to_dynamodb_with_environment_and_project(  # type: ignore[no-untyped-def]
+def test_write_environments_to_dynamodb_with_environment_and_project(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamo_enabled_project,
     dynamo_enabled_project_environment_one,
     mock_dynamo_env_wrapper,
@@ -528,7 +528,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__call_
     )
 
 
-def test_write_environments_to_dynamodb__project_environments_v2_migrated__wrapper_disabled__wrapper_not_called(
+def test_write_environments_to_dynamodb__project_environments_v2_migrated__wrapper_disabled__wrapper_not_called(  # noqa: FT003
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
     dynamo_enabled_project_environment_two: Environment,
@@ -584,7 +584,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_not_migrated__w
         ("foo", 1, "identity-identifier"),
     ),
 )
-def test_webhook_generate_webhook_feature_state_data(  # type: ignore[no-untyped-def]
+def test_webhook_generate_webhook_feature_state_data(  # type: ignore[no-untyped-def]  # noqa: FT003
     feature, environment, value, identity_id, identifier
 ):
     # Given
@@ -600,7 +600,7 @@ def test_webhook_generate_webhook_feature_state_data(  # type: ignore[no-untyped
 
 
 @pytest.mark.parametrize("identity_id, identifier", ((1, None), (None, "identifier")))
-def test_webhook_generate_webhook_feature_state_data_identity_error_conditions(  # type: ignore[no-untyped-def]
+def test_webhook_generate_webhook_feature_state_data_identity_error_conditions(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     mocker, identity_id, identifier
 ):
     # Given
@@ -624,7 +624,7 @@ def test_webhook_generate_webhook_feature_state_data_identity_error_conditions( 
     # exception raised
 
 
-def test_webhook_generate_webhook_feature_state_data_raises_error_segment_and_identity(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_webhook_generate_webhook_feature_state_data_raises_error_segment_and_identity(  # type: ignore[no-untyped-def]  # noqa: E501,FT003,FT004
     mocker,
 ):
     # Given
@@ -652,7 +652,7 @@ def test_webhook_generate_webhook_feature_state_data_raises_error_segment_and_id
     # exception raised
 
 
-def test_environment_get_environment_document(environment, django_assert_num_queries):  # type: ignore[no-untyped-def]
+def test_environment_get_environment_document(environment, django_assert_num_queries):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
 
     # When
@@ -664,7 +664,7 @@ def test_environment_get_environment_document(environment, django_assert_num_que
     assert environment_document["api_key"] == environment.api_key
 
 
-def test_environment_get_environment_document_with_caching_when_document_in_cache(  # type: ignore[no-untyped-def]
+def test_environment_get_environment_document_with_caching_when_document_in_cache(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment, django_assert_num_queries, settings, mocker
 ):
     # Given
@@ -686,7 +686,7 @@ def test_environment_get_environment_document_with_caching_when_document_in_cach
     assert environment_document["api_key"] == environment.api_key
 
 
-def test_environment_get_environment_document_with_caching_when_document_not_in_cache(  # type: ignore[no-untyped-def]
+def test_environment_get_environment_document_with_caching_when_document_not_in_cache(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment, django_assert_num_queries, settings, mocker
 ):
     # Given
@@ -710,7 +710,7 @@ def test_environment_get_environment_document_with_caching_when_document_not_in_
     )
 
 
-def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(project):  # type: ignore[no-untyped-def]
+def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(project):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     project.prevent_flag_defaults = True
     project.save()
@@ -735,11 +735,11 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(proj
     assert not feature_state.get_feature_state_value()
 
 
-def test_get_segments_returns_no_segments_if_no_overrides(environment, segment):  # type: ignore[no-untyped-def]
+def test_get_segments_returns_no_segments_if_no_overrides(environment, segment):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert environment.get_segments_from_cache() == []
 
 
-def test_get_segments_returns_only_segments_that_have_an_override(  # type: ignore[no-untyped-def]
+def test_get_segments_returns_only_segments_that_have_an_override(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment, segment, segment_featurestate, mocker, monkeypatch
 ):
     # Given
@@ -764,7 +764,7 @@ def test_get_segments_returns_only_segments_that_have_an_override(  # type: igno
     )
 
 
-def test_get_segments_from_cache_does_not_hit_db_if_cache_hit(  # type: ignore[no-untyped-def]
+def test_get_segments_from_cache_does_not_hit_db_if_cache_hit(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment,
     segment,
     segment_featurestate,
@@ -802,7 +802,7 @@ def test_get_segments_from_cache_does_not_hit_db_if_cache_hit(  # type: ignore[n
         (None, False, False),
     ),
 )
-def test_get_hide_disabled_flags(  # type: ignore[no-untyped-def]
+def test_get_hide_disabled_flags(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     project, environment, environment_value, project_value, expected_result
 ):
     # Given
@@ -816,7 +816,7 @@ def test_get_hide_disabled_flags(  # type: ignore[no-untyped-def]
     assert environment.get_hide_disabled_flags() is expected_result
 
 
-def test_saving_environment_api_key_creates_dynamo_document_if_enabled(  # type: ignore[no-untyped-def]
+def test_saving_environment_api_key_creates_dynamo_document_if_enabled(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamo_enabled_project_environment_one: Environment,
     mocker: MockerFixture,
     flagsmith_environment_api_key_table: "Table",
@@ -837,7 +837,7 @@ def test_saving_environment_api_key_creates_dynamo_document_if_enabled(  # type:
     assert response["Item"]["key"] == api_key.key
 
 
-def test_deleting_environment_api_key_deletes_dynamo_document_if_enabled(  # type: ignore[no-untyped-def]
+def test_deleting_environment_api_key_deletes_dynamo_document_if_enabled(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamo_enabled_project_environment_one: Environment,
     mocker: MockerFixture,
     flagsmith_environment_api_key_table: "Table",
@@ -860,7 +860,7 @@ def test_deleting_environment_api_key_deletes_dynamo_document_if_enabled(  # typ
     assert flagsmith_environment_api_key_table.scan()["Count"] == 0
 
 
-def test_deleting_environment_creates_task_to_delete_dynamo_document_if_enabled(
+def test_deleting_environment_creates_task_to_delete_dynamo_document_if_enabled(  # noqa: FT003
     dynamo_enabled_project_environment_one: Environment,
     mocker: MockerFixture,
 ) -> None:
@@ -884,7 +884,7 @@ def test_deleting_environment_creates_task_to_delete_dynamo_document_if_enabled(
     )
 
 
-def test_delete_api_key_not_called_when_deleting_environment_api_key_for_non_edge_project(
+def test_delete_api_key_not_called_when_deleting_environment_api_key_for_non_edge_project(  # noqa: FT003
     environment_api_key: EnvironmentAPIKey, mocker: MockerFixture
 ) -> None:
     # Given
@@ -898,7 +898,7 @@ def test_delete_api_key_not_called_when_deleting_environment_api_key_for_non_edg
     mocked_environment_api_key_wrapper.delete_api_key.assert_not_called()
 
 
-def test_put_item_not_called_when_saving_environment_api_key_for_non_edge_project(  # type: ignore[no-untyped-def]
+def test_put_item_not_called_when_saving_environment_api_key_for_non_edge_project(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment, mocker
 ):
     # Given
@@ -912,7 +912,7 @@ def test_put_item_not_called_when_saving_environment_api_key_for_non_edge_projec
     mocked_environment_api_key_wrapper.write_api_key.assert_not_called()
 
 
-def test_delete_environment_with_committed_change_request(
+def test_delete_environment_with_committed_change_request(  # noqa: FT003
     organisation: "Organisation",
     environment: Environment,
     change_request: "ChangeRequest",
@@ -932,7 +932,7 @@ def test_delete_environment_with_committed_change_request(
     assert environment.deleted_at is not None
 
 
-def test_create_environment_creates_feature_states_in_all_environments_and_environment_feature_version(
+def test_create_environment_creates_feature_states_in_all_environments_and_environment_feature_version(  # noqa: FT003
     project: "Project",
 ) -> None:
     # Given
@@ -951,7 +951,7 @@ def test_create_environment_creates_feature_states_in_all_environments_and_envir
     assert environment.feature_states.count() == 2
 
 
-def test_clone_environment_v2_versioning(
+def test_clone_environment_v2_versioning(  # noqa: FT003
     feature: Feature,
     feature_state: FeatureState,
     segment: Segment,
@@ -1004,7 +1004,7 @@ def test_clone_environment_v2_versioning(
     )
 
 
-def test_environment_clone_async(
+def test_environment_clone_async(  # noqa: FT003
     environment: Environment, mocker: MockerFixture
 ) -> None:
     # Given
@@ -1028,7 +1028,7 @@ def test_environment_clone_async(
     )
 
 
-def test_delete_environment_removes_environment_document_cache(
+def test_delete_environment_removes_environment_document_cache(  # noqa: FT003,FT004
     environment: Environment,
     persistent_environment_document_cache: MagicMock,
 ) -> None:
@@ -1041,7 +1041,7 @@ def test_delete_environment_removes_environment_document_cache(
     )
 
 
-def test_change_api_key_updates_environment_document_cache(
+def test_change_api_key_updates_environment_document_cache(  # noqa: FT003
     environment: Environment,
     persistent_environment_document_cache: MagicMock,
 ) -> None:
@@ -1060,7 +1060,7 @@ def test_change_api_key_updates_environment_document_cache(
     )
 
 
-def test_get_environment_document_from_cache_triggers_correct_metrics__cache_hit(
+def test_get_environment_document_from_cache_triggers_correct_metrics__cache_hit(  # noqa: FT003,FT004
     environment: Environment,
     persistent_environment_document_cache: MagicMock,
     populate_environment_document_cache: None,
@@ -1079,7 +1079,7 @@ def test_get_environment_document_from_cache_triggers_correct_metrics__cache_hit
     )
 
 
-def test_get_environment_document_from_cache_triggers_correct_metrics__cache_miss(
+def test_get_environment_document_from_cache_triggers_correct_metrics__cache_miss(  # noqa: FT003
     environment: Environment,
     persistent_environment_document_cache: MagicMock,
     assert_metric: AssertMetricFixture,
@@ -1108,7 +1108,7 @@ def test_get_environment_document_from_cache_triggers_correct_metrics__cache_mis
         (21, 14, 8, 13, 2),
     ],
 )
-def test_environment_metric_query_helpers_match_expected_counts(
+def test_environment_metric_query_helpers_match_expected_counts(  # noqa: FT003
     project: Project,
     admin_user: FFAdminUser,
     total_features: int,
@@ -1209,7 +1209,7 @@ def test_environment_metric_query_helpers_match_expected_counts(
     assert identity_override_count == 0
 
 
-def test_environment_create_with_use_v2_feature_versioning_true(
+def test_environment_create_with_use_v2_feature_versioning_true(  # noqa: FT003
     project: Project,
     feature: Feature,
     enable_features: EnableFeaturesFixture,
@@ -1230,7 +1230,7 @@ def test_environment_create_with_use_v2_feature_versioning_true(
     assert new_environment.use_v2_feature_versioning
 
 
-def test_environment_clone_from_versioned_environment_with_use_v2_feature_versioning_true(
+def test_environment_clone_from_versioned_environment_with_use_v2_feature_versioning_true(  # noqa: FT003
     project: Project,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -1249,7 +1249,7 @@ def test_environment_clone_from_versioned_environment_with_use_v2_feature_versio
     assert new_environment.use_v2_feature_versioning
 
 
-def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_versioning_true(
+def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_versioning_true(  # noqa: FT003
     project: Project,
     environment: Environment,
     feature: Feature,

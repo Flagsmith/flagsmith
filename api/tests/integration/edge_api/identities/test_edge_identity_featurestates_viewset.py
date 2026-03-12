@@ -39,7 +39,7 @@ from util.engine_models.features.models import (
 from util.mappers.engine import map_feature_to_engine
 
 
-def test_edge_identities_feature_states_list_does_not_call_sync_identity_document_features_if_not_needed(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_edge_identities_feature_states_list_does_not_call_sync_identity_document_features_if_not_needed(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     admin_client,
     environment,
     environment_api_key,
@@ -70,7 +70,7 @@ def test_edge_identities_feature_states_list_does_not_call_sync_identity_documen
     sync_identity_document_features.delay.assert_not_called()
 
 
-def test_edge_identities_feature_states_list_calls_sync_identity_document_features_if_identity_have_deleted_feature(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_edge_identities_feature_states_list_calls_sync_identity_document_features_if_identity_have_deleted_feature(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     admin_client,
     environment,
     environment_api_key,
@@ -125,7 +125,7 @@ def test_edge_identities_feature_states_list_calls_sync_identity_document_featur
     sync_identity_document_features.delay.assert_called_once_with(args=(identity_uuid,))
 
 
-def test_edge_identities_feature_states_list_can_be_filtered_using_feature_id(  # type: ignore[no-untyped-def]
+def test_edge_identities_feature_states_list_can_be_filtered_using_feature_id(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     environment,
     environment_api_key,
@@ -155,7 +155,7 @@ def test_edge_identities_feature_states_list_can_be_filtered_using_feature_id(  
     assert response.json()[0]["feature"] == feature
 
 
-def test_edge_identities_feature_states_list_returns_404_if_identity_does_not_exists(  # type: ignore[no-untyped-def]
+def test_edge_identities_feature_states_list_returns_404_if_identity_does_not_exists(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     environment,
     environment_api_key,
@@ -175,7 +175,7 @@ def test_edge_identities_feature_states_list_returns_404_if_identity_does_not_ex
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_edge_identities_featurestate_detail(  # type: ignore[no-untyped-def]
+def test_edge_identities_featurestate_detail(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     environment,
     environment_api_key,
@@ -203,7 +203,7 @@ def test_edge_identities_featurestate_detail(  # type: ignore[no-untyped-def]
     assert response.json()["featurestate_uuid"] == featurestate_uuid
 
 
-def test_edge_identities_featurestate_detail_calls_sync_identity_if_deleted_feature_exists(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_edge_identities_featurestate_detail_calls_sync_identity_if_deleted_feature_exists(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     admin_client,
     environment,
     environment_api_key,
@@ -251,7 +251,7 @@ def test_edge_identities_featurestate_detail_calls_sync_identity_if_deleted_feat
     sync_identity_document_features.delay.assert_called_once_with(args=(identity_uuid,))
 
 
-def test_edge_identities_featurestate_delete(  # type: ignore[no-untyped-def]
+def test_edge_identities_featurestate_delete(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamodb_wrapper_v2,
     admin_client,
     environment,
@@ -291,7 +291,7 @@ def test_edge_identities_featurestate_delete(  # type: ignore[no-untyped-def]
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_edge_identities_featurestate_delete_returns_404_if_featurestate_does_not_exists(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_edge_identities_featurestate_delete_returns_404_if_featurestate_does_not_exists(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     admin_client,
     environment,
     environment_api_key,
@@ -315,7 +315,7 @@ def test_edge_identities_featurestate_delete_returns_404_if_featurestate_does_no
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_edge_identities_create_featurestate_returns_400_if_feature_state_already_exists(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_edge_identities_create_featurestate_returns_400_if_feature_state_already_exists(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     admin_client,
     environment,
     environment_api_key,
@@ -353,7 +353,7 @@ def test_edge_identities_create_featurestate_returns_400_if_feature_state_alread
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_edge_identities_create_featurestate(  # type: ignore[no-untyped-def]
+def test_edge_identities_create_featurestate(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     admin_client_new: APIClient,
     environment: int,
@@ -417,7 +417,7 @@ def test_edge_identities_create_featurestate(  # type: ignore[no-untyped-def]
     assert actual_feature_state["featurestate_uuid"] is not None
 
 
-def test_edge_identities_create_mv_featurestate(  # type: ignore[no-untyped-def]
+def test_edge_identities_create_mv_featurestate(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamodb_wrapper_v2,
     admin_client,
     environment,
@@ -497,7 +497,7 @@ def test_edge_identities_create_mv_featurestate(  # type: ignore[no-untyped-def]
     assert actual_feature_state["featurestate_uuid"] is not None
 
 
-def test_edge_identities_update_featurestate(  # type: ignore[no-untyped-def]
+def test_edge_identities_update_featurestate(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     admin_client: APIClient,
     environment: Environment,
@@ -561,7 +561,7 @@ def test_edge_identities_update_featurestate(  # type: ignore[no-untyped-def]
     )
 
 
-def test_edge_identities_patch_returns_405(  # type: ignore[no-untyped-def]
+def test_edge_identities_patch_returns_405(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     environment,
     environment_api_key,
@@ -586,7 +586,7 @@ def test_edge_identities_patch_returns_405(  # type: ignore[no-untyped-def]
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
-def test_edge_identities_update_mv_featurestate(  # type: ignore[no-untyped-def]
+def test_edge_identities_update_mv_featurestate(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     admin_client: APIClient,
     environment: Environment,
@@ -675,7 +675,7 @@ def test_edge_identities_update_mv_featurestate(  # type: ignore[no-untyped-def]
     )
 
 
-def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(  # type: ignore[no-untyped-def]
+def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     project,
     environment,
@@ -729,7 +729,7 @@ def test_edge_identities_post_returns_400_for_invalid_mvfs_allocation(  # type: 
 @pytest.mark.parametrize(
     "lazy_feature", [(lazy_fixture("feature")), (lazy_fixture("feature_name"))]
 )
-def test_edge_identities_with_identifier_create_featurestate(  # type: ignore[no-untyped-def]
+def test_edge_identities_with_identifier_create_featurestate(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamodb_wrapper_v2,
     admin_client,
     environment,
@@ -795,7 +795,7 @@ def test_edge_identities_with_identifier_create_featurestate(  # type: ignore[no
 @pytest.mark.parametrize(
     "lazy_feature", [(lazy_fixture("feature")), (lazy_fixture("feature_name"))]
 )
-def test_edge_identities_with_identifier_delete_featurestate(  # type: ignore[no-untyped-def]
+def test_edge_identities_with_identifier_delete_featurestate(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamodb_wrapper_v2,
     admin_client,
     environment,
@@ -837,7 +837,7 @@ def test_edge_identities_with_identifier_delete_featurestate(  # type: ignore[no
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_edge_identities_with_identifier_update_featurestate(  # type: ignore[no-untyped-def]
+def test_edge_identities_with_identifier_update_featurestate(  # type: ignore[no-untyped-def]  # noqa: FT003
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     admin_client: APIClient,
     environment: Environment,
@@ -896,7 +896,7 @@ def test_edge_identities_with_identifier_update_featurestate(  # type: ignore[no
     )
 
 
-def test_put_identity_override_creates_identity_if_not_found(
+def test_put_identity_override_creates_identity_if_not_found(  # noqa: FT003
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     admin_client: APIClient,
     environment: int,
@@ -962,7 +962,7 @@ def test_put_identity_override_creates_identity_if_not_found(
         ("bool", True),
     ),
 )
-def test_get_all_feature_states_for_an_identity(  # type: ignore[no-untyped-def]
+def test_get_all_feature_states_for_an_identity(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_client,
     environment,
     environment_api_key,
@@ -1118,7 +1118,7 @@ def _create_segment_override(  # type: ignore[no-untyped-def]
     assert create_segment_override_response.status_code == status.HTTP_201_CREATED
 
 
-def test_edge_identity_clone_flag_states_from(
+def test_edge_identity_clone_flag_states_from(  # noqa: FT003
     admin_client: APIClient,
     mocker: MockerFixture,
     dynamo_enabled_environment: int,

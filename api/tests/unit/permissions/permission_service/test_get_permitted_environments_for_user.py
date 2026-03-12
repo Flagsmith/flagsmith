@@ -25,7 +25,7 @@ from projects.models import (
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_get_permitted_environments_for_user_returns_all_environments_for_org_admin(  # type: ignore[no-untyped-def]
+def test_get_permitted_environments_for_user_returns_all_environments_for_org_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_user, environment, project, project_two_environment
 ):
     for permission in EnvironmentPermissionModel.objects.all().values_list(
@@ -45,7 +45,7 @@ def test_get_permitted_environments_for_user_returns_all_environments_for_org_ad
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_get_permitted_environments_for_user_returns_all_the_environments_for_project_admin(  # noqa: E501
+def test_get_permitted_environments_for_user_returns_all_the_environments_for_project_admin(  # noqa: E501,FT003,FT004
     staff_user: FFAdminUser,
     environment: Environment,
     project: Project,
@@ -71,7 +71,7 @@ def test_get_permitted_environments_for_user_returns_all_the_environments_for_pr
         (lazy_fixture("environment_admin_via_user_permission_group")),
     ],
 )
-def test_get_permitted_environments_for_user_returns_the_environment_for_environment_admin(  # noqa: E501
+def test_get_permitted_environments_for_user_returns_the_environment_for_environment_admin(  # noqa: E501,FT003,FT004
     staff_user: FFAdminUser,
     environment: Environment,
     project: Project,
@@ -90,7 +90,7 @@ def test_get_permitted_environments_for_user_returns_the_environment_for_environ
         )
 
 
-def test_get_permitted_environments_for_user_returns_correct_environment(
+def test_get_permitted_environments_for_user_returns_correct_environment(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     environment: Environment,
     project_two_environment: Environment,
@@ -151,7 +151,7 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
         )
 
 
-def test_get_permitted_environments_for_user__does_not_return_environment_for_orphan_group_permission(
+def test_get_permitted_environments_for_user__does_not_return_environment_for_orphan_group_permission(  # noqa: FT003
     organisation: Organisation,
     project: Project,
     environment: Environment,

@@ -27,7 +27,7 @@ from util.mappers import (
 )
 
 
-def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__return_expected(
+def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__return_expected(  # noqa: FT004
     environment: Environment,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     feature: Feature,
@@ -44,7 +44,7 @@ def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__retur
     assert results[0] == identity_override_document
 
 
-def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__last_evaluated_key__call_expected(
+def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__last_evaluated_key__call_expected(  # noqa: FT003
     flagsmith_environments_v2_table: Table,
     mocker: MockerFixture,
 ) -> None:
@@ -126,7 +126,7 @@ def test_environment_v2_wrapper__update_identity_overrides__put_expected(
 
 
 @freeze_time("2023-01-01T00:00:00Z")
-def test_environment_v2_wrapper__update_identity_overrides__put__stores_created_date(
+def test_environment_v2_wrapper__update_identity_overrides__put__stores_created_date(  # noqa: FT003
     settings: SettingsWrapper,
     environment: Environment,
     flagsmith_environments_v2_table: Table,
@@ -233,7 +233,7 @@ def test_environment_v2_wrapper__write_environments__put_expected(
     assert results[0] == map_environment_to_environment_v2_document(environment)
 
 
-def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_enabled__writes_compressed(
+def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_enabled__writes_compressed(  # noqa: FT003
     environment: Environment,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     flagsmith_environments_v2_table: Table,
@@ -253,7 +253,7 @@ def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_e
     assert isinstance(results[0]["feature_states"], Binary)
 
 
-def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_enabled__observes_metrics(
+def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_enabled__observes_metrics(  # noqa: FT003
     environment: Environment,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     flagsmith_environments_v2_table: Table,
@@ -279,7 +279,7 @@ def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_e
     )
 
 
-def test_environment_v2_wrapper__write_environments__uncompressed__observes_size_metric(
+def test_environment_v2_wrapper__write_environments__uncompressed__observes_size_metric(  # noqa: FT003,FT004
     environment: Environment,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     flagsmith_environments_v2_table: Table,
@@ -296,7 +296,7 @@ def test_environment_v2_wrapper__write_environments__uncompressed__observes_size
     )
 
 
-def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_enabled__logs_expected(
+def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_enabled__logs_expected(  # noqa: FT003
     environment: Environment,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     flagsmith_environments_v2_table: Table,

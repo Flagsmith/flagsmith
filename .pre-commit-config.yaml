@@ -33,7 +33,7 @@ repos:
         language: system
         entry: make -C api generate-docs
         pass_filenames: false
-        types: [python,toml]
+        types: [python, toml]
       - id: python-typecheck
         name: python-typecheck
         language: system
@@ -44,7 +44,7 @@ repos:
         stages: [pre-push]
 
   - repo: https://github.com/Flagsmith/flagsmith-common
-    rev: feat/lint-tests-ft-rules
+    rev: v3.4.0
     hooks:
       - id: flagsmith-lint-tests
 

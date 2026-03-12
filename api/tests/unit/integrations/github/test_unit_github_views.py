@@ -58,7 +58,7 @@ WEBHOOK_MERGED_ACTION_SIGNATURE = "sha1=f3f7e1e9b43448d570451317447d3b4f8f8142de
 WEBHOOK_SECRET = "secret-key"
 
 
-def test_get_github_configuration(
+def test_get_github_configuration(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -73,7 +73,7 @@ def test_get_github_configuration(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_non_admin_user_get_github_configuration(
+def test_non_admin_user_get_github_configuration(  # noqa: FT003
     staff_client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -92,7 +92,7 @@ def test_non_admin_user_get_github_configuration(
     assert github_configuration_res["id"] == github_configuration.id
 
 
-def test_create_github_configuration(
+def test_create_github_configuration(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -110,7 +110,7 @@ def test_create_github_configuration(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_cannot_create_github_configuration_due_to_unique_constraint(
+def test_cannot_create_github_configuration_due_to_unique_constraint(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -134,7 +134,7 @@ def test_cannot_create_github_configuration_due_to_unique_constraint(
     )
 
 
-def test_cannot_create_github_configuration_when_the_organization_already_has_an_integration(
+def test_cannot_create_github_configuration_when_the_organization_already_has_an_integration(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -159,7 +159,7 @@ def test_cannot_create_github_configuration_when_the_organization_already_has_an
 
 
 @responses.activate
-def test_delete_github_configuration(
+def test_delete_github_configuration(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -194,7 +194,7 @@ def test_delete_github_configuration(
 
 
 @responses.activate
-def test_can_delete_github_configuration_when_delete_github_installation_response_was_404(
+def test_can_delete_github_configuration_when_delete_github_installation_response_was_404(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -228,7 +228,7 @@ def test_can_delete_github_configuration_when_delete_github_installation_respons
     assert not GithubConfiguration.objects.filter(id=github_configuration.id).exists()
 
 
-def test_get_github_repository(  # type: ignore[no-untyped-def]
+def test_get_github_repository(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -244,7 +244,7 @@ def test_get_github_repository(  # type: ignore[no-untyped-def]
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_cannot_get_github_repository_when_github_pk_in_not_a_number(  # type: ignore[no-untyped-def]
+def test_cannot_get_github_repository_when_github_pk_in_not_a_number(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -262,7 +262,7 @@ def test_cannot_get_github_repository_when_github_pk_in_not_a_number(  # type: i
 
 
 @responses.activate
-def test_create_github_repository(
+def test_create_github_repository(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -299,7 +299,7 @@ def test_create_github_repository(
 
 
 @responses.activate
-def test_create_github_repository_and_label_already_Existe(
+def test_create_github_repository_and_label_already_Existe(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -345,7 +345,7 @@ def test_create_github_repository_and_label_already_Existe(
     assert GitHubRepository.objects.filter(repository_owner="repositoryowner").exists()
 
 
-def test_cannot_create_github_repository_when_does_not_have_permissions(
+def test_cannot_create_github_repository_when_does_not_have_permissions(  # noqa: FT003
     staff_client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -370,7 +370,7 @@ def test_cannot_create_github_repository_when_does_not_have_permissions(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_cannot_create_github_repository_due_to_unique_constraint(
+def test_cannot_create_github_repository_due_to_unique_constraint(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -401,7 +401,7 @@ def test_cannot_create_github_repository_due_to_unique_constraint(
     )
 
 
-def test_github_delete_repository(
+def test_github_delete_repository(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -473,7 +473,7 @@ def mocked_requests_get_error(*args, **kwargs):  # type: ignore[no-untyped-def]
     return response
 
 
-def test_fetch_pull_requests(
+def test_fetch_pull_requests(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -508,7 +508,7 @@ def test_fetch_pull_requests(
     )
 
 
-def test_fetch_issues(
+def test_fetch_issues(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -549,7 +549,7 @@ def test_fetch_issues(
 
 
 @responses.activate
-def test_fetch_issues_returns_error_on_bad_response_from_github(
+def test_fetch_issues_returns_error_on_bad_response_from_github(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -583,7 +583,7 @@ def test_fetch_issues_returns_error_on_bad_response_from_github(
 
 
 @responses.activate
-def test_search_issues_returns_error_on_bad_search_params(
+def test_search_issues_returns_error_on_bad_search_params(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -619,7 +619,7 @@ def test_search_issues_returns_error_on_bad_search_params(
 
 
 @responses.activate
-def test_fetch_repositories(
+def test_fetch_repositories(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -673,7 +673,7 @@ def test_fetch_repositories(
         (lazy_fixture("admin_client"), "api-v1:organisations:get-github-pulls"),
     ],
 )
-def test_fetch_issues_and_pull_requests_fails_with_status_400_when_integration_not_configured(
+def test_fetch_issues_and_pull_requests_fails_with_status_400_when_integration_not_configured(  # noqa: FT003,FT004
     client: APIClient,
     organisation: Organisation,
     reverse_url: str,
@@ -694,7 +694,7 @@ def test_fetch_issues_and_pull_requests_fails_with_status_400_when_integration_n
         ("api-v1:organisations:get-github-pulls"),
     ],
 )
-def test_user_cannot_fetch_issues_or_prs_from_organisation_they_do_not_belong_to(
+def test_user_cannot_fetch_issues_or_prs_from_organisation_they_do_not_belong_to(  # noqa: FT003
     api_client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -715,7 +715,7 @@ def test_user_cannot_fetch_issues_or_prs_from_organisation_they_do_not_belong_to
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_verify_github_webhook_payload() -> None:
+def test_verify_github_webhook_payload() -> None:  # noqa: FT003,FT004
     # When
     result = github_webhook_payload_is_valid(
         payload_body=WEBHOOK_PAYLOAD.encode("utf-8"),
@@ -727,7 +727,7 @@ def test_verify_github_webhook_payload() -> None:
     assert result is True
 
 
-def test_verify_github_webhook_payload_returns_false_on_bad_signature() -> None:
+def test_verify_github_webhook_payload_returns_false_on_bad_signature() -> None:  # noqa: FT003,FT004
     # When
     result = github_webhook_payload_is_valid(
         payload_body=WEBHOOK_PAYLOAD.encode("utf-8"),
@@ -739,7 +739,7 @@ def test_verify_github_webhook_payload_returns_false_on_bad_signature() -> None:
     assert result is False
 
 
-def test_verify_github_webhook_payload_returns_false_on_no_signature_header() -> None:
+def test_verify_github_webhook_payload_returns_false_on_no_signature_header() -> None:  # noqa: FT003,FT004
     # When
     result = github_webhook_payload_is_valid(
         payload_body=WEBHOOK_PAYLOAD.encode("utf-8"),
@@ -751,7 +751,7 @@ def test_verify_github_webhook_payload_returns_false_on_no_signature_header() ->
     assert result is False
 
 
-def test_github_webhook_delete_installation(  # type: ignore[no-untyped-def]
+def test_github_webhook_delete_installation(  # type: ignore[no-untyped-def]  # noqa: FT003
     api_client: APIClient,
     github_configuration: GithubConfiguration,
     set_github_webhook_secret,
@@ -773,7 +773,7 @@ def test_github_webhook_delete_installation(  # type: ignore[no-untyped-def]
     assert not GithubConfiguration.objects.filter(installation_id=1234567).exists()
 
 
-def test_github_webhook_merged_a_pull_request(  # type: ignore[no-untyped-def]
+def test_github_webhook_merged_a_pull_request(  # type: ignore[no-untyped-def]  # noqa: FT003
     api_client: APIClient,
     feature: Feature,
     github_configuration: GithubConfiguration,
@@ -799,7 +799,7 @@ def test_github_webhook_merged_a_pull_request(  # type: ignore[no-untyped-def]
     assert feature.tags.first().label == "PR Merged"  # type: ignore[union-attr]
 
 
-def test_github_webhook_without_installation_id(  # type: ignore[no-untyped-def]
+def test_github_webhook_without_installation_id(  # type: ignore[no-untyped-def]  # noqa: FT003
     api_client: APIClient,
     mocker: MockerFixture,
     set_github_webhook_secret,
@@ -824,7 +824,7 @@ def test_github_webhook_without_installation_id(  # type: ignore[no-untyped-def]
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_github_webhook_with_non_existing_installation(  # type: ignore[no-untyped-def]
+def test_github_webhook_with_non_existing_installation(  # type: ignore[no-untyped-def]  # noqa: FT003
     api_client: APIClient,
     github_configuration: GithubConfiguration,
     mocker: MockerFixture,
@@ -850,7 +850,7 @@ def test_github_webhook_with_non_existing_installation(  # type: ignore[no-untyp
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_github_webhook_fails_on_signature_header_missing(  # type: ignore[no-untyped-def]
+def test_github_webhook_fails_on_signature_header_missing(  # type: ignore[no-untyped-def]  # noqa: FT003
     github_configuration: GithubConfiguration,
     set_github_webhook_secret,
 ) -> None:
@@ -872,7 +872,7 @@ def test_github_webhook_fails_on_signature_header_missing(  # type: ignore[no-un
     assert GithubConfiguration.objects.filter(installation_id=1234567).exists()
 
 
-def test_github_webhook_fails_on_bad_signature_header_missing(  # type: ignore[no-untyped-def]
+def test_github_webhook_fails_on_bad_signature_header_missing(  # type: ignore[no-untyped-def]  # noqa: FT003
     github_configuration: GithubConfiguration,
     set_github_webhook_secret,
 ) -> None:
@@ -895,7 +895,7 @@ def test_github_webhook_fails_on_bad_signature_header_missing(  # type: ignore[n
     assert response.json() == {"error": "Invalid signature"}
 
 
-def test_github_webhook_bypass_event(  # type: ignore[no-untyped-def]
+def test_github_webhook_bypass_event(  # type: ignore[no-untyped-def]  # noqa: FT003
     github_configuration: GithubConfiguration,
     set_github_webhook_secret,
 ) -> None:
@@ -918,7 +918,7 @@ def test_github_webhook_bypass_event(  # type: ignore[no-untyped-def]
 
 
 @responses.activate
-def test_cannot_fetch_pull_requests_when_github_request_call_failed(
+def test_cannot_fetch_pull_requests_when_github_request_call_failed(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -946,7 +946,7 @@ def test_cannot_fetch_pull_requests_when_github_request_call_failed(
 
 
 @responses.activate
-def test_cannot_fetch_pulls_when_the_github_response_was_invalid(
+def test_cannot_fetch_pulls_when_the_github_response_was_invalid(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -970,7 +970,7 @@ def test_cannot_fetch_pulls_when_the_github_response_was_invalid(
     assert response.status_code == status.HTTP_502_BAD_GATEWAY
 
 
-def test_cannot_fetch_repositories_when_there_is_no_installation_id(
+def test_cannot_fetch_repositories_when_there_is_no_installation_id(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -986,7 +986,7 @@ def test_cannot_fetch_repositories_when_there_is_no_installation_id(
 
 
 @responses.activate
-def test_fetch_github_repo_contributors(
+def test_fetch_github_repo_contributors(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -1044,7 +1044,7 @@ def test_fetch_github_repo_contributors(
     assert response.json() == expected_response
 
 
-def test_fetch_github_repo_contributors_with_invalid_query_params(
+def test_fetch_github_repo_contributors_with_invalid_query_params(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -1069,7 +1069,7 @@ def test_fetch_github_repo_contributors_with_invalid_query_params(
     assert response.json() == {"error": {"repo_name": ["This field is required."]}}
 
 
-def test_github_api_call_error_handler_with_value_error(
+def test_github_api_call_error_handler_with_value_error(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -1103,7 +1103,7 @@ def test_github_api_call_error_handler_with_value_error(
         ),
     ],
 )
-def test_send_the_invalid_number_page_or_page_size_param_returns_400(
+def test_send_the_invalid_number_page_or_page_size_param_returns_400(  # noqa: FT003
     admin_client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -1146,7 +1146,7 @@ def test_send_the_invalid_number_page_or_page_size_param_returns_400(
         ),
     ],
 )
-def test_send_the_invalid_type_page_or_page_size_param_returns_400(
+def test_send_the_invalid_type_page_or_page_size_param_returns_400(  # noqa: FT003
     admin_client: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -1175,7 +1175,7 @@ def test_send_the_invalid_type_page_or_page_size_param_returns_400(
 
 
 @responses.activate
-def test_label_and_tags_no_added_when_tagging_is_disabled(
+def test_label_and_tags_no_added_when_tagging_is_disabled(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -1214,7 +1214,7 @@ def test_label_and_tags_no_added_when_tagging_is_disabled(
 
 
 @responses.activate
-def test_update_github_repository(
+def test_update_github_repository(  # noqa: FT003
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,

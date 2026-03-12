@@ -16,7 +16,7 @@ from tests.types import WithProjectPermissionsCallable
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_get_tag_by_uuid(client: APIClient, project: Project, tag: Tag):  # type: ignore[no-untyped-def]
+def test_get_tag_by_uuid(client: APIClient, project: Project, tag: Tag):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     url = reverse("api-v1:projects:tags-get-by-uuid", args=[project.id, str(tag.uuid)])
 
     # When
@@ -27,7 +27,7 @@ def test_get_tag_by_uuid(client: APIClient, project: Project, tag: Tag):  # type
     assert response.json()["uuid"] == str(tag.uuid)
 
 
-def test_get_tag_by_uuid__returns_403_for_user_without_permission(  # type: ignore[no-untyped-def]
+def test_get_tag_by_uuid__returns_403_for_user_without_permission(  # type: ignore[no-untyped-def]  # noqa: FT003
     staff_client: APIClient,
     organisation_one_project_two: Project,
     project: Project,
@@ -50,7 +50,7 @@ def test_get_tag_by_uuid__returns_403_for_user_without_permission(  # type: igno
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_tag_by__uuid_returns_200_for_user_with_view_project_permission(  # type: ignore[no-untyped-def]
+def test_get_tag_by__uuid_returns_200_for_user_with_view_project_permission(  # type: ignore[no-untyped-def]  # noqa: FT003
     staff_client: APIClient,
     project: Project,
     tag: Tag,
@@ -72,7 +72,7 @@ def test_get_tag_by__uuid_returns_200_for_user_with_view_project_permission(  # 
     assert response.json()["uuid"] == str(tag.uuid)
 
 
-def test_cannot_delete_a_system_tag(
+def test_cannot_delete_a_system_tag(  # noqa: FT003
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -91,7 +91,7 @@ def test_cannot_delete_a_system_tag(
     assert response.json() == {"message": "Cannot delete a system tag."}
 
 
-def test_cannot_update_a_system_tag(  # type: ignore[no-untyped-def]
+def test_cannot_update_a_system_tag(  # type: ignore[no-untyped-def]  # noqa: FT003
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,

@@ -7,7 +7,7 @@ from environments.models import Environment
 from integrations.sentry.models import SentryChangeTrackingConfiguration
 
 
-def test_sentry__change_tracking__setup__accepts_new_configuration(
+def test_sentry__change_tracking__setup__accepts_new_configuration(  # noqa: FT003
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -85,7 +85,7 @@ def test_sentry__change_tracking__setup__accepts_new_configuration(
         ),
     ],
 )
-def test_sentry__change_tracking__setup__rejects_invalid_configuration(
+def test_sentry__change_tracking__setup__rejects_invalid_configuration(  # noqa: FT003
     admin_client: APIClient,
     environment: Environment,
     errors: Any,

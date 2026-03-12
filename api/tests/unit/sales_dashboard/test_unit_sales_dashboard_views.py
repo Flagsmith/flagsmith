@@ -28,7 +28,7 @@ from users.models import FFAdminUser
     "allowed_calls_30d, actual_calls_30d, expected_overage",
     ((1000000, 500000, 0), (1000000, 1100000, 100000), (0, 100000, 100000)),
 )
-def test_organisation_subscription_get_api_call_overage(
+def test_organisation_subscription_get_api_call_overage(  # noqa: FT003,FT004
     organisation: Organisation,
     allowed_calls_30d: int,
     actual_calls_30d: int,
@@ -50,7 +50,7 @@ def test_organisation_subscription_get_api_call_overage(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_organisation_info__get_event_list_for_organisation(
+def test_get_organisation_info__get_event_list_for_organisation(  # noqa: FT003
     organisation: Organisation,
     superuser_client: APIClient,
     settings: SettingsWrapper,
@@ -80,7 +80,7 @@ def test_get_organisation_info__get_event_list_for_organisation(
     event_list_mock.assert_called_once_with(organisation.id, date_start)
 
 
-def test_list_organisations_search_by_name(
+def test_list_organisations_search_by_name(  # noqa: FT003
     organisation: Organisation,
     superuser_client: Client,
 ) -> None:
@@ -99,7 +99,7 @@ def test_list_organisations_search_by_name(
     assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
-def test_list_organisations_search_by_subscription_id(
+def test_list_organisations_search_by_subscription_id(  # noqa: FT003
     organisation: Organisation,
     chargebee_subscription: Subscription,
     superuser_client: Client,
@@ -117,7 +117,7 @@ def test_list_organisations_search_by_subscription_id(
     assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
-def test_list_organisations_search_by_user_email(
+def test_list_organisations_search_by_user_email(  # noqa: FT003
     organisation: Organisation,
     superuser_client: Client,
     admin_user: FFAdminUser,
@@ -135,7 +135,7 @@ def test_list_organisations_search_by_user_email(
     assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
-def test_list_organisations_search_by_user_email_for_non_existent_user(
+def test_list_organisations_search_by_user_email_for_non_existent_user(  # noqa: FT003
     organisation: Organisation,
     superuser_client: Client,
 ) -> None:
@@ -155,7 +155,7 @@ def test_list_organisations_search_by_user_email_for_non_existent_user(
     assert list(response.context_data["organisation_list"]) == []  # type: ignore[index]
 
 
-def test_list_organisations_search_by_domain(
+def test_list_organisations_search_by_domain(  # noqa: FT003
     organisation: Organisation,
     superuser_client: Client,
 ) -> None:
@@ -174,7 +174,7 @@ def test_list_organisations_search_by_domain(
     assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
-def test_list_organisations_filter_plan(
+def test_list_organisations_filter_plan(  # noqa: FT003
     organisation: Organisation,
     chargebee_subscription: Subscription,
     superuser_client: Client,
@@ -193,7 +193,7 @@ def test_list_organisations_filter_plan(
     assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
-def test_list_organisations_fails_if_not_staff(
+def test_list_organisations_fails_if_not_staff(  # noqa: FT003
     organisation: Organisation,
     client: Client,
 ) -> None:
@@ -211,7 +211,7 @@ def test_list_organisations_fails_if_not_staff(
     assert response.url == "/admin/login/?next=/sales-dashboard/"  # type: ignore[attr-defined]
 
 
-def test_get_email_usage_fails_if_not_staff(
+def test_get_email_usage_fails_if_not_staff(  # noqa: FT003
     organisation: Organisation,
     client: Client,
 ) -> None:
@@ -229,7 +229,7 @@ def test_get_email_usage_fails_if_not_staff(
     assert response.url == "/admin/login/?next=/sales-dashboard/usage/"  # type: ignore[attr-defined]
 
 
-def test_start_trial(
+def test_start_trial(  # noqa: FT003
     organisation: Organisation,
     client: Client,
     admin_user: FFAdminUser,
@@ -268,7 +268,7 @@ def test_start_trial(
     assert subscription_information_cache.feature_history_visibility_days is None
 
 
-def test_end_trial(
+def test_end_trial(  # noqa: FT003
     in_trial_organisation: Organisation,
     client: Client,
     admin_user: FFAdminUser,
@@ -315,7 +315,7 @@ def test_end_trial(
 
 
 @pytest.mark.django_db
-def test_list_organisations_with_empty_organisation_returns_zero_counts_not_none(
+def test_list_organisations_with_empty_organisation_returns_zero_counts_not_none(  # noqa: FT003
     rf: RequestFactory,
 ) -> None:
     # Given

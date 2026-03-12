@@ -8,7 +8,7 @@ from integrations.webhook.models import WebhookConfiguration
 valid_webhook_url = "http://my.webhook.com/webhooks"
 
 
-def test_should_create_webhook_config_when_post(  # type: ignore[no-untyped-def]
+def test_should_create_webhook_config_when_post(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client, organisation, environment
 ):
     # Given
@@ -31,7 +31,7 @@ def test_should_create_webhook_config_when_post(  # type: ignore[no-untyped-def]
     assert WebhookConfiguration.objects.filter(environment=environment).count() == 1
 
 
-def test_should_return_BadRequest_when_duplicate_webhook_config_is_posted(  # type: ignore[no-untyped-def]
+def test_should_return_BadRequest_when_duplicate_webhook_config_is_posted(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client, organisation, environment
 ):
     # Given
@@ -56,7 +56,7 @@ def test_should_return_BadRequest_when_duplicate_webhook_config_is_posted(  # ty
     assert WebhookConfiguration.objects.filter(environment=environment).count() == 1
 
 
-def test_should_update_configuration_when_put(admin_client, organisation, environment):  # type: ignore[no-untyped-def]  # noqa: E501
+def test_should_update_configuration_when_put(admin_client, organisation, environment):  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     # Given
     config = WebhookConfiguration.objects.create(
         url=valid_webhook_url,
@@ -81,7 +81,7 @@ def test_should_update_configuration_when_put(admin_client, organisation, enviro
     assert config.url == new_url
 
 
-def test_should_return_webhook_config_list_when_requested(  # type: ignore[no-untyped-def]
+def test_should_return_webhook_config_list_when_requested(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client, organisation, environment
 ):
     # Given
@@ -96,7 +96,7 @@ def test_should_return_webhook_config_list_when_requested(  # type: ignore[no-un
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_should_remove_configuration_when_delete(  # type: ignore[no-untyped-def]
+def test_should_remove_configuration_when_delete(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client, organisation, environment
 ):
     # Given

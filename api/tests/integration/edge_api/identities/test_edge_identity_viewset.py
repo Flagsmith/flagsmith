@@ -19,7 +19,7 @@ from environments.dynamodb.wrappers.identity_wrapper import (
 from environments.models import Environment
 
 
-def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(  # type: ignore[no-untyped-def]
+def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client, environment, environment_api_key
 ):
     # Given
@@ -35,7 +35,7 @@ def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(  # type: i
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_get_identity(  # type: ignore[no-untyped-def]
+def test_get_identity(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -62,7 +62,7 @@ def test_get_identity(  # type: ignore[no-untyped-def]
     )
 
 
-def test_get_identity_returns_404_if_identity_does_not_exists(  # type: ignore[no-untyped-def]
+def test_get_identity_returns_404_if_identity_does_not_exists(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -82,7 +82,7 @@ def test_get_identity_returns_404_if_identity_does_not_exists(  # type: ignore[n
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_create_identity(  # type: ignore[no-untyped-def]
+def test_create_identity(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -116,7 +116,7 @@ def test_create_identity(  # type: ignore[no-untyped-def]
     assert response.json()["identity_uuid"] is not None
 
 
-def test_create_identity_returns_400_if_identity_already_exists(  # type: ignore[no-untyped-def]
+def test_create_identity_returns_400_if_identity_already_exists(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -135,7 +135,7 @@ def test_create_identity_returns_400_if_identity_already_exists(  # type: ignore
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_delete_identity(
+def test_delete_identity(  # noqa: FT003
     admin_client: APIClient,
     dynamo_enabled_environment: int,
     environment_api_key: str,
@@ -171,7 +171,7 @@ def test_delete_identity(
     )
 
 
-def test_identity_list_pagination(  # type: ignore[no-untyped-def]
+def test_identity_list_pagination(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -220,7 +220,7 @@ def test_identity_list_pagination(  # type: ignore[no-untyped-def]
     assert response.json()["last_evaluated_key"] is None
 
 
-def test_get_identities_list(  # type: ignore[no-untyped-def]
+def test_get_identities_list(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -253,7 +253,7 @@ def test_get_identities_list(  # type: ignore[no-untyped-def]
     )
 
 
-def test_search_identities_without_exact_match(  # type: ignore[no-untyped-def]
+def test_search_identities_without_exact_match(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client: APIClient,
     dynamo_enabled_environment: Environment,
     environment_api_key: str,
@@ -281,7 +281,7 @@ def test_search_identities_without_exact_match(  # type: ignore[no-untyped-def]
     assert response.json()["results"][0]["identifier"] == identifier
 
 
-def test_search_for_identities_with_exact_match(  # type: ignore[no-untyped-def]
+def test_search_for_identities_with_exact_match(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client: APIClient,
     dynamo_enabled_environment: Environment,
     environment_api_key: str,
@@ -310,7 +310,7 @@ def test_search_for_identities_with_exact_match(  # type: ignore[no-untyped-def]
     assert response.json()["results"][0]["identifier"] == identifier
 
 
-def test_search_for_identities_by_dashboard_alias_prefix(
+def test_search_for_identities_by_dashboard_alias_prefix(  # noqa: FT003
     admin_client: APIClient,
     dynamo_enabled_environment: Environment,
     environment_api_key: str,
@@ -349,7 +349,7 @@ def test_search_for_identities_by_dashboard_alias_prefix(
     assert response.json()["results"][0]["identifier"] == identifier
 
 
-def test_search_for_identities_by_dashboard_alias_exact(
+def test_search_for_identities_by_dashboard_alias_exact(  # noqa: FT003
     admin_client: APIClient,
     dynamo_enabled_environment: Environment,
     environment_api_key: str,
@@ -382,7 +382,7 @@ def test_search_for_identities_by_dashboard_alias_exact(
     assert response.json()["results"][0]["identifier"] == identifier
 
 
-def test_search_for_identities_by_dashboard_alias_casts_search_to_lower(
+def test_search_for_identities_by_dashboard_alias_casts_search_to_lower(  # noqa: FT003
     admin_client: APIClient,
     dynamo_enabled_environment: Environment,
     environment_api_key: str,
@@ -415,7 +415,7 @@ def test_search_for_identities_by_dashboard_alias_casts_search_to_lower(
     assert response.json()["results"][0]["identifier"] == identifier
 
 
-def test_update_edge_identity(
+def test_update_edge_identity(  # noqa: FT003
     admin_client_new: APIClient,
     dynamo_enabled_environment: Environment,
     environment_api_key: str,
@@ -462,7 +462,7 @@ def test_update_edge_identity(
     } == identity_from_db
 
 
-def test_edge_identities_traits_list(  # type: ignore[no-untyped-def]
+def test_edge_identities_traits_list(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     environment_api_key,
     identity_document,
@@ -492,7 +492,7 @@ def test_edge_identities_traits_list(  # type: ignore[no-untyped-def]
     )
 
 
-def test_edge_identities_trait_delete(  # type: ignore[no-untyped-def]
+def test_edge_identities_trait_delete(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     environment_api_key,
     dynamo_enabled_environment,
@@ -535,7 +535,7 @@ def test_edge_identities_trait_delete(  # type: ignore[no-untyped-def]
     )
 
 
-def test_edge_identities_create_trait(  # type: ignore[no-untyped-def]
+def test_edge_identities_create_trait(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -577,7 +577,7 @@ def test_edge_identities_create_trait(  # type: ignore[no-untyped-def]
     )
 
 
-def test_edge_identities_update_trait(  # type: ignore[no-untyped-def]
+def test_edge_identities_update_trait(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -626,7 +626,7 @@ def test_edge_identities_update_trait(  # type: ignore[no-untyped-def]
     )
 
 
-def test_edge_identities_update_trait_with_same_value(  # type: ignore[no-untyped-def]
+def test_edge_identities_update_trait_with_same_value(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -661,7 +661,7 @@ def test_edge_identities_update_trait_with_same_value(  # type: ignore[no-untype
     edge_identity_dynamo_wrapper_mock.put_item.assert_not_called()
 
 
-def test_edge_identities_update_traits_returns_400_if_persist_trait_data_is_false(  # type: ignore[no-untyped-def]
+def test_edge_identities_update_traits_returns_400_if_persist_trait_data_is_false(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,

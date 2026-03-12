@@ -24,7 +24,7 @@ from app_analytics.types import TrackFeatureEvaluationsByEnvironmentData
 )
 @mock.patch("app_analytics.track.requests")
 @mock.patch("app_analytics.track.Environment")
-def test_track_request_googleanalytics(  # type: ignore[no-untyped-def]
+def test_track_request_googleanalytics(  # type: ignore[no-untyped-def]  # noqa: FT003
     MockEnvironment, mock_requests, request_uri, expected_ga_requests
 ):
     """
@@ -56,7 +56,7 @@ def test_track_request_googleanalytics(  # type: ignore[no-untyped-def]
         (Resource.ENVIRONMENT_DOCUMENT, "environment-document"),
     ),
 )
-def test_track_request_sends_data_to_influxdb_for_tracked_uris(  # type: ignore[no-untyped-def]
+def test_track_request_sends_data_to_influxdb_for_tracked_uris(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker: MockerFixture,
     expected_resource: Resource,
     expected_influxdb_tag: str,
@@ -87,7 +87,7 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(  # type: ignore[
     )
 
 
-def test_track_request_sends_host_data_to_influxdb(
+def test_track_request_sends_host_data_to_influxdb(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     """
@@ -113,7 +113,7 @@ def test_track_request_sends_host_data_to_influxdb(
     )
 
 
-def test_track_feature_evaluation_influxdb(mocker: MockerFixture) -> None:
+def test_track_feature_evaluation_influxdb(mocker: MockerFixture) -> None:  # noqa: FT003
     # Given
     influx_db_wrapper_class_mock = mocker.patch("app_analytics.track.InfluxDBWrapper")
     influx_db_wrapper_mock = influx_db_wrapper_class_mock.return_value

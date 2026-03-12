@@ -26,7 +26,7 @@ def clear_lru_caches() -> None:
         ("", "unknown"),
     ],
 )
-def test_api_version_is_added_to_success_response_headers(
+def test_api_version_is_added_to_success_response_headers(  # noqa: FT003,FT004
     admin_client: APIClient,
     expected_version: str,
     fs: FakeFilesystem,
@@ -48,7 +48,7 @@ def test_api_version_is_added_to_success_response_headers(
         ("", "unknown"),
     ],
 )
-def test_api_version_is_added_to_error_response_headers(
+def test_api_version_is_added_to_error_response_headers(  # noqa: FT003,FT004
     client: APIClient,
     expected_version: str,
     fs: FakeFilesystem,

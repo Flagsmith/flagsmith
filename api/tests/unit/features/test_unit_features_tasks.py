@@ -24,7 +24,7 @@ from webhooks.webhooks import WebhookEventType
     ],
 )
 @pytest.mark.django_db
-def test_trigger_feature_state_change_webhooks(
+def test_trigger_feature_state_change_webhooks(  # noqa: FT003
     mocker: MockerFixture,
     user: FFAdminUser | None,
     api_key: MasterAPIKey | None,
@@ -85,7 +85,7 @@ def test_trigger_feature_state_change_webhooks(
 
 
 @pytest.mark.django_db
-def test_trigger_feature_state_change_webhooks_for_deleted_flag(  # type: ignore[no-untyped-def]
+def test_trigger_feature_state_change_webhooks_for_deleted_flag(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     mocker, organisation, project, environment, feature
 ):
     # Given
@@ -125,7 +125,7 @@ def test_trigger_feature_state_change_webhooks_for_deleted_flag(  # type: ignore
 
 
 @pytest.mark.django_db
-def test_trigger_feature_state_change_webhooks_for_deleted_flag_uses_fs_instance(  # type: ignore[no-untyped-def]
+def test_trigger_feature_state_change_webhooks_for_deleted_flag_uses_fs_instance(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     mocker: MockerFixture,
     environment: Environment,
     feature: Feature,

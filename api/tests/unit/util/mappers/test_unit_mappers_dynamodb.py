@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from features.models import FeatureState
 
 
-def test_map_environment_to_environment_document__call_expected(
+def test_map_environment_to_environment_document__call_expected(  # noqa: FT003
     environment: "Environment",
     feature_state: "FeatureState",
 ) -> None:
@@ -83,7 +83,7 @@ def test_map_environment_to_environment_document__call_expected(
     }
 
 
-def test_map_environment_api_key_to_environment_api_key_document__call_expected(
+def test_map_environment_api_key_to_environment_api_key_document__call_expected(  # noqa: FT003
     environment_api_key: "EnvironmentAPIKey",
 ) -> None:
     # Given
@@ -108,7 +108,7 @@ def test_map_environment_api_key_to_environment_api_key_document__call_expected(
     }
 
 
-def test_map_identity_to_identity_document__call_expected(
+def test_map_identity_to_identity_document__call_expected(  # noqa: FT003
     identity: "Identity",
     trait: "Trait",
     mocker: "MockerFixture",
@@ -137,7 +137,7 @@ def test_map_identity_to_identity_document__call_expected(
     assert uuid.UUID(result["identity_uuid"])  # type: ignore[arg-type]
 
 
-def test_map_environment_to_environment_v2_document__call_expected(
+def test_map_environment_to_environment_v2_document__call_expected(  # noqa: FT003
     environment: "Environment",
     feature_state: "FeatureState",
 ) -> None:
@@ -233,7 +233,7 @@ def test_map_identity_override_to_identity_override_document__decimal_feature_st
     assert feature_state_value == expected_feature_state_value
 
 
-def test_map_environment_to_compressed_environment_document__returns_expected(
+def test_map_environment_to_compressed_environment_document__returns_expected(  # noqa: FT003
     environment: "Environment",
     feature_state: "FeatureState",
 ) -> None:
@@ -263,7 +263,7 @@ def test_map_environment_to_compressed_environment_document__returns_expected(
     )
 
 
-def test_map_environment_to_compressed_environment_v2_document__returns_expected(
+def test_map_environment_to_compressed_environment_v2_document__returns_expected(  # noqa: FT003
     environment: "Environment",
     feature_state: "FeatureState",
 ) -> None:

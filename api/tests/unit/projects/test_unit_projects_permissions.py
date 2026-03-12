@@ -20,7 +20,7 @@ mock_request = mock.MagicMock()
 mock_view = mock.MagicMock()
 
 
-def test_list_project_has_permission(
+def test_list_project_has_permission(  # noqa: FT003
     staff_user: FFAdminUser,
 ) -> None:
     """All users should be able to create project"""
@@ -36,7 +36,7 @@ def test_list_project_has_permission(
     assert response is True
 
 
-def test_create_project_has_permission(
+def test_create_project_has_permission(  # noqa: FT003
     staff_user: FFAdminUser,
     organisation: Organisation,
     with_organisation_permissions: WithOrganisationPermissionsCallable,
@@ -56,7 +56,7 @@ def test_create_project_has_permission(
     assert response is True
 
 
-def test_create_project_has_permission_with_e2e_test_auth_token(
+def test_create_project_has_permission_with_e2e_test_auth_token(  # noqa: FT003
     staff_user: FFAdminUser,
     organisation: Organisation,
     with_organisation_permissions: WithOrganisationPermissionsCallable,
@@ -81,7 +81,7 @@ def test_create_project_has_permission_with_e2e_test_auth_token(
     assert response is True
 
 
-def test_admin_can_update_project_has_permission(
+def test_admin_can_update_project_has_permission(  # noqa: FT003
     organisation: Organisation,
     staff_user: FFAdminUser,
     project: Project,
@@ -100,7 +100,7 @@ def test_admin_can_update_project_has_permission(
     assert result is True
 
 
-def test_admin_group_can_update_project_has_permission(
+def test_admin_group_can_update_project_has_permission(  # noqa: FT003
     staff_user: FFAdminUser,
     organisation: Organisation,
     project: Project,
@@ -125,7 +125,7 @@ def test_admin_group_can_update_project_has_permission(
     assert result is True
 
 
-def test_regular_user_cannot_update_project_missing_permission(
+def test_regular_user_cannot_update_project_missing_permission(  # noqa: FT003
     staff_user: FFAdminUser,
     organisation: Organisation,
     project: Project,
@@ -144,7 +144,7 @@ def test_regular_user_cannot_update_project_missing_permission(
     assert result is False
 
 
-def test_admin_can_delete_project_has_permission(
+def test_admin_can_delete_project_has_permission(  # noqa: FT003
     staff_user: FFAdminUser,
     organisation: Organisation,
     project: Project,
@@ -168,7 +168,7 @@ def test_admin_can_delete_project_has_permission(
     assert result is True
 
 
-def test_regular_user_cannot_delete_project(
+def test_regular_user_cannot_delete_project(  # noqa: FT003
     staff_user: FFAdminUser,
     organisation: Organisation,
     project: Project,
@@ -187,7 +187,7 @@ def test_regular_user_cannot_delete_project(
     assert result is False
 
 
-def test_organisation_admin_can_perform_all_actions_on_a_project(
+def test_organisation_admin_can_perform_all_actions_on_a_project(  # noqa: FT003
     admin_user: FFAdminUser,
     organisation: Organisation,
     project: Project,
@@ -218,7 +218,7 @@ def test_organisation_admin_can_perform_all_actions_on_a_project(
     assert all(result for result in results)
 
 
-def test_user_with_view_project_permission_can_view_project(
+def test_user_with_view_project_permission_can_view_project(  # noqa: FT003
     staff_user: FFAdminUser,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -236,7 +236,7 @@ def test_user_with_view_project_permission_can_view_project(
     assert result
 
 
-def test_project_admin_has_permission(
+def test_project_admin_has_permission(  # noqa: FT003
     staff_user: FFAdminUser,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -258,7 +258,7 @@ def test_project_admin_has_permission(
     assert all(results)
 
 
-def test_project_admin_has_object_permission(
+def test_project_admin_has_object_permission(  # noqa: FT003
     staff_user: FFAdminUser,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -280,7 +280,7 @@ def test_project_admin_has_object_permission(
     assert all(results)
 
 
-def test_organisation_admin_has_permission(
+def test_organisation_admin_has_permission(  # noqa: FT003
     admin_user: FFAdminUser,
     organisation: Organisation,
     project: Project,
@@ -301,7 +301,7 @@ def test_organisation_admin_has_permission(
     assert all(results)
 
 
-def test_organisation_admin_has_object_permission(
+def test_organisation_admin_has_object_permission(  # noqa: FT003
     admin_user: FFAdminUser,
     staff_user: FFAdminUser,
     organisation: Organisation,
@@ -327,7 +327,7 @@ def test_organisation_admin_has_object_permission(
     assert all(results)
 
 
-def test_regular_user_has_no_list_permission(
+def test_regular_user_has_no_list_permission(  # noqa: FT003
     staff_user: FFAdminUser,
     project: Project,
 ) -> None:
@@ -345,7 +345,7 @@ def test_regular_user_has_no_list_permission(
     assert result is False
 
 
-def test_regular_user_has_no_create_permission(
+def test_regular_user_has_no_create_permission(  # noqa: FT003
     staff_user: FFAdminUser,
     project: Project,
 ) -> None:
@@ -363,7 +363,7 @@ def test_regular_user_has_no_create_permission(
     assert result is False
 
 
-def test_regular_user_has_no_update_permission(
+def test_regular_user_has_no_update_permission(  # noqa: FT003
     staff_user: FFAdminUser,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -383,7 +383,7 @@ def test_regular_user_has_no_update_permission(
     assert result is False
 
 
-def test_regular_user_has_no_destroy_permission(
+def test_regular_user_has_no_destroy_permission(  # noqa: FT003
     staff_user: FFAdminUser,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -404,7 +404,7 @@ def test_regular_user_has_no_destroy_permission(
 
 
 @pytest.mark.django_db
-def test_free_plan_has_only_fixed_projects_permission() -> None:
+def test_free_plan_has_only_fixed_projects_permission() -> None:  # noqa: FT003
     # Given
     organisation = Organisation.objects.create(name="Test organisation")
 
@@ -428,7 +428,7 @@ def test_free_plan_has_only_fixed_projects_permission() -> None:
     assert not project_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
 
-def test_is_project_admin_has_permission_raises_permission_denied_if_not_found(  # type: ignore[no-untyped-def]
+def test_is_project_admin_has_permission_raises_permission_denied_if_not_found(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     mocker, admin_user
 ) -> None:
     # Given
@@ -440,7 +440,7 @@ def test_is_project_admin_has_permission_raises_permission_denied_if_not_found( 
         IsProjectAdmin().has_permission(request, view)  # type: ignore[no-untyped-call]
 
 
-def test_is_project_admin_has_permission_raises_api_exception_if_no_kwarg(  # type: ignore[no-untyped-def]
+def test_is_project_admin_has_permission_raises_api_exception_if_no_kwarg(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     mocker, admin_user
 ) -> None:
     # Given
@@ -452,7 +452,7 @@ def test_is_project_admin_has_permission_raises_api_exception_if_no_kwarg(  # ty
         IsProjectAdmin().has_permission(request, view)  # type: ignore[no-untyped-call]
 
 
-def test_is_project_admin_has_permission_returns_true_if_project_admin(  # type: ignore[no-untyped-def]
+def test_is_project_admin_has_permission_returns_true_if_project_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     mocker, admin_user, organisation, project
 ) -> None:
     # Given

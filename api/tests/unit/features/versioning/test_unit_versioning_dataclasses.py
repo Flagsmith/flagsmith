@@ -7,13 +7,13 @@ from features.versioning.dataclasses import Conflict
 
 
 @pytest.mark.parametrize("segment_id, expected_result", ((None, True), (1, False)))
-def test_conflict_is_environment_default(
+def test_conflict_is_environment_default(  # noqa: FT003,FT004
     segment_id: int | None, expected_result: bool
 ) -> None:
     assert Conflict(segment_id=segment_id).is_environment_default is expected_result
 
 
-def test_author_data_from_request_sets_api_key_for_non_user() -> None:
+def test_author_data_from_request_sets_api_key_for_non_user() -> None:  # noqa: FT003,FT004
     mock_master_api_key = Mock(spec_set=["id", "name"])
     mock_api_key_user = Mock()
     mock_api_key_user.key = mock_master_api_key
@@ -26,7 +26,7 @@ def test_author_data_from_request_sets_api_key_for_non_user() -> None:
     assert author.user is None
 
 
-def test_author_data_from_request_raises_for_invalid_user() -> None:
+def test_author_data_from_request_raises_for_invalid_user() -> None:  # noqa: FT003,FT004
     mock_request = Mock()
     mock_request.user = object()  # No .key attribute
 

@@ -158,7 +158,7 @@ class MockChargeBeePortalSession:
         self.access_url = access_url
 
 
-def test_chargebee_get_max_seats_for_plan_returns_max_seats_for_plan(
+def test_chargebee_get_max_seats_for_plan_returns_max_seats_for_plan(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -173,7 +173,7 @@ def test_chargebee_get_max_seats_for_plan_returns_max_seats_for_plan(
     assert max_seats == meta_data["seats"]
 
 
-def test_chargebee_get_max_api_calls_for_plan_returns_max_api_calls_for_plan(
+def test_chargebee_get_max_api_calls_for_plan_returns_max_api_calls_for_plan(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -187,7 +187,7 @@ def test_chargebee_get_max_api_calls_for_plan_returns_max_api_calls_for_plan(
     assert max_api_calls == meta_data["api_calls"]
 
 
-def test_chargebee_get_plan_meta_data_returns_correct_metadata(
+def test_chargebee_get_plan_meta_data_returns_correct_metadata(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -213,7 +213,7 @@ def test_chargebee_get_plan_meta_data_returns_correct_metadata(
     mock_cb.Plan.retrieve.assert_called_with(plan_id)
 
 
-def test_chargebee_get_subscription_data_from_hosted_page_returns_expected_values(
+def test_chargebee_get_subscription_data_from_hosted_page_returns_expected_values(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -245,7 +245,7 @@ def test_chargebee_get_subscription_data_from_hosted_page_returns_expected_value
     assert subscription_data["customer_id"] == customer_id
 
 
-def test_get_chargebee_portal_url(mocker: MockerFixture) -> None:
+def test_get_chargebee_portal_url(mocker: MockerFixture) -> None:  # noqa: FT003
     # Given
     access_url = "https://test.url.com"
     mock_cb = mocker.patch(
@@ -263,7 +263,7 @@ def test_get_chargebee_portal_url(mocker: MockerFixture) -> None:
     assert portal_url == access_url
 
 
-def test_chargebee_get_customer_id_from_subscription(
+def test_chargebee_get_customer_id_from_subscription(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -282,7 +282,7 @@ def test_chargebee_get_customer_id_from_subscription(
     assert customer_id == expected_customer_id
 
 
-def test_chargebee_get_hosted_page_url_for_subscription_upgrade(
+def test_chargebee_get_hosted_page_url_for_subscription_upgrade(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -311,7 +311,7 @@ def test_chargebee_get_hosted_page_url_for_subscription_upgrade(
     )
 
 
-def test_extract_subscription_metadata(
+def test_extract_subscription_metadata(  # noqa: FT003
     mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
     chargebee_object_metadata: ChargebeeObjMetadata,
 ) -> None:
@@ -351,7 +351,7 @@ def test_extract_subscription_metadata(
     assert subscription_metadata.chargebee_email == customer_email
 
 
-def test_extract_subscription_metadata_when_addon_list_is_empty(
+def test_extract_subscription_metadata_when_addon_list_is_empty(  # noqa: FT003
     mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
     chargebee_object_metadata: ChargebeeObjMetadata,
 ) -> None:
@@ -381,7 +381,7 @@ def test_extract_subscription_metadata_when_addon_list_is_empty(
     assert subscription_metadata.chargebee_email == customer_email
 
 
-def test_get_subscription_metadata_from_id(
+def test_get_subscription_metadata_from_id(  # noqa: FT003
     mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
     chargebee_object_metadata: ChargebeeObjMetadata,
 ) -> None:
@@ -401,7 +401,7 @@ def test_get_subscription_metadata_from_id(
     assert subscription_metadata.chargebee_email == customer_email  # type: ignore[union-attr]
 
 
-def test_cancel_subscription(mocker) -> None:  # type: ignore[no-untyped-def]
+def test_cancel_subscription(mocker) -> None:  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client", autospec=True
@@ -418,7 +418,7 @@ def test_cancel_subscription(mocker) -> None:  # type: ignore[no-untyped-def]
     )
 
 
-def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(  # type: ignore[no-untyped-def]
+def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, caplog
 ) -> None:
     # Given
@@ -450,7 +450,7 @@ def test_cancel_subscription_throws_cannot_cancel_error_if_api_error(  # type: i
     )
 
 
-def test_get_subscription_metadata_from_id_returns_null_if_chargebee_error(  # type: ignore[no-untyped-def]
+def test_get_subscription_metadata_from_id_returns_null_if_chargebee_error(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, chargebee_object_metadata
 ) -> None:
     # Given
@@ -474,7 +474,7 @@ def test_get_subscription_metadata_from_id_returns_null_if_chargebee_error(  # t
     "subscription_id",
     [None, "", " "],
 )
-def test_get_subscription_metadata_from_id_returns_none_for_invalid_subscription_id(  # type: ignore[no-untyped-def]
+def test_get_subscription_metadata_from_id_returns_none_for_invalid_subscription_id(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, chargebee_object_metadata, subscription_id
 ) -> None:
     # Given
@@ -490,7 +490,7 @@ def test_get_subscription_metadata_from_id_returns_none_for_invalid_subscription
     assert subscription_metadata is None
 
 
-def test_get_subscription_metadata_from_id_returns_valid_metadata_if_addons_is_none(
+def test_get_subscription_metadata_from_id_returns_valid_metadata_if_addons_is_none(  # noqa: FT003
     mock_subscription_response: MockChargeBeeSubscriptionResponse,
     chargebee_object_metadata: ChargebeeObjMetadata,
 ) -> None:
@@ -507,7 +507,7 @@ def test_get_subscription_metadata_from_id_returns_valid_metadata_if_addons_is_n
     assert subscription_metadata.projects == chargebee_object_metadata.projects  # type: ignore[union-attr]
 
 
-def test_add_single_seat_with_existing_addon(mocker) -> None:  # type: ignore[no-untyped-def]
+def test_add_single_seat_with_existing_addon(mocker) -> None:  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     plan_id = "plan-id"
     addon_id = ADDITIONAL_SEAT_ADDON_ID
@@ -547,7 +547,7 @@ def test_add_single_seat_with_existing_addon(mocker) -> None:  # type: ignore[no
     )
 
 
-def test_add_single_seat_without_existing_addon(mocker) -> None:  # type: ignore[no-untyped-def]
+def test_add_single_seat_without_existing_addon(mocker) -> None:  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     subscription_id = "subscription-id"
 
@@ -584,7 +584,7 @@ def test_add_single_seat_without_existing_addon(mocker) -> None:  # type: ignore
     )
 
 
-def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(  # type: ignore[no-untyped-def]
+def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, caplog
 ) -> None:
     # Given
@@ -643,7 +643,7 @@ def test_add_single_seat_throws_upgrade_seats_error_error_if_api_error(  # type:
     )
 
 
-def test_add_100k_api_calls_when_count_is_empty(mocker: MockerFixture) -> None:
+def test_add_100k_api_calls_when_count_is_empty(mocker: MockerFixture) -> None:  # noqa: FT003
     # Given
     subscription_mock = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client", autospec=True
@@ -662,7 +662,7 @@ def test_add_100k_api_calls_when_count_is_empty(mocker: MockerFixture) -> None:
     subscription_mock.Subscription.update.assert_not_called()
 
 
-def test_add_100k_api_calls_when_chargebee_api_error_has_error_code(
+def test_add_100k_api_calls_when_chargebee_api_error_has_error_code(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -691,7 +691,7 @@ def test_add_100k_api_calls_when_chargebee_api_error_has_error_code(
         )
 
 
-def test_add_100k_api_calls_when_chargebee_api_error_has_no_error_code(
+def test_add_100k_api_calls_when_chargebee_api_error_has_no_error_code(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given

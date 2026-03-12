@@ -10,7 +10,7 @@ from users.models import FFAdminUser
 from webhooks.permissions import TriggerSampleWebhookPermission
 
 
-def test_has_permission_returns_false_for_org_webhook_if_user_is_not_an_admin(  # type: ignore[no-untyped-def]
+def test_has_permission_returns_false_for_org_webhook_if_user_is_not_an_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     organisation, django_user_model, rf
 ):
     # Given
@@ -27,7 +27,7 @@ def test_has_permission_returns_false_for_org_webhook_if_user_is_not_an_admin(  
     assert permission_class.has_permission(mock_request, mock_view) is False  # type: ignore[no-untyped-call]
 
 
-def test_has_permission_returns_true_for_org_webhook_if_user_is_an_admin(  # type: ignore[no-untyped-def]
+def test_has_permission_returns_true_for_org_webhook_if_user_is_an_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     organisation, django_user_model, rf
 ):
     # Given
@@ -45,7 +45,7 @@ def test_has_permission_returns_true_for_org_webhook_if_user_is_an_admin(  # typ
     assert permission_class.has_permission(mock_request, mock_view) is True  # type: ignore[no-untyped-call]
 
 
-def test_has_permission_returns_false_for_env_webhook_if_user_is_not_an_admin(  # type: ignore[no-untyped-def]
+def test_has_permission_returns_false_for_env_webhook_if_user_is_not_an_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     environment, django_user_model, rf
 ):
     # Given
@@ -62,7 +62,7 @@ def test_has_permission_returns_false_for_env_webhook_if_user_is_not_an_admin(  
     assert permission_class.has_permission(mock_request, mock_view) is False  # type: ignore[no-untyped-call]
 
 
-def test_has_permission_returns_true_for_env_webhook_if_user_is_an_admin(
+def test_has_permission_returns_true_for_env_webhook_if_user_is_an_admin(  # noqa: FT003,FT004
     environment: Environment,
     staff_user: FFAdminUser,
     rf: RequestFactory,
@@ -84,7 +84,7 @@ def test_has_permission_returns_true_for_env_webhook_if_user_is_an_admin(
     assert permission_class.has_permission(mock_request, mock_view) is True  # type: ignore[no-untyped-call]
 
 
-def test_has_permission_ignores_payload_scope_if_not_webhook_test(  # type: ignore[no-untyped-def]
+def test_has_permission_ignores_payload_scope_if_not_webhook_test(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     organisation, django_user_model, rf
 ):
     # Given
@@ -106,7 +106,7 @@ def test_has_permission_ignores_payload_scope_if_not_webhook_test(  # type: igno
     assert permission_class.has_permission(mock_request, mock_view) is False  # type: ignore[no-untyped-call]
 
 
-def test_has_permission_returns_true_for_webhook_test_if_user_is_an_organisation_admin(  # type: ignore[no-untyped-def]
+def test_has_permission_returns_true_for_webhook_test_if_user_is_an_organisation_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     organisation, django_user_model, rf
 ):
     # Given
@@ -128,7 +128,7 @@ def test_has_permission_returns_true_for_webhook_test_if_user_is_an_organisation
     assert permission_class.has_permission(mock_request, mock_view) is True  # type: ignore[no-untyped-call]
 
 
-def test_has_permission_returns_true_for_webhook_test_if_user_is_an_environment_admin(
+def test_has_permission_returns_true_for_webhook_test_if_user_is_an_environment_admin(  # noqa: FT003,FT004
     environment: Environment,
     staff_user: FFAdminUser,
     user_environment_permission: UserEnvironmentPermission,

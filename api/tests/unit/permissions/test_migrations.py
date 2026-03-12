@@ -3,7 +3,7 @@ from django_test_migrations.migrator import Migrator
 from organisations.models import OrganisationRole
 
 
-def test_migration_only_remove_permissions_for_users_that_are_not_part_of_the_organisation(  # noqa: E501
+def test_migration_only_remove_permissions_for_users_that_are_not_part_of_the_organisation(  # noqa: E501,FT003,FT004
     migrator: Migrator,
 ) -> None:
     # Given - the migration state is at 0004 (before the migration we want to test)

@@ -5,7 +5,7 @@ from integrations.integration import identify_integrations
 from integrations.segment.models import SegmentConfiguration
 
 
-def test_identify_integrations_amplitude_called(mocker, environment, identity):  # type: ignore[no-untyped-def]
+def test_identify_integrations_amplitude_called(mocker, environment, identity):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     mock_amplitude_wrapper = mocker.patch(
         "integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async"
@@ -19,7 +19,7 @@ def test_identify_integrations_amplitude_called(mocker, environment, identity): 
     mock_amplitude_wrapper.assert_called()
 
 
-def test_identify_integrations_segment_called(mocker, environment, identity):  # type: ignore[no-untyped-def]
+def test_identify_integrations_segment_called(mocker, environment, identity):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     mock_segment_wrapper = mocker.patch(
         "integrations.segment.segment.SegmentWrapper.identify_user_async"
@@ -32,7 +32,7 @@ def test_identify_integrations_segment_called(mocker, environment, identity):  #
     mock_segment_wrapper.assert_called()
 
 
-def test_identify_integrations_calls_every_integration_in_identity_integrations_dict(  # type: ignore[no-untyped-def]
+def test_identify_integrations_calls_every_integration_in_identity_integrations_dict(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, identity
 ):
     # Given
@@ -99,7 +99,7 @@ def test_identify_integrations_calls_every_integration_in_identity_integrations_
     )
 
 
-def test_identify_integrations_does_not_call_deleted_integrations(  # type: ignore[no-untyped-def]
+def test_identify_integrations_does_not_call_deleted_integrations(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, environment, identity
 ):
     # Given

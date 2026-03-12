@@ -6,11 +6,11 @@ from environments.identities.helpers import (
 )
 
 
-def test_get_hashed_percentage_for_object_ids_is_number_between_0_inc_and_1_exc():  # type: ignore[no-untyped-def]
+def test_get_hashed_percentage_for_object_ids_is_number_between_0_inc_and_1_exc():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert 1 > get_hashed_percentage_for_object_ids([12, 93]) >= 0
 
 
-def test_get_hashed_percentage_for_object_ids_is_the_same_each_time():  # type: ignore[no-untyped-def]
+def test_get_hashed_percentage_for_object_ids_is_the_same_each_time():  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     object_ids = [30, 73]
 
@@ -22,7 +22,7 @@ def test_get_hashed_percentage_for_object_ids_is_the_same_each_time():  # type: 
     assert result_1 == result_2
 
 
-def test_percentage_value_is_unique_for_different_identities():  # type: ignore[no-untyped-def]
+def test_percentage_value_is_unique_for_different_identities():  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     first_object_ids = [14, 106]
     second_object_ids = [53, 200]
@@ -35,7 +35,7 @@ def test_percentage_value_is_unique_for_different_identities():  # type: ignore[
     assert result_1 != result_2
 
 
-def test_get_hashed_percentage_for_object_ids_should_be_evenly_distributed():  # type: ignore[no-untyped-def]
+def test_get_hashed_percentage_for_object_ids_should_be_evenly_distributed():  # type: ignore[no-untyped-def]  # noqa: FT003
     """
     This test checks if the percentage value returned by the helper function returns
     evenly distributed values.
@@ -72,7 +72,7 @@ def test_get_hashed_percentage_for_object_ids_should_be_evenly_distributed():  #
 
 
 @mock.patch("environments.identities.helpers.hashlib")
-def test_get_hashed_percentage_does_not_return_1(mock_hashlib):  # type: ignore[no-untyped-def]
+def test_get_hashed_percentage_does_not_return_1(mock_hashlib):  # type: ignore[no-untyped-def]  # noqa: FT003
     """
     Quite complex test to ensure that the function will never return 1.
 

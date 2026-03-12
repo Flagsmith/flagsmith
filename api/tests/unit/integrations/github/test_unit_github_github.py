@@ -1,7 +1,7 @@
 from integrations.github.github import tag_feature_per_github_event
 
 
-def test_tag_feature_per_github_event_with_empty_feature(db: None) -> None:
+def test_tag_feature_per_github_event_with_empty_feature(db: None) -> None:  # noqa: FT003
     # Given / When
     result = tag_feature_per_github_event(  # type: ignore[func-returns-value]
         event_type="test",

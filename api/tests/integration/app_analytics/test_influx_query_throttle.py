@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 
-def test_influx_data_endpoint_is_throttled(
+def test_influx_data_endpoint_is_throttled(  # noqa: FT003
     admin_client: APIClient,
     organisation: int,
     mocker: MockerFixture,

@@ -8,7 +8,7 @@ from organisations.permissions.permissions import (
 from permissions.models import ORGANISATION_PERMISSION_TYPE
 
 
-def test_migration_creates_create_project_permissions_for_org_users(
+def test_migration_creates_create_project_permissions_for_org_users(  # noqa: FT003
     migrator: Migrator,
 ) -> None:
     # Given
@@ -67,7 +67,7 @@ def test_migration_creates_create_project_permissions_for_org_users(
     ).exists()
 
 
-def test_merge_duplicate_permissions_migration(migrator: Migrator) -> None:
+def test_merge_duplicate_permissions_migration(migrator: Migrator) -> None:  # noqa: FT003
     # Given - the migration state is at 0002 (before the migration we want to test)
     old_state = migrator.apply_initial_migration(
         ("organisation_permissions", "0002_add_related_query_name")
@@ -161,7 +161,7 @@ def test_merge_duplicate_permissions_migration(migrator: Migrator) -> None:
     ).exists()
 
 
-def test_update_audit_and_history_limits(migrator: Migrator) -> None:
+def test_update_audit_and_history_limits(migrator: Migrator) -> None:  # noqa: FT003
     # Given
     old_state = migrator.apply_initial_migration(
         ("organisations", "0056_create_organisation_breached_grace_period")
