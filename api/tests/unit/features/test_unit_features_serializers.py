@@ -14,6 +14,29 @@ from features.multivariate.serializers import (
 from features.serializers import FeatureStateSerializerBasic
 
 
+def test_feature_state_serializer_basic__null_environment_with_context__is_valid(  # type: ignore[no-untyped-def]
+    feature, environment
+):
+    # Given
+    feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+    data = {
+        "id": feature_state.id,
+        "feature": feature.id,
+        "environment": None,
+    }
+    serializer = FeatureStateSerializerBasic(
+        instance=feature_state,
+        data=data,
+        context={"environment": environment},
+    )
+
+    # When
+    is_valid = serializer.is_valid()
+
+    # Then - should not raise AttributeError on environment.id
+    assert is_valid
+
+
 @pytest.mark.parametrize(
     "percentage_value, expected_is_valid", ((90, True), (100, True), (110, False))
 )
