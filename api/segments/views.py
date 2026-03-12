@@ -1,5 +1,4 @@
 import logging
-from functools import cache
 from typing import TYPE_CHECKING, Any
 
 from common.projects.permissions import VIEW_PROJECT
@@ -93,17 +92,10 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [SegmentPermissions]
     pagination_class = CustomPagination
 
-    @cache
     def get_project(self) -> Project:
         user: "FFAdminUser" = self.request.user  # type: ignore[assignment]
         projects = user.get_permitted_projects(permission_key=VIEW_PROJECT)
         return get_object_or_404(projects, pk=self.kwargs["project_pk"])
-
-    def get_serializer_context(self) -> dict[str, Any]:
-        context = super().get_serializer_context()
-        if not getattr(self, "swagger_fake_view", False):
-            context["project"] = self.get_project()
-        return context
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
