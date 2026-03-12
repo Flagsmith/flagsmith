@@ -1,3 +1,4 @@
+from functools import cached_property
 from typing import Any
 
 import structlog
@@ -79,6 +80,7 @@ class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
 
 
 class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
+    instance: Segment | None
     rules = SegmentRuleSerializer(many=True, required=True, allow_empty=False)
     metadata = MetadataSerializer(required=False, many=True)
 
@@ -112,17 +114,30 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "rules",
             "metadata",
         ]
+        read_only_fields = ["project"]
+
+    @cached_property
+    def project(self) -> Project:
+        """Resolve the project from the view's URL kwargs"""
+        if self.instance:
+            return self.instance.project
+        try:
+            pk = int(self.context["view"].kwargs["project_pk"])
+        except KeyError as error:
+            raise RuntimeError(
+                "The serializer context is missing a view with project_pk in its URL."
+            ) from error
+        return Project.objects.get(pk=pk)  # type: ignore[no-any-return]
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
-        project = self.instance.project if self.instance else attrs["project"]  # type: ignore[union-attr]
-        organisation = project.organisation
+        organisation = self.project.organisation
 
         self._validate_required_metadata(
-            organisation, attrs.get("metadata", []), project=project
+            organisation, attrs.get("metadata", []), project=self.project
         )
         self._validate_segment_rules_conditions_limit(attrs["rules"])
-        self._validate_project_segment_limit(project)
+        self._validate_project_segment_limit(self.project)
         return attrs
 
     def create(self, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]

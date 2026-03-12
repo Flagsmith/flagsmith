@@ -135,6 +135,9 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         return queryset
 
+    def perform_create(self, serializer: SegmentSerializer) -> None:  # type: ignore[override]
+        serializer.save(project_id=self.kwargs["project_pk"])  # type: ignore[no-untyped-call]
+
     @extend_schema(parameters=[AssociatedFeaturesQuerySerializer])
     @action(
         detail=True,
