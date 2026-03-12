@@ -597,6 +597,8 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         return feature
 
     def validate_environment(self, environment):  # type: ignore[no-untyped-def]
+        if environment is None:
+            return environment
         if self.instance and self.instance.environment_id != environment.id:  # type: ignore[union-attr]
             raise serializers.ValidationError(
                 "Cannot change the environment of a feature state"
