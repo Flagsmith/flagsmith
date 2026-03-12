@@ -139,12 +139,7 @@ class CreateEnvironmentSerializer(_BaseCreateUpdateEnvironmentSerializer):
         if getattr(view, "swagger_fake_view", False):
             return None
 
-        # handle `project` not being part of the data
-        # When request comes from drf-spectacular (as part of schema generation)
-        project_id = view.request.data.get("project")
-        if not project_id:
-            return None
-
+        project_id = view.request.data["project"]
         project = Project.objects.select_related(
             "organisation", "organisation__subscription"
         ).get(id=project_id)
