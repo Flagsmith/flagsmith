@@ -1,5 +1,6 @@
 import logging
-from typing import Any
+from functools import cache
+from typing import TYPE_CHECKING, Any
 
 from common.projects.permissions import VIEW_PROJECT
 from django.utils.decorators import method_decorator
@@ -21,6 +22,7 @@ from features.serializers import (
     SegmentAssociatedFeatureStateSerializer,
 )
 from features.versioning.models import EnvironmentFeatureVersion
+from projects.models import Project
 
 from .models import Segment
 from .permissions import SegmentPermissions
@@ -30,6 +32,9 @@ from .serializers import (
     SegmentSerializer,
 )
 from .services import delete_segment
+
+if TYPE_CHECKING:
+    from users.models import FFAdminUser
 
 logger = logging.getLogger()
 
@@ -88,15 +93,23 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [SegmentPermissions]
     pagination_class = CustomPagination
 
+    @cache
+    def get_project(self) -> Project:
+        user: "FFAdminUser" = self.request.user  # type: ignore[assignment]
+        projects = user.get_permitted_projects(permission_key=VIEW_PROJECT)
+        return get_object_or_404(projects, pk=self.kwargs["project_pk"])
+
+    def get_serializer_context(self) -> dict[str, Any]:
+        context = super().get_serializer_context()
+        if not getattr(self, "swagger_fake_view", False):
+            context["project"] = self.get_project()
+        return context
+
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Segment.objects.none()
 
-        permitted_projects = self.request.user.get_permitted_projects(  # type: ignore[union-attr]
-            permission_key=VIEW_PROJECT
-        )
-        project = get_object_or_404(permitted_projects, pk=self.kwargs["project_pk"])
-
+        project = self.get_project()
         queryset = Segment.live_objects.filter(project=project, is_system_segment=False)
 
         if self.action == "list":
@@ -134,9 +147,6 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             queryset = queryset.filter(feature__isnull=True)
 
         return queryset
-
-    def perform_create(self, serializer: SegmentSerializer) -> None:  # type: ignore[override]
-        serializer.save(project_id=int(self.kwargs["project_pk"]))  # type: ignore[no-untyped-call]
 
     @extend_schema(parameters=[AssociatedFeaturesQuerySerializer])
     @action(

@@ -205,7 +205,7 @@ def test_segments_limit_ignores_old_segment_versions(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
+    with_project_permissions([MANAGE_SEGMENTS, VIEW_PROJECT])  # type: ignore[call-arg]
 
     # let's reduce the max segments allowed to 2
     project.max_segments_allowed = 2
