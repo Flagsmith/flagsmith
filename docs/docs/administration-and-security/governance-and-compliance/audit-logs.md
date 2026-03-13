@@ -76,30 +76,100 @@ hmac.compare_digest(expected_signature, received_signature) is True
 
 ---
 
+## Related Object Types
+
+The `related_object_type` field in the audit log payload indicates the type of resource that was affected. The possible
+values are:
+
+| Value               | Description                    |
+| ------------------- | ------------------------------ |
+| `FEATURE`           | Feature (flag / remote config) |
+| `FEATURE_STATE`     | Feature state                  |
+| `SEGMENT`           | Segment                        |
+| `ENVIRONMENT`       | Environment                    |
+| `CHANGE_REQUEST`    | Change request                 |
+| `EDGE_IDENTITY`     | Edge identity                  |
+| `IMPORT_REQUEST`    | Import request                 |
+| `EF_VERSION`        | Environment feature version    |
+| `FEATURE_HEALTH`    | Feature health status          |
+| `RELEASE_PIPELINE`  | Release pipeline               |
+
 ## Audit Log Event Types
 
-The following sections describe the types of events that are recorded in the Audit Log (both in the Flagsmith application and via webhooks):
+The following sections describe the types of events that are recorded in the Audit Log (both in the Flagsmith
+application and via webhooks):
 
 ### Environments
 
-- New environment created within a project
-- Environment meta-data updated
+- New environment created
+- Environment updated
 
 ### Flags
 
-- New flag created
-- Flag state changed
-- Flag deleted
-- Multivariate flag state changed
+- New flag / remote config created
+- Flag / remote config updated
+- Flag / remote config deleted
+- Multivariate option added to or removed from a feature
+- Multivariate value changed for a feature
 
 ### Segments
 
 - New segment created
-- Segment rule updated
-- Segment condition added
-- Segment condition updated
-- Segment overrides re-ordered
+- Segment updated
+- Segment deleted
 
-### Identities
+### Flag State Changes
 
-- Identity feature state overridden
+- Flag state updated for a feature
+- Remote config value updated for a feature
+- Flag state / remote config value update scheduled
+- Scheduled change went live (via change request)
+- Flag state scheduled for update by a change request
+- Flag state / remote config updated by a change request
+
+### Identity Overrides
+
+- Identity override created
+- Identity override updated (flag state / remote config value)
+- Identity override value updated (remote config)
+- Identity override deleted
+- Identity override scheduled
+- Edge identity feature override created, updated, or deleted
+
+### Segment Overrides
+
+- Segment override created
+- Segment override updated (flag state / remote config value)
+- Segment override value updated (remote config)
+- Segment override deleted
+- Segment override scheduled
+- Segment rules updated for a flag in an environment
+- Segment overrides re-ordered for a feature
+
+### Change Requests
+
+- Change request created
+- Change request approved
+- Change request committed
+- Change request deleted
+
+### Feature Versioning
+
+- New version published for a feature
+
+### Release Pipelines
+
+- Release pipeline created
+- Release pipeline cloned
+- Release pipeline updated
+- Release pipeline published
+- Release pipeline converted to draft (unpublished)
+- Release pipeline deleted
+- Feature added to a release pipeline
+- Feature removed from a release pipeline
+- Flag state / remote config updated by a release pipeline
+
+### Phased Rollouts
+
+- Phased rollout created for a feature by a release pipeline
+- Phased rollout split percentage changed
