@@ -32,16 +32,14 @@ def exceeds_segment_override_limit(
         )
         q = q & Q(environment_feature_version__in=latest_versions)
 
-    existing_overridden_segment_ids = set(
-        environment.feature_segments.filter(q).values_list("segment_id", flat=True)
-    )
-    segment_override_count = len(existing_overridden_segment_ids)
+    existing_overrides = environment.feature_segments.filter(q)
+    segment_override_count = existing_overrides.count()
 
-    extra = len(segment_ids_to_create_overrides) - len(
-        set(segment_ids_to_delete_overrides).intersection(
-            existing_overridden_segment_ids
-        )
+    existing_segment_ids = set(existing_overrides.values_list("segment_id", flat=True))
+    to_delete_count = len(
+        set(segment_ids_to_delete_overrides).intersection(existing_segment_ids)
     )
+    extra = len(segment_ids_to_create_overrides) - to_delete_count
 
     return _check(
         segment_override_count + extra,
