@@ -6,6 +6,7 @@ import pytest
 import responses
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -78,6 +79,7 @@ def test_create_cleanup_issue__valid_request__returns_204(
     admin_client_new: APIClient,
     organisation: Organisation,
     feature: Feature,
+    log: StructuredLogCapture,
 ) -> None:
     # Given
     github_issue_response_1: dict[str, Any] = {
@@ -134,6 +136,15 @@ def test_create_cleanup_issue__valid_request__returns_204(
     assert "src/app.py#L42" in request_body_1["body"]
     request_body_2 = json.loads(responses.calls[1].request.body)
     assert "lib/flags.py#L7" in request_body_2["body"]
+
+    assert log.events == [
+        {
+            "event": "cleanup-issues-created",
+            "level": "info",
+            "organisation_id": organisation.id,
+            "issues_created_count": 2,
+        },
+    ]
 
 
 @responses.activate

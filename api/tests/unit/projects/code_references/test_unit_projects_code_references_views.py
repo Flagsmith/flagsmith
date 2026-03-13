@@ -1,4 +1,5 @@
 import freezegun
+from pytest_structlog import StructuredLogCapture
 from rest_framework.test import APIClient
 
 from features.models import Feature
@@ -10,6 +11,7 @@ from projects.models import Project
 def test_CodeReferenceCreateAPIView__responds_201_with_accepted_code_references(  # noqa: FT003,FT004
     admin_client_new: APIClient,
     project: Project,
+    log: StructuredLogCapture,
 ) -> None:
     # When
     response = admin_client_new.post(
@@ -60,6 +62,16 @@ def test_CodeReferenceCreateAPIView__responds_201_with_accepted_code_references(
             "feature_name": "feature-2",
             "file_path": "path/to/file3.py",
             "line_number": 30,
+        },
+    ]
+
+    assert log.events == [
+        {
+            "event": "code-references-scan-created",
+            "level": "info",
+            "organisation_id": project.organisation_id,
+            "code_references_count": 3,
+            "feature_count": 2,
         },
     ]
 
