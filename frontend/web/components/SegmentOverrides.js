@@ -1,5 +1,5 @@
-// import propTypes from 'prop-types';
 import React, { Component, Fragment } from 'react'
+import classNames from 'classnames'
 import { DragDropProvider } from '@dnd-kit/react'
 import { useSortable, isSortable } from '@dnd-kit/react/sortable'
 import { RestrictToVerticalAxis } from '@dnd-kit/abstract/modifiers'
@@ -11,7 +11,6 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import CreateSegmentModal from './modals/CreateSegment'
 import SegmentSelect from './SegmentSelect'
 import JSONReference from './JSONReference'
-import ConfigProvider from 'common/providers/ConfigProvider'
 import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
@@ -24,6 +23,9 @@ import Tooltip from './Tooltip'
 import SegmentsIcon from './svg/SegmentsIcon'
 import SegmentOverrideActions from './SegmentOverrideActions'
 import Button from './base/forms/Button'
+
+const getSegmentId = (segment) =>
+  typeof segment === 'object' && segment !== null ? segment.id : segment
 
 const SegmentOverrideInner = class Override extends React.Component {
   constructor(props) {
@@ -95,22 +97,18 @@ const SegmentOverrideInner = class Override extends React.Component {
     return (
       <div
         data-test={`segment-override-${index}`}
-        style={{ zIndex: 9999999999 }}
-        className={`segment-overrides mb-3${
-          this.props.id
-            ? ''
-            : ' panel user-select-none panel-without-heading panel--draggable pb-0'
-        }${isHighlighted ? ' border-2 border-primary' : ''}`}
+        className={classNames('segment-overrides mb-3', {
+          'border-2 border-primary': isHighlighted,
+          'panel user-select-none panel-without-heading panel--draggable pb-0':
+            !this.props.id,
+        })}
       >
         <Row className='p-0 table-header px-3 py-1' space>
           <div
             ref={dragHandleRef}
-            className='flex flex-1 text-left'
-            style={
-              dragHandleRef
-                ? { cursor: 'grab', touchAction: 'none' }
-                : undefined
-            }
+            className={classNames('flex flex-1 text-left', {
+              'drag-handle': dragHandleRef,
+            })}
           >
             {this.props.id ? (
               <>
@@ -349,8 +347,6 @@ const SegmentOverrideInner = class Override extends React.Component {
   }
 }
 
-const SortableSegmentOverrideInner = ConfigProvider(SegmentOverrideInner)
-
 const SortableSegmentOverride = (props) => {
   const { handleRef, ref } = useSortable({
     id: props.sortId,
@@ -360,7 +356,7 @@ const SortableSegmentOverride = (props) => {
 
   return (
     <div ref={ref}>
-      <SortableSegmentOverrideInner {...props} dragHandleRef={handleRef} />
+      <SegmentOverrideInner {...props} dragHandleRef={handleRef} />
     </div>
   )
 }
@@ -391,10 +387,11 @@ const SegmentOverrideListInner = ({
   return (
     <div>
       {items.map((value, index) => {
-        const sortId = `segment-${value.segment?.id ?? value.segment ?? index}`
+        const segmentId = getSegmentId(value.segment)
+        const sortId = `segment-${segmentId ?? index}`
         if (isSortable) {
           return (
-            <Fragment key={value.segment.name || sortId}>
+            <Fragment key={sortId}>
               <SortableSegmentOverride
                 sortId={sortId}
                 id={id}
@@ -442,7 +439,7 @@ const SegmentOverrideListInner = ({
         }
 
         return (
-          <Fragment key={value.segment.name || sortId}>
+          <Fragment key={sortId}>
             <SegmentOverrideInner
               id={id}
               name={name}
