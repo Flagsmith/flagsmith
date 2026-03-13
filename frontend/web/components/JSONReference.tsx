@@ -4,7 +4,7 @@ import { isArray, isObject } from 'lodash'
 import Highlight from './Highlight'
 import Button from './base/forms/Button'
 import Switch from './Switch'
-import flagsmith from 'flagsmith'
+import flagsmith from '@flagsmith/flagsmith'
 import Icon from './Icon'
 import Utils from 'common/utils/utils'
 

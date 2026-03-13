@@ -205,7 +205,7 @@ def test_segments_limit_ignores_old_segment_versions(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
+    with_project_permissions([MANAGE_SEGMENTS, VIEW_PROJECT])  # type: ignore[call-arg]
 
     # let's reduce the max segments allowed to 2
     project.max_segments_allowed = 2
@@ -1884,3 +1884,28 @@ def test_create_segment__required_metadata_on_other_project__returns_201(
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_create_segment__body_project_differs_from_url__does_not_create_in_other_project(
+    admin_client: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    other_org = Organisation.objects.create(name="Other Org")
+    other_project = Project.objects.create(name="Other Project", organisation=other_org)
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project.id}/segments/",
+        data={
+            "name": "a_wild_pokemon",
+            "project": other_project.id,
+            "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["project"] == project.id
+    assert not Segment.objects.filter(project=other_project).exists()

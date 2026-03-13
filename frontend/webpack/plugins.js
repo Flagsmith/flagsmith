@@ -1,8 +1,27 @@
 const path = require('path');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const fs = require('fs');
 const webpack = require('webpack');
 
-module.exports = [
+class CopyStaticPlugin {
+    constructor(src, dest) {
+        this.src = src;
+        this.dest = dest;
+    }
+
+    apply(compiler) {
+        compiler.hooks.afterEmit.tap('CopyStaticPlugin', () => {
+            try {
+                fs.cpSync(this.src, this.dest, { recursive: true });
+            } catch (error) {
+                compiler.errors.push(
+                    new Error(`CopyStaticPlugin: Failed to copy ${this.src} to ${this.dest}: ${error.message}`)
+                );
+            }        
+         });
+    }
+}
+
+const plugins = [
 
     new webpack.DefinePlugin({
         SENTRY_RELEASE_VERSION: true,
@@ -13,11 +32,13 @@ module.exports = [
         resourceRegExp: /^\.\/locale$/,
         contextRegExp: /moment$/,
     }),
-    //
     // Copy static content
-    new CopyWebpackPlugin({
-        patterns: [
-            { from: path.join(__dirname, '../web/static'), to: path.join(__dirname, '../public/static') },
-        ],
-    }),
+    new CopyStaticPlugin(
+        path.join(__dirname, '../web/static'),
+        path.join(__dirname, '../public/static'),
+    ),
 ];
+
+plugins.CopyStaticPlugin = CopyStaticPlugin;
+
+module.exports = plugins;

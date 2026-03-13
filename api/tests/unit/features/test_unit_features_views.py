@@ -45,7 +45,7 @@ from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
 from features import views
 from features.dataclasses import EnvironmentFeatureOverridesData
-from features.feature_types import MULTIVARIATE
+from features.feature_types import MULTIVARIATE, STANDARD
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
@@ -1816,8 +1816,8 @@ def test_audit_log_created_when_feature_updated(
         args=[project.id, feature.id],
     )
     data = {
-        "name": "Test Feature updated",
-        "type": "FLAG",
+        "name": feature.name,
+        "description": "Updated description",
         "project": project.id,
     }
 
@@ -4488,3 +4488,42 @@ def test_list_features__edge_v2_project__makes_one_dynamo_query(
     # Validate that only a single query is made to dynamodb, not one
     # per feature.
     assert mock_table.query.call_count == 1
+
+
+def test_create_feature__type_provided__ignores_type_and_defaults_to_standard(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "test_feature_type_readonly", "type": "boolean"}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["type"] == STANDARD
+
+
+def test_create_feature__multivariate_options_provided__sets_type_to_multivariate(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {
+        "name": "test_feature_mv_type",
+        "multivariate_options": [{"type": "unicode", "string_value": "option-a"}],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["type"] == MULTIVARIATE
