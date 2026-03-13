@@ -31,9 +31,9 @@ total_variance_percentage = (
 @pytest.mark.parametrize(
     "hashed_percentage, expected_mv_value",
     (
-        (variant_1_percentage_allocation / 100 - 0.01, variant_1_value),
-        (total_variance_percentage / 100 - 0.01, variant_2_value),
-        (total_variance_percentage / 100 + 0.01, control_value),
+        (variant_1_percentage_allocation - 1, variant_1_value),
+        (total_variance_percentage - 1, variant_2_value),
+        (total_variance_percentage + 1, control_value),
     ),
 )
 @mock.patch("features.models.get_hashed_percentage_for_object_ids")

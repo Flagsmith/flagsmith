@@ -23,9 +23,6 @@ from core.constants import (
     STRING,
 )
 from environments.identities import views
-from environments.identities.helpers import (
-    get_hashed_percentage_for_object_ids,
-)
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
@@ -646,12 +643,9 @@ def test_identities_endpoint_returns_default_value_if_rule_type_percentage_split
         segment=segment, type=SegmentRule.ALL_RULE
     )
 
-    identity_percentage_value = get_hashed_percentage_for_object_ids(
-        [segment.id, identity.id]
-    )
     Condition.objects.create(
         operator=PERCENTAGE_SPLIT,
-        value=int(identity_percentage_value / 2),
+        value=0,
         rule=segment_rule,
     )
     feature_segment = FeatureSegment.objects.create(
