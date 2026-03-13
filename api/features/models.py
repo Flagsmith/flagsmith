@@ -962,9 +962,9 @@ class FeatureState(
 
         return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
+    def get_update_log_message(self, history_instance: "FeatureState") -> str | None:
         if self.change_request and self.is_scheduled:
-            live_from: datetime.datetime = timezone.localtime(self.live_from)
+            live_from = timezone.localtime(self.live_from)
             return FEATURE_STATE_SCHEDULED_TO_UPDATE_MESSAGE % (
                 self.feature.name,
                 self.change_request.title,
@@ -975,11 +975,15 @@ class FeatureState(
                 self.feature.name,
                 self.identity.identifier,
             )
-        elif self.feature_segment:
-            return SEGMENT_FEATURE_STATE_UPDATED_MESSAGE % (
-                self.feature.name,
-                self.feature_segment.segment.name,
-            )
+        if self.feature_segment_id:
+            try:
+                return SEGMENT_FEATURE_STATE_UPDATED_MESSAGE % (
+                    self.feature.name,
+                    self.feature_segment.segment.name,  # type: ignore[union-attr]
+                )
+            except FeatureSegment.DoesNotExist:
+                # Cascade-deleted from segment overrides
+                return None
         return FEATURE_STATE_UPDATED_MESSAGE % self.feature.name
 
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
