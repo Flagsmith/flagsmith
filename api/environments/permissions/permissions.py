@@ -40,7 +40,8 @@ class EnvironmentPermissions(IsAuthenticated):
                 project_lookup = Q(id=project_id)
                 project = Project.objects.get(project_lookup)
                 return request.user.has_project_permission(CREATE_ENVIRONMENT, project)
-            except Project.DoesNotExist:
+            # We catch ValueError and TypeError here to resolve previous issues with invalid project IDs
+            except (Project.DoesNotExist, ValueError, TypeError):
                 return False
 
         # return true as all users can list and obj permissions will be handled later
