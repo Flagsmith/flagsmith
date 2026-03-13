@@ -542,6 +542,13 @@ SPECTACULAR_SETTINGS = {
         "edge_api.identities.openapi",
         "environments.identities.traits.openapi",
     ],
+    "PREPROCESSING_HOOKS": [
+        "api.openapi.preprocessing_filter_spec",
+    ],
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "api.openapi.postprocessing_assign_tags",
+    ],
     "ENUM_NAME_OVERRIDES": {
         # Overrides to use specific schema names for fields named "type".
         # If this is not set, drf-spectacular will generate schema names like "Type975Enum".
