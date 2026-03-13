@@ -1,21 +1,9 @@
 // import propTypes from 'prop-types';
 import React, { Component, Fragment } from 'react'
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-  arrayMove,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { DragDropProvider } from '@dnd-kit/react'
+import { useSortable, isSortable } from '@dnd-kit/react/sortable'
+import { RestrictToVerticalAxis } from '@dnd-kit/abstract/modifiers'
+import { arrayMove } from '@dnd-kit/helpers'
 import ProjectStore from 'common/stores/project-store'
 import ValueEditor from './ValueEditor'
 import { VariationOptions } from './mv/VariationOptions'
@@ -37,34 +25,6 @@ import SegmentsIcon from './svg/SegmentsIcon'
 import SegmentOverrideActions from './SegmentOverrideActions'
 import Button from './base/forms/Button'
 
-// Custom PointerSensor that cancels drag when the user interacts with
-// inputs, buttons, textareas, or specific interactive areas — replicating the
-// shouldCancelStart behaviour from the old react-sortable-hoc implementation.
-class InteractiveAwarePointerSensor extends PointerSensor {
-  static activators = [
-    {
-      eventName: 'onPointerDown',
-      handler: ({ nativeEvent: event }) => {
-        const tagName = event.target.tagName.toLowerCase()
-        if (
-          tagName === 'input' ||
-          tagName === 'textarea' ||
-          tagName === 'button'
-        ) {
-          return false
-        }
-        if (
-          event.target.closest('.feature-action__item') ||
-          event.target.closest('.hljs')
-        ) {
-          return false
-        }
-        return true
-      },
-    },
-  ]
-}
-
 const SegmentOverrideInner = class Override extends React.Component {
   constructor(props) {
     super(props)
@@ -83,6 +43,7 @@ const SegmentOverrideInner = class Override extends React.Component {
       confirmRemove,
       controlValue,
       disabled,
+      dragHandleRef,
       environmentId,
       hideViewSegment,
       highlightSegmentId,
@@ -142,7 +103,15 @@ const SegmentOverrideInner = class Override extends React.Component {
         }${isHighlighted ? ' border-2 border-primary' : ''}`}
       >
         <Row className='p-0 table-header px-3 py-1' space>
-          <div className='flex flex-1 text-left'>
+          <div
+            ref={dragHandleRef}
+            className='flex flex-1 text-left'
+            style={
+              dragHandleRef
+                ? { cursor: 'grab', touchAction: 'none' }
+                : undefined
+            }
+          >
             {this.props.id ? (
               <>
                 <Row className='font-weight-medium text-dark mb-1'>
@@ -383,17 +352,15 @@ const SegmentOverrideInner = class Override extends React.Component {
 const SortableSegmentOverrideInner = ConfigProvider(SegmentOverrideInner)
 
 const SortableSegmentOverride = (props) => {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: props.sortId })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
+  const { handleRef, ref } = useSortable({
+    id: props.sortId,
+    index: props.index,
+    modifiers: [RestrictToVerticalAxis],
+  })
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <SortableSegmentOverrideInner {...props} />
+    <div ref={ref}>
+      <SortableSegmentOverrideInner {...props} dragHandleRef={handleRef} />
     </div>
   )
 }
@@ -424,7 +391,7 @@ const SegmentOverrideListInner = ({
   return (
     <div>
       {items.map((value, index) => {
-        const sortId = `segment-${value.segment.id}-${index}`
+        const sortId = `segment-${value.segment?.id ?? value.segment ?? index}`
         if (isSortable) {
           return (
             <Fragment key={value.segment.name || sortId}>
@@ -528,46 +495,25 @@ const SortableSegmentOverrideList = ({
   onSortEnd: handleSortEnd,
   ...rest
 }) => {
-  const sensors = useSensors(
-    useSensor(InteractiveAwarePointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
-
-  const sortableIds = items.map(
-    (value, index) => `segment-${value.segment.id}-${index}`,
-  )
-
   const handleDragEnd = (event) => {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const oldIndex = sortableIds.indexOf(active.id)
-    const newIndex = sortableIds.indexOf(over.id)
-    handleSortEnd({ newIndex, oldIndex })
+    if (event.canceled) return
+    const { source } = event.operation
+    if (isSortable(source)) {
+      const { index, initialIndex } = source
+      if (initialIndex !== index) {
+        handleSortEnd({ newIndex: index, oldIndex: initialIndex })
+      }
+    }
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext
-        items={sortableIds}
-        strategy={verticalListSortingStrategy}
-      >
-        <SegmentOverrideListInner
-          items={items}
-          onSortEnd={handleSortEnd}
-          {...rest}
-        />
-      </SortableContext>
-    </DndContext>
+    <DragDropProvider onDragEnd={handleDragEnd}>
+      <SegmentOverrideListInner
+        items={items}
+        onSortEnd={handleSortEnd}
+        {...rest}
+      />
+    </DragDropProvider>
   )
 }
 
