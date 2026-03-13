@@ -1,8 +1,9 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import Constants from 'common/constants'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import { FeatureHealthEventReasonTextBlock } from 'common/types/responses'
+import useCollapsibleHeight from 'common/hooks/useCollapsibleHeight'
 
 interface EventTextBlocksProps {
   textBlocks: FeatureHealthEventReasonTextBlock[] | undefined
@@ -12,36 +13,10 @@ const CollapsibleText: React.FC<{
   collapsed: boolean
   children: React.ReactNode
 }> = ({ children, collapsed }) => {
-  const contentRef = useRef<HTMLDivElement>(null)
-  const [height, setHeight] = useState<number | undefined>(
-    collapsed ? 0 : undefined,
-  )
-
-  useEffect(() => {
-    if (!contentRef.current) return
-    if (!collapsed) {
-      setHeight(contentRef.current.scrollHeight)
-      const timer = setTimeout(() => setHeight(undefined), 300)
-      return () => clearTimeout(timer)
-    } else {
-      setHeight(contentRef.current.scrollHeight)
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setHeight(0)
-        })
-      })
-    }
-  }, [collapsed])
+  const { contentRef, style } = useCollapsibleHeight(!collapsed)
 
   return (
-    <div
-      ref={contentRef}
-      style={{
-        height: height !== undefined ? `${height}px` : 'auto',
-        overflow: 'hidden',
-        transition: 'height 0.3s ease',
-      }}
-    >
+    <div ref={contentRef} style={style}>
       {children}
     </div>
   )

@@ -33,3 +33,8 @@
 .create-segment-overrides:first-child {
   margin: -0.5rem -1.5rem -1rem !important;
 }
+
+.drag-handle {
+  cursor: grab;
+  touch-action: none;
+}

@@ -1,7 +1,7 @@
 $arrow: 6px;
 $shadow: 0 4px 4px 0 rgba(100, 116, 139, 0.12);
 $shadow-dark: 0 4px 4px 0 #00000029;
-.react-tooltip {
+.react-tooltip.react-tooltip {
   box-shadow: $shadow;
   max-width: 400px;
   font-family: $btn-font-family;
@@ -9,7 +9,8 @@ $shadow-dark: 0 4px 4px 0 #00000029;
   color: $body-color !important;
   text-transform: none;
   text-wrap: wrap;
-  opacity: 1 !important;
+  --rt-opacity: 1;
+  --rt-transition-show-delay: 0.2s;
   background-color: white !important;
   z-index: 9999;
 

@@ -45,6 +45,8 @@ const ChipInput: FC<ChipInputType> = ({ onChange, placeholder, value }) => {
       if (inputValue.trim()) {
         addChips([inputValue.trim()])
       }
+    } else if (e.key === 'Backspace' && !inputValue && value?.length) {
+      onDelete(value.length - 1)
     }
   }
 
