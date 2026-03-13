@@ -30,7 +30,7 @@ from projects.models import ProjectPermissionModel
         ),
     ],
 )
-def test_is_master_api_key_project_admin(  # type: ignore[no-untyped-def]
+def test_is_master_api_key_project_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     for_project,
     for_master_api_key,
     expected_is_admin,
@@ -64,7 +64,7 @@ def test_is_master_api_key_project_admin(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_is_master_api_key_environment_admin(  # type: ignore[no-untyped-def]
+def test_is_master_api_key_environment_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     for_environment,
     for_master_api_key,
     expected_is_admin,
@@ -93,7 +93,7 @@ def test_is_master_api_key_environment_admin(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_get_permitted_projects_for_master_api_key(  # type: ignore[no-untyped-def]
+def test_get_permitted_projects_for_master_api_key(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     for_project,
     for_master_api_key,
     expected_count,
@@ -128,7 +128,7 @@ def test_get_permitted_projects_for_master_api_key(  # type: ignore[no-untyped-d
         ),
     ],
 )
-def test_get_permitted_environments_for_master_api_key(  # type: ignore[no-untyped-def]
+def test_get_permitted_environments_for_master_api_key(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     for_project,
     for_master_api_key,
     expected_count,
@@ -172,7 +172,7 @@ def test_get_permitted_environments_for_master_api_key(  # type: ignore[no-untyp
         ),
     ],
 )
-def test_master_api_key_has_organisation_permission(  # type: ignore[no-untyped-def]
+def test_master_api_key_has_organisation_permission(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     for_organisation,
     for_master_api_key,
     expected_has_permission,

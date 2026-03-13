@@ -118,7 +118,7 @@ def test_get_summary__no_analytics__returns_zero_api_calls(
     assert result["total_api_calls_30d"] == 0
 
 
-def test_get_organisation_metrics__returns_nested_structure(
+def test_get_organisation_metrics__returns_nested_structure(  # noqa: FT003
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
     platform_hub_environment: Environment,
@@ -147,7 +147,7 @@ def test_get_organisation_metrics__returns_nested_structure(
     assert len(org_data["projects"][0]["environments"]) == 1
 
 
-def test_get_organisation_metrics__includes_overage_calculations(
+def test_get_organisation_metrics__includes_overage_calculations(  # noqa: FT003
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
     platform_hub_environment: Environment,
@@ -176,7 +176,7 @@ def test_get_organisation_metrics__includes_overage_calculations(
     assert org_data["overage_90d"] == 0
 
 
-def test_get_organisation_metrics__filters_to_given_orgs(
+def test_get_organisation_metrics__filters_to_given_orgs(  # noqa: FT003
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
     platform_hub_environment: Environment,
@@ -387,7 +387,7 @@ def test_get_usage_trends__no_analytics__returns_empty(
     assert result == []
 
 
-def test_get_organisation_metrics__query_count_stable_across_projects(
+def test_get_organisation_metrics__query_count_stable_across_projects(  # noqa: FT003
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
     platform_hub_environment: Environment,
@@ -424,7 +424,7 @@ def test_get_organisation_metrics__query_count_stable_across_projects(
     assert result[0]["project_count"] == 2
 
 
-def test_get_stale_flags_per_project__query_count_stable_across_projects(
+def test_get_stale_flags_per_project__query_count_stable_across_projects(  # noqa: FT003
     platform_hub_organisation: Organisation,
     platform_hub_admin_user: FFAdminUser,
 ) -> None:
@@ -507,7 +507,7 @@ def test_get_stale_flags_per_project__no_flags__skips_project(
     assert result == []
 
 
-def test_get_stale_flags_per_project__filters_to_given_orgs(
+def test_get_stale_flags_per_project__filters_to_given_orgs(  # noqa: FT003
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
     platform_hub_environment: Environment,
@@ -528,7 +528,7 @@ def test_get_stale_flags_per_project__filters_to_given_orgs(
     assert other_org_project.id not in project_ids
 
 
-def test_get_integration_breakdown__counts_all_types_with_scope(
+def test_get_integration_breakdown__counts_all_types_with_scope(  # noqa: FT003
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
     platform_hub_environment: Environment,
@@ -570,7 +570,7 @@ def test_get_release_pipeline_stats__not_installed__returns_empty(
     assert result == []
 
 
-def test_get_release_pipeline_stats__returns_stage_hierarchy(
+def test_get_release_pipeline_stats__returns_stage_hierarchy(  # noqa: FT003
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
     platform_hub_environment: Environment,

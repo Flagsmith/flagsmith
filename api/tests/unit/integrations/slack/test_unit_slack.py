@@ -7,7 +7,7 @@ from integrations.slack.exceptions import SlackChannelJoinError
 from integrations.slack.slack import SlackChannel, SlackWrapper
 
 
-def test_get_channels_data_response_structure(mocker, mocked_slack_internal_client):  # type: ignore[no-untyped-def]
+def test_get_channels_data_response_structure(mocker, mocked_slack_internal_client):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     api_token = "test_token"
     cursor = "dGVhbTpDMDI3MEpNRldNVg=="
@@ -47,7 +47,7 @@ def test_get_channels_data_response_structure(mocker, mocked_slack_internal_clie
     )
 
 
-def test_client_makes_correct_calls(mocker):  # type: ignore[no-untyped-def]
+def test_client_makes_correct_calls(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     api_token = "random_token"
 
@@ -61,7 +61,7 @@ def test_client_makes_correct_calls(mocker):  # type: ignore[no-untyped-def]
     mocked_web_client.assert_called_with(token=api_token)
 
 
-def test_join_channel_makes_correct_call(mocker, mocked_slack_internal_client):  # type: ignore[no-untyped-def]
+def test_join_channel_makes_correct_call(mocker, mocked_slack_internal_client):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     channel = "channel_1"
     api_token = "random_token"
@@ -73,7 +73,7 @@ def test_join_channel_makes_correct_call(mocker, mocked_slack_internal_client): 
     mocked_slack_internal_client.conversations_join.assert_called_with(channel=channel)
 
 
-def test_join_channel_raises_slack_channel_join_error_on_slack_api_error(  # type: ignore[no-untyped-def]
+def test_join_channel_raises_slack_channel_join_error_on_slack_api_error(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     mocker, mocked_slack_internal_client
 ):
     # Given
@@ -87,7 +87,7 @@ def test_join_channel_raises_slack_channel_join_error_on_slack_api_error(  # typ
         SlackWrapper(api_token=api_token, channel_id=channel).join_channel()  # type: ignore[no-untyped-call]
 
 
-def test_get_bot_token_makes_correct_calls(  # type: ignore[no-untyped-def]
+def test_get_bot_token_makes_correct_calls(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, settings, mocked_slack_internal_client
 ):
     # Given
@@ -114,7 +114,7 @@ def test_get_bot_token_makes_correct_calls(  # type: ignore[no-untyped-def]
     )
 
 
-def test_slack_initialized_correctly(mocker, mocked_slack_internal_client):  # type: ignore[no-untyped-def]
+def test_slack_initialized_correctly(mocker, mocked_slack_internal_client):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     api_token = "test_token"
     channel_id = "channel_id_1"
@@ -127,7 +127,7 @@ def test_slack_initialized_correctly(mocker, mocked_slack_internal_client):  # t
     assert slack_wrapper._client == mocked_slack_internal_client
 
 
-def test_track_event_makes_correct_call(mocked_slack_internal_client):  # type: ignore[no-untyped-def]
+def test_track_event_makes_correct_call(mocked_slack_internal_client):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     api_token = "test_token"
     channel_id = "channel_id_1"
@@ -144,7 +144,7 @@ def test_track_event_makes_correct_call(mocked_slack_internal_client):  # type: 
     )
 
 
-def test_slack_generate_event_data_with_correct_values(django_user_model):  # type: ignore[no-untyped-def]
+def test_slack_generate_event_data_with_correct_values(django_user_model):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     log = "some log data"
 

@@ -13,7 +13,7 @@ from permissions.permission_service import user_has_organisation_permission
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_user_has_organisation_permission_returns_false_if_user_does_not_have_permission(
+def test_user_has_organisation_permission_returns_false_if_user_does_not_have_permission(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     organisation: Organisation,
 ) -> None:
@@ -26,7 +26,7 @@ def test_user_has_organisation_permission_returns_false_if_user_does_not_have_pe
         )
 
 
-def test_user_has_organisation_permission_returns_true_if_user_is_admin(  # type: ignore[no-untyped-def]
+def test_user_has_organisation_permission_returns_true_if_user_is_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_user, organisation
 ):
     for permission in OrganisationPermissionModel.objects.all().values_list(
@@ -38,7 +38,7 @@ def test_user_has_organisation_permission_returns_true_if_user_is_admin(  # type
         )
 
 
-def test_user_has_organisation_permission_returns_true_if_user_has_permission_directly(
+def test_user_has_organisation_permission_returns_true_if_user_has_permission_directly(  # noqa: FT003,FT004
     staff_user: FFAdminUser, organisation: Organisation
 ) -> None:
     # Given
@@ -59,7 +59,7 @@ def test_user_has_organisation_permission_returns_true_if_user_has_permission_di
     )
 
 
-def test_user_has_organisation_permission_returns_true_if_user_has_permission_via_group(
+def test_user_has_organisation_permission_returns_true_if_user_has_permission_via_group(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
@@ -83,7 +83,7 @@ def test_user_has_organisation_permission_returns_true_if_user_has_permission_vi
     )
 
 
-def test_user_has_organisation_permission_returns_true_if_user_has_permission_via_group_and_directly(
+def test_user_has_organisation_permission_returns_true_if_user_has_permission_via_group_and_directly(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
@@ -111,7 +111,7 @@ def test_user_has_organisation_permission_returns_true_if_user_has_permission_vi
     )
 
 
-def test_user_has_organisation_permission__returns_false_for_orphan_group_permission(
+def test_user_has_organisation_permission__returns_false_for_orphan_group_permission(  # noqa: FT003
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
     staff_user: FFAdminUser,

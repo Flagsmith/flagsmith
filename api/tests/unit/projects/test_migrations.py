@@ -5,7 +5,7 @@ from common.projects.permissions import (
 from django_test_migrations.migrator import Migrator
 
 
-def test_merge_duplicate_permissions_migration(migrator: Migrator) -> None:
+def test_merge_duplicate_permissions_migration(migrator: Migrator) -> None:  # noqa: FT003
     # Given - the migration state is at 0016 (before the migration we want to test)
     old_state = migrator.apply_initial_migration(
         ("projects", "0016_soft_delete_projects")

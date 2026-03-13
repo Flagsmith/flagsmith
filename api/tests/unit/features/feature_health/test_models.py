@@ -17,7 +17,7 @@ from users.models import FFAdminUser
 now = datetime.datetime.now()
 
 
-def test_feature_health_provider__get_create_log_message__return_expected(
+def test_feature_health_provider__get_create_log_message__return_expected(  # noqa: FT004
     feature_health_provider: FeatureHealthProvider,
     mocker: MockerFixture,
 ) -> None:
@@ -28,7 +28,7 @@ def test_feature_health_provider__get_create_log_message__return_expected(
     assert log_message == "Health provider Webhook set up for project Test Project."
 
 
-def test_feature_health_provider__get_delete_log_message__return_expected(
+def test_feature_health_provider__get_delete_log_message__return_expected(  # noqa: FT004
     feature_health_provider: FeatureHealthProvider,
     mocker: MockerFixture,
 ) -> None:
@@ -39,7 +39,7 @@ def test_feature_health_provider__get_delete_log_message__return_expected(
     assert log_message == "Health provider Webhook removed from project Test Project."
 
 
-def test_feature_health_provider__get_audit_log_author__return_expected(
+def test_feature_health_provider__get_audit_log_author__return_expected(  # noqa: FT004
     feature_health_provider: FeatureHealthProvider,
     mocker: MockerFixture,
     staff_user: FFAdminUser,
@@ -203,7 +203,7 @@ def test_feature_health_event__get_create_log_message__return_expected(
     )
 
 
-def test_feature_health_event__get_create_log_message__environment__return_expected(
+def test_feature_health_event__get_create_log_message__environment__return_expected(  # noqa: FT003
     feature: Feature,
     environment: Environment,
     mocker: MockerFixture,

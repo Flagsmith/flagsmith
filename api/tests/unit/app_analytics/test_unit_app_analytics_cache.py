@@ -8,7 +8,7 @@ from app_analytics.models import Resource
 from app_analytics.types import TrackFeatureEvaluationsByEnvironmentData
 
 
-def test_api_usage_cache(
+def test_api_usage_cache(  # noqa: FT003,FT004
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ) -> None:
@@ -95,7 +95,7 @@ def test_api_usage_cache(
         assert not mocked_track_request_task.called
 
 
-def test_feature_evaluation_cache(
+def test_feature_evaluation_cache(  # noqa: FT003,FT004
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ) -> None:

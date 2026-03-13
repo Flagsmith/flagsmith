@@ -39,7 +39,7 @@ from projects.models import Project, UserProjectPermission
 from segments.models import Condition, Segment, SegmentRule
 
 
-def test_should_return_identities_list_when_requested(
+def test_should_return_identities_list_when_requested(  # noqa: FT003
     environment: Environment,
     identity: Identity,
     admin_client: APIClient,
@@ -60,7 +60,7 @@ def test_should_return_identities_list_when_requested(
     assert response.data["identifier"] == identity.identifier
 
 
-def test_should_create_identity_feature_when_post(
+def test_should_create_identity_feature_when_post(  # noqa: FT003
     feature: Feature,
     admin_client: APIClient,
     identity: Identity,
@@ -86,7 +86,7 @@ def test_should_create_identity_feature_when_post(
     assert identity_features.count() == 1
 
 
-def test_should_return_400_when_duplicate_identity_feature_is_posted(
+def test_should_return_400_when_duplicate_identity_feature_is_posted(  # noqa: FT003
     feature: Feature,
     admin_client: APIClient,
     identity: Identity,
@@ -116,7 +116,7 @@ def test_should_return_400_when_duplicate_identity_feature_is_posted(
     assert identity_feature.count() == 1
 
 
-def test_should_change_enabled_state_when_put(
+def test_should_change_enabled_state_when_put(  # noqa: FT003
     feature: Feature,
     admin_client: APIClient,
     identity: Identity,
@@ -147,7 +147,7 @@ def test_should_change_enabled_state_when_put(
     assert feature_state.enabled
 
 
-def test_should_remove_identity_feature_when_delete(
+def test_should_remove_identity_feature_when_delete(  # noqa: FT003
     admin_client: APIClient,
     feature: Feature,
     project: Project,
@@ -182,7 +182,7 @@ def test_should_remove_identity_feature_when_delete(
     assert identity_features.count() == 1
 
 
-def test_can_search_for_identities(
+def test_can_search_for_identities(  # noqa: FT003
     admin_client: APIClient,
     identity: Identity,
     environment: Environment,
@@ -208,7 +208,7 @@ def test_can_search_for_identities(
     assert response.data["results"][0]["identifier"] == identity.identifier
 
 
-def test_can_search_for_identities_with_exact_match(
+def test_can_search_for_identities_with_exact_match(  # noqa: FT003
     environment: Environment,
     admin_client: APIClient,
 ) -> None:
@@ -238,7 +238,7 @@ def test_can_search_for_identities_with_exact_match(
     assert response.data["results"][0]["id"] == identity_to_return.id
 
 
-def test_search_identities_is_case_insensitive(
+def test_search_identities_is_case_insensitive(  # noqa: FT003
     identity: Identity,
     environment: Environment,
     admin_client: APIClient,
@@ -261,7 +261,7 @@ def test_search_identities_is_case_insensitive(
     assert response.data["count"] == 1
 
 
-def test_no_identities_returned_if_search_matches_none(
+def test_no_identities_returned_if_search_matches_none(  # noqa: FT003
     environment: Environment,
     admin_client: APIClient,
 ) -> None:
@@ -280,7 +280,7 @@ def test_no_identities_returned_if_search_matches_none(
     assert response.data["count"] == 0
 
 
-def test_search_identities_still_allows_paging(
+def test_search_identities_still_allows_paging(  # noqa: FT003
     environment: Environment,
     admin_client: APIClient,
 ) -> None:
@@ -305,7 +305,7 @@ def test_search_identities_still_allows_paging(
     assert response2.data["results"]
 
 
-def test_can_delete_identity(
+def test_can_delete_identity(  # noqa: FT003
     environment: Environment,
     admin_client: APIClient,
     identity: Identity,
@@ -324,7 +324,7 @@ def test_can_delete_identity(
     assert not Identity.objects.filter(id=identity.id).exists()
 
 
-def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_not_provided(
+def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_not_provided(  # noqa: FT003
     identity: Identity,
     environment: Environment,
     api_client: APIClient,
@@ -344,7 +344,7 @@ def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_
     assert len(response.data["flags"]) == 2
 
 
-def test_get_flags_for_identities_with_cache(
+def test_get_flags_for_identities_with_cache(  # noqa: FT003
     environment: Environment,
     feature: Feature,
     django_assert_num_queries: DjangoAssertNumQueries,
@@ -393,7 +393,7 @@ def test_get_flags_for_identities_with_cache(
 
 
 @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
-def test_identities_endpoint_get_all_feature_amplitude_called(
+def test_identities_endpoint_get_all_feature_amplitude_called(  # noqa: FT003
     mock_amplitude_wrapper: mock.MagicMock,
     environment: Environment,
     identity: Identity,
@@ -420,7 +420,7 @@ def test_identities_endpoint_get_all_feature_amplitude_called(
 
 
 @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
-def test_identities_endpoint_returns_traits(
+def test_identities_endpoint_returns_traits(  # noqa: FT003
     mock_amplitude_wrapper: mock.MagicMock,
     identity: Identity,
     api_client: APIClient,
@@ -448,7 +448,7 @@ def test_identities_endpoint_returns_traits(
     mock_amplitude_wrapper.assert_not_called()
 
 
-def test_identities_endpoint_returns_single_feature_state_if_feature_provided(
+def test_identities_endpoint_returns_single_feature_state_if_feature_provided(  # noqa: FT003
     identity: Identity,
     environment: Environment,
     api_client: APIClient,
@@ -472,7 +472,7 @@ def test_identities_endpoint_returns_single_feature_state_if_feature_provided(
 
 
 @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
-def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment(
+def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment(  # noqa: FT003
     mock_amplitude_wrapper: mock.MagicMock,
     identity: Identity,
     api_client: APIClient,
@@ -527,7 +527,7 @@ def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment(
 
 
 @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
-def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment_and_feature_specified(
+def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment_and_feature_specified(  # noqa: FT003
     mock_amplitude_wrapper: mock.MagicMock,
     identity: Identity,
     api_client: APIClient,
@@ -582,7 +582,7 @@ def test_identities_endpoint_returns_value_for_segment_if_identity_in_segment_an
 
 
 @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
-def test_identities_endpoint_returns_value_for_segment_if_rule_type_percentage_split_and_identity_in_segment(
+def test_identities_endpoint_returns_value_for_segment_if_rule_type_percentage_split_and_identity_in_segment(  # noqa: FT003
     mock_amplitude_wrapper: mock.MagicMock,
     identity: Identity,
     api_client: APIClient,
@@ -630,7 +630,7 @@ def test_identities_endpoint_returns_value_for_segment_if_rule_type_percentage_s
 
 
 @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
-def test_identities_endpoint_returns_default_value_if_rule_type_percentage_split_and_identity_not_in_segment(
+def test_identities_endpoint_returns_default_value_if_rule_type_percentage_split_and_identity_not_in_segment(  # noqa: FT003
     mock_amplitude_wrapper: mock.MagicMock,
     identity: Identity,
     api_client: APIClient,
@@ -678,7 +678,7 @@ def test_identities_endpoint_returns_default_value_if_rule_type_percentage_split
     mock_amplitude_wrapper.assert_not_called()
 
 
-def test_post_identify_with_new_identity_work_with_null_trait_value(
+def test_post_identify_with_new_identity_work_with_null_trait_value(  # noqa: FT003
     environment: Environment,
     api_client: APIClient,
     identity: Identity,
@@ -703,7 +703,7 @@ def test_post_identify_with_new_identity_work_with_null_trait_value(
     assert identity.identity_traits.count() == 0
 
 
-def test_post_identify_deletes_a_trait_if_trait_value_is_none(  # type: ignore[no-untyped-def]
+def test_post_identify_deletes_a_trait_if_trait_value_is_none(  # type: ignore[no-untyped-def]  # noqa: FT003
     identity: Identity,
     environment: Environment,
     api_client: APIClient,
@@ -743,7 +743,7 @@ def test_post_identify_deletes_a_trait_if_trait_value_is_none(  # type: ignore[n
     assert identity.identity_traits.filter(trait_key=trait_2.trait_key).exists()
 
 
-def test_post_identify_with_persistence(
+def test_post_identify_with_persistence(  # noqa: FT003
     identity: Identity,
     environment: Environment,
     api_client: APIClient,
@@ -776,7 +776,7 @@ def test_post_identify_with_persistence(
     assert identity.identity_traits.count() == 2
 
 
-def test_post_identify_without_persistence(
+def test_post_identify_without_persistence(  # noqa: FT003
     organisation: Organisation,
     identity: Identity,
     environment: Environment,
@@ -818,7 +818,7 @@ def test_post_identify_without_persistence(
 
 @override_settings(EDGE_API_URL="http://localhost")
 @mock.patch("environments.identities.views.forward_identity_request")
-def test_post_identities_calls_forward_identity_request_with_correct_arguments(
+def test_post_identities_calls_forward_identity_request_with_correct_arguments(  # noqa: FT003
     mocked_forward_identity_request: mock.MagicMock,
     identity: Identity,
     api_client: APIClient,
@@ -855,7 +855,7 @@ def test_post_identities_calls_forward_identity_request_with_correct_arguments(
 
 @override_settings(EDGE_API_URL="http://localhost")
 @mock.patch("environments.identities.views.forward_identity_request")
-def test_get_identities_calls_forward_identity_request_with_correct_arguments(
+def test_get_identities_calls_forward_identity_request_with_correct_arguments(  # noqa: FT003
     mocked_forward_identity_request: mock.MagicMock,
     identity: Identity,
     api_client: APIClient,
@@ -883,7 +883,7 @@ def test_get_identities_calls_forward_identity_request_with_correct_arguments(
     assert kwargs["kwargs"]["query_params"] == {"identifier": identity.identifier}
 
 
-def test_post_identities_returns_empty_traits_if_client_cannot_set_traits(
+def test_post_identities_returns_empty_traits_if_client_cannot_set_traits(  # noqa: FT003
     identity: Identity,
     environment: Environment,
     api_client: APIClient,
@@ -911,7 +911,7 @@ def test_post_identities_returns_empty_traits_if_client_cannot_set_traits(
     assert response.json()["identifier"] == identity.identifier
 
 
-def test_post_identities_with_traits_success_if_client_cannot_set_traits_server_key(
+def test_post_identities_with_traits_success_if_client_cannot_set_traits_server_key(  # noqa: FT003
     identity: Identity,
     environment: Environment,
     api_client: APIClient,
@@ -944,7 +944,7 @@ def test_post_identities_with_traits_success_if_client_cannot_set_traits_server_
     assert trait.trait_value == trait_value  # type: ignore[union-attr]
 
 
-def test_post_identities_request_includes_updated_at_header(
+def test_post_identities_request_includes_updated_at_header(  # noqa: FT003
     identity: Identity,
     environment: Environment,
     api_client: APIClient,
@@ -969,7 +969,7 @@ def test_post_identities_request_includes_updated_at_header(
     )
 
 
-def test_get_identities_request_includes_updated_at_header(
+def test_get_identities_request_includes_updated_at_header(  # noqa: FT003
     environment: Environment,
     api_client: APIClient,
 ) -> None:
@@ -987,7 +987,7 @@ def test_get_identities_request_includes_updated_at_header(
     )
 
 
-def test_get_identities_with_hide_sensitive_data_with_feature_name(  # type: ignore[no-untyped-def]
+def test_get_identities_with_hide_sensitive_data_with_feature_name(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment, feature, identity, api_client
 ):
     # Given
@@ -1019,7 +1019,7 @@ def test_get_identities_with_hide_sensitive_data_with_feature_name(  # type: ign
         assert flag["feature"][field] is None
 
 
-def test_get_identities_with_hide_sensitive_data(  # type: ignore[no-untyped-def]
+def test_get_identities_with_hide_sensitive_data(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment, feature, identity, api_client
 ):
     # Given
@@ -1070,7 +1070,7 @@ def test_get_identities__transient__no_persistence(
     assert not Identity.objects.filter(identifier=identifier).count()
 
 
-def test_post_identities_with_hide_sensitive_data(  # type: ignore[no-untyped-def]
+def test_post_identities_with_hide_sensitive_data(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment, feature, identity, api_client
 ):
     # Given
@@ -1136,7 +1136,7 @@ def test_post_identities__server_key_only_feature__return_expected(
     assert not response.json()["flags"]
 
 
-def test_post_identities__server_key_only_feature__server_key_auth__return_expected(
+def test_post_identities__server_key_only_feature__server_key_auth__return_expected(  # noqa: FT003
     environment_api_key: EnvironmentAPIKey,
     feature: Feature,
     identity: Identity,
@@ -1209,7 +1209,7 @@ def test_post_identities__transient__no_persistence(
         pytest.param({}, id="trait-default"),
     ],
 )
-def test_post_identities__existing__transient__no_persistence(
+def test_post_identities__existing__transient__no_persistence(  # noqa: FT003
     environment: Environment,
     identity: Identity,
     trait: Trait,
@@ -1296,7 +1296,7 @@ def test_post_identities__transient_traits__no_persistence(
     assert not Trait.objects.filter(trait_key=transient_trait_key).exists()
 
 
-def test_user_with_view_identities_permission_can_retrieve_identity(
+def test_user_with_view_identities_permission_can_retrieve_identity(  # noqa: FT003
     environment: Environment,
     identity: Identity,
     staff_client: APIClient,
@@ -1325,7 +1325,7 @@ def test_user_with_view_identities_permission_can_retrieve_identity(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_user_with_view_environment_permission_can_not_list_identities(
+def test_user_with_view_environment_permission_can_not_list_identities(  # noqa: FT003
     environment: Environment,
     identity: Identity,
     staff_client: APIClient,
@@ -1352,7 +1352,7 @@ def test_user_with_view_environment_permission_can_not_list_identities(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]
+def test_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     view_set = views.IdentityViewSet()
 
@@ -1426,7 +1426,7 @@ def test_SDKIdentitiesDeprecated__given_identifier__retrieves_identity(
         pytest.param(True, False, True, 4, id="replica_db,old_identity,transient"),
     ],
 )
-def test_SDKIdentities_retrieves_identity_feature_states(
+def test_SDKIdentities_retrieves_identity_feature_states(  # noqa: FT003
     api_client: APIClient,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,

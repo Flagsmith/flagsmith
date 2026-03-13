@@ -5,7 +5,7 @@ from environments.admin import EnvironmentAdmin
 from environments.models import Environment
 
 
-def test_environment_admin_rebuild_environments(
+def test_environment_admin_rebuild_environments(  # noqa: FT003
     environment: Environment, mocker: MockerFixture
 ) -> None:
     # GIVEN

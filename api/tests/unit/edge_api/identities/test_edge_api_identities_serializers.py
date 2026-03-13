@@ -19,7 +19,7 @@ from util.mappers import map_identity_to_identity_document
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
 
-def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(  # type: ignore[no-untyped-def]
+def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, identity, feature, admin_user
 ):
     # Given
@@ -65,7 +65,7 @@ def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(  # t
         lazy_fixture("admin_user"),
     ],
 )
-def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_override(  # type: ignore[no-untyped-def]
+def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_override(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker: MockerFixture,
     identity: Identity,
     feature: Feature,
@@ -122,7 +122,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
     )
 
 
-def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(  # type: ignore[no-untyped-def]
+def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, identity, feature, admin_user
 ):
     # Given
@@ -183,7 +183,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(  
     )
 
 
-def test_all_feature_states_serializer_get_feature_state_value_uses_mv_values_for_edge(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_all_feature_states_serializer_get_feature_state_value_uses_mv_values_for_edge(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     identity, multivariate_feature, environment
 ):
     # Given

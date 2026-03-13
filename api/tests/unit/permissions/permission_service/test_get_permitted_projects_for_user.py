@@ -20,7 +20,7 @@ from projects.models import (
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_get_permitted_projects_for_user_returns_all_projects_for_org_admin(  # type: ignore[no-untyped-def]
+def test_get_permitted_projects_for_user_returns_all_projects_for_org_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_user, project, project_two
 ):
     for permission in ProjectPermissionModel.objects.all().values_list(
@@ -37,7 +37,7 @@ def test_get_permitted_projects_for_user_returns_all_projects_for_org_admin(  # 
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_get_permitted_projects_for_user_returns_the_project_for_project_admin(
+def test_get_permitted_projects_for_user_returns_the_project_for_project_admin(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     project: Project,
     project_admin: typing.Union[
@@ -52,7 +52,7 @@ def test_get_permitted_projects_for_user_returns_the_project_for_project_admin(
         assert get_permitted_projects_for_user(staff_user, permission).count() == 1
 
 
-def test_get_permitted_projects_for_user_returns_correct_project(
+def test_get_permitted_projects_for_user_returns_correct_project(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     project: Project,
     view_project_permission: PermissionModel,
@@ -106,7 +106,7 @@ def test_get_permitted_projects_for_user_returns_correct_project(
         )
 
 
-def test_get_permitted_project_for_user__does_not_return_project_for_orphan_group_permission(
+def test_get_permitted_project_for_user__does_not_return_project_for_orphan_group_permission(  # noqa: FT003
     organisation: Organisation,
     project: Project,
     user_permission_group: UserPermissionGroup,

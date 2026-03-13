@@ -21,7 +21,7 @@ from util.engine_models.identities.traits.types import (
         ({"a": "dict"}, "{'a': 'dict'}"),
     ],
 )
-def test_map_any_value_to_trait_value(value: object, expected: object) -> None:
+def test_map_any_value_to_trait_value(value: object, expected: object) -> None:  # noqa: FT003,FT004
     # When
     result = map_any_value_to_trait_value(value)
 

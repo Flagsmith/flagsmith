@@ -27,7 +27,7 @@ from projects.models import Project, UserProjectPermission
 from users.models import FFAdminUser
 
 
-def test_can_set_trait_for_an_identity(
+def test_can_set_trait_for_an_identity(  # noqa: FT003
     api_client: APIClient,
     identity: Identity,
     environment: Environment,
@@ -53,7 +53,7 @@ def test_can_set_trait_for_an_identity(
     assert Trait.objects.filter(identity=identity, trait_key=trait_key).exists()
 
 
-def test_cannot_set_trait_for_an_identity_for_organisations_without_persistence(
+def test_cannot_set_trait_for_an_identity_for_organisations_without_persistence(  # noqa: FT003
     api_client: APIClient,
     identity: Identity,
     organisation: Organisation,
@@ -89,7 +89,7 @@ def test_cannot_set_trait_for_an_identity_for_organisations_without_persistence(
     assert Trait.objects.count() == 0
 
 
-def test_can_set_trait_with_boolean_value_for_an_identity(
+def test_can_set_trait_with_boolean_value_for_an_identity(  # noqa: FT003
     api_client: APIClient,
     identity: Identity,
     environment: Environment,
@@ -120,7 +120,7 @@ def test_can_set_trait_with_boolean_value_for_an_identity(
     )
 
 
-def test_can_set_trait_with_identity_value_for_an_identity(
+def test_can_set_trait_with_identity_value_for_an_identity(  # noqa: FT003
     api_client: APIClient,
     identity: Identity,
     environment: Environment,
@@ -151,7 +151,7 @@ def test_can_set_trait_with_identity_value_for_an_identity(
     )
 
 
-def test_can_set_trait_with_float_value_for_an_identity(
+def test_can_set_trait_with_float_value_for_an_identity(  # noqa: FT003
     api_client: APIClient,
     identity: Identity,
     environment: Environment,
@@ -184,7 +184,7 @@ def test_can_set_trait_with_float_value_for_an_identity(
     )
 
 
-def test_add_trait_creates_identity_if_it_doesnt_exist(
+def test_add_trait_creates_identity_if_it_doesnt_exist(  # noqa: FT003
     api_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -217,7 +217,7 @@ def test_add_trait_creates_identity_if_it_doesnt_exist(
     ).exists()
 
 
-def test_trait_is_updated_if_already_exists(
+def test_trait_is_updated_if_already_exists(  # noqa: FT003
     identity: Identity,
     api_client: APIClient,
     environment: Environment,
@@ -252,7 +252,7 @@ def test_trait_is_updated_if_already_exists(
     assert trait.get_trait_value() == new_value  # type: ignore[no-untyped-call]
 
 
-def test_increment_value_increments_trait_value_if_value_positive_integer(
+def test_increment_value_increments_trait_value_if_value_positive_integer(  # noqa: FT003
     identity: Identity,
     api_client: APIClient,
     environment: Environment,
@@ -287,7 +287,7 @@ def test_increment_value_increments_trait_value_if_value_positive_integer(
     assert trait.get_trait_value() == initial_value + increment_by  # type: ignore[no-untyped-call]
 
 
-def test_increment_value_decrements_trait_value_if_value_negative_integer(
+def test_increment_value_decrements_trait_value_if_value_negative_integer(  # noqa: FT003
     api_client: APIClient,
     identity: Identity,
     environment: Environment,
@@ -321,7 +321,7 @@ def test_increment_value_decrements_trait_value_if_value_negative_integer(
     assert trait.get_trait_value() == initial_value + increment_by  # type: ignore[no-untyped-call]
 
 
-def test_increment_value_initialises_trait_with_a_value_of_zero_if_it_doesnt_exist(
+def test_increment_value_initialises_trait_with_a_value_of_zero_if_it_doesnt_exist(  # noqa: FT003
     identity: Identity,
     api_client: APIClient,
     environment: Environment,
@@ -345,7 +345,7 @@ def test_increment_value_initialises_trait_with_a_value_of_zero_if_it_doesnt_exi
     assert trait.get_trait_value() == increment_by  # type: ignore[no-untyped-call]
 
 
-def test_increment_value_returns_400_if_trait_value_not_integer(
+def test_increment_value_returns_400_if_trait_value_not_integer(  # noqa: FT003
     identity: Identity,
     api_client: APIClient,
     environment: Environment,
@@ -373,7 +373,7 @@ def test_increment_value_returns_400_if_trait_value_not_integer(
     assert res.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_set_trait_with_too_long_string_value_returns_400(
+def test_set_trait_with_too_long_string_value_returns_400(  # noqa: FT003
     identity: Identity,
     api_client: APIClient,
     environment: Environment,
@@ -405,7 +405,7 @@ def test_set_trait_with_too_long_string_value_returns_400(
     )
 
 
-def test_can_set_trait_with_bad_value_for_an_identity(
+def test_can_set_trait_with_bad_value_for_an_identity(  # noqa: FT003
     api_client: APIClient,
     environment: Environment,
     identity: Identity,
@@ -436,7 +436,7 @@ def test_can_set_trait_with_bad_value_for_an_identity(
     ).get_trait_value() == str(bad_trait_value)
 
 
-def test_bulk_create_traits(
+def test_bulk_create_traits(  # noqa: FT003
     api_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -470,7 +470,7 @@ def test_bulk_create_traits(
     )
 
 
-def test_bulk_create_traits_when_bad_trait_value_sent_then_trait_value_stringified(
+def test_bulk_create_traits_when_bad_trait_value_sent_then_trait_value_stringified(  # noqa: FT003
     identity: Identity,
     api_client: APIClient,
     environment: Environment,
@@ -516,7 +516,7 @@ def test_bulk_create_traits_when_bad_trait_value_sent_then_trait_value_stringifi
     ).get_trait_value() == str(bad_trait_value)
 
 
-def test_sending_null_value_in_bulk_create_deletes_trait_for_identity(
+def test_sending_null_value_in_bulk_create_deletes_trait_for_identity(  # noqa: FT003
     identity: Identity,
     api_client: APIClient,
     environment: Environment,
@@ -562,7 +562,7 @@ def test_sending_null_value_in_bulk_create_deletes_trait_for_identity(
     assert Trait.objects.filter(id=trait_to_keep.id).exists()
 
 
-def test_bulk_create_traits_when_float_value_sent_then_trait_value_correct(
+def test_bulk_create_traits_when_float_value_sent_then_trait_value_correct(  # noqa: FT003
     identity: Identity,
     api_client: APIClient,
     environment: Environment,
@@ -601,7 +601,7 @@ def test_bulk_create_traits_when_float_value_sent_then_trait_value_correct(
 
 @override_settings(EDGE_API_URL="http://localhost")
 @mock.patch("environments.identities.traits.views.forward_trait_request")
-def test_post_trait_calls_forward_trait_request_with_correct_arguments(
+def test_post_trait_calls_forward_trait_request_with_correct_arguments(  # noqa: FT003
     mocked_forward_trait_request: mock.MagicMock,
     identity: Identity,
     api_client: APIClient,
@@ -636,7 +636,7 @@ def test_post_trait_calls_forward_trait_request_with_correct_arguments(
 
 @override_settings(EDGE_API_URL="http://localhost")
 @mock.patch("environments.identities.traits.views.forward_trait_request")
-def test_increment_value_calls_forward_trait_request_with_correct_arguments(
+def test_increment_value_calls_forward_trait_request_with_correct_arguments(  # noqa: FT003
     mocked_forward_trait_request: mock.MagicMock,
     identity: Identity,
     api_client: APIClient,
@@ -674,7 +674,7 @@ def test_increment_value_calls_forward_trait_request_with_correct_arguments(
 
 @override_settings(EDGE_API_URL="http://localhost")
 @mock.patch("environments.identities.traits.views.forward_trait_requests")
-def test_bulk_create_traits_calls_forward_trait_request_with_correct_arguments(
+def test_bulk_create_traits_calls_forward_trait_request_with_correct_arguments(  # noqa: FT003
     mocked_forward_trait_requests: mock.MagicMock,
     api_client: APIClient,
     environment: Environment,
@@ -711,7 +711,7 @@ def test_bulk_create_traits_calls_forward_trait_request_with_correct_arguments(
     assert kwargs["args"][3] == data
 
 
-def test_create_trait_returns_403_if_client_cannot_set_traits(
+def test_create_trait_returns_403_if_client_cannot_set_traits(  # noqa: FT003
     identity: Identity,
     api_client: APIClient,
     environment: Environment,
@@ -739,7 +739,7 @@ def test_create_trait_returns_403_if_client_cannot_set_traits(
     }
 
 
-def test_server_key_can_create_trait_if_not_allow_client_traits(
+def test_server_key_can_create_trait_if_not_allow_client_traits(  # noqa: FT003
     identity: Identity,
     api_client: APIClient,
     environment: Environment,
@@ -767,7 +767,7 @@ def test_server_key_can_create_trait_if_not_allow_client_traits(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_bulk_create_traits_returns_403_if_client_cannot_set_traits(
+def test_bulk_create_traits_returns_403_if_client_cannot_set_traits(  # noqa: FT003
     identity: Identity,
     api_client: APIClient,
     environment: Environment,
@@ -795,7 +795,7 @@ def test_bulk_create_traits_returns_403_if_client_cannot_set_traits(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_server_key_can_bulk_create_traits_if_not_allow_client_traits(
+def test_server_key_can_bulk_create_traits_if_not_allow_client_traits(  # noqa: FT003
     identity: Identity,
     api_client: APIClient,
     environment: Environment,
@@ -826,7 +826,7 @@ def test_server_key_can_bulk_create_traits_if_not_allow_client_traits(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_delete_trait_only_deletes_single_trait_if_query_param_not_provided(
+def test_delete_trait_only_deletes_single_trait_if_query_param_not_provided(  # noqa: FT003
     identity: Identity,
     environment: Environment,
     admin_client: APIClient,
@@ -864,7 +864,7 @@ def test_delete_trait_only_deletes_single_trait_if_query_param_not_provided(
     assert Trait.objects.filter(pk=trait_2.id).exists()
 
 
-def test_delete_trait_deletes_all_traits_if_query_param_provided(
+def test_delete_trait_deletes_all_traits_if_query_param_provided(  # noqa: FT003
     identity: Identity,
     environment: Environment,
     admin_client: APIClient,
@@ -903,7 +903,7 @@ def test_delete_trait_deletes_all_traits_if_query_param_provided(
     assert not Trait.objects.filter(pk=trait_2.id).exists()
 
 
-def test_delete_trait_only_deletes_traits_in_current_environment(
+def test_delete_trait_only_deletes_traits_in_current_environment(  # noqa: FT003
     identity: Identity,
     environment: Environment,
     admin_client: APIClient,
@@ -944,7 +944,7 @@ def test_delete_trait_only_deletes_traits_in_current_environment(
     assert Trait.objects.filter(pk=trait_2.id).exists()
 
 
-def test_set_trait_for_an_identity_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped-def]
+def test_set_trait_for_an_identity_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped-def]  # noqa: FT003
     settings, identity, environment, api_client
 ):
     # Given
@@ -969,7 +969,7 @@ def test_set_trait_for_an_identity_is_not_throttled_by_user_throttle(  # type: i
         assert res.status_code == status.HTTP_200_OK
 
 
-def test_user_with_manage_identities_permission_can_add_trait_for_identity(
+def test_user_with_manage_identities_permission_can_add_trait_for_identity(  # noqa: FT003
     environment: Environment,
     identity: Identity,
     staff_user: FFAdminUser,
@@ -1000,7 +1000,7 @@ def test_user_with_manage_identities_permission_can_add_trait_for_identity(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_trait_view_delete_trait(environment, admin_client, identity, trait, mocker):  # type: ignore[no-untyped-def]
+def test_trait_view_delete_trait(environment, admin_client, identity, trait, mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     url = reverse(
         "api-v1:environments:identities-traits-detail",
@@ -1017,7 +1017,7 @@ def test_trait_view_delete_trait(environment, admin_client, identity, trait, moc
     assert not Trait.objects.filter(pk=trait.id).exists()
 
 
-def test_trait_view_set_update(environment, admin_client, identity, trait, mocker):  # type: ignore[no-untyped-def]
+def test_trait_view_set_update(environment, admin_client, identity, trait, mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     url = reverse(
         "api-v1:environments:identities-traits-detail",
@@ -1033,7 +1033,7 @@ def test_trait_view_set_update(environment, admin_client, identity, trait, mocke
     assert response.json()["string_value"] == new_value
 
 
-def test_edge_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]
+def test_edge_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     view_set = TraitViewSet()
 

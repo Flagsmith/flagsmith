@@ -5,7 +5,7 @@ from django_test_migrations.migrator import Migrator
 from core.constants import STRING
 
 
-def test_remove_duplicate_mv_feature_state_values(migrator: Migrator) -> None:
+def test_remove_duplicate_mv_feature_state_values(migrator: Migrator) -> None:  # noqa: FT003
     # Given
     # We set the DB to be in the state prior to the migration we want to test
     old_state = migrator.apply_initial_migration(("multivariate", "0001_initial"))

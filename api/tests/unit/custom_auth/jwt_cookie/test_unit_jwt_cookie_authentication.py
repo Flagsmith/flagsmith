@@ -15,7 +15,7 @@ from custom_auth.jwt_cookie.constants import JWT_SLIDING_COOKIE_KEY
 from users.models import FFAdminUser
 
 
-def test_authenticate_without_cookie(mocker: MockerFixture) -> None:
+def test_authenticate_without_cookie(mocker: MockerFixture) -> None:  # noqa: FT003
     # Given
     auth = JWTCookieAuthentication()
     request = mocker.MagicMock(spec=Request)
@@ -28,7 +28,7 @@ def test_authenticate_without_cookie(mocker: MockerFixture) -> None:
     assert result is None
 
 
-def test_authenticate_valid_cookie(mocker: MockerFixture) -> None:
+def test_authenticate_valid_cookie(mocker: MockerFixture) -> None:  # noqa: FT003
     # Given
     auth = JWTCookieAuthentication()
     request = mocker.MagicMock(spec=Request)
@@ -56,7 +56,7 @@ def test_authenticate_valid_cookie(mocker: MockerFixture) -> None:
 @pytest.mark.parametrize(
     "exception_class", [InvalidToken, TokenError, AuthenticationFailed]
 )
-def test_authenticate_invalid_cookie(
+def test_authenticate_invalid_cookie(  # noqa: FT003
     mocker: MockerFixture,
     exception_class: Type[Exception],
 ) -> None:

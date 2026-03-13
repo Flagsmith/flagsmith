@@ -14,7 +14,7 @@ if typing.TYPE_CHECKING:
     from pytest_django.fixtures import SettingsWrapper
 
 
-def test_invite_link_is_expired_expiry_date_in_past(
+def test_invite_link_is_expired_expiry_date_in_past(  # noqa: FT003
     organisation: Organisation,
 ) -> None:
     # Given
@@ -30,7 +30,7 @@ def test_invite_link_is_expired_expiry_date_in_past(
     assert is_expired
 
 
-def test_invite_link_is_expired_expiry_date_in_future(
+def test_invite_link_is_expired_expiry_date_in_future(  # noqa: FT003
     organisation: Organisation,
 ) -> None:
     # Given
@@ -46,7 +46,7 @@ def test_invite_link_is_expired_expiry_date_in_future(
     assert not is_expired
 
 
-def test_invite_link_is_expired_no_expiry_date(
+def test_invite_link_is_expired_no_expiry_date(  # noqa: FT003
     organisation: Organisation,
 ) -> None:
     # Given
@@ -60,7 +60,7 @@ def test_invite_link_is_expired_no_expiry_date(
 
 
 @pytest.mark.django_db
-def test_cannot_create_invite_link_if_disabled(settings: "SettingsWrapper") -> None:
+def test_cannot_create_invite_link_if_disabled(settings: "SettingsWrapper") -> None:  # noqa: FT003
     # Given
     settings.DISABLE_INVITE_LINKS = True
 
@@ -70,7 +70,7 @@ def test_cannot_create_invite_link_if_disabled(settings: "SettingsWrapper") -> N
 
 
 @pytest.mark.django_db
-def test_save_invalid_invite__dont_send(mailoutbox: "list[EmailMessage]") -> None:
+def test_save_invalid_invite__dont_send(mailoutbox: "list[EmailMessage]") -> None:  # noqa: FT003
     # Given
     email = "unknown@test.com"
     organisation = Organisation.objects.create(name="ssg")

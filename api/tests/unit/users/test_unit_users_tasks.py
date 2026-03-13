@@ -5,7 +5,7 @@ from users.tasks import (
 )
 
 
-def test_send_email_changed_notification():  # type: ignore[no-untyped-def]
+def test_send_email_changed_notification():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     # When
     send_email_changed_notification_email(
         first_name="first_name",

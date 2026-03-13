@@ -17,7 +17,7 @@ from core.constants import BOOLEAN, INTEGER, STRING
         ("bool", True),
     ),
 )
-def test_get_all_feature_states_for_an_identity(  # type: ignore[no-untyped-def]
+def test_get_all_feature_states_for_an_identity(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_client,
     environment,
     environment_api_key,

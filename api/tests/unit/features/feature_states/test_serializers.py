@@ -14,7 +14,7 @@ from projects.models import Project
 from segments.models import Segment
 
 
-def test_get_feature_raises_error_when_environment_not_in_context(
+def test_get_feature_raises_error_when_environment_not_in_context(  # noqa: FT003
     feature: Feature,
 ) -> None:
     # Given
@@ -36,7 +36,7 @@ def test_get_feature_raises_error_when_environment_not_in_context(
     assert "Environment context is required" in str(exc_info.value)
 
 
-def test_validate_segment_overrides_returns_empty_list() -> None:
+def test_validate_segment_overrides_returns_empty_list() -> None:  # noqa: FT003
     # Given
     serializer = UpdateFlagV2Serializer()
 
@@ -47,7 +47,7 @@ def test_validate_segment_overrides_returns_empty_list() -> None:
     assert result == []
 
 
-def test_feature_value_serializer_rejects_invalid_integer() -> None:
+def test_feature_value_serializer_rejects_invalid_integer() -> None:  # noqa: FT003
     # Given
     serializer = FeatureValueSerializer(
         data={"type": "integer", "value": "not_a_number"}
@@ -61,7 +61,7 @@ def test_feature_value_serializer_rejects_invalid_integer() -> None:
     assert "not a valid integer" in str(serializer.errors)
 
 
-def test_feature_value_serializer_rejects_invalid_boolean() -> None:
+def test_feature_value_serializer_rejects_invalid_boolean() -> None:  # noqa: FT003
     # Given
     serializer = FeatureValueSerializer(data={"type": "boolean", "value": "yes"})
 
@@ -104,7 +104,7 @@ def test_feature_value_serializer_rejects_invalid_boolean() -> None:
         ),
     ],
 )
-def test_serializer_rejects_nonexistent_segment(
+def test_serializer_rejects_nonexistent_segment(  # noqa: FT003
     feature: Feature,
     environment: Environment,
     serializer_class: type,
@@ -155,7 +155,7 @@ def test_serializer_rejects_nonexistent_segment(
         ),
     ],
 )
-def test_serializer_rejects_cross_project_segment(
+def test_serializer_rejects_cross_project_segment(  # noqa: FT003
     feature: Feature,
     environment: Environment,
     organisation: object,

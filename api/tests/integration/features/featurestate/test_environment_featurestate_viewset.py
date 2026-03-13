@@ -10,7 +10,7 @@ from rest_framework import status
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_update_feature_state_value_updates_feature_state_value(  # type: ignore[no-untyped-def]
+def test_update_feature_state_value_updates_feature_state_value(  # type: ignore[no-untyped-def]  # noqa: FT003
     client, environment, environment_api_key, feature, feature_state
 ):
     # Given

@@ -7,7 +7,7 @@ from custom_auth.oauth.google import USER_INFO_URL, get_user_info
 
 
 @mock.patch("custom_auth.oauth.google.requests")
-def test_get_user_info(mock_requests):  # type: ignore[no-untyped-def]
+def test_get_user_info(mock_requests):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     access_token = "access-token"
     mock_google_response_data = {
@@ -35,7 +35,7 @@ def test_get_user_info(mock_requests):  # type: ignore[no-untyped-def]
 
 
 @mock.patch("custom_auth.oauth.google.requests")
-def test_get_user_info_non_200_status_code(mock_requests):  # type: ignore[no-untyped-def]
+def test_get_user_info_non_200_status_code(mock_requests):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     # Given
     access_token = "access-token"
     mock_response = mock.MagicMock(status_code=400)

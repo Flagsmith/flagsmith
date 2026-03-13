@@ -31,7 +31,7 @@ def mock_local_file_handler_class(  # type: ignore[no-untyped-def]
     )
 
 
-def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_disabled(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_disabled(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     settings: SettingsWrapper,
     mocker: MockerFixture,
     mock_local_file_handler,
@@ -64,7 +64,7 @@ def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_di
     mock_local_file_handler_class.assert_called_once_with(ENVIRONMENT_JSON_PATH)
 
 
-def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_enabled(  # type: ignore[no-untyped-def]
+def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_enabled(  # type: ignore[no-untyped-def]  # noqa: FT003
     settings: SettingsWrapper,
     mocker: MockerFixture,
     mock_local_file_handler,
@@ -90,7 +90,7 @@ def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_en
     mock_local_file_handler_class.assert_called_once_with(ENVIRONMENT_JSON_PATH)
 
 
-def test_get_client_raises_value_error_if_missing_args(  # type: ignore[no-untyped-def]
+def test_get_client_raises_value_error_if_missing_args(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     settings: SettingsWrapper, mock_local_file_handler_class
 ):
     # Given

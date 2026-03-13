@@ -1,7 +1,7 @@
 from integrations.amplitude.models import AmplitudeConfiguration
 
 
-def test_amplitude_configuration_save_writes_environment_to_dynamodb(  # type: ignore[no-untyped-def]
+def test_amplitude_configuration_save_writes_environment_to_dynamodb(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment, mocker
 ):
     """
@@ -24,7 +24,7 @@ def test_amplitude_configuration_save_writes_environment_to_dynamodb(  # type: i
     )
 
 
-def test_amplitude_configuration_delete_writes_environment_to_dynamodb(  # type: ignore[no-untyped-def]
+def test_amplitude_configuration_delete_writes_environment_to_dynamodb(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment, mocker
 ):
     """
@@ -48,7 +48,7 @@ def test_amplitude_configuration_delete_writes_environment_to_dynamodb(  # type:
     )
 
 
-def test_amplitude_configuration_update_clears_environment_cache(environment, mocker):  # type: ignore[no-untyped-def]
+def test_amplitude_configuration_update_clears_environment_cache(environment, mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     mock_environment_cache = mocker.patch("environments.models.environment_cache")
     amplitude_config = AmplitudeConfiguration.objects.create(

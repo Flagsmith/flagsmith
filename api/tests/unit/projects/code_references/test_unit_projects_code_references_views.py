@@ -7,7 +7,7 @@ from projects.models import Project
 
 
 @freezegun.freeze_time("2025-04-14T09:30:00-0300")
-def test_CodeReferenceCreateAPIView__responds_201_with_accepted_code_references(
+def test_CodeReferenceCreateAPIView__responds_201_with_accepted_code_references(  # noqa: FT003,FT004
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -64,7 +64,7 @@ def test_CodeReferenceCreateAPIView__responds_201_with_accepted_code_references(
     ]
 
 
-def test_CodeReferenceCreateView__responds_401_if_not_authenticated(
+def test_CodeReferenceCreateView__responds_401_if_not_authenticated(  # noqa: FT003,FT004
     client: APIClient,
     project: Project,
 ) -> None:
@@ -90,7 +90,7 @@ def test_CodeReferenceCreateView__responds_401_if_not_authenticated(
     assert not FeatureFlagCodeReferencesScan.objects.exists()
 
 
-def test_CodeReferenceCreateAPIView__responds_403_if_incorrect_permissions(
+def test_CodeReferenceCreateAPIView__responds_403_if_incorrect_permissions(  # noqa: FT003,FT004
     project: Project,
     staff_client: APIClient,
 ) -> None:
@@ -116,7 +116,7 @@ def test_CodeReferenceCreateAPIView__responds_403_if_incorrect_permissions(
     assert not FeatureFlagCodeReferencesScan.objects.exists()
 
 
-def test_CodeReferenceCreateAPIView__responds_400_when_missing_field(
+def test_CodeReferenceCreateAPIView__responds_400_when_missing_field(  # noqa: FT003,FT004
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -145,7 +145,7 @@ def test_CodeReferenceCreateAPIView__responds_400_when_missing_field(
     assert not FeatureFlagCodeReferencesScan.objects.exists()
 
 
-def test_CodeReferenceCreateAPIView__responds_400_when_file_path_too_long(
+def test_CodeReferenceCreateAPIView__responds_400_when_file_path_too_long(  # noqa: FT003,FT004
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -176,7 +176,7 @@ def test_CodeReferenceCreateAPIView__responds_400_when_file_path_too_long(
     assert not FeatureFlagCodeReferencesScan.objects.exists()
 
 
-def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_for_given_feature(
+def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_for_given_feature(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,
@@ -279,7 +279,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_code_references_f
     ]
 
 
-def test_FeatureCodeReferencesDetailAPIView__responds_200_with_feature_flag_removed(
+def test_FeatureCodeReferencesDetailAPIView__responds_200_with_feature_flag_removed(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,
@@ -325,7 +325,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_with_feature_flag_remo
     ]
 
 
-def test_FeatureCodeReferencesDetailAPIView__responds_200_even_without_code_references(
+def test_FeatureCodeReferencesDetailAPIView__responds_200_even_without_code_references(  # noqa: FT003,FT004
     admin_client_new: APIClient,
     feature: Feature,
     project: Project,
@@ -340,7 +340,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_200_even_without_code_refe
     assert response.json() == []
 
 
-def test_FeatureCodeReferencesDetailAPIView__responds_401_if_not_authenticated(
+def test_FeatureCodeReferencesDetailAPIView__responds_401_if_not_authenticated(  # noqa: FT003,FT004
     client: APIClient,
     feature: Feature,
     project: Project,
@@ -355,7 +355,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_401_if_not_authenticated(
     assert response.data["detail"] == "Authentication credentials were not provided."
 
 
-def test_FeatureCodeReferencesDetailAPIView__responds_403_if_incorrect_permissions(
+def test_FeatureCodeReferencesDetailAPIView__responds_403_if_incorrect_permissions(  # noqa: FT003,FT004
     feature: Feature,
     project: Project,
     staff_client: APIClient,
@@ -369,7 +369,7 @@ def test_FeatureCodeReferencesDetailAPIView__responds_403_if_incorrect_permissio
     assert response.status_code == 403
 
 
-def test_FeatureCodeReferencesDetailAPIView__responds_404_when_feature_not_found(
+def test_FeatureCodeReferencesDetailAPIView__responds_404_when_feature_not_found(  # noqa: FT003,FT004
     project: Project,
     admin_client_new: APIClient,
 ) -> None:

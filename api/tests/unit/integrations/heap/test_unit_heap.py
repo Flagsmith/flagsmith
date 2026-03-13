@@ -15,7 +15,7 @@ from integrations.heap.models import HeapConfiguration
     [(False, False), (True, True), ("foo", "foo"), (1, 1), (0, 0)],
     indirect=["feature_state_with_value"],
 )
-def test_heap_when_generate_user_data_with_correct_values_then_success(
+def test_heap_when_generate_user_data_with_correct_values_then_success(  # noqa: FT003
     expected_property_value: typing.Any,
     environment: Environment,
     feature_state: FeatureState,

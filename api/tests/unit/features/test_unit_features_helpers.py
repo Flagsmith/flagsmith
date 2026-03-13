@@ -15,5 +15,5 @@ from features.value_types import BOOLEAN, INTEGER, STRING
         (STRING, "False", "False"),
     ),
 )
-def test_get_correctly_typed_value(value_type, string_value, expected_value):  # type: ignore[no-untyped-def]
+def test_get_correctly_typed_value(value_type, string_value, expected_value):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert get_correctly_typed_value(value_type, string_value) == expected_value

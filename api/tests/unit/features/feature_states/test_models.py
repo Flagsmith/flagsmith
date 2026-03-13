@@ -17,7 +17,7 @@ from features.value_types import BOOLEAN, INTEGER, STRING
         ("TRUE", "boolean", True, BOOLEAN),
     ],
 )
-def test_set_value(
+def test_set_value(  # noqa: FT003
     feature_state: FeatureState,
     value: str,
     type_: FeatureValueType,
@@ -43,7 +43,7 @@ def test_set_value(
         ("hello", "invalid", "'invalid' is not a valid type"),
     ],
 )
-def test_set_value_invalid_raises_error(
+def test_set_value_invalid_raises_error(  # noqa: FT003
     feature_state: FeatureState,
     value: str,
     type_: str,
@@ -59,7 +59,7 @@ def test_set_value_invalid_raises_error(
     assert expected_error in str(exc_info.value)
 
 
-def test_set_value_clears_old_fields_when_changing_type(
+def test_set_value_clears_old_fields_when_changing_type(  # noqa: FT003
     feature_state: FeatureState,
 ) -> None:
     # Given
@@ -87,7 +87,7 @@ def test_set_value_clears_old_fields_when_changing_type(
         ("hello", "invalid_type"),
     ],
 )
-def test_set_value_preserves_original_value_on_error(
+def test_set_value_preserves_original_value_on_error(  # noqa: FT003
     feature_state: FeatureState,
     invalid_value: str,
     invalid_type: str,

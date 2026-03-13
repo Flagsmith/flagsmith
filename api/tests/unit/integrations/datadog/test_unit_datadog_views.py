@@ -8,7 +8,7 @@ from integrations.datadog.models import DataDogConfiguration
 from projects.models import Project
 
 
-def test_should_create_datadog_config_when_post(
+def test_should_create_datadog_config_when_post(  # noqa: FT003
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -36,7 +36,7 @@ def test_should_create_datadog_config_when_post(
     assert created_config.use_custom_source == data["use_custom_source"]
 
 
-def test_should_return_400_when_duplicate_datadog_config_is_posted(
+def test_should_return_400_when_duplicate_datadog_config_is_posted(  # noqa: FT003
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -59,7 +59,7 @@ def test_should_return_400_when_duplicate_datadog_config_is_posted(
     assert DataDogConfiguration.objects.filter(project=project).count() == 1
 
 
-def test_should_update_configuration_when_put(
+def test_should_update_configuration_when_put(  # noqa: FT003
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -87,7 +87,7 @@ def test_should_update_configuration_when_put(
     assert config.api_key == api_key_updated
 
 
-def test_should_return_datadog_config_list_when_requested(
+def test_should_return_datadog_config_list_when_requested(  # noqa: FT003
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -112,7 +112,7 @@ def test_should_return_datadog_config_list_when_requested(
     ]
 
 
-def test_should_remove_configuration_when_delete(
+def test_should_remove_configuration_when_delete(  # noqa: FT003
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -132,7 +132,7 @@ def test_should_remove_configuration_when_delete(
     assert not DataDogConfiguration.objects.filter(project=project).exists()
 
 
-def test_create_datadog_configuration_in_project_with_deleted_configuration(  # type: ignore[no-untyped-def]
+def test_create_datadog_configuration_in_project_with_deleted_configuration(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client, project, deleted_datadog_configuration
 ):
     # Given

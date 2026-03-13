@@ -1,7 +1,7 @@
 from django_test_migrations.migrator import Migrator
 
 
-def test_migrate_use_mv_v2_evaluation(migrator: Migrator) -> None:
+def test_migrate_use_mv_v2_evaluation(migrator: Migrator) -> None:  # noqa: FT003
     # Given
     old_state = migrator.apply_initial_migration(
         ("environments", "0027_auto_20230106_0626")
