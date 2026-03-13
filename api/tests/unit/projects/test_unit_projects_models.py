@@ -76,8 +76,8 @@ def test_get_segments_from_cache_set_to_empty_list(
     # Since we're calling the live_objects manager in the method,
     # only one copy of the segment should be returned, not the
     # other versioned copy of the segment.
-    assert segments.count() == 1
-    assert segments.first() == segment
+    assert len(segments) == 1
+    assert segments[0] == segment
 
     # And correct calls to cache are made
     mock_project_segments_cache.get.assert_called_once_with(project.id)
