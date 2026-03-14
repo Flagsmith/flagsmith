@@ -55,17 +55,54 @@ class FeatureMVOptionsValuesResponseSerializer(serializers.Serializer):  # type:
 class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSerializer):
     class Meta(NestedMultivariateFeatureOptionSerializer.Meta):
         fields = NestedMultivariateFeatureOptionSerializer.Meta.fields + ("feature",)  # type: ignore[assignment]
+        extra_kwargs = {
+            "feature": {"required": False},
+        }
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
+
+        # For partial updates or nested routes, use existing instance or URL value as fallback
+        feature = attrs.get("feature")
+        if feature is None and self.instance is not None:
+            feature = self.instance.feature
+
+        if feature is None:
+            view = self.context.get("view")
+            feature_pk = getattr(view, "kwargs", {}).get("feature_pk") if view else None
+            project_pk = getattr(view, "kwargs", {}).get("project_pk") if view else None
+            if feature_pk is not None:
+                qs = Feature.objects.filter(pk=feature_pk)
+                if project_pk is not None:
+                    qs = qs.filter(project__id=project_pk)
+                feature = qs.first()
+
+        if feature is None:
+            raise serializers.ValidationError({"feature": "Feature is required"})
+
+        # Ensure feature is always present in validated data (e.g. for creates via nested routes)
+        attrs["feature"] = feature
+
+        # Handle legacy records where default_percentage_allocation may be NULL in the database.
+        if self.instance and self.instance.default_percentage_allocation is not None:
+            instance_default_allocation = self.instance.default_percentage_allocation
+        else:
+            instance_default_allocation = 100
+
+        default_allocation = attrs.get(
+            "default_percentage_allocation",
+            instance_default_allocation,
+        )
+        attrs["default_percentage_allocation"] = default_allocation
+
         total_sibling_percentage_allocation = (
-            self._get_siblings(attrs["feature"]).aggregate(
+            self._get_siblings(feature).aggregate(
                 total_percentage_allocation=Sum("default_percentage_allocation")
             )["total_percentage_allocation"]
             or 0
         )
         total_percentage_allocation = (
-            total_sibling_percentage_allocation + attrs["default_percentage_allocation"]
+            total_sibling_percentage_allocation + default_allocation
         )
 
         if total_percentage_allocation > 100:

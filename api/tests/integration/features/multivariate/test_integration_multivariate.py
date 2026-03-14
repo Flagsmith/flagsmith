@@ -7,6 +7,8 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from features.models import Feature
+from features.multivariate.models import MultivariateFeatureOption
+from features.multivariate.serializers import MultivariateFeatureOptionSerializer
 from organisations.models import Organisation
 from projects.models import Project
 from users.models import FFAdminUser
@@ -38,6 +40,181 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):  
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["id"]
     assert set(data.items()).issubset(set(response.json().items()))
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_mv_option__without_feature_in_payload__uses_feature_from_url(
+    client: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+    }
+    # When
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    body = response.json()
+    assert body["id"]
+    assert body["feature"] == feature
+    assert body["string_value"] == "bigger"
+    assert body["default_percentage_allocation"] == 50
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_mv_option__without_default_percentage_allocation__uses_default(
+    client: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "test_value",
+    }
+
+    # When
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["id"]
+    assert response.json()["default_percentage_allocation"] == 100
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_create_mv_option__without_default_percentage_allocation_with_existing_sibling_and_total_gt_100__returns_400(  # noqa: E501
+    client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "another_value",
+    }
+
+    # When
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["default_percentage_allocation"] == [
+        "Invalid percentage allocation"
+    ]
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_partial_update_mv_option__without_feature_and_allocation__uses_existing_values(
+    client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+    data = {
+        "string_value": "updated_value",
+    }
+
+    # When
+    response = client.patch(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["string_value"] == "updated_value"
+    assert response.json()["default_percentage_allocation"] == 50
+    assert response.json()["feature"] == feature
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_partial_update_mv_option__handles_legacy_null_default_percentage_allocation(  # noqa: E501
+    client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given
+    # Simulate a legacy instance in memory where default_percentage_allocation is NULL.
+    mv_option = MultivariateFeatureOption.objects.get(id=mv_option_50_percent)
+    mv_option.default_percentage_allocation = None
+
+    serializer = MultivariateFeatureOptionSerializer(
+        instance=mv_option,
+        data={"string_value": "updated_legacy_value"},
+        partial=True,
+        context={
+            "view": type(
+                "View",
+                (),
+                {
+                    "kwargs": {
+                        "project_pk": project,
+                        "feature_pk": feature,
+                    },
+                },
+            )(),
+        },
+    )
+    assert serializer.is_valid(), serializer.errors
+    instance = serializer.save()
+
+    assert instance.string_value == "updated_legacy_value"
+    assert instance.default_percentage_allocation == 100
+    assert instance.feature_id == feature
 
 
 @pytest.mark.parametrize(
@@ -181,6 +358,56 @@ def test_can_update_default_percentage_allocation(  # type: ignore[no-untyped-de
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["id"] == mv_option_50_percent
     assert set(data.items()).issubset(set(response.json().items()))
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_partial_update_default_percentage_allocation__sibling_total_gt_100__returns_400(  # noqa: E501
+    project: int,
+    mv_option_50_percent: int,
+    client: APIClient,
+    feature: int,
+) -> None:
+    # First let's create another mv_option with 30 percent allocation
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 30,
+    }
+    response = client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    mv_option_30_percent = response.json()["id"]
+
+    # Next, let's partially update the 30 percent mv option to 51 percent
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_30_percent],
+    )
+    data = {
+        "default_percentage_allocation": 51,
+    }
+    # When
+    response = client.patch(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["default_percentage_allocation"] == [
+        "Invalid percentage allocation"
+    ]
 
 
 @pytest.mark.parametrize(
