@@ -27,11 +27,14 @@ export const groupService = service
           }
           //Add the members
           if (query.users?.length) {
-            const { error } = await baseQuery({
+            const res = await baseQuery({
               body: { user_ids: query.users.map((u) => u.id) },
               method: 'POST',
-              url: `organisations/${query.orgId}/groups/${data.id}/`,
+              url: `organisations/${query.orgId}/groups/${data.id}/add-users/`,
             })
+            if (res.error) {
+              return { error: res.error }
+            }
           }
           // Make the admins
           await Promise.all(
@@ -115,19 +118,25 @@ export const groupService = service
             return { error }
           }
           //Add the members
-          if (query.users?.length) {
-            await baseQuery({
-              body: { user_ids: query.data.users.map((u) => u.id) },
+          if (query.usersToAdd?.length) {
+            const res = await baseQuery({
+              body: { user_ids: query.usersToAdd },
               method: 'POST',
               url: `organisations/${query.orgId}/groups/${data.id}/add-users/`,
             })
+            if (res.error) {
+              return { error: res.error }
+            }
           }
           if (query.usersToRemove?.length) {
-            await baseQuery({
+            const res = await baseQuery({
               body: { user_ids: query.usersToRemove },
               method: 'POST',
               url: `organisations/${query.orgId}/groups/${data.id}/remove-users/`,
             })
+            if (res.error) {
+              return { error: res.error }
+            }
           }
           // Make the admins
           await Promise.all(

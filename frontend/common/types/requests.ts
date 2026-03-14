@@ -666,8 +666,7 @@ export type Req = {
   updateGroup: Req['createGroup'] & {
     orgId: number
     data: UserGroup
-    users: UserGroup['users']
-
+    usersToAdd: number[] | null
     usersToAddAdmin: number[] | null
     usersToRemoveAdmin: number[] | null
     usersToRemove: number[] | null
