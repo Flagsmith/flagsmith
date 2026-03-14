@@ -176,7 +176,7 @@ const Input = class extends React.Component {
             }}
           >
             <Icon
-              name={this.state.type === 'text' ? 'eye' : 'eye-off'}
+              name={this.state.type === 'password' ? 'eye' : 'eye-off'}
               fill={invalid && '#ef4d56'}
               width={
                 size &&

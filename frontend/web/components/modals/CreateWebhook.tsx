@@ -117,7 +117,7 @@ const CreateWebhook: FC<CreateWebhookProps> = ({
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setSecret(Utils.safeParseEventValue(e))
             }
-            type='text'
+            type='password'
             className='full-width'
             placeholder='Secret'
           />
