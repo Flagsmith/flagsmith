@@ -174,6 +174,9 @@ djangorestframework-simplejwt = "^5.5.1"
 structlog = "^24.4.0"
 prometheus-client = "^0.21.1"
 django_cockroachdb = "~4.2"
+opentelemetry-api = "^1.40.0"
+opentelemetry-sdk = "^1.40.0"
+opentelemetry-exporter-otlp-proto-http = "^1.40.0"
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -252,6 +255,7 @@ pytest-responses = "^0.5.1"
 diff-cover = "^10.1.0"
 django-debug-toolbar = "*"
 ipython = "^9.10.0"
+types-protobuf = "^6.32.1.20260221"
 
 [build-system]
 requires = ["poetry>=2.0.0"]

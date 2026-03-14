@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import importlib
 import json
+import logging
 import os
 import warnings
 from datetime import datetime, time, timedelta
@@ -21,6 +22,7 @@ import dj_database_url
 import django_stubs_ext
 import prometheus_client
 import pytz
+import structlog
 from common.core import ReplicaReadStrategy
 from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
@@ -665,6 +667,40 @@ else:
             },
         },
     }
+
+# OpenTelemetry Logs configuration
+OTEL_LOGS_ENDPOINT = env.str("OTEL_LOGS_ENDPOINT", default=None)
+OTEL_SERVICE_NAME = env.str("OTEL_SERVICE_NAME", default="flagsmith-api")
+
+# structlog configuration — processors that run on every structlog log call.
+_structlog_processors: list[Any] = [
+    structlog.contextvars.merge_contextvars,
+    structlog.processors.add_log_level,
+    structlog.processors.format_exc_info,
+    structlog.processors.TimeStamper(fmt="iso"),
+]
+
+if OTEL_LOGS_ENDPOINT:
+    from observability.otel import StructlogOTelProcessor, build_otel_provider
+
+    _otel_provider = build_otel_provider(
+        endpoint=OTEL_LOGS_ENDPOINT,
+        service_name=OTEL_SERVICE_NAME,
+    )
+    _structlog_processors.append(StructlogOTelProcessor(_otel_provider))
+
+_structlog_processors.append(structlog.dev.ConsoleRenderer())
+
+STRUCTLOG_LOG_LEVEL = env.str("STRUCTLOG_LOG_LEVEL", default="INFO")
+
+structlog.configure(
+    processors=_structlog_processors,
+    wrapper_class=structlog.make_filtering_bound_logger(
+        logging.getLevelNamesMapping()[STRUCTLOG_LOG_LEVEL.upper()]
+    ),
+    logger_factory=structlog.PrintLoggerFactory(),
+    cache_logger_on_first_use=True,
+)
 
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
 if ENABLE_DB_LOGGING:

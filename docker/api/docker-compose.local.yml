@@ -32,3 +32,12 @@ services:
     environment:
       POSTGRES_DB: analytics
       POSTGRES_PASSWORD: password
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    pull_policy: always
+    restart: unless-stopped
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - 4318:4318
