@@ -1843,6 +1843,7 @@ const Index = class extends Component {
                                 />
                                 <FeatureUpdateSummary
                                   identity={identity}
+                                  projectId={this.props.projectId}
                                   onCreateFeature={onCreateFeature}
                                   isSaving={isSaving}
                                   name={projectFlag.name}
