@@ -1,0 +1,140 @@
+// =============================================================================
+// Design Tokens — CSS Custom Properties
+// =============================================================================
+//
+// This file defines the CSS custom properties consumed by common/theme/tokens.ts.
+// Light mode values are defined on :root, dark mode overrides on [data-bs-theme='dark'].
+//
+// Migration: gradually replace $scss-variable references in component SCSS files
+// with var(--tokenName). Once a $foo / $foo-dark pair is fully replaced, remove it
+// from _variables.scss.
+//
+// =============================================================================
+
+:root {
+  // ---- Text ----------------------------------------------------------------
+  --colorTextStandard: #{$body-color};                   // #1a2634
+  --colorTextSecondary: #{$text-icon-grey};              // #656d7b
+  --colorTextTertiary: #{$text-icon-light-grey};         // rgba(157, 164, 174, 1)
+  --colorTextInverse: #ffffff;
+  --colorTextOnBrand: #ffffff;
+  --colorTextHeading: #{$header-color};                  // #1e0d26
+
+  // ---- Surface -------------------------------------------------------------
+  --colorSurfaceStandard: #{$bg-light100};               // #ffffff
+  --colorSurfaceSecondary: #{$bg-light200};              // #fafafb
+  --colorSurfaceTertiary: #{$bg-light300};               // #eff1f4
+  --colorSurfaceMuted: #{$bg-light500};                  // #e0e3e9
+  --colorSurfaceInverse: #{$bg-dark500};                 // #101628
+  --colorSurfacePanel: #{$panel-bg};                     // white
+  --colorSurfacePanelSecondary: #{$panel-grey-background}; // #fafafb
+  --colorSurfaceModal: #ffffff;
+  --colorSurfaceInput: #{$input-bg};                     // #fff
+
+  // ---- Icon ----------------------------------------------------------------
+  --colorIconStandard: #{$body-color};                   // #1a2634
+  --colorIconSecondary: #{$text-icon-grey};              // #656d7b
+  --colorIconTertiary: #{$text-icon-light-grey};         // rgba(157, 164, 174, 1)
+  --colorIconInverse: #ffffff;
+
+  // ---- Stroke --------------------------------------------------------------
+  --colorStrokeStandard: #{$basic-alpha-16};             // rgba(101, 109, 123, 0.16)
+  --colorStrokeSecondary: #{$basic-alpha-24};            // rgba(101, 109, 123, 0.24)
+  --colorStrokeFocus: #{$primary};                       // #6837fc
+  --colorStrokeInverse: #{$white-alpha-16};              // rgba(255, 255, 255, 0.16)
+  --colorStrokeInput: #{$input-border-color};            // rgba(101, 109, 123, 0.16)
+  --colorStrokeInputHover: #{$basic-alpha-24};
+  --colorStrokeInputFocus: #{$primary};
+
+  // ---- Brand ---------------------------------------------------------------
+  --colorBrandPrimary: #{$primary};                      // #6837fc
+  --colorBrandPrimaryHover: #{$primary600};              // #4e25db
+  --colorBrandPrimaryActive: #{$primary700};             // #3919b7
+  --colorBrandSecondary: #{$secondary500};               // #F7D56E
+  --colorBrandSecondaryHover: #{$secondary600};          // #e5c55f
+  --colorBrandPrimaryAlpha8: #{$primary-alfa-8};
+  --colorBrandPrimaryAlpha16: #{$primary-alfa-16};
+  --colorBrandPrimaryAlpha24: #{$primary-alfa-24};
+
+  // ---- Feedback ------------------------------------------------------------
+  --colorFeedbackSuccess: #{$success};                   // #27ab95
+  --colorFeedbackSuccessLight: #{$success400};           // #56ccad
+  --colorFeedbackSuccessSurface: #{$success-solid-alert};
+  --colorFeedbackDanger: #{$danger};                     // #ef4d56
+  --colorFeedbackDangerLight: #{$danger400};             // #f57c78
+  --colorFeedbackDangerSurface: #{$danger-solid-alert};
+  --colorFeedbackWarning: #{$warning};                   // #ff9f43
+  --colorFeedbackWarningSurface: #{$warning-solid-alert};
+  --colorFeedbackInfo: #{$info};                         // #0aaddf
+  --colorFeedbackInfoSurface: #{$info-solid-alert};
+
+  // ---- Interactive ---------------------------------------------------------
+  --colorInteractiveSecondary: #{$basic-alpha-8};
+  --colorInteractiveSecondaryHover: #{$basic-alpha-16};
+  --colorInteractiveSecondaryActive: #{$basic-alpha-24};
+  --colorInteractiveSwitchOff: #{$switch-bg};            // rgba(101, 109, 123, 0.24)
+  --colorInteractiveSwitchOffHover: #{$switch-hover-bg}; // rgba(101, 109, 123, 0.48)
+
+  // ---- Misc ----------------------------------------------------------------
+  --borderRadiusSm: #{$border-radius-sm};                // 4px
+  --borderRadiusStandard: #{$border-radius};             // 6px
+  --borderRadiusLg: #{$border-radius-lg};                // 8px
+  --borderRadiusXl: #{$border-radius-xlg};               // 10px
+}
+
+// =============================================================================
+// Dark mode overrides
+// =============================================================================
+
+[data-bs-theme='dark'] {
+  // ---- Text ----------------------------------------------------------------
+  --colorTextStandard: #{$body-color-dark};              // white
+  --colorTextSecondary: #{$text-icon-light-grey};        // rgba(157, 164, 174, 1)
+  --colorTextTertiary: #{$white-alpha-48};
+  --colorTextInverse: #{$body-color};                    // #1a2634
+  --colorTextOnBrand: #ffffff;
+  --colorTextHeading: #{$header-color-dark};             // white
+
+  // ---- Surface -------------------------------------------------------------
+  --colorSurfaceStandard: #{$bg-dark500};                // #101628
+  --colorSurfaceSecondary: #{$bg-dark400};               // #15192b
+  --colorSurfaceTertiary: #{$bg-dark300};                // #161d30
+  --colorSurfaceMuted: #{$bg-dark200};                   // #202839
+  --colorSurfaceInverse: #{$bg-light100};                // #ffffff
+  --colorSurfacePanel: #{$panel-bg-dark};                // #15192b
+  --colorSurfacePanelSecondary: #{$panel-grey-background-dark}; // #161d30
+  --colorSurfaceModal: #{$modal-bg-dark};                // #15192b
+  --colorSurfaceInput: #{$input-bg-dark};                // #161d30
+
+  // ---- Icon ----------------------------------------------------------------
+  --colorIconStandard: #{$text-icon-light};              // #ffffff
+  --colorIconSecondary: #{$text-icon-light-grey};        // rgba(157, 164, 174, 1)
+  --colorIconTertiary: #{$white-alpha-48};
+  --colorIconInverse: #{$body-color};                    // #1a2634
+
+  // ---- Stroke --------------------------------------------------------------
+  --colorStrokeStandard: #{$white-alpha-16};
+  --colorStrokeSecondary: #{$white-alpha-24};
+  --colorStrokeFocus: #{$primary400};                    // #906af6
+  --colorStrokeInverse: #{$basic-alpha-16};
+  --colorStrokeInput: #{$input-border-color-dark};       // #15192b
+  --colorStrokeInputHover: #{$input-hover-border-color-dark}; // rgba(255, 255, 255, 0.08)
+  --colorStrokeInputFocus: #{$input-focus-border-color-dark}; // #6837fc
+
+  // ---- Brand ---------------------------------------------------------------
+  --colorBrandPrimaryHover: #{$btn-hover-bg-dark};       // #906af6
+  --colorBrandPrimaryActive: #{$primary};                // #6837fc
+
+  // ---- Feedback (dark surfaces) --------------------------------------------
+  --colorFeedbackSuccessSurface: #{$success-solid-dark-alert};
+  --colorFeedbackDangerSurface: #{$danger-solid-dark-alert};
+  --colorFeedbackWarningSurface: #{$warning-solid-dark-alert};
+  --colorFeedbackInfoSurface: #{$info-solid-dark-alert};
+
+  // ---- Interactive ---------------------------------------------------------
+  --colorInteractiveSecondary: #{$white-alpha-8};
+  --colorInteractiveSecondaryHover: #{$white-alpha-16};
+  --colorInteractiveSecondaryActive: #{$white-alpha-24};
+  --colorInteractiveSwitchOff: #{$switch-bg-dark};       // rgba(255, 255, 255, 0.24)
+  --colorInteractiveSwitchOffHover: #{$switch-hover-bg-dark}; // rgba(255, 255, 255, 0.48)
+}
