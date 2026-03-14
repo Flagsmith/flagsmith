@@ -854,7 +854,7 @@ const controller = {
       store.projectId = projectId
       store.environmentId = environmentId
       store.page = page
-      store.filter = filter
+      store.filter = filter || {}
       let filterUrl = ''
       const { feature } = Utils.fromParam()
       if (Object.keys(store.filter).length) {

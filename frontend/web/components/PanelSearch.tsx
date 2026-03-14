@@ -307,7 +307,6 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
       <div
         id={props.id}
         className={classNames('search-list', props.listClassName)}
-        style={isLoading ? { opacity: 0.5 } : {}}
       >
         {props.header}
         {isLoading && (!filteredItems || !items) ? (
@@ -315,7 +314,9 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
             <Loader />
           </div>
         ) : filteredItems && filteredItems.length ? (
-          renderContainer(filteredItems)
+          <div style={isLoading ? { opacity: 0.5 } : undefined}>
+            {renderContainer(filteredItems)}
+          </div>
         ) : renderNoResults && !search ? (
           renderNoResults
         ) : (
