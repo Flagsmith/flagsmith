@@ -8,6 +8,10 @@ import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
 import OverflowNav from 'components/navigation/OverflowNav'
 import ProjectChangeRequestsLink from 'components/ProjectChangeRequestsLink'
+import {
+  ADMIN_PERMISSION,
+  ProjectPermission,
+} from 'common/types/permissions.types'
 
 type ProjectNavType = {
   environmentId?: string
@@ -19,7 +23,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
   const { permission: projectAdmin } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'ADMIN',
+    permission: ADMIN_PERMISSION,
   })
   const projectMetricsTooltipEnabled = Utils.getFlagsmithHasFeature(
     'project_metrics_tooltip',
@@ -50,19 +54,23 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       >
         Segments
       </NavSubLink>
-      {Utils.getFlagsmithHasFeature('feature_lifecycle') && (
-        <NavSubLink
-          icon={<Icon name='refresh' />}
-          id='lifecycle-link'
-          to={`/project/${projectId}/lifecycle`}
-          isActive={(_, location) =>
-            location.pathname.startsWith(`/project/${projectId}/lifecycle`)
-          }
-        >
-          Feature Lifecycle
-        </NavSubLink>
-      )}
-      <Permission level='project' permission='VIEW_AUDIT_LOG' id={projectId}>
+        {Utils.getFlagsmithHasFeature('feature_lifecycle') && (
+            <NavSubLink
+                icon={<Icon name='refresh' />}
+                id='lifecycle-link'
+                to={`/project/${projectId}/lifecycle`}
+                isActive={(_, location) =>
+                    location.pathname.startsWith(`/project/${projectId}/lifecycle`)
+                }
+            >
+                Feature Lifecycle
+            </NavSubLink>
+        )}
+      <Permission
+        level='project'
+        permission={ProjectPermission.VIEW_AUDIT_LOG}
+        id={projectId}
+      >
         {({ permission }) =>
           permission && (
             <NavSubLink

@@ -20,6 +20,7 @@ import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import Constants from 'common/constants'
 import EnvironmentNavbar from './navbars/EnvironmentNavbar'
 import OverflowNav from './OverflowNav'
+import { ProjectPermission } from 'common/types/permissions.types';
 
 type HomeAsideType = {
   environmentId: string
@@ -137,7 +138,7 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
               const createEnvironmentButton = (
                 <Permission
                   level='project'
-                  permission='CREATE_ENVIRONMENT'
+                  permission={ProjectPermission.CREATE_ENVIRONMENT}
                   id={projectId}
                 >
                   {({ permission }) =>

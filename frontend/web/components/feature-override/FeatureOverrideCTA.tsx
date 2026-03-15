@@ -31,8 +31,7 @@ const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
   overrideFeatureState,
   projectFlag,
 }) => {
-  const { permission, permissionDescription } =
-    Utils.getOverridePermission(level)
+  const { permission } = Utils.getOverridePermission(level)
   const { permission: hasPermission } = useHasPermission({
     id: environmentId,
     level: 'environment',
@@ -48,7 +47,7 @@ const FeatureOverrideCTA: FC<FeatureOverrideCTAType> = ({
         <>
           {Utils.renderWithPermission(
             hasPermission,
-            Constants.environmentPermissions(permissionDescription),
+            Constants.environmentPermissions(permission),
             <Button
               theme='text'
               size='xSmall'

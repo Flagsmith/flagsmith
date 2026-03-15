@@ -25,6 +25,7 @@ import InfoMessage from 'components/InfoMessage'
 
 import CodeHelp from 'components/CodeHelp'
 import SegmentRow from 'components/segments/SegmentRow/SegmentRow'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 const SegmentsPage: FC = () => {
   const history = useHistory()
@@ -48,13 +49,14 @@ const SegmentsPage: FC = () => {
     } else if (!id && typeof closeModal !== 'undefined') {
       closeModal()
     }
+    //eslint-disable-next-line
   }, [id])
 
-  const { data, error, isLoading, refetch } = useGetSegmentsQuery({
+  const { data, error, isLoading } = useGetSegmentsQuery({
     include_feature_specific: showFeatureSpecific,
     page,
     page_size: 100,
-    projectId,
+    projectId: Number(projectId),
     q: search,
   })
   const [_, { isLoading: isRemoving }] = useDeleteSegmentMutation()
@@ -100,7 +102,7 @@ const SegmentsPage: FC = () => {
   const { permission: manageSegmentsPermission } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'MANAGE_SEGMENTS',
+    permission: ProjectPermission.MANAGE_SEGMENTS,
   })
 
   const renderWithPermission = (
@@ -112,7 +114,7 @@ const SegmentsPage: FC = () => {
       el
     ) : (
       <Tooltip title={el} place='right'>
-        {Constants.projectPermissions('Manage segments')}
+        {Constants.projectPermissions(ProjectPermission.MANAGE_SEGMENTS)}
       </Tooltip>
     )
   }

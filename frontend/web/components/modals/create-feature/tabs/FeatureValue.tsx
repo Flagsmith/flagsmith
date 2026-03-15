@@ -11,6 +11,7 @@ import Icon from 'components/Icon'
 import Switch from 'components/Switch'
 import Utils from 'common/utils/utils'
 import { FeatureState, ProjectFlag } from 'common/types/responses'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 function isNegativeNumberString(str: any) {
   if (typeof Utils.getTypedValue(str) !== 'number') {
@@ -52,6 +53,7 @@ const FeatureValue: FC<EditFeatureValueProps> = ({
   onRemoveMultivariateOption,
   projectFlag,
 }) => {
+  /* eslint-enable sort-destructure-keys/sort-destructure-keys */
   const default_enabled = featureState.enabled ?? false
   const initial_value = featureState.feature_state_value
   const multivariate_options = projectFlag.multivariate_options || []
@@ -278,7 +280,7 @@ const FeatureValue: FC<EditFeatureValueProps> = ({
               </FormGroup>
               {Utils.renderWithPermission(
                 createFeature,
-                Constants.projectPermissions('Create Feature'),
+                Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
                 <AddVariationButton
                   multivariateOptions={multivariate_options}
                   disabled={!createFeature || noPermissions}
