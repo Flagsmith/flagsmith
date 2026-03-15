@@ -4,7 +4,3 @@ class GithubError(Exception):
 
 class GoogleError(Exception):
     pass
-
-
-class OAuthError(Exception):
-    pass

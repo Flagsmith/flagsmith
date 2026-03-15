@@ -64,11 +64,6 @@ class DerivedFromSerializer(serializers.Serializer):  # type: ignore[type-arg]
     roles = PermissionRoleSerializer(many=True)
 
 
-class BaseDetailedPermissionsSerializer(serializers.Serializer):  # type: ignore[type-arg]
-    is_directly_granted = serializers.BooleanField()
-    derived_from = DerivedFromSerializer()
-
-
 class DetailedPermissionsSerializer(serializers.Serializer):  # type: ignore[type-arg]
     permission_key = serializers.CharField()
     is_directly_granted = serializers.BooleanField()

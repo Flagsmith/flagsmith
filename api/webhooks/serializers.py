@@ -6,10 +6,6 @@ class WebhookSerializer(serializers.Serializer[None]):
     data = serializers.DictField()  # type: ignore[assignment]
 
 
-class WebhookURLSerializer(serializers.Serializer[None]):
-    url = serializers.URLField()
-
-
 class ScopeSerializer(serializers.Serializer[None]):
     type = serializers.ChoiceField(choices=["organisation", "environment"])
 
