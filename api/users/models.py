@@ -20,6 +20,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 from django_lifecycle.conditions import (  # type: ignore[import-untyped]
     WhenFieldHasChanged,
 )
+
 from integrations.pylon.identity_verification import get_user_email_signature
 from organisations.models import (
     Organisation,
@@ -42,7 +43,6 @@ from users.abc import UserABC
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
-
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
