@@ -13,6 +13,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "user": "100000/day",
     "master_api_key": "100000/day",
     "influx_query": "50/min",
+    "identity_search": "100/min",
 }
 
 AWS_SSE_LOGS_BUCKET_NAME = "test_bucket"
