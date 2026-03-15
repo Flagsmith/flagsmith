@@ -217,16 +217,6 @@ class Feature(  # type: ignore[django-manager-missing]
         return self.project
 
 
-def get_next_segment_priority(feature):  # type: ignore[no-untyped-def]
-    feature_segments = FeatureSegment.objects.filter(feature=feature).order_by(
-        "-priority"
-    )
-    if feature_segments.count() == 0:
-        return 1
-    else:
-        return feature_segments.first().priority + 1
-
-
 class FeatureSegment(
     LifecycleModelMixin,  # type: ignore[misc]
     AbstractBaseExportableModel,

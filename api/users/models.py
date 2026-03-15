@@ -20,8 +20,6 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 from django_lifecycle.conditions import (  # type: ignore[import-untyped]
     WhenFieldHasChanged,
 )
-from pydantic import BaseModel
-
 from integrations.pylon.identity_verification import get_user_email_signature
 from organisations.models import (
     Organisation,
@@ -44,14 +42,6 @@ from users.abc import UserABC
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
-
-
-class UTMDataModel(BaseModel):
-    utm_source: typing.Optional[str] = None
-    utm_medium: typing.Optional[str] = None
-    utm_campaign: typing.Optional[str] = None
-    utm_term: typing.Optional[str] = None
-    utm_content: typing.Optional[str] = None
 
 
 if typing.TYPE_CHECKING:
