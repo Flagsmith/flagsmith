@@ -28,7 +28,6 @@ export default (WrappedComponent) => {
 
       return (
         <WrappedComponent
-          ref='wrappedComponent'
           isLoading={isLoading}
           error={error}
           history={this.props.history}

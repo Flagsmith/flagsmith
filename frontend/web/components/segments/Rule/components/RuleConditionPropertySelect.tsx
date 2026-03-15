@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { components } from 'react-select/lib/components'
+import { components } from 'react-select'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import { GroupLabel } from 'components/base/select/SearchableSelect'

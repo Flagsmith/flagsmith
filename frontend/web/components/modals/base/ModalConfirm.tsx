@@ -10,6 +10,7 @@ interface Confirm {
   isDanger?: boolean
   onYes?: () => void
   onNo?: () => void
+  onClosed?: () => void
   noText?: string
   disabled?: boolean
   destructive?: boolean
@@ -25,6 +26,7 @@ const Confirm: FC<Confirm> = ({
   isDanger,
   isOpen,
   noText = 'Cancel',
+  onClosed,
   onNo,
   onYes,
   title,
@@ -46,6 +48,7 @@ const Confirm: FC<Confirm> = ({
       unmountOnClose
       isOpen={isOpen}
       toggle={no}
+      onClosed={onClosed}
     >
       <ModalHeader onDismissClick={no}>{title}</ModalHeader>
       <ModalBody>{children}</ModalBody>

@@ -4,7 +4,6 @@ import { useGetSegmentsQuery } from 'common/services/useSegment'
 import useInfiniteScroll from 'common/useInfiniteScroll'
 import { Req } from 'common/types/requests'
 import { components } from 'react-select'
-import { SelectProps } from '@material-ui/core/Select/Select'
 import Utils from 'common/utils/utils'
 import Button from './base/forms/Button'
 
@@ -14,8 +13,8 @@ type SegmentSelectType = {
   'data-test'?: string
   placeholder?: string
   className?: string
-  value: SelectProps['value']
-  onChange: SelectProps['onChange']
+  value: number | string | undefined
+  onChange: (value: any) => void
   filter?: (segments: Segment) => Segment[]
 }
 
@@ -30,13 +29,19 @@ const SegmentSelect: FC<SegmentSelectType> = ({
     Res['segments']
   >(useGetSegmentsQuery, { page_size: 100, projectId })
 
-  const options = (
-    data
-      ? filter
-        ? (data.results.filter(filter) as Res['segments']['results'])
-        : data.results
-      : []
-  ).map(({ feature, id: value, name: label }) => ({ feature, label, value }))
+  let filteredResults: Res['segments']['results'] = []
+  if (data) {
+    filteredResults = filter
+      ? (data.results.filter(filter) as Res['segments']['results'])
+      : data.results
+  }
+  const options = filteredResults.map(
+    ({ feature, id: value, name: label }) => ({
+      feature,
+      label,
+      value,
+    }),
+  )
 
   return (
     //@ts-ignore

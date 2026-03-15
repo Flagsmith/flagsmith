@@ -225,7 +225,6 @@ export default (WrappedComponent) => {
     render() {
       return (
         <WrappedComponent
-          ref='wrappedComponent'
           updateSegments={this.updateSegments}
           onEnvironmentVariationsChange={this.onEnvironmentVariationsChange}
           removeMultivariateOption={this.removeMultivariateOption}
