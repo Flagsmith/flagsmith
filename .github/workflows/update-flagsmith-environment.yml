@@ -41,6 +41,6 @@ jobs:
           commit-message: Update API Flagsmith Defaults
           branch: chore/update-api-flagsmith-environment
           delete-branch: true
-          title: 'chore: update Flagsmith environment document'
+          title: 'chore: Update Flagsmith environment document'
           labels: api
           token: '${{ secrets.GITHUB_TOKEN }}'
