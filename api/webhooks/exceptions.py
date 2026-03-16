@@ -1,2 +1,0 @@
-class WebhookSendError(Exception):
-    pass

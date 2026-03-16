@@ -6,9 +6,7 @@ from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
 from environments.models import Environment
-from environments.serializers import EnvironmentSerializerFull
 from features.models import FeatureState
-from features.serializers import FeatureStateSerializerFull
 from util.engine_models.features.models import FeatureStateModel
 
 
@@ -16,15 +14,6 @@ class IdentifierOnlyIdentitySerializer(serializers.ModelSerializer):  # type: ig
     class Meta:
         model = Identity
         fields = ("identifier",)
-
-
-class IdentitySerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
-    identity_features = FeatureStateSerializerFull(many=True)
-    environment = EnvironmentSerializerFull()
-
-    class Meta:
-        model = Identity
-        fields = ("id", "identifier", "identity_features", "environment")
 
 
 class IdentitySerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
