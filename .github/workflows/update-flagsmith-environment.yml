@@ -42,4 +42,4 @@ jobs:
           delete-branch: true
           title: 'chore: Update Flagsmith environment document'
           labels: api
-          token: '${{ secrets.FLAGSMITH_BOT_GITHUB_TOKEN }}'
+          token: ${{ secrets.UPDATE_ENVIRONMENT_DOCUMENT_WORKFLOW_GH_PAT }}
