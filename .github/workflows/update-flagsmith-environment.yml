@@ -40,3 +40,4 @@ jobs:
           delete-branch: true
           title: 'chore: update Flagsmith environment document'
           labels: api
+          token: '${{ secrets.GITHUB_TOKEN }}'
