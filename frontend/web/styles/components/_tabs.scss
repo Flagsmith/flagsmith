@@ -21,13 +21,12 @@
   }
   .hljs-container {
     code {
-
       padding-top: 80px;
     }
     .react-select {
       position: absolute;
-      top:16px;
-      left:16px;
+      top: 16px;
+      left: 16px;
     }
   }
 }
@@ -115,10 +114,9 @@
   }
 }
 
-
 .tabs {
   & .pill {
-    background-color:$pill-bg;
+    background-color: $pill-bg;
     border-radius: $border-radius-xlg;
     display: inline-block;
     button,
@@ -168,6 +166,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    bottom: 0;
   }
 
   &.btn-no-focus {

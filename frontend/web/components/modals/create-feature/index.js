@@ -924,7 +924,7 @@ const Index = class extends Component {
                                       tabLabelString='Segment Overrides'
                                       tabLabel={
                                         <Row
-                                          className={`justify-content-center ${
+                                          className={`justify-content-center align-items-center ${
                                             this.state.segmentsChanged
                                               ? 'pr-1'
                                               : ''
