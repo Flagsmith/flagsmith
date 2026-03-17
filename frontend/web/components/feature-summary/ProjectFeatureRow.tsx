@@ -1,10 +1,10 @@
 import React, { FC } from 'react'
 import classNames from 'classnames'
-import { ProjectFlag, VCSProvider } from 'common/types/responses'
+import { ProjectFlag } from 'common/types/responses'
 import FeatureName from './FeatureName'
 import FeatureDescription from './FeatureDescription'
 import TagValues from 'components/tags/TagValues'
-import VCSProviderTag from 'components/tags/VCSProviderTag'
+import CodeReferencesTag from 'components/tags/CodeReferencesTag'
 
 export interface ProjectFeatureRowProps {
   projectFlag: ProjectFlag
@@ -24,14 +24,6 @@ const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
   projectFlag,
 }) => {
   const { description } = projectFlag
-
-  const hasScannedCodeReferences =
-    projectFlag?.code_references_counts?.length > 0
-  const codeReferencesCounts =
-    projectFlag?.code_references_counts?.reduce(
-      (acc, curr) => acc + curr.count,
-      0,
-    ) || 0
 
   return (
     <>
@@ -61,20 +53,7 @@ const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
           <div className='mx-0 flex-1 flex-column'>
             <div className='d-flex align-items-center'>
               <FeatureName name={projectFlag.name} />
-              {hasScannedCodeReferences && (
-                <Tooltip
-                  title={
-                    <VCSProviderTag
-                      count={codeReferencesCounts}
-                      isWarning={codeReferencesCounts === 0}
-                      vcsProvider={VCSProvider.GITHUB}
-                    />
-                  }
-                  place='top'
-                >
-                  {`Scanned ${codeReferencesCounts} times in ${projectFlag?.code_references_counts?.length} repositories`}
-                </Tooltip>
-              )}
+              <CodeReferencesTag projectFlag={projectFlag} />
               <TagValues
                 projectId={`${projectFlag.project}`}
                 value={projectFlag.tags}
@@ -110,20 +89,7 @@ const ProjectFeatureRow: FC<ProjectFeatureRowProps> = ({
           )}
           <div className='flex-1 align-items-center flex-wrap'>
             <FeatureName name={projectFlag.name} />
-            {hasScannedCodeReferences && (
-              <Tooltip
-                title={
-                  <VCSProviderTag
-                    count={codeReferencesCounts}
-                    isWarning={codeReferencesCounts === 0}
-                    vcsProvider={VCSProvider.GITHUB}
-                  />
-                }
-                place='top'
-              >
-                {`Scanned ${codeReferencesCounts} times in ${projectFlag?.code_references_counts?.length} repositories`}
-              </Tooltip>
-            )}
+            <CodeReferencesTag projectFlag={projectFlag} />
             <TagValues
               projectId={`${projectFlag.project}`}
               value={projectFlag.tags}

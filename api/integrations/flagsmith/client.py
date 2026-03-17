@@ -10,14 +10,21 @@ identity_flags = get_client().get_identity_flags()
 ```
 """
 
+import logging
 import typing
 
 from django.conf import settings
 from flagsmith import Flagsmith
+from flagsmith.exceptions import FlagsmithFeatureDoesNotExistError
 from flagsmith.offline_handlers import LocalFileHandler
 
 from integrations.flagsmith.exceptions import FlagsmithIntegrationError
 from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
+
+if typing.TYPE_CHECKING:
+    from organisations.models import Organisation
+
+logger = logging.getLogger(__name__)
 
 _flagsmith_clients: dict[str, Flagsmith] = {}
 
@@ -34,6 +41,23 @@ def get_client(name: str = "default", local_eval: bool = False) -> Flagsmith:
         _flagsmith_clients[name] = _flagsmith_client
 
     return _flagsmith_client
+
+
+def is_feature_enabled(
+    feature_name: str,
+    organisation: "Organisation",
+) -> bool:
+    """Check if a Flagsmith-on-Flagsmith feature flag is enabled for an organisation."""
+    client = get_client("local", local_eval=True)
+    flags = client.get_identity_flags(
+        organisation.flagsmith_identifier,
+        traits=organisation.flagsmith_on_flagsmith_api_traits,
+    )
+    try:
+        return flags.is_feature_enabled(feature_name)
+    except FlagsmithFeatureDoesNotExistError:
+        logger.warning("FoF feature %r not found, defaulting to disabled", feature_name)
+        return False
 
 
 def _get_client_kwargs() -> dict[str, typing.Any]:

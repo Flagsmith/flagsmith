@@ -3586,10 +3586,11 @@ def test_FeatureViewSet_list__includes_code_references_counts(
     project: Project,
     feature: Feature,
     with_project_permissions: WithProjectPermissionsCallable,
-    environment: Environment,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    mocker.patch("features.views.is_feature_enabled", return_value=True)
     with freeze_time("2099-01-01T10:00:00-0300"):
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
@@ -3667,26 +3668,62 @@ def test_FeatureViewSet_list__includes_code_references_counts(
     ]
 
 
+@pytest.mark.usefixtures("feature")
 def test_FeatureViewSet_list__no_scans__returns_empty_code_references_counts(
     staff_client: APIClient,
     project: Project,
-    feature: Feature,
     environment: Environment,
     with_project_permissions: WithProjectPermissionsCallable,
+    mocker: MockerFixture,
 ) -> None:
-    # Given - project has no code reference scans
+    # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    mocker.patch("features.views.is_feature_enabled", return_value=True)
 
     # When
     response = staff_client.get(
         f"/api/v1/projects/{project.id}/features/?environment={environment.id}"
     )
 
-    # Then - response should include code_references_counts as empty list
+    # Then
     assert response.status_code == 200
     results = response.json()["results"]
     assert len(results) == 1
-    assert "code_references_counts" in results[0]
+    assert results[0]["code_references_counts"] == []
+
+
+# TODO: Delete this after https://github.com/flagsmith/flagsmith/issues/6832 is resolved
+def test_FeatureViewSet_list__code_references_ui_stats_disabled__returns_empty_counts(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    FeatureFlagCodeReferencesScan.objects.create(
+        project=project,
+        repository_url="https://github.flagsmith.com/backend/",
+        revision="rev-1",
+        code_references=[
+            {
+                "feature_name": feature.name,
+                "file_path": "path/to/file.py",
+                "line_number": 42,
+            },
+        ],
+    )
+
+    # When
+    response = staff_client.get(
+        f"/api/v1/projects/{project.id}/features/?environment={environment.id}"
+    )
+
+    # Then
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert len(results) == 1
     assert results[0]["code_references_counts"] == []
 
 
