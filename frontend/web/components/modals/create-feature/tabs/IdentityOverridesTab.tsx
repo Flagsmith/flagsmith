@@ -278,6 +278,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
         })
         .catch(() => {
           setIsLoading(false)
+          setUserOverridesErrorState()                                                                                                                                           
         })
     },
     [environmentId, environmentFlag, projectFlag?.id, userOverridesPage],
