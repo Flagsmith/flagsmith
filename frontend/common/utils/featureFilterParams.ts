@@ -169,6 +169,6 @@ export function getFiltersFromParams(
         ? TagStrategy.UNION
         : TagStrategy.INTERSECTION,
     tags: parseIntArray(params.tags),
-    value_search: parseStringParam(params.value_search, '') || null,
+    value_search: parseStringParam(params.value_search, ''),
   }
 }
