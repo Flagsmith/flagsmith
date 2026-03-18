@@ -19,7 +19,7 @@ const keywords = {
   FEATURE_NAME_ALT_VALUE: 'big',
   LIB_NAME: 'flagsmith',
   LIB_NAME_JAVA: 'FlagsmithClient',
-  NPM_CLIENT: 'flagsmith',
+  NPM_CLIENT: '@flagsmith/flagsmith',
   NPM_NODE_CLIENT: 'flagsmith-nodejs',
   SEGMENT_NAME: 'superUsers',
   TRAIT_NAME: 'age',
@@ -29,7 +29,7 @@ const keywords = {
 }
 const keywordsReactNative = {
   ...keywords,
-  NPM_CLIENT: 'react-native-flagsmith',
+  NPM_CLIENT: '@flagsmith/react-native',
 }
 const Constants = {
   archivedTag: { color: '#8f8f8f', label: 'Archived' },

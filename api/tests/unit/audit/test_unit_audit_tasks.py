@@ -225,6 +225,44 @@ def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_
     )
 
 
+def test_create_audit_log_from_historical_record__cascade_deleted_feature_segment__does_nothing(
+    admin_user: FFAdminUser,
+    feature: Feature,
+    segment: Segment,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    """https://github.com/Flagsmith/flagsmith/issues/6792"""
+    # Given
+    feature_segment = FeatureSegment.objects.create(
+        environment=environment,
+        feature=feature,
+        segment=segment,
+    )
+    feature_state = FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        feature_segment=feature_segment,
+    )
+    feature_state.enabled = not feature_state.enabled
+    feature_state.save()  # creates a "~" historical record
+    history_instance = feature_state.history.filter(history_type="~").first()
+    assert history_instance is not None
+    feature_segment.delete()  # cascade-deletes the FeatureState
+    get_update_log_message = mocker.spy(FeatureState, "get_update_log_message")
+
+    # When
+    create_audit_log_from_historical_record(
+        history_instance.history_id,
+        admin_user.id,
+        feature_state.history_record_class_path,
+    )
+
+    # Then
+    assert get_update_log_message.call_count == 1
+    assert get_update_log_message.spy_return is None
+
+
 def test_create_segment_priorities_changed_audit_log(
     admin_user: FFAdminUser,
     feature_segment: FeatureSegment,
