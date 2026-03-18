@@ -4,9 +4,6 @@ on:
   schedule:
     - cron: 0 8 * * *
   workflow_dispatch:
-  push:
-    branches:
-      - ci/run-workflows-on-update-flagsmith-environment
 
 defaults:
   run:
