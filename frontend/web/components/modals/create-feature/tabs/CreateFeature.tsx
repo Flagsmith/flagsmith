@@ -5,6 +5,7 @@ import FeatureSettings from './FeatureSettings'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import { useHasPermission } from 'common/providers/Permission'
+import { ProjectPermission } from 'common/types/permissions.types'
 import Switch from 'components/Switch'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/Icon'
@@ -48,13 +49,13 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
   const { permission: createFeature } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'CREATE_FEATURE',
+    permission: ProjectPermission.CREATE_FEATURE,
   })
 
   const { permission: projectAdmin } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'ADMIN',
+    permission: ProjectPermission.ADMIN,
   })
 
   const { data: project } = useGetProjectQuery({ id: projectId })
@@ -150,11 +151,11 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
             error={error}
             createFeature={createFeature}
             hideValue={preventFlagDefaults}
-            isEdit={!!identity}
             identity={identity}
+            isEdit={!!identity}
             noPermissions={noPermissions}
-            featureState={overrideFeatureState || featureState}
             projectFlag={projectFlag}
+            featureState={overrideFeatureState || featureState}
             onEnvironmentFlagChange={onEnvironmentFlagChange}
             onProjectFlagChange={onProjectFlagChange}
             onRemoveMultivariateOption={onRemoveMultivariateOption}

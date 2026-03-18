@@ -28,6 +28,7 @@ import { useFeatureListWithApiKey } from 'common/hooks/useFeatureListWithApiKey'
 import { useViewMode } from 'common/useViewMode'
 import type { Pagination } from './types'
 import type { ProjectFlag, FeatureState } from 'common/types/responses'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 const DEFAULT_PAGINATION: Pagination = {
   count: 0,
@@ -325,7 +326,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
     return (
       <Permission
         level='project'
-        permission='CREATE_FEATURE'
+        permission={ProjectPermission.CREATE_FEATURE}
         id={projectId}
         showTooltip
         permissionName='Create Feature'

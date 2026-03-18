@@ -11,6 +11,7 @@ import { getTagColor } from 'components/tags/Tag'
 import ActionButton from 'components/ActionButton'
 import ActionItem from 'components/shared/ActionItem'
 import { calculateListPosition } from 'common/utils/calculateListPosition'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 export interface FeatureActionProps {
   projectId: string
@@ -138,14 +139,16 @@ export const FeatureAction: FC<FeatureActionProps> = ({
           {!hideRemove && (
             <Permission
               level='project'
-              permission='DELETE_FEATURE'
+              permission={ProjectPermission.DELETE_FEATURE}
               tags={tags}
               id={projectId}
             >
               {({ permission: removeFeaturePermission }) =>
                 Utils.renderWithPermission(
                   removeFeaturePermission,
-                  Constants.projectPermissions('Delete Feature'),
+                  Constants.projectPermissions(
+                    ProjectPermission.DELETE_FEATURE,
+                  ),
                   <Tooltip
                     title={
                       <ActionItem
