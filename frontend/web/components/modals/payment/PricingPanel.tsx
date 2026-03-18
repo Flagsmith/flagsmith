@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react'
 import classNames from 'classnames'
-import Icon, { IconName } from 'components/Icon'
+import Icon from 'components/Icon'
 import Button from 'components/base/forms/Button'
 import { PricingFeaturesList } from './PricingFeaturesList'
 import { PaymentButton } from './PaymentButton'
@@ -9,8 +9,6 @@ import { PricingFeature } from './types'
 
 export type PricingPanelProps = {
   title: string
-  icon?: string
-  iconFill?: string
   priceMonthly?: string
   priceYearly?: string
   isYearly: boolean
@@ -21,20 +19,16 @@ export type PricingPanelProps = {
   isDisableAccount?: string
   features: PricingFeature[]
   headerContent?: ReactNode
-  onContactSales?: () => void
 }
 
 export const PricingPanel = ({
   chargebeePlanId,
   features,
   headerContent,
-  icon = 'flash',
-  iconFill,
   isDisableAccount,
   isEnterprise,
   isPurchased,
   isYearly,
-  onContactSales,
   priceMonthly,
   priceYearly,
   title,
@@ -47,22 +41,9 @@ export const PricingPanel = ({
       })}
     >
       <div className='panel panel-default'>
-        <div
-          className='panel-content p-3 pt-4'
-          style={{
-            backgroundColor: 'rgba(39, 171, 149, 0.08)',
-            minHeight: '320px',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100%',
-              minHeight: '200px',
-            }}
-          >
-            <div style={{ flex: '0 0 auto' }}>
+        <div className='p-3 pt-4 pricing-panel-content'>
+          <div className='pricing-panel-layout'>
+            <div>
               {headerContent && (
                 <span
                   className={classNames('featured', {
@@ -75,9 +56,9 @@ export const PricingPanel = ({
               )}
               <Row className='pt-4 justify-content-center'>
                 <Icon
-                  name={icon as IconName}
+                  name='flash'
                   width={32}
-                  fill={iconFill || undefined}
+                  fill={isEnterprise ? 'white' : undefined}
                 />
                 <h4
                   className={classNames('mb-0 ml-2', {
@@ -93,7 +74,7 @@ export const PricingPanel = ({
                   <h5 className='mb-0 align-self-start'>$</h5>
                   <h1 className='mb-0 d-flex align-items-end'>
                     {isYearly ? priceYearly : priceMonthly}{' '}
-                    <h5 className='fs-lg mb-0'>/mo</h5>
+                    <span className='fs-lg mb-0'>/mo</span>
                   </h1>
                 </Row>
               )}
@@ -107,32 +88,22 @@ export const PricingPanel = ({
               )}
             </div>
 
-            <div style={{ flex: '1 1 auto' }} />
+            <div className='pricing-panel-spacer' />
 
-            <div style={{ flex: '0 0 auto' }}>
+            <div>
               {!viewOnly && !isEnterprise && chargebeePlanId && (
-                <>
-                  <PaymentButton
-                    data-cb-plan-id={chargebeePlanId}
-                    className={classNames(
-                      'btn btn-primary btn-lg full-width mt-3',
-                    )}
-                    isDisableAccount={isDisableAccount}
-                  >
-                    {isPurchased ? 'Purchased' : '14 Day Free Trial'}
-                  </PaymentButton>
-                </>
+                <PaymentButton
+                  data-cb-plan-id={chargebeePlanId}
+                  className='btn btn-primary btn-lg full-width mt-3'
+                  isDisableAccount={isDisableAccount}
+                >
+                  {isPurchased ? 'Purchased' : '14 Day Free Trial'}
+                </PaymentButton>
               )}
 
               {!viewOnly && isEnterprise && (
                 <Button
-                  onClick={() => {
-                    if (onContactSales) {
-                      onContactSales()
-                    } else {
-                      openChat()
-                    }
-                  }}
+                  onClick={() => openChat()}
                   className='full-width btn-lg btn-tertiary mt-3'
                 >
                   Contact Sales

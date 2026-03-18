@@ -7,15 +7,10 @@ type UseChargebeeCheckoutParams = {
   onSuccess?: () => void
 }
 
-type ChargebeeCheckout = {
-  openCheckout: (planId: string) => void
-  isLoading: boolean
-}
-
 export const useChargebeeCheckout = ({
   onSuccess,
   organisationId,
-}: UseChargebeeCheckoutParams): ChargebeeCheckout => {
+}: UseChargebeeCheckoutParams) => {
   const [isLoading, setIsLoading] = useState(false)
 
   const openCheckout = (planId: string) => {
@@ -37,8 +32,5 @@ export const useChargebeeCheckout = ({
     })
   }
 
-  return {
-    isLoading,
-    openCheckout,
-  }
+  return { isLoading, openCheckout }
 }

@@ -32,6 +32,6 @@ declare global {
 
 export type PricingFeature = {
   icon?: string
-  iconFill?: string
+  iconClass?: string
   text: ReactNode
 }

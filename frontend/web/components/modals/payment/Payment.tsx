@@ -67,7 +67,6 @@ export const Payment: FC<PaymentProps> = ({
         <Row className='pricing-container align-start'>
           <PricingPanel
             title='Start-Up'
-            icon='flash'
             priceYearly='40'
             priceMonthly='45'
             isYearly={yearly}
@@ -84,8 +83,6 @@ export const Payment: FC<PaymentProps> = ({
 
           <PricingPanel
             title='Enterprise'
-            icon='flash'
-            iconFill='white'
             isYearly={yearly}
             viewOnly={viewOnly}
             isEnterprise

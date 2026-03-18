@@ -1,6 +1,5 @@
 import React, { FC, ReactNode } from 'react'
-import { usePaymentState } from './hooks'
-import { useChargebeeCheckout } from './hooks'
+import { usePaymentState, useChargebeeCheckout } from './hooks'
 
 type PaymentButtonProps = {
   'data-cb-plan-id'?: string
@@ -9,10 +8,16 @@ type PaymentButtonProps = {
   isDisableAccount?: string
 }
 
-export const PaymentButton: FC<PaymentButtonProps> = (props) => {
+export const PaymentButton: FC<PaymentButtonProps> = ({
+  children,
+  className,
+  isDisableAccount,
+  ...rest
+}) => {
+  const planId = rest['data-cb-plan-id']
   const { hasActiveSubscription, organisation } = usePaymentState()
-  const { openCheckout } = useChargebeeCheckout({
-    onSuccess: props.isDisableAccount
+  const { isLoading, openCheckout } = useChargebeeCheckout({
+    onSuccess: isDisableAccount
       ? () => {
           window.location.href = '/organisations'
         }
@@ -22,29 +27,25 @@ export const PaymentButton: FC<PaymentButtonProps> = (props) => {
 
   if (hasActiveSubscription) {
     return (
-      <a
-        onClick={() => {
-          const planId = props['data-cb-plan-id']
-          if (planId) {
-            openCheckout(planId)
-          }
-        }}
-        className={props.className}
-        href='#'
+      <button
+        onClick={() => planId && openCheckout(planId)}
+        className={className}
+        type='button'
+        disabled={isLoading}
       >
-        {props.children}
-      </a>
+        {isLoading ? 'Processing...' : children}
+      </button>
     )
   }
 
   return (
-    <a
-      href='javascript:void(0)'
+    <button
+      type='button'
       data-cb-type='checkout'
-      data-cb-plan-id={props['data-cb-plan-id']}
-      className={props.className}
+      data-cb-plan-id={planId}
+      className={className}
     >
-      {props.children}
-    </a>
+      {children}
+    </button>
   )
 }

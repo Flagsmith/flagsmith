@@ -1,6 +1,5 @@
 import React from 'react'
 import Icon from 'components/Icon'
-import { PRIMARY_ICON_COLOR } from './constants'
 import { PricingFeature } from './types'
 
 export type PricingFeaturesListProps = {
@@ -13,11 +12,8 @@ export const PricingFeaturesList = ({ features }: PricingFeaturesListProps) => {
       {features.map((feature, index) => (
         <li key={index}>
           <Row className='mb-3 pricing-features-item'>
-            <span>
-              <Icon
-                name='checkmark-circle'
-                fill={feature.iconFill || PRIMARY_ICON_COLOR}
-              />
+            <span className={feature.iconClass || 'text-success'}>
+              <Icon name='checkmark-circle' />
             </span>
             <div className='ml-2'>{feature.text}</div>
           </Row>

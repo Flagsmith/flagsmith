@@ -1,5 +1,22 @@
-.panel-content.p-4 {
-  padding: unset !important;
+.pricing-panel {
+  border-radius: 4px;
+}
+
+.pricing-panel-content {
+  background-color: rgba(39, 171, 149, 0.08);
+  min-height: 320px;
+  border-radius: 4px;
+}
+
+.pricing-panel-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 200px;
+}
+
+.pricing-panel-spacer {
+  flex: 1 1 auto;
 }
 
 .pricing-features > li {
@@ -8,9 +25,4 @@
 
 .pricing-features-item {
   flex-wrap: nowrap;
-}
-
-.pricing-panel,
-.panel-content {
-  border-radius: 4px;
 }

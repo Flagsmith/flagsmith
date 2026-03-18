@@ -1,5 +1,6 @@
 import { PricingFeature } from './types'
-import { ENTERPRISE_ICON_COLOR } from './constants'
+
+const ENTERPRISE_ICON_CLASS = 'text-secondary'
 
 export const startupFeatures: PricingFeature[] = [
   {
@@ -33,7 +34,7 @@ export const startupFeatures: PricingFeature[] = [
 
 export const enterpriseFeatures: PricingFeature[] = [
   {
-    iconFill: ENTERPRISE_ICON_COLOR,
+    iconClass: ENTERPRISE_ICON_CLASS,
     text: (
       <>
         <strong> 5,000,000+</strong> requests per month
@@ -41,7 +42,7 @@ export const enterpriseFeatures: PricingFeature[] = [
     ),
   },
   {
-    iconFill: ENTERPRISE_ICON_COLOR,
+    iconClass: ENTERPRISE_ICON_CLASS,
     text: (
       <>
         <strong>20+</strong> Team members
@@ -49,27 +50,27 @@ export const enterpriseFeatures: PricingFeature[] = [
     ),
   },
   {
-    iconFill: ENTERPRISE_ICON_COLOR,
+    iconClass: ENTERPRISE_ICON_CLASS,
     text: 'Advanced hosting options',
   },
   {
-    iconFill: ENTERPRISE_ICON_COLOR,
+    iconClass: ENTERPRISE_ICON_CLASS,
     text: 'Priority real time technical support with the engineering team over Slack or Discord',
   },
   {
-    iconFill: ENTERPRISE_ICON_COLOR,
+    iconClass: ENTERPRISE_ICON_CLASS,
     text: 'Governance features – roles, permissions, change requests, audit logs',
   },
   {
-    iconFill: ENTERPRISE_ICON_COLOR,
+    iconClass: ENTERPRISE_ICON_CLASS,
     text: 'Features for maximum security',
   },
   {
-    iconFill: ENTERPRISE_ICON_COLOR,
+    iconClass: ENTERPRISE_ICON_CLASS,
     text: 'Optional on premises installation',
   },
   {
-    iconFill: ENTERPRISE_ICON_COLOR,
+    iconClass: ENTERPRISE_ICON_CLASS,
     text: 'Onboarding & training',
   },
 ]

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import AccountStore from 'common/stores/account-store'
+import { Organisation } from 'common/types/responses'
 
 type PaymentState = {
-  organisation: any
+  organisation: Organisation | null
   plan: string
   isAWS: boolean
   hasActiveSubscription: boolean
