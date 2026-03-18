@@ -1,5 +1,38 @@
 # Changelog
 
+## [2.222.2](https://github.com/Flagsmith/flagsmith/compare/v2.222.1...v2.222.2) (2026-03-18)
+
+
+### Bug Fixes
+
+* add edit users sending up wrong data ([#6923](https://github.com/Flagsmith/flagsmith/issues/6923)) ([b249f2c](https://github.com/Flagsmith/flagsmith/commit/b249f2c9759e0a7b5c15c70fe1d0b1a8068fcf2f))
+* align organisation dropdown on responsive viewports ([#6971](https://github.com/Flagsmith/flagsmith/issues/6971)) ([0073739](https://github.com/Flagsmith/flagsmith/commit/007373971bba8e77f76745ce496fda26e01a6571))
+* convert feature_state_value after v2 segment save ([#6962](https://github.com/Flagsmith/flagsmith/issues/6962)) ([#6967](https://github.com/Flagsmith/flagsmith/issues/6967)) ([13ada3b](https://github.com/Flagsmith/flagsmith/commit/13ada3b32c297b9cd0c4ce481e7b83df724d4bb2))
+* mask webhook secret with password field and reveal toggle ([#6932](https://github.com/Flagsmith/flagsmith/issues/6932)) ([ddbf8bd](https://github.com/Flagsmith/flagsmith/commit/ddbf8bdd0aa597ebad8d24bb1641ef27426e37bd))
+* restore grid layout in PanelSearch broken by wrapper div ([#6977](https://github.com/Flagsmith/flagsmith/issues/6977)) ([51fc019](https://github.com/Flagsmith/flagsmith/commit/51fc019109d49a7e09d6435bcb4a8afeb4238178))
+* restore Prevent Flag Defaults UI enforcement in create feature modal ([#6931](https://github.com/Flagsmith/flagsmith/issues/6931)) ([0b80126](https://github.com/Flagsmith/flagsmith/commit/0b80126daf0f53269eafb76b9f5acf6eb8f0bae3))
+* trim whitespace in search filters to prevent API 400 errors ([#6934](https://github.com/Flagsmith/flagsmith/issues/6934)) ([d93f6d4](https://github.com/Flagsmith/flagsmith/commit/d93f6d419f1a552f519c4de5a273b4c6b773794e))
+* use bg-body on sign-up card for dark mode compatibility ([#6973](https://github.com/Flagsmith/flagsmith/issues/6973)) ([ead91ec](https://github.com/Flagsmith/flagsmith/commit/ead91eca1038aa8d7335e76097facc8a452e6622))
+* wrap long text in value editor to prevent horizontal overflow ([#6972](https://github.com/Flagsmith/flagsmith/issues/6972)) ([cf9d70d](https://github.com/Flagsmith/flagsmith/commit/cf9d70ddc93353ecc70b8d73dbf8b0464f73d505))
+
+
+### Dependency Updates
+
+* Bump flagsmith-worfklows 3.3.2 ([#6981](https://github.com/Flagsmith/flagsmith/issues/6981)) ([a4593a2](https://github.com/Flagsmith/flagsmith/commit/a4593a2a1c0cdc44eeaa40c2840d5e429d9c6c95))
+
+
+### CI
+
+* Ensure workflows run on update flagsmith environment PRs ([#6957](https://github.com/Flagsmith/flagsmith/issues/6957)) ([de8bf59](https://github.com/Flagsmith/flagsmith/commit/de8bf597581849da3b9179d0e7e566f3d6d8557a))
+* pre-commit autoupdate ([#6965](https://github.com/Flagsmith/flagsmith/issues/6965)) ([f226061](https://github.com/Flagsmith/flagsmith/commit/f22606182ac325b72874d464d5e0604981beef30))
+
+
+### Refactoring
+
+* decouple Button from Constants import ([#6947](https://github.com/Flagsmith/flagsmith/issues/6947)) ([c7f9f29](https://github.com/Flagsmith/flagsmith/commit/c7f9f299c0cd0ca8752df65182f536058a752fdc))
+* Migrate from `is_context_in_segment` to `get_evaluation_result` ([#6896](https://github.com/Flagsmith/flagsmith/issues/6896)) ([2ae6edc](https://github.com/Flagsmith/flagsmith/commit/2ae6edcdc9ae8152046f28a18910b54abff8f405))
+* permission types ([#6417](https://github.com/Flagsmith/flagsmith/issues/6417)) ([2d9f0fa](https://github.com/Flagsmith/flagsmith/commit/2d9f0fa6d8ca97178db7d5b4b14caded18a34e1a))
+
 ## [2.222.1](https://github.com/Flagsmith/flagsmith/compare/v2.222.0...v2.222.1) (2026-03-18)
 
 
