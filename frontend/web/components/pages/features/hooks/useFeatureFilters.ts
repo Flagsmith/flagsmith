@@ -5,7 +5,9 @@ import {
   hasActiveFilters,
   buildUrlParams,
   getFiltersFromParams,
+  normaliseFilters,
 } from 'common/utils/featureFilterParams'
+import { isEqual } from 'lodash'
 import Utils from 'common/utils/utils'
 
 /**
@@ -43,7 +45,12 @@ export function useFeatureFilters(history: History): {
   }, [updateURLParams])
 
   const handleFilterChange = (updates: Partial<FilterState>) => {
-    setFilters((prev) => ({ ...prev, ...updates }))
+    const normalised = normaliseFilters(updates)
+    setFilters((prev) => {
+      const next = { ...prev, ...normalised }
+      if (isEqual(prev, next)) return prev
+      return next
+    })
     setPage(1)
   }
 
