@@ -7,7 +7,11 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
 
-from app_analytics.influxdb_wrapper import get_current_api_usage
+from app_analytics.analytics_db_service import get_total_events_count
+from app_analytics.influxdb_wrapper import (
+    get_current_api_usage,
+    is__get_current_api_usage_deprecated,
+)
 from core.helpers import get_current_site_url
 from organisations.models import (
     Organisation,
@@ -126,7 +130,10 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
 
         allowed_api_calls = subscription_cache.allowed_30d_api_calls
 
-    api_usage = get_current_api_usage(organisation.id, period_starts_at)
+    if is__get_current_api_usage_deprecated(organisation):  # pragma: no cover
+        api_usage = get_total_events_count(organisation, period_starts_at)
+    else:
+        api_usage = get_current_api_usage(organisation.id, period_starts_at)
 
     # For some reason the allowed API calls is set to 0 so default to the max free plan.
     allowed_api_calls = allowed_api_calls or MAX_API_CALLS_IN_FREE_PLAN

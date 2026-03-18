@@ -22,6 +22,8 @@ from app_analytics.mappers import (
     map_labels_to_influx_record_values,
 )
 from app_analytics.types import Labels
+from integrations.flagsmith.client import get_client
+from organisations.models import Organisation
 
 logger = logging.getLogger(__name__)
 
@@ -457,6 +459,20 @@ def get_current_api_usage(
         return sum(r.get_value() for r in result.records)
 
     return 0
+
+
+def is__get_current_api_usage_deprecated(organisation: Organisation) -> bool:
+    """
+    TODO: https://github.com/Flagsmith/flagsmith/issues/6985
+    Delete this function, along with get_current_api_usage, once we verify
+    it can be safely replaced with get_events_for_organisation.
+    """
+    flagsmith_client = get_client("local", local_eval=True)
+    flags = flagsmith_client.get_identity_flags(
+        organisation.flagsmith_identifier,
+        traits=organisation.flagsmith_on_flagsmith_api_traits,
+    )
+    return flags.is_feature_enabled("get_current_api_usage_deprecated")
 
 
 def get_platform_usage_trends(

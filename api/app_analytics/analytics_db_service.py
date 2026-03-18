@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 import structlog
 from common.core.utils import using_database_replica
@@ -122,20 +122,31 @@ def get_usage_data_from_local_db(
     return map_annotated_api_usage_buckets_to_usage_data(qs)
 
 
-def get_total_events_count(organisation) -> int:  # type: ignore[no-untyped-def]
+def get_total_events_count(
+    organisation: Organisation,
+    date_start: datetime | None = None,
+    date_stop: datetime | None = None,
+) -> int:
     """
-    Return total number of events for an organisation in the last 30 days
+    Return total number of events for an organisation for a range, or last 30 days
     """
+    today = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    date_start = date_start or (today - timedelta(days=30))
+    date_stop = date_stop or today
     if settings.USE_POSTGRES_FOR_ANALYTICS:
-        count = APIUsageBucket.objects.filter(
+        count: int = APIUsageBucket.objects.filter(
             environment_id__in=_get_environment_ids_for_org(organisation),
-            created_at__date__lte=date.today(),
-            created_at__date__gt=date.today() - timedelta(days=30),
+            created_at__date__lte=date_stop,
+            created_at__date__gt=date_start,
             bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
         ).aggregate(total_count=Sum("total_count"))["total_count"]
     else:
-        count = get_events_for_organisation(organisation.id)
-    return count  # type: ignore[no-any-return]
+        count = get_events_for_organisation(
+            organisation.id,
+            date_start=date_start,
+            date_stop=date_stop,
+        )
+    return count
 
 
 def get_feature_evaluation_data(
