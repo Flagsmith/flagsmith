@@ -12,7 +12,6 @@ import { AutoSizer, List } from 'react-virtualized'
 import Popover from './base/Popover'
 import Input from './base/forms/Input'
 import Icon from './Icon'
-import classNames from 'classnames'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import Button from './base/forms/Button'
@@ -197,6 +196,58 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
     search = search.replace(/^"+|"+$/g, '')
   }
 
+  const renderListContent = (): ReactNode => {
+    if (isLoading && (!filteredItems || !items)) {
+      return (
+        <div className='text-center'>
+          <Loader />
+        </div>
+      )
+    }
+    if (filteredItems && filteredItems.length) {
+      return (
+        <div
+          className={props.listClassName}
+          style={isLoading ? { opacity: 0.5 } : undefined}
+        >
+          {renderContainer(filteredItems)}
+        </div>
+      )
+    }
+    if (renderNoResults && !search) {
+      return <>{renderNoResults}</>
+    }
+    return (
+      <Row className='list-item'>
+        {!isLoading && (
+          <>
+            {props.noResultsText ? (
+              props.noResultsText(search) || (
+                <div className='table-column'>
+                  No results{' '}
+                  {search && (
+                    <span>
+                      for <strong>{` "${search}"`}</strong>
+                    </span>
+                  )}
+                </div>
+              )
+            ) : (
+              <div className='table-column'>
+                No results{' '}
+                {search && (
+                  <span>
+                    for <strong>{` "${search}"`}</strong>
+                  </span>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </Row>
+    )
+  }
+
   if (
     !search &&
     (!filteredItems || filteredItems.length === 0) &&
@@ -304,50 +355,9 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
       }
     >
       {props.searchPanel}
-      <div
-        id={props.id}
-        className={classNames('search-list', props.listClassName)}
-      >
+      <div id={props.id} className='search-list'>
         {props.header}
-        {isLoading && (!filteredItems || !items) ? (
-          <div className='text-center'>
-            <Loader />
-          </div>
-        ) : filteredItems && filteredItems.length ? (
-          <div style={isLoading ? { opacity: 0.5 } : undefined}>
-            {renderContainer(filteredItems)}
-          </div>
-        ) : renderNoResults && !search ? (
-          renderNoResults
-        ) : (
-          <Row className='list-item'>
-            {!isLoading && (
-              <>
-                {props.noResultsText ? (
-                  props.noResultsText(search) || (
-                    <div className='table-column'>
-                      No results{' '}
-                      {search && (
-                        <span>
-                          for <strong>{` "${search}"`}</strong>
-                        </span>
-                      )}
-                    </div>
-                  )
-                ) : (
-                  <div className='table-column'>
-                    No results{' '}
-                    {search && (
-                      <span>
-                        for <strong>{` "${search}"`}</strong>
-                      </span>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </Row>
-        )}
+        {renderListContent()}
         {paging && (
           <Paging
             paging={paging}
