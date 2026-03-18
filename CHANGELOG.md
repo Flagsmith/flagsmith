@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.222.3](https://github.com/Flagsmith/flagsmith/compare/v2.222.2...v2.222.3) (2026-03-18)
+
+
+### Bug Fixes
+
+* **GitHub Integration:** Fix JWT generation for GitHub API calls ([#6983](https://github.com/Flagsmith/flagsmith/issues/6983)) ([faf3a66](https://github.com/Flagsmith/flagsmith/commit/faf3a6647cc992067b727a41b9797a26fc828c51))
+
 ## [2.222.2](https://github.com/Flagsmith/flagsmith/compare/v2.222.1...v2.222.2) (2026-03-18)
 
 
