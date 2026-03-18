@@ -19,9 +19,9 @@ import Utils from 'common/utils/utils'
 import FormGroup from 'components/base/grid/FormGroup'
 import Row from 'components/base/grid/Row'
 import AccountStore from 'common/stores/account-store'
+import { ProjectPermission } from 'common/types/permissions.types'
 import { getStore } from 'common/store'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
-import { ProjectPermission } from 'common/types/permissions.types'
 
 type FeatureSettingsTabProps = {
   identity?: string

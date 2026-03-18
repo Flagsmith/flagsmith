@@ -8,10 +8,7 @@ import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
 import OverflowNav from 'components/navigation/OverflowNav'
 import ProjectChangeRequestsLink from 'components/ProjectChangeRequestsLink'
-import {
-  ADMIN_PERMISSION,
-  ProjectPermission,
-} from 'common/types/permissions.types'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type ProjectNavType = {
   environmentId?: string
@@ -23,7 +20,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
   const { permission: projectAdmin } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: ADMIN_PERMISSION,
+    permission: ProjectPermission.ADMIN,
   })
   const projectMetricsTooltipEnabled = Utils.getFlagsmithHasFeature(
     'project_metrics_tooltip',

@@ -19,7 +19,7 @@ const keywords = {
   FEATURE_NAME_ALT_VALUE: 'big',
   LIB_NAME: 'flagsmith',
   LIB_NAME_JAVA: 'FlagsmithClient',
-  NPM_CLIENT: 'flagsmith',
+  NPM_CLIENT: '@flagsmith/flagsmith',
   NPM_NODE_CLIENT: 'flagsmith-nodejs',
   SEGMENT_NAME: 'superUsers',
   TRAIT_NAME: 'age',
@@ -29,7 +29,7 @@ const keywords = {
 }
 const keywordsReactNative = {
   ...keywords,
-  NPM_CLIENT: 'react-native-flagsmith',
+  NPM_CLIENT: '@flagsmith/react-native',
 }
 const Constants = {
   archivedTag: { color: '#8f8f8f', label: 'Archived' },
@@ -261,11 +261,7 @@ const Constants = {
   } as SegmentCondition,
   defaultTagColor: '#3d4db6',
   environmentPermissions: (perm: EnvironmentPermission) => {
-    const description =
-      perm === 'ADMIN'
-        ? 'Administrator'
-        : EnvironmentPermissionDescriptions[perm]
-    return `To manage this feature you need the <i>${description}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`
+    return `To manage this feature you need the <i>${EnvironmentPermissionDescriptions[perm]}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`
   },
   events: {
     'ACCEPT_INVITE': (org: any) => ({
@@ -640,11 +636,7 @@ const Constants = {
     'PAYMENT': 'Payment Modal',
   },
   organisationPermissions: (perm: OrganisationPermission) => {
-    const description =
-      perm === 'ADMIN'
-        ? 'Administrator'
-        : OrganisationPermissionDescriptions[perm]
-    return `To manage this feature you need the <i>${description}</i> permission for this organisation.<br/>Please contact a member of this organisation who has administrator privileges.`
+    return `To manage this feature you need the <i>${OrganisationPermissionDescriptions[perm]}</i> permission for this organisation.<br/>Please contact a member of this organisation who has administrator privileges.`
   },
   pages: {
     'ACCOUNT': 'Account Page',
@@ -678,9 +670,7 @@ const Constants = {
     '#F57C78',
   ],
   projectPermissions: (perm: ProjectPermission) => {
-    const description =
-      perm === 'ADMIN' ? 'Administrator' : ProjectPermissionDescriptions[perm]
-    return `To use this feature you need the <i>${description}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`
+    return `To use this feature you need the <i>${ProjectPermissionDescriptions[perm]}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`
   },
   resourceTypes: {
     GITHUB_ISSUE: {

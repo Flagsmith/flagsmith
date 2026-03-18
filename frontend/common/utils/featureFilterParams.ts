@@ -67,6 +67,20 @@ function parsePageNumber(value: string | string[] | undefined): number {
   return 1
 }
 
+/** Normalises filter updates by trimming string fields to prevent whitespace-only API requests. */
+export function normaliseFilters(
+  filters: Partial<FilterState>,
+): Partial<FilterState> {
+  const result = { ...filters }
+  if ('search' in result) {
+    result.search = result.search?.trim() || null
+  }
+  if ('value_search' in result) {
+    result.value_search = result.value_search?.trim() || null
+  }
+  return result
+}
+
 /** Check if any filters are currently active. */
 export function hasActiveFilters(filters: FilterState): boolean {
   return !!(
@@ -169,6 +183,6 @@ export function getFiltersFromParams(
         ? TagStrategy.UNION
         : TagStrategy.INTERSECTION,
     tags: parseIntArray(params.tags),
-    value_search: parseStringParam(params.value_search, '') || null,
+    value_search: parseStringParam(params.value_search, ''),
   }
 }

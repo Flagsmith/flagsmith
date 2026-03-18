@@ -42,10 +42,7 @@ import {
 } from 'common/services/useInvites'
 import OrganisationUsersTable from 'components/users-permissions/OrganisationUsersTable/OrganisationUsersTable'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
-import {
-  ADMIN_PERMISSION,
-  OrganisationPermission,
-} from 'common/types/permissions.types'
+import { OrganisationPermission } from 'common/types/permissions.types'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -105,7 +102,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
     hasEmailProvider && manageUsersPermission.permission
   const tooltipText = !hasEmailProvider
     ? noEmailProvider
-    : Constants.organisationPermissions(ADMIN_PERMISSION)
+    : Constants.organisationPermissions(OrganisationPermission.ADMIN)
 
   const { data: roles } = useGetRolesQuery({ organisation_id: organisation.id })
 

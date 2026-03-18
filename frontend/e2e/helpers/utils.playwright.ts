@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
-import flagsmith from 'flagsmith/isomorphic';
-import { IFlagsmith } from 'flagsmith/types';
+import flagsmith from '@flagsmith/flagsmith/isomorphic';
+import { IFlagsmith } from '@flagsmith/flagsmith/types';
 import Project from '../../common/project';
 
 export const LONG_TIMEOUT = 20000;

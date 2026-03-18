@@ -10,7 +10,7 @@ import AccountStore from 'common/stores/account-store'
 import API from 'project/api'
 import { useGetProjectQuery } from 'common/services/useProject'
 import { useRouteContext } from 'components/providers/RouteContext'
-import { ADMIN_PERMISSION } from 'common/types/permissions.types'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 export const integrationCategories = [
   'Analytics',
@@ -79,9 +79,7 @@ const IntegrationsPage: FC = () => {
                 )}
               </div>
             ) : (
-              <div>
-                {Constants.projectPermissions(ADMIN_PERMISSION)}
-              </div>
+              <div>{Constants.projectPermissions(ProjectPermission.ADMIN)}</div>
             )}
           </div>
         </div>

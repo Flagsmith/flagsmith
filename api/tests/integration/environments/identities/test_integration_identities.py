@@ -31,9 +31,9 @@ total_variance_percentage = (
 @pytest.mark.parametrize(
     "hashed_percentage, expected_mv_value",
     (
-        (variant_1_percentage_allocation / 100 - 0.01, variant_1_value),
-        (total_variance_percentage / 100 - 0.01, variant_2_value),
-        (total_variance_percentage / 100 + 0.01, control_value),
+        (variant_1_percentage_allocation - 1, variant_1_value),
+        (total_variance_percentage - 1, variant_2_value),
+        (total_variance_percentage + 1, control_value),
     ),
 )
 @mock.patch("features.models.get_hashed_percentage_for_object_ids")
@@ -75,7 +75,7 @@ def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]
         variant_1_percentage_allocation,
         variant_1_value,
     )
-    create_mv_option_with_api(
+    variant_2_mvfo_id = create_mv_option_with_api(
         admin_client,
         project,
         multivariate_feature_id,  # type: ignore[arg-type]
@@ -125,9 +125,11 @@ def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]
     feature_state_data = retrieve_feature_state_response.json()
 
     # now let's amend the data so that all identities should receive variant 2
-    mv_values = feature_state_data["multivariate_feature_state_values"]
-    mv_values[0]["percentage_allocation"] = 0
-    mv_values[1]["percentage_allocation"] = 100
+    for mv_value in feature_state_data["multivariate_feature_state_values"]:
+        if mv_value["multivariate_feature_option"] == variant_2_mvfo_id:
+            mv_value["percentage_allocation"] = 100
+        else:
+            mv_value["percentage_allocation"] = 0
 
     # and PUT the data back
     update_feature_state_response = admin_client.put(

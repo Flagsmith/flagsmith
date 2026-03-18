@@ -5,13 +5,12 @@ import FeatureSettingsTab from './FeatureSettingsTab'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import { useHasPermission } from 'common/providers/Permission'
-import {
-  ADMIN_PERMISSION,
-  ProjectPermission,
-} from 'common/types/permissions.types'
+import { ProjectPermission } from 'common/types/permissions.types'
 import Switch from 'components/Switch'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/Icon'
+import InfoMessage from 'components/InfoMessage'
+import { useGetProjectQuery } from 'common/services/useProject'
 import { useCreateTagMutation, useGetTagsQuery } from 'common/services/useTag'
 
 type CreateFeatureTabProps = {
@@ -54,8 +53,11 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
   const { permission: projectAdmin } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: ADMIN_PERMISSION,
+    permission: ProjectPermission.ADMIN,
   })
+
+  const { data: project } = useGetProjectQuery({ id: projectId })
+  const preventFlagDefaults = !!project?.prevent_flag_defaults && !identity
 
   const noPermissions = !createFeature && !projectAdmin
 
@@ -135,13 +137,23 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
       <WarningMessage warningMessage={featureWarning} />
       {!!projectFlag && (
         <>
+          {preventFlagDefaults && (
+            <InfoMessage collapseId='create-flag'>
+              This will create the feature for <strong>all environments</strong>
+              , you can edit the feature's enabled state and value per
+              environment once the feature is created.
+            </InfoMessage>
+          )}
           <FeatureValueTab
             error={error}
+            createFeature={createFeature}
+            hideValue={preventFlagDefaults}
             projectId={projectId}
             identity={identity}
+            isEdit={!!identity}
             noPermissions={noPermissions}
-            featureState={overrideFeatureState || featureState}
             projectFlag={projectFlag}
+            featureState={overrideFeatureState || featureState}
             onEnvironmentFlagChange={onEnvironmentFlagChange}
             onProjectFlagChange={onProjectFlagChange}
             onRemoveMultivariateOption={onRemoveMultivariateOption}
