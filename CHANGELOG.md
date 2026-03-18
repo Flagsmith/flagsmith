@@ -1,5 +1,41 @@
 # Changelog
 
+## [2.222.1](https://github.com/Flagsmith/flagsmith/compare/v2.222.0...v2.222.1) (2026-03-18)
+
+
+### Bug Fixes
+
+* **6905:** replace dynamic serializer with SDKAnalyticsFlagsV1Serializer ([#6908](https://github.com/Flagsmith/flagsmith/issues/6908)) ([f1082d4](https://github.com/Flagsmith/flagsmith/commit/f1082d4453538e9172d6b369b7c1c44092162dc9))
+* **Audit:** Stop error noise when deleting segment overrides ([#6941](https://github.com/Flagsmith/flagsmith/issues/6941)) ([c2bddaf](https://github.com/Flagsmith/flagsmith/commit/c2bddaf934da544af9bfbe02d8ad449c36e0fe88))
+* only apply bold font-weight to active sidebar link ([#6926](https://github.com/Flagsmith/flagsmith/issues/6926)) ([1dca708](https://github.com/Flagsmith/flagsmith/commit/1dca70867bba4bfdba7a911bcc601b3f28f0f902))
+* prevent IDOR vulnerability in environment update endpoint ([#6384](https://github.com/Flagsmith/flagsmith/issues/6384)) ([89f2477](https://github.com/Flagsmith/flagsmith/commit/89f2477d61019a0ffc6824bf2f5145c1515f4346))
+* replace all hardcoded icon fills with currentColor ([#6870](https://github.com/Flagsmith/flagsmith/issues/6870)) ([7453f96](https://github.com/Flagsmith/flagsmith/commit/7453f961ad444cf3b10af867047599058d4a815c))
+* **Segments:** Fix project reference in segment creation ([#6929](https://github.com/Flagsmith/flagsmith/issues/6929)) ([b905af2](https://github.com/Flagsmith/flagsmith/commit/b905af254c6c5a3a2d71b9b280eecbd66ca519c0))
+* **SuccessMessage:** fix invalid fontWeight and consolidate duplicate ([#6873](https://github.com/Flagsmith/flagsmith/issues/6873)) ([45b0dec](https://github.com/Flagsmith/flagsmith/commit/45b0dec1c835b5aa6ab896f470a65a96192223f8))
+
+
+### Dependency Updates
+
+* bump black from 25.1.0 to 26.3.1 in /api ([#6939](https://github.com/Flagsmith/flagsmith/issues/6939)) ([ffa171d](https://github.com/Flagsmith/flagsmith/commit/ffa171d92c4930f1c49b9e933add060076c489c9))
+* bump pyjwt from 2.8.0 to 2.12.0 in /api ([#6950](https://github.com/Flagsmith/flagsmith/issues/6950)) ([696bf62](https://github.com/Flagsmith/flagsmith/commit/696bf623c156f8e5d41494c728ab58ac961e5f55))
+* bump pyopenssl from 25.3.0 to 26.0.0 in /api ([#6964](https://github.com/Flagsmith/flagsmith/issues/6964)) ([a6390eb](https://github.com/Flagsmith/flagsmith/commit/a6390eb3db9963d59be14a94af042ae323b87bf4))
+
+
+### CI
+
+* pre-commit autoupdate ([#6897](https://github.com/Flagsmith/flagsmith/issues/6897)) ([0cb6bda](https://github.com/Flagsmith/flagsmith/commit/0cb6bda0479400544c97e7d5400d87243dff1f90))
+* Use sticky PR comments for Playwright report summaries ([#6909](https://github.com/Flagsmith/flagsmith/issues/6909)) ([dbd66e9](https://github.com/Flagsmith/flagsmith/commit/dbd66e9ee47e8d04d662ca58a3da7fc6ba938524))
+
+
+### Refactoring
+
+* Prevent duplicate features list GETS ([#6927](https://github.com/Flagsmith/flagsmith/issues/6927)) ([362a9f8](https://github.com/Flagsmith/flagsmith/commit/362a9f8f6d3f5f08ec037f176ccfbe4575773afc))
+
+
+### Tests
+
+* fix flaky tests ([#6848](https://github.com/Flagsmith/flagsmith/issues/6848)) ([8ffafd9](https://github.com/Flagsmith/flagsmith/commit/8ffafd953cc0abcc8f54a1a4d81194e88c5efc13))
+
 ## [2.222.0](https://github.com/Flagsmith/flagsmith/compare/v2.221.2...v2.222.0) (2026-03-10)
 
 
