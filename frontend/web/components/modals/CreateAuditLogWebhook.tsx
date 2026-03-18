@@ -120,7 +120,7 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
               setSecret(Utils.safeParseEventValue(e))
             }
             isValid={!!url && url.length > 0}
-            type='text'
+            type='password'
             className='full-width'
             placeholder='Secret'
           />
