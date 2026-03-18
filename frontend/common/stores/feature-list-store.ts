@@ -766,6 +766,9 @@ const controller = {
               store.model.keyedEnvironmentFeatures[projectFlag.id] = {
                 ...store.model.keyedEnvironmentFeatures[projectFlag.id],
                 ...environmentFeatureState,
+                feature_state_value: Utils.featureStateToValue(
+                  environmentFeatureState.feature_state_value,
+                ),
               }
             }
           })
