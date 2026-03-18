@@ -436,7 +436,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     level: 'identity' | 'segment',
   ): {
     permission: EnvironmentPermission
-    permissionDescription: EnvironmentPermissionDescription
+    permissionDescription: string
   } => {
     switch (level) {
       case 'identity':
