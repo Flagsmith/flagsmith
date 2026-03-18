@@ -6,7 +6,6 @@ import { cloneDeep } from 'lodash'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import {
-  ADMIN_PERMISSION,
   EnvironmentPermission,
   OrganisationPermission,
   ProjectPermission,
@@ -183,17 +182,6 @@ const Permission: FC<PermissionType> = ({
   const finalPermission = hasPermission || AccountStore.isAdmin()
 
   const getPermissionDescription = (): string => {
-    if (permission === ADMIN_PERMISSION) {
-      switch (level) {
-        case 'environment':
-          return Constants.environmentPermissions(ADMIN_PERMISSION)
-        case 'project':
-          return Constants.projectPermissions(ADMIN_PERMISSION)
-        default:
-          return Constants.organisationPermissions(ADMIN_PERMISSION)
-      }
-    }
-
     switch (level) {
       case 'environment':
         return Constants.environmentPermissions(

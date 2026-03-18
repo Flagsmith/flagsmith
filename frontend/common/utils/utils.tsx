@@ -29,10 +29,7 @@ import { getStore } from 'common/store'
 import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
 import { TimeUnit } from 'components/release-pipelines/constants'
 import {
-  ADMIN_PERMISSION,
-  ADMIN_PERMISSION_DESCRIPTION,
   EnvironmentPermission,
-  EnvironmentPermissionDescription,
   EnvironmentPermissionDescriptions,
   OrganisationPermission,
   OrganisationPermissionDescriptions,
@@ -235,15 +232,17 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getCreateProjectPermission(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
-      return ADMIN_PERMISSION
+      return OrganisationPermission.ADMIN
     }
     return OrganisationPermission.CREATE_PROJECT
   },
   getCreateProjectPermissionDescription(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
-      return ADMIN_PERMISSION_DESCRIPTION
+      return OrganisationPermissionDescriptions[OrganisationPermission.ADMIN]
     }
-    return OrganisationPermissionDescriptions.CREATE_PROJECT
+    return OrganisationPermissionDescriptions[
+      OrganisationPermission.CREATE_PROJECT
+    ]
   },
   getExistingWaitForTime: (
     waitFor: string | undefined,
