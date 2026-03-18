@@ -31,6 +31,12 @@
   }
 }
 
+.search-list.row > div {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
 .overflow-visible .search-list,
 .overflow-visible .List {
   overflow-x: visible !important;
