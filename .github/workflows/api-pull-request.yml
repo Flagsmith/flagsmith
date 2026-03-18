@@ -2,7 +2,6 @@ name: API Pull Request
 
 permissions:
   contents: read # For actions/checkout
-  id-token: write # For Codecov OIDC
 
 on:
   pull_request:
@@ -80,9 +79,10 @@ jobs:
         run: make test
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v5
-        env:
-          PYTHON: ${{ matrix.python-version }}
+        if: matrix.python-version == '3.13'
+        uses: qltysh/qlty-action/coverage@v2
         with:
-          env_vars: PYTHON
-          use_oidc: true
+          token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
+          files: coverage.xml
+          tag: api
+          add-prefix: api/

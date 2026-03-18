@@ -33,4 +33,12 @@ jobs:
         run: npm ci
 
       - name: Run unit tests
-        run: npm run test:unit -- --passWithNoTests
+        run: npm run test:unit -- --passWithNoTests --coverage
+
+      - name: Upload Coverage
+        uses: qltysh/qlty-action/coverage@v2
+        with:
+          token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
+          files: coverage/lcov.info
+          tag: frontend
+          add-prefix: frontend/
