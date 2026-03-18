@@ -1236,24 +1236,6 @@ files = [
 ]
 
 [[package]]
-name = "deprecated"
-version = "1.2.14"
-description = "Python @deprecated decorator to deprecate old python classes, functions or methods."
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-groups = ["main"]
-files = [
-    {file = "Deprecated-1.2.14-py2.py3-none-any.whl", hash = "sha256:6fac8b097794a90302bdbb17b9b815e732d3c4720583ff1b198499d78470466c"},
-    {file = "Deprecated-1.2.14.tar.gz", hash = "sha256:e5323eb936458dccc2582dc6f9c322c852a775a27065ff2b0c4970b9d53d01b3"},
-]
-
-[package.dependencies]
-wrapt = ">=1.10,<2"
-
-[package.extras]
-dev = ["PyTest", "PyTest-Cov", "bump2version (<1)", "sphinx (<2)", "tox"]
-
-[[package]]
 name = "deprecation"
 version = "2.0.7"
 description = "A library to handle automated deprecations"
@@ -3700,23 +3682,21 @@ files = [
 
 [[package]]
 name = "pygithub"
-version = "2.1.1"
+version = "2.8.1"
 description = "Use the full Github API v3"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "PyGithub-2.1.1-py3-none-any.whl", hash = "sha256:4b528d5d6f35e991ea5fd3f942f58748f24938805cb7fcf24486546637917337"},
-    {file = "PyGithub-2.1.1.tar.gz", hash = "sha256:ecf12c2809c44147bce63b047b3d2e9dac8a41b63e90fcb263c703f64936b97c"},
+    {file = "pygithub-2.8.1-py3-none-any.whl", hash = "sha256:23a0a5bca93baef082e03411bf0ce27204c32be8bfa7abc92fe4a3e132936df0"},
+    {file = "pygithub-2.8.1.tar.gz", hash = "sha256:341b7c78521cb07324ff670afd1baa2bf5c286f8d9fd302c1798ba594a5400c9"},
 ]
 
 [package.dependencies]
-Deprecated = "*"
 pyjwt = {version = ">=2.4.0", extras = ["crypto"]}
 pynacl = ">=1.4.0"
-python-dateutil = "*"
 requests = ">=2.14.0"
-typing-extensions = ">=4.0.0"
+typing-extensions = ">=4.5.0"
 urllib3 = ">=1.26.0"
 
 [[package]]
@@ -5577,7 +5557,7 @@ version = "1.15.0"
 description = "Module for decorators, wrappers and monkey patching."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
-groups = ["main", "dev"]
+groups = ["dev"]
 files = [
     {file = "wrapt-1.15.0-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:ca1cccf838cd28d5a0883b342474c630ac48cac5df0ee6eacc9c7290f76b11c1"},
     {file = "wrapt-1.15.0-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:e826aadda3cae59295b95343db8f3d965fb31059da7de01ee8d1c40a60398b29"},
@@ -5691,4 +5671,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.14"
-content-hash = "76011b5a1ea9e95d16da15c712a89de25856d4049c6286f0813e5691f87bb440"
+content-hash = "83fc1419a52f7553b9c7dbbe1405cb3be83d2727e8a9661450e391282d858ea0"
