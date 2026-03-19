@@ -62,6 +62,7 @@ from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
 from tests.types import (
+    EnableFeaturesFixture,
     WithEnvironmentPermissionsCallable,
     WithProjectPermissionsCallable,
 )
@@ -3593,14 +3594,15 @@ def test_list_features__value_search_boolean__returns_matching(
 
 
 def test_list_features__with_code_references__returns_counts(
-    staff_client: APIClient,
-    project: Project,
+    enable_features: EnableFeaturesFixture,
     feature: Feature,
+    project: Project,
+    staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
-    environment: Environment,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    enable_features("code_references_ui_stats")
     with freeze_time("2099-01-01T10:00:00-0300"):
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
@@ -3678,26 +3680,64 @@ def test_list_features__with_code_references__returns_counts(
     ]
 
 
-def test_FeatureViewSet_list__no_scans__returns_empty_code_references_counts(
-    staff_client: APIClient,
-    project: Project,
-    feature: Feature,
+@pytest.mark.usefixtures("feature")
+def test_list_features__without_code_references__returns_empty_counts(
+    enable_features: EnableFeaturesFixture,
     environment: Environment,
+    project: Project,
+    staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
-    # Given - project has no code reference scans
+    # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    enable_features("code_references_ui_stats")
 
     # When
     response = staff_client.get(
         f"/api/v1/projects/{project.id}/features/?environment={environment.id}"
     )
 
-    # Then - response should include code_references_counts as empty list
+    # Then
     assert response.status_code == 200
     results = response.json()["results"]
     assert len(results) == 1
-    assert "code_references_counts" in results[0]
+    assert results[0]["code_references_counts"] == []
+
+
+# TODO: Delete this after https://github.com/flagsmith/flagsmith/issues/6832 is resolved
+def test_list_features__code_references_ui_stats_disabled__returns_empty_counts(
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+    feature: Feature,
+    project: Project,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    enable_features()  # code_references_ui_stats not enabled
+    FeatureFlagCodeReferencesScan.objects.create(
+        project=project,
+        repository_url="https://github.flagsmith.com/backend/",
+        revision="rev-1",
+        code_references=[
+            {
+                "feature_name": feature.name,
+                "file_path": "path/to/file.py",
+                "line_number": 42,
+            },
+        ],
+    )
+
+    # When
+    response = staff_client.get(
+        f"/api/v1/projects/{project.id}/features/?environment={environment.id}"
+    )
+
+    # Then
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert len(results) == 1
     assert results[0]["code_references_counts"] == []
 
 
