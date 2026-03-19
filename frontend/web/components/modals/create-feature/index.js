@@ -804,7 +804,7 @@ const Index = class extends Component {
                   this.setState({ segmentsChanged: false })
 
                   if ((is4Eyes || schedule) && isVersioned && !identity) {
-                    return saveFeatureValue()
+                    return saveFeatureValue(schedule)
                   } else {
                     this.save(editFeatureSegments, isSaving)
                   }
