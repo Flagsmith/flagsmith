@@ -648,7 +648,7 @@ def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(
     project.save()
 
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": "Test feature flag", "type": "FLAG", "project": project.id}
+    data = {"name": "Test feature flag", "type": STANDARD, "project": project.id}
 
     mock_dynamo_environment_wrapper.is_enabled = True
     mock_dynamo_environment_wrapper.reset_mock()
@@ -1748,7 +1748,7 @@ def test_create_feature_returns_201_if_name_matches_regex(
     feature_name = "valid_feature_name"
 
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": feature_name, "type": "FLAG", "project": project.id}
+    data = {"name": feature_name, "type": STANDARD, "project": project.id}
 
     # When
     response = admin_client_new.post(url, data=data)
@@ -1766,7 +1766,7 @@ def test_create_feature_returns_400_if_name_does_not_matches_regex(
     feature_name = "not_a_valid_feature_name"
 
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": feature_name, "type": "FLAG", "project": project.id}
+    data = {"name": feature_name, "type": STANDARD, "project": project.id}
 
     # When
     response = admin_client_new.post(url, data=data)
@@ -1784,7 +1784,7 @@ def test_audit_log_created_when_feature_created(
 ) -> None:
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": "Test feature flag", "type": "FLAG", "project": project.id}
+    data = {"name": "Test feature flag", "type": STANDARD, "project": project.id}
 
     # When
     response = admin_client_new.post(url, data=data)
