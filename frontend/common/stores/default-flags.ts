@@ -30,7 +30,7 @@ const defaultFlags = {
     },
     'code-references': {
       'description':
-        'Integrate with Code References to track feature flag usage in your codebase, and unlock new functionality in Flagsmith',
+        'Integrate with Code References to track feature flag usage in your codebase, and unlock new functionality in Flagsmith.',
       'docs': 'https://docs.flagsmith.com/managing-flags/code-references',
       'external': true,
       'image': '/static/images/integrations/code-references.svg',
