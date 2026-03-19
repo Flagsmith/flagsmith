@@ -5,9 +5,12 @@ import FeatureSettings from './FeatureSettings'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import { useHasPermission } from 'common/providers/Permission'
+import { ProjectPermission } from 'common/types/permissions.types'
 import Switch from 'components/Switch'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/Icon'
+import InfoMessage from 'components/InfoMessage'
+import { useGetProjectQuery } from 'common/services/useProject'
 import { useCreateTagMutation, useGetTagsQuery } from 'common/services/useTag'
 
 type CreateFeatureTabProps = {
@@ -46,14 +49,17 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
   const { permission: createFeature } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'CREATE_FEATURE',
+    permission: ProjectPermission.CREATE_FEATURE,
   })
 
   const { permission: projectAdmin } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'ADMIN',
+    permission: ProjectPermission.ADMIN,
   })
+
+  const { data: project } = useGetProjectQuery({ id: projectId })
+  const preventFlagDefaults = !!project?.prevent_flag_defaults && !identity
 
   const noPermissions = !createFeature && !projectAdmin
 
@@ -134,15 +140,22 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
       <WarningMessage warningMessage={featureWarning} />
       {!!projectFlag && (
         <>
+          {preventFlagDefaults && (
+            <InfoMessage collapseId='create-flag'>
+              This will create the feature for <strong>all environments</strong>
+              , you can edit the feature's enabled state and value per
+              environment once the feature is created.
+            </InfoMessage>
+          )}
           <FeatureValue
             error={error}
             createFeature={createFeature}
-            hideValue={false}
-            isEdit={!!identity}
+            hideValue={preventFlagDefaults}
             identity={identity}
+            isEdit={!!identity}
             noPermissions={noPermissions}
-            featureState={overrideFeatureState || featureState}
             projectFlag={projectFlag}
+            featureState={overrideFeatureState || featureState}
             onEnvironmentFlagChange={onEnvironmentFlagChange}
             onProjectFlagChange={onProjectFlagChange}
             onRemoveMultivariateOption={onRemoveMultivariateOption}

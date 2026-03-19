@@ -3,15 +3,12 @@ import { useHistory } from 'react-router-dom'
 
 import { useHasPermission } from 'common/providers/Permission'
 
-import Utils from 'common/utils/utils'
-import Icon from 'components/Icon'
-
 import { Segment } from 'common/types/responses'
 import SegmentAction from './components/SegmentAction'
 import ConfirmCloneSegment from 'components/modals/ConfirmCloneSegment'
 import { useCloneSegmentMutation } from 'common/services/useSegment'
-import Button from 'components/base/forms/Button'
 import { handleRemoveSegment } from 'components/modals/ConfirmRemoveSegment'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 interface SegmentRowProps {
   segment: Segment
@@ -30,7 +27,7 @@ export const SegmentRow: FC<SegmentRowProps> = ({
   const { permission: manageSegmentsPermission } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'MANAGE_SEGMENTS',
+    permission: ProjectPermission.MANAGE_SEGMENTS,
   })
 
   const onRemoveSegmentClick = () => {

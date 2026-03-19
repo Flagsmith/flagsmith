@@ -109,6 +109,9 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
   const getUsersToRemove = (usersToFilter: GroupUser[]) =>
     filter(usersToFilter, ({ id }) => !find(users, { id }))
 
+  const getUsersToAdd = (existingUsers: GroupUser[]) =>
+    filter(users, ({ id }) => !find(existingUsers, { id }))
+
   const getUsersAdminChanged = (existingUsers: GroupUser[], value: boolean) => {
     return filter(users, (user) => {
       if (!!user.group_admin !== value) {
@@ -140,7 +143,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       updateGroup({
         data,
         orgId,
-        users: users as any,
+        usersToAdd: getUsersToAdd(groupData!.users).map((v) => v.id),
         usersToAddAdmin: (usersToAddAdmin || []).map((user) => user.id),
         usersToRemove: getUsersToRemove(groupData!.users).map((v) => v.id),
         usersToRemoveAdmin: (usersToRemoveAdmin || []).map((user) => user.id),
