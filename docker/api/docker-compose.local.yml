@@ -48,12 +48,12 @@ services:
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    pull_policy: always
+    image: otelcol-flagsmith
+    pull_policy: never
     restart: unless-stopped
     depends_on:
       - clickhouse
     volumes:
-      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml
     ports:
       - 4318:4318

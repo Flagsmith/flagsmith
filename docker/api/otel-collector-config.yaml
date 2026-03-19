@@ -14,8 +14,17 @@ exporters:
     logs_table_name: otel_logs
     create_schema: true
 
+  # Amplitude exporter — set AMPLITUDE_API_KEY env var to enable.
+  # amplitude:
+  #   api_key: ${env:AMPLITUDE_API_KEY}
+  #   endpoint: https://api2.amplitude.com/2/httpapi
+  #   user_id_attribute: organisation.id
+  #   user_id_prefix: "org:"
+
 service:
   pipelines:
     logs:
       receivers: [otlp]
       exporters: [debug, clickhouse]
+      # To also export to Amplitude:
+      # exporters: [debug, clickhouse, amplitude]
