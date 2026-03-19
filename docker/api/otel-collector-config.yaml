@@ -8,8 +8,14 @@ exporters:
   debug:
     verbosity: detailed
 
+  clickhouse:
+    endpoint: tcp://clickhouse:9000?dial_timeout=10s
+    database: otel
+    logs_table_name: otel_logs
+    create_schema: true
+
 service:
   pipelines:
     logs:
       receivers: [otlp]
-      exporters: [debug]
+      exporters: [debug, clickhouse]

@@ -5,6 +5,7 @@ name: flagsmith
 volumes:
   pg_11_data:
   pg_11_data_analytics:
+  clickhouse_data:
 
 services:
   db:
@@ -33,10 +34,25 @@ services:
       POSTGRES_DB: analytics
       POSTGRES_PASSWORD: password
 
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    pull_policy: always
+    restart: unless-stopped
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    ports:
+      - 8123:8123   # HTTP interface
+      - 9000:9000   # Native protocol
+    environment:
+      CLICKHOUSE_DB: otel
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     pull_policy: always
     restart: unless-stopped
+    depends_on:
+      - clickhouse
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
     ports:
