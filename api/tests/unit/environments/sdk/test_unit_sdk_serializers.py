@@ -14,7 +14,7 @@ from features.models import Feature
     "create_identity_before, persist_traits",
     ((True, True), (True, False), (False, True), (False, False)),
 )
-def test_identify_with_traits_serializer_runs_identity_integrations_on_create(  # noqa: FT003
+def test_identify_with_traits_serializer__create_or_existing_identity__runs_identity_integrations(
     mocker: MockerFixture,
     environment: Environment,
     create_identity_before: bool,
@@ -117,7 +117,7 @@ def test_identify_with_traits_serializer__transient__identity_and_traits_not_per
     assert not Trait.objects.filter(identity__identifier=identity_identifier).exists()
 
 
-def test_identify_with_traits_serializer_validate_traits_returns_empty_list_when_persistence_not_allowed(  # noqa: FT003
+def test_identify_with_traits_serializer__client_traits_not_allowed__returns_empty_traits(
     mocker: MockerFixture,
     environment: Environment,
 ) -> None:
@@ -152,7 +152,7 @@ def test_identify_with_traits_serializer_validate_traits_returns_empty_list_when
     assert not Trait.objects.filter(identity__identifier="test_user").exists()
 
 
-def test_identify_with_traits_serializer_does_not_erase_existing_traits_when_persistence_not_allowed(  # noqa: FT003
+def test_identify_with_traits_serializer__client_traits_not_allowed__preserves_existing_traits(
     mocker: MockerFixture,
     environment: Environment,
 ) -> None:

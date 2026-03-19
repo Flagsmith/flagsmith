@@ -9,7 +9,8 @@ from organisations.subscriptions.constants import ENTERPRISE
 from users.models import FFAdminUser
 
 
-def test_e2e_teardown(settings, db) -> None:  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_e2e_teardown__registered_user__cleans_up_successfully(settings, db) -> None:  # type: ignore[no-untyped-def]
+    # Given
     # TODO: tidy up this hack to fix throttle rates
     settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"] = "1000/min"
     token = "test-token"
@@ -32,9 +33,11 @@ def test_e2e_teardown(settings, db) -> None:  # type: ignore[no-untyped-def]  # 
     register_response = client.post(register_url, data=register_data)
     assert register_response.status_code == status.HTTP_201_CREATED
 
-    # then test that we can teardown that user
+    # When
     url = reverse(viewname="api-v1:e2etests:teardown")
     teardown_response = client.post(url)
+
+    # Then
     assert teardown_response.status_code == status.HTTP_204_NO_CONTENT
     e2e_user: FFAdminUser = FFAdminUser.objects.get(email=settings.E2E_USER)
     assert e2e_user is not None
@@ -47,7 +50,7 @@ def test_e2e_teardown(settings, db) -> None:  # type: ignore[no-untyped-def]  # 
         assert subscription.subscription_id == "test_subscription_id"
 
 
-def test_e2e_teardown_with_incorrect_token(settings, db):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_e2e_teardown__incorrect_token__returns_401(settings, db):  # type: ignore[no-untyped-def]
     # Given
     os.environ["E2E_TEST_AUTH_TOKEN"] = "expected-token"
     url = reverse("api-v1:e2etests:teardown")

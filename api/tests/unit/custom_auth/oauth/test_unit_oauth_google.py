@@ -7,7 +7,7 @@ from custom_auth.oauth.google import USER_INFO_URL, get_user_info
 
 
 @mock.patch("custom_auth.oauth.google.requests")
-def test_get_user_info(mock_requests):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_user_info__valid_access_token__returns_user_data(mock_requests):  # type: ignore[no-untyped-def]
     # Given
     access_token = "access-token"
     mock_google_response_data = {
@@ -35,14 +35,12 @@ def test_get_user_info(mock_requests):  # type: ignore[no-untyped-def]  # noqa: 
 
 
 @mock.patch("custom_auth.oauth.google.requests")
-def test_get_user_info_non_200_status_code(mock_requests):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_get_user_info__non_200_status_code__raises_google_error(mock_requests):  # type: ignore[no-untyped-def]
     # Given
     access_token = "access-token"
     mock_response = mock.MagicMock(status_code=400)
     mock_requests.get.return_value = mock_response
 
-    # When
+    # When / Then
     with pytest.raises(GoogleError):
         get_user_info(access_token)  # type: ignore[no-untyped-call]
-
-    # Then - exception raised

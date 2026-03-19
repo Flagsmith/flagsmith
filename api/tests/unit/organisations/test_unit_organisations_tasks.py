@@ -54,7 +54,7 @@ from organisations.tasks import (  # type: ignore[attr-defined]
 from users.models import FFAdminUser
 
 
-def test_send_org_over_limit_alert_for_organisation_with_free_subscription(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_send_org_over_limit_alert__free_subscription__sends_alert_with_free_plan_details(  # type: ignore[no-untyped-def]
     organisation, mocker
 ):
     # Given
@@ -79,7 +79,7 @@ def test_send_org_over_limit_alert_for_organisation_with_free_subscription(  # t
 @pytest.mark.parametrize(
     "SubscriptionMetadata", [ChargebeeObjMetadata, XeroSubscriptionMetadata]
 )
-def test_send_org_over_limit_alert_for_organisation_with_subscription(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_send_org_over_limit_alert__paid_subscription__sends_alert_with_subscription_details(  # type: ignore[no-untyped-def]
     organisation, subscription, mocker, SubscriptionMetadata
 ):
     # Given
@@ -106,7 +106,9 @@ def test_send_org_over_limit_alert_for_organisation_with_subscription(  # type: 
     assert kwargs["subject"] == ALERT_EMAIL_SUBJECT
 
 
-def test_subscription_cancellation(db: None) -> None:  # noqa: FT003
+def test_finish_subscription_cancellation__cancelled_subscription__resets_to_free_plan(
+    db: None,
+) -> None:
     # Given
     organisation = Organisation.objects.create()
     OrganisationSubscriptionInformationCache.objects.create(
@@ -180,7 +182,9 @@ def test_subscription_cancellation(db: None) -> None:  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:12:34+00:00")
-def test_finish_subscription_cancellation(db: None, mocker: MockerFixture) -> None:  # noqa: FT003
+def test_finish_subscription_cancellation__multiple_organisations__removes_excess_users_for_cancelled_only(
+    db: None, mocker: MockerFixture
+) -> None:
     # Given
     send_org_subscription_cancelled_alert_task = mocker.patch(
         "organisations.tasks.send_org_subscription_cancelled_alert"
@@ -255,7 +259,7 @@ def test_finish_subscription_cancellation(db: None, mocker: MockerFixture) -> No
     assert organisation4.num_seats == organisation_user_count
 
 
-def test_send_org_subscription_cancelled_alert(  # noqa: FT003
+def test_send_org_subscription_cancelled_alert__valid_organisation__sends_cancellation_email(
     mocker: MockerFixture, settings: SettingsWrapper
 ) -> None:
     # Given
@@ -280,7 +284,7 @@ def test_send_org_subscription_cancelled_alert(  # noqa: FT003
     )
 
 
-def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_is_none(  # noqa: FT003
+def test_handle_api_usage_notification_for_organisation__billing_starts_at_is_none__logs_warning(
     organisation: Organisation,
     inspecting_handler: logging.Handler,
     mocker: MockerFixture,
@@ -313,7 +317,7 @@ def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_i
     ]
 
 
-def test_handle_api_usage_notification_for_organisation_when_cancellation_date_is_set(  # noqa: FT003
+def test_handle_api_usage_notification_for_organisation__cancellation_date_is_set__skips_notification(
     organisation: Organisation,
     inspecting_handler: logging.Handler,
     mocker: MockerFixture,
@@ -349,7 +353,7 @@ def test_handle_api_usage_notification_for_organisation_when_cancellation_date_i
     assert inspecting_handler.messages == []  # type: ignore[attr-defined]
 
 
-def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_is_more_than_12_months_ago(  # noqa: FT003
+def test_handle_api_usage_notification_for_organisation__billing_starts_at_over_12_months_ago__uses_12_month_offset(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -381,7 +385,7 @@ def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_i
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_handle_api_usage_notifications_when_feature_flag_is_off(  # noqa: FT003
+def test_handle_api_usage_notifications__feature_flag_is_off__skips_processing(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
@@ -429,7 +433,7 @@ def test_handle_api_usage_notifications_when_feature_flag_is_off(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_handle_api_usage_notifications_below_100(  # noqa: FT003
+def test_handle_api_usage_notifications__usage_below_100_percent__sends_90_percent_notification(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
@@ -541,7 +545,7 @@ def test_handle_api_usage_notifications_below_100(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_handle_api_usage_notifications_below_api_usage_alert_thresholds(  # noqa: FT003
+def test_handle_api_usage_notifications__usage_below_alert_thresholds__sends_no_email(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
@@ -591,7 +595,7 @@ def test_handle_api_usage_notifications_below_api_usage_alert_thresholds(  # noq
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_handle_api_usage_notifications_above_100(  # noqa: FT003
+def test_handle_api_usage_notifications__usage_above_100_percent__sends_limit_notification(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
@@ -686,7 +690,7 @@ def test_handle_api_usage_notifications_above_100(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_handle_api_usage_notifications_with_error(  # noqa: FT003
+def test_handle_api_usage_notifications__processing_error__logs_error_message(
     mocker: MockerFixture,
     organisation: Organisation,
     inspecting_handler: logging.Handler,
@@ -740,7 +744,7 @@ def test_handle_api_usage_notifications_with_error(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_handle_api_usage_notifications_for_free_accounts(  # noqa: FT003
+def test_handle_api_usage_notifications__free_account_over_limit__sends_limit_notification_with_grace_period(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
@@ -838,7 +842,7 @@ def test_handle_api_usage_notifications_for_free_accounts(  # noqa: FT003
     assert OrganisationAPIUsageNotification.objects.first() == api_usage_notification
 
 
-def test_handle_api_usage_notifications_missing_info_cache(  # noqa: FT003
+def test_handle_api_usage_notifications__missing_info_cache__skips_processing(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
@@ -877,7 +881,7 @@ def test_handle_api_usage_notifications_missing_info_cache(  # noqa: FT003
 
 @pytest.mark.parametrize("plan", ("scale-up", "scale-up-v2", "scale-up-v3"))
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_scale_up(  # noqa: FT003
+def test_charge_for_api_call_count_overages__scale_up_plan__charges_correct_addon_quantity(
     organisation: Organisation,
     mocker: MockerFixture,
     plan: str,
@@ -958,7 +962,7 @@ def test_charge_for_api_call_count_overages_scale_up(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_cancellation_date(  # noqa: FT003
+def test_charge_for_api_call_count_overages__cancellation_date_set__skips_charging(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1002,7 +1006,7 @@ def test_charge_for_api_call_count_overages_cancellation_date(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_scale_up_when_flagsmith_client_sets_is_enabled_to_false(  # noqa: FT003
+def test_charge_for_api_call_count_overages__flagsmith_feature_disabled__skips_charging(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1064,7 +1068,7 @@ def test_charge_for_api_call_count_overages_scale_up_when_flagsmith_client_sets_
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_grace_period(  # noqa: FT003
+def test_charge_for_api_call_count_overages__within_grace_period__creates_breached_record_without_charging(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1114,7 +1118,7 @@ def test_charge_for_api_call_count_overages_grace_period(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_grace_period_over(  # noqa: FT003
+def test_charge_for_api_call_count_overages__grace_period_previously_breached__charges_overage(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1173,7 +1177,7 @@ def test_charge_for_api_call_count_overages_grace_period_over(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_with_not_covered_plan(  # noqa: FT003
+def test_charge_for_api_call_count_overages__uncovered_plan__does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1229,7 +1233,7 @@ def test_charge_for_api_call_count_overages_with_not_covered_plan(  # noqa: FT00
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_under_api_limit(  # noqa: FT003
+def test_charge_for_api_call_count_overages__usage_under_api_limit__does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1282,7 +1286,7 @@ def test_charge_for_api_call_count_overages_under_api_limit(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_start_up(  # noqa: FT003
+def test_charge_for_api_call_count_overages__startup_plan__charges_correct_addon_quantity(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1373,7 +1377,7 @@ def test_charge_for_api_call_count_overages_start_up(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_non_standard(  # noqa: FT003
+def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_plan_warning(
     organisation: Organisation,
     mocker: MockerFixture,
     inspecting_handler: logging.Handler,
@@ -1436,7 +1440,7 @@ def test_charge_for_api_call_count_overages_non_standard(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_with_exception(  # noqa: FT003
+def test_charge_for_api_call_count_overages__billing_exception__logs_error_and_does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
     inspecting_handler: logging.Handler,
@@ -1499,7 +1503,7 @@ def test_charge_for_api_call_count_overages_with_exception(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_start_up_with_api_billing(  # noqa: FT003
+def test_charge_for_api_call_count_overages__startup_plan_with_existing_billing__charges_remaining_overage(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1571,7 +1575,7 @@ def test_charge_for_api_call_count_overages_start_up_with_api_billing(  # noqa: 
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_with_yearly_account(  # noqa: FT003
+def test_charge_for_api_call_count_overages__yearly_account__does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1620,7 +1624,7 @@ def test_charge_for_api_call_count_overages_with_yearly_account(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_with_bad_plan(  # noqa: FT003
+def test_charge_for_api_call_count_overages__bad_plan_name__does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1670,7 +1674,7 @@ def test_charge_for_api_call_count_overages_with_bad_plan(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_restrict_use_due_to_api_limit_grace_period_over(  # noqa: FT003
+def test_restrict_use_due_to_api_limit_grace_period_over__multiple_organisations__blocks_only_eligible(
     mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
@@ -1910,7 +1914,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_restrict_use_due_to_api_limit_grace_period_breached(  # noqa: FT003
+def test_restrict_use_due_to_api_limit_grace_period_over__previously_breached__blocks_immediately(
     mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
@@ -1968,7 +1972,7 @@ def test_restrict_use_due_to_api_limit_grace_period_breached(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_restrict_use_due_to_api_limit_grace_period_over_missing_subscription_information_cache(  # noqa: FT003
+def test_restrict_use_due_to_api_limit_grace_period_over__missing_subscription_cache__does_not_block(
     mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
@@ -2010,7 +2014,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over_missing_subscription_in
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_restrict_use_due_to_api_limit_grace_period_over_with_reduced_api_usage(  # noqa: FT003
+def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__does_not_block(
     mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
@@ -2073,7 +2077,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over_with_reduced_api_usage(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_unrestrict_after_api_limit_grace_period_is_stale(  # noqa: FT003
+def test_unrestrict_after_api_limit_grace_period_is_stale__stale_notifications__unblocks_organisations(
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -2158,7 +2162,7 @@ def test_unrestrict_after_api_limit_grace_period_is_stale(  # noqa: FT003
     assert getattr(organisation4, "api_limit_access_block", None) is None
 
 
-def test_register_recurring_tasks(  # noqa: FT003
+def test_register_recurring_tasks__alerting_enabled__registers_all_tasks(
     mocker: MockerFixture, settings: SettingsWrapper
 ) -> None:
     # Given

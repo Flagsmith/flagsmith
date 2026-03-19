@@ -9,7 +9,9 @@ from redis.exceptions import RedisClusterException
 from core.redis_cluster import ClusterConnectionFactory, SafeRedisClusterClient
 
 
-def test_cluster_connection_factory__connect_cache(mocker: MockerFixture):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_cluster_connection_factory__connect_called_twice__returns_cached_connection(
+    mocker: MockerFixture,
+):  # type: ignore[no-untyped-def]
     # Given
     mock_get_connection = mocker.patch.object(
         ClusterConnectionFactory, "get_connection"
@@ -41,7 +43,7 @@ def test_cluster_connection_factory__connect_cache(mocker: MockerFixture):  # ty
     make_connection_params.assert_called_once_with(url)
 
 
-def test_cluster_connection_factory__get_connection_with_non_conflicting_params(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_cluster_connection_factory__non_conflicting_params__creates_redis_cluster(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ):
@@ -67,7 +69,7 @@ def test_cluster_connection_factory__get_connection_with_non_conflicting_params(
     )
 
 
-def test_cluster_connection_factory__get_connection_with_conflicting_params(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_cluster_connection_factory__conflicting_params__raises_connection_interrupted(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
 ):
     # Given
@@ -85,7 +87,9 @@ def test_cluster_connection_factory__get_connection_with_conflicting_params(  # 
     mockRedisCluster.assert_not_called()
 
 
-def test_disconnect(mocker: MockerFixture):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_cluster_connection_factory__disconnect__calls_disconnect_connection_pools(
+    mocker: MockerFixture,
+):  # type: ignore[no-untyped-def]
     # Given
     connection_factory = ClusterConnectionFactory({})
     mock_connection = mocker.MagicMock()
@@ -99,7 +103,7 @@ def test_disconnect(mocker: MockerFixture):  # type: ignore[no-untyped-def]  # n
     mock_disconnect_connection_pools.assert_called_once()
 
 
-def test_safe_redis_cluster__safe_methods_raise_connection_interrupted(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_safe_redis_cluster__redis_cluster_exception__raises_connection_interrupted(  # type: ignore[no-untyped-def]
     mocker: MockerFixture, settings
 ):
     # Given

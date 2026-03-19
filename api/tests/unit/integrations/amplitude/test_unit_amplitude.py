@@ -10,7 +10,7 @@ from integrations.amplitude.constants import DEFAULT_AMPLITUDE_API_URL
 from integrations.amplitude.models import AmplitudeConfiguration
 
 
-def test_amplitude_initialized_correctly() -> None:  # noqa: FT003
+def test_amplitude_wrapper__default_config__sets_correct_url() -> None:
     # Given
     config = AmplitudeConfiguration(api_key="123key")
 
@@ -22,7 +22,7 @@ def test_amplitude_initialized_correctly() -> None:  # noqa: FT003
     assert amplitude_wrapper.url == expected_url
 
 
-def test_amplitude_initialized_correctly_with_custom_base_url() -> None:  # noqa: FT003
+def test_amplitude_wrapper__custom_base_url__sets_correct_url() -> None:
     # Given
     base_url = "https://api.eu.amplitude.com"
     config = AmplitudeConfiguration(api_key="123key", base_url=base_url)
@@ -40,7 +40,7 @@ def test_amplitude_initialized_correctly_with_custom_base_url() -> None:  # noqa
     [(False, False), (True, True), ("foo", "foo"), (1, 1), (0, 0)],
     indirect=["feature_state_with_value"],
 )
-def test_amplitude_when_generate_user_data_with_correct_values_then_success(  # noqa: FT003
+def test_amplitude_generate_user_data__feature_states_with_values__returns_expected_data(
     expected_property_value: typing.Any,
     environment: Environment,
     feature_state: FeatureState,

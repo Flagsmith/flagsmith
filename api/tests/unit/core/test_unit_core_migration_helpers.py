@@ -1,7 +1,7 @@
 from core.migration_helpers import AddDefaultUUIDs, PostgresOnlyRunSQL
 
 
-def test_add_default_uuids_class_correctly_sets_uuid_attribute(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_add_default_uuids__model_without_uuid__sets_uuid_attribute(mocker):  # type: ignore[no-untyped-def]
     # Given
     mock_apps = mocker.MagicMock()
     mock_schema_editor = mocker.MagicMock()

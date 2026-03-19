@@ -17,7 +17,7 @@ from features.serializers import FeatureStateSerializerBasic
 @pytest.mark.parametrize(
     "percentage_value, expected_is_valid", ((90, True), (100, True), (110, False))
 )
-def test_feature_state_serializer_basic_validates_mv_percentage_values(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_feature_state_serializer_basic__mv_percentage_values__validates_correctly(  # type: ignore[no-untyped-def]
     feature, environment, percentage_value, expected_is_valid
 ):
     # Given
@@ -54,7 +54,7 @@ def test_feature_state_serializer_basic_validates_mv_percentage_values(  # type:
     assert is_valid == expected_is_valid
 
 
-def test_multivariate_option_values_serializer_with_string_value(  # noqa: FT003
+def test_multivariate_option_values_serializer__string_value__returns_string(
     multivariate_feature: MultivariateFeatureOption,
 ) -> None:
     # Given
@@ -67,7 +67,7 @@ def test_multivariate_option_values_serializer_with_string_value(  # noqa: FT003
     assert serializer.data["value"] == option.string_value
 
 
-def test_multivariate_option_values_serializer_with_boolean_value(  # noqa: FT003
+def test_multivariate_option_values_serializer__boolean_value__returns_boolean(
     feature: Feature,
 ) -> None:
     # Given
@@ -85,7 +85,7 @@ def test_multivariate_option_values_serializer_with_boolean_value(  # noqa: FT00
     assert serializer.data["value"] is True
 
 
-def test_multivariate_option_values_serializer_with_integer_value(  # noqa: FT003
+def test_multivariate_option_values_serializer__integer_value__returns_integer(
     feature: Feature,
 ) -> None:
     # Given
@@ -103,7 +103,7 @@ def test_multivariate_option_values_serializer_with_integer_value(  # noqa: FT00
     assert serializer.data["value"] == 42
 
 
-def test_feature_mv_options_values_response_serializer_with_feature_state(  # noqa: FT003
+def test_mv_options_values_response_serializer__with_feature_state__returns_control_value(
     multivariate_feature: Feature,
     environment: Environment,
 ) -> None:
@@ -128,7 +128,7 @@ def test_feature_mv_options_values_response_serializer_with_feature_state(  # no
     assert len(serializer.data["options"]) == 3
 
 
-def test_feature_mv_options_values_response_serializer_without_feature_state(  # noqa: FT003
+def test_mv_options_values_response_serializer__without_feature_state__returns_null_control(
     multivariate_feature: Feature,
 ) -> None:
     # Given

@@ -16,7 +16,7 @@ from organisations.subscriptions.serializers.mixins import (
         ("invalid-plan-id", tuple(), "invalid-.*"),
     ),
 )
-def test_read_only_if_not_valid_plan_mixin_sets_read_only_if_plan_not_valid(  # noqa: FT003
+def test_read_only_if_not_valid_plan_mixin__invalid_plan__sets_fields_read_only(
     plan_id: str, invalid_plans_: list[str], invalid_plans_regex_: str
 ) -> None:
     # Given
@@ -43,7 +43,7 @@ def test_read_only_if_not_valid_plan_mixin_sets_read_only_if_plan_not_valid(  # 
     assert serializer.fields["foo"].read_only is True
 
 
-def test_read_only_if_not_valid_plan_mixin_does_not_set_read_only_if_plan_valid():  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_read_only_if_not_valid_plan_mixin__valid_plan__keeps_fields_writable():  # type: ignore[no-untyped-def]
     # Given
     valid_plan_id = "plan-id"
     invalid_plan_id = "invalid-plan-id"

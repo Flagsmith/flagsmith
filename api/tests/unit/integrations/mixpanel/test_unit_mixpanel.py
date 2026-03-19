@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from projects.models import Project
 
 
-def test_mixpanel_initialized_correctly() -> None:  # noqa: FT003
+def test_mixpanel_wrapper__valid_config__initializes_correctly() -> None:
     # Given
     config = MixpanelConfiguration(api_key="123key")
 
@@ -26,7 +26,7 @@ def test_mixpanel_initialized_correctly() -> None:  # noqa: FT003
     assert mixpanel.api_key == config.api_key
 
 
-def test_mixpanel_identity_user__calls_expected(  # noqa: FT003
+def test_mixpanel_identify_user__valid_identity__posts_to_api(
     mocker: "MockerFixture",
     caplog: "LogCaptureFixture",
     feature: "Feature",
@@ -70,7 +70,7 @@ def test_mixpanel_identity_user__calls_expected(  # noqa: FT003
     ]
 
 
-def test_mixpanel_generate_user_data(  # noqa: FT003
+def test_mixpanel_generate_user_data__identity_with_features__returns_expected_format(
     project: "Project",
     feature: "Feature",
     identity: "Identity",

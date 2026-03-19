@@ -30,17 +30,18 @@ from projects.models import ProjectPermissionModel
         ),
     ],
 )
-def test_is_master_api_key_project_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_is_master_api_key_project_admin__given_key_and_project__returns_expected(  # type: ignore[no-untyped-def]  # noqa: E501
     for_project,
     for_master_api_key,
     expected_is_admin,
     admin_master_api_key,
     master_api_key,
 ):
-    assert (
-        is_master_api_key_project_admin(for_master_api_key, for_project)
-        is expected_is_admin
-    )
+    # Given / When
+    result = is_master_api_key_project_admin(for_master_api_key, for_project)
+
+    # Then
+    assert result is expected_is_admin
 
 
 @pytest.mark.parametrize(
@@ -64,16 +65,17 @@ def test_is_master_api_key_project_admin(  # type: ignore[no-untyped-def]  # noq
         ),
     ],
 )
-def test_is_master_api_key_environment_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_is_master_api_key_environment_admin__given_key_and_environment__returns_expected(  # type: ignore[no-untyped-def]  # noqa: E501
     for_environment,
     for_master_api_key,
     expected_is_admin,
     organisation_two_project_one_environment_one,
 ):
-    assert (
-        is_master_api_key_environment_admin(for_master_api_key, for_environment)
-        is expected_is_admin
-    )
+    # Given / When
+    result = is_master_api_key_environment_admin(for_master_api_key, for_environment)
+
+    # Then
+    assert result is expected_is_admin
 
 
 @pytest.mark.parametrize(
@@ -93,16 +95,16 @@ def test_is_master_api_key_environment_admin(  # type: ignore[no-untyped-def]  #
         ),
     ],
 )
-def test_get_permitted_projects_for_master_api_key(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_get_permitted_projects_for_master_api_key__given_key__returns_expected_count(  # type: ignore[no-untyped-def]  # noqa: E501
     for_project,
     for_master_api_key,
     expected_count,
 ):
-    # When
-    for permission in ProjectPermissionModel.objects.all().values_list(
-        "key", flat=True
-    ):
-        # Then
+    # Given
+    permissions = ProjectPermissionModel.objects.all().values_list("key", flat=True)
+
+    # When / Then
+    for permission in permissions:
         assert (
             get_permitted_projects_for_master_api_key(
                 for_master_api_key, permission
@@ -128,7 +130,7 @@ def test_get_permitted_projects_for_master_api_key(  # type: ignore[no-untyped-d
         ),
     ],
 )
-def test_get_permitted_environments_for_master_api_key(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_get_permitted_environments_for_master_api_key__given_key_and_project__returns_expected_count(  # type: ignore[no-untyped-def]  # noqa: E501
     for_project,
     for_master_api_key,
     expected_count,
@@ -138,11 +140,11 @@ def test_get_permitted_environments_for_master_api_key(  # type: ignore[no-untyp
     admin_master_api_key,
     master_api_key,
 ):
-    # When
-    for permission in EnvironmentPermissionModel.objects.all().values_list(
-        "key", flat=True
-    ):
-        # Then
+    # Given
+    permissions = EnvironmentPermissionModel.objects.all().values_list("key", flat=True)
+
+    # When / Then
+    for permission in permissions:
         assert (
             get_permitted_environments_for_master_api_key(
                 for_master_api_key, for_project, permission
@@ -172,18 +174,20 @@ def test_get_permitted_environments_for_master_api_key(  # type: ignore[no-untyp
         ),
     ],
 )
-def test_master_api_key_has_organisation_permission(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_master_api_key_has_organisation_permission__given_key_and_org__returns_expected(  # type: ignore[no-untyped-def]  # noqa: E501
     for_organisation,
     for_master_api_key,
     expected_has_permission,
     admin_master_api_key,
     master_api_key,
 ):
-    # When
-    for permission in OrganisationPermissionModel.objects.all().values_list(
+    # Given
+    permissions = OrganisationPermissionModel.objects.all().values_list(
         "key", flat=True
-    ):
-        # Then
+    )
+
+    # When / Then
+    for permission in permissions:
         assert (
             master_api_key_has_organisation_permission(
                 for_master_api_key, for_organisation, permission

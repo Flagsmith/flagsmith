@@ -14,7 +14,7 @@ from projects.models import Project
 from segments.models import Segment
 
 
-def test_get_feature_raises_error_when_environment_not_in_context(  # noqa: FT003
+def test_get_feature__no_environment_in_context__raises_validation_error(
     feature: Feature,
 ) -> None:
     # Given
@@ -36,7 +36,7 @@ def test_get_feature_raises_error_when_environment_not_in_context(  # noqa: FT00
     assert "Environment context is required" in str(exc_info.value)
 
 
-def test_validate_segment_overrides_returns_empty_list() -> None:  # noqa: FT003
+def test_validate_segment_overrides__empty_list__returns_empty_list() -> None:
     # Given
     serializer = UpdateFlagV2Serializer()
 
@@ -47,7 +47,7 @@ def test_validate_segment_overrides_returns_empty_list() -> None:  # noqa: FT003
     assert result == []
 
 
-def test_feature_value_serializer_rejects_invalid_integer() -> None:  # noqa: FT003
+def test_feature_value_serializer__invalid_integer__returns_not_valid() -> None:
     # Given
     serializer = FeatureValueSerializer(
         data={"type": "integer", "value": "not_a_number"}
@@ -61,7 +61,7 @@ def test_feature_value_serializer_rejects_invalid_integer() -> None:  # noqa: FT
     assert "not a valid integer" in str(serializer.errors)
 
 
-def test_feature_value_serializer_rejects_invalid_boolean() -> None:  # noqa: FT003
+def test_feature_value_serializer__invalid_boolean__returns_not_valid() -> None:
     # Given
     serializer = FeatureValueSerializer(data={"type": "boolean", "value": "yes"})
 
@@ -104,7 +104,7 @@ def test_feature_value_serializer_rejects_invalid_boolean() -> None:  # noqa: FT
         ),
     ],
 )
-def test_serializer_rejects_nonexistent_segment(  # noqa: FT003
+def test_update_flag_serializer__nonexistent_segment__returns_invalid(
     feature: Feature,
     environment: Environment,
     serializer_class: type,
@@ -155,7 +155,7 @@ def test_serializer_rejects_nonexistent_segment(  # noqa: FT003
         ),
     ],
 )
-def test_serializer_rejects_cross_project_segment(  # noqa: FT003
+def test_update_flag_serializer__cross_project_segment__returns_invalid(
     feature: Feature,
     environment: Environment,
     organisation: object,

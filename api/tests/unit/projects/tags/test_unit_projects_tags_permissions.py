@@ -17,7 +17,7 @@ mock_view = mock.MagicMock()
 permissions = TagPermissions()
 
 
-def test_project_admin_has_permission(  # noqa: FT003
+def test_tag_permissions__project_admin_list_and_create__returns_true(
     staff_user: FFAdminUser,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -38,7 +38,7 @@ def test_project_admin_has_permission(  # noqa: FT003
     assert all(results)
 
 
-def test_project_admin_has_object_permission(  # noqa: FT003
+def test_tag_permissions__project_admin_object_actions__returns_true(
     staff_user: FFAdminUser,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -59,7 +59,7 @@ def test_project_admin_has_object_permission(  # noqa: FT003
     assert all(results)
 
 
-def test_project_user_has_list_permission(  # noqa: FT003
+def test_tag_permissions__project_user_list_action__returns_true(
     staff_user: FFAdminUser,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -81,7 +81,7 @@ def test_project_user_has_list_permission(  # noqa: FT003
     assert result is True
 
 
-def test_project_user_has_no_create_permission(  # noqa: FT003
+def test_tag_permissions__project_user_without_manage_tags_create__returns_false(
     staff_user: FFAdminUser,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -103,7 +103,7 @@ def test_project_user_has_no_create_permission(  # noqa: FT003
     assert result is False
 
 
-def test_project_user_has_no_update_or_delete_permission(  # noqa: FT003
+def test_tag_permissions__project_user_update_or_delete__returns_false(
     staff_user: FFAdminUser,
     project: Project,
 ) -> None:
@@ -126,7 +126,7 @@ def test_project_user_has_no_update_or_delete_permission(  # noqa: FT003
     assert all(result is False for result in results)
 
 
-def test_project_user_has_detail_permission(  # noqa: FT003
+def test_tag_permissions__project_user_detail_action__returns_true(
     staff_user: FFAdminUser,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -148,7 +148,7 @@ def test_project_user_has_detail_permission(  # noqa: FT003
     assert result is True
 
 
-def test_project_user_with_manage_tags_has_permission_to_create(  # noqa: FT003
+def test_tag_permissions__project_user_with_manage_tags_create__returns_true(
     staff_user: FFAdminUser,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -170,7 +170,7 @@ def test_project_user_with_manage_tags_has_permission_to_create(  # noqa: FT003
     assert result is True
 
 
-def test_project_user_with_view_project_does_not_have_permission_to_create(  # noqa: FT003
+def test_tag_permissions__project_user_with_view_only_create__returns_false(
     staff_user: FFAdminUser,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -192,7 +192,7 @@ def test_project_user_with_view_project_does_not_have_permission_to_create(  # n
     assert result is False
 
 
-def test_project_user_with_manage_tags_has_detail_permission(  # noqa: FT003
+def test_tag_permissions__project_user_with_manage_tags_detail__returns_true(
     staff_user: FFAdminUser,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,

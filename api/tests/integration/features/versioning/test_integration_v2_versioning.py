@@ -72,7 +72,7 @@ def environment_v2_versioning(
     return environment
 
 
-def test_v2_versioning(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_v2_versioning__publish_and_revert__returns_consistent_flags(  # type: ignore[no-untyped-def]
     admin_client: "APIClient",
     environment: int,
     environment_api_key: str,
@@ -84,6 +84,8 @@ def test_v2_versioning(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     get_environment_flags_response_json: GetEnvironmentFlagsResponseJSONCallable,
     get_identity_flags_response_json: GetIdentityFlagsResponseJSONCallable,
 ):
+    # Given / When
+    # Then
     # First, let's get a baseline for a flags response for the environment and an identity
     # to make sure that the response before and after we enable v2 versioning is the same.
     get_environment_flags_response_v1_json = get_environment_flags_response_json(
@@ -277,7 +279,7 @@ def test_v2_versioning(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert identity_flag_tuples_pre_revert == identity_flag_tuples_post_revert
 
 
-def test_v2_versioning_mv_feature(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_v2_versioning__mv_feature_updated__returns_mv_option_value(  # type: ignore[no-untyped-def]
     admin_client: "APIClient",
     environment_v2_versioning: int,
     environment_api_key: str,
@@ -289,6 +291,8 @@ def test_v2_versioning_mv_feature(  # type: ignore[no-untyped-def]  # noqa: FT00
     get_environment_flags_response_json: GetEnvironmentFlagsResponseJSONCallable,
     get_identity_flags_response_json: GetIdentityFlagsResponseJSONCallable,
 ):
+    # Given / When
+    # Then
     # First, let's get a baseline for a flags response for the environment and an identity
     # to make sure that the response before and after we enable v2 versioning is the same.
     get_environment_flags_response_v1_json = get_environment_flags_response_json(
@@ -385,7 +389,7 @@ def test_v2_versioning_mv_feature(  # type: ignore[no-untyped-def]  # noqa: FT00
     assert mv_flag["feature_state_value"] == mv_feature_option_value
 
 
-def test_v2_versioning_multiple_segment_overrides(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_v2_versioning__multiple_segment_overrides_reordered__returns_correct_priority(  # type: ignore[no-untyped-def]
     admin_client: "APIClient",
     environment_v2_versioning: int,
     environment_api_key: str,
@@ -395,6 +399,8 @@ def test_v2_versioning_multiple_segment_overrides(  # type: ignore[no-untyped-de
     get_environment_flags_response_json: GetEnvironmentFlagsResponseJSONCallable,
     get_identity_flags_response_json: GetIdentityFlagsResponseJSONCallable,
 ):
+    # Given / When
+    # Then
     # Firstly, let's define an identity and their traits
     identifier = "identity"
     trait_key_1 = "trait_key_1"
@@ -555,7 +561,7 @@ def test_v2_versioning_multiple_segment_overrides(  # type: ignore[no-untyped-de
     )
 
 
-def test_v2_versioning_carries_existing_segment_overrides_across(  # noqa: FT003,FT004
+def test_v2_versioning__existing_segment_overrides__carried_across_after_migration(
     environment: int,
     environment_api_key: str,
     admin_client: "APIClient",
@@ -591,11 +597,13 @@ def test_v2_versioning_carries_existing_segment_overrides_across(  # noqa: FT003
     )
 
     # Now, let's enable v2 versioning.
+    # When
     enable_v2_versioning_url = reverse(
         "api-v1:environments:environment-enable-v2-versioning",
         args=[environment_api_key],
     )
     assert (
+        # When
         admin_client.post(enable_v2_versioning_url).status_code
         == status.HTTP_202_ACCEPTED
     )
@@ -607,6 +615,8 @@ def test_v2_versioning_carries_existing_segment_overrides_across(  # noqa: FT003
     feature_segment_list_post_migrate_response_json = (
         feature_segment_list_post_migrate_response.json()
     )
+
+    # Then
     assert feature_segment_list_post_migrate_response_json["count"] == 1
     assert (
         feature_segment_list_post_migrate_response_json["results"][0]["id"]
@@ -614,7 +624,7 @@ def test_v2_versioning_carries_existing_segment_overrides_across(  # noqa: FT003
     )
 
 
-def test_identities_should_return_default_environment_values_after_deleting_segment_override(  # noqa: FT003
+def test_identities__segment_override_deleted__returns_default_environment_values(
     feature: int,
     default_feature_value: str,
     segment_featurestate: int,

@@ -12,7 +12,7 @@ from util.logging import GunicornAccessLogJsonFormatter, JsonFormatter
 
 
 @pytest.mark.freeze_time("2023-12-08T06:05:47.000000+00:00")
-def test_json_formatter__outputs_expected(  # noqa: FT003
+def test_json_formatter__info_and_error_logs__outputs_expected_json(
     inspecting_handler: logging.Handler,
     request: pytest.FixtureRequest,
 ) -> None:
@@ -66,7 +66,9 @@ def test_json_formatter__outputs_expected(  # noqa: FT003
 
 
 @pytest.mark.freeze_time("2023-12-08T06:05:47.000000+00:00")
-def test_gunicorn_access_log_json_formatter__outputs_expected() -> None:  # noqa: FT003
+def test_gunicorn_access_log_json_formatter__access_log_record__outputs_expected_json() -> (
+    None
+):
     # Given
     gunicorn_access_log_json_formatter = GunicornAccessLogJsonFormatter()
     log_record = logging.LogRecord(

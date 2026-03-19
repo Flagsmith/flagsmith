@@ -11,7 +11,7 @@ from environments.dynamodb.types import (
 )
 
 
-def test_get_or_new_returns_instance_with_default_values_if_document_does_not_exists(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_or_new__document_does_not_exist__returns_default_values(  # type: ignore[no-untyped-def]
     mocker,
 ):
     # Given
@@ -32,7 +32,7 @@ def test_get_or_new_returns_instance_with_default_values_if_document_does_not_ex
     mocked_dynamo_table.get_item.assert_called_with(Key={"id": project_id})
 
 
-def test_get_or_new_returns_instance_with_document_data_if_document_does_exists(mocker):  # type: ignore[no-untyped-def]  # noqa: E501,FT003
+def test_get_or_new__document_exists__returns_document_data(mocker):  # type: ignore[no-untyped-def]
     # Given
     project_id = 1
     migration_start_time = datetime.now().isoformat()
@@ -57,7 +57,7 @@ def test_get_or_new_returns_instance_with_document_data_if_document_does_exists(
     mocked_dynamo_table.get_item.assert_called_with(Key={"id": project_id})
 
 
-def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_start_identity_migration__new_project__calls_put_item_correctly(mocker):  # type: ignore[no-untyped-def]
     # Given
     project_id = 1
 
@@ -114,11 +114,15 @@ def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
         ),
     ),
 )
-def test_identity_migration_status(instance, status):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_identity_migration_status__given_metadata_state__returns_expected_status(
+    instance, status
+):  # type: ignore[no-untyped-def]
+    # Given / When
+    # Then
     assert instance.identity_migration_status == status
 
 
-def test_finish_identity_migration_calls_put_item_with_correct_arguments(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_finish_identity_migration__started_migration__calls_put_item_correctly(  # type: ignore[no-untyped-def]
     mocker,
 ):
     # Given
@@ -150,7 +154,7 @@ def test_finish_identity_migration_calls_put_item_with_correct_arguments(  # typ
     )
 
 
-def test_delete__removes_project_metadata_document_from_dynamodb(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_delete__existing_metadata__removes_document_from_dynamodb(  # type: ignore[no-untyped-def]
     flagsmith_project_metadata_table: Table, mocker: MockerFixture
 ):
     # Given

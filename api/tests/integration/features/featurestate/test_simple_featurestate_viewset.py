@@ -10,7 +10,7 @@ from rest_framework import status
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_create_feature_state_for_identity_override(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_create_feature_state__identity_override__returns_201(  # type: ignore[no-untyped-def]
     client, environment, identity, feature
 ):
     # Given
@@ -36,7 +36,7 @@ def test_create_feature_state_for_identity_override(  # type: ignore[no-untyped-
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_create_feature_state_for_identity_with_identifier(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_create_feature_state__identity_with_identifier__returns_201(  # type: ignore[no-untyped-def]
     client, environment, identity, feature, identity_identifier
 ):
     # Given
@@ -62,7 +62,9 @@ def test_create_feature_state_for_identity_with_identifier(  # type: ignore[no-u
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_list_feature_states_for_environment(client, environment, feature):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_list_feature_states__filter_by_environment__returns_environment_states(
+    client, environment, feature
+):  # type: ignore[no-untyped-def]
     # Given
     base_url = reverse("api-v1:features:featurestates-list")
     url = f"{base_url}?environment={environment}"
@@ -82,7 +84,9 @@ def test_list_feature_states_for_environment(client, environment, feature):  # t
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_update_feature_state(client, environment, feature_state, feature, identity):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_update_feature_state__new_value__returns_updated_value(
+    client, environment, feature_state, feature, identity
+):  # type: ignore[no-untyped-def]
     # Given
 
     url = reverse("api-v1:features:featurestates-detail", args=[feature_state])
@@ -107,7 +111,7 @@ def test_update_feature_state(client, environment, feature_state, feature, ident
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_update_feature_state_for_identity_with_identifier(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_update_feature_state__identity_with_identifier__returns_updated_value(  # type: ignore[no-untyped-def]
     client, environment, identity_featurestate, feature, identity, identity_identifier
 ):
     # Given

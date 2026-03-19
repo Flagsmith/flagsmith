@@ -14,7 +14,7 @@ from segments.models import Segment
 from users.models import FFAdminUser
 
 
-def test_feature_segment_change_priorities_serializer_validate_fails_if_non_unique_version(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
+def test_feature_segment_change_priorities_serializer__non_unique_version__validation_fails(  # type: ignore[no-untyped-def]  # noqa: E501
     feature: Feature,
     environment_v2_versioning: Environment,
     segment: Segment,
@@ -64,7 +64,7 @@ def test_feature_segment_change_priorities_serializer_validate_fails_if_non_uniq
     assert serializer.errors
 
 
-def test_feature_segment_serializer_save_new_feature_segment_sets_lowest_priority_if_none_given(  # noqa: FT003
+def test_feature_segment_serializer__new_segment_no_priority__sets_lowest_priority(
     feature: Feature,
     segment_featurestate: FeatureState,
     feature_segment: FeatureSegment,
@@ -86,7 +86,7 @@ def test_feature_segment_serializer_save_new_feature_segment_sets_lowest_priorit
     assert new_feature_segment.priority == 1
 
 
-def test_feature_segment_serializer_save_new_feature_segment_sets_highest_priority_if_0_given(  # noqa: FT003
+def test_feature_segment_serializer__new_segment_priority_zero__sets_highest_priority(
     feature: Feature,
     segment_featurestate: FeatureState,
     feature_segment: FeatureSegment,
@@ -108,7 +108,7 @@ def test_feature_segment_serializer_save_new_feature_segment_sets_highest_priori
     assert new_feature_segment.priority == 0
 
 
-def test_feature_segment_serializer_save_new_feature_segment_moves_others_if_needed(  # noqa: FT003
+def test_feature_segment_serializer__new_segment_with_priority__moves_others(
     feature: Feature,
     segment_featurestate: FeatureState,
     feature_segment: FeatureSegment,
@@ -132,7 +132,7 @@ def test_feature_segment_serializer_save_new_feature_segment_moves_others_if_nee
     assert new_feature_segment.priority == 1
 
 
-def test_feature_segment_serializer_save_existing_feature_segment_does_nothing_if_no_priority_given(  # noqa: FT003
+def test_feature_segment_serializer__existing_segment_no_priority__does_nothing(
     feature: Feature,
     segment_featurestate: FeatureState,
     feature_segment: FeatureSegment,
@@ -161,7 +161,7 @@ def test_feature_segment_serializer_save_existing_feature_segment_does_nothing_i
     assert updated_feature_segment.priority == 1
 
 
-def test_feature_segment_serializer_save_existing_feature_segment_sets_highest_priority_if_0_given(  # noqa: FT003
+def test_feature_segment_serializer__existing_segment_priority_zero__sets_highest_priority(
     feature: Feature,
     segment_featurestate: FeatureState,
     feature_segment: FeatureSegment,
@@ -191,7 +191,7 @@ def test_feature_segment_serializer_save_existing_feature_segment_sets_highest_p
     assert updated_feature_segment.priority == 0
 
 
-def test_feature_segment_serializer_save_existing_feature_segment_moves_others_if_needed(  # noqa: FT003
+def test_feature_segment_serializer__existing_segment_with_priority__moves_others(
     feature: Feature,
     segment_featurestate: FeatureState,
     feature_segment: FeatureSegment,
@@ -222,7 +222,7 @@ def test_feature_segment_serializer_save_existing_feature_segment_moves_others_i
     assert updated_feature_segment.priority == 1
 
 
-def test_feature_segment_serializer_save_new_feature_segment_does_nothing_on_error(  # noqa: FT003
+def test_feature_segment_serializer__new_segment_create_error__does_nothing(
     feature: Feature,
     segment_featurestate: FeatureState,
     feature_segment: FeatureSegment,

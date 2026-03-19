@@ -11,7 +11,7 @@ from django.db.models import Model
 from django_test_migrations.migrator import Migrator
 
 
-def test_add_change_request_permissions_adds_correct_permissions_if_user_has_update_fs(  # noqa: E501,FT003
+def test_add_change_request_permissions__user_has_update_fs__adds_cr_permissions(  # noqa: E501
     django_user_model: Type[Model], migrator: Migrator
 ) -> None:
     # Given
@@ -61,7 +61,7 @@ def test_add_change_request_permissions_adds_correct_permissions_if_user_has_upd
     ) == [APPROVE_CHANGE_REQUEST, CREATE_CHANGE_REQUEST, UPDATE_FEATURE_STATE]
 
 
-def test_add_change_request_permissions_does_nothing_if_user_does_not_have_update_fs(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_add_change_request_permissions__user_lacks_update_fs__does_nothing(  # type: ignore[no-untyped-def]
     environment, django_user_model, migrator
 ):
     # Given
@@ -95,7 +95,7 @@ def test_add_change_request_permissions_does_nothing_if_user_does_not_have_updat
     )
 
 
-def test_add_view_identity_permissions_adds_view_permissions_if_user_has_manage_identities(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
+def test_add_view_identity_permissions__user_has_manage_identities__adds_view_identities(  # type: ignore[no-untyped-def]  # noqa: E501
     environment, django_user_model, migrator
 ):
     # Given
@@ -176,7 +176,7 @@ def test_add_view_identity_permissions_adds_view_permissions_if_user_has_manage_
     ]
 
 
-def test_add_view_identity_permissions_does_nothing_if_user_does_not_have_manage_identities(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
+def test_add_view_identity_permissions__user_lacks_manage_identities__does_nothing(  # type: ignore[no-untyped-def]  # noqa: E501
     environment, django_user_model, migrator
 ):
     # Given
@@ -225,7 +225,9 @@ def test_add_view_identity_permissions_does_nothing_if_user_does_not_have_manage
     )
 
 
-def test_merge_duplicate_permissions_migration(migrator: Migrator) -> None:  # noqa: FT003
+def test_merge_duplicate_permissions__duplicates_exist__merges_into_single_record(
+    migrator: Migrator,
+) -> None:
     # Given - the migration state is at 0005 (before the migration we want to test)
     old_state = migrator.apply_initial_migration(
         ("environment_permissions", "0005_add_view_identity_permissions")

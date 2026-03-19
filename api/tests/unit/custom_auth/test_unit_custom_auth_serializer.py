@@ -23,7 +23,7 @@ user_dict = {
 }
 
 
-def test_CustomUserCreateSerializer_converts_email_to_lower_case(  # noqa: FT003
+def test_custom_user_create_serializer__mixed_case_email__converts_to_lower_case(
     db: None, rf: RequestFactory
 ) -> None:
     # Given
@@ -37,7 +37,7 @@ def test_CustomUserCreateSerializer_converts_email_to_lower_case(  # noqa: FT003
     assert serializer.validated_data["email"] == "testuser@mail.com"
 
 
-def test_CustomUserCreateSerializer_does_case_insensitive_lookup_with_email(  # noqa: FT003,FT004
+def test_custom_user_create_serializer__duplicate_email_different_case__returns_error(
     db: None, rf: RequestFactory
 ) -> None:
     # Given
@@ -49,11 +49,14 @@ def test_CustomUserCreateSerializer_does_case_insensitive_lookup_with_email(  # 
     )
 
     # When
-    assert serializer.is_valid() is False
+    is_valid = serializer.is_valid()
+
+    # Then
+    assert is_valid is False
     assert serializer.errors["email"][0] == "Email already exists. Please log in."
 
 
-def test_CustomUserCreateSerializer_calls_is_authentication_method_valid_correctly_if_auth_controller_is_installed(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
+def test_custom_user_create_serializer__auth_controller_installed__calls_is_authentication_method_valid(  # type: ignore[no-untyped-def]  # noqa: E501
     db, settings, mocker, rf
 ):
     # Given
@@ -80,7 +83,7 @@ def test_CustomUserCreateSerializer_calls_is_authentication_method_valid_correct
     )
 
 
-def test_CustomUserCreateSerializer_allows_registration_if_sign_up_type_is_invite_link(  # noqa: FT003
+def test_custom_user_create_serializer__sign_up_type_invite_link__allows_registration(
     invite_link: InviteLink,
     db: None,
     settings: SettingsWrapper,
@@ -107,7 +110,7 @@ def test_CustomUserCreateSerializer_allows_registration_if_sign_up_type_is_invit
     assert user
 
 
-def test_invite_link_validation_mixin_validate_fails_if_invite_link_hash_not_provided(  # noqa: FT003
+def test_invite_link_validation__hash_not_provided__raises_permission_denied(
     settings: SettingsWrapper,
     db: None,
 ) -> None:
@@ -129,7 +132,7 @@ def test_invite_link_validation_mixin_validate_fails_if_invite_link_hash_not_pro
     assert exc_info.value.detail == USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
 
 
-def test_invite_link_validation_mixin_validate_fails_if_invite_link_hash_not_valid(  # noqa: FT003
+def test_invite_link_validation__invalid_hash__raises_permission_denied(
     invite_link: InviteLink,
     settings: SettingsWrapper,
 ) -> None:

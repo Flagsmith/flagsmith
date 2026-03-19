@@ -52,7 +52,7 @@ from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 
 
-def test_export_organisation(db):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_export_organisation__default_org__returns_export(db):  # type: ignore[no-untyped-def]
     # Given
     # an organisation
     organisation_name = "test org"
@@ -75,7 +75,7 @@ def test_export_organisation(db):  # type: ignore[no-untyped-def]  # noqa: FT003
     # TODO: test whether the export is importable
 
 
-def test_export_project(organisation):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_export_projects__project_with_integrations__returns_export(organisation):  # type: ignore[no-untyped-def]
     # Given
     # a project
     project_name = "test project"
@@ -103,7 +103,7 @@ def test_export_project(organisation):  # type: ignore[no-untyped-def]  # noqa: 
     # TODO: test whether the export is importable
 
 
-def test_export_project__only_live_segments_are_exported(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_export_projects__non_live_segment_version_exists__exports_only_live_segments(  # type: ignore[no-untyped-def]
     organisation: Organisation, project: Project
 ):
     # Given
@@ -133,7 +133,7 @@ def test_export_project__only_live_segments_are_exported(  # type: ignore[no-unt
     assert export[3]["fields"]["uuid"] == str(segment_condition.uuid)
 
 
-def test_export_environments(project):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_export_environments__environment_with_integrations__returns_export(project):  # type: ignore[no-untyped-def]
     # Given
     # an environment
     environment_name = "test environment"
@@ -172,7 +172,9 @@ def test_export_environments(project):  # type: ignore[no-untyped-def]  # noqa: 
     # TODO: test whether the export is importable
 
 
-def test_export_metadata(environment, organisation, settings):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_export_metadata__environment_with_metadata__exports_and_reimports_correctly(  # type: ignore[no-untyped-def]
+    environment, organisation, settings
+):
     # Given
     environment_type = ContentType.objects.get_for_model(environment)
 
@@ -214,7 +216,7 @@ def test_export_metadata(environment, organisation, settings):  # type: ignore[n
 
         call_command("loaddata", f.name, format="json")
 
-    # Finally
+    # Then
     # Metadata field exists
     assert MetadataField.objects.filter(uuid=metadata_field.uuid)
 
@@ -235,7 +237,9 @@ def test_export_metadata(environment, organisation, settings):  # type: ignore[n
     assert metadata.content_object == loaded_environment
 
 
-def test_export_features(project, environment, segment, admin_user):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_export_features__standard_and_mv_features__returns_export_without_owners_or_change_requests(  # type: ignore[no-untyped-def]
+    project, environment, segment, admin_user
+):
     # Given
     # a standard feature
     standard_feature = Feature.objects.create(project=project, name="standard_feature")
@@ -289,7 +293,7 @@ def test_export_features(project, environment, segment, admin_user):  # type: ig
     # TODO: test whether the export is importable
 
 
-def test_export_features_with_environment_feature_version(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_export_features__v2_versioning_enabled__includes_environment_feature_version(  # type: ignore[no-untyped-def]
     project, environment, segment, admin_user
 ):
     # Given
@@ -315,7 +319,7 @@ def test_export_features_with_environment_feature_version(  # type: ignore[no-un
     # TODO: test whether the export is importable
 
 
-def test_export_edge_identities(  # noqa: FT003
+def test_export_edge_identities__identities_with_overrides_and_traits__exports_and_reimports_correctly(
     flagsmith_identities_table: Table,
     project: Project,
     environment: Environment,
@@ -577,7 +581,9 @@ def test_export_edge_identities(  # noqa: FT003
 
 
 @mock_s3
-def test_organisation_exporter_export_to_s3(organisation):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_organisation_exporter_export_to_s3__valid_organisation__uploads_to_s3(  # type: ignore[no-untyped-def]
+    organisation,
+):
     # Given
     bucket_name = "test-bucket"
     file_key = "organisation-exports/org-1.json"
@@ -600,7 +606,7 @@ def test_organisation_exporter_export_to_s3(organisation):  # type: ignore[no-un
     assert retrieved_object.get("ContentLength", 0) > 0
 
 
-def test_export_dynamo_project(  # noqa: FT003
+def test_export_projects__dynamo_db_project__reimports_with_dynamo_disabled(
     organisation: Organisation, mocker: MockerFixture, fs: FakeFilesystem
 ) -> None:
     # Given - dynamo db project

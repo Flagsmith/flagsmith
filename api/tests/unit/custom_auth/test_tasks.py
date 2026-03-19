@@ -9,7 +9,7 @@ from custom_auth.tasks import clean_up_user_password_reset_request
 from users.models import FFAdminUser
 
 
-def test_clean_up_user_password_reset_request(  # noqa: FT003
+def test_clean_up_user_password_reset_request__expired_and_recent_requests__removes_only_expired(
     settings: SettingsWrapper, staff_user: FFAdminUser, freezer: FrozenDateTimeFactory
 ) -> None:
     # Given

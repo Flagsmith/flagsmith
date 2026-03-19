@@ -16,7 +16,7 @@ yesterday = now - timedelta(days=1)
 
 
 @pytest.mark.django_db()
-def test_get_segments_from_cache(project, monkeypatch):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_segments_from_cache__cache_miss__sets_cache(project, monkeypatch):  # type: ignore[no-untyped-def]
     # Given
     mock_project_segments_cache = mock.MagicMock()
     mock_project_segments_cache.get.return_value = None
@@ -36,7 +36,9 @@ def test_get_segments_from_cache(project, monkeypatch):  # type: ignore[no-untyp
 
 
 @pytest.mark.django_db()
-def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_segments_from_cache__cache_hit__does_not_set_cache(
+    project, segments, monkeypatch
+):  # type: ignore[no-untyped-def]
     # Given
     mock_project_segments_cache = mock.MagicMock()
     mock_project_segments_cache.get.return_value = project.segments.all()
@@ -56,7 +58,7 @@ def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):
     mock_project_segments_cache.set.assert_not_called()
 
 
-def test_get_segments_from_cache_set_to_empty_list(  # noqa: FT003
+def test_get_segments_from_cache__empty_list_in_cache__fetches_from_db(
     project: Project,
     segment: Segment,
     monkeypatch: pytest.MonkeyPatch,
@@ -88,7 +90,7 @@ def test_get_segments_from_cache_set_to_empty_list(  # noqa: FT003
     "edge_enabled, expected_enable_dynamo_db_value",
     ((True, True), (False, False)),
 )
-def test_create_project_sets_enable_dynamo_db(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_create_project__edge_enabled_setting__sets_enable_dynamo_db(  # type: ignore[no-untyped-def]
     db, edge_enabled, expected_enable_dynamo_db_value, settings, organisation
 ):
     # Given
@@ -105,7 +107,7 @@ def test_create_project_sets_enable_dynamo_db(  # type: ignore[no-untyped-def]  
     "edge_release_datetime, expected",
     ((yesterday, True), (tomorrow, False), (None, False)),
 )
-def test_is_edge_project_by_default(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_is_edge_project_by_default__release_datetime__returns_expected(  # type: ignore[no-untyped-def]
     settings, organisation, edge_release_datetime, expected
 ):
     # Given
@@ -127,16 +129,22 @@ def test_is_edge_project_by_default(  # type: ignore[no-untyped-def]  # noqa: FT
         ("^[a-z]+$", "InvalidFeature", False),
     ),
 )
-def test_is_feature_name_valid(feature_name_regex, feature_name, expected_result):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
-    assert (
-        Project(
-            name="test", feature_name_regex=feature_name_regex
-        ).is_feature_name_valid(feature_name)
-        == expected_result
-    )
+def test_is_feature_name_valid__regex_and_name__returns_expected(
+    feature_name_regex, feature_name, expected_result
+):  # type: ignore[no-untyped-def]  # noqa: E501
+    # Given
+    project = Project(name="test", feature_name_regex=feature_name_regex)
+
+    # When
+    result = project.is_feature_name_valid(feature_name)
+
+    # Then
+    assert result == expected_result
 
 
-def test_updating_project_clears_environment_caches(environment, project, mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_save_project__name_updated__clears_environment_caches(
+    environment, project, mocker
+):  # type: ignore[no-untyped-def]
     # Given
     mock_environment_cache = mocker.patch("projects.models.environment_cache")
 
@@ -148,7 +156,7 @@ def test_updating_project_clears_environment_caches(environment, project, mocker
     mock_environment_cache.delete_many.assert_called_once_with([environment.api_key])
 
 
-def test_environments_are_updated_in_dynamodb_when_project_id_updated(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_save_project__dynamo_enabled__updates_environments_in_dynamodb(  # type: ignore[no-untyped-def]
     dynamo_enabled_project,
     dynamo_enabled_project_environment_one,
     dynamo_enabled_project_environment_two,
@@ -176,19 +184,21 @@ def test_environments_are_updated_in_dynamodb_when_project_id_updated(  # type: 
         (EdgeV2MigrationStatus.INCOMPLETE, False),
     ),
 )
-def test_show_edge_identity_overrides_for_feature(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_show_edge_identity_overrides_for_feature__migration_status__returns_expected(  # type: ignore[no-untyped-def]
     edge_v2_migration_status: EdgeV2MigrationStatus,
     expected_value: bool,
 ):
-    assert (
-        Project(
-            edge_v2_migration_status=edge_v2_migration_status
-        ).show_edge_identity_overrides_for_feature
-        == expected_value
-    )
+    # Given
+    project = Project(edge_v2_migration_status=edge_v2_migration_status)
+
+    # When
+    result = project.show_edge_identity_overrides_for_feature
+
+    # Then
+    assert result == expected_value
 
 
-def test_create_project_sets_edge_v2_migration_status_if_edge_enabled(  # noqa: FT003
+def test_create_project__edge_enabled__sets_edge_v2_migration_complete(
     settings: SettingsWrapper, organisation: Organisation
 ) -> None:
     # Given

@@ -11,7 +11,7 @@ from app import routers
         ("another_app", None),
     ],
 )
-def test_AnalyticsRouter_db_for_read__returns_analytics_db_for_analytics_models(  # noqa: FT003
+def test_analytics_router_db_for_read__given_app_label__returns_expected_db(
     given_app_label: str,
     expected_db: str | None,
 ) -> None:
@@ -36,7 +36,7 @@ def test_AnalyticsRouter_db_for_read__returns_analytics_db_for_analytics_models(
         ("another_app", None),
     ],
 )
-def test_AnalyticsRouter_db_for_write__returns_analytics_db_for_analytics_models(  # noqa: FT003
+def test_analytics_router_db_for_write__given_app_label__returns_expected_db(
     model_app_label: str,
     expected_db: str | None,
 ) -> None:
@@ -61,7 +61,7 @@ def test_AnalyticsRouter_db_for_write__returns_analytics_db_for_analytics_models
         ("app_analytics", "another_app", None),
     ],
 )
-def test_AnalyticsRouter_allow_relation__allows_relations_between_analytics_models(  # noqa: FT003
+def test_analytics_router_allow_relation__given_app_labels__returns_expected(
     model1_app_label: str,
     model2_app_label: str,
     expected: bool | None,
@@ -93,7 +93,7 @@ def test_AnalyticsRouter_allow_relation__allows_relations_between_analytics_mode
         ("analytics", "another_app", False),
     ],
 )
-def test_AnalyticsRouter_allow_migrate__allows_migrations_on_analytics_db(  # noqa: FT003
+def test_analytics_router_allow_migrate__given_db_and_app_label__returns_expected(
     db_name: str,
     app_label: str,
     expected: bool | None,
