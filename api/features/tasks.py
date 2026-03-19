@@ -1,3 +1,7 @@
+from django.db import IntegrityError, OperationalError, transaction
+from django.db.transaction import TransactionManagementError
+from task_processor.exceptions import TaskBackoffError
+
 import logging
 from typing import Any
 
@@ -159,4 +163,12 @@ def _get_previous_multivariate_values(
 
 @register_task_handler()
 def delete_feature(feature_id: int) -> None:
-    Feature.objects.get(pk=feature_id).delete()
+    try:
+        with transaction.atomic():
+            Feature.objects.get(pk=feature_id).delete()
+            
+    except Feature.DoesNotExist:
+        pass
+        
+    except (OperationalError, IntegrityError, TransactionManagementError):
+        raise TaskBackoffError()
