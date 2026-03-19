@@ -12,7 +12,7 @@ from projects.models import Project
 from webhooks.webhooks import WebhookEventType
 
 
-def test_organisation_webhooks_are_called_when_audit_log_saved(
+def test_organisation_webhooks_are_called_when_audit_log_saved(  # noqa: FT003
     project: Project, mocker: MockerFixture, organisation: Organisation
 ) -> None:
     # Given
@@ -40,7 +40,7 @@ def test_organisation_webhooks_are_called_when_audit_log_saved(
     )
 
 
-def test_data_dog_track_event_not_called_on_audit_log_saved_when_not_configured(  # type: ignore[no-untyped-def]
+def test_data_dog_track_event_not_called_on_audit_log_saved_when_not_configured(  # type: ignore[no-untyped-def]  # noqa: FT003
     project, mocker
 ):
     # Given Audit log and project not configured for Datadog
@@ -56,7 +56,7 @@ def test_data_dog_track_event_not_called_on_audit_log_saved_when_not_configured(
     datadog_mock.track_event_async.assert_not_called()
 
 
-def test_data_dog_track_event_not_called_on_audit_log_saved_when_wrong(mocker, project):  # type: ignore[no-untyped-def]  # noqa: E501
+def test_data_dog_track_event_not_called_on_audit_log_saved_when_wrong(mocker, project):  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     # Given Audit log and project configured for Datadog integration
     datadog_mock = mocker.patch(
         "integrations.datadog.datadog.DataDogWrapper.track_event_async"
@@ -85,7 +85,7 @@ def test_data_dog_track_event_not_called_on_audit_log_saved_when_wrong(mocker, p
     "use_custom_source, expected_additional_data",
     [(False, {}), (True, {"source_type_name": "flagsmith"})],
 )
-def test_data_dog_track_event_called_on_audit_log_saved_when_correct_type(
+def test_data_dog_track_event_called_on_audit_log_saved_when_correct_type(  # noqa: FT003
     project: Project,
     mocker: MockerFixture,
     use_custom_source: bool,
@@ -158,7 +158,7 @@ def test_data_dog_track_event_called_on_audit_log_saved_when_correct_type(
     ]
 
 
-def test_audit_log_get_history_record_model_class(mocker):  # type: ignore[no-untyped-def]
+def test_audit_log_get_history_record_model_class(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     module_name = "module"
 
@@ -186,7 +186,7 @@ def test_audit_log_get_history_record_model_class(mocker):  # type: ignore[no-un
     assert klass == DummyHistoricalRecordModel  # type: ignore[comparison-overlap]
 
 
-def test_audit_log_history_record(mocker):  # type: ignore[no-untyped-def]
+def test_audit_log_history_record(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     module_name = "app.models"
     model_class_name = "MyModel"
@@ -217,7 +217,7 @@ def test_audit_log_history_record(mocker):  # type: ignore[no-untyped-def]
     )
 
 
-def test_audit_log_history_record_for_audit_log_record_with_no_history_record(mocker):  # type: ignore[no-untyped-def]
+def test_audit_log_history_record_for_audit_log_record_with_no_history_record(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     audit_log = AuditLog()
 
@@ -228,7 +228,7 @@ def test_audit_log_history_record_for_audit_log_record_with_no_history_record(mo
     assert record is None
 
 
-def test_audit_log_save_project_is_added_if_not_set(environment):  # type: ignore[no-untyped-def]
+def test_audit_log_save_project_is_added_if_not_set(environment):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     audit_log = AuditLog(environment=environment)
 
@@ -239,7 +239,7 @@ def test_audit_log_save_project_is_added_if_not_set(environment):  # type: ignor
     assert audit_log.project == environment.project
 
 
-def test_creating_audit_logs_creates_process_environment_update_task(  # type: ignore[no-untyped-def]
+def test_creating_audit_logs_creates_process_environment_update_task(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment, mocker
 ):
     # Given
@@ -258,7 +258,7 @@ def test_creating_audit_logs_creates_process_environment_update_task(  # type: i
     assert environment.updated_at == audit_log.created_date
 
 
-def test_creating_audit_logs_for_change_request_does_not_trigger_process_environment_update(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_creating_audit_logs_for_change_request_does_not_trigger_process_environment_update(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     environment, mocker, project
 ):
     # Given
@@ -278,7 +278,7 @@ def test_creating_audit_logs_for_change_request_does_not_trigger_process_environ
 
 
 @pytest.mark.django_db
-def test_audit_log__organisation__empty_instance__return_expected() -> None:
+def test_audit_log__organisation__empty_instance__return_expected() -> None:  # noqa: FT003
     # Given
     audit_log = AuditLog.objects.create()
 

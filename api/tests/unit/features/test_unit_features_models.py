@@ -30,7 +30,7 @@ yesterday = now - timedelta(days=1)
 tomorrow = now + timedelta(days=1)
 
 
-def test_feature_should_create_feature_states_for_environments(
+def test_feature_should_create_feature_states_for_environments(  # noqa: FT003
     db: None,
     environment: Environment,
     project: Project,
@@ -46,7 +46,7 @@ def test_feature_should_create_feature_states_for_environments(
     assert feature_states.count() == 2
 
 
-def test_save_existing_feature_should_not_change_feature_state_enabled(
+def test_save_existing_feature_should_not_change_feature_state_enabled(  # noqa: FT003
     db: None,
     project: Project,
 ) -> None:
@@ -66,7 +66,7 @@ def test_save_existing_feature_should_not_change_feature_state_enabled(
     assert all(fs.enabled == default_enabled for fs in feature.feature_states.all())
 
 
-def test_creating_feature_with_initial_value_should_set_value_for_all_feature_states(
+def test_creating_feature_with_initial_value_should_set_value_for_all_feature_states(  # noqa: FT003
     project: Project,
     environment: Environment,
 ) -> None:
@@ -87,7 +87,7 @@ def test_creating_feature_with_initial_value_should_set_value_for_all_feature_st
         feature_state.get_feature_state_value() == value
 
 
-def test_creating_feature_with_integer_initial_value_should_set_integer_value_for_all_feature_states(
+def test_creating_feature_with_integer_initial_value_should_set_integer_value_for_all_feature_states(  # noqa: FT003
     project: Project,
     environment: Environment,
 ) -> None:
@@ -110,7 +110,7 @@ def test_creating_feature_with_integer_initial_value_should_set_integer_value_fo
         assert feature_state.get_feature_state_value() == initial_value
 
 
-def test_creating_feature_with_boolean_initial_value_should_set_boolean_value_for_all_feature_states(
+def test_creating_feature_with_boolean_initial_value_should_set_boolean_value_for_all_feature_states(  # noqa: FT003
     project: Project,
     environment: Environment,
 ) -> None:
@@ -133,7 +133,7 @@ def test_creating_feature_with_boolean_initial_value_should_set_boolean_value_fo
         assert feature_state.get_feature_state_value() == initial_value
 
 
-def test_cannot_create_feature_with_same_case_insensitive_name(
+def test_cannot_create_feature_with_same_case_insensitive_name(  # noqa: FT003
     project: Project,
 ) -> None:
     # Given
@@ -150,7 +150,7 @@ def test_cannot_create_feature_with_same_case_insensitive_name(
         feature_two.save()
 
 
-def test_updating_feature_name_should_update_feature_states(
+def test_updating_feature_name_should_update_feature_states(  # noqa: FT003
     project: Project,
 ) -> None:
     # Given
@@ -167,7 +167,7 @@ def test_updating_feature_name_should_update_feature_states(
     FeatureState.objects.filter(feature__name=new_feature_name).exists()
 
 
-def test_full_clean_fails_when_duplicate_case_insensitive_name(
+def test_full_clean_fails_when_duplicate_case_insensitive_name(  # noqa: FT003,FT004
     project: Project,
 ) -> None:
     # unit test to validate validate_unique() method
@@ -186,7 +186,7 @@ def test_full_clean_fails_when_duplicate_case_insensitive_name(
         feature_two.full_clean()
 
 
-def test_updating_feature_should_allow_case_insensitive_name(project: Project) -> None:
+def test_updating_feature_should_allow_case_insensitive_name(project: Project) -> None:  # noqa: FT003,FT004
     # Given
     feature_name = "Test Feature"
     feature = Feature.objects.create(
@@ -199,7 +199,7 @@ def test_updating_feature_should_allow_case_insensitive_name(project: Project) -
     feature.full_clean()
 
 
-def test_when_create_feature_with_tags_then_success(project: Project) -> None:
+def test_when_create_feature_with_tags_then_success(project: Project) -> None:  # noqa: FT003,FT004
     # Given
     tag1 = Tag.objects.create(
         label="Test Tag 1",
@@ -223,7 +223,7 @@ def test_when_create_feature_with_tags_then_success(project: Project) -> None:
     assert list(feature.tags.all()) == [tag1, tag2]
 
 
-def test_cannot_create_duplicate_feature_state_in_an_environment(
+def test_cannot_create_duplicate_feature_state_in_an_environment(  # noqa: FT003
     feature: Feature,
     environment: Environment,
 ) -> None:
@@ -243,7 +243,7 @@ def test_cannot_create_duplicate_feature_state_in_an_environment(
     )
 
 
-def test_cannot_create_duplicate_feature_state_in_an_environment_for_segment(
+def test_cannot_create_duplicate_feature_state_in_an_environment_for_segment(  # noqa: FT003
     project: Project,
     feature: Feature,
     environment: Environment,
@@ -281,7 +281,7 @@ def test_cannot_create_duplicate_feature_state_in_an_environment_for_segment(
     )
 
 
-def test_cannot_create_duplicate_feature_state_in_an_environment_for_identity(
+def test_cannot_create_duplicate_feature_state_in_an_environment_for_identity(  # noqa: FT003
     project: Project,
     feature: Feature,
     environment: Environment,
@@ -312,7 +312,7 @@ def test_cannot_create_duplicate_feature_state_in_an_environment_for_identity(
     )
 
 
-def test_feature_state_gt_operator_order(
+def test_feature_state_gt_operator_order(  # noqa: FT003
     identity: Identity,
     feature: Feature,
     environment: Environment,
@@ -367,7 +367,7 @@ def test_feature_state_gt_operator_order(
     assert segment_2_state > default_env_state
 
 
-def test_feature_state_gt_operator_order_when_environment_feature_version_is_none(
+def test_feature_state_gt_operator_order_when_environment_feature_version_is_none(  # noqa: FT003
     identity: Identity,
     feature: Feature,
     feature_state: FeatureState,
@@ -397,7 +397,7 @@ def test_feature_state_gt_operator_order_when_environment_feature_version_is_non
     )
 
 
-def test_feature_state_gt_operator_throws_value_error_if_different_environments(
+def test_feature_state_gt_operator_throws_value_error_if_different_environments(  # noqa: FT003
     project: Project,
     environment: Environment,
     feature: Feature,
@@ -416,7 +416,7 @@ def test_feature_state_gt_operator_throws_value_error_if_different_environments(
         feature_state_env_1 > feature_state_env_2
 
 
-def test_feature_state_gt_operator_throws_value_error_if_different_features(
+def test_feature_state_gt_operator_throws_value_error_if_different_features(  # noqa: FT003
     project: Project,
     feature: Feature,
     environment: Environment,
@@ -431,7 +431,7 @@ def test_feature_state_gt_operator_throws_value_error_if_different_features(
         feature_state_env_1 > feature_state_env_2
 
 
-def test_feature_state_gt_operator_throws_value_error_if_different_identities(
+def test_feature_state_gt_operator_throws_value_error_if_different_identities(  # noqa: FT003
     environment: Environment,
     feature: Feature,
 ) -> None:
@@ -455,7 +455,7 @@ def test_feature_state_gt_operator_throws_value_error_if_different_identities(
         feature_state_identity_1 > feature_state_identity_2
 
 
-def test_feature_state_gt_operator__environment_default__returns_expected(
+def test_feature_state_gt_operator__environment_default__returns_expected(  # noqa: FT004
     environment: Environment,
     feature: Feature,
     identity: Identity,
@@ -490,7 +490,7 @@ def test_feature_state_gt_operator__environment_default__returns_expected(
         ),
     ],
 )
-def test_feature_state_str__returns_expected(
+def test_feature_state_str__returns_expected(  # noqa: FT003
     feature_state: FeatureState,
     feature_identity: Identity | None,
     expected_result: str,
@@ -503,7 +503,7 @@ def test_feature_state_str__returns_expected(
 
 
 @mock.patch("features.tasks.trigger_feature_state_change_webhooks")
-def test_feature_state_save_calls_trigger_webhooks(
+def test_feature_state_save_calls_trigger_webhooks(  # noqa: FT003
     mock_trigger_webhooks: mock.MagicMock,
     feature: Feature,
     environment: Environment,
@@ -524,7 +524,7 @@ def test_feature_state_save_calls_trigger_webhooks(
     assert called_feature_state.id == feature_state.id
 
 
-def test_delete_feature_should_not_trigger_fs_change_webhooks(
+def test_delete_feature_should_not_trigger_fs_change_webhooks(  # noqa: FT003
     mocker: MockerFixture,
     feature: Feature,
     environment: Environment,
@@ -541,7 +541,7 @@ def test_delete_feature_should_not_trigger_fs_change_webhooks(
     mock_trigger_webhooks.assert_not_called()
 
 
-def test_feature_state_type_environment(
+def test_feature_state_type_environment(  # noqa: FT003,FT004
     feature: Feature,
     environment: Environment,
 ) -> None:
@@ -557,7 +557,7 @@ def test_feature_state_type_environment(
     assert feature_state.type == ENVIRONMENT
 
 
-def test_feature_state_type_identity(
+def test_feature_state_type_identity(  # noqa: FT003,FT004
     identity: Identity,
     feature: Feature,
     environment: Environment,
@@ -574,7 +574,7 @@ def test_feature_state_type_identity(
     assert feature_state.type == IDENTITY
 
 
-def test_feature_state_type_feature_segment(
+def test_feature_state_type_feature_segment(  # noqa: FT003,FT004
     segment: Segment,
     feature: Feature,
     environment: Environment,
@@ -596,7 +596,7 @@ def test_feature_state_type_feature_segment(
 
 @pytest.mark.parametrize("hashed_percentage", (0.0, 30.0, 50.0, 80.0, 99.9999))
 @mock.patch("features.models.get_hashed_percentage_for_object_ids")
-def test_get_multivariate_value_returns_correct_value_when_we_pass_identity(  # type: ignore[no-untyped-def]
+def test_get_multivariate_value_returns_correct_value_when_we_pass_identity(  # type: ignore[no-untyped-def]  # noqa: FT003
     mock_get_hashed_percentage,
     hashed_percentage,
     multivariate_feature,
@@ -627,7 +627,7 @@ def test_get_multivariate_value_returns_correct_value_when_we_pass_identity(  # 
 
 
 @mock.patch.object(FeatureState, "get_multivariate_feature_state_value")
-def test_get_feature_state_value_for_multivariate_features(  # type: ignore[no-untyped-def]
+def test_get_feature_state_value_for_multivariate_features(  # type: ignore[no-untyped-def]  # noqa: FT003
     mock_get_mv_feature_state_value, environment, multivariate_feature, identity
 ):
     # Given
@@ -656,7 +656,7 @@ def test_get_feature_state_value_for_multivariate_features(  # type: ignore[no-u
 
 
 @mock.patch.object(FeatureState, "get_multivariate_feature_state_value")
-def test_get_feature_state_value_for_multivariate_features_mv_v2_evaluation(  # type: ignore[no-untyped-def]
+def test_get_feature_state_value_for_multivariate_features_mv_v2_evaluation(  # type: ignore[no-untyped-def]  # noqa: FT003
     mock_get_mv_feature_state_value, environment, multivariate_feature, identity
 ):
     # Given
@@ -696,7 +696,7 @@ def test_get_feature_state_value_for_multivariate_features_mv_v2_evaluation(  # 
     ),
     indirect=True,
 )
-def test_feature_state_gt_operator(feature_state_version_generator):  # type: ignore[no-untyped-def]
+def test_feature_state_gt_operator(feature_state_version_generator):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     first, second, expected_result = feature_state_version_generator
     assert (first > second) is expected_result
 
@@ -711,7 +711,7 @@ def test_feature_state_gt_operator(feature_state_version_generator):  # type: ig
         (1, tomorrow, False),
     ),
 )
-def test_feature_state_is_live(version, live_from, expected_is_live, environment):  # type: ignore[no-untyped-def]
+def test_feature_state_is_live(version, live_from, expected_is_live, environment):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert (
         FeatureState(
             version=version, live_from=live_from, environment=environment
@@ -736,7 +736,7 @@ def test_feature_state_is_live__identity_override_v2_versioning__returns_true(
     assert feature_state.is_live is True
 
 
-def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(  # type: ignore[no-untyped-def]
+def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(  # type: ignore[no-untyped-def]  # noqa: FT003
     project, environment
 ):
     # Given
@@ -762,7 +762,7 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(  # 
     assert not feature_state.get_feature_state_value()
 
 
-def test_feature_state_get_skip_create_audit_log_if_uncommitted_change_request(  # type: ignore[no-untyped-def]
+def test_feature_state_get_skip_create_audit_log_if_uncommitted_change_request(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     environment, feature, admin_user
 ):
     # Given
@@ -780,7 +780,7 @@ def test_feature_state_get_skip_create_audit_log_if_uncommitted_change_request( 
     assert feature_state.get_skip_create_audit_log() is True
 
 
-def test_feature_state_get_skip_create_audit_log_if_environment_feature_version(  # type: ignore[no-untyped-def]
+def test_feature_state_get_skip_create_audit_log_if_environment_feature_version(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     environment_v2_versioning: Environment, feature: Feature
 ):
     # Given
@@ -797,7 +797,7 @@ def test_feature_state_get_skip_create_audit_log_if_environment_feature_version(
     assert feature_state.get_skip_create_audit_log() is True
 
 
-def test_feature_state_value_get_skip_create_audit_log_if_environment_feature_version(  # type: ignore[no-untyped-def]
+def test_feature_state_value_get_skip_create_audit_log_if_environment_feature_version(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     environment_v2_versioning: Environment, feature: Feature
 ):
     # Given
@@ -814,7 +814,7 @@ def test_feature_state_value_get_skip_create_audit_log_if_environment_feature_ve
     assert feature_state.feature_state_value.get_skip_create_audit_log() is True
 
 
-def test_feature_state_value__get_skip_create_audit_log_for_feature_segment_delete(
+def test_feature_state_value__get_skip_create_audit_log_for_feature_segment_delete(  # noqa: FT003,FT004
     feature: Feature, feature_segment: FeatureSegment, environment: Environment
 ) -> None:
     # Give
@@ -836,7 +836,7 @@ def test_feature_state_value__get_skip_create_audit_log_for_feature_segment_dele
     assert fsv_history_instance.instance.get_skip_create_audit_log() is True
 
 
-def test_feature_state_value__get_skip_create_audit_log_for_identity_delete(
+def test_feature_state_value__get_skip_create_audit_log_for_identity_delete(  # noqa: FT003,FT004
     feature: Feature,
     environment: Environment,
     identity: Identity,
@@ -860,7 +860,7 @@ def test_feature_state_value__get_skip_create_audit_log_for_identity_delete(
     assert fsv_history_instance.instance.get_skip_create_audit_log() is True
 
 
-def test_feature_state_value__get_skip_create_audit_log_for_feature_delete(
+def test_feature_state_value__get_skip_create_audit_log_for_feature_delete(  # noqa: FT003,FT004
     feature: Feature,
     environment: Environment,
     identity: Identity,
@@ -888,7 +888,7 @@ def test_feature_state_value__get_skip_create_audit_log_for_feature_delete(
         (None, None, "get_environment_feature_state_created_audit_message"),
     ),
 )
-def test_feature_state_get_create_log_message_calls_correct_helper_function(  # type: ignore[no-untyped-def]
+def test_feature_state_get_create_log_message_calls_correct_helper_function(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker,
     feature_segment_id,
     identity_id,
@@ -915,7 +915,7 @@ def test_feature_state_get_create_log_message_calls_correct_helper_function(  # 
     expected_function.assert_called_once_with(feature_state)
 
 
-def test_feature_state_get_create_log_message_returns_null_if_environment_created_after_feature(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_feature_state_get_create_log_message_returns_null_if_environment_created_after_feature(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     feature, mocker
 ):
     # Given
@@ -931,7 +931,7 @@ def test_feature_state_get_create_log_message_returns_null_if_environment_create
     assert log is None
 
 
-def test_feature_state_get_create_log_message_returns_value_if_environment_created_after_feature_for_override(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_feature_state_get_create_log_message_returns_value_if_environment_created_after_feature_for_override(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     feature, mocker, identity
 ):
     # Given
@@ -949,7 +949,7 @@ def test_feature_state_get_create_log_message_returns_value_if_environment_creat
     assert log is not None
 
 
-def test_feature_state_get_create_log_message_returns_message_if_environment_created_before_feature(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_feature_state_get_create_log_message_returns_message_if_environment_created_before_feature(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     environment, mocker
 ):
     # Given
@@ -963,7 +963,7 @@ def test_feature_state_get_create_log_message_returns_message_if_environment_cre
     assert log is not None
 
 
-def test_feature_segment_update_priorities_when_no_changes(  # type: ignore[no-untyped-def]
+def test_feature_segment_update_priorities_when_no_changes(  # type: ignore[no-untyped-def]  # noqa: FT003
     project, environment, feature, feature_segment, admin_user, mocker
 ):
     # Given
@@ -997,7 +997,7 @@ def test_feature_segment_update_priorities_when_no_changes(  # type: ignore[no-u
     mocked_create_segment_priorities_changed_audit_log.delay.assert_not_called()
 
 
-def test_feature_segment_update_priorities_when_changes(  # type: ignore[no-untyped-def]
+def test_feature_segment_update_priorities_when_changes(  # type: ignore[no-untyped-def]  # noqa: FT003
     project, environment, feature, feature_segment, admin_user, mocker
 ):
     # Given
@@ -1044,7 +1044,7 @@ def test_feature_segment_update_priorities_when_changes(  # type: ignore[no-unty
     )
 
 
-def test_feature_state_gt_operator_for_multiple_versions_of_segment_overrides(  # type: ignore[no-untyped-def]
+def test_feature_state_gt_operator_for_multiple_versions_of_segment_overrides(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     feature, segment, feature_segment, environment
 ):
     # Given
@@ -1062,7 +1062,7 @@ def test_feature_state_gt_operator_for_multiple_versions_of_segment_overrides(  
     assert v2_segment_override > v1_segment_override
 
 
-def test_feature_state_gt_operator_for_segment_overrides_and_environment_default(  # type: ignore[no-untyped-def]
+def test_feature_state_gt_operator_for_segment_overrides_and_environment_default(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     feature, segment, feature_segment, environment
 ):
     # Given
@@ -1080,7 +1080,7 @@ def test_feature_state_gt_operator_for_segment_overrides_and_environment_default
     assert segment_override > environment_default
 
 
-def test_feature_state_clone_for_segment_override_clones_feature_segment(
+def test_feature_state_clone_for_segment_override_clones_feature_segment(  # noqa: FT003,FT004
     feature: Feature,
     segment_featurestate: FeatureState,
     environment: Environment,
@@ -1102,7 +1102,7 @@ def test_feature_state_clone_for_segment_override_clones_feature_segment(
     )
 
 
-def test_feature_segment_clone(
+def test_feature_segment_clone(  # noqa: FT003,FT004
     feature_segment: FeatureSegment,
     environment: Environment,
     environment_two: Environment,
@@ -1119,7 +1119,7 @@ def test_feature_segment_clone(
     assert cloned_feature_segment.environment == environment_two
 
 
-def test_create_feature_creates_feature_states_in_all_environments_and_environment_feature_version(
+def test_create_feature_creates_feature_states_in_all_environments_and_environment_feature_version(  # noqa: FT003
     project: "Project",
 ) -> None:
     # Given
@@ -1138,7 +1138,7 @@ def test_create_feature_creates_feature_states_in_all_environments_and_environme
     assert feature.feature_states.count() == 2
 
 
-def test_webhooks_are_called_when_feature_state_is_updated(
+def test_webhooks_are_called_when_feature_state_is_updated(  # noqa: FT003
     mocker: MockerFixture,
     feature_state: FeatureState,
     admin_history: None,
@@ -1159,7 +1159,7 @@ def test_webhooks_are_called_when_feature_state_is_updated(
     assert called_feature_state.id == feature_state.id
 
 
-def test_webhooks_are_called_when_feature_state_is_created(
+def test_webhooks_are_called_when_feature_state_is_created(  # noqa: FT003
     mocker: MockerFixture,
     feature: Feature,
     environment: Environment,
@@ -1193,7 +1193,7 @@ def test_webhooks_are_called_when_feature_state_is_created(
     assert called_feature_state.id == feature_state.id
 
 
-def test_webhooks_are_not_called_for_feature_state_with_environment_feature_version(
+def test_webhooks_are_not_called_for_feature_state_with_environment_feature_version(  # noqa: FT003
     mocker: MockerFixture,
     feature: Feature,
     environment_v2_versioning: Environment,

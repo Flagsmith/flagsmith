@@ -83,7 +83,7 @@ two_hours_ago = now - timedelta(hours=2)
 one_hour_ago = now - timedelta(hours=1)
 
 
-def test_project_owners_is_read_only_for_feature_create(
+def test_project_owners_is_read_only_for_feature_create(  # noqa: FT003
     project: Project,
     admin_client_original: APIClient,
     admin_user: FFAdminUser,
@@ -118,7 +118,7 @@ def test_project_owners_is_read_only_for_feature_create(
 
 
 @mock.patch("features.views.trigger_feature_state_change_webhooks")
-def test_feature_state_webhook_triggered_when_feature_deleted(
+def test_feature_state_webhook_triggered_when_feature_deleted(  # noqa: FT003
     mocked_trigger_fs_change_webhook: mock.MagicMock,
     project: Project,
     feature: Feature,
@@ -138,7 +138,7 @@ def test_feature_state_webhook_triggered_when_feature_deleted(
     mocked_trigger_fs_change_webhook.assert_has_calls(mock_calls)
 
 
-def test_remove_owners_only_remove_specified_owners(
+def test_remove_owners_only_remove_specified_owners(  # noqa: FT003,FT004
     feature: Feature,
     project: Project,
     admin_client_new: APIClient,
@@ -169,7 +169,7 @@ def test_remove_owners_only_remove_specified_owners(
     }
 
 
-def test_audit_log_created_when_feature_state_created_for_identity(
+def test_audit_log_created_when_feature_state_created_for_identity(  # noqa: FT003
     feature: Feature,
     project: Project,
     identity: Identity,
@@ -204,7 +204,7 @@ def test_audit_log_created_when_feature_state_created_for_identity(
     assert audit_log.log == expected_log_message
 
 
-def test_audit_log_created_when_feature_state_updated_for_identity(
+def test_audit_log_created_when_feature_state_updated_for_identity(  # noqa: FT003
     feature: Feature,
     project: Project,
     environment: Environment,
@@ -245,7 +245,7 @@ def test_audit_log_created_when_feature_state_updated_for_identity(
     assert audit_log.log == expected_log_message
 
 
-def test_audit_log_created_when_feature_state_deleted_for_identity(
+def test_audit_log_created_when_feature_state_deleted_for_identity(  # noqa: FT003
     feature: Feature,
     project: Project,
     environment: Environment,
@@ -280,7 +280,7 @@ def test_audit_log_created_when_feature_state_deleted_for_identity(
     )
 
 
-def test_when_add_tags_from_different_project_on_feature_create_then_failed(
+def test_when_add_tags_from_different_project_on_feature_create_then_failed(  # noqa: FT003
     project: Project,
     admin_client_new: APIClient,
     organisation: Organisation,
@@ -316,7 +316,7 @@ def test_when_add_tags_from_different_project_on_feature_create_then_failed(
     assert Feature.objects.filter(name=feature_name, project=project.id).count() == 0
 
 
-def test_when_add_tags_on_feature_update_then_success(
+def test_when_add_tags_on_feature_update_then_success(  # noqa: FT003
     project: Project,
     feature: Feature,
     tag_one: Tag,
@@ -352,7 +352,7 @@ def test_when_add_tags_on_feature_update_then_success(
     assert check_feature.tags.count() == 1
 
 
-def test_when_add_tags_from_different_project_on_feature_update_then_failed(
+def test_when_add_tags_from_different_project_on_feature_update_then_failed(  # noqa: FT003
     feature: Feature,
     project: Project,
     admin_client_new: APIClient,
@@ -395,7 +395,7 @@ def test_when_add_tags_from_different_project_on_feature_update_then_failed(
     assert check_feature.tags.count() == 0
 
 
-def test_list_features_is_archived_filter(
+def test_list_features_is_archived_filter(  # noqa: FT003
     feature: Feature,
     project: Project,
     admin_client_new: APIClient,
@@ -424,7 +424,7 @@ def test_list_features_is_archived_filter(
     assert response.json()["results"][0]["id"] == feature.id
 
 
-def test_put_feature_does_not_update_feature_states(
+def test_put_feature_does_not_update_feature_states(  # noqa: FT003
     feature: Feature,
     project: Project,
     admin_client_new: APIClient,
@@ -453,7 +453,7 @@ def test_put_feature_does_not_update_feature_states(
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("features.views.get_multiple_event_list_for_feature")
-def test_get_project_features_influx_data(
+def test_get_project_features_influx_data(  # noqa: FT003
     mock_get_event_list: mock.MagicMock,
     feature: Feature,
     project: Project,
@@ -490,7 +490,7 @@ def test_get_project_features_influx_data(
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("features.views.get_multiple_event_list_for_feature")
-def test_get_project_features_influx_data_with_two_weeks_period(
+def test_get_project_features_influx_data_with_two_weeks_period(  # noqa: FT003
     mock_get_event_list: mock.MagicMock,
     feature: Feature,
     project: Project,
@@ -526,7 +526,7 @@ def test_get_project_features_influx_data_with_two_weeks_period(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_project_features_influx_data_with_malformed_period(
+def test_get_project_features_influx_data_with_malformed_period(  # noqa: FT003
     feature: Feature,
     project: Project,
     environment: Environment,
@@ -547,7 +547,7 @@ def test_get_project_features_influx_data_with_malformed_period(
     assert response.data[0] == "Malformed period supplied"
 
 
-def test_regular_user_cannot_create_mv_options_when_creating_feature(
+def test_regular_user_cannot_create_mv_options_when_creating_feature(  # noqa: FT003
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -572,7 +572,7 @@ def test_regular_user_cannot_create_mv_options_when_creating_feature(
     assert response.json()["detail"] == detail
 
 
-def test_regular_user_cannot_create_mv_options_when_updating_feature(
+def test_regular_user_cannot_create_mv_options_when_updating_feature(  # noqa: FT003
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -602,7 +602,7 @@ def test_regular_user_cannot_create_mv_options_when_updating_feature(
     assert response.json()["detail"] == detail
 
 
-def test_regular_user_can_update_feature_description(
+def test_regular_user_can_update_feature_description(  # noqa: FT003
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -637,7 +637,7 @@ def test_regular_user_can_update_feature_description(
 
 
 @mock.patch("environments.models.environment_wrapper")
-def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(
+def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(  # noqa: FT003
     mock_dynamo_environment_wrapper: mock.MagicMock,
     project: Project,
     admin_client_new: APIClient,
@@ -660,7 +660,7 @@ def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(
     mock_dynamo_environment_wrapper.write_environments.assert_called_once()
 
 
-def test_get_flags_for_environment_response(
+def test_get_flags_for_environment_response(  # noqa: FT003
     api_client: APIClient,
     environment: Environment,
     project: Project,
@@ -712,7 +712,7 @@ def test_get_flags_for_environment_response(
 
 
 @pytest.mark.parametrize("cache_flags_seconds", [0, 30])
-def test_SDKFeatureStates_get__responds_200_with_feature_list(
+def test_SDKFeatureStates_get__responds_200_with_feature_list(  # noqa: FT003
     api_client: APIClient,
     cache_flags_seconds: int,
     environment: Environment,
@@ -807,7 +807,7 @@ def test_SDKFeatureStates_get__given_identifier__responds_200_with_feature_list(
         pytest.param(True, False, 7, id="replica_database,existing_identity"),
     ],
 )
-def test_SDKFeatureStates_get__given_identifier_and_feature__both_exist__responds_200_with_feature(
+def test_SDKFeatureStates_get__given_identifier_and_feature__both_exist__responds_200_with_feature(  # noqa: FT003
     api_client: APIClient,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
@@ -858,7 +858,7 @@ def test_SDKFeatureStates_get__given_identifier_and_feature__both_exist__respond
         pytest.param(True, False, 6, id="replica_database,existing_identity"),
     ],
 )
-def test_SDKFeatureStates_get__given_identifier_and_feature__feature_does_not_exist__responds_404(
+def test_SDKFeatureStates_get__given_identifier_and_feature__feature_does_not_exist__responds_404(  # noqa: FT003
     api_client: APIClient,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
@@ -882,7 +882,7 @@ def test_SDKFeatureStates_get__given_identifier_and_feature__feature_does_not_ex
     assert Identity.objects.filter(identifier=identifier).exists()
 
 
-def test_SDKFeatureStates_get__given_feature__exists__responds_200_with_feature(
+def test_SDKFeatureStates_get__given_feature__exists__responds_200_with_feature(  # noqa: FT003
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -908,7 +908,7 @@ def test_SDKFeatureStates_get__given_feature__exists__responds_200_with_feature(
     }
 
 
-def test_SDKFeatureStates_get__given_feature__doesnt_exist__responds_404(
+def test_SDKFeatureStates_get__given_feature__doesnt_exist__responds_404(  # noqa: FT003
     api_client: APIClient,
     environment: Environment,
     mocker: MockerFixture,
@@ -934,7 +934,7 @@ def test_SDKFeatureStates_get__given_feature__doesnt_exist__responds_404(
         (None, False, True),
     ),
 )
-def test_get_flags_hide_disabled_flags(
+def test_get_flags_hide_disabled_flags(  # noqa: FT003
     environment_value: bool | None,
     project_value: bool,
     disabled_flag_returned: bool,
@@ -963,7 +963,7 @@ def test_get_flags_hide_disabled_flags(
     assert len(response.json()) == (2 if disabled_flag_returned else 1)
 
 
-def test_get_flags_hide_sensitive_data(
+def test_get_flags_hide_sensitive_data(  # noqa: FT003
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -1016,7 +1016,7 @@ def test_get_flags__server_key_only_feature__return_expected(
     assert not response.json()
 
 
-def test_get_flags_cache(
+def test_get_flags_cache(  # noqa: FT003
     environment: Environment,
     feature: Feature,
     django_assert_num_queries: DjangoAssertNumQueries,
@@ -1059,7 +1059,7 @@ def test_get_flags_cache(
             )
 
 
-def test_get_flags__server_key_only_feature__server_key_auth__return_expected(
+def test_get_flags__server_key_only_feature__server_key_auth__return_expected(  # noqa: FT003
     api_client: APIClient,
     environment_api_key: EnvironmentAPIKey,
     feature: Feature,
@@ -1120,7 +1120,7 @@ def test_get_flags__server_key_only_feature__cache_isolation_between_client_and_
     assert feature.name not in client_feature_names
 
 
-def test_get_feature_states_by_uuid(
+def test_get_feature_states_by_uuid(  # noqa: FT003
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -1141,7 +1141,7 @@ def test_get_feature_states_by_uuid(
     assert response_json["uuid"] == str(feature_state.uuid)
 
 
-def test_deleted_features_are_not_listed(
+def test_deleted_features_are_not_listed(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -1159,7 +1159,7 @@ def test_deleted_features_are_not_listed(
     assert response.json()["count"] == 0
 
 
-def test_get_feature_evaluation_data(
+def test_get_feature_evaluation_data(  # noqa: FT003
     project: Project,
     feature: Feature,
     environment: Environment,
@@ -1267,7 +1267,7 @@ def test_get_feature_evaluation_data__labels_filter__returns_expected(
     )
 
 
-def test_create_segment_override_forbidden(
+def test_create_segment_override_forbidden(  # noqa: FT003
     feature: Feature,
     segment: Segment,
     environment: Environment,
@@ -1301,7 +1301,7 @@ def test_create_segment_override_forbidden(
     }
 
 
-def test_create_segment_override_staff(
+def test_create_segment_override_staff(  # noqa: FT003
     feature: Feature,
     segment: Segment,
     environment: Environment,
@@ -1334,7 +1334,7 @@ def test_create_segment_override_staff(
     assert response.data["feature_segment"]["segment"] == segment.id
 
 
-def test_create_segment_override(
+def test_create_segment_override(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     segment: Segment,
@@ -1370,7 +1370,7 @@ def test_create_segment_override(
     assert created_override.get_feature_state_value() == string_value
 
 
-def test_get_flags_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped-def]
+def test_get_flags_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped-def]  # noqa: FT003
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -1390,7 +1390,7 @@ def test_get_flags_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped
         assert response.status_code == status.HTTP_200_OK
 
 
-def test_list_feature_states_from_simple_view_set(
+def test_list_feature_states_from_simple_view_set(  # noqa: FT003
     environment: Environment,
     feature: Feature,
     admin_user: FFAdminUser,
@@ -1447,7 +1447,7 @@ def test_list_feature_states_from_simple_view_set(
     assert response_json["count"] == 3
 
 
-def test_list_feature_states_nested_environment_view_set(
+def test_list_feature_states_nested_environment_view_set(  # noqa: FT003
     environment: Environment,
     project: Project,
     feature: Feature,
@@ -1494,7 +1494,7 @@ def test_list_feature_states_nested_environment_view_set(
     assert response_json["count"] == 3
 
 
-def test_environment_feature_states_filter_using_feature_name(
+def test_environment_feature_states_filter_using_feature_name(  # noqa: FT003
     environment: Environment,
     project: Project,
     feature: Feature,
@@ -1517,7 +1517,7 @@ def test_environment_feature_states_filter_using_feature_name(
     assert response.json()["results"][0]["feature"] == feature.id
 
 
-def test_environment_feature_states_filter_to_show_identity_override_only(
+def test_environment_feature_states_filter_to_show_identity_override_only(  # noqa: FT003
     environment: Environment,
     feature: Feature,
     admin_client_new: APIClient,
@@ -1546,7 +1546,7 @@ def test_environment_feature_states_filter_to_show_identity_override_only(
     assert res.json()["results"][0]["identity"]["identifier"] == identifier
 
 
-def test_environment_feature_states_only_returns_latest_versions(
+def test_environment_feature_states_only_returns_latest_versions(  # noqa: FT003
     environment: Environment,
     feature: Feature,
     admin_client_new: APIClient,
@@ -1573,7 +1573,7 @@ def test_environment_feature_states_only_returns_latest_versions(
     assert response_json["results"][0]["id"] == feature_state_v2.id
 
 
-def test_environment_feature_states_does_not_return_null_versions(
+def test_environment_feature_states_does_not_return_null_versions(  # noqa: FT003
     environment: Environment,
     feature: Feature,
     admin_client_new: APIClient,
@@ -1599,7 +1599,7 @@ def test_environment_feature_states_does_not_return_null_versions(
     assert response_json["results"][0]["id"] == feature_state.id
 
 
-def test_create_feature_default_is_archived_is_false(
+def test_create_feature_default_is_archived_is_false(  # noqa: FT003
     admin_client_new: APIClient, project: Project
 ) -> None:
     # Given
@@ -1617,7 +1617,7 @@ def test_create_feature_default_is_archived_is_false(
     assert response["is_archived"] is False
 
 
-def test_update_feature_is_archived(
+def test_update_feature_is_archived(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -1637,7 +1637,7 @@ def test_update_feature_is_archived(
     assert response["is_archived"] is True
 
 
-def test_should_create_feature_states_when_feature_created(
+def test_should_create_feature_states_when_feature_created(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -1674,7 +1674,7 @@ def test_should_create_feature_states_when_feature_created(
 
 
 @pytest.mark.parametrize("default_value", [(12), (True), ("test")])
-def test_should_create_feature_states_with_value_when_feature_created(
+def test_should_create_feature_states_with_value_when_feature_created(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -1706,7 +1706,7 @@ def test_should_create_feature_states_with_value_when_feature_created(
     assert feature_state.get_feature_state_value() == default_value
 
 
-def test_should_delete_feature_states_when_feature_deleted(
+def test_should_delete_feature_states_when_feature_deleted(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -1737,7 +1737,7 @@ def test_should_delete_feature_states_when_feature_deleted(
     )
 
 
-def test_create_feature_returns_201_if_name_matches_regex(
+def test_create_feature_returns_201_if_name_matches_regex(  # noqa: FT003,FT004
     admin_client_new: APIClient, project: Project
 ) -> None:
     # Given
@@ -1755,7 +1755,7 @@ def test_create_feature_returns_201_if_name_matches_regex(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_create_feature_returns_400_if_name_does_not_matches_regex(
+def test_create_feature_returns_400_if_name_does_not_matches_regex(  # noqa: FT003,FT004
     admin_client_new: APIClient, project: Project
 ) -> None:
     # Given
@@ -1777,7 +1777,7 @@ def test_create_feature_returns_400_if_name_does_not_matches_regex(
     )
 
 
-def test_audit_log_created_when_feature_created(
+def test_audit_log_created_when_feature_created(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -1807,7 +1807,7 @@ def test_audit_log_created_when_feature_created(
     ).count() == len(project.environments.all())
 
 
-def test_audit_log_created_when_feature_updated(
+def test_audit_log_created_when_feature_updated(  # noqa: FT003
     admin_client_new: APIClient, project: Project, feature: Feature
 ) -> None:
     # Given
@@ -1833,7 +1833,7 @@ def test_audit_log_created_when_feature_updated(
     )
 
 
-def test_audit_logs_created_when_feature_deleted(
+def test_audit_logs_created_when_feature_deleted(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -1863,7 +1863,7 @@ def test_audit_logs_created_when_feature_deleted(
     ).count() == len(feature_states_ids)
 
 
-def test_should_create_tags_when_feature_created(
+def test_should_create_tags_when_feature_created(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     tag_one: Tag,
@@ -1899,7 +1899,7 @@ def test_should_create_tags_when_feature_created(
     assert list(feature.tags.all()) == [tag_one, tag_two]
 
 
-def test_add_owners_fails_if_user_not_found(
+def test_add_owners_fails_if_user_not_found(  # noqa: FT003
     admin_client_new: APIClient, project: Project
 ) -> None:
     # Given
@@ -1924,7 +1924,7 @@ def test_add_owners_fails_if_user_not_found(
     assert feature.owners.filter(id__in=[user_1.id, user_2.id]).count() == 0
 
 
-def test_add_owners_adds_owner(
+def test_add_owners_adds_owner(  # noqa: FT003
     staff_user: FFAdminUser,
     admin_user: FFAdminUser,
     admin_client_new: APIClient,
@@ -1968,7 +1968,7 @@ def test_add_owners_adds_owner(
     }
 
 
-def test_add_group_owners_adds_group_owner(
+def test_add_group_owners_adds_group_owner(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -2010,7 +2010,7 @@ def test_add_group_owners_adds_group_owner(
     }
 
 
-def test_remove_group_owners_removes_group_owner(
+def test_remove_group_owners_removes_group_owner(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -2051,7 +2051,7 @@ def test_remove_group_owners_removes_group_owner(
     }
 
 
-def test_remove_group_owners_when_nonexistent(
+def test_remove_group_owners_when_nonexistent(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -2086,7 +2086,7 @@ def test_remove_group_owners_when_nonexistent(
     assert len(json_response["group_owners"]) == 0
 
 
-def test_add_group_owners_with_wrong_org_group(
+def test_add_group_owners_with_wrong_org_group(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -2125,7 +2125,7 @@ def test_add_group_owners_with_wrong_org_group(
     response.json() == {"non_field_errors": ["Some groups not found"]}
 
 
-def test_list_features_return_tags(
+def test_list_features_return_tags(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -2146,7 +2146,7 @@ def test_list_features_return_tags(
     assert "tags" in feature
 
 
-def test_list_features_group_owners(
+def test_list_features_group_owners(  # noqa: FT003
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -2185,7 +2185,7 @@ def test_list_features_group_owners(
     }
 
 
-def test_project_admin_can_create_mv_options_when_creating_feature(
+def test_project_admin_can_create_mv_options_when_creating_feature(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -2209,7 +2209,7 @@ def test_project_admin_can_create_mv_options_when_creating_feature(
     assert len(response_json["multivariate_options"]) == 1
 
 
-def test_get_feature_by_uuid(
+def test_get_feature_by_uuid(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -2226,7 +2226,7 @@ def test_get_feature_by_uuid(
     assert response.json()["uuid"] == str(feature.uuid)
 
 
-def test_get_feature_by_uuid_returns_404_if_feature_does_not_exists(
+def test_get_feature_by_uuid_returns_404_if_feature_does_not_exists(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -2240,7 +2240,7 @@ def test_get_feature_by_uuid_returns_404_if_feature_does_not_exists(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_update_feature_state_value_triggers_dynamo_rebuild(
+def test_update_feature_state_value_triggers_dynamo_rebuild(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -2273,7 +2273,7 @@ def test_update_feature_state_value_triggers_dynamo_rebuild(
     mock_dynamo_environment_wrapper.write_environments.assert_called_once()
 
 
-def test_create_segment_overrides_creates_correct_audit_log_messages(
+def test_create_segment_overrides_creates_correct_audit_log_messages(  # noqa: FT003
     admin_client_new: APIClient,
     feature: Feature,
     segment: Segment,
@@ -2329,7 +2329,7 @@ def test_create_segment_overrides_creates_correct_audit_log_messages(
     )
 
 
-def test_list_features_provides_information_on_number_of_overrides(
+def test_list_features_provides_information_on_number_of_overrides(  # noqa: FT003
     feature: Feature,
     segment: Segment,
     segment_featurestate: FeatureState,
@@ -2357,7 +2357,7 @@ def test_list_features_provides_information_on_number_of_overrides(
     assert response_json["results"][0]["num_identity_overrides"] == 1
 
 
-def test_list_features_provides_correct_information_on_number_of_overrides_based_on_version(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_list_features_provides_correct_information_on_number_of_overrides_based_on_version(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     feature: Feature,
     segment: Segment,
     project: Project,
@@ -2410,7 +2410,7 @@ def test_list_features_provides_correct_information_on_number_of_overrides_based
     assert response_json["results"][0]["num_segment_overrides"] == 0
 
 
-def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
+def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(  # noqa: FT003
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
@@ -2452,7 +2452,7 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     assert response_json["results"][0]["num_identity_overrides"] is None
 
 
-def test_list_features_calls_get_overrides_data(
+def test_list_features_calls_get_overrides_data(  # noqa: FT003
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
     admin_client_new: APIClient,
@@ -2483,7 +2483,7 @@ def test_list_features_calls_get_overrides_data(
     )
 
 
-def test_create_segment_override_reaching_max_limit(
+def test_create_segment_override_reaching_max_limit(  # noqa: FT003,FT004
     admin_client_new: APIClient,
     feature: Feature,
     segment: Segment,
@@ -2526,7 +2526,7 @@ def test_create_segment_override_reaching_max_limit(
     assert environment.feature_segments.count() == 1
 
 
-def test_create_feature_reaching_max_limit(
+def test_create_feature_reaching_max_limit(  # noqa: FT003,FT004
     admin_client_new: APIClient,
     project: Project,
     settings: SettingsWrapper,
@@ -2555,7 +2555,7 @@ def test_create_feature_reaching_max_limit(
     )
 
 
-def test_create_segment_override_using_environment_viewset(
+def test_create_segment_override_using_environment_viewset(  # noqa: FT003
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -2586,7 +2586,7 @@ def test_create_segment_override_using_environment_viewset(
     response.json()["feature_state_value"] == new_value
 
 
-def test_cannot_create_feature_state_for_feature_from_different_project(
+def test_cannot_create_feature_state_for_feature_from_different_project(  # noqa: FT003
     admin_client_new: APIClient,
     environment: Environment,
     project_two_feature: Feature,
@@ -2617,7 +2617,7 @@ def test_cannot_create_feature_state_for_feature_from_different_project(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_create_feature_state_environment_is_read_only(
+def test_create_feature_state_environment_is_read_only(  # noqa: FT003
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -2648,7 +2648,7 @@ def test_create_feature_state_environment_is_read_only(
     assert response.json()["environment"] == environment.id
 
 
-def test_cannot_create_feature_state_of_feature_from_different_project(
+def test_cannot_create_feature_state_of_feature_from_different_project(  # noqa: FT003
     admin_client_new: APIClient,
     environment: Environment,
     project_two_feature: Feature,
@@ -2678,7 +2678,7 @@ def test_cannot_create_feature_state_of_feature_from_different_project(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_create_feature_state_environment_field_is_read_only(
+def test_create_feature_state_environment_field_is_read_only(  # noqa: FT003
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -2709,7 +2709,7 @@ def test_create_feature_state_environment_field_is_read_only(
     assert response.json()["environment"] == environment.id
 
 
-def test_cannot_update_environment_of_a_feature_state(
+def test_cannot_update_environment_of_a_feature_state(  # noqa: FT003
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -2745,7 +2745,7 @@ def test_cannot_update_environment_of_a_feature_state(
     )
 
 
-def test_update_feature_state_without_history_of_fsv(
+def test_update_feature_state_without_history_of_fsv(  # noqa: FT003
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -2778,7 +2778,7 @@ def test_update_feature_state_without_history_of_fsv(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_cannot_update_feature_of_a_feature_state(
+def test_cannot_update_feature_of_a_feature_state(  # noqa: FT003
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -2817,7 +2817,7 @@ def test_cannot_update_feature_of_a_feature_state(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_without_required_metadata_returns_400(
+def test_create_feature_without_required_metadata_returns_400(  # noqa: FT003
     project: Project,
     client: APIClient,
     required_a_feature_metadata_field: MetadataModelField,
@@ -2841,7 +2841,7 @@ def test_create_feature_without_required_metadata_returns_400(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_with_optional_metadata_returns_201(
+def test_create_feature_with_optional_metadata_returns_201(  # noqa: FT003
     project: Project,
     client: APIClient,
     optional_b_feature_metadata_field: MetadataModelField,
@@ -2877,7 +2877,7 @@ def test_create_feature_with_optional_metadata_returns_201(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_with_required_metadata_returns_201(
+def test_create_feature_with_required_metadata_returns_201(  # noqa: FT003
     project: Project,
     client: APIClient,
     required_a_feature_metadata_field: MetadataModelField,
@@ -2913,7 +2913,7 @@ def test_create_feature_with_required_metadata_returns_201(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_with_required_metadata_using_organisation_content_typereturns_201(
+def test_create_feature_with_required_metadata_using_organisation_content_typereturns_201(  # noqa: FT003
     project: Project,
     client: APIClient,
     required_a_feature_metadata_field_using_organisation_content_type: MetadataModelField,
@@ -3099,7 +3099,7 @@ def test_update_segment_override__using_simple_feature_state_viewset__denies_upd
     settings.IS_RBAC_INSTALLED is True,
     reason="Skip this test if RBAC is installed",
 )
-def test_list_features_n_plus_1_without_rbac(
+def test_list_features_n_plus_1_without_rbac(  # noqa: FT003,FT004
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3128,7 +3128,7 @@ def test_list_features_n_plus_1_without_rbac(
     settings.IS_RBAC_INSTALLED is False,
     reason="Skip this test if RBAC is not installed",
 )
-def test_list_features_n_plus_1_with_rbac(
+def test_list_features_n_plus_1_with_rbac(  # noqa: FT003,FT004
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3176,7 +3176,7 @@ def _assert_list_feature_n_plus_1(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_list_features_from_different_project_returns_404(
+def test_list_features_from_different_project_returns_404(  # noqa: FT003
     staff_client: APIClient,
     organisation_two_project_two: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -3195,7 +3195,7 @@ def test_list_features_from_different_project_returns_404(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_list_features_with_union_tag(
+def test_list_features_with_union_tag(  # noqa: FT003
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3247,7 +3247,7 @@ def test_list_features_with_union_tag(
     assert response.data["results"][1]["tags"] == [tag2.id]
 
 
-def test_list_features_with_intersection_tag(
+def test_list_features_with_intersection_tag(  # noqa: FT003
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3297,7 +3297,7 @@ def test_list_features_with_intersection_tag(
     assert response.data["results"][0]["tags"] == [tag1.id, tag2.id]
 
 
-def test_list_features_with_feature_state(
+def test_list_features_with_feature_state(  # noqa: FT003
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3414,7 +3414,7 @@ def test_list_features_with_feature_state(
     assert results[2]["name"] == feature3.name
 
 
-def test_list_features_with_filter_by_value_search_string_and_int(
+def test_list_features_with_filter_by_value_search_string_and_int(  # noqa: FT003
     staff_client: APIClient,
     staff_user: FFAdminUser,
     project: Project,
@@ -3512,7 +3512,7 @@ def test_list_features_with_filter_by_value_search_string_and_int(
     assert feature4.name in features
 
 
-def test_list_features_with_filter_by_search_value_boolean(
+def test_list_features_with_filter_by_search_value_boolean(  # noqa: FT003
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3581,7 +3581,7 @@ def test_list_features_with_filter_by_search_value_boolean(
     assert response.data["results"][0]["name"] == feature2.name
 
 
-def test_FeatureViewSet_list__includes_code_references_counts(
+def test_FeatureViewSet_list__includes_code_references_counts(  # noqa: FT003
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3690,7 +3690,7 @@ def test_FeatureViewSet_list__no_scans__returns_empty_code_references_counts(
     assert results[0]["code_references_counts"] == []
 
 
-def test_simple_feature_state_returns_only_latest_versions(
+def test_simple_feature_state_returns_only_latest_versions(  # noqa: FT003
     staff_client: APIClient,
     staff_user: FFAdminUser,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -3746,7 +3746,7 @@ def test_simple_feature_state_returns_only_latest_versions(
     reason="Skip this test if RBAC is installed",
 )
 @pytest.mark.freeze_time(two_hours_ago)
-def test_feature_list_last_modified_values_without_rbac(
+def test_feature_list_last_modified_values_without_rbac(  # noqa: FT003,FT004
     staff_client: APIClient,
     staff_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -3772,7 +3772,7 @@ def test_feature_list_last_modified_values_without_rbac(
     reason="Skip this test if RBAC is not installed",
 )
 @pytest.mark.freeze_time(two_hours_ago)
-def test_feature_list_last_modified_values_with_rbac(
+def test_feature_list_last_modified_values_with_rbac(  # noqa: FT003,FT004
     staff_client: APIClient,
     staff_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -3856,7 +3856,7 @@ def _assert_feature_list_last_modified_values(  # type: ignore[no-untyped-def]
     )
 
 
-def test_filter_features_with_owners(
+def test_filter_features_with_owners(  # noqa: FT003
     staff_client: APIClient,
     staff_user: FFAdminUser,
     admin_user: FFAdminUser,
@@ -3899,7 +3899,7 @@ def test_filter_features_with_owners(
     assert response.data["results"][1]["id"] == feature2.id
 
 
-def test_filter_features_with_group_owners(
+def test_filter_features_with_group_owners(  # noqa: FT003
     staff_client: APIClient,
     project: Project,
     organisation: Organisation,
@@ -3945,7 +3945,7 @@ def test_filter_features_with_group_owners(
     assert response.data["results"][1]["id"] == feature2.id
 
 
-def test_filter_features_with_owners_and_group_owners_together(
+def test_filter_features_with_owners_and_group_owners_together(  # noqa: FT003
     staff_client: APIClient,
     staff_user: FFAdminUser,
     project: Project,
@@ -3989,7 +3989,7 @@ def test_filter_features_with_owners_and_group_owners_together(
     assert response.data["results"][1]["id"] == feature2.id
 
 
-def test_delete_feature_deletes_any_related_identity_overrides(
+def test_delete_feature_deletes_any_related_identity_overrides(  # noqa: FT003
     flagsmith_environments_v2_table: "Table",
     flagsmith_identities_table: "Table",
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
@@ -4041,7 +4041,7 @@ def test_delete_feature_deletes_any_related_identity_overrides(
     )
 
 
-def test_get_multivariate_options_responds_200_with_control_value_and_options(
+def test_get_multivariate_options_responds_200_with_control_value_and_options(  # noqa: FT003
     api_client: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
@@ -4068,7 +4068,7 @@ def test_get_multivariate_options_responds_200_with_control_value_and_options(
         assert expected_value in actual_option_values
 
 
-def test_get_multivariate_options_feature_not_found_responds_404(
+def test_get_multivariate_options_feature_not_found_responds_404(  # noqa: FT003
     api_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -4085,7 +4085,7 @@ def test_get_multivariate_options_feature_not_found_responds_404(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_list_features_segment_query_param_with_valid_segment(
+def test_list_features_segment_query_param_with_valid_segment(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -4129,7 +4129,7 @@ def test_list_features_segment_query_param_with_valid_segment(
     assert segment_state["enabled"] is True
 
 
-def test_list_features_segment_query_param_with_invalid_segment(
+def test_list_features_segment_query_param_with_invalid_segment(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -4271,7 +4271,7 @@ def test_list_features__edge_identity_query__sorts_by_field_with_overrides_first
         (True, "0"),
     ],
 )
-def test_list_features__identity_query__invalid_format__returns_400(
+def test_list_features__identity_query__invalid_format__returns_400(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -4293,7 +4293,7 @@ def test_list_features__identity_query__invalid_format__returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_list_features__edge_identity_query__nonexistent_identity__returns_features_unsorted(
+def test_list_features__edge_identity_query__nonexistent_identity__returns_features_unsorted(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -4326,7 +4326,7 @@ def test_list_features__edge_identity_query__nonexistent_identity__returns_featu
     ]
 
 
-def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
+def test_create_multiple_features_with_metadata_keeps_metadata_isolated(  # noqa: FT003
     admin_client_new: APIClient,
     project: Project,
     optional_b_feature_metadata_field: MetadataModelField,

@@ -10,7 +10,7 @@ from users.models import FFAdminUser
 mock_view = mock.MagicMock()
 
 
-def test_oauth_init_permission_with_non_environment_admin_user(  # type: ignore[no-untyped-def]
+def test_oauth_init_permission_with_non_environment_admin_user(  # type: ignore[no-untyped-def]  # noqa: FT003
     environment, django_user_model, rf
 ):
     # Given
@@ -25,7 +25,7 @@ def test_oauth_init_permission_with_non_environment_admin_user(  # type: ignore[
     assert oauth_init_permission.has_permission(mock_request, mock_view) is False  # type: ignore[no-untyped-call]
 
 
-def test_oauth_init_permission_with_environment_admin_user(
+def test_oauth_init_permission_with_environment_admin_user(  # noqa: FT003
     environment: Environment, staff_user: FFAdminUser, rf: RequestFactory
 ) -> None:
     # Given

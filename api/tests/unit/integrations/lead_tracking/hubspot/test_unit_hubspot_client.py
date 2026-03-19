@@ -42,7 +42,7 @@ def hubspot_client(mocker: MockerFixture) -> HubspotClient:
         (None, {}),
     ],
 )
-def test_create_lead_form(
+def test_create_lead_form(  # noqa: FT003
     staff_user: FFAdminUser,
     hubspot_client: HubspotClient,
     hubspot_cookie_body: str | None,
@@ -117,7 +117,7 @@ def test_create_lead_form(
 
 
 @responses.activate
-def test_create_lead_form_error(
+def test_create_lead_form_error(  # noqa: FT003
     staff_user: FFAdminUser,
     hubspot_client: HubspotClient,
     inspecting_handler: logging.Handler,
@@ -148,7 +148,7 @@ def test_create_lead_form_error(
     ]
 
 
-def test_get_company_by_domain(hubspot_client: HubspotClient) -> None:
+def test_get_company_by_domain(hubspot_client: HubspotClient) -> None:  # noqa: FT003
     # Given
     name = "Flagsmith"
     domain = "flagsmith.com"
@@ -178,7 +178,7 @@ def test_get_company_by_domain(hubspot_client: HubspotClient) -> None:
     assert applied_filters[0]["operator"] == "EQ"
 
 
-def test_get_company_by_domain_no_results(hubspot_client: HubspotClient) -> None:
+def test_get_company_by_domain_no_results(hubspot_client: HubspotClient) -> None:  # noqa: FT003
     # Given
     hubspot_response = generate_get_company_by_domain_response_no_results()
 
@@ -193,7 +193,7 @@ def test_get_company_by_domain_no_results(hubspot_client: HubspotClient) -> None
     assert company is None
 
 
-def test_create_company_without_organisation_information(
+def test_create_company_without_organisation_information(  # noqa: FT003
     hubspot_client: HubspotClient,
 ) -> None:
     # Given
@@ -217,7 +217,7 @@ def test_create_company_without_organisation_information(
     }
 
 
-def test_associate_contact_to_company_succeeds(hubspot_client: HubspotClient) -> None:
+def test_associate_contact_to_company_succeeds(hubspot_client: HubspotClient) -> None:  # noqa: FT003
     # Given
     company_id = "456"
     contact_id = "123"
@@ -274,7 +274,7 @@ def test_associate_contact_to_company_succeeds(hubspot_client: HubspotClient) ->
         ),
     ],
 )
-def test_update_company_calls_hubspot_api(
+def test_update_company_calls_hubspot_api(  # noqa: FT003
     hubspot_client: HubspotClient,
     kwargs: dict[str, typing.Any],
     expected_properties: dict[str, typing.Any],

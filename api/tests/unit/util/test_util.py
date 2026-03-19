@@ -3,11 +3,11 @@ import pytest
 from util.util import iter_chunked_concat, iter_paired_chunks
 
 
-def test__iter_paired_chunks__empty():  # type: ignore[no-untyped-def]
+def test__iter_paired_chunks__empty():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert list(iter_paired_chunks([], [], chunk_size=1)) == []
 
 
-def test__iter_paired_chunks__first_empty():  # type: ignore[no-untyped-def]
+def test__iter_paired_chunks__first_empty():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert list(iter_paired_chunks([], [1, 2, 3], chunk_size=1)) == [
         ([], [1]),
         ([], [2]),
@@ -15,7 +15,7 @@ def test__iter_paired_chunks__first_empty():  # type: ignore[no-untyped-def]
     ]
 
 
-def test__iter_paired_chunks__second_empty():  # type: ignore[no-untyped-def]
+def test__iter_paired_chunks__second_empty():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert list(iter_paired_chunks([1, 2, 3], [], chunk_size=1)) == [
         ([1], []),
         ([2], []),
@@ -23,7 +23,7 @@ def test__iter_paired_chunks__second_empty():  # type: ignore[no-untyped-def]
     ]
 
 
-def test__iter_paired_chunks__first_shorter():  # type: ignore[no-untyped-def]
+def test__iter_paired_chunks__first_shorter():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert list(iter_paired_chunks([1, 2, 3], [4, 5, 6, 7, 8], chunk_size=3)) == [
         ([1, 2], [4]),
         ([3], [5, 6]),
@@ -31,7 +31,7 @@ def test__iter_paired_chunks__first_shorter():  # type: ignore[no-untyped-def]
     ]
 
 
-def test__iter_pair_chunks__second_shorter():  # type: ignore[no-untyped-def]
+def test__iter_pair_chunks__second_shorter():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert list(iter_paired_chunks([1, 2, 3, 4, 5], [6, 7, 8], chunk_size=3)) == [
         ([1, 2], [6]),
         ([3, 4], [7]),
@@ -39,7 +39,7 @@ def test__iter_pair_chunks__second_shorter():  # type: ignore[no-untyped-def]
     ]
 
 
-def test__iter_pair_chunks__same_length():  # type: ignore[no-untyped-def]
+def test__iter_pair_chunks__same_length():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert list(iter_paired_chunks([1, 2, 3], [4, 5, 6], chunk_size=3)) == [
         ([1, 2], [4]),
         ([3], [5, 6]),
@@ -82,7 +82,7 @@ def test__iter_pair_chunks__same_length():  # type: ignore[no-untyped-def]
         (["a", "b", "c"], ",", 5, ["a,b,c"]),
     ],
 )
-def test_iter_chunked_concat(
+def test_iter_chunked_concat(  # noqa: FT003,FT004
     values: list[str],
     delimiter: str,
     max_len: int,

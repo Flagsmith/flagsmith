@@ -4,7 +4,7 @@ from projects.models import Project
 from segments.models import Segment
 
 
-def test_feature_segment_is_less_than_other_if_priority_lower(
+def test_feature_segment_is_less_than_other_if_priority_lower(  # noqa: FT003
     feature: Feature,
     environment: Environment,
     segment: Segment,
@@ -33,7 +33,7 @@ def test_feature_segment_is_less_than_other_if_priority_lower(
     assert result is True
 
 
-def test_feature_segments_are_created_with_correct_priority(
+def test_feature_segments_are_created_with_correct_priority(  # noqa: FT003,FT004
     feature: Feature,
     environment: Environment,
     segment: Segment,
@@ -89,7 +89,7 @@ def test_feature_segments_are_created_with_correct_priority(
     assert feature_segment_5.priority == 0
 
 
-def test_clone_creates_a_new_object(
+def test_clone_creates_a_new_object(  # noqa: FT003
     feature: Feature,
     environment: Environment,
     segment: Segment,

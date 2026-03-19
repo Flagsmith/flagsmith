@@ -4,7 +4,7 @@ from pytest_django.fixtures import SettingsWrapper
 from rest_framework.test import APIClient
 
 
-def test_brute_force_access_attempts(
+def test_brute_force_access_attempts(  # noqa: FT003,FT004
     db: None, settings: SettingsWrapper, api_client: APIClient
 ) -> None:
     invalid_user_name = "invalid_user@mail.com"

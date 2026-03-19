@@ -7,7 +7,7 @@ from app_analytics.models import FeatureEvaluationBucket
 
 
 @pytest.mark.use_analytics_db
-def test_migrate_feature_evaluations(mocker: MockerFixture) -> None:
+def test_migrate_feature_evaluations(mocker: MockerFixture) -> None:  # noqa: FT003
     # Given
     feature_name = "test_feature_one"
     environment_id = "1"

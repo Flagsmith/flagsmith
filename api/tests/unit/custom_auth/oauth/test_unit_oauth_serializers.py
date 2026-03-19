@@ -29,7 +29,7 @@ from users.models import FFAdminUser, HubspotTracker, SignUpType
     ),
 )
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
-def test_create_oauth_login_serializer(
+def test_create_oauth_login_serializer(  # noqa: FT003
     mock_get_user_info: mock.MagicMock,
     db: None,
     settings: SettingsWrapper,
@@ -89,7 +89,7 @@ def test_create_oauth_login_serializer(
 
 
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
-def test_get_user_info_with_google_login(
+def test_get_user_info_with_google_login(  # noqa: FT003
     mock_get_user_info: mock.MagicMock,
 ) -> None:
     # Given
@@ -109,7 +109,7 @@ def test_get_user_info_with_google_login(
 
 
 @mock.patch("custom_auth.oauth.serializers.GithubUser")
-def test_get_user_info_with_github_login(
+def test_get_user_info_with_github_login(  # noqa: FT003
     mock_github_user_serializer: mock.MagicMock,
 ) -> None:
     # Given
@@ -132,7 +132,7 @@ def test_get_user_info_with_github_login(
     mock_github_user.get_user_info.assert_called()
 
 
-def test_OAuthLoginSerializer_calls_is_authentication_method_valid_correctly_if_auth_controller_is_installed(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_OAuthLoginSerializer_calls_is_authentication_method_valid_correctly_if_auth_controller_is_installed(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     settings, rf, mocker, db
 ):
     # Given
@@ -166,7 +166,7 @@ def test_OAuthLoginSerializer_calls_is_authentication_method_valid_correctly_if_
     )
 
 
-def test_OAuthLoginSerializer_allows_registration_if_sign_up_type_is_invite_link(  # type: ignore[no-untyped-def]
+def test_OAuthLoginSerializer_allows_registration_if_sign_up_type_is_invite_link(  # type: ignore[no-untyped-def]  # noqa: FT003
     settings: SettingsWrapper,
     rf: RequestFactory,
     mocker: MockerFixture,
@@ -208,7 +208,7 @@ def test_OAuthLoginSerializer_allows_registration_if_sign_up_type_is_invite_link
 @pytest.mark.parametrize(
     "serializer_class", (GithubLoginSerializer, GithubLoginSerializer)
 )
-def test_OAuthLoginSerializer_allows_login_if_allow_registration_without_invite_is_false(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_OAuthLoginSerializer_allows_login_if_allow_registration_without_invite_is_false(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     settings: SettingsWrapper,
     rf: RequestFactory,
     mocker: MockerFixture,

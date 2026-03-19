@@ -21,7 +21,7 @@ from segments.models import Segment
 from users.models import FFAdminUser
 
 
-def test_release_pipeline_publish_raises_error_if_pipeline_is_already_published(
+def test_release_pipeline_publish_raises_error_if_pipeline_is_already_published(  # noqa: FT003
     release_pipeline: ReleasePipeline, admin_user: FFAdminUser
 ) -> None:
     # Given - the pipeline is already published
@@ -34,7 +34,7 @@ def test_release_pipeline_publish_raises_error_if_pipeline_is_already_published(
         release_pipeline.publish(admin_user)
 
 
-def test_release_pipeline_get_first_stage_returns_none_if_pipeline_has_no_stages(
+def test_release_pipeline_get_first_stage_returns_none_if_pipeline_has_no_stages(  # noqa: FT003,FT004
     release_pipeline: ReleasePipeline,
 ) -> None:
     # When
@@ -44,7 +44,7 @@ def test_release_pipeline_get_first_stage_returns_none_if_pipeline_has_no_stages
     assert first_stage is None
 
 
-def test_release_pipeline_get_first_stage_returns_correct_stage(
+def test_release_pipeline_get_first_stage_returns_correct_stage(  # noqa: FT003
     release_pipeline: ReleasePipeline, environment: Environment
 ) -> None:
     # Given
@@ -63,7 +63,7 @@ def test_release_pipeline_get_first_stage_returns_correct_stage(
     assert first_stage.order == 0  # type: ignore[union-attr]
 
 
-def test_release_pipeline_get_last_stage_returns_none_if_pipeline_has_no_stages(
+def test_release_pipeline_get_last_stage_returns_none_if_pipeline_has_no_stages(  # noqa: FT003,FT004
     release_pipeline: ReleasePipeline,
 ) -> None:
     # When
@@ -73,7 +73,7 @@ def test_release_pipeline_get_last_stage_returns_none_if_pipeline_has_no_stages(
     assert last_stage is None
 
 
-def test_release_pipeline_get_last_stage_returns_correct_stage(
+def test_release_pipeline_get_last_stage_returns_correct_stage(  # noqa: FT003
     release_pipeline: ReleasePipeline, environment: Environment
 ) -> None:
     # Given
@@ -92,7 +92,7 @@ def test_release_pipeline_get_last_stage_returns_correct_stage(
     assert last_stage.order == 2  # type: ignore[union-attr]
 
 
-def test_release_pipeline_get_next_stage(
+def test_release_pipeline_get_next_stage(  # noqa: FT003,FT004
     release_pipeline: ReleasePipeline, environment: Environment
 ) -> None:
     # Given
@@ -121,7 +121,7 @@ def test_release_pipeline_get_next_stage(
     assert stage3.get_next_stage() is None
 
 
-def test_release_pipeline_get_create_log_message(
+def test_release_pipeline_get_create_log_message(  # noqa: FT003,FT004
     release_pipeline: ReleasePipeline,
 ) -> None:
     # When
@@ -131,7 +131,7 @@ def test_release_pipeline_get_create_log_message(
     assert release_pipeline.get_create_log_message(release_pipeline) == expected_message
 
 
-def test_release_pipeline_get_delete_log_message(
+def test_release_pipeline_get_delete_log_message(  # noqa: FT003,FT004
     release_pipeline: ReleasePipeline,
 ) -> None:
     # When
@@ -141,7 +141,7 @@ def test_release_pipeline_get_delete_log_message(
     assert release_pipeline.get_delete_log_message(release_pipeline) == expected_message
 
 
-def test_release_pipeline_unpublish(
+def test_release_pipeline_unpublish(  # noqa: FT003
     release_pipeline: ReleasePipeline, admin_user: FFAdminUser
 ) -> None:
     # Given - the pipeline is already published
@@ -155,7 +155,7 @@ def test_release_pipeline_unpublish(
     assert release_pipeline.published_by is None
 
 
-def test_should_raise_error_when_unpublishing_unpublished_pipeline(
+def test_should_raise_error_when_unpublishing_unpublished_pipeline(  # noqa: FT003,FT004
     release_pipeline: ReleasePipeline, admin_user: FFAdminUser
 ) -> None:
     # When/ Then
@@ -163,7 +163,7 @@ def test_should_raise_error_when_unpublishing_unpublished_pipeline(
         release_pipeline.unpublish()
 
 
-def test_release_pipeline_has_feature_in_flight(
+def test_release_pipeline_has_feature_in_flight(  # noqa: FT003,FT004
     release_pipeline: ReleasePipeline,
     environment: Environment,
     pipeline_stage_enable_feature_on_enter: PipelineStage,
@@ -190,7 +190,7 @@ def test_release_pipeline_has_feature_in_flight(
     assert release_pipeline.has_feature_in_flight() is False
 
 
-def test_phased_rollout_state_increase_split_does_not_exceed_100(
+def test_phased_rollout_state_increase_split_does_not_exceed_100(  # noqa: FT003
     phased_rollout_state: PhasedRolloutState,
 ) -> None:
     # Given
@@ -219,7 +219,7 @@ def test_phased_rollout_state_increase_split_does_not_exceed_100(
     )
 
 
-def test_phased_rollout_complete_rollout(
+def test_phased_rollout_complete_rollout(  # noqa: FT003,FT004
     phased_rollout_state: PhasedRolloutState,
     rollout_segment: Segment,
 ) -> None:
@@ -230,7 +230,7 @@ def test_phased_rollout_complete_rollout(
     assert Segment.objects.filter(id=rollout_segment.id).exists() is False
 
 
-def test_get_phased_rollout_action_returns_none_if_no_phased_rollout_action(
+def test_get_phased_rollout_action_returns_none_if_no_phased_rollout_action(  # noqa: FT003,FT004
     pipeline_stage_enable_feature_on_enter: PipelineStage,
 ) -> None:
     # When
@@ -242,7 +242,7 @@ def test_get_phased_rollout_action_returns_none_if_no_phased_rollout_action(
     assert phased_rollout_action is None
 
 
-def test_get_phased_rollout_action_returns_phased_rollout_action_if_exists(
+def test_get_phased_rollout_action_returns_phased_rollout_action_if_exists(  # noqa: FT003,FT004
     pipeline_stage_phased_rollout: PipelineStage,
 ) -> None:
     # When
@@ -253,7 +253,7 @@ def test_get_phased_rollout_action_returns_phased_rollout_action_if_exists(
     assert phased_rollout_action.action_type == StageActionType.PHASED_ROLLOUT.value
 
 
-def test_pipeline_stage_on_enter_get_completed_feature_versions_qs(
+def test_pipeline_stage_on_enter_get_completed_feature_versions_qs(  # noqa: FT003,FT004
     pipeline_stage_enable_feature_on_enter: PipelineStage,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
@@ -279,7 +279,7 @@ def test_pipeline_stage_on_enter_get_completed_feature_versions_qs(
     )
 
 
-def test_pipeline_stage_on_enter_get_completed_feature_versions_qs_with_completed_after(
+def test_pipeline_stage_on_enter_get_completed_feature_versions_qs_with_completed_after(  # noqa: FT003
     pipeline_stage_enable_feature_on_enter: PipelineStage,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
@@ -315,7 +315,7 @@ def test_pipeline_stage_on_enter_get_completed_feature_versions_qs_with_complete
     )
 
 
-def test_pipeline_stage_on_enter_get_in_stage_feature_versions_qs(
+def test_pipeline_stage_on_enter_get_in_stage_feature_versions_qs(  # noqa: FT003,FT004
     pipeline_stage_enable_feature_on_enter: PipelineStage,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
@@ -340,7 +340,7 @@ def test_pipeline_stage_on_enter_get_in_stage_feature_versions_qs(
     assert in_stage_feature_versions.count() == 0
 
 
-def test_pipeline_stage_wait_for_get_completed_feature_versions_qs(
+def test_pipeline_stage_wait_for_get_completed_feature_versions_qs(  # noqa: FT003,FT004
     pipeline_stage_update_feature_value_on_wait_for: PipelineStage,
     feature_in_pipeline_stage_update_feature_value_on_wait_for: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
@@ -363,7 +363,7 @@ def test_pipeline_stage_wait_for_get_completed_feature_versions_qs(
     )
 
 
-def test_pipeline_stage_wait_for_get_in_stage_feature_versions_qs(
+def test_pipeline_stage_wait_for_get_in_stage_feature_versions_qs(  # noqa: FT003,FT004
     pipeline_stage_update_feature_value_on_wait_for: PipelineStage,
     feature_in_pipeline_stage_update_feature_value_on_wait_for: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
@@ -386,7 +386,7 @@ def test_pipeline_stage_wait_for_get_in_stage_feature_versions_qs(
     assert in_stage_feature_versions.count() == 0
 
 
-def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs(
+def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs(  # noqa: FT003,FT004
     pipeline_stage_phased_rollout: PipelineStage,
     feature_in_pipeline_stage_phased_rollout: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
@@ -404,7 +404,7 @@ def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs(
     )
 
 
-def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs_with_completed_after(
+def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs_with_completed_after(  # noqa: FT003
     pipeline_stage_phased_rollout: PipelineStage,
     feature_in_pipeline_stage_phased_rollout: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
@@ -445,7 +445,7 @@ def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs_with_co
     )
 
 
-def test_pipeline_stage_phased_rollout_get_in_stage_feature_versions_qs(
+def test_pipeline_stage_phased_rollout_get_in_stage_feature_versions_qs(  # noqa: FT003,FT004
     pipeline_stage_phased_rollout: PipelineStage,
     feature_in_pipeline_stage_phased_rollout: Feature,
     feature_completed_pipeline_phased_rollout: Feature,
@@ -463,7 +463,7 @@ def test_pipeline_stage_phased_rollout_get_in_stage_feature_versions_qs(
     )
 
 
-def test_release_pipeline_get_feature_versions_in_pipeline_qs(
+def test_release_pipeline_get_feature_versions_in_pipeline_qs(  # noqa: FT003,FT004
     release_pipeline: ReleasePipeline,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
     feature_in_pipeline_stage_phased_rollout: Feature,
@@ -496,7 +496,7 @@ def test_release_pipeline_get_feature_versions_in_pipeline_qs(
     )
 
 
-def test_release_pipeline_url(release_pipeline: ReleasePipeline) -> None:
+def test_release_pipeline_url(release_pipeline: ReleasePipeline) -> None:  # noqa: FT003,FT004
     # When
     url = release_pipeline.url
     # Then
@@ -506,7 +506,7 @@ def test_release_pipeline_url(release_pipeline: ReleasePipeline) -> None:
     )
 
 
-def test_release_pipeline_url_raises_error_if_pipeline_is_not_saved(
+def test_release_pipeline_url_raises_error_if_pipeline_is_not_saved(  # noqa: FT003,FT004
     release_pipeline: ReleasePipeline,
 ) -> None:
     # When/ Then

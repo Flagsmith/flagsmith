@@ -18,7 +18,7 @@ from tests.integration.helpers import (
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_clone_environment_clones_feature_states_with_value(  # type: ignore[no-untyped-def]
+def test_clone_environment_clones_feature_states_with_value(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     client: APIClient,
     project: int,
     environment: int,
@@ -88,7 +88,7 @@ def test_clone_environment_clones_feature_states_with_value(  # type: ignore[no-
     )
 
 
-def test_clone_environment_creates_admin_permission_with_the_current_user(  # type: ignore[no-untyped-def]
+def test_clone_environment_creates_admin_permission_with_the_current_user(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_user, admin_client, environment, environment_api_key
 ):
     # Firstly, let's create the clone of the environment
@@ -108,7 +108,7 @@ def test_clone_environment_creates_admin_permission_with_the_current_user(  # ty
     assert response.json()[0]["admin"] is True
 
 
-def test_env_clone_creates_feature_segment(  # type: ignore[no-untyped-def]
+def test_env_clone_creates_feature_segment(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_client: APIClient,
     environment: int,
     environment_api_key: str,
@@ -136,7 +136,7 @@ def test_env_clone_creates_feature_segment(  # type: ignore[no-untyped-def]
     assert json_response["results"][0]["id"] != feature_segment
 
 
-def test_env_clone_clones_segments_overrides(  # type: ignore[no-untyped-def]
+def test_env_clone_clones_segments_overrides(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_client, environment, environment_api_key, feature, feature_segment, segment
 ):
     # Firstly, let's override the segment in source environment
@@ -221,7 +221,7 @@ def test_env_clone_clones_segments_overrides(  # type: ignore[no-untyped-def]
     assert clone_feature_segment_id != source_feature_segment_id
 
 
-def test_get_environment_document_using_persistent_cache(
+def test_get_environment_document_using_persistent_cache(  # noqa: FT003
     persistent_environment_document_cache: MagicMock,
     environment: int,
     environment_api_key: str,

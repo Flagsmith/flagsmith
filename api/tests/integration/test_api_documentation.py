@@ -1,7 +1,7 @@
 from django.test import Client
 
 
-def test_api_documentation_specification_loads(
+def test_api_documentation_specification_loads(  # noqa: FT003,FT004
     client: Client,
 ) -> None:
     # When

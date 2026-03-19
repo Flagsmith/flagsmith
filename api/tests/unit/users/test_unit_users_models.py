@@ -12,7 +12,7 @@ from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_user_belongs_to_success(
+def test_user_belongs_to_success(  # noqa: FT003,FT004
     admin_user: FFAdminUser,
     organisation: Organisation,
 ) -> None:
@@ -22,12 +22,12 @@ def test_user_belongs_to_success(
     assert admin_user.belongs_to(organisation.id)
 
 
-def test_user_belongs_to_fail(admin_user: FFAdminUser) -> None:
+def test_user_belongs_to_fail(admin_user: FFAdminUser) -> None:  # noqa: FT003,FT004
     unaffiliated_organisation = Organisation.objects.create(name="Unaffiliated")
     assert not admin_user.belongs_to(unaffiliated_organisation.id)
 
 
-def test_get_permitted_projects_for_org_admin_returns_all_projects(
+def test_get_permitted_projects_for_org_admin_returns_all_projects(  # noqa: FT003
     admin_user: FFAdminUser,
     organisation: Organisation,
     project: Project,
@@ -41,7 +41,7 @@ def test_get_permitted_projects_for_org_admin_returns_all_projects(
     assert projects.count() == 2
 
 
-def test_get_permitted_projects_for_user_returns_only_projects_matching_permission(
+def test_get_permitted_projects_for_user_returns_only_projects_matching_permission(  # noqa: FT003
     staff_user: FFAdminUser,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -57,7 +57,7 @@ def test_get_permitted_projects_for_user_returns_only_projects_matching_permissi
     assert projects.first() == project
 
 
-def test_get_admin_organisations(
+def test_get_admin_organisations(  # noqa: FT003
     admin_user: FFAdminUser,
     organisation: Organisation,
 ) -> None:
@@ -73,7 +73,7 @@ def test_get_admin_organisations(
     assert non_admin_organisation not in admin_orgs
 
 
-def test_get_permitted_environments_for_org_admin_returns_all_environments_for_project(
+def test_get_permitted_environments_for_org_admin_returns_all_environments_for_project(  # noqa: FT003,FT004
     admin_user: FFAdminUser,
     organisation: Organisation,
     project: Project,
@@ -87,7 +87,7 @@ def test_get_permitted_environments_for_org_admin_returns_all_environments_for_p
     assert environments.count() == project.environments.count()
 
 
-def test_get_permitted_environments_for_user_returns_only_environments_matching_permission(
+def test_get_permitted_environments_for_user_returns_only_environments_matching_permission(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     project: Project,
 ) -> None:
@@ -100,7 +100,7 @@ def test_get_permitted_environments_for_user_returns_only_environments_matching_
     assert len(list(environments)) == 0
 
 
-def test_unique_user_organisation(
+def test_unique_user_organisation(  # noqa: FT003,FT004
     admin_user: FFAdminUser,
     organisation: Organisation,
 ) -> None:
@@ -108,7 +108,7 @@ def test_unique_user_organisation(
         admin_user.add_organisation(organisation, OrganisationRole.USER)
 
 
-def test_has_organisation_permission_is_true_for_organisation_admin(
+def test_has_organisation_permission_is_true_for_organisation_admin(  # noqa: FT003,FT004
     admin_user: FFAdminUser,
     organisation: Organisation,
 ) -> None:
@@ -121,7 +121,7 @@ def test_has_organisation_permission_is_true_for_organisation_admin(
     )
 
 
-def test_has_organisation_permission_is_true_when_user_has_permission(
+def test_has_organisation_permission_is_true_when_user_has_permission(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     organisation: Organisation,
 ) -> None:
@@ -144,7 +144,7 @@ def test_has_organisation_permission_is_true_when_user_has_permission(
     )
 
 
-def test_has_organisation_permission_is_false_when_user_does_not_have_permission(
+def test_has_organisation_permission_is_false_when_user_does_not_have_permission(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     organisation: Organisation,
 ) -> None:
@@ -156,7 +156,7 @@ def test_has_organisation_permission_is_false_when_user_does_not_have_permission
     )
 
 
-def test_user_add_organisation_adds_user_to_the_default_user_permission_group(
+def test_user_add_organisation_adds_user_to_the_default_user_permission_group(  # noqa: FT003
     organisation: Organisation,
     default_user_permission_group: UserPermissionGroup,
     user_permission_group: UserPermissionGroup,
@@ -172,7 +172,7 @@ def test_user_add_organisation_adds_user_to_the_default_user_permission_group(
     assert user_permission_group not in user.permission_groups.all()
 
 
-def test_user_remove_organisation_removes_user_from_the_user_permission_group(  # type: ignore[no-untyped-def]
+def test_user_remove_organisation_removes_user_from_the_user_permission_group(  # type: ignore[no-untyped-def]  # noqa: FT003
     user_permission_group, admin_user, organisation, default_user_permission_group
 ):
     # Given - two groups that belongs to the same organisation, but user
@@ -187,7 +187,7 @@ def test_user_remove_organisation_removes_user_from_the_user_permission_group(  
 
 
 @pytest.mark.django_db
-def test_delete_user():  # type: ignore[no-untyped-def]
+def test_delete_user():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     # create a couple of users
     email1 = "test1@example.com"
     email2 = "test2@example.com"
@@ -241,5 +241,5 @@ def test_delete_user():  # type: ignore[no-untyped-def]
     assert Organisation.objects.filter(name="org1").count() == 1
 
 
-def test_user_email_domain_property():  # type: ignore[no-untyped-def]
+def test_user_email_domain_property():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     assert FFAdminUser(email="test@example.com").email_domain == "example.com"

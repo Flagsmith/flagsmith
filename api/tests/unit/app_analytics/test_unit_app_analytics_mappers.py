@@ -11,7 +11,7 @@ from app_analytics.mappers import (
 )
 
 
-def test_map_flux_tables_to_feature_evaluation_data__returns_expected() -> None:
+def test_map_flux_tables_to_feature_evaluation_data__returns_expected() -> None:  # noqa: FT003
     # Given
     flux_table = FluxTable()
     flux_table.records.append(
@@ -40,7 +40,7 @@ def test_map_flux_tables_to_feature_evaluation_data__returns_expected() -> None:
     ]
 
 
-def test_map_flux_tables_to_usage_data__returns_expected() -> None:
+def test_map_flux_tables_to_usage_data__returns_expected() -> None:  # noqa: FT003
     # Given
     flux_table = FluxTable()
     flux_table.records.append(
@@ -94,7 +94,7 @@ def test_map_flux_tables_to_usage_data__returns_expected() -> None:
         ({"user_agent": "not-a-number"}, {}),
     ],
 )
-def test_map_influx_record_values_to_labels(
+def test_map_influx_record_values_to_labels(  # noqa: FT003
     values: dict[str, str],
     expected: dict[str, str],
 ) -> None:

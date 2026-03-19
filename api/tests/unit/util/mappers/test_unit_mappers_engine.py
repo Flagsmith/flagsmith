@@ -100,7 +100,7 @@ def versioned_segment_feature_state(
     )
 
 
-def test_map_segment_rule_to_engine__return_expected(
+def test_map_segment_rule_to_engine__return_expected(  # noqa: FT003
     segment_rule: SegmentRule,
     identity_matching_segment: "Segment",
 ) -> None:
@@ -131,7 +131,7 @@ def test_map_segment_rule_to_engine__return_expected(
     )
 
 
-def test_map_integration_to_engine__return_expected() -> None:
+def test_map_integration_to_engine__return_expected() -> None:  # noqa: FT003
     # Given
     class TestIntegration(IntegrationsModel):
         class Meta:
@@ -150,7 +150,7 @@ def test_map_integration_to_engine__return_expected() -> None:
     assert result == expected_result
 
 
-def test_map_integration_to_engine__none__return_expected() -> None:
+def test_map_integration_to_engine__none__return_expected() -> None:  # noqa: FT004
     # When
     result = engine.map_integration_to_engine(None)
 
@@ -182,7 +182,7 @@ def test_map_integration_to_engine__dynatrace__return_expected() -> None:
     assert result == expected_result
 
 
-def test_map_webhook_config_to_engine__return_expected() -> None:
+def test_map_webhook_config_to_engine__return_expected() -> None:  # noqa: FT003
     # Given
     url = "http://someurl"
     secret = "test"
@@ -203,7 +203,7 @@ def test_map_webhook_config_to_engine__return_expected() -> None:
     assert result == expected_result
 
 
-def test_map_webhook_config_to_engine__none__return_expected() -> None:
+def test_map_webhook_config_to_engine__none__return_expected() -> None:  # noqa: FT004
     # When
     result = engine.map_webhook_config_to_engine(None)
 
@@ -211,7 +211,7 @@ def test_map_webhook_config_to_engine__none__return_expected() -> None:
     assert result is None
 
 
-def test_map_feature_state_to_engine__return_expected(
+def test_map_feature_state_to_engine__return_expected(  # noqa: FT003
     feature: "Feature",
     feature_state: FeatureState,
 ) -> None:
@@ -284,7 +284,7 @@ def test_map_feature_state_to_engine__feature_segment__return_expected(
     assert result == expected_result
 
 
-def test_map_environment_to_engine__return_expected(
+def test_map_environment_to_engine__return_expected(  # noqa: FT003
     environment: Environment,
     feature: "Feature",
     feature_state: FeatureState,
@@ -425,7 +425,7 @@ def test_map_environment_to_engine__return_expected(
     assert segment_featurestate.uuid not in segment_feature_state_uuids
 
 
-def test_map_environment_api_key_to_engine__return_expected(
+def test_map_environment_api_key_to_engine__return_expected(  # noqa: FT003
     environment: Environment,
     environment_api_key: "EnvironmentAPIKey",
 ) -> None:
@@ -447,7 +447,7 @@ def test_map_environment_api_key_to_engine__return_expected(
     )
 
 
-def test_map_identity_to_engine__return_expected(
+def test_map_identity_to_engine__return_expected(  # noqa: FT003
     environment: Environment,
     identity: "Identity",
     feature: "Feature",
@@ -496,7 +496,7 @@ def test_map_identity_to_engine__return_expected(
     assert result == expected_result
 
 
-def test_map_environment_to_engine__returns_correct_feature_state_for_different_versions(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_map_environment_to_engine__returns_correct_feature_state_for_different_versions(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     feature, environment
 ):
     # Given
@@ -541,7 +541,7 @@ def test_map_environment_to_engine__returns_correct_feature_state_for_different_
     assert result.feature_states[0].django_id == v15_feature_state.id
 
 
-def test_map_environment_to_engine_following_migration_to_v2_versioning(
+def test_map_environment_to_engine_following_migration_to_v2_versioning(  # noqa: FT003
     environment: Environment,
     feature: "Feature",
     feature_state: FeatureState,
@@ -604,7 +604,7 @@ def test_map_environment_to_engine_following_migration_to_v2_versioning(
     assert mapped_segment_override.feature_state_value == v2_segment_override_value
 
 
-def test_map_environment_to_engine_v2_versioning_segment_overrides(
+def test_map_environment_to_engine_v2_versioning_segment_overrides(  # noqa: FT003
     environment_v2_versioning: Environment,
     segment: Segment,
     feature: "Feature",
@@ -663,7 +663,7 @@ def test_map_environment_to_engine_v2_versioning_segment_overrides(
 def test_map_environment_to_evaluation_context__no_identity__returns_environment_only(
     environment: Environment,
 ) -> None:
-    # When
+    # Given / When
     result = engine.map_environment_to_evaluation_context(environment=environment)
 
     # Then
@@ -679,7 +679,7 @@ def test_map_environment_to_evaluation_context__with_identity__returns_identity_
     environment: Environment,
     identity: Identity,
 ) -> None:
-    # When
+    # Given / When
     result = engine.map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
@@ -706,7 +706,7 @@ def test_map_environment_to_evaluation_context__with_explicit_traits__returns_gi
     identity: Identity,
     trait: Trait,
 ) -> None:
-    # When
+    # Given / When
     result = engine.map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
@@ -734,7 +734,7 @@ def test_map_environment_to_evaluation_context__no_explicit_traits__returns_iden
     identity: Identity,
     trait: Trait,
 ) -> None:
-    # When
+    # Given / When
     result = engine.map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
@@ -760,7 +760,7 @@ def test_map_environment_to_evaluation_context__with_segments__returns_segment_c
     environment: Environment,
     identity_matching_segment: Segment,
 ) -> None:
-    # When
+    # Given / When
     result = engine.map_environment_to_evaluation_context(
         environment=environment,
         segments=[identity_matching_segment],

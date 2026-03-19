@@ -8,7 +8,7 @@ from integrations.new_relic.models import NewRelicConfiguration
 from projects.models import Project
 
 
-def test_should_create_new_relic_config_when_post(
+def test_should_create_new_relic_config_when_post(  # noqa: FT003
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -31,7 +31,7 @@ def test_should_create_new_relic_config_when_post(
     assert NewRelicConfiguration.objects.filter(project=project).count() == 1
 
 
-def test_should_return_400_when_duplicate_new_relic_config_is_posted(
+def test_should_return_400_when_duplicate_new_relic_config_is_posted(  # noqa: FT003
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -62,7 +62,7 @@ def test_should_return_400_when_duplicate_new_relic_config_is_posted(
     assert NewRelicConfiguration.objects.filter(project=project).count() == 1
 
 
-def test_should_update_configuration_when_put(
+def test_should_update_configuration_when_put(  # noqa: FT003
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -100,7 +100,7 @@ def test_should_update_configuration_when_put(
     assert config.app_id == app_id_updated
 
 
-def test_should_return_new_relic_config_list_when_requested(
+def test_should_return_new_relic_config_list_when_requested(  # noqa: FT003
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -128,7 +128,7 @@ def test_should_return_new_relic_config_list_when_requested(
     ]
 
 
-def test_should_remove_configuration_when_delete(
+def test_should_remove_configuration_when_delete(  # noqa: FT003
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -151,7 +151,7 @@ def test_should_remove_configuration_when_delete(
     assert not NewRelicConfiguration.objects.filter(project=project).exists()
 
 
-def test_create_newrelic_configuration_in_project_with_deleted_configuration(  # type: ignore[no-untyped-def]
+def test_create_newrelic_configuration_in_project_with_deleted_configuration(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client, project, deleted_newrelic_configuration
 ):
     # Given

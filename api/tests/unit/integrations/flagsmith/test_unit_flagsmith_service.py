@@ -59,7 +59,7 @@ def environment_document():  # type: ignore[no-untyped-def]
 
 
 @responses.activate
-def test_update_environment_json(settings, environment_document):  # type: ignore[no-untyped-def]
+def test_update_environment_json(settings, environment_document):  # type: ignore[no-untyped-def]  # noqa: FT003
     """
     Test to verify that, when we call update_environment_json, the response is written
     to the correct file and that the sensitive data from the response is masked.
@@ -90,7 +90,7 @@ def test_update_environment_json(settings, environment_document):  # type: ignor
 
 
 @responses.activate
-def test_update_environment_json_throws_exception_for_failed_request(settings):  # type: ignore[no-untyped-def]
+def test_update_environment_json_throws_exception_for_failed_request(settings):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     # Given
     api_url = "https://api.flagsmith.com/api/v1"
     settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = api_url

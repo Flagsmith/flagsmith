@@ -19,7 +19,7 @@ from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_user_can_list_all_user_permissions_for_an_environment(
+def test_user_can_list_all_user_permissions_for_an_environment(  # noqa: FT003
     environment: Environment,
     admin_client: APIClient,
     staff_user: FFAdminUser,
@@ -40,7 +40,7 @@ def test_user_can_list_all_user_permissions_for_an_environment(
     assert len(response.json()) == 1
 
 
-def test_user_can_create_new_user_permission_for_an_environment(
+def test_user_can_create_new_user_permission_for_an_environment(  # noqa: FT003
     admin_client: APIClient,
     staff_user: FFAdminUser,
     organisation: Organisation,
@@ -74,7 +74,7 @@ def test_user_can_create_new_user_permission_for_an_environment(
     assert user_environment_permission.permissions.count() == 1
 
 
-def test_user_can_update_user_permission_for_a_project(
+def test_user_can_update_user_permission_for_a_project(  # noqa: FT003
     admin_client: APIClient,
     staff_user: FFAdminUser,
     environment: Environment,
@@ -105,7 +105,7 @@ def test_user_can_update_user_permission_for_a_project(
     assert uep.permissions.first().key == VIEW_ENVIRONMENT  # type: ignore[union-attr]
 
 
-def test_user_can_delete_user_permission_for_a_project(
+def test_user_can_delete_user_permission_for_a_project(  # noqa: FT003
     admin_client: APIClient,
     environment: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -126,7 +126,7 @@ def test_user_can_delete_user_permission_for_a_project(
         uep.refresh_from_db()
 
 
-def test_user_can_list_all_user_group_permissions_for_an_environment(
+def test_user_can_list_all_user_group_permissions_for_an_environment(  # noqa: FT003
     admin_client: APIClient,
     environment: Environment,
     organisation: Organisation,
@@ -159,7 +159,7 @@ def test_user_can_list_all_user_group_permissions_for_an_environment(
     assert len(response.json()) == 1
 
 
-def test_user_can_create_new_user_group_permission_for_an_environment(
+def test_user_can_create_new_user_group_permission_for_an_environment(  # noqa: FT003
     organisation: Organisation,
     staff_user: FFAdminUser,
     admin_client: APIClient,
@@ -202,7 +202,7 @@ def test_user_can_create_new_user_group_permission_for_an_environment(
     assert user_group_environment_permission.permissions.count() == 1
 
 
-def test_user_can_update_user_group_permission_for_an_environment(
+def test_user_can_update_user_group_permission_for_an_environment(  # noqa: FT003
     admin_client: APIClient,
     staff_user: FFAdminUser,
     environment: Environment,
@@ -240,7 +240,7 @@ def test_user_can_update_user_group_permission_for_an_environment(
     assert user_group_environment_permission.permissions.count() == 0
 
 
-def test_user_can_delete_user_permission_for_a_user_group(
+def test_user_can_delete_user_permission_for_a_user_group(  # noqa: FT003
     admin_client: APIClient,
     staff_user: FFAdminUser,
     environment: Environment,

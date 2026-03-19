@@ -11,7 +11,7 @@ from features.multivariate.models import (
 from segments.models import Segment
 
 
-def test_multivariate_feature_option_get_create_log_message(feature):  # type: ignore[no-untyped-def]
+def test_multivariate_feature_option_get_create_log_message(feature):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     mvfo = MultivariateFeatureOption.objects.create(feature=feature, string_value="foo")
 
@@ -24,7 +24,7 @@ def test_multivariate_feature_option_get_create_log_message(feature):  # type: i
     assert msg == f"Multivariate option added to feature '{feature.name}'."
 
 
-def test_multivariate_feature_option_get_delete_log_message_for_valid_feature(feature):  # type: ignore[no-untyped-def]  # noqa: E501
+def test_multivariate_feature_option_get_delete_log_message_for_valid_feature(feature):  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     # Given
     mvfo = MultivariateFeatureOption.objects.create(feature=feature, string_value="foo")
 
@@ -37,7 +37,7 @@ def test_multivariate_feature_option_get_delete_log_message_for_valid_feature(fe
     assert msg == f"Multivariate option removed from feature '{feature.name}'."
 
 
-def test_multivariate_feature_option_get_delete_log_message_for_deleted_feature(  # type: ignore[no-untyped-def]
+def test_multivariate_feature_option_get_delete_log_message_for_deleted_feature(  # type: ignore[no-untyped-def]  # noqa: FT003
     feature,
 ):
     # Given
@@ -58,7 +58,7 @@ def test_multivariate_feature_option_get_delete_log_message_for_deleted_feature(
     assert msg is None
 
 
-def test_multivariate_feature_state_value_get_update_log_message_environment_default(  # type: ignore[no-untyped-def]
+def test_multivariate_feature_state_value_get_update_log_message_environment_default(  # type: ignore[no-untyped-def]  # noqa: FT003
     multivariate_feature, environment
 ):
     # Given
@@ -77,7 +77,7 @@ def test_multivariate_feature_state_value_get_update_log_message_environment_def
     )
 
 
-def test_multivariate_feature_state_value_get_update_log_message_identity_override(  # type: ignore[no-untyped-def]
+def test_multivariate_feature_state_value_get_update_log_message_identity_override(  # type: ignore[no-untyped-def]  # noqa: FT003
     multivariate_feature, environment, identity
 ):
     # Given
@@ -101,7 +101,7 @@ def test_multivariate_feature_state_value_get_update_log_message_identity_overri
     )
 
 
-def test_multivariate_feature_state_value_get_update_log_message_segment_override(  # type: ignore[no-untyped-def]
+def test_multivariate_feature_state_value_get_update_log_message_segment_override(  # type: ignore[no-untyped-def]  # noqa: FT003
     multivariate_feature, environment, segment
 ):
     # Given
@@ -130,7 +130,7 @@ def test_multivariate_feature_state_value_get_update_log_message_segment_overrid
     )
 
 
-def test_deleting_last_mv_option_of_mulitvariate_feature_converts_it_into_standard(  # type: ignore[no-untyped-def]
+def test_deleting_last_mv_option_of_mulitvariate_feature_converts_it_into_standard(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     multivariate_feature,
 ):
     # Given
@@ -153,7 +153,7 @@ def test_deleting_last_mv_option_of_mulitvariate_feature_converts_it_into_standa
     assert multivariate_feature.type == STANDARD
 
 
-def test_adding_mv_option_to_standard_feature_converts_it_into_multivariate(feature):  # type: ignore[no-untyped-def]
+def test_adding_mv_option_to_standard_feature_converts_it_into_multivariate(feature):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     assert feature.type == STANDARD
 
@@ -165,7 +165,7 @@ def test_adding_mv_option_to_standard_feature_converts_it_into_multivariate(feat
     assert feature.type == MULTIVARIATE
 
 
-def test_multivariate_feature_state_value__get_skip_create_audit_log_for_identity_delete(
+def test_multivariate_feature_state_value__get_skip_create_audit_log_for_identity_delete(  # noqa: FT003
     multivariate_feature: MultivariateFeatureOption,
     environment: Environment,
     identity: Identity,
@@ -190,7 +190,7 @@ def test_multivariate_feature_state_value__get_skip_create_audit_log_for_identit
     assert mvfsv_history_instance.instance.get_skip_create_audit_log() is True
 
 
-def test_multivariate_feature_state_value__get_skip_create_audit_log_for_segment_delete(
+def test_multivariate_feature_state_value__get_skip_create_audit_log_for_segment_delete(  # noqa: FT003
     multivariate_feature: MultivariateFeatureOption,
     environment: Environment,
     segment: Segment,
@@ -220,7 +220,7 @@ def test_multivariate_feature_state_value__get_skip_create_audit_log_for_segment
     assert mvfsv_history_instance.instance.get_skip_create_audit_log() is True
 
 
-def test_multivariate_feature_state_value__get_skip_create_audit_log_for_feature_delete(
+def test_multivariate_feature_state_value__get_skip_create_audit_log_for_feature_delete(  # noqa: FT003
     multivariate_feature: MultivariateFeatureOption,
     environment: Environment,
 ) -> None:

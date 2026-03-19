@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     "use_v2_feature_versioning, total_queries", [(True, 12), (False, 11)]
 )
-def test_get_environment_document(
+def test_get_environment_document(  # noqa: FT003
     organisation_one: "Organisation",
     organisation_two: "Organisation",
     organisation_one_project_one: "Project",
@@ -142,7 +142,7 @@ def test_get_environment_document(
         lazy_fixture("environment_v2_versioning"),
     ),
 )
-def test_get_environment_document__identity_overrides(
+def test_get_environment_document__identity_overrides(  # noqa: FT003
     project: Project,
     environment_: Environment,
 ) -> None:
@@ -234,7 +234,7 @@ def test_get_environment_document__identity_overrides(
     )
 
 
-def test_get_environment_document_fails_with_invalid_key(
+def test_get_environment_document_fails_with_invalid_key(  # noqa: FT003
     organisation_one: "Organisation",
     organisation_one_project_one: "Project",
 ) -> None:
@@ -260,7 +260,7 @@ def test_get_environment_document_fails_with_invalid_key(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_environment_document_if_modified_since(
+def test_environment_document_if_modified_since(  # noqa: FT003
     organisation_one: "Organisation",
     organisation_one_project_one: "Project",
 ) -> None:

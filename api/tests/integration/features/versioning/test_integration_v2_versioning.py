@@ -72,7 +72,7 @@ def environment_v2_versioning(
     return environment
 
 
-def test_v2_versioning(  # type: ignore[no-untyped-def]
+def test_v2_versioning(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_client: "APIClient",
     environment: int,
     environment_api_key: str,
@@ -277,7 +277,7 @@ def test_v2_versioning(  # type: ignore[no-untyped-def]
     assert identity_flag_tuples_pre_revert == identity_flag_tuples_post_revert
 
 
-def test_v2_versioning_mv_feature(  # type: ignore[no-untyped-def]
+def test_v2_versioning_mv_feature(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_client: "APIClient",
     environment_v2_versioning: int,
     environment_api_key: str,
@@ -385,7 +385,7 @@ def test_v2_versioning_mv_feature(  # type: ignore[no-untyped-def]
     assert mv_flag["feature_state_value"] == mv_feature_option_value
 
 
-def test_v2_versioning_multiple_segment_overrides(  # type: ignore[no-untyped-def]
+def test_v2_versioning_multiple_segment_overrides(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     admin_client: "APIClient",
     environment_v2_versioning: int,
     environment_api_key: str,
@@ -555,7 +555,7 @@ def test_v2_versioning_multiple_segment_overrides(  # type: ignore[no-untyped-de
     )
 
 
-def test_v2_versioning_carries_existing_segment_overrides_across(
+def test_v2_versioning_carries_existing_segment_overrides_across(  # noqa: FT003,FT004
     environment: int,
     environment_api_key: str,
     admin_client: "APIClient",
@@ -614,7 +614,7 @@ def test_v2_versioning_carries_existing_segment_overrides_across(
     )
 
 
-def test_identities_should_return_default_environment_values_after_deleting_segment_override(
+def test_identities_should_return_default_environment_values_after_deleting_segment_override(  # noqa: FT003
     feature: int,
     default_feature_value: str,
     segment_featurestate: int,

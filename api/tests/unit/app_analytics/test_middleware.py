@@ -17,7 +17,7 @@ from tests.types import EnableFeaturesFixture
         ("/api/v1/environment-document", "environment-document"),
     ],
 )
-def test_api_usage_middleware__calls_expected(
+def test_api_usage_middleware__calls_expected(  # noqa: FT003
     rf: RequestFactory,
     mocker: MockerFixture,
     path: str,

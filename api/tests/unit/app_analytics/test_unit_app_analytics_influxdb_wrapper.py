@@ -55,7 +55,7 @@ def mock_write_api(mock_influxdb_client: MagicMock) -> MagicMock:
     return mock_write_api
 
 
-def test_write(mock_write_api: MagicMock) -> None:
+def test_write(mock_write_api: MagicMock) -> None:  # noqa: FT003
     # Given
     influxdb = InfluxDBWrapper("name")  # type: ignore[no-untyped-call]
     influxdb.add_data_point("field_name", "field_value")
@@ -68,7 +68,7 @@ def test_write(mock_write_api: MagicMock) -> None:
 
 
 @pytest.mark.parametrize("exception_class", [HTTPError, InfluxDBError, ApiException])
-def test_write_handles_errors(
+def test_write_handles_errors(  # noqa: FT003
     mock_write_api: MagicMock,
     exception_class: Type[Exception],
     caplog: pytest.LogCaptureFixture,
@@ -113,7 +113,7 @@ def test_influx_db_wrapper_query__http_error__logs_expected(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):  # type: ignore[no-untyped-def]
+def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     expected_query = (
         (
             f'from(bucket:"{read_bucket}") |> range(start: 2022-12-20T09:09:47.325132+00:00, '
@@ -148,7 +148,7 @@ def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):  # 
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_influx_db_query_when_get_events_list_then_query_api_called(
+def test_influx_db_query_when_get_events_list_then_query_api_called(  # noqa: FT003,FT004
     mocker: MockerFixture,
 ) -> None:
     query = (
@@ -214,7 +214,7 @@ def test_influx_db_query_when_get_events_list_then_query_api_called(
     ),
 )
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_multiple_event_list_for_organisation__calls_expected(
+def test_get_multiple_event_list_for_organisation__calls_expected(  # noqa: FT003,FT004
     mocker: MockerFixture,
     project_id: int | None,
     environment_id: int | None,
@@ -253,7 +253,7 @@ def test_get_multiple_event_list_for_organisation__calls_expected(
     ]
 
 
-def test_get_multiple_event_list_for_organisation__returns_expected(
+def test_get_multiple_event_list_for_organisation__returns_expected(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -365,7 +365,7 @@ def test_get_multiple_event_list_for_organisation__labels_filter__calls_expected
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_multiple_event_list_for_feature__calls_expected(
+def test_get_multiple_event_list_for_feature__calls_expected(  # noqa: FT003,FT004
     mocker: MockerFixture,
 ) -> None:
     query = (
@@ -432,7 +432,7 @@ def test_get_multiple_event_list_for_feature__labels_filter__calls_expected(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data__calls_expected(mocker: MockerFixture) -> None:
+def test_get_usage_data__calls_expected(mocker: MockerFixture) -> None:  # noqa: FT003
     # Given
     mocked_get_multiple_event_list_for_organisation = mocker.patch(
         "app_analytics.influxdb_wrapper.get_multiple_event_list_for_organisation",
@@ -456,7 +456,7 @@ def test_get_usage_data__calls_expected(mocker: MockerFixture) -> None:
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_feature_evaluation_data__calls_expected(mocker: MockerFixture) -> None:
+def test_get_feature_evaluation_data__calls_expected(mocker: MockerFixture) -> None:  # noqa: FT003
     # Given
     mocked_get_multiple_event_list_for_feature = mocker.patch(
         "app_analytics.influxdb_wrapper.get_multiple_event_list_for_feature",
@@ -480,7 +480,7 @@ def test_get_feature_evaluation_data__calls_expected(mocker: MockerFixture) -> N
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_event_list_for_organisation_with_date_stop_set_to_now_and_previously(
+def test_get_event_list_for_organisation_with_date_stop_set_to_now_and_previously(  # noqa: FT003
     mocker: MockerFixture,
     organisation: Organisation,
 ) -> None:
@@ -527,7 +527,7 @@ def test_get_event_list_for_organisation_with_date_stop_set_to_now_and_previousl
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.parametrize("limit", ["10", ""])
-def test_get_top_organisations(
+def test_get_top_organisations(  # noqa: FT003
     limit: str,
     mocker: MockerFixture,
 ) -> None:
@@ -564,7 +564,7 @@ def test_get_top_organisations(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_top_organisations_value_error(
+def test_get_top_organisations_value_error(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -596,7 +596,7 @@ def test_get_top_organisations_value_error(
     assert dataset == {456: 43}
 
 
-def test_early_return_for_empty_range_for_influx_query_manager() -> None:
+def test_early_return_for_empty_range_for_influx_query_manager() -> None:  # noqa: FT003,FT004
     # When
     now = timezone.now()
     results = InfluxDBWrapper.influx_query_manager(
@@ -608,7 +608,7 @@ def test_early_return_for_empty_range_for_influx_query_manager() -> None:
     assert results == []
 
 
-def test_get_range_bucket_mappings_when_less_than_10_days(
+def test_get_range_bucket_mappings_when_less_than_10_days(  # noqa: FT003
     settings: SettingsWrapper,
 ) -> None:
     # Given
@@ -621,7 +621,7 @@ def test_get_range_bucket_mappings_when_less_than_10_days(
     assert result == settings.INFLUXDB_BUCKET + "_downsampled_15m"
 
 
-def test_get_range_bucket_mappings_when_more_than_10_days(
+def test_get_range_bucket_mappings_when_more_than_10_days(  # noqa: FT003
     settings: SettingsWrapper,
 ) -> None:
     # Given
@@ -634,7 +634,7 @@ def test_get_range_bucket_mappings_when_more_than_10_days(
     assert result == settings.INFLUXDB_BUCKET + "_downsampled_1h"
 
 
-def test_influx_query_manager_when_date_start_is_set_to_none(
+def test_influx_query_manager_when_date_start_is_set_to_none(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -648,7 +648,7 @@ def test_influx_query_manager_when_date_start_is_set_to_none(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_top_organisation_when_date_start_is_set_to_none(
+def test_get_top_organisation_when_date_start_is_set_to_none(  # noqa: FT003
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -667,7 +667,7 @@ def test_get_top_organisation_when_date_start_is_set_to_none(
     assert influx_query_call.kwargs["date_start"] == date_start
 
 
-def test_get_current_api_usage(mocker: MockerFixture) -> None:
+def test_get_current_api_usage(mocker: MockerFixture) -> None:  # noqa: FT003
     # Given
     influx_mock = mocker.patch(
         "app_analytics.influxdb_wrapper.InfluxDBWrapper.influx_query_manager"

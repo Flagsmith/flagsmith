@@ -19,7 +19,7 @@ from projects.models import (
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_is_user_environment_admin_returns_true_for_org_admin(admin_user, environment):  # type: ignore[no-untyped-def]  # noqa: E501
+def test_is_user_environment_admin_returns_true_for_org_admin(admin_user, environment):  # type: ignore[no-untyped-def]  # noqa: E501,FT003,FT004
     assert is_user_environment_admin(admin_user, environment) is True
 
 
@@ -30,7 +30,7 @@ def test_is_user_environment_admin_returns_true_for_org_admin(admin_user, enviro
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_is_user_environment_admin_returns_true_for_project_admin(
+def test_is_user_environment_admin_returns_true_for_project_admin(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     environment: Environment,
     project_admin: typing.Union[
@@ -48,7 +48,7 @@ def test_is_user_environment_admin_returns_true_for_project_admin(
         (lazy_fixture("environment_admin_via_user_permission_group")),
     ],
 )
-def test_is_user_environment_admin_returns_true_for_environment_admin(  # type: ignore[no-untyped-def]
+def test_is_user_environment_admin_returns_true_for_environment_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     environment: Environment,
     environment_admin: typing.Union[
@@ -59,14 +59,14 @@ def test_is_user_environment_admin_returns_true_for_environment_admin(  # type: 
     assert is_user_environment_admin(staff_user, environment) is True
 
 
-def test_is_user_environment_admin_returns_false_for_user_with_no_permission(
+def test_is_user_environment_admin_returns_false_for_user_with_no_permission(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     environment: Environment,
 ) -> None:
     assert is_user_environment_admin(staff_user, environment) is False
 
 
-def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_of_other_org(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_of_other_org(  # type: ignore[no-untyped-def]  # noqa: E501,FT003,FT004
     admin_user,
     organisation_two_project_one_environment_one,
 ):
@@ -78,7 +78,7 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
     )
 
 
-def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_of_other_environment(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_of_other_environment(  # type: ignore[no-untyped-def]  # noqa: E501,FT003,FT004
     django_user_model,
     environment,
     user_project_permission,
@@ -106,7 +106,7 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
     assert is_user_environment_admin(user, environment) is False
 
 
-def test_is_user_environment_admin__does_not_return_environment_for_orphan_group_permission(
+def test_is_user_environment_admin__does_not_return_environment_for_orphan_group_permission(  # noqa: FT003
     organisation: Organisation,
     project: Project,
     environment: Environment,
@@ -137,7 +137,7 @@ def test_is_user_environment_admin__does_not_return_environment_for_orphan_group
     assert not is_user_environment_admin(user=staff_user, environment=environment)
 
 
-def test_is_user_environment_admin__short_circuits_on_direct_permission(
+def test_is_user_environment_admin__short_circuits_on_direct_permission(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     environment: Environment,
     environment_admin_via_user_permission: UserEnvironmentPermission,
@@ -156,7 +156,7 @@ def test_is_user_environment_admin__short_circuits_on_direct_permission(
         assert is_user_environment_admin(staff_user, environment) is True
 
 
-def test_is_user_environment_admin__short_circuits_on_group_permission(
+def test_is_user_environment_admin__short_circuits_on_group_permission(  # noqa: FT003,FT004
     staff_user: FFAdminUser,
     environment: Environment,
     environment_admin_via_user_permission_group: UserPermissionGroupEnvironmentPermission,
