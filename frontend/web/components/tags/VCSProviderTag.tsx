@@ -4,7 +4,7 @@ import GitlabIcon from 'components/base/icons/GitlabIcon'
 import { VCSProvider } from 'common/types/responses'
 
 interface VCSProviderTagProps {
-  count?: number
+  count: number
   vcsProvider?: VCSProvider
   isWarning?: boolean
 }
@@ -49,7 +49,7 @@ const VCSProviderTag: React.FC<VCSProviderTagProps> = ({
         }}
       >
         {providerIcon}
-        {count !== undefined && <span>{count}</span>}
+        <span>{count}</span>
       </span>
     </div>
   )

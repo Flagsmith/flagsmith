@@ -62,9 +62,9 @@ from environments.permissions.permissions import (
     NestedEnvironmentPermissions,
 )
 from features.value_types import BOOLEAN, INTEGER, STRING
-from integrations.flagsmith.client import is_feature_enabled
 from projects.code_references.services import (
     annotate_feature_queryset_with_code_references_summary,
+    is__code_references_ui_stats__enabled,
 )
 from projects.models import Project
 from users.models import FFAdminUser, UserPermissionGroup
@@ -221,7 +221,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         query_data = query_serializer.validated_data
 
         # TODO: Delete this after https://github.com/flagsmith/flagsmith/issues/6832 is resolved
-        if is_feature_enabled("code_references_ui_stats", project.organisation):
+        if is__code_references_ui_stats__enabled(project.organisation):
             queryset = annotate_feature_queryset_with_code_references_summary(queryset)
         else:
             queryset = queryset.annotate(

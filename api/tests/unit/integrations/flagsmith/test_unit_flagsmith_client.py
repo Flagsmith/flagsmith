@@ -5,10 +5,9 @@ from flagsmith.offline_handlers import LocalFileHandler
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
-from integrations.flagsmith.client import get_client, is_feature_enabled
+from integrations.flagsmith.client import get_client
 from integrations.flagsmith.exceptions import FlagsmithIntegrationError
 from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
-from organisations.models import Organisation
 
 
 @pytest.fixture(autouse=True)
@@ -101,39 +100,3 @@ def test_get_client_raises_value_error_if_missing_args(  # type: ignore[no-untyp
     # When
     with pytest.raises(FlagsmithIntegrationError):
         get_client()
-
-
-@pytest.mark.parametrize("expected", [True, False])
-def test_is_feature_enabled__mocked_client__returns_expected(
-    organisation: Organisation,
-    mocker: MockerFixture,
-    expected: bool,
-) -> None:
-    # Given
-    get_client = mocker.patch("integrations.flagsmith.client.get_client")
-    get_client().get_identity_flags().is_feature_enabled.return_value = expected
-
-    # When
-    result = is_feature_enabled("some_feature", organisation)
-
-    # Then
-    assert result is expected
-
-
-def test_is_feature_enabled__unknown_feature__returns_false(
-    organisation: Organisation,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    from flagsmith.exceptions import FlagsmithFeatureDoesNotExistError
-
-    get_client = mocker.patch("integrations.flagsmith.client.get_client")
-    get_client().get_identity_flags().is_feature_enabled.side_effect = (
-        FlagsmithFeatureDoesNotExistError("Feature does not exist: unknown_feature")
-    )
-
-    # When
-    result = is_feature_enabled("unknown_feature", organisation)
-
-    # Then
-    assert result is False

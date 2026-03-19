@@ -3581,16 +3581,16 @@ def test_list_features_with_filter_by_search_value_boolean(
     assert response.data["results"][0]["name"] == feature2.name
 
 
-def test_FeatureViewSet_list__includes_code_references_counts(
-    staff_client: APIClient,
-    project: Project,
+def test_FeatureViewSet_list__code_references_ui_stats_enabled__returns_counts(
     feature: Feature,
-    with_project_permissions: WithProjectPermissionsCallable,
     mocker: MockerFixture,
+    project: Project,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    mocker.patch("features.views.is_feature_enabled", return_value=True)
+    mocker.patch.object(views, "is__code_references_ui_stats__enabled", return_value=True)  # fmt: skip
     with freeze_time("2099-01-01T10:00:00-0300"):
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
@@ -3669,16 +3669,16 @@ def test_FeatureViewSet_list__includes_code_references_counts(
 
 
 @pytest.mark.usefixtures("feature")
-def test_FeatureViewSet_list__no_scans__returns_empty_code_references_counts(
-    staff_client: APIClient,
-    project: Project,
+def test_FeatureViewSet_list__no_code_reference_scans__returns_empty_counts(
     environment: Environment,
-    with_project_permissions: WithProjectPermissionsCallable,
     mocker: MockerFixture,
+    project: Project,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    mocker.patch("features.views.is_feature_enabled", return_value=True)
+    mocker.patch.object(views, "is__code_references_ui_stats__enabled", return_value=True)  # fmt: skip
 
     # When
     response = staff_client.get(
@@ -3694,14 +3694,16 @@ def test_FeatureViewSet_list__no_scans__returns_empty_code_references_counts(
 
 # TODO: Delete this after https://github.com/flagsmith/flagsmith/issues/6832 is resolved
 def test_FeatureViewSet_list__code_references_ui_stats_disabled__returns_empty_counts(
-    staff_client: APIClient,
-    project: Project,
-    feature: Feature,
     environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+    project: Project,
+    staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    mocker.patch.object(views, "is__code_references_ui_stats__enabled", return_value=False)  # fmt: skip
     FeatureFlagCodeReferencesScan.objects.create(
         project=project,
         repository_url="https://github.flagsmith.com/backend/",

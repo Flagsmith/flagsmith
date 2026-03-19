@@ -1,7 +1,7 @@
 import React, { FC, useMemo } from 'react'
 import SegmentOverridesIcon from 'components/SegmentOverridesIcon'
 import Constants from 'common/constants'
-import { ProjectFlag } from 'common/types/responses'
+import { ProjectFlag, VCSProvider } from 'common/types/responses'
 import IdentityOverridesIcon from 'components/IdentityOverridesIcon'
 import TagValues from 'components/tags/TagValues'
 import UnhealthyFlagWarning from './UnhealthyFlagWarning'
@@ -9,7 +9,7 @@ import StaleFlagWarning from './StaleFlagWarning'
 import Tag from 'components/tags/Tag'
 import Utils from 'common/utils/utils'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
-import CodeReferencesTag from 'components/tags/CodeReferencesTag'
+import VCSProviderTag from 'components/tags/VCSProviderTag'
 
 type FeatureTagsType = {
   editFeature: (tab?: string) => void
@@ -38,6 +38,14 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
   }
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
 
+  const hasScannedCodeReferences =
+    projectFlag?.code_references_counts?.length > 0
+  const codeReferencesCounts =
+    projectFlag?.code_references_counts?.reduce(
+      (acc, curr) => acc + curr.count,
+      0,
+    ) || 0
+
   return (
     <>
       <SegmentOverridesIcon
@@ -55,13 +63,28 @@ const FeatureTags: FC<FeatureTagsType> = ({ editFeature, projectFlag }) => {
         count={projectFlag.num_identity_overrides}
         showPlusIndicator={showPlusIndicator}
       />
-      <CodeReferencesTag
-        projectFlag={projectFlag}
-        onClick={(e) => {
-          e.stopPropagation()
-          editFeature(Constants.featurePanelTabs.USAGE)
-        }}
-      />
+      {hasScannedCodeReferences && (
+        <Tooltip
+          title={
+            <div
+              onClick={(e) => {
+                e.stopPropagation()
+                editFeature(Constants.featurePanelTabs.USAGE)
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              <VCSProviderTag
+                count={codeReferencesCounts}
+                isWarning={codeReferencesCounts === 0}
+                vcsProvider={VCSProvider.GITHUB}
+              />
+            </div>
+          }
+          place='top'
+        >
+          {`Scanned ${codeReferencesCounts?.toString()} times in ${projectFlag?.code_references_counts?.length?.toString()} repositories`}
+        </Tooltip>
+      )}
       {projectFlag.is_server_key_only && (
         <Tooltip
           title={

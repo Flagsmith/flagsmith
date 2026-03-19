@@ -1,3 +1,4 @@
+import typing
 from datetime import timedelta
 from urllib.parse import urljoin
 
@@ -15,6 +16,7 @@ from django.db.models.functions import JSONObject
 from django.utils import timezone
 
 from features.models import Feature
+from integrations.flagsmith.client import get_client
 from projects.code_references.constants import (
     FEATURE_FLAG_CODE_REFERENCES_RETENTION_DAYS,
 )
@@ -24,6 +26,22 @@ from projects.code_references.types import (
     FeatureFlagCodeReferencesRepositorySummary,
     VCSProvider,
 )
+
+if typing.TYPE_CHECKING:
+    from organisations.models import Organisation
+
+
+def is__code_references_ui_stats__enabled(organisation: "Organisation") -> bool:
+    """Check if code reference UI stats are enabled for an organisation.
+
+    TODO: Delete this after https://github.com/flagsmith/flagsmith/issues/6832 is resolved.
+    """
+    flagsmith_client = get_client("local", local_eval=True)
+    flags = flagsmith_client.get_identity_flags(
+        organisation.flagsmith_identifier,
+        traits=organisation.flagsmith_on_flagsmith_api_traits,
+    )
+    return flags.is_feature_enabled("code_references_ui_stats")
 
 
 def annotate_feature_queryset_with_code_references_summary(
