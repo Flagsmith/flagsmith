@@ -7,7 +7,7 @@ from edge_api.identities.permissions import (
 )
 
 
-def test_edge_identity_with_identifier_view_permissions_has_permissions_calls_has_environment_permission(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_edge_identity_with_identifier_view_permissions_has_permissions_calls_has_environment_permission(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     environment,
     mocker,
 ):

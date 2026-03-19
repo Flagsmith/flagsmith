@@ -8,7 +8,7 @@ from environments.models import Environment
 from organisations.models import Organisation
 
 
-def test_authentication_passes_if_valid_api_key_passed(
+def test_authentication_passes_if_valid_api_key_passed(  # noqa: FT003
     environment: Environment,
 ) -> None:
     # Given
@@ -20,7 +20,7 @@ def test_authentication_passes_if_valid_api_key_passed(
     authenticator.authenticate(request)  # type: ignore[no-untyped-call]
 
 
-def test_authenticate_raises_authentication_failed_if_request_missing_environment_key(
+def test_authenticate_raises_authentication_failed_if_request_missing_environment_key(  # noqa: FT003
     db: None,
 ) -> None:
     # Given
@@ -32,7 +32,7 @@ def test_authenticate_raises_authentication_failed_if_request_missing_environmen
         authenticator.authenticate(request)  # type: ignore[no-untyped-call]
 
 
-def test_authenticate_raises_authentication_failed_if_request_environment_key_not_found(
+def test_authenticate_raises_authentication_failed_if_request_environment_key_not_found(  # noqa: FT003
     db: None,
 ) -> None:
     # Given
@@ -45,7 +45,7 @@ def test_authenticate_raises_authentication_failed_if_request_environment_key_no
         authenticator.authenticate(request)  # type: ignore[no-untyped-call]
 
 
-def test_authenticate_raises_authentication_failed_if_organisation_set_to_stop_serving_flags(
+def test_authenticate_raises_authentication_failed_if_organisation_set_to_stop_serving_flags(  # noqa: FT003
     organisation: Organisation,
     environment: Environment,
 ) -> None:

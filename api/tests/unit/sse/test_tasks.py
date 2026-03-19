@@ -17,7 +17,7 @@ from sse.tasks import (
 )
 
 
-def test_send_environment_update_message_for_project_make_correct_request(  # type: ignore[no-untyped-def]
+def test_send_environment_update_message_for_project_make_correct_request(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker,
     settings,
     realtime_enabled_project,
@@ -59,7 +59,7 @@ def test_send_environment_update_message_for_project_make_correct_request(  # ty
     )
 
 
-def test_send_environment_update_message_make_correct_request(mocker, settings):  # type: ignore[no-untyped-def]
+def test_send_environment_update_message_make_correct_request(mocker, settings):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     base_url = "http://localhost:8000"
     token = "token"
@@ -82,7 +82,7 @@ def test_send_environment_update_message_make_correct_request(mocker, settings):
     )
 
 
-def test_auth_header_raises_exception_if_token_not_set(settings):  # type: ignore[no-untyped-def]
+def test_auth_header_raises_exception_if_token_not_set(settings):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     # Given
     settings.SSE_AUTHENTICATION_TOKEN = None
 
@@ -91,7 +91,7 @@ def test_auth_header_raises_exception_if_token_not_set(settings):  # type: ignor
         get_auth_header()  # type: ignore[no-untyped-call]
 
 
-def test_track_sse_usage(  # type: ignore[no-untyped-def]
+def test_track_sse_usage(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker: MockerFixture,
     environment: Environment,
     django_assert_num_queries: DjangoAssertNumQueries,

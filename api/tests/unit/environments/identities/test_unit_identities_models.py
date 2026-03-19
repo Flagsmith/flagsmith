@@ -30,7 +30,7 @@ from .helpers import (
 )
 
 
-def test_create_identity_should_assign_relevant_attributes(
+def test_create_identity_should_assign_relevant_attributes(  # noqa: FT003,FT004
     environment: Environment,
 ) -> None:
     # When
@@ -43,7 +43,7 @@ def test_create_identity_should_assign_relevant_attributes(
     assert hasattr(identity, "created_date")
 
 
-def test_identity_str__returns_account_identifier(
+def test_identity_str__returns_account_identifier(  # noqa: FT003
     environment: Environment,
 ) -> None:
     # Given
@@ -58,7 +58,7 @@ def test_identity_str__returns_account_identifier(
     assert result == "Account test-identity"
 
 
-def test_get_all_feature_states(
+def test_get_all_feature_states(  # noqa: FT003,FT004
     project: Project,
     environment: Environment,
 ) -> None:
@@ -113,7 +113,7 @@ def test_get_all_feature_states(
     assert fs_identity_anticipated in flags
 
 
-def test_create_trait_should_assign_relevant_attributes(
+def test_create_trait_should_assign_relevant_attributes(  # noqa: FT003,FT004
     environment: Environment,
 ) -> None:
     identity = Identity.objects.create(
@@ -129,7 +129,7 @@ def test_create_trait_should_assign_relevant_attributes(
     assert hasattr(trait, "created_date") is True
 
 
-def test_create_trait_float_value_should_assign_relevant_attributes(
+def test_create_trait_float_value_should_assign_relevant_attributes(  # noqa: FT003,FT004
     environment: Environment,
 ) -> None:
     identity = Identity.objects.create(
@@ -152,7 +152,7 @@ def test_create_trait_float_value_should_assign_relevant_attributes(
     assert hasattr(trait, "created_date") is True
 
 
-def test_get_all_traits_for_identity(environment: Environment) -> None:
+def test_get_all_traits_for_identity(environment: Environment) -> None:  # noqa: FT003,FT004
     identity = Identity.objects.create(
         identifier="test-identifier", environment=environment
     )
@@ -181,7 +181,7 @@ def test_get_all_traits_for_identity(environment: Environment) -> None:
     assert len(traits_identity_two) == 1
 
 
-def test_get_all_feature_states_for_identity_returns_correct_values_for_matching_segment(
+def test_get_all_feature_states_for_identity_returns_correct_values_for_matching_segment(  # noqa: FT003
     environment: Environment,
     project: Project,
 ) -> None:
@@ -250,7 +250,7 @@ def test_get_all_feature_states_for_identity_returns_correct_values_for_matching
     assert remote_config_feature_state.get_feature_state_value() == overridden_value
 
 
-def test_get_all_feature_states_for_identity_returns_correct_values_for_identity_not_matching_segment(
+def test_get_all_feature_states_for_identity_returns_correct_values_for_identity_not_matching_segment(  # noqa: FT003
     environment: Environment,
     project: Project,
 ) -> None:
@@ -312,7 +312,7 @@ def test_get_all_feature_states_for_identity_returns_correct_values_for_identity
     assert remote_config_feature_state.get_feature_state_value() == initial_value
 
 
-def test_get_all_feature_states_for_identity_returns_correct_value_for_matching_segment_when_value_integer(
+def test_get_all_feature_states_for_identity_returns_correct_value_for_matching_segment_when_value_integer(  # noqa: FT003
     environment: Environment,
     project: Project,
 ) -> None:
@@ -362,7 +362,7 @@ def test_get_all_feature_states_for_identity_returns_correct_value_for_matching_
     assert feature_state.get_feature_state_value() == overridden_value
 
 
-def test_get_all_feature_states_for_identity_returns_correct_value_for_matching_segment_when_value_boolean(
+def test_get_all_feature_states_for_identity_returns_correct_value_for_matching_segment_when_value_boolean(  # noqa: FT003
     environment: Environment,
     project: Project,
 ) -> None:
@@ -412,7 +412,7 @@ def test_get_all_feature_states_for_identity_returns_correct_value_for_matching_
     assert not feature_state.get_feature_state_value()
 
 
-def test_get_all_feature_states_highest_value_of_highest_priority_segment(
+def test_get_all_feature_states_highest_value_of_highest_priority_segment(  # noqa: FT003
     environment: Environment,
     project: Project,
 ) -> None:
@@ -496,7 +496,7 @@ def test_get_all_feature_states_highest_value_of_highest_priority_segment(
     assert remote_config_feature_state.get_feature_state_value() == overridden_value_1
 
 
-def test_remote_config_override(
+def test_remote_config_override(  # noqa: FT003
     environment: Environment,
     project: Project,
 ) -> None:
@@ -553,7 +553,7 @@ def test_remote_config_override(
     assert overridden_feature_state.get_feature_state_value() == overridden_value_2
 
 
-def test_get_all_feature_states_returns_correct_value_when_traits_passed_manually(
+def test_get_all_feature_states_returns_correct_value_when_traits_passed_manually(  # noqa: FT003
     environment: Environment,
     project: Project,
 ) -> None:
@@ -612,7 +612,7 @@ def test_get_all_feature_states_returns_correct_value_when_traits_passed_manuall
     assert feature_states[0].enabled == enabled_for_segment
 
 
-def test_generate_traits_with_persistence(environment: Environment) -> None:
+def test_generate_traits_with_persistence(environment: Environment) -> None:  # noqa: FT003
     # Given
     identity = Identity.objects.create(identifier="identifier", environment=environment)
     trait_data_items = [
@@ -636,7 +636,7 @@ def test_generate_traits_with_persistence(environment: Environment) -> None:
     ).exists()
 
 
-def test_generate_traits_without_persistence(environment: Environment) -> None:
+def test_generate_traits_without_persistence(environment: Environment) -> None:  # noqa: FT003
     # Given
     identity = Identity.objects.create(identifier="identifier", environment=environment)
 
@@ -659,7 +659,7 @@ def test_generate_traits_without_persistence(environment: Environment) -> None:
     assert Trait.objects.filter(identity=identity).count() == 0
 
 
-def test_update_traits(environment: Environment) -> None:
+def test_update_traits(environment: Environment) -> None:  # noqa: FT003
     """
     This is quite a long test to verify the update traits functionality correctly
     handles updating and creating traits.
@@ -725,7 +725,7 @@ def test_update_traits(environment: Environment) -> None:
     assert transient_trait.trait_value == transient_trait_value
 
 
-def test_update_traits_deletes_when_nulled_out(environment: Environment) -> None:
+def test_update_traits_deletes_when_nulled_out(environment: Environment) -> None:  # noqa: FT003
     """
     This is quite a long test to verify the update traits functionality correctly
     handles updating and creating traits.
@@ -762,7 +762,7 @@ def test_update_traits_deletes_when_nulled_out(environment: Environment) -> None
     assert updated_traits[0].trait_value == trait_2_value
 
 
-def test_get_identity_segments(
+def test_get_identity_segments(  # noqa: FT003
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
     project: Project,
@@ -816,7 +816,7 @@ def test_get_identity_segments(
     assert len(segments) == 1 and segments[0] == segment
 
 
-def test_get_segments_with_overrides_only_only_returns_segments_overridden_in_environment(
+def test_get_segments_with_overrides_only_only_returns_segments_overridden_in_environment(  # noqa: FT003
     project: Project,
     environment: Environment,
 ) -> None:
@@ -861,7 +861,7 @@ def test_get_segments_with_overrides_only_only_returns_segments_overridden_in_en
     assert identity_segments[0] == segment_1
 
 
-def test_get_all_feature_states_does_not_return_null_versions(
+def test_get_all_feature_states_does_not_return_null_versions(  # noqa: FT003
     project: Project,
     environment: Environment,
     feature: Feature,
@@ -885,7 +885,7 @@ def test_get_all_feature_states_does_not_return_null_versions(
     assert identity_feature_states[0].id == version_1_feature_state.id
 
 
-def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change(  # type: ignore[no-untyped-def]
+def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     identity, django_assert_num_queries, trait
 ):
     # Given
@@ -913,7 +913,7 @@ def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change
         (None, False, True),
     ),
 )
-def test_get_all_feature_hide_disabled_flags(  # type: ignore[no-untyped-def]
+def test_get_all_feature_hide_disabled_flags(  # type: ignore[no-untyped-def]  # noqa: FT003
     project,
     environment,
     identity,
@@ -961,7 +961,7 @@ def test_get_all_feature_hide_disabled_flags(  # type: ignore[no-untyped-def]
     assert bool(identity_flags) == disabled_flag_returned
 
 
-def test_identity_get_all_feature_states_gets_latest_committed_version(environment):  # type: ignore[no-untyped-def]
+def test_identity_get_all_feature_states_gets_latest_committed_version(environment):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     identity = Identity.objects.create(identifier="identity", environment=environment)
 
@@ -1008,7 +1008,7 @@ def test_identity_get_all_feature_states_gets_latest_committed_version(environme
     assert identity_feature_state.get_feature_state_value() == "v2"
 
 
-def test_get_hash_key_with_use_identity_composite_key_for_hashing_enabled(  # type: ignore[no-untyped-def]
+def test_get_hash_key_with_use_identity_composite_key_for_hashing_enabled(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     identity: Identity,
 ):
     assert (
@@ -1017,7 +1017,7 @@ def test_get_hash_key_with_use_identity_composite_key_for_hashing_enabled(  # ty
     )
 
 
-def test_get_hash_key_with_use_identity_composite_key_for_hashing_disabled(  # type: ignore[no-untyped-def]
+def test_get_hash_key_with_use_identity_composite_key_for_hashing_disabled(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     identity: Identity,
 ):
     assert identity.get_hash_key(use_identity_composite_key_for_hashing=False) == str(

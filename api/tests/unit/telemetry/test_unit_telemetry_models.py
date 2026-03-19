@@ -7,7 +7,7 @@ debug_enabled = True
 
 
 @override_settings(ENV=env, DEBUG=debug_enabled)
-def test_get_install_stats(  # type: ignore[no-untyped-def]
+def test_get_install_stats(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     organisation_one,
     organisation_two,
     organisation_one_project_one,

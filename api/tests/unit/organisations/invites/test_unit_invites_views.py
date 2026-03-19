@@ -19,7 +19,7 @@ from organisations.models import Organisation, OrganisationRole, Subscription
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_create_invite_link(
+def test_create_invite_link(  # noqa: FT003
     organisation: Organisation,
     admin_client: APIClient,
 ) -> None:
@@ -44,7 +44,7 @@ def test_create_invite_link(
     assert response.data["role"] == "USER"
 
 
-def test_get_invite_links_for_organisation(
+def test_get_invite_links_for_organisation(  # noqa: FT003
     organisation: Organisation,
     admin_client: APIClient,
 ) -> None:
@@ -72,7 +72,7 @@ def test_get_invite_links_for_organisation(
         assert all(attr in invite_link for attr in expected_attributes)
 
 
-def test_get_invite_links_for_organisation_returns_400_if_seats_are_over(
+def test_get_invite_links_for_organisation_returns_400_if_seats_are_over(  # noqa: FT003
     settings: SettingsWrapper,
     organisation: Organisation,
     admin_client: APIClient,
@@ -94,7 +94,7 @@ def test_get_invite_links_for_organisation_returns_400_if_seats_are_over(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_delete_invite_link_for_organisation(
+def test_delete_invite_link_for_organisation(  # noqa: FT003
     settings: SettingsWrapper,
     organisation: Organisation,
     admin_client: APIClient,
@@ -118,7 +118,7 @@ def test_delete_invite_link_for_organisation(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_delete_invite_link_for_organisation_return_400_if_seats_are_over(
+def test_delete_invite_link_for_organisation_return_400_if_seats_are_over(  # noqa: FT003
     organisation: Organisation,
     admin_client: APIClient,
     settings: SettingsWrapper,
@@ -138,7 +138,7 @@ def test_delete_invite_link_for_organisation_return_400_if_seats_are_over(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_update_invite_link_returns_405(invite_link, admin_client, organisation):  # type: ignore[no-untyped-def]
+def test_update_invite_link_returns_405(invite_link, admin_client, organisation):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     url = reverse(
         "api-v1:organisations:organisation-invite-links-detail",
@@ -156,7 +156,7 @@ def test_update_invite_link_returns_405(invite_link, admin_client, organisation)
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
-def test_join_organisation_with_permission_groups(
+def test_join_organisation_with_permission_groups(  # noqa: FT003
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
     enterprise_subscription: Subscription,
@@ -194,7 +194,7 @@ def test_join_organisation_with_permission_groups(
 
 
 @pytest.mark.saas_mode
-def test_create_invite_with_permission_groups(
+def test_create_invite_with_permission_groups(  # noqa: FT003
     admin_client: APIClient,
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
@@ -226,7 +226,7 @@ def test_create_invite_with_permission_groups(
 
 
 @pytest.mark.saas_mode
-def test_create_invite_with_permission_groups_fails_if_permission_group_belongs_to_another_organisation(
+def test_create_invite_with_permission_groups_fails_if_permission_group_belongs_to_another_organisation(  # noqa: FT003
     admin_client: APIClient,
     organisation: Organisation,
     chargebee_subscription: Subscription,
@@ -264,7 +264,7 @@ def test_create_invite_with_permission_groups_fails_if_permission_group_belongs_
     }
 
 
-def test_create_invite_returns_400_if_seats_are_over(
+def test_create_invite_returns_400_if_seats_are_over(  # noqa: FT003
     admin_client: APIClient,
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
@@ -289,7 +289,7 @@ def test_create_invite_returns_400_if_seats_are_over(
     )
 
 
-def test_retrieve_invite(admin_client, organisation, user_permission_group, invite):  # type: ignore[no-untyped-def]
+def test_retrieve_invite(admin_client, organisation, user_permission_group, invite):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     url = reverse(
         "api-v1:organisations:organisation-invites-detail",
@@ -301,7 +301,7 @@ def test_retrieve_invite(admin_client, organisation, user_permission_group, invi
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_delete_invite(admin_client, organisation, user_permission_group, invite):  # type: ignore[no-untyped-def]
+def test_delete_invite(admin_client, organisation, user_permission_group, invite):  # type: ignore[no-untyped-def]  # noqa: FT003
     # Given
     url = reverse(
         "api-v1:organisations:organisation-invites-detail",
@@ -313,7 +313,7 @@ def test_delete_invite(admin_client, organisation, user_permission_group, invite
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_update_invite_returns_405(  # type: ignore[no-untyped-def]
+def test_update_invite_returns_405(  # type: ignore[no-untyped-def]  # noqa: FT003
     admin_client, organisation, user_permission_group, invite
 ):
     # Given
@@ -338,7 +338,7 @@ def test_update_invite_returns_405(  # type: ignore[no-untyped-def]
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation_returns_400_if_exceeds_plan_limit_for_saas(
+def test_join_organisation_returns_400_if_exceeds_plan_limit_for_saas(  # noqa: FT003
     staff_client: APIClient,
     invite_object: Invite | InviteLink,
     url: str,
@@ -366,7 +366,7 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit_for_saas(
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation_returns_400_if_exceeds_plan_limit_for_self_hosted_enterprise(
+def test_join_organisation_returns_400_if_exceeds_plan_limit_for_self_hosted_enterprise(  # noqa: FT003
     staff_client: APIClient,
     invite_object: Invite | InviteLink,
     url: str,
@@ -398,7 +398,7 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit_for_self_hosted_ent
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation_returns_400_if_payment_fails(
+def test_join_organisation_returns_400_if_payment_fails(  # noqa: FT003
     staff_client: APIClient,
     invite_object: Invite | InviteLink,
     url: str,
@@ -445,7 +445,7 @@ def test_join_organisation_returns_400_if_payment_fails(
     )
 
 
-def test_join_organisation_from_link_returns_403_if_invite_links_disabled(
+def test_join_organisation_from_link_returns_403_if_invite_links_disabled(  # noqa: FT003
     organisation: Organisation,
     invite_link: InviteLink,
     settings: SettingsWrapper,

@@ -97,7 +97,7 @@ def test_bootstrap__empty_instance__creates_expected(
     )
 
 
-def test_bootstrap__empty_instance__cli_overrides__creates_expected(
+def test_bootstrap__empty_instance__cli_overrides__creates_expected(  # noqa: FT003
     settings: SettingsWrapper,
     capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
 ) -> None:
@@ -156,7 +156,7 @@ def test_bootstrap__used_instance__skip_expected(
     [*Project.objects.all()] == expected_projects
 
 
-def test_bootstrap__allow_admin_initiation_via_cli__false_by_default__skip_expected(
+def test_bootstrap__allow_admin_initiation_via_cli__false_by_default__skip_expected(  # noqa: FT003,FT004
     settings: SettingsWrapper,
 ) -> None:
     # When

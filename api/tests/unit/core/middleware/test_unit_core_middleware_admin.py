@@ -11,7 +11,7 @@ not_allowed_ip_address = "11.0.0.1"
 
 
 @override_settings(ALLOWED_ADMIN_IP_ADDRESSES=[allowed_ip_address])
-def test_admin_whitelist_middleware_raises_permission_denied_for_admin_pages_if_ip_not_allowed():  # type: ignore[no-untyped-def]  # noqa: E501
+def test_admin_whitelist_middleware_raises_permission_denied_for_admin_pages_if_ip_not_allowed():  # type: ignore[no-untyped-def]  # noqa: E501,FT003,FT004
     # Given
     mock_get_response = mock.MagicMock()
 
@@ -29,7 +29,7 @@ def test_admin_whitelist_middleware_raises_permission_denied_for_admin_pages_if_
 
 
 @override_settings(ALLOWED_ADMIN_IP_ADDRESSES=[allowed_ip_address])
-def test_admin_whitelist_middleware_returns_get_response_for_admin_pages_if_ip_allowed():  # type: ignore[no-untyped-def]  # noqa: E501
+def test_admin_whitelist_middleware_returns_get_response_for_admin_pages_if_ip_allowed():  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     # Given
     mock_get_response = mock.MagicMock()
     mock_get_response_return = mock.MagicMock()
@@ -50,7 +50,7 @@ def test_admin_whitelist_middleware_returns_get_response_for_admin_pages_if_ip_a
 
 
 @override_settings(ALLOWED_ADMIN_IP_ADDRESSES=[allowed_ip_address])
-def test_admin_whitelist_middleware_returns_get_response_for_non_admin_request_if_ip_not_allowed():  # type: ignore[no-untyped-def]  # noqa: E501
+def test_admin_whitelist_middleware_returns_get_response_for_non_admin_request_if_ip_not_allowed():  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     # Given
     mock_get_response = mock.MagicMock()
     mock_get_response_return = mock.MagicMock()

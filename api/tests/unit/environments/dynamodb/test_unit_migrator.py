@@ -12,7 +12,7 @@ from environments.models import Environment, EnvironmentAPIKey
 from projects.models import Project
 
 
-def test_migrate_calls_internal_methods_with_correct_arguments(  # type: ignore[no-untyped-def]
+def test_migrate_calls_internal_methods_with_correct_arguments(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, project, identity, settings, environment_api_key
 ):
     # Given
@@ -74,7 +74,7 @@ def test_migrate_calls_internal_methods_with_correct_arguments(  # type: ignore[
     assert project.enable_dynamo_db is True
 
 
-def test_trigger_migration_calls_internal_methods_with_correct_arguments(  # type: ignore[no-untyped-def]
+def test_trigger_migration_calls_internal_methods_with_correct_arguments(  # type: ignore[no-untyped-def]  # noqa: FT003
     mocker, project
 ):
     # Given
@@ -101,7 +101,7 @@ def test_trigger_migration_calls_internal_methods_with_correct_arguments(  # typ
     mocked_send_migration_event.assert_called_once_with(project.id)
 
 
-def test_is_migration_done_returns_true_if_migration_is_completed(  # type: ignore[no-untyped-def]
+def test_is_migration_done_returns_true_if_migration_is_completed(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     mocker,
 ):
     # Given
@@ -123,7 +123,7 @@ def test_is_migration_done_returns_true_if_migration_is_completed(  # type: igno
     mocked_project_metadata.get_or_new.assert_called_with(project_id)
 
 
-def test_can_migrate_returns_true_if_migration_was_not_started(  # type: ignore[no-untyped-def]
+def test_can_migrate_returns_true_if_migration_was_not_started(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     mocker,
 ):
     # Given
@@ -146,7 +146,7 @@ def test_can_migrate_returns_true_if_migration_was_not_started(  # type: ignore[
     mocked_project_metadata.get_or_new.assert_called_with(project_id)
 
 
-def test_get_migration_status_returns_correct_migraion_status_for_in_progress_migration(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_get_migration_status_returns_correct_migraion_status_for_in_progress_migration(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
     mocker,
 ):
     # Given
@@ -197,7 +197,7 @@ def test_iter_identities_in_chunks__multiple_chunks__yields_all_in_pk_order(
     assert len(result) == 5
 
 
-def test_iter_identities_in_chunks__preserves_prefetch_related(
+def test_iter_identities_in_chunks__preserves_prefetch_related(  # noqa: FT003,FT004
     project: Project,
     environment: Environment,
     django_assert_num_queries: DjangoAssertNumQueries,

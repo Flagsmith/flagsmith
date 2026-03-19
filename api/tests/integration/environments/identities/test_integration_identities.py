@@ -37,7 +37,7 @@ total_variance_percentage = (
     ),
 )
 @mock.patch("features.models.get_hashed_percentage_for_object_ids")
-def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]
+def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     mock_get_hashed_percentage_value,
     hashed_percentage,
     expected_mv_value,
@@ -149,7 +149,7 @@ def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]
     assert values_dict[multivariate_feature_id] == variant_2_value
 
 
-def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_states(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_states(  # type: ignore[no-untyped-def]  # noqa: E501,FT003,FT004
     sdk_client,
     admin_client,
     project,
@@ -286,7 +286,7 @@ def transient_identifier(
         pytest.param({}, lazy_fixture("transient_identifier"), id="missing-identifier"),
     ],
 )
-def test_get_feature_states_for_identity__segment_match_expected(
+def test_get_feature_states_for_identity__segment_match_expected(  # noqa: FT003
     sdk_client: APIClient,
     feature: int,
     segment: int,
@@ -430,7 +430,7 @@ def test_get_feature_states_for_identity__transient_trait__segment_match_expecte
     assert flag_data["feature_state_value"] == "segment override"
 
 
-def test_get_feature_states_for_identity__transient_trait__existing_identity__return_expected(
+def test_get_feature_states_for_identity__transient_trait__existing_identity__return_expected(  # noqa: FT003
     sdk_client: APIClient,
     identity_identifier: str,
     identity: int,
@@ -481,7 +481,7 @@ def test_get_feature_states_for_identity__transient_trait__existing_identity__re
     ]
 
 
-def test_get_feature_states_for_identity__transient_identifier__empty_segment__return_expected(
+def test_get_feature_states_for_identity__transient_identifier__empty_segment__return_expected(  # noqa: FT003
     admin_client: APIClient,
     sdk_client: APIClient,
     default_feature_value: str,
