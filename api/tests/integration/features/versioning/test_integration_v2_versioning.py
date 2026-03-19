@@ -72,7 +72,7 @@ def environment_v2_versioning(
     return environment
 
 
-def test_v2_versioning__publish_and_revert__returns_consistent_flags(  # type: ignore[no-untyped-def]
+def test_v2_versioning__publish_and_revert__returns_consistent_flags(  # type: ignore[no-untyped-def]  # noqa: FT004
     admin_client: "APIClient",
     environment: int,
     environment_api_key: str,
@@ -84,8 +84,6 @@ def test_v2_versioning__publish_and_revert__returns_consistent_flags(  # type: i
     get_environment_flags_response_json: GetEnvironmentFlagsResponseJSONCallable,
     get_identity_flags_response_json: GetIdentityFlagsResponseJSONCallable,
 ):
-    # Given / When
-    # Then
     # First, let's get a baseline for a flags response for the environment and an identity
     # to make sure that the response before and after we enable v2 versioning is the same.
     get_environment_flags_response_v1_json = get_environment_flags_response_json(
@@ -279,7 +277,7 @@ def test_v2_versioning__publish_and_revert__returns_consistent_flags(  # type: i
     assert identity_flag_tuples_pre_revert == identity_flag_tuples_post_revert
 
 
-def test_v2_versioning__mv_feature_updated__returns_mv_option_value(  # type: ignore[no-untyped-def]
+def test_v2_versioning__mv_feature_updated__returns_mv_option_value(  # type: ignore[no-untyped-def]  # noqa: FT004
     admin_client: "APIClient",
     environment_v2_versioning: int,
     environment_api_key: str,
@@ -291,8 +289,6 @@ def test_v2_versioning__mv_feature_updated__returns_mv_option_value(  # type: ig
     get_environment_flags_response_json: GetEnvironmentFlagsResponseJSONCallable,
     get_identity_flags_response_json: GetIdentityFlagsResponseJSONCallable,
 ):
-    # Given / When
-    # Then
     # First, let's get a baseline for a flags response for the environment and an identity
     # to make sure that the response before and after we enable v2 versioning is the same.
     get_environment_flags_response_v1_json = get_environment_flags_response_json(
@@ -389,7 +385,7 @@ def test_v2_versioning__mv_feature_updated__returns_mv_option_value(  # type: ig
     assert mv_flag["feature_state_value"] == mv_feature_option_value
 
 
-def test_v2_versioning__multiple_segment_overrides_reordered__returns_correct_priority(  # type: ignore[no-untyped-def]
+def test_v2_versioning__multiple_segment_overrides_reordered__returns_correct_priority(  # type: ignore[no-untyped-def]   # noqa: FT004
     admin_client: "APIClient",
     environment_v2_versioning: int,
     environment_api_key: str,
@@ -399,8 +395,6 @@ def test_v2_versioning__multiple_segment_overrides_reordered__returns_correct_pr
     get_environment_flags_response_json: GetEnvironmentFlagsResponseJSONCallable,
     get_identity_flags_response_json: GetIdentityFlagsResponseJSONCallable,
 ):
-    # Given / When
-    # Then
     # Firstly, let's define an identity and their traits
     identifier = "identity"
     trait_key_1 = "trait_key_1"
