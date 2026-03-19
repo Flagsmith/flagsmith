@@ -94,6 +94,10 @@ ignore_missing_imports = true
 module = ["saml.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["opentelemetry.*"]
+ignore_missing_imports = true
+
 [tool.django-stubs]
 django_settings_module = "app.settings.local"
 
@@ -177,6 +181,7 @@ django_cockroachdb = "~4.2"
 opentelemetry-api = "^1.40.0"
 opentelemetry-sdk = "^1.40.0"
 opentelemetry-exporter-otlp-proto-http = "^1.40.0"
+opentelemetry-instrumentation-django = "^0.61b0"
 
 [tool.poetry.group.auth-controller]
 optional = true

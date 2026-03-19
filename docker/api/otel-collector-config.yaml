@@ -28,3 +28,6 @@ service:
       exporters: [debug, clickhouse]
       # To also export to Amplitude:
       # exporters: [debug, clickhouse, amplitude]
+    traces:
+      receivers: [otlp]
+      exporters: [debug]

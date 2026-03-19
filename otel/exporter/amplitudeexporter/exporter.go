@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -14,10 +15,17 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	baggageDeviceID  = "amplitude.device_id"
+	baggageSessionID = "amplitude.session_id"
+)
+
 // amplitudeEvent mirrors a single event in Amplitude's HTTP V2 API.
 type amplitudeEvent struct {
 	EventType       string         `json:"event_type"`
 	UserID          string         `json:"user_id,omitempty"`
+	DeviceID        string         `json:"device_id,omitempty"`
+	SessionID       int64          `json:"session_id,omitempty"`
 	Time            int64          `json:"time,omitempty"`
 	EventProperties map[string]any `json:"event_properties,omitempty"`
 	InsertID        string         `json:"insert_id,omitempty"`
@@ -126,11 +134,18 @@ func (e *amplitudeExporter) mapLogRecord(lr plog.LogRecord) amplitudeEvent {
 
 	props := make(map[string]any)
 	var userID string
+	var deviceID string
+	var sessionID int64
 
 	lr.Attributes().Range(func(k string, v pcommon.Value) bool {
-		if k == e.cfg.UserIDAttribute {
+		switch k {
+		case e.cfg.UserIDAttribute:
 			userID = e.cfg.UserIDPrefix + v.AsString()
-		} else {
+		case baggageDeviceID:
+			deviceID = v.AsString()
+		case baggageSessionID:
+			sessionID, _ = strconv.ParseInt(v.AsString(), 10, 64)
+		default:
 			props[k] = v.AsString()
 		}
 		return true
@@ -144,6 +159,8 @@ func (e *amplitudeExporter) mapLogRecord(lr plog.LogRecord) amplitudeEvent {
 	return amplitudeEvent{
 		EventType:       eventType,
 		UserID:          userID,
+		DeviceID:        deviceID,
+		SessionID:       sessionID,
 		Time:            timeMs,
 		EventProperties: props,
 		InsertID:        lr.TraceID().String() + "-" + lr.SpanID().String(),
