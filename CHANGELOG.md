@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.222.4](https://github.com/Flagsmith/flagsmith/compare/v2.222.3...v2.222.4) (2026-03-19)
+
+
+### Bug Fixes
+
+* make Feature.type writable on create ([#6986](https://github.com/Flagsmith/flagsmith/issues/6986)) ([0cb8d90](https://github.com/Flagsmith/flagsmith/commit/0cb8d90b9a4c776068d5ea63d56727ed4da281e6))
+
 ## [2.222.3](https://github.com/Flagsmith/flagsmith/compare/v2.222.2...v2.222.3) (2026-03-18)
 
 
