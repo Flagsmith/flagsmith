@@ -40,7 +40,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
 }) => {
   const [searchProject, setSearchProject] = useState<string>('')
   const [searchEnv, setSearchEnv] = useState<string>('')
-  const projectData: Project[] = OrganisationStore.getProjects()
+  const projectData: Project[] | undefined = OrganisationStore.getProjects()
   const [project, setProject] = useState<string>('')
   const [environments, setEnvironments] = useState<Environment[]>([])
 
@@ -123,7 +123,10 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             group={group}
             orgId={orgId}
             filter={searchProject}
-            mainItems={projectData.map((v) => ({ ...v, projectId: v.id }))}
+            mainItems={(projectData || []).map((v) => ({
+              ...v,
+              projectId: v.id,
+            }))}
             role={role}
             level={'project'}
             ref={tabRef}
