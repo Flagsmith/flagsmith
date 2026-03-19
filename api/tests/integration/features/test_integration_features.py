@@ -4,31 +4,38 @@ from django.urls import reverse
 from rest_framework import status
 
 
-def test_search_features(admin_client, feature, project):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
-    # First get the features without searching
+def test_list_features__search_by_name__returns_matching_features(  # type: ignore[no-untyped-def]
+    admin_client, feature, project
+):
+    # Given
     feature_list_url = reverse("api-v1:projects:project-features-list", args=[project])
     response = admin_client.get(feature_list_url)
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
     assert response_json["count"] == 1
-
     feature_name = response_json["results"][0]["name"]
 
-    # Now search for the correct feature name
+    # When
     valid_search_url = f"{feature_list_url}?search={feature_name}"
     valid_search_response = admin_client.get(valid_search_url)
+
+    # Then
     assert valid_search_response.status_code == status.HTTP_200_OK
     assert valid_search_response.json()["count"] == 1
 
-    # Now search for an invalid feature name
+    # When - search for an invalid feature name
     invalid_search_url = f"{feature_list_url}?search=invalid-feature"
     invalid_search_response = admin_client.get(invalid_search_url)
+
+    # Then
     assert invalid_search_response.status_code == status.HTTP_200_OK
     assert invalid_search_response.json()["count"] == 0
 
 
-def test_sort_features(admin_client, project):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
-    # first, we need to create 2 features
+def test_list_features__sort_by_various_fields__returns_correctly_ordered(  # type: ignore[no-untyped-def]
+    admin_client, project
+):
+    # Given
     feature_1_data = {"name": "feature_a"}
     feature_2_data = {"name": "feature_b"}
     url = reverse("api-v1:projects:project-features-list", args=[project])
@@ -42,40 +49,50 @@ def test_sort_features(admin_client, project):  # type: ignore[no-untyped-def]  
     feature_1_id = feature_1_create_response.json()["id"]
     feature_2_id = feature_2_create_response.json()["id"]
 
-    # now we can test the ordering
-    # by default it should sort by created_date asc
+    # When - default sort by created_date asc
     created_date_asc_response = admin_client.get(url)
+
+    # Then
     assert created_date_asc_response.status_code == status.HTTP_200_OK
     created_date_asc_response_json = created_date_asc_response.json()
     assert created_date_asc_response_json["results"][0]["id"] == feature_1_id
     assert created_date_asc_response_json["results"][1]["id"] == feature_2_id
 
-    # now let's try reversing the order
+    # When - reverse order
     created_date_desc_url = f"{url}?sort_direction=DESC"
     created_date_desc_response = admin_client.get(created_date_desc_url)
+
+    # Then
     assert created_date_desc_response.status_code == status.HTTP_200_OK
     created_date_desc_response_json = created_date_desc_response.json()
     assert created_date_desc_response_json["results"][0]["id"] == feature_2_id
     assert created_date_desc_response_json["results"][1]["id"] == feature_1_id
 
-    # now let's try sorting by name asc and desc
+    # When - sort by name asc
     name_asc_url = f"{url}?sort_field=name&sort_direction=ASC"
     name_asc_response = admin_client.get(name_asc_url)
+
+    # Then
     assert name_asc_response.status_code == status.HTTP_200_OK
     name_asc_response_json = name_asc_response.json()
     assert name_asc_response_json["results"][0]["id"] == feature_1_id
     assert name_asc_response_json["results"][1]["id"] == feature_2_id
 
+    # When - sort by name desc
     name_desc_url = f"{url}?sort_field=name&sort_direction=DESC"
     name_desc_response = admin_client.get(name_desc_url)
+
+    # Then
     assert name_desc_response.status_code == status.HTTP_200_OK
     name_desc_response_json = name_desc_response.json()
     assert name_desc_response_json["results"][0]["id"] == feature_2_id
     assert name_desc_response_json["results"][1]["id"] == feature_1_id
 
 
-def test_filter_features_by_tags(admin_client, project):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
-    # first lets create some tags
+def test_list_features__filter_by_tags__returns_matching_features(  # type: ignore[no-untyped-def]
+    admin_client, project
+):
+    # Given
     tag_labels = ("tag_1", "tag_2")
 
     tags_url = reverse("api-v1:projects:tags-list", args=[project])
@@ -108,8 +125,7 @@ def test_filter_features_by_tags(admin_client, project):  # type: ignore[no-unty
     assert untagged_feature_response.status_code == status.HTTP_201_CREATED
     untagged_feature_id = untagged_feature_response.json()["id"]
 
-    # now lets try listing features with different combinations of tag filters to
-    # check we get what we expect
+    # When / Then
     # case 1: no tags filter should return all features
     assert admin_client.get(features_url).json()["count"] == 2
 
@@ -134,8 +150,10 @@ def test_filter_features_by_tags(admin_client, project):  # type: ignore[no-unty
     assert all_tags_features_response_json["count"] == 0
 
 
-def test_filter_features_by_archived_status(admin_client, project):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
-    # First let's create 2 new features, one which is archived and one which isn't
+def test_list_features__filter_by_archived_status__returns_matching_features(  # type: ignore[no-untyped-def]
+    admin_client, project
+):
+    # Given
     features_url = reverse("api-v1:projects:project-features-list", args=[project])
     create_archived_feature_response = admin_client.post(
         features_url,
@@ -156,8 +174,7 @@ def test_filter_features_by_archived_status(admin_client, project):  # type: ign
     assert create_unarchived_feature_response.status_code == status.HTTP_201_CREATED
     unarchived_feature_id = create_unarchived_feature_response.json()["id"]
 
-    # Now let's verify that the correct features are returned based on the is_archived
-    # query parameter
+    # When / Then
     # Case 1: is_archived not provided - both features should be returned
     list_features_missing_is_archived_response = admin_client.get(features_url)
     assert list_features_missing_is_archived_response.status_code == status.HTTP_200_OK

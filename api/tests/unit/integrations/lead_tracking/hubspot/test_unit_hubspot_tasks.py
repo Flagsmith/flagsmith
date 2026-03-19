@@ -11,7 +11,7 @@ from organisations.models import Organisation
 from users.models import FFAdminUser
 
 
-def test_create_hubspot_contact_for_user_skips_when_tracking_disabled(  # noqa: FT003
+def test_create_hubspot_contact_for_user__tracking_disabled__raises_assertion_error(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -24,7 +24,7 @@ def test_create_hubspot_contact_for_user_skips_when_tracking_disabled(  # noqa: 
         create_hubspot_contact_for_user(user_id=admin_user.id)
 
 
-def test_create_hubspot_contact_for_user_skips_when_should_track_false(  # noqa: FT003
+def test_create_hubspot_contact_for_user__should_track_false__does_not_create_contact(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -46,7 +46,7 @@ def test_create_hubspot_contact_for_user_skips_when_should_track_false(  # noqa:
     mock_create_contact.assert_not_called()
 
 
-def test_track_hubspot_lead_skips_when_tracking_disabled(  # noqa: FT003
+def test_track_hubspot_lead__tracking_disabled__raises_assertion_error(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -59,7 +59,7 @@ def test_track_hubspot_lead_skips_when_tracking_disabled(  # noqa: FT003
         track_hubspot_lead_v2(user_id=admin_user.id, organisation_id=1)
 
 
-def test_track_hubspot_lead_skips_when_should_track_false(  # noqa: FT003
+def test_track_hubspot_lead__should_track_false__does_not_create_lead(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -81,7 +81,7 @@ def test_track_hubspot_lead_skips_when_should_track_false(  # noqa: FT003
     mock_create_lead.assert_not_called()
 
 
-def test_update_hubspot_active_subscription_skips_when_tracking_disabled(  # noqa: FT003
+def test_update_hubspot_active_subscription__tracking_disabled__raises_assertion_error(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -94,7 +94,7 @@ def test_update_hubspot_active_subscription_skips_when_tracking_disabled(  # noq
         update_hubspot_active_subscription(subscription_id=1)
 
 
-def test_update_hubspot_active_subscription_is_triggered_when_tracking_enabled(  # noqa: FT003
+def test_update_hubspot_active_subscription__tracking_enabled__calls_update(
     db: None,
     settings: SettingsWrapper,
     organisation: Organisation,

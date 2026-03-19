@@ -16,7 +16,9 @@ from users.models import FFAdminUser
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_create_mv_option(client, project, mv_option_50_percent, feature):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_create_mv_option__valid_data__returns_created(  # type: ignore[no-untyped-def]
+    client, project, mv_option_50_percent, feature
+):
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -47,7 +49,9 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):  
         (lazy_fixture("admin_client"), "89809"),
     ],
 )
-def test_cannot_create_mv_option_when_feature_id_invalid(client, feature_id, project):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_create_mv_option__invalid_feature_id__returns_not_found(  # type: ignore[no-untyped-def]
+    client, feature_id, project
+):
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -70,7 +74,7 @@ def test_cannot_create_mv_option_when_feature_id_invalid(client, feature_id, pro
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_cannot_create_mv_option_when_user_is_not_owner_of_the_feature(project):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_create_mv_option__user_not_project_member__returns_forbidden(project):  # type: ignore[no-untyped-def]
     # Given
     new_user = FFAdminUser.objects.create(email="testuser@mail.com")
     organisation = Organisation.objects.create(name="Test Org")
@@ -106,7 +110,9 @@ def test_cannot_create_mv_option_when_user_is_not_owner_of_the_feature(project):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_list_mv_option(project, mv_option_50_percent, client, feature):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_list_mv_options__option_exists__returns_option(  # type: ignore[no-untyped-def]
+    project, mv_option_50_percent, client, feature
+):
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -127,9 +133,10 @@ def test_can_list_mv_option(project, mv_option_50_percent, client, feature):  # 
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_create_mv_option__total_allocation_exceeds_100__returns_bad_request(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
 ):
+    # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
         args=[project, feature],
@@ -157,9 +164,10 @@ def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(  # type:
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_update_default_percentage_allocation(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_update_mv_option__valid_allocation__returns_updated_option(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
 ):
+    # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-detail",
         args=[project, feature, mv_option_50_percent],
@@ -187,9 +195,10 @@ def test_can_update_default_percentage_allocation(  # type: ignore[no-untyped-de
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_updating_default_percentage_allocation_that_pushes_the_total_percentage_allocation_over_100_returns_400(  # type: ignore[no-untyped-def]  # noqa: E501,FT003,FT004
+def test_update_mv_option__total_allocation_exceeds_100__returns_bad_request(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
 ):
+    # Given
     # First let's create another mv_option with 30 percent allocation
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -237,7 +246,9 @@ def test_updating_default_percentage_allocation_that_pushes_the_total_percentage
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_remove_mv_option(project, mv_option_50_percent, client, feature):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_delete_mv_option__option_exists__returns_no_content(  # type: ignore[no-untyped-def]
+    project, mv_option_50_percent, client, feature
+):
     # Given
     mv_option_url = reverse(
         "api-v1:projects:feature-mv-options-detail",
@@ -269,13 +280,14 @@ def test_can_remove_mv_option(project, mv_option_50_percent, client, feature):  
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_and_update_multivariate_feature_with_2_variations_50_percent(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_update_feature_state__two_mv_options_at_50_percent__returns_ok(  # type: ignore[no-untyped-def]
     project, environment, environment_api_key, client, feature
 ):
     """
     Specific test to reproduce issue #234 in Github
     https://github.com/Flagsmith/flagsmith/issues/234
     """
+    # Given
     first_mv_option_data = {
         "type": "unicode",
         "feature": feature,
@@ -326,8 +338,7 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(  #
     assert get_feature_states_response.status_code == status.HTTP_200_OK
     assert len(feature_state["multivariate_feature_state_values"]) == 2
 
-    # Now we just want to try and update the feature state in the environment without
-    # changing anything
+    # When
     update_url = reverse(
         "api-v1:environments:environment-featurestates-detail",
         args=[environment_api_key, feature_state_id],
@@ -357,6 +368,8 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(  #
         data=json.dumps(update_feature_state_data),
         content_type="application/json",
     )
+
+    # Then
     assert update_feature_state_response.status_code == status.HTTP_200_OK
 
 
@@ -364,14 +377,14 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(  #
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_modify_weight_of_2_variations_in_single_request(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_update_feature_state__swap_variation_weights__returns_ok(  # type: ignore[no-untyped-def]
     project, environment, environment_api_key, client, feature
 ):
     """
     Specific test to reproduce issue #807 in Github
     https://github.com/Flagsmith/flagsmith/issues/807
     """
-
+    # Given
     first_mv_option_data = {
         "type": "unicode",
         "feature": feature,
@@ -422,8 +435,8 @@ def test_modify_weight_of_2_variations_in_single_request(  # type: ignore[no-unt
     assert get_feature_states_response.status_code == status.HTTP_200_OK
     assert len(feature_state["multivariate_feature_state_values"]) == 2
 
-    # Now we want to switch the weighting so that the opposite variation is 100% as
-    # well as adding another new variation
+    # When
+    # switch the weighting so that the opposite variation is 100%
     update_url = reverse(
         "api-v1:environments:environment-featurestates-detail",
         args=[environment_api_key, feature_state_id],
@@ -457,4 +470,6 @@ def test_modify_weight_of_2_variations_in_single_request(  # type: ignore[no-unt
         data=json.dumps(update_feature_state_data),
         content_type="application/json",
     )
+
+    # Then
     assert update_feature_state_response.status_code == status.HTTP_200_OK

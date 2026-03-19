@@ -18,13 +18,15 @@ from tests.integration.helpers import (
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_clone_environment_clones_feature_states_with_value(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_clone_environment__feature_states_with_value__clones_values(  # type: ignore[no-untyped-def]
     client: APIClient,
     project: int,
     environment: int,
     environment_api_key: str,
     feature: int,
 ):
+    # Given / When
+    # Then
     # Firstly, let's update feature state value of the source environment
     # fetch the feature state id to update
     feature_state = get_env_feature_states_list_with_api(
@@ -88,9 +90,11 @@ def test_clone_environment_clones_feature_states_with_value(  # type: ignore[no-
     )
 
 
-def test_clone_environment_creates_admin_permission_with_the_current_user(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_clone_environment__current_user__gets_admin_permission(  # type: ignore[no-untyped-def]
     admin_user, admin_client, environment, environment_api_key
 ):
+    # Given / When
+    # Then
     # Firstly, let's create the clone of the environment
     env_name = "Cloned env"
     url = reverse("api-v1:environments:environment-clone", args=[environment_api_key])
@@ -108,7 +112,7 @@ def test_clone_environment_creates_admin_permission_with_the_current_user(  # ty
     assert response.json()[0]["admin"] is True
 
 
-def test_env_clone_creates_feature_segment(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_clone_environment__feature_segment_exists__clones_feature_segment(  # type: ignore[no-untyped-def]
     admin_client: APIClient,
     environment: int,
     environment_api_key: str,
@@ -116,6 +120,8 @@ def test_env_clone_creates_feature_segment(  # type: ignore[no-untyped-def]  # n
     feature_segment: int,
     segment_featurestate: int,
 ):
+    # Given / When
+    # Then
     # Firstly, let's clone the environment
     env_name = "Cloned env"
     url = reverse("api-v1:environments:environment-clone", args=[environment_api_key])
@@ -136,9 +142,11 @@ def test_env_clone_creates_feature_segment(  # type: ignore[no-untyped-def]  # n
     assert json_response["results"][0]["id"] != feature_segment
 
 
-def test_env_clone_clones_segments_overrides(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_clone_environment__segment_overrides_exist__clones_segment_overrides(  # type: ignore[no-untyped-def]
     admin_client, environment, environment_api_key, feature, feature_segment, segment
 ):
+    # Given / When
+    # Then
     # Firstly, let's override the segment in source environment
     create_url = reverse("api-v1:features:featurestates-list")
     data = {
@@ -221,7 +229,7 @@ def test_env_clone_clones_segments_overrides(  # type: ignore[no-untyped-def]  #
     assert clone_feature_segment_id != source_feature_segment_id
 
 
-def test_get_environment_document_using_persistent_cache(  # noqa: FT003
+def test_get_environment_document__persistent_cache__returns_200_with_single_query(
     persistent_environment_document_cache: MagicMock,
     environment: int,
     environment_api_key: str,

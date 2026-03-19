@@ -50,7 +50,7 @@ with _frozen_time:
         ),
     ),
 )
-def test_get_identity_override_created_audit_message(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_identity_override_created_audit_message__given_live_from__returns_expected_message(  # type: ignore[no-untyped-def]
     project, live_from, feature_name, environment_name, identifier, expected_message
 ):
     # Given
@@ -88,7 +88,7 @@ def test_get_identity_override_created_audit_message(  # type: ignore[no-untyped
         ),
     ),
 )
-def test_get_segment_override_created_audit_message(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_segment_override_created_audit_message__given_live_from__returns_expected_message(  # type: ignore[no-untyped-def]
     project, live_from, feature_name, environment_name, segment_name, expected_message
 ):
     # Given
@@ -130,7 +130,7 @@ def test_get_segment_override_created_audit_message(  # type: ignore[no-untyped-
         ),
     ),
 )
-def test_get_environment_feature_state_created_audit_message(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_environment_feature_state_created_audit_message__given_live_from__returns_expected_message(  # type: ignore[no-untyped-def]
     project, live_from, feature_name, environment_name, expected_message
 ):
     # Given

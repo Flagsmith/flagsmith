@@ -36,7 +36,7 @@ from projects.models import Project
 from projects.tags.models import Tag
 
 
-def test_clear_stale_feature_imports_and_exports(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_clear_stale_feature_imports_and_exports__stale_records__deletes_old_keeps_new(  # type: ignore[no-untyped-def]
     db: None, environment: Environment, freezer: FrozenDateTimeFactory
 ):
     # Given
@@ -74,7 +74,7 @@ def test_clear_stale_feature_imports_and_exports(  # type: ignore[no-untyped-def
     kept_feature_export.refresh_from_db()
 
 
-def test_retire_stalled_feature_imports_and_exports(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_retire_stalled_feature_imports_and_exports__stalled_records__marks_as_failed(  # type: ignore[no-untyped-def]
     db: None, environment: Environment, freezer: FrozenDateTimeFactory
 ):
     # Given
@@ -118,7 +118,7 @@ def test_retire_stalled_feature_imports_and_exports(  # type: ignore[no-untyped-
     assert keep_processing_feature_export.status == PROCESSING
 
 
-def test_export_and_import_features_for_environment_with_skip(  # noqa: FT003
+def test_export_and_import_features__skip_strategy__preserves_overlapping_features(
     db: None,
     environment: Environment,
     project: Project,
@@ -201,7 +201,7 @@ def test_export_and_import_features_for_environment_with_skip(  # noqa: FT003
     assert new_feature2.default_enabled is False
 
 
-def test_export_and_import_features_for_environment_with_overwrite_destructive(  # noqa: FT003
+def test_export_and_import_features__overwrite_destructive_strategy__replaces_overlapping_features(
     db: None,
     environment: Environment,
     project: Project,
@@ -373,7 +373,7 @@ def test_export_and_import_features_for_environment_with_overwrite_destructive( 
     assert new_feature_state3.feature_state_value.value == "changed"
 
 
-def test_create_flagsmith_on_flagsmith_feature_export(  # noqa: FT003
+def test_create_flagsmith_on_flagsmith_feature_export__valid_config__creates_export(
     db: None,
     settings: SettingsWrapper,
     environment: Environment,

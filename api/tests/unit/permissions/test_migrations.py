@@ -3,7 +3,7 @@ from django_test_migrations.migrator import Migrator
 from organisations.models import OrganisationRole
 
 
-def test_migration_only_remove_permissions_for_users_that_are_not_part_of_the_organisation(  # noqa: E501,FT003,FT004
+def test_orphan_permission_cleanup__user_not_in_organisation__removes_permissions(  # noqa: E501
     migrator: Migrator,
 ) -> None:
     # Given - the migration state is at 0004 (before the migration we want to test)
@@ -88,7 +88,7 @@ def test_migration_only_remove_permissions_for_users_that_are_not_part_of_the_or
 
     new_member = new_ff_admin_user_model_class.objects.get(id=member.id)
     new_not_a_member = new_ff_admin_user_model_class.objects.get(id=not_a_member.id)
-    # Finally - assert that project_user_permission is removed for not_a_member(but exists for member)
+    # Then - assert that project_user_permission is removed for not_a_member(but exists for member)
     assert (
         new_user_project_permission_model_class.objects.filter(
             project=new_project, user=new_member

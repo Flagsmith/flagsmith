@@ -8,7 +8,7 @@ from environments.models import Environment
 from integrations.rudderstack.models import RudderstackConfiguration
 
 
-def test_should_create_rudderstack_config_when_post(  # noqa: FT003
+def test_create_rudderstack_config__valid_data__returns_201(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -32,7 +32,7 @@ def test_should_create_rudderstack_config_when_post(  # noqa: FT003
     assert RudderstackConfiguration.objects.filter(environment=environment).count() == 1
 
 
-def test_should_return_400_when_duplicate_rudderstack_config_is_posted(  # noqa: FT003
+def test_create_rudderstack_config__duplicate_config__returns_400(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -59,7 +59,7 @@ def test_should_return_400_when_duplicate_rudderstack_config_is_posted(  # noqa:
     assert RudderstackConfiguration.objects.filter(environment=environment).count() == 1
 
 
-def test_should_update_configuration_when_put(  # noqa: FT003
+def test_update_rudderstack_config__valid_data__returns_200(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -88,7 +88,7 @@ def test_should_update_configuration_when_put(  # noqa: FT003
     assert config.api_key == api_key_updated
 
 
-def test_should_return_rudderstack_config_list_when_requested(  # noqa: FT003
+def test_list_rudderstack_config__existing_config__returns_200(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -116,7 +116,7 @@ def test_should_return_rudderstack_config_list_when_requested(  # noqa: FT003
     ]
 
 
-def test_should_remove_configuration_when_delete(  # noqa: FT003
+def test_delete_rudderstack_config__existing_config__returns_204(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -134,5 +134,4 @@ def test_should_remove_configuration_when_delete(  # noqa: FT003
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    #  and
     assert not RudderstackConfiguration.objects.filter(environment=environment).exists()

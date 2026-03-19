@@ -20,13 +20,14 @@ from projects.models import (
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_get_permitted_projects_for_user_returns_all_projects_for_org_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_get_permitted_projects_for_user__org_admin__returns_all_projects(  # type: ignore[no-untyped-def]
     admin_user, project, project_two
 ):
+    # Given / When
+    # Then
     for permission in ProjectPermissionModel.objects.all().values_list(
         "key", flat=True
     ):
-        # Then
         assert get_permitted_projects_for_user(admin_user, permission).count() == 2
 
 
@@ -37,7 +38,7 @@ def test_get_permitted_projects_for_user_returns_all_projects_for_org_admin(  # 
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_get_permitted_projects_for_user_returns_the_project_for_project_admin(  # noqa: FT003,FT004
+def test_get_permitted_projects_for_user__project_admin__returns_single_project(
     staff_user: FFAdminUser,
     project: Project,
     project_admin: typing.Union[
@@ -45,14 +46,15 @@ def test_get_permitted_projects_for_user_returns_the_project_for_project_admin( 
     ],
     project_two: Project,
 ) -> None:
+    # Given / When
+    # Then
     for permission in ProjectPermissionModel.objects.all().values_list(
         "key", flat=True
     ):
-        # Then
         assert get_permitted_projects_for_user(staff_user, permission).count() == 1
 
 
-def test_get_permitted_projects_for_user_returns_correct_project(  # noqa: FT003,FT004
+def test_get_permitted_projects_for_user__mixed_permissions__returns_correct_project(
     staff_user: FFAdminUser,
     project: Project,
     view_project_permission: PermissionModel,
@@ -61,19 +63,22 @@ def test_get_permitted_projects_for_user_returns_correct_project(  # noqa: FT003
     project_permission_using_user_permission: UserProjectPermission,
     project_permission_using_user_permission_group: UserPermissionGroupProjectPermission,
 ) -> None:
+    # Given
     # First, let's assert that the user does not have access to any project
     for permission in ProjectPermissionModel.objects.all().values_list(
         "key", flat=True
     ):
         assert get_permitted_projects_for_user(staff_user, permission).count() == 0
 
-    # Next, let's give user some permissions using `user_permission`
+    # When
+    # Let's give user some permissions using `user_permission`
     project_permission_using_user_permission.permissions.add(view_project_permission)
     project_permission_using_user_permission.permissions.add(
         create_environment_permission
     )
 
-    # Next, let's assert that the project is returned only for those permissions (and not for others).
+    # Then
+    # The project is returned only for those permissions (and not for others).
     for permission in ProjectPermissionModel.objects.all().values_list(
         "key", flat=True
     ):
@@ -106,7 +111,7 @@ def test_get_permitted_projects_for_user_returns_correct_project(  # noqa: FT003
         )
 
 
-def test_get_permitted_project_for_user__does_not_return_project_for_orphan_group_permission(  # noqa: FT003
+def test_get_permitted_projects_for_user__orphan_group_permission__does_not_return_project(
     organisation: Organisation,
     project: Project,
     user_permission_group: UserPermissionGroup,

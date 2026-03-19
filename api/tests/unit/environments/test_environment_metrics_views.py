@@ -11,7 +11,7 @@ from tests.types import WithEnvironmentPermissionsCallable
 
 
 @pytest.mark.parametrize("with_workflows", [True, False])
-def test_get_environment_metrics_without_workflows(  # noqa: FT003
+def test_get_environment_metrics__with_or_without_workflows__returns_expected_metrics(
     admin_client: APIClient,
     environment: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -45,7 +45,7 @@ def test_get_environment_metrics_without_workflows(  # noqa: FT003
         assert "total_scheduled_changes" not in names
 
 
-def test_environment_metrics_requires_permission(  # noqa: FT003
+def test_get_environment_metrics__no_permissions__returns_403(
     staff_client: APIClient,
     environment: Environment,
 ) -> None:

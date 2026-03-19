@@ -8,7 +8,7 @@ from integrations.datadog.models import DataDogConfiguration
 from projects.models import Project
 
 
-def test_should_create_datadog_config_when_post(  # noqa: FT003
+def test_datadog_config__post_valid_data__creates_configuration(
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -36,7 +36,7 @@ def test_should_create_datadog_config_when_post(  # noqa: FT003
     assert created_config.use_custom_source == data["use_custom_source"]
 
 
-def test_should_return_400_when_duplicate_datadog_config_is_posted(  # noqa: FT003
+def test_datadog_config__post_duplicate__returns_bad_request(
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -59,7 +59,7 @@ def test_should_return_400_when_duplicate_datadog_config_is_posted(  # noqa: FT0
     assert DataDogConfiguration.objects.filter(project=project).count() == 1
 
 
-def test_should_update_configuration_when_put(  # noqa: FT003
+def test_datadog_config__put_updated_data__updates_configuration(
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -87,7 +87,7 @@ def test_should_update_configuration_when_put(  # noqa: FT003
     assert config.api_key == api_key_updated
 
 
-def test_should_return_datadog_config_list_when_requested(  # noqa: FT003
+def test_datadog_config__get_list__returns_configurations(
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -112,7 +112,7 @@ def test_should_return_datadog_config_list_when_requested(  # noqa: FT003
     ]
 
 
-def test_should_remove_configuration_when_delete(  # noqa: FT003
+def test_datadog_config__delete_existing__removes_configuration(
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -132,7 +132,7 @@ def test_should_remove_configuration_when_delete(  # noqa: FT003
     assert not DataDogConfiguration.objects.filter(project=project).exists()
 
 
-def test_create_datadog_configuration_in_project_with_deleted_configuration(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_datadog_config__project_with_deleted_config__creates_new_configuration(  # type: ignore[no-untyped-def]
     admin_client, project, deleted_datadog_configuration
 ):
     # Given

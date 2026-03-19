@@ -9,7 +9,9 @@ from tests.unit.telemetry.helpers import get_example_telemetry_data
 @override_settings(INFLUXDB_TOKEN="some-token")
 @mock.patch("telemetry.serializers.get_ip_address_from_request")
 @mock.patch("telemetry.serializers.InfluxDBWrapper")
-def test_telemetry_serializer_save(MockInfluxDBWrapper, mock_get_ip_address):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_telemetry_serializer__valid_data__writes_to_influxdb(  # type: ignore[no-untyped-def]
+    MockInfluxDBWrapper, mock_get_ip_address
+):
     # Given
     data = get_example_telemetry_data()
     serializer = TelemetrySerializer(data=data, context={"request": mock.MagicMock()})
