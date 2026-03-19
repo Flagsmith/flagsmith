@@ -39,10 +39,10 @@ class FeatureFlagCodeReferencesScanCreateAPIView(
         instance = serializer.save(project_id=self.kwargs["project_pk"])
         feature_names = {ref["feature_name"] for ref in instance.code_references}
         logger.info(
-            "code-references-scan-created",
-            organisation_id=instance.project.organisation_id,
-            code_references_count=len(instance.code_references),
-            feature_count=len(feature_names),
+            "scan.created",
+            organisation__id=instance.project.organisation_id,
+            code_references__count=len(instance.code_references),
+            feature__count=len(feature_names),
         )
 
 

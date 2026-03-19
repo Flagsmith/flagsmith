@@ -674,6 +674,7 @@ OTEL_SERVICE_NAME = env.str("OTEL_SERVICE_NAME", default="flagsmith-api")
 
 # structlog configuration — processors that run on every structlog log call.
 _structlog_processors: list[Any] = [
+    structlog.stdlib.add_logger_name,
     structlog.contextvars.merge_contextvars,
     structlog.processors.add_log_level,
     structlog.processors.format_exc_info,
@@ -698,7 +699,7 @@ structlog.configure(
     wrapper_class=structlog.make_filtering_bound_logger(
         logging.getLevelNamesMapping()[STRUCTLOG_LOG_LEVEL.upper()]
     ),
-    logger_factory=structlog.PrintLoggerFactory(),
+    logger_factory=structlog.stdlib.LoggerFactory(),
     cache_logger_on_first_use=True,
 )
 

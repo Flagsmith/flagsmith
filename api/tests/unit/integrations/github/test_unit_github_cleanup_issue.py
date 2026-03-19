@@ -139,10 +139,10 @@ def test_create_cleanup_issue__valid_request__returns_204(
 
     assert log.events == [
         {
-            "event": "cleanup-issues-created",
+            "event": "cleanup_issues.created",
             "level": "info",
-            "organisation_id": organisation.id,
-            "issues_created_count": 2,
+            "organisation__id": organisation.id,
+            "issues_created__count": 2,
         },
     ]
 

@@ -67,11 +67,11 @@ def test_CodeReferenceCreateAPIView__responds_201_with_accepted_code_references(
 
     assert log.events == [
         {
-            "event": "code-references-scan-created",
+            "event": "scan.created",
             "level": "info",
-            "organisation_id": project.organisation_id,
-            "code_references_count": 3,
-            "feature_count": 2,
+            "organisation__id": project.organisation_id,
+            "code_references__count": 3,
+            "feature__count": 2,
         },
     ]
 

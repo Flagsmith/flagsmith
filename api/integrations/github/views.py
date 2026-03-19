@@ -386,9 +386,9 @@ def create_cleanup_issue(request, organisation_pk: int) -> Response:  # type: ig
             pass
 
     code_references_logger.info(
-        "cleanup-issues-created",
-        organisation_id=organisation_pk,
-        issues_created_count=len(summaries),
+        "cleanup_issues.created",
+        organisation__id=organisation_pk,
+        issues_created__count=len(summaries),
     )
 
     return Response(status=status.HTTP_204_NO_CONTENT)

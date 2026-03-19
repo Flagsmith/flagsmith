@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
+import inflection
 import structlog
 from opentelemetry import context as otel_context
 from opentelemetry._logs import SeverityNumber
@@ -22,14 +23,7 @@ _SEVERITY_MAP: dict[str, SeverityNumber] = {
     "critical": SeverityNumber.FATAL,
 }
 
-_RESERVED_KEYS = frozenset({"event", "level", "timestamp"})
-
-
-def _serialise_value(value: object) -> str | int | float | bool:
-    """Coerce a value to an OTel-attribute-compatible type."""
-    if isinstance(value, (bool, str, int, float)):
-        return value
-    return json.dumps(value, default=str)
+_RESERVED_KEYS = frozenset({"event", "level", "timestamp", "logger"})
 
 
 class StructlogOTelProcessor:
@@ -54,20 +48,34 @@ class StructlogOTelProcessor:
         severity_number = _SEVERITY_MAP.get(level, SeverityNumber.INFO)
 
         attributes = {
-            k: _serialise_value(v)
+            k.replace("__", "."): _serialise_value(v)
             for k, v in event_dict.items()
             if k not in _RESERVED_KEYS
         }
+
+        body = event_dict.get("event", "")
+        event_name = inflection.underscore(body)
+        logger_name = event_dict.get("logger")
+        if logger_name:
+            event_name = f"{logger_name}.{event_name}"
 
         self._logger.emit(
             timestamp=int(datetime.now(timezone.utc).timestamp() * 1e9),
             context=otel_context.get_current(),
             severity_text=level,
             severity_number=severity_number,
-            body=event_dict.get("event", ""),
+            body=body,
+            event_name=event_name,
             attributes=attributes,
         )
         return event_dict
+
+
+def _serialise_value(value: object) -> str | int | float | bool:
+    """Coerce a value to an OTel-attribute-compatible type."""
+    if isinstance(value, (bool, str, int, float)):
+        return value
+    return json.dumps(value, default=str)
 
 
 def build_otel_provider(
