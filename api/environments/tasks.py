@@ -1,3 +1,8 @@
+from django.db import IntegrityError, OperationalError, transaction
+from django.db.transaction import TransactionManagementError
+from task_processor.exceptions import TaskBackoffError
+from django.db import transaction
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Prefetch, Q
 from django.utils import timezone
 from task_processor.decorators import (
@@ -59,8 +64,16 @@ def delete_environment_from_dynamo(api_key: str, environment_id: str):  # type: 
 
 @register_task_handler()
 def delete_environment(environment_id: int) -> None:
-    Environment.objects.get(id=environment_id).delete()
-
+    try:
+        # Wrap in atomic to safely catch DB-level errors
+        with transaction.atomic():
+            Environment.objects.get(id=environment_id).delete()
+    except Environment.DoesNotExist:
+        # If it's already gone, our job is done!
+        pass
+    except (OperationalError, IntegrityError, TransactionManagementError):
+        # Someone else is locking these rows, back off and retry
+        raise TaskBackoffError()
 
 @register_task_handler()
 def clone_environment_feature_states(
