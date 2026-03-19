@@ -133,6 +133,7 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         organisation.flagsmith_identifier,
         traits=organisation.flagsmith_on_flagsmith_api_traits,
     )
+    # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
     if flags.is_feature_enabled("get_current_api_usage_deprecated"):  # pragma: no cover
         api_usage = get_total_events_count(organisation, period_starts_at)
     else:
