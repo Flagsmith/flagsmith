@@ -7,9 +7,9 @@ from integrations.slack.exceptions import SlackChannelJoinError
 from integrations.slack.slack import SlackChannel, SlackWrapper
 
 
-def test_get_channels_data__valid_response__returns_correct_structure(
+def test_get_channels_data__valid_response__returns_correct_structure(  # type: ignore[no-untyped-def]
     mocker, mocked_slack_internal_client
-):  # type: ignore[no-untyped-def]
+):
     # Given
     api_token = "test_token"
     cursor = "dGVhbTpDMDI3MEpNRldNVg=="
@@ -63,9 +63,9 @@ def test_slack_wrapper__init_with_token__creates_web_client_correctly(mocker):  
     mocked_web_client.assert_called_with(token=api_token)
 
 
-def test_join_channel__valid_channel__calls_conversations_join(
+def test_join_channel__valid_channel__calls_conversations_join(  # type: ignore[no-untyped-def]
     mocker, mocked_slack_internal_client
-):  # type: ignore[no-untyped-def]
+):
     # Given
     channel = "channel_1"
     api_token = "random_token"
@@ -118,9 +118,9 @@ def test_get_bot_token__valid_code__calls_oauth_and_returns_token(  # type: igno
     )
 
 
-def test_slack_wrapper__token_and_channel__initialises_correctly(
+def test_slack_wrapper__token_and_channel__initialises_correctly(  # type: ignore[no-untyped-def]
     mocker, mocked_slack_internal_client
-):  # type: ignore[no-untyped-def]
+):
     # Given
     api_token = "test_token"
     channel_id = "channel_id_1"
@@ -133,9 +133,9 @@ def test_slack_wrapper__token_and_channel__initialises_correctly(
     assert slack_wrapper._client == mocked_slack_internal_client
 
 
-def test_track_event__valid_event__calls_chat_post_message(
+def test_track_event__valid_event__calls_chat_post_message(  # type: ignore[no-untyped-def]
     mocked_slack_internal_client,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     api_token = "test_token"
     channel_id = "channel_id_1"
@@ -152,9 +152,9 @@ def test_track_event__valid_event__calls_chat_post_message(
     )
 
 
-def test_generate_event_data__audit_log_record__returns_correct_blocks(
+def test_generate_event_data__audit_log_record__returns_correct_blocks(  # type: ignore[no-untyped-def]
     django_user_model,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     log = "some log data"
 

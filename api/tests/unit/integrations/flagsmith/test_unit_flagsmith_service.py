@@ -59,9 +59,9 @@ def environment_document():  # type: ignore[no-untyped-def]
 
 
 @responses.activate
-def test_update_environment_json__valid_response__writes_masked_data(
+def test_update_environment_json__valid_response__writes_masked_data(  # type: ignore[no-untyped-def]
     settings, environment_document
-):  # type: ignore[no-untyped-def]
+):
     """
     Test to verify that, when we call update_environment_json, the response is written
     to the correct file and that the sensitive data from the response is masked.

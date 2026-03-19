@@ -11,9 +11,9 @@ from features.multivariate.models import (
 from segments.models import Segment
 
 
-def test_mv_feature_option_get_create_log_message__valid_feature__returns_expected_message(
+def test_mv_feature_option_get_create_log_message__valid_feature__returns_expected_message(  # type: ignore[no-untyped-def]
     feature,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     mvfo = MultivariateFeatureOption.objects.create(feature=feature, string_value="foo")
 
@@ -26,9 +26,9 @@ def test_mv_feature_option_get_create_log_message__valid_feature__returns_expect
     assert msg == f"Multivariate option added to feature '{feature.name}'."
 
 
-def test_mv_feature_option_get_delete_log_message__valid_feature__returns_expected_message(
+def test_mv_feature_option_get_delete_log_message__valid_feature__returns_expected_message(  # type: ignore[no-untyped-def]
     feature,
-):  # type: ignore[no-untyped-def]  # noqa: E501
+):  # noqa: E501
     # Given
     mvfo = MultivariateFeatureOption.objects.create(feature=feature, string_value="foo")
 
@@ -157,9 +157,9 @@ def test_mv_feature_option_delete__last_option_deleted__converts_feature_to_stan
     assert multivariate_feature.type == STANDARD
 
 
-def test_mv_feature_option_create__standard_feature__converts_feature_to_multivariate(
+def test_mv_feature_option_create__standard_feature__converts_feature_to_multivariate(  # type: ignore[no-untyped-def]
     feature,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     assert feature.type == STANDARD
 

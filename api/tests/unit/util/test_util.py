@@ -3,15 +3,15 @@ import pytest
 from util.util import iter_chunked_concat, iter_paired_chunks
 
 
-def test_iter_paired_chunks__both_empty__returns_empty_list() -> None:  # type: ignore[no-untyped-def]
+def test_iter_paired_chunks__both_empty__returns_empty_list() -> None:
     # Given / When
-    result = list(iter_paired_chunks([], [], chunk_size=1))
+    result: list[object] = list(iter_paired_chunks([], [], chunk_size=1))
 
     # Then
     assert result == []
 
 
-def test_iter_paired_chunks__first_empty__chunks_second_only() -> None:  # type: ignore[no-untyped-def]
+def test_iter_paired_chunks__first_empty__chunks_second_only() -> None:
     # Given / When
     result = list(iter_paired_chunks([], [1, 2, 3], chunk_size=1))
 
@@ -23,7 +23,7 @@ def test_iter_paired_chunks__first_empty__chunks_second_only() -> None:  # type:
     ]
 
 
-def test_iter_paired_chunks__second_empty__chunks_first_only() -> None:  # type: ignore[no-untyped-def]
+def test_iter_paired_chunks__second_empty__chunks_first_only() -> None:
     # Given / When
     result = list(iter_paired_chunks([1, 2, 3], [], chunk_size=1))
 
@@ -35,7 +35,7 @@ def test_iter_paired_chunks__second_empty__chunks_first_only() -> None:  # type:
     ]
 
 
-def test_iter_paired_chunks__first_shorter__distributes_across_chunks() -> None:  # type: ignore[no-untyped-def]
+def test_iter_paired_chunks__first_shorter__distributes_across_chunks() -> None:
     # Given / When
     result = list(iter_paired_chunks([1, 2, 3], [4, 5, 6, 7, 8], chunk_size=3))
 
@@ -47,7 +47,7 @@ def test_iter_paired_chunks__first_shorter__distributes_across_chunks() -> None:
     ]
 
 
-def test_iter_paired_chunks__second_shorter__distributes_across_chunks() -> None:  # type: ignore[no-untyped-def]
+def test_iter_paired_chunks__second_shorter__distributes_across_chunks() -> None:
     # Given / When
     result = list(iter_paired_chunks([1, 2, 3, 4, 5], [6, 7, 8], chunk_size=3))
 
@@ -59,7 +59,7 @@ def test_iter_paired_chunks__second_shorter__distributes_across_chunks() -> None
     ]
 
 
-def test_iter_paired_chunks__same_length__distributes_across_chunks() -> None:  # type: ignore[no-untyped-def]
+def test_iter_paired_chunks__same_length__distributes_across_chunks() -> None:
     # Given / When
     result = list(iter_paired_chunks([1, 2, 3], [4, 5, 6], chunk_size=3))
 

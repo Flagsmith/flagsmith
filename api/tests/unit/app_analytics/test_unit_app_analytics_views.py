@@ -135,9 +135,9 @@ def test_sdk_analytics_flags_v1__invalid_feature_name__tracks_only_valid(
     )
 
 
-def test_get_usage_data__no_period__returns_usage_data(
+def test_get_usage_data__no_period__returns_usage_data(  # type: ignore[no-untyped-def]
     mocker, admin_client, organisation
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
 
@@ -451,9 +451,9 @@ def test_get_usage_data__non_admin_user__returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_total_usage_count__admin_user__returns_count(
+def test_get_total_usage_count__admin_user__returns_count(  # type: ignore[no-untyped-def]
     mocker, admin_client, organisation
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse(
         "api-v1:organisations:usage-data-total-count",

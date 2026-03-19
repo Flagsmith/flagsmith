@@ -39,9 +39,9 @@ def test_create_metadata_field__valid_data__returns_201(admin_client, organisati
     assert response.json()["organisation"] == organisation.id
 
 
-def test_delete_metadata_field__existing_field__returns_204(
+def test_delete_metadata_field__existing_field__returns_204(  # type: ignore[no-untyped-def]
     admin_client, a_metadata_field
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse("api-v1:metadata:metadata-fields-detail", args=[a_metadata_field.id])
 
@@ -52,9 +52,9 @@ def test_delete_metadata_field__existing_field__returns_204(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_update_metadata_field__valid_data__returns_200(
+def test_update_metadata_field__valid_data__returns_200(  # type: ignore[no-untyped-def]
     admin_client, a_metadata_field, organisation
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse("api-v1:metadata:metadata-fields-detail", args=[a_metadata_field.id])
 
@@ -78,9 +78,9 @@ def test_update_metadata_field__valid_data__returns_200(
     assert response.json()["type"] == new_field_type
 
 
-def test_list_metadata_fields__with_organisation_filter__returns_fields(
+def test_list_metadata_fields__with_organisation_filter__returns_fields(  # type: ignore[no-untyped-def]
     admin_client, a_metadata_field
-):  # type: ignore[no-untyped-def]
+):
     # Given
     base_url = reverse("api-v1:metadata:metadata-fields-list")
 
@@ -108,9 +108,9 @@ def test_list_metadata_fields__without_organisation_filter__returns_400(  # type
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_retrieve_metadata_field__existing_field__returns_200(
+def test_retrieve_metadata_field__existing_field__returns_200(  # type: ignore[no-untyped-def]
     admin_client, a_metadata_field
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse("api-v1:metadata:metadata-fields-detail", args=[a_metadata_field.id])
 
@@ -434,9 +434,9 @@ def test_get_supported_content_types__valid_request__returns_supported_models(  
         assert model in supported_models
 
 
-def test_get_supported_required_for_models__environment_model__returns_expected_models(
+def test_get_supported_required_for_models__environment_model__returns_expected_models(  # type: ignore[no-untyped-def]
     admin_client, organisation
-):  # type: ignore[no-untyped-def]
+):
     # Given
     base_url = reverse(
         "api-v1:organisations:metadata-model-fields-supported-required-for-models",

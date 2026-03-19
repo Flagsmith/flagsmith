@@ -126,9 +126,9 @@ def test_from_identity_document__valid_document__returns_edge_identity(  # type:
         ),
     ),
 )
-def test_edge_identity_id__parametrised_ids__returns_expected_id(
+def test_edge_identity_id__parametrised_ids__returns_expected_id(  # type: ignore[no-untyped-def]
     django_id, identity_uuid, expected_id, mocker
-):  # type: ignore[no-untyped-def]
+):
     # Given / When
     edge_identity = EdgeIdentity(
         mocker.MagicMock(django_id=django_id, identity_uuid=identity_uuid)
@@ -138,9 +138,9 @@ def test_edge_identity_id__parametrised_ids__returns_expected_id(
     assert edge_identity.id == expected_id
 
 
-def test_get_feature_state_by_feature_name_or_id__existing_override__returns_feature_state(
+def test_get_feature_state_by_feature_name_or_id__existing_override__returns_feature_state(  # type: ignore[no-untyped-def]
     edge_identity_model,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     feature_state_model = FeatureStateModel(
         feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
@@ -163,9 +163,9 @@ def test_get_feature_state_by_feature_name_or_id__existing_override__returns_fea
     )
 
 
-def test_get_feature_state_by_featurestate_uuid__existing_override__returns_feature_state(
+def test_get_feature_state_by_featurestate_uuid__existing_override__returns_feature_state(  # type: ignore[no-untyped-def]
     edge_identity_model,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     feature_state_model = FeatureStateModel(
         feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
@@ -185,9 +185,9 @@ def test_get_feature_state_by_featurestate_uuid__existing_override__returns_feat
     assert edge_identity_model.get_feature_state_by_featurestate_uuid("invalid") is None
 
 
-def test_remove_feature_override__existing_override__removes_feature_state(
+def test_remove_feature_override__existing_override__removes_feature_state(  # type: ignore[no-untyped-def]
     edge_identity_model,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     feature_state_model = FeatureStateModel(
         feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
@@ -228,9 +228,9 @@ def test_remove_feature_override__no_matching_override__no_error(  # type: ignor
     )
 
 
-def test_synchronise_features__empty_feature_list__removes_overrides(
+def test_synchronise_features__empty_feature_list__removes_overrides(  # type: ignore[no-untyped-def]
     mocker, edge_identity_model
-):  # type: ignore[no-untyped-def]
+):
     # Given
     mock_sync_identity_document_features = mocker.patch(
         "edge_api.identities.models.sync_identity_document_features"

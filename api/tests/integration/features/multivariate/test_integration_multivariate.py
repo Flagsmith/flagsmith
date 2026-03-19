@@ -16,9 +16,9 @@ from users.models import FFAdminUser
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_mv_option__valid_data__returns_created(
+def test_create_mv_option__valid_data__returns_created(  # type: ignore[no-untyped-def]
     client, project, mv_option_50_percent, feature
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -49,9 +49,9 @@ def test_create_mv_option__valid_data__returns_created(
         (lazy_fixture("admin_client"), "89809"),
     ],
 )
-def test_create_mv_option__invalid_feature_id__returns_not_found(
+def test_create_mv_option__invalid_feature_id__returns_not_found(  # type: ignore[no-untyped-def]
     client, feature_id, project
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -110,9 +110,9 @@ def test_create_mv_option__user_not_project_member__returns_forbidden(project): 
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_list_mv_options__option_exists__returns_option(
+def test_list_mv_options__option_exists__returns_option(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -246,9 +246,9 @@ def test_update_mv_option__total_allocation_exceeds_100__returns_bad_request(  #
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_delete_mv_option__option_exists__returns_no_content(
+def test_delete_mv_option__option_exists__returns_no_content(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
-):  # type: ignore[no-untyped-def]
+):
     # Given
     mv_option_url = reverse(
         "api-v1:projects:feature-mv-options-detail",

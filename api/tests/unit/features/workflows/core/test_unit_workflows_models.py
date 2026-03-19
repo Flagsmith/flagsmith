@@ -172,9 +172,9 @@ def test_change_request_commit__not_scheduled__sets_committed_at_and_version(  #
     assert change_request_no_required_approvals.feature_states.first().live_from == now
 
 
-def test_change_request_create__valid_environment__creates_audit_log(
+def test_change_request_create__valid_environment__creates_audit_log(  # type: ignore[no-untyped-def]
     environment, admin_user
-):  # type: ignore[no-untyped-def]
+):
     # Given / When
     change_request = ChangeRequest.objects.create(
         environment=environment, title="Change Request", user=admin_user
@@ -456,9 +456,9 @@ def test_change_request_approval_save__existing_approval_approved__notifies_auth
     ]
 
 
-def test_change_request_url__environment_change_request__returns_correct_url(
+def test_change_request_url__environment_change_request__returns_correct_url(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals, settings
-):  # type: ignore[no-untyped-def]
+):
     # Given
     site = Site.objects.filter(id=settings.SITE_ID).first()
     environment_key = change_request_no_required_approvals.environment.api_key
@@ -476,9 +476,9 @@ def test_change_request_url__environment_change_request__returns_correct_url(
     )
 
 
-def test_change_request_email_subject__valid_change_request__returns_formatted_subject(
+def test_change_request_email_subject__valid_change_request__returns_formatted_subject(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals,
-):  # type: ignore[no-untyped-def]
+):
     # Given / When
     subject = change_request_no_required_approvals.email_subject
 

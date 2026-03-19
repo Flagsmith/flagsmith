@@ -1505,9 +1505,9 @@ def test_remove_group_admin__non_admin_user__returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_list_user_groups__group_admin__returns_only_admin_groups(
+def test_list_user_groups__group_admin__returns_only_admin_groups(  # type: ignore[no-untyped-def]
     organisation, api_client
-) -> None:  # type: ignore[no-untyped-def]
+) -> None:
     # Given
     user1 = FFAdminUser.objects.create(email="user1@example.com")
     user2 = FFAdminUser.objects.create(email="user2@example.com")
@@ -1548,9 +1548,9 @@ def test_list_user_groups__group_admin__returns_only_admin_groups(
     assert response_json["results"][0]["id"] == user_permission_group_1.id
 
 
-def test_list_my_groups__user_in_one_group__returns_only_own_groups(
+def test_list_my_groups__user_in_one_group__returns_only_own_groups(  # type: ignore[no-untyped-def]
     organisation, api_client
-) -> None:  # type: ignore[no-untyped-def]
+) -> None:
     # Given
     user1 = FFAdminUser.objects.create(email="user1@example.com")
     user2 = FFAdminUser.objects.create(email="user2@example.com")

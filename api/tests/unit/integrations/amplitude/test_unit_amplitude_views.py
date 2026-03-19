@@ -137,9 +137,9 @@ def test_delete_amplitude_config__config_exists__returns_no_content(
     assert not AmplitudeConfiguration.objects.filter(environment=environment).exists()
 
 
-def test_create_amplitude_integration__valid_api_key__returns_created(
+def test_create_amplitude_integration__valid_api_key__returns_created(  # type: ignore[no-untyped-def]
     environment, admin_client
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse(
         "api-v1:environments:integrations-amplitude-list", args=[environment.api_key]

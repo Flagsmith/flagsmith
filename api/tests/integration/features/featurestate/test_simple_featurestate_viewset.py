@@ -62,9 +62,9 @@ def test_create_feature_state__identity_with_identifier__returns_201(  # type: i
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_list_feature_states__filter_by_environment__returns_environment_states(
+def test_list_feature_states__filter_by_environment__returns_environment_states(  # type: ignore[no-untyped-def]
     client, environment, feature
-):  # type: ignore[no-untyped-def]
+):
     # Given
     base_url = reverse("api-v1:features:featurestates-list")
     url = f"{base_url}?environment={environment}"
@@ -84,9 +84,9 @@ def test_list_feature_states__filter_by_environment__returns_environment_states(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_update_feature_state__new_value__returns_updated_value(
+def test_update_feature_state__new_value__returns_updated_value(  # type: ignore[no-untyped-def]
     client, environment, feature_state, feature, identity
-):  # type: ignore[no-untyped-def]
+):
     # Given
 
     url = reverse("api-v1:features:featurestates-detail", args=[feature_state])

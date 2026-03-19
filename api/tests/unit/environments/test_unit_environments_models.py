@@ -364,9 +364,9 @@ def test_get_from_cache__environment_api_key__sets_cache_correctly(  # type: ign
     assert environment == environment_cache.get(environment_api_key.key)
 
 
-def test_environment_updated_at__environment_audit_log_created__updates_timestamp(
+def test_environment_updated_at__environment_audit_log_created__updates_timestamp(  # type: ignore[no-untyped-def]
     environment,
-):  # type: ignore[no-untyped-def]
+):
     # Given / When
     audit_log = AuditLog.objects.create(
         environment=environment, project=environment.project, log="random_audit_log"
@@ -377,9 +377,9 @@ def test_environment_updated_at__environment_audit_log_created__updates_timestam
     assert environment.updated_at == audit_log.created_date
 
 
-def test_environment_updated_at__project_audit_log_created__updates_timestamp(
+def test_environment_updated_at__project_audit_log_created__updates_timestamp(  # type: ignore[no-untyped-def]
     environment,
-):  # type: ignore[no-untyped-def]
+):
     # Given / When
     audit_log = AuditLog.objects.create(
         project=environment.project, log="random_audit_log"
@@ -390,9 +390,9 @@ def test_environment_updated_at__project_audit_log_created__updates_timestamp(
     assert environment.updated_at == audit_log.created_date
 
 
-def test_environment_updated_at__change_request_audit_log_created__does_not_update(
+def test_environment_updated_at__change_request_audit_log_created__does_not_update(  # type: ignore[no-untyped-def]
     environment,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     updated_at_before_audit_log = environment.updated_at
 
@@ -408,9 +408,9 @@ def test_environment_updated_at__change_request_audit_log_created__does_not_upda
     assert environment.updated_at != audit_log.created_date
 
 
-def test_environment_save__api_key_changed__clears_cache_with_original_key(
+def test_environment_save__api_key_changed__clears_cache_with_original_key(  # type: ignore[no-untyped-def]
     mocker, project
-):  # type: ignore[no-untyped-def]
+):
     # Given
     mock_environment_cache = mocker.patch("environments.models.environment_cache")
     environment = Environment.objects.create(name="test environment", project=project)
@@ -666,9 +666,9 @@ def test_generate_webhook_feature_state_data__segment_and_identity__raises_value
         )
 
 
-def test_get_environment_document__valid_api_key__returns_document(
+def test_get_environment_document__valid_api_key__returns_document(  # type: ignore[no-untyped-def]
     environment, django_assert_num_queries
-):  # type: ignore[no-untyped-def]
+):
     # Given
 
     # When
@@ -726,9 +726,9 @@ def test_get_environment_document__document_not_in_cache__fetches_and_caches(  #
     )
 
 
-def test_environment_save__prevent_flag_defaults_enabled__ignores_feature_defaults(
+def test_environment_save__prevent_flag_defaults_enabled__ignores_feature_defaults(  # type: ignore[no-untyped-def]
     project,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     project.prevent_flag_defaults = True
     project.save()
@@ -753,9 +753,9 @@ def test_environment_save__prevent_flag_defaults_enabled__ignores_feature_defaul
     assert not feature_state.get_feature_state_value()
 
 
-def test_get_segments_from_cache__no_overrides__returns_empty_list(
+def test_get_segments_from_cache__no_overrides__returns_empty_list(  # type: ignore[no-untyped-def]
     environment, segment
-):  # type: ignore[no-untyped-def]
+):
     # Given / When
     result = environment.get_segments_from_cache()
 

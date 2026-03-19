@@ -45,9 +45,9 @@ def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCach
 
 
 @pytest.mark.use_analytics_db
-def test_get_usage_data_from_local_db__multiple_buckets__returns_aggregated_daily_data(
+def test_get_usage_data_from_local_db__multiple_buckets__returns_aggregated_daily_data(  # type: ignore[no-untyped-def]
     organisation, environment, settings
-):  # type: ignore[no-untyped-def]
+):
     environment_id = environment.id
     now = timezone.now()
     read_bucket_size = 15
@@ -269,9 +269,9 @@ def test_get_usage_data_from_local_db__labels_filter__returns_expected(
 
 
 @pytest.mark.use_analytics_db
-def test_get_total_events_count__multiple_buckets__returns_correct_total(
+def test_get_total_events_count__multiple_buckets__returns_correct_total(  # type: ignore[no-untyped-def]
     organisation, environment, settings
-):  # type: ignore[no-untyped-def]
+):
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = environment.id
     now = timezone.now()

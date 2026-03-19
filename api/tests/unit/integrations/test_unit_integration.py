@@ -5,9 +5,9 @@ from integrations.integration import identify_integrations
 from integrations.segment.models import SegmentConfiguration
 
 
-def test_identify_integrations__amplitude_configured__calls_amplitude(
+def test_identify_integrations__amplitude_configured__calls_amplitude(  # type: ignore[no-untyped-def]
     mocker, environment, identity
-):  # type: ignore[no-untyped-def]
+):
     # Given
     mock_amplitude_wrapper = mocker.patch(
         "integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async"
@@ -21,9 +21,9 @@ def test_identify_integrations__amplitude_configured__calls_amplitude(
     mock_amplitude_wrapper.assert_called()
 
 
-def test_identify_integrations__segment_configured__calls_segment(
+def test_identify_integrations__segment_configured__calls_segment(  # type: ignore[no-untyped-def]
     mocker, environment, identity
-):  # type: ignore[no-untyped-def]
+):
     # Given
     mock_segment_wrapper = mocker.patch(
         "integrations.segment.segment.SegmentWrapper.identify_user_async"

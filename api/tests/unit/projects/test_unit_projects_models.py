@@ -36,9 +36,9 @@ def test_get_segments_from_cache__cache_miss__sets_cache(project, monkeypatch): 
 
 
 @pytest.mark.django_db()
-def test_get_segments_from_cache__cache_hit__does_not_set_cache(
+def test_get_segments_from_cache__cache_hit__does_not_set_cache(  # type: ignore[no-untyped-def]
     project, segments, monkeypatch
-):  # type: ignore[no-untyped-def]
+):
     # Given
     mock_project_segments_cache = mock.MagicMock()
     mock_project_segments_cache.get.return_value = project.segments.all()
@@ -129,9 +129,9 @@ def test_is_edge_project_by_default__release_datetime__returns_expected(  # type
         ("^[a-z]+$", "InvalidFeature", False),
     ),
 )
-def test_is_feature_name_valid__regex_and_name__returns_expected(
+def test_is_feature_name_valid__regex_and_name__returns_expected(  # type: ignore[no-untyped-def]
     feature_name_regex, feature_name, expected_result
-):  # type: ignore[no-untyped-def]  # noqa: E501
+):  # noqa: E501
     # Given
     project = Project(name="test", feature_name_regex=feature_name_regex)
 
@@ -142,9 +142,9 @@ def test_is_feature_name_valid__regex_and_name__returns_expected(
     assert result == expected_result
 
 
-def test_save_project__name_updated__clears_environment_caches(
+def test_save_project__name_updated__clears_environment_caches(  # type: ignore[no-untyped-def]
     environment, project, mocker
-):  # type: ignore[no-untyped-def]
+):
     # Given
     mock_environment_cache = mocker.patch("projects.models.environment_cache")
 

@@ -3,9 +3,9 @@ import json
 from edge_api.identities.events import send_migration_event
 
 
-def test_send_migration_event__valid_project_id__calls_put_events_with_correct_arguments(
+def test_send_migration_event__valid_project_id__calls_put_events_with_correct_arguments(  # type: ignore[no-untyped-def]
     mocker, settings
-):  # type: ignore[no-untyped-def]  # noqa: E501
+):  # noqa: E501
     # Given
     project_id = 1
     mocked_client = mocker.patch("edge_api.identities.events.events_client")

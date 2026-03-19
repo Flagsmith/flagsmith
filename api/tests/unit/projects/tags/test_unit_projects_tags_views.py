@@ -16,9 +16,9 @@ from tests.types import WithProjectPermissionsCallable
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_get_tag_by_uuid__valid_client__returns_tag(
+def test_get_tag_by_uuid__valid_client__returns_tag(  # type: ignore[no-untyped-def]
     client: APIClient, project: Project, tag: Tag
-):  # type: ignore[no-untyped-def]  # noqa: E501
+):  # noqa: E501
     # Given
     url = reverse("api-v1:projects:tags-get-by-uuid", args=[project.id, str(tag.uuid)])
 

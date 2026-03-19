@@ -9,9 +9,9 @@ from redis.exceptions import RedisClusterException
 from core.redis_cluster import ClusterConnectionFactory, SafeRedisClusterClient
 
 
-def test_cluster_connection_factory__connect_called_twice__returns_cached_connection(
+def test_cluster_connection_factory__connect_called_twice__returns_cached_connection(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     mock_get_connection = mocker.patch.object(
         ClusterConnectionFactory, "get_connection"
@@ -87,9 +87,9 @@ def test_cluster_connection_factory__conflicting_params__raises_connection_inter
     mockRedisCluster.assert_not_called()
 
 
-def test_cluster_connection_factory__disconnect__calls_disconnect_connection_pools(
+def test_cluster_connection_factory__disconnect__calls_disconnect_connection_pools(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     connection_factory = ClusterConnectionFactory({})
     mock_connection = mocker.MagicMock()

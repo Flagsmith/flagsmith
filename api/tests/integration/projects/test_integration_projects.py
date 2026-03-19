@@ -2,9 +2,9 @@ from django.urls import reverse
 from rest_framework import status
 
 
-def test_get_all_user_permissions__admin_user__returns_admin_with_empty_permissions(
+def test_get_all_user_permissions__admin_user__returns_admin_with_empty_permissions(  # type: ignore[no-untyped-def]
     project, admin_user, admin_client
-):  # type: ignore[no-untyped-def]
+):
     """Basic integration test to verify that endpoint works"""
     # Given
     url = reverse("api-v1:projects:all-user-permissions", args=(project, admin_user.id))

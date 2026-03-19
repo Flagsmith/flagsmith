@@ -191,9 +191,9 @@ def test_over_plan_seats_limit__over_limit__returns_true(  # type: ignore[no-unt
     mocked_get_subscription_metadata.assert_called_once_with(chargebee_subscription)
 
 
-def test_over_plan_seats_limit__no_subscription_metadata__returns_true(
+def test_over_plan_seats_limit__no_subscription_metadata__returns_true(  # type: ignore[no-untyped-def]
     organisation, mocker, admin_user
-):  # type: ignore[no-untyped-def]  # noqa: E501
+):  # noqa: E501
     # Given
     organisation.subscription.max_seats = 0
     organisation.subscription.save()

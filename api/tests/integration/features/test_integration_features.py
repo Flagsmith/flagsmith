@@ -4,9 +4,9 @@ from django.urls import reverse
 from rest_framework import status
 
 
-def test_list_features__search_by_name__returns_matching_features(
+def test_list_features__search_by_name__returns_matching_features(  # type: ignore[no-untyped-def]
     admin_client, feature, project
-):  # type: ignore[no-untyped-def]
+):
     # Given
     feature_list_url = reverse("api-v1:projects:project-features-list", args=[project])
     response = admin_client.get(feature_list_url)
@@ -32,9 +32,9 @@ def test_list_features__search_by_name__returns_matching_features(
     assert invalid_search_response.json()["count"] == 0
 
 
-def test_list_features__sort_by_various_fields__returns_correctly_ordered(
+def test_list_features__sort_by_various_fields__returns_correctly_ordered(  # type: ignore[no-untyped-def]
     admin_client, project
-):  # type: ignore[no-untyped-def]
+):
     # Given
     feature_1_data = {"name": "feature_a"}
     feature_2_data = {"name": "feature_b"}
@@ -89,9 +89,9 @@ def test_list_features__sort_by_various_fields__returns_correctly_ordered(
     assert name_desc_response_json["results"][1]["id"] == feature_1_id
 
 
-def test_list_features__filter_by_tags__returns_matching_features(
+def test_list_features__filter_by_tags__returns_matching_features(  # type: ignore[no-untyped-def]
     admin_client, project
-):  # type: ignore[no-untyped-def]
+):
     # Given
     tag_labels = ("tag_1", "tag_2")
 
@@ -150,9 +150,9 @@ def test_list_features__filter_by_tags__returns_matching_features(
     assert all_tags_features_response_json["count"] == 0
 
 
-def test_list_features__filter_by_archived_status__returns_matching_features(
+def test_list_features__filter_by_archived_status__returns_matching_features(  # type: ignore[no-untyped-def]
     admin_client, project
-):  # type: ignore[no-untyped-def]
+):
     # Given
     features_url = reverse("api-v1:projects:project-features-list", args=[project])
     create_archived_feature_response = admin_client.post(

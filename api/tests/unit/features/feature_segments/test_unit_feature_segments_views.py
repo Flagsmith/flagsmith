@@ -179,9 +179,9 @@ def test_list_feature_segments__feature_specific_segment__returns_is_feature_spe
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_segment__valid_data__returns_201(
+def test_create_feature_segment__valid_data__returns_201(  # type: ignore[no-untyped-def]
     segment, feature, environment, client
-):  # type: ignore[no-untyped-def]
+):
     # Given
     data = {
         "feature": feature.id,
@@ -279,9 +279,9 @@ def test_create_feature_segment__staff_wrong_permission__returns_403(  # type: i
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_delete_feature_segment__existing_segment__returns_204(
+def test_delete_feature_segment__existing_segment__returns_204(  # type: ignore[no-untyped-def]
     segment, feature, environment, client
-):  # type: ignore[no-untyped-def]
+):
     # Given
     feature_segment = FeatureSegment.objects.create(
         feature=feature, environment=environment, segment=segment

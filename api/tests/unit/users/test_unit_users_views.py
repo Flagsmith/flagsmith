@@ -734,9 +734,9 @@ def test_delete_user__multiple_users_in_multiple_orgs__orphan_orgs_deleted():  #
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("password", [None, "", "random"])
-def test_delete_user__social_auth_with_no_password__deletes_user_and_orphan_org(
+def test_delete_user__social_auth_with_no_password__deletes_user_and_orphan_org(  # type: ignore[no-untyped-def]
     password,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     google_auth_user_email = "google@example.com"
     github_auth_user_email = "github@example.com"

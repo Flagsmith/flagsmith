@@ -699,9 +699,9 @@ def test_list_projects__uuid_filter__returns_matching_project(  # type: ignore[n
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_get_project_by_uuid__existing_project__returns_project(
+def test_get_project_by_uuid__existing_project__returns_project(  # type: ignore[no-untyped-def]
     client, project, mocker, settings, organisation
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse("api-v1:projects:project-get-by-uuid", args=[str(project.uuid)])
 
@@ -751,9 +751,9 @@ def test_enable_realtime_updates__subscription_tier__returns_expected_value(  # 
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_update_project__read_only_fields__does_not_update_read_only_fields(
+def test_update_project__read_only_fields__does_not_update_read_only_fields(  # type: ignore[no-untyped-def]
     client, project, mocker, settings, organisation
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse("api-v1:projects:project-detail", args=[project.id])
     feature_name_regex = r"^[a-zA-Z0-9_]+$"

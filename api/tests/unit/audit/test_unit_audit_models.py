@@ -56,9 +56,9 @@ def test_audit_log_save__datadog_not_configured__does_not_call_track_event(  # t
     datadog_mock.track_event_async.assert_not_called()
 
 
-def test_audit_log_save__datadog_configured_with_wrong_type__does_not_call_track_event(
+def test_audit_log_save__datadog_configured_with_wrong_type__does_not_call_track_event(  # type: ignore[no-untyped-def]
     mocker, project
-):  # type: ignore[no-untyped-def]  # noqa: E501
+):  # noqa: E501
     # Given
     datadog_mock = mocker.patch(
         "integrations.datadog.datadog.DataDogWrapper.track_event_async"
@@ -160,9 +160,9 @@ def test_audit_log_save__datadog_configured_with_correct_type__calls_track_event
     ]
 
 
-def test_audit_log_get_history_record_model_class__valid_class_path__returns_class(
+def test_audit_log_get_history_record_model_class__valid_class_path__returns_class(  # type: ignore[no-untyped-def]
     mocker,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     module_name = "module"
 
@@ -232,9 +232,9 @@ def test_audit_log_history_record__no_history_record_set__returns_none(mocker): 
     assert record is None
 
 
-def test_audit_log_save__environment_set_without_project__sets_project_from_environment(
+def test_audit_log_save__environment_set_without_project__sets_project_from_environment(  # type: ignore[no-untyped-def]
     environment,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     audit_log = AuditLog(environment=environment)
 

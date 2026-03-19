@@ -51,9 +51,9 @@ def test_base_subscription_metadata_add__different_payment_sources__raises_type_
         ),
     ),
 )
-def test_base_subscription_metadata_add__same_payment_source__returns_summed_metadata(
+def test_base_subscription_metadata_add__same_payment_source__returns_summed_metadata(  # type: ignore[no-untyped-def]
     add_to, add, expected_result
-):  # type: ignore[no-untyped-def]
+):
     # Given / When
     result = add_to + add
 

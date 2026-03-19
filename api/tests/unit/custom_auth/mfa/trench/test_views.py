@@ -7,9 +7,9 @@ from custom_auth.mfa.trench.models import MFAMethod
 from users.models import FFAdminUser
 
 
-def test_list_user_active_methods__active_mfa_exists__returns_active_methods(
+def test_list_user_active_methods__active_mfa_exists__returns_active_methods(  # type: ignore[no-untyped-def]
     admin_client: APIClient, mfa_app_method: MFAMethod
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse("api-v1:custom_auth:mfa-list-user-active-methods")
 

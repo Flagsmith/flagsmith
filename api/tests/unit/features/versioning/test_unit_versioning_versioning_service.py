@@ -68,9 +68,9 @@ def test_get_environment_flags_queryset__hide_disabled_flags_enabled__returns_al
     assert feature_states.count() == 2
 
 
-def test_get_environment_flags_queryset__filter_by_feature_name__returns_matching_flag(
+def test_get_environment_flags_queryset__filter_by_feature_name__returns_matching_flag(  # type: ignore[no-untyped-def]
     environment, project
-):  # type: ignore[no-untyped-def]  # noqa: E501
+):  # noqa: E501
     # Given
     flag_1_name = "flag_1"
     Feature.objects.create(default_enabled=True, name=flag_1_name, project=project)

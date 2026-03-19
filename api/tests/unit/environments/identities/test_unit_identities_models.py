@@ -980,9 +980,9 @@ def test_get_all_feature_states__hide_disabled_flags__returns_expected_flags(  #
     assert bool(identity_flags) == disabled_flag_returned
 
 
-def test_get_all_feature_states__multiple_versions__returns_latest_committed_version(
+def test_get_all_feature_states__multiple_versions__returns_latest_committed_version(  # type: ignore[no-untyped-def]
     environment,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     identity = Identity.objects.create(identifier="identity", environment=environment)
 

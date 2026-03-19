@@ -138,9 +138,9 @@ def test_delete_invite_link__seats_exceeded__returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_update_invite_link__patch_request__returns_405(
+def test_update_invite_link__patch_request__returns_405(  # type: ignore[no-untyped-def]
     invite_link, admin_client, organisation
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse(
         "api-v1:organisations:organisation-invite-links-detail",
@@ -291,9 +291,9 @@ def test_create_invite__seats_exceeded__returns_400(
     )
 
 
-def test_retrieve_invite__valid_invite__returns_200(
+def test_retrieve_invite__valid_invite__returns_200(  # type: ignore[no-untyped-def]
     admin_client, organisation, user_permission_group, invite
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse(
         "api-v1:organisations:organisation-invites-detail",
@@ -305,9 +305,9 @@ def test_retrieve_invite__valid_invite__returns_200(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_delete_invite__valid_invite__returns_204(
+def test_delete_invite__valid_invite__returns_204(  # type: ignore[no-untyped-def]
     admin_client, organisation, user_permission_group, invite
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse(
         "api-v1:organisations:organisation-invites-detail",

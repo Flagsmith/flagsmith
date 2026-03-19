@@ -17,9 +17,9 @@ from organisations.subscriptions.constants import SubscriptionCacheEntity
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_update_caches__with_usage_data__populates_cache_correctly(
+def test_update_caches__with_usage_data__populates_cache_correctly(  # type: ignore[no-untyped-def]
     mocker, organisation, chargebee_subscription, settings
-):  # type: ignore[no-untyped-def]
+):
     # Given
     settings.CHARGEBEE_API_KEY = "api-key"
     settings.INFLUXDB_TOKEN = "token"

@@ -403,9 +403,9 @@ def test_get_subscription_metadata_from_id__valid_subscription_with_addons__retu
     assert subscription_metadata.chargebee_email == customer_email  # type: ignore[union-attr]
 
 
-def test_cancel_subscription__valid_subscription_id__calls_chargebee_cancel(
+def test_cancel_subscription__valid_subscription_id__calls_chargebee_cancel(  # type: ignore[no-untyped-def]
     mocker,
-) -> None:  # type: ignore[no-untyped-def]
+) -> None:
     # Given
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client", autospec=True
@@ -551,9 +551,9 @@ def test_add_single_seat__existing_addon__increments_quantity(mocker) -> None:  
     )
 
 
-def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(
+def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(  # type: ignore[no-untyped-def]
     mocker,
-) -> None:  # type: ignore[no-untyped-def]
+) -> None:
     # Given
     subscription_id = "subscription-id"
 

@@ -5,9 +5,9 @@ from rest_framework.test import APIClient
 from organisations.models import Organisation
 
 
-def test_create_master_api_key__valid_data__returns_key_in_response(
+def test_create_master_api_key__valid_data__returns_key_in_response(  # type: ignore[no-untyped-def]
     admin_client, organisation
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-list",
@@ -46,9 +46,9 @@ def test_create_master_api_key__non_admin_without_rbac__returns_400(  # type: ig
     ]
 
 
-def test_delete_master_api_key__existing_key__returns_204(
+def test_delete_master_api_key__existing_key__returns_204(  # type: ignore[no-untyped-def]
     admin_client, organisation, admin_master_api_key_prefix
-):  # type: ignore[no-untyped-def]  # noqa: E501
+):  # noqa: E501
     # Given
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-detail",
@@ -179,9 +179,9 @@ def test_update_master_api_key__rbac_not_installed__returns_400(  # type: ignore
     ]
 
 
-def test_list_master_api_keys__non_admin_user__returns_403(
+def test_list_master_api_keys__non_admin_user__returns_403(  # type: ignore[no-untyped-def]
     non_admin_client, organisation
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-list",
@@ -194,9 +194,9 @@ def test_list_master_api_keys__non_admin_user__returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_create_master_api_key__wrong_org_in_body__uses_url_org(
+def test_create_master_api_key__wrong_org_in_body__uses_url_org(  # type: ignore[no-untyped-def]
     admin_client, organisation
-):  # type: ignore[no-untyped-def]
+):
     # Given
     list_create_url = reverse(
         "api-v1:organisations:organisation-master-api-keys-list",

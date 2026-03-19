@@ -14,9 +14,9 @@ from environments.identities.traits.models import Trait
         (123.4, {"value_type": "float", "float_value": 123.4}),
     ),
 )
-def test_generate_trait_value_data__given_value__returns_expected_data(
+def test_generate_trait_value_data__given_value__returns_expected_data(  # type: ignore[no-untyped-def]
     value, expected_data
-):  # type: ignore[no-untyped-def]
+):
     # Given / When
     result = Trait.generate_trait_value_data(value)
 

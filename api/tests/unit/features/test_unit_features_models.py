@@ -708,9 +708,9 @@ def test_get_feature_state_value__multivariate_v2_evaluation__uses_composite_key
     ),
     indirect=True,
 )
-def test_feature_state_gt__parametrised_versions__returns_expected(
+def test_feature_state_gt__parametrised_versions__returns_expected(  # type: ignore[no-untyped-def]
     feature_state_version_generator,
-):  # type: ignore[no-untyped-def]
+):
     # Given / When
     # Then
     first, second, expected_result = feature_state_version_generator
@@ -727,9 +727,9 @@ def test_feature_state_gt__parametrised_versions__returns_expected(
         (1, tomorrow, False),
     ),
 )
-def test_feature_state_is_live__parametrised_version_and_live_from__returns_expected(
+def test_feature_state_is_live__parametrised_version_and_live_from__returns_expected(  # type: ignore[no-untyped-def]
     version, live_from, expected_is_live, environment
-):  # type: ignore[no-untyped-def]
+):
     # Given / When
     # Then
     assert (

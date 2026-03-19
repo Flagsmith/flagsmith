@@ -59,9 +59,9 @@ def test_send_environment_update_message_for_project__realtime_enabled__posts_to
     )
 
 
-def test_send_environment_update_message__valid_config__posts_to_sse_endpoint(
+def test_send_environment_update_message__valid_config__posts_to_sse_endpoint(  # type: ignore[no-untyped-def]
     mocker, settings
-):  # type: ignore[no-untyped-def]
+):
     # Given
     base_url = "http://localhost:8000"
     token = "token"

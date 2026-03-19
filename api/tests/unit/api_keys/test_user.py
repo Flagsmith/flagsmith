@@ -35,9 +35,9 @@ def test_api_key_user__str__returns_name(master_api_key_object):  # type: ignore
         (lazy_fixture("organisation_two"), False),
     ],
 )
-def test_api_key_user__belongs_to__returns_expected_result(
+def test_api_key_user__belongs_to__returns_expected_result(  # type: ignore[no-untyped-def]
     for_organisation, expected_result, master_api_key_object
-):  # type: ignore[no-untyped-def]
+):
     # Given
     user = APIKeyUser(master_api_key_object)
 
@@ -240,9 +240,9 @@ def test_api_key_user__has_organisation_permission__returns_expected_result(  # 
         ),
     ],
 )
-def test_api_key_user__get_permitted_projects__returns_expected_projects(
+def test_api_key_user__get_permitted_projects__returns_expected_projects(  # type: ignore[no-untyped-def]
     for_project, for_master_api_key, expected_project
-):  # type: ignore[no-untyped-def]
+):
     # Given
     user = APIKeyUser(for_master_api_key)
 

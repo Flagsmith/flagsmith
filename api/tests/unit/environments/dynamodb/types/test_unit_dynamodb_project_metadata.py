@@ -114,9 +114,9 @@ def test_start_identity_migration__new_project__calls_put_item_correctly(mocker)
         ),
     ),
 )
-def test_identity_migration_status__given_metadata_state__returns_expected_status(
+def test_identity_migration_status__given_metadata_state__returns_expected_status(  # type: ignore[no-untyped-def]
     instance, status
-):  # type: ignore[no-untyped-def]
+):
     # Given / When
     # Then
     assert instance.identity_migration_status == status

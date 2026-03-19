@@ -115,9 +115,9 @@ def test_influx_db_wrapper_query__http_error__logs_expected(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_events_for_organisation__default_params__calls_query_api_with_expected_query(
+def test_get_events_for_organisation__default_params__calls_query_api_with_expected_query(  # type: ignore[no-untyped-def]
     monkeypatch,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     expected_query = (
         (

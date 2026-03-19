@@ -37,9 +37,9 @@ def test_multivariate_feature_options_view_set__get_permissions__returns_expecte
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_get_mv_feature_option_by_uuid__valid_uuid__returns_option(
+def test_get_mv_feature_option_by_uuid__valid_uuid__returns_option(  # type: ignore[no-untyped-def]
     client, project, multivariate_feature
-):  # type: ignore[no-untyped-def]
+):
     # Given
     mv_option_uuid = multivariate_feature.multivariate_options.first().uuid
     url = reverse(

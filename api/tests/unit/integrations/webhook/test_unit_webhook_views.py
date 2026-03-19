@@ -56,9 +56,9 @@ def test_create_webhook_config__duplicate_url__returns_400(  # type: ignore[no-u
     assert WebhookConfiguration.objects.filter(environment=environment).count() == 1
 
 
-def test_update_webhook_config__valid_data__returns_200(
+def test_update_webhook_config__valid_data__returns_200(  # type: ignore[no-untyped-def]
     admin_client, organisation, environment
-):  # type: ignore[no-untyped-def]  # noqa: E501
+):  # noqa: E501
     # Given
     config = WebhookConfiguration.objects.create(
         url=valid_webhook_url,

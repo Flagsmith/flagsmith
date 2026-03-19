@@ -468,9 +468,9 @@ def test_get_segment_ids__none_argument__raises_value_error():  # type: ignore[n
         dynamo_identity_wrapper.get_segment_ids(None)  # type: ignore[arg-type]
 
 
-def test_get_segment_ids__with_identity_model__returns_empty_list(
+def test_get_segment_ids__with_identity_model__returns_empty_list(  # type: ignore[no-untyped-def]
     identity, environment, mocker
-):  # type: ignore[no-untyped-def]
+):
     # Given
     identity_document = map_identity_to_identity_document(identity)
     identity_model = IdentityModel.parse_obj(identity_document)

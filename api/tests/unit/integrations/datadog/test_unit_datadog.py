@@ -19,9 +19,9 @@ from integrations.datadog.datadog import (
         ("https://test.com/", f"https://test.com/{EVENTS_API_URI}"),
     ),
 )
-def test_datadog_init__valid_base_url__sets_correct_events_url(
+def test_datadog_init__valid_base_url__sets_correct_events_url(  # type: ignore[no-untyped-def]
     base_url, expected_events_url
-):  # type: ignore[no-untyped-def]
+):
     # Given
     api_key = "123key"
 

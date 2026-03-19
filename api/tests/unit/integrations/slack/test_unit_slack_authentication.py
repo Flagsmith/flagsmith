@@ -15,9 +15,9 @@ def test_oauth_init_authentication__invalid_signature__raises_authentication_fai
         oauth_init_authentication.authenticate(request)  # type: ignore[no-untyped-call]
 
 
-def test_oauth_init_authentication__valid_signature__authenticates_successfully(
+def test_oauth_init_authentication__valid_signature__authenticates_successfully(  # type: ignore[no-untyped-def]
     django_user_model, rf
-):  # type: ignore[no-untyped-def]
+):
     # Given
     signer = TimestampSigner()
     user = django_user_model.objects.create(username="test_user")

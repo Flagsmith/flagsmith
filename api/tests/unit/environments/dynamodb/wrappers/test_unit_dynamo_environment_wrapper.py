@@ -139,9 +139,9 @@ def test_get_item__valid_api_key__returns_expected_document(mocker):  # type: ig
     assert returned_item == expected_document
 
 
-def test_get_item__no_item_returned__raises_object_does_not_exist(
+def test_get_item__no_item_returned__raises_object_does_not_exist(  # type: ignore[no-untyped-def]
     mocker,
-):  # type: ignore[no-untyped-def]
+):
     # Given
     dynamo_environment_wrapper = DynamoEnvironmentWrapper()
     api_key = "test_key"

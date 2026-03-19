@@ -1000,9 +1000,9 @@ def test_add_trait__user_with_manage_identities_permission__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_delete_trait__admin_user__deletes_trait(
+def test_delete_trait__admin_user__deletes_trait(  # type: ignore[no-untyped-def]
     environment, admin_client, identity, trait, mocker
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse(
         "api-v1:environments:identities-traits-detail",
@@ -1019,9 +1019,9 @@ def test_delete_trait__admin_user__deletes_trait(
     assert not Trait.objects.filter(pk=trait.id).exists()
 
 
-def test_update_trait__admin_user__updates_string_value(
+def test_update_trait__admin_user__updates_string_value(  # type: ignore[no-untyped-def]
     environment, admin_client, identity, trait, mocker
-):  # type: ignore[no-untyped-def]
+):
     # Given
     url = reverse(
         "api-v1:environments:identities-traits-detail",
