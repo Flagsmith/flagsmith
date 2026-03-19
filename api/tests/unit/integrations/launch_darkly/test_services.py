@@ -27,7 +27,7 @@ from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 
 
-def test_create_import_request__return_expected(  # noqa: FT003
+def test_create_import_request__valid_project__returns_expected(
     ld_client_mock: MagicMock,
     ld_client_class_mock: MagicMock,
     project: Project,
@@ -259,11 +259,11 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
     [tag.label for tag in tagged_feature.tags.all()] == ["testtag", "testtag2"]
 
 
-def test_process_import_request__segments_imported(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_process_import_request__valid_segments__imports_correctly(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
 ):
-    # When
+    # Given / When
     process_import_request(import_request)
 
     # Then
@@ -459,11 +459,11 @@ def test_process_import_request__segments_imported(  # type: ignore[no-untyped-d
         assert trait_value == identity.identifier
 
 
-def test_process_import_request__rules_imported(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_process_import_request__valid_rules__imports_correctly(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
 ):
-    # When
+    # Given / When
     process_import_request(import_request)
 
     # Then
@@ -632,11 +632,11 @@ def test_process_import_request__large_segments__correctly_imported(
         (True, "True"),
     ],
 )
-def test_serialize_variation_value__return_expected(  # noqa: FT003,FT004
+def test_serialize_variation_value__various_types__returns_expected(
     value: object,
     expected: str,
 ) -> None:
-    # When
+    # Given / When
     result = _serialize_variation_value(value)
 
     # Then

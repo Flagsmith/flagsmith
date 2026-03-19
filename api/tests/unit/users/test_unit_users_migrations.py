@@ -1,7 +1,7 @@
 from django_test_migrations.migrator import Migrator
 
 
-def test_remove_users_from_groups_in_orgs_the_do_not_belong_to(  # noqa: FT003
+def test_remove_users_from_groups__user_not_in_organisation__removes_from_group(
     migrator: Migrator,
 ) -> None:
     # Given

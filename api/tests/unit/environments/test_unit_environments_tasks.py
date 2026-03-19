@@ -9,7 +9,7 @@ from environments.tasks import (
 )
 
 
-def test_rebuild_environment_document(  # noqa: FT003
+def test_rebuild_environment_document__valid_environment__calls_write_documents(
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
@@ -27,7 +27,9 @@ def test_rebuild_environment_document(  # noqa: FT003
     )
 
 
-def test_process_environment_update_with_environment_audit_log(environment, mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_process_environment_update__environment_audit_log__sends_environment_message(  # type: ignore[no-untyped-def]
+    environment, mocker
+):
     # Given
     audit_log = AuditLog.objects.create(
         project=environment.project, environment=environment
@@ -57,7 +59,9 @@ def test_process_environment_update_with_environment_audit_log(environment, mock
     mock_send_environment_update_message_for_project.assert_not_called()
 
 
-def test_process_environment_update_with_project_audit_log(environment, mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_process_environment_update__project_audit_log__sends_project_message(  # type: ignore[no-untyped-def]
+    environment, mocker
+):
     # Given
     audit_log = AuditLog.objects.create(project=environment.project)
     mock_environment_model_class = mocker.patch(
@@ -85,7 +89,7 @@ def test_process_environment_update_with_project_audit_log(environment, mocker):
     )
 
 
-def test_delete_environment__calls_internal_methods_correctly(  # noqa: FT003
+def test_delete_environment_from_dynamo__valid_environment__calls_all_wrappers(
     mocker: MockerFixture,
 ) -> None:
     # Given

@@ -11,7 +11,7 @@ from organisations.models import Organisation
 from users.models import FFAdminUser
 
 
-def test_send_onboarding_request_to_saas_flagsmith_view_for_non_admin_user(  # noqa: FT003
+def test_send_onboarding_request__non_admin_user__returns_forbidden(
     staff_client: APIClient, is_oss: MagicMock
 ) -> None:
     # Given
@@ -24,7 +24,7 @@ def test_send_onboarding_request_to_saas_flagsmith_view_for_non_admin_user(  # n
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_send_onboarding_request_to_saas_flagsmith_view_without_org(  # noqa: FT003
+def test_send_onboarding_request__no_organisation__returns_bad_request(
     admin_client_original: APIClient, is_oss: MagicMock
 ) -> None:
     # Given
@@ -41,7 +41,7 @@ def test_send_onboarding_request_to_saas_flagsmith_view_without_org(  # noqa: FT
     )
 
 
-def test_send_onboarding_request_to_saas_flagsmith_view(  # noqa: FT003
+def test_send_onboarding_request__valid_admin_with_org__returns_no_content(
     admin_client_original: APIClient,
     mocker: MockerFixture,
     organisation: Organisation,
@@ -69,7 +69,7 @@ def test_send_onboarding_request_to_saas_flagsmith_view(  # noqa: FT003
     )
 
 
-def test_receive_support_request_from_self_hosted_view_without_hubspot_token(  # noqa: FT003
+def test_receive_onboarding_request__no_hubspot_token__returns_bad_request(
     settings: SettingsWrapper,
     api_client: APIClient,
     db: None,
@@ -88,7 +88,7 @@ def test_receive_support_request_from_self_hosted_view_without_hubspot_token(  #
     assert response.json()["message"] == "HubSpot access token not configured"
 
 
-def test_receive_support_request_from_self_hosted_view(  # noqa: FT003
+def test_receive_onboarding_request__valid_data__creates_lead(
     settings: SettingsWrapper,
     api_client: APIClient,
     mocker: MockerFixture,
@@ -118,7 +118,7 @@ def test_receive_support_request_from_self_hosted_view(  # noqa: FT003
     mocked_create_self_hosted_onboarding_lead.assert_called_once_with(**data)
 
 
-def test_receive_support_request_throttling(  # noqa: FT003
+def test_receive_onboarding_request__repeated_requests__throttles_by_ip(
     settings: SettingsWrapper,
     api_client: APIClient,
     mocker: MockerFixture,

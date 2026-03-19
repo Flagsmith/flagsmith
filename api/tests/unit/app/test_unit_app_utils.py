@@ -3,7 +3,9 @@ import pytest
 from app.utils import get_numbered_env_vars_with_prefix
 
 
-def test_get_numbered_env_vars_with_prefix(monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: FT003
+def test_get_numbered_env_vars_with_prefix__sequential_vars_set__returns_contiguous_values(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     # Given
     monkeypatch.setenv("DB_URL_0", "0")
     monkeypatch.setenv("DB_URL_1", "1")

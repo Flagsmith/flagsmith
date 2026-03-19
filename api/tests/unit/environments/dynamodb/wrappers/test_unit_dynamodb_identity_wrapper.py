@@ -38,7 +38,7 @@ if typing.TYPE_CHECKING:
     from projects.models import Project
 
 
-def test_get_item_from_uuid_calls_query_with_correct_argument(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_item_from_uuid__valid_uuid__calls_query_correctly(mocker):  # type: ignore[no-untyped-def]
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
@@ -54,19 +54,20 @@ def test_get_item_from_uuid_calls_query_with_correct_argument(mocker):  # type: 
     )
 
 
-def test_get_item_from_uuid_raises_object_does_not_exists_if_identity_is_not_returned(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_get_item_from_uuid__identity_not_found__raises_object_does_not_exist(  # type: ignore[no-untyped-def]
     mocker,
 ):
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     mocked_dynamo_table = mocker.patch.object(dynamo_identity_wrapper, "_table")
     mocked_dynamo_table.query.return_value = {"Items": [], "Count": 0}
-    # Then
+
+    # When / Then
     with pytest.raises(ObjectDoesNotExist):
         dynamo_identity_wrapper.get_item_from_uuid("identity_uuid")
 
 
-def test_get_item_from_uuid_or_404_calls_get_item_from_uuid_with_correct_arguments(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_item_from_uuid_or_404__existing_identity__returns_document(  # type: ignore[no-untyped-def]
     mocker,
 ):
     # Given
@@ -85,7 +86,7 @@ def test_get_item_from_uuid_or_404_calls_get_item_from_uuid_with_correct_argumen
     mocked_get_item_from_uuid.assert_called_with(identity_uuid)
 
 
-def test_get_item_from_uuid_or_404_calls_raises_not_found_if_internal_method_raises_object_does_not_exists(  # type: ignore[no-untyped-def]  # noqa: E501,FT003,FT004
+def test_get_item_from_uuid_or_404__identity_not_found__raises_not_found(  # type: ignore[no-untyped-def]
     mocker,
 ):
     # Given
@@ -95,12 +96,12 @@ def test_get_item_from_uuid_or_404_calls_raises_not_found_if_internal_method_rai
     )
     identity_uuid = "test_uuid"
 
-    # Then
+    # When / Then
     with pytest.raises(NotFound):
         dynamo_identity_wrapper.get_item_from_uuid_or_404(identity_uuid)
 
 
-def test_delete_item_calls_dynamo_delete_item_with_correct_arguments(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_delete_item__valid_composite_key__calls_dynamo_correctly(mocker):  # type: ignore[no-untyped-def]
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     composite_key = "test_key"
@@ -115,7 +116,7 @@ def test_delete_item_calls_dynamo_delete_item_with_correct_arguments(mocker):  #
     )
 
 
-def test_get_item_calls_dynamo_get_item_with_correct_arguments(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_item__valid_composite_key__calls_dynamo_correctly(mocker):  # type: ignore[no-untyped-def]
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     composite_key = "test_key"
@@ -130,7 +131,7 @@ def test_get_item_calls_dynamo_get_item_with_correct_arguments(mocker):  # type:
     )
 
 
-def test_get_all_items_without_start_key_calls_query_with_correct_arguments(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_all_items__without_start_key__calls_query_correctly(mocker):  # type: ignore[no-untyped-def]
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     environment_key = "environment_key"
@@ -147,7 +148,7 @@ def test_get_all_items_without_start_key_calls_query_with_correct_arguments(mock
     )
 
 
-def test_get_all_items_with_start_key_calls_query_with_correct_arguments(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_all_items__with_start_key__calls_query_correctly(mocker):  # type: ignore[no-untyped-def]
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
 
@@ -192,7 +193,8 @@ def test_get_all_items__return_consumed_capacity_true__calls_expected(
     )
 
 
-def test_search_items_with_identifier_calls_query_with_correct_arguments(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_search_items__with_identifier__calls_query_correctly(mocker):  # type: ignore[no-untyped-def]
+    # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
     environment_key = "environment_key"
     identifier = "test_user"
@@ -222,7 +224,7 @@ def test_search_items_with_identifier_calls_query_with_correct_arguments(mocker)
     )
 
 
-def test_write_identities_calls_internal_methods_with_correct_arguments(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_write_identities__single_identity__calls_batch_writer_correctly(  # type: ignore[no-untyped-def]
     mocker, project, identity
 ):
     # Given
@@ -251,7 +253,7 @@ def test_write_identities_calls_internal_methods_with_correct_arguments(  # type
     assert actual_identity_document == expected_identity_document
 
 
-def test_write_identities_skips_identity_if_identifier_is_too_large(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_write_identities__identifier_too_large__skips_identity(  # type: ignore[no-untyped-def]
     mocker, project, identity
 ):
     # Given
@@ -272,7 +274,7 @@ def test_write_identities_skips_identity_if_identifier_is_too_large(  # type: ig
     mocked_dynamo_table.batch_writer.return_value.__enter__.return_value.put_item.assert_not_called()
 
 
-def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings, mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_is_enabled__table_name_not_set__returns_false(settings, mocker):  # type: ignore[no-untyped-def]
     # Given
     mocker.patch(
         "environments.dynamodb.wrappers.identity_wrapper.DynamoIdentityWrapper.table_name",
@@ -289,7 +291,7 @@ def test_is_enabled_is_false_if_dynamo_table_name_is_not_set(settings, mocker): 
     mocked_boto3.resource.return_value.Table.assert_not_called()
 
 
-def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_is_enabled__table_name_set__returns_true(settings, mocker):  # type: ignore[no-untyped-def]
     # Given
     table_name = "random_table_name"
     settings.IDENTITIES_TABLE_NAME_DYNAMO = table_name
@@ -307,7 +309,7 @@ def test_is_enabled_is_true_if_dynamo_table_name_is_set(settings, mocker):  # ty
     mocked_boto3.resource.return_value.Table.assert_called_with(table_name)
 
 
-def test_get_segment_ids_returns_correct_segment_ids(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_segment_ids__matching_segment_exists__returns_correct_ids(  # type: ignore[no-untyped-def]
     project, environment, identity, identity_matching_segment, mocker
 ):
     # Given - two segments (one that matches the identity and one that does not)
@@ -329,7 +331,7 @@ def test_get_segment_ids_returns_correct_segment_ids(  # type: ignore[no-untyped
     mocked_get_item_from_uuid.assert_called_with(identity_uuid)
 
 
-def test_get_segment_ids_with_segment_feature_overrides(  # noqa: FT003
+def test_get_segment_ids__segment_with_feature_overrides__returns_correct_ids(
     project: "Project",
     environment: "Environment",
     feature: "Feature",
@@ -394,7 +396,7 @@ def test_get_segment_ids_with_segment_feature_overrides(  # noqa: FT003
     assert segment_ids == [identity_matching_segment.id]
 
 
-def test_get_segment_ids_returns_segment_using_in_operator_for_integer_traits(  # noqa: FT003
+def test_get_segment_ids__in_operator_with_integer_traits__returns_matching_segment(
     project: "Project", environment: "Environment", mocker: "MockerFixture"
 ) -> None:
     """
@@ -430,7 +432,7 @@ def test_get_segment_ids_returns_segment_using_in_operator_for_integer_traits(  
     assert segment_ids == [segment.id]
 
 
-def test_get_segment_ids_returns_empty_list_if_identity_does_not_exists(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_get_segment_ids__identity_does_not_exist__returns_empty_list(  # type: ignore[no-untyped-def]
     project, environment, identity, mocker
 ):
     # Given
@@ -441,38 +443,34 @@ def test_get_segment_ids_returns_empty_list_if_identity_does_not_exists(  # type
     )
     identity_uuid = identity_document["identity_uuid"]
 
-    # Then
+    # When
     segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)  # type: ignore[arg-type]
 
     # Then
     assert segment_ids == []
 
 
-def test_get_segment_ids_throws_value_error_if_no_arguments():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_get_segment_ids__no_arguments__raises_value_error():  # type: ignore[no-untyped-def]
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
 
-    # When
+    # When / Then
     with pytest.raises(ValueError):
         dynamo_identity_wrapper.get_segment_ids()
 
-    # Then
-    # exception raised
 
-
-def test_get_segment_ids_throws_value_error_if_arguments_not_valid():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_get_segment_ids__none_argument__raises_value_error():  # type: ignore[no-untyped-def]
     # Given
     dynamo_identity_wrapper = DynamoIdentityWrapper()
 
-    # When
+    # When / Then
     with pytest.raises(ValueError):
         dynamo_identity_wrapper.get_segment_ids(None)  # type: ignore[arg-type]
 
-    # Then
-    # exception raised
 
-
-def test_get_segment_ids_with_identity_model(identity, environment, mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_segment_ids__with_identity_model__returns_empty_list(  # type: ignore[no-untyped-def]
+    identity, environment, mocker
+):
     # Given
     identity_document = map_identity_to_identity_document(identity)
     identity_model = IdentityModel.parse_obj(identity_document)
@@ -586,7 +584,7 @@ def test_identity_wrapper__iter_all_items_paginated__returns_expected(
 
 
 @pytest.mark.parametrize("capacity_budget", [Decimal("2.0"), Decimal("2.2")])
-def test_identity_wrapper__iter_all_items_paginated__capacity_budget_set__raises_expected(  # noqa: FT003
+def test_iter_all_items_paginated__capacity_budget_exceeded__raises_expected(
     identity: "Identity",
     mocker: "MockerFixture",
     capacity_budget: Decimal,
@@ -659,7 +657,7 @@ def test_identity_wrapper__iter_all_items_paginated__capacity_budget_set__raises
     )
 
 
-def test_delete_all_identities__deletes_all_identities_documents_from_dynamodb(  # noqa: FT003
+def test_delete_all_identities__multiple_identities__deletes_only_matching_environment(
     flagsmith_identities_table: Table,
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
 ) -> None:

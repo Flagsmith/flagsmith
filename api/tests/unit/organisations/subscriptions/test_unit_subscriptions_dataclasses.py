@@ -11,17 +11,14 @@ class SourceBSubscriptionMetadata(BaseSubscriptionMetadata):
     payment_source = "SOURCE_B"  # type: ignore[assignment]
 
 
-def test_base_subscription_metadata_add_raises_error_if_not_matching_payment_source():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_base_subscription_metadata_add__different_payment_sources__raises_type_error():  # type: ignore[no-untyped-def]
     # Given
     source_a_metadata = SourceASubscriptionMetadata(seats=1, api_calls=50000)
     source_b_metadata = SourceBSubscriptionMetadata(seats=1, api_calls=50000)
 
-    # When
+    # When / Then
     with pytest.raises(TypeError):
         source_a_metadata + source_b_metadata
-
-    # Then
-    # exception was raised
 
 
 @pytest.mark.parametrize(
@@ -54,5 +51,11 @@ def test_base_subscription_metadata_add_raises_error_if_not_matching_payment_sou
         ),
     ),
 )
-def test_base_subscription_metadata_add(add_to, add, expected_result):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
-    assert add_to + add == expected_result
+def test_base_subscription_metadata_add__same_payment_source__returns_summed_metadata(  # type: ignore[no-untyped-def]
+    add_to, add, expected_result
+):
+    # Given / When
+    result = add_to + add
+
+    # Then
+    assert result == expected_result

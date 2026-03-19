@@ -28,7 +28,7 @@ from users.models import (
 )
 
 
-def test_join_organisation(  # noqa: FT003
+def test_join_organisation__valid_invite__user_added_to_organisation(
     staff_user: FFAdminUser,
     staff_client: APIClient,
 ) -> None:
@@ -45,7 +45,7 @@ def test_join_organisation(  # noqa: FT003
     assert organisation in staff_user.organisations.all()
 
 
-def test_join_organisation_via_link(  # noqa: FT003
+def test_join_organisation__valid_invite_link__user_added_to_organisation(
     staff_user: FFAdminUser,
     staff_client: APIClient,
 ) -> None:
@@ -63,7 +63,7 @@ def test_join_organisation_via_link(  # noqa: FT003
     assert organisation in staff_user.organisations.all()
 
 
-def test_cannot_join_organisation_via_expired_link(  # noqa: FT003
+def test_join_organisation__expired_invite_link__returns_400(
     staff_user: FFAdminUser,
     staff_client: APIClient,
 ) -> None:
@@ -84,7 +84,7 @@ def test_cannot_join_organisation_via_expired_link(  # noqa: FT003
     assert organisation not in staff_user.organisations.all()
 
 
-def test_user_can_join_second_organisation(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_join_organisation__user_already_in_one_org__user_added_to_both(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     staff_user: FFAdminUser,
     staff_client: APIClient,
@@ -108,7 +108,7 @@ def test_user_can_join_second_organisation(  # type: ignore[no-untyped-def]  # n
     )
 
 
-def test_cannot_join_organisation_with_different_email_address_than_invite(  # noqa: FT003
+def test_join_organisation__different_email_than_invite__returns_400(
     staff_user: FFAdminUser,
     staff_client: APIClient,
 ) -> None:
@@ -127,7 +127,7 @@ def test_cannot_join_organisation_with_different_email_address_than_invite(  # n
     assert organisation not in staff_user.organisations.all()
 
 
-def test_can_join_organisation_as_admin_if_invite_role_is_admin(  # noqa: FT003
+def test_join_organisation__invite_role_is_admin__user_becomes_org_admin(
     staff_user: FFAdminUser,
     staff_client: APIClient,
 ) -> None:
@@ -147,7 +147,7 @@ def test_can_join_organisation_as_admin_if_invite_role_is_admin(  # noqa: FT003
     assert staff_user.is_organisation_admin(organisation)
 
 
-def test_admin_can_update_role_for_a_user_in_organisation(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_update_user_role__admin_sets_user_to_admin__role_updated(  # type: ignore[no-untyped-def]
     admin_client_new: APIClient,
     organisation: Organisation,
 ):
@@ -173,7 +173,7 @@ def test_admin_can_update_role_for_a_user_in_organisation(  # type: ignore[no-un
     )
 
 
-def test_admin_can_get_users_in_organisation(  # noqa: FT003
+def test_list_organisation_users__as_admin__returns_all_users(
     admin_user: FFAdminUser,
     admin_client_new: APIClient,
     staff_user: FFAdminUser,
@@ -206,7 +206,7 @@ def test_admin_can_get_users_in_organisation(  # noqa: FT003
     assert response.data[4]["email"] == additional_user2.email
 
 
-def test_org_user_can_get_users_in_organisation(  # noqa: FT003
+def test_list_organisation_users__as_org_user__returns_all_users(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     organisation: Organisation,
@@ -229,7 +229,7 @@ def test_org_user_can_get_users_in_organisation(  # noqa: FT003
     assert response.data[2]["email"] == organisation_user.email
 
 
-def test_org_user_can_exclude_themself_when_getting_users_in_organisation(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_list_organisation_users__exclude_current_user__returns_other_users(  # type: ignore[no-untyped-def]
     staff_client: APIClient,
     staff_user: FFAdminUser,
     organisation: Organisation,
@@ -253,7 +253,7 @@ def test_org_user_can_exclude_themself_when_getting_users_in_organisation(  # ty
     assert response.data[1]["id"] == organisation_user.id
 
 
-def test_organisation_admin_can_interact_with_groups(  # noqa: FT003
+def test_permission_groups__admin_crud_operations__succeeds(
     organisation: Organisation,
     admin_client_new: APIClient,
 ) -> None:
@@ -296,25 +296,30 @@ def test_organisation_admin_can_interact_with_groups(  # noqa: FT003
     assert not UserPermissionGroup.objects.filter(name=update_data["name"]).exists()
 
 
-def test_staff_user_cannot_post_to_groups(  # noqa: FT003,FT004
+def test_create_permission_group__as_staff_user__returns_403(
     staff_client: APIClient,
     organisation: Organisation,
 ) -> None:
+    # Given
     group_name = "Test Group"
     UserPermissionGroup.objects.create(name=group_name, organisation=organisation)
     data = {"name": "New Test Group"}
-
     url = reverse(
         "api-v1:organisations:organisation-groups-list", args=[organisation.id]
     )
+
+    # When
     response = staff_client.post(url, data=data)
+
+    # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_staff_user_cannot_put_to_groups(  # noqa: FT003,FT004
+def test_update_permission_group__as_staff_user__returns_404(
     staff_client: APIClient,
     organisation: Organisation,
 ) -> None:
+    # Given
     group_name = "Test Group"
     group = UserPermissionGroup.objects.create(
         name=group_name, organisation=organisation
@@ -324,14 +329,18 @@ def test_staff_user_cannot_put_to_groups(  # noqa: FT003,FT004
         args=[organisation.id, group.id],
     )
 
+    # When
     response = staff_client.put(url)
+
+    # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_staff_user_cannot_get_to_groups(  # noqa: FT003,FT004
+def test_retrieve_permission_group__as_staff_user__returns_404(
     staff_client: APIClient,
     organisation: Organisation,
 ) -> None:
+    # Given
     group_name = "Test Group"
     group = UserPermissionGroup.objects.create(
         name=group_name, organisation=organisation
@@ -341,14 +350,18 @@ def test_staff_user_cannot_get_to_groups(  # noqa: FT003,FT004
         args=[organisation.id, group.id],
     )
 
+    # When
     response = staff_client.get(url)
+
+    # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_staff_user_cannot_delete_to_groups(  # noqa: FT003,FT004
+def test_delete_permission_group__as_staff_user__returns_404(
     staff_client: APIClient,
     organisation: Organisation,
 ) -> None:
+    # Given
     group_name = "Test Group"
     group = UserPermissionGroup.objects.create(
         name=group_name, organisation=organisation
@@ -358,12 +371,15 @@ def test_staff_user_cannot_delete_to_groups(  # noqa: FT003,FT004
         args=[organisation.id, group.id],
     )
 
+    # When
     response = staff_client.delete(url)
+
+    # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert UserPermissionGroup.objects.filter(name=group_name).exists()
 
 
-def test_can_add_multiple_users_including_current_user(  # noqa: FT003
+def test_add_users_to_group__multiple_users_including_current__all_added(
     staff_user: FFAdminUser,
     organisation: Organisation,
     admin_user: FFAdminUser,
@@ -389,7 +405,7 @@ def test_can_add_multiple_users_including_current_user(  # noqa: FT003
     assert all(user in group.users.all() for user in [admin_user, staff_user])
 
 
-def test_can_add_users_with_master_api_key(  # noqa: FT003
+def test_add_users_to_group__with_master_api_key__all_added(
     staff_user: FFAdminUser,
     organisation: Organisation,
     admin_user: FFAdminUser,
@@ -415,7 +431,7 @@ def test_can_add_users_with_master_api_key(  # noqa: FT003
     assert all(user in group.users.all() for user in [admin_user, staff_user])
 
 
-def test_cannot_add_user_from_another_organisation(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_add_users_to_group__user_from_another_org__returns_400(  # type: ignore[no-untyped-def]
     admin_client_new: APIClient,
     organisation: Organisation,
 ):
@@ -441,7 +457,7 @@ def test_cannot_add_user_from_another_organisation(  # type: ignore[no-untyped-d
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_cannot_add_same_user_twice(  # noqa: FT003
+def test_add_users_to_group__user_already_in_group__not_duplicated(
     staff_user: FFAdminUser,
     organisation: Organisation,
     admin_client_new: APIClient,
@@ -464,7 +480,7 @@ def test_cannot_add_same_user_twice(  # noqa: FT003
     assert staff_user in group.users.all() and group.users.count() == 1
 
 
-def test_remove_users_from_group(  # noqa: FT003
+def test_remove_users_from_group__one_of_two_users__only_specified_user_removed(
     staff_user: FFAdminUser,
     organisation: Organisation,
     admin_user: FFAdminUser,
@@ -493,7 +509,7 @@ def test_remove_users_from_group(  # noqa: FT003
     assert admin_user in group.users.all()
 
 
-def test_remove_users_silently_fails_if_user_not_in_group(  # noqa: FT003
+def test_remove_users_from_group__user_not_in_group__succeeds_silently(
     staff_user: FFAdminUser,
     organisation: Organisation,
     admin_client_new: APIClient,
@@ -522,7 +538,7 @@ def test_remove_users_silently_fails_if_user_not_in_group(  # noqa: FT003
     assert admin_user in group.users.all()
 
 
-def test_user_permission_group_can_update_is_default(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_update_permission_group__set_is_default_true__updates_successfully(  # type: ignore[no-untyped-def]
     admin_client_new, organisation, user_permission_group
 ):
     # Given
@@ -543,7 +559,7 @@ def test_user_permission_group_can_update_is_default(  # type: ignore[no-untyped
     assert user_permission_group.is_default is True
 
 
-def test_user_permission_group_can_update_external_id(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_update_permission_group__set_external_id__updates_successfully(  # type: ignore[no-untyped-def]
     admin_client_new, organisation, user_permission_group
 ):
     # Given
@@ -561,7 +577,7 @@ def test_user_permission_group_can_update_external_id(  # type: ignore[no-untype
     assert response.json()["external_id"] == external_id
 
 
-def test_users_in_organisation_have_last_login(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_list_organisation_users__user_has_logged_in__includes_last_login(  # type: ignore[no-untyped-def]
     admin_client_new, organisation, rf, mocker, admin_user
 ):
     # Given
@@ -582,7 +598,7 @@ def test_users_in_organisation_have_last_login(  # type: ignore[no-untyped-def] 
     assert res.status_code == status.HTTP_200_OK
 
 
-def test_retrieve_user_permission_group_includes_group_admin(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_retrieve_permission_group__with_group_admin__includes_group_admin_flag(  # type: ignore[no-untyped-def]
     admin_client_new, admin_user, organisation, user_permission_group
 ):
     # Given
@@ -613,7 +629,7 @@ def test_retrieve_user_permission_group_includes_group_admin(  # type: ignore[no
     )
 
 
-def test_group_admin_can_retrieve_group(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_retrieve_permission_group__as_group_admin__returns_200(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     django_user_model: typing.Type[AbstractUser],
     api_client: APIClient,
@@ -657,8 +673,8 @@ def delete_user(  # type: ignore[no-untyped-def]
 
 
 @pytest.mark.django_db
-def test_delete_user():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
-    # create a couple of users
+def test_delete_user__multiple_users_in_multiple_orgs__orphan_orgs_deleted():  # type: ignore[no-untyped-def]
+    # Given
     email1 = "test1@example.com"
     email2 = "test2@example.com"
     email3 = "test3@example.com"
@@ -683,6 +699,7 @@ def test_delete_user():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
 
     # Configuration: org1: [user1, user3], org2: [user1, user2], org3: [user1]
 
+    # When / Then
     # Delete user2
     response = delete_user(user2, password)
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -717,7 +734,10 @@ def test_delete_user():  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("password", [None, "", "random"])
-def test_delete_user_social_auth_with_no_password(password):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_delete_user__social_auth_with_no_password__deletes_user_and_orphan_org(  # type: ignore[no-untyped-def]
+    password,
+):
+    # Given
     google_auth_user_email = "google@example.com"
     github_auth_user_email = "github@example.com"
 
@@ -738,6 +758,7 @@ def test_delete_user_social_auth_with_no_password(password):  # type: ignore[no-
     google_auth_user_org.users.add(google_auth_user)
     github_auth_user_org.users.add(github_auth_user)
 
+    # When / Then
     # Delete google_auth_user
     response = delete_user(google_auth_user, password, delete_orphan_organisations=True)
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -752,7 +773,7 @@ def test_delete_user_social_auth_with_no_password(password):  # type: ignore[no-
 
 
 @pytest.mark.django_db
-def test_change_email_address_api(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_change_email__valid_password__updates_email_and_sends_notification(mocker):  # type: ignore[no-untyped-def]
     # Given
     mocked_task = mocker.patch("users.tasks.send_email_changed_notification_email")
     # create an user
@@ -788,7 +809,7 @@ def test_change_email_address_api(mocker):  # type: ignore[no-untyped-def]  # no
 
 
 @pytest.mark.django_db
-def test_send_reset_password_emails_rate_limit(  # noqa: FT003
+def test_reset_password__exceeds_rate_limit__stops_sending_emails(
     settings: SettingsWrapper,
     client: APIClient,
     staff_user: FFAdminUser,
@@ -827,7 +848,7 @@ def test_send_reset_password_emails_rate_limit(  # noqa: FT003
 
 
 @pytest.mark.django_db
-def test_send_reset_password_emails_rate_limit_resets_after_password_reset(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_reset_password__rate_limit_resets_after_password_change__sends_email_again(  # type: ignore[no-untyped-def]
     settings: SettingsWrapper,
     client: APIClient,
     staff_user: FFAdminUser,
@@ -839,6 +860,7 @@ def test_send_reset_password_emails_rate_limit_resets_after_password_reset(  # t
     url = reverse("api-v1:custom_auth:ffadminuser-reset-password")
     data = {"email": staff_user.email}
 
+    # When
     # First, let's hit the limit of emails we can send
     for _ in range(5):
         response = client.post(
@@ -874,7 +896,7 @@ def test_send_reset_password_emails_rate_limit_resets_after_password_reset(  # t
     assert len(mail.outbox) == 1
 
 
-def test_list_user_groups(  # noqa: FT003
+def test_list_permission_groups__multiple_groups_with_users__returns_correct_data(
     organisation: Organisation,
     admin_client: APIClient,
     django_assert_num_queries: DjangoAssertNumQueries,
@@ -947,7 +969,7 @@ def test_list_user_groups(  # noqa: FT003
         ),
     ],
 )
-def test_get_me_view_updates_last_login(  # noqa: FT003
+def test_get_me__various_last_login_values__updates_last_login_correctly(
     api_client: APIClient,
     staff_user: FFAdminUser,
     last_login: datetime | None,

@@ -11,7 +11,7 @@ from app_analytics.models import (
 pytestmark = pytest.mark.use_analytics_db
 
 
-def test_creating_overlapping_api_usage_bucket_raises_error(db):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_api_usage_bucket__overlapping_bucket__raises_validation_error(db):  # type: ignore[no-untyped-def]
     # Given
     created_at = timezone.now()
     bucket_size = 15
@@ -39,7 +39,7 @@ def test_creating_overlapping_api_usage_bucket_raises_error(db):  # type: ignore
         )
 
 
-def test_creating_overlapping_feature_evaluation_bucket_raises_error(db):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_feature_evaluation_bucket__overlapping_bucket__raises_validation_error(db):  # type: ignore[no-untyped-def]
     # Given
     created_at = timezone.now()
     bucket_size = 15

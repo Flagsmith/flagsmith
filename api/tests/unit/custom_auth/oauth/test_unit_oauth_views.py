@@ -15,7 +15,7 @@ from users.models import SignUpType
 
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
-def test_cannot_register_with_google_without_invite_if_registration_disabled(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_google_oauth_login__no_invite_and_registration_disabled__returns_403(  # type: ignore[no-untyped-def]
     mock_get_user_info, db
 ):
     # Given
@@ -34,7 +34,7 @@ def test_cannot_register_with_google_without_invite_if_registration_disabled(  #
 
 @mock.patch("custom_auth.oauth.serializers.GithubUser")
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
-def test_cannot_register_with_github_without_invite_if_registration_disabled(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_github_oauth_login__no_invite_and_registration_disabled__returns_403(  # type: ignore[no-untyped-def]
     MockGithubUser, db
 ):
     # Given
@@ -55,7 +55,7 @@ def test_cannot_register_with_github_without_invite_if_registration_disabled(  #
 
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
-def test_can_register_with_google_with_invite_if_registration_disabled(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_google_oauth_login__invite_exists_and_registration_disabled__returns_200(  # type: ignore[no-untyped-def]
     mock_get_user_info, db
 ):
     # Given
@@ -82,7 +82,7 @@ def test_can_register_with_google_with_invite_if_registration_disabled(  # type:
 
 @mock.patch("custom_auth.oauth.serializers.GithubUser")
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
-def test_can_register_with_github_with_invite_if_registration_disabled(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_github_oauth_login__invite_exists_and_registration_disabled__returns_200(  # type: ignore[no-untyped-def]
     MockGithubUser, db
 ):
     # Given
@@ -111,7 +111,7 @@ def test_can_register_with_github_with_invite_if_registration_disabled(  # type:
 
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
 @override_settings(ALLOW_OAUTH_REGISTRATION_WITHOUT_INVITE=False)
-def test_can_login_with_google_if_registration_disabled(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_google_oauth_login__existing_user_and_registration_disabled__returns_200(  # type: ignore[no-untyped-def]
     mock_get_user_info, db, django_user_model
 ):
     # Given
@@ -137,7 +137,7 @@ def test_can_login_with_google_if_registration_disabled(  # type: ignore[no-unty
 
 @mock.patch("custom_auth.oauth.serializers.GithubUser")
 @override_settings(ALLOW_OAUTH_REGISTRATION_WITHOUT_INVITE=False)
-def test_can_login_with_github_if_registration_disabled(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_github_oauth_login__existing_user_and_registration_disabled__returns_200(  # type: ignore[no-untyped-def]
     MockGithubUser, db, django_user_model
 ):
     # Given
@@ -163,7 +163,7 @@ def test_can_login_with_github_if_registration_disabled(  # type: ignore[no-unty
     assert "key" in response.json()
 
 
-def test_login_with_google_updates_existing_user_case_insensitive(  # noqa: FT003
+def test_google_oauth_login__case_insensitive_email__updates_existing_user(
     db: None,
     django_user_model: type[Model],
     mocker: MockerFixture,
@@ -202,7 +202,7 @@ def test_login_with_google_updates_existing_user_case_insensitive(  # noqa: FT00
     assert user.google_user_id == google_user_id
 
 
-def test_login_with_github_updates_existing_user_case_insensitive(  # noqa: FT003
+def test_github_oauth_login__case_insensitive_email__updates_existing_user(
     db: None,
     django_user_model: type[Model],
     mocker: MockerFixture,
@@ -242,7 +242,7 @@ def test_login_with_github_updates_existing_user_case_insensitive(  # noqa: FT00
     assert user.github_user_id == github_user_id
 
 
-def test_user_with_duplicate_accounts_authenticates_as_the_correct_oauth_user(  # noqa: FT003
+def test_oauth_login__duplicate_accounts__authenticates_correct_oauth_user(
     db: None,
     django_user_model: type[Model],
     api_client: APIClient,
@@ -306,7 +306,7 @@ def test_user_with_duplicate_accounts_authenticates_as_the_correct_oauth_user(  
 
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
 @override_settings(COOKIE_AUTH_ENABLED=True)
-def test_login_with_google_jwt_cookie(  # noqa: FT003
+def test_google_oauth_login__cookie_auth_enabled__returns_jwt_cookie(
     mock_get_user_info: mock.Mock,
     db: None,
     django_user_model: type[Any],
@@ -336,7 +336,7 @@ def test_login_with_google_jwt_cookie(  # noqa: FT003
 
 
 @override_settings(COOKIE_AUTH_ENABLED=True)
-def test_login_with_github_jwt_cookie(  # noqa: FT003
+def test_github_oauth_login__cookie_auth_enabled__returns_jwt_cookie(
     db: None,
     django_user_model: type[Any],
     api_client: APIClient,

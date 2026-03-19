@@ -19,7 +19,9 @@ from integrations.datadog.datadog import (
         ("https://test.com/", f"https://test.com/{EVENTS_API_URI}"),
     ),
 )
-def test_datadog_initialized_correctly(base_url, expected_events_url):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_datadog_init__valid_base_url__sets_correct_events_url(  # type: ignore[no-untyped-def]
+    base_url, expected_events_url
+):
     # Given
     api_key = "123key"
 
@@ -44,7 +46,7 @@ def test_datadog_initialized_correctly(base_url, expected_events_url):  # type: 
         ),
     ),
 )
-def test_datadog_track_event(  # noqa: FT003
+def test_datadog_track_event__given_event_data__posts_expected_data(
     mocker: MockerFixture,
     event_data: dict,  # type: ignore[type-arg]
     use_custom_source: bool,
@@ -71,7 +73,7 @@ def test_datadog_track_event(  # noqa: FT003
     )
 
 
-def test_datadog_when_generate_event_data_with_correct_values_then_success(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_generate_event_data__valid_audit_log__returns_correct_event(  # type: ignore[no-untyped-def]
     django_user_model,
     feature,
 ):
@@ -96,7 +98,7 @@ def test_datadog_when_generate_event_data_with_correct_values_then_success(  # t
     assert event_data["tags"][0] == f"env:{environment.name}"
 
 
-def test_datadog_when_generate_event_data_with_missing_author_then_success(feature):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_generate_event_data__missing_author__returns_system_user(feature):  # type: ignore[no-untyped-def]
     # Given
     log = "some log data"
 
@@ -116,7 +118,7 @@ def test_datadog_when_generate_event_data_with_missing_author_then_success(featu
     assert event_data["tags"][0] == f"env:{environment.name}"
 
 
-def test_datadog_when_generate_event_data_with_missing_env_then_success(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_generate_event_data__missing_environment__returns_unknown_env(  # type: ignore[no-untyped-def]
     django_user_model,
     feature,
 ):

@@ -9,7 +9,7 @@ from integrations.segment.constants import DEFAULT_BASE_URL
 from integrations.segment.models import SegmentConfiguration
 
 
-def test_should_create_segment_config_when_post(  # noqa: FT003
+def test_create_segment_config__valid_data__returns_201(
     environment: Environment,
     admin_client: APIClient,
 ) -> None:
@@ -37,7 +37,7 @@ def test_should_create_segment_config_when_post(  # noqa: FT003
     assert segment_configuration.base_url == DEFAULT_BASE_URL
 
 
-def test_should_return_400_when_duplicate_segment_config_is_posted(  # noqa: FT003
+def test_create_segment_config__duplicate_config__returns_400(
     environment: Environment,
     admin_client: APIClient,
 ) -> None:
@@ -63,7 +63,7 @@ def test_should_return_400_when_duplicate_segment_config_is_posted(  # noqa: FT0
     assert SegmentConfiguration.objects.filter(environment=environment).count() == 1
 
 
-def test_should_update_configuration_when_put(  # noqa: FT003
+def test_update_segment_config__valid_data__returns_200(
     environment: Environment,
     admin_client: APIClient,
 ) -> None:
@@ -92,7 +92,7 @@ def test_should_update_configuration_when_put(  # noqa: FT003
     assert config.api_key == api_key_updated
 
 
-def test_should_return_segment_config_list_when_requested(  # noqa: FT003
+def test_list_segment_config__existing_config__returns_200(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -114,7 +114,7 @@ def test_should_return_segment_config_list_when_requested(  # noqa: FT003
     assert response.data == [expected_response]
 
 
-def test_should_remove_configuration_when_delete(  # noqa: FT003
+def test_delete_segment_config__existing_config__returns_204(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:

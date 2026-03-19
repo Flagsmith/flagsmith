@@ -11,7 +11,7 @@ from features.models import Feature
 from permissions.models import PermissionModel
 
 
-def test_user_with_view_environment_permission_can_retrieve_all_feature_states_for_edge_identity(  # noqa: FT003
+def test_retrieve_all_feature_states_for_edge_identity__view_environment_permission__returns_ok(
     staff_client: APIClient,
     environment: Environment,
     feature: Feature,

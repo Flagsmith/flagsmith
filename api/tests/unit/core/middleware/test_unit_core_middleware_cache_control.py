@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from core.middleware.cache_control import NeverCacheMiddleware
 
 
-def test_NoCacheMiddleware_adds_cache_control_headers(mocker):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_never_cache_middleware__any_request__adds_cache_control_headers(mocker):  # type: ignore[no-untyped-def]
     # Given
     a_response = HttpResponse()
     mocked_get_response = mocker.MagicMock(return_value=a_response)

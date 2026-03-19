@@ -5,7 +5,7 @@ from util.mappers import (
 )
 
 
-def test_write_api_keys_calls_internal_methods_correctly(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_write_api_keys__valid_api_keys__calls_batch_writer_correctly(  # type: ignore[no-untyped-def]
     mocker, environment, environment_api_key
 ):
     # Given
@@ -34,7 +34,7 @@ def test_write_api_keys_calls_internal_methods_correctly(  # type: ignore[no-unt
     assert actual_environment_api_key_document == expected_environment_api_key_document
 
 
-def test_write_api_key_calls_internal_methods_correctly(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_write_api_key__single_api_key__delegates_to_write_api_keys(  # type: ignore[no-untyped-def]
     mocker, environment, environment_api_key
 ):
     # Given

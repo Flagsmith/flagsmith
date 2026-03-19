@@ -11,7 +11,7 @@ from organisations.permissions.permissions import CREATE_PROJECT
 from users.models import FFAdminUser, UserPermissionGroup
 
 
-def test_regular_user_cannot_create_user_organisation_permissions(  # noqa: FT003
+def test_create_user_org_permission__regular_user__returns_403(
     staff_client: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -42,7 +42,7 @@ def test_regular_user_cannot_create_user_organisation_permissions(  # noqa: FT00
     )
 
 
-def test_create_user_organisation_permission(  # noqa: FT003
+def test_create_user_org_permission__admin_user__creates_permission(
     admin_client: APIClient,
     staff_user: FFAdminUser,
     organisation: Organisation,
@@ -69,7 +69,7 @@ def test_create_user_organisation_permission(  # noqa: FT003
     )
 
 
-def test_list_user_organisation_permissions(  # noqa: FT003
+def test_list_user_org_permissions__filtered_by_user__returns_permissions(
     staff_user: FFAdminUser,
     organisation: Organisation,
     admin_client: APIClient,
@@ -96,7 +96,7 @@ def test_list_user_organisation_permissions(  # noqa: FT003
     assert response.data[0]["permissions"] == [CREATE_PROJECT]
 
 
-def test_destroy_user_organisation_permission(  # noqa: FT003
+def test_destroy_user_org_permission__existing_permission__removes_permission(
     staff_user: FFAdminUser,
     organisation: Organisation,
     admin_client: APIClient,
@@ -125,7 +125,7 @@ def test_destroy_user_organisation_permission(  # noqa: FT003
     )
 
 
-def test_update_user_organisation_permission(  # noqa: FT003
+def test_update_user_org_permission__remove_permissions__clears_permission(
     staff_user: FFAdminUser,
     organisation: Organisation,
     admin_client: APIClient,
@@ -154,7 +154,7 @@ def test_update_user_organisation_permission(  # noqa: FT003
     )
 
 
-def test_regular_user_cannot_create_user_group_permissions(  # noqa: FT003
+def test_create_user_group_org_permission__regular_user__returns_403(
     staff_client: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -189,7 +189,7 @@ def test_regular_user_cannot_create_user_group_permissions(  # noqa: FT003
     )
 
 
-def test_create_user_group_organisation_permission(  # noqa: FT003
+def test_create_user_group_org_permission__admin_user__creates_permission(
     staff_user: FFAdminUser,
     organisation: Organisation,
     admin_client: APIClient,
@@ -220,7 +220,7 @@ def test_create_user_group_organisation_permission(  # noqa: FT003
     )
 
 
-def test_list_user_group_permissions(  # noqa: FT003
+def test_list_user_group_org_permissions__filtered_by_group__returns_permissions(
     admin_client: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -249,7 +249,7 @@ def test_list_user_group_permissions(  # noqa: FT003
     assert response.data[0]["permissions"] == [CREATE_PROJECT]
 
 
-def test_destroy_user_group_permission(  # noqa: FT003
+def test_destroy_user_group_org_permission__existing_permission__removes_permission(
     admin_client: APIClient,
     staff_user: FFAdminUser,
     organisation: Organisation,
@@ -281,7 +281,7 @@ def test_destroy_user_group_permission(  # noqa: FT003
     )
 
 
-def test_update_user_group_permission(  # noqa: FT003
+def test_update_user_group_org_permission__remove_permissions__clears_permission(
     admin_client: APIClient,
     staff_user: FFAdminUser,
     organisation: Organisation,

@@ -14,8 +14,14 @@ from environments.identities.traits.models import Trait
         (123.4, {"value_type": "float", "float_value": 123.4}),
     ),
 )
-def test_generate_trait_value_data_for_value(value, expected_data):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
-    assert Trait.generate_trait_value_data(value) == expected_data
+def test_generate_trait_value_data__given_value__returns_expected_data(  # type: ignore[no-untyped-def]
+    value, expected_data
+):
+    # Given / When
+    result = Trait.generate_trait_value_data(value)
+
+    # Then
+    assert result == expected_data
 
 
 @pytest.mark.parametrize(
@@ -41,13 +47,17 @@ def test_generate_trait_value_data_for_value(value, expected_data):  # type: ign
         ),
     ),
 )
-def test_generate_trait_value_data_for_deserialized_data(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_generate_trait_value_data__given_deserialized_data__returns_expected_data(  # type: ignore[no-untyped-def]
     deserialized_data, expected_data
 ):
-    assert Trait.generate_trait_value_data(deserialized_data) == expected_data
+    # Given / When
+    result = Trait.generate_trait_value_data(deserialized_data)
+
+    # Then
+    assert result == expected_data
 
 
-def test_trait_bulk_create_create_objects(identity):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_trait_bulk_create__multiple_traits__creates_objects(identity):  # type: ignore[no-untyped-def]
     # Given
     traits = [
         Trait(identity=identity, trait_key="key1"),
@@ -61,9 +71,9 @@ def test_trait_bulk_create_create_objects(identity):  # type: ignore[no-untyped-
     assert Trait.objects.filter(identity=identity).count() == 2
 
 
-def test_trait_bulk_delete_deletes_objects(trait):  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
-    # When
+def test_trait_bulk_delete__existing_traits__deletes_objects(trait):  # type: ignore[no-untyped-def]
+    # Given / When
     Trait.objects.filter(identity=trait.identity).delete()
 
     # Then
-    Trait.objects.filter(identity=trait.identity).count() == 0
+    assert Trait.objects.filter(identity=trait.identity).count() == 0

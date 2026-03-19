@@ -12,7 +12,7 @@ from features.feature_health.services import (
 from features.models import Feature
 
 
-def test_get_provider_response__invalid_provider__return_none__log_expected(  # noqa: FT003
+def test_get_provider_response__invalid_provider__returns_none_and_logs_error(
     mocker: MockerFixture,
     log: "StructuredLogCapture",
 ) -> None:

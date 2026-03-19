@@ -7,7 +7,7 @@ debug_enabled = True
 
 
 @override_settings(ENV=env, DEBUG=debug_enabled)
-def test_get_install_stats(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_generate_telemetry_data__existing_entities__returns_correct_counts(  # type: ignore[no-untyped-def]
     organisation_one,
     organisation_two,
     organisation_one_project_one,
@@ -20,7 +20,7 @@ def test_get_install_stats(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
     organisation_two_project_one_environment_two,
     user_one,
 ):
-    # When
+    # Given / When
     telemetry_data = TelemetryData.generate_telemetry_data()
 
     # Then

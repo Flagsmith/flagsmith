@@ -12,7 +12,9 @@ from organisations.chargebee.cache import ChargebeeCache, get_item_generator
 from organisations.chargebee.metadata import ChargebeeItem
 
 
-def test_get_item_generator_fetches_all_items(mocker: MockerFixture) -> None:  # noqa: FT003
+def test_get_item_generator__paginated_results__fetches_all_items(
+    mocker: MockerFixture,
+) -> None:
     # Given
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.cache.chargebee_client", autospec=True
@@ -46,7 +48,9 @@ def test_get_item_generator_fetches_all_items(mocker: MockerFixture) -> None:  #
     ]
 
 
-def test_chargebee_cache(mocker: MockerFixture, db: None) -> None:  # noqa: FT003
+def test_chargebee_cache__plans_and_addons__populates_cache_correctly(
+    mocker: MockerFixture, db: None
+) -> None:
     # Given
 
     # a plan

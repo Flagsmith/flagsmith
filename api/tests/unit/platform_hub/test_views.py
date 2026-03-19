@@ -146,7 +146,7 @@ def test_organisations_view__user_admin_of_one_org__returns_only_that_org(
     assert data[0]["name"] == "Platform Hub Org"
 
 
-def test_organisations_view__other_orgs_data_not_visible(  # noqa: FT003
+def test_organisations_view__non_admin_org_exists__excludes_non_admin_orgs(
     platform_hub_admin_client: APIClient,
     platform_hub_organisation: Organisation,
     other_organisation: Organisation,
@@ -170,7 +170,7 @@ def test_organisations_view__other_orgs_data_not_visible(  # noqa: FT003
     assert other_organisation.id not in org_ids
 
 
-def test_organisations_view__returns_nested_projects_and_environments(  # noqa: FT003
+def test_organisations_view__org_with_project_and_environment__returns_nested_data(
     platform_hub_admin_client: APIClient,
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
@@ -197,7 +197,7 @@ def test_organisations_view__returns_nested_projects_and_environments(  # noqa: 
     assert org["projects"][0]["environments"][0]["name"] == "Hub Environment"
 
 
-def test_organisations_view__includes_overage_fields(  # noqa: FT003
+def test_organisations_view__valid_request__includes_overage_fields(
     platform_hub_admin_client: APIClient,
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
@@ -223,7 +223,7 @@ def test_organisations_view__includes_overage_fields(  # noqa: FT003
     assert "api_calls_allowed" in org
 
 
-def test_usage_trends_view__returns_trends_for_admin_orgs_only(  # noqa: FT003
+def test_usage_trends_view__admin_user__returns_trends_for_admin_orgs(
     platform_hub_admin_client: APIClient,
     platform_hub_organisation: Organisation,
 ) -> None:
@@ -238,7 +238,7 @@ def test_usage_trends_view__returns_trends_for_admin_orgs_only(  # noqa: FT003
     assert isinstance(response.json(), list)
 
 
-def test_stale_flags_view__returns_stale_flags_for_admin_orgs_only(  # noqa: FT003
+def test_stale_flags_view__non_admin_org_exists__excludes_non_admin_orgs(
     platform_hub_admin_client: APIClient,
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
@@ -262,7 +262,7 @@ def test_stale_flags_view__returns_stale_flags_for_admin_orgs_only(  # noqa: FT0
     assert other_organisation.id not in org_ids
 
 
-def test_integrations_view__returns_integrations_for_admin_orgs_only(  # noqa: FT003
+def test_integrations_view__non_admin_org_exists__excludes_non_admin_orgs(
     platform_hub_admin_client: APIClient,
     platform_hub_organisation: Organisation,
     platform_hub_project: Project,
@@ -289,7 +289,7 @@ def test_integrations_view__returns_integrations_for_admin_orgs_only(  # noqa: F
         assert item["organisation_id"] != other_organisation.id
 
 
-def test_release_pipelines_view__returns_pipelines_for_admin_orgs_only(  # noqa: FT003
+def test_release_pipelines_view__admin_user__returns_pipelines_for_admin_orgs(
     platform_hub_admin_client: APIClient,
     platform_hub_organisation: Organisation,
 ) -> None:

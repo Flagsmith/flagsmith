@@ -5,7 +5,7 @@ from organisations.permissions.permissions import OrganisationUsersPermission
 from users.models import FFAdminUser
 
 
-def test_org_user_can_list_users(  # noqa: FT003
+def test_organisation_users_permission__list_action__allows_staff_user(
     staff_user: FFAdminUser,
     organisation: Organisation,
 ) -> None:
@@ -24,7 +24,7 @@ def test_org_user_can_list_users(  # noqa: FT003
     assert result is True
 
 
-def test_org_user_cannot_create_user(  # noqa: FT003
+def test_organisation_users_permission__create_action__denies_staff_user(
     staff_user: FFAdminUser,
     organisation: Organisation,
 ) -> None:

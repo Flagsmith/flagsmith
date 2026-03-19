@@ -5,7 +5,7 @@ from environments.dynamodb.migrator import IdentityMigrator
 from organisations.models import Organisation
 
 
-def test_sales_dashboard_index(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_sales_dashboard_index__multiple_organisations__returns_200(  # type: ignore[no-untyped-def]
     superuser_authenticated_client, django_assert_num_queries
 ):
     """
@@ -27,7 +27,7 @@ def test_sales_dashboard_index(  # type: ignore[no-untyped-def]  # noqa: FT003
     assert response.status_code == 200
 
 
-def test_migrate_identities_to_edge_calls_identity_migrator_with_correct_arguments_if_migration_is_not_done(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
+def test_migrate_identities_to_edge__migration_not_done__triggers_migration(  # type: ignore[no-untyped-def]
     superuser_authenticated_client, mocker, project, settings
 ):
     # Given
@@ -49,7 +49,7 @@ def test_migrate_identities_to_edge_calls_identity_migrator_with_correct_argumen
     mocked_identity_migrator.return_value.trigger_migration.assert_called_once_with()
 
 
-def test_migrate_identities_to_edge_does_not_call_migrate_if_migration_is_already_done(  # type: ignore[no-untyped-def]  # noqa: E501,FT003
+def test_migrate_identities_to_edge__migration_already_done__returns_400(  # type: ignore[no-untyped-def]
     superuser_authenticated_client, mocker, project, settings
 ):
     # Given
@@ -71,7 +71,7 @@ def test_migrate_identities_to_edge_does_not_call_migrate_if_migration_is_alread
     mocked_identity_migrator.return_value.trigger_migration.assert_not_called()
 
 
-def test_migrate_identities_to_edge_returns_400_if_dynamodb_is_not_enabled(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_migrate_identities_to_edge__dynamodb_not_enabled__returns_400(  # type: ignore[no-untyped-def]
     superuser_authenticated_client, mocker, project, settings
 ):
     # Given
@@ -85,7 +85,7 @@ def test_migrate_identities_to_edge_returns_400_if_dynamodb_is_not_enabled(  # t
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_migrate_identities_to_edge_calls_send_migration_event_with_correct_arguments(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_migrate_identities_to_edge__can_migrate__triggers_migration(  # type: ignore[no-untyped-def]
     superuser_authenticated_client, mocker, project, settings, identity
 ):
     # Given

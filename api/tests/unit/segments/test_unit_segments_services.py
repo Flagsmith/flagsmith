@@ -44,7 +44,7 @@ def _create_segment_with_nested_rules(
     return segment
 
 
-def test_delete_segment_soft_deletes_segment(  # noqa: FT003
+def test_delete_segment__called_with_valid_segment__soft_deletes_segment(
     project: Project, admin_user: FFAdminUser
 ) -> None:
     # Given
@@ -59,7 +59,7 @@ def test_delete_segment_soft_deletes_segment(  # noqa: FT003
     assert segment.deleted_at is not None
 
 
-def test_delete_segment_soft_deletes_all_rules(  # noqa: FT003
+def test_delete_segment__segment_with_nested_rules__soft_deletes_all_rules(
     project: Project, admin_user: FFAdminUser
 ) -> None:
     # Given
@@ -88,7 +88,7 @@ def test_delete_segment_soft_deletes_all_rules(  # noqa: FT003
         assert rule.deleted_at is not None
 
 
-def test_delete_segment_soft_deletes_all_conditions(  # noqa: FT003
+def test_delete_segment__segment_with_nested_conditions__soft_deletes_all_conditions(
     project: Project, admin_user: FFAdminUser
 ) -> None:
     # Given
@@ -109,7 +109,7 @@ def test_delete_segment_soft_deletes_all_conditions(  # noqa: FT003
         assert condition.deleted_at is not None
 
 
-def test_delete_segment_creates_audit_log(  # noqa: FT003
+def test_delete_segment__called_with_author__creates_audit_log(
     project: Project, admin_user: FFAdminUser
 ) -> None:
     # Given
@@ -134,7 +134,7 @@ def test_delete_segment_creates_audit_log(  # noqa: FT003
     assert audit_log.related_object_uuid == segment_uuid
 
 
-def test_delete_segment_deletes_all_versions(  # noqa: FT003
+def test_delete_segment__segment_with_revision__deletes_all_versions(
     project: Project, admin_user: FFAdminUser
 ) -> None:
     # Given
@@ -152,7 +152,7 @@ def test_delete_segment_deletes_all_versions(  # noqa: FT003
     assert revision.deleted_at is not None
 
 
-def test_delete_segment_query_count_is_constant(  # noqa: FT003
+def test_delete_segment__varying_segment_sizes__query_count_is_constant(
     project: Project, admin_user: FFAdminUser
 ) -> None:
     # Given
@@ -180,7 +180,7 @@ def test_delete_segment_query_count_is_constant(  # noqa: FT003
     assert small_query_count == large_query_count == 26
 
 
-def test_delete_segment_without_rules_works(  # noqa: FT003
+def test_delete_segment__segment_without_rules__soft_deletes_segment(
     project: Project, admin_user: FFAdminUser
 ) -> None:
     # Given
@@ -195,7 +195,7 @@ def test_delete_segment_without_rules_works(  # noqa: FT003
     assert segment.deleted_at is not None
 
 
-def test_delete_segment_with_master_api_key_records_api_key_in_audit_log(  # noqa: FT003
+def test_delete_segment__called_with_master_api_key__records_api_key_in_audit_log(
     project: Project, organisation: Organisation
 ) -> None:
     # Given
@@ -221,7 +221,7 @@ def test_delete_segment_with_master_api_key_records_api_key_in_audit_log(  # noq
     assert audit_log.author is None
 
 
-def test_delete_segment_deletes_feature_segments(  # noqa: FT003
+def test_delete_segment__segment_with_feature_segment__deletes_feature_segments(
     project: Project,
     environment: Environment,
     feature: Feature,
@@ -242,7 +242,7 @@ def test_delete_segment_deletes_feature_segments(  # noqa: FT003
     assert not FeatureSegment.objects.filter(id=feature_segment_id).exists()
 
 
-def test_delete_segment_cascades_to_feature_states(  # noqa: FT003
+def test_delete_segment__segment_with_feature_state__cascades_to_feature_states(
     project: Project,
     environment: Environment,
     feature: Feature,
@@ -268,7 +268,9 @@ def test_delete_segment_cascades_to_feature_states(  # noqa: FT003
     assert not FeatureState.objects.filter(id=feature_state_id).exists()
 
 
-def test_copy_segment_rules_and_conditions_copies_rules(project: Project) -> None:  # noqa: FT003
+def test_copy_rules_and_conditions_from__source_with_nested_rules__copies_rules(
+    project: Project,
+) -> None:
     # Given
     source = _create_segment_with_nested_rules(
         project, num_rules=2, num_nested=2, num_conditions=3
@@ -292,7 +294,7 @@ def test_copy_segment_rules_and_conditions_copies_rules(project: Project) -> Non
     assert target_condition_count == source_condition_count
 
 
-def test_copy_segment_rules_and_conditions_replaces_existing_rules(  # noqa: FT003
+def test_copy_rules_and_conditions_from__target_has_existing_rules__replaces_existing_rules(
     project: Project,
 ) -> None:
     # Given
@@ -322,7 +324,7 @@ def test_copy_segment_rules_and_conditions_replaces_existing_rules(  # noqa: FT0
     assert target_rule_count == source_rule_count
 
 
-def test_copy_segment_rules_and_conditions_query_count_is_constant(  # noqa: FT003
+def test_copy_rules_and_conditions_from__varying_segment_sizes__query_count_is_constant(
     project: Project,
 ) -> None:
     # Given

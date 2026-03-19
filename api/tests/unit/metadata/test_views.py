@@ -18,7 +18,7 @@ from projects.models import Project
 from users.models import FFAdminUser
 
 
-def test_can_create_metadata_field(admin_client, organisation):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_create_metadata_field__valid_data__returns_201(admin_client, organisation):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:metadata:metadata-fields-list")
     field_name = "some_id"
@@ -39,7 +39,9 @@ def test_can_create_metadata_field(admin_client, organisation):  # type: ignore[
     assert response.json()["organisation"] == organisation.id
 
 
-def test_can_delete_metadata_field(admin_client, a_metadata_field):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_delete_metadata_field__existing_field__returns_204(  # type: ignore[no-untyped-def]
+    admin_client, a_metadata_field
+):
     # Given
     url = reverse("api-v1:metadata:metadata-fields-detail", args=[a_metadata_field.id])
 
@@ -50,7 +52,9 @@ def test_can_delete_metadata_field(admin_client, a_metadata_field):  # type: ign
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_can_update_metadata_field(admin_client, a_metadata_field, organisation):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_update_metadata_field__valid_data__returns_200(  # type: ignore[no-untyped-def]
+    admin_client, a_metadata_field, organisation
+):
     # Given
     url = reverse("api-v1:metadata:metadata-fields-detail", args=[a_metadata_field.id])
 
@@ -74,7 +78,9 @@ def test_can_update_metadata_field(admin_client, a_metadata_field, organisation)
     assert response.json()["type"] == new_field_type
 
 
-def test_list_metadata_fields(admin_client, a_metadata_field):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_list_metadata_fields__with_organisation_filter__returns_fields(  # type: ignore[no-untyped-def]
+    admin_client, a_metadata_field
+):
     # Given
     base_url = reverse("api-v1:metadata:metadata-fields-list")
 
@@ -89,7 +95,7 @@ def test_list_metadata_fields(admin_client, a_metadata_field):  # type: ignore[n
     assert response.json()["results"][0]["id"] == a_metadata_field.id
 
 
-def test_list_metadata_fields_without_organisation_returns_400(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_list_metadata_fields__without_organisation_filter__returns_400(  # type: ignore[no-untyped-def]
     admin_client, a_metadata_field
 ):
     # Given
@@ -102,7 +108,9 @@ def test_list_metadata_fields_without_organisation_returns_400(  # type: ignore[
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_retrieve_metadata_fields(admin_client, a_metadata_field):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_retrieve_metadata_field__existing_field__returns_200(  # type: ignore[no-untyped-def]
+    admin_client, a_metadata_field
+):
     # Given
     url = reverse("api-v1:metadata:metadata-fields-detail", args=[a_metadata_field.id])
 
@@ -114,10 +122,11 @@ def test_retrieve_metadata_fields(admin_client, a_metadata_field):  # type: igno
     assert response.json()["id"] == a_metadata_field.id
 
 
-def test_create_metadata_field_returns_403_for_non_org_admin(  # type: ignore[no-untyped-def]  # noqa: FT003,FT004
+def test_create_metadata_field__non_org_admin__returns_403(  # type: ignore[no-untyped-def]
     staff_client: APIClient,
     organisation: Organisation,
 ):
+    # Given
     url = reverse("api-v1:metadata:metadata-fields-list")
     field_name = "some_id"
     field_type = "int"
@@ -133,7 +142,7 @@ def test_create_metadata_field_returns_403_for_non_org_admin(  # type: ignore[no
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_list_model_metadata_fields(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_list_model_metadata_fields__multiple_fields__returns_all(  # type: ignore[no-untyped-def]
     required_a_environment_metadata_field,
     optional_b_environment_metadata_field,
     admin_client,
@@ -152,7 +161,7 @@ def test_list_model_metadata_fields(  # type: ignore[no-untyped-def]  # noqa: FT
     assert len(response.json()["results"]) == 2
 
 
-def test_list_model_metadata_fields_content_type_filter(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_list_model_metadata_fields__content_type_filter__returns_matching_only(  # type: ignore[no-untyped-def]
     required_a_environment_metadata_field,
     optional_b_environment_metadata_field,
     admin_client,
@@ -181,7 +190,7 @@ def test_list_model_metadata_fields_content_type_filter(  # type: ignore[no-unty
     assert response.json()["results"][0]["id"] == a_metadata_project_field.id
 
 
-def test_delete_model_metadata_field(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_delete_model_metadata_field__existing_field__returns_204(  # type: ignore[no-untyped-def]
     environment,
     admin_client,
     a_metadata_field,
@@ -200,7 +209,7 @@ def test_delete_model_metadata_field(  # type: ignore[no-untyped-def]  # noqa: F
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_can_not_delete_model_metadata_field_from_other_organisation(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_delete_model_metadata_field__other_organisation__returns_404(  # type: ignore[no-untyped-def]
     environment,
     admin_client,
     a_metadata_field,
@@ -220,7 +229,7 @@ def test_can_not_delete_model_metadata_field_from_other_organisation(  # type: i
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_update_model_metadata_field(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_update_model_metadata_field__valid_data__returns_200(  # type: ignore[no-untyped-def]
     environment,
     admin_client,
     a_metadata_field,
@@ -258,7 +267,7 @@ def test_update_model_metadata_field(  # type: ignore[no-untyped-def]  # noqa: F
     )
 
 
-def test_can_not_update_model_metadata_field_from_other_organisation(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_update_model_metadata_field__other_organisation__returns_404(  # type: ignore[no-untyped-def]
     environment, admin_client, environment_metadata_field_different_org, organisation
 ):
     # Given
@@ -278,7 +287,7 @@ def test_can_not_update_model_metadata_field_from_other_organisation(  # type: i
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_create_model_metadata_field_for_environments(  # noqa: FT003
+def test_create_model_metadata_field__environment_content_type__returns_201(
     admin_client: APIClient,
     a_metadata_field: MetadataField,
     organisation: Organisation,
@@ -311,7 +320,7 @@ def test_create_model_metadata_field_for_environments(  # noqa: FT003
     }
 
 
-def test_create_model_metadata_field_for_features(  # noqa: FT003
+def test_create_model_metadata_field__feature_content_type__returns_201(
     admin_client: APIClient,
     a_metadata_field: MetadataField,
     organisation: Organisation,
@@ -344,7 +353,7 @@ def test_create_model_metadata_field_for_features(  # noqa: FT003
     }
 
 
-def test_create_model_metadata_field_for_segments(  # noqa: FT003
+def test_create_model_metadata_field__segment_content_type__returns_201(
     admin_client: APIClient,
     a_metadata_field: MetadataField,
     organisation: Organisation,
@@ -377,7 +386,7 @@ def test_create_model_metadata_field_for_segments(  # noqa: FT003
     }
 
 
-def test_can_not_create_model_metadata_field_using_field_from_other_organisation(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_create_model_metadata_field__field_from_other_organisation__returns_403(  # type: ignore[no-untyped-def]
     admin_client, environment_metadata_field_different_org, organisation, project
 ):
     # Given
@@ -398,7 +407,7 @@ def test_can_not_create_model_metadata_field_using_field_from_other_organisation
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_supported_content_type(  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_supported_content_types__valid_request__returns_supported_models(  # type: ignore[no-untyped-def]
     admin_client: APIClient, organisation: Organisation
 ):
     # Given
@@ -425,7 +434,9 @@ def test_get_supported_content_type(  # type: ignore[no-untyped-def]  # noqa: FT
         assert model in supported_models
 
 
-def test_get_supported_required_for_models(admin_client, organisation):  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_get_supported_required_for_models__environment_model__returns_expected_models(  # type: ignore[no-untyped-def]
+    admin_client, organisation
+):
     # Given
     base_url = reverse(
         "api-v1:organisations:metadata-model-fields-supported-required-for-models",
@@ -521,7 +532,7 @@ def test_create_metadata_field__project_admin__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_list_metadata_fields__returns_org_level_only(  # noqa: FT003
+def test_list_metadata_fields__organisation_filter__returns_org_level_only(
     admin_client: APIClient,
     organisation: Organisation,
     project: Project,
@@ -549,7 +560,7 @@ def test_list_metadata_fields__returns_org_level_only(  # noqa: FT003
     assert returned_ids == {org_field.id}
 
 
-def test_list_metadata_fields__response_includes_nested_model_fields(  # noqa: FT003
+def test_list_metadata_fields__field_with_model_fields__returns_nested_model_fields(
     admin_client: APIClient,
     organisation: Organisation,
     environment_content_type: ContentType,
@@ -592,7 +603,7 @@ def test_list_metadata_fields__response_includes_nested_model_fields(  # noqa: F
     ]
 
 
-def test_list_project_metadata_fields__returns_project_fields_only(  # noqa: FT003
+def test_list_project_metadata_fields__project_filter__returns_project_fields_only(
     admin_client: APIClient,
     organisation: Organisation,
     project: Project,
@@ -667,7 +678,7 @@ def test_list_project_metadata_fields__include_organisation__project_overrides_o
     assert org_field.id not in returned_ids
 
 
-def test_list_project_metadata_fields__excludes_other_project_fields(  # noqa: FT003
+def test_list_project_metadata_fields__include_organisation__excludes_other_project_fields(
     admin_client: APIClient,
     organisation: Organisation,
     project: Project,
@@ -707,7 +718,7 @@ def test_list_project_metadata_fields__excludes_other_project_fields(  # noqa: F
         "same_name_org_and_project_level",
     ],
 )
-def test_create_metadata_field__uniqueness(  # noqa: FT003
+def test_create_metadata_field__uniqueness_constraint__returns_expected_status(
     admin_client: APIClient,
     organisation: Organisation,
     project: Project,

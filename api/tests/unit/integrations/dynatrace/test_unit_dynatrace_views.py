@@ -8,7 +8,7 @@ from environments.models import Environment
 from integrations.dynatrace.models import DynatraceConfiguration
 
 
-def test_should_create_dynatrace_config_when_post(  # noqa: FT003
+def test_create_dynatrace_config__post_valid_data__returns_created(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -36,7 +36,7 @@ def test_should_create_dynatrace_config_when_post(  # noqa: FT003
     assert DynatraceConfiguration.objects.filter(environment=environment).count() == 1
 
 
-def test_should_return_400_when_duplicate_dynatrace_config_is_posted(  # noqa: FT003
+def test_create_dynatrace_config__duplicate_config__returns_bad_request(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -66,7 +66,7 @@ def test_should_return_400_when_duplicate_dynatrace_config_is_posted(  # noqa: F
     assert DynatraceConfiguration.objects.filter(environment=environment).count() == 1
 
 
-def test_should_update_configuration_when_put(  # noqa: FT003
+def test_update_dynatrace_config__put_valid_data__returns_ok(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -98,7 +98,7 @@ def test_should_update_configuration_when_put(  # noqa: FT003
     assert config.api_key == api_key_updated
 
 
-def test_should_return_dynatrace_config_list_when_requested(  # noqa: FT003
+def test_list_dynatrace_config__config_exists__returns_config_list(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -126,7 +126,7 @@ def test_should_return_dynatrace_config_list_when_requested(  # noqa: FT003
     ]
 
 
-def test_should_remove_configuration_when_delete(  # noqa: FT003
+def test_delete_dynatrace_config__config_exists__removes_config(
     admin_client: APIClient,
     environment: Environment,
 ) -> None:

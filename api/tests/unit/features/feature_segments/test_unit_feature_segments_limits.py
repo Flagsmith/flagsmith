@@ -5,7 +5,7 @@ from projects.models import Project
 from segments.models import Segment
 
 
-def test_segment_override_limit_does_not_exclude_invalid_overrides_being_deleted(  # noqa: FT003
+def test_exceeds_segment_override_limit__deleting_override_with_zero_limit__returns_true(
     feature: Feature,
     segment: Segment,
     another_segment: Segment,

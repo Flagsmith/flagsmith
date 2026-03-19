@@ -9,7 +9,7 @@ from integrations.segment.models import SegmentConfiguration
 from integrations.segment.segment import SegmentWrapper
 
 
-def test_segment_initialized_correctly():  # type: ignore[no-untyped-def]  # noqa: FT003
+def test_segment_wrapper__valid_config__initialises_correctly():  # type: ignore[no-untyped-def]
     # Given
     api_key = "123key"
     base_url = "https://api.segment.io/"
@@ -29,7 +29,7 @@ def test_segment_initialized_correctly():  # type: ignore[no-untyped-def]  # noq
     [(False, False), (True, True), ("foo", "foo"), (1, 1), (0, 0)],
     indirect=["feature_state_with_value"],
 )
-def test_segment_when_generate_user_data_with_correct_values_then_success(  # noqa: FT003
+def test_segment_generate_user_data__correct_values__returns_expected_data(
     expected_property_value: typing.Any,
     environment: Environment,
     feature_state: FeatureState,
