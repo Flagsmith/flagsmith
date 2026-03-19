@@ -4490,13 +4490,24 @@ def test_list_features__edge_v2_project__makes_one_dynamo_query(
     assert mock_table.query.call_count == 1
 
 
-def test_create_feature__type_provided__ignores_type_and_defaults_to_standard(
+@pytest.mark.parametrize(
+    "feature_type, expected_status",
+    [
+        (STANDARD, status.HTTP_201_CREATED),
+        (MULTIVARIATE, status.HTTP_201_CREATED),
+        ("boolean", status.HTTP_400_BAD_REQUEST),
+        ("FLAG", status.HTTP_400_BAD_REQUEST),
+    ],
+)
+def test_create_feature__type_provided__validates_and_sets_type(
     admin_client_new: APIClient,
     project: Project,
+    feature_type: str,
+    expected_status: int,
 ) -> None:
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": "test_feature_type_readonly", "type": "boolean"}
+    data = {"name": f"test_feature_{feature_type}", "type": feature_type}
 
     # When
     response = admin_client_new.post(
@@ -4504,8 +4515,9 @@ def test_create_feature__type_provided__ignores_type_and_defaults_to_standard(
     )
 
     # Then
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["type"] == STANDARD
+    assert response.status_code == expected_status
+    if expected_status == status.HTTP_201_CREATED:
+        assert response.json()["type"] == feature_type
 
 
 def test_create_feature__multivariate_options_provided__sets_type_to_multivariate(
