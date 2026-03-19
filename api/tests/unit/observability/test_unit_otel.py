@@ -15,7 +15,7 @@ from observability.otel import StructlogOTelProcessor, build_otel_provider
 
 @pytest.fixture()
 def otel_exporter() -> InMemoryLogRecordExporter:
-    return InMemoryLogRecordExporter()
+    return InMemoryLogRecordExporter()  # type: ignore[no-untyped-call]
 
 
 @pytest.fixture()
@@ -30,13 +30,9 @@ def processor(otel_exporter: InMemoryLogRecordExporter) -> StructlogOTelProcesso
 def test_build_otel_provider__valid_config__returns_logger_provider() -> None:
     # Given
     endpoint = "http://localhost:4318/v1/logs"
-    service_name = "flagsmith-api-test"
 
     # When
-    provider = build_otel_provider(
-        endpoint=endpoint,
-        service_name=service_name,
-    )
+    provider = build_otel_provider(endpoint=endpoint)
 
     # Then
     assert isinstance(provider, LoggerProvider)
@@ -70,6 +66,7 @@ def test_StructlogOTelProcessor__event_with_logger_name__emits_namespaced_record
     assert log_record.event_name == "code_references.scan.created"
     assert log_record.severity_text == "info"
     assert log_record.severity_number == SeverityNumber.INFO
+    assert log_record.attributes is not None
     assert log_record.attributes["organisation.id"] == 42
     assert log_record.attributes["code_references.count"] == 3
     assert "event" not in log_record.attributes
@@ -135,6 +132,7 @@ def test_StructlogOTelProcessor__dunder_attributes__converts_to_dots(
 
     # Then
     attrs = otel_exporter.get_finished_logs()[0].log_record.attributes
+    assert attrs is not None
     assert attrs["organisation.id"] == 1
     assert attrs["feature.count"] == 5
     assert attrs["code_references.count"] == 3
@@ -157,6 +155,7 @@ def test_StructlogOTelProcessor__single_underscore_attributes__left_unchanged(
 
     # Then
     attrs = otel_exporter.get_finished_logs()[0].log_record.attributes
+    assert attrs is not None
     assert attrs["simple_attr"] == "value"
     assert attrs["issues_created_count"] == 7
 
@@ -178,6 +177,7 @@ def test_StructlogOTelProcessor__non_primitive_attributes__serialises_to_json(
 
     # Then
     attrs = otel_exporter.get_finished_logs()[0].log_record.attributes
+    assert attrs is not None
     assert attrs["nested"] == '{"key": "value"}'
     assert attrs["items"] == "[1, 2, 3]"
 

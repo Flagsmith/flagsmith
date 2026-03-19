@@ -6,14 +6,28 @@ from typing import Any
 
 import inflection
 import structlog
+from opentelemetry import baggage, trace
 from opentelemetry import context as otel_context
 from opentelemetry._logs import SeverityNumber
+from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     OTLPLogExporter,
 )
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter,
+)
+from opentelemetry.instrumentation.django import DjangoInstrumentor
+from opentelemetry.propagate import set_global_textmap
+from opentelemetry.propagators.composite import CompositePropagator
+from opentelemetry.propagators.textmap import TextMapPropagator
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.trace.propagation.tracecontext import (
+    TraceContextTextMapPropagator,
+)
 
 _SEVERITY_MAP: dict[str, SeverityNumber] = {
     "debug": SeverityNumber.DEBUG,
@@ -24,6 +38,23 @@ _SEVERITY_MAP: dict[str, SeverityNumber] = {
 }
 
 _RESERVED_KEYS = frozenset({"event", "level", "timestamp", "logger"})
+
+_resource: Resource | None = None
+
+
+def _get_resource() -> Resource:
+    global _resource
+    if _resource is None:
+        raise RuntimeError(
+            "OTel resource not initialised — call init_resource() first."
+        )
+    return _resource
+
+
+def init_resource(*, service_name: str) -> None:
+    """Initialise the shared OTel Resource. Must be called before other setup."""
+    global _resource
+    _resource = Resource.create({"service.name": service_name})
 
 
 class StructlogOTelProcessor:
@@ -53,6 +84,12 @@ class StructlogOTelProcessor:
             if k not in _RESERVED_KEYS
         }
 
+        # Copy W3C baggage entries into log attributes so downstream
+        # exporters (e.g. Amplitude) can access them.
+        ctx = otel_context.get_current()
+        for key, value in baggage.get_all(ctx).items():
+            attributes[key] = str(value)
+
         body = event_dict.get("event", "")
         event_name = inflection.underscore(body)
         logger_name = event_dict.get("logger")
@@ -78,14 +115,44 @@ def _serialise_value(value: object) -> str | int | float | bool:
     return json.dumps(value, default=str)
 
 
-def build_otel_provider(
-    *,
-    endpoint: str,
-    service_name: str,
-) -> LoggerProvider:
+def build_otel_provider(*, endpoint: str) -> LoggerProvider:
     """Create and configure an OTel LoggerProvider with OTLP/HTTP export."""
-    resource = Resource.create({"service.name": service_name})
-    provider = LoggerProvider(resource=resource)
+    provider = LoggerProvider(resource=_get_resource())
     exporter = OTLPLogExporter(endpoint=endpoint)
     provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
     return provider
+
+
+def setup_tracing(*, endpoint: str, service_name: str | None = None) -> None:
+    """Set up OTel distributed tracing with Django instrumentation.
+
+    Configures a TracerProvider with OTLP/HTTP export and W3C
+    trace context + baggage propagation. Instruments Django so
+    that every request creates a span with the incoming trace
+    context (including baggage from the frontend).
+
+    Must be called *before* Django's WSGI app is created.
+    If ``service_name`` is provided, creates its own Resource;
+    otherwise uses the shared one from ``init_resource()``.
+    """
+    resource = (
+        Resource.create({"service.name": service_name})
+        if service_name
+        else _get_resource()
+    )
+    tracer_provider = TracerProvider(resource=resource)
+
+    span_exporter = OTLPSpanExporter(endpoint=endpoint)
+    tracer_provider.add_span_processor(BatchSpanProcessor(span_exporter))
+
+    trace.set_tracer_provider(tracer_provider)
+
+    propagator: TextMapPropagator = CompositePropagator(
+        [
+            TraceContextTextMapPropagator(),
+            W3CBaggagePropagator(),
+        ]
+    )
+    set_global_textmap(propagator)
+
+    DjangoInstrumentor().instrument()

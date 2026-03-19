@@ -668,8 +668,8 @@ else:
         },
     }
 
-# OpenTelemetry Logs configuration
-OTEL_LOGS_ENDPOINT = env.str("OTEL_LOGS_ENDPOINT", default=None)
+# OpenTelemetry configuration
+OTEL_EXPORTER_ENDPOINT = env.str("OTEL_EXPORTER_ENDPOINT", default=None)
 OTEL_SERVICE_NAME = env.str("OTEL_SERVICE_NAME", default="flagsmith-api")
 
 # structlog configuration — processors that run on every structlog log call.
@@ -681,14 +681,23 @@ _structlog_processors: list[Any] = [
     structlog.processors.TimeStamper(fmt="iso"),
 ]
 
-if OTEL_LOGS_ENDPOINT:
-    from observability.otel import StructlogOTelProcessor, build_otel_provider
+if OTEL_EXPORTER_ENDPOINT:
+    from observability.otel import (
+        StructlogOTelProcessor,
+        build_otel_provider,
+        init_resource,
+        setup_tracing,
+    )
+
+    init_resource(service_name=OTEL_SERVICE_NAME)
+    _otel_exporter_endpoint = OTEL_EXPORTER_ENDPOINT.rstrip("/")
 
     _otel_provider = build_otel_provider(
-        endpoint=OTEL_LOGS_ENDPOINT,
-        service_name=OTEL_SERVICE_NAME,
+        endpoint=f"{_otel_exporter_endpoint}/v1/logs",
     )
     _structlog_processors.append(StructlogOTelProcessor(_otel_provider))
+
+    setup_tracing(endpoint=f"{_otel_exporter_endpoint}/v1/traces")
 
 _structlog_processors.append(structlog.dev.ConsoleRenderer())
 
@@ -1232,6 +1241,8 @@ CORS_ALLOW_HEADERS = list(
             *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
             "X-Environment-Key",
             "X-E2E-Test-Auth-Token",
+            "baggage",
+            "traceparent",
             *TRACK_HEADERS,
         )
     )
