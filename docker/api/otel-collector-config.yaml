@@ -20,6 +20,8 @@ exporters:
   #   endpoint: https://api2.amplitude.com/2/httpapi
   #   user_id_attribute: organisation.id
   #   user_id_prefix: "org:"
+  #   events:
+  #     - "code_references.*"
 
 service:
   pipelines:

@@ -117,9 +117,10 @@ func (e *amplitudeExporter) mapLogs(ld plog.Logs) []amplitudeEvent {
 			for k := range sl.LogRecords().Len() {
 				lr := sl.LogRecords().At(k)
 				event := e.mapLogRecord(lr)
-				if event.EventType != "" {
-					events = append(events, event)
+				if !e.cfg.matchesEvents(event.EventType) {
+					continue
 				}
+				events = append(events, event)
 			}
 		}
 	}
