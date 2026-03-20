@@ -51,6 +51,7 @@ from organisations.tasks import (  # type: ignore[attr-defined]
     send_org_subscription_cancelled_alert,
     unrestrict_after_api_limit_grace_period_is_stale,
 )
+from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
 
 
@@ -885,6 +886,7 @@ def test_charge_for_api_call_count_overages__scale_up_plan__charges_correct_addo
     organisation: Organisation,
     mocker: MockerFixture,
     plan: str,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -924,10 +926,7 @@ def test_charge_for_api_call_count_overages__scale_up_plan__charges_correct_addo
         autospec=True,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
 
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
@@ -1071,6 +1070,7 @@ def test_charge_for_api_call_count_overages__flagsmith_feature_disabled__skips_c
 def test_charge_for_api_call_count_overages__within_grace_period__creates_breached_record_without_charging(
     organisation: Organisation,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1092,10 +1092,7 @@ def test_charge_for_api_call_count_overages__within_grace_period__creates_breach
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
 
     mock_chargebee_update = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
@@ -1121,6 +1118,7 @@ def test_charge_for_api_call_count_overages__within_grace_period__creates_breach
 def test_charge_for_api_call_count_overages__grace_period_previously_breached__charges_overage(
     organisation: Organisation,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1143,10 +1141,7 @@ def test_charge_for_api_call_count_overages__grace_period_previously_breached__c
     )
 
     OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
 
     mock_chargebee_update = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
@@ -1180,6 +1175,7 @@ def test_charge_for_api_call_count_overages__grace_period_previously_breached__c
 def test_charge_for_api_call_count_overages__uncovered_plan__does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1204,10 +1200,7 @@ def test_charge_for_api_call_count_overages__uncovered_plan__does_not_charge(
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
 
     mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
@@ -1236,6 +1229,7 @@ def test_charge_for_api_call_count_overages__uncovered_plan__does_not_charge(
 def test_charge_for_api_call_count_overages__usage_under_api_limit__does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1257,10 +1251,7 @@ def test_charge_for_api_call_count_overages__usage_under_api_limit__does_not_cha
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
 
     mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
@@ -1289,6 +1280,7 @@ def test_charge_for_api_call_count_overages__usage_under_api_limit__does_not_cha
 def test_charge_for_api_call_count_overages__startup_plan__charges_correct_addon_quantity(
     organisation: Organisation,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1311,10 +1303,7 @@ def test_charge_for_api_call_count_overages__startup_plan__charges_correct_addon
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
     mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
         autospec=True,
@@ -1381,6 +1370,7 @@ def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_pla
     organisation: Organisation,
     mocker: MockerFixture,
     inspecting_handler: logging.Handler,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1407,10 +1397,7 @@ def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_pla
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
     mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
         autospec=True,
@@ -1444,6 +1431,7 @@ def test_charge_for_api_call_count_overages__billing_exception__logs_error_and_d
     organisation: Organisation,
     mocker: MockerFixture,
     inspecting_handler: logging.Handler,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1469,10 +1457,7 @@ def test_charge_for_api_call_count_overages__billing_exception__logs_error_and_d
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
     mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
         autospec=True,
@@ -1506,6 +1491,7 @@ def test_charge_for_api_call_count_overages__billing_exception__logs_error_and_d
 def test_charge_for_api_call_count_overages__startup_plan_with_existing_billing__charges_remaining_overage(
     organisation: Organisation,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1534,10 +1520,7 @@ def test_charge_for_api_call_count_overages__startup_plan_with_existing_billing_
         billed_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
     mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
         autospec=True,
@@ -1681,12 +1664,13 @@ def test_restrict_use_due_to_api_limit_grace_period_over__multiple_organisations
     mailoutbox: list[EmailMultiAlternatives],
     admin_user: FFAdminUser,
     staff_user: FFAdminUser,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
 
     now = timezone.now()
     organisation2 = Organisation.objects.create(name="Org #2")
@@ -1821,33 +1805,6 @@ def test_restrict_use_due_to_api_limit_grace_period_over__multiple_organisations
     assert organisation6.block_access_to_admin is True
     assert organisation6.api_limit_access_block
 
-    client_mock.get_identity_flags.call_args_list == [
-        call(
-            f"org.{organisation.id}",
-            traits={
-                "organisation.id": organisation.id,
-                "organisation.name": organisation.name,
-                "subscription.plan": organisation.subscription.plan,
-            },
-        ),
-        call(
-            f"org.{organisation2.id}",
-            traits={
-                "organisation.id": organisation2.id,
-                "organisation.name": organisation2.name,
-                "subscription.plan": organisation2.subscription.plan,
-            },
-        ),
-        call(
-            f"org.{organisation6.id}",
-            traits={
-                "organisation.id": organisation6.id,
-                "organisation.name": organisation6.name,
-                "subscription.plan": organisation6.subscription.plan,
-            },
-        ),
-    ]
-
     assert len(mailoutbox) == 3
     email1 = mailoutbox[0]
     assert email1.subject == "Flagsmith API use has been blocked due to overuse"
@@ -1921,12 +1878,13 @@ def test_restrict_use_due_to_api_limit_grace_period_over__previously_breached__b
     mailoutbox: list[EmailMultiAlternatives],
     admin_user: FFAdminUser,
     staff_user: FFAdminUser,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
 
     now = timezone.now()
 
@@ -1977,14 +1935,15 @@ def test_restrict_use_due_to_api_limit_grace_period_over__missing_subscription_c
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
     mailoutbox: list[EmailMultiAlternatives],
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     assert not organisation.has_subscription_information_cache()
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
 
     now = timezone.now()
     organisation.subscription.subscription_id = "fancy_sub_id23"
@@ -2020,6 +1979,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__doe
     freezer: FrozenDateTimeFactory,
     mailoutbox: list[EmailMultiAlternatives],
     inspecting_handler: logging.Handler,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     assert not organisation.has_subscription_information_cache()
@@ -2028,10 +1988,10 @@ def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__doe
 
     logger.addHandler(inspecting_handler)
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
 
     now = timezone.now()
 
