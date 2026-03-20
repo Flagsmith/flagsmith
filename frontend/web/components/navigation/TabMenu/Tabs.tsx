@@ -104,8 +104,6 @@ const Tabs: React.FC<TabsProps> = ({
     () => (disableOverflow ? [] : tabChildren.slice(visibleCount)),
     [tabChildren, visibleCount, disableOverflow],
   )
-  const canGrow = !isMeasuring && visibleCount === tabChildren.length
-
   const handleChange = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>, tabLabel: string, i: number) => {
       e.stopPropagation()
@@ -138,9 +136,13 @@ const Tabs: React.FC<TabsProps> = ({
       >
         <div
           ref={itemsContainerRef}
-          className={classNames('d-flex align-items-center flex-1', 'gap-2', {
-            'opacity-0': isMeasuring,
-          })}
+          className={classNames(
+            'd-flex align-items-center justify-content-evenly flex-1',
+            'gap-2',
+            {
+              'opacity-0': isMeasuring,
+            },
+          )}
         >
           {(isMeasuring ? tabChildren : visible).map((child, i) => {
             const isSelected = !isMeasuring && value === i
@@ -148,7 +150,6 @@ const Tabs: React.FC<TabsProps> = ({
               <TabButton
                 key={`button-${i}`}
                 isSelected={isSelected}
-                className={canGrow ? 'tab-nav-full' : ''}
                 noFocus={noFocus}
                 onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
                   handleChange(

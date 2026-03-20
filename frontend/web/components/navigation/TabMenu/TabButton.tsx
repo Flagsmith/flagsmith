@@ -8,13 +8,12 @@ interface TabButtonProps {
   isSelected: boolean
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
   buttonTheme?: string
-  className?: string
   child: React.ReactElement
   children: React.ReactNode
 }
 
 const TabButton = React.forwardRef<HTMLButtonElement | null, TabButtonProps>(
-  ({ buttonTheme, child, className, isSelected, noFocus, onClick }, ref) => {
+  ({ buttonTheme, child, isSelected, noFocus, onClick }, ref) => {
     return (
       <Button
         ref={ref as React.RefObject<HTMLButtonElement>}
@@ -25,7 +24,7 @@ const TabButton = React.forwardRef<HTMLButtonElement | null, TabButtonProps>(
         onClick={(e) => onClick?.(e)}
         className={`btn-tab px-2 ${noFocus ? 'btn-no-focus' : ''} ${
           isSelected ? ' tab-active' : ''
-        } ${className}`}
+        }`}
       >
         {child.props.tabLabel}
       </Button>
