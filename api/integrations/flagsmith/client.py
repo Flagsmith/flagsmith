@@ -1,46 +1,61 @@
 """
-Wrapper module for the flagsmith client to implement singleton behaviour and provide some
-additional logic by wrapping the client.
+OpenFeature client wrapper for Flagsmith on Flagsmith feature evaluation.
 
 Usage:
 
 ```
-environment_flags = get_client().get_environment_flags()
-identity_flags = get_client().get_identity_flags()
+from integrations.flagsmith.client import get_openfeature_client
+
+client = get_openfeature_client()
+enabled = client.get_boolean_value(
+    "flag_name", default_value=False, evaluation_context=ctx
+)
 ```
 """
 
 import typing
 
+import openfeature.api as openfeature_api
 from django.conf import settings
 from flagsmith import Flagsmith
 from flagsmith.offline_handlers import LocalFileHandler
+from openfeature.client import OpenFeatureClient
+from openfeature.provider import ProviderStatus
+from openfeature_flagsmith.provider import FlagsmithProvider
 
 from integrations.flagsmith.exceptions import FlagsmithIntegrationError
 from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
 
-_flagsmith_clients: dict[str, Flagsmith] = {}
+DEFAULT_OPENFEATURE_DOMAIN = "flagsmith-api"
 
 
-def get_client(name: str = "default", local_eval: bool = False) -> Flagsmith:
-    global _flagsmith_clients
-
-    try:
-        _flagsmith_client = _flagsmith_clients[name]
-    except (KeyError, TypeError):
-        kwargs = _get_client_kwargs()
-        kwargs["enable_local_evaluation"] = local_eval
-        _flagsmith_client = Flagsmith(**kwargs)
-        _flagsmith_clients[name] = _flagsmith_client
-
-    return _flagsmith_client
+def get_openfeature_client(
+    domain: str = DEFAULT_OPENFEATURE_DOMAIN,
+    **flagsmith_kwargs: typing.Any,
+) -> OpenFeatureClient:
+    openfeature_client = openfeature_api.get_client(domain=domain)
+    if openfeature_client.get_provider_status() != ProviderStatus.READY:
+        initialise_provider(domain, **(flagsmith_kwargs or get_provider_kwargs()))
+    return openfeature_client
 
 
-def _get_client_kwargs() -> dict[str, typing.Any]:
-    _default_kwargs = {"offline_handler": LocalFileHandler(ENVIRONMENT_JSON_PATH)}
+def initialise_provider(
+    domain: str = DEFAULT_OPENFEATURE_DOMAIN,
+    **kwargs: typing.Any,
+) -> None:
+    flagsmith_client = Flagsmith(**kwargs)
+    provider = FlagsmithProvider(client=flagsmith_client)
+    openfeature_api.set_provider(provider, domain=domain)
+
+
+def get_provider_kwargs() -> dict[str, typing.Any]:
+    common_kwargs: dict[str, typing.Any] = {
+        "offline_handler": LocalFileHandler(ENVIRONMENT_JSON_PATH),
+        "enable_local_evaluation": True,
+    }
 
     if settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE:
-        return {"offline_mode": True, **_default_kwargs}
+        return {"offline_mode": True, **common_kwargs}
     elif (
         settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY
         and settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL
@@ -48,7 +63,7 @@ def _get_client_kwargs() -> dict[str, typing.Any]:
         return {
             "environment_key": settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY,
             "api_url": settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL,
-            **_default_kwargs,
+            **common_kwargs,
         }
 
     raise FlagsmithIntegrationError(

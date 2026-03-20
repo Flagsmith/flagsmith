@@ -94,6 +94,10 @@ ignore_missing_imports = true
 module = ["saml.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["openfeature_flagsmith.*"]
+ignore_missing_imports = true
+
 [tool.django-stubs]
 django_settings_module = "app.settings.local"
 
@@ -157,6 +161,8 @@ pydantic = "^2.12.0"
 pydantic-collections = "^0.6.0"
 pyngo = "~2.4.1"
 flagsmith = "^5.1.1"
+openfeature-sdk = ">=0.6.0,<0.9.0"
+openfeature-provider-flagsmith = { git = "https://github.com/danjuv/flagsmith-openfeature-provider-python.git", branch = "fix/flagsmith-5-support" }
 python-gnupg = "^0.5.1"
 django-redis = "^5.4.0"
 pygithub = "~2.8"

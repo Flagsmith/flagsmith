@@ -14,7 +14,7 @@ from task_processor.decorators import (
 
 from app_analytics.analytics_db_service import get_total_events_count
 from app_analytics.influxdb_wrapper import get_current_api_usage
-from integrations.flagsmith.client import get_client
+from integrations.flagsmith.client import get_openfeature_client
 from organisations import subscription_info_cache
 from organisations.chargebee import (  # type: ignore[attr-defined]
     add_100k_api_calls_scale_up,
@@ -113,7 +113,7 @@ def finish_subscription_cancellation() -> None:
 
 # Task enqueued in register_recurring_tasks below.
 def handle_api_usage_notifications() -> None:
-    flagsmith_client = get_client("local", local_eval=True)
+    openfeature_client = get_openfeature_client()
 
     threshold_percentage = min(API_USAGE_ALERT_THRESHOLDS) / 100
     for organisation in Organisation.objects.filter(
@@ -129,10 +129,11 @@ def handle_api_usage_notifications() -> None:
         )
         * threshold_percentage,
     ).select_related("subscription", "subscription_information_cache"):
-        feature_enabled = flagsmith_client.get_identity_flags(
-            organisation.flagsmith_identifier,
-            traits=organisation.flagsmith_on_flagsmith_api_traits,
-        ).is_feature_enabled("api_usage_alerting")
+        feature_enabled = openfeature_client.get_boolean_value(
+            "api_usage_alerting",
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        )
         if not feature_enabled:
             logger.info(
                 f"Skipping processing API usage for organisation {organisation.id}"
@@ -174,7 +175,7 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
         ).values_list("organisation_id", flat=True)
     )
 
-    flagsmith_client = get_client("local", local_eval=True)
+    openfeature_client = get_openfeature_client()
 
     for organisation in (
         Organisation.objects.filter(
@@ -199,11 +200,11 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             "subscription",
         )
     ):
-        flags = flagsmith_client.get_identity_flags(
-            organisation.flagsmith_identifier,
-            traits=organisation.flagsmith_on_flagsmith_api_traits,
-        )
-        if not flags.is_feature_enabled("api_usage_overage_charges"):
+        if not openfeature_client.get_boolean_value(
+            "api_usage_overage_charges",
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        ):
             continue
 
         subscription_cache = organisation.subscription_information_cache
@@ -329,16 +330,21 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     )
 
     api_limit_access_blocks = []
-    flagsmith_client = get_client("local", local_eval=True)
+    openfeature_client = get_openfeature_client()
 
     for organisation in organisations:
-        flags = flagsmith_client.get_identity_flags(
-            organisation.flagsmith_identifier,
-            traits=organisation.flagsmith_on_flagsmith_api_traits,
-        )
+        ctx = organisation.openfeature_evaluation_context
 
-        stop_serving = flags.is_feature_enabled("api_limiting_stop_serving_flags")
-        block_access = flags.is_feature_enabled("api_limiting_block_access_to_admin")
+        stop_serving = openfeature_client.get_boolean_value(
+            "api_limiting_stop_serving_flags",
+            default_value=False,
+            evaluation_context=ctx,
+        )
+        block_access = openfeature_client.get_boolean_value(
+            "api_limiting_block_access_to_admin",
+            default_value=False,
+            evaluation_context=ctx,
+        )
 
         if not stop_serving and not block_access:
             continue
