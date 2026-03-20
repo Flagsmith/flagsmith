@@ -123,7 +123,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             group={group}
             orgId={orgId}
             filter={searchProject}
-            mainItems={(projectData || []).map((v) => ({
+            mainItems={(projectData ?? []).map((v) => ({
               ...v,
               projectId: v.id,
             }))}
