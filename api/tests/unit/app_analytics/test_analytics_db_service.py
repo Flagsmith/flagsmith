@@ -45,6 +45,7 @@ def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCach
 
 
 @pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_usage_data_from_local_db__multiple_buckets__returns_aggregated_daily_data(  # type: ignore[no-untyped-def]
     organisation, environment, settings
 ):
@@ -197,6 +198,7 @@ def test_get_usage_data_from_local_db__environment_filter__returns_expected(
 
 
 @pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_usage_data_from_local_db__labels_filter__returns_expected(
     organisation: Organisation,
     environment: Environment,
@@ -269,6 +271,7 @@ def test_get_usage_data_from_local_db__labels_filter__returns_expected(
 
 
 @pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_total_events_count__multiple_buckets__returns_correct_total(  # type: ignore[no-untyped-def]
     organisation, environment, settings
 ):
@@ -322,6 +325,7 @@ def test_get_total_events_count__multiple_buckets__returns_correct_total(  # typ
 
 
 @pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_feature_evaluation_data_from_local_db__multiple_buckets__returns_aggregated_daily_data(
     feature: Feature,
     environment: Environment,
@@ -538,6 +542,7 @@ def test_get_usage_data__no_analytics_configured__no_calls_expected(
     mocked_get_usage_data_from_local_db.assert_not_called()
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_total_events_count__postgres_not_configured__calls_influx(  # type: ignore[no-untyped-def]
     mocker, settings, organisation
 ):
@@ -553,7 +558,9 @@ def test_get_total_events_count__postgres_not_configured__calls_influx(  # type:
     # Then
     assert total_events_count == mocked_get_events_for_organisation.return_value
     mocked_get_events_for_organisation.assert_called_once_with(
-        organisation_id=organisation.id
+        organisation.id,
+        date_start=datetime(2022, 12, 20, 0, 0, tzinfo=UTC),
+        date_stop=datetime(2023, 1, 19, 0, 0, tzinfo=UTC),
     )
 
 
