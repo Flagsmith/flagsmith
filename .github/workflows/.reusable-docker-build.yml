@@ -152,6 +152,7 @@ jobs:
         if: inputs.scan
         with:
           image-tag: ${{ steps.image-tag.outputs.image-tag }}
+          artifact-name: ${{ inputs.image-name }}-trivy-results
           category: ${{ inputs.image-name }}
           # `query` value contained path:{image_name} before but not all Trivy findings
           # conform to that. There's no category filter at the moment; for the time being,
