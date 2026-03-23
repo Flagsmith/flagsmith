@@ -46,7 +46,7 @@ from users.models import FFAdminUser
 now = timezone.now()
 
 
-def test_change_request_approve_by_required_approver(  # type: ignore[no-untyped-def]
+def test_change_request_approve__required_approver__creates_approval_and_sends_emails(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals, mocker
 ):
     # Given
@@ -84,7 +84,7 @@ def test_change_request_approve_by_required_approver(  # type: ignore[no-untyped
     assert author_email_call_args.kwargs["fail_silently"] is True
 
 
-def test_change_request_approve_by_new_approver_when_no_approvals_exist(  # type: ignore[no-untyped-def]
+def test_change_request_approve__new_approver_no_existing_approvals__creates_approval(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals, mocker
 ):
     # Given
@@ -101,7 +101,7 @@ def test_change_request_approve_by_new_approver_when_no_approvals_exist(  # type
     assert approval.user == user
 
 
-def test_change_request_approve_by_new_approver_when_approvals_exist(  # type: ignore[no-untyped-def]
+def test_change_request_approve__new_approver_with_existing_approvals__creates_additional_approval(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals, mocker
 ):
     # Given
@@ -127,28 +127,32 @@ def test_change_request_approve_by_new_approver_when_approvals_exist(  # type: i
     ).exists()
 
 
-def test_change_request_is_approved_returns_true_when_minimum_change_request_approvals_is_none(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_change_request_is_approved__minimum_approvals_is_none__returns_true(  # type: ignore[no-untyped-def]  # noqa: E501
     change_request_no_required_approvals, mocker, environment
 ):
     # Given
     change_request_no_required_approvals.environment.minimum_change_request_approvals = None
     change_request_no_required_approvals.save()
+
+    # When
+    result = change_request_no_required_approvals.is_approved()
+
     # Then
-    assert change_request_no_required_approvals.is_approved() is True
+    assert result is True
 
 
-def test_change_request_commit_raises_exception_when_not_approved(  # type: ignore[no-untyped-def]
+def test_change_request_commit__not_approved__raises_exception(  # type: ignore[no-untyped-def]
     change_request_1_required_approvals,
 ):
     # Given
     user_2 = FFAdminUser.objects.create(email="user_2@example.com")
 
-    # When
+    # When / Then
     with pytest.raises(ChangeRequestNotApprovedError):
         change_request_1_required_approvals.commit(committed_by=user_2)
 
 
-def test_change_request_commit_not_scheduled(  # type: ignore[no-untyped-def]
+def test_change_request_commit__not_scheduled__sets_committed_at_and_version(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals, mocker
 ):
     # Given
@@ -168,8 +172,10 @@ def test_change_request_commit_not_scheduled(  # type: ignore[no-untyped-def]
     assert change_request_no_required_approvals.feature_states.first().live_from == now
 
 
-def test_creating_a_change_request_creates_audit_log(environment, admin_user):  # type: ignore[no-untyped-def]
-    # When
+def test_change_request_create__valid_environment__creates_audit_log(  # type: ignore[no-untyped-def]
+    environment, admin_user
+):
+    # Given / When
     change_request = ChangeRequest.objects.create(
         environment=environment, title="Change Request", user=admin_user
     )
@@ -185,7 +191,7 @@ def test_creating_a_change_request_creates_audit_log(environment, admin_user):  
     )
 
 
-def test_approving_a_change_request_creates_audit_logs(  # type: ignore[no-untyped-def]
+def test_change_request_approval__approved__creates_audit_log(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals, django_user_model, mocker
 ):
     # Given
@@ -210,7 +216,7 @@ def test_approving_a_change_request_creates_audit_logs(  # type: ignore[no-untyp
     )
 
 
-def test_change_request_commit_creates_audit_log(  # type: ignore[no-untyped-def]
+def test_change_request_commit__valid_request__creates_audit_log(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals, mocker, django_assert_num_queries
 ):
     # Given
@@ -231,7 +237,7 @@ def test_change_request_commit_creates_audit_log(  # type: ignore[no-untyped-def
     )
 
 
-def test_change_request_commit_scheduled(  # type: ignore[no-untyped-def]
+def test_change_request_commit__scheduled_for_future__preserves_live_from(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals,
     mocker,
 ):
@@ -258,13 +264,17 @@ def test_change_request_commit_scheduled(  # type: ignore[no-untyped-def]
     )
 
 
-def test_change_request_is_approved_false_when_no_approvals(  # type: ignore[no-untyped-def]
+def test_change_request_is_approved__no_approvals_with_required_approval__returns_false(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals, environment_with_1_required_cr_approval
 ):
-    assert change_request_no_required_approvals.is_approved() is False
+    # Given / When
+    result = change_request_no_required_approvals.is_approved()
+
+    # Then
+    assert result is False
 
 
-def test_change_request_is_approved_false_when_unapproved_approvals(  # type: ignore[no-untyped-def]
+def test_change_request_is_approved__unapproved_approvals__returns_false(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals,
     environment_with_1_required_cr_approval,
     django_user_model,
@@ -276,11 +286,14 @@ def test_change_request_is_approved_false_when_unapproved_approvals(  # type: ig
         change_request=change_request_no_required_approvals, user=user
     )
 
+    # When
+    result = change_request_no_required_approvals.is_approved()
+
     # Then
-    assert change_request_no_required_approvals.is_approved() is False
+    assert result is False
 
 
-def test_change_request_is_approved_true_when_enough_approved_approvals(  # type: ignore[no-untyped-def]
+def test_change_request_is_approved__enough_approved_approvals__returns_true(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals,
     environment_with_1_required_cr_approval,
     django_user_model,
@@ -290,20 +303,25 @@ def test_change_request_is_approved_true_when_enough_approved_approvals(  # type
     user = django_user_model.objects.create(email="user@example.com")
     change_request_no_required_approvals.approve(user)
 
+    # When
+    result = change_request_no_required_approvals.is_approved()
+
     # Then
-    assert change_request_no_required_approvals.is_approved() is True
+    assert result is True
 
 
-def test_user_cannot_approve_their_own_change_requests(  # type: ignore[no-untyped-def]
+def test_change_request_approve__own_change_request__raises_exception(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals,
 ):
+    # Given / When
+    # Then
     with pytest.raises(CannotApproveOwnChangeRequest):
         change_request_no_required_approvals.approve(
             change_request_no_required_approvals.user
         )
 
 
-def test_user_is_notified_when_assigned_to_a_change_request(  # type: ignore[no-untyped-def]
+def test_change_request_approval_create__assigned_to_user__sends_notification_email(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals,
     django_user_model,
     mocker,
@@ -335,7 +353,7 @@ def test_user_is_notified_when_assigned_to_a_change_request(  # type: ignore[no-
     assert call_kwargs["recipient_list"] == [user.email]
 
 
-def test_user_is_not_notified_after_approving_a_change_request(  # type: ignore[no-untyped-def]
+def test_change_request_approval_create__already_approved__does_not_notify_approver(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals, django_user_model, mocker
 ):
     # Given
@@ -358,7 +376,7 @@ def test_user_is_not_notified_after_approving_a_change_request(  # type: ignore[
     ]
 
 
-def test_change_request_author_is_notified_after_an_approval_is_created(  # type: ignore[no-untyped-def]
+def test_change_request_approval_create__approved__notifies_author(  # type: ignore[no-untyped-def]
     mocker,
     change_request_no_required_approvals,
     django_user_model,
@@ -394,7 +412,7 @@ def test_change_request_author_is_notified_after_an_approval_is_created(  # type
     ]
 
 
-def test_change_request_author_is_notified_after_an_existing_approval_is_approved(  # type: ignore[no-untyped-def]
+def test_change_request_approval_save__existing_approval_approved__notifies_author(  # type: ignore[no-untyped-def]
     mocker,
     django_user_model,
     change_request_no_required_approvals,
@@ -438,37 +456,40 @@ def test_change_request_author_is_notified_after_an_existing_approval_is_approve
     ]
 
 
-def test_change_request_url(change_request_no_required_approvals, settings):  # type: ignore[no-untyped-def]
+def test_change_request_url__environment_change_request__returns_correct_url(  # type: ignore[no-untyped-def]
+    change_request_no_required_approvals, settings
+):
     # Given
     site = Site.objects.filter(id=settings.SITE_ID).first()
     environment_key = change_request_no_required_approvals.environment.api_key
     project_id = change_request_no_required_approvals.environment.project.id
 
+    # When
+    url = change_request_no_required_approvals.url
+
     # Then
-    assert (
-        change_request_no_required_approvals.url
-        == "https://%s/project/%s/environment/%s/change-requests/%s"
-        % (
-            site.domain,  # type: ignore[union-attr]
-            project_id,
-            environment_key,
-            change_request_no_required_approvals.id,
-        )
+    assert url == "https://%s/project/%s/environment/%s/change-requests/%s" % (
+        site.domain,  # type: ignore[union-attr]
+        project_id,
+        environment_key,
+        change_request_no_required_approvals.id,
     )
 
 
-def test_change_request_email_subject(change_request_no_required_approvals):  # type: ignore[no-untyped-def]
-    assert (
-        change_request_no_required_approvals.email_subject
-        == "Flagsmith Change Request: %s (#%s)"
-        % (
-            change_request_no_required_approvals.title,
-            change_request_no_required_approvals.id,
-        )
+def test_change_request_email_subject__valid_change_request__returns_formatted_subject(  # type: ignore[no-untyped-def]
+    change_request_no_required_approvals,
+):
+    # Given / When
+    subject = change_request_no_required_approvals.email_subject
+
+    # Then
+    assert subject == "Flagsmith Change Request: %s (#%s)" % (
+        change_request_no_required_approvals.title,
+        change_request_no_required_approvals.id,
     )
 
 
-def test_committing_cr_after_live_from_creates_correct_audit_log_for_related_feature_states(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_change_request_commit__after_live_from__creates_audit_log_for_feature_states(  # type: ignore[no-untyped-def]
     settings, change_request_no_required_approvals, mocker, admin_user
 ):
     # Given
@@ -498,7 +519,7 @@ def test_committing_cr_after_live_from_creates_correct_audit_log_for_related_fea
         )
 
 
-def test_committing_cr_after_before_from_schedules_tasks_correctly(  # type: ignore[no-untyped-def]
+def test_change_request_commit__before_live_from__schedules_audit_log_task(  # type: ignore[no-untyped-def]
     settings, change_request_no_required_approvals, mocker, admin_user
 ):
     # Given
@@ -521,7 +542,7 @@ def test_committing_cr_after_before_from_schedules_tasks_correctly(  # type: ign
 
 
 @pytest.mark.freeze_time()
-def test_committing_scheduled_change_requests_results_in_correct_versions(  # type: ignore[no-untyped-def]
+def test_change_request_commit__scheduled_out_of_order__returns_latest_feature_state(  # type: ignore[no-untyped-def]
     environment, feature, admin_user, freezer
 ):
     # Given
@@ -567,7 +588,7 @@ def test_committing_scheduled_change_requests_results_in_correct_versions(  # ty
     assert feature_states[0] == cr_2_fs
 
 
-def test_change_request_group_assignment_sends_notification_emails_to_group_users(  # type: ignore[no-untyped-def]
+def test_change_request_group_assignment_save__valid_group__sends_notification_to_group(  # type: ignore[no-untyped-def]
     change_request, user_permission_group, settings, mocker
 ):
     # Given
@@ -594,7 +615,7 @@ def test_change_request_group_assignment_sends_notification_emails_to_group_user
 
 
 @pytest.mark.freeze_time(now)
-def test_commit_change_request_publishes_environment_feature_versions(  # type: ignore[no-untyped-def]
+def test_change_request_commit__v2_versioning__publishes_environment_feature_versions(  # type: ignore[no-untyped-def]
     environment: Environment,
     feature: Feature,
     admin_user: FFAdminUser,
@@ -647,22 +668,19 @@ def test_commit_change_request_publishes_environment_feature_versions(  # type: 
     )
 
 
-def test_cannot_delete_committed_change_request(
+def test_change_request_delete__committed__raises_deletion_error(
     change_request: ChangeRequest, admin_user: FFAdminUser
 ) -> None:
     # Given
     change_request.commit(admin_user)
     change_request.save()
 
-    # When
+    # When / Then
     with pytest.raises(ChangeRequestDeletionError):
         change_request.delete()
 
-    # Then
-    # exception raised
 
-
-def test_can_delete_committed_change_request_scheduled_for_the_future(
+def test_change_request_delete__committed_scheduled_for_future__deletes_successfully(
     change_request: ChangeRequest,
     admin_user: FFAdminUser,
     feature: Feature,
@@ -687,7 +705,7 @@ def test_can_delete_committed_change_request_scheduled_for_the_future(
     assert not ChangeRequest.objects.filter(id=change_request.id).exists()
 
 
-def test_can_delete_committed_change_request_scheduled_for_the_future_with_environment_feature_versions(
+def test_change_request_delete__scheduled_with_environment_feature_versions__deletes_successfully(
     change_request: ChangeRequest,
     admin_user: FFAdminUser,
     feature: Feature,
@@ -717,7 +735,7 @@ def test_can_delete_committed_change_request_scheduled_for_the_future_with_envir
     assert not ChangeRequest.objects.filter(id=change_request.id).exists()
 
 
-def test_committing_change_request_with_environment_feature_versions_creates_publish_audit_log(
+def test_change_request_commit__with_environment_feature_versions__creates_publish_audit_log(
     feature: Feature, environment_v2_versioning: Environment, admin_user: FFAdminUser
 ) -> None:
     # Given
@@ -744,7 +762,7 @@ def test_committing_change_request_with_environment_feature_versions_creates_pub
     ).exists()
 
 
-def test_change_request_live_from_for_change_request_with_change_set(
+def test_change_request_live_from__with_change_set__sets_live_from_to_commit_time(
     feature: Feature,
     environment_v2_versioning: Environment,
     admin_user: FFAdminUser,
@@ -781,7 +799,7 @@ def test_change_request_live_from_for_change_request_with_change_set(
     assert change_request.live_from == now
 
 
-def test_publishing_segments_as_part_of_commit(
+def test_change_request_commit__with_draft_segment__publishes_segment_rules(
     segment: Segment,
     change_request: ChangeRequest,
     admin_user: FFAdminUser,
@@ -869,7 +887,7 @@ def test_publishing_segments_as_part_of_commit(
     ]
 
 
-def test_ignore_conflicts_for_multiple_scheduled_change_requests(
+def test_change_request_commit__multiple_scheduled_with_ignore_conflicts__applies_in_order(
     feature: Feature,
     environment_v2_versioning: Environment,
     admin_user: FFAdminUser,
@@ -881,6 +899,7 @@ def test_ignore_conflicts_for_multiple_scheduled_change_requests(
     This test is for the specific use case where we want to schedule a slow
     roll-out for a feature.
     """
+    # Given
     # We are going to simulate the task processor ourselves, so let's mock it so we can assert
     # the required calls later.
     mock_publish_version_change_set = mocker.patch(
@@ -955,6 +974,7 @@ def test_ignore_conflicts_for_multiple_scheduled_change_requests(
 
     mock_publish_version_change_set.stop()
 
+    # When
     # Now, let's move time forward and publish the first change request (note: this is
     # simulating the task processor picking up the task that we mock asserted earlier)
     freezer.move_to(ten_minutes_from_now)
@@ -971,6 +991,7 @@ def test_ignore_conflicts_for_multiple_scheduled_change_requests(
     assert len(after_cr_1_flags) == 1
     assert after_cr_1_flags[0].feature_segment.segment == ten_percent_segment  # type: ignore[union-attr]
 
+    # Then
     # Now, let's move time forward again and publish the second change request
     freezer.move_to(twenty_minutes_from_now)
     publish_version_change_set(
@@ -987,7 +1008,9 @@ def test_ignore_conflicts_for_multiple_scheduled_change_requests(
     assert after_cr_1_flags[0].feature_segment.segment == twenty_percent_segment  # type: ignore[union-attr]
 
 
-def test_approval_via_project(project_change_request: ChangeRequest) -> None:
+def test_change_request_is_approved__project_with_no_minimum_approvals__returns_true(
+    project_change_request: ChangeRequest,
+) -> None:
     # Given - The project change request fixture
     assert project_change_request.environment is None
     assert project_change_request.project.minimum_change_request_approvals is None
@@ -999,7 +1022,9 @@ def test_approval_via_project(project_change_request: ChangeRequest) -> None:
     assert is_approved is True
 
 
-def test_url_via_project(project_change_request: ChangeRequest) -> None:
+def test_change_request_url__project_change_request__returns_project_url(
+    project_change_request: ChangeRequest,
+) -> None:
     # Given
     assert project_change_request.environment is None
 
@@ -1013,7 +1038,7 @@ def test_url_via_project(project_change_request: ChangeRequest) -> None:
     assert url == expected_url
 
 
-def test_delete_organisation_with_committed_change_request(
+def test_organisation_delete__with_committed_change_request__soft_deletes_successfully(
     organisation: Organisation,
     feature: Feature,
     change_request_no_required_approvals: ChangeRequest,
@@ -1032,7 +1057,7 @@ def test_delete_organisation_with_committed_change_request(
     assert organisation.deleted_at is not None
 
 
-def test_delete_project_with_v2_versioning_does_not_trigger_audit_log(
+def test_project_delete__v2_versioning_with_change_requests__does_not_trigger_audit_log(
     project: Project,
     environment: Environment,
     feature: Feature,

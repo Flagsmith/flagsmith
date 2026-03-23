@@ -40,7 +40,7 @@ flagsmith
     AsyncStorage,
     api: Project.flagsmithClientAPI,
     cacheFlags: true,
-    enableAnalytics: Project.flagsmithAnalytics,
+    enableAnalytics: window.E2E ? false : Project.flagsmithAnalytics,
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
     realtime: window.E2E ? false : Project.flagsmithRealtime,

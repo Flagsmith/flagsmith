@@ -40,7 +40,7 @@ now = timezone.now()
 yesterday = now - timedelta(days=1)
 
 
-def test_should_create_a_project(
+def test_create_project__valid_data__returns_201_and_creates_project(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     admin_client: APIClient,
@@ -87,7 +87,7 @@ def test_should_create_a_project(
     assert get_project_response.status_code == status.HTTP_200_OK
 
 
-def test_should_create_a_project_with_admin_master_api_key_client(  # type: ignore[no-untyped-def]
+def test_create_project__admin_master_api_key_client__returns_201_and_creates_project(  # type: ignore[no-untyped-def]
     settings, organisation, admin_master_api_key_client
 ):
     # Given
@@ -113,7 +113,7 @@ def test_should_create_a_project_with_admin_master_api_key_client(  # type: igno
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_can_update_project(
+def test_update_project__valid_data__returns_200_and_updates_project(
     client: APIClient,
     project: Project,
     organisation: Organisation,
@@ -139,7 +139,7 @@ def test_can_update_project(
     assert response.json()["stale_flags_limit_days"] == new_stale_flags_limit_days
 
 
-def test_can_not_update_project_organisation(
+def test_update_project__different_organisation__does_not_change_organisation(
     admin_client: APIClient,
     project: Project,
     organisation: Organisation,
@@ -167,7 +167,9 @@ def test_can_not_update_project_organisation(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_can_list_project_permission(client: APIClient, project: Project) -> None:
+def test_list_project_permissions__valid_client__returns_all_permissions(
+    client: APIClient, project: Project
+) -> None:
     # Given
     url = reverse("api-v1:projects:project-permissions")
 
@@ -187,7 +189,7 @@ def test_can_list_project_permission(client: APIClient, project: Project) -> Non
     assert set(returned_supported_permissions) == set(TAG_SUPPORTED_PERMISSIONS)
 
 
-def test_my_permissions_for_a_project_return_400_with_master_api_key(  # type: ignore[no-untyped-def]
+def test_my_permissions__master_api_key_client__returns_400(  # type: ignore[no-untyped-def]
     admin_master_api_key_client, project, organisation
 ):
     # Given
@@ -204,7 +206,7 @@ def test_my_permissions_for_a_project_return_400_with_master_api_key(  # type: i
     )
 
 
-def test_create_project_returns_403_if_user_is_not_organisation_admin(
+def test_create_project__user_not_organisation_admin__returns_403(
     organisation: Organisation,
     staff_user: FFAdminUser,
     staff_client: APIClient,
@@ -226,7 +228,7 @@ def test_create_project_returns_403_if_user_is_not_organisation_admin(
     )
 
 
-def test_user_with_create_project_permission_can_create_project(
+def test_create_project__user_with_create_project_permission__returns_201(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     organisation: Organisation,
@@ -250,7 +252,7 @@ def test_user_with_create_project_permission_can_create_project(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_user_with_create_project_permission_cannot_create_project_if_restricted_to_admin(
+def test_create_project__restricted_to_admin__returns_403(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     organisation: Organisation,
@@ -279,7 +281,7 @@ def test_user_with_create_project_permission_cannot_create_project_if_restricted
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_user_with_view_project_permission_can_view_project(
+def test_get_project__user_with_view_permission__returns_200(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     organisation: Organisation,
@@ -297,7 +299,7 @@ def test_user_with_view_project_permission_can_view_project(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_user_with_view_project_permission_can_get_their_permissions_for_a_project(
+def test_my_permissions__user_with_view_permission__returns_200(
     staff_client: APIClient,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -313,7 +315,7 @@ def test_user_with_view_project_permission_can_get_their_permissions_for_a_proje
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_user_can_list_all_user_permissions_for_a_project(
+def test_list_user_permissions__admin_client__returns_permissions(
     admin_client: APIClient,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -330,7 +332,7 @@ def test_user_can_list_all_user_permissions_for_a_project(
     assert len(response.json()) == 1
 
 
-def test_user_can_create_new_user_permission_for_a_project(
+def test_create_user_permission__valid_data__returns_201_and_creates_permission(
     staff_user: FFAdminUser,
     admin_client: APIClient,
     project: Project,
@@ -360,7 +362,7 @@ def test_user_can_create_new_user_permission_for_a_project(
     assert user_project_permission.permissions.count() == 2
 
 
-def test_user_can_update_user_permission_for_a_project(
+def test_update_user_permission__valid_data__returns_200_and_updates_permission(
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
     admin_client: APIClient,
@@ -385,7 +387,7 @@ def test_user_can_update_user_permission_for_a_project(
     assert CREATE_FEATURE in upp.permissions.values_list("key", flat=True)
 
 
-def test_user_can_delete_user_permission_for_a_project(
+def test_delete_user_permission__existing_permission__returns_204_and_deletes(
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
     admin_client: APIClient,
@@ -405,7 +407,7 @@ def test_user_can_delete_user_permission_for_a_project(
     assert not UserProjectPermission.objects.filter(id=upp.id).exists()
 
 
-def test_user_can_list_all_user_group_permissions_for_a_project(
+def test_list_user_group_permissions__existing_group__returns_permissions(
     project: Project,
     admin_client: APIClient,
     organisation: Organisation,
@@ -433,7 +435,7 @@ def test_user_can_list_all_user_group_permissions_for_a_project(
     assert len(response.json()) == 1
 
 
-def test_user_can_create_new_user_group_permission_for_a_project(
+def test_create_user_group_permission__valid_data__returns_201_and_creates_permission(
     organisation: Organisation,
     project: Project,
     staff_user: FFAdminUser,
@@ -472,7 +474,7 @@ def test_user_can_create_new_user_group_permission_for_a_project(
     assert user_group_project_permission.permissions.count() == 2
 
 
-def test_user_can_update_user_group_permission_for_a_project(
+def test_update_user_group_permission__valid_data__returns_200_and_updates_permission(
     admin_client: APIClient,
     project: Project,
     staff_user: FFAdminUser,
@@ -506,7 +508,7 @@ def test_user_can_update_user_group_permission_for_a_project(
     assert CREATE_FEATURE in upgpp.permissions.values_list("key", flat=True)
 
 
-def test_user_group_can_delete_user_permission_for_a_project(
+def test_delete_user_group_permission__existing_permission__returns_204_and_deletes(
     admin_client: APIClient,
     project: Project,
     staff_user: FFAdminUser,
@@ -535,7 +537,7 @@ def test_user_group_can_delete_user_permission_for_a_project(
     assert not UserPermissionGroupProjectPermission.objects.filter(id=upgpp.id).exists()
 
 
-def test_project_migrate_to_edge_calls_trigger_migration(  # type: ignore[no-untyped-def]
+def test_migrate_to_edge__valid_project__returns_202_and_triggers_migration(  # type: ignore[no-untyped-def]
     admin_client, project, mocker, settings
 ):
     # Given
@@ -553,7 +555,7 @@ def test_project_migrate_to_edge_calls_trigger_migration(  # type: ignore[no-unt
     mocked_identity_migrator.return_value.trigger_migration.assert_called_once()
 
 
-def test_project_migrate_to_edge_returns_400_if_can_migrate_is_false(  # type: ignore[no-untyped-def]
+def test_migrate_to_edge__can_migrate_is_false__returns_400(  # type: ignore[no-untyped-def]
     admin_client, project, mocker, settings
 ):
     # Given
@@ -572,7 +574,7 @@ def test_project_migrate_to_edge_returns_400_if_can_migrate_is_false(  # type: i
     mocked_identity_migrator.return_value.trigger_migration.assert_not_called()
 
 
-def test_project_migrate_to_edge_returns_400_if_project_have_too_many_identities(  # type: ignore[no-untyped-def]
+def test_migrate_to_edge__too_many_identities__returns_400(  # type: ignore[no-untyped-def]
     admin_client, project, mocker, settings, identity, environment
 ):
     # Given
@@ -592,7 +594,7 @@ def test_project_migrate_to_edge_returns_400_if_project_have_too_many_identities
     mocked_identity_migrator.assert_not_called()
 
 
-def test_project_migrate_to_edge_returns_400_if_project_have_too_many_features(  # type: ignore[no-untyped-def]
+def test_migrate_to_edge__too_many_features__returns_400(  # type: ignore[no-untyped-def]
     admin_client, project, mocker, environment, feature, multivariate_feature, settings
 ):
     # Given
@@ -613,7 +615,7 @@ def test_project_migrate_to_edge_returns_400_if_project_have_too_many_features( 
     mocked_identity_migrator.assert_not_called()
 
 
-def test_project_migrate_to_edge_returns_400_if_project_have_too_many_segments(  # type: ignore[no-untyped-def]
+def test_migrate_to_edge__too_many_segments__returns_400(  # type: ignore[no-untyped-def]
     admin_client,
     project,
     mocker,
@@ -641,7 +643,7 @@ def test_project_migrate_to_edge_returns_400_if_project_have_too_many_segments( 
     mocked_identity_migrator.assert_not_called()
 
 
-def test_project_migrate_to_edge_returns_400_if_project_have_too_many_segment_overrides(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_migrate_to_edge__too_many_segment_overrides__returns_400(  # type: ignore[no-untyped-def]
     admin_client,
     project,
     mocker,
@@ -674,7 +676,7 @@ def test_project_migrate_to_edge_returns_400_if_project_have_too_many_segment_ov
     mocked_identity_migrator.assert_not_called()
 
 
-def test_list_project_with_uuid_filter_returns_correct_project(  # type: ignore[no-untyped-def]
+def test_list_projects__uuid_filter__returns_matching_project(  # type: ignore[no-untyped-def]
     admin_client, project, mocker, settings, organisation
 ):
     # Given
@@ -697,7 +699,9 @@ def test_list_project_with_uuid_filter_returns_correct_project(  # type: ignore[
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_get_project_by_uuid(client, project, mocker, settings, organisation):  # type: ignore[no-untyped-def]
+def test_get_project_by_uuid__existing_project__returns_project(  # type: ignore[no-untyped-def]
+    client, project, mocker, settings, organisation
+):
     # Given
     url = reverse("api-v1:projects:project-get-by-uuid", args=[str(project.uuid)])
 
@@ -718,7 +722,7 @@ def test_get_project_by_uuid(client, project, mocker, settings, organisation):  
         (lazy_fixture("enterprise_subscription"), True),
     ],
 )
-def test_can_enable_realtime_updates_for_enterprise(  # type: ignore[no-untyped-def]
+def test_enable_realtime_updates__subscription_tier__returns_expected_value(  # type: ignore[no-untyped-def]
     admin_client: APIClient,
     project: Project,
     organisation: Organisation,
@@ -747,7 +751,9 @@ def test_can_enable_realtime_updates_for_enterprise(  # type: ignore[no-untyped-
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_update_project(client, project, mocker, settings, organisation):  # type: ignore[no-untyped-def]
+def test_update_project__read_only_fields__does_not_update_read_only_fields(  # type: ignore[no-untyped-def]
+    client, project, mocker, settings, organisation
+):
     # Given
     url = reverse("api-v1:projects:project-detail", args=[project.id])
     feature_name_regex = r"^[a-zA-Z0-9_]+$"
@@ -778,7 +784,7 @@ def test_update_project(client, project, mocker, settings, organisation):  # typ
     "client",
     (lazy_fixture("admin_client"), lazy_fixture("admin_master_api_key_client")),
 )
-def test_get_project_list_data(client, organisation):  # type: ignore[no-untyped-def]
+def test_list_projects__existing_project__returns_project_data(client, organisation):  # type: ignore[no-untyped-def]
     # Given
     list_url = reverse("api-v1:projects:project-list")
 
@@ -824,7 +830,7 @@ def test_get_project_list_data(client, organisation):  # type: ignore[no-untyped
     "client",
     (lazy_fixture("admin_client"), lazy_fixture("admin_master_api_key_client")),
 )
-def test_get_project_data_by_id(
+def test_get_project__with_features_and_segments__returns_detailed_data(
     client: APIClient, organisation: Organisation, project: Project
 ) -> None:
     # Given
@@ -855,7 +861,7 @@ def test_get_project_data_by_id(
     assert response_json["show_edge_identity_overrides_for_feature"] is False
 
 
-def test_delete_project_delete_handles_cascade_delete(
+def test_delete_project__existing_project__calls_cascade_delete(
     admin_client: APIClient,
     project: Project,
     mocker: MockerFixture,
@@ -877,7 +883,7 @@ def test_delete_project_delete_handles_cascade_delete(
     )
 
 
-def test_cannot_create_duplicate_project_name(
+def test_create_project__duplicate_name__returns_400(
     admin_client: APIClient,
     project: Project,
 ) -> None:
@@ -900,7 +906,7 @@ def test_cannot_create_duplicate_project_name(
     }
 
 
-def test_can_create_project_with_duplicate_name_in_another_organisation(
+def test_create_project__duplicate_name_different_organisation__returns_201(
     admin_user: FFAdminUser,
     admin_client: APIClient,
     project: Project,
@@ -925,7 +931,7 @@ def test_can_create_project_with_duplicate_name_in_another_organisation(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_project_user_can_get_their_detailed_permissions(
+def test_get_detailed_permissions__own_user__returns_permissions(
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -955,7 +961,7 @@ def test_project_user_can_get_their_detailed_permissions(
     ]
 
 
-def test_project_user_can_not_get_detailed_permissions_of_other_user(
+def test_get_detailed_permissions__other_user__returns_403(
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -975,7 +981,7 @@ def test_project_user_can_not_get_detailed_permissions_of_other_user(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_project_admin_can_get_detailed_permissions_of_other_user(
+def test_get_detailed_permissions__admin_viewing_other_user__returns_permissions(
     admin_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,

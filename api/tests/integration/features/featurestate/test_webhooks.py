@@ -64,7 +64,7 @@ def organisation_webhook(
 
 
 @responses.activate
-def test_update_segment_override__webhook_payload_has_correct_previous_and_new_values(
+def test_update_segment_override__via_api__webhook_payload_has_correct_previous_and_new_values(
     admin_client: APIClient,
     environment: int,
     feature: int,
@@ -150,7 +150,7 @@ def test_update_segment_override__webhook_payload_has_correct_previous_and_new_v
     [lazy_fixture("environment_webhook"), lazy_fixture("organisation_webhook")],
 )
 @responses.activate
-def test_update_multivariate_percentage__webhook_payload_includes_multivariate_values(
+def test_update_multivariate_percentage__percentage_changed__webhook_payload_includes_multivariate_values(
     admin_client: APIClient,
     environment: int,
     feature: int,

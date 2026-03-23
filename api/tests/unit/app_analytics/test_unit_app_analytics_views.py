@@ -102,7 +102,7 @@ def test_sdk_analytics_flags_v1__boolean_count__is_skipped(
     mocked_feature_eval_cache.track_feature_evaluation.assert_not_called()
 
 
-def test_sdk_analytics_ignores_bad_data(
+def test_sdk_analytics_flags_v1__invalid_feature_name__tracks_only_valid(
     mocker: MockerFixture,
     environment: Environment,
     feature: Feature,
@@ -135,7 +135,9 @@ def test_sdk_analytics_ignores_bad_data(
     )
 
 
-def test_get_usage_data(mocker, admin_client, organisation):  # type: ignore[no-untyped-def]
+def test_get_usage_data__no_period__returns_usage_data(  # type: ignore[no-untyped-def]
+    mocker, admin_client, organisation
+):
     # Given
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
 
@@ -175,7 +177,7 @@ def test_get_usage_data(mocker, admin_client, organisation):  # type: ignore[no-
 
 
 @pytest.mark.freeze_time("2024-04-30T09:09:47.325132+00:00")
-def test_get_usage_data__current_billing_period(
+def test_get_usage_data__current_billing_period__returns_expected(
     settings: SettingsWrapper,
     mocker: MockerFixture,
     admin_client_new: APIClient,
@@ -250,7 +252,7 @@ def test_get_usage_data__current_billing_period(
 
 
 @pytest.mark.freeze_time("2024-04-30T09:09:47.325132+00:00")
-def test_get_usage_data__previous_billing_period(
+def test_get_usage_data__previous_billing_period__returns_expected(
     mocker: MockerFixture,
     admin_client_new: APIClient,
     organisation: Organisation,
@@ -318,7 +320,7 @@ def test_get_usage_data__previous_billing_period(
 
 
 @pytest.mark.freeze_time("2024-04-30T09:09:47.325132+00:00")
-def test_get_usage_data__90_day_period(
+def test_get_usage_data__90_day_period__returns_expected(
     settings: SettingsWrapper,
     mocker: MockerFixture,
     admin_client_new: APIClient,
@@ -435,7 +437,7 @@ def test_get_usage_data__labels_filter__returns_expected(
     )
 
 
-def test_get_usage_data_for_non_admin_user_returns_403(
+def test_get_usage_data__non_admin_user__returns_403(
     staff_client: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -449,7 +451,9 @@ def test_get_usage_data_for_non_admin_user_returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_total_usage_count(mocker, admin_client, organisation):  # type: ignore[no-untyped-def]
+def test_get_total_usage_count__admin_user__returns_count(  # type: ignore[no-untyped-def]
+    mocker, admin_client, organisation
+):
     # Given
     url = reverse(
         "api-v1:organisations:usage-data-total-count",
@@ -470,7 +474,7 @@ def test_get_total_usage_count(mocker, admin_client, organisation):  # type: ign
     mocked_get_total_events_count.assert_called_once_with(organisation)
 
 
-def test_get_total_usage_count_for_non_admin_user_returns_403(
+def test_get_total_usage_count__non_admin_user__returns_403(
     staff_client: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -487,7 +491,7 @@ def test_get_total_usage_count_for_non_admin_user_returns_403(
 
 
 @pytest.mark.use_analytics_db
-def test_set_sdk_analytics_flags_with_identifier(
+def test_sdk_analytics_flags_v2__with_identifier__stores_evaluation(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -528,7 +532,7 @@ def test_set_sdk_analytics_flags_with_identifier(
 
 
 @pytest.mark.use_analytics_db
-def test_set_sdk_analytics_flags_without_identifier(
+def test_sdk_analytics_flags_v2__without_identifier__stores_evaluation(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -665,7 +669,7 @@ def test_set_sdk_analytics_flags_with_identifier__influx__calls_expected(
         ),
     ],
 )
-def test_sdk_analytics_flags_v1(
+def test_sdk_analytics_flags_v1__with_headers__tracks_labels(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,

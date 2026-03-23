@@ -28,13 +28,14 @@ from users.models import FFAdminUser
     "allowed_calls_30d, actual_calls_30d, expected_overage",
     ((1000000, 500000, 0), (1000000, 1100000, 100000), (0, 100000, 100000)),
 )
-def test_organisation_subscription_get_api_call_overage(
+def test_organisation_list__varying_api_call_counts__returns_correct_overage(
     organisation: Organisation,
     allowed_calls_30d: int,
     actual_calls_30d: int,
     expected_overage: int,
     rf: RequestFactory,
 ) -> None:
+    # Given
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_30d_api_calls=allowed_calls_30d,
@@ -44,13 +45,16 @@ def test_organisation_subscription_get_api_call_overage(
     request = rf.get("/sales-dashboard")
     view = OrganisationList()
     view.request = request
+
+    # When
     result = view.get_queryset().get(pk=organisation.id)  # type: ignore[no-untyped-call]
 
+    # Then
     assert result.overage == expected_overage
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_organisation_info__get_event_list_for_organisation(
+def test_get_organisation_info__valid_organisation__returns_event_list(
     organisation: Organisation,
     superuser_client: APIClient,
     settings: SettingsWrapper,
@@ -80,7 +84,7 @@ def test_get_organisation_info__get_event_list_for_organisation(
     event_list_mock.assert_called_once_with(organisation.id, date_start)
 
 
-def test_list_organisations_search_by_name(
+def test_list_organisations__search_by_name__returns_matching_organisation(
     organisation: Organisation,
     superuser_client: Client,
 ) -> None:
@@ -99,7 +103,7 @@ def test_list_organisations_search_by_name(
     assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
-def test_list_organisations_search_by_subscription_id(
+def test_list_organisations__search_by_subscription_id__returns_matching_organisation(
     organisation: Organisation,
     chargebee_subscription: Subscription,
     superuser_client: Client,
@@ -117,7 +121,7 @@ def test_list_organisations_search_by_subscription_id(
     assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
-def test_list_organisations_search_by_user_email(
+def test_list_organisations__search_by_user_email__returns_matching_organisation(
     organisation: Organisation,
     superuser_client: Client,
     admin_user: FFAdminUser,
@@ -135,7 +139,7 @@ def test_list_organisations_search_by_user_email(
     assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
-def test_list_organisations_search_by_user_email_for_non_existent_user(
+def test_list_organisations__search_by_non_existent_user_email__returns_empty_list(
     organisation: Organisation,
     superuser_client: Client,
 ) -> None:
@@ -155,7 +159,7 @@ def test_list_organisations_search_by_user_email_for_non_existent_user(
     assert list(response.context_data["organisation_list"]) == []  # type: ignore[index]
 
 
-def test_list_organisations_search_by_domain(
+def test_list_organisations__search_by_domain__returns_matching_organisation(
     organisation: Organisation,
     superuser_client: Client,
 ) -> None:
@@ -174,7 +178,7 @@ def test_list_organisations_search_by_domain(
     assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
-def test_list_organisations_filter_plan(
+def test_list_organisations__filter_by_plan__returns_matching_organisation(
     organisation: Organisation,
     chargebee_subscription: Subscription,
     superuser_client: Client,
@@ -193,7 +197,7 @@ def test_list_organisations_filter_plan(
     assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[index]
 
 
-def test_list_organisations_fails_if_not_staff(
+def test_list_organisations__non_staff_user__returns_redirect(
     organisation: Organisation,
     client: Client,
 ) -> None:
@@ -211,7 +215,7 @@ def test_list_organisations_fails_if_not_staff(
     assert response.url == "/admin/login/?next=/sales-dashboard/"  # type: ignore[attr-defined]
 
 
-def test_get_email_usage_fails_if_not_staff(
+def test_get_email_usage__non_staff_user__returns_redirect(
     organisation: Organisation,
     client: Client,
 ) -> None:
@@ -229,7 +233,7 @@ def test_get_email_usage_fails_if_not_staff(
     assert response.url == "/admin/login/?next=/sales-dashboard/usage/"  # type: ignore[attr-defined]
 
 
-def test_start_trial(
+def test_start_trial__valid_organisation__creates_trial_subscription(
     organisation: Organisation,
     client: Client,
     admin_user: FFAdminUser,
@@ -268,7 +272,7 @@ def test_start_trial(
     assert subscription_information_cache.feature_history_visibility_days is None
 
 
-def test_end_trial(
+def test_end_trial__organisation_in_trial__reverts_to_free_plan(
     in_trial_organisation: Organisation,
     client: Client,
     admin_user: FFAdminUser,
@@ -315,7 +319,7 @@ def test_end_trial(
 
 
 @pytest.mark.django_db
-def test_list_organisations_with_empty_organisation_returns_zero_counts_not_none(
+def test_list_organisations__empty_organisation__returns_zero_counts(
     rf: RequestFactory,
 ) -> None:
     # Given
