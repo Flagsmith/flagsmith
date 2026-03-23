@@ -4,6 +4,7 @@ import uuid
 from copy import deepcopy
 from typing import TYPE_CHECKING, Literal
 
+from flagsmith_schemas.api import V1EnvironmentDocumentResponse
 from common.core.utils import using_database_replica
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -361,10 +362,11 @@ class Environment(
         ):
             environment_document_cache.set_many(
                 {
-                    e.api_key: map_environment_to_environment_document(e)
+                    # Use the SDK mapper so the cache perfectly matches the DB fallback
+                    e.api_key: map_environment_to_sdk_document(e)
                     for e in environments
                 }
-            )
+            )            
 
     def get_feature_state(
         self,
