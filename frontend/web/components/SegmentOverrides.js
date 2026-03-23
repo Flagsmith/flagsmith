@@ -383,13 +383,13 @@ const SegmentOverrideListInner = ({
   showEditSegment,
   toggle,
 }) => {
-  const isSortable = !id && !disabled
+  const canSort = !id && !disabled
   return (
     <div>
       {items.map((value, index) => {
         const segmentId = getSegmentId(value.segment)
         const sortId = `segment-${segmentId ?? index}`
-        if (isSortable) {
+        if (canSort) {
           return (
             <Fragment key={sortId}>
               <SortableSegmentOverride
