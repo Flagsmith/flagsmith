@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.223.0](https://github.com/Flagsmith/flagsmith/compare/v2.222.4...v2.223.0) (2026-03-23)
+
+
+### Features
+
+* add Code References to project integrations page ([#6974](https://github.com/Flagsmith/flagsmith/issues/6974)) ([26fc48f](https://github.com/Flagsmith/flagsmith/commit/26fc48fd7713c1a2dc16817c3ed33d20b8694f6a))
+* **Features API:** Restrict code references querying to a feature flag ([#6970](https://github.com/Flagsmith/flagsmith/issues/6970)) ([dcb0a37](https://github.com/Flagsmith/flagsmith/commit/dcb0a3790a4a01b783e4505c13348918c99311ab))
+
+
+### Bug Fixes
+
+* **API Usage:** Allow self-hosted API usage alerts ([#6975](https://github.com/Flagsmith/flagsmith/issues/6975)) ([437abff](https://github.com/Flagsmith/flagsmith/commit/437abff9cce156a7c2a1d71aa30047f841fca770))
+* **CI:** Pin safe trivy check version ([#7010](https://github.com/Flagsmith/flagsmith/issues/7010)) ([ffd2a11](https://github.com/Flagsmith/flagsmith/commit/ffd2a11fac0d7589fcc07ece63760c2220a72cea))
+* Schedule Update on Segment Overrides shows 'Feature contains no changes' ([#6996](https://github.com/Flagsmith/flagsmith/issues/6996)) ([ec940fe](https://github.com/Flagsmith/flagsmith/commit/ec940fe002653b998d6ed2baa40ab0384238ec1d))
+
+
+### CI
+
+* Add flagsmith-lint-tests pre-commit hook ([#6933](https://github.com/Flagsmith/flagsmith/issues/6933)) ([95a1721](https://github.com/Flagsmith/flagsmith/commit/95a1721cf187835707b7c4f17114d063cf74a3a4))
+* Fix all flagsmith-lint-tests violations ([#6994](https://github.com/Flagsmith/flagsmith/issues/6994)) ([aafc84b](https://github.com/Flagsmith/flagsmith/commit/aafc84b1ad52a66f544c604ce3ee7daf8811f8de))
+* pre-commit autoupdate ([#7017](https://github.com/Flagsmith/flagsmith/issues/7017)) ([078e7d8](https://github.com/Flagsmith/flagsmith/commit/078e7d89ab85db323a3a763aa1822b7f8d8f3374))
+
+
+### Docs
+
+* add troubleshooting guide to support ([#6978](https://github.com/Flagsmith/flagsmith/issues/6978)) ([9be685c](https://github.com/Flagsmith/flagsmith/commit/9be685c92596de28ac8dd011f14e8af22e765cf2))
+
 ## [2.222.4](https://github.com/Flagsmith/flagsmith/compare/v2.222.3...v2.222.4) (2026-03-19)
 
 
