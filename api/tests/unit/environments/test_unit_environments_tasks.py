@@ -1,12 +1,12 @@
-from pytest_mock import MockerFixture
 import pytest
 from django.db import OperationalError
+from pytest_mock import MockerFixture
 from task_processor.exceptions import TaskBackoffError
-from environments.models import Environment
-from environments.tasks import delete_environment
+
 from audit.models import AuditLog
 from environments.models import Environment
 from environments.tasks import (
+    delete_environment,
     delete_environment_from_dynamo,
     process_environment_update,
     rebuild_environment_document,
@@ -117,6 +117,8 @@ def test_delete_environment__calls_internal_methods_correctly(
     mocked_identity_wrapper.delete_all_identities.assert_called_once_with(
         environment_api_key
     )
+
+
 def test_delete_environment__environment_does_not_exist__succeeds_silently(
     mocker: MockerFixture,
 ) -> None:
@@ -145,7 +147,7 @@ def test_delete_environment__database_deadlock__raises_task_backoff_error(
 
     # Then
     # TaskBackoffError is raised to trigger the task-processor retry
-    mock_get_environment.assert_called_once_with(id=1)    # Given
+    mock_get_environment.assert_called_once_with(id=1)  # Given
     mock_get_environment = mocker.patch("environments.tasks.Environment.objects.get")
     mock_get_environment.side_effect = OperationalError
 

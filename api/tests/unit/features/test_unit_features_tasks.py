@@ -1,14 +1,13 @@
 import pytest
+from django.db import OperationalError
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
-from unittest import mock
-from django.db import OperationalError
 from task_processor.exceptions import TaskBackoffError
-from features.tasks import delete_feature 
+
 from api_keys.models import MasterAPIKey
 from environments.models import Environment
 from features.models import Feature, FeatureState
-from features.tasks import trigger_feature_state_change_webhooks
+from features.tasks import delete_feature, trigger_feature_state_change_webhooks
 from organisations.models import Organisation
 from projects.models import Project
 from users.models import FFAdminUser
@@ -165,6 +164,7 @@ def test_trigger_feature_state_change_webhooks_for_deleted_flag_uses_fs_instance
 
     assert data["previous_state"]["feature"]["id"] == feature_state.feature.id
     assert event_type == WebhookEventType.FLAG_DELETED.value
+
 
 @pytest.mark.django_db
 def test_delete_feature__feature_does_not_exist__succeeds_silently(
