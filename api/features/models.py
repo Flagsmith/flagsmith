@@ -215,7 +215,7 @@ class Feature(  # type: ignore[django-manager-missing]
         return self.project
 
 
-def get_next_segment_priority(feature):# type: ignore[no-untyped-def]
+def get_next_segment_priority(feature):  # type: ignore[no-untyped-def]
     Feature.objects.select_for_update().get(pk=feature.id)
 
     feature_segments = FeatureSegment.objects.filter(feature=feature).order_by(
@@ -282,10 +282,11 @@ class FeatureSegment(
     order_with_respect_to = ("feature", "environment", "environment_feature_version")
 
     objects = FeatureSegmentManager()  # type: ignore[misc]
+
     @hook(BEFORE_CREATE)
     def set_priority(self) -> None:
         if self.priority is None:
-            # We use an atomic transaction here to ensure 
+            # We use an atomic transaction here to ensure
             # the select_for_update() lock in get_next_segment_priority works.
             with transaction.atomic():
                 self.priority = get_next_segment_priority(self.feature)
