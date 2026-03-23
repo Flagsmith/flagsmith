@@ -4,7 +4,6 @@ import uuid
 from copy import deepcopy
 from typing import TYPE_CHECKING, Literal
 
-from flagsmith_schemas.api import V1EnvironmentDocumentResponse
 from common.core.utils import using_database_replica
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -57,7 +56,6 @@ from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
 from util.mappers import (
-    map_environment_to_environment_document,
     map_environment_to_sdk_document,
 )
 from webhooks.models import AbstractBaseExportableWebhookModel
@@ -366,7 +364,7 @@ class Environment(
                     e.api_key: map_environment_to_sdk_document(e)
                     for e in environments
                 }
-            )            
+            )
 
     def get_feature_state(
         self,

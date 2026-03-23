@@ -19,9 +19,8 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from core.constants import STRING
 from core.request_origin import RequestOrigin
-from environments.identities.models import Identity
 from environments.enums import EnvironmentDocumentCacheMode
-from flagsmith_schemas.api import V1EnvironmentDocumentResponse
+from environments.identities.models import Identity
 from environments.metrics import CACHE_HIT, CACHE_MISS
 from environments.models import (
     Environment,
@@ -43,8 +42,10 @@ from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
 from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
-from util.mappers import (map_environment_to_environment_document,
-    map_environment_to_sdk_document)
+from util.mappers import (
+    map_environment_to_environment_document,
+    map_environment_to_sdk_document,
+)
 
 if typing.TYPE_CHECKING:
     from django.db.models import Model
@@ -1270,7 +1271,7 @@ def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_ve
     # When
     new_environment = environment.clone(name="new-environment")
 
- # Then
+    # Then
     assert new_environment.use_v2_feature_versioning
 
     # we only expect a single environment feature version as we are essentially
@@ -1284,11 +1285,10 @@ def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_ve
     assert latest_feature_states.count() == 2
     assert {fs.environment_feature_version for fs in latest_feature_states} == {efv}
 
+
 @mock.patch("environments.models.environment_document_cache")
 def test_write_environment_documents__persistent_caching_enabled__caches_sdk_document(
-    mock_document_cache: MagicMock,
-    environment: Environment,
-    settings: typing.Any
+    mock_document_cache: MagicMock, environment: Environment, settings: typing.Any
 ) -> None:
     # Given
     settings.CACHE_ENVIRONMENT_DOCUMENT_MODE = EnvironmentDocumentCacheMode.PERSISTENT
