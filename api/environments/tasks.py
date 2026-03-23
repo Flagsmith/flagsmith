@@ -1,13 +1,11 @@
 from django.db import IntegrityError, OperationalError, transaction
-from django.db.transaction import TransactionManagementError
-from task_processor.exceptions import TaskBackoffError
-from django.db import transaction
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Prefetch, Q
+from django.db.transaction import TransactionManagementError
 from django.utils import timezone
 from task_processor.decorators import (
     register_task_handler,
 )
+from task_processor.exceptions import TaskBackoffError
 from task_processor.models import TaskPriority
 
 from audit.models import AuditLog
@@ -74,6 +72,7 @@ def delete_environment(environment_id: int) -> None:
     except (OperationalError, IntegrityError, TransactionManagementError):
         # Someone else is locking these rows, back off and retry
         raise TaskBackoffError()
+
 
 @register_task_handler()
 def clone_environment_feature_states(
