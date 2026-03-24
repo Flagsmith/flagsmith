@@ -1,6 +1,7 @@
 import React, { FC, useState } from 'react'
 import Constants from 'common/constants'
 import AppActions from 'common/dispatcher/app-actions'
+import FeatureListStore from 'common/stores/feature-list-store'
 import { useGetProjectQuery } from 'common/services/useProject'
 import Icon from 'components/Icon'
 import Button from 'components/base/forms/Button'
@@ -77,6 +78,8 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
       identityId: identity.value,
     }).then(() => {
       setSelectedIdentity(null)
+      refetch()
+      FeatureListStore.trigger('saved', {})
     })
   }
 
@@ -232,14 +235,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
             return (
               <Row space className='list-item cursor-pointer' key={id}>
                 <Row>
-                  <div className='table-column' style={{ width: '65px' }}>
-                    <Switch
-                      checked={enabled}
-                      onChange={() => toggleUserFlag({ enabled, id, identity })}
-                      disabled={isEdge}
-                    />
-                  </div>
-                  <div className='font-weight-medium fs-small lh-sm'>
+                  <div className='font-weight-medium fs-small lh-sm ms-3'>
                     {identity.identifier}
                   </div>
                 </Row>
@@ -249,11 +245,18 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
                       <FeatureValue value={feature_state_value} />
                     )}
                   </div>
-                  <div className='table-column'>
+                  <div className='table-column' style={{ width: '65px' }}>
+                    <Switch
+                      checked={enabled}
+                      onChange={() => toggleUserFlag({ enabled, id, identity })}
+                      disabled={isEdge}
+                    />
+                  </div>
+                  <div className='table-column d-flex align-items-center'>
                     <Button
                       target='_blank'
                       href={`/project/${projectId}/environment/${environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
-                      className='btn btn-link fs-small lh-sm font-weight-medium'
+                      className='btn btn-link fs-small lh-sm font-weight-medium me-4'
                     >
                       <Icon name='edit' width={20} fill='#6837FC' /> Edit
                     </Button>
@@ -261,7 +264,10 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
                       onClick={(e: React.MouseEvent) => {
                         e.stopPropagation()
                         removeUserOverride({
-                          cb: () => refetch(),
+                          cb: () => {
+                            refetch()
+                            FeatureListStore.trigger('saved', {})
+                          },
                           environmentId,
                           identifier: identity.identifier,
                           identity: identity.id,
@@ -270,7 +276,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
                           projectFlag,
                         })
                       }}
-                      className='btn ml-2 btn-with-icon'
+                      className='btn btn-with-icon'
                     >
                       <Icon name='trash-2' width={20} fill='#656D7B' />
                     </Button>
