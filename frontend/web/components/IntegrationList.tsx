@@ -355,7 +355,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
               return allItems
             })
           }
-          if (key !== 'github' && key !== 'gitlab') {
+          if (!integration.isExternalInstallation && !integration.isGitlabIntegration) {
             return _data
               .get(
                 `${Project.api}projects/${props.projectId}/integrations/${key}/`,
