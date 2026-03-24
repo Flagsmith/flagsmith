@@ -1,7 +1,8 @@
 import React, { useState, FC } from 'react'
-import { IconButton, Collapse } from '@material-ui/core'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import Button from 'components/base/forms/Button'
+import Collapse from 'components/Collapse'
 
 interface AccordionCardProps {
   children?: React.ReactNode
@@ -36,12 +37,12 @@ const AccordionCard: FC<AccordionCardProps> = ({
           {isLoading && <Loader width='15px' height='15px' />}
         </div>
         {!isLoading && (
-          <IconButton size='small'>
+          <Button theme='icon' size='xSmall'>
             <IonIcon
               className='fs-small me-2 text-muted'
               icon={open ? chevronUp : chevronDown}
             />
-          </IconButton>
+          </Button>
         )}
       </div>
       <Collapse in={open}>

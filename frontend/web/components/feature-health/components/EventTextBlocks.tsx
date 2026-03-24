@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import Constants from 'common/constants'
-import Collapse from '@material-ui/core/Collapse'
+import Collapse from 'components/Collapse'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import { FeatureHealthEventReasonTextBlock } from 'common/types/responses'

@@ -4,7 +4,6 @@ import { useGetSegmentsQuery } from 'common/services/useSegment'
 import useInfiniteScroll from 'common/useInfiniteScroll'
 import { Req } from 'common/types/requests'
 import { components } from 'react-select'
-import { SelectProps } from '@material-ui/core/Select/Select'
 import Utils from 'common/utils/utils'
 import Button from './base/forms/Button'
 
@@ -14,8 +13,8 @@ type SegmentSelectType = {
   'data-test'?: string
   placeholder?: string
   className?: string
-  value: SelectProps['value']
-  onChange: SelectProps['onChange']
+  value: unknown
+  onChange: (event: any) => void
   filter?: (segments: Segment) => Segment[]
 }
 

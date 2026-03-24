@@ -2,7 +2,6 @@ import React, { FC, FormEventHandler, useState } from 'react'
 import TheInput from 'material-ui-chip-input'
 import Utils from 'common/utils/utils'
 import { filter } from 'lodash'
-import Chip from '@material-ui/core/Chip'
 import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 
@@ -59,18 +58,23 @@ const ChipInput: FC<ChipInputType> = ({ onChange, placeholder, value }) => {
         root: 'mui-root',
       }}
       chipRenderer={({ className, handleClick, handleDelete, value }, key) => (
-        <Chip
+        <span
           key={key}
           className={className}
           onClick={handleClick}
-          onDelete={handleDelete}
-          label={value}
-          deleteIcon={
-            <span className='chip-icon ion'>
-              <IonIcon icon={close} />
-            </span>
-          }
-        />
+          role='button'
+          tabIndex={0}
+        >
+          <span>{value}</span>
+          <span
+            className='chip-icon ion'
+            onClick={handleDelete}
+            role='button'
+            tabIndex={0}
+          >
+            <IonIcon icon={close} />
+          </span>
+        </span>
       )}
     />
   )
