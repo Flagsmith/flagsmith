@@ -1,7 +1,8 @@
+from collections import defaultdict
 from datetime import datetime, timedelta
 
 import structlog
-from common.core.utils import using_database_replica
+from common.core.utils import is_saas, using_database_replica
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import Q, Sum
@@ -120,6 +121,41 @@ def get_usage_data_from_local_db(
     )
 
     return map_annotated_api_usage_buckets_to_usage_data(qs)
+
+
+def get_top_organisations_from_local_db(
+    date_start: datetime,
+) -> dict[int, int]:
+    """
+    Return a mapping of organisation ID to total API call count from the
+    Postgres analytics database, for all organisations with usage since
+    ``date_start``.  Self-hosted deployments only.
+    """
+    if is_saas():
+        raise RuntimeError("Must not run in SaaS mode")
+
+    environment_id_to_organisation_id: dict[int, int] = dict(
+        using_database_replica(Environment.objects).values_list(
+            "id", "project__organisation_id"
+        )
+    )
+
+    usage_per_environment = (
+        APIUsageBucket.objects.filter(
+            created_at__gte=date_start,
+            bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
+        )
+        .values("environment_id")
+        .annotate(total=Sum("total_count"))
+    )
+
+    calls_per_organisation: defaultdict[int, int] = defaultdict(int)
+    for row in usage_per_environment:
+        organisation_id = environment_id_to_organisation_id.get(row["environment_id"])
+        if organisation_id is not None:
+            calls_per_organisation[organisation_id] += row["total"]
+
+    return dict(calls_per_organisation)
 
 
 def get_total_events_count(

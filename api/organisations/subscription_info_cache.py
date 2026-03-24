@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.utils import timezone
 
+from app_analytics.analytics_db_service import get_top_organisations_from_local_db
 from app_analytics.influxdb_wrapper import get_top_organisations
 
 from .chargebee import get_subscription_metadata_from_id  # type: ignore[attr-defined]
@@ -32,8 +33,11 @@ def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, .
         for org in organisations
     }
 
-    if SubscriptionCacheEntity.INFLUX in update_cache_entities:
-        _update_caches_with_influx_data(organisation_info_cache_dict)
+    if (
+        SubscriptionCacheEntity.API_USAGE in update_cache_entities
+        or SubscriptionCacheEntity.INFLUX in update_cache_entities
+    ):
+        _update_caches_with_api_usage_data(organisation_info_cache_dict)
 
     if SubscriptionCacheEntity.CHARGEBEE in update_cache_entities:
         _update_caches_with_chargebee_data(organisations, organisation_info_cache_dict)
@@ -64,14 +68,17 @@ def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, .
     )
 
 
-def _update_caches_with_influx_data(
+def _update_caches_with_api_usage_data(
     organisation_info_cache_dict: OrganisationSubscriptionInformationCacheDict,
 ) -> None:
     """
     Mutates the provided organisation_info_cache_dict in place to add information about the organisation's
-    influx usage.
+    API usage, sourced from either Postgres or InfluxDB.
     """
-    if not settings.INFLUXDB_TOKEN:
+    use_postgres = settings.USE_POSTGRES_FOR_ANALYTICS
+    use_influx = bool(settings.INFLUXDB_TOKEN)
+
+    if not use_postgres and not use_influx:
         return
 
     for _date_start, limit in (("-30d", ""), ("-7d", ""), ("-24h", "100")):
@@ -85,7 +92,10 @@ def _update_caches_with_influx_data(
         else:
             assert False, "Expecting either days (d) or hours (h)"  # pragma: no cover
 
-        org_calls = get_top_organisations(date_start, limit)
+        if use_postgres:
+            org_calls = get_top_organisations_from_local_db(date_start)
+        else:
+            org_calls = get_top_organisations(date_start, limit)
 
         covered_orgs = set()
 

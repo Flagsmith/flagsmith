@@ -49,7 +49,7 @@ def test_update_caches__with_usage_data__populates_cache_correctly(  # type: ign
 
     # When
     subscription_cache_entities = (
-        SubscriptionCacheEntity.INFLUX,
+        SubscriptionCacheEntity.API_USAGE,
         SubscriptionCacheEntity.CHARGEBEE,
     )
     update_caches(subscription_cache_entities)
@@ -119,7 +119,7 @@ def test_update_caches__no_usage_data__resets_cache_to_zero(
 
     # When
     subscription_cache_entities = (
-        SubscriptionCacheEntity.INFLUX,
+        SubscriptionCacheEntity.API_USAGE,
         SubscriptionCacheEntity.CHARGEBEE,
     )
     update_caches(subscription_cache_entities)
@@ -129,3 +129,76 @@ def test_update_caches__no_usage_data__resets_cache_to_zero(
     assert organisation.subscription_information_cache.api_calls_24h == 0
     assert organisation.subscription_information_cache.api_calls_7d == 0
     assert organisation.subscription_information_cache.api_calls_30d == 0
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_update_caches__postgres_analytics__populates_cache_correctly(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
+    settings.INFLUXDB_TOKEN = None
+
+    now = timezone.now()
+    day_1 = now - timedelta(hours=24)
+    day_7 = now - timedelta(days=7)
+    day_30 = now - timedelta(days=30)
+    organisation_usage = {
+        day_1: 25123,
+        day_7: 182957,
+        day_30: 804564,
+    }
+    mock_get_top_organisations_from_local_db = mocker.patch(
+        "organisations.subscription_info_cache.get_top_organisations_from_local_db",
+        side_effect=lambda t: {organisation.id: organisation_usage[t]},
+    )
+    mock_get_top_organisations = mocker.patch(
+        "organisations.subscription_info_cache.get_top_organisations"
+    )
+
+    # When
+    update_caches((SubscriptionCacheEntity.API_USAGE,))
+
+    # Then
+    organisation.refresh_from_db()
+    assert (
+        organisation.subscription_information_cache.api_calls_24h
+        == organisation_usage[day_1]
+    )
+    assert (
+        organisation.subscription_information_cache.api_calls_7d
+        == organisation_usage[day_7]
+    )
+    assert (
+        organisation.subscription_information_cache.api_calls_30d
+        == organisation_usage[day_30]
+    )
+    assert mock_get_top_organisations_from_local_db.call_count == 3
+    assert mock_get_top_organisations.call_count == 0
+
+
+def test_update_caches__postgres_and_influx_configured__prefers_postgres(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
+    settings.INFLUXDB_TOKEN = "token"
+
+    mocked_get_top_organisations_from_local_db = mocker.patch(
+        "organisations.subscription_info_cache.get_top_organisations_from_local_db",
+        return_value={organisation.id: 42},
+    )
+    mock_get_top_organisations = mocker.patch(
+        "organisations.subscription_info_cache.get_top_organisations"
+    )
+
+    # When
+    update_caches((SubscriptionCacheEntity.API_USAGE,))
+
+    # Then
+    assert mocked_get_top_organisations_from_local_db.call_count == 3
+    assert mock_get_top_organisations.call_count == 0
