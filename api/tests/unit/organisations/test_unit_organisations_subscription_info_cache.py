@@ -202,3 +202,40 @@ def test_update_caches__postgres_and_influx_configured__prefers_postgres(
     # Then
     assert mocked_get_top_organisations_from_local_db.call_count == 3
     assert mock_get_top_organisations.call_count == 0
+
+
+def test_update_caches__no_analytics_source_configured__skips_api_usage_update(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False
+    settings.INFLUXDB_TOKEN = ""
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        api_calls_24h=100,
+        api_calls_7d=700,
+        api_calls_30d=3000,
+    )
+
+    mock_get_top_organisations_from_local_db = mocker.patch(
+        "organisations.subscription_info_cache.get_top_organisations_from_local_db",
+    )
+    mock_get_top_organisations = mocker.patch(
+        "organisations.subscription_info_cache.get_top_organisations",
+    )
+
+    # When
+    update_caches((SubscriptionCacheEntity.API_USAGE,))
+
+    # Then — neither analytics source was queried
+    assert mock_get_top_organisations_from_local_db.call_count == 0
+    assert mock_get_top_organisations.call_count == 0
+
+    # And the existing cache values are preserved (not zeroed out)
+    organisation.subscription_information_cache.refresh_from_db()
+    assert organisation.subscription_information_cache.api_calls_24h == 100
+    assert organisation.subscription_information_cache.api_calls_7d == 700
+    assert organisation.subscription_information_cache.api_calls_30d == 3000
