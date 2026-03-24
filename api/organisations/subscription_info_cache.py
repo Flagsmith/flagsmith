@@ -35,6 +35,9 @@ def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, .
 
     if (
         SubscriptionCacheEntity.API_USAGE in update_cache_entities
+        # NOTE: SubscriptionCacheEntity.INFLUX is superseded, but must live
+        # briefly for the sake of task processor continuity during the release.
+        # TODO: https://github.com/Flagsmith/flagsmith/pull/7024
         or SubscriptionCacheEntity.INFLUX in update_cache_entities
     ):
         _update_caches_with_api_usage_data(organisation_info_cache_dict)

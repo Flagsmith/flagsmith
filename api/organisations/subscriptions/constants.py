@@ -51,7 +51,7 @@ ENTERPRISE = "enterprise"
 
 
 class SubscriptionCacheEntity(Enum):
-    INFLUX = "INFLUX"  # Deprecated alias — use API_USAGE.
+    INFLUX = "INFLUX"  # Deprecated — use API_USAGE.
     API_USAGE = "API_USAGE"
     CHARGEBEE = "CHARGEBEE"
 
