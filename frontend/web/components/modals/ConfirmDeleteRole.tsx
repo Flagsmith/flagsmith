@@ -3,7 +3,7 @@ import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 import { useDeleteRoleMutation } from 'common/services/useRole'
 import ModalHR from './ModalHR'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import { Role } from 'common/types/responses'
 
 type ConfirmDeleteRoleType = {

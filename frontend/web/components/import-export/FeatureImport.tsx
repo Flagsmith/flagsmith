@@ -19,7 +19,7 @@ import {
 import FeatureRow from 'components/feature-summary/FeatureRow'
 import Button from 'components/base/forms/Button'
 import { useCreateFlagsmithProjectImportMutation } from 'common/services/useFlagsmithProjectImport'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
 import FeatureListStore from 'common/stores/feature-list-store'

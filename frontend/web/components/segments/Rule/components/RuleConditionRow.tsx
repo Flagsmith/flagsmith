@@ -8,7 +8,7 @@ import {
 } from 'common/types/responses'
 import find from 'lodash/find'
 import Button from 'components/base/forms/Button'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import RuleConditionPropertySelect from './RuleConditionPropertySelect'
 import RuleConditionValueInput from './RuleConditionValueInput'
 import { useRuleOperator, useRuleContext } from 'components/segments/Rule/hooks'

@@ -2,7 +2,7 @@ import React, { FC, useEffect, useRef, useState } from 'react'
 import { Identity } from 'common/types/responses'
 import { useUpdateIdentityMutation } from 'common/services/useIdentity'
 import Button from './base/forms/Button'
-import ErrorMessage from './ErrorMessage'
+import ErrorMessage from './messages/ErrorMessage'
 import GhostInput from './base/forms/GhostInput'
 
 type EditIdentityType = {

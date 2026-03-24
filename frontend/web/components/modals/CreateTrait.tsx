@@ -9,7 +9,7 @@ import React, {
 import Highlight from 'components/Highlight'
 import Constants from 'common/constants'
 import Format from 'common/utils/format'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import ModalHR from './ModalHR'
 import IdentityProvider from 'common/providers/IdentityProvider'
 import _ from 'lodash'

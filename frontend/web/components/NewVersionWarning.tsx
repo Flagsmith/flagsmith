@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react'
 import { useGetFeatureVersionsQuery } from 'common/services/useFeatureVersion'
 import moment from 'moment'
-import ErrorMessage from './ErrorMessage'
+import ErrorMessage from './messages/ErrorMessage'
 
 type NewVersionWarningType = {
   date: string

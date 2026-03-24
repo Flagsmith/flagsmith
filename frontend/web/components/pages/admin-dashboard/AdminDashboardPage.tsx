@@ -11,7 +11,7 @@ import { useGetAdminDashboardMetricsQuery } from 'common/services/useAdminDashbo
 import Button from 'components/base/forms/Button'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 
 const AdminDashboardPage: FC = () => {
   const [days, setDays] = useState<30 | 60 | 90>(30)

@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import Constants from 'common/constants'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import { withRouter } from 'react-router-dom'
 const PasswordResetPage = class extends Component {
   static displayName = 'PasswordResetPage'

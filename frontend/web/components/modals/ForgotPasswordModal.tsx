@@ -3,7 +3,7 @@ import { FC, FormEvent, useState } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import Project from 'common/project'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import ModalHR from './ModalHR'
 

@@ -7,7 +7,7 @@ import { sortBy } from 'lodash'
 import { GroupUser, UserGroupSummary } from 'common/types/responses'
 import Switch from './Switch'
 import PanelSearch from './PanelSearch'
-import ErrorMessage from './ErrorMessage'
+import ErrorMessage from './messages/ErrorMessage'
 
 type UsersGroupsType = {
   user: GroupUser

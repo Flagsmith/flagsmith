@@ -1,7 +1,7 @@
 import propTypes from 'prop-types'
 import React, { Component } from 'react'
 import QRCode from 'qrcode.react'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 
 export default class TheComponent extends Component {
   static displayName = 'TheComponent'
