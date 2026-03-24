@@ -14,7 +14,7 @@ Run OSS (non-enterprise) E2E tests and report results.
 ## Run Command
 
 ```bash
-E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=5 npm run test -- --grep @oss --quiet
+E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep @oss --quiet
 ```
 
 ## Workflow

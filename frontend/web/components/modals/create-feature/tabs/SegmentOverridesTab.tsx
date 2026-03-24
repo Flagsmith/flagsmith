@@ -1,6 +1,6 @@
 import React, { FC, useState } from 'react'
 import Constants from 'common/constants'
-import { useGetProjectQuery } from 'common/services/useProject'
+import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { useHasPermission } from 'common/providers/Permission'
 import SegmentOverrides from 'components/SegmentOverrides'
 import Button from 'components/base/forms/Button'
@@ -57,10 +57,8 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
   const [showCreateSegment, setShowCreateSegment] = useState(false)
   const [enabledSegment, setEnabledSegment] = useState(false)
 
-  const { data: project } = useGetProjectQuery({ id: projectId })
-  const environment = project?.environments?.find(
-    (env) => env.api_key === environmentId,
-  )
+  const { getEnvironment } = useProjectEnvironments(projectId)
+  const environment = getEnvironment(environmentId)
   const isVersioned = !!environment?.use_v2_feature_versioning
   const is4Eyes =
     !!environment &&

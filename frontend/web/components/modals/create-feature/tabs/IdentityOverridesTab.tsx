@@ -88,17 +88,10 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
           return
         }
 
-        const envId = project?.environments?.find(
-          (env) => env.api_key === environmentId,
-        )?.id
-        if (!envId) {
-          setUserOverridesNoPermissionState()
-          return
-        }
         getPermission(
           getStore(),
           {
-            id: envId,
+            id: environmentId as unknown as number,
             level: 'environment',
           },
           { forceRefetch },
@@ -278,10 +271,16 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
         })
         .catch(() => {
           setIsLoading(false)
-          setUserOverridesErrorState()                                                                                                                                           
+          setUserOverridesErrorState()
         })
     },
-    [environmentId, environmentFlag, projectFlag?.id, userOverridesPage],
+    [
+      environmentId,
+      environmentFlag,
+      projectFlag?.id,
+      setUserOverridesErrorState,
+      userOverridesPage,
+    ],
   )
 
   // Load initial data

@@ -3,7 +3,7 @@ import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
-import FeatureLimitAlert from 'components/modals/create-feature/FeatureLimitAlert'
+import FeatureLimitAlert from 'components/modals/create-feature/components/FeatureLimitAlert'
 import { ProjectPermission } from 'common/types/permissions.types'
 
 type FeaturesPageHeaderProps = {
