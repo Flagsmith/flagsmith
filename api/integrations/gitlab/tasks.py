@@ -63,7 +63,7 @@ def _post_to_resource(
     resource_iid = int(iid_match.group(1))
 
     # Extract project path from URL (everything between host and /-/)
-    project_path_match = re.search(r"^/([^/-]+(?:/[^/-]+)*)/-/", path)
+    project_path_match = re.search(r"^/([^/]+(?:/[^/]+)*)/-/", path)
     if not project_path_match:
         return
     project_path = project_path_match.group(1)

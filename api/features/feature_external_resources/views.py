@@ -86,10 +86,10 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
                         if gitlab_config and gitlab_config.gitlab_project_id:
                             # Parse resource IID from URL
                             if resource_type == "GITLAB_MR":
-                                match = _re.search(r"https?://[^/]+/([^/-]+(?:/[^/-]+)*)/-/merge_requests/(\d+)$", resource_url)
+                                match = _re.search(r"https?://[^/]+/([^/]+(?:/[^/]+)*)/-/merge_requests/(\d+)$", resource_url)
                                 api_type = "merge_requests"
                             else:
-                                match = _re.search(r"https?://[^/]+/([^/-]+(?:/[^/-]+)*)/-/(?:issues|work_items)/(\d+)$", resource_url)
+                                match = _re.search(r"https?://[^/]+/([^/]+(?:/[^/]+)*)/-/(?:issues|work_items)/(\d+)$", resource_url)
                                 api_type = "issues"
 
                             if match:
@@ -125,9 +125,9 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
 
         url = request.data.get("url")
         if resource_type == "GITLAB_MR":
-            pattern = r"https?://[^/]+/([^/-]+(?:/[^/-]+)*)/-/merge_requests/(\d+)$"
+            pattern = r"https?://[^/]+/([^/]+(?:/[^/]+)*)/-/merge_requests/(\d+)$"
         else:
-            pattern = r"https?://[^/]+/([^/-]+(?:/[^/-]+)*)/-/(?:issues|work_items)/(\d+)$"
+            pattern = r"https?://[^/]+/([^/]+(?:/[^/]+)*)/-/(?:issues|work_items)/(\d+)$"
 
         url_match = re.search(pattern, url)
         if url_match:

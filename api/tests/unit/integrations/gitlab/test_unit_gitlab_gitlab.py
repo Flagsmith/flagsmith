@@ -1130,11 +1130,11 @@ def test_post_to_resource__no_iid_in_url__returns_early(
 def test_post_to_resource__no_project_path_match__returns_early(
     mocker: MockerFixture,
 ) -> None:
-    # Given — URL has hyphens in the group name which breaks the [^/-] regex
+    # Given — URL path starts directly with /-/ with no project path before it
     mock_post_comment = mocker.patch(
         "integrations.gitlab.tasks.post_comment_to_gitlab"
     )
-    resource_url = "https://gitlab.example.com/my-group/my-project/-/issues/1"
+    resource_url = "https://gitlab.example.com/-/issues/1"
 
     # When
     _post_to_resource(
