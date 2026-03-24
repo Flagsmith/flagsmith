@@ -270,9 +270,7 @@ def test_tag_feature_per_gitlab_event__work_items_url_variant__finds_feature(
     mocker.patch(
         "features.feature_external_resources.models.FeatureExternalResource._handle_gitlab_after_save"
     )
-    work_items_url = (
-        "https://gitlab.example.com/testgroup/testrepo/-/work_items/5"
-    )
+    work_items_url = "https://gitlab.example.com/testgroup/testrepo/-/work_items/5"
     FeatureExternalResource.objects.create(
         url=work_items_url,
         type="GITLAB_ISSUE",
@@ -365,9 +363,7 @@ def test_handle_gitlab_webhook_event__merge_request__calls_tag_feature(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_tag = mocker.patch(
-        "integrations.gitlab.gitlab.tag_feature_per_gitlab_event"
-    )
+    mock_tag = mocker.patch("integrations.gitlab.gitlab.tag_feature_per_gitlab_event")
     payload = {
         "object_attributes": {
             "action": "merge",
@@ -401,9 +397,7 @@ def test_handle_gitlab_webhook_event__issue__calls_tag_feature(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_tag = mocker.patch(
-        "integrations.gitlab.gitlab.tag_feature_per_gitlab_event"
-    )
+    mock_tag = mocker.patch("integrations.gitlab.gitlab.tag_feature_per_gitlab_event")
     payload = {
         "object_attributes": {
             "action": "close",
@@ -430,9 +424,7 @@ def test_handle_gitlab_webhook_event__unknown_event__does_nothing(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_tag = mocker.patch(
-        "integrations.gitlab.gitlab.tag_feature_per_gitlab_event"
-    )
+    mock_tag = mocker.patch("integrations.gitlab.gitlab.tag_feature_per_gitlab_event")
 
     # When
     handle_gitlab_webhook_event(event_type="push", payload={})
@@ -478,7 +470,9 @@ def test_generate_body_comment__resource_removed__returns_unlinked_text() -> Non
     assert result == UNLINKED_FEATURE_TEXT % "my_flag"
 
 
-def test_generate_body_comment__segment_override_deleted__returns_segment_deleted_text() -> None:
+def test_generate_body_comment__segment_override_deleted__returns_segment_deleted_text() -> (
+    None
+):
     # Given
     event_type = GitLabEventType.SEGMENT_OVERRIDE_DELETED.value
 
@@ -648,7 +642,9 @@ def test_generate_data__feature_state_with_value__includes_feature_state_value(
         project=gitlab_configuration.project,
     )
     feature_state = FeatureState.objects.filter(
-        feature=feature_with_val, identity__isnull=True, environment=environment,
+        feature=feature_with_val,
+        identity__isnull=True,
+        environment=environment,
     ).first()
     assert feature_state is not None
 
@@ -806,14 +802,18 @@ def test_paginated_query_params__page_less_than_1__raises_value_error() -> None:
 def test_paginated_query_params__page_size_too_large__raises_value_error() -> None:
     # Given / When
     # Then
-    with pytest.raises(ValueError, match="Page size must be an integer between 1 and 100"):
+    with pytest.raises(
+        ValueError, match="Page size must be an integer between 1 and 100"
+    ):
         PaginatedQueryParams(page=1, page_size=101)
 
 
 def test_paginated_query_params__page_size_less_than_1__raises_value_error() -> None:
     # Given / When
     # Then
-    with pytest.raises(ValueError, match="Page size must be an integer between 1 and 100"):
+    with pytest.raises(
+        ValueError, match="Page size must be an integer between 1 and 100"
+    ):
         PaginatedQueryParams(page=1, page_size=0)
 
 
@@ -822,7 +822,9 @@ def test_paginated_query_params__page_size_less_than_1__raises_value_error() -> 
 # ---------------------------------------------------------------
 
 
-def test_resolve_resource_urls_for_event__flag_updated__returns_all_resource_urls() -> None:
+def test_resolve_resource_urls_for_event__flag_updated__returns_all_resource_urls() -> (
+    None
+):
     # Given
     gitlab_data = GitLabData(
         gitlab_instance_url="https://gitlab.example.com",
@@ -835,8 +837,14 @@ def test_resolve_resource_urls_for_event__flag_updated__returns_all_resource_url
         event_type=GitLabEventType.FLAG_UPDATED.value,
         gitlab_data=gitlab_data,
         feature_external_resources=[
-            {"type": "GITLAB_ISSUE", "url": "https://gitlab.example.com/group/project/-/issues/1"},
-            {"type": "GITLAB_MR", "url": "https://gitlab.example.com/group/project/-/merge_requests/2"},
+            {
+                "type": "GITLAB_ISSUE",
+                "url": "https://gitlab.example.com/group/project/-/issues/1",
+            },
+            {
+                "type": "GITLAB_MR",
+                "url": "https://gitlab.example.com/group/project/-/merge_requests/2",
+            },
         ],
     )
 
@@ -849,7 +857,9 @@ def test_resolve_resource_urls_for_event__flag_updated__returns_all_resource_url
     assert "merge_requests/2" in result[1]
 
 
-def test_resolve_resource_urls_for_event__flag_deleted__returns_all_resource_urls() -> None:
+def test_resolve_resource_urls_for_event__flag_deleted__returns_all_resource_urls() -> (
+    None
+):
     # Given
     gitlab_data = GitLabData(
         gitlab_instance_url="https://gitlab.example.com",
@@ -862,7 +872,10 @@ def test_resolve_resource_urls_for_event__flag_deleted__returns_all_resource_url
         event_type=GitLabEventType.FLAG_DELETED.value,
         gitlab_data=gitlab_data,
         feature_external_resources=[
-            {"type": "GITLAB_ISSUE", "url": "https://gitlab.example.com/group/project/-/issues/1"},
+            {
+                "type": "GITLAB_ISSUE",
+                "url": "https://gitlab.example.com/group/project/-/issues/1",
+            },
         ],
     )
 
@@ -873,7 +886,9 @@ def test_resolve_resource_urls_for_event__flag_deleted__returns_all_resource_url
     assert len(result) == 1
 
 
-def test_resolve_resource_urls_for_event__resource_removed_with_url__returns_url() -> None:
+def test_resolve_resource_urls_for_event__resource_removed_with_url__returns_url() -> (
+    None
+):
     # Given
     gitlab_data = GitLabData(
         gitlab_instance_url="https://gitlab.example.com",
@@ -896,7 +911,9 @@ def test_resolve_resource_urls_for_event__resource_removed_with_url__returns_url
     assert result == ["https://gitlab.example.com/group/project/-/issues/5"]
 
 
-def test_resolve_resource_urls_for_event__resource_removed_no_url__returns_empty() -> None:
+def test_resolve_resource_urls_for_event__resource_removed_no_url__returns_empty() -> (
+    None
+):
     # Given
     gitlab_data = GitLabData(
         gitlab_instance_url="https://gitlab.example.com",
@@ -932,8 +949,14 @@ def test_resolve_resource_urls_for_event__default_case__returns_last_resource() 
         event_type=GitLabEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
         gitlab_data=gitlab_data,
         feature_external_resources=[
-            {"type": "GITLAB_ISSUE", "url": "https://gitlab.example.com/group/project/-/issues/1"},
-            {"type": "GITLAB_MR", "url": "https://gitlab.example.com/group/project/-/merge_requests/2"},
+            {
+                "type": "GITLAB_ISSUE",
+                "url": "https://gitlab.example.com/group/project/-/issues/1",
+            },
+            {
+                "type": "GITLAB_MR",
+                "url": "https://gitlab.example.com/group/project/-/merge_requests/2",
+            },
         ],
     )
 
@@ -945,7 +968,9 @@ def test_resolve_resource_urls_for_event__default_case__returns_last_resource() 
     assert "merge_requests/2" in result[0]
 
 
-def test_resolve_resource_urls_for_event__default_empty_resources__returns_empty() -> None:
+def test_resolve_resource_urls_for_event__default_empty_resources__returns_empty() -> (
+    None
+):
     # Given
     gitlab_data = GitLabData(
         gitlab_instance_url="https://gitlab.example.com",
@@ -978,9 +1003,7 @@ def test_post_to_resource__mr_url__posts_to_merge_requests(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_post_comment = mocker.patch(
-        "integrations.gitlab.tasks.post_comment_to_gitlab"
-    )
+    mock_post_comment = mocker.patch("integrations.gitlab.tasks.post_comment_to_gitlab")
     resource_url = "https://gitlab.example.com/testgroup/testrepo/-/merge_requests/3"
 
     # When
@@ -1008,9 +1031,7 @@ def test_post_to_resource__issue_url__posts_to_issues(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_post_comment = mocker.patch(
-        "integrations.gitlab.tasks.post_comment_to_gitlab"
-    )
+    mock_post_comment = mocker.patch("integrations.gitlab.tasks.post_comment_to_gitlab")
     resource_url = "https://gitlab.example.com/testgroup/testrepo/-/issues/7"
 
     # When
@@ -1038,9 +1059,7 @@ def test_post_to_resource__work_items_url__posts_to_issues(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_post_comment = mocker.patch(
-        "integrations.gitlab.tasks.post_comment_to_gitlab"
-    )
+    mock_post_comment = mocker.patch("integrations.gitlab.tasks.post_comment_to_gitlab")
     resource_url = "https://gitlab.example.com/testgroup/testrepo/-/work_items/7"
 
     # When
@@ -1067,9 +1086,7 @@ def test_post_to_resource__unknown_url_format__does_not_post(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_post_comment = mocker.patch(
-        "integrations.gitlab.tasks.post_comment_to_gitlab"
-    )
+    mock_post_comment = mocker.patch("integrations.gitlab.tasks.post_comment_to_gitlab")
     resource_url = "https://gitlab.example.com/testgroup/testrepo/-/pipelines/1"
 
     # When
@@ -1089,9 +1106,7 @@ def test_post_to_resource__missing_config__does_not_post(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_post_comment = mocker.patch(
-        "integrations.gitlab.tasks.post_comment_to_gitlab"
-    )
+    mock_post_comment = mocker.patch("integrations.gitlab.tasks.post_comment_to_gitlab")
     resource_url = "https://gitlab.example.com/nonexistent/project/-/issues/1"
 
     # When
@@ -1110,9 +1125,7 @@ def test_post_to_resource__no_iid_in_url__returns_early(
     mocker: MockerFixture,
 ) -> None:
     # Given — URL has /-/issues/ but no digits after it
-    mock_post_comment = mocker.patch(
-        "integrations.gitlab.tasks.post_comment_to_gitlab"
-    )
+    mock_post_comment = mocker.patch("integrations.gitlab.tasks.post_comment_to_gitlab")
     resource_url = "https://gitlab.example.com/group/project/-/issues/notanumber"
 
     # When
@@ -1131,9 +1144,7 @@ def test_post_to_resource__no_project_path_match__returns_early(
     mocker: MockerFixture,
 ) -> None:
     # Given — URL path starts directly with /-/ with no project path before it
-    mock_post_comment = mocker.patch(
-        "integrations.gitlab.tasks.post_comment_to_gitlab"
-    )
+    mock_post_comment = mocker.patch("integrations.gitlab.tasks.post_comment_to_gitlab")
     resource_url = "https://gitlab.example.com/-/issues/1"
 
     # When
@@ -1159,9 +1170,7 @@ def test_send_post_request__with_resources__calls_post_to_resource(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_post_to_resource = mocker.patch(
-        "integrations.gitlab.tasks._post_to_resource"
-    )
+    mock_post_to_resource = mocker.patch("integrations.gitlab.tasks._post_to_resource")
     gitlab_data = GitLabData(
         gitlab_instance_url="https://gitlab.example.com",
         access_token="test-token",
@@ -1175,7 +1184,10 @@ def test_send_post_request__with_resources__calls_post_to_resource(
         event_type=GitLabEventType.FLAG_UPDATED.value,
         gitlab_data=gitlab_data,
         feature_external_resources=[
-            {"type": "GITLAB_ISSUE", "url": "https://gitlab.example.com/testgroup/testrepo/-/issues/1"},
+            {
+                "type": "GITLAB_ISSUE",
+                "url": "https://gitlab.example.com/testgroup/testrepo/-/issues/1",
+            },
         ],
     )
 
@@ -1257,7 +1269,9 @@ def test_call_gitlab_app_webhook_for_feature_state__resource_removed__posts_with
     # Then
     mock_send.assert_called_once()
     call_args = mock_send.call_args[0][0]
-    assert call_args.event_type == GitLabEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
+    assert (
+        call_args.event_type == GitLabEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
+    )
     assert call_args.feature_external_resources == []
 
 
@@ -1528,9 +1542,7 @@ def test_feature_segment_create_github_comment__with_gitlab_config__calls_gitlab
         metadata='{"state": "opened"}',
     )
 
-    segment = Segment.objects.create(
-        name="test_segment", project=feature.project
-    )
+    segment = Segment.objects.create(name="test_segment", project=feature.project)
     feature_segment = FeatureSegment.objects.create(
         feature=feature,
         segment=segment,
@@ -1644,9 +1656,7 @@ def test_post_to_resource__issue_url__extracts_iid_and_project_path(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_post_comment = mocker.patch(
-        "integrations.gitlab.tasks.post_comment_to_gitlab"
-    )
+    mock_post_comment = mocker.patch("integrations.gitlab.tasks.post_comment_to_gitlab")
     # testgroup/testrepo matches the gitlab_configuration fixture's project_name
     resource_url = "https://gitlab.example.com/testgroup/testrepo/-/issues/42"
 

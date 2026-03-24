@@ -69,13 +69,14 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
                     )
                 elif resource_type.startswith("GITLAB_"):
                     try:
+                        import re as _re
+
                         from integrations.gitlab.client import (
                             get_gitlab_issue_mr_title_and_state as get_gitlab_metadata,
                         )
                         from integrations.gitlab.models import (
                             GitLabConfiguration,
                         )
-                        import re as _re
 
                         feature_obj = get_object_or_404(
                             Feature.objects.filter(id=self.kwargs["feature_pk"]),
@@ -86,10 +87,16 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
                         if gitlab_config and gitlab_config.gitlab_project_id:
                             # Parse resource IID from URL
                             if resource_type == "GITLAB_MR":
-                                match = _re.search(r"https?://[^/]+/([^/]+(?:/[^/]+)*)/-/merge_requests/(\d+)$", resource_url)
+                                match = _re.search(
+                                    r"https?://[^/]+/([^/]+(?:/[^/]+)*)/-/merge_requests/(\d+)$",
+                                    resource_url,
+                                )
                                 api_type = "merge_requests"
                             else:
-                                match = _re.search(r"https?://[^/]+/([^/]+(?:/[^/]+)*)/-/(?:issues|work_items)/(\d+)$", resource_url)
+                                match = _re.search(
+                                    r"https?://[^/]+/([^/]+(?:/[^/]+)*)/-/(?:issues|work_items)/(\d+)$",
+                                    resource_url,
+                                )
                                 api_type = "issues"
 
                             if match:
@@ -106,7 +113,9 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
 
         return Response(data={"results": data})
 
-    def _create_gitlab_resource(self, request: Any, feature: Any, resource_type: str, *args: Any, **kwargs: Any) -> Response:
+    def _create_gitlab_resource(
+        self, request: Any, feature: Any, resource_type: str, *args: Any, **kwargs: Any
+    ) -> Response:
         from integrations.gitlab.models import GitLabConfiguration
 
         try:
@@ -127,12 +136,16 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
         if resource_type == "GITLAB_MR":
             pattern = r"https?://[^/]+/([^/]+(?:/[^/]+)*)/-/merge_requests/(\d+)$"
         else:
-            pattern = r"https?://[^/]+/([^/]+(?:/[^/]+)*)/-/(?:issues|work_items)/(\d+)$"
+            pattern = (
+                r"https?://[^/]+/([^/]+(?:/[^/]+)*)/-/(?:issues|work_items)/(\d+)$"
+            )
 
         url_match = re.search(pattern, url)
         if url_match:
             _project_path, resource_iid = url_match.groups()
-            api_resource_type = "merge_requests" if resource_type == "GITLAB_MR" else "issues"
+            api_resource_type = (
+                "merge_requests" if resource_type == "GITLAB_MR" else "issues"
+            )
             if gitlab_config.tagging_enabled and gitlab_config.gitlab_project_id:
                 label_gitlab_issue_mr(
                     instance_url=gitlab_config.gitlab_instance_url,
@@ -149,7 +162,9 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    def _create_github_resource(self, request: Any, feature: Any, resource_type: str, *args: Any, **kwargs: Any) -> Response:
+    def _create_github_resource(
+        self, request: Any, feature: Any, resource_type: str, *args: Any, **kwargs: Any
+    ) -> Response:
         github_configuration = (
             Organisation.objects.prefetch_related("github_config")
             .get(id=feature.project.organisation_id)
@@ -212,10 +227,14 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
 
         # Handle GitLab resources
         if resource_type in ("GITLAB_MR", "GITLAB_ISSUE"):
-            return self._create_gitlab_resource(request, feature, resource_type, *args, **kwargs)
+            return self._create_gitlab_resource(
+                request, feature, resource_type, *args, **kwargs
+            )
 
         # Handle GitHub resources
-        return self._create_github_resource(request, feature, resource_type, *args, **kwargs)
+        return self._create_github_resource(
+            request, feature, resource_type, *args, **kwargs
+        )
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         external_resource_id = int(self.kwargs["pk"])
