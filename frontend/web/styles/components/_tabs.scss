@@ -159,6 +159,14 @@
 
 .btn-tab {
   position: relative;
+
+  .btn-tab__label {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
   .unread {
     padding-left: 0 !important;
     padding-right: 0 !important;

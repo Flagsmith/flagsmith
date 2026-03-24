@@ -503,10 +503,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
           <TabItem
             tabLabelString='General'
             tabLabel={
-              <Row className='justify-content-center flex-nowrap'>
-                General{' '}
-                {valueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
-              </Row>
+              <>
+                General
+                {valueChanged && <span className='unread'>{'*'}</span>}
+              </>
             }
           >
             <div className='my-4'>
@@ -564,12 +564,12 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <TabItem
               tabLabelString='Custom Fields'
               tabLabel={
-                <Row className='justify-content-center flex-nowrap'>
+                <>
                   Custom Fields
                   {metadataValueChanged && (
-                    <div className='unread ml-2 px-1 pt-2'>{'*'}</div>
+                    <span className='unread'>{'*'}</span>
                   )}
-                </Row>
+                </>
               }
             >
               <div className='my-4'>{MetadataTab}</div>
@@ -579,10 +579,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
       )}
       {!(isEdit && !condensed) && metadataEnable && segmentContentType?.id && (
         <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
-          <TabItem
-            tabLabelString='Basic configuration'
-            tabLabel={'Basic configuration'}
-          >
+          <TabItem tabLabel='Basic configuration'>
             <div className={className || 'my-3 mx-4'}>
               <CreateSegmentRulesTabForm
                 save={save}
@@ -610,12 +607,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               />
             </div>
           </TabItem>
-          <TabItem
-            tabLabelString='Custom Fields'
-            tabLabel={
-              <Row className='justify-content-center'>Custom Fields</Row>
-            }
-          >
+          <TabItem tabLabel='Custom Fields'>
             <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>
         </Tabs>
