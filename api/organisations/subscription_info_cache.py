@@ -36,7 +36,7 @@ def update_caches(*update_cache_entities: SubscriptionCacheEntity) -> None:
     if (
         SubscriptionCacheEntity.API_USAGE in update_cache_entities
         # NOTE: SubscriptionCacheEntity.INFLUX is superseded, but must live
-        # briefly for the sake of task processor continuity during the release.
+        # forever for the sake of task processor continuity during version updates.
         # TODO: https://github.com/Flagsmith/flagsmith/pull/7024
         or SubscriptionCacheEntity.INFLUX in update_cache_entities
     ):
