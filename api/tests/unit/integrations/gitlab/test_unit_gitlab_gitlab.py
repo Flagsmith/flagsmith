@@ -500,7 +500,7 @@ def test_generate_body_comment__flag_updated__returns_updated_text_with_table(
 ) -> None:
     # Given
     mocker.patch(
-        "integrations.gitlab.gitlab.get_current_site_url",
+        "integrations.vcs.comments.get_current_site_url",
         return_value="https://example.com",
     )
     event_type = GitLabEventType.FLAG_UPDATED.value
@@ -534,7 +534,7 @@ def test_generate_body_comment__resource_added_with_feature_states__returns_link
 ) -> None:
     # Given
     mocker.patch(
-        "integrations.gitlab.gitlab.get_current_site_url",
+        "integrations.vcs.comments.get_current_site_url",
         return_value="https://example.com",
     )
     event_type = GitLabEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value
@@ -568,7 +568,7 @@ def test_generate_body_comment__with_segment_feature_states__includes_segment_he
 ) -> None:
     # Given
     mocker.patch(
-        "integrations.gitlab.gitlab.get_current_site_url",
+        "integrations.vcs.comments.get_current_site_url",
         return_value="https://example.com",
     )
     event_type = GitLabEventType.FLAG_UPDATED.value

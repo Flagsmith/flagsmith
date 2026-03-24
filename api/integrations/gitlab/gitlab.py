@@ -6,19 +6,10 @@ from typing import Any
 from django.db.models import Q
 from django.utils.formats import get_format
 
-from core.helpers import get_current_site_url
 from features.models import Feature, FeatureState, FeatureStateValue
 from integrations.gitlab.constants import (
-    DELETED_FEATURE_TEXT,
-    DELETED_SEGMENT_OVERRIDE_TEXT,
-    FEATURE_ENVIRONMENT_URL,
-    FEATURE_TABLE_HEADER,
-    FEATURE_TABLE_ROW,
     GITLAB_TAG_COLOR,
-    LINK_FEATURE_TITLE,
-    LINK_SEGMENT_TITLE,
     UNLINKED_FEATURE_TEXT,
-    UPDATED_FEATURE_TEXT,
     GitLabEventType,
     GitLabTag,
     gitlab_tag_description,
@@ -147,57 +138,19 @@ def generate_body_comment(
     project_id: int | None = None,
     segment_name: str | None = None,
 ) -> str:
-    is_removed = event_type == GitLabEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
-    is_segment_override_deleted = (
-        event_type == GitLabEventType.SEGMENT_OVERRIDE_DELETED.value
+    from integrations.vcs.comments import (
+        generate_body_comment as _generate_body_comment,
     )
 
-    if event_type == GitLabEventType.FLAG_DELETED.value:
-        return DELETED_FEATURE_TEXT % (name)
-
-    if is_removed:
-        return UNLINKED_FEATURE_TEXT % (name)
-
-    if is_segment_override_deleted and segment_name is not None:
-        return DELETED_SEGMENT_OVERRIDE_TEXT % (segment_name, name)
-
-    result = ""
-    if event_type == GitLabEventType.FLAG_UPDATED.value:
-        result = UPDATED_FEATURE_TEXT % (name)
-    else:
-        result = LINK_FEATURE_TITLE % (name)
-
-    last_segment_name = ""
-    if len(feature_states) > 0 and not feature_states[0].get("segment_name"):
-        result += FEATURE_TABLE_HEADER
-
-    for fs in feature_states:
-        feature_value = fs.get("feature_state_value")
-        tab = "segment-overrides" if fs.get("segment_name") is not None else "value"
-        environment_link_url = FEATURE_ENVIRONMENT_URL % (
-            get_current_site_url(),
-            project_id,
-            fs.get("environment_api_key"),
-            feature_id,
-            tab,
-        )
-        if (
-            fs.get("segment_name") is not None
-            and fs["segment_name"] != last_segment_name
-        ):
-            result += "\n" + LINK_SEGMENT_TITLE % (fs["segment_name"])
-            last_segment_name = fs["segment_name"]
-            result += FEATURE_TABLE_HEADER
-        table_row = FEATURE_TABLE_ROW % (
-            fs["environment_name"],
-            environment_link_url,
-            "✅ Enabled" if fs["enabled"] else "❌ Disabled",
-            f"`{feature_value}`" if feature_value else "",
-            fs["last_updated"],
-        )
-        result += table_row
-
-    return result
+    return _generate_body_comment(
+        name=name,
+        event_type=event_type,
+        feature_id=feature_id,
+        feature_states=feature_states,
+        unlinked_feature_text=UNLINKED_FEATURE_TEXT,
+        project_id=project_id,
+        segment_name=segment_name,
+    )
 
 
 def generate_data(
