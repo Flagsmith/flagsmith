@@ -1,7 +1,5 @@
-import React, { FC, useCallback, useEffect, useState } from 'react'
+import React, { FC, useState } from 'react'
 import Constants from 'common/constants'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const _data = require('common/data/base/_data')
 import AppActions from 'common/dispatcher/app-actions'
 import { useGetProjectQuery } from 'common/services/useProject'
 import Icon from 'components/Icon'
@@ -10,29 +8,20 @@ import InfoMessage from 'components/InfoMessage'
 import IdentitySelect from 'components/IdentitySelect'
 import FeatureValue from 'components/feature-summary/FeatureValue'
 import { removeUserOverride } from 'components/RemoveUserOverride'
-import { getPermission } from 'common/services/usePermission'
-import { getStore } from 'common/store'
-import Project from 'common/project'
+import { useHasPermission } from 'common/providers/Permission'
 import Utils from 'common/utils/utils'
 import {
   FeatureState,
   IdentityFeatureState,
+  IdentityOverride,
   ProjectFlag,
 } from 'common/types/responses'
 import Switch from 'components/Switch'
 import { EnvironmentPermission } from 'common/types/permissions.types'
-
-type IdentityOverride = FeatureState & {
-  identity: { id: string; identifier: string }
-  segment?: null
-  overridden_by?: string | null
-}
-
-type Paging = {
-  count: number
-  currentPage: number
-  next: string | null
-}
+import {
+  useCreateIdentityOverrideMutation,
+  useGetIdentityOverridesQuery,
+} from 'common/services/useIdentityOverride'
 
 type IdentityOverridesTabProps = {
   environmentId: string
@@ -48,258 +37,109 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
   projectId,
 }) => {
   const { data: project } = useGetProjectQuery({ id: projectId })
-  const [userOverrides, setUserOverrides] = useState<IdentityOverride[]>()
-  const [userOverridesError, setUserOverridesError] = useState(false)
-  const [userOverridesNoPermission, setUserOverridesNoPermission] =
-    useState(false)
-  const [userOverridesPaging, setUserOverridesPaging] = useState<Paging>({
-    count: 0,
-    currentPage: 1,
-    next: null,
-  })
+  const [page, setPage] = useState(1)
   const [selectedIdentity, setSelectedIdentity] = useState<{
     value: string
     label: string
   } | null>(null)
   const [enabledIdentity, setEnabledIdentity] = useState(false)
-  const [_isLoading, setIsLoading] = useState(false)
 
-  const setUserOverridesErrorState = useCallback(() => {
-    setUserOverrides([])
-    setUserOverridesError(true)
-    setUserOverridesNoPermission(false)
-    setUserOverridesPaging({ count: 0, currentPage: 1, next: null })
-  }, [])
+  const isEdge = Utils.getIsEdge()
+  const shouldHideTab = Utils.getShouldHideIdentityOverridesTab(project)
 
-  const setUserOverridesNoPermissionState = useCallback(() => {
-    setUserOverrides([])
-    setUserOverridesError(false)
-    setUserOverridesNoPermission(true)
-    setUserOverridesPaging({ count: 0, currentPage: 1, next: null })
-  }, [])
+  const {
+    isLoading: isPermissionLoading,
+    permission: hasViewIdentitiesPermission,
+  } = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: EnvironmentPermission.VIEW_IDENTITIES,
+  })
 
-  const userOverridesPage = useCallback(
-    (page: number, forceRefetch?: boolean) => {
-      if (Utils.getIsEdge()) {
-        // Early return if tab should be hidden
-        if (Utils.getShouldHideIdentityOverridesTab(project)) {
-          setUserOverrides([])
-          setUserOverridesPaging({ count: 0, currentPage: 1, next: null })
-          return
-        }
+  const skipFetch =
+    shouldHideTab ||
+    (isEdge && (isPermissionLoading || !hasViewIdentitiesPermission))
 
-        getPermission(
-          getStore(),
-          {
-            id: environmentId as unknown as number,
-            level: 'environment',
-          },
-          { forceRefetch },
-        )
-          .then((permissions: Record<string, boolean>) => {
-            const hasViewIdentitiesPermission =
-              permissions[EnvironmentPermission.VIEW_IDENTITIES] ||
-              permissions.ADMIN
-            if (!hasViewIdentitiesPermission) {
-              setUserOverridesNoPermissionState()
-              return
-            }
+  const { data, isError, isLoading, refetch } = useGetIdentityOverridesQuery(
+    { environmentId, featureId: projectFlag.id, isEdge, page },
+    { skip: skipFetch },
+  )
 
-            _data
-              .get(
-                `${Project.api}environments/${environmentId}/edge-identity-overrides?feature=${projectFlag?.id}&page=${page}`,
-              )
-              .then(
-                (res: {
-                  results: Array<{
-                    feature_state: FeatureState
-                    identity_uuid: string
-                    identifier: string
-                  }>
-                  count: number
-                  next: string | null
-                }) => {
-                  setUserOverrides(
-                    res.results.map((v) => ({
-                      ...v.feature_state,
-                      identity: {
-                        id: v.identity_uuid,
-                        identifier: v.identifier,
-                      },
-                    })) as IdentityOverride[],
-                  )
-                  setUserOverridesError(false)
-                  setUserOverridesNoPermission(false)
-                  setUserOverridesPaging({
-                    count: res.count,
-                    currentPage: page,
-                    next: res.next,
-                  })
-                },
-              )
-              .catch((response: { status?: number }) => {
-                if (response?.status === 403) {
-                  setUserOverridesNoPermissionState()
-                } else {
-                  setUserOverridesErrorState()
-                }
-              })
-          })
-          .catch(() => {
-            setUserOverridesErrorState()
-          })
-        return
-      }
+  const [createIdentityOverride] = useCreateIdentityOverrideMutation()
 
-      _data
-        .get(
-          `${
-            Project.api
-          }environments/${environmentId}/${Utils.getFeatureStatesEndpoint()}/?anyIdentity=1&feature=${
-            projectFlag?.id
-          }&page=${page}`,
-        )
-        .then(
-          (res: {
-            results: FeatureState[]
-            count: number
-            next: string | null
-          }) => {
-            setUserOverrides(res.results as IdentityOverride[])
-            setUserOverridesError(false)
-            setUserOverridesNoPermission(false)
-            setUserOverridesPaging({
-              count: res.count,
-              currentPage: page,
-              next: res.next,
+  const addItem = (identity: { value: string; label: string }) => {
+    if (!identity?.value) return
+    createIdentityOverride({
+      enabled: !environmentFlag?.enabled,
+      environmentId,
+      featureId: projectFlag.id,
+      feature_state_value: environmentFlag?.feature_state_value ?? null,
+      identityId: identity.value,
+    }).then(() => {
+      setSelectedIdentity(null)
+    })
+  }
+
+  const changeIdentity = (items: IdentityOverride[]) => {
+    Promise.all(
+      items.map(
+        (item) =>
+          new Promise<void>((resolve) => {
+            AppActions.changeUserFlag({
+              environmentId,
+              identity: item.identity.id,
+              identityFlag: item.id,
+              onSuccess: resolve,
+              payload: {
+                enabled: enabledIdentity,
+                id: item.identity.id,
+                value: item.identity.identifier,
+              },
             })
-          },
-        )
-        .catch((response: { status?: number }) => {
-          if (response?.status === 403) {
-            setUserOverridesNoPermissionState()
-          } else {
-            setUserOverridesErrorState()
-          }
-        })
-    },
-    [
+          }),
+      ),
+    ).then(() => {
+      refetch()
+    })
+    setEnabledIdentity(!enabledIdentity)
+  }
+
+  const toggleUserFlag = ({
+    enabled,
+    id,
+    identity,
+  }: {
+    enabled: boolean
+    id: number
+    identity: { id: string; identifier: string }
+  }) => {
+    AppActions.changeUserFlag({
       environmentId,
-      project,
-      projectFlag?.id,
-      setUserOverridesErrorState,
-      setUserOverridesNoPermissionState,
-    ],
-  )
-
-  const changeIdentity = useCallback(
-    (items: IdentityOverride[]) => {
-      Promise.all(
-        items.map(
-          (item) =>
-            new Promise<void>((resolve) => {
-              AppActions.changeUserFlag({
-                environmentId,
-                identity: item.identity.id,
-                identityFlag: item.id,
-                onSuccess: resolve,
-                payload: {
-                  enabled: enabledIdentity,
-                  id: item.identity.id,
-                  value: item.identity.identifier,
-                },
-              })
-            }),
-        ),
-      ).then(() => {
-        userOverridesPage(1)
-      })
-      setEnabledIdentity(!enabledIdentity)
-    },
-    [enabledIdentity, environmentId, userOverridesPage],
-  )
-
-  const toggleUserFlag = useCallback(
-    ({
-      enabled,
-      id,
-      identity,
-    }: {
-      enabled: boolean
-      id: number
-      identity: { id: string; identifier: string }
-    }) => {
-      AppActions.changeUserFlag({
-        environmentId,
-        identity: identity.id,
-        identityFlag: id,
-        onSuccess: () => {
-          userOverridesPage(1)
-        },
-        payload: {
-          enabled: !enabled,
-          id: identity.id,
-          value: identity.identifier,
-        },
-      })
-    },
-    [environmentId, userOverridesPage],
-  )
-
-  const addItem = useCallback(
-    (identity: { value: string; label: string }) => {
-      if (!identity?.value) return
-
-      setIsLoading(true)
-      _data
-        .post(
-          `${
-            Project.api
-          }environments/${environmentId}/${Utils.getIdentitiesEndpoint()}/${
-            identity.value
-          }/${Utils.getFeatureStatesEndpoint()}/`,
-          {
-            enabled: !environmentFlag?.enabled,
-            feature: projectFlag?.id,
-            feature_state_value: environmentFlag?.feature_state_value || null,
-          },
-        )
-        .then(() => {
-          setIsLoading(false)
-          setSelectedIdentity(null)
-          userOverridesPage(1)
-        })
-        .catch(() => {
-          setIsLoading(false)
-          setUserOverridesErrorState()
-        })
-    },
-    [
-      environmentId,
-      environmentFlag,
-      projectFlag?.id,
-      setUserOverridesErrorState,
-      userOverridesPage,
-    ],
-  )
-
-  // Load initial data
-  useEffect(() => {
-    userOverridesPage(1, true)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+      identity: identity.id,
+      identityFlag: id,
+      onSuccess: () => {
+        refetch()
+      },
+      payload: {
+        enabled: !enabled,
+        id: identity.id,
+        value: identity.identifier,
+      },
+    })
+  }
 
   const renderNoResults = () => {
-    if (userOverridesError) {
-      return (
-        <div className='text-center py-4'>
-          Failed to load identity overrides.
-        </div>
-      )
-    }
-    if (userOverridesNoPermission) {
+    if (isEdge && !isPermissionLoading && !hasViewIdentitiesPermission) {
       return (
         <div className='text-center py-4'>
           You do not have permission to view identity overrides.
+        </div>
+      )
+    }
+    if (isError) {
+      return (
+        <div className='text-center py-4'>
+          Failed to load identity overrides.
         </div>
       )
     }
@@ -350,9 +190,9 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
             </>
           }
           action={
-            !Utils.getIsEdge() && (
+            !isEdge && (
               <Button
-                onClick={() => changeIdentity(userOverrides || [])}
+                onClick={() => changeIdentity(data?.results || [])}
                 type='button'
                 theme='secondary'
                 size='small'
@@ -361,23 +201,19 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
               </Button>
             )
           }
-          items={userOverrides}
-          paging={userOverridesPaging}
+          items={data?.results}
+          paging={{ ...data, currentPage: page }}
           renderSearchWithNoResults
-          nextPage={() =>
-            userOverridesPage(userOverridesPaging.currentPage + 1)
-          }
-          prevPage={() =>
-            userOverridesPage(userOverridesPaging.currentPage - 1)
-          }
-          goToPage={(page: number) => userOverridesPage(page)}
+          nextPage={() => setPage((p) => p + 1)}
+          prevPage={() => setPage((p) => p - 1)}
+          goToPage={setPage}
           searchPanel={
-            !Utils.getIsEdge() && (
+            !isEdge && (
               <div className='text-center mt-2 mb-2'>
                 <Flex className='text-left'>
                   <IdentitySelect
                     isEdge={false}
-                    ignoreIds={userOverrides?.map((v) => v.identity?.id)}
+                    ignoreIds={data?.results?.map((v) => v.identity?.id)}
                     environmentId={environmentId}
                     data-test='select-identity'
                     placeholder='Create an Identity Override...'
@@ -400,7 +236,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
                     <Switch
                       checked={enabled}
                       onChange={() => toggleUserFlag({ enabled, id, identity })}
-                      disabled={Utils.getIsEdge()}
+                      disabled={isEdge}
                     />
                   </div>
                   <div className='font-weight-medium fs-small lh-sm'>
@@ -425,7 +261,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
                       onClick={(e: React.MouseEvent) => {
                         e.stopPropagation()
                         removeUserOverride({
-                          cb: () => userOverridesPage(1, true),
+                          cb: () => refetch(),
                           environmentId,
                           identifier: identity.identifier,
                           identity: identity.id,
@@ -444,7 +280,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
             )
           }}
           renderNoResults={renderNoResults()}
-          isLoading={!userOverrides}
+          isLoading={isLoading || isPermissionLoading}
         />
       </FormGroup>
     </>
