@@ -89,13 +89,13 @@ def update_organisation_subscription_information_cache_recurring() -> None:
 
 @register_task_handler()
 def update_organisation_subscription_information_api_usage_cache() -> None:
-    subscription_info_cache.update_caches((SubscriptionCacheEntity.API_USAGE,))
+    subscription_info_cache.update_caches(SubscriptionCacheEntity.API_USAGE)
 
 
 @register_task_handler(timeout=timedelta(minutes=5))
 def update_organisation_subscription_information_cache() -> None:
     subscription_info_cache.update_caches(
-        (SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE)
+        SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE
     )
 
 

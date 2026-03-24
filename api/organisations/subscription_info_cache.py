@@ -16,7 +16,7 @@ OrganisationSubscriptionInformationCacheDict = typing.Dict[
 ]
 
 
-def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, ...]):  # type: ignore[no-untyped-def]
+def update_caches(*update_cache_entities: SubscriptionCacheEntity) -> None:
     """
     Update the cache objects for an update_cache_entity in the database.
     """

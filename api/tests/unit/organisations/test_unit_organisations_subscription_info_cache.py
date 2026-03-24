@@ -48,11 +48,7 @@ def test_update_caches__with_usage_data__populates_cache_correctly(  # type: ign
     mocked_get_subscription_metadata.return_value = chargebee_metadata
 
     # When
-    subscription_cache_entities = (
-        SubscriptionCacheEntity.API_USAGE,
-        SubscriptionCacheEntity.CHARGEBEE,
-    )
-    update_caches(subscription_cache_entities)
+    update_caches(SubscriptionCacheEntity.API_USAGE, SubscriptionCacheEntity.CHARGEBEE)
 
     # Then
     assert (
@@ -118,11 +114,7 @@ def test_update_caches__no_usage_data__resets_cache_to_zero(
     mocked_get_subscription_metadata.return_value = chargebee_metadata
 
     # When
-    subscription_cache_entities = (
-        SubscriptionCacheEntity.API_USAGE,
-        SubscriptionCacheEntity.CHARGEBEE,
-    )
-    update_caches(subscription_cache_entities)
+    update_caches(SubscriptionCacheEntity.API_USAGE, SubscriptionCacheEntity.CHARGEBEE)
 
     # Then
     organisation.refresh_from_db()
@@ -159,7 +151,7 @@ def test_update_caches__postgres_analytics__populates_cache_correctly(
     )
 
     # When
-    update_caches((SubscriptionCacheEntity.API_USAGE,))
+    update_caches(SubscriptionCacheEntity.API_USAGE)
 
     # Then
     organisation.refresh_from_db()
@@ -197,7 +189,7 @@ def test_update_caches__postgres_and_influx_configured__prefers_postgres(
     )
 
     # When
-    update_caches((SubscriptionCacheEntity.API_USAGE,))
+    update_caches(SubscriptionCacheEntity.API_USAGE)
 
     # Then
     assert mocked_get_top_organisations_from_local_db.call_count == 3
@@ -228,7 +220,7 @@ def test_update_caches__no_analytics_source_configured__skips_api_usage_update(
     )
 
     # When
-    update_caches((SubscriptionCacheEntity.API_USAGE,))
+    update_caches(SubscriptionCacheEntity.API_USAGE)
 
     # Then — neither analytics source was queried
     assert mock_get_top_organisations_from_local_db.call_count == 0

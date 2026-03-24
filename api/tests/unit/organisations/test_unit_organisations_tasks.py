@@ -2182,7 +2182,7 @@ def test_update_organisation_subscription_information_api_usage_cache__called__c
 
     # Then
     assert mock_update_caches.call_args_list == [
-        mocker.call((SubscriptionCacheEntity.API_USAGE,))
+        mocker.call(SubscriptionCacheEntity.API_USAGE)
     ]
 
 
@@ -2200,6 +2200,6 @@ def test_update_organisation_subscription_information_cache__called__calls_updat
     # Then
     assert mock_update_caches.call_args_list == [
         mocker.call(
-            (SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE)
+            SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE
         )
     ]
