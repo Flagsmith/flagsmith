@@ -542,7 +542,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
             setSegmentsChanged(false)
 
             if ((is4Eyes || schedule) && isVersioned && !identity) {
-              return saveFeatureValue(false)
+              return saveFeatureValue(schedule)
             } else {
               save(editFeatureSegments, isSaving)
             }
