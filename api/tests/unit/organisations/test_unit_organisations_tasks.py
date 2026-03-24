@@ -34,6 +34,7 @@ from organisations.subscriptions.constants import (
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
     SCALE_UP,
+    SubscriptionCacheEntity,
 )
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from organisations.task_helpers import (
@@ -50,6 +51,9 @@ from organisations.tasks import (  # type: ignore[attr-defined]
     send_org_over_limit_alert,
     send_org_subscription_cancelled_alert,
     unrestrict_after_api_limit_grace_period_is_stale,
+    update_organisation_subscription_information_api_usage_cache,
+    update_organisation_subscription_information_cache,
+    update_organisation_subscription_information_cache_recurring,
 )
 from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
@@ -2147,4 +2151,55 @@ def test_register_recurring_tasks__alerting_enabled__registers_all_tasks(
         call(charge_for_api_call_count_overages),
         call(restrict_use_due_to_api_limit_grace_period_over),
         call(unrestrict_after_api_limit_grace_period_is_stale),
+    ]
+
+
+def test_update_organisation_subscription_information_cache_recurring__called__delegates_to_cache_task(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_update = mocker.patch(
+        "organisations.tasks.update_organisation_subscription_information_cache"
+    )
+
+    # When
+    update_organisation_subscription_information_cache_recurring()
+
+    # Then
+    assert mock_update.call_args_list == [mocker.call()]
+
+
+def test_update_organisation_subscription_information_api_usage_cache__called__calls_update_caches_with_api_usage(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_update_caches = mocker.patch(
+        "organisations.tasks.subscription_info_cache.update_caches"
+    )
+
+    # When
+    update_organisation_subscription_information_api_usage_cache()
+
+    # Then
+    assert mock_update_caches.call_args_list == [
+        mocker.call(SubscriptionCacheEntity.API_USAGE)
+    ]
+
+
+def test_update_organisation_subscription_information_cache__called__calls_update_caches_with_chargebee_and_api_usage(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_update_caches = mocker.patch(
+        "organisations.tasks.subscription_info_cache.update_caches"
+    )
+
+    # When
+    update_organisation_subscription_information_cache()
+
+    # Then
+    assert mock_update_caches.call_args_list == [
+        mocker.call(
+            SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE
+        )
     ]
