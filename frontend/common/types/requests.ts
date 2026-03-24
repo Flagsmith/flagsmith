@@ -619,6 +619,36 @@ export type Req = {
     github_resource: string
   }>
   getGithubRepos: { installation_id: string; organisation_id: number }
+  // GitLab
+  getGitlabIntegration: { project_id: number; id?: number }
+  createGitlabIntegration: {
+    project_id: number
+    body: {
+      gitlab_instance_url: string
+      access_token: string
+      webhook_secret: string
+    }
+  }
+  updateGitlabIntegration: {
+    project_id: number
+    gitlab_integration_id: number
+    body: {
+      gitlab_project_id?: number
+      project_name?: string
+      tagging_enabled?: boolean
+    }
+  }
+  deleteGitlabIntegration: {
+    project_id: number
+    gitlab_integration_id: number
+  }
+  getGitlabResources: PagedRequest<{
+    project_id: number
+    gitlab_project_id: number
+    project_name: string
+    gitlab_resource: string
+  }>
+  getGitlabProjects: { project_id: number }
   getServersideEnvironmentKeys: { environmentId: string }
   deleteServersideEnvironmentKeys: { environmentId: string; id: string }
   createServersideEnvironmentKeys: {

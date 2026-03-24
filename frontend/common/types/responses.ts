@@ -321,6 +321,7 @@ export type IntegrationData = {
   image: string
   fields: IntegrationField[] | undefined
   isExternalInstallation: boolean
+  isGitlabIntegration?: boolean
   perEnvironment: boolean
   title?: string
   organisation?: string
@@ -1150,6 +1151,26 @@ export type Res = {
   githubRepository: PagedResponse<GithubRepository>
   githubResources: GitHubPagedResponse<GithubResource>
   githubRepos: GithubPaginatedRepos<Repository>
+  // GitLab
+  gitlabIntegration: {
+    id: number
+    gitlab_instance_url: string
+    webhook_secret: string
+    project: number
+  }
+  gitlabIntegrations: PagedResponse<Res['gitlabIntegration']>
+  GitlabResource: {
+    web_url: string
+    id: number
+    iid: number
+    title: string
+    state: string
+    merged: boolean
+    draft: boolean
+  }
+  gitlabResources: PagedResponse<Res['GitlabResource']>
+  GitlabProject: { id: number; name: string; path_with_namespace: string }
+  gitlabProjects: PagedResponse<Res['GitlabProject']>
   segmentPriorities: {}
   featureSegment: FeatureState['feature_segment']
   featureVersions: PagedResponse<FeatureVersion>

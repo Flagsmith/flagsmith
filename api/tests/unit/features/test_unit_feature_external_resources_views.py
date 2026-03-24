@@ -24,6 +24,7 @@ from features.serializers import (
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.constants import GITHUB_API_URL, GITHUB_API_VERSION
 from integrations.github.models import GithubConfiguration, GitHubRepository
+from integrations.gitlab.models import GitLabConfiguration
 from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import Segment
@@ -929,3 +930,437 @@ def test_create_feature_external_resource__duplicate_feature_and_url__returns_40
         response.json()["non_field_errors"][0]
         == "The fields feature, url must make a unique set."
     )
+
+
+# ---------------------------------------------------------------
+# GitLab external resource tests
+# ---------------------------------------------------------------
+
+
+@responses.activate
+def test_create_feature_external_resource__valid_gitlab_issue__creates_resource(
+    admin_client_new: APIClient,
+    feature: Feature,
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "features.feature_external_resources.models.FeatureExternalResource._handle_gitlab_after_save"
+    )
+    mock_label = mocker.patch(
+        "features.feature_external_resources.views.label_gitlab_issue_mr"
+    )
+    feature_external_resource_data = {
+        "type": "GITLAB_ISSUE",
+        "url": "https://gitlab.example.com/testgroup/testrepo/-/issues/5",
+        "feature": feature.id,
+        "metadata": {"state": "opened"},
+    }
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature.id},
+    )
+
+    # When
+    response = admin_client_new.post(
+        url, data=feature_external_resource_data, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert FeatureExternalResource.objects.filter(
+        feature=feature, type="GITLAB_ISSUE"
+    ).exists()
+    mock_label.assert_called_once_with(
+        instance_url=gitlab_configuration.gitlab_instance_url,
+        access_token=gitlab_configuration.access_token,
+        gitlab_project_id=gitlab_configuration.gitlab_project_id,
+        resource_type="issues",
+        resource_iid=5,
+    )
+
+
+@responses.activate
+def test_create_feature_external_resource__valid_gitlab_mr__creates_resource(
+    admin_client_new: APIClient,
+    feature: Feature,
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "features.feature_external_resources.models.FeatureExternalResource._handle_gitlab_after_save"
+    )
+    mock_label = mocker.patch(
+        "features.feature_external_resources.views.label_gitlab_issue_mr"
+    )
+    feature_external_resource_data = {
+        "type": "GITLAB_MR",
+        "url": "https://gitlab.example.com/testgroup/testrepo/-/merge_requests/3",
+        "feature": feature.id,
+        "metadata": {"state": "opened"},
+    }
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature.id},
+    )
+
+    # When
+    response = admin_client_new.post(
+        url, data=feature_external_resource_data, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert FeatureExternalResource.objects.filter(
+        feature=feature, type="GITLAB_MR"
+    ).exists()
+    mock_label.assert_called_once_with(
+        instance_url=gitlab_configuration.gitlab_instance_url,
+        access_token=gitlab_configuration.access_token,
+        gitlab_project_id=gitlab_configuration.gitlab_project_id,
+        resource_type="merge_requests",
+        resource_iid=3,
+    )
+
+
+def test_create_feature_external_resource__invalid_gitlab_url__returns_400(
+    admin_client_new: APIClient,
+    feature: Feature,
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "features.feature_external_resources.models.FeatureExternalResource._handle_gitlab_after_save"
+    )
+    feature_external_resource_data = {
+        "type": "GITLAB_ISSUE",
+        "url": "https://gitlab.example.com/not-a-valid-issue-url",
+        "feature": feature.id,
+        "metadata": {"state": "opened"},
+    }
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature.id},
+    )
+
+    # When
+    response = admin_client_new.post(
+        url, data=feature_external_resource_data, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Invalid GitLab Issue/MR URL"
+
+
+def test_create_feature_external_resource__no_gitlab_config__returns_400(
+    admin_client_new: APIClient,
+    feature: Feature,
+    project: Project,
+) -> None:
+    # Given
+    feature_external_resource_data = {
+        "type": "GITLAB_ISSUE",
+        "url": "https://gitlab.example.com/testgroup/testrepo/-/issues/5",
+        "feature": feature.id,
+        "metadata": {"state": "opened"},
+    }
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature.id},
+    )
+
+    # When
+    response = admin_client_new.post(
+        url, data=feature_external_resource_data, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "doesn't have a valid GitLab integration" in response.json()["detail"]
+
+
+@responses.activate
+def test_list_feature_external_resources__gitlab_resource__returns_metadata(
+    admin_client_new: APIClient,
+    feature: Feature,
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "features.feature_external_resources.models.FeatureExternalResource._handle_gitlab_after_save"
+    )
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/testgroup/testrepo/-/issues/7",
+        type="GITLAB_ISSUE",
+        feature=feature,
+        metadata='{"state": "opened"}',
+    )
+    mock_get_metadata = mocker.patch(
+        "integrations.gitlab.client.get_gitlab_issue_mr_title_and_state",
+        return_value={"title": "My GitLab Issue", "state": "opened"},
+    )
+
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature.id},
+    )
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    results = response.json()["results"]
+    assert len(results) == 1
+    assert results[0]["metadata"]["title"] == "My GitLab Issue"
+    assert results[0]["metadata"]["state"] == "opened"
+    mock_get_metadata.assert_called_once()
+
+
+# ---------------------------------------------------------------
+# GitLab call_gitlab_task via serializer save tests
+# ---------------------------------------------------------------
+
+
+def test_call_gitlab_task__feature_state_updated__calls_task(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    feature: Feature,
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "features.feature_external_resources.models.FeatureExternalResource._handle_gitlab_after_save"
+    )
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/testgroup/testrepo/-/issues/1",
+        type="GITLAB_ISSUE",
+        feature=feature,
+        metadata='{"state": "opened"}',
+    )
+    mock_call_gitlab = mocker.patch(
+        "integrations.gitlab.gitlab.call_gitlab_task"
+    )
+    with_environment_permissions([UPDATE_FEATURE_STATE], environment.id, False)
+    feature_state = FeatureState.objects.get(
+        feature=feature, environment=environment.id
+    )
+    payload = dict(FeatureStateSerializerBasic(instance=feature_state).data)
+    payload["enabled"] = not feature_state.enabled
+    url = reverse(
+        viewname="api-v1:environments:environment-featurestates-detail",
+        kwargs={"environment_api_key": environment.api_key, "pk": feature_state.id},
+    )
+
+    # When
+    response = staff_client.put(path=url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_call_gitlab.assert_called_once()
+
+
+def test_call_gitlab_task__v2_versioning_feature_state_updated__calls_task(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "features.feature_external_resources.models.FeatureExternalResource._handle_gitlab_after_save"
+    )
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/testgroup/testrepo/-/issues/1",
+        type="GITLAB_ISSUE",
+        feature=feature,
+        metadata='{"state": "opened"}',
+    )
+    mock_call_gitlab = mocker.patch(
+        "integrations.gitlab.gitlab.call_gitlab_task"
+    )
+
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    segment = Segment.objects.create(name="segment", project=project)
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-list",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.uuid,
+        ],
+    )
+    data = {
+        "feature_segment": {"segment": segment.id},
+        "enabled": True,
+        "feature_state_value": {
+            "string_value": "segment value!",
+        },
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    mock_call_gitlab.assert_called_once()
+
+
+# ---------------------------------------------------------------
+# FeatureExternalResourceViewSet.get_queryset — "pk" branch (line 44)
+# ---------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_get_feature_external_resource__with_pk__returns_single_resource(
+    admin_client_new: APIClient,
+    feature: Feature,
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "features.feature_external_resources.models.FeatureExternalResource._handle_gitlab_after_save"
+    )
+    resource = FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/testgroup/testrepo/-/issues/5",
+        type="GITLAB_ISSUE",
+        feature=feature,
+        metadata='{"state": "opened"}',
+    )
+    url = reverse(
+        "api-v1:projects:feature-external-resources-detail",
+        kwargs={
+            "project_pk": project.id,
+            "feature_pk": feature.id,
+            "pk": resource.id,
+        },
+    )
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then — get_queryset filters by pk (line 47)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["id"] == resource.id
+    assert response.json()["url"] == resource.url
+
+
+# ---------------------------------------------------------------
+# FeatureExternalResourceViewSet.list — GITLAB_MR metadata branch (lines 89-90)
+# ---------------------------------------------------------------
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_list_feature_external_resources__gitlab_mr_type__fetches_metadata(
+    admin_client_new: APIClient,
+    feature: Feature,
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "features.feature_external_resources.models.FeatureExternalResource._handle_gitlab_after_save"
+    )
+    mr_url = "https://gitlab.example.com/testgroup/testrepo/-/merge_requests/7"
+    FeatureExternalResource.objects.create(
+        url=mr_url,
+        type="GITLAB_MR",
+        feature=feature,
+        metadata='{"state": "opened"}',
+    )
+    responses.add(
+        responses.GET,
+        f"{gitlab_configuration.gitlab_instance_url}/api/v4/projects/{gitlab_configuration.gitlab_project_id}/merge_requests/7",
+        json={"title": "My MR", "state": "opened"},
+        status=200,
+    )
+
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature.id},
+    )
+
+    # When
+    response = admin_client_new.get(url)
+    response_json = response.json()
+
+    # Then — GITLAB_MR branch (lines 89-90) is exercised, metadata populated
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response_json["results"]) == 1
+    result = response_json["results"][0]
+    assert result["type"] == "GITLAB_MR"
+    assert result["metadata"]["title"] == "My MR"
+
+
+# ---------------------------------------------------------------
+# FeatureExternalResourceViewSet.list — exception swallowed (lines 104-105)
+# ---------------------------------------------------------------
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_list_feature_external_resources__gitlab_api_fails__swallows_exception(
+    admin_client_new: APIClient,
+    feature: Feature,
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "features.feature_external_resources.models.FeatureExternalResource._handle_gitlab_after_save"
+    )
+    issue_url = "https://gitlab.example.com/testgroup/testrepo/-/issues/3"
+    FeatureExternalResource.objects.create(
+        url=issue_url,
+        type="GITLAB_ISSUE",
+        feature=feature,
+        metadata='{"state": "opened"}',
+    )
+    # Simulate the GitLab API returning an error so get_gitlab_issue_mr_title_and_state raises
+    responses.add(
+        responses.GET,
+        f"{gitlab_configuration.gitlab_instance_url}/api/v4/projects/{gitlab_configuration.gitlab_project_id}/issues/3",
+        status=500,
+    )
+
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature.id},
+    )
+
+    # When
+    response = admin_client_new.get(url)
+    response_json = response.json()
+
+    # Then — exception is swallowed (lines 104-105); response is still successful.
+    # The stored metadata is returned because only the live API fetch fails; DB data is unaffected.
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response_json["results"]) == 1
+    result = response_json["results"][0]
+    assert result.get("metadata") == {"state": "opened"}

@@ -51,6 +51,7 @@ from features.value_types import STRING
 from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
 from integrations.github.models import GithubConfiguration, GitHubRepository
+from integrations.gitlab.models import GitLabConfiguration
 from metadata.models import (
     Metadata,
     MetadataField,
@@ -1215,6 +1216,19 @@ def github_repository(
         repository_owner="repositoryownertest",
         repository_name="repositorynametest",
         project=project,
+        tagging_enabled=True,
+    )
+
+
+@pytest.fixture()
+def gitlab_configuration(project: Project) -> GitLabConfiguration:
+    return GitLabConfiguration.objects.create(  # type: ignore[no-any-return]
+        project=project,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="test-gitlab-token",
+        webhook_secret="test-webhook-secret",
+        gitlab_project_id=1,
+        project_name="testgroup/testrepo",
         tagging_enabled=True,
     )
 

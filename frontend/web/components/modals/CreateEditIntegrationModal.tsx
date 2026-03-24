@@ -65,9 +65,17 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
   } = props
   const [fields, setFields] = useState(cloneDeep(integration.fields || []))
 
-  const [formData, setFormData] = useState<Record<string, any>>(
-    data || { fields },
-  )
+  const [formData, setFormData] = useState<Record<string, any>>(() => {
+    if (data) return data
+    // Populate defaults from field definitions
+    const defaults: Record<string, any> = { fields }
+    for (const field of integration.fields || []) {
+      if (field.default !== undefined) {
+        defaults[field.key] = field.default
+      }
+    }
+    return defaults
+  })
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [authorised, setAuthorised] = useState<boolean>(false)

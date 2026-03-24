@@ -14,8 +14,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from integrations.github.constants import GitHubEventType, GitHubTag
-from integrations.github.github import call_github_task
-from integrations.github.models import GitHubRepository
+from integrations.gitlab.constants import GitLabEventType, GitLabTag
 from organisations.models import Organisation
 from projects.tags.models import Tag, TagType
 
@@ -26,6 +25,9 @@ class ResourceType(models.TextChoices):
     # GitHub external resource types
     GITHUB_ISSUE = "GITHUB_ISSUE", "GitHub Issue"
     GITHUB_PR = "GITHUB_PR", "GitHub PR"
+    # GitLab external resource types
+    GITLAB_ISSUE = "GITLAB_ISSUE", "GitLab Issue"
+    GITLAB_MR = "GITLAB_MR", "GitLab MR"
 
 
 tag_by_type_and_state = {
@@ -38,6 +40,15 @@ tag_by_type_and_state = {
         "closed": GitHubTag.PR_CLOSED.value,
         "merged": GitHubTag.PR_MERGED.value,
         "draft": GitHubTag.PR_DRAFT.value,
+    },
+    ResourceType.GITLAB_ISSUE.value: {
+        "opened": GitLabTag.ISSUE_OPEN.value,
+        "closed": GitLabTag.ISSUE_CLOSED.value,
+    },
+    ResourceType.GITLAB_MR.value: {
+        "opened": GitLabTag.MR_OPEN.value,
+        "closed": GitLabTag.MR_CLOSED.value,
+        "merged": GitLabTag.MR_MERGED.value,
     },
 }
 
@@ -67,12 +78,18 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
 
     @hook(AFTER_SAVE)
     def execute_after_save_actions(self):  # type: ignore[no-untyped-def]
-        # Tag the feature with the external resource type
         metadata = json.loads(self.metadata) if self.metadata else {}
         state = metadata.get("state", "open")
 
-        # Add a comment to GitHub Issue/PR when feature is linked to the GH external resource
-        # and tag the feature with the corresponding tag if tagging is enabled
+        if self.type in (ResourceType.GITHUB_ISSUE, ResourceType.GITHUB_PR):
+            self._handle_github_after_save(state)
+        elif self.type in (ResourceType.GITLAB_ISSUE, ResourceType.GITLAB_MR):
+            self._handle_gitlab_after_save(state)
+
+    def _handle_github_after_save(self, state: str) -> None:
+        from integrations.github.github import call_github_task
+        from integrations.github.models import GitHubRepository
+
         if (
             github_configuration := Organisation.objects.prefetch_related(
                 "github_config"
@@ -130,17 +147,85 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
                 feature_states=feature_states,
             )
 
+    def _handle_gitlab_after_save(self, state: str) -> None:
+        from integrations.gitlab.gitlab import call_gitlab_task
+        from integrations.gitlab.models import GitLabConfiguration
+
+        try:
+            gitlab_config = GitLabConfiguration.objects.get(
+                project=self.feature.project,
+                deleted_at__isnull=True,
+            )
+        except GitLabConfiguration.DoesNotExist:
+            return
+
+        if gitlab_config.tagging_enabled:
+            gitlab_tag, _ = Tag.objects.get_or_create(
+                label=tag_by_type_and_state[self.type][state],
+                project=self.feature.project,
+                is_system_tag=True,
+                type=TagType.GITLAB.value,
+            )
+            self.feature.tags.add(gitlab_tag)
+            self.feature.save()
+
+        feature_states: list[FeatureState] = []
+        environments = Environment.objects.filter(
+            project_id=self.feature.project_id
+        )
+        for environment in environments:
+            q = Q(
+                feature_id=self.feature_id,
+                identity__isnull=True,
+            )
+            feature_states.extend(
+                FeatureState.objects.get_live_feature_states(
+                    environment=environment, additional_filters=q
+                )
+            )
+
+        call_gitlab_task(
+            project_id=self.feature.project_id,
+            type=GitLabEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
+            feature=self.feature,
+            segment_name=None,
+            url=None,
+            feature_states=feature_states,
+        )
+
     @hook(BEFORE_DELETE)  # type: ignore[misc]
     def execute_before_save_actions(self) -> None:
-        # Add a comment to GitHub Issue/PR when feature is unlinked to the GH external resource
-        if (
-            Organisation.objects.prefetch_related("github_config")
-            .get(id=self.feature.project.organisation_id)
-            .github_config.first()
-        ):
-            call_github_task(
-                organisation_id=self.feature.project.organisation_id,  # type: ignore[arg-type]
-                type=GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
+        if self.type in (ResourceType.GITHUB_ISSUE, ResourceType.GITHUB_PR):
+            from integrations.github.github import call_github_task
+
+            if (
+                Organisation.objects.prefetch_related("github_config")
+                .get(id=self.feature.project.organisation_id)
+                .github_config.first()
+            ):
+                call_github_task(
+                    organisation_id=self.feature.project.organisation_id,  # type: ignore[arg-type]
+                    type=GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
+                    feature=self.feature,
+                    segment_name=None,
+                    url=self.url,
+                    feature_states=None,
+                )
+        elif self.type in (ResourceType.GITLAB_ISSUE, ResourceType.GITLAB_MR):
+            from integrations.gitlab.gitlab import call_gitlab_task
+            from integrations.gitlab.models import GitLabConfiguration
+
+            try:
+                GitLabConfiguration.objects.get(
+                    project=self.feature.project,
+                    deleted_at__isnull=True,
+                )
+            except GitLabConfiguration.DoesNotExist:
+                return
+
+            call_gitlab_task(
+                project_id=self.feature.project_id,
+                type=GitLabEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
                 feature=self.feature,
                 segment_name=None,
                 url=self.url,

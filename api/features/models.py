@@ -158,6 +158,24 @@ class Feature(  # type: ignore[django-manager-missing]
                 feature_states=None,
             )
 
+        # GitLab comment posting
+        from integrations.gitlab.constants import GitLabEventType
+        from integrations.gitlab.gitlab import call_gitlab_task
+
+        if (
+            self.external_resources.exists()
+            and self.project.gitlab_project.exists()
+            and self.deleted_at
+        ):
+            call_gitlab_task(
+                project_id=self.project_id,
+                type=GitLabEventType.FLAG_DELETED.value,
+                feature=self,
+                segment_name=None,
+                url=None,
+                feature_states=None,
+            )
+
     @hook(AFTER_CREATE)
     def create_feature_states(self):  # type: ignore[no-untyped-def]
         FeatureState.create_initial_feature_states_for_feature(feature=self)
@@ -431,6 +449,23 @@ class FeatureSegment(
             call_github_task(
                 self.feature.project.organisation_id,  # type: ignore[arg-type]
                 GitHubEventType.SEGMENT_OVERRIDE_DELETED.value,
+                self.feature,
+                self.segment.name,
+                None,
+                None,
+            )
+
+        # GitLab comment posting
+        from integrations.gitlab.constants import GitLabEventType
+        from integrations.gitlab.gitlab import call_gitlab_task
+
+        if (
+            self.feature.external_resources.exists()
+            and self.feature.project.gitlab_project.exists()
+        ):
+            call_gitlab_task(
+                self.feature.project_id,
+                GitLabEventType.SEGMENT_OVERRIDE_DELETED.value,
                 self.feature,
                 self.segment.name,
                 None,

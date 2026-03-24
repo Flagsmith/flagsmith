@@ -28,6 +28,7 @@ import { getStore } from 'common/store'
 import Button from 'components/base/forms/Button'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
+import { getGitlabIntegration } from 'common/services/useGitlabIntegration'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
@@ -88,6 +89,7 @@ const Index = class extends Component {
       featureLimitAlert: { percentage: 0 },
       githubId: '',
       hasIntegrationWithGithub: false,
+      hasIntegrationWithGitlab: false,
       hasMetadataRequired: false,
       isEdit: !!this.props.projectFlag,
       period: 30,
@@ -222,6 +224,14 @@ const Index = class extends Component {
       this.setState({
         githubId: res?.data?.results[0]?.id,
         hasIntegrationWithGithub: !!res?.data?.results?.length,
+      })
+    })
+
+    getGitlabIntegration(getStore(), {
+      project_id: this.props.projectId,
+    }).then((res) => {
+      this.setState({
+        hasIntegrationWithGitlab: !!res?.data?.results?.length,
       })
     })
   }
@@ -605,6 +615,7 @@ const Index = class extends Component {
       featureContentType,
       githubId,
       hasIntegrationWithGithub,
+      hasIntegrationWithGitlab,
       isEdit,
       projectFlag,
     } = this.state
@@ -1635,7 +1646,8 @@ const Index = class extends Component {
                                       />
                                     </TabItem>
                                   }
-                                  {hasIntegrationWithGithub &&
+                                  {(hasIntegrationWithGithub ||
+                                    hasIntegrationWithGitlab) &&
                                     projectFlag?.id && (
                                       <TabItem
                                         data-test='external-resources-links'
@@ -1648,6 +1660,9 @@ const Index = class extends Component {
                                       >
                                         <ExternalResourcesLinkTab
                                           githubId={githubId}
+                                          hasIntegrationWithGitlab={
+                                            hasIntegrationWithGitlab
+                                          }
                                           organisationId={
                                             AccountStore.getOrganisation().id
                                           }

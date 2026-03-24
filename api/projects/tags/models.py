@@ -8,6 +8,7 @@ class TagType(models.Choices):
     NONE = "NONE"
     STALE = "STALE"
     GITHUB = "GITHUB"
+    GITLAB = "GITLAB"
     UNHEALTHY = "UNHEALTHY"
 
 

@@ -7,6 +7,7 @@ from django.db.models import TextChoices
 
 class VCSProvider(TextChoices):
     GITHUB = "github", "GitHub"
+    GITLAB = "gitlab", "GitLab"
 
 
 class JSONCodeReference(TypedDict):

@@ -19,6 +19,14 @@ from features.import_export.views import (
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
+from integrations.gitlab.views import (
+    GitLabConfigurationViewSet,
+    create_cleanup_issue as gitlab_create_cleanup_issue,
+    fetch_issues as gitlab_fetch_issues,
+    fetch_merge_requests,
+    fetch_project_members,
+    fetch_projects,
+)
 from integrations.grafana.views import GrafanaProjectConfigurationViewSet
 from integrations.launch_darkly.views import LaunchDarklyImportRequestViewSet
 from integrations.new_relic.views import NewRelicConfigurationViewSet
@@ -69,6 +77,11 @@ projects_router.register(
     r"integrations/grafana",
     GrafanaProjectConfigurationViewSet,
     basename="integrations-grafana",
+)
+projects_router.register(
+    r"integrations/gitlab",
+    GitLabConfigurationViewSet,
+    basename="integrations-gitlab",
 )
 projects_router.register(
     "audit",
@@ -138,5 +151,30 @@ urlpatterns = [
         "<int:project_pk>/feature-imports/",
         FeatureImportListView.as_view(),
         name="feature-imports",
+    ),
+    path(
+        "<int:project_pk>/gitlab/issues/",
+        gitlab_fetch_issues,
+        name="get-gitlab-issues",
+    ),
+    path(
+        "<int:project_pk>/gitlab/project-members/",
+        fetch_project_members,
+        name="get-gitlab-project-members",
+    ),
+    path(
+        "<int:project_pk>/gitlab/merge-requests/",
+        fetch_merge_requests,
+        name="get-gitlab-merge-requests",
+    ),
+    path(
+        "<int:project_pk>/gitlab/projects/",
+        fetch_projects,
+        name="get-gitlab-projects",
+    ),
+    path(
+        "<int:project_pk>/gitlab/create-cleanup-issue/",
+        gitlab_create_cleanup_issue,
+        name="create-gitlab-cleanup-issue",
     ),
 ]

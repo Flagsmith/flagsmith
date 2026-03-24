@@ -87,6 +87,32 @@ const defaultFlags = {
       'tags': ['logging'],
       'title': 'Dynatrace',
     },
+    'gitlab': {
+      'description':
+        'View your Flagsmith flags inside GitLab issues and merge requests.',
+      'docs':
+        'https://docs.flagsmith.com/integrations/project-management/gitlab',
+      'fields': [
+        {
+          'default': 'https://gitlab.com',
+          'key': 'gitlab_instance_url',
+          'label': 'GitLab Instance URL',
+        },
+        {
+          'hidden': true,
+          'key': 'access_token',
+          'label': 'Access Token',
+        },
+        {
+          'key': 'webhook_secret',
+          'label': 'Webhook Secret',
+        },
+      ],
+      'image': '/static/images/integrations/gitlab.svg',
+      'isGitlabIntegration': true,
+      'perEnvironment': false,
+      'title': 'GitLab',
+    },
     'grafana': {
       'description':
         'Receive Flagsmith annotations to your Grafana instance on feature flag and segment changes.',

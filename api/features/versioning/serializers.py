@@ -54,6 +54,25 @@ class CustomEnvironmentFeatureVersionFeatureStateSerializer(
                 feature_states=[feature_state],
             )
 
+        # GitLab comment posting
+        if (
+            not feature_state.identity_id
+            and feature_state.feature.external_resources.exists()
+            and feature_state.environment
+            and feature_state.environment.project.gitlab_project.exists()
+        ):
+            from integrations.gitlab.constants import GitLabEventType
+            from integrations.gitlab.gitlab import call_gitlab_task
+
+            call_gitlab_task(
+                project_id=feature_state.feature.project_id,
+                type=GitLabEventType.FLAG_UPDATED.value,
+                feature=feature_state.feature,
+                segment_name=None,
+                url=None,
+                feature_states=[feature_state],
+            )
+
         return response
 
 

@@ -10,6 +10,13 @@ import { ExternalResource } from 'common/types/responses'
 import Constants from 'common/constants'
 import Tooltip from './Tooltip'
 
+const getResourceNumber = (url: string, type: string): string => {
+  const isGitlab = type?.startsWith('GITLAB')
+  const match = url.match(/\/(\d+)\/?$/)
+  const num = match ? match[1] : url.replace(/\D/g, '')
+  return isGitlab && type === 'GITLAB_MR' ? `!${num}` : `#${num}`
+}
+
 export type ExternalResourcesTableBase = {
   featureId: string
   projectId: string
@@ -61,9 +68,10 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
             <Tooltip
               title={
                 <Row>
-                  {`${
-                    externalResource?.metadata?.title
-                  } (#${externalResource?.url.replace(/\D/g, '')})`}{' '}
+                  {`${externalResource?.metadata?.title} (${getResourceNumber(
+                    externalResource?.url,
+                    externalResource?.type,
+                  )})`}{' '}
                   <div className='ml-1 mb-1'>
                     <Icon name='open-external-link' width={14} fill='#6837fc' />
                   </div>
