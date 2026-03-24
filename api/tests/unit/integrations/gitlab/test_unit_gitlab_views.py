@@ -70,9 +70,7 @@ def test_create_gitlab_configuration__valid_data__returns_201(
     response = admin_client_new.post(url, data)
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    assert GitLabConfiguration.objects.filter(
-        project=project
-    ).exists()
+    assert GitLabConfiguration.objects.filter(project=project).exists()
 
 
 def test_create_gitlab_configuration__duplicate__returns_400(
@@ -114,9 +112,7 @@ def test_delete_gitlab_configuration__valid_configuration__returns_204(
     response = admin_client_new.delete(url)
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert not GitLabConfiguration.objects.filter(
-        id=gitlab_configuration.id
-    ).exists()
+    assert not GitLabConfiguration.objects.filter(id=gitlab_configuration.id).exists()
 
 
 @responses.activate

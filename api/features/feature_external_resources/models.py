@@ -170,9 +170,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
             self.feature.save()
 
         feature_states: list[FeatureState] = []
-        environments = Environment.objects.filter(
-            project_id=self.feature.project_id
-        )
+        environments = Environment.objects.filter(project_id=self.feature.project_id)
         for environment in environments:
             q = Q(
                 feature_id=self.feature_id,

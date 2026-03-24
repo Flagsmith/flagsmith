@@ -51,9 +51,7 @@ logger = logging.getLogger(__name__)
 def gitlab_auth_required(func):  # type: ignore[no-untyped-def]
     @wraps(func)
     def wrapper(request, project_pk):  # type: ignore[no-untyped-def]
-        if not GitLabConfiguration.has_gitlab_configuration(
-            project_id=project_pk
-        ):
+        if not GitLabConfiguration.has_gitlab_configuration(project_id=project_pk):
             return Response(
                 data={
                     "detail": "This Project doesn't have a valid GitLab Configuration"
@@ -110,7 +108,9 @@ class GitLabConfigurationViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
     def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         project_id = self.kwargs["project_pk"]
         serializer.save(project_id=project_id)
-        if serializer.validated_data.get("tagging_enabled", False) and serializer.validated_data.get("gitlab_project_id"):
+        if serializer.validated_data.get(
+            "tagging_enabled", False
+        ) and serializer.validated_data.get("gitlab_project_id"):
             create_flagsmith_flag_label(
                 instance_url=serializer.validated_data["gitlab_instance_url"],
                 access_token=serializer.validated_data["access_token"],
@@ -121,9 +121,7 @@ class GitLabConfigurationViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
         if getattr(self, "swagger_fake_view", False):
             return GitLabConfiguration.objects.none()
 
-        return GitLabConfiguration.objects.filter(
-            project_id=self.kwargs["project_pk"]
-        )
+        return GitLabConfiguration.objects.filter(project_id=self.kwargs["project_pk"])
 
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         try:
@@ -165,7 +163,9 @@ def fetch_merge_requests(request, project_pk) -> Response:  # type: ignore[no-un
         access_token=gitlab_config.access_token,
         params=query_serializer.validated_data,
     )
-    return Response(data=data, content_type="application/json", status=status.HTTP_200_OK)
+    return Response(
+        data=data, content_type="application/json", status=status.HTTP_200_OK
+    )
 
 
 @api_view(["GET"])
@@ -186,7 +186,9 @@ def fetch_issues(request, project_pk) -> Response:  # type: ignore[no-untyped-de
         access_token=gitlab_config.access_token,
         params=query_serializer.validated_data,
     )
-    return Response(data=data, content_type="application/json", status=status.HTTP_200_OK)
+    return Response(
+        data=data, content_type="application/json", status=status.HTTP_200_OK
+    )
 
 
 @api_view(["GET"])
@@ -205,7 +207,9 @@ def fetch_projects(request, project_pk: int) -> Response | None:  # type: ignore
         access_token=gitlab_config.access_token,
         params=query_serializer.validated_data,
     )
-    return Response(data=data, content_type="application/json", status=status.HTTP_200_OK)
+    return Response(
+        data=data, content_type="application/json", status=status.HTTP_200_OK
+    )
 
 
 @api_view(["GET"])
@@ -225,7 +229,9 @@ def fetch_project_members(request, project_pk) -> Response:  # type: ignore[no-u
         access_token=gitlab_config.access_token,
         params=query_serializer.validated_data,
     )
-    return Response(data=response, content_type="application/json", status=status.HTTP_200_OK)
+    return Response(
+        data=response, content_type="application/json", status=status.HTTP_200_OK
+    )
 
 
 @api_view(["POST"])
@@ -279,7 +285,9 @@ def create_cleanup_issue(request, project_pk: int) -> Response:  # type: ignore[
         url_parts = summary.repository_url.rstrip("/").split("/")
         repo_path = "/".join(url_parts[-2:])  # e.g. "group/project"
 
-        if not gitlab_config.project_name or not gitlab_config.project_name.endswith(repo_path):
+        if not gitlab_config.project_name or not gitlab_config.project_name.endswith(
+            repo_path
+        ):
             continue
 
         if not gitlab_config.gitlab_project_id:

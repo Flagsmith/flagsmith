@@ -145,7 +145,9 @@ def test_create_gitlab_issue__valid_data__creates_issue() -> None:
 
 
 @responses.activate
-def test_get_gitlab_issue_mr_title_and_state__valid_resource__returns_metadata() -> None:
+def test_get_gitlab_issue_mr_title_and_state__valid_resource__returns_metadata() -> (
+    None
+):
     # Given
     responses.add(
         responses.GET,
@@ -305,7 +307,9 @@ def test_label_gitlab_issue_mr__happy_path__adds_label() -> None:
 # ---------------------------------------------------------------
 
 
-def test_build_paginated_response__pagination_headers__returns_previous_and_next() -> None:
+def test_build_paginated_response__pagination_headers__returns_previous_and_next() -> (
+    None
+):
     # Given
     import requests
 

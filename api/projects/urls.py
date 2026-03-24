@@ -21,11 +21,15 @@ from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
 from integrations.gitlab.views import (
     GitLabConfigurationViewSet,
-    create_cleanup_issue as gitlab_create_cleanup_issue,
-    fetch_issues as gitlab_fetch_issues,
     fetch_merge_requests,
     fetch_project_members,
     fetch_projects,
+)
+from integrations.gitlab.views import (
+    create_cleanup_issue as gitlab_create_cleanup_issue,
+)
+from integrations.gitlab.views import (
+    fetch_issues as gitlab_fetch_issues,
 )
 from integrations.grafana.views import GrafanaProjectConfigurationViewSet
 from integrations.launch_darkly.views import LaunchDarklyImportRequestViewSet
