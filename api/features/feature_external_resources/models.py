@@ -3,7 +3,6 @@ import logging
 import re
 
 from django.db import models
-from django.db.models import Q
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_SAVE,
     BEFORE_DELETE,
@@ -11,8 +10,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     hook,
 )
 
-from environments.models import Environment
-from features.models import Feature, FeatureState
+from features.models import Feature
 from integrations.github.constants import GitHubEventType, GitHubTag
 from integrations.gitlab.constants import GitLabEventType, GitLabTag
 from organisations.models import Organisation
@@ -121,22 +119,12 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
                 self.feature.tags.add(github_tag)
                 self.feature.save()
 
-            feature_states: list[FeatureState] = []
+            from integrations.vcs.helpers import collect_feature_states_for_resource
 
-            environments = Environment.objects.filter(
-                project_id=self.feature.project_id
+            feature_states = collect_feature_states_for_resource(
+                feature_id=self.feature_id,
+                project_id=self.feature.project_id,
             )
-
-            for environment in environments:
-                q = Q(
-                    feature_id=self.feature_id,
-                    identity__isnull=True,
-                )
-                feature_states.extend(
-                    FeatureState.objects.get_live_feature_states(
-                        environment=environment, additional_filters=q
-                    )
-                )
 
             call_github_task(
                 organisation_id=self.feature.project.organisation_id,  # type: ignore[arg-type]
@@ -169,20 +157,12 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
             self.feature.tags.add(gitlab_tag)
             self.feature.save()
 
-        feature_states: list[FeatureState] = []
-        environments = Environment.objects.filter(
-            project_id=self.feature.project_id
+        from integrations.vcs.helpers import collect_feature_states_for_resource
+
+        feature_states = collect_feature_states_for_resource(
+            feature_id=self.feature_id,
+            project_id=self.feature.project_id,
         )
-        for environment in environments:
-            q = Q(
-                feature_id=self.feature_id,
-                identity__isnull=True,
-            )
-            feature_states.extend(
-                FeatureState.objects.get_live_feature_states(
-                    environment=environment, additional_filters=q
-                )
-            )
 
         call_gitlab_task(
             project_id=self.feature.project_id,
