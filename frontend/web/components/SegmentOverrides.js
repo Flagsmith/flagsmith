@@ -1,21 +1,9 @@
-// import propTypes from 'prop-types';
 import React, { Component, Fragment } from 'react'
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-  arrayMove,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import classNames from 'classnames'
+import { DragDropProvider } from '@dnd-kit/react'
+import { useSortable, isSortable } from '@dnd-kit/react/sortable'
+import { RestrictToVerticalAxis } from '@dnd-kit/abstract/modifiers'
+import { arrayMove } from '@dnd-kit/helpers'
 import ProjectStore from 'common/stores/project-store'
 import ValueEditor from './ValueEditor'
 import { VariationOptions } from './mv/VariationOptions'
@@ -23,7 +11,6 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import CreateSegmentModal from './modals/CreateSegment'
 import SegmentSelect from './SegmentSelect'
 import JSONReference from './JSONReference'
-import ConfigProvider from 'common/providers/ConfigProvider'
 import InfoMessage from './InfoMessage'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
@@ -36,6 +23,9 @@ import Tooltip from './Tooltip'
 import SegmentsIcon from './svg/SegmentsIcon'
 import SegmentOverrideActions from './SegmentOverrideActions'
 import Button from './base/forms/Button'
+
+const getSegmentId = (segment) =>
+  typeof segment === 'object' && segment !== null ? segment.id : segment
 
 const SegmentOverrideInner = class Override extends React.Component {
   constructor(props) {
@@ -55,6 +45,7 @@ const SegmentOverrideInner = class Override extends React.Component {
       confirmRemove,
       controlValue,
       disabled,
+      dragHandleRef,
       environmentId,
       hideViewSegment,
       highlightSegmentId,
@@ -106,15 +97,19 @@ const SegmentOverrideInner = class Override extends React.Component {
     return (
       <div
         data-test={`segment-override-${index}`}
-        style={{ zIndex: 9999999999 }}
-        className={`segment-overrides mb-3${
-          this.props.id
-            ? ''
-            : ' panel user-select-none panel-without-heading panel--draggable pb-0'
-        }${isHighlighted ? ' border-2 border-primary' : ''}`}
+        className={classNames('segment-overrides mb-3', {
+          'border-2 border-primary': isHighlighted,
+          'panel user-select-none panel-without-heading panel--draggable pb-0':
+            !this.props.id,
+        })}
       >
         <Row className='p-0 table-header px-3 py-1' space>
-          <div className='flex flex-1 text-left'>
+          <div
+            ref={dragHandleRef}
+            className={classNames('flex flex-1 text-left', {
+              'drag-handle': dragHandleRef,
+            })}
+          >
             {this.props.id ? (
               <>
                 <Row className='font-weight-medium text-dark mb-1'>
@@ -352,20 +347,16 @@ const SegmentOverrideInner = class Override extends React.Component {
   }
 }
 
-const SortableSegmentOverrideInner = ConfigProvider(SegmentOverrideInner)
-
 const SortableSegmentOverride = (props) => {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: props.sortId })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
+  const { handleRef, ref } = useSortable({
+    id: props.sortId,
+    index: props.index,
+    modifiers: [RestrictToVerticalAxis],
+  })
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <SortableSegmentOverrideInner {...props} />
+    <div ref={ref}>
+      <SegmentOverrideInner {...props} dragHandleRef={handleRef} />
     </div>
   )
 }
@@ -392,14 +383,15 @@ const SegmentOverrideListInner = ({
   showEditSegment,
   toggle,
 }) => {
-  const isSortable = !id && !disabled
+  const canSort = !id && !disabled
   return (
     <div>
       {items.map((value, index) => {
-        const sortId = `segment-${value.segment.id}-${index}`
-        if (isSortable) {
+        const segmentId = getSegmentId(value.segment)
+        const sortId = `segment-${segmentId ?? index}`
+        if (canSort) {
           return (
-            <Fragment key={value.segment.name || sortId}>
+            <Fragment key={sortId}>
               <SortableSegmentOverride
                 sortId={sortId}
                 id={id}
@@ -447,7 +439,7 @@ const SegmentOverrideListInner = ({
         }
 
         return (
-          <Fragment key={value.segment.name || sortId}>
+          <Fragment key={sortId}>
             <SegmentOverrideInner
               id={id}
               name={name}
@@ -500,46 +492,25 @@ const SortableSegmentOverrideList = ({
   onSortEnd: handleSortEnd,
   ...rest
 }) => {
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
-
-  const sortableIds = items.map(
-    (value, index) => `segment-${value.segment.id}-${index}`,
-  )
-
   const handleDragEnd = (event) => {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const oldIndex = sortableIds.indexOf(active.id)
-    const newIndex = sortableIds.indexOf(over.id)
-    handleSortEnd({ newIndex, oldIndex })
+    if (event.canceled) return
+    const { source } = event.operation
+    if (isSortable(source)) {
+      const { index, initialIndex } = source
+      if (initialIndex !== index) {
+        handleSortEnd({ newIndex: index, oldIndex: initialIndex })
+      }
+    }
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext
-        items={sortableIds}
-        strategy={verticalListSortingStrategy}
-      >
-        <SegmentOverrideListInner
-          items={items}
-          onSortEnd={handleSortEnd}
-          {...rest}
-        />
-      </SortableContext>
-    </DndContext>
+    <DragDropProvider onDragEnd={handleDragEnd}>
+      <SegmentOverrideListInner
+        items={items}
+        onSortEnd={handleSortEnd}
+        {...rest}
+      />
+    </DragDropProvider>
   )
 }
 

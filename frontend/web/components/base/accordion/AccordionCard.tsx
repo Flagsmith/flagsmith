@@ -1,6 +1,7 @@
-import React, { useState, FC, useRef, useEffect } from 'react'
+import React, { useState, FC } from 'react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import useCollapsibleHeight from 'common/hooks/useCollapsibleHeight'
 
 interface AccordionCardProps {
   children?: React.ReactNode
@@ -17,31 +18,7 @@ const AccordionCard: FC<AccordionCardProps> = ({
   title = 'Summary',
 }) => {
   const [open, setOpen] = useState(defaultOpen)
-  const contentRef = useRef<HTMLDivElement>(null)
-  const [height, setHeight] = useState<number | undefined>(
-    defaultOpen ? undefined : 0,
-  )
-
-  useEffect(() => {
-    if (!contentRef.current) return
-    if (open) {
-      setHeight(contentRef.current.scrollHeight)
-      const timer = setTimeout(() => setHeight(undefined), 300)
-      return () => clearTimeout(timer)
-    } else {
-      setHeight(contentRef.current.scrollHeight)
-      let innerFrameId: number
-      const outerFrameId = requestAnimationFrame(() => {
-        innerFrameId = requestAnimationFrame(() => {
-          setHeight(0)
-        })
-      })
-      return () => {
-        cancelAnimationFrame(outerFrameId)
-        cancelAnimationFrame(innerFrameId)
-      }
-    }
-  }, [open])
+  const { contentRef, style: collapsibleStyle } = useCollapsibleHeight(open)
 
   return (
     <div className='d-flex flex-column px-3 py-3 accordion-card m-0'>
@@ -68,14 +45,7 @@ const AccordionCard: FC<AccordionCardProps> = ({
           </span>
         )}
       </div>
-      <div
-        ref={contentRef}
-        style={{
-          height: height !== undefined ? `${height}px` : 'auto',
-          overflow: 'hidden',
-          transition: 'height 0.3s ease',
-        }}
-      >
+      <div ref={contentRef} style={collapsibleStyle}>
         <div className='mt-2 mb-2'>{children}</div>
       </div>
     </div>

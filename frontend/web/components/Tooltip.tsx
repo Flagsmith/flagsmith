@@ -53,6 +53,7 @@ const Tooltip: FC<TooltipProps> = ({
         place={place || 'top'}
         float={effect === 'float'}
         afterShow={afterShow}
+        delayShow={500}
         style={{ wordBreak: 'break-word' }}
       />
     </>
