@@ -52,7 +52,10 @@ def _get_tag_value_for_event(
 
 
 def tag_feature_per_gitlab_event(
-    event_type: str, action: str, metadata: dict[str, Any], project_path: str,
+    event_type: str,
+    action: str,
+    metadata: dict[str, Any],
+    project_path: str,
 ) -> None:
     web_url = metadata.get("web_url", "")
 
@@ -216,9 +219,7 @@ def call_gitlab_task(
     url: str | None,
     feature_states: typing.Union[list[typing.Any], list[typing.Any]] | None,
 ) -> None:
-    gitlab_configuration = GitLabConfiguration.objects.get(
-        project_id=project_id
-    )
+    gitlab_configuration = GitLabConfiguration.objects.get(project_id=project_id)
 
     feature_data: GitLabData = generate_data(
         gitlab_configuration=gitlab_configuration,

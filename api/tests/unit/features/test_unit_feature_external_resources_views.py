@@ -1151,9 +1151,7 @@ def test_call_gitlab_task__feature_state_updated__calls_task(
         feature=feature,
         metadata='{"state": "opened"}',
     )
-    mock_call_gitlab = mocker.patch(
-        "integrations.gitlab.gitlab.call_gitlab_task"
-    )
+    mock_call_gitlab = mocker.patch("integrations.gitlab.gitlab.call_gitlab_task")
     with_environment_permissions([UPDATE_FEATURE_STATE], environment.id, False)
     feature_state = FeatureState.objects.get(
         feature=feature, environment=environment.id
@@ -1192,9 +1190,7 @@ def test_call_gitlab_task__v2_versioning_feature_state_updated__calls_task(
         feature=feature,
         metadata='{"state": "opened"}',
     )
-    mock_call_gitlab = mocker.patch(
-        "integrations.gitlab.gitlab.call_gitlab_task"
-    )
+    mock_call_gitlab = mocker.patch("integrations.gitlab.gitlab.call_gitlab_task")
 
     environment_feature_version = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature
