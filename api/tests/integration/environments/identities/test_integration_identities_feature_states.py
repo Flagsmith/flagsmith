@@ -17,7 +17,7 @@ from core.constants import BOOLEAN, INTEGER, STRING
         ("bool", True),
     ),
 )
-def test_get_all_feature_states_for_an_identity(  # type: ignore[no-untyped-def]
+def test_get_all_feature_states_for_identity__segment_and_identity_overrides__returns_correct_overrides(  # type: ignore[no-untyped-def]
     admin_client,
     environment,
     environment_api_key,
@@ -29,6 +29,7 @@ def test_get_all_feature_states_for_an_identity(  # type: ignore[no-untyped-def]
     segment_override_type,
     segment_override_value,
 ):
+    # Given
     # First, let's verify that, without any overrides, the endpoint gives us the
     # environment default feature state
     get_all_identity_feature_states_url = reverse(
@@ -77,7 +78,7 @@ def test_get_all_feature_states_for_an_identity(  # type: ignore[no-untyped-def]
     assert second_response_json[0]["segment"]["id"] == segment_id
     assert second_response_json[0]["segment"]["name"] == segment_name
 
-    # finally, let's simulate an override for the identity
+    # When - simulate an override for the identity
     identity_override_value = "identity override"
     identity_feature_states_url = reverse(
         "api-v1:environments:identity-featurestates-list",
@@ -96,7 +97,7 @@ def test_get_all_feature_states_for_an_identity(  # type: ignore[no-untyped-def]
     )
     assert create_identity_feature_state_response.status_code == status.HTTP_201_CREATED
 
-    # and check the response now correctly shows the identity override
+    # Then - check the response now correctly shows the identity override
     third_response = admin_client.get(get_all_identity_feature_states_url)
 
     assert third_response.status_code == status.HTTP_200_OK

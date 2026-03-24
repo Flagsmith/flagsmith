@@ -7,7 +7,7 @@ from organisations.subscriptions.decorators import require_plan
 from organisations.subscriptions.exceptions import InvalidSubscriptionPlanError
 
 
-def test_require_plan_raises_exception_if_plan_invalid():  # type: ignore[no-untyped-def]
+def test_require_plan__invalid_plan__raises_exception():  # type: ignore[no-untyped-def]
     # Given
     valid_plan_id = "plan-id"
     invalid_plan_id = "invalid-plan-id"
@@ -19,15 +19,12 @@ def test_require_plan_raises_exception_if_plan_invalid():  # type: ignore[no-unt
     def test_function(request: Request):  # type: ignore[no-untyped-def]
         return "foo"
 
-    # When
+    # When / Then
     with pytest.raises(InvalidSubscriptionPlanError):
         test_function(mock_request)
 
-    # Then
-    # Exception is raised
 
-
-def test_require_plan_does_not_raise_exception_if_plan_valid(rf):  # type: ignore[no-untyped-def]
+def test_require_plan__valid_plan__returns_function_result(rf):  # type: ignore[no-untyped-def]
     # Given
     valid_plan_id = "plan-id"
 

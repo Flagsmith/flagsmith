@@ -11,7 +11,7 @@ from tests.types import EnableFeaturesFixture
 from util.mappers import map_environment_to_environment_document
 
 
-def test_write_environments_calls_internal_methods_with_correct_arguments(  # type: ignore[no-untyped-def]
+def test_write_environments__valid_environments__calls_batch_writer_correctly(  # type: ignore[no-untyped-def]
     mocker, project, environment
 ):
     # Given
@@ -88,7 +88,7 @@ def test_write_environments__uncompressed__observes_size_metric(
     flagsmith_environment_table: Table,
     assert_metric: AssertMetricFixture,
 ) -> None:
-    # When
+    # Given / When
     dynamo_environment_wrapper.write_environments([environment])
 
     # Then
@@ -123,7 +123,7 @@ def test_write_environments__compress_dynamo_documents_enabled__logs_expected(
     ]
 
 
-def test_get_item_calls_dynamo_get_item_with_correct_arguments(mocker):  # type: ignore[no-untyped-def]
+def test_get_item__valid_api_key__returns_expected_document(mocker):  # type: ignore[no-untyped-def]
     # Given
     dynamo_environment_wrapper = DynamoEnvironmentWrapper()
     expected_document = {"key": "value"}
@@ -139,7 +139,7 @@ def test_get_item_calls_dynamo_get_item_with_correct_arguments(mocker):  # type:
     assert returned_item == expected_document
 
 
-def test_get_item_raises_object_does_not_exists_if_get_item_does_not_return_any_item(  # type: ignore[no-untyped-def]
+def test_get_item__no_item_returned__raises_object_does_not_exist(  # type: ignore[no-untyped-def]
     mocker,
 ):
     # Given
@@ -148,12 +148,12 @@ def test_get_item_raises_object_does_not_exists_if_get_item_does_not_return_any_
     mocked_dynamo_table = mocker.patch.object(dynamo_environment_wrapper, "_table")
     mocked_dynamo_table.get_item.return_value = {}
 
-    # Then
+    # When / Then
     with pytest.raises(ObjectDoesNotExist):
         dynamo_environment_wrapper.get_item(api_key)
 
 
-def test_delete_environment__removes_environment_document_from_dynamodb(  # type: ignore[no-untyped-def]
+def test_delete_environment__existing_document__removes_from_dynamodb(  # type: ignore[no-untyped-def]
     dynamo_enabled_project_environment_one_document: dict,  # type: ignore[type-arg]
     dynamo_environment_wrapper: DynamoEnvironmentWrapper,
     flagsmith_environment_table: Table,

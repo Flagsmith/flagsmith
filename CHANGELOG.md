@@ -1,5 +1,79 @@
 # Changelog
 
+## [2.223.0](https://github.com/Flagsmith/flagsmith/compare/v2.222.4...v2.223.0) (2026-03-23)
+
+
+### Features
+
+* add Code References to project integrations page ([#6974](https://github.com/Flagsmith/flagsmith/issues/6974)) ([26fc48f](https://github.com/Flagsmith/flagsmith/commit/26fc48fd7713c1a2dc16817c3ed33d20b8694f6a))
+* **Features API:** Restrict code references querying to a feature flag ([#6970](https://github.com/Flagsmith/flagsmith/issues/6970)) ([dcb0a37](https://github.com/Flagsmith/flagsmith/commit/dcb0a3790a4a01b783e4505c13348918c99311ab))
+
+
+### Bug Fixes
+
+* **API Usage:** Allow self-hosted API usage alerts ([#6975](https://github.com/Flagsmith/flagsmith/issues/6975)) ([437abff](https://github.com/Flagsmith/flagsmith/commit/437abff9cce156a7c2a1d71aa30047f841fca770))
+* **CI:** Pin safe trivy check version ([#7010](https://github.com/Flagsmith/flagsmith/issues/7010)) ([ffd2a11](https://github.com/Flagsmith/flagsmith/commit/ffd2a11fac0d7589fcc07ece63760c2220a72cea))
+* Schedule Update on Segment Overrides shows 'Feature contains no changes' ([#6996](https://github.com/Flagsmith/flagsmith/issues/6996)) ([ec940fe](https://github.com/Flagsmith/flagsmith/commit/ec940fe002653b998d6ed2baa40ab0384238ec1d))
+
+
+### CI
+
+* Add flagsmith-lint-tests pre-commit hook ([#6933](https://github.com/Flagsmith/flagsmith/issues/6933)) ([95a1721](https://github.com/Flagsmith/flagsmith/commit/95a1721cf187835707b7c4f17114d063cf74a3a4))
+* Fix all flagsmith-lint-tests violations ([#6994](https://github.com/Flagsmith/flagsmith/issues/6994)) ([aafc84b](https://github.com/Flagsmith/flagsmith/commit/aafc84b1ad52a66f544c604ce3ee7daf8811f8de))
+* pre-commit autoupdate ([#7017](https://github.com/Flagsmith/flagsmith/issues/7017)) ([078e7d8](https://github.com/Flagsmith/flagsmith/commit/078e7d89ab85db323a3a763aa1822b7f8d8f3374))
+
+
+### Docs
+
+* add troubleshooting guide to support ([#6978](https://github.com/Flagsmith/flagsmith/issues/6978)) ([9be685c](https://github.com/Flagsmith/flagsmith/commit/9be685c92596de28ac8dd011f14e8af22e765cf2))
+
+## [2.222.4](https://github.com/Flagsmith/flagsmith/compare/v2.222.3...v2.222.4) (2026-03-19)
+
+
+### Bug Fixes
+
+* make Feature.type writable on create ([#6986](https://github.com/Flagsmith/flagsmith/issues/6986)) ([0cb8d90](https://github.com/Flagsmith/flagsmith/commit/0cb8d90b9a4c776068d5ea63d56727ed4da281e6))
+
+## [2.222.3](https://github.com/Flagsmith/flagsmith/compare/v2.222.2...v2.222.3) (2026-03-18)
+
+
+### Bug Fixes
+
+* **GitHub Integration:** Fix JWT generation for GitHub API calls ([#6983](https://github.com/Flagsmith/flagsmith/issues/6983)) ([faf3a66](https://github.com/Flagsmith/flagsmith/commit/faf3a6647cc992067b727a41b9797a26fc828c51))
+
+## [2.222.2](https://github.com/Flagsmith/flagsmith/compare/v2.222.1...v2.222.2) (2026-03-18)
+
+
+### Bug Fixes
+
+* add edit users sending up wrong data ([#6923](https://github.com/Flagsmith/flagsmith/issues/6923)) ([b249f2c](https://github.com/Flagsmith/flagsmith/commit/b249f2c9759e0a7b5c15c70fe1d0b1a8068fcf2f))
+* align organisation dropdown on responsive viewports ([#6971](https://github.com/Flagsmith/flagsmith/issues/6971)) ([0073739](https://github.com/Flagsmith/flagsmith/commit/007373971bba8e77f76745ce496fda26e01a6571))
+* convert feature_state_value after v2 segment save ([#6962](https://github.com/Flagsmith/flagsmith/issues/6962)) ([#6967](https://github.com/Flagsmith/flagsmith/issues/6967)) ([13ada3b](https://github.com/Flagsmith/flagsmith/commit/13ada3b32c297b9cd0c4ce481e7b83df724d4bb2))
+* mask webhook secret with password field and reveal toggle ([#6932](https://github.com/Flagsmith/flagsmith/issues/6932)) ([ddbf8bd](https://github.com/Flagsmith/flagsmith/commit/ddbf8bdd0aa597ebad8d24bb1641ef27426e37bd))
+* restore grid layout in PanelSearch broken by wrapper div ([#6977](https://github.com/Flagsmith/flagsmith/issues/6977)) ([51fc019](https://github.com/Flagsmith/flagsmith/commit/51fc019109d49a7e09d6435bcb4a8afeb4238178))
+* restore Prevent Flag Defaults UI enforcement in create feature modal ([#6931](https://github.com/Flagsmith/flagsmith/issues/6931)) ([0b80126](https://github.com/Flagsmith/flagsmith/commit/0b80126daf0f53269eafb76b9f5acf6eb8f0bae3))
+* trim whitespace in search filters to prevent API 400 errors ([#6934](https://github.com/Flagsmith/flagsmith/issues/6934)) ([d93f6d4](https://github.com/Flagsmith/flagsmith/commit/d93f6d419f1a552f519c4de5a273b4c6b773794e))
+* use bg-body on sign-up card for dark mode compatibility ([#6973](https://github.com/Flagsmith/flagsmith/issues/6973)) ([ead91ec](https://github.com/Flagsmith/flagsmith/commit/ead91eca1038aa8d7335e76097facc8a452e6622))
+* wrap long text in value editor to prevent horizontal overflow ([#6972](https://github.com/Flagsmith/flagsmith/issues/6972)) ([cf9d70d](https://github.com/Flagsmith/flagsmith/commit/cf9d70ddc93353ecc70b8d73dbf8b0464f73d505))
+
+
+### Dependency Updates
+
+* Bump flagsmith-worfklows 3.3.2 ([#6981](https://github.com/Flagsmith/flagsmith/issues/6981)) ([a4593a2](https://github.com/Flagsmith/flagsmith/commit/a4593a2a1c0cdc44eeaa40c2840d5e429d9c6c95))
+
+
+### CI
+
+* Ensure workflows run on update flagsmith environment PRs ([#6957](https://github.com/Flagsmith/flagsmith/issues/6957)) ([de8bf59](https://github.com/Flagsmith/flagsmith/commit/de8bf597581849da3b9179d0e7e566f3d6d8557a))
+* pre-commit autoupdate ([#6965](https://github.com/Flagsmith/flagsmith/issues/6965)) ([f226061](https://github.com/Flagsmith/flagsmith/commit/f22606182ac325b72874d464d5e0604981beef30))
+
+
+### Refactoring
+
+* decouple Button from Constants import ([#6947](https://github.com/Flagsmith/flagsmith/issues/6947)) ([c7f9f29](https://github.com/Flagsmith/flagsmith/commit/c7f9f299c0cd0ca8752df65182f536058a752fdc))
+* Migrate from `is_context_in_segment` to `get_evaluation_result` ([#6896](https://github.com/Flagsmith/flagsmith/issues/6896)) ([2ae6edc](https://github.com/Flagsmith/flagsmith/commit/2ae6edcdc9ae8152046f28a18910b54abff8f405))
+* permission types ([#6417](https://github.com/Flagsmith/flagsmith/issues/6417)) ([2d9f0fa](https://github.com/Flagsmith/flagsmith/commit/2d9f0fa6d8ca97178db7d5b4b14caded18a34e1a))
+
 ## [2.222.1](https://github.com/Flagsmith/flagsmith/compare/v2.222.0...v2.222.1) (2026-03-18)
 
 

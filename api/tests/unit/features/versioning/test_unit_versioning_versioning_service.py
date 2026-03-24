@@ -24,7 +24,7 @@ from segments.models import Segment
 from users.models import FFAdminUser
 
 
-def test_get_environment_flags_queryset_returns_only_latest_versions(  # type: ignore[no-untyped-def]
+def test_get_environment_flags_queryset__multiple_versions_exist__returns_latest_version(  # type: ignore[no-untyped-def]
     feature: Feature,
     environment: Environment,
     django_assert_num_queries: DjangoAssertNumQueries,
@@ -51,7 +51,7 @@ def test_get_environment_flags_queryset_returns_only_latest_versions(  # type: i
     assert feature_states.first() == feature_state_v2
 
 
-def test_project_hide_disabled_flags_have_no_effect_on_get_environment_flags_queryset(  # type: ignore[no-untyped-def]
+def test_get_environment_flags_queryset__hide_disabled_flags_enabled__returns_all_flags(  # type: ignore[no-untyped-def]
     environment, project
 ):
     # Given
@@ -68,7 +68,9 @@ def test_project_hide_disabled_flags_have_no_effect_on_get_environment_flags_que
     assert feature_states.count() == 2
 
 
-def test_get_environment_flags_queryset_filter_using_feature_name(environment, project):  # type: ignore[no-untyped-def]  # noqa: E501
+def test_get_environment_flags_queryset__filter_by_feature_name__returns_matching_flag(  # type: ignore[no-untyped-def]
+    environment, project
+):  # noqa: E501
     # Given
     flag_1_name = "flag_1"
     Feature.objects.create(default_enabled=True, name=flag_1_name, project=project)
@@ -84,7 +86,7 @@ def test_get_environment_flags_queryset_filter_using_feature_name(environment, p
     assert feature_states.first().feature.name == "flag_1"  # type: ignore[union-attr]
 
 
-def test_get_environment_flags_returns_latest_live_versions_of_feature_states(  # type: ignore[no-untyped-def]
+def test_get_environment_flags_list__multiple_versions_and_identities__returns_latest_live(  # type: ignore[no-untyped-def]
     project, environment, feature
 ):
     # Given
@@ -123,7 +125,7 @@ def test_get_environment_flags_returns_latest_live_versions_of_feature_states(  
     }
 
 
-def test_get_environment_flags_v2_versioning_returns_latest_live_versions_of_feature_states(
+def test_get_environment_flags_list__v2_versioning_with_published_version__returns_latest_live(
     project: Project,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -166,7 +168,7 @@ def test_get_environment_flags_v2_versioning_returns_latest_live_versions_of_fea
     }
 
 
-def test_get_environment_flags_v2_versioning_does_not_return_removed_segment_override(
+def test_get_environment_flags_list__v2_segment_override_removed__excludes_override(
     project: Project,
     feature: Feature,
     admin_user: FFAdminUser,
@@ -207,7 +209,7 @@ def test_get_environment_flags_v2_versioning_does_not_return_removed_segment_ove
     assert len(environment_feature_states) == 1
 
 
-def test_get_current_live_environment_feature_version(
+def test_get_current_live_environment_feature_version__unpublished_and_future_versions_exist__returns_v1(
     environment_v2_versioning: Environment, staff_user: FFAdminUser, feature: Feature
 ) -> None:
     # Given
@@ -236,7 +238,7 @@ def test_get_current_live_environment_feature_version(
     assert latest_version == version_1
 
 
-def test_get_updated_feature_states_for_version_returns_empty_list_when_no_changes(
+def test_get_updated_feature_states_for_version__no_changes__returns_empty_list(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -254,7 +256,7 @@ def test_get_updated_feature_states_for_version_returns_empty_list_when_no_chang
     assert updated_feature_states == []
 
 
-def test_get_updated_feature_states_for_version_returns_feature_state_when_enabled_changes(
+def test_get_updated_feature_states_for_version__enabled_changed__returns_updated_state(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -282,7 +284,7 @@ def test_get_updated_feature_states_for_version_returns_feature_state_when_enabl
     assert updated_feature_states[0].enabled is not v1_fs.enabled
 
 
-def test_get_updated_feature_states_for_version_returns_feature_state_when_value_changes(
+def test_get_updated_feature_states_for_version__value_changed__returns_updated_state(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -307,7 +309,7 @@ def test_get_updated_feature_states_for_version_returns_feature_state_when_value
     assert updated_feature_states[0].get_feature_state_value() == "changed_value"
 
 
-def test_get_updated_feature_states_for_version_returns_new_segment_override(
+def test_get_updated_feature_states_for_version__new_segment_override_added__returns_override(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -342,7 +344,7 @@ def test_get_updated_feature_states_for_version_returns_new_segment_override(
     assert updated_feature_states[0].feature_segment == feature_segment
 
 
-def test_get_updated_feature_states_for_version_detects_environment_value_change(
+def test_get_updated_feature_states_for_version__environment_value_changed__returns_default_only(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -396,7 +398,7 @@ def test_get_updated_feature_states_for_version_detects_environment_value_change
     assert updated_feature_states[0].get_feature_state_value() == "default_value_v2"
 
 
-def test_get_updated_feature_states_for_version_detects_segment_override_changes(
+def test_get_updated_feature_states_for_version__segment_override_value_changed__returns_override_only(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -449,7 +451,7 @@ def test_get_updated_feature_states_for_version_detects_segment_override_changes
     assert updated_feature_states[0].get_feature_state_value() == "segment_value_v2"
 
 
-def test_get_updated_feature_states_for_version_detects_multivariate_segment_override_weight_changes(
+def test_get_updated_feature_states_for_version__mv_allocation_changed__returns_override(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -528,7 +530,7 @@ def test_get_updated_feature_states_for_version_detects_multivariate_segment_ove
     assert updated_feature_states[0].feature_segment.segment == segment
 
 
-def test_get_updated_feature_states_for_version_detects_segment_override_multivariate_value_changes(
+def test_get_updated_feature_states_for_version__mv_control_value_changed__returns_override(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -602,16 +604,20 @@ def test_get_updated_feature_states_for_version_detects_segment_override_multiva
     assert updated_feature_states[0].get_feature_state_value() == "new_control_value"
 
 
-def test_get_environment_flags_list_with_replica(
+def test_get_environment_flags_list__from_replica__returns_feature_states(
     feature: Feature,
     environment: Environment,
 ) -> None:
+    # Given
     # This just verifies the code path works - actual replica behavior
     # depends on database configuration
+
+    # When
     result = get_environment_flags_list(
         environment=environment,
         from_replica=True,
     )
 
+    # Then
     assert len(result) >= 1
     assert result[0].feature == feature

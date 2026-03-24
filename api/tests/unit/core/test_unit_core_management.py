@@ -12,7 +12,9 @@ class MockQuerySet(list):  # type: ignore[type-arg]
         return self.__len__() > 0
 
 
-def test_rollbackmigrationsappliedafter(mocker: MockerFixture) -> None:
+def test_rollbackmigrationsappliedafter__valid_date_with_migrations__rolls_back_correctly(
+    mocker: MockerFixture,
+) -> None:
     # Given
     dt_string = "2024-10-24 08:23:45"
 
@@ -46,7 +48,9 @@ def test_rollbackmigrationsappliedafter(mocker: MockerFixture) -> None:
     ]
 
 
-def test_rollbackmigrationsappliedafter_invalid_date(mocker: MockerFixture) -> None:
+def test_rollbackmigrationsappliedafter__invalid_date__raises_command_error(
+    mocker: MockerFixture,
+) -> None:
     # Given
     dt_string = "foo"
 
@@ -63,7 +67,7 @@ def test_rollbackmigrationsappliedafter_invalid_date(mocker: MockerFixture) -> N
     assert e.value.args == ("Date must be in ISO format",)
 
 
-def test_rollbackmigrationsappliedafter_no_migrations(
+def test_rollbackmigrationsappliedafter__no_migrations__prints_message(
     mocker: MockerFixture,
     capsys: CaptureFixture,  # type: ignore[type-arg]
 ) -> None:

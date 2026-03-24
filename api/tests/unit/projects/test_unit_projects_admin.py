@@ -17,7 +17,9 @@ if typing.TYPE_CHECKING:
     from organisations.models import Organisation
 
 
-def test_project_admin_delete_all_segments(organisation: "Organisation"):  # type: ignore[no-untyped-def]
+def test_project_admin_delete_all_segments__single_project_selected__deletes_only_that_projects_segments(  # type: ignore[no-untyped-def]
+    organisation: "Organisation",
+):
     # Given
     project_1 = Project.objects.create(name="project_1", organisation=organisation)
     project_2 = Project.objects.create(name="project_2", organisation=organisation)
@@ -66,16 +68,16 @@ def test_project_admin_delete_all_segments(organisation: "Organisation"):  # typ
 @pytest.mark.parametrize(
     "is_superuser, expected_result", ((True, True), (False, False))
 )
-def test_project_admin_has_delete_all_segments_permission(  # type: ignore[no-untyped-def]
+def test_project_admin_has_delete_all_segments_permission__superuser_or_not__returns_expected(  # type: ignore[no-untyped-def]
     is_superuser: bool, expected_result: bool, django_user_model: type["AbstractUser"]
 ):
     # Given
     request = MagicMock(user=django_user_model(is_superuser=is_superuser))
 
-    # Then
-    assert (
-        ProjectAdmin(Project, AdminSite()).has_delete_all_segments_permission(
-            request=request
-        )
-        is expected_result
+    # When
+    result = ProjectAdmin(Project, AdminSite()).has_delete_all_segments_permission(
+        request=request
     )
+
+    # Then
+    assert result is expected_result

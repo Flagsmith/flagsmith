@@ -45,7 +45,10 @@ def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCach
 
 
 @pytest.mark.use_analytics_db
-def test_get_usage_data_from_local_db(organisation, environment, settings):  # type: ignore[no-untyped-def]
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_usage_data_from_local_db__multiple_buckets__returns_aggregated_daily_data(  # type: ignore[no-untyped-def]
+    organisation, environment, settings
+):
     environment_id = environment.id
     now = timezone.now()
     read_bucket_size = 15
@@ -102,7 +105,7 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):  # t
 
 
 @pytest.mark.use_analytics_db
-def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-untyped-def]
+def test_get_usage_data_from_local_db__project_id_filter__returns_filtered_data(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     project: Project,
     project_two: Project,
@@ -195,6 +198,7 @@ def test_get_usage_data_from_local_db__environment_filter__returns_expected(
 
 
 @pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_usage_data_from_local_db__labels_filter__returns_expected(
     organisation: Organisation,
     environment: Environment,
@@ -267,7 +271,10 @@ def test_get_usage_data_from_local_db__labels_filter__returns_expected(
 
 
 @pytest.mark.use_analytics_db
-def test_get_total_events_count(organisation, environment, settings):  # type: ignore[no-untyped-def]
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_total_events_count__multiple_buckets__returns_correct_total(  # type: ignore[no-untyped-def]
+    organisation, environment, settings
+):
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = environment.id
     now = timezone.now()
@@ -318,7 +325,8 @@ def test_get_total_events_count(organisation, environment, settings):  # type: i
 
 
 @pytest.mark.use_analytics_db
-def test_get_feature_evaluation_data_from_local_db(
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_feature_evaluation_data_from_local_db__multiple_buckets__returns_aggregated_daily_data(
     feature: Feature,
     environment: Environment,
     settings: SettingsWrapper,
@@ -454,7 +462,7 @@ def test_get_feature_evaluation_data_from_local_db__labels_filter__returns_expec
     ]
 
 
-def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_configured(
+def test_get_usage_data__postgres_not_configured__calls_influxdb(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -481,7 +489,7 @@ def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_confi
     )
 
 
-def test_get_usage_data_calls_get_usage_data_from_local_db_if_postgres_is_configured(
+def test_get_usage_data__postgres_configured__calls_local_db(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -534,7 +542,8 @@ def test_get_usage_data__no_analytics_configured__no_calls_expected(
     mocked_get_usage_data_from_local_db.assert_not_called()
 
 
-def test_get_total_events_count_calls_influx_method_if_postgres_not_configured(  # type: ignore[no-untyped-def]
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_total_events_count__postgres_not_configured__calls_influx(  # type: ignore[no-untyped-def]
     mocker, settings, organisation
 ):
     # Given
@@ -549,11 +558,13 @@ def test_get_total_events_count_calls_influx_method_if_postgres_not_configured( 
     # Then
     assert total_events_count == mocked_get_events_for_organisation.return_value
     mocked_get_events_for_organisation.assert_called_once_with(
-        organisation_id=organisation.id
+        organisation.id,
+        date_start=datetime(2022, 12, 20, 0, 0, tzinfo=UTC),
+        date_stop=datetime(2023, 1, 19, 0, 0, tzinfo=UTC),
     )
 
 
-def test_get_feature_evaluation_data_calls_influx_method_if_postgres_not_configured(
+def test_get_feature_evaluation_data__postgres_not_configured__calls_influxdb(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -612,7 +623,7 @@ def test_get_feature_evaluation_data__no_analytics_configured__no_calls_expected
     mocked_get_feature_evaluation_data_from_local_db.assert_not_called()
 
 
-def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_local_db_if_configured(
+def test_get_feature_evaluation_data__postgres_configured__calls_local_db(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     feature: Feature,
@@ -643,7 +654,7 @@ def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_loca
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.parametrize("period", [PREVIOUS_BILLING_PERIOD, CURRENT_BILLING_PERIOD])
-def test_get_usage_data_returns_404_when_organisation_has_no_billing_periods(
+def test_get_usage_data__no_billing_periods__raises_not_found(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -665,7 +676,7 @@ def test_get_usage_data_returns_404_when_organisation_has_no_billing_periods(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_starts_at_with_current_billing_period(
+def test_get_usage_data__current_billing_period__passes_correct_date_range(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -694,7 +705,7 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_starts_at_with_previous_billing_period(
+def test_get_usage_data__previous_billing_period__passes_correct_date_range(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,

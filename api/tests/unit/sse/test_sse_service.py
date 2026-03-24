@@ -14,7 +14,7 @@ from sse.sse_service import (
 )
 
 
-def test_send_environment_update_message_for_project_schedules_task_correctly(  # type: ignore[no-untyped-def]
+def test_send_environment_update_message_for_project__sse_enabled__schedules_task_correctly(  # type: ignore[no-untyped-def]
     mocker,
     sse_enabled_settings,
     realtime_enabled_project,
@@ -44,7 +44,7 @@ def test_send_environment_update_message_for_project_schedules_task_correctly(  
         ),
     ],
 )
-def test_send_environment_update_message_for_project_exits_early_without_scheduling_task(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_send_environment_update_message_for_project__sse_or_realtime_disabled__exits_early_without_scheduling_task(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker,
     test_settings,
     test_project,
@@ -72,7 +72,7 @@ def test_send_environment_update_message_for_project_exits_early_without_schedul
         ),
     ],
 )
-def test_send_environment_update_message_for_environment_exits_early_without_scheduling_task(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_send_environment_update_message_for_environment__sse_or_realtime_disabled__exits_early_without_scheduling_task(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, test_settings, test_environment
 ):
     # Given
@@ -85,7 +85,7 @@ def test_send_environment_update_message_for_environment_exits_early_without_sch
     mocked_tasks.send_environment_update_message.delay.assert_not_called()
 
 
-def test_send_environment_update_message_for_environment_schedules_task_correctly(  # type: ignore[no-untyped-def]
+def test_send_environment_update_message_for_environment__sse_enabled__schedules_task_correctly(  # type: ignore[no-untyped-def]
     mocker, sse_enabled_settings, realtime_enabled_project_environment_one
 ):
     # Given
@@ -106,7 +106,9 @@ def test_send_environment_update_message_for_environment_schedules_task_correctl
 
 
 @mock_s3  # type: ignore[misc]
-def test_stream_access_logs(mocker: MockerFixture, aws_credentials: None) -> None:
+def test_stream_access_logs__valid_encrypted_objects__returns_parsed_logs(
+    mocker: MockerFixture, aws_credentials: None
+) -> None:
     # Given - Some test data
     first_log = SSEAccessLogs("2023-11-27T06:42:47+0000", "key_one")
     second_log = SSEAccessLogs("2023-11-27T06:42:47+0000", "key_two")
@@ -163,7 +165,7 @@ def test_stream_access_logs(mocker: MockerFixture, aws_credentials: None) -> Non
     assert "Contents" not in s3_client.list_objects(Bucket=bucket_name)
 
 
-def test_stream_access_logs_handles_deleted_files(
+def test_stream_access_logs__file_already_deleted__skips_with_warning(
     mocker: MockerFixture, aws_credentials: None
 ) -> None:
     # Given - Mock bucket with objects where first raises NoSuchKey
@@ -200,7 +202,7 @@ def test_stream_access_logs_handles_deleted_files(
     )
 
 
-def test_stream_access_logs_reraises_non_nosuchkey_errors(
+def test_stream_access_logs__non_nosuchkey_error__reraises_client_error(
     mocker: MockerFixture, aws_credentials: None
 ) -> None:
     # Given - Mock bucket with object that raises AccessDenied error
@@ -225,7 +227,7 @@ def test_stream_access_logs_reraises_non_nosuchkey_errors(
     assert exc_info.value.response["Error"]["Code"] == "AccessDenied"
 
 
-def test_stream_access_logs_respects_timeout(
+def test_stream_access_logs__timeout_reached__stops_processing(
     mocker: MockerFixture, aws_credentials: None
 ) -> None:
     # Given - Mock bucket with multiple objects

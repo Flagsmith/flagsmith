@@ -38,7 +38,7 @@ from segments.models import Segment
         ("multiline_str", "a valid string", True),
     ],
 )
-def test_metadata_serializer_validate_validates_field_value_type_correctly(
+def test_metadata_serializer_validate__various_field_types__validates_correctly(
     organisation: Organisation,
     environment_content_type: ContentType,
     field_type: str,
@@ -86,7 +86,7 @@ def test_metadata_serializer_validate_validates_field_value_type_correctly(
         ),
     ],
 )
-def test_metadata_model_field_serializer_validation(
+def test_metadata_model_field_serializer__various_content_types__validates_correctly(
     a_metadata_field: MetadataField,
     feature_content_type: ContentType,
     project: Project,
@@ -127,7 +127,7 @@ def test_metadata_model_field_serializer_validation(
         assert serializer.errors["non_field_errors"][0] == error_message
 
 
-def test_metadata_model_field_serializer_with_empty_is_required_for(
+def test_metadata_model_field_serializer__empty_is_required_for__is_valid(
     a_metadata_field: MetadataField,
     feature_content_type: ContentType,
 ) -> None:
@@ -144,7 +144,7 @@ def test_metadata_model_field_serializer_with_empty_is_required_for(
     assert result is True
 
 
-def test_metadata_model_field_serializer_validation_invalid_content_type(
+def test_metadata_model_field_serializer__invalid_content_type__returns_error(
     a_metadata_field: MetadataField,
     feature_content_type: ContentType,
     project: Project,

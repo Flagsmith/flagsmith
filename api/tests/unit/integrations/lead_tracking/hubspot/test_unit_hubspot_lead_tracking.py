@@ -60,7 +60,7 @@ def mock_client_existing_contact(mocker: MockerFixture) -> MagicMock:
 
 
 @responses.activate
-def test_create_hubspot_contact_with_lead_form_and_get_hubspot_id(
+def test_create_user_hubspot_contact__new_user_with_tracker__returns_hubspot_id(
     db: None,
     settings: SettingsWrapper,
     mocker: MockerFixture,
@@ -95,11 +95,12 @@ def test_create_hubspot_contact_with_lead_form_and_get_hubspot_id(
     assert hubspot_id == HUBSPOT_USER_ID
 
 
-def test_create_organisation_lead_skips_all_tracking_when_lead_exists(
+def test_create_lead__existing_hubspot_lead_and_org__skips_all_tracking(
     db: None,
     organisation: Organisation,
     mock_client_existing_contact: MagicMock,
 ) -> None:
+    # Given
     user = FFAdminUser.objects.create(
         email="existing.lead@example.com",
         first_name="Jane",
@@ -111,16 +112,18 @@ def test_create_organisation_lead_skips_all_tracking_when_lead_exists(
         organisation=organisation,
         hubspot_id=HUBSPOT_COMPANY_ID,
     )
+    # When
     tracker = HubspotLeadTracker()
     tracker.create_lead(user=user, organisation=organisation)
 
+    # Then
     mock_client_existing_contact.get_contact.assert_not_called()
     mock_client_existing_contact.create_lead_form.assert_not_called()
     mock_client_existing_contact.create_company.assert_not_called()
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47+00:00")
-def test_hubspot_user_org_hook_creates_hubspot_user_and_organisation_associations(
+def test_track_hubspot_lead_v2__new_user_added_to_org__creates_associations(
     organisation: Organisation,
     enable_hubspot: None,
     mock_client_existing_contact: MagicMock,
@@ -176,7 +179,7 @@ def test_hubspot_user_org_hook_creates_hubspot_user_and_organisation_association
     mock_client_existing_contact.get_contact.assert_called_once_with(user)
 
 
-def test_create_organisation_lead_creates_contact_when_not_found_but_not_company(
+def test_create_lead__contact_not_found_initially__creates_contact_via_form(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -215,7 +218,7 @@ def test_create_organisation_lead_creates_contact_when_not_found_but_not_company
     mock_client.associate_contact_to_company.assert_not_called()
 
 
-def test_create_organisation_lead_creates_contact_for_existing_org(
+def test_create_lead__existing_hubspot_org__creates_contact_and_associates(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -256,7 +259,7 @@ def test_create_organisation_lead_creates_contact_for_existing_org(
     )
 
 
-def test_create_organisation_lead_skips_company_for_filtered_domain(
+def test_create_lead__filtered_domain__skips_company_creation(
     organisation: Organisation,
     settings: SettingsWrapper,
     mock_client_existing_contact: MagicMock,
@@ -284,7 +287,7 @@ def test_create_organisation_lead_skips_company_for_filtered_domain(
     mock_client_existing_contact.associate_contact_to_company.assert_not_called()
 
 
-def test_update_company_active_subscription_calls_update_company(
+def test_update_company_active_subscription__valid_subscription__calls_update_company(
     db: None, mocker: MockerFixture
 ) -> None:
     # Given
@@ -313,7 +316,7 @@ def test_update_company_active_subscription_calls_update_company(
     )
 
 
-def test_update_company_active_subscription_returns_none_when_no_hubspot_org(
+def test_update_company_active_subscription__no_hubspot_org__returns_none(
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -330,7 +333,7 @@ def test_update_company_active_subscription_returns_none_when_no_hubspot_org(
     assert result is None
 
 
-def test_update_company_active_subscription_returns_none_when_no_plan(
+def test_update_company_active_subscription__no_plan__returns_none(
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -356,7 +359,7 @@ def test_update_company_active_subscription_returns_none_when_no_plan(
         ([None, None, None, None, None, None, None, None], 4, None, False),
     ],
 )
-def test_create_user_hubspot_contact_retries(
+def test_create_user_hubspot_contact__get_contact_retries__returns_expected_id(
     db: None,
     mocker: MockerFixture,
     get_contact_return_values: list[dict[str, typing.Any] | None],
@@ -394,7 +397,7 @@ def test_create_user_hubspot_contact_retries(
         ("contact_123", None),
     ],
 )
-def test_create_leads_skips_association_on_missing_ids(
+def test_create_lead__missing_contact_or_org_id__skips_association(
     mocker: MockerFixture,
     hubspot_contact_id: str | None,
     hubspot_org_id: str | None,
@@ -419,7 +422,7 @@ def test_create_leads_skips_association_on_missing_ids(
     mock_client.associate_contact_to_company.assert_not_called()
 
 
-def test_register_hubspot_tracker_and_track_user_fallback_to_request_user(
+def test_register_hubspot_tracker_and_track_user__no_explicit_user__falls_back_to_request_user(
     mocker: MockerFixture, staff_user: FFAdminUser, settings: SettingsWrapper
 ) -> None:
     # Given

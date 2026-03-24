@@ -7,7 +7,7 @@ from api.openapi import MCPSchemaGenerator, SchemaGenerator
 from api.openapi_views import CustomSpectacularJSONAPIView, CustomSpectacularYAMLAPIView
 
 
-def test_mcp_filter_paths__includes_operations_with_mcp_tag() -> None:
+def test_mcp_filter_paths__mcp_tagged_operation__includes_path() -> None:
     # Given
     paths: dict[str, Any] = {
         "/api/v1/organisations/": {
@@ -28,7 +28,7 @@ def test_mcp_filter_paths__includes_operations_with_mcp_tag() -> None:
     assert "get" in filtered["/api/v1/organisations/"]
 
 
-def test_mcp_filter_paths__excludes_operations_without_mcp_tag() -> None:
+def test_mcp_filter_paths__no_mcp_tag__excludes_path() -> None:
     # Given
     paths: dict[str, Any] = {
         "/api/v1/users/": {
@@ -48,7 +48,9 @@ def test_mcp_filter_paths__excludes_operations_without_mcp_tag() -> None:
     assert "/api/v1/users/" not in filtered
 
 
-def test_mcp_filter_paths__mixed_operations() -> None:
+def test_mcp_filter_paths__mixed_mcp_and_non_mcp_operations__includes_only_mcp() -> (
+    None
+):
     # Given
     paths: dict[str, Any] = {
         "/api/v1/organisations/{id}/": {
@@ -80,7 +82,7 @@ def test_mcp_filter_paths__mixed_operations() -> None:
     ]
 
 
-def test_mcp_transform_for_mcp__preserves_x_gram_extension() -> None:
+def test_mcp_transform_for_mcp__x_gram_extension_present__preserves_extension() -> None:
     # Given
     operation: dict[str, Any] = {
         "operationId": "organisations_list",
@@ -105,7 +107,7 @@ def test_mcp_transform_for_mcp__preserves_x_gram_extension() -> None:
     assert transformed["description"] == "Original description"
 
 
-def test_mcp_transform_for_mcp__preserves_original_when_no_extensions() -> None:
+def test_mcp_transform_for_mcp__no_extensions__preserves_original() -> None:
     # Given
     operation: dict[str, Any] = {
         "operationId": "organisations_list",
@@ -122,7 +124,9 @@ def test_mcp_transform_for_mcp__preserves_original_when_no_extensions() -> None:
     assert transformed["description"] == "Original description"
 
 
-def test_mcp_transform_for_mcp__removes_operation_level_security() -> None:
+def test_mcp_transform_for_mcp__security_present__removes_operation_level_security() -> (
+    None
+):
     # Given
     operation: dict[str, Any] = {
         "operationId": "organisations_list",
@@ -139,7 +143,9 @@ def test_mcp_transform_for_mcp__removes_operation_level_security() -> None:
     assert "security" not in transformed
 
 
-def test_mcp_update_security_for_mcp__sets_api_key_security_scheme() -> None:
+def test_mcp_update_security_for_mcp__existing_scheme__sets_token_auth_security() -> (
+    None
+):
     # Given
     schema: dict[str, Any] = {
         "components": {
@@ -164,7 +170,7 @@ def test_mcp_update_security_for_mcp__sets_api_key_security_scheme() -> None:
     "view_class",
     [CustomSpectacularJSONAPIView, CustomSpectacularYAMLAPIView],
 )
-def test_custom_view__returns_mcp_generator_when_mcp_param_is_true(
+def test_custom_view__mcp_param_is_true__returns_mcp_generator(
     view_class: type,
 ) -> None:
     # Given
@@ -183,7 +189,7 @@ def test_custom_view__returns_mcp_generator_when_mcp_param_is_true(
     "view_class",
     [CustomSpectacularJSONAPIView, CustomSpectacularYAMLAPIView],
 )
-def test_custom_view__returns_schema_generator_when_mcp_param_is_false(
+def test_custom_view__mcp_param_is_false__returns_schema_generator(
     view_class: type,
 ) -> None:
     # Given
@@ -202,7 +208,7 @@ def test_custom_view__returns_schema_generator_when_mcp_param_is_false(
     "view_class",
     [CustomSpectacularJSONAPIView, CustomSpectacularYAMLAPIView],
 )
-def test_custom_view__returns_schema_generator_when_no_mcp_param(
+def test_custom_view__no_mcp_param__returns_schema_generator(
     view_class: type,
 ) -> None:
     # Given
@@ -221,7 +227,9 @@ def test_custom_view__returns_schema_generator_when_no_mcp_param(
     "view_class",
     [CustomSpectacularJSONAPIView, CustomSpectacularYAMLAPIView],
 )
-def test_custom_view__case_insensitive_mcp_param(view_class: type) -> None:
+def test_custom_view__uppercase_mcp_param__returns_mcp_generator(
+    view_class: type,
+) -> None:
     # Given
     view = view_class()
     view.request = MagicMock()
@@ -234,7 +242,7 @@ def test_custom_view__case_insensitive_mcp_param(view_class: type) -> None:
     assert generator_class is MCPSchemaGenerator
 
 
-def test_mcp_schema__includes_expected_endpoints_and_excludes_others() -> None:
+def test_mcp_schema__full_schema_generated__includes_expected_endpoints_only() -> None:
     # Given
     generator = MCPSchemaGenerator()
 
@@ -259,7 +267,7 @@ def test_mcp_schema__includes_expected_endpoints_and_excludes_others() -> None:
     assert "/api/v1/users/" not in paths
 
 
-def test_mcp_schema__includes_https_server() -> None:
+def test_mcp_schema__full_schema_generated__includes_https_server() -> None:
     # Given
     generator = MCPSchemaGenerator()
 
@@ -270,7 +278,7 @@ def test_mcp_schema__includes_https_server() -> None:
     assert schema["servers"] == [{"url": "https://api.flagsmith.com"}]
 
 
-def test_mcp_schema__includes_token_auth_security() -> None:
+def test_mcp_schema__full_schema_generated__includes_token_auth_security() -> None:
     # Given
     generator = MCPSchemaGenerator()
 

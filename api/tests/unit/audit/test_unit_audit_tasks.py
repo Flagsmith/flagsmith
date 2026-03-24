@@ -27,7 +27,7 @@ from segments.models import Segment
 from users.models import FFAdminUser
 
 
-def test_create_audit_log_from_historical_record_does_nothing_if_no_user_or_api_key(  # type: ignore[no-untyped-def]
+def test_create_audit_log_from_historical_record__no_user_or_api_key__does_not_create_audit_log(  # type: ignore[no-untyped-def]
     mocker,
     monkeypatch,
 ):
@@ -65,7 +65,7 @@ def test_create_audit_log_from_historical_record_does_nothing_if_no_user_or_api_
     mocked_audit_log_model_class.objects.create.assert_not_called()
 
 
-def test_create_audit_log_from_historical_record_does_nothing_if_no_log_message(  # type: ignore[no-untyped-def]
+def test_create_audit_log_from_historical_record__no_log_message__does_not_create_audit_log(  # type: ignore[no-untyped-def]
     mocker,
     monkeypatch,
 ):
@@ -112,7 +112,7 @@ def test_create_audit_log_from_historical_record_does_nothing_if_no_log_message(
     mocked_audit_log_model_class.objects.create.assert_not_called()
 
 
-def test_create_audit_log_from_historical_record_does_nothing_if_get_skip_create_audit_log_true(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_create_audit_log_from_historical_record__skip_audit_log_true__does_not_create_audit_log(  # type: ignore[no-untyped-def]
     mocker,
     monkeypatch,
 ):
@@ -155,7 +155,7 @@ def test_create_audit_log_from_historical_record_does_nothing_if_get_skip_create
     mocked_audit_log_model_class.objects.create.assert_not_called()
 
 
-def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_fields(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_create_audit_log_from_historical_record__valid_record__creates_audit_log_with_correct_fields(  # type: ignore[no-untyped-def]
     mocker,
     monkeypatch,
 ):
@@ -263,7 +263,7 @@ def test_create_audit_log_from_historical_record__cascade_deleted_feature_segmen
     assert get_update_log_message.spy_return is None
 
 
-def test_create_segment_priorities_changed_audit_log(
+def test_create_segment_priorities_changed_audit_log__priorities_changed__creates_audit_log(
     admin_user: FFAdminUser,
     feature_segment: FeatureSegment,
     feature: Feature,
@@ -298,7 +298,7 @@ def test_create_segment_priorities_changed_audit_log(
     ).exists()
 
 
-def test_create_segment_priorities_changed_audit_log_does_not_create_audit_log_for_versioned_feature_segments(
+def test_create_segment_priorities_changed_audit_log__versioned_feature_segments__does_not_create_audit_log(
     admin_user: FFAdminUser,
     feature_segment: FeatureSegment,
     feature: Feature,
@@ -348,7 +348,7 @@ def test_create_segment_priorities_changed_audit_log_does_not_create_audit_log_f
     ).exists()
 
 
-def test_create_feature_state_went_live_audit_log(
+def test_create_feature_state_went_live_audit_log__valid_feature_state__creates_audit_log(
     change_request_feature_state: FeatureState,
 ) -> None:
     # Given
@@ -534,7 +534,7 @@ def test_create_feature_state_went_live_audit_log__rescheduled_feature_update__s
         )
 
 
-def test_create_feature_state_updated_by_change_request_audit_log(
+def test_create_feature_state_updated_by_change_request_audit_log__valid_feature_state__creates_audit_log(
     change_request_feature_state: FeatureState,
 ) -> None:
     # Given
@@ -559,7 +559,7 @@ def test_create_feature_state_updated_by_change_request_audit_log(
     )
 
 
-def test_create_feature_state_updated_by_change_request_audit_log_does_nothing_if_feature_state_deleted(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_create_feature_state_went_live_audit_log__feature_state_deleted__does_not_create_audit_log(  # type: ignore[no-untyped-def]
     change_request_feature_state,
 ):
     # Given
@@ -578,7 +578,7 @@ def test_create_feature_state_updated_by_change_request_audit_log_does_nothing_i
     )
 
 
-def test_create_feature_state_wen_live_audit_log_does_nothing_if_feature_state_deleted(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_create_feature_state_went_live_audit_log__feature_state_deleted_with_message__does_not_create_audit_log(  # type: ignore[no-untyped-def]
     change_request_feature_state,
 ):
     # Given
