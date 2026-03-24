@@ -319,6 +319,26 @@ def test_end_trial__organisation_in_trial__reverts_to_free_plan(
 
 
 @pytest.mark.django_db
+def test_trigger_update_organisation_subscription_information_api_usage_cache__called__enqueues_task(
+    superuser_client: APIClient,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_update = mocker.patch(
+        "sales_dashboard.views.update_organisation_subscription_information_api_usage_cache"
+    )
+
+    # When
+    response = superuser_client.get(
+        "/sales-dashboard/update-organisation-subscription-information-influx-cache"
+    )
+
+    # Then
+    assert response.status_code == 302
+    assert mock_update.delay.call_args_list == [mocker.call()]
+
+
+@pytest.mark.django_db
 def test_list_organisations__empty_organisation__returns_zero_counts(
     rf: RequestFactory,
 ) -> None:

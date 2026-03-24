@@ -2166,7 +2166,7 @@ def test_update_organisation_subscription_information_cache_recurring__called__d
     update_organisation_subscription_information_cache_recurring()
 
     # Then
-    assert mock_update.call_args_list == [call()]
+    assert mock_update.call_args_list == [mocker.call()]
 
 
 def test_update_organisation_subscription_information_api_usage_cache__called__calls_update_caches_with_api_usage(
@@ -2182,7 +2182,7 @@ def test_update_organisation_subscription_information_api_usage_cache__called__c
 
     # Then
     assert mock_update_caches.call_args_list == [
-        call((SubscriptionCacheEntity.API_USAGE,))
+        mocker.call((SubscriptionCacheEntity.API_USAGE,))
     ]
 
 
@@ -2199,5 +2199,7 @@ def test_update_organisation_subscription_information_cache__called__calls_updat
 
     # Then
     assert mock_update_caches.call_args_list == [
-        call((SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE))
+        mocker.call(
+            (SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE)
+        )
     ]
