@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.224.0](https://github.com/Flagsmith/flagsmith/compare/v2.223.0...v2.224.0) (2026-03-24)
+
+
+### Features
+
+* **CockroachDB support:** Switch to `JSONField` for SDK metrics labels ([#5833](https://github.com/Flagsmith/flagsmith/issues/5833)) ([02618c6](https://github.com/Flagsmith/flagsmith/commit/02618c674df196d0e97a98c347487931c94742da))
+
+
+### Bug Fixes
+
+* **API Usage:** Update subscription cache from database-backed usage ([#7024](https://github.com/Flagsmith/flagsmith/issues/7024)) ([b018bfb](https://github.com/Flagsmith/flagsmith/commit/b018bfb400bea58497ba0d8156574b8ffb2380df))
+
 ## [2.223.0](https://github.com/Flagsmith/flagsmith/compare/v2.222.4...v2.223.0) (2026-03-23)
 
 
