@@ -129,7 +129,7 @@ def get_top_organisations_from_local_db(
     """
     Return a mapping of organisation ID to total API call count from the
     Postgres analytics database, for all organisations with usage since
-    ``date_start``.  Self-hosted deployments only.
+    ``date_start``.  Non-SaaS deployments only.
     """
     if is_saas():
         raise RuntimeError("Must not run in SaaS mode")

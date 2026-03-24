@@ -94,7 +94,7 @@ def update_organisation_subscription_information_cache_recurring():  # type: ign
 
 
 @register_task_handler()
-def update_organisation_subscription_information_influx_cache():  # type: ignore[no-untyped-def]
+def update_organisation_subscription_information_api_usage_cache():  # type: ignore[no-untyped-def]
     subscription_info_cache.update_caches((SubscriptionCacheEntity.API_USAGE,))
 
 

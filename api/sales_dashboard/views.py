@@ -39,8 +39,8 @@ from organisations.models import (
     UserOrganisation,
 )
 from organisations.tasks import (
+    update_organisation_subscription_information_api_usage_cache,
     update_organisation_subscription_information_cache,
-    update_organisation_subscription_information_influx_cache,
 )
 from projects.models import Project
 from users.models import FFAdminUser
@@ -352,8 +352,8 @@ def download_org_data(request, organisation_id):  # type: ignore[no-untyped-def]
 
 
 @staff_member_required()  # type: ignore[misc]
-def trigger_update_organisation_subscription_information_influx_cache(request):  # type: ignore[no-untyped-def]
-    update_organisation_subscription_information_influx_cache.delay()
+def trigger_update_organisation_subscription_information_api_usage_cache(request):  # type: ignore[no-untyped-def]
+    update_organisation_subscription_information_api_usage_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 

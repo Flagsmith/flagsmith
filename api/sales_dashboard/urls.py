@@ -49,7 +49,7 @@ urlpatterns = [
     ),
     path(
         "update-organisation-subscription-information-influx-cache",
-        views.trigger_update_organisation_subscription_information_influx_cache,
+        views.trigger_update_organisation_subscription_information_api_usage_cache,
         name="update-organisation-subscription-information-influx-cache",
     ),
     path(
