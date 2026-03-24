@@ -1,8 +1,7 @@
 import React, { FC, ReactNode, useMemo } from 'react'
 import { useGetPermissionQuery } from 'common/services/usePermission'
 import AccountStore from 'common/stores/account-store'
-import intersection from 'lodash/intersection'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, intersection } from 'lodash'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import {
@@ -50,7 +49,7 @@ type PermissionType =
   | EnvironmentLevelProps
 
 type UseHasPermissionParams = {
-  id: number | string
+  id: number | string | undefined | null
   level: 'organisation' | 'project' | 'environment'
   permission: OrganisationPermission | ProjectPermission | EnvironmentPermission
   tags?: number[]

@@ -14,6 +14,7 @@ import Button from 'components/base/forms/Button'
 import {
   Environment,
   FeatureListProviderData,
+  FeatureState,
   ProjectFlag,
   ReleasePipeline,
 } from 'common/types/responses'
@@ -39,9 +40,7 @@ export interface FeatureRowProps {
   removeFlag?: (projectFlag: ProjectFlag) => void | Promise<void>
   toggleFlag?: (
     projectFlag: ProjectFlag,
-    environmentFlag:
-      | FeatureListProviderData['environmentFlags'][number]
-      | undefined,
+    environmentFlag: FeatureState | undefined,
     onError?: () => void,
   ) => void | Promise<void>
   index: number
@@ -84,7 +83,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     style,
     toggleFlag,
   } = props
-  const protectedTags = useProtectedTags(projectFlag, projectId)
+  const protectedTags = useProtectedTags(projectFlag, String(projectId))
   const history = useHistory()
   const { id } = projectFlag
 
@@ -99,7 +98,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   } = useFeatureRowState(actualEnabled)
 
   const { data: healthEvents } = useGetHealthEventsQuery(
-    { projectId: String(projectFlag.project) },
+    { projectId: projectFlag.project },
     { skip: !projectFlag?.project },
   )
 
@@ -311,7 +310,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       if (disableControls) return
       editFeature(Constants.featurePanelTabs.HISTORY)
     },
-    projectId,
+    projectId: String(projectId),
     protectedTags,
     readOnly: isReadOnly,
     tags: projectFlag.tags,

@@ -146,11 +146,8 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
           )}
           <FeatureValueTab
             error={error}
-            createFeature={createFeature}
-            hideValue={preventFlagDefaults}
             projectId={projectId}
             identity={identity}
-            isEdit={!!identity}
             noPermissions={noPermissions}
             projectFlag={projectFlag}
             featureState={overrideFeatureState || featureState}

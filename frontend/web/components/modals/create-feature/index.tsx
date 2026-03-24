@@ -802,6 +802,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   featureWarning={parseError(error).featureWarning}
                 />
                 <FeatureUpdateSummary
+                  projectId={projectId}
                   identity={identity}
                   onCreateFeature={onCreateFeature}
                   isSaving={isSaving}
