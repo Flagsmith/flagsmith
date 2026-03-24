@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("app_analytics", "0006_add_labels"),
+        ("app_analytics", "0007_rename_environment_id_created_at_index"),
     ]
 
     operations = [
@@ -39,6 +39,7 @@ class Migration(migrations.Migration):
                     # See 0006_add_labels to understand why we are doing this.
                     sql="""
                     DO $$
+                    DECLARE relname text;
                     BEGIN
                         FOR relname IN
                             SELECT c.relname
@@ -56,6 +57,7 @@ class Migration(migrations.Migration):
                         LOOP
                             EXECUTE format(
                                 'ALTER TABLE %I
+                                 ALTER COLUMN labels DROP DEFAULT,
                                  ALTER COLUMN labels TYPE jsonb USING hstore_to_json(labels),
                                  ALTER COLUMN labels SET DEFAULT ''{}''::jsonb',
                                 relname

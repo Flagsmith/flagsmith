@@ -160,3 +160,11 @@ def migrator(migrator_factory: MigratorFactory) -> Migrator:
         pytest.skip("Skip migration tests to speed up tests where necessary")
     migrator: Migrator = migrator_factory()
     return migrator
+
+
+@pytest.fixture()
+def analytics_migrator(migrator_factory: MigratorFactory) -> Migrator:
+    if settings.SKIP_MIGRATION_TESTS:  # pragma: no cover
+        pytest.skip("Skip migration tests to speed up tests where necessary")
+    migrator: Migrator = migrator_factory("analytics")
+    return migrator
