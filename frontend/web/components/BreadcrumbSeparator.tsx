@@ -414,7 +414,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                 footer={Utils.renderWithPermission(
                   canCreateProject,
                   Constants.organisationPermissions(
-                    Utils.getCreateProjectPermissionDescription(
+                    Utils.getCreateProjectPermission(
                       AccountStore.getOrganisation(),
                     ),
                   ),

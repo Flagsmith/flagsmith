@@ -9,15 +9,15 @@ from organisations.permissions.models import OrganisationPermissionModel
 from projects.models import ProjectPermissionModel
 
 
-def test_is_authenticated(master_api_key_object):  # type: ignore[no-untyped-def]
+def test_api_key_user__is_authenticated__returns_true(master_api_key_object):  # type: ignore[no-untyped-def]
     # Given
     user = APIKeyUser(master_api_key_object)
 
-    # Then
+    # When / Then
     assert user.is_authenticated is True
 
 
-def test__str__returns_name(master_api_key_object):  # type: ignore[no-untyped-def]
+def test_api_key_user__str__returns_name(master_api_key_object):  # type: ignore[no-untyped-def]
     # Given
     user = APIKeyUser(master_api_key_object)
 
@@ -35,11 +35,13 @@ def test__str__returns_name(master_api_key_object):  # type: ignore[no-untyped-d
         (lazy_fixture("organisation_two"), False),
     ],
 )
-def test_belongs_to(for_organisation, expected_result, master_api_key_object):  # type: ignore[no-untyped-def]
+def test_api_key_user__belongs_to__returns_expected_result(  # type: ignore[no-untyped-def]
+    for_organisation, expected_result, master_api_key_object
+):
     # Given
     user = APIKeyUser(master_api_key_object)
 
-    # Then
+    # When / Then
     assert user.belongs_to(for_organisation.id) == expected_result
 
 
@@ -60,7 +62,7 @@ def test_belongs_to(for_organisation, expected_result, master_api_key_object):  
         ),
     ],
 )
-def test_is_project_admin(  # type: ignore[no-untyped-def]
+def test_api_key_user__is_project_admin__returns_expected_result(  # type: ignore[no-untyped-def]
     for_project,
     for_master_api_key,
     expected_is_admin,
@@ -70,7 +72,7 @@ def test_is_project_admin(  # type: ignore[no-untyped-def]
     # Given
     user = APIKeyUser(for_master_api_key)
 
-    # Then
+    # When / Then
     assert user.is_project_admin(for_project) is expected_is_admin
 
 
@@ -95,7 +97,7 @@ def test_is_project_admin(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_is_environment_admin(  # type: ignore[no-untyped-def]
+def test_api_key_user__is_environment_admin__returns_expected_result(  # type: ignore[no-untyped-def]
     for_environment,
     for_master_api_key,
     expected_is_admin,
@@ -104,7 +106,7 @@ def test_is_environment_admin(  # type: ignore[no-untyped-def]
     # Given
     user = APIKeyUser(for_master_api_key)
 
-    # Then
+    # When / Then
     assert user.is_environment_admin(for_environment) is expected_is_admin
 
 
@@ -125,7 +127,7 @@ def test_is_environment_admin(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_has_project_permission(  # type: ignore[no-untyped-def]
+def test_api_key_user__has_project_permission__returns_expected_result(  # type: ignore[no-untyped-def]
     for_project, for_master_api_key, expected_has_permission
 ):
     # Given
@@ -163,7 +165,7 @@ def test_has_project_permission(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_has_environment_permission(  # type: ignore[no-untyped-def]
+def test_api_key_user__has_environment_permission__returns_expected_result(  # type: ignore[no-untyped-def]
     for_environment, for_master_api_key, expected_has_permission
 ):
     # Given
@@ -201,7 +203,7 @@ def test_has_environment_permission(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_has_organisation_permission(  # type: ignore[no-untyped-def]
+def test_api_key_user__has_organisation_permission__returns_expected_result(  # type: ignore[no-untyped-def]
     for_organisation, for_master_api_key, expected_has_permission
 ):
     # Given
@@ -238,7 +240,9 @@ def test_has_organisation_permission(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_get_permitted_projects(for_project, for_master_api_key, expected_project):  # type: ignore[no-untyped-def]
+def test_api_key_user__get_permitted_projects__returns_expected_projects(  # type: ignore[no-untyped-def]
+    for_project, for_master_api_key, expected_project
+):
     # Given
     user = APIKeyUser(for_master_api_key)
 
@@ -277,7 +281,7 @@ def test_get_permitted_projects(for_project, for_master_api_key, expected_projec
         ),
     ],
 )
-def test_get_permitted_environments(  # type: ignore[no-untyped-def]
+def test_api_key_user__get_permitted_environments__returns_expected_environments(  # type: ignore[no-untyped-def]
     for_project,
     for_master_api_key,
     expected_environment,
@@ -301,7 +305,7 @@ def test_get_permitted_environments(  # type: ignore[no-untyped-def]
             assert environments.first() == expected_environment
 
 
-def test_is_organisation_admin_for_admin_key(
+def test_api_key_user__is_organisation_admin_with_admin_key__returns_expected_result(
     admin_master_api_key_object: MasterAPIKey,
     organisation: Organisation,
     organisation_two: Organisation,
@@ -309,7 +313,7 @@ def test_is_organisation_admin_for_admin_key(
     # Given
     user = APIKeyUser(admin_master_api_key_object)
 
-    # Then
+    # When / Then
     # Return True for the associated organisation
     assert user.is_organisation_admin(organisation) is True
     assert user.is_organisation_admin(organisation.id) is True
@@ -319,7 +323,7 @@ def test_is_organisation_admin_for_admin_key(
     assert user.is_organisation_admin(organisation_two.id) is False
 
 
-def test_is_organisation_admin_for_non_admin_key(
+def test_api_key_user__is_organisation_admin_with_non_admin_key__returns_false(
     master_api_key_object: MasterAPIKey,
     organisation: Organisation,
     organisation_two: Organisation,
@@ -327,7 +331,7 @@ def test_is_organisation_admin_for_non_admin_key(
     # Given
     user = APIKeyUser(master_api_key_object)
 
-    # Then
+    # When / Then
     assert user.is_organisation_admin(organisation) is False
     assert user.is_organisation_admin(organisation.id) is False
 
@@ -335,7 +339,7 @@ def test_is_organisation_admin_for_non_admin_key(
     assert user.is_organisation_admin(organisation_two.id) is False
 
 
-def test_organisation_property(  # type: ignore[no-untyped-def]
+def test_api_key_user__organisations_property__returns_associated_organisation(  # type: ignore[no-untyped-def]
     master_api_key_object: MasterAPIKey,
     organisation: Organisation,
 ):
@@ -350,7 +354,7 @@ def test_organisation_property(  # type: ignore[no-untyped-def]
     assert organisations.first().id == organisation.id  # type: ignore[union-attr]
 
 
-def test_get_organisation_role_for_admin_key(
+def test_api_key_user__get_organisation_role_with_admin_key__returns_admin(
     admin_master_api_key_object: MasterAPIKey,
     organisation: Organisation,
     organisation_two: Organisation,
@@ -366,7 +370,7 @@ def test_get_organisation_role_for_admin_key(
     assert user.get_organisation_role(organisation_two) is None
 
 
-def test_get_organisation_role_for_non_admin_key(
+def test_api_key_user__get_organisation_role_with_non_admin_key__returns_user(
     master_api_key_object: MasterAPIKey,
     organisation: Organisation,
     organisation_two: Organisation,

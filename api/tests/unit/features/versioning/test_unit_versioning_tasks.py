@@ -39,10 +39,10 @@ from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType
 
 
-def test_enable_v2_versioning(
+def test_enable_v2_versioning__environment_with_features__creates_versions_and_enables_flag(
     environment: Environment, feature: Feature, multivariate_feature: Feature
 ) -> None:
-    # When
+    # Given / When
     enable_v2_versioning(environment.id)
 
     # Then
@@ -57,7 +57,7 @@ def test_enable_v2_versioning(
     assert environment.use_v2_feature_versioning is True
 
 
-def test_disable_v2_versioning(
+def test_disable_v2_versioning__published_and_unpublished_versions__restores_latest_published_state(
     environment_v2_versioning: Environment,
     project: Project,
     feature: Feature,
@@ -157,7 +157,7 @@ def test_disable_v2_versioning(
 
 
 @responses.activate
-def test_trigger_update_version_webhooks__with_changes(
+def test_trigger_update_version_webhooks__version_with_changes__triggers_flag_updated_and_version_published_webhooks(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -242,7 +242,7 @@ def test_trigger_update_version_webhooks__with_changes(
 
 
 @responses.activate
-def test_trigger_update_version_webhooks__without_changes(
+def test_trigger_update_version_webhooks__version_without_changes__triggers_only_version_published_webhook(
     environment_v2_versioning: Environment,
     feature: Feature,
     staff_user: FFAdminUser,
@@ -290,7 +290,7 @@ def test_trigger_update_version_webhooks__without_changes(
     }
 
 
-def test_enable_v2_versioning_for_scheduled_changes(
+def test_enable_v2_versioning__scheduled_changes_exist__converts_published_scheduled_changes(
     environment: Environment, staff_user: FFAdminUser, feature: Feature
 ) -> None:
     # Given
@@ -396,7 +396,7 @@ def test_enable_v2_versioning_for_scheduled_changes(
     )
 
 
-def test_publish_version_change_set_sends_email_to_change_request_owner_if_conflicts_when_scheduled(
+def test_publish_version_change_set__conflict_with_scheduled_change__sends_conflict_email_to_owner(
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -500,7 +500,7 @@ def test_publish_version_change_set_sends_email_to_change_request_owner_if_confl
     )
 
 
-def test_publish_version_change_set_raises_error_when_segment_override_does_not_exist(
+def test_publish_version_change_set__segment_override_does_not_exist__raises_validation_error(
     change_request: ChangeRequest,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -544,7 +544,7 @@ def test_publish_version_change_set_raises_error_when_segment_override_does_not_
     )
 
 
-def test_publish_version_change_set_raises_error_when_serializer_not_valid(
+def test_publish_version_change_set__invalid_serializer_data__raises_feature_versioning_error(
     change_request: ChangeRequest,
     environment_v2_versioning: Environment,
     feature: Feature,
@@ -569,7 +569,7 @@ def test_publish_version_change_set_raises_error_when_serializer_not_valid(
     assert str(e.value) == "Unable to publish version change set"
 
 
-def test_publish_version_change_set_uses_current_time_for_version_live_from(
+def test_publish_version_change_set__live_from_in_past__uses_current_time_for_version(
     change_request: ChangeRequest,
     feature: Feature,
     environment_v2_versioning: Environment,
@@ -610,7 +610,7 @@ def test_publish_version_change_set_uses_current_time_for_version_live_from(
     )
 
 
-def test_scheduled_versioning_change_set_with_ignore_conflicts_sends_email_if_validation_fails(
+def test_publish_version_change_set__ignore_conflicts_with_invalid_data__sends_conflict_email(
     feature: Feature,
     environment_v2_versioning: Environment,
     admin_user: FFAdminUser,

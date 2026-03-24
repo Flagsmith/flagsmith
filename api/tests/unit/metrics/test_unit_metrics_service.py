@@ -10,7 +10,7 @@ from metrics.types import EnvMetricsName
 
 @pytest.mark.parametrize("with_workflows", [True, False])
 @pytest.mark.django_db
-def test_environment_metrics_service_builds_expected_metrics(
+def test_environment_metrics_service__with_or_without_workflows__builds_expected_metrics(
     monkeypatch: pytest.MonkeyPatch,
     environment: Environment,
     with_workflows: bool,
@@ -73,7 +73,7 @@ def test_environment_metrics_service_builds_expected_metrics(
 
 @pytest.mark.parametrize("uses_dynamo, expected_value", [(True, 99), (False, 1)])
 @pytest.mark.django_db
-def test_dynamo_identity_metric_used(
+def test_environment_metrics_service__dynamo_enabled_or_not__uses_correct_identity_source(
     monkeypatch: pytest.MonkeyPatch,
     environment: Environment,
     uses_dynamo: bool,

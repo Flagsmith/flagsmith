@@ -48,6 +48,10 @@ import FeatureValueTab from './tabs/FeatureValue'
 import FeatureLimitAlert from './FeatureLimitAlert'
 import FeatureUpdateSummary from './FeatureUpdateSummary'
 import FeatureNameInput from './FeatureNameInput'
+import {
+  EnvironmentPermission,
+  ProjectPermission,
+} from 'common/types/permissions.types'
 
 const Index = class extends Component {
   static displayName = 'create-feature'
@@ -266,13 +270,13 @@ const Index = class extends Component {
         {
           id: this.props.environmentId,
           level: 'environment',
-          permissions: 'VIEW_IDENTITIES',
+          permissions: EnvironmentPermission.VIEW_IDENTITIES,
         },
         { forceRefetch },
       )
         .then((permissions) => {
           const hasViewIdentitiesPermission =
-            permissions[Utils.getViewIdentitiesPermission()] ||
+            permissions[EnvironmentPermission.VIEW_IDENTITIES] ||
             permissions.ADMIN
           // Early return if user doesn't have permission
           if (!hasViewIdentitiesPermission) {
@@ -800,7 +804,7 @@ const Index = class extends Component {
                   this.setState({ segmentsChanged: false })
 
                   if ((is4Eyes || schedule) && isVersioned && !identity) {
-                    return saveFeatureValue()
+                    return saveFeatureValue(schedule)
                   } else {
                     this.save(editFeatureSegments, isSaving)
                   }
@@ -817,7 +821,7 @@ const Index = class extends Component {
               return (
                 <Permission
                   level='project'
-                  permission='CREATE_FEATURE'
+                  permission={ProjectPermission.CREATE_FEATURE}
                   id={this.props.projectId}
                 >
                   {({ permission: createFeature }) => (
@@ -986,7 +990,7 @@ const Index = class extends Component {
                                               <Permission
                                                 level='environment'
                                                 permission={
-                                                  'MANAGE_SEGMENT_OVERRIDES'
+                                                  EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES
                                                 }
                                                 id={this.props.environmentId}
                                               >
@@ -1041,7 +1045,7 @@ const Index = class extends Component {
                                               <Permission
                                                 level='environment'
                                                 permission={
-                                                  'MANAGE_SEGMENT_OVERRIDES'
+                                                  EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES
                                                 }
                                                 id={this.props.environmentId}
                                               >
@@ -1144,7 +1148,6 @@ const Index = class extends Component {
                                                     tags={projectFlag.tags}
                                                     permission={Utils.getManageFeaturePermission(
                                                       is4Eyes,
-                                                      identity,
                                                     )}
                                                     id={
                                                       this.props.environmentId
@@ -1157,7 +1160,7 @@ const Index = class extends Component {
                                                       <Permission
                                                         level='environment'
                                                         permission={
-                                                          'MANAGE_SEGMENT_OVERRIDES'
+                                                          EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES
                                                         }
                                                         id={
                                                           this.props
@@ -1226,7 +1229,7 @@ const Index = class extends Component {
                                                           return Utils.renderWithPermission(
                                                             manageSegmentsOverrides,
                                                             Constants.environmentPermissions(
-                                                              'Manage segment overrides',
+                                                              EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
                                                             ),
                                                             <>
                                                               {!is4Eyes &&
@@ -1293,7 +1296,9 @@ const Index = class extends Component {
                                     data-test='identity_overrides'
                                     tabLabel='Identity Overrides'
                                     level='environment'
-                                    permission={'VIEW_IDENTITIES'}
+                                    permission={
+                                      EnvironmentPermission.VIEW_IDENTITIES
+                                    }
                                     id={this.props.environmentId}
                                   >
                                     {({ permission: viewIdentities }) =>
@@ -1553,7 +1558,7 @@ const Index = class extends Component {
                                                 dangerouslySetInnerHTML={{
                                                   __html:
                                                     Constants.environmentPermissions(
-                                                      'View Identities',
+                                                      EnvironmentPermission.VIEW_IDENTITIES,
                                                     ),
                                                 }}
                                               />
@@ -1843,6 +1848,7 @@ const Index = class extends Component {
                                 />
                                 <FeatureUpdateSummary
                                   identity={identity}
+                                  projectId={this.props.projectId}
                                   onCreateFeature={onCreateFeature}
                                   isSaving={isSaving}
                                   name={projectFlag.name}
@@ -1884,22 +1890,39 @@ const Index = class extends Component {
 
                                 <div className='text-right mb-2'>
                                   {identity && (
-                                    <div>
-                                      <Button
-                                        onClick={() => saveFeatureValue()}
-                                        data-test='update-feature-btn'
-                                        id='update-feature-btn'
-                                        disabled={
-                                          isSaving ||
-                                          !projectFlag.name ||
-                                          invalid
-                                        }
-                                      >
-                                        {isSaving
-                                          ? 'Updating'
-                                          : 'Update Feature'}
-                                      </Button>
-                                    </div>
+                                    <Permission
+                                      level='environment'
+                                      tags={projectFlag.tags}
+                                      permission={Utils.getManageFeaturePermission(
+                                        is4Eyes,
+                                        identity,
+                                      )}
+                                      id={this.props.environmentId}
+                                    >
+                                      {({ permission: savePermission }) =>
+                                        Utils.renderWithPermission(
+                                          savePermission,
+                                          EnvironmentPermission.UPDATE_FEATURE_STATE,
+                                          <div>
+                                            <Button
+                                              onClick={() => saveFeatureValue()}
+                                              data-test='update-feature-btn'
+                                              id='update-feature-btn'
+                                              disabled={
+                                                !savePermission ||
+                                                isSaving ||
+                                                !projectFlag.name ||
+                                                invalid
+                                              }
+                                            >
+                                              {isSaving
+                                                ? 'Updating'
+                                                : 'Update Feature'}
+                                            </Button>
+                                          </div>,
+                                        )
+                                      }
+                                    </Permission>
                                   )}
                                 </div>
                               </div>

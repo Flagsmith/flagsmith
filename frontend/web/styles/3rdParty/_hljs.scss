@@ -271,6 +271,8 @@
 }
 .value-editor pre code {
   height: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 code.txt {

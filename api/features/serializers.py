@@ -229,7 +229,6 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             "created_date",
             "uuid",
             "project",
-            "type",
         )
 
     def to_internal_value(self, data):  # type: ignore[no-untyped-def]
