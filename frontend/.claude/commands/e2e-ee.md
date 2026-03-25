@@ -14,7 +14,7 @@ Run enterprise E2E tests (tagged with @enterprise) and report results.
 ## Run Command
 
 ```bash
-E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=20 npm run test -- --grep @enterprise --quiet
+E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=5 npm run test -- --grep @enterprise --quiet
 ```
 
 ## Re-running Failed Enterprise Tests

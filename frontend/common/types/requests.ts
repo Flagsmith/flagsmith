@@ -24,6 +24,7 @@ import {
   StageActionType,
   StageActionBody,
   ChangeRequest,
+  FlagsmithValue,
   TagStrategy,
 } from './responses'
 import { UtmsType } from './utms'
@@ -234,7 +235,7 @@ export type Req = {
     pages?: (string | undefined)[] // this is needed for edge since it returns no paging info other than a key
     isEdge: boolean
   }>
-  getPermission: { id: number; level: PermissionLevel }
+  getPermission: { id: number | string; level: PermissionLevel }
   getAvailablePermissions: { level: PermissionLevel }
   getTag: { id: number }
   getHealthEvents: { projectId: number }
@@ -250,7 +251,10 @@ export type Req = {
   getTags: {
     projectId: number
   }
-  createTag: { projectId: number; tag: Omit<Tag, 'id'> }
+  createTag: {
+    projectId: number
+    tag: Omit<Tag, 'id' | 'project' | 'type' | 'is_system_tag' | 'is_permanent'>
+  }
   getSegment: { projectId: number; id: number }
   updateAccount: Account
   deleteAccount: {
@@ -882,6 +886,19 @@ export type Req = {
         feature_id: number
       }
     }
+  }
+  getIdentityOverrides: {
+    environmentId: string
+    featureId: number
+    page?: number
+    isEdge: boolean
+  }
+  createIdentityOverride: {
+    environmentId: string
+    identityId: string
+    featureId: number
+    enabled: boolean
+    feature_state_value: FlagsmithValue | null
   }
   // END OF TYPES
 }

@@ -223,7 +223,6 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
                 ?.multivariate_feature_state_values
             : undefined
         }
-        flagId={environmentFlag.id}
       />,
       'side-modal create-feature-modal',
     )

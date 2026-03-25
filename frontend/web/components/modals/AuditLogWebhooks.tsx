@@ -23,7 +23,10 @@ type AuditLogWebhooksType = {
 
 const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
   const { data: webhooks, isLoading: webhooksLoading } =
-    useGetAuditLogWebhooksQuery({ organisationId }, { skip: !organisationId })
+    useGetAuditLogWebhooksQuery(
+      { organisationId: parseInt(organisationId) },
+      { skip: !organisationId },
+    )
   const createWebhook = () => {
     openModal(
       'New Webhook',
