@@ -17,13 +17,20 @@ import { checkmarkCircle } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import FormGroup from 'components/base/grid/FormGroup'
 import Row from 'components/base/grid/Row'
-window.AppActions = require('../../common/dispatcher/app-actions')
-window.Actions = require('../../common/dispatcher/action-constants')
-window.ES6Component = require('../../common/ES6Component')
+import AppActions from 'common/dispatcher/app-actions'
+import Actions from 'common/dispatcher/action-constants'
+import ES6Component from 'common/ES6Component'
+import FeatureListProvider from 'common/providers/FeatureListProvider'
+import Flex from 'components/base/grid/Flex'
+import Column from 'components/base/grid/Column'
+
+window.AppActions = AppActions
+window.Actions = Actions
+window.ES6Component = ES6Component
 
 window.AccountProvider = AccountProvider
 window.AccountStore = AccountStore
-window.FeatureListProvider = require('../../common/providers/FeatureListProvider')
+window.FeatureListProvider = FeatureListProvider
 window.OrganisationProvider = OrganisationProvider
 window.ProjectProvider = ProjectProvider
 
@@ -31,8 +38,8 @@ window.Paging = Paging
 
 // Useful components
 window.Row = Row
-window.Flex = require('../components/base/grid/Flex')
-window.Column = require('../components/base/grid/Column')
+window.Flex = Flex
+window.Column = Column
 window.InputGroup = InputGroup
 window.Input = Input
 window.Button = Button

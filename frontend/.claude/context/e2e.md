@@ -49,7 +49,7 @@ E2E_TEST_TOKEN_PROD=<prod-token>
 ## Environment Variables
 
 - `SKIP_BUNDLE=1` - Skip webpack bundle build for faster iteration
-- `E2E_CONCURRENCY=20` - Number of parallel test workers (reduce to 1 for debugging)
+- `E2E_CONCURRENCY=5` - Number of parallel test workers (reduce to 1 for debugging)
 - `E2E_RETRIES=0` - Disable retries and enable fail-fast mode (stop on first failure)
 - `--quiet` - Minimal output
 - `--grep @enterprise` - Run only enterprise tests
