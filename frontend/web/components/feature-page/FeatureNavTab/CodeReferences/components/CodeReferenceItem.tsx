@@ -1,12 +1,17 @@
+import flagsmith from '@flagsmith/flagsmith'
 import Icon from 'components/Icon'
-import { CodeReference } from 'common/types/responses'
+import { CodeReference, VCSProvider } from 'common/types/responses'
 
 interface CodeReferenceItemProps {
   codeReference: CodeReference
+  featureId: number
+  vcsProvider: VCSProvider
 }
 
 const CodeReferenceItem: React.FC<CodeReferenceItemProps> = ({
   codeReference,
+  featureId,
+  vcsProvider,
 }) => {
   return (
     <Row className='flex items-center gap-1' noWrap>
@@ -25,6 +30,12 @@ const CodeReferenceItem: React.FC<CodeReferenceItemProps> = ({
         href={codeReference.permalink}
         target='_blank'
         rel='noreferrer'
+        onClick={() => {
+          flagsmith.trackEvent('code_references_click_permalink', {
+            feature_id: featureId,
+            vcs_provider: vcsProvider,
+          })
+        }}
       >
         {codeReference.file_path}:{codeReference.line_number}
       </a>

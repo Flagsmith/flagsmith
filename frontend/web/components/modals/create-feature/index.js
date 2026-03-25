@@ -40,6 +40,7 @@ import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
+import flagsmith from '@flagsmith/flagsmith'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import CreateFeature from './tabs/CreateFeature'
@@ -1610,6 +1611,14 @@ const Index = class extends Component {
                                               target='_blank'
                                               href='https://docs.flagsmith.com/managing-flags/code-references'
                                               rel='noreferrer'
+                                              onClick={() => {
+                                                flagsmith.trackEvent(
+                                                  'code_references_click_docs',
+                                                  {
+                                                    feature_id: projectFlag.id,
+                                                  },
+                                                )
+                                              }}
                                             >
                                               Learn more
                                             </a>
