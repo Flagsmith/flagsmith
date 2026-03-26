@@ -24,6 +24,14 @@ const GRAM_MOTION_FIX_CSS = `
     transition: none !important;
     animation: none !important;
   }
+  /* Nudge the bubble up to avoid overlap with bottom bar */
+  .aui-modal-anchor {
+    bottom: 26px !important;
+  }
+  [class*="aui-modal-anchor"],
+  [class*="fixed"][class*="bottom"] {
+    bottom: 26px !important;
+  }
 `
 
 // Flagsmith colours mapped to Gram's CSS custom properties.

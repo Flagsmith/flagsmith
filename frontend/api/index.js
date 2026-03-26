@@ -262,7 +262,7 @@ if (process.env.GRAM_API_KEY) {
           req.headers.origin ||
           (req.headers.referer && req.headers.referer.replace(/\/$/, '')) ||
           '*',
-        userIdentifier: user.email,
+        userIdentifier: String(user.id),
         expiresAfter: 3600,
       })
     } catch (err) {
