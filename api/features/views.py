@@ -802,7 +802,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         extensions={
             "x-gram": {
                 "name": "list_environment_feature_states",
-                "description": "Retrieves all feature states for an environment.",
+                "description": "Retrieves all feature states for an environment. Use this for environments without v2 feature versioning.",
             },
         },
     ),
@@ -814,7 +814,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         extensions={
             "x-gram": {
                 "name": "update_environment_feature_state",
-                "description": "Updates a feature state in an environment, including enabled status and value.",
+                "description": "Updates a feature state in an environment, including enabled status and value. Use this for environments without v2 feature versioning.",
             },
         },
     ),
