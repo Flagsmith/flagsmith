@@ -158,6 +158,15 @@ class EnvironmentFeatureVersionViewSet(
 
         super().perform_destroy(instance)
 
+    @extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "publish_environment_feature_version",
+                "description": "Publishes a feature version to make it live in the environment.",
+            },
+        },
+    )
     @action(detail=True, methods=["POST"])
     def publish(self, request: Request, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         ef_version = self.get_object()
