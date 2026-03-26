@@ -338,7 +338,9 @@ const App = class extends Component {
           }}
         </AccountProvider>
         <ScrollToTop />
-        {Project.gramProjectSlug && <GramChat />}
+        {AccountStore.getUser() &&
+          Project.gramProjectSlug &&
+          Utils.getFlagsmithHasFeature('gram_chat') && <GramChat />}
       </Provider>
     )
   }
