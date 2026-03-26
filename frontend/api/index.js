@@ -121,6 +121,8 @@ app.get('/config/project-overrides', (req, res) => {
       name: 'evaluationAnalyticsServerUrl',
       value: process.env.EVALUATION_ANALYTICS_SERVER_URL,
     },
+    { name: 'gramProjectSlug', value: process.env.GRAM_PROJECT_SLUG },
+    { name: 'gramMcpUrl', value: process.env.GRAM_MCP_URL },
   ]
   let output = values.map(getVariable).join('')
   res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate')
@@ -230,6 +232,47 @@ if (process.env.FLAGSMITH_PROXY_API_URL) {
 }
 
 app.use(bodyParser.json())
+
+// Gram Elements chat session endpoint
+if (process.env.GRAM_API_KEY) {
+  const { createElementsServerHandlers } = require('@gram-ai/elements/server')
+  const gramHandlers = createElementsServerHandlers()
+
+  app.post('/api/gram/session', async (req, res) => {
+    const token = req.headers.authorization
+    if (!token) {
+      return res.status(401).json({ error: 'Authentication required' })
+    }
+
+    const apiUrl = process.env.FLAGSMITH_PROXY_API_URL
+      ? process.env.FLAGSMITH_PROXY_API_URL.replace(/\/?$/, '/')
+      : process.env.FLAGSMITH_API_URL || 'https://api.flagsmith.com/'
+
+    try {
+      const userResponse = await fetch(`${apiUrl}api/v1/auth/users/me/`, {
+        headers: { Authorization: token },
+      })
+      if (!userResponse.ok) {
+        return res.status(401).json({ error: 'Invalid authentication token' })
+      }
+      const user = await userResponse.json()
+
+      return gramHandlers.session(req, res, {
+        embedOrigin:
+          req.headers.origin ||
+          (req.headers.referer && req.headers.referer.replace(/\/$/, '')) ||
+          '*',
+        userIdentifier: user.email,
+        expiresAfter: 3600,
+      })
+    } catch (err) {
+      // eslint-disable-next-line
+      console.error('Gram session error:', err)
+      return res.status(500).json({ error: 'Failed to create chat session' })
+    }
+  })
+}
+
 app.use(spm)
 const genericWebsite = (url) => {
   if (!url) return true
