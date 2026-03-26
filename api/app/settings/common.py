@@ -610,9 +610,8 @@ CHARGEBEE_API_KEY = env("CHARGEBEE_API_KEY", default=None)
 CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 
 # Logging is configured by flagsmith-common's setup_logging() in ensure_cli_env(),
-# before Django loads. This no-op dict prevents Django's dictConfig() from
-# overriding the already-configured handlers.
-LOGGING = {"version": 1, "disable_existing_loggers": False}
+# before Django loads. Disable Django's logging config to preserve our setup.
+LOGGING_CONFIG = None
 LOG_FORMAT = env.str("LOG_FORMAT", default="generic")
 LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
 
