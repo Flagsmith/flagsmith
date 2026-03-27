@@ -947,7 +947,7 @@ SIMPLE_JWT = {
 # OAuth 2.1 Provider (django-oauth-toolkit)
 FLAGSMITH_API_URL = env.str("FLAGSMITH_API_URL", default="http://localhost:8000")
 FLAGSMITH_FRONTEND_URL = env.str(
-    "FLAGSMITH_FRONTEND_URL", default="http://localhost:3000"
+    "FLAGSMITH_FRONTEND_URL", default="http://localhost:8080"
 )
 
 OAUTH2_PROVIDER = {
