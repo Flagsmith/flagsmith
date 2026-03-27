@@ -796,18 +796,6 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
 
 @method_decorator(
-    name="list",
-    decorator=extend_schema(
-        tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "list_environment_feature_states",
-                "description": "Retrieves the latest live feature states for an environment. Returns only environment-level defaults (no segment or identity overrides). Use this to discover feature state IDs needed for updates in environments without v2 feature versioning.",
-            },
-        },
-    ),
-)
-@method_decorator(
     name="update",
     decorator=extend_schema(
         tags=["mcp"],
