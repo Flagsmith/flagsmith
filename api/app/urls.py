@@ -53,6 +53,7 @@ if not settings.TASK_PROCESSOR_MODE:
             "robots.txt",
             TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
         ),
+        # Authorize template view for testing: this will be moved to the frontend in following issues
         path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
     ]
 

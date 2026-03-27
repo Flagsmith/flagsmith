@@ -97,11 +97,12 @@ def test_metadata_endpoint__scopes__reflect_oauth2_provider_settings(
     assert set(data["scopes_supported"]) == {"mcp", "read"}
 
 
-def test_metadata_endpoint__post_request__returns_405(
-    client: Client,
-) -> None:
+def test_metadata_endpoint__post_request__returns_405() -> None:
+    # Given
+    csrf_client = Client(enforce_csrf_checks=True)
+
     # When
-    response = client.post(reverse(METADATA_URL))
+    response = csrf_client.post(reverse(METADATA_URL))
 
     # Then
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED

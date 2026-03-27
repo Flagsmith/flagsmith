@@ -2,9 +2,11 @@ from typing import Any
 
 from django.conf import settings
 from django.http import HttpRequest, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
 
+@csrf_exempt
 @require_GET
 def authorization_server_metadata(request: HttpRequest) -> JsonResponse:
     """RFC 8414 OAuth 2.0 Authorization Server Metadata."""
