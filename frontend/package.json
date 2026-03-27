@@ -147,7 +147,7 @@
     "webpack-hot-middleware": "2.26.1",
     "whatwg-fetch": "3.0.0",
     "x-frame-options": "^1.0.0",
-    "yaml": "^2.2.2"
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@dword-design/eslint-plugin-import-alias": "^2.0.7",
@@ -158,6 +158,7 @@
     "@types/color": "^3.0.3",
     "@types/dompurify": "^3.2.0",
     "@types/jest": "^30.0.0",
+    "@types/lodash": "^4.17.24",
     "@types/rc-switch": "^1.9.5",
     "@types/react-router": "^5.1.20",
     "@types/react-router-dom": "^5.3.3",

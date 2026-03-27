@@ -27,7 +27,10 @@ const FeatureUpdateSummary: FC<FeatureUpdateSummaryProps> = ({
   projectId,
   regexValid,
 }) => {
-  const { data: project } = useGetProjectQuery({ id: projectId })
+  const { data: project } = useGetProjectQuery(
+    { id: parseInt(projectId as string, 10) },
+    { skip: !projectId },
+  )
   const preventFlagDefaults = !!project?.prevent_flag_defaults
 
   return (

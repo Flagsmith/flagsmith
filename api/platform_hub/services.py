@@ -48,7 +48,10 @@ def get_summary(
     ).count()
 
     total_users = (
-        FFAdminUser.objects.filter(organisations__in=organisations).distinct().count()
+        FFAdminUser.objects.filter(organisations__in=organisations)
+        .values("id")
+        .distinct()
+        .count()
     )
 
     total_projects = Project.objects.filter(organisation__in=organisations).count()
@@ -62,12 +65,16 @@ def get_summary(
             organisations__in=organisations,
             last_login__gte=cutoff,
         )
+        .values("id")
         .distinct()
         .count()
     )
 
     active_organisations = (
-        organisations.filter(users__last_login__gte=cutoff).distinct().count()
+        organisations.filter(users__last_login__gte=cutoff)
+        .values("id")
+        .distinct()
+        .count()
     )
 
     total_integrations = 0

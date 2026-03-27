@@ -9,6 +9,7 @@ from rest_framework.exceptions import NotFound
 from app_analytics.analytics_db_service import (
     get_feature_evaluation_data,
     get_feature_evaluation_data_from_local_db,
+    get_top_organisations_from_local_db,
     get_total_events_count,
     get_usage_data,
     get_usage_data_from_local_db,
@@ -731,3 +732,83 @@ def test_get_usage_data__previous_billing_period__passes_correct_date_range(
         date_stop=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=UTC),
         labels_filter=None,
     )
+
+
+@pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_top_organisations_from_local_db__with_data__returns_correct_mapping(
+    organisation: Organisation,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    now = timezone.now()
+    read_bucket_size = 15
+    settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
+    date_start = now - timedelta(days=30)
+
+    for i in range(3):
+        APIUsageBucket.objects.create(
+            environment_id=environment.id,
+            resource=Resource.FLAGS,
+            total_count=100,
+            bucket_size=read_bucket_size,
+            created_at=now - timedelta(days=i),
+        )
+
+    # When
+    result = get_top_organisations_from_local_db(date_start)
+
+    # Then
+    assert result == {organisation.id: 300}
+
+
+@pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_top_organisations_from_local_db__buckets_before_date_start__excluded(
+    organisation: Organisation,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    now = timezone.now()
+    read_bucket_size = 15
+    settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
+    date_start = now - timedelta(days=7)
+
+    # Bucket within range
+    APIUsageBucket.objects.create(
+        environment_id=environment.id,
+        resource=Resource.FLAGS,
+        total_count=50,
+        bucket_size=read_bucket_size,
+        created_at=now - timedelta(days=3),
+    )
+    # Bucket outside range (before date_start)
+    APIUsageBucket.objects.create(
+        environment_id=environment.id,
+        resource=Resource.FLAGS,
+        total_count=200,
+        bucket_size=read_bucket_size,
+        created_at=now - timedelta(days=10),
+    )
+
+    # When
+    result = get_top_organisations_from_local_db(date_start)
+
+    # Then
+    assert result == {organisation.id: 50}
+
+
+def test_get_top_organisations_from_local_db__saas_mode__raises_runtime_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "app_analytics.analytics_db_service.is_saas",
+        return_value=True,
+    )
+
+    # When / Then
+    with pytest.raises(RuntimeError, match="Must not run in SaaS mode"):
+        get_top_organisations_from_local_db(timezone.now() - timedelta(days=30))
