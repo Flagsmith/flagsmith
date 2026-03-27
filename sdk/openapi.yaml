@@ -558,6 +558,8 @@ components:
     basicAuth:
       type: http
       scheme: basic
+    oauth2:
+      type: oauth2
     tokenAuth:
       type: apiKey
       in: header
