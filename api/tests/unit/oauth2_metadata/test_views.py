@@ -29,7 +29,9 @@ def test_metadata_endpoint__unauthenticated__returns_200_with_rfc8414_json(
 
     data = response.json()
     assert data["issuer"] == "https://api.flagsmith.com"
-    assert data["authorization_endpoint"] == "https://app.flagsmith.com/oauth/authorize/"
+    assert (
+        data["authorization_endpoint"] == "https://app.flagsmith.com/oauth/authorize/"
+    )
     assert data["token_endpoint"] == "https://api.flagsmith.com/o/token/"
     assert data["registration_endpoint"] == "https://api.flagsmith.com/o/register/"
     assert data["revocation_endpoint"] == "https://api.flagsmith.com/o/revoke_token/"
