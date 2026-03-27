@@ -314,7 +314,7 @@ REST_FRAMEWORK = {
         "custom_auth.jwt_cookie.authentication.JWTCookieAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "api_keys.authentication.MasterAPIKeyAuthentication",
-        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+        "oauth2_metadata.authentication.OAuth2BearerTokenAuthentication",
     ),
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
