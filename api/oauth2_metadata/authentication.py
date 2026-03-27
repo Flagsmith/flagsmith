@@ -1,6 +1,7 @@
+from oauth2_provider.contrib.rest_framework import (
+    OAuth2Authentication,  # type: ignore[import-untyped]
+)
 from rest_framework.request import Request
-
-from oauth2_provider.contrib.rest_framework import OAuth2Authentication  # type: ignore[import-untyped]
 
 
 class OAuth2BearerTokenAuthentication(OAuth2Authentication):  # type: ignore[misc]
