@@ -802,7 +802,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         extensions={
             "x-gram": {
                 "name": "list_environment_feature_states",
-                "description": "Retrieves all feature states for an environment. Use this for environments without v2 feature versioning.",
+                "description": "Retrieves the latest live feature states for an environment. Returns only environment-level defaults (no segment or identity overrides). Use this to discover feature state IDs needed for updates in environments without v2 feature versioning.",
             },
         },
     ),
