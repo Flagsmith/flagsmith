@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic.base import TemplateView
 
+from oauth2_metadata.views import authorization_server_metadata
 from users.views import password_reset_redirect
 
 from . import views
@@ -13,6 +14,11 @@ from . import views
 urlpatterns = [
     *core_urlpatterns,
     path("processor/", include("task_processor.urls")),
+    path(
+        ".well-known/oauth-authorization-server",
+        authorization_server_metadata,
+        name="oauth-authorization-server-metadata",
+    ),
 ]
 
 if not settings.TASK_PROCESSOR_MODE:
@@ -47,6 +53,7 @@ if not settings.TASK_PROCESSOR_MODE:
             "robots.txt",
             TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
         ),
+        path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
     ]
 
 if settings.DEBUG:  # pragma: no cover

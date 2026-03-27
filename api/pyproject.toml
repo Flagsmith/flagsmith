@@ -94,6 +94,10 @@ ignore_missing_imports = true
 module = ["saml.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["oauth2_provider.*"]
+ignore_missing_imports = true
+
 [tool.django-stubs]
 django_settings_module = "app.settings.local"
 
@@ -174,6 +178,7 @@ djangorestframework-simplejwt = "^5.5.1"
 structlog = "^24.4.0"
 prometheus-client = "^0.21.1"
 django_cockroachdb = "~4.2"
+django-oauth-toolkit = "^3.0.1"
 
 [tool.poetry.group.auth-controller]
 optional = true
