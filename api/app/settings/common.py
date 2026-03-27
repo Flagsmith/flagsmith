@@ -166,6 +166,7 @@ INSTALLED_APPS = [
     "softdelete",
     "metadata",
     "app_analytics",
+    "oauth2_metadata",
 ]
 
 SILENCED_SYSTEM_CHECKS = ["axes.W002"]
