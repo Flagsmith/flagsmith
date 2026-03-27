@@ -38,6 +38,7 @@
     "@types/react": "$@types/react",
     "@types/react-dom": "$@types/react-dom",
     "@assistant-ui/react": "$@assistant-ui/react",
+    "@assistant-ui/react-markdown": "$@assistant-ui/react-markdown",
     "@assistant-ui/react-ai-sdk": {
       "assistant-stream": "0.3.7"
     }
