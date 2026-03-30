@@ -148,6 +148,38 @@ def test_environment_permissions__user_without_create_permission__returns_false(
     assert result is False
 
 
+def test_environment_permissions__create_with_non_integer_project__returns_false(
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    mock_view.action = "create"
+    mock_view.detail = False
+    mock_request.user = staff_user
+    mock_request.data = {"project": "<Project ID>", "name": "Test environment"}
+
+    # When
+    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is False
+
+
+def test_environment_permissions__create_with_none_project__returns_false(
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    mock_view.action = "create"
+    mock_view.detail = False
+    mock_request.user = staff_user
+    mock_request.data = {"name": "Test environment"}
+
+    # When
+    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is False
+
+
 def test_environment_permissions__list_action__returns_true(
     staff_user: FFAdminUser,
 ) -> None:
