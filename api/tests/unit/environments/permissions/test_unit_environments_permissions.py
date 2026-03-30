@@ -146,7 +146,6 @@ def test_project_user_without_create_environment_permission_cannot_create_enviro
     assert result is False
 
 
-# created additional tests to cover edge cases around project ID validation in environment creation
 def test_create_environment__invalid_project_id_string__returns_false(
     admin_user: FFAdminUser,
 ) -> None:
