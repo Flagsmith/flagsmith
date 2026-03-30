@@ -1,0 +1,297 @@
+// =============================================================================
+// Storybook Documentation Styles
+// =============================================================================
+// Shared styles for documentation stories. Uses design token custom properties
+// for spacing, radius, and colours — dogfooding the token system.
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// Page layout
+// ---------------------------------------------------------------------------
+
+.docs-page {
+  font-family: 'OpenSans', sans-serif;
+  max-width: 960px;
+
+  code {
+    color: var(--color-text-default, #1a2634);
+  }
+}
+
+.docs-page__title {
+  color: var(--color-text-default, #1a2634);
+  margin-bottom: var(--space-1, 4px);
+}
+
+.docs-page__description {
+  color: var(--color-text-secondary, #656d7b);
+  font-size: var(--font-body-size, 14px);
+  margin-bottom: var(--space-6, 24px);
+
+  code {
+    color: inherit;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Colour palette (swatches)
+// ---------------------------------------------------------------------------
+
+.scale-row {
+  margin-bottom: var(--space-8, 32px);
+}
+
+.scale-row__title {
+  color: var(--color-text-default, #1a2634);
+  font-size: var(--font-h6-size, 16px);
+  font-weight: var(--font-weight-bold, 700);
+  margin-bottom: var(--space-3, 12px);
+}
+
+.scale-row__swatches {
+  display: flex;
+  gap: 6px;
+}
+
+.swatch-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+  min-width: 0;
+}
+
+.swatch-card__colour {
+  align-items: flex-end;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: var(--radius-lg, 8px);
+  display: flex;
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold, 600);
+  height: 56px;
+  padding: 6px;
+}
+
+.swatch-card__hex {
+  color: var(--color-text-secondary, #656d7b);
+  font-size: 10px;
+}
+
+// ---------------------------------------------------------------------------
+// Token table
+// ---------------------------------------------------------------------------
+
+.token-group {
+  margin-bottom: var(--space-8, 32px);
+}
+
+.token-group__title {
+  color: var(--color-text-default, #1a2634);
+  font-size: var(--font-h6-size, 16px);
+  font-weight: var(--font-weight-bold, 700);
+  margin-bottom: var(--space-3, 12px);
+}
+
+.token-group__header {
+  border-bottom: 2px solid var(--color-border-strong, rgba(101, 109, 123, 0.24));
+  display: grid;
+  gap: var(--space-3, 12px);
+  grid-template-columns: 48px 1fr 1fr;
+  padding-bottom: 6px;
+}
+
+.token-group__header-label {
+  color: var(--color-text-secondary, #656d7b);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold, 700);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.token-swatch {
+  align-items: center;
+  border-bottom: 1px solid var(--color-border-default, rgba(101, 109, 123, 0.16));
+  display: grid;
+  gap: var(--space-3, 12px);
+  grid-template-columns: 48px 1fr 1fr;
+  padding: var(--space-2, 8px) 0;
+}
+
+.token-swatch__preview {
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: var(--radius-lg, 8px);
+  height: 40px;
+  width: 40px;
+}
+
+.token-swatch__name {
+  color: var(--color-text-default, #1a2634);
+  font-size: var(--font-caption-size, 12px);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+.token-swatch__value {
+  color: var(--color-text-secondary, #656d7b);
+  font-size: 11px;
+}
+
+// ---------------------------------------------------------------------------
+// Categorical palette (swatches with labels)
+// ---------------------------------------------------------------------------
+
+.cat-swatch {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+}
+
+.cat-swatch__colour {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-md, 6px);
+  height: 40px;
+  width: 40px;
+}
+
+.cat-swatch__label {
+  color: var(--color-text-default, #1a2634);
+  font-size: 11px;
+  text-align: center;
+  white-space: pre-line;
+}
+
+.cat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4, 16px);
+}
+
+.cat-health-row {
+  display: flex;
+  gap: var(--space-6, 24px);
+}
+
+.cat-health-item {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2, 8px);
+}
+
+.cat-health-item__migration {
+  color: var(--color-text-secondary, #656d7b);
+  font-size: var(--font-caption-size, 12px);
+
+  code {
+    color: var(--color-text-default, #1a2634);
+  }
+}
+
+.cat-note {
+  color: var(--color-text-secondary, #656d7b);
+  margin-top: var(--space-4, 16px);
+}
+
+// ---------------------------------------------------------------------------
+// Icon catalogue
+// ---------------------------------------------------------------------------
+
+.icon-catalogue__header {
+  margin-bottom: var(--space-0_5, 2px);
+}
+
+.icon-catalogue__description {
+  color: var(--color-text-secondary, #656d7b);
+  font-size: var(--font-body-sm-size, 13px);
+  margin-bottom: var(--space-3, 12px);
+}
+
+.icon-catalogue__search {
+  background: var(--color-surface-subtle, #fafafb);
+  border: 1px solid var(--color-border-default, #e0e3e9);
+  border-radius: var(--radius-md, 6px);
+  color: var(--color-text-default, #1a2634);
+  font-size: var(--font-body-sm-size, 13px);
+  margin-bottom: var(--space-4, 16px);
+  padding: var(--space-1, 4px) var(--space-3, 12px);
+  width: 100%;
+}
+
+.icon-catalogue__category {
+  margin-bottom: var(--space-4, 16px);
+}
+
+.icon-catalogue__category-label {
+  border-bottom: 1px solid var(--color-border-default, #e0e3e9);
+  color: var(--color-text-secondary, #656d7b);
+  font-size: var(--font-caption-size, 12px);
+  font-weight: var(--font-weight-semibold, 600);
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-2, 8px);
+  padding-bottom: var(--space-1, 4px);
+  text-transform: uppercase;
+}
+
+.icon-catalogue__grid {
+  display: grid;
+  gap: var(--space-2, 8px);
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+}
+
+.icon-catalogue__card {
+  align-items: center;
+  background: var(--color-surface-muted, #eff1f4);
+  border: 1px solid var(--color-border-default, #e0e3e9);
+  border-radius: var(--radius-sm, 4px);
+  color: var(--color-text-default, #1a2634);
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+  padding: var(--space-3, 12px) var(--space-2, 8px) var(--space-2, 8px);
+  transition: background var(--duration-fast, 100ms);
+}
+
+.icon-catalogue__card:hover {
+  background: var(--color-surface-emphasis, #e0e3e9);
+}
+
+.icon-catalogue__card code {
+  color: var(--color-text-secondary, #656d7b);
+  font-size: 10px;
+  text-align: center;
+  word-break: break-word;
+}
+
+.icon-catalogue__empty {
+  color: var(--color-text-tertiary, #9da4ae);
+  margin-top: var(--space-4, 16px);
+}
+
+// ---------------------------------------------------------------------------
+// Documentation table (Decision Framework, etc.)
+// ---------------------------------------------------------------------------
+
+.docs-table {
+  border-collapse: collapse;
+  font-size: var(--font-body-size, 14px);
+  width: 100%;
+
+  th,
+  td {
+    border-bottom: 1px solid var(--color-border-default, rgba(101, 109, 123, 0.16));
+    padding: var(--space-2, 8px) var(--space-3, 12px);
+    text-align: left;
+  }
+
+  th {
+    color: var(--color-text-secondary, #656d7b);
+    font-size: 11px;
+    font-weight: var(--font-weight-bold, 700);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  code {
+    font-size: var(--font-caption-size, 12px);
+  }
+}
