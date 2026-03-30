@@ -3,7 +3,6 @@ from typing import Any
 from uuid import UUID
 
 import django.core.exceptions
-from django.db import models
 from common.features.multivariate.serializers import (
     MultivariateFeatureStateValueSerializer,
 )
@@ -12,6 +11,7 @@ from common.features.serializers import (
     FeatureStateValueSerializer,
 )
 from common.projects.permissions import VIEW_PROJECT
+from django.db import models
 from drf_spectacular.utils import extend_schema_field
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
@@ -165,7 +165,6 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
 
 
 class _FeatureOwnersField(serializers.PrimaryKeyRelatedField[FFAdminUser]):
-
     def get_queryset(self) -> models.QuerySet[FFAdminUser]:
         return FFAdminUser.objects.all()
 
@@ -174,7 +173,6 @@ class _FeatureOwnersField(serializers.PrimaryKeyRelatedField[FFAdminUser]):
 
 
 class _FeatureGroupOwnersField(serializers.PrimaryKeyRelatedField[UserPermissionGroup]):
-
     def get_queryset(self) -> models.QuerySet[UserPermissionGroup]:
         return UserPermissionGroup.objects.all()
 
