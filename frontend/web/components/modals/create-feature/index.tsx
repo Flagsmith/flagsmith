@@ -380,7 +380,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     controlValue < 0
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
-  const hasCodeReferences = projectFlag?.code_references_counts?.length > 0
+  const hasCodeReferenceCounts = projectFlag?.code_references_counts?.length > 0
 
   let regexValid = true
   try {
@@ -659,7 +659,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       />
                     </TabItem>
                   )}
-                  {(!Project.disableAnalytics || hasCodeReferences) && (
+                  {(!Project.disableAnalytics || hasCodeReferenceCounts) && (
                     <TabItem
                       tabLabelString='Usage'
                       tabLabel={
@@ -670,7 +670,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         projectId={projectId}
                         featureId={projectFlag.id}
                         environmentId={environment.id}
-                        hasCodeReferences={hasCodeReferences}
+                        hasCodeReferences={true}
                       />
                     </TabItem>
                   )}

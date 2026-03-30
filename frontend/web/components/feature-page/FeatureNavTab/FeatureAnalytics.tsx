@@ -106,7 +106,10 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
                   tick={{ fill: '#656D7B' }}
                   axisLine={{ stroke: '#656D7B' }}
                 />
-                <Tooltip cursor={{ fill: 'transparent' }} />
+                <Tooltip
+                  cursor={{ fill: 'transparent' }}
+                  labelStyle={{ color: '#1a1a1a' }}
+                />
                 {sortBy(environmentIds, (id) =>
                   environments?.results?.findIndex((env) => `${env.id}` === id),
                 ).map((id) => {
