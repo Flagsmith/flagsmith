@@ -20,8 +20,23 @@ services:
       retries: 20
       start_period: 20s
 
+  init-db:
+    image: docker.flagsmith.com/flagsmith/flagsmith:latest
+    command:
+      - migrate
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+      USE_POSTGRES_FOR_ANALYTICS: 'true' # Store API and Flag Analytics data in Postgres
+    healthcheck:
+      test: ["NONE"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   flagsmith:
     image: docker.flagsmith.com/flagsmith/flagsmith:latest
+    command:
+      - serve
     environment:
       # All environments variables are available here:
       # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
@@ -57,8 +72,8 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      postgres:
-        condition: service_healthy
+      init-db:
+        condition: service_completed_successfully
 
   # The flagsmith_processor service is only needed if TASK_RUN_METHOD set to TASK_PROCESSOR
   # in the application environment
@@ -72,5 +87,6 @@ services:
     ports:
       - 8001:8000
     depends_on:
-      - flagsmith
+      init-db:
+        condition: service_completed_successfully
     command: run-task-processor
