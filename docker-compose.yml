@@ -34,7 +34,7 @@ x-flagsmith-env: &flagsmith-env
   # EMAIL_USE_TLS: 'true' # optional
 
 volumes:
-  pgdata-onboardingtest202603301212:
+  pgdata:
 
 services:
   postgres:
@@ -44,7 +44,7 @@ services:
       POSTGRES_DB: flagsmith
     container_name: flagsmith_postgres
     volumes:
-      - pgdata-onboardingtest202603301212:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -d flagsmith -U postgres']
       interval: 2s
