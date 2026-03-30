@@ -86,7 +86,7 @@ one_hour_ago = now - timedelta(hours=1)
 
 def test_create_feature__with_owners__assigns_specified_owners(
     project: Project,
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     admin_user: FFAdminUser,
 ) -> None:
     # Given
@@ -97,7 +97,7 @@ def test_create_feature__with_owners__assigns_specified_owners(
     }
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4588,7 +4588,7 @@ def test_create_feature__multivariate_options_provided__sets_type_to_multivariat
 
 
 def test_create_feature__enforce_owners_enabled__no_owners__returns_400(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
 ) -> None:
     # Given
@@ -4599,7 +4599,7 @@ def test_create_feature__enforce_owners_enabled__no_owners__returns_400(
     data = {"name": "test_feature_no_owners"}
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4610,7 +4610,7 @@ def test_create_feature__enforce_owners_enabled__no_owners__returns_400(
 
 
 def test_create_feature__enforce_owners_enabled__with_owners__returns_201(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
     admin_user: FFAdminUser,
 ) -> None:
@@ -4625,7 +4625,7 @@ def test_create_feature__enforce_owners_enabled__with_owners__returns_201(
     }
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4636,7 +4636,7 @@ def test_create_feature__enforce_owners_enabled__with_owners__returns_201(
 
 
 def test_create_feature__enforce_owners_enabled__with_group_owners__returns_201(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
     organisation: Organisation,
 ) -> None:
@@ -4655,7 +4655,7 @@ def test_create_feature__enforce_owners_enabled__with_group_owners__returns_201(
     }
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4666,7 +4666,7 @@ def test_create_feature__enforce_owners_enabled__with_group_owners__returns_201(
 
 
 def test_create_feature__enforce_owners_disabled__no_owners__returns_201(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
 ) -> None:
     # Given — enforce_feature_owners defaults to False
@@ -4674,7 +4674,7 @@ def test_create_feature__enforce_owners_disabled__no_owners__returns_201(
     data = {"name": "test_feature_no_enforcement"}
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4683,7 +4683,7 @@ def test_create_feature__enforce_owners_disabled__no_owners__returns_201(
 
 
 def test_create_feature__owners_provided_without_enforcement__returns_201_with_owners(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
     admin_user: FFAdminUser,
 ) -> None:
@@ -4695,7 +4695,7 @@ def test_create_feature__owners_provided_without_enforcement__returns_201_with_o
     }
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4706,7 +4706,7 @@ def test_create_feature__owners_provided_without_enforcement__returns_201_with_o
 
 
 def test_create_feature__nonexistent_owner__returns_400(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
 ) -> None:
     # Given
@@ -4717,7 +4717,7 @@ def test_create_feature__nonexistent_owner__returns_400(
     }
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4727,7 +4727,7 @@ def test_create_feature__nonexistent_owner__returns_400(
 
 
 def test_create_feature__group_owner_from_different_org__returns_400(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
 ) -> None:
     # Given
@@ -4743,7 +4743,7 @@ def test_create_feature__group_owner_from_different_org__returns_400(
     }
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4753,7 +4753,7 @@ def test_create_feature__group_owner_from_different_org__returns_400(
 
 
 def test_create_feature__owner_without_project_access__returns_400(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
 ) -> None:
     # Given — create a user that does not belong to the project's organisation
@@ -4766,7 +4766,7 @@ def test_create_feature__owner_without_project_access__returns_400(
     }
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4797,7 +4797,7 @@ def test_create_feature__enforce_owners_enabled_with_master_api_key__returns_400
 
 
 def test_update_feature__owners_in_request_body__returns_200_without_changes(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
     feature: Feature,
     admin_user: FFAdminUser,
@@ -4822,7 +4822,7 @@ def test_update_feature__owners_in_request_body__returns_200_without_changes(
     }
 
     # When
-    response = admin_client_original.patch(
+    response = admin_client_new.patch(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4834,7 +4834,7 @@ def test_update_feature__owners_in_request_body__returns_200_without_changes(
 
 
 def test_remove_owners__enforce_owners__last_owner__returns_400(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
     feature: Feature,
     admin_user: FFAdminUser,
@@ -4851,7 +4851,7 @@ def test_remove_owners__enforce_owners__last_owner__returns_400(
     data = {"user_ids": [admin_user.id]}
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4862,7 +4862,7 @@ def test_remove_owners__enforce_owners__last_owner__returns_400(
 
 
 def test_remove_owners__enforce_owners__other_owners_remain__returns_200(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
     feature: Feature,
     admin_user: FFAdminUser,
@@ -4882,7 +4882,7 @@ def test_remove_owners__enforce_owners__other_owners_remain__returns_200(
     data = {"user_ids": [admin_user.id]}
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4894,7 +4894,7 @@ def test_remove_owners__enforce_owners__other_owners_remain__returns_200(
 
 
 def test_remove_owners__enforce_owners__group_owners_remain__returns_200(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
     feature: Feature,
     admin_user: FFAdminUser,
@@ -4916,7 +4916,7 @@ def test_remove_owners__enforce_owners__group_owners_remain__returns_200(
     data = {"user_ids": [admin_user.id]}
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4928,7 +4928,7 @@ def test_remove_owners__enforce_owners__group_owners_remain__returns_200(
 
 
 def test_remove_group_owners__enforce_owners__last_group_owner__returns_400(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
     feature: Feature,
     organisation: Organisation,
@@ -4948,7 +4948,7 @@ def test_remove_group_owners__enforce_owners__last_group_owner__returns_400(
     data = {"group_ids": [group.id]}
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -4959,7 +4959,7 @@ def test_remove_group_owners__enforce_owners__last_group_owner__returns_400(
 
 
 def test_remove_group_owners__enforce_owners__user_owners_remain__returns_200(
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     project: Project,
     feature: Feature,
     admin_user: FFAdminUser,
@@ -4981,7 +4981,7 @@ def test_remove_group_owners__enforce_owners__user_owners_remain__returns_200(
     data = {"group_ids": [group.id]}
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
