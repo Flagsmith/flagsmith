@@ -1,8 +1,40 @@
 # See https://docs.flagsmith.com/deployment/docker for more information on running Flagsmith in Docker
 # This Docker Compose file will run the entire Flagsmith Platform
 
+x-flagsmith-env: &flagsmith-env
+  # All environments variables are available here:
+  # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
+  # UI: https://docs.flagsmith.com/deployment/locally-frontend#environment-variables
+
+  DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+  USE_POSTGRES_FOR_ANALYTICS: 'true' # Store API and Flag Analytics data in Postgres
+  ENVIRONMENT: production # set to 'production' in production.
+  DJANGO_ALLOWED_HOSTS: '*' # Change this in production
+  FLAGSMITH_DOMAIN: localhost:8000 # Change this in production
+  DJANGO_SECRET_KEY: secret # Change this in production
+  # PREVENT_SIGNUP: 'true' # Uncomment to prevent any additional signups
+  # ALLOW_REGISTRATION_WITHOUT_INVITE: 'true' # Uncomment and set to false to only allow signups via invitations
+
+  # Enable Task Processor
+  TASK_RUN_METHOD: TASK_PROCESSOR # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
+  PROMETHEUS_ENABLED: 'true'
+
+  # Uncomment if you want to enable Google OAuth. Note this does not turn Google OAuth on. You still need to use
+  # Flagsmith on Flagsmith to enable it - https://docs.flagsmith.com/deployment/#oauth_google
+  # DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY: 'same-origin-allow-popups'
+
+  # For more info on configuring E-Mails - https://docs.flagsmith.com/deployment/locally-api#environment-variables
+  # Example SMTP:
+  # EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+  # EMAIL_HOST: mail.example.com
+  # SENDER_EMAIL: flagsmith@example.com
+  # EMAIL_HOST_USER: flagsmith@example.com
+  # EMAIL_HOST_PASSWORD: smtp_account_password
+  # EMAIL_PORT: 587 # optional
+  # EMAIL_USE_TLS: 'true' # optional
+
 volumes:
-  pgdata:
+  pgdata-onboardingtest202603301212:
 
 services:
   postgres:
@@ -12,7 +44,7 @@ services:
       POSTGRES_DB: flagsmith
     container_name: flagsmith_postgres
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata-onboardingtest202603301212:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -d flagsmith -U postgres']
       interval: 2s
@@ -25,8 +57,7 @@ services:
     command:
       - migrate
     environment:
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
-      USE_POSTGRES_FOR_ANALYTICS: 'true' # Store API and Flag Analytics data in Postgres
+      <<: *flagsmith-env
     healthcheck:
       test: ["NONE"]
     depends_on:
@@ -38,37 +69,7 @@ services:
     command:
       - serve
     environment:
-      # All environments variables are available here:
-      # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
-      # UI: https://docs.flagsmith.com/deployment/locally-frontend#environment-variables
-
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
-      USE_POSTGRES_FOR_ANALYTICS: 'true' # Store API and Flag Analytics data in Postgres
-
-      ENVIRONMENT: production # set to 'production' in production.
-      DJANGO_ALLOWED_HOSTS: '*' # Change this in production
-      FLAGSMITH_DOMAIN: localhost:8000 # Change this in production
-      DJANGO_SECRET_KEY: secret # Change this in production
-      # PREVENT_SIGNUP: 'true' # Uncomment to prevent any additional signups
-      # ALLOW_REGISTRATION_WITHOUT_INVITE: 'true' # Uncomment and set to false to only allow signups via invitations
-
-      # Enable Task Processor
-      TASK_RUN_METHOD: TASK_PROCESSOR # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
-      PROMETHEUS_ENABLED: 'true'
-
-      # Uncomment if you want to enable Google OAuth. Note this does not turn Google OAuth on. You still need to use
-      # Flagsmith on Flagsmith to enable it - https://docs.flagsmith.com/deployment/#oauth_google
-      # DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY: 'same-origin-allow-popups'
-
-      # For more info on configuring E-Mails - https://docs.flagsmith.com/deployment/locally-api#environment-variables
-      # Example SMTP:
-      # EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
-      # EMAIL_HOST: mail.example.com
-      # SENDER_EMAIL: flagsmith@example.com
-      # EMAIL_HOST_USER: flagsmith@example.com
-      # EMAIL_HOST_PASSWORD: smtp_account_password
-      # EMAIL_PORT: 587 # optional
-      # EMAIL_USE_TLS: 'true' # optional
+      <<: *flagsmith-env
     ports:
       - 8000:8000
     depends_on:
@@ -80,10 +81,7 @@ services:
   flagsmith-task-processor:
     image: docker.flagsmith.com/flagsmith/flagsmith:latest
     environment:
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
-      USE_POSTGRES_FOR_ANALYTICS: 'true'
-      DJANGO_ALLOWED_HOSTS: '*'
-      PROMETHEUS_ENABLED: 'true'
+      <<: *flagsmith-env
     ports:
       - 8001:8000
     depends_on:
