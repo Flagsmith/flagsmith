@@ -12,14 +12,14 @@ on:
     paths:
       - api/**
       - docker/api/**
-      - .github/**
+      - .depot/**
       - .release-please-manifest.json
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     paths:
       - api/**
       - docker/api/**
-      - .github/**
+      - .depot/**
       - .release-please-manifest.json
     branches:
       - main
