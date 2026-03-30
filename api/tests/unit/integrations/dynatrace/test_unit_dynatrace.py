@@ -14,7 +14,7 @@ from projects.models import Project
 from segments.models import Segment
 
 
-def test_dynatrace_initialized_correctly():  # type: ignore[no-untyped-def]
+def test_dynatrace_wrapper__valid_config__initializes_correctly():  # type: ignore[no-untyped-def]
     # Given
     api_key = "123key"
     base_url = "http://test.com"
@@ -50,7 +50,7 @@ def test_dynatrace_initialized_correctly():  # type: ignore[no-untyped-def]
         ),
     ),
 )
-def test_dynatrace_when_generate_event_data_with_correct_values_then_success(
+def test_dynatrace_generate_event_data__correct_values__returns_expected(
     django_user_model: Type[AbstractUser],
     related_object_type: RelatedObjectType,
     related_object: Feature | Segment | FeatureState,
@@ -99,7 +99,7 @@ def test_dynatrace_when_generate_event_data_with_correct_values_then_success(
     )
 
 
-def test_dynatrace_when_generate_event_data_with_missing_author_then_success():  # type: ignore[no-untyped-def]
+def test_dynatrace_generate_event_data__missing_author__returns_system_user():  # type: ignore[no-untyped-def]
     # Given
     log = "some log data"
 
@@ -122,7 +122,7 @@ def test_dynatrace_when_generate_event_data_with_missing_author_then_success(): 
     assert event_data["properties"]["environment"] == environment.name
 
 
-def test_dynatrace_when_generate_event_data_with_missing_environment_then_success(  # type: ignore[no-untyped-def]
+def test_dynatrace_generate_event_data__missing_environment__returns_unknown(  # type: ignore[no-untyped-def]
     django_user_model, feature
 ):
     # Given

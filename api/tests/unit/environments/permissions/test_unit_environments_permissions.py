@@ -28,7 +28,7 @@ nested_environment_permissions = NestedEnvironmentPermissions()
 environment_admin_permissions = EnvironmentAdminPermission()
 
 
-def test_environment_admin_permissions_has_permissions_returns_false_for_non_admin_user(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_environment_admin_permissions__non_admin_user__returns_false(  # type: ignore[no-untyped-def]  # noqa: E501
     environment, django_user_model, mocker
 ) -> None:
     # Given
@@ -43,10 +43,12 @@ def test_environment_admin_permissions_has_permissions_returns_false_for_non_adm
     has_permission = environment_admin_permissions.has_permission(  # type: ignore[no-untyped-call]
         mocked_request, mocked_view
     )
+
+    # Then
     assert has_permission is False
 
 
-def test_environment_admin_permissions_has_permissions_returns_true_for_admin_user(
+def test_environment_admin_permissions__admin_user__returns_true(
     environment: Environment,
     staff_user: FFAdminUser,
     user_environment_permission: UserEnvironmentPermission,
@@ -71,7 +73,7 @@ def test_environment_admin_permissions_has_permissions_returns_true_for_admin_us
     assert has_permission is True
 
 
-def test_org_admin_can_create_environment_for_any_project(
+def test_environment_permissions__org_admin_creates_environment__returns_true(
     admin_user: FFAdminUser,
     project: Project,
 ) -> None:
@@ -88,7 +90,7 @@ def test_org_admin_can_create_environment_for_any_project(
     assert result is True
 
 
-def test_project_admin_can_create_environment_in_project(
+def test_environment_permissions__project_admin_creates_environment__returns_true(
     admin_user: FFAdminUser,
     project: Project,
 ) -> None:
@@ -105,7 +107,7 @@ def test_project_admin_can_create_environment_in_project(
     assert result is True
 
 
-def test_project_user_with_create_environment_permission_can_create_environment(
+def test_environment_permissions__user_with_create_permission__returns_true(
     staff_user: FFAdminUser,
     project: Project,
 ) -> None:
@@ -129,7 +131,7 @@ def test_project_user_with_create_environment_permission_can_create_environment(
     assert result is True
 
 
-def test_project_user_without_create_environment_permission_cannot_create_environment(
+def test_environment_permissions__user_without_create_permission__returns_false(
     staff_user: FFAdminUser,
     project: Project,
 ) -> None:
@@ -146,7 +148,7 @@ def test_project_user_without_create_environment_permission_cannot_create_enviro
     assert result is False
 
 
-def test_all_users_can_list_environments_for_project(
+def test_environment_permissions__list_action__returns_true(
     staff_user: FFAdminUser,
 ) -> None:
     # Given
@@ -161,7 +163,7 @@ def test_all_users_can_list_environments_for_project(
     assert result is True
 
 
-def test_organisation_admin_can_delete_environment(
+def test_environment_permissions__org_admin_deletes_environment__returns_true(
     admin_user: FFAdminUser,
     environment: Environment,
 ) -> None:
@@ -179,7 +181,7 @@ def test_organisation_admin_can_delete_environment(
     assert result is True
 
 
-def test_project_admin_can_delete_environment(
+def test_environment_permissions__project_admin_deletes_environment__returns_true(
     admin_user: FFAdminUser,
     environment: Environment,
 ) -> None:
@@ -197,7 +199,7 @@ def test_project_admin_can_delete_environment(
     assert result is True
 
 
-def test_environment_admin_can_delete_environment(
+def test_environment_permissions__environment_admin_deletes_environment__returns_true(
     admin_user: FFAdminUser,
     environment: Environment,
 ) -> None:
@@ -215,7 +217,7 @@ def test_environment_admin_can_delete_environment(
     assert result is True
 
 
-def test_regular_user_cannot_delete_environment(
+def test_environment_permissions__regular_user_deletes_environment__returns_false(
     staff_user: FFAdminUser,
     environment: Environment,
 ) -> None:
@@ -233,7 +235,7 @@ def test_regular_user_cannot_delete_environment(
     assert result is False
 
 
-def test_organisation_admin_has_create_permission(
+def test_nested_environment_permissions__org_admin_creates__returns_true(
     admin_user: FFAdminUser,
     environment: Environment,
 ) -> None:
@@ -250,7 +252,7 @@ def test_organisation_admin_has_create_permission(
     assert result is True
 
 
-def test_environment_admin_has_create_permission(
+def test_nested_environment_permissions__environment_admin_creates__returns_true(
     staff_user: FFAdminUser,
     environment: Environment,
 ) -> None:
@@ -270,7 +272,7 @@ def test_environment_admin_has_create_permission(
     assert result is True
 
 
-def test_regular_user_does_not_have_create_permission(
+def test_nested_environment_permissions__regular_user_creates__returns_false(
     staff_user: FFAdminUser,
     environment: Environment,
 ) -> None:
@@ -287,7 +289,7 @@ def test_regular_user_does_not_have_create_permission(
     assert result is False
 
 
-def test_organisation_admin_has_destroy_permission(
+def test_nested_environment_permissions__org_admin_destroys__returns_true(
     admin_user: FFAdminUser,
     identity: Identity,
 ) -> None:
@@ -305,7 +307,7 @@ def test_organisation_admin_has_destroy_permission(
     assert result is True
 
 
-def test_environment_admin_has_destroy_permission(
+def test_nested_environment_permissions__environment_admin_destroys__returns_true(
     staff_user: FFAdminUser,
     environment: Environment,
     identity: Identity,
@@ -327,7 +329,7 @@ def test_environment_admin_has_destroy_permission(
     assert result is True
 
 
-def test_regular_user_does_not_have_destroy_permission(
+def test_nested_environment_permissions__regular_user_destroys__returns_false(
     staff_user: FFAdminUser,
     identity: Identity,
 ) -> None:

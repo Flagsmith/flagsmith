@@ -12,7 +12,7 @@ if typing.TYPE_CHECKING:
 pytestmark = pytest.mark.django_db
 
 
-def test_get_current_site_url_returns_correct_url_if_site_exists(
+def test_get_current_site_url__site_exists__returns_correct_url(
     settings: "SettingsWrapper",
 ) -> None:
     # Given
@@ -27,7 +27,7 @@ def test_get_current_site_url_returns_correct_url_if_site_exists(
     assert url == f"https://{expected_domain}"
 
 
-def test_get_current_site_url_uses_default_url_if_site_does_not_exist(
+def test_get_current_site_url__site_does_not_exist__returns_default_url(
     settings: "SettingsWrapper",
 ) -> None:
     # Given
@@ -71,7 +71,7 @@ def test_get_current_site_url__site_created__cached_return_expected(
     assert url_with_site == f"https://{expected_domain_with_site}"
 
 
-def test_get_current_site__domain_override__with_site__return_expected(
+def test_get_current_site_url__domain_override_with_site__returns_override(
     settings: "SettingsWrapper",
 ) -> None:
     # Given
@@ -88,7 +88,7 @@ def test_get_current_site__domain_override__with_site__return_expected(
     assert url == f"https://{expected_domain}"
 
 
-def test_get_current_site__domain_override__no_site__return_expected(
+def test_get_current_site_url__domain_override_no_site__returns_override(
     settings: "SettingsWrapper",
 ) -> None:
     # Given

@@ -566,6 +566,18 @@ export type IdentityFeatureState = {
   }[]
 }
 
+export type EdgeIdentityOverrideItem = {
+  feature_state: FeatureState
+  identity_uuid: string
+  identifier: string
+}
+
+export type IdentityOverride = FeatureState & {
+  identity: { id: string; identifier: string }
+  segment?: null
+  overridden_by?: string | null
+}
+
 export type FeatureState = {
   change_request?: number
   created_at: string
@@ -1165,6 +1177,7 @@ export type Res = {
   identityFeatureStates: IdentityFeatureState[]
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
+  identityOverrides: PagedResponse<IdentityOverride>
   samlConfiguration: SAMLConfiguration
   samlConfigurations: PagedResponse<SAMLConfiguration>
   samlMetadata: {

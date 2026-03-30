@@ -123,7 +123,7 @@ def test_get_overridden_feature_ids_for_edge_identity__nonexistent_identity__ret
     assert result == set()
 
 
-def test_get_edge_identity_override_keys__returns_list_of_document_keys(
+def test_get_edge_identity_override_keys__override_exists__returns_document_keys(
     flagsmith_environments_v2_table: Table,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     dynamo_enabled_project: Project,
@@ -131,6 +131,8 @@ def test_get_edge_identity_override_keys__returns_list_of_document_keys(
     feature: Feature,
     identity_override_document: dict[str, Any],
 ) -> None:
+    # Given - fixtures provide environment with identity override document
+
     # When
     document_keys = get_edge_identity_override_keys(environment_id=environment.id)
 

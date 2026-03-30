@@ -1,7 +1,7 @@
 from integrations.sentry.middleware import ForceSentryTraceMiddleware
 
 
-def test_force_sentry_trace_middleware_starts_transaction_when_param_present(  # type: ignore[no-untyped-def]
+def test_force_sentry_trace_middleware__correct_key_present__starts_transaction(  # type: ignore[no-untyped-def]
     rf, mocker, settings
 ):
     # Given
@@ -30,7 +30,7 @@ def test_force_sentry_trace_middleware_starts_transaction_when_param_present(  #
     assert response == mock_response
 
 
-def test_force_sentry_trace_middleware_does_nothing_when_key_incorrect(  # type: ignore[no-untyped-def]
+def test_force_sentry_trace_middleware__incorrect_key__does_not_start_transaction(  # type: ignore[no-untyped-def]
     rf, mocker, settings
 ):
     # Given
@@ -53,7 +53,7 @@ def test_force_sentry_trace_middleware_does_nothing_when_key_incorrect(  # type:
     assert response == mock_response
 
 
-def test_force_sentry_trace_middleware_does_nothing_when_key_missing(  # type: ignore[no-untyped-def]
+def test_force_sentry_trace_middleware__key_missing__does_not_start_transaction(  # type: ignore[no-untyped-def]
     rf, mocker, settings
 ):
     # Given

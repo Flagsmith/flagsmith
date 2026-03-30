@@ -85,7 +85,6 @@
     "fbjs": "^3.0.4",
     "fetchify": "0.0.2",
     "file-loader": "6.2.0",
-    "flagsmith": "^10.0.0",
     "flux-react-dispatcher": "1.2.5",
     "free-email-domains": "^1.2.14",
     "fs-extra": "2.0.0",
@@ -145,7 +144,7 @@
     "webpack-hot-middleware": "2.26.1",
     "whatwg-fetch": "3.0.0",
     "x-frame-options": "^1.0.0",
-    "yaml": "^2.2.2"
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@dword-design/eslint-plugin-import-alias": "^2.0.7",
@@ -156,6 +155,7 @@
     "@types/color": "^3.0.3",
     "@types/dompurify": "^3.2.0",
     "@types/jest": "^30.0.0",
+    "@types/lodash": "^4.17.24",
     "@types/rc-switch": "^1.9.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
@@ -186,7 +186,7 @@
     "react-refresh": "^0.14.2",
     "ssgrtk": "^0.3.5",
     "ts-jest": "^29.4.6",
-    "typescript": "4.6.4"
+    "typescript": "5.9.3"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": "eslint --fix"

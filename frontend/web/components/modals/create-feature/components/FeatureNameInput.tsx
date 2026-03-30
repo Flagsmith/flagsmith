@@ -12,7 +12,7 @@ type FeatureNameInputProps = {
   value: string
   onChange: (name: string) => void
   caseSensitive: boolean
-  regex?: string
+  regex?: string | null
   regexValid: boolean
   autoFocus?: boolean
 }

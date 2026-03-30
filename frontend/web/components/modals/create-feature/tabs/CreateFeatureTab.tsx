@@ -1,13 +1,16 @@
 import React, { FC, useCallback, useEffect, useState } from 'react'
 import { FeatureState, ProjectFlag } from 'common/types/responses'
-import FeatureValue from './FeatureValue'
-import FeatureSettings from './FeatureSettings'
+import FeatureValueTab from './FeatureValueTab'
+import FeatureSettingsTab from './FeatureSettingsTab'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import { useHasPermission } from 'common/providers/Permission'
+import { ProjectPermission } from 'common/types/permissions.types'
 import Switch from 'components/Switch'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/Icon'
+import InfoMessage from 'components/InfoMessage'
+import { useGetProjectQuery } from 'common/services/useProject'
 import { useCreateTagMutation, useGetTagsQuery } from 'common/services/useTag'
 
 type CreateFeatureTabProps = {
@@ -16,21 +19,19 @@ type CreateFeatureTabProps = {
   featureState: FeatureState
   overrideFeatureState?: FeatureState
   projectFlag: ProjectFlag | null
-  featureContentType: any
   identity?: string
   defaultExperiment?: boolean
-  onEnvironmentFlagChange: (changes: FeatureState) => void
-  onProjectFlagChange: (changes: ProjectFlag) => void
+  onEnvironmentFlagChange: (changes: Partial<FeatureState>) => void
+  onProjectFlagChange: (changes: Partial<ProjectFlag>) => void
   onRemoveMultivariateOption?: (id: number) => void
   onHasMetadataRequiredChange: (hasMetadataRequired: boolean) => void
   featureError?: string
   featureWarning?: string
 }
 
-const CreateFeature: FC<CreateFeatureTabProps> = ({
+const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
   defaultExperiment,
   error,
-  featureContentType,
   featureError,
   featureState,
   featureWarning,
@@ -46,14 +47,17 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
   const { permission: createFeature } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'CREATE_FEATURE',
+    permission: ProjectPermission.CREATE_FEATURE,
   })
 
   const { permission: projectAdmin } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'ADMIN',
+    permission: ProjectPermission.ADMIN,
   })
+
+  const { data: project } = useGetProjectQuery({ id: projectId })
+  const preventFlagDefaults = !!project?.prevent_flag_defaults && !identity
 
   const noPermissions = !createFeature && !projectAdmin
 
@@ -100,7 +104,7 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
 
       if (checked) {
         if (!experimentTag) {
-          const result = await createTag({
+          experimentTag = await createTag({
             projectId,
             tag: {
               color: '#6A52CF',
@@ -108,7 +112,6 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
               label: 'experiment',
             },
           }).unwrap()
-          experimentTag = result
         }
         if (experimentTag && !projectFlag.tags.includes(experimentTag.id)) {
           onProjectFlagChange({
@@ -120,7 +123,7 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
         if (experimentTag) {
           onProjectFlagChange({
             ...projectFlag,
-            tags: projectFlag.tags.filter((id) => id !== experimentTag!.id),
+            tags: projectFlag.tags.filter((id) => id !== experimentTag?.id),
           })
         }
       }
@@ -134,15 +137,20 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
       <WarningMessage warningMessage={featureWarning} />
       {!!projectFlag && (
         <>
-          <FeatureValue
+          {preventFlagDefaults && (
+            <InfoMessage collapseId='create-flag'>
+              This will create the feature for <strong>all environments</strong>
+              , you can edit the feature's enabled state and value per
+              environment once the feature is created.
+            </InfoMessage>
+          )}
+          <FeatureValueTab
             error={error}
-            createFeature={createFeature}
-            hideValue={false}
-            isEdit={!!identity}
+            projectId={projectId}
             identity={identity}
             noPermissions={noPermissions}
-            featureState={overrideFeatureState || featureState}
             projectFlag={projectFlag}
+            featureState={overrideFeatureState || featureState}
             onEnvironmentFlagChange={onEnvironmentFlagChange}
             onProjectFlagChange={onProjectFlagChange}
             onRemoveMultivariateOption={onRemoveMultivariateOption}
@@ -171,12 +179,8 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
               </Tooltip>
             </FormGroup>
           )}
-          <FeatureSettings
-            projectAdmin={projectAdmin}
-            createFeature={createFeature}
-            featureContentType={featureContentType}
+          <FeatureSettingsTab
             identity={identity}
-            isEdit={!!identity}
             projectId={projectId}
             projectFlag={projectFlag}
             onChange={onProjectFlagChange}
@@ -188,4 +192,4 @@ const CreateFeature: FC<CreateFeatureTabProps> = ({
   )
 }
 
-export default CreateFeature
+export default CreateFeatureTab

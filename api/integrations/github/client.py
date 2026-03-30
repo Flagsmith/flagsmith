@@ -50,10 +50,9 @@ def build_request_headers(
     }
 
 
-# TODO: Add test coverage for this function
-def generate_token(installation_id: str, app_id: int) -> str:  # pragma: no cover
+def generate_token(installation_id: str, app_id: int) -> str:
     auth: Auth.AppInstallationAuth = Auth.AppAuth(
-        app_id=int(app_id), private_key=settings.GITHUB_PEM
+        app_id=str(app_id), private_key=settings.GITHUB_PEM
     ).get_installation_auth(
         installation_id=int(installation_id),
         token_permissions=None,
@@ -63,10 +62,9 @@ def generate_token(installation_id: str, app_id: int) -> str:  # pragma: no cove
     return token
 
 
-# TODO: Add test coverage for this function
-def generate_jwt_token(app_id: int) -> str:  # pragma: no cover
+def generate_jwt_token(app_id: int) -> str:
     github_auth: Auth.AppAuth = Auth.AppAuth(
-        app_id=app_id,
+        app_id=str(app_id),
         private_key=settings.GITHUB_PEM,
     )
     token = github_auth.create_jwt()

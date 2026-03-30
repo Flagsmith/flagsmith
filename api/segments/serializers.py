@@ -115,12 +115,14 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
-        project = self.instance.project if self.instance else attrs["project"]  # type: ignore[union-attr]
+        metadata = attrs.get("metadata", [])
+
+        # TODO: Make "project" read-only — https://github.com/Flagsmith/flagsmith-workflows/issues/102
+        project_pk = self.context["view"].kwargs["project_pk"]
+        project = attrs["project"] = Project.objects.get(pk=project_pk)
         organisation = project.organisation
 
-        self._validate_required_metadata(
-            organisation, attrs.get("metadata", []), project=project
-        )
+        self._validate_required_metadata(organisation, metadata, project)
         self._validate_segment_rules_conditions_limit(attrs["rules"])
         self._validate_project_segment_limit(project)
         return attrs

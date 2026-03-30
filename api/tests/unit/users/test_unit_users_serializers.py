@@ -11,17 +11,19 @@ from users.serializers import (
 )
 
 
-def test_user_ids_serializer_raises_exception_for_invalid_user_id(db: None) -> None:
+def test_user_ids_serializer__invalid_user_id__raises_validation_error(
+    db: None,
+) -> None:
     # Given
     serializer = UserIdsSerializer(data={"user_ids": [99999]})
 
-    # Then
+    # When / Then
     with pytest.raises(ValidationError):
         serializer.is_valid(raise_exception=True)
 
 
 @freeze_time("2025-01-01T12:00:00Z")
-def test_onboarding_task_serializer_list_returns_correct_format() -> None:
+def test_onboarding_task_serializer__list_input__returns_correct_format() -> None:
     # Given
     data = [
         {"name": "task-1"},
@@ -44,7 +46,7 @@ def test_onboarding_task_serializer_list_returns_correct_format() -> None:
 
 
 @pytest.mark.parametrize("tools_completed", [True, False, None])
-def test_patch_onboarding_serializer_returns_correct_format(
+def test_patch_onboarding_serializer__valid_data__returns_correct_format(
     tools_completed: bool | None,
 ) -> None:
     # Given

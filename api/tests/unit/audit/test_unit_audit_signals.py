@@ -32,7 +32,7 @@ from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType
 
 
-def test_call_webhooks_does_not_create_task_if_webhooks_disabled(
+def test_call_webhooks__webhooks_disabled__does_not_create_task(
     organisation: Organisation,
     project: Project,
     settings: SettingsWrapper,
@@ -53,7 +53,7 @@ def test_call_webhooks_does_not_create_task_if_webhooks_disabled(
     mocked_call_organisation_webhooks.delay.assert_not_called()
 
 
-def test_call_webhooks_does_not_create_task_if_organisation_has_no_webhooks(
+def test_call_webhooks__organisation_has_no_webhooks__does_not_create_task(
     organisation: Organisation,
     project: Project,
     settings: SettingsWrapper,
@@ -76,7 +76,7 @@ def test_call_webhooks_does_not_create_task_if_organisation_has_no_webhooks(
     mocked_call_organisation_webhooks.delay.assert_not_called()
 
 
-def test_call_webhooks_creates_task_if_organisation_has_webhooks(
+def test_call_webhooks__organisation_has_webhooks__creates_task(
     organisation: Organisation,
     project: Project,
     settings: SettingsWrapper,
@@ -172,7 +172,7 @@ def test_send_audit_log_event_to_grafana__organisation_grafana_config__calls_exp
     )
 
 
-def test_send_audit_log_event_to_grafana__organisation_grafana_config__deleted__doesnt_call(
+def test_send_audit_log_event_to_grafana__organisation_grafana_config_deleted__does_not_call(
     mocker: MockerFixture,
     organisation: Organisation,
     project: Project,
@@ -199,7 +199,7 @@ def test_send_audit_log_event_to_grafana__organisation_grafana_config__deleted__
 
 
 @responses.activate
-def test_send_environment_feature_version_audit_log_event_to_grafana(
+def test_send_audit_log_event_to_grafana__environment_feature_version__sends_expected_payload(
     tagged_feature: Feature,
     tag_one: Tag,
     tag_two: Tag,
@@ -291,7 +291,7 @@ def test_send_audit_log_event_to_dynatrace__environment_dynatrace_config__calls_
 
 
 @responses.activate
-def test_send_environment_feature_version_audit_log_event_to_dynatrace(
+def test_send_audit_log_event_to_dynatrace__environment_feature_version__sends_expected_payload(
     feature: Feature,
     environment_v2_versioning: Environment,
     project: Project,

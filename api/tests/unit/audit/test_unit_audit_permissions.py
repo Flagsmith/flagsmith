@@ -11,7 +11,7 @@ from projects.models import Project
 from users.models import FFAdminUser
 
 
-def test_organisation_audit_log_permission_has_permission_organisation_admin(  # type: ignore[no-untyped-def]
+def test_organisation_audit_log_permission__organisation_admin__returns_true(  # type: ignore[no-untyped-def]
     organisation: Organisation, admin_user: FFAdminUser, mocker: MockerFixture
 ):
     # Given
@@ -29,7 +29,7 @@ def test_organisation_audit_log_permission_has_permission_organisation_admin(  #
     assert result is True
 
 
-def test_organisation_audit_log_permission_has_permission_organisation_user_without_permission(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_organisation_audit_log_permission__user_without_permission__returns_false(  # type: ignore[no-untyped-def]
     organisation_one: Organisation,
     mocker: MockerFixture,
     organisation_one_user: FFAdminUser,
@@ -50,7 +50,7 @@ def test_organisation_audit_log_permission_has_permission_organisation_user_with
     assert result is False
 
 
-def test_project_audit_log_permission_has_permission_project_admin(  # type: ignore[no-untyped-def]
+def test_project_audit_log_permission__project_admin__returns_true(  # type: ignore[no-untyped-def]
     project: Project, project_admin_user: FFAdminUser, mocker: MockerFixture
 ):
     # Given
@@ -68,7 +68,7 @@ def test_project_audit_log_permission_has_permission_project_admin(  # type: ign
     assert result is True
 
 
-def test_project_audit_log_permission_has_permission_project_user_with_permission(  # type: ignore[no-untyped-def]
+def test_project_audit_log_permission__user_with_view_permission__returns_true(  # type: ignore[no-untyped-def]
     project: Project, mocker: MockerFixture, view_audit_log_user: FFAdminUser
 ):
     # Given
@@ -86,7 +86,7 @@ def test_project_audit_log_permission_has_permission_project_user_with_permissio
     assert result is True
 
 
-def test_project_audit_log_permission_has_permission_project_user_without_permission(  # type: ignore[no-untyped-def]
+def test_project_audit_log_permission__user_without_permission__returns_false(  # type: ignore[no-untyped-def]
     project: Project, mocker: MockerFixture, project_user: FFAdminUser
 ):
     # Given

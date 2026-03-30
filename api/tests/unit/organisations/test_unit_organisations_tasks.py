@@ -34,6 +34,7 @@ from organisations.subscriptions.constants import (
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
     SCALE_UP,
+    SubscriptionCacheEntity,
 )
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from organisations.task_helpers import (
@@ -50,11 +51,15 @@ from organisations.tasks import (  # type: ignore[attr-defined]
     send_org_over_limit_alert,
     send_org_subscription_cancelled_alert,
     unrestrict_after_api_limit_grace_period_is_stale,
+    update_organisation_subscription_information_api_usage_cache,
+    update_organisation_subscription_information_cache,
+    update_organisation_subscription_information_cache_recurring,
 )
+from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
 
 
-def test_send_org_over_limit_alert_for_organisation_with_free_subscription(  # type: ignore[no-untyped-def]
+def test_send_org_over_limit_alert__free_subscription__sends_alert_with_free_plan_details(  # type: ignore[no-untyped-def]
     organisation, mocker
 ):
     # Given
@@ -79,7 +84,7 @@ def test_send_org_over_limit_alert_for_organisation_with_free_subscription(  # t
 @pytest.mark.parametrize(
     "SubscriptionMetadata", [ChargebeeObjMetadata, XeroSubscriptionMetadata]
 )
-def test_send_org_over_limit_alert_for_organisation_with_subscription(  # type: ignore[no-untyped-def]
+def test_send_org_over_limit_alert__paid_subscription__sends_alert_with_subscription_details(  # type: ignore[no-untyped-def]
     organisation, subscription, mocker, SubscriptionMetadata
 ):
     # Given
@@ -106,7 +111,9 @@ def test_send_org_over_limit_alert_for_organisation_with_subscription(  # type: 
     assert kwargs["subject"] == ALERT_EMAIL_SUBJECT
 
 
-def test_subscription_cancellation(db: None) -> None:
+def test_finish_subscription_cancellation__cancelled_subscription__resets_to_free_plan(
+    db: None,
+) -> None:
     # Given
     organisation = Organisation.objects.create()
     OrganisationSubscriptionInformationCache.objects.create(
@@ -180,7 +187,9 @@ def test_subscription_cancellation(db: None) -> None:
 
 
 @pytest.mark.freeze_time("2023-01-19T09:12:34+00:00")
-def test_finish_subscription_cancellation(db: None, mocker: MockerFixture) -> None:
+def test_finish_subscription_cancellation__multiple_organisations__removes_excess_users_for_cancelled_only(
+    db: None, mocker: MockerFixture
+) -> None:
     # Given
     send_org_subscription_cancelled_alert_task = mocker.patch(
         "organisations.tasks.send_org_subscription_cancelled_alert"
@@ -255,7 +264,7 @@ def test_finish_subscription_cancellation(db: None, mocker: MockerFixture) -> No
     assert organisation4.num_seats == organisation_user_count
 
 
-def test_send_org_subscription_cancelled_alert(
+def test_send_org_subscription_cancelled_alert__valid_organisation__sends_cancellation_email(
     mocker: MockerFixture, settings: SettingsWrapper
 ) -> None:
     # Given
@@ -280,7 +289,7 @@ def test_send_org_subscription_cancelled_alert(
     )
 
 
-def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_is_none(
+def test_handle_api_usage_notification_for_organisation__billing_starts_at_is_none__logs_warning(
     organisation: Organisation,
     inspecting_handler: logging.Handler,
     mocker: MockerFixture,
@@ -313,7 +322,7 @@ def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_i
     ]
 
 
-def test_handle_api_usage_notification_for_organisation_when_cancellation_date_is_set(
+def test_handle_api_usage_notification_for_organisation__cancellation_date_is_set__skips_notification(
     organisation: Organisation,
     inspecting_handler: logging.Handler,
     mocker: MockerFixture,
@@ -349,7 +358,7 @@ def test_handle_api_usage_notification_for_organisation_when_cancellation_date_i
     assert inspecting_handler.messages == []  # type: ignore[attr-defined]
 
 
-def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_is_more_than_12_months_ago(
+def test_handle_api_usage_notification_for_organisation__billing_starts_at_over_12_months_ago__uses_12_month_offset(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -381,7 +390,7 @@ def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_i
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_handle_api_usage_notifications_when_feature_flag_is_off(
+def test_handle_api_usage_notifications__feature_flag_is_off__skips_processing(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
@@ -429,7 +438,7 @@ def test_handle_api_usage_notifications_when_feature_flag_is_off(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_handle_api_usage_notifications_below_100(
+def test_handle_api_usage_notifications__usage_below_100_percent__sends_90_percent_notification(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
@@ -541,7 +550,7 @@ def test_handle_api_usage_notifications_below_100(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_handle_api_usage_notifications_below_api_usage_alert_thresholds(
+def test_handle_api_usage_notifications__usage_below_alert_thresholds__sends_no_email(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
@@ -591,7 +600,7 @@ def test_handle_api_usage_notifications_below_api_usage_alert_thresholds(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_handle_api_usage_notifications_above_100(
+def test_handle_api_usage_notifications__usage_above_100_percent__sends_limit_notification(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
@@ -686,7 +695,7 @@ def test_handle_api_usage_notifications_above_100(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_handle_api_usage_notifications_with_error(
+def test_handle_api_usage_notifications__processing_error__logs_error_message(
     mocker: MockerFixture,
     organisation: Organisation,
     inspecting_handler: logging.Handler,
@@ -740,7 +749,7 @@ def test_handle_api_usage_notifications_with_error(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_handle_api_usage_notifications_for_free_accounts(
+def test_handle_api_usage_notifications__free_account_over_limit__sends_limit_notification_with_grace_period(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
@@ -838,7 +847,7 @@ def test_handle_api_usage_notifications_for_free_accounts(
     assert OrganisationAPIUsageNotification.objects.first() == api_usage_notification
 
 
-def test_handle_api_usage_notifications_missing_info_cache(
+def test_handle_api_usage_notifications__missing_info_cache__skips_processing(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
@@ -877,10 +886,11 @@ def test_handle_api_usage_notifications_missing_info_cache(
 
 @pytest.mark.parametrize("plan", ("scale-up", "scale-up-v2", "scale-up-v3"))
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_scale_up(
+def test_charge_for_api_call_count_overages__scale_up_plan__charges_correct_addon_quantity(
     organisation: Organisation,
     mocker: MockerFixture,
     plan: str,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -920,10 +930,7 @@ def test_charge_for_api_call_count_overages_scale_up(
         autospec=True,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
 
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
@@ -958,7 +965,7 @@ def test_charge_for_api_call_count_overages_scale_up(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_cancellation_date(
+def test_charge_for_api_call_count_overages__cancellation_date_set__skips_charging(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1002,7 +1009,7 @@ def test_charge_for_api_call_count_overages_cancellation_date(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_scale_up_when_flagsmith_client_sets_is_enabled_to_false(
+def test_charge_for_api_call_count_overages__flagsmith_feature_disabled__skips_charging(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1064,9 +1071,10 @@ def test_charge_for_api_call_count_overages_scale_up_when_flagsmith_client_sets_
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_grace_period(
+def test_charge_for_api_call_count_overages__within_grace_period__creates_breached_record_without_charging(
     organisation: Organisation,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1088,10 +1096,7 @@ def test_charge_for_api_call_count_overages_grace_period(
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
 
     mock_chargebee_update = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
@@ -1114,9 +1119,10 @@ def test_charge_for_api_call_count_overages_grace_period(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_grace_period_over(
+def test_charge_for_api_call_count_overages__grace_period_previously_breached__charges_overage(
     organisation: Organisation,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1139,10 +1145,7 @@ def test_charge_for_api_call_count_overages_grace_period_over(
     )
 
     OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
 
     mock_chargebee_update = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
@@ -1173,9 +1176,10 @@ def test_charge_for_api_call_count_overages_grace_period_over(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_with_not_covered_plan(
+def test_charge_for_api_call_count_overages__uncovered_plan__does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1200,10 +1204,7 @@ def test_charge_for_api_call_count_overages_with_not_covered_plan(
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
 
     mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
@@ -1229,9 +1230,10 @@ def test_charge_for_api_call_count_overages_with_not_covered_plan(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_under_api_limit(
+def test_charge_for_api_call_count_overages__usage_under_api_limit__does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1253,10 +1255,7 @@ def test_charge_for_api_call_count_overages_under_api_limit(
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
 
     mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
@@ -1282,9 +1281,10 @@ def test_charge_for_api_call_count_overages_under_api_limit(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_start_up(
+def test_charge_for_api_call_count_overages__startup_plan__charges_correct_addon_quantity(
     organisation: Organisation,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1307,10 +1307,7 @@ def test_charge_for_api_call_count_overages_start_up(
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
     mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
         autospec=True,
@@ -1373,10 +1370,11 @@ def test_charge_for_api_call_count_overages_start_up(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_non_standard(
+def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_plan_warning(
     organisation: Organisation,
     mocker: MockerFixture,
     inspecting_handler: logging.Handler,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1403,10 +1401,7 @@ def test_charge_for_api_call_count_overages_non_standard(
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
     mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
         autospec=True,
@@ -1436,10 +1431,11 @@ def test_charge_for_api_call_count_overages_non_standard(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_with_exception(
+def test_charge_for_api_call_count_overages__billing_exception__logs_error_and_does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
     inspecting_handler: logging.Handler,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1465,10 +1461,7 @@ def test_charge_for_api_call_count_overages_with_exception(
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
     mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
         autospec=True,
@@ -1499,9 +1492,10 @@ def test_charge_for_api_call_count_overages_with_exception(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_start_up_with_api_billing(
+def test_charge_for_api_call_count_overages__startup_plan_with_existing_billing__charges_remaining_overage(
     organisation: Organisation,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -1530,10 +1524,7 @@ def test_charge_for_api_call_count_overages_start_up_with_api_billing(
         billed_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_overage_charges")
     mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
         autospec=True,
@@ -1571,7 +1562,7 @@ def test_charge_for_api_call_count_overages_start_up_with_api_billing(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_with_yearly_account(
+def test_charge_for_api_call_count_overages__yearly_account__does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1620,7 +1611,7 @@ def test_charge_for_api_call_count_overages_with_yearly_account(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_charge_for_api_call_count_overages_with_bad_plan(
+def test_charge_for_api_call_count_overages__bad_plan_name__does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -1670,19 +1661,20 @@ def test_charge_for_api_call_count_overages_with_bad_plan(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_restrict_use_due_to_api_limit_grace_period_over(
+def test_restrict_use_due_to_api_limit_grace_period_over__multiple_organisations__blocks_only_eligible(
     mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
     mailoutbox: list[EmailMultiAlternatives],
     admin_user: FFAdminUser,
     staff_user: FFAdminUser,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
 
     now = timezone.now()
     organisation2 = Organisation.objects.create(name="Org #2")
@@ -1817,33 +1809,6 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     assert organisation6.block_access_to_admin is True
     assert organisation6.api_limit_access_block
 
-    client_mock.get_identity_flags.call_args_list == [
-        call(
-            f"org.{organisation.id}",
-            traits={
-                "organisation.id": organisation.id,
-                "organisation.name": organisation.name,
-                "subscription.plan": organisation.subscription.plan,
-            },
-        ),
-        call(
-            f"org.{organisation2.id}",
-            traits={
-                "organisation.id": organisation2.id,
-                "organisation.name": organisation2.name,
-                "subscription.plan": organisation2.subscription.plan,
-            },
-        ),
-        call(
-            f"org.{organisation6.id}",
-            traits={
-                "organisation.id": organisation6.id,
-                "organisation.name": organisation6.name,
-                "subscription.plan": organisation6.subscription.plan,
-            },
-        ),
-    ]
-
     assert len(mailoutbox) == 3
     email1 = mailoutbox[0]
     assert email1.subject == "Flagsmith API use has been blocked due to overuse"
@@ -1910,19 +1875,20 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_restrict_use_due_to_api_limit_grace_period_breached(
+def test_restrict_use_due_to_api_limit_grace_period_over__previously_breached__blocks_immediately(
     mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
     mailoutbox: list[EmailMultiAlternatives],
     admin_user: FFAdminUser,
     staff_user: FFAdminUser,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
 
     now = timezone.now()
 
@@ -1968,19 +1934,20 @@ def test_restrict_use_due_to_api_limit_grace_period_breached(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_restrict_use_due_to_api_limit_grace_period_over_missing_subscription_information_cache(
+def test_restrict_use_due_to_api_limit_grace_period_over__missing_subscription_cache__does_not_block(
     mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
     mailoutbox: list[EmailMultiAlternatives],
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     assert not organisation.has_subscription_information_cache()
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
 
     now = timezone.now()
     organisation.subscription.subscription_id = "fancy_sub_id23"
@@ -2010,12 +1977,13 @@ def test_restrict_use_due_to_api_limit_grace_period_over_missing_subscription_in
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_restrict_use_due_to_api_limit_grace_period_over_with_reduced_api_usage(
+def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__does_not_block(
     mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
     mailoutbox: list[EmailMultiAlternatives],
     inspecting_handler: logging.Handler,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     assert not organisation.has_subscription_information_cache()
@@ -2024,10 +1992,10 @@ def test_restrict_use_due_to_api_limit_grace_period_over_with_reduced_api_usage(
 
     logger.addHandler(inspecting_handler)
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
 
     now = timezone.now()
 
@@ -2073,7 +2041,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over_with_reduced_api_usage(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_unrestrict_after_api_limit_grace_period_is_stale(
+def test_unrestrict_after_api_limit_grace_period_is_stale__stale_notifications__unblocks_organisations(
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -2158,7 +2126,7 @@ def test_unrestrict_after_api_limit_grace_period_is_stale(
     assert getattr(organisation4, "api_limit_access_block", None) is None
 
 
-def test_register_recurring_tasks(
+def test_register_recurring_tasks__alerting_enabled__registers_all_tasks(
     mocker: MockerFixture, settings: SettingsWrapper
 ) -> None:
     # Given
@@ -2183,4 +2151,55 @@ def test_register_recurring_tasks(
         call(charge_for_api_call_count_overages),
         call(restrict_use_due_to_api_limit_grace_period_over),
         call(unrestrict_after_api_limit_grace_period_is_stale),
+    ]
+
+
+def test_update_organisation_subscription_information_cache_recurring__called__delegates_to_cache_task(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_update = mocker.patch(
+        "organisations.tasks.update_organisation_subscription_information_cache"
+    )
+
+    # When
+    update_organisation_subscription_information_cache_recurring()
+
+    # Then
+    assert mock_update.call_args_list == [mocker.call()]
+
+
+def test_update_organisation_subscription_information_api_usage_cache__called__calls_update_caches_with_api_usage(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_update_caches = mocker.patch(
+        "organisations.tasks.subscription_info_cache.update_caches"
+    )
+
+    # When
+    update_organisation_subscription_information_api_usage_cache()
+
+    # Then
+    assert mock_update_caches.call_args_list == [
+        mocker.call(SubscriptionCacheEntity.API_USAGE)
+    ]
+
+
+def test_update_organisation_subscription_information_cache__called__calls_update_caches_with_chargebee_and_api_usage(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_update_caches = mocker.patch(
+        "organisations.tasks.subscription_info_cache.update_caches"
+    )
+
+    # When
+    update_organisation_subscription_information_cache()
+
+    # Then
+    assert mock_update_caches.call_args_list == [
+        mocker.call(
+            SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE
+        )
     ]
