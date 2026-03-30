@@ -571,12 +571,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                     data-test='value'
                     tabLabelString='Value'
                     tabLabel={
-                      <Row className='justify-content-center'>
-                        Value{' '}
-                        {valueChanged && (
-                          <div className='unread ml-2 px-1'>{'*'}</div>
-                        )}
-                      </Row>
+                      <>
+                        Value
+                        {valueChanged && <div className='unread'>*</div>}
+                      </>
                     }
                   >
                     <FeatureValueTab
@@ -615,16 +613,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         data-test='segment_overrides'
                         tabLabelString='Segment Overrides'
                         tabLabel={
-                          <Row
-                            className={`justify-content-center ${
-                              segmentsChanged ? 'pr-1' : ''
-                            }`}
-                          >
-                            Segment Overrides{' '}
-                            {segmentsChanged && (
-                              <div className='unread ml-2 px-2'>*</div>
-                            )}
-                          </Row>
+                          <>
+                            Segment Overrides
+                            {segmentsChanged && <div className='unread'>*</div>}
+                          </>
                         }
                       >
                         <SegmentOverridesTab
@@ -660,12 +652,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                     </TabItem>
                   )}
                   {(!Project.disableAnalytics || hasCodeReferences) && (
-                    <TabItem
-                      tabLabelString='Usage'
-                      tabLabel={
-                        <Row className='justify-content-center'>Usage</Row>
-                      }
-                    >
+                    <TabItem tabLabelString='Usage' tabLabel='Usage'>
                       <UsageTab
                         projectId={projectId}
                         featureId={projectFlag.id}
@@ -691,9 +678,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                     <TabItem
                       data-test='external-resources-links'
                       tabLabelString='Links'
-                      tabLabel={
-                        <Row className='justify-content-center'>Links</Row>
-                      }
+                      tabLabel='Links'
                     >
                       <ExternalResourcesLinkTab
                         githubId={githubId}
@@ -719,12 +704,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       data-test='settings'
                       tabLabelString='Settings'
                       tabLabel={
-                        <Row className='justify-content-center'>
-                          Settings{' '}
-                          {settingsChanged && (
-                            <div className='unread ml-2 px-1'>{'*'}</div>
-                          )}
-                        </Row>
+                        <>
+                          Settings
+                          {settingsChanged && <div className='unread'>*</div>}
+                        </>
                       }
                     >
                       <FeatureSettings

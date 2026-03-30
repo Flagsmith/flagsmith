@@ -468,14 +468,12 @@ const Index = class extends Component {
                                     data-test='value'
                                     tabLabelString='Value'
                                     tabLabel={
-                                      <Row className='justify-content-center'>
-                                        Value{' '}
+                                      <>
+                                        Value
                                         {this.state.valueChanged && (
-                                          <div className='unread ml-2 px-1'>
-                                            {'*'}
-                                          </div>
+                                          <span className='unread'>{'*'}</span>
                                         )}
-                                      </Row>
+                                      </>
                                     }
                                   >
                                     <FeatureValueTab
@@ -540,12 +538,7 @@ const Index = class extends Component {
                                   </TabItem>
                                   <TabItem
                                     data-test='results'
-                                    tabLabelString='Results'
-                                    tabLabel={
-                                      <Row className='justify-content-center'>
-                                        Results
-                                      </Row>
-                                    }
+                                    tabLabel='Results'
                                   >
                                     <ExperimentResultsTab
                                       environmentId={this.props.environmentId}

@@ -456,15 +456,15 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
     <Tabs uncontrolled className='px-0'>
       <TabItem
         tabLabel={
-          <div>
+          <>
             General
             {!!edited && <span className='unread'>*</span>}
-          </div>
+          </>
         }
       >
         {editGroupEl}
       </TabItem>
-      <TabItem tabLabel={<div>Permissions</div>}>{editPermissionsEl}</TabItem>
+      <TabItem tabLabel='Permissions'>{editPermissionsEl}</TabItem>
     </Tabs>
   ) : (
     editGroupEl
