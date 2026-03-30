@@ -3,6 +3,7 @@ set -e
 
 # common environment variables
 ACCESS_LOG_FORMAT=${ACCESS_LOG_FORMAT:-'%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %({origin}i)s %({access-control-allow-origin}o)s'}
+APPLICATION_LOGGERS=${APPLICATION_LOGGERS:-"common,features,task_processor,app_analytics,webhooks"}
 
 waitfordb() {
   if [ -z "${SKIP_WAIT_FOR_DB}" ]; then
