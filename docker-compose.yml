@@ -52,7 +52,7 @@ services:
       retries: 20
       start_period: 20s
 
-  init-db:
+  migrate-db:
     image: docker.flagsmith.com/flagsmith/flagsmith:latest
     command:
       - migrate
@@ -73,7 +73,7 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      init-db:
+      migrate-db:
         condition: service_completed_successfully
 
   # The flagsmith_processor service is only needed if TASK_RUN_METHOD set to TASK_PROCESSOR
@@ -85,6 +85,6 @@ services:
     ports:
       - 8001:8000
     depends_on:
-      init-db:
+      migrate-db:
         condition: service_completed_successfully
     command: run-task-processor
