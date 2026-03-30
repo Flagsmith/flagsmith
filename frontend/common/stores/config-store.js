@@ -40,10 +40,17 @@ flagsmith
     AsyncStorage,
     api: Project.flagsmithClientAPI,
     cacheFlags: true,
-    enableAnalytics: Project.flagsmithAnalytics,
+    enableAnalytics: window.E2E ? false : Project.flagsmithAnalytics,
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
-    realtime: Project.flagsmithRealtime,
+    realtime: window.E2E ? false : Project.flagsmithRealtime,
+    ...(Project.evaluationAnalyticsServerUrl
+      ? {
+          evaluationAnalyticsConfig: {
+            analyticsServerUrl: Project.evaluationAnalyticsServerUrl,
+          },
+        }
+      : {}),
   })
   .catch(() => {
     controller.onError()

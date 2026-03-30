@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 import django.core.exceptions
 from common.features.multivariate.serializers import (
@@ -95,6 +96,11 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
         required=False,
         help_text="Integer ID of the segment to retrieve segment overrides for.",
     )
+    identity = serializers.CharField(
+        required=False,
+        help_text="ID of the identity to sort features with identity overrides first.",
+    )
+
     is_enabled = serializers.BooleanField(
         allow_null=True,
         required=False,
@@ -115,6 +121,23 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
         required=False,
         help_text="Comma separated list of group owner ids to filter on",
     )
+
+    @property
+    def project(self) -> Project:
+        if isinstance(project := self.context.get("project"), Project):
+            return project
+        else:  # pragma: no cover
+            raise RuntimeError(f"{type(self)} requires 'project' in context.")
+
+    def validate_identity(self, value: str) -> str:
+        if self.project.enable_dynamo_db:
+            try:
+                UUID(value)
+            except ValueError:
+                raise serializers.ValidationError("Must be a valid UUID.")
+        elif not value.isdigit():
+            raise serializers.ValidationError("Must be a valid integer.")
+        return value
 
     def validate_owners(self, owners: str) -> list[int]:
         try:
@@ -157,11 +180,10 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         "in the environment provided by the `environment` query parameter. "
         "Note: will return null for Edge enabled projects."
     )
-    is_num_identity_overrides_complete = serializers.SerializerMethodField(
-        help_text="A boolean that indicates whether there are more"
-        " identity overrides than are being listed, if `False`. This field is "
-        "`True` when querying overrides data for a features list page and "
-        "exact data has been returned."
+
+    # This is kept for backwards compatibility, but is always true
+    is_num_identity_overrides_complete = serializers.BooleanField(
+        read_only=True, default=True
     )
 
     last_modified_in_any_environment = serializers.SerializerMethodField(
@@ -202,7 +224,12 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             "last_modified_in_any_environment",
             "last_modified_in_current_environment",
         )
-        read_only_fields = ("feature_segments", "created_date", "uuid", "project")
+        read_only_fields = (
+            "feature_segments",
+            "created_date",
+            "uuid",
+            "project",
+        )
 
     def to_internal_value(self, data):  # type: ignore[no-untyped-def]
         if data.get("initial_value") and not isinstance(data["initial_value"], str):
@@ -322,14 +349,6 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         except (KeyError, AttributeError):
             return None
 
-    def get_is_num_identity_overrides_complete(self, instance: Feature) -> bool | None:
-        try:
-            return self.context["overrides_data"][  # type: ignore[no-any-return]
-                instance.id
-            ].is_num_identity_overrides_complete
-        except (KeyError, AttributeError):
-            return None
-
     def get_last_modified_in_any_environment(
         self, instance: Feature
     ) -> datetime | None:
@@ -359,7 +378,9 @@ class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerial
         attrs = super().validate(attrs)
         project = self.instance.project if self.instance else self.context["project"]  # type: ignore[union-attr]
         organisation = project.organisation
-        self._validate_required_metadata(organisation, attrs.get("metadata", []))
+        self._validate_required_metadata(
+            organisation, attrs.get("metadata", []), project=project
+        )
         return attrs
 
     def create(self, validated_data: dict[str, Any]) -> Feature:

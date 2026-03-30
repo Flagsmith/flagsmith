@@ -95,7 +95,7 @@ def test_segment_override_limit_v2_delete_count_uses_unique_segment_ids(
     assert result is True
 
 
-def test_segment_override_limit_does_not_exclude_invalid_overrides_being_deleted(
+def test_exceeds_segment_override_limit__deleting_override_with_zero_limit__returns_true(
     feature: Feature,
     segment: Segment,
     another_segment: Segment,

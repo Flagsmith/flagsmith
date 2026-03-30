@@ -81,7 +81,7 @@ def distinct_identity_featurestate(
             True,
             EdgeV2MigrationStatus.COMPLETE,
             "get_edge_overrides_data",
-            [None],
+            [],
             {},
         ),
         (
@@ -93,7 +93,7 @@ def distinct_identity_featurestate(
         ),
     ],
 )
-def test_feature_get_overrides_data__call_expected(
+def test_get_overrides_data__various_dynamo_configs__calls_expected_getter(
     mocker: "MockerFixture",
     environment: "Environment",
     enable_dynamo_db: bool,
@@ -168,7 +168,7 @@ def test_feature_get_overrides_data__edge_project_not_migrated_to_v2__return_exp
     )
 
 
-def test_feature_get_core_overrides_data(
+def test_get_core_overrides_data__multiple_overrides__returns_correct_counts(
     feature: Feature,
     environment: "Environment",
     identity: Identity,
@@ -216,7 +216,7 @@ def test_feature_get_core_overrides_data(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_feature_get_edge_overrides_data(
+def test_get_edge_overrides_data__multiple_overrides__returns_correct_counts(
     feature: Feature,
     environment: "Environment",
     identity: Identity,
@@ -241,13 +241,8 @@ def test_feature_get_edge_overrides_data(
     )
     edge_identity.save(admin_user)
 
-    feature_ids = [
-        distinct_identity_featurestate.feature.id,
-        feature.id,
-    ]
-
     # When
-    overrides_data = get_edge_overrides_data(environment, feature_ids)
+    overrides_data = get_edge_overrides_data(environment)
 
     # Then
     assert overrides_data[feature.id].num_identity_overrides == 1
@@ -273,7 +268,7 @@ def test_feature_get_edge_overrides_data(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_get_edge_overrides_data_skips_deleted_features(  # type: ignore[no-untyped-def]
+def test_get_edge_overrides_data__deleted_feature__skips_deleted(  # type: ignore[no-untyped-def]
     feature: Feature,
     environment: "Environment",
     identity: Identity,
@@ -295,12 +290,11 @@ def test_get_edge_overrides_data_skips_deleted_features(  # type: ignore[no-unty
     )
     edge_identity.save(admin_user)
 
-    feature_ids = [distinct_identity_featurestate.feature.id, feature.id]
     # Now, delete one of the feature
     feature.delete()
 
     # When
-    overrides_data = get_edge_overrides_data(environment, feature_ids)
+    overrides_data = get_edge_overrides_data(environment)
 
     # Then - we only have one identity override(for the feature that still exists)
     assert len(overrides_data) == 1

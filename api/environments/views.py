@@ -8,6 +8,7 @@ from common.environments.permissions import (
 from django.db.models import Count, Q, QuerySet
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+from flagsmith_schemas.api import V1EnvironmentDocumentResponse
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -24,7 +25,6 @@ from environments.permissions.permissions import (
     EnvironmentPermissions,
     NestedEnvironmentPermissions,
 )
-from environments.sdk.schemas import SDKEnvironmentDocumentModel
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import (
     disable_v2_versioning,
@@ -54,10 +54,11 @@ from .permissions.models import (
 )
 from .serializers import (
     CloneEnvironmentSerializer,
-    CreateUpdateEnvironmentSerializer,
+    CreateEnvironmentSerializer,
     EnvironmentAPIKeySerializer,
     EnvironmentRetrieveSerializerWithMetadata,
     EnvironmentSerializerWithMetadata,
+    UpdateEnvironmentSerializer,
     WebhookSerializer,
 )
 
@@ -69,6 +70,7 @@ logger = logging.getLogger(__name__)
 @method_decorator(
     name="list",
     decorator=extend_schema(
+        tags=["mcp"],
         parameters=[
             OpenApiParameter(
                 name="project",
@@ -77,7 +79,13 @@ logger = logging.getLogger(__name__)
                 required=False,
                 type=int,
             )
-        ]
+        ],
+        extensions={
+            "x-gram": {
+                "name": "list_environments",
+                "description": "Lists all environments the user has access to",
+            },
+        },
     ),
 )
 class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
@@ -93,8 +101,10 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             return CloneEnvironmentSerializer
         if self.action == "retrieve":
             return EnvironmentRetrieveSerializerWithMetadata
-        elif self.action in ("create", "update", "partial_update"):
-            return CreateUpdateEnvironmentSerializer
+        elif self.action == "create":
+            return CreateEnvironmentSerializer
+        elif self.action in ("update", "partial_update"):
+            return UpdateEnvironmentSerializer
         return EnvironmentSerializerWithMetadata
 
     def get_serializer_context(self):  # type: ignore[no-untyped-def]
@@ -281,7 +291,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         )
         return Response(serializer.data)
 
-    @extend_schema(responses={200: SDKEnvironmentDocumentModel})
+    @extend_schema(responses={200: V1EnvironmentDocumentResponse})
     @action(detail=True, methods=["GET"], url_path="document")
     def get_document(self, request, api_key: str):  # type: ignore[no-untyped-def]
         environment = (

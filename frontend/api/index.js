@@ -115,13 +115,18 @@ app.get('/config/project-overrides', (req, res) => {
     },
     {
       name: 'e2eToken',
-      value: process.env.E2E_TEST_TOKEN || '',
+      value: process.env[`E2E_TEST_TOKEN_${(process.env.ENV || 'dev').toUpperCase()}`] || process.env.E2E_TEST_TOKEN || '',
+    },
+    {
+      name: 'evaluationAnalyticsServerUrl',
+      value: process.env.EVALUATION_ANALYTICS_SERVER_URL,
     },
   ]
   let output = values.map(getVariable).join('')
   res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate')
   res.setHeader('content-type', 'application/javascript')
-  res.send(`window.projectOverrides = {
+  const e2eScript = process.env.E2E ? 'window.E2E=true;' : ''
+  res.send(`${e2eScript}window.projectOverrides = {
         ${output}
     };`)
 })
@@ -207,6 +212,22 @@ app.get('/version', (req, res) => {
     res.send({ 'ci_commit_sha': commitSha, 'image_tag': imageTag })
   }
 })
+
+if (process.env.FLAGSMITH_PROXY_API_URL) {
+  app.get('/_backend_version', async (req, res) => {
+    try {
+      const response = await fetch(
+        `${process.env.FLAGSMITH_PROXY_API_URL.replace(/\/?$/, '/')}version/`,
+      )
+      const data = await response.json()
+      res.json(data)
+    } catch (err) {
+      // eslint-disable-next-line
+      console.log('Unable to fetch backend version:', err)
+      res.status(502).json({})
+    }
+  })
+}
 
 app.use(bodyParser.json())
 app.use(spm)

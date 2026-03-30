@@ -11,8 +11,8 @@ from pytest_django.fixtures import SettingsWrapper
 from util.logging import GunicornAccessLogJsonFormatter, JsonFormatter
 
 
-@pytest.mark.freeze_time("2023-12-08T06:05:47.320000+00:00")
-def test_json_formatter__outputs_expected(
+@pytest.mark.freeze_time("2023-12-08T06:05:47.000000+00:00")
+def test_json_formatter__info_and_error_logs__outputs_expected_json(
     inspecting_handler: logging.Handler,
     request: pytest.FixtureRequest,
 ) -> None:
@@ -48,7 +48,7 @@ def test_json_formatter__outputs_expected(
         {
             "levelname": "INFO",
             "message": "hello arg1, 22",
-            "timestamp": "2023-12-08 06:05:47,319",
+            "timestamp": "2023-12-08 06:05:47,000",
             "logger_name": "test_json_formatter__outputs_expected",
             "process_id": expected_pid,
             "thread_name": "MainThread",
@@ -56,7 +56,7 @@ def test_json_formatter__outputs_expected(
         {
             "levelname": "ERROR",
             "message": "this is an error",
-            "timestamp": "2023-12-08 06:05:47,319",
+            "timestamp": "2023-12-08 06:05:47,000",
             "logger_name": "test_json_formatter__outputs_expected",
             "process_id": expected_pid,
             "thread_name": "MainThread",
@@ -65,8 +65,10 @@ def test_json_formatter__outputs_expected(
     ]
 
 
-@pytest.mark.freeze_time("2023-12-08T06:05:47.320000+00:00")
-def test_gunicorn_access_log_json_formatter__outputs_expected() -> None:
+@pytest.mark.freeze_time("2023-12-08T06:05:47.000000+00:00")
+def test_gunicorn_access_log_json_formatter__access_log_record__outputs_expected_json() -> (
+    None
+):
     # Given
     gunicorn_access_log_json_formatter = GunicornAccessLogJsonFormatter()
     log_record = logging.LogRecord(
@@ -92,7 +94,7 @@ def test_gunicorn_access_log_json_formatter__outputs_expected() -> None:
             "r": "GET",
             "s": 200,
             "T": 1,
-            "t": datetime.fromisoformat("2023-12-08T06:05:47.320000+00:00").strftime(
+            "t": datetime.fromisoformat("2023-12-08T06:05:47.000+00:00").strftime(
                 "[%d/%b/%Y:%H:%M:%S %z]"
             ),
             "u": "-",
@@ -120,7 +122,7 @@ def test_gunicorn_access_log_json_formatter__outputs_expected() -> None:
         "status": "200",
         "thread_name": "MainThread",
         "time": "2023-12-08T06:05:47+00:00",
-        "timestamp": "2023-12-08 06:05:47,319",
+        "timestamp": "2023-12-08 06:05:47,000",
         "user_agent": "requests",
     }
 

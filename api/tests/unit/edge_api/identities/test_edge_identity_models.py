@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 import pytest
 import shortuuid
 from django.utils import timezone
-from flag_engine.features.models import FeatureModel, FeatureStateModel
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
@@ -18,9 +17,10 @@ from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
 from segments.models import Segment
 from users.models import FFAdminUser
+from util.engine_models.features.models import FeatureModel, FeatureStateModel
 
 
-def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(  # type: ignore[no-untyped-def]
+def test_get_all_feature_states__multiple_segment_overrides__uses_segment_priorities(  # type: ignore[no-untyped-def]
     environment, project, segment, feature, mocker
 ):
     # Given
@@ -65,7 +65,7 @@ def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(  # ty
     )
 
 
-def test_edge_identity_get_all_feature_states_ignores_not_live_feature_states(  # type: ignore[no-untyped-def]
+def test_get_all_feature_states__not_live_change_request__ignores_not_live_states(  # type: ignore[no-untyped-def]
     environment, project, segment, feature, feature_state, admin_user, mocker
 ):
     # Given
@@ -98,7 +98,8 @@ def test_edge_identity_get_all_feature_states_ignores_not_live_feature_states(  
     assert feature_states == [feature_state]
 
 
-def test_edge_identity_from_identity_document():  # type: ignore[no-untyped-def]
+def test_from_identity_document__valid_document__returns_edge_identity(  # type: ignore[no-untyped-def]
+):
     # Given
     identifier = "identifier"
     environment_api_key = shortuuid.uuid()
@@ -125,8 +126,10 @@ def test_edge_identity_from_identity_document():  # type: ignore[no-untyped-def]
         ),
     ),
 )
-def test_edge_identity_id_property(django_id, identity_uuid, expected_id, mocker):  # type: ignore[no-untyped-def]
-    # When
+def test_edge_identity_id__parametrised_ids__returns_expected_id(  # type: ignore[no-untyped-def]
+    django_id, identity_uuid, expected_id, mocker
+):
+    # Given / When
     edge_identity = EdgeIdentity(
         mocker.MagicMock(django_id=django_id, identity_uuid=identity_uuid)
     )
@@ -135,7 +138,9 @@ def test_edge_identity_id_property(django_id, identity_uuid, expected_id, mocker
     assert edge_identity.id == expected_id
 
 
-def test_edge_identity_get_feature_state_by_feature_name_or_id(edge_identity_model):  # type: ignore[no-untyped-def]
+def test_get_feature_state_by_feature_name_or_id__existing_override__returns_feature_state(  # type: ignore[no-untyped-def]
+    edge_identity_model,
+):
     # Given
     feature_state_model = FeatureStateModel(
         feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
@@ -158,7 +163,9 @@ def test_edge_identity_get_feature_state_by_feature_name_or_id(edge_identity_mod
     )
 
 
-def test_edge_identity_get_feature_state_by_featurestate_uuid(edge_identity_model):  # type: ignore[no-untyped-def]
+def test_get_feature_state_by_featurestate_uuid__existing_override__returns_feature_state(  # type: ignore[no-untyped-def]
+    edge_identity_model,
+):
     # Given
     feature_state_model = FeatureStateModel(
         feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
@@ -178,7 +185,9 @@ def test_edge_identity_get_feature_state_by_featurestate_uuid(edge_identity_mode
     assert edge_identity_model.get_feature_state_by_featurestate_uuid("invalid") is None
 
 
-def test_edge_identity_remove_feature_state(edge_identity_model):  # type: ignore[no-untyped-def]
+def test_remove_feature_override__existing_override__removes_feature_state(  # type: ignore[no-untyped-def]
+    edge_identity_model,
+):
     # Given
     feature_state_model = FeatureStateModel(
         feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
@@ -198,7 +207,7 @@ def test_edge_identity_remove_feature_state(edge_identity_model):  # type: ignor
     )
 
 
-def test_edge_identity_remove_feature_state_if_no_matching_feature_state(  # type: ignore[no-untyped-def]
+def test_remove_feature_override__no_matching_override__no_error(  # type: ignore[no-untyped-def]
     edge_identity_model,
 ):
     # Given
@@ -219,7 +228,9 @@ def test_edge_identity_remove_feature_state_if_no_matching_feature_state(  # typ
     )
 
 
-def test_edge_identity_synchronise_features(mocker, edge_identity_model):  # type: ignore[no-untyped-def]
+def test_synchronise_features__empty_feature_list__removes_overrides(  # type: ignore[no-untyped-def]
+    mocker, edge_identity_model
+):
     # Given
     mock_sync_identity_document_features = mocker.patch(
         "edge_api.identities.models.sync_identity_document_features"
@@ -246,7 +257,7 @@ def test_edge_identity_synchronise_features(mocker, edge_identity_model):  # typ
     )
 
 
-def test_edge_identity_save_does_not_generate_audit_records_if_no_changes(  # type: ignore[no-untyped-def]
+def test_save__no_changes__does_not_generate_audit_records(  # type: ignore[no-untyped-def]
     mocker, edge_identity_model, edge_identity_dynamo_wrapper_mock
 ):
     # Given
@@ -416,7 +427,7 @@ def test_edge_identity_save_called__feature_override_removed__expected_tasks_cal
         (False, "initial", True, "updated"),
     ),
 )
-def test_edge_identity_save_called_generate_audit_records_if_feature_override_updated(
+def test_save__feature_override_updated__generates_audit_records(
     initial_enabled: bool,
     initial_value: str,
     new_enabled: bool,
@@ -498,7 +509,7 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
     )
 
 
-def test_get_all_feature_states_post_v2_versioning_migration(
+def test_get_all_feature_states__post_v2_versioning_migration__returns_latest_overrides(
     environment: Environment,
     feature: Feature,
     feature_state: FeatureState,

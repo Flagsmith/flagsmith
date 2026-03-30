@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timedelta
+from datetime import timezone as dttz
 from typing import Type
 from unittest import mock
 from unittest.mock import MagicMock
@@ -63,11 +64,11 @@ from users.models import (
 User = get_user_model()
 
 
-def test_should_return_organisation_list_when_requested(
+def test_list_organisations__authenticated_user__returns_organisation_list(
     staff_client: APIClient,
     organisation: Organisation,
 ) -> None:
-    # When
+    # Given / When
     response = staff_client.get("/api/v1/organisations/")
 
     # Then
@@ -77,7 +78,7 @@ def test_should_return_organisation_list_when_requested(
     assert response.data["results"][0]["name"] == organisation.name
 
 
-def test_get_by_uuid_returns_organisation(
+def test_get_by_uuid__valid_organisation__returns_organisation(
     admin_client: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -95,7 +96,7 @@ def test_get_by_uuid_returns_organisation(
     assert response.json()["uuid"] == str(organisation.uuid)
 
 
-def test_get_by_uuid_returns_404_for_organisation_that_does_not_belong_to_the_user(
+def test_get_by_uuid__organisation_not_belonging_to_user__returns_404(
     admin_client: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -113,7 +114,7 @@ def test_get_by_uuid_returns_404_for_organisation_that_does_not_belong_to_the_us
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_non_superuser_can_create_new_organisation_by_default(
+def test_create_organisation__non_superuser_default_settings__returns_201(
     staff_client: APIClient,
     staff_user: FFAdminUser,
 ) -> None:
@@ -140,7 +141,7 @@ def test_non_superuser_can_create_new_organisation_by_default(
     )
 
 
-def test_colliding_hubspot_cookies_are_ignored(
+def test_create_organisation__colliding_hubspot_cookie__ignores_cookie(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     admin_user: FFAdminUser,
@@ -175,7 +176,7 @@ def test_colliding_hubspot_cookies_are_ignored(
 
 
 @override_settings(RESTRICT_ORG_CREATE_TO_SUPERUSERS=True)  # type: ignore[misc]
-def test_create_new_orgnisation_returns_403_with_non_superuser(
+def test_create_organisation__restrict_to_superusers_enabled__returns_403(
     staff_client: APIClient,
 ) -> None:
     # Given
@@ -195,7 +196,7 @@ def test_create_new_orgnisation_returns_403_with_non_superuser(
     )
 
 
-def test_saml_users_cannot_create_organisation(
+def test_create_organisation__saml_user__returns_403(
     mocker: MockerFixture,
     staff_client: APIClient,
     staff_user: FFAdminUser,
@@ -226,7 +227,7 @@ def test_saml_users_cannot_create_organisation(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_should_update_organisation_data(
+def test_update_organisation__valid_data__returns_200(
     client: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -253,7 +254,7 @@ def test_should_update_organisation_data(
         (timezone.now() - timedelta(days=5), timezone.now() - timedelta(days=1), False),
     ],
 )
-def test_get_subscription_metadata_returns_expected_result(
+def test_list_organisations__with_billing_periods__returns_expected_subscription_metadata(
     organisation: Organisation,
     admin_client: APIClient,
     current_billing_term_starts_at: datetime,
@@ -278,7 +279,7 @@ def test_get_subscription_metadata_returns_expected_result(
     )
 
 
-def test_should_invite_users_to_organisation(
+def test_invite_users__valid_email__creates_invite(
     settings: SettingsWrapper,
     admin_client: APIClient,
     organisation: Organisation,
@@ -299,7 +300,7 @@ def test_should_invite_users_to_organisation(
     assert Invite.objects.filter(email="test@example.com").exists()
 
 
-def test_should_fail_if_invite_exists_already(
+def test_invite_users__duplicate_invite__returns_400(
     settings: SettingsWrapper,
     admin_client: APIClient,
     organisation: Organisation,
@@ -347,7 +348,7 @@ def test_organisation_invite__non_admin__return_expected(
     assert not Invite.objects.filter(email=email, organisation=organisation).exists()
 
 
-def test_should_return_all_invites_and_can_resend(
+def test_list_and_resend_invites__existing_invites__returns_200(
     settings: SettingsWrapper,
     admin_client: APIClient,
     organisation: Organisation,
@@ -373,7 +374,7 @@ def test_should_return_all_invites_and_can_resend(
     assert invite_resend_response.status_code == status.HTTP_200_OK
 
 
-def test_remove_user_from_an_organisation_also_removes_from_group(
+def test_remove_user__user_in_group__removes_from_group(
     organisation: Organisation,
     admin_client: APIClient,
     admin_user: FFAdminUser,
@@ -405,13 +406,12 @@ def test_remove_user_from_an_organisation_also_removes_from_group(
     assert group in admin_user.permission_groups.all()
 
 
-def test_remove_user_from_an_organisation_also_removes_users_environment_and_project_permission(
+def test_remove_user__user_with_project_and_environment_permissions__removes_all_permissions(
     organisation: Organisation,
     admin_client: APIClient,
     admin_user: FFAdminUser,
 ) -> None:
     # Given
-    # Now, let's create a project
     project_name = "org_remove_test"
     project_create_url = reverse("api-v1:projects:project-list")
     data = {"name": project_name, "organisation": organisation.id}
@@ -431,7 +431,7 @@ def test_remove_user_from_an_organisation_also_removes_users_environment_and_pro
 
     data = [{"id": admin_user.id}]  # type: ignore[assignment]
 
-    # Next, let's remove the user from the organisation
+    # When
     response = admin_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )
@@ -452,7 +452,7 @@ def test_remove_user_from_an_organisation_also_removes_users_environment_and_pro
     )
 
 
-def test_can_invite_user_as_admin(
+def test_invite_user__as_admin_role__creates_admin_invite(
     settings: SettingsWrapper,
     admin_client: APIClient,
     organisation: Organisation,
@@ -477,7 +477,7 @@ def test_can_invite_user_as_admin(
     assert Invite.objects.get(email=invited_email).role == OrganisationRole.ADMIN.name
 
 
-def test_can_invite_user_as_user(
+def test_invite_user__as_user_role__creates_user_invite(
     settings: SettingsWrapper,
     admin_client: APIClient,
     organisation: Organisation,
@@ -507,7 +507,7 @@ def test_can_invite_user_as_user(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("staff_client")],
 )
-def test_user_can_get_projects_for_an_organisation(
+def test_list_projects__valid_organisation__returns_projects(
     organisation: Organisation,
     client: APIClient,
     project: Project,
@@ -526,7 +526,7 @@ def test_user_can_get_projects_for_an_organisation(
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("app_analytics.influxdb_wrapper.influxdb_client")
-def test_should_get_usage_for_organisation(
+def test_get_usage__valid_organisation__queries_influx(
     mock_influxdb_client: MagicMock,
     organisation: Organisation,
     admin_client: APIClient,
@@ -564,7 +564,7 @@ def test_should_get_usage_for_organisation(
 
 
 @mock.patch("organisations.serializers.get_subscription_data_from_hosted_page")
-def test_update_subscription_gets_subscription_data_from_chargebee(
+def test_update_subscription__valid_hosted_page__updates_from_chargebee(
     mock_get_subscription_data: MagicMock,
     settings: SettingsWrapper,
     organisation: Organisation,
@@ -610,7 +610,7 @@ def test_update_subscription_gets_subscription_data_from_chargebee(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_delete_organisation(
+def test_delete_organisation__with_related_objects__soft_deletes(
     organisation: Organisation,
     client: APIClient,
     project: Project,
@@ -644,7 +644,7 @@ def test_delete_organisation(
 
 
 @mock.patch("organisations.serializers.get_hosted_page_url_for_subscription_upgrade")
-def test_get_hosted_page_url_for_subscription_upgrade(
+def test_get_hosted_page_url__valid_subscription__returns_upgrade_url(
     mock_get_hosted_page_url: MagicMock,
     organisation: Organisation,
     admin_client: APIClient,
@@ -677,7 +677,7 @@ def test_get_hosted_page_url_for_subscription_upgrade(
     )
 
 
-def test_get_organisation_permissions(
+def test_get_organisation_permissions__authenticated_user__returns_permissions(
     staff_client: APIClient,
 ) -> None:
     # Given
@@ -691,7 +691,7 @@ def test_get_organisation_permissions(
     assert len(response.json()) == 2
 
 
-def test_get_my_permissions_for_non_admin(
+def test_get_my_permissions__non_admin_user__returns_user_permissions(
     organisation: Organisation,
     staff_client: APIClient,
     staff_user: FFAdminUser,
@@ -715,7 +715,7 @@ def test_get_my_permissions_for_non_admin(
     assert response.data["admin"] is False
 
 
-def test_get_my_permissions_for_admin(
+def test_get_my_permissions__admin_user__returns_admin_true(
     organisation: Organisation,
     admin_client: APIClient,
 ) -> None:
@@ -735,7 +735,7 @@ def test_get_my_permissions_for_admin(
 
 @pytest.mark.parametrize("subscription_status", ("active", "in_trial"))
 @mock.patch("organisations.chargebee.webhook_handlers.extract_subscription_metadata")
-def test_chargebee_webhook(
+def test_chargebee_webhook__active_or_trial_subscription__updates_cache(
     mock_extract_subscription_metadata: MagicMock,
     staff_user: FFAdminUser,
     staff_client: APIClient,
@@ -785,7 +785,7 @@ def test_chargebee_webhook(
         15,
         33,
         9,
-        tzinfo=timezone.utc,  # type: ignore[attr-defined]
+        tzinfo=dttz.utc,
     )
     assert subscription_cache.current_billing_term_starts_at == datetime(
         2023,
@@ -794,7 +794,7 @@ def test_chargebee_webhook(
         15,
         33,
         9,
-        tzinfo=timezone.utc,  # type: ignore[attr-defined]
+        tzinfo=dttz.utc,
     )
     assert subscription_cache.allowed_projects is None
     assert subscription_cache.allowed_30d_api_calls == api_calls
@@ -802,7 +802,7 @@ def test_chargebee_webhook(
 
 
 @mock.patch("organisations.models.cancel_chargebee_subscription")
-def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and_alert_sent(
+def test_chargebee_webhook__non_renewing_subscription__sets_cancellation_date_and_sends_alert(
     mocked_cancel_chargebee_subscription: MagicMock,
     subscription: Subscription,
     staff_user: FFAdminUser,
@@ -836,9 +836,7 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
     subscription.refresh_from_db()
     assert subscription.cancellation_date == datetime.utcfromtimestamp(
         current_term_end
-    ).replace(
-        tzinfo=timezone.utc  # type: ignore[attr-defined]
-    )
+    ).replace(tzinfo=dttz.utc)
 
     # and
     assert len(mail.outbox) == 1
@@ -847,7 +845,7 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("organisations.models.cancel_chargebee_subscription")
-def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and_current_term_end_is_missing(
+def test_chargebee_webhook__non_renewing_missing_term_end__reverts_to_free_plan(
     mocked_cancel_chargebee_subscription: MagicMock,
     chargebee_subscription: Subscription,
     staff_user: FFAdminUser,
@@ -883,7 +881,7 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
     mocked_cancel_chargebee_subscription.assert_not_called()
 
 
-def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sent(
+def test_chargebee_webhook__cancelled_subscription__sets_cancellation_date_and_sends_alert(
     subscription: Subscription,
     staff_user: FFAdminUser,
     staff_client: APIClient,
@@ -915,16 +913,14 @@ def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sen
     subscription.refresh_from_db()
     assert subscription.cancellation_date == datetime.utcfromtimestamp(
         current_term_end
-    ).replace(
-        tzinfo=timezone.utc  # type: ignore[attr-defined]
-    )
+    ).replace(tzinfo=dttz.utc)
 
     # and
     assert len(mail.outbox) == 1
 
 
 @mock.patch("organisations.chargebee.webhook_handlers.extract_subscription_metadata")
-def test_when_cancelled_subscription_is_renewed_then_subscription_activated_and_no_cancellation_email_sent(
+def test_chargebee_webhook__cancelled_subscription_renewed__clears_cancellation_date(
     mock_extract_subscription_metadata: MagicMock,
     subscription: Subscription,
     staff_user: FFAdminUser,
@@ -963,7 +959,7 @@ def test_when_cancelled_subscription_is_renewed_then_subscription_activated_and_
     assert not mail.outbox
 
 
-def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_200(
+def test_chargebee_webhook__unknown_subscription_id__returns_200_and_logs_warning(
     api_client: APIClient, caplog: LogCaptureFixture, django_user_model: Type[Model]
 ) -> None:
     # Given
@@ -993,7 +989,7 @@ def test_when_chargebee_webhook_received_with_unknown_subscription_id_then_200(
     )
 
 
-def test_user_can_create_new_webhook(
+def test_create_webhook__valid_url__returns_201(
     admin_client: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -1011,7 +1007,7 @@ def test_user_can_create_new_webhook(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_can_update_secret_for_webhook(
+def test_update_webhook__with_secret__updates_secret(
     organisation: Organisation,
     admin_client: APIClient,
 ) -> None:
@@ -1039,7 +1035,7 @@ def test_can_update_secret_for_webhook(
     assert webhook.secret == data["secret"]
 
 
-def test_get_subscription_metadata_when_subscription_information_cache_exist(
+def test_get_subscription_metadata__cache_exists__returns_cached_data(
     organisation: Organisation,
     admin_client: APIClient,
     chargebee_subscription: Subscription,
@@ -1088,7 +1084,7 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
     }
 
 
-def test_get_subscription_metadata_when_subscription_information_cache_does_not_exist(
+def test_get_subscription_metadata__no_cache__fetches_from_chargebee(
     mocker: MockerFixture,
     organisation: Organisation,
     admin_client: APIClient,
@@ -1139,7 +1135,7 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
     )
 
 
-def test_get_subscription_metadata_returns_200_if_the_organisation_have_no_paid_subscription(
+def test_get_subscription_metadata__no_paid_subscription__returns_free_plan_defaults(
     mocker: MockerFixture, organisation: Organisation, admin_client: APIClient
 ) -> None:
     # Given
@@ -1172,7 +1168,7 @@ def test_get_subscription_metadata_returns_200_if_the_organisation_have_no_paid_
     get_subscription_metadata.assert_not_called()
 
 
-def test_get_subscription_metadata_returns_defaults_if_chargebee_error(  # type: ignore[no-untyped-def]
+def test_get_subscription_metadata__chargebee_error__returns_defaults(  # type: ignore[no-untyped-def]
     organisation, admin_client, chargebee_subscription
 ) -> None:
     # Given
@@ -1198,7 +1194,7 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(  # type:
     }
 
 
-def test_can_invite_user_with_permission_groups(  # type: ignore[no-untyped-def]
+def test_invite_user__with_permission_groups__creates_invite_with_groups(  # type: ignore[no-untyped-def]
     settings, admin_client, organisation, user_permission_group
 ) -> None:
     # Given
@@ -1240,7 +1236,7 @@ def test_can_invite_user_with_permission_groups(  # type: ignore[no-untyped-def]
         ("environment_id=1", {"environment_id": 1}),
     ),
 )
-def test_organisation_get_influx_data(  # type: ignore[no-untyped-def]
+def test_get_influx_data__with_filter_params__returns_filtered_events(  # type: ignore[no-untyped-def]
     mocker, admin_client, organisation, query_string, expected_filter_args
 ) -> None:
     # Given
@@ -1274,7 +1270,7 @@ def test_organisation_get_influx_data(  # type: ignore[no-untyped-def]
 )
 @mock.patch("organisations.models.get_plan_meta_data")
 @mock.patch("organisations.chargebee.webhook_handlers.extract_subscription_metadata")
-def test_when_plan_is_changed_max_seats_and_max_api_calls_are_updated(  # type: ignore[no-untyped-def]
+def test_chargebee_webhook__plan_changed__updates_seats_and_api_calls(  # type: ignore[no-untyped-def]
     mock_extract_subscription_metadata,
     mock_get_plan_meta_data,
     subscription,
@@ -1354,7 +1350,7 @@ def test_when_plan_is_changed_max_seats_and_max_api_calls_are_updated(  # type: 
         assert subscription_information_cache.chargebee_updated_at > updated_at
 
 
-def test_delete_organisation_does_not_delete_all_subscriptions_from_the_database(  # type: ignore[no-untyped-def]
+def test_delete_organisation__other_org_exists__preserves_other_subscriptions(  # type: ignore[no-untyped-def]
     admin_client, admin_user, organisation, subscription
 ) -> None:
     """
@@ -1378,7 +1374,7 @@ def test_delete_organisation_does_not_delete_all_subscriptions_from_the_database
     assert Subscription.objects.filter(organisation=another_organisation).exists()
 
 
-def test_make_user_group_admin_user_does_not_belong_to_group(  # type: ignore[no-untyped-def]
+def test_make_group_admin__user_not_in_group__returns_404(  # type: ignore[no-untyped-def]
     admin_client, admin_user, organisation, user_permission_group
 ) -> None:
     # Given
@@ -1396,7 +1392,7 @@ def test_make_user_group_admin_user_does_not_belong_to_group(  # type: ignore[no
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_make_user_group_admin_success(  # type: ignore[no-untyped-def]
+def test_make_group_admin__user_in_group__sets_group_admin(  # type: ignore[no-untyped-def]
     admin_client, admin_user, organisation, user_permission_group
 ) -> None:
     # Given
@@ -1422,7 +1418,7 @@ def test_make_user_group_admin_success(  # type: ignore[no-untyped-def]
     )
 
 
-def test_make_user_group_admin_forbidden(
+def test_make_group_admin__non_admin_user__returns_403(
     staff_client: APIClient,
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
@@ -1443,7 +1439,7 @@ def test_make_user_group_admin_forbidden(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_remove_user_as_group_admin_user_does_not_belong_to_group(  # type: ignore[no-untyped-def]
+def test_remove_group_admin__user_not_in_group__returns_404(  # type: ignore[no-untyped-def]
     admin_client, admin_user, organisation, user_permission_group
 ) -> None:
     # Given
@@ -1461,7 +1457,7 @@ def test_remove_user_as_group_admin_user_does_not_belong_to_group(  # type: igno
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_remove_user_as_group_admin_success(  # type: ignore[no-untyped-def]
+def test_remove_group_admin__user_is_group_admin__removes_group_admin(  # type: ignore[no-untyped-def]
     admin_client, admin_user, organisation, user_permission_group
 ) -> None:
     # Given
@@ -1488,7 +1484,7 @@ def test_remove_user_as_group_admin_success(  # type: ignore[no-untyped-def]
     )
 
 
-def test_remove_user_as_group_admin_forbidden(
+def test_remove_group_admin__non_admin_user__returns_403(
     staff_client: APIClient,
     organisation: Organisation,
     user_permission_group: UserPermissionGroup,
@@ -1509,7 +1505,9 @@ def test_remove_user_as_group_admin_forbidden(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_list_user_groups_as_group_admin(organisation, api_client) -> None:  # type: ignore[no-untyped-def]
+def test_list_user_groups__group_admin__returns_only_admin_groups(  # type: ignore[no-untyped-def]
+    organisation, api_client
+) -> None:
     # Given
     user1 = FFAdminUser.objects.create(email="user1@example.com")
     user2 = FFAdminUser.objects.create(email="user2@example.com")
@@ -1550,7 +1548,9 @@ def test_list_user_groups_as_group_admin(organisation, api_client) -> None:  # t
     assert response_json["results"][0]["id"] == user_permission_group_1.id
 
 
-def test_list_my_groups(organisation, api_client) -> None:  # type: ignore[no-untyped-def]
+def test_list_my_groups__user_in_one_group__returns_only_own_groups(  # type: ignore[no-untyped-def]
+    organisation, api_client
+) -> None:
     # Given
     user1 = FFAdminUser.objects.create(email="user1@example.com")
     user2 = FFAdminUser.objects.create(email="user2@example.com")
@@ -1593,7 +1593,7 @@ def test_list_my_groups(organisation, api_client) -> None:  # type: ignore[no-un
     }
 
 
-def test_payment_failed_chargebee_webhook(
+def test_chargebee_webhook__payment_failed_dunning__sets_dunning_status(
     staff_client: FFAdminUser, subscription: Subscription
 ) -> None:
     # Given
@@ -1628,7 +1628,7 @@ def test_payment_failed_chargebee_webhook(
     assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_DUNNING
 
 
-def test_payment_failed_chargebee_webhook_when_not_dunning(
+def test_chargebee_webhook__payment_failed_not_dunning__keeps_active_status(
     staff_client: FFAdminUser, subscription: Subscription
 ) -> None:
     # Given
@@ -1665,7 +1665,7 @@ def test_payment_failed_chargebee_webhook_when_not_dunning(
     assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_ACTIVE
 
 
-def test_when_subscription_is_cancelled_then_remove_all_but_the_first_user(
+def test_chargebee_webhook__cancelled_subscription__removes_extra_users(
     staff_client: APIClient,
     subscription: Subscription,
     organisation: Organisation,
@@ -1708,7 +1708,7 @@ def test_when_subscription_is_cancelled_then_remove_all_but_the_first_user(
     assert organisation.num_seats == 1
 
 
-def test_payment_failed_chargebee_webhook_no_subscription_id(
+def test_chargebee_webhook__payment_failed_no_subscription_id__keeps_active_status(
     staff_client: FFAdminUser, subscription: Subscription
 ) -> None:
     # Given
@@ -1742,7 +1742,7 @@ def test_payment_failed_chargebee_webhook_no_subscription_id(
     assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_ACTIVE
 
 
-def test_cache_rebuild_event_chargebee_webhook(
+def test_chargebee_webhook__addon_deleted_event__triggers_cache_rebuild(
     staff_client: FFAdminUser,
     mocker: MockerFixture,
 ) -> None:
@@ -1783,7 +1783,7 @@ def test_cache_rebuild_event_chargebee_webhook(
     task.delay.assert_called_once_with()
 
 
-def test_payment_succeeded_chargebee_webhook(
+def test_chargebee_webhook__payment_succeeded__sets_active_status(
     staff_client: FFAdminUser, subscription: Subscription
 ) -> None:
     # Given
@@ -1817,7 +1817,7 @@ def test_payment_succeeded_chargebee_webhook(
     assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_ACTIVE
 
 
-def test_payment_succeeded_chargebee_webhook_no_subscription_id(
+def test_chargebee_webhook__payment_succeeded_no_subscription_id__keeps_dunning_status(
     staff_client: FFAdminUser, subscription: Subscription
 ) -> None:
     # Given
@@ -1849,7 +1849,7 @@ def test_payment_succeeded_chargebee_webhook_no_subscription_id(
     assert subscription.billing_status == SUBSCRIPTION_BILLING_STATUS_DUNNING
 
 
-def test_list_organisations_shows_dunning(
+def test_list_organisations__dunning_subscription__shows_dunning_status(
     staff_client: FFAdminUser, subscription: Subscription
 ) -> None:
     # Given
@@ -1868,7 +1868,7 @@ def test_list_organisations_shows_dunning(
     assert _subscription["billing_status"] == SUBSCRIPTION_BILLING_STATUS_DUNNING
 
 
-def test_list_group_summaries(
+def test_list_group_summaries__groups_exist__returns_summaries(
     organisation: Organisation, staff_client: APIClient
 ) -> None:
     # Given
@@ -1901,7 +1901,7 @@ def test_list_group_summaries(
     }
 
 
-def test_user_from_another_organisation_cannot_list_group_summaries(
+def test_list_group_summaries__user_from_other_org__returns_403(
     organisation: Organisation, api_client: APIClient
 ) -> None:
     # Given
@@ -1923,7 +1923,7 @@ def test_user_from_another_organisation_cannot_list_group_summaries(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_defaults_to_empty_api_notifications_when_no_subscription_information_cache(
+def test_get_api_usage_notifications__no_subscription_cache__returns_empty(
     staff_client: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -1953,7 +1953,7 @@ def test_defaults_to_empty_api_notifications_when_no_subscription_information_ca
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_retrieves_api_usage_notifications(
+def test_get_api_usage_notifications__with_cache__returns_highest_notification(
     staff_client: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -2004,7 +2004,7 @@ def test_retrieves_api_usage_notifications(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_doesnt_retrieve_stale_api_usage_notifications(
+def test_get_api_usage_notifications__stale_notification__returns_empty(
     staff_client: APIClient,
     organisation: Organisation,
 ) -> None:
@@ -2040,7 +2040,7 @@ def test_doesnt_retrieve_stale_api_usage_notifications(
     assert len(response.data["results"]) == 0
 
 
-def test_non_organisation_user_cannot_remove_user_from_organisation(
+def test_remove_user__non_organisation_member__returns_403(
     staff_user: FFAdminUser, organisation: Organisation, api_client: APIClient
 ) -> None:
     # Given
@@ -2064,7 +2064,7 @@ def test_non_organisation_user_cannot_remove_user_from_organisation(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_non_admin_user_cannot_remove_user_from_organisation(
+def test_remove_user__non_admin_user__returns_403(
     staff_user: FFAdminUser,
     organisation: Organisation,
     staff_client: APIClient,
@@ -2086,7 +2086,7 @@ def test_non_admin_user_cannot_remove_user_from_organisation(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_validation_error_if_non_numeric_organisation_id(
+def test_remove_user__non_numeric_organisation_id__returns_400(
     staff_client: APIClient,
 ) -> None:
     # Given
@@ -2103,7 +2103,7 @@ def test_validation_error_if_non_numeric_organisation_id(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_organisation_user_can_get_their_detailed_permissions(
+def test_get_detailed_permissions__own_user__returns_permissions(
     staff_client: APIClient,
     with_organisation_permissions: WithOrganisationPermissionsCallable,
     organisation: Organisation,
@@ -2133,7 +2133,7 @@ def test_organisation_user_can_get_their_detailed_permissions(
     ]
 
 
-def test_organisation_user_can_not_get_detailed_permissions_of_other_user(
+def test_get_detailed_permissions__other_user_non_admin__returns_403(
     staff_client: APIClient,
     with_organisation_permissions: WithOrganisationPermissionsCallable,
     organisation: Organisation,
@@ -2153,7 +2153,7 @@ def test_organisation_user_can_not_get_detailed_permissions_of_other_user(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_organisation_admin_can_get_detailed_permissions_of_other_user(
+def test_get_detailed_permissions__other_user_as_admin__returns_permissions(
     admin_client: APIClient,
     with_organisation_permissions: WithOrganisationPermissionsCallable,
     organisation: Organisation,

@@ -1,7 +1,10 @@
 import logging
+import secrets
+import string
 import typing
 import uuid
 
+from common.core.utils import is_enterprise, is_saas
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -104,6 +107,13 @@ class UserManager(BaseUserManager):  # type: ignore[type-arg]
     def get_by_natural_key(self, email):  # type: ignore[no-untyped-def]
         # Used to allow case insensitive login
         return self.get(email__iexact=email)
+
+    def make_random_password(
+        self,
+        length: int = 10,
+        allowed_chars: str = string.ascii_letters + string.digits,
+    ) -> str:
+        return "".join(secrets.choice(allowed_chars) for _ in range(length))
 
 
 class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-missing,misc]
@@ -228,7 +238,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     def join_organisation_from_invite(self, invite: "AbstractBaseInviteModel"):  # type: ignore[no-untyped-def]
         organisation = invite.organisation
 
-        if settings.ENABLE_CHARGEBEE and organisation.over_plan_seats_limit(
+        # We purposefully allow self-hosted open source users to have unlimited users,
+        # but any paid or SaaS subscriptions must respect the seats limit.
+        # Ref: https://github.com/Flagsmith/flagsmith-private/issues/105
+        if (is_saas() or is_enterprise()) and organisation.over_plan_seats_limit(
             additional_seats=1
         ):
             if organisation.is_auto_seat_upgrade_available():

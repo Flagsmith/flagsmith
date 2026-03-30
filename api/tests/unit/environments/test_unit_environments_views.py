@@ -24,7 +24,12 @@ from environments.models import Environment, EnvironmentAPIKey, Webhook
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
-from metadata.models import Metadata, MetadataModelField
+from metadata.models import (
+    Metadata,
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
 from organisations.models import Organisation
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
@@ -33,7 +38,7 @@ from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
 
 
-def test_retrieve_environment(
+def test_retrieve_environment__default_state__returns_all_fields(
     admin_client_new: APIClient, environment: Environment
 ) -> None:
     # Given
@@ -75,7 +80,7 @@ def test_retrieve_environment(
     )
 
 
-def test_get_by_uuid_returns_environment(
+def test_get_by_uuid__user_has_view_permission__returns_environment(
     staff_client: APIClient,
     environment: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -96,7 +101,7 @@ def test_get_by_uuid_returns_environment(
     assert response.json()["uuid"] == str(environment.uuid)
 
 
-def test_get_by_uuid_returns_403_for_user_without_permission(
+def test_get_by_uuid__user_without_permission__returns_403(
     staff_client: APIClient, environment: Environment
 ) -> None:
     # Given
@@ -112,7 +117,7 @@ def test_get_by_uuid_returns_403_for_user_without_permission(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_user_with_view_environment_permission_can_retrieve_environment(
+def test_retrieve_environment__user_with_view_permission__returns_200(
     staff_client: APIClient,
     environment: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -129,7 +134,7 @@ def test_user_with_view_environment_permission_can_retrieve_environment(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_can_clone_environment_with_create_environment_permission(
+def test_clone_environment__user_with_create_permission__returns_200(
     staff_client: APIClient,
     environment: Environment,
     user_project_permission: UserProjectPermission,
@@ -148,7 +153,7 @@ def test_can_clone_environment_with_create_environment_permission(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_should_return_identities_for_an_environment(
+def test_list_identities__multiple_identities_exist__returns_all_identities(
     admin_client_new: APIClient,
     environment: Environment,
     identity: Identity,
@@ -169,7 +174,7 @@ def test_should_return_identities_for_an_environment(
     assert response.data["results"][1]["identifier"] == identifier_two
 
 
-def test_audit_log_entry_created_when_new_environment_created(
+def test_create_environment__valid_data__creates_audit_log_entry(
     project: Project,
     admin_client_new: APIClient,
 ) -> None:
@@ -200,7 +205,7 @@ def test_audit_log_entry_created_when_new_environment_created(
         (lazy_fixture("admin_client_original"), None, lazy_fixture("admin_user")),
     ],
 )
-def test_audit_log_created_when_feature_state_updated(
+def test_update_feature_state__valid_data__creates_audit_log_entry(
     feature: Feature,
     environment: Environment,
     client: APIClient,
@@ -229,7 +234,7 @@ def test_audit_log_created_when_feature_state_updated(
     assert AuditLog.objects.first().master_api_key == master_api_key
 
 
-def test_delete_trait_keys_deletes_trait_for_all_users_in_that_environment(
+def test_delete_traits__trait_exists_in_multiple_environments__deletes_only_in_target_environment(
     environment: Environment,
     identity: Identity,
     admin_client_new: APIClient,
@@ -273,7 +278,7 @@ def test_delete_trait_keys_deletes_trait_for_all_users_in_that_environment(
     assert Trait.objects.filter(identity=identity2, trait_key=trait_key).exists()
 
 
-def test_environment_user_can_get_their_permissions(
+def test_my_permissions__user_with_view_permission__returns_permissions(
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     environment: Environment,
@@ -293,7 +298,7 @@ def test_environment_user_can_get_their_permissions(
     assert "VIEW_ENVIRONMENT" in response.json()["permissions"]
 
 
-def test_environment_user_can_get_their_detailed_permissions(
+def test_user_detailed_permissions__own_user__returns_detailed_permissions(
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     environment: Environment,
@@ -323,7 +328,7 @@ def test_environment_user_can_get_their_detailed_permissions(
     ]
 
 
-def test_environment_user_can_not_get_detailed_permissions_of_other_user(
+def test_user_detailed_permissions__other_user_as_non_admin__returns_403(
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     environment: Environment,
@@ -343,7 +348,7 @@ def test_environment_user_can_not_get_detailed_permissions_of_other_user(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_environment_admin_can_get_detailed_permissions_of_other_user(
+def test_user_detailed_permissions__other_user_as_admin__returns_permissions(
     admin_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     environment: Environment,
@@ -374,7 +379,7 @@ def test_environment_admin_can_get_detailed_permissions_of_other_user(
     ]
 
 
-def test_can_create_webhook_for_an_environment(
+def test_create_webhook__valid_data__returns_201(
     environment: Environment,
     admin_client_new: APIClient,
 ) -> None:
@@ -394,7 +399,7 @@ def test_can_create_webhook_for_an_environment(
     assert Webhook.objects.filter(environment=environment, **data).exists()
 
 
-def test_can_update_webhook_for_an_environment(
+def test_update_webhook__valid_data__returns_200(
     environment: Environment,
     admin_client_new: APIClient,
 ) -> None:
@@ -418,7 +423,7 @@ def test_can_update_webhook_for_an_environment(
     assert webhook.url == data["url"] and not webhook.enabled
 
 
-def test_can_update_webhook_secret(
+def test_update_webhook__patch_secret__updates_secret(
     environment: Environment,
     admin_client_new: APIClient,
 ) -> None:
@@ -442,7 +447,7 @@ def test_can_update_webhook_secret(
     assert webhook.secret == data["secret"]
 
 
-def test_can_delete_webhook_for_an_environment(
+def test_delete_webhook__existing_webhook__returns_204(
     environment: Environment,
     admin_client_new: APIClient,
 ) -> None:
@@ -462,7 +467,7 @@ def test_can_delete_webhook_for_an_environment(
     assert not Webhook.objects.filter(id=webhook.id).exists()
 
 
-def test_can_list_webhooks_for_an_environment(
+def test_list_webhooks__webhook_exists__returns_webhook(
     environment: Environment,
     admin_client_new: APIClient,
 ) -> None:
@@ -482,7 +487,7 @@ def test_can_list_webhooks_for_an_environment(
     assert response.json()[0]["id"] == webhook.id
 
 
-def test_cannot_delete_webhooks_for_environment_user_does_not_belong_to(
+def test_delete_webhook__different_environment__returns_404(
     environment: Environment,
     admin_client_new: APIClient,
 ) -> None:
@@ -509,7 +514,7 @@ def test_cannot_delete_webhooks_for_environment_user_does_not_belong_to(
     assert Webhook.objects.filter(id=webhook.id).exists()
 
 
-def test_list_api_keys(
+def test_list_api_keys__multiple_keys_exist__returns_all_keys(
     environment: Environment,
     admin_client_new: APIClient,
 ) -> None:
@@ -537,7 +542,7 @@ def test_list_api_keys(
     }
 
 
-def test_create_api_key(
+def test_create_api_key__valid_data__returns_201_with_generated_key(
     admin_client_new: APIClient,
     environment: Environment,
 ) -> None:
@@ -559,7 +564,7 @@ def test_create_api_key(
     assert response.data["active"] is True
 
 
-def test_update_api_key(
+def test_update_api_key__patch_name_and_active__updates_fields_but_not_key(
     environment: Environment,
     admin_client_new: APIClient,
 ) -> None:
@@ -587,7 +592,7 @@ def test_update_api_key(
     assert api_key.key != new_key
 
 
-def test_delete_api_key(
+def test_delete_api_key__existing_key__deletes_key(
     environment: Environment,
     admin_client_new: APIClient,
 ) -> None:
@@ -613,7 +618,7 @@ def test_delete_api_key(
         (lazy_fixture("admin_client_original"), False),
     ],
 )
-def test_should_create_environments(  # type: ignore[no-untyped-def]
+def test_create_environment__valid_data__returns_201_with_defaults(  # type: ignore[no-untyped-def]
     project, client, admin_user, is_admin_master_api_key_client
 ) -> None:
     # Given
@@ -642,7 +647,7 @@ def test_should_create_environments(  # type: ignore[no-untyped-def]
         ).exists()
 
 
-def test_environment_matches_existing_environment_name(
+def test_create_environment__duplicate_name__returns_400(
     project: Project,
     admin_client: APIClient,
 ) -> None:
@@ -669,7 +674,7 @@ def test_environment_matches_existing_environment_name(
     }
 
 
-def test_create_environment_without_required_metadata_returns_400(  # type: ignore[no-untyped-def]
+def test_create_environment__missing_required_metadata__returns_400(  # type: ignore[no-untyped-def]
     project,
     admin_client_new,
     required_a_environment_metadata_field,
@@ -696,7 +701,7 @@ def test_create_environment_without_required_metadata_returns_400(  # type: igno
     settings.IS_RBAC_INSTALLED is True,
     reason="Skip this test if RBAC is installed",
 )
-def test_view_environment_with_staff__query_count_is_expected_without_rbac(
+def test_list_environments__staff_without_rbac__query_count_is_expected(
     staff_client: APIClient,
     environment: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -707,6 +712,8 @@ def test_view_environment_with_staff__query_count_is_expected_without_rbac(
     required_a_environment_metadata_field: MetadataModelField,
     environment_content_type: ContentType,
 ) -> None:
+    # Given / When
+    # Then
     _assert_view_environment_with_staff__query_count(
         staff_client,
         environment,
@@ -725,7 +732,7 @@ def test_view_environment_with_staff__query_count_is_expected_without_rbac(
     settings.IS_RBAC_INSTALLED is False,
     reason="Skip this test if RBAC is not installed",
 )
-def test_view_environment_with_staff__query_count_is_expected_with_rbac(
+def test_list_environments__staff_with_rbac__query_count_is_expected(
     staff_client: APIClient,
     environment: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -736,6 +743,8 @@ def test_view_environment_with_staff__query_count_is_expected_with_rbac(
     required_a_environment_metadata_field: MetadataModelField,
     environment_content_type: ContentType,
 ) -> None:  # pragma: no cover
+    # Given / When
+    # Then
     _assert_view_environment_with_staff__query_count(
         staff_client,
         environment,
@@ -798,7 +807,7 @@ def _assert_view_environment_with_staff__query_count(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_view_environment_with_admin__query_count_is_expected(
+def test_list_environments__admin_user__query_count_is_expected(
     admin_client_new: APIClient,
     environment: Environment,
     project: Project,
@@ -837,7 +846,7 @@ def test_view_environment_with_admin__query_count_is_expected(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_create_environment_with_required_metadata_returns_201(  # type: ignore[no-untyped-def]
+def test_create_environment__with_required_metadata__returns_201(  # type: ignore[no-untyped-def]
     project,
     admin_client_new,
     required_a_environment_metadata_field,
@@ -873,7 +882,7 @@ def test_create_environment_with_required_metadata_returns_201(  # type: ignore[
     assert response.json()["metadata"][0]["field_value"] == str(field_value)
 
 
-def test_update_environment_metadata(  # type: ignore[no-untyped-def]
+def test_update_environment__modify_metadata__updates_and_removes_metadata(  # type: ignore[no-untyped-def]
     project,
     admin_client_new,
     environment,
@@ -914,7 +923,7 @@ def test_update_environment_metadata(  # type: ignore[no-untyped-def]
     ]
 
 
-def test_create_multiple_environments_with_metadata_keeps_metadata_isolated(
+def test_create_environment__duplicate_metadata_id_from_other_environment__keeps_metadata_isolated(
     project: Project,
     admin_client_new: APIClient,
     optional_b_environment_metadata_field: MetadataModelField,
@@ -1008,7 +1017,7 @@ def test_create_multiple_environments_with_metadata_keeps_metadata_isolated(
     assert second_environment_metadata_after[0]["id"] != first_metadata_id
 
 
-def test_audit_log_entry_created_when_environment_updated(
+def test_update_environment__valid_data__creates_audit_log_and_updates_fields(
     environment: Environment, project: Project, admin_client_new: APIClient
 ) -> None:
     # Given
@@ -1059,7 +1068,7 @@ def test_audit_log_entry_created_when_environment_updated(
     )
 
 
-def test_environment_update_cannot_change_is_creating(
+def test_update_environment__is_creating_in_payload__does_not_change_is_creating(
     environment: Environment, project: Project, admin_client_new: APIClient
 ) -> None:
     # Given
@@ -1083,7 +1092,39 @@ def test_environment_update_cannot_change_is_creating(
     assert response.json()["is_creating"] is False
 
 
-def test_get_document(
+def test_update_environment__different_project_in_payload__does_not_change_project(
+    environment: Environment,
+    project: Project,
+    organisation: Organisation,
+    admin_client_new: APIClient,
+) -> None:
+    # Given - an environment in the original project
+    original_project = project
+    url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
+
+    # and a different project
+    other_project = Project.objects.create(
+        name="Other Project", organisation=organisation
+    )
+
+    data = {
+        "project": other_project.id,
+        "name": environment.name,
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then - the project should NOT change
+    assert response.status_code == status.HTTP_200_OK
+    environment.refresh_from_db()
+    assert environment.project_id == original_project.id
+    assert response.json()["project"] == original_project.id
+
+
+def test_get_document__user_with_view_permission__returns_document(
     environment: Environment,
     project: Project,
     staff_client: APIClient,
@@ -1115,7 +1156,7 @@ def test_get_document(
     assert response.json()
 
 
-def test_cannot_get_environment_document_without_permission(
+def test_get_document__user_without_permission__returns_403(
     staff_client: APIClient, environment: Environment
 ) -> None:
     # Given
@@ -1130,7 +1171,7 @@ def test_cannot_get_environment_document_without_permission(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(
+def test_get_trait_keys__duplicate_keys_across_identities__returns_distinct_keys(
     identity: Identity,
     admin_client_new: APIClient,
     trait: Trait,
@@ -1171,7 +1212,7 @@ def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(
     assert len(res.json().get("keys")) == 2
 
 
-def test_user_with_view_environment_can_get_trait_keys(
+def test_get_trait_keys__user_with_view_permission__returns_200(
     identity: Identity,
     staff_client: APIClient,
     trait: Trait,
@@ -1192,7 +1233,7 @@ def test_user_with_view_environment_can_get_trait_keys(
     assert res.status_code == status.HTTP_200_OK
 
 
-def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
+def test_delete_traits__multiple_trait_keys__deletes_only_matching_key(
     identity: Identity,
     admin_client_new: APIClient,
     trait: Trait,
@@ -1224,7 +1265,7 @@ def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
     assert Trait.objects.filter(identity=identity, trait_key=trait_to_persist).exists()
 
 
-def test_user_can_list_environment_permission(
+def test_list_environment_permissions__admin_user__returns_all_permissions(
     admin_client_new: APIClient, environment: Environment
 ) -> None:
     # Given
@@ -1245,7 +1286,7 @@ def test_user_can_list_environment_permission(
     assert set(returned_supported_permissions) == set(TAG_SUPPORTED_PERMISSIONS)
 
 
-def test_environment_my_permissions_reruns_400_for_master_api_key(
+def test_my_permissions__master_api_key__returns_400(
     admin_master_api_key_client: APIClient, environment: Environment
 ) -> None:
     # Given
@@ -1264,7 +1305,7 @@ def test_environment_my_permissions_reruns_400_for_master_api_key(
     )
 
 
-def test_partial_environment_update(
+def test_update_environment__patch_name__returns_200(
     admin_client: APIClient, environment: "Environment"
 ) -> None:
     # Given
@@ -1280,7 +1321,7 @@ def test_partial_environment_update(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_cannot_enable_v2_versioning_for_environment_already_enabled(
+def test_enable_v2_versioning__already_enabled__returns_400(
     environment_v2_versioning: Environment,
     admin_client_new: APIClient,
     mocker: MockerFixture,
@@ -1303,7 +1344,7 @@ def test_cannot_enable_v2_versioning_for_environment_already_enabled(
     mock_enable_v2_versioning.delay.assert_not_called()
 
 
-def test_total_segment_overrides_correctly_ignores_old_versions(
+def test_retrieve_environment__v2_versioning_with_old_versions__returns_correct_segment_override_count(
     feature: Feature,
     segment_featurestate: FeatureState,
     environment_v2_versioning: Environment,
@@ -1325,3 +1366,32 @@ def test_total_segment_overrides_correctly_ignores_old_versions(
 
     # Then
     assert response.json()["total_segment_overrides"] == 1
+
+
+def test_create_environment__required_metadata_on_other_project__returns_201(
+    admin_client: APIClient,
+    project: Project,
+    project_b: Project,
+    organisation: Organisation,
+    a_metadata_field: MetadataField,
+    environment_content_type: ContentType,
+    project_content_type: ContentType,
+) -> None:
+    # Given
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=environment_content_type,
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type,
+        object_id=project_b.id,
+        model_field=model_field,
+    )
+    url = reverse("api-v1:environments:environment-list")
+    data = {"name": "New env", "project": project.id}
+
+    # When
+    response = admin_client.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED

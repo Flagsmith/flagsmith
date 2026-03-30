@@ -31,7 +31,7 @@ def mock_local_file_handler_class(  # type: ignore[no-untyped-def]
     )
 
 
-def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_disabled(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_get_client__offline_mode_disabled__initialises_with_server_key(  # type: ignore[no-untyped-def]
     settings: SettingsWrapper,
     mocker: MockerFixture,
     mock_local_file_handler,
@@ -64,7 +64,7 @@ def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_di
     mock_local_file_handler_class.assert_called_once_with(ENVIRONMENT_JSON_PATH)
 
 
-def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_enabled(  # type: ignore[no-untyped-def]
+def test_get_client__offline_mode_enabled__initialises_with_offline_handler(  # type: ignore[no-untyped-def]
     settings: SettingsWrapper,
     mocker: MockerFixture,
     mock_local_file_handler,
@@ -90,13 +90,13 @@ def test_get_client_initialises_flagsmith_with_correct_arguments_offline_mode_en
     mock_local_file_handler_class.assert_called_once_with(ENVIRONMENT_JSON_PATH)
 
 
-def test_get_client_raises_value_error_if_missing_args(  # type: ignore[no-untyped-def]
+def test_get_client__missing_server_key__raises_error(  # type: ignore[no-untyped-def]
     settings: SettingsWrapper, mock_local_file_handler_class
 ):
     # Given
     settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = False
     assert settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY is None
 
-    # When
+    # When / Then
     with pytest.raises(FlagsmithIntegrationError):
         get_client()

@@ -31,7 +31,7 @@ def ld_client_mock(
     for method_name, response_data_path in {
         "get_project": "client_responses/get_project.json",
         "get_environments": "client_responses/get_environments.json",
-        "get_flags": "client_responses/get_flags.json",
+        "get_flags_by_envs": "client_responses/get_flags.json",
         "get_segments": "client_responses/get_segments.json",
     }.items():
         getattr(ld_client_mock, method_name).return_value = json.loads(

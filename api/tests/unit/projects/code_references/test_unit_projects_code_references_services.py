@@ -11,10 +11,10 @@ from projects.code_references.types import VCSProvider
         "https://github.com/Flagsmith/flagsmith/",  # with trailing slash
     ],
 )
-def test_get_permalink_generates_valid_public_github_url(
+def test_get_permalink__public_github_repository__returns_valid_url(
     repository_url: str,
 ) -> None:
-    # When
+    # Given / When
     result = _get_permalink(
         provider=VCSProvider.GITHUB,
         repository_url=repository_url,
@@ -36,10 +36,10 @@ def test_get_permalink_generates_valid_public_github_url(
         "https://github.flagsmith.com/flagsmith/backend/",  # with trailing slash
     ],
 )
-def test_get_permalink_generates_valid_private_github_url(
+def test_get_permalink__private_github_repository__returns_valid_url(
     repository_url: str,
 ) -> None:
-    # When
+    # Given / When
     result = _get_permalink(
         provider=VCSProvider.GITHUB,
         repository_url=repository_url,

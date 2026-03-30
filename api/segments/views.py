@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from common.projects.permissions import VIEW_PROJECT
 from django.utils.decorators import method_decorator
@@ -21,6 +21,7 @@ from features.serializers import (
     SegmentAssociatedFeatureStateSerializer,
 )
 from features.versioning.models import EnvironmentFeatureVersion
+from projects.models import Project
 
 from .models import Segment
 from .permissions import SegmentPermissions
@@ -31,27 +32,76 @@ from .serializers import (
 )
 from .services import delete_segment
 
+if TYPE_CHECKING:
+    from users.models import FFAdminUser
+
 logger = logging.getLogger()
 
 
 @method_decorator(
     name="list",
-    decorator=extend_schema(parameters=[SegmentListQuerySerializer]),
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[SegmentListQuerySerializer],
+        extensions={
+            "x-gram": {
+                "name": "list_project_segments",
+                "description": "Retrieves all user segments defined for audience targeting within the project.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "create_project_segment",
+                "description": "Creates a new user segment for audience targeting within the project.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="retrieve",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "get_project_segment",
+                "description": "Retrieves detailed information about a specific user segment.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "update_project_segment",
+                "description": "Updates an existing user segment's properties and rules.",
+            },
+        },
+    ),
 )
 class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = SegmentSerializer
     permission_classes = [SegmentPermissions]
     pagination_class = CustomPagination
 
+    def get_project(self) -> Project:
+        user: "FFAdminUser" = self.request.user  # type: ignore[assignment]
+        projects = user.get_permitted_projects(permission_key=VIEW_PROJECT)
+        return get_object_or_404(projects, pk=self.kwargs["project_pk"])
+
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Segment.objects.none()
 
-        permitted_projects = self.request.user.get_permitted_projects(  # type: ignore[union-attr]
-            permission_key=VIEW_PROJECT
-        )
-        project = get_object_or_404(permitted_projects, pk=self.kwargs["project_pk"])
-
+        project = self.get_project()
         queryset = Segment.live_objects.filter(project=project, is_system_segment=False)
 
         if self.action == "list":

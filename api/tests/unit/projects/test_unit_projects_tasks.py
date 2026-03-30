@@ -47,7 +47,7 @@ def project_v2_migration_in_progress(
         ),
     ),
 )
-def test_migrate_project_environments_to_v2__calls_expected(  # type: ignore[no-untyped-def]
+def test_migrate_project_environments_to_v2__migration_result__updates_status(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
     project_v2_migration_in_progress: Project,
     migrate_environments_to_v2_return_value: EdgeV2MigrationResult | None,
@@ -75,7 +75,7 @@ def test_migrate_project_environments_to_v2__calls_expected(  # type: ignore[no-
     assert project_v2_migration_in_progress.edge_v2_migration_status == expected_status
 
 
-def test_migrate_project_environments_to_v2__expected_status_on_error(  # type: ignore[no-untyped-def]
+def test_migrate_project_environments_to_v2__error_raised__keeps_in_progress_status(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
     project_v2_migration_in_progress: Project,
 ):
@@ -135,7 +135,7 @@ def test_migrate_project_environments_to_v2__project_capacity_budget_none__call_
     )
 
 
-def test_handle_cascade_delete(
+def test_handle_cascade_delete__project_with_related_objects__deletes_all(
     project: Project,
     environment: Environment,
     feature: Feature,

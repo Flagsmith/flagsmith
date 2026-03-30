@@ -7,6 +7,7 @@ import { AsyncStorage } from 'polyfill-react-native'
 import ProjectNavbar from './navbars/ProjectNavbar'
 import OrganisationNavbar from './navbars/OrganisationNavbar'
 import TopNavbar from './navbars/TopNavbar'
+import { appLevelPaths } from './constants'
 
 type NavType = {
   environmentId: string | undefined
@@ -25,7 +26,7 @@ const Nav: FC<NavType> = ({
   const [lastEnvironmentId, setLastEnvironmentId] = useState()
   const [lastProjectId, setLastProjectId] = useState()
 
-  const isOrganisationSelect = document.location.pathname === '/organisations'
+  const isAppLevelPage = appLevelPaths.includes(document.location.pathname)
   const history = useHistory()
   const location = useLocation()
   const pathname = location.pathname
@@ -46,7 +47,6 @@ const Nav: FC<NavType> = ({
   }, [history])
 
   const isCreateEnvironment = environmentId === 'create'
-  const isCreateOrganisation = document.location.pathname === '/create'
   const isHomepage =
     pathname === '/' ||
     pathname === '/login' ||
@@ -54,9 +54,16 @@ const Nav: FC<NavType> = ({
     pathname === '/github-setup' ||
     pathname.includes('/invite')
 
+  // Check if we're on a persona view page where nav should be hidden
+  const isPersonaViewPage =
+    pathname.includes('/release-manager') ||
+    pathname.includes('/executive-view') ||
+    pathname.includes('/dev-view') ||
+    /\/project\/\d+\/flag\/\d+\/environments/.test(pathname)
+
   const showNav =
-    !isOrganisationSelect &&
-    !isCreateOrganisation &&
+    !isAppLevelPage &&
+    !isPersonaViewPage &&
     !!AccountStore.getOrganisation()?.id
 
   return (

@@ -347,7 +347,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   useEffect(() => {
     setTimeout(() => {
-      document.getElementById('segmentID')?.focus()
+      if (!E2E) {
+        document.getElementById('segmentID')?.focus()
+      }
     }, 500)
   }, [])
   useEffect(() => {
@@ -466,7 +468,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           <AddMetadataToEntity
             organisationId={AccountStore.getOrganisation().id}
             projectId={projectId}
-            entityId={`${segment.id}` || ''}
+            entityId={segment.id}
             entityContentType={segmentContentType?.id}
             entity={segmentContentType?.model}
             onChange={(m) => {
@@ -491,7 +493,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           segmentId={`${segment.id}`}
         />
       )}
-      {isEdit && !condensed ? (
+      {isEdit && !condensed && (
         <Tabs
           value={tab}
           theme='pill'
@@ -574,7 +576,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </TabItem>
           )}
         </Tabs>
-      ) : metadataEnable && segmentContentType?.id ? (
+      )}
+      {!(isEdit && !condensed) && metadataEnable && segmentContentType?.id && (
         <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
           <TabItem
             tabLabelString='Basic configuration'
@@ -616,32 +619,34 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>
         </Tabs>
-      ) : (
-        <div className={className || 'my-3 mx-4'}>
-          <CreateSegmentRulesTabForm
-            save={save}
-            condensed={condensed}
-            segmentsLimitAlert={segmentsLimitAlert}
-            name={name}
-            setName={setName}
-            setValueChanged={setValueChanged}
-            description={description}
-            setDescription={setDescription}
-            identity={identity}
-            readOnly={readOnly}
-            showDescriptions={showDescriptions}
-            setShowDescriptions={setShowDescriptions}
-            allWarnings={allWarnings}
-            rulesEl={rulesEl}
-            isEdit={isEdit}
-            segment={segment}
-            isSaving={isSaving}
-            isValid={isValid}
-            isLimitReached={isLimitReached}
-            onCancel={onCancel}
-          />
-        </div>
       )}
+      {!(isEdit && !condensed) &&
+        !(metadataEnable && segmentContentType?.id) && (
+          <div className={className || 'my-3 mx-4'}>
+            <CreateSegmentRulesTabForm
+              save={save}
+              condensed={condensed}
+              segmentsLimitAlert={segmentsLimitAlert}
+              name={name}
+              setName={setName}
+              setValueChanged={setValueChanged}
+              description={description}
+              setDescription={setDescription}
+              identity={identity}
+              readOnly={readOnly}
+              showDescriptions={showDescriptions}
+              setShowDescriptions={setShowDescriptions}
+              allWarnings={allWarnings}
+              rulesEl={rulesEl}
+              isEdit={isEdit}
+              segment={segment}
+              isSaving={isSaving}
+              isValid={isValid}
+              isLimitReached={isLimitReached}
+              onCancel={onCancel}
+            />
+          </div>
+        )}
     </>
   )
 }
@@ -670,7 +675,10 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
     { id: `${props.projectId}` },
     { skip: !props.projectId },
   )
-  const isLoading = projectLoading || segmentLoading
+  const { isLoading: contentTypesLoading } = useGetSupportedContentTypeQuery({
+    organisation_id: AccountStore.getOrganisation().id,
+  })
+  const isLoading = projectLoading || segmentLoading || contentTypesLoading
   const [page, setPage] = useState<PageType>({
     number: 1,
     pageType: undefined,

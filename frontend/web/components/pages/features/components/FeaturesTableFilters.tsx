@@ -40,11 +40,13 @@ type FeaturesTableFiltersProps = {
   orgId?: number
   onFilterChange: (updates: Partial<FilterState>) => void
   onClearFilters: () => void
-  viewMode: ViewMode
-  onViewModeChange: (value: ViewMode) => void
+  viewMode?: ViewMode
+  onViewModeChange?: (value: ViewMode) => void
+  excludeTag?: (tag: { type: string; is_permanent: boolean }) => boolean
 }
 
 export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
+  excludeTag,
   filters,
   hasFilters,
   isLoading,
@@ -122,6 +124,7 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
             onToggleArchived={handleToggleArchivedFilter}
             showArchived={showArchived}
             onChange={handleTagsChange}
+            excludeTag={excludeTag}
           />
           <TableValueFilter
             className='me-4'
@@ -142,13 +145,15 @@ export const FeaturesTableFilters: FC<FeaturesTableFiltersProps> = ({
             value={groupOwners}
             onChange={(group_owners) => onFilterChange({ group_owners })}
           />
-          <TableFilterOptions
-            title={'View'}
-            className='me-4'
-            value={viewMode}
-            onChange={(value) => onViewModeChange(value as ViewMode)}
-            options={VIEW_MODE_OPTIONS}
-          />
+          {viewMode && onViewModeChange && (
+            <TableFilterOptions
+              title={'View'}
+              className='me-4'
+              value={viewMode}
+              onChange={(value) => onViewModeChange(value as ViewMode)}
+              options={VIEW_MODE_OPTIONS}
+            />
+          )}
           <TableSortFilter
             isLoading={!!isLoading}
             value={sort}

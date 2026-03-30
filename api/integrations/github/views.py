@@ -3,6 +3,7 @@ import logging
 import re
 from functools import wraps
 from typing import Any, Callable
+from urllib.parse import urlparse
 
 import requests
 from django.conf import settings
@@ -13,13 +14,25 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from features.feature_external_resources.models import (
+    FeatureExternalResource,
+)
+from features.feature_external_resources.models import (
+    ResourceType as ExternalResourceType,
+)
+from features.models import Feature
 from integrations.github.client import (
     ResourceType,
     create_flagsmith_flag_label,
+    create_github_issue,
     delete_github_installation,
     fetch_github_repo_contributors,
     fetch_github_repositories,
     fetch_search_github_resource,
+)
+from integrations.github.constants import (
+    CLEANUP_ISSUE_BODY,
+    CLEANUP_ISSUE_TITLE,
 )
 from integrations.github.exceptions import DuplicateGitHubIntegration
 from integrations.github.github import (
@@ -30,6 +43,7 @@ from integrations.github.helpers import github_webhook_payload_is_valid
 from integrations.github.models import GithubConfiguration, GitHubRepository
 from integrations.github.permissions import HasPermissionToGithubConfiguration
 from integrations.github.serializers import (
+    CreateCleanupIssueSerializer,
     GithubConfigurationSerializer,
     GithubRepositorySerializer,
     IssueQueryParamsSerializer,
@@ -37,6 +51,7 @@ from integrations.github.serializers import (
     RepoQueryParamsSerializer,
 )
 from organisations.permissions.permissions import GithubIsAdminOrganisation
+from projects.code_references.services import get_code_references_for_feature_flag
 
 logger = logging.getLogger(__name__)
 
@@ -268,6 +283,107 @@ def fetch_repo_contributors(request, organisation_pk) -> Response:  # type: igno
         content_type="application/json",
         status=status.HTTP_200_OK,
     )
+
+
+def _get_github_api_url(repository_url: str) -> str:
+    """Derive the GitHub API base URL from a repository URL.
+
+    For github.com: https://api.github.com/
+    For enterprise: https://{host}/api/v3/
+    """
+    parsed = urlparse(repository_url)
+    if parsed.hostname == "github.com":
+        return "https://api.github.com/"
+    return f"{parsed.scheme}://{parsed.hostname}/api/v3/"
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
+@github_api_call_error_handler(error="Failed to create GitHub cleanup issue.")
+def create_cleanup_issue(request, organisation_pk: int) -> Response:  # type: ignore[no-untyped-def]
+    serializer = CreateCleanupIssueSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            {"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    github_pat: str = settings.FEATURE_LIFECYCLE_GITHUB_PAT
+    if not github_pat:
+        return Response(
+            data={"detail": "GitHub PAT is not configured."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    feature_id: int = serializer.validated_data["feature_id"]
+
+    # Validate the feature exists and belongs to this org.
+    try:
+        feature = Feature.objects.get(
+            id=feature_id,
+            project__organisation_id=organisation_pk,
+        )
+    except Feature.DoesNotExist:
+        return Response(
+            data={"detail": "Feature not found in this organisation."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # Get code references for the feature across all repositories.
+    summaries = [
+        summary
+        for summary in get_code_references_for_feature_flag(feature)
+        if summary.code_references
+    ]
+    if not summaries:
+        return Response(
+            data={"detail": "No code references found for this feature."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    issue_title = CLEANUP_ISSUE_TITLE % feature.name
+
+    for summary in summaries:
+        # Format code references as markdown list.
+        references_text = "\n".join(
+            f"- [`{ref.file_path}#L{ref.line_number}`]({ref.permalink})"
+            for ref in summary.code_references
+        )
+        issue_body = CLEANUP_ISSUE_BODY % (feature.name, references_text)
+
+        # Parse owner/name from repository_url.
+        url_parts = summary.repository_url.rstrip("/").split("/")
+        owner = url_parts[-2]
+        repo = url_parts[-1]
+
+        api_url = _get_github_api_url(summary.repository_url)
+        github_response = create_github_issue(
+            github_pat=github_pat,
+            api_url=api_url,
+            owner=owner,
+            repo=repo,
+            title=issue_title,
+            body=issue_body,
+        )
+
+        # Link the issue to the feature.
+        issue_url: str = github_response["html_url"]
+        metadata = json.dumps(
+            {
+                "title": github_response["title"],
+                "state": github_response["state"],
+            }
+        )
+        try:
+            FeatureExternalResource.objects.create(
+                url=issue_url,
+                type=ExternalResourceType.GITHUB_ISSUE,
+                feature=feature,
+                metadata=metadata,
+            )
+        except IntegrityError:
+            pass
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(["POST"])

@@ -26,16 +26,20 @@ def clear_lru_caches() -> None:
         ("", "unknown"),
     ],
 )
-def test_api_version_is_added_to_success_response_headers(
+def test_api_version_header__success_response__returns_expected_version(
     admin_client: APIClient,
     expected_version: str,
     fs: FakeFilesystem,
     url: str,
     version_file_contents: str,
 ) -> None:
+    # Given
     fs.create_file(".versions.json", contents=version_file_contents)
 
+    # When
     response = admin_client.get(url)
+
+    # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.headers["Flagsmith-Version"] == expected_version
 
@@ -48,14 +52,18 @@ def test_api_version_is_added_to_success_response_headers(
         ("", "unknown"),
     ],
 )
-def test_api_version_is_added_to_error_response_headers(
+def test_api_version_header__error_response__returns_expected_version(
     client: APIClient,
     expected_version: str,
     fs: FakeFilesystem,
     version_file_contents: str,
 ) -> None:
+    # Given
     fs.create_file(".versions.json", contents=version_file_contents)
 
+    # When
     response = client.get("/wat")
+
+    # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.headers["Flagsmith-Version"] == expected_version

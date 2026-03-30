@@ -1,43 +1,41 @@
-import React, { FC } from 'react'
+import React, { FC, useState } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
-import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
+import FeatureLimitAlert from 'components/modals/create-feature/components/FeatureLimitAlert'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 type FeaturesPageHeaderProps = {
-  totalFeatures: number
-  maxFeaturesAllowed: number | null
   onCreateFeature: () => void
   readOnly: boolean
   projectId: number
+  title?: string
 }
 
 export const FeaturesPageHeader: FC<FeaturesPageHeaderProps> = ({
-  maxFeaturesAllowed,
   onCreateFeature,
   projectId,
   readOnly,
-  totalFeatures,
+  title = 'Features',
 }) => {
-  const featureLimitAlert = Utils.calculateRemainingLimitsPercentage(
-    totalFeatures,
-    maxFeaturesAllowed,
-  )
-
-  const featureLimitWarningBanner = featureLimitAlert.percentage
-    ? Utils.displayLimitAlert('features', featureLimitAlert.percentage)
-    : null
+  const [featureLimitAlert, setFeatureLimitAlert] = useState({
+    limit: 0,
+    percentage: 0,
+  })
 
   return (
     <>
-      {featureLimitWarningBanner}
+      <FeatureLimitAlert
+        projectId={projectId}
+        onChange={setFeatureLimitAlert}
+      />
       <PageTitle
-        title={'Features'}
+        title={title}
         cta={
           <Permission
             level='project'
-            permission='CREATE_FEATURE'
+            permission={ProjectPermission.CREATE_FEATURE}
             id={projectId}
             showTooltip
             permissionName='Create Feature'

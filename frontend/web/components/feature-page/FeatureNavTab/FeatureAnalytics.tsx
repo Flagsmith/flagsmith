@@ -79,10 +79,10 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
         )}
         {!isLoading && data && !hasData && (
           <div
-            style={{ height: 400 }}
+            style={{ height: 200 }}
             className='text-center justify-content-center align-items-center text-muted mt-4 d-flex'
           >
-            No analytics data available for the selected environment
+            No analytics data available for the selected environments
             {environmentIds?.length > 1 ? 's' : ''}.
           </div>
         )}
@@ -106,7 +106,10 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
                   tick={{ fill: '#656D7B' }}
                   axisLine={{ stroke: '#656D7B' }}
                 />
-                <Tooltip cursor={{ fill: 'transparent' }} />
+                <Tooltip
+                  cursor={{ fill: 'transparent' }}
+                  labelStyle={{ color: '#1a1a1a' }}
+                />
                 {sortBy(environmentIds, (id) =>
                   environments?.results?.findIndex((env) => `${env.id}` === id),
                 ).map((id) => {

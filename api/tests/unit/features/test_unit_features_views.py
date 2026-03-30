@@ -16,6 +16,7 @@ from common.projects.permissions import (
     VIEW_PROJECT,
 )
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
@@ -44,12 +45,16 @@ from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
 from features import views
 from features.dataclasses import EnvironmentFeatureOverridesData
-from features.feature_types import MULTIVARIATE
+from features.feature_types import MULTIVARIATE, STANDARD
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.versioning.models import EnvironmentFeatureVersion
-from metadata.models import MetadataModelField
+from metadata.models import (
+    MetadataField,
+    MetadataModelField,
+    MetadataModelFieldRequirement,
+)
 from organisations.models import Organisation, OrganisationRole
 from permissions.models import PermissionModel
 from projects.code_references.models import FeatureFlagCodeReferencesScan
@@ -57,6 +62,7 @@ from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
 from tests.types import (
+    EnableFeaturesFixture,
     WithEnvironmentPermissionsCallable,
     WithProjectPermissionsCallable,
 )
@@ -72,15 +78,13 @@ from webhooks.webhooks import WebhookEventType
 if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.service_resource import Table
 
-# patch this function as it's triggering extra threads and causing errors
-mock.patch("features.signals.trigger_feature_state_change_webhooks").start()
 
 now = timezone.now()
 two_hours_ago = now - timedelta(hours=2)
 one_hour_ago = now - timedelta(hours=1)
 
 
-def test_project_owners_is_read_only_for_feature_create(
+def test_create_feature__with_owners_field__owners_is_read_only(
     project: Project,
     admin_client_original: APIClient,
     admin_user: FFAdminUser,
@@ -115,7 +119,7 @@ def test_project_owners_is_read_only_for_feature_create(
 
 
 @mock.patch("features.views.trigger_feature_state_change_webhooks")
-def test_feature_state_webhook_triggered_when_feature_deleted(
+def test_delete_feature__with_feature_states__triggers_webhooks(
     mocked_trigger_fs_change_webhook: mock.MagicMock,
     project: Project,
     feature: Feature,
@@ -135,7 +139,7 @@ def test_feature_state_webhook_triggered_when_feature_deleted(
     mocked_trigger_fs_change_webhook.assert_has_calls(mock_calls)
 
 
-def test_remove_owners_only_remove_specified_owners(
+def test_remove_owners__specified_owner__removes_only_specified(
     feature: Feature,
     project: Project,
     admin_client_new: APIClient,
@@ -155,6 +159,8 @@ def test_remove_owners_only_remove_specified_owners(
     json_response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     ).json()
+
+    # Then
     assert len(json_response["owners"]) == 1
     assert json_response["owners"][0] == {
         "id": user_3.id,
@@ -166,7 +172,7 @@ def test_remove_owners_only_remove_specified_owners(
     }
 
 
-def test_audit_log_created_when_feature_state_created_for_identity(
+def test_create_identity_feature_state__valid_data__creates_audit_log(
     feature: Feature,
     project: Project,
     identity: Identity,
@@ -201,7 +207,7 @@ def test_audit_log_created_when_feature_state_created_for_identity(
     assert audit_log.log == expected_log_message
 
 
-def test_audit_log_created_when_feature_state_updated_for_identity(
+def test_update_identity_feature_state__valid_data__creates_audit_log(
     feature: Feature,
     project: Project,
     environment: Environment,
@@ -242,7 +248,7 @@ def test_audit_log_created_when_feature_state_updated_for_identity(
     assert audit_log.log == expected_log_message
 
 
-def test_audit_log_created_when_feature_state_deleted_for_identity(
+def test_delete_identity_feature_state__existing_state__creates_audit_log(
     feature: Feature,
     project: Project,
     environment: Environment,
@@ -277,7 +283,7 @@ def test_audit_log_created_when_feature_state_deleted_for_identity(
     )
 
 
-def test_when_add_tags_from_different_project_on_feature_create_then_failed(
+def test_create_feature__tags_from_different_project__returns_400(
     project: Project,
     admin_client_new: APIClient,
     organisation: Organisation,
@@ -313,7 +319,7 @@ def test_when_add_tags_from_different_project_on_feature_create_then_failed(
     assert Feature.objects.filter(name=feature_name, project=project.id).count() == 0
 
 
-def test_when_add_tags_on_feature_update_then_success(
+def test_update_feature__with_tags__returns_200(
     project: Project,
     feature: Feature,
     tag_one: Tag,
@@ -349,7 +355,7 @@ def test_when_add_tags_on_feature_update_then_success(
     assert check_feature.tags.count() == 1
 
 
-def test_when_add_tags_from_different_project_on_feature_update_then_failed(
+def test_update_feature__tags_from_different_project__returns_400(
     feature: Feature,
     project: Project,
     admin_client_new: APIClient,
@@ -392,7 +398,7 @@ def test_when_add_tags_from_different_project_on_feature_update_then_failed(
     assert check_feature.tags.count() == 0
 
 
-def test_list_features_is_archived_filter(
+def test_list_features__is_archived_filter__returns_filtered_results(
     feature: Feature,
     project: Project,
     admin_client_new: APIClient,
@@ -421,7 +427,7 @@ def test_list_features_is_archived_filter(
     assert response.json()["results"][0]["id"] == feature.id
 
 
-def test_put_feature_does_not_update_feature_states(
+def test_update_feature__default_enabled_changed__does_not_update_feature_states(
     feature: Feature,
     project: Project,
     admin_client_new: APIClient,
@@ -450,7 +456,7 @@ def test_put_feature_does_not_update_feature_states(
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("features.views.get_multiple_event_list_for_feature")
-def test_get_project_features_influx_data(
+def test_get_influx_data__default_period__calls_with_one_day(
     mock_get_event_list: mock.MagicMock,
     feature: Feature,
     project: Project,
@@ -487,7 +493,7 @@ def test_get_project_features_influx_data(
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("features.views.get_multiple_event_list_for_feature")
-def test_get_project_features_influx_data_with_two_weeks_period(
+def test_get_influx_data__two_week_period__calls_with_fourteen_days(
     mock_get_event_list: mock.MagicMock,
     feature: Feature,
     project: Project,
@@ -523,7 +529,7 @@ def test_get_project_features_influx_data_with_two_weeks_period(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_project_features_influx_data_with_malformed_period(
+def test_get_influx_data__malformed_period__returns_400(
     feature: Feature,
     project: Project,
     environment: Environment,
@@ -544,7 +550,7 @@ def test_get_project_features_influx_data_with_malformed_period(
     assert response.data[0] == "Malformed period supplied"
 
 
-def test_regular_user_cannot_create_mv_options_when_creating_feature(
+def test_create_feature__regular_user_with_mv_options__returns_403(
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -569,7 +575,7 @@ def test_regular_user_cannot_create_mv_options_when_creating_feature(
     assert response.json()["detail"] == detail
 
 
-def test_regular_user_cannot_create_mv_options_when_updating_feature(
+def test_update_feature__regular_user_with_mv_options__returns_403(
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -599,7 +605,7 @@ def test_regular_user_cannot_create_mv_options_when_updating_feature(
     assert response.json()["detail"] == detail
 
 
-def test_regular_user_can_update_feature_description(
+def test_update_feature__regular_user_with_description__returns_200(
     staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
     project: Project,
@@ -634,7 +640,7 @@ def test_regular_user_can_update_feature_description(
 
 
 @mock.patch("environments.models.environment_wrapper")
-def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(
+def test_create_feature__dynamo_enabled__triggers_single_dynamo_write(
     mock_dynamo_environment_wrapper: mock.MagicMock,
     project: Project,
     admin_client_new: APIClient,
@@ -645,7 +651,7 @@ def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(
     project.save()
 
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": "Test feature flag", "type": "FLAG", "project": project.id}
+    data = {"name": "Test feature flag", "type": STANDARD, "project": project.id}
 
     mock_dynamo_environment_wrapper.is_enabled = True
     mock_dynamo_environment_wrapper.reset_mock()
@@ -657,7 +663,7 @@ def test_create_feature_only_triggers_write_to_dynamodb_once_per_environment(
     mock_dynamo_environment_wrapper.write_environments.assert_called_once()
 
 
-def test_get_flags_for_environment_response(
+def test_get_flags__environment_with_overrides__returns_environment_default(
     api_client: APIClient,
     environment: Environment,
     project: Project,
@@ -709,7 +715,7 @@ def test_get_flags_for_environment_response(
 
 
 @pytest.mark.parametrize("cache_flags_seconds", [0, 30])
-def test_SDKFeatureStates_get__responds_200_with_feature_list(
+def test_sdk_feature_states_get__no_identifier__returns_feature_list(
     api_client: APIClient,
     cache_flags_seconds: int,
     environment: Environment,
@@ -804,7 +810,7 @@ def test_SDKFeatureStates_get__given_identifier__responds_200_with_feature_list(
         pytest.param(True, False, 7, id="replica_database,existing_identity"),
     ],
 )
-def test_SDKFeatureStates_get__given_identifier_and_feature__both_exist__responds_200_with_feature(
+def test_sdk_feature_states_get__identifier_and_existing_feature__returns_feature(
     api_client: APIClient,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
@@ -855,7 +861,7 @@ def test_SDKFeatureStates_get__given_identifier_and_feature__both_exist__respond
         pytest.param(True, False, 6, id="replica_database,existing_identity"),
     ],
 )
-def test_SDKFeatureStates_get__given_identifier_and_feature__feature_does_not_exist__responds_404(
+def test_sdk_feature_states_get__identifier_and_missing_feature__returns_404(
     api_client: APIClient,
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
@@ -879,7 +885,7 @@ def test_SDKFeatureStates_get__given_identifier_and_feature__feature_does_not_ex
     assert Identity.objects.filter(identifier=identifier).exists()
 
 
-def test_SDKFeatureStates_get__given_feature__exists__responds_200_with_feature(
+def test_sdk_feature_states_get__existing_feature_filter__returns_feature(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -905,7 +911,7 @@ def test_SDKFeatureStates_get__given_feature__exists__responds_200_with_feature(
     }
 
 
-def test_SDKFeatureStates_get__given_feature__doesnt_exist__responds_404(
+def test_sdk_feature_states_get__missing_feature_filter__returns_404(
     api_client: APIClient,
     environment: Environment,
     mocker: MockerFixture,
@@ -931,7 +937,7 @@ def test_SDKFeatureStates_get__given_feature__doesnt_exist__responds_404(
         (None, False, True),
     ),
 )
-def test_get_flags_hide_disabled_flags(
+def test_get_flags__hide_disabled_flags_setting__returns_expected_flags(
     environment_value: bool | None,
     project_value: bool,
     disabled_flag_returned: bool,
@@ -960,7 +966,7 @@ def test_get_flags_hide_disabled_flags(
     assert len(response.json()) == (2 if disabled_flag_returned else 1)
 
 
-def test_get_flags_hide_sensitive_data(
+def test_get_flags__hide_sensitive_data_enabled__returns_nulled_fields(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -1013,7 +1019,7 @@ def test_get_flags__server_key_only_feature__return_expected(
     assert not response.json()
 
 
-def test_get_flags_cache(
+def test_get_flags__cached_responses__returns_correct_per_environment(
     environment: Environment,
     feature: Feature,
     django_assert_num_queries: DjangoAssertNumQueries,
@@ -1056,7 +1062,7 @@ def test_get_flags_cache(
             )
 
 
-def test_get_flags__server_key_only_feature__server_key_auth__return_expected(
+def test_get_flags__server_key_only_with_server_auth__returns_feature(
     api_client: APIClient,
     environment_api_key: EnvironmentAPIKey,
     feature: Feature,
@@ -1117,7 +1123,7 @@ def test_get_flags__server_key_only_feature__cache_isolation_between_client_and_
     assert feature.name not in client_feature_names
 
 
-def test_get_feature_states_by_uuid(
+def test_get_feature_state_by_uuid__existing_state__returns_200(
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -1138,7 +1144,7 @@ def test_get_feature_states_by_uuid(
     assert response_json["uuid"] == str(feature_state.uuid)
 
 
-def test_deleted_features_are_not_listed(
+def test_list_features__deleted_feature__returns_empty(
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -1156,7 +1162,7 @@ def test_deleted_features_are_not_listed(
     assert response.json()["count"] == 0
 
 
-def test_get_feature_evaluation_data(
+def test_get_evaluation_data__valid_request__returns_evaluation_data(
     project: Project,
     feature: Feature,
     environment: Environment,
@@ -1264,7 +1270,7 @@ def test_get_feature_evaluation_data__labels_filter__returns_expected(
     )
 
 
-def test_create_segment_override_forbidden(
+def test_create_segment_override__no_permission__returns_403(
     feature: Feature,
     segment: Segment,
     environment: Environment,
@@ -1298,7 +1304,7 @@ def test_create_segment_override_forbidden(
     }
 
 
-def test_create_segment_override_staff(
+def test_create_segment_override__staff_with_permission__returns_201(
     feature: Feature,
     segment: Segment,
     environment: Environment,
@@ -1331,7 +1337,7 @@ def test_create_segment_override_staff(
     assert response.data["feature_segment"]["segment"] == segment.id
 
 
-def test_create_segment_override(
+def test_create_segment_override__admin_user__creates_override(
     admin_client_new: APIClient,
     feature: Feature,
     segment: Segment,
@@ -1367,7 +1373,7 @@ def test_create_segment_override(
     assert created_override.get_feature_state_value() == string_value
 
 
-def test_get_flags_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped-def]
+def test_get_flags__user_throttle_set__is_not_throttled(  # type: ignore[no-untyped-def]
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -1387,7 +1393,7 @@ def test_get_flags_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped
         assert response.status_code == status.HTTP_200_OK
 
 
-def test_list_feature_states_from_simple_view_set(
+def test_list_feature_states__simple_view_set__returns_expected_count(
     environment: Environment,
     feature: Feature,
     admin_user: FFAdminUser,
@@ -1444,7 +1450,7 @@ def test_list_feature_states_from_simple_view_set(
     assert response_json["count"] == 3
 
 
-def test_list_feature_states_nested_environment_view_set(
+def test_list_feature_states__nested_environment_view_set__returns_expected_count(
     environment: Environment,
     project: Project,
     feature: Feature,
@@ -1491,7 +1497,7 @@ def test_list_feature_states_nested_environment_view_set(
     assert response_json["count"] == 3
 
 
-def test_environment_feature_states_filter_using_feature_name(
+def test_list_environment_feature_states__feature_name_filter__returns_matching(
     environment: Environment,
     project: Project,
     feature: Feature,
@@ -1514,7 +1520,7 @@ def test_environment_feature_states_filter_using_feature_name(
     assert response.json()["results"][0]["feature"] == feature.id
 
 
-def test_environment_feature_states_filter_to_show_identity_override_only(
+def test_list_environment_feature_states__identity_override_filter__returns_override(
     environment: Environment,
     feature: Feature,
     admin_client_new: APIClient,
@@ -1543,7 +1549,7 @@ def test_environment_feature_states_filter_to_show_identity_override_only(
     assert res.json()["results"][0]["identity"]["identifier"] == identifier
 
 
-def test_environment_feature_states_only_returns_latest_versions(
+def test_list_environment_feature_states__multiple_versions__returns_latest(
     environment: Environment,
     feature: Feature,
     admin_client_new: APIClient,
@@ -1570,7 +1576,7 @@ def test_environment_feature_states_only_returns_latest_versions(
     assert response_json["results"][0]["id"] == feature_state_v2.id
 
 
-def test_environment_feature_states_does_not_return_null_versions(
+def test_list_environment_feature_states__null_version__excludes_null(
     environment: Environment,
     feature: Feature,
     admin_client_new: APIClient,
@@ -1596,7 +1602,7 @@ def test_environment_feature_states_does_not_return_null_versions(
     assert response_json["results"][0]["id"] == feature_state.id
 
 
-def test_create_feature_default_is_archived_is_false(
+def test_create_feature__default_values__is_archived_false(
     admin_client_new: APIClient, project: Project
 ) -> None:
     # Given
@@ -1614,7 +1620,7 @@ def test_create_feature_default_is_archived_is_false(
     assert response["is_archived"] is False
 
 
-def test_update_feature_is_archived(
+def test_update_feature__set_is_archived__returns_archived(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -1634,7 +1640,7 @@ def test_update_feature_is_archived(
     assert response["is_archived"] is True
 
 
-def test_should_create_feature_states_when_feature_created(
+def test_create_feature__multiple_environments__creates_feature_states(
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -1671,7 +1677,7 @@ def test_should_create_feature_states_when_feature_created(
 
 
 @pytest.mark.parametrize("default_value", [(12), (True), ("test")])
-def test_should_create_feature_states_with_value_when_feature_created(
+def test_create_feature__with_initial_value__creates_feature_state_with_value(
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -1703,7 +1709,7 @@ def test_should_create_feature_states_with_value_when_feature_created(
     assert feature_state.get_feature_state_value() == default_value
 
 
-def test_should_delete_feature_states_when_feature_deleted(
+def test_delete_feature__existing_feature__removes_feature_states(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -1734,7 +1740,7 @@ def test_should_delete_feature_states_when_feature_deleted(
     )
 
 
-def test_create_feature_returns_201_if_name_matches_regex(
+def test_create_feature__name_matches_regex__returns_201(
     admin_client_new: APIClient, project: Project
 ) -> None:
     # Given
@@ -1745,14 +1751,16 @@ def test_create_feature_returns_201_if_name_matches_regex(
     feature_name = "valid_feature_name"
 
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": feature_name, "type": "FLAG", "project": project.id}
+    data = {"name": feature_name, "type": STANDARD, "project": project.id}
 
     # When
     response = admin_client_new.post(url, data=data)
+
+    # Then
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_create_feature_returns_400_if_name_does_not_matches_regex(
+def test_create_feature__name_does_not_match_regex__returns_400(
     admin_client_new: APIClient, project: Project
 ) -> None:
     # Given
@@ -1763,10 +1771,12 @@ def test_create_feature_returns_400_if_name_does_not_matches_regex(
     feature_name = "not_a_valid_feature_name"
 
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": feature_name, "type": "FLAG", "project": project.id}
+    data = {"name": feature_name, "type": STANDARD, "project": project.id}
 
     # When
     response = admin_client_new.post(url, data=data)
+
+    # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["name"][0]
@@ -1774,14 +1784,14 @@ def test_create_feature_returns_400_if_name_does_not_matches_regex(
     )
 
 
-def test_audit_log_created_when_feature_created(
+def test_create_feature__valid_data__creates_audit_log(
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
 ) -> None:
     # Given
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": "Test feature flag", "type": "FLAG", "project": project.id}
+    data = {"name": "Test feature flag", "type": STANDARD, "project": project.id}
 
     # When
     response = admin_client_new.post(url, data=data)
@@ -1804,7 +1814,7 @@ def test_audit_log_created_when_feature_created(
     ).count() == len(project.environments.all())
 
 
-def test_audit_log_created_when_feature_updated(
+def test_update_feature__valid_data__creates_audit_log(
     admin_client_new: APIClient, project: Project, feature: Feature
 ) -> None:
     # Given
@@ -1813,8 +1823,8 @@ def test_audit_log_created_when_feature_updated(
         args=[project.id, feature.id],
     )
     data = {
-        "name": "Test Feature updated",
-        "type": "FLAG",
+        "name": feature.name,
+        "description": "Updated description",
         "project": project.id,
     }
 
@@ -1830,7 +1840,7 @@ def test_audit_log_created_when_feature_updated(
     )
 
 
-def test_audit_logs_created_when_feature_deleted(
+def test_delete_feature__existing_feature__creates_audit_logs(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -1860,7 +1870,7 @@ def test_audit_logs_created_when_feature_deleted(
     ).count() == len(feature_states_ids)
 
 
-def test_should_create_tags_when_feature_created(
+def test_create_feature__with_tags__creates_tagged_feature(
     admin_client_new: APIClient,
     project: Project,
     tag_one: Tag,
@@ -1896,7 +1906,7 @@ def test_should_create_tags_when_feature_created(
     assert list(feature.tags.all()) == [tag_one, tag_two]
 
 
-def test_add_owners_fails_if_user_not_found(
+def test_add_owners__users_not_in_project__returns_400(
     admin_client_new: APIClient, project: Project
 ) -> None:
     # Given
@@ -1921,7 +1931,7 @@ def test_add_owners_fails_if_user_not_found(
     assert feature.owners.filter(id__in=[user_1.id, user_2.id]).count() == 0
 
 
-def test_add_owners_adds_owner(
+def test_add_owners__valid_users__adds_owners(
     staff_user: FFAdminUser,
     admin_user: FFAdminUser,
     admin_client_new: APIClient,
@@ -1965,7 +1975,7 @@ def test_add_owners_adds_owner(
     }
 
 
-def test_add_group_owners_adds_group_owner(
+def test_add_group_owners__valid_groups__adds_group_owners(
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -2007,7 +2017,7 @@ def test_add_group_owners_adds_group_owner(
     }
 
 
-def test_remove_group_owners_removes_group_owner(
+def test_remove_group_owners__existing_group__removes_specified_group(
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -2048,7 +2058,7 @@ def test_remove_group_owners_removes_group_owner(
     }
 
 
-def test_remove_group_owners_when_nonexistent(
+def test_remove_group_owners__nonexistent_group__succeeds(
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -2083,7 +2093,7 @@ def test_remove_group_owners_when_nonexistent(
     assert len(json_response["group_owners"]) == 0
 
 
-def test_add_group_owners_with_wrong_org_group(
+def test_add_group_owners__wrong_organisation_group__returns_400(
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -2122,7 +2132,7 @@ def test_add_group_owners_with_wrong_org_group(
     response.json() == {"non_field_errors": ["Some groups not found"]}
 
 
-def test_list_features_return_tags(
+def test_list_features__with_tags__returns_tags_in_response(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -2143,7 +2153,7 @@ def test_list_features_return_tags(
     assert "tags" in feature
 
 
-def test_list_features_group_owners(
+def test_list_features__with_group_owners__returns_group_owners(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -2182,7 +2192,7 @@ def test_list_features_group_owners(
     }
 
 
-def test_project_admin_can_create_mv_options_when_creating_feature(
+def test_create_feature__admin_with_mv_options__returns_201(
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -2206,7 +2216,7 @@ def test_project_admin_can_create_mv_options_when_creating_feature(
     assert len(response_json["multivariate_options"]) == 1
 
 
-def test_get_feature_by_uuid(
+def test_get_feature_by_uuid__existing_feature__returns_200(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -2223,7 +2233,7 @@ def test_get_feature_by_uuid(
     assert response.json()["uuid"] == str(feature.uuid)
 
 
-def test_get_feature_by_uuid_returns_404_if_feature_does_not_exists(
+def test_get_feature_by_uuid__nonexistent_feature__returns_404(
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -2237,7 +2247,7 @@ def test_get_feature_by_uuid_returns_404_if_feature_does_not_exists(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_update_feature_state_value_triggers_dynamo_rebuild(
+def test_update_feature_state_value__dynamo_enabled__triggers_rebuild(
     admin_client_new: APIClient,
     project: Project,
     environment: Environment,
@@ -2270,7 +2280,7 @@ def test_update_feature_state_value_triggers_dynamo_rebuild(
     mock_dynamo_environment_wrapper.write_environments.assert_called_once()
 
 
-def test_create_segment_overrides_creates_correct_audit_log_messages(
+def test_create_segment_overrides__multiple_segments__creates_audit_logs(
     admin_client_new: APIClient,
     feature: Feature,
     segment: Segment,
@@ -2326,7 +2336,7 @@ def test_create_segment_overrides_creates_correct_audit_log_messages(
     )
 
 
-def test_list_features_provides_information_on_number_of_overrides(
+def test_list_features__with_overrides__returns_override_counts(
     feature: Feature,
     segment: Segment,
     segment_featurestate: FeatureState,
@@ -2354,7 +2364,7 @@ def test_list_features_provides_information_on_number_of_overrides(
     assert response_json["results"][0]["num_identity_overrides"] == 1
 
 
-def test_list_features_provides_correct_information_on_number_of_overrides_based_on_version(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_list_features__v2_versioning_with_removed_override__returns_zero_overrides(  # type: ignore[no-untyped-def]
     feature: Feature,
     segment: Segment,
     project: Project,
@@ -2407,9 +2417,10 @@ def test_list_features_provides_correct_information_on_number_of_overrides_based
     assert response_json["results"][0]["num_segment_overrides"] == 0
 
 
-def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
+def test_list_features__dynamo_enabled_project__returns_segment_override_count(
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     admin_client_new: APIClient,
 ) -> None:
     # Given
@@ -2448,7 +2459,7 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     assert response_json["results"][0]["num_identity_overrides"] is None
 
 
-def test_list_features_calls_get_overrides_data_with_feature_ids(
+def test_list_features__dynamo_enabled__calls_get_overrides_data(
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,
     admin_client_new: APIClient,
@@ -2476,11 +2487,10 @@ def test_list_features_calls_get_overrides_data_with_feature_ids(
     assert response.status_code == status.HTTP_200_OK
     mock_get_overrides_data.assert_called_once_with(
         dynamo_enabled_project_environment_one,
-        [feature.id],
     )
 
 
-def test_create_segment_override_reaching_max_limit(
+def test_create_segment_override__max_limit_reached__returns_400(
     admin_client_new: APIClient,
     feature: Feature,
     segment: Segment,
@@ -2503,18 +2513,18 @@ def test_create_segment_override_reaching_max_limit(
         "feature_segment": {"segment": segment.id},
     }
 
-    # Now, crate the first override
+    # Now, create the first override
     response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
-
     assert response.status_code == status.HTTP_201_CREATED
 
-    # Then
-    # Try to create another override
+    # When
     response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
+
+    # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["environment"]
@@ -2523,7 +2533,7 @@ def test_create_segment_override_reaching_max_limit(
     assert environment.feature_segments.count() == 1
 
 
-def test_create_feature_reaching_max_limit(
+def test_create_feature__max_limit_reached__returns_400(
     admin_client_new: APIClient,
     project: Project,
     settings: SettingsWrapper,
@@ -2534,17 +2544,18 @@ def test_create_feature_reaching_max_limit(
 
     url = reverse("api-v1:projects:project-features-list", args=[project.id])
 
-    # Now, crate the first feature
+    # Now, create the first feature
     response = admin_client_new.post(
         url, data={"name": "test_feature", "project": project.id}
     )
     assert response.status_code == status.HTTP_201_CREATED
 
-    # Then
-    # Try to create another feature
+    # When
     response = admin_client_new.post(
         url, data={"name": "second_feature", "project": project.id}
     )
+
+    # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
         response.json()["project"]
@@ -2552,7 +2563,7 @@ def test_create_feature_reaching_max_limit(
     )
 
 
-def test_create_segment_override_using_environment_viewset(
+def test_create_segment_override__environment_viewset__returns_201(
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -2583,7 +2594,7 @@ def test_create_segment_override_using_environment_viewset(
     response.json()["feature_state_value"] == new_value
 
 
-def test_cannot_create_feature_state_for_feature_from_different_project(
+def test_create_feature_state__feature_from_different_project__returns_403(
     admin_client_new: APIClient,
     environment: Environment,
     project_two_feature: Feature,
@@ -2614,7 +2625,7 @@ def test_cannot_create_feature_state_for_feature_from_different_project(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_create_feature_state_environment_is_read_only(
+def test_create_feature_state__different_environment_in_body__uses_url_environment(
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -2645,7 +2656,7 @@ def test_create_feature_state_environment_is_read_only(
     assert response.json()["environment"] == environment.id
 
 
-def test_cannot_create_feature_state_of_feature_from_different_project(
+def test_create_feature_state__cross_project_feature__returns_403(
     admin_client_new: APIClient,
     environment: Environment,
     project_two_feature: Feature,
@@ -2675,7 +2686,7 @@ def test_cannot_create_feature_state_of_feature_from_different_project(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_create_feature_state_environment_field_is_read_only(
+def test_create_feature_state__environment_field_override__ignores_override(
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -2706,7 +2717,7 @@ def test_create_feature_state_environment_field_is_read_only(
     assert response.json()["environment"] == environment.id
 
 
-def test_cannot_update_environment_of_a_feature_state(
+def test_update_feature_state__change_environment__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -2742,7 +2753,7 @@ def test_cannot_update_environment_of_a_feature_state(
     )
 
 
-def test_update_feature_state_without_history_of_fsv(
+def test_update_feature_state__no_fsv_history__returns_200(
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -2775,7 +2786,7 @@ def test_update_feature_state_without_history_of_fsv(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_cannot_update_feature_of_a_feature_state(
+def test_update_feature_state__change_feature__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
@@ -2814,7 +2825,7 @@ def test_cannot_update_feature_of_a_feature_state(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_without_required_metadata_returns_400(
+def test_create_feature__missing_required_metadata__returns_400(
     project: Project,
     client: APIClient,
     required_a_feature_metadata_field: MetadataModelField,
@@ -2838,7 +2849,7 @@ def test_create_feature_without_required_metadata_returns_400(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_with_optional_metadata_returns_201(
+def test_create_feature__with_optional_metadata__returns_201(
     project: Project,
     client: APIClient,
     optional_b_feature_metadata_field: MetadataModelField,
@@ -2874,7 +2885,7 @@ def test_create_feature_with_optional_metadata_returns_201(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_with_required_metadata_returns_201(
+def test_create_feature__with_required_metadata__returns_201(
     project: Project,
     client: APIClient,
     required_a_feature_metadata_field: MetadataModelField,
@@ -2910,7 +2921,7 @@ def test_create_feature_with_required_metadata_returns_201(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_with_required_metadata_using_organisation_content_typereturns_201(
+def test_create_feature__required_metadata_org_content_type__returns_201(
     project: Project,
     client: APIClient,
     required_a_feature_metadata_field_using_organisation_content_type: MetadataModelField,
@@ -3096,7 +3107,7 @@ def test_update_segment_override__using_simple_feature_state_viewset__denies_upd
     settings.IS_RBAC_INSTALLED is True,
     reason="Skip this test if RBAC is installed",
 )
-def test_list_features_n_plus_1_without_rbac(
+def test_list_features__without_rbac__no_n_plus_1(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3110,6 +3121,8 @@ def test_list_features_n_plus_1_without_rbac(
           be even better to solve the underlying issue while runnig locally.
           See: https://github.com/Flagsmith/flagsmith/issues/4898
     """
+    # Given / When
+    # Then
     _assert_list_feature_n_plus_1(
         staff_client,
         project,
@@ -3125,7 +3138,7 @@ def test_list_features_n_plus_1_without_rbac(
     settings.IS_RBAC_INSTALLED is False,
     reason="Skip this test if RBAC is not installed",
 )
-def test_list_features_n_plus_1_with_rbac(
+def test_list_features__with_rbac__no_n_plus_1(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3133,6 +3146,8 @@ def test_list_features_n_plus_1_with_rbac(
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
 ) -> None:  # pragma: no cover
+    # Given / When
+    # Then
     _assert_list_feature_n_plus_1(
         staff_client,
         project,
@@ -3173,7 +3188,7 @@ def _assert_list_feature_n_plus_1(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_list_features_from_different_project_returns_404(
+def test_list_features__different_project__returns_404(
     staff_client: APIClient,
     organisation_two_project_two: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -3192,7 +3207,7 @@ def test_list_features_from_different_project_returns_404(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_list_features_with_union_tag(
+def test_list_features__union_tag_filter__returns_matching_features(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3244,7 +3259,7 @@ def test_list_features_with_union_tag(
     assert response.data["results"][1]["tags"] == [tag2.id]
 
 
-def test_list_features_with_intersection_tag(
+def test_list_features__intersection_tag_filter__returns_matching_features(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3294,7 +3309,7 @@ def test_list_features_with_intersection_tag(
     assert response.data["results"][0]["tags"] == [tag1.id, tag2.id]
 
 
-def test_list_features_with_feature_state(
+def test_list_features__with_environment__returns_feature_state_data(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3411,7 +3426,7 @@ def test_list_features_with_feature_state(
     assert results[2]["name"] == feature3.name
 
 
-def test_list_features_with_filter_by_value_search_string_and_int(
+def test_list_features__value_search_string_and_int__returns_matching(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     project: Project,
@@ -3509,7 +3524,7 @@ def test_list_features_with_filter_by_value_search_string_and_int(
     assert feature4.name in features
 
 
-def test_list_features_with_filter_by_search_value_boolean(
+def test_list_features__value_search_boolean__returns_matching(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -3578,15 +3593,16 @@ def test_list_features_with_filter_by_search_value_boolean(
     assert response.data["results"][0]["name"] == feature2.name
 
 
-def test_FeatureViewSet_list__includes_code_references_counts(
-    staff_client: APIClient,
-    project: Project,
+def test_list_features__with_code_references__returns_counts(
+    enable_features: EnableFeaturesFixture,
     feature: Feature,
+    project: Project,
+    staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
-    environment: Environment,
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    enable_features("code_references_ui_stats")
     with freeze_time("2099-01-01T10:00:00-0300"):
         FeatureFlagCodeReferencesScan.objects.create(
             project=project,
@@ -3664,30 +3680,68 @@ def test_FeatureViewSet_list__includes_code_references_counts(
     ]
 
 
-def test_FeatureViewSet_list__no_scans__returns_empty_code_references_counts(
-    staff_client: APIClient,
-    project: Project,
-    feature: Feature,
+@pytest.mark.usefixtures("feature")
+def test_list_features__without_code_references__returns_empty_counts(
+    enable_features: EnableFeaturesFixture,
     environment: Environment,
+    project: Project,
+    staff_client: APIClient,
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
-    # Given - project has no code reference scans
+    # Given
     with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    enable_features("code_references_ui_stats")
 
     # When
     response = staff_client.get(
         f"/api/v1/projects/{project.id}/features/?environment={environment.id}"
     )
 
-    # Then - response should include code_references_counts as empty list
+    # Then
     assert response.status_code == 200
     results = response.json()["results"]
     assert len(results) == 1
-    assert "code_references_counts" in results[0]
     assert results[0]["code_references_counts"] == []
 
 
-def test_simple_feature_state_returns_only_latest_versions(
+# TODO: Delete this after https://github.com/flagsmith/flagsmith/issues/6832 is resolved
+def test_list_features__code_references_ui_stats_disabled__returns_empty_counts(
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+    feature: Feature,
+    project: Project,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    enable_features()  # code_references_ui_stats not enabled
+    FeatureFlagCodeReferencesScan.objects.create(
+        project=project,
+        repository_url="https://github.flagsmith.com/backend/",
+        revision="rev-1",
+        code_references=[
+            {
+                "feature_name": feature.name,
+                "file_path": "path/to/file.py",
+                "line_number": 42,
+            },
+        ],
+    )
+
+    # When
+    response = staff_client.get(
+        f"/api/v1/projects/{project.id}/features/?environment={environment.id}"
+    )
+
+    # Then
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert len(results) == 1
+    assert results[0]["code_references_counts"] == []
+
+
+def test_list_feature_states__v2_versioning__returns_latest_versions(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -3743,7 +3797,7 @@ def test_simple_feature_state_returns_only_latest_versions(
     reason="Skip this test if RBAC is installed",
 )
 @pytest.mark.freeze_time(two_hours_ago)
-def test_feature_list_last_modified_values_without_rbac(
+def test_list_features__last_modified_without_rbac__returns_expected(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -3752,6 +3806,8 @@ def test_feature_list_last_modified_values_without_rbac(
     with_project_permissions: WithProjectPermissionsCallable,
     django_assert_num_queries: DjangoAssertNumQueries,
 ) -> None:
+    # Given / When
+    # Then
     _assert_feature_list_last_modified_values(
         staff_client,
         staff_user,
@@ -3769,7 +3825,7 @@ def test_feature_list_last_modified_values_without_rbac(
     reason="Skip this test if RBAC is not installed",
 )
 @pytest.mark.freeze_time(two_hours_ago)
-def test_feature_list_last_modified_values_with_rbac(
+def test_list_features__last_modified_with_rbac__returns_expected(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -3778,6 +3834,8 @@ def test_feature_list_last_modified_values_with_rbac(
     with_project_permissions: WithProjectPermissionsCallable,
     django_assert_num_queries: DjangoAssertNumQueries,
 ) -> None:  # pragma: no cover
+    # Given / When
+    # Then
     _assert_feature_list_last_modified_values(
         staff_client,
         staff_user,
@@ -3853,7 +3911,7 @@ def _assert_feature_list_last_modified_values(  # type: ignore[no-untyped-def]
     )
 
 
-def test_filter_features_with_owners(
+def test_list_features__owners_filter__returns_matching_features(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     admin_user: FFAdminUser,
@@ -3896,7 +3954,7 @@ def test_filter_features_with_owners(
     assert response.data["results"][1]["id"] == feature2.id
 
 
-def test_filter_features_with_group_owners(
+def test_list_features__group_owners_filter__returns_matching_features(
     staff_client: APIClient,
     project: Project,
     organisation: Organisation,
@@ -3942,7 +4000,7 @@ def test_filter_features_with_group_owners(
     assert response.data["results"][1]["id"] == feature2.id
 
 
-def test_filter_features_with_owners_and_group_owners_together(
+def test_list_features__owners_and_group_owners_filter__returns_matching(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     project: Project,
@@ -3986,7 +4044,7 @@ def test_filter_features_with_owners_and_group_owners_together(
     assert response.data["results"][1]["id"] == feature2.id
 
 
-def test_delete_feature_deletes_any_related_identity_overrides(
+def test_delete_feature__dynamo_identity_overrides__deletes_overrides(
     flagsmith_environments_v2_table: "Table",
     flagsmith_identities_table: "Table",
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
@@ -4038,7 +4096,7 @@ def test_delete_feature_deletes_any_related_identity_overrides(
     )
 
 
-def test_get_multivariate_options_responds_200_with_control_value_and_options(
+def test_get_multivariate_options__existing_feature__returns_control_and_options(
     api_client: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
@@ -4065,7 +4123,7 @@ def test_get_multivariate_options_responds_200_with_control_value_and_options(
         assert expected_value in actual_option_values
 
 
-def test_get_multivariate_options_feature_not_found_responds_404(
+def test_get_multivariate_options__nonexistent_feature__returns_404(
     api_client: APIClient,
     environment: Environment,
 ) -> None:
@@ -4082,7 +4140,7 @@ def test_get_multivariate_options_feature_not_found_responds_404(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_list_features_segment_query_param_with_valid_segment(
+def test_list_features__valid_segment_query_param__returns_segment_override(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -4126,7 +4184,7 @@ def test_list_features_segment_query_param_with_valid_segment(
     assert segment_state["enabled"] is True
 
 
-def test_list_features_segment_query_param_with_invalid_segment(
+def test_list_features__invalid_segment_query_param__returns_null_segment_state(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -4152,7 +4210,178 @@ def test_list_features_segment_query_param_with_invalid_segment(
     assert feature_data["segment_feature_state"] is None
 
 
-def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__segment_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    sort_field: str,
+) -> None:
+    # Given
+    Feature.objects.create(project=project, name="feature_a")
+    feature_b = Feature.objects.create(project=project, name="feature_b")
+    feature_c = Feature.objects.create(project=project, name="feature_c")
+    other_environment = Environment.objects.create(
+        project=project, name="other_environment"
+    )
+
+    # feature_c has a segment override in the requested environment
+    FeatureSegment.objects.create(
+        feature=feature_c, segment=segment, environment=environment
+    )
+    # feature_b has a segment override in a different environment
+    FeatureSegment.objects.create(
+        feature=feature_b, segment=segment, environment=other_environment
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&segment={segment.id}"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_c", "feature_a", "feature_b"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__identity_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    identity: Identity,
+    sort_field: str,
+) -> None:
+    # Given
+    Feature.objects.create(project=project, name="feature_a")
+    Feature.objects.create(project=project, name="feature_b")
+    feature_c = Feature.objects.create(project=project, name="feature_c")
+
+    # feature_c has an identity override
+    FeatureState.objects.create(
+        feature=feature_c, environment=environment, identity=identity
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity={identity.id}"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_c", "feature_a", "feature_b"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
+@pytest.mark.parametrize("sort_field", ["name", "created_date"])
+def test_list_features__edge_identity_query__sorts_by_field_with_overrides_first(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    sort_field: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    project.enable_dynamo_db = True
+    project.save()
+
+    Feature.objects.create(project=project, name="feature_a")
+    feature_b = Feature.objects.create(project=project, name="feature_b")
+    Feature.objects.create(project=project, name="feature_c")
+    mocker.patch.object(
+        views,
+        "get_overridden_feature_ids_for_edge_identity",
+        return_value={feature_b.id},
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity=59efa2a7-6a45-46d6-b953-a7073a90eacf"
+        f"&sort_field={sort_field}&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_b", "feature_a", "feature_c"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
+@pytest.mark.parametrize(
+    "enable_dynamo_db, identity_value",
+    [
+        (False, "not-an-integer"),
+        (True, "0"),
+    ],
+)
+def test_list_features__identity_query_invalid_format__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    enable_dynamo_db: bool,
+    identity_value: str,
+) -> None:
+    # Given
+    project.enable_dynamo_db = enable_dynamo_db
+    project.save()
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity={identity_value}"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_list_features__edge_identity_nonexistent__returns_features_unsorted(
+    admin_client_new: APIClient,
+    project: Project,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    project.enable_dynamo_db = True
+    project.save()
+    Feature.objects.create(project=project, name="feature_a")
+    Feature.objects.create(project=project, name="feature_b")
+    Feature.objects.create(project=project, name="feature_c")
+    mocker.patch.object(
+        views,
+        "get_overridden_feature_ids_for_edge_identity",
+        return_value=set(),
+    )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.id}/features/"
+        f"?environment={environment.id}"
+        f"&identity=59efa2a7-6a45-46d6-b953-a7073a90eacf"
+        f"&sort_field=name&sort_direction=ASC"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert ["feature_a", "feature_b", "feature_c"] == [
+        f["name"] for f in response.json()["results"]
+    ]
+
+
+def test_create_feature__duplicate_metadata_id__keeps_metadata_isolated(
     admin_client_new: APIClient,
     project: Project,
     optional_b_feature_metadata_field: MetadataModelField,
@@ -4242,3 +4471,126 @@ def test_create_multiple_features_with_metadata_keeps_metadata_isolated(
     second_feature_metadata_after = second_feature_check.json()["metadata"]
     assert len(second_feature_metadata_after) == 1
     assert second_feature_metadata_after[0]["field_value"] == "200"
+
+
+def test_create_feature__required_metadata_on_other_project__returns_201(
+    admin_client: APIClient,
+    project: Project,
+    project_b: Project,
+    organisation: Organisation,
+    a_metadata_field: MetadataField,
+    feature_content_type: ContentType,
+    project_content_type: ContentType,
+) -> None:
+    # Given
+    model_field = MetadataModelField.objects.create(
+        field=a_metadata_field,
+        content_type=feature_content_type,
+    )
+    MetadataModelFieldRequirement.objects.create(
+        content_type=project_content_type,
+        object_id=project_b.id,
+        model_field=model_field,
+    )
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "Test feature cross project", "description": "desc"}
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_list_features__edge_v2_project__makes_one_dynamo_query(
+    admin_client_new: APIClient,
+    dynamo_enabled_project_environment_one: Environment,
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    environment = dynamo_enabled_project_environment_one
+    project = environment.project
+
+    # Create two additional features so we have 3 in total (including the fixture feature).
+    Feature.objects.create(name="feature_2", project=project)
+    Feature.objects.create(name="feature_3", project=project)
+
+    # Inject a mock DynamoDB table directly on the wrapper so we can
+    # verify the number of queries made.
+    mock_table = mocker.MagicMock()
+    mock_table.query.return_value = {"Items": [], "Count": 0}
+
+    from edge_api.identities import edge_identity_service
+
+    mocker.patch.object(
+        edge_identity_service.ddb_environment_v2_wrapper,
+        "_table",
+        mock_table,
+    )
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+
+    # When
+    response = admin_client_new.get(f"{url}?environment={environment.id}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # Validate that only a single query is made to dynamodb, not one
+    # per feature.
+    assert mock_table.query.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "feature_type, expected_status",
+    [
+        (STANDARD, status.HTTP_201_CREATED),
+        (MULTIVARIATE, status.HTTP_201_CREATED),
+        ("boolean", status.HTTP_400_BAD_REQUEST),
+        ("FLAG", status.HTTP_400_BAD_REQUEST),
+    ],
+)
+def test_create_feature__type_provided__validates_and_sets_type(
+    admin_client_new: APIClient,
+    project: Project,
+    feature_type: str,
+    expected_status: int,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": f"test_feature_{feature_type}", "type": feature_type}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == expected_status
+    if expected_status == status.HTTP_201_CREATED:
+        assert response.json()["type"] == feature_type
+
+
+def test_create_feature__multivariate_options_provided__sets_type_to_multivariate(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {
+        "name": "test_feature_mv_type",
+        "multivariate_options": [{"type": "unicode", "string_value": "option-a"}],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["type"] == MULTIVARIATE

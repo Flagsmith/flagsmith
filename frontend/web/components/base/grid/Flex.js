@@ -24,4 +24,4 @@ Flex.propTypes = {
   value: OptionalNumber,
 }
 
-module.exports = Flex
+export default Flex

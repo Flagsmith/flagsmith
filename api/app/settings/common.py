@@ -130,6 +130,7 @@ INSTALLED_APPS = [
     "webhooks",
     "metrics",
     "onboarding",
+    "platform_hub",
     # 2FA
     "custom_auth.mfa.trench",
     # health check plugins
@@ -302,8 +303,8 @@ TASK_PROCESSOR_DATABASES = env.list(
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
-USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
-MASTER_API_KEY_THROTTLE_RATE = env("MASTER_API_KEY_THROTTLE_RATE", USER_THROTTLE_RATE)
+USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", default=None)
+MASTER_API_KEY_THROTTLE_RATE = env("MASTER_API_KEY_THROTTLE_RATE", default=None)
 DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", subcast=str, default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -534,26 +535,7 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_SETTINGS": {
         "deepLinking": True,
     },
-    "SECURITY": [
-        {"Private": []},
-        {"Public": []},
-    ],
-    "APPEND_COMPONENTS": {
-        "securitySchemes": {
-            "Private": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "Authorization",
-                "description": "For Private Endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>.",
-            },
-            "Public": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "X-Environment-Key",
-                "description": "For Public Endpoints. <a href='https://docs.flagsmith.com/clients/rest#public-api-endpoints'>Find out more</a>.",
-            },
-        },
-    },
+    "SERVERS": env.json("OPENAPI_SERVERS", default=[]),
     "DEFAULT_GENERATOR_CLASS": "api.openapi.SchemaGenerator",
     "EXTENSIONS": [
         "api.openapi",
@@ -567,6 +549,7 @@ SPECTACULAR_SETTINGS = {
         "SegmentRuleTypeEnum": "segments.models.SegmentRule.RULE_TYPES",
         "FeatureValueTypeEnum": ["integer", "string", "boolean"],
     },
+    "COMPONENT_NO_READ_ONLY_REQUIRED": True,
 }
 
 
@@ -1003,21 +986,21 @@ ENABLE_ADMIN_ACCESS_USER_PASS = env.bool("ENABLE_ADMIN_ACCESS_USER_PASS", defaul
 DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool("DEFAULT_ORG_STORE_TRAITS_VALUE", True)
 
 # DynamoDB table name for storing environment
-ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", None)
+ENVIRONMENTS_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_TABLE_NAME_DYNAMO", "")
 
 # V2 was created to improve storage over overrides data.
-ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_V2_TABLE_NAME_DYNAMO", None)
+ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = env.str("ENVIRONMENTS_V2_TABLE_NAME_DYNAMO", "")
 
 # DynamoDB table name for storing identities
-IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", None)
+IDENTITIES_TABLE_NAME_DYNAMO = env.str("IDENTITIES_TABLE_NAME_DYNAMO", "")
 
 # DynamoDB table name for storing environment api keys
 ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO = env.str(
-    "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO", None
+    "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO", ""
 )
 
 # DynamoDB table name for storing project metadata(currently only used for identity migration)
-PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO", None)
+PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO", "")
 
 # Front end environment variables
 API_URL = env("API_URL", default="/api/v1/")
@@ -1047,6 +1030,7 @@ SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
 GITHUB_PEM = env.str("GITHUB_PEM", default="")
 GITHUB_APP_ID: int = env.int("GITHUB_APP_ID", default=0)
 GITHUB_WEBHOOK_SECRET = env.str("GITHUB_WEBHOOK_SECRET", default="")
+FEATURE_LIFECYCLE_GITHUB_PAT = env.str("FEATURE_LIFECYCLE_GITHUB_PAT", default="")
 
 # Additional functionality for using SAML in Flagsmith SaaS
 SAML_INSTALLED = importlib.util.find_spec("saml") is not None

@@ -32,7 +32,7 @@ from webhooks.webhooks import (
 
 
 @mock.patch("webhooks.webhooks.requests")
-def test_webhooks_requests_made_to_all_urls_for_environment(
+def test_call_environment_webhooks__multiple_enabled_webhooks__requests_made_to_all_urls(
     mock_requests: MagicMock,
     environment: Environment,
 ) -> None:
@@ -62,7 +62,7 @@ def test_webhooks_requests_made_to_all_urls_for_environment(
 
 
 @mock.patch("webhooks.webhooks.requests")
-def test_webhooks_request_not_made_to_disabled_webhook(
+def test_call_environment_webhooks__disabled_webhook__request_not_made(
     mock_requests: MagicMock,
     environment: Environment,
 ) -> None:
@@ -84,7 +84,7 @@ def test_webhooks_request_not_made_to_disabled_webhook(
 
 @mock.patch("webhooks.webhooks.WebhookSerializer")
 @mock.patch("webhooks.webhooks.requests")
-def test_request_made_with_correct_signature(
+def test_call_environment_webhooks__webhook_with_secret__request_has_correct_signature(
     mock_requests: MagicMock,
     webhook_serializer: MagicMock,
     environment: Environment,
@@ -119,7 +119,7 @@ def test_request_made_with_correct_signature(
 
 
 @mock.patch("webhooks.webhooks.requests")
-def test_request_does_not_have_signature_header_if_secret_is_not_set(
+def test_call_environment_webhooks__no_secret_set__request_has_no_signature_header(
     mock_requests: MagicMock,
     environment: Environment,
 ) -> None:
@@ -141,7 +141,7 @@ def test_request_does_not_have_signature_header_if_secret_is_not_set(
 
 @pytest.mark.parametrize("expected_error", [ConnectionError, Timeout])
 @pytest.mark.django_db
-def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
+def test_call_environment_webhooks__multiple_webhooks_with_connection_error__sends_failure_emails(
     mocker: MockerFixture,
     expected_error: Type[Exception],
     environment: Environment,
@@ -205,7 +205,7 @@ def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
 
 @pytest.mark.parametrize("expected_error", [ConnectionError, Timeout])
 @pytest.mark.django_db
-def test_call_organisation_webhooks__multiple_webhooks__failure__calls_expected(
+def test_call_organisation_webhooks__multiple_webhooks_with_connection_error__sends_failure_emails(
     mocker: MockerFixture,
     expected_error: Type[Exception],
     organisation: Organisation,
@@ -265,13 +265,47 @@ def test_call_organisation_webhooks__multiple_webhooks__failure__calls_expected(
     )
 
 
-def test_call_webhook_with_failure_mail_after_retries_raises_error_on_invalid_args():  # type: ignore[no-untyped-def]
+def test_call_webhook_with_failure_mail_after_retries__non_2xx_response__logs_warning(
+    mocker: MockerFixture, organisation: Organisation
+) -> None:
+    # Given
+    mock_response = MagicMock()
+    mock_response.ok = False
+    mock_response.status_code = 301
+    mocker.patch("webhooks.webhooks.requests.post", return_value=mock_response)
+    mock_logger = mocker.patch("webhooks.webhooks.logger")
+
+    webhook = OrganisationWebhook.objects.create(
+        url="http://url.1.com", enabled=True, organisation=organisation
+    )
+
+    # When
+    call_webhook_with_failure_mail_after_retries(
+        webhook.id,
+        data={},
+        webhook_type=WebhookType.ORGANISATION.value,
+    )
+
+    # Then
+    mock_logger.warning.assert_called_once_with(
+        "Webhook %d returned HTTP %d (attempt %d/%d)",
+        webhook.id,
+        301,
+        1,
+        3,
+    )
+
+
+def test_call_webhook_with_failure_mail_after_retries__invalid_args__raises_value_error():  # type: ignore[no-untyped-def]
+    # Given
     try_count = 10
+
+    # When / Then
     with pytest.raises(ValueError):
         call_webhook_with_failure_mail_after_retries(0, {}, "", try_count=try_count)
 
 
-def test_call_webhook_with_failure_mail_after_retries_does_not_retry_if_not_using_processor(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_call_webhook_with_failure_mail_after_retries__retry_disabled__does_not_retry(  # type: ignore[no-untyped-def]
     mocker: MockerFixture, organisation: Organisation, settings: SettingsWrapper
 ):
     # Given
@@ -301,7 +335,7 @@ def test_call_webhook_with_failure_mail_after_retries_does_not_retry_if_not_usin
 
 
 @responses.activate()
-def test_call_integration_webhook_does_not_raise_error_on_backoff_give_up(
+def test_call_integration_webhook__backoff_give_up__does_not_raise_error(
     mocker: MockerFixture,
 ) -> None:
     """
@@ -360,7 +394,7 @@ def test_call_integration_webhook_does_not_raise_error_on_backoff_give_up(
         ),
     ],
 )
-def test_send_test_request_to_webhook_returns_correct_response(
+def test_send_test_webhook__various_status_codes__returns_correct_response(
     mocker: MockerFixture,
     admin_client: APIClient,
     external_api_response_status: int,
@@ -415,12 +449,13 @@ def test_send_test_request_to_webhook_returns_correct_response(
         ),
         (
             "",
-            lambda headers, expected_signature: FLAGSMITH_SIGNATURE_HEADER
-            not in headers,
+            lambda headers, expected_signature: (
+                FLAGSMITH_SIGNATURE_HEADER not in headers
+            ),
         ),
     ],
 )
-def test_send_test_request_to_webhook_returns_has_correct_payload(
+def test_send_test_webhook__various_secrets__sends_correct_payload(
     mocker: MockerFixture,
     admin_client: APIClient,
     header_assertion: Callable[[dict[str, str], str], bool],
@@ -461,7 +496,7 @@ def test_send_test_request_to_webhook_returns_has_correct_payload(
     assert response.status_code == 200
 
 
-def test_send_test_request_to_webhook_handles_request_exception(
+def test_send_test_webhook__request_exception__returns_error_response(
     mocker: MockerFixture,
     admin_client: APIClient,
     organisation: Organisation,
@@ -492,7 +527,7 @@ def test_send_test_request_to_webhook_handles_request_exception(
     }
 
 
-def test_should_return_bad_request_when_webhook_url_is_missing(
+def test_send_test_webhook__empty_webhook_url__returns_bad_request(
     admin_client: APIClient,
     organisation: Organisation,
 ) -> None:

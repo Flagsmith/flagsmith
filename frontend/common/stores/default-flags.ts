@@ -19,6 +19,24 @@ const defaultFlags = {
       'tags': ['analytics'],
       'title': 'Amplitude',
     },
+    'backstage': {
+      'description':
+        'View your Flagsmith feature flags inside your Backstage developer portal.',
+      'docs': 'https://docs.flagsmith.com/third-party-integrations/backstage',
+      'external': true,
+      'image': '/static/images/integrations/backstage.svg',
+      'perEnvironment': false,
+      'title': 'Backstage',
+    },
+    'code-references': {
+      'description':
+        'Integrate with Code References to track feature flag usage in your codebase, and unlock new functionality in Flagsmith.',
+      'docs': 'https://docs.flagsmith.com/managing-flags/code-references',
+      'external': true,
+      'image': '/static/images/integrations/code-references.svg',
+      'perEnvironment': false,
+      'title': 'Code References',
+    },
     'datadog': {
       'description':
         'Sends events to Datadog for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
@@ -90,7 +108,6 @@ const defaultFlags = {
       'tags': ['logging'],
       'title': 'Grafana',
     },
-
     'heap': {
       'description': 'Sends data on what flags served to each identity.',
       'docs': 'https://docs.flagsmith.com/integrations/analytics/heap',
@@ -186,6 +203,26 @@ const defaultFlags = {
       'perEnvironment': true,
       'tags': ['analytics'],
       'title': 'Segment',
+    },
+    'sentry': {
+      'description': 'Send flag change events to Sentry.',
+      'docs':
+        'https://docs.flagsmith.com/third-party-integrations/observability-and-monitoring/sentry',
+      'fields': [
+        {
+          'key': 'webhook_url',
+          'label': 'Webhook URL',
+        },
+        {
+          'hidden': true,
+          'key': 'secret',
+          'label': 'Secret',
+        },
+      ],
+      'image': '/static/images/integrations/sentry.svg',
+      'perEnvironment': true,
+      'tags': ['Monitoring'],
+      'title': 'Sentry',
     },
     'slack': {
       'description':

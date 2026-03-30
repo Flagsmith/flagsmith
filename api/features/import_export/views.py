@@ -134,8 +134,10 @@ class FeatureExportListView(ListAPIView):  # type: ignore[type-arg]
             if user.is_environment_admin(environment):  # type: ignore[union-attr]
                 environment_ids.append(environment.id)
 
-        return FeatureExport.objects.filter(environment__in=environment_ids).order_by(
-            "-created_at"
+        return (
+            FeatureExport.objects.filter(environment__in=environment_ids)
+            .defer("data")
+            .order_by("-created_at")
         )
 
 
@@ -156,6 +158,8 @@ class FeatureImportListView(ListAPIView):  # type: ignore[type-arg]
             if user.is_environment_admin(environment):  # type: ignore[union-attr]
                 environment_ids.append(environment.id)
 
-        return FeatureImport.objects.filter(environment__in=environment_ids).order_by(
-            "-created_at"
+        return (
+            FeatureImport.objects.filter(environment__in=environment_ids)
+            .defer("data")
+            .order_by("-created_at")
         )

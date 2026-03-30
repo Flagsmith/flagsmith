@@ -8,7 +8,7 @@ from app_analytics.models import Resource
 from app_analytics.types import TrackFeatureEvaluationsByEnvironmentData
 
 
-def test_api_usage_cache(
+def test_api_usage_cache__cache_interval_elapsed__flushes_tracked_requests(
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ) -> None:
@@ -42,8 +42,8 @@ def test_api_usage_cache(
         # make sure track_request task was not called
         assert not mocked_track_request_task.called
 
-        # Now, let's move the time forward
-        frozen_time.tick(settings.API_USAGE_CACHE_SECONDS + 1)  # type: ignore[arg-type]
+        # When
+        frozen_time.tick(settings.API_USAGE_CACHE_SECONDS + 1)
 
         # let's track another request(to trigger flush)
         cache.track_request(
@@ -95,7 +95,7 @@ def test_api_usage_cache(
         assert not mocked_track_request_task.called
 
 
-def test_feature_evaluation_cache(
+def test_feature_evaluation_cache__cache_interval_elapsed__flushes_tracked_evaluations(
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ) -> None:
@@ -135,8 +135,8 @@ def test_feature_evaluation_cache(
                 labels={},
             )
 
-        # Now, let's move the time forward
-        frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)  # type: ignore[arg-type]
+        # When
+        frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)
 
         # track another evaluation(to trigger cache flush)
         cache.track_feature_evaluation(
@@ -154,7 +154,7 @@ def test_feature_evaluation_cache(
         )
 
         # move time forward again
-        frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)  # type: ignore[arg-type]
+        frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)
 
         # track another one(to trigger cache flush)
         cache.track_feature_evaluation(
@@ -164,7 +164,7 @@ def test_feature_evaluation_cache(
             labels={},
         )
 
-        # Assert that the call was made with only the data tracked after the flush interval.
+        # Then
         assert mocked_track_evaluation_task.delay.call_args_list == [
             mocker.call(
                 kwargs={

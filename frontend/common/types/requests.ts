@@ -24,6 +24,7 @@ import {
   StageActionType,
   StageActionBody,
   ChangeRequest,
+  FlagsmithValue,
   TagStrategy,
 } from './responses'
 import { UtmsType } from './utms'
@@ -190,9 +191,9 @@ export type Req = {
     projectId?: number
     environmentId?: string
     billing_period?:
-    | 'current_billing_period'
-    | 'previous_billing_period'
-    | '90_day_period'
+      | 'current_billing_period'
+      | 'previous_billing_period'
+      | '90_day_period'
   }
   getWebhooks: {
     environmentId: string
@@ -234,7 +235,7 @@ export type Req = {
     pages?: (string | undefined)[] // this is needed for edge since it returns no paging info other than a key
     isEdge: boolean
   }>
-  getPermission: { id: number; level: PermissionLevel }
+  getPermission: { id: number | string; level: PermissionLevel }
   getAvailablePermissions: { level: PermissionLevel }
   getTag: { id: number }
   getHealthEvents: { projectId: number }
@@ -250,7 +251,10 @@ export type Req = {
   getTags: {
     projectId: number
   }
-  createTag: { projectId: number; tag: Omit<Tag, 'id'> }
+  createTag: {
+    projectId: number
+    tag: Omit<Tag, 'id' | 'project' | 'type' | 'is_system_tag' | 'is_permanent'>
+  }
   getSegment: { projectId: number; id: number }
   updateAccount: Account
   deleteAccount: {
@@ -425,7 +429,11 @@ export type Req = {
     }
   }
   getMetadataField: { organisation_id: number }
-  getMetadataList: { organisation: number }
+  getMetadataList: PagedRequest<{ organisation: number }>
+  getProjectMetadataFieldList: PagedRequest<{
+    project_id: number
+    include_organisation?: boolean
+  }>
   updateMetadataField: {
     id: number
     body: {
@@ -433,6 +441,7 @@ export type Req = {
       type: string
       description: string
       organisation: number
+      project?: number | null
     }
   }
   deleteMetadataField: { id: number }
@@ -442,6 +451,7 @@ export type Req = {
       name: string
       organisation: number
       type: string
+      project?: number | null
     }
   }
 
@@ -660,8 +670,7 @@ export type Req = {
   updateGroup: Req['createGroup'] & {
     orgId: number
     data: UserGroup
-    users: UserGroup['users']
-
+    usersToAdd: number[] | null
     usersToAddAdmin: number[] | null
     usersToRemoveAdmin: number[] | null
     usersToRemove: number[] | null
@@ -864,6 +873,32 @@ export type Req = {
     environmentId: string
     environmentFlagId: number
     body: UpdateFeatureStateBody
+  }
+  getExperimentResults: {
+    environmentId: string
+    featureName: string
+    getAdminDashboardMetrics: {
+      days?: number
+    }
+    createCleanupIssue: {
+      organisation_id: number
+      body: {
+        feature_id: number
+      }
+    }
+  }
+  getIdentityOverrides: {
+    environmentId: string
+    featureId: number
+    page?: number
+    isEdge: boolean
+  }
+  createIdentityOverride: {
+    environmentId: string
+    identityId: string
+    featureId: number
+    enabled: boolean
+    feature_state_value: FlagsmithValue | null
   }
   // END OF TYPES
 }

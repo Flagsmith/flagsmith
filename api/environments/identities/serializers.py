@@ -1,19 +1,15 @@
 import typing
 
 from drf_spectacular.utils import extend_schema_field
-from flag_engine.features.models import FeatureStateModel
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
-from environments.identities.traits.fields import TraitValueField
 from environments.models import Environment
 from environments.serializers import EnvironmentSerializerFull
 from features.models import FeatureState
-from features.serializers import (
-    FeatureStateSerializerFull,
-    SDKFeatureStateSerializer,
-)
+from features.serializers import FeatureStateSerializerFull
+from util.engine_models.features.models import FeatureStateModel
 
 
 class IdentifierOnlyIdentitySerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -51,16 +47,6 @@ class IdentitySerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
                 }
             )
         return super(IdentitySerializer, self).save(**kwargs)
-
-
-class SDKIdentitiesResponseSerializer(serializers.Serializer):  # type: ignore[type-arg]
-    class _TraitSerializer(serializers.Serializer):  # type: ignore[type-arg]
-        trait_key = serializers.CharField()
-        trait_value = TraitValueField()
-
-    identifier = serializers.CharField()
-    flags = serializers.ListField(child=SDKFeatureStateSerializer())
-    traits = serializers.ListSerializer(child=_TraitSerializer())  # type: ignore[var-annotated]
 
 
 class SDKIdentitiesQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]

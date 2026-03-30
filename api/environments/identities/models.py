@@ -2,8 +2,7 @@ from itertools import chain
 
 from django.db import models
 from django.db.models import Prefetch, Q
-from flag_engine.context.mappers import map_environment_identity_to_context
-from flag_engine.segments.evaluator import is_context_in_segment
+from flag_engine.engine import get_evaluation_result
 
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
@@ -13,11 +12,7 @@ from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.versioning_service import get_environment_flags_list
 from segments.models import Segment
-from util.mappers.engine import (
-    map_identity_to_engine,
-    map_segment_to_engine,
-    map_traits_to_engine,
-)
+from util.mappers.engine import map_environment_to_evaluation_context
 
 
 class Identity(models.Model):
@@ -39,7 +34,7 @@ class Identity(models.Model):
         # Note that the environment / created_date index is added only to postgres, so we can add it concurrently to
         # avoid any downtime. If people using MySQL / Oracle have issues with poor performance on the identities table,
         # we can provide them the SQL to add it manually in a small window of downtime.
-        index_together = (("environment", "created_date"),)
+        indexes = [models.Index(fields=["environment", "created_date"])]
 
     def natural_key(self):  # type: ignore[no-untyped-def]
         return self.identifier, self.environment.api_key
@@ -152,7 +147,6 @@ class Identity(models.Model):
         :param overrides_only: only retrieve the segments which have a valid override in the environment
         :return: List of matching segments
         """
-        matching_segments = []
         db_traits = (
             self.identity_traits.all() if (traits is None and self.id) else traits or []
         )
@@ -162,29 +156,18 @@ class Identity(models.Model):
         else:
             all_segments = self.environment.project.get_segments_from_cache()
 
-        engine_identity = map_identity_to_engine(
-            self,
-            with_overrides=False,
-            with_traits=False,
+        segments_by_pk = {segment.pk: segment for segment in all_segments}
+        context = map_environment_to_evaluation_context(
+            identity=self,
+            environment=self.environment,
+            traits=db_traits,
+            segments=all_segments,
         )
-        engine_traits = map_traits_to_engine(db_traits)
-
-        for segment in all_segments:
-            engine_segment = map_segment_to_engine(segment)
-
-            context = map_environment_identity_to_context(
-                environment=self.environment,
-                identity=engine_identity,
-                override_traits=engine_traits,
-            )
-
-            if is_context_in_segment(
-                context=context,
-                segment=engine_segment,
-            ):
-                matching_segments.append(segment)
-
-        return matching_segments
+        result = get_evaluation_result(context)
+        return [
+            segments_by_pk[segment_result["metadata"]["pk"]]
+            for segment_result in result["segments"]
+        ]
 
     def get_all_user_traits(self):  # type: ignore[no-untyped-def]
         # this is pointless, we should probably replace all uses with the below code

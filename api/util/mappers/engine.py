@@ -3,34 +3,35 @@ from itertools import chain
 from typing import TYPE_CHECKING, Dict, List, Optional
 from uuid import UUID
 
-from flag_engine.context.types import EvaluationContext
-from flag_engine.environments.integrations.models import IntegrationModel
-from flag_engine.environments.models import (
+from flag_engine.context import types as engine_types
+from flag_engine.segments.types import ConditionOperator, RuleType
+from pydantic import TypeAdapter
+
+from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
+from features.versioning.models import EnvironmentFeatureVersion
+from segments.types import SegmentEngineMetadata
+from util.engine_models.environments.integrations.models import IntegrationModel
+from util.engine_models.environments.models import (
     EnvironmentAPIKeyModel,
     EnvironmentModel,
     WebhookModel,
 )
-from flag_engine.features.models import (
+from util.engine_models.features.models import (
     FeatureModel,
     FeatureSegmentModel,
     FeatureStateModel,
     MultivariateFeatureOptionModel,
     MultivariateFeatureStateValueModel,
 )
-from flag_engine.identities.models import (  # type: ignore[attr-defined]
-    IdentityModel,
-    TraitModel,
-)
-from flag_engine.organisations.models import OrganisationModel
-from flag_engine.projects.models import ProjectModel
-from flag_engine.segments.models import (
+from util.engine_models.identities.models import IdentityModel
+from util.engine_models.identities.traits.models import TraitModel
+from util.engine_models.organisations.models import OrganisationModel
+from util.engine_models.projects.models import ProjectModel
+from util.engine_models.segments.models import (
     SegmentConditionModel,
     SegmentModel,
     SegmentRuleModel,
 )
-
-from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
-from features.versioning.models import EnvironmentFeatureVersion
 
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import (  # type: ignore[attr-defined]
@@ -47,16 +48,20 @@ if TYPE_CHECKING:  # pragma: no cover
     from integrations.webhook.models import WebhookConfiguration
     from organisations.models import Organisation
     from projects.models import Project
-    from segments.models import Segment, SegmentRule
+    from segments.models import Condition, Segment, SegmentRule
 
 
 __all__ = (
+    "map_condition_to_segment_condition",
     "map_environment_api_key_to_engine",
     "map_environment_to_engine",
     "map_feature_to_engine",
     "map_identity_to_engine",
+    "map_environment_to_evaluation_context",
     "map_mv_option_to_engine",
+    "map_rule_to_segment_rule",
     "map_segment_to_engine",
+    "map_segment_to_segment_context",
     "map_traits_to_engine",
 )
 
@@ -419,23 +424,75 @@ def map_identity_to_engine(
     )
 
 
-def map_engine_identity_to_context(
-    identity: IdentityModel,
-) -> "EvaluationContext":
-    """
-    A special mapper to produce a minimal EvaluationContext
-    in an environment-less form.
-    Used when an environment object is not available, like when evaluating segments for webhooks.
-    """
-    return {
-        "environment": {"key": identity.environment_api_key, "name": ""},
-        "identity": {
-            "identifier": identity.identifier,
-            "key": str(identity.django_id or identity.composite_key),
-            "traits": {
-                trait.trait_key: trait.trait_value for trait in identity.identity_traits
-            },
+_rule_type_adapter: TypeAdapter[RuleType] = TypeAdapter(RuleType)
+_condition_operator_adapter: TypeAdapter[ConditionOperator] = TypeAdapter(
+    ConditionOperator
+)
+
+
+def map_environment_to_evaluation_context(
+    *,
+    environment: "Environment",
+    identity: "Identity | None" = None,
+    traits: "Iterable[Trait] | None" = None,
+    segments: "Iterable[Segment] | None" = None,
+) -> "engine_types.EvaluationContext[SegmentEngineMetadata, object]":
+    """Map Django ORM Environment (and optionally Identity) to a flag-engine EvaluationContext."""
+    context: engine_types.EvaluationContext[SegmentEngineMetadata, object] = {
+        "environment": {
+            "key": environment.api_key,
+            "name": environment.name or "",
         },
+    }
+    if identity is not None:
+        trait_items: "Iterable[Trait]" = (
+            traits if traits is not None else identity.identity_traits.all()
+        )
+        context["identity"] = {
+            "identifier": identity.identifier,
+            "key": identity.get_hash_key(
+                environment.use_identity_composite_key_for_hashing
+            ),
+            "traits": {trait.trait_key: trait.trait_value for trait in trait_items},
+        }
+    if segments is not None:
+        context["segments"] = {
+            str(segment.pk): map_segment_to_segment_context(segment)
+            for segment in segments
+        }
+    return context
+
+
+def map_segment_to_segment_context(
+    segment: "Segment",
+) -> "engine_types.SegmentContext[SegmentEngineMetadata, object]":
+    """Map a Django ORM Segment to a flag-engine SegmentContext TypedDict."""
+    return {
+        "key": str(segment.pk),
+        "name": segment.name,
+        "rules": [map_rule_to_segment_rule(rule) for rule in segment.rules.all()],
+        "metadata": SegmentEngineMetadata(pk=segment.pk),
+    }
+
+
+def map_rule_to_segment_rule(rule: "SegmentRule") -> engine_types.SegmentRule:
+    return {
+        "type": _rule_type_adapter.validate_python(rule.type),
+        "conditions": [
+            map_condition_to_segment_condition(condition)
+            for condition in rule.conditions.all()
+        ],
+        "rules": [map_rule_to_segment_rule(sub_rule) for sub_rule in rule.rules.all()],
+    }
+
+
+def map_condition_to_segment_condition(
+    condition: "Condition",
+) -> engine_types.StrValueSegmentCondition:
+    return {
+        "property": condition.property or "",
+        "operator": _condition_operator_adapter.validate_python(condition.operator),
+        "value": condition.value or "",
     }
 
 

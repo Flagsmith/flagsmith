@@ -7,6 +7,8 @@ from common.projects.permissions import VIEW_PROJECT
 from django.db.models import BooleanField, ExpressionWrapper, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.mixins import (
@@ -45,6 +47,30 @@ from features.versioning.serializers import (
 from users.models import FFAdminUser
 
 
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "get_environment_feature_versions",
+                "description": "Retrieves version information for a feature flag in a specific environment. Use this for environments with v2 feature versioning.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "create_environment_feature_version",
+                "description": "Creates a new version for a feature flag in a specific environment. Use this for environments with v2 feature versioning.",
+            },
+        },
+    ),
+)
 class EnvironmentFeatureVersionViewSet(
     GenericViewSet,  # type: ignore[type-arg]
     ListModelMixin,
@@ -132,6 +158,15 @@ class EnvironmentFeatureVersionViewSet(
 
         super().perform_destroy(instance)
 
+    @extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "publish_environment_feature_version",
+                "description": "Publishes a feature version to make it live in the environment. Use this for environments with v2 feature versioning.",
+            },
+        },
+    )
     @action(detail=True, methods=["POST"])
     def publish(self, request: Request, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         ef_version = self.get_object()
@@ -184,6 +219,42 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
         return EnvironmentFeatureVersion.objects.all()
 
 
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "get_environment_feature_version_states",
+                "description": "Retrieves feature state information for a specific version in an environment. Use this for environments with v2 feature versioning.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "create_environment_feature_version_state",
+                "description": "Creates a new feature state for a specific version in an environment. Use this for environments with v2 feature versioning.",
+            },
+        },
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "update_environment_feature_version_state",
+                "description": "Updates an existing feature state for a specific version in an environment. Use this for environments with v2 feature versioning.",
+            },
+        },
+    ),
+)
 class EnvironmentFeatureVersionFeatureStatesViewSet(
     GenericViewSet,  # type: ignore[type-arg]
     ListModelMixin,

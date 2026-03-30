@@ -11,6 +11,7 @@ from audit.views import OrganisationAuditLogViewSet
 from integrations.github.views import (
     GithubConfigurationViewSet,
     GithubRepositoryViewSet,
+    create_cleanup_issue,
     fetch_issues,
     fetch_pull_requests,
     fetch_repo_contributors,
@@ -146,6 +147,11 @@ urlpatterns = [
         "<int:organisation_pk>/github/repositories/",
         fetch_repositories,
         name="get-github-installation-repos",
+    ),
+    path(
+        "<int:organisation_pk>/github/create-cleanup-issue/",
+        create_cleanup_issue,
+        name="create-github-cleanup-issue",
     ),
     path(
         "<int:organisation_pk>/api-usage-notification/",

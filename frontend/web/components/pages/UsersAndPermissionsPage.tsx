@@ -42,6 +42,7 @@ import {
 } from 'common/services/useInvites'
 import OrganisationUsersTable from 'components/users-permissions/OrganisationUsersTable/OrganisationUsersTable'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+import { OrganisationPermission } from 'common/types/permissions.types'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -80,7 +81,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const [resendUserInvite] = useResendUserInviteMutation()
 
   const invites = userInvitesData?.results
-  const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
   const verifySeatsLimit = Utils.getFlagsmithHasFeature(
     'verify_seats_limit_for_invite_links',
   )
@@ -90,19 +90,19 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const manageUsersPermission = useHasPermission({
     id: AccountStore.getOrganisation()?.id,
     level: 'organisation',
-    permission: 'MANAGE_USERS',
+    permission: OrganisationPermission.MANAGE_USERS,
   })
   const manageGroupsPermission = useHasPermission({
     id: AccountStore.getOrganisation()?.id,
     level: 'organisation',
-    permission: 'MANAGE_USER_GROUPS',
+    permission: OrganisationPermission.MANAGE_USER_GROUPS,
   })
 
   const hasInvitePermission =
     hasEmailProvider && manageUsersPermission.permission
-  const tooltTipText = !hasEmailProvider
+  const tooltipText = !hasEmailProvider
     ? noEmailProvider
-    : Constants.organisationPermissions('Admin')
+    : Constants.organisationPermissions(OrganisationPermission.ADMIN)
 
   const { data: roles } = useGetRolesQuery({ organisation_id: organisation.id })
 
@@ -121,9 +121,11 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const meta = subscriptionMeta || organisation.subscription || { max_seats: 1 }
   const max_seats = meta.max_seats || 1
   const isAWS = AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
-  const autoSeats = !isAWS && Utils.getPlansPermission('AUTO_SEATS')
-  const usedSeats = paymentsEnabled && organisation.num_seats >= max_seats
-  const overSeats = paymentsEnabled && organisation.num_seats > max_seats
+  const autoSeats =
+    Utils.isSaas() && !isAWS && Utils.getPlansPermission('AUTO_SEATS')
+  const isSaasOrEnterprise = Utils.isSaas() || Utils.isEnterpriseImage()
+  const usedSeats = isSaasOrEnterprise && organisation.num_seats >= max_seats
+  const overSeats = isSaasOrEnterprise && organisation.num_seats > max_seats
   const [role, setRole] = useState<'ADMIN' | 'USER'>('ADMIN')
 
   const deleteInvite = (id: number) => {
@@ -140,9 +142,8 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
           .then(() => {
             toast('Invite deleted successfully')
           })
-          .catch((error) => {
+          .catch(() => {
             toast('Error deleting invite', 'error')
-            console.error(error)
           }),
       title: 'Delete Invite',
       yesText: 'Confirm',
@@ -195,7 +196,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         <h5 className='mb-0'>Team Members</h5>
                         {Utils.renderWithPermission(
                           hasInvitePermission,
-                          tooltTipText,
+                          tooltipText,
                           <Button
                             disabled={
                               !hasEmailProvider ||
@@ -218,7 +219,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         )}
                       </Row>
                       <FormGroup className='mt-2'>
-                        {paymentsEnabled && !isLoading && (
+                        {!isLoading && isSaasOrEnterprise && (
                           <div className='col-md-6 mt-3 mb-4'>
                             <InfoMessage>
                               {'You are currently using '}
@@ -238,11 +239,24 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                     <strong>
                                       If you wish to invite any additional
                                       members, please{' '}
-                                      {
-                                        <a href='#' onClick={openChat}>
-                                          Contact us
+                                      {Utils.isSaas() ? (
+                                        <a
+                                          href='#'
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            openChat()
+                                          }}
+                                        >
+                                          contact us
                                         </a>
-                                      }
+                                      ) : (
+                                        <a
+                                          href='mailto:support@flagsmith.com'
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          contact us
+                                        </a>
+                                      )}
                                       .
                                     </strong>
                                   ) : needsUpgradeForAdditionalSeats ? (
@@ -254,7 +268,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           href='#'
                                           onClick={() => {
                                             history.replace(
-                                              Constants.getUpgradeUrl(),
+                                              '/organisation-settings?tab=billing',
                                             )
                                           }}
                                         >
@@ -287,6 +301,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                 <Row>
                                   <div className='mr-3' style={{ width: 257 }}>
                                     <Select
+                                      data-test='invite-role-select'
                                       value={{
                                         label:
                                           role === 'ADMIN'
@@ -485,7 +500,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                               'Error resending invite',
                                               'error',
                                             )
-                                            console.error(error)
                                           })
                                       }
                                       theme='text'
@@ -532,7 +546,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                           {Utils.renderWithPermission(
                             manageGroupsPermission.permission,
                             Constants.organisationPermissions(
-                              'Manage User Groups',
+                              OrganisationPermission.MANAGE_USER_GROUPS,
                             ),
                             <Button
                               id='btn-invite-groups'
