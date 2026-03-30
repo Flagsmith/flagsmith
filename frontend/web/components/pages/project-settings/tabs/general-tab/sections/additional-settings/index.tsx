@@ -5,6 +5,7 @@ import { PreventFlagDefaultsSetting } from './PreventFlagDefaultsSetting'
 import { EnforceFeatureOwnershipSetting } from './EnforceFeatureOwnershipSetting'
 import { CaseSensitivitySetting } from './CaseSensitivitySetting'
 import { FeatureNameValidation } from './FeatureNameValidation'
+import { RequireFeatureOwnershipSetting } from './RequireFeatureOwnershipSetting'
 
 type AdditionalSettingsProps = {
   project: Project
@@ -22,6 +23,8 @@ export const AdditionalSettings = ({ project }: AdditionalSettingsProps) => {
       <CaseSensitivitySetting project={project} />
 
       <FeatureNameValidation project={project} />
+
+      <RequireFeatureOwnershipSetting project={project} />
     </div>
   )
 }
