@@ -59,7 +59,7 @@ services:
     environment:
       <<: *flagsmith-env
     healthcheck:
-      test: ["NONE"]
+      disable: true
     depends_on:
       postgres:
         condition: service_healthy
