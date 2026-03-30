@@ -8,6 +8,7 @@ import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { useHasPermission } from 'common/providers/Permission'
 import FlagOwners from 'components/FlagOwners'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
+import FeatureOwnerSelect from 'components/FeatureOwnerSelect'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import Switch from 'components/Switch'
 import Tooltip from 'components/Tooltip'
@@ -30,19 +31,27 @@ type FeatureSettingsTabProps = {
   isSaving?: boolean
   invalid?: boolean
   hasMetadataRequired?: boolean
+  ownerIds?: number[]
+  groupOwnerIds?: number[]
+  onOwnerIdsChange?: (ids: number[]) => void
+  onGroupOwnerIdsChange?: (ids: number[]) => void
   onChange: (projectFlag: ProjectFlag) => void
   onHasMetadataRequiredChange: (hasMetadataRequired: boolean) => void
   onSaveSettings?: () => void
 }
 
 const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
+  groupOwnerIds,
   hasMetadataRequired,
   identity,
   invalid,
   isSaving,
   onChange,
+  onGroupOwnerIdsChange,
   onHasMetadataRequiredChange,
+  onOwnerIdsChange,
   onSaveSettings,
+  ownerIds,
   projectFlag,
   projectId,
 }) => {
@@ -137,6 +146,19 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
           />
         </>
       )}
+      {!identity &&
+        !projectFlag?.id &&
+        onOwnerIdsChange &&
+        onGroupOwnerIdsChange && (
+          <FormGroup className='mb-3 setting'>
+            <FeatureOwnerSelect
+              selectedUserIds={ownerIds ?? []}
+              selectedGroupIds={groupOwnerIds ?? []}
+              onUserIdsChange={onOwnerIdsChange}
+              onGroupIdsChange={onGroupOwnerIdsChange}
+            />
+          </FormGroup>
+        )}
       <FormGroup className='mb-3 setting'>
         <InputGroup
           value={projectFlag?.description || ''}

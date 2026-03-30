@@ -7,6 +7,7 @@ import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
 import Icon from 'components/Icon'
+import Tooltip from 'components/Tooltip'
 import FeatureValue from './FeatureValue'
 import FeatureAction, { FeatureActionProps } from './FeatureAction'
 import classNames from 'classnames'
@@ -25,6 +26,7 @@ import AccountStore from 'common/stores/account-store'
 import CondensedFeatureRow from 'components/CondensedFeatureRow'
 import { useHistory } from 'react-router-dom'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 import FeatureName from './FeatureName'
 import FeatureDescription from './FeatureDescription'
 import FeatureTags from './FeatureTags'
@@ -224,9 +226,22 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
           tab,
         }
 
+    const ownerChips = [
+      ...(projectFlag.owners ?? []).map((u) => ({
+        id: `user-${u.id}`,
+        label: getUserDisplayName(u),
+      })),
+      ...(projectFlag.owner_groups ?? []).map((g) => ({
+        id: `group-${g.id}`,
+        label: g.name,
+      })),
+    ]
+
     openModal(
-      <Row>
-        {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
+      <Row className='align-items-center'>
+        <span>
+          {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
+        </span>
         <Button
           onClick={() => {
             Utils.copyToClipboard(projectFlag.name)
@@ -236,6 +251,33 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         >
           <Icon name='copy' />
         </Button>
+        {ownerChips.length > 0 && (
+          <div className='d-flex align-items-center gap-1 ms-3'>
+            <Icon name='people' width={16} fill='#9DA4AE' />
+            {ownerChips.slice(0, 3).map((chip) => (
+              <Tooltip
+                key={chip.id}
+                title={<span className='chip chip--xs'>{chip.label}</span>}
+              >
+                {chip.label}
+              </Tooltip>
+            ))}
+            {ownerChips.length > 3 && (
+              <Tooltip
+                title={
+                  <span className='chip chip--xs'>
+                    +{ownerChips.length - 3}
+                  </span>
+                }
+              >
+                {ownerChips
+                  .slice(3)
+                  .map((c) => c.label)
+                  .join(', ')}
+              </Tooltip>
+            )}
+          </div>
+        )}
       </Row>,
       <ModalComponent {...modalProps} />,
       modalCssClass,

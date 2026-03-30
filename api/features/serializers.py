@@ -3,6 +3,7 @@ from typing import Any
 from uuid import UUID
 
 import django.core.exceptions
+from django.db import models
 from common.features.multivariate.serializers import (
     MultivariateFeatureStateValueSerializer,
 )
@@ -10,6 +11,7 @@ from common.features.serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureStateValueSerializer,
 )
+from common.projects.permissions import VIEW_PROJECT
 from drf_spectacular.utils import extend_schema_field
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
@@ -29,6 +31,7 @@ from projects.code_references.serializers import (
     FeatureFlagCodeReferencesRepositoryCountSerializer,
 )
 from projects.models import Project
+from users.models import FFAdminUser, UserPermissionGroup
 from users.serializers import (
     UserIdsSerializer,
     UserListSerializer,
@@ -161,12 +164,30 @@ class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
             raise serializers.ValidationError("Tag IDs must be integers.")
 
 
+class _FeatureOwnersField(serializers.PrimaryKeyRelatedField[FFAdminUser]):
+
+    def get_queryset(self) -> models.QuerySet[FFAdminUser]:
+        return FFAdminUser.objects.all()
+
+    def to_representation(self, value: FFAdminUser) -> dict[str, Any]:
+        return UserListSerializer(value).data
+
+
+class _FeatureGroupOwnersField(serializers.PrimaryKeyRelatedField[UserPermissionGroup]):
+
+    def get_queryset(self) -> models.QuerySet[UserPermissionGroup]:
+        return UserPermissionGroup.objects.all()
+
+    def to_representation(self, value: UserPermissionGroup) -> dict[str, Any]:
+        return UserPermissionGroupSummarySerializer(value).data
+
+
 class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     multivariate_options = NestedMultivariateFeatureOptionSerializer(
         many=True, required=False
     )
-    owners = UserListSerializer(many=True, read_only=True)
-    group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
+    owners = _FeatureOwnersField(many=True, required=False)
+    group_owners = _FeatureGroupOwnersField(many=True, required=False)
 
     environment_feature_state = serializers.SerializerMethodField()
     segment_feature_state = serializers.SerializerMethodField()
@@ -240,12 +261,22 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         project = self.context["project"]
         self.validate_project_features_limit(project)
 
+        # Pop M2M fields before creating the instance (can't pass to Model.objects.create)
+        owners: list[FFAdminUser] = validated_data.pop("owners", [])
+        group_owners: list[UserPermissionGroup] = validated_data.pop("group_owners", [])
+
         # Add the default(User creating the feature) owner of the feature
         # NOTE: pop the user before passing the data to create
         user = validated_data.pop("user", None)
         instance = super(CreateFeatureSerializer, self).create(validated_data)  # type: ignore[no-untyped-call]
         if user and getattr(user, "is_master_api_key_user", False) is False:
             instance.owners.add(user)
+
+        if owners:
+            instance.owners.add(*owners)
+        if group_owners:
+            instance.group_owners.add(*group_owners)
+
         return instance  # type: ignore[no-any-return]
 
     def validate_project_features_limit(self, project: Project) -> None:
@@ -274,6 +305,26 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             if total_percentage_allocation > 100:
                 raise serializers.ValidationError("Invalid percentage allocation")
         return multivariate_options
+
+    def validate_owners(self, owners: list[FFAdminUser]) -> list[FFAdminUser]:
+        project: Project = self.context["project"]
+        for user in owners:
+            if not user.has_project_permission(VIEW_PROJECT, project):
+                raise serializers.ValidationError(
+                    "Some users do not have access to this project."
+                )
+        return owners
+
+    def validate_group_owners(
+        self, group_owners: list[UserPermissionGroup]
+    ) -> list[UserPermissionGroup]:
+        project: Project = self.context["project"]
+        for group in group_owners:
+            if group.organisation_id != project.organisation_id:
+                raise serializers.ValidationError(
+                    "Some groups do not belong to this project's organisation."
+                )
+        return group_owners
 
     def validate_name(self, name: str):  # type: ignore[no-untyped-def]
         view = self.context["view"]
@@ -317,7 +368,22 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
                 "Selected Tags must be from the same Project as current Feature"
             )
 
+        self._validate_enforce_feature_owners(attrs)
+
         return attrs
+
+    def _validate_enforce_feature_owners(self, attrs: dict[str, Any]) -> None:
+        project: Project = self.context["project"]
+        if (
+            not self.instance
+            and project.enforce_feature_owners
+            and not attrs.get("owners")
+            and not attrs.get("group_owners")
+        ):
+            raise serializers.ValidationError(
+                "This project requires at least one owner or group owner "
+                "when creating a feature."
+            )
 
     @extend_schema_field(FeatureStateSerializerSmall(allow_null=True))
     def get_environment_feature_state(  # type: ignore[return]
@@ -399,6 +465,9 @@ class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerial
 class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
     """prevent users from changing certain values after creation"""
 
+    owners = _FeatureOwnersField(many=True, read_only=True)
+    group_owners = _FeatureGroupOwnersField(many=True, read_only=True)
+
     class Meta(FeatureSerializerWithMetadata.Meta):
         read_only_fields = FeatureSerializerWithMetadata.Meta.read_only_fields + (  # type: ignore[assignment]
             "default_enabled",
@@ -415,6 +484,9 @@ class ListFeatureSerializer(FeatureSerializerWithMetadata):
 
 class UpdateFeatureSerializer(ListFeatureSerializer):
     """prevent users from changing certain values after creation"""
+
+    owners = _FeatureOwnersField(many=True, read_only=True)
+    group_owners = _FeatureGroupOwnersField(many=True, read_only=True)
 
     class Meta(ListFeatureSerializer.Meta):
         read_only_fields = ListFeatureSerializer.Meta.read_only_fields + (  # type: ignore[assignment]
