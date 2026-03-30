@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 from oauth2_metadata.tasks import clear_expired_oauth2_tokens
 
 
-def test_clear_expired_oauth2_tokens__calls_cleartokens(
+def test_clear_expired_oauth2_tokens__called__invokes_cleartokens_command(
     mocker: MagicMock,
 ) -> None:
     # Given
