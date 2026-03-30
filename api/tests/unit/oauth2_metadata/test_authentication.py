@@ -21,8 +21,7 @@ def test_authenticate__non_bearer_header__returns_none(
 ) -> None:
     # Given
     factory = APIRequestFactory()
-    kwargs = {"HTTP_AUTHORIZATION": auth_header} if auth_header else {}
-    request = Request(factory.get("/", **kwargs))
+    request = Request(factory.get("/", HTTP_AUTHORIZATION=auth_header))
     auth = OAuth2BearerTokenAuthentication()
 
     # When
