@@ -6,7 +6,7 @@ from projects.models import Project
 from segments.models import Segment
 
 
-def test_segment_override_limit_includes_all_feature_segments_states(
+def test_exceeds_segment_override_limit__shared_segment_across_features__returns_true(
     project: Project,
     environment: Environment,
 ) -> None:
@@ -31,7 +31,7 @@ def test_segment_override_limit_includes_all_feature_segments_states(
     assert result is True
 
 
-def test_segment_override_limit_is_triggered_with_distinct_segments_per_feature_states(
+def test_exceeds_segment_override_limit__distinct_segments_per_feature__returns_true(
     project: Project,
     environment: Environment,
 ) -> None:
@@ -58,7 +58,7 @@ def test_segment_override_limit_is_triggered_with_distinct_segments_per_feature_
     assert result is True
 
 
-def test_segment_override_limit_v2_delete_count_uses_unique_segment_ids(
+def test_exceeds_segment_override_limit__v2_delete_uses_unique_segment_ids__returns_true(
     project: Project,
     environment_v2_versioning: Environment,
 ) -> None:
