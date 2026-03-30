@@ -1040,7 +1040,7 @@ def test_update_project__set_enforce_feature_owners__succeeds(
     assert project.enforce_feature_owners is True
 
 
-def test_list_projects__includes_enforce_feature_owners_field(
+def test_list_projects__default_enforce_feature_owners__returns_false(
     admin_client: APIClient,
     project: Project,
 ) -> None:

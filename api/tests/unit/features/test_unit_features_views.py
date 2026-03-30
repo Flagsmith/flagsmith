@@ -4587,7 +4587,7 @@ def test_create_feature__multivariate_options_provided__sets_type_to_multivariat
     assert response.json()["type"] == MULTIVARIATE
 
 
-def test_create_feature__enforce_owners_enabled__no_owners__returns_400(
+def test_create_feature__enforce_owners_enabled_no_owners__returns_400(
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -4609,7 +4609,7 @@ def test_create_feature__enforce_owners_enabled__no_owners__returns_400(
     assert "least one owner" in response.json()["non_field_errors"][0].lower()
 
 
-def test_create_feature__enforce_owners_enabled__with_owners__returns_201(
+def test_create_feature__enforce_owners_enabled_with_owners__returns_201(
     admin_client_new: APIClient,
     project: Project,
     admin_user: FFAdminUser,
@@ -4635,7 +4635,7 @@ def test_create_feature__enforce_owners_enabled__with_owners__returns_201(
     assert admin_user in feature.owners.all()
 
 
-def test_create_feature__enforce_owners_enabled__with_group_owners__returns_201(
+def test_create_feature__enforce_owners_enabled_with_group_owners__returns_201(
     admin_client_new: APIClient,
     project: Project,
     organisation: Organisation,
@@ -4665,7 +4665,7 @@ def test_create_feature__enforce_owners_enabled__with_group_owners__returns_201(
     assert group in feature.group_owners.all()
 
 
-def test_create_feature__enforce_owners_disabled__no_owners__returns_201(
+def test_create_feature__enforce_owners_disabled_no_owners__returns_201(
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -4833,7 +4833,7 @@ def test_update_feature__owners_in_request_body__returns_200_without_changes(
     assert list(feature.group_owners.all()) == []
 
 
-def test_remove_owners__enforce_owners__last_owner__returns_400(
+def test_remove_owners__enforce_owners_last_owner__returns_400(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -4861,7 +4861,7 @@ def test_remove_owners__enforce_owners__last_owner__returns_400(
     assert admin_user in feature.owners.all()
 
 
-def test_remove_owners__enforce_owners__other_owners_remain__returns_200(
+def test_remove_owners__enforce_owners_other_owners_remain__returns_200(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -4893,7 +4893,7 @@ def test_remove_owners__enforce_owners__other_owners_remain__returns_200(
     assert other_user in feature.owners.all()
 
 
-def test_remove_owners__enforce_owners__group_owners_remain__returns_200(
+def test_remove_owners__enforce_owners_group_owners_remain__returns_200(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -4927,7 +4927,7 @@ def test_remove_owners__enforce_owners__group_owners_remain__returns_200(
     assert group in feature.group_owners.all()
 
 
-def test_remove_group_owners__enforce_owners__last_group_owner__returns_400(
+def test_remove_group_owners__enforce_owners_last_group_owner__returns_400(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
@@ -4958,7 +4958,7 @@ def test_remove_group_owners__enforce_owners__last_group_owner__returns_400(
     assert group in feature.group_owners.all()
 
 
-def test_remove_group_owners__enforce_owners__user_owners_remain__returns_200(
+def test_remove_group_owners__enforce_owners_user_owners_remain__returns_200(
     admin_client_new: APIClient,
     project: Project,
     feature: Feature,
