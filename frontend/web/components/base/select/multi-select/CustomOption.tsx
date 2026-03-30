@@ -1,4 +1,4 @@
-import { OptionProps } from 'react-select/lib/components/Option'
+import { OptionProps } from 'react-select'
 import { MultiSelectOption } from './MultiSelect'
 import Icon from 'components/Icon'
 import { useEffect, useRef } from 'react'
