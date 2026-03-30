@@ -1,6 +1,7 @@
-from rest_framework.request import Request
+from typing import Any
 
-from oauth2_provider.contrib.rest_framework import OAuth2Authentication  # type: ignore[import-untyped]
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+from rest_framework.request import Request
 
 
 class OAuth2BearerTokenAuthentication(OAuth2Authentication):  # type: ignore[misc]
@@ -9,8 +10,8 @@ class OAuth2BearerTokenAuthentication(OAuth2Authentication):  # type: ignore[mis
     views that need to read request.body.
     """
 
-    def authenticate(self, request: Request) -> tuple[object, str] | None:
+    def authenticate(self, request: Request) -> tuple[Any, Any] | None:
         auth_header = request.META.get("HTTP_AUTHORIZATION", "")
         if not auth_header.startswith("Bearer "):
             return None
-        return super().authenticate(request)  # type: ignore[return-value]
+        return super().authenticate(request)  # type: ignore[no-any-return]
