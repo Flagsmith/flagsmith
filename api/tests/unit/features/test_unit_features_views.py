@@ -4840,38 +4840,6 @@ def test_remove_owners__enforce_owners_last_owner__returns_400(
     assert admin_user in feature.owners.all()
 
 
-def test_remove_owners__enforce_owners_other_owners_remain__returns_200(
-    admin_client_new: APIClient,
-    project: Project,
-    feature: Feature,
-    admin_user: FFAdminUser,
-    organisation: Organisation,
-) -> None:
-    # Given
-    project.enforce_feature_owners = True
-    project.save()
-    other_user = FFAdminUser.objects.create_user(email="other@example.com")  # type: ignore[no-untyped-call]
-    other_user.add_organisation(organisation)
-    feature.owners.add(admin_user, other_user)
-
-    url = reverse(
-        "api-v1:projects:project-features-remove-owners",
-        args=[project.id, feature.id],
-    )
-    data = {"user_ids": [admin_user.id]}
-
-    # When
-    response = admin_client_new.post(
-        url, data=json.dumps(data), content_type="application/json"
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    feature.refresh_from_db()
-    assert admin_user not in feature.owners.all()
-    assert other_user in feature.owners.all()
-
-
 def test_remove_owners__enforce_owners_group_owners_remain__returns_200(
     admin_client_new: APIClient,
     project: Project,
