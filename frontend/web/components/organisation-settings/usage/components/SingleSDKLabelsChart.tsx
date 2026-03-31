@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React from 'react'
 import {
   Bar,
   BarChart,
@@ -7,17 +7,12 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  TooltipProps,
   Legend,
 } from 'recharts'
 import moment from 'moment'
-import {
-  NameType,
-  ValueType,
-} from 'recharts/types/component/DefaultTooltipContent'
 import { ChartDataPoint } from 'components/organisation-settings/usage/OrganisationUsageMetrics.container'
-import Utils from 'common/utils/utils'
 import useChartTheme from 'common/hooks/useChartTheme'
+import ChartTooltip from 'components/charts/ChartTooltip'
 
 interface UsageChartProps {
   colours: string[]
@@ -45,7 +40,9 @@ const UsageChart: React.FC<UsageChartProps> = ({
           <CartesianGrid stroke={chartTheme.gridStroke} vertical={false} />
           <_Tooltip
             cursor={{ fill: 'transparent' }}
-            content={<RechartsTooltip />}
+            content={
+              <ChartTooltip formatLabel={(v) => moment(v).format('D MMM')} />
+            }
           />
           <XAxis
             dataKey='day'
@@ -79,44 +76,6 @@ const UsageChart: React.FC<UsageChartProps> = ({
           ))}
         </BarChart>
       </ResponsiveContainer>
-    </div>
-  )
-}
-
-const RechartsTooltip: FC<TooltipProps<ValueType, NameType>> = ({
-  active,
-  label,
-  payload,
-}) => {
-  if (!active || !payload || payload.length === 0) {
-    return null
-  }
-
-  return (
-    <div className='recharts-tooltip py-2'>
-      <div className='px-4 py-2 fs-small lh-sm fw-bold recharts-tooltip-header'>
-        {moment(label).format('D MMM')}
-      </div>
-      <hr className='py-0 my-0 mb-3' />
-      {payload.map((el: any) => {
-        const { dataKey, fill, value } = el
-        return (
-          <Row key={dataKey} className='px-4 mb-3'>
-            <span
-              style={{
-                backgroundColor: fill,
-                borderRadius: 2,
-                display: 'inline-block',
-                height: 16,
-                width: 16,
-              }}
-            />
-            <span className='text-muted ml-2'>
-              {dataKey}: {Utils.numberWithCommas(value)}
-            </span>
-          </Row>
-        )
-      })}
     </div>
   )
 }

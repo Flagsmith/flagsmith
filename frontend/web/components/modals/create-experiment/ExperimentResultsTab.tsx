@@ -15,6 +15,7 @@ import {
 } from 'recharts'
 import { useGetExperimentResultsQuery } from 'common/services/useExperimentResults'
 import useChartTheme from 'common/hooks/useChartTheme'
+import ChartTooltip from 'components/charts/ChartTooltip'
 
 const getVariantColour = (
   variant: string,
@@ -47,7 +48,16 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
     )
   }
 
-  if (error || !data?.variants?.length) {
+  if (!data?.variants?.length) {
+    return (
+      <div className='text-center py-4'>
+        Experiment is on-going, data should start appearing as soon as your
+        users use it.
+      </div>
+    )
+  }
+
+  if (error) {
     return (
       <div className='text-center py-4'>
         Experiment is on-going, data should start appearing as soon as your
@@ -83,7 +93,10 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
               tickLine={false}
               axisLine={{ stroke: chartTheme.axisStroke }}
             />
-            <Tooltip cursor={{ fill: 'transparent' }} />
+            <Tooltip
+              cursor={{ fill: 'transparent' }}
+              content={<ChartTooltip />}
+            />
             <Bar dataKey='conversion_rate' barSize={40}>
               <LabelList
                 dataKey='conversion_rate'
@@ -127,7 +140,10 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
               tickLine={false}
               axisLine={{ stroke: chartTheme.axisStroke }}
             />
-            <Tooltip cursor={{ fill: 'transparent' }} />
+            <Tooltip
+              cursor={{ fill: 'transparent' }}
+              content={<ChartTooltip />}
+            />
             <Legend />
             <Bar
               dataKey='evaluations'
@@ -173,7 +189,7 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
                   />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip content={<ChartTooltip />} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>

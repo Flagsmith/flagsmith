@@ -16,6 +16,7 @@ import { useGetFeatureAnalyticsQuery } from 'common/services/useFeatureAnalytics
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import Utils from 'common/utils/utils'
 import useChartTheme from 'common/hooks/useChartTheme'
+import ChartTooltip from 'components/charts/ChartTooltip'
 
 type FlagAnalyticsType = {
   projectId: string
@@ -110,7 +111,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
                 />
                 <Tooltip
                   cursor={{ fill: 'transparent' }}
-                  labelStyle={{ color: chartTheme.tooltipLabelColour }}
+                  content={<ChartTooltip />}
                 />
                 {sortBy(environmentIds, (id) =>
                   environments?.results?.findIndex((env) => `${env.id}` === id),

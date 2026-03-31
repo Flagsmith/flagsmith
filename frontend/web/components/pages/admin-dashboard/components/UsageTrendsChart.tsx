@@ -14,6 +14,7 @@ import { UsageTrend } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import Card from 'components/Card'
 import useChartTheme from 'common/hooks/useChartTheme'
+import ChartTooltip from 'components/charts/ChartTooltip'
 
 interface UsageTrendsChartProps {
   trends: UsageTrend[]
@@ -46,9 +47,7 @@ const UsageTrendsChart: FC<UsageTrendsChartProps> = ({ days = 30, trends }) => {
               tickFormatter={(value: number) => Utils.numberWithCommas(value)}
               tick={{ fill: chartTheme.tickFill, fontSize: 12 }}
             />
-            <Tooltip
-              formatter={(value: number) => Utils.numberWithCommas(value)}
-            />
+            <Tooltip content={<ChartTooltip />} />
             <Legend />
             <Line
               type='monotone'

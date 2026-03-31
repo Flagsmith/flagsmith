@@ -1,4 +1,3 @@
-import Utils from 'common/utils/utils'
 import React, { FC } from 'react'
 import {
   Bar,
@@ -8,15 +7,11 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  TooltipProps,
 } from 'recharts'
 import moment from 'moment'
-import {
-  NameType,
-  ValueType,
-} from 'recharts/types/component/DefaultTooltipContent'
 import { AggregateUsageDataItem } from 'common/types/responses'
 import useChartTheme from 'common/hooks/useChartTheme'
+import ChartTooltip from 'components/charts/ChartTooltip'
 import UsageAPIDefinitions from './components/UsageAPIDefinitions'
 
 type OrganisationUsageProps = {
@@ -66,7 +61,9 @@ const OrganisationUsage: FC<OrganisationUsageProps> = ({
             />
             <_Tooltip
               cursor={{ fill: 'transparent' }}
-              content={<RechartsTooltip />}
+              content={
+                <ChartTooltip formatLabel={(v) => moment(v).format('D MMM')} />
+              }
             />
             {selection.includes('Flags') && (
               <Bar dataKey='flags' barSize={14} stackId='a' fill={colours[0]} />
@@ -104,106 +101,6 @@ const OrganisationUsage: FC<OrganisationUsageProps> = ({
   ) : (
     <div className='text-center'>
       <Loader />
-    </div>
-  )
-}
-
-const RechartsTooltip: FC<TooltipProps<ValueType, NameType>> = ({
-  active,
-  label,
-  payload,
-}) => {
-  if (!active || !payload || payload.length === 0) {
-    return null
-  }
-
-  return (
-    <div className='recharts-tooltip py-2'>
-      <div className='px-4 py-2 fs-small lh-sm fw-bold recharts-tooltip-header'>
-        {moment(label).format('D MMM')}
-      </div>
-      <hr className='py-0 my-0 mb-3' />
-      {payload.map((el: any) => {
-        const { dataKey, fill, payload } = el
-        switch (dataKey) {
-          case 'traits': {
-            return (
-              <Row key={dataKey} className='px-4 mb-3'>
-                <span
-                  style={{
-                    backgroundColor: fill,
-                    borderRadius: 2,
-                    display: 'inline-block',
-                    height: 16,
-                    width: 16,
-                  }}
-                />
-                <span className='text-muted ml-2'>
-                  Traits: {Utils.numberWithCommas(payload[dataKey])}
-                </span>
-              </Row>
-            )
-          }
-          case 'flags': {
-            return (
-              <Row key={dataKey} className='px-4 mb-3'>
-                <span
-                  style={{
-                    backgroundColor: fill,
-                    borderRadius: 2,
-                    display: 'inline-block',
-                    height: 16,
-                    width: 16,
-                  }}
-                />
-                <span className='text-muted ml-2'>
-                  Flags: {Utils.numberWithCommas(payload[dataKey])}
-                </span>
-              </Row>
-            )
-          }
-          case 'identities': {
-            return (
-              <Row key={dataKey} className='px-4 mb-3'>
-                <span
-                  style={{
-                    backgroundColor: fill,
-                    borderRadius: 2,
-                    display: 'inline-block',
-                    height: 16,
-                    width: 16,
-                  }}
-                />
-                <span className='text-muted ml-2'>
-                  Identities: {Utils.numberWithCommas(payload[dataKey])}
-                </span>
-              </Row>
-            )
-          }
-          case 'environment_document': {
-            return (
-              <Row key={dataKey} className='px-4 mb-3'>
-                <span
-                  style={{
-                    backgroundColor: fill,
-                    borderRadius: 2,
-                    display: 'inline-block',
-                    height: 16,
-                    width: 16,
-                  }}
-                />
-                <span className='text-muted ml-2'>
-                  Environment Document:{' '}
-                  {Utils.numberWithCommas(payload[dataKey])}
-                </span>
-              </Row>
-            )
-          }
-          default: {
-            return null
-          }
-        }
-      })}
     </div>
   )
 }
