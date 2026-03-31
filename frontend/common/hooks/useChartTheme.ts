@@ -8,7 +8,6 @@ type ChartTheme = {
   gridStroke: string
   tickFill: string
   axisStroke: string
-  tooltipLabelColour: string
   lineInfo: string
   lineSuccess: string
   lineWarning: string
@@ -34,6 +33,5 @@ export default function useChartTheme(): ChartTheme {
     lineWarning: warning,
     palette: [action, info, warning, danger, success],
     tickFill: resolveToken('--color-text-secondary'),
-    tooltipLabelColour: resolveToken('--color-text-default'),
   }
 }
