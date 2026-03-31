@@ -47,7 +47,6 @@ export const tokens = {
     default: 'var(--color-text-default, #1a2634)',
     disabled: 'var(--color-text-disabled, #9da4ae)',
     info: 'var(--color-text-info, #0aaddf)',
-    onFill: 'var(--color-text-on-fill, #ffffff)',
     secondary: 'var(--color-text-secondary, #656d7b)',
     success: 'var(--color-text-success, #27ab95)',
     tertiary: 'var(--color-text-tertiary, #9da4ae)',

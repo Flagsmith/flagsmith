@@ -194,14 +194,6 @@ export const AllTokens: StoryObj = {
           </tr>
           <tr>
             <td>
-              <code>--color-text-on-fill</code>
-            </td>
-            <td>
-              <code>#ffffff</code>
-            </td>
-          </tr>
-          <tr>
-            <td>
               <code>--color-text-action</code>
             </td>
             <td>

@@ -39,9 +39,7 @@ const DemoBox: React.FC<{
           ? 'var(--color-surface-action, #6837fc)'
           : 'var(--color-surface-muted, #eff1f4)',
         borderRadius: 'var(--radius-md, 6px)',
-        color: active
-          ? 'var(--color-text-on-fill, #fff)'
-          : 'var(--color-text-default)',
+        color: active ? '#ffffff' : 'var(--color-text-default)',
         cursor: 'pointer',
         fontSize: 13,
         fontWeight: 600,
