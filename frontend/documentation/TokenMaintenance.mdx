@@ -16,6 +16,7 @@ How to add, modify, or remove design tokens. Follow this process to keep the tok
     <tr><td><code>common/theme/tokens.json</code></td><td><strong>Single source of truth.</strong> All token values and descriptions.</td><td>Every token change starts here.</td></tr>
     <tr><td><code>common/theme/tokens.ts</code></td><td><strong>Generated.</strong> TypeScript exports with <code>var(--token, fallback)</code> pattern.</td><td>Never — auto-generated.</td></tr>
     <tr><td><code>web/styles/_tokens.scss</code></td><td><strong>Generated.</strong> CSS custom properties with <code>:root</code> and <code>.dark</code>.</td><td>Never — auto-generated.</td></tr>
+    <tr><td><code>web/styles/_token-utilities.scss</code></td><td><strong>Generated.</strong> Utility classes consuming tokens (e.g. <code>.bg-surface-subtle</code>, <code>.icon-secondary</code>).</td><td>Never — auto-generated.</td></tr>
     <tr><td><code>documentation/TokenReference.generated.stories.tsx</code></td><td><strong>Generated.</strong> Flat JSX for Storybook MCP.</td><td>Never — auto-generated.</td></tr>
     <tr><td><code>web/styles/_primitives.scss</code></td><td>Raw colour scales (50-950).</td><td>Only when adding a new colour family or adjusting a scale.</td></tr>
   </tbody>
@@ -33,7 +34,7 @@ Example: adding a new radius value `--radius-3xl` (24px).
 "3xl": { "cssVar": "--radius-3xl", "value": "24px", "description": "Extra-large container corners." }
 ```
 
-2. Run `git commit`. The pre-commit hook automatically regenerates `tokens.ts`, `_tokens.scss`, and `TokenReference.generated.stories.tsx`, then stages them. No manual step needed.
+2. Run `git commit`. The pre-commit hook automatically regenerates `tokens.ts`, `_tokens.scss`, `_token-utilities.scss`, and `TokenReference.generated.stories.tsx`, then stages them. No manual step needed. The new radius utility class (e.g. `.rounded-3xl`) is created automatically.
 
 **Note:** Spacing is handled by Bootstrap utility classes (`gap-2`, `p-3`, `m-4`, etc.) — there are no custom spacing tokens.
 
@@ -49,7 +50,7 @@ Example: adding `--color-text-link`.
 "link": { "cssVar": "--color-text-link", "light": "#6837fc", "dark": "#906af6" }
 ```
 
-2. Run `git commit`. The pre-commit hook regenerates all three files. The colour also appears in the Semantic Tokens visual story (auto-read from CSS vars).
+2. Run `git commit`. The pre-commit hook regenerates all four files. The colour also appears in the Semantic Tokens visual story (auto-read from CSS vars) and a utility class is created (e.g. `.text-link`).
 
 ---
 
@@ -70,7 +71,7 @@ Example: adding `--color-text-link`.
 
 ## The one rule
 
-**Token values must only be defined in `tokens.json`.** No hardcoded hex values, no hardcoded pixel values anywhere else. SCSS files use `var(--token)`. TypeScript uses the exports from `common/theme/tokens`. Future Tailwind config references tokens via `var()` in `theme.extend`.
+**Token values must only be defined in `tokens.json`.** No hardcoded hex values, no hardcoded pixel values anywhere else. SCSS files use `var(--token)`. TypeScript uses the exports from `common/theme/tokens`. Utility classes are auto-generated — use `className="bg-surface-subtle"` in JSX instead of writing SCSS.
 
 ---
 
@@ -82,7 +83,7 @@ Example: adding `--color-text-link`.
   </thead>
   <tbody>
     <tr><td>1</td><td><code>scripts/generate-tokens.mjs</code> reads <code>tokens.json</code></td><td>Pre-commit hook (lint-staged) when <code>tokens.json</code> is staged</td></tr>
-    <tr><td>2</td><td>Generates <code>tokens.ts</code>, <code>_tokens.scss</code>, and <code>TokenReference.generated.stories.tsx</code></td><td>Automatic</td></tr>
+    <tr><td>2</td><td>Generates <code>tokens.ts</code>, <code>_tokens.scss</code>, <code>_token-utilities.scss</code>, and <code>TokenReference.generated.stories.tsx</code></td><td>Automatic</td></tr>
     <tr><td>3</td><td>Generated files are auto-staged and included in the commit</td><td>Automatic</td></tr>
     <tr><td>4</td><td>Chromatic deploys the updated Storybook. Storybook MCP serves the flat JSX — AI agents can read all token data.</td><td>CI (on PR)</td></tr>
   </tbody>
