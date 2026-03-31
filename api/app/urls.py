@@ -6,7 +6,10 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic.base import TemplateView
 
-from oauth2_metadata.views import authorization_server_metadata
+from oauth2_metadata.views import (
+    DynamicClientRegistrationView,
+    authorization_server_metadata,
+)
 from users.views import password_reset_redirect
 
 from . import views
@@ -52,6 +55,11 @@ if not settings.TASK_PROCESSOR_MODE:
         path(
             "robots.txt",
             TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
+        ),
+        path(
+            "o/register/",
+            DynamicClientRegistrationView.as_view(),
+            name="oauth2-dcr-register",
         ),
         # Authorize template view for testing: this will be moved to the frontend in following issues
         path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
