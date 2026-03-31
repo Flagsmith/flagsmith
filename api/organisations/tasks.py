@@ -209,8 +209,10 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
 
         subscription_cache = organisation.subscription_information_cache
         # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
-        if flags.is_feature_enabled(
-            "get_current_api_usage_deprecated"
+        if openfeature_client.get_boolean_value(
+            "get_current_api_usage_deprecated",
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
         ):  # pragma: no cover
             api_usage = get_total_events_count(
                 organisation,
@@ -356,8 +358,10 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
 
         subscription_cache = organisation.subscription_information_cache
         # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
-        if flags.is_feature_enabled(
-            "get_current_api_usage_deprecated"
+        if openfeature_client.get_boolean_value(
+            "get_current_api_usage_deprecated",
+            default_value=False,
+            evaluation_context=ctx,
         ):  # pragma: no cover
             api_usage = get_total_events_count(
                 organisation,
