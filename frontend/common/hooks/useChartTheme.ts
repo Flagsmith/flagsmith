@@ -14,8 +14,7 @@ type ChartTheme = {
   lineWarning: string
   lineDanger: string
   lineAction: string
-  variantColours: string[]
-  winnerColour: string
+  palette: string[]
 }
 
 export default function useChartTheme(): ChartTheme {
@@ -33,9 +32,8 @@ export default function useChartTheme(): ChartTheme {
     lineInfo: info,
     lineSuccess: success,
     lineWarning: warning,
+    palette: [action, info, warning, danger, success],
     tickFill: resolveToken('--color-text-secondary'),
     tooltipLabelColour: resolveToken('--color-text-default'),
-    variantColours: [action, info, warning, danger, success],
-    winnerColour: success,
   }
 }

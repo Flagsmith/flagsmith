@@ -19,13 +19,10 @@ import useChartTheme from 'common/hooks/useChartTheme'
 const getVariantColour = (
   variant: string,
   index: number,
-  variantColours: string[],
+  palette: string[],
   winnerColour: string,
   winner?: string,
-) =>
-  variant === winner
-    ? winnerColour
-    : variantColours[index % variantColours.length]
+) => (variant === winner ? winnerColour : palette[index % palette.length])
 
 type ExperimentResultsTabProps = {
   environmentId: string
@@ -101,8 +98,8 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
                     fill={getVariantColour(
                       entry.variant,
                       index,
-                      chartTheme.variantColours,
-                      chartTheme.winnerColour,
+                      chartTheme.palette,
+                      chartTheme.lineSuccess,
                       winner,
                     )}
                   />
@@ -134,12 +131,12 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
             <Legend />
             <Bar
               dataKey='evaluations'
-              fill={chartTheme.variantColours[0]}
+              fill={chartTheme.palette[0]}
               barSize={40}
             />
             <Bar
               dataKey='conversions'
-              fill={chartTheme.winnerColour}
+              fill={chartTheme.lineSuccess}
               barSize={40}
             />
           </BarChart>
@@ -169,8 +166,8 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
                     fill={getVariantColour(
                       entry.variant,
                       index,
-                      chartTheme.variantColours,
-                      chartTheme.winnerColour,
+                      chartTheme.palette,
+                      chartTheme.lineSuccess,
                       winner,
                     )}
                   />
