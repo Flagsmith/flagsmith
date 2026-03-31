@@ -36,8 +36,8 @@ const esc = (s) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 const lightVal = (e) => e.light ?? e.value
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
-const NON_COLOUR = ['space', 'radius', 'font', 'shadow', 'duration', 'easing']
-const DESCRIBED = ['space', 'radius', 'shadow', 'duration', 'easing']
+const NON_COLOUR = ['radius', 'font', 'shadow', 'duration', 'easing']
+const DESCRIBED = ['radius', 'shadow', 'duration', 'easing']
 
 function makeCssVar(cssVarName, fallback) {
   if (
@@ -195,7 +195,6 @@ function generateTs() {
     '',
     'export type TokenCategory = keyof typeof tokens',
     'export type TokenName<C extends TokenCategory> = keyof (typeof tokens)[C]',
-    'export type SpaceScale = keyof typeof space',
     'export type RadiusScale = keyof typeof radius',
     'export type ShadowScale = keyof typeof shadow',
     '',
@@ -251,15 +250,7 @@ function generateMcpStory() {
     '    >',
     ...tables,
     '',
-    "      <h3>Pairing rules</h3>",
-    '      <ul>',
-    '        <li><strong>Icon-to-text gap:</strong> --space-1 (4px) or --space-2 (8px)</li>',
-    '        <li><strong>Component inner padding:</strong> --space-3 (12px) to --space-4 (16px)</li>',
-    '        <li><strong>Between components:</strong> --space-4 (16px) to --space-6 (24px)</li>',
-    '        <li><strong>Page sections:</strong> --space-8 (32px) and above</li>',
-    '      </ul>',
-    '',
-    '      <h3>Dark mode shadows</h3>',
+    "      <h3>Dark mode shadows</h3>",
     '      <p>',
     '        Dark mode overrides use stronger opacity (0.20-0.40 vs 0.05-0.20).',
     '        Higher elevation surfaces should use lighter backgrounds',
