@@ -4,7 +4,8 @@
  * Outputs:
  *   1. common/theme/tokens.ts     — TypeScript exports
  *   2. web/styles/_tokens.scss    — CSS custom properties
- *   3. documentation/TokenReference.generated.stories.tsx — flat JSX for Storybook MCP
+ *   3. web/styles/_token-utilities.scss — utility classes consuming tokens
+ *   4. documentation/TokenReference.generated.stories.tsx — flat JSX for Storybook MCP
  *
  * Usage:
  *   node scripts/generate-tokens.mjs
@@ -271,15 +272,100 @@ function generateMcpStory() {
   return output.join('\n')
 }
 
+function generateUtilities() {
+  const lines = [
+    '// =============================================================================',
+    '// Token Utility Classes — AUTO-GENERATED from common/theme/tokens.json',
+    '// Do not edit manually. Run: npm run generate:tokens',
+    '// Dark mode is automatic — CSS custom properties resolve differently under',
+    '// :root vs .dark, so no dark-prefixed classes are needed.',
+    '// =============================================================================',
+    '',
+  ]
+
+  // Colour utilities
+  const colourMappings = {
+    surface: { prefix: 'bg-surface', property: 'background-color' },
+    text: { prefix: 'text', property: 'color' },
+    border: { prefix: 'border', property: 'border-color' },
+    icon: { prefix: 'icon', property: null }, // special: color + fill
+  }
+
+  for (const [category, entries] of Object.entries(json.color)) {
+    const mapping = colourMappings[category]
+    if (!mapping) continue
+
+    lines.push(`// ${cap(category)}`)
+    for (const [key, e] of sorted(entries)) {
+      const cls = `${mapping.prefix}-${key}`
+      if (category === 'icon') {
+        lines.push(`.${cls} { color: var(${e.cssVar}); fill: var(${e.cssVar}); }`)
+      } else {
+        lines.push(`.${cls} { ${mapping.property}: var(${e.cssVar}); }`)
+      }
+    }
+    lines.push('')
+  }
+
+  // Radius utilities
+  if (json.radius) {
+    lines.push('// Radius')
+    for (const [key, e] of sorted(json.radius)) {
+      lines.push(`.rounded-${key} { border-radius: var(${e.cssVar}); }`)
+    }
+    lines.push('')
+  }
+
+  // Shadow utilities
+  if (json.shadow) {
+    lines.push('// Shadow')
+    for (const [key, e] of sorted(json.shadow)) {
+      lines.push(`.shadow-${key} { box-shadow: var(${e.cssVar}); }`)
+    }
+    lines.push('.shadow-none { box-shadow: none; }')
+    lines.push('')
+  }
+
+  // Font weight utilities
+  if (json.font) {
+    const weights = Object.entries(json.font).filter(([k]) =>
+      k.startsWith('weight-'),
+    )
+    if (weights.length) {
+      lines.push('// Font weight')
+      for (const [key, e] of weights.sort(([a], [b]) => a.localeCompare(b))) {
+        const cls = key.replace('weight-', '')
+        lines.push(`.font-${cls} { font-weight: var(${e.cssVar}); }`)
+      }
+      lines.push('')
+    }
+  }
+
+  // Transition utilities
+  if (json.duration && json.easing) {
+    lines.push('// Transitions')
+    for (const [key, e] of sorted(json.duration)) {
+      lines.push(
+        `.transition-${key} { transition-duration: var(${e.cssVar}); transition-timing-function: var(--easing-standard); }`,
+      )
+    }
+    lines.push('')
+  }
+
+  return lines.join('\n')
+}
+
 // ---------------------------------------------------------------------------
 // Write and format
 // ---------------------------------------------------------------------------
 
 const scssPath = resolve(ROOT, 'web/styles/_tokens.scss')
+const utilitiesPath = resolve(ROOT, 'web/styles/_token-utilities.scss')
 const tsPath = resolve(ROOT, 'common/theme/tokens.ts')
 const storyPath = resolve(ROOT, 'documentation/TokenReference.generated.stories.tsx')
 
 writeFileSync(scssPath, generateScss(), 'utf-8')
+writeFileSync(utilitiesPath, generateUtilities(), 'utf-8')
 writeFileSync(tsPath, generateTs(), 'utf-8')
 writeFileSync(storyPath, generateMcpStory(), 'utf-8')
 
@@ -302,6 +388,7 @@ const nonColorCount = NON_COLOUR.reduce(
 )
 console.log('Generated from tokens.json:')
 console.log(`  ${scssPath}`)
+console.log(`  ${utilitiesPath}`)
 console.log(`  ${tsPath}`)
 console.log(`  ${storyPath}`)
 console.log(
