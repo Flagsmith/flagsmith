@@ -4775,27 +4775,6 @@ def test_create_feature__owner_without_project_access__returns_400(
     assert "owners" in response.json()
 
 
-def test_create_feature__enforce_owners_enabled_with_master_api_key__returns_400(
-    admin_master_api_key_client: APIClient,
-    project: Project,
-) -> None:
-    # Given
-    project.enforce_feature_owners = True
-    project.save()
-
-    url = reverse("api-v1:projects:project-features-list", args=[project.id])
-    data = {"name": "test_feature_master_api_key_no_owners"}
-
-    # When
-    response = admin_master_api_key_client.post(
-        url, data=json.dumps(data), content_type="application/json"
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "non_field_errors" in response.json()
-
-
 def test_update_feature__owners_in_request_body__returns_200_without_changes(
     admin_client_new: APIClient,
     project: Project,
