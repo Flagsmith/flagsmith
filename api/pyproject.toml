@@ -191,7 +191,7 @@ pysaml2 = "^7.4.2"
 optional = true
 
 [tool.poetry.group.ldap.dependencies]
-flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.1" }
+flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.2" }
 
 [tool.poetry.group.workflows]
 optional = true
