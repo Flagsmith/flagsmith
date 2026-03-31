@@ -15,6 +15,7 @@ import EnvironmentTagSelect from 'components/EnvironmentTagSelect'
 import { useGetFeatureAnalyticsQuery } from 'common/services/useFeatureAnalytics'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import Utils from 'common/utils/utils'
+import useChartTheme from 'common/hooks/useChartTheme'
 
 type FlagAnalyticsType = {
   projectId: string
@@ -27,6 +28,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
   featureId,
   projectId,
 }) => {
+  const chartTheme = useChartTheme()
   const [environmentIds, setEnvironmentIds] = useState(defaultEnvironmentIds)
   const { data, isLoading } = useGetFeatureAnalyticsQuery(
     {
@@ -98,17 +100,17 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
                   height={100}
                   angle={-90}
                   textAnchor='end'
-                  tick={{ dx: -4, fill: '#656D7B' }}
+                  tick={{ dx: -4, fill: chartTheme.tickFill }}
                   tickLine={false}
-                  axisLine={{ stroke: '#656D7B' }}
+                  axisLine={{ stroke: chartTheme.axisStroke }}
                 />
                 <YAxis
-                  tick={{ fill: '#656D7B' }}
-                  axisLine={{ stroke: '#656D7B' }}
+                  tick={{ fill: chartTheme.tickFill }}
+                  axisLine={{ stroke: chartTheme.axisStroke }}
                 />
                 <Tooltip
                   cursor={{ fill: 'transparent' }}
-                  labelStyle={{ color: '#1a1a1a' }}
+                  labelStyle={{ color: chartTheme.tooltipLabelColour }}
                 />
                 {sortBy(environmentIds, (id) =>
                   environments?.results?.findIndex((env) => `${env.id}` === id),

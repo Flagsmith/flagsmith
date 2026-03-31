@@ -14,23 +14,18 @@ import {
   YAxis,
 } from 'recharts'
 import { useGetExperimentResultsQuery } from 'common/services/useExperimentResults'
+import useChartTheme from 'common/hooks/useChartTheme'
 
-const WINNER_COLOUR = 'rgba(22, 163, 74, 0.8)'
-const VARIANT_COLOURS = [
-  'rgba(37, 99, 235, 0.8)',
-  'rgba(234, 88, 12, 0.8)',
-  'rgba(124, 58, 237, 0.8)',
-  'rgba(8, 145, 178, 0.8)',
-  'rgba(219, 39, 119, 0.8)',
-  'rgba(220, 38, 38, 0.8)',
-  'rgba(132, 204, 22, 0.8)',
-  'rgba(245, 158, 11, 0.8)',
-]
-
-const getVariantColour = (variant: string, index: number, winner?: string) =>
+const getVariantColour = (
+  variant: string,
+  index: number,
+  variantColours: string[],
+  winnerColour: string,
+  winner?: string,
+) =>
   variant === winner
-    ? WINNER_COLOUR
-    : VARIANT_COLOURS[index % VARIANT_COLOURS.length]
+    ? winnerColour
+    : variantColours[index % variantColours.length]
 
 type ExperimentResultsTabProps = {
   environmentId: string
@@ -41,6 +36,7 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
   environmentId,
   featureName,
 }) => {
+  const chartTheme = useChartTheme()
   const { data, error, isLoading } = useGetExperimentResultsQuery({
     environmentId,
     featureName,
@@ -78,31 +74,37 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
         <h5 className='mb-2'>Conversion Rate (%)</h5>
         <ResponsiveContainer height={300} width='100%'>
           <BarChart data={data.variants}>
-            <CartesianGrid stroke='#EFF1F4' vertical={false} />
+            <CartesianGrid stroke={chartTheme.gridStroke} vertical={false} />
             <XAxis
               dataKey='variant'
-              tick={{ fill: '#656D7B' }}
+              tick={{ fill: chartTheme.tickFill }}
               tickLine={false}
-              axisLine={{ stroke: '#EFF1F4' }}
+              axisLine={{ stroke: chartTheme.axisStroke }}
             />
             <YAxis
-              tick={{ fill: '#656D7B' }}
+              tick={{ fill: chartTheme.tickFill }}
               tickLine={false}
-              axisLine={{ stroke: '#EFF1F4' }}
+              axisLine={{ stroke: chartTheme.axisStroke }}
             />
             <Tooltip cursor={{ fill: 'transparent' }} />
             <Bar dataKey='conversion_rate' barSize={40}>
               <LabelList
                 dataKey='conversion_rate'
                 position='top'
-                fill='#656D7B'
+                fill={chartTheme.tickFill}
                 formatter={(v: number) => `${v.toFixed(1)}%`}
               />
               {data.variants.map(
                 (entry: { variant: string }, index: number) => (
                   <Cell
                     key={index}
-                    fill={getVariantColour(entry.variant, index, winner)}
+                    fill={getVariantColour(
+                      entry.variant,
+                      index,
+                      chartTheme.variantColours,
+                      chartTheme.winnerColour,
+                      winner,
+                    )}
                   />
                 ),
               )}
@@ -116,22 +118,30 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
         <h5 className='mb-2'>Evaluations & Conversions</h5>
         <ResponsiveContainer height={300} width='100%'>
           <BarChart data={data.variants}>
-            <CartesianGrid stroke='#EFF1F4' vertical={false} />
+            <CartesianGrid stroke={chartTheme.gridStroke} vertical={false} />
             <XAxis
               dataKey='variant'
-              tick={{ fill: '#656D7B' }}
+              tick={{ fill: chartTheme.tickFill }}
               tickLine={false}
-              axisLine={{ stroke: '#EFF1F4' }}
+              axisLine={{ stroke: chartTheme.axisStroke }}
             />
             <YAxis
-              tick={{ fill: '#656D7B' }}
+              tick={{ fill: chartTheme.tickFill }}
               tickLine={false}
-              axisLine={{ stroke: '#EFF1F4' }}
+              axisLine={{ stroke: chartTheme.axisStroke }}
             />
             <Tooltip cursor={{ fill: 'transparent' }} />
             <Legend />
-            <Bar dataKey='evaluations' fill={VARIANT_COLOURS[0]} barSize={40} />
-            <Bar dataKey='conversions' fill={WINNER_COLOUR} barSize={40} />
+            <Bar
+              dataKey='evaluations'
+              fill={chartTheme.variantColours[0]}
+              barSize={40}
+            />
+            <Bar
+              dataKey='conversions'
+              fill={chartTheme.winnerColour}
+              barSize={40}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -156,7 +166,13 @@ const ExperimentResultsTab: FC<ExperimentResultsTabProps> = ({
                 {chanceToWinData.map((entry, index) => (
                   <Cell
                     key={index}
-                    fill={getVariantColour(entry.variant, index, winner)}
+                    fill={getVariantColour(
+                      entry.variant,
+                      index,
+                      chartTheme.variantColours,
+                      chartTheme.winnerColour,
+                      winner,
+                    )}
                   />
                 ))}
               </Pie>

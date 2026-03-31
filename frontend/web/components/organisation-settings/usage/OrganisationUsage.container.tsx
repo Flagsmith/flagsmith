@@ -16,6 +16,7 @@ import {
   ValueType,
 } from 'recharts/types/component/DefaultTooltipContent'
 import { AggregateUsageDataItem } from 'common/types/responses'
+import useChartTheme from 'common/hooks/useChartTheme'
 import UsageAPIDefinitions from './components/UsageAPIDefinitions'
 
 type OrganisationUsageProps = {
@@ -31,6 +32,7 @@ const OrganisationUsage: FC<OrganisationUsageProps> = ({
   isError,
   selection,
 }) => {
+  const chartTheme = useChartTheme()
   return chartData || isError ? (
     <>
       {isError || chartData?.length === 0 ? (
@@ -42,7 +44,7 @@ const OrganisationUsage: FC<OrganisationUsageProps> = ({
       ) : (
         <ResponsiveContainer height={400} width='100%'>
           <BarChart data={chartData} style={{ stroke: '#fff', strokeWidth: 1 }}>
-            <CartesianGrid stroke='#EFF1F4' vertical={false} />
+            <CartesianGrid stroke={chartTheme.gridStroke} vertical={false} />
             <XAxis
               padding='gap'
               allowDataOverflow={false}
@@ -52,15 +54,15 @@ const OrganisationUsage: FC<OrganisationUsageProps> = ({
               angle={-90}
               textAnchor='end'
               tickFormatter={(v) => moment(v).format('D MMM')}
-              axisLine={{ stroke: '#EFF1F4' }}
-              tick={{ dx: -4, fill: '#656D7B' }}
+              axisLine={{ stroke: chartTheme.axisStroke }}
+              tick={{ dx: -4, fill: chartTheme.tickFill }}
               tickLine={false}
             />
             <YAxis
               allowDataOverflow={false}
               tickLine={false}
-              axisLine={{ stroke: '#EFF1F4' }}
-              tick={{ fill: '#1A2634' }}
+              axisLine={{ stroke: chartTheme.axisStroke }}
+              tick={{ fill: chartTheme.tickFill }}
             />
             <_Tooltip
               cursor={{ fill: 'transparent' }}

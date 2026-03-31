@@ -13,6 +13,7 @@ import moment from 'moment'
 import { UsageTrend } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import Card from 'components/Card'
+import useChartTheme from 'common/hooks/useChartTheme'
 
 interface UsageTrendsChartProps {
   trends: UsageTrend[]
@@ -20,6 +21,7 @@ interface UsageTrendsChartProps {
 }
 
 const UsageTrendsChart: FC<UsageTrendsChartProps> = ({ days = 30, trends }) => {
+  const chartTheme = useChartTheme()
   const chartData = trends.map((trend) => ({
     ...trend,
     date: moment(trend.date).format('MMM DD'),
@@ -37,12 +39,12 @@ const UsageTrendsChart: FC<UsageTrendsChartProps> = ({ days = 30, trends }) => {
             <CartesianGrid strokeDasharray='3 3' />
             <XAxis
               dataKey='date'
-              tick={{ fontSize: 12 }}
+              tick={{ fill: chartTheme.tickFill, fontSize: 12 }}
               interval='preserveStartEnd'
             />
             <YAxis
               tickFormatter={(value: number) => Utils.numberWithCommas(value)}
-              tick={{ fontSize: 12 }}
+              tick={{ fill: chartTheme.tickFill, fontSize: 12 }}
             />
             <Tooltip
               formatter={(value: number) => Utils.numberWithCommas(value)}
@@ -52,7 +54,7 @@ const UsageTrendsChart: FC<UsageTrendsChartProps> = ({ days = 30, trends }) => {
               type='monotone'
               dataKey='api_calls'
               name='API Calls'
-              stroke='#0AADDF'
+              stroke={chartTheme.lineInfo}
               strokeWidth={2}
               dot={false}
             />
@@ -60,7 +62,7 @@ const UsageTrendsChart: FC<UsageTrendsChartProps> = ({ days = 30, trends }) => {
               type='monotone'
               dataKey='flag_evaluations'
               name='Flag Evaluations'
-              stroke='#27AB95'
+              stroke={chartTheme.lineSuccess}
               strokeWidth={2}
               dot={false}
             />
@@ -68,7 +70,7 @@ const UsageTrendsChart: FC<UsageTrendsChartProps> = ({ days = 30, trends }) => {
               type='monotone'
               dataKey='identity_requests'
               name='Identity Requests'
-              stroke='#FF9F43'
+              stroke={chartTheme.lineWarning}
               strokeWidth={2}
               dot={false}
             />

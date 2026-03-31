@@ -40,8 +40,17 @@ $shadow-dark: 0 4px 4px 0 #00000029;
 }
 
 .recharts-tooltip {
-  background-color: $text-icon-light;
+  background-color: var(--color-surface-default);
+  border: 1px solid var(--color-border-strong);
   border-radius: $border-radius-lg;
+
+  .text-muted {
+    color: var(--color-text-secondary) !important;
+  }
+}
+
+.recharts-tooltip-header {
+  color: var(--color-text-default);
 }
 
 .yAxis {
@@ -54,20 +63,11 @@ $shadow-dark: 0 4px 4px 0 #00000029;
   font-size: $font-caption-xs;
   line-height: $line-height-xxsm;
   font-weight: 500;
+  color: var(--color-text-secondary);
 }
 
-.dark {
-  .recharts-tooltip-header {
-    color: $body-color;
-  }
-
-  .xAxis {
-    color: $text-icon-light-grey;
-  }
-
-  .recharts-wrapper {
-    line {
-      stroke: $bg-dark100;
-    }
+.recharts-wrapper {
+  line {
+    stroke: var(--color-border-default);
   }
 }
