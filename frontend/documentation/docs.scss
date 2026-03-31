@@ -2,7 +2,7 @@
 // Storybook Documentation Styles
 // =============================================================================
 // Shared styles for documentation stories. Uses design token custom properties
-// for spacing, radius, and colours — dogfooding the token system.
+// for radius and colours — dogfooding the token system.
 // =============================================================================
 
 // ---------------------------------------------------------------------------
@@ -20,13 +20,13 @@
 
 .docs-page__title {
   color: var(--color-text-default, #1a2634);
-  margin-bottom: var(--space-1, 4px);
+  margin-bottom: 4px;
 }
 
 .docs-page__description {
   color: var(--color-text-secondary, #656d7b);
   font-size: var(--font-body-size, 14px);
-  margin-bottom: var(--space-6, 24px);
+  margin-bottom: 24px;
 
   code {
     color: inherit;
@@ -38,14 +38,14 @@
 // ---------------------------------------------------------------------------
 
 .scale-row {
-  margin-bottom: var(--space-8, 32px);
+  margin-bottom: 32px;
 }
 
 .scale-row__title {
   color: var(--color-text-default, #1a2634);
   font-size: var(--font-h6-size, 16px);
   font-weight: var(--font-weight-bold, 700);
-  margin-bottom: var(--space-3, 12px);
+  margin-bottom: 12px;
 }
 
 .scale-row__swatches {
@@ -57,7 +57,7 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: var(--space-1, 4px);
+  gap: 4px;
   min-width: 0;
 }
 
@@ -82,20 +82,20 @@
 // ---------------------------------------------------------------------------
 
 .token-group {
-  margin-bottom: var(--space-8, 32px);
+  margin-bottom: 32px;
 }
 
 .token-group__title {
   color: var(--color-text-default, #1a2634);
   font-size: var(--font-h6-size, 16px);
   font-weight: var(--font-weight-bold, 700);
-  margin-bottom: var(--space-3, 12px);
+  margin-bottom: 12px;
 }
 
 .token-group__header {
   border-bottom: 2px solid var(--color-border-strong, rgba(101, 109, 123, 0.24));
   display: grid;
-  gap: var(--space-3, 12px);
+  gap: 12px;
   grid-template-columns: 48px 1fr 1fr;
   padding-bottom: 6px;
 }
@@ -112,9 +112,9 @@
   align-items: center;
   border-bottom: 1px solid var(--color-border-default, rgba(101, 109, 123, 0.16));
   display: grid;
-  gap: var(--space-3, 12px);
+  gap: 12px;
   grid-template-columns: 48px 1fr 1fr;
-  padding: var(--space-2, 8px) 0;
+  padding: 8px 0;
 }
 
 .token-swatch__preview {
@@ -143,7 +143,7 @@
   align-items: center;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1, 4px);
+  gap: 4px;
 }
 
 .cat-swatch__colour {
@@ -163,18 +163,18 @@
 .cat-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-4, 16px);
+  gap: 16px;
 }
 
 .cat-health-row {
   display: flex;
-  gap: var(--space-6, 24px);
+  gap: 24px;
 }
 
 .cat-health-item {
   align-items: center;
   display: flex;
-  gap: var(--space-2, 8px);
+  gap: 8px;
 }
 
 .cat-health-item__migration {
@@ -188,7 +188,7 @@
 
 .cat-note {
   color: var(--color-text-secondary, #656d7b);
-  margin-top: var(--space-4, 16px);
+  margin-top: 16px;
 }
 
 // ---------------------------------------------------------------------------
@@ -196,13 +196,13 @@
 // ---------------------------------------------------------------------------
 
 .icon-catalogue__header {
-  margin-bottom: var(--space-0_5, 2px);
+  margin-bottom: 2px;
 }
 
 .icon-catalogue__description {
   color: var(--color-text-secondary, #656d7b);
   font-size: var(--font-body-sm-size, 13px);
-  margin-bottom: var(--space-3, 12px);
+  margin-bottom: 12px;
 }
 
 .icon-catalogue__search {
@@ -211,13 +211,13 @@
   border-radius: var(--radius-md, 6px);
   color: var(--color-text-default, #1a2634);
   font-size: var(--font-body-sm-size, 13px);
-  margin-bottom: var(--space-4, 16px);
-  padding: var(--space-1, 4px) var(--space-3, 12px);
+  margin-bottom: 16px;
+  padding: 4px 12px;
   width: 100%;
 }
 
 .icon-catalogue__category {
-  margin-bottom: var(--space-4, 16px);
+  margin-bottom: 16px;
 }
 
 .icon-catalogue__category-label {
@@ -226,14 +226,14 @@
   font-size: var(--font-caption-size, 12px);
   font-weight: var(--font-weight-semibold, 600);
   letter-spacing: 0.04em;
-  margin-bottom: var(--space-2, 8px);
-  padding-bottom: var(--space-1, 4px);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
   text-transform: uppercase;
 }
 
 .icon-catalogue__grid {
   display: grid;
-  gap: var(--space-2, 8px);
+  gap: 8px;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
 }
 
@@ -246,8 +246,8 @@
   cursor: default;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1, 4px);
-  padding: var(--space-3, 12px) var(--space-2, 8px) var(--space-2, 8px);
+  gap: 4px;
+  padding: 12px 8px 8px;
   transition: background var(--duration-fast, 100ms);
 }
 
@@ -264,7 +264,7 @@
 
 .icon-catalogue__empty {
   color: var(--color-text-tertiary, #9da4ae);
-  margin-top: var(--space-4, 16px);
+  margin-top: 16px;
 }
 
 // ---------------------------------------------------------------------------
@@ -279,7 +279,7 @@
   th,
   td {
     border-bottom: 1px solid var(--color-border-default, rgba(101, 109, 123, 0.16));
-    padding: var(--space-2, 8px) var(--space-3, 12px);
+    padding: 8px 12px;
     text-align: left;
   }
 

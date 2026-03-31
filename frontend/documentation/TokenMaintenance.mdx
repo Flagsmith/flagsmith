@@ -25,15 +25,17 @@ How to add, modify, or remove design tokens. Follow this process to keep the tok
 
 ## Adding a new non-colour token
 
-Example: adding a new spacing value `--space-20` (80px).
+Example: adding a new radius value `--radius-3xl` (24px).
 
-1. Add the entry to `tokens.json` in the `space` object:
+1. Add the entry to `tokens.json` in the `radius` object:
 
 ```json
-"20": { "cssVar": "--space-20", "value": "80px", "description": "Page hero spacing." }
+"3xl": { "cssVar": "--radius-3xl", "value": "24px", "description": "Extra-large container corners." }
 ```
 
 2. Run `git commit`. The pre-commit hook automatically regenerates `tokens.ts`, `_tokens.scss`, and `TokenReference.generated.stories.tsx`, then stages them. No manual step needed.
+
+**Note:** Spacing is handled by Bootstrap utility classes (`gap-2`, `p-3`, `m-4`, etc.) — there are no custom spacing tokens.
 
 ---
 
@@ -100,6 +102,6 @@ You can also run `npm run generate:tokens` manually at any time.
     <tr><td>Token Reference</td><td>Auto-generated (codegen)</td><td>MCP-optimised. Every token inlined as flat JSX. AI agents read this.</td></tr>
     <tr><td>Semantic Colour Tokens</td><td>Auto-generated (runtime)</td><td>Visual. Reads <code>--color-*</code> CSS vars from the DOM. Shows computed colours with theme toggle.</td></tr>
     <tr><td>Colour Palette</td><td>Auto-generated (build time)</td><td>Visual. Parses <code>_primitives.scss</code> and renders swatch grids.</td></tr>
-    <tr><td>Spacing, Radius, Elevation, Motion</td><td>Imports from tokens.ts</td><td>Visual. Shows previews (bars, rounded boxes, shadow cards, interactive demos). Data derived from <code>tokens.ts</code>.</td></tr>
+    <tr><td>Radius, Elevation, Motion</td><td>Imports from tokens.ts</td><td>Visual. Shows previews (rounded boxes, shadow cards, interactive demos). Data derived from <code>tokens.ts</code>.</td></tr>
   </tbody>
 </table>

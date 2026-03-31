@@ -60,62 +60,6 @@ export type TokenEntry = {
   description: string
 }
 
-// Space
-export const space: Record<string, TokenEntry> = {
-  '0': {
-    description: 'No spacing. Use for flush edges between elements.',
-    value: 'var(--space-0, 0px)',
-  },
-  '0.5': {
-    description:
-      'Fine optical adjustment only. Never use for component padding.',
-    value: 'var(--space-0_5, 2px)',
-  },
-  '1': {
-    description: 'Tight inline spacing. Icon-to-text gap, badge padding.',
-    value: 'var(--space-1, 4px)',
-  },
-  '10': {
-    description: 'Extra-large spacing. Major page sections.',
-    value: 'var(--space-10, 40px)',
-  },
-  '12': {
-    description: 'Page-level vertical spacing between major sections.',
-    value: 'var(--space-12, 48px)',
-  },
-  '16': {
-    description: 'Maximum spacing. Hero sections, page-level separation.',
-    value: 'var(--space-16, 64px)',
-  },
-  '2': {
-    description:
-      'Default inline gap. Space between icon and label, between chips.',
-    value: 'var(--space-2, 8px)',
-  },
-  '3': {
-    description:
-      'Comfortable inner padding. Input padding, small card padding.',
-    value: 'var(--space-3, 12px)',
-  },
-  '4': {
-    description:
-      'Standard component padding. Card padding, section gap, button horizontal padding.',
-    value: 'var(--space-4, 16px)',
-  },
-  '5': {
-    description: 'Button horizontal padding (large). Modal body padding.',
-    value: 'var(--space-5, 20px)',
-  },
-  '6': {
-    description:
-      'Section spacing. Gap between card groups, modal header/body padding.',
-    value: 'var(--space-6, 24px)',
-  },
-  '8': {
-    description: 'Large section spacing. Page section margins.',
-    value: 'var(--space-8, 32px)',
-  },
-}
 // Radius
 export const radius: Record<string, TokenEntry> = {
   '2xl': {
@@ -212,6 +156,5 @@ export const easing: Record<string, TokenEntry> = {
 
 export type TokenCategory = keyof typeof tokens
 export type TokenName<C extends TokenCategory> = keyof (typeof tokens)[C]
-export type SpaceScale = keyof typeof space
 export type RadiusScale = keyof typeof radius
 export type ShadowScale = keyof typeof shadow
