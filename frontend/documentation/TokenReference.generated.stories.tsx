@@ -34,7 +34,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-default</code>
             </td>
             <td>
-              <code>#ffffff</code>
+              <code>var(--slate-0)</code>
             </td>
           </tr>
           <tr>
@@ -42,7 +42,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-subtle</code>
             </td>
             <td>
-              <code>#fafafb</code>
+              <code>var(--slate-50)</code>
             </td>
           </tr>
           <tr>
@@ -50,7 +50,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-muted</code>
             </td>
             <td>
-              <code>#eff1f4</code>
+              <code>var(--slate-100)</code>
             </td>
           </tr>
           <tr>
@@ -58,7 +58,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-emphasis</code>
             </td>
             <td>
-              <code>#e0e3e9</code>
+              <code>var(--slate-200)</code>
             </td>
           </tr>
           <tr>
@@ -66,7 +66,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-hover</code>
             </td>
             <td>
-              <code>rgba(0, 0, 0, 0.08)</code>
+              <code>oklch(from var(--slate-1000) l c h / 0.08)</code>
             </td>
           </tr>
           <tr>
@@ -74,7 +74,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-active</code>
             </td>
             <td>
-              <code>rgba(0, 0, 0, 0.16)</code>
+              <code>oklch(from var(--slate-1000) l c h / 0.16)</code>
             </td>
           </tr>
           <tr>
@@ -82,7 +82,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-action</code>
             </td>
             <td>
-              <code>#6837fc</code>
+              <code>var(--purple-600)</code>
             </td>
           </tr>
           <tr>
@@ -90,7 +90,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-action-hover</code>
             </td>
             <td>
-              <code>#4e25db</code>
+              <code>var(--purple-700)</code>
             </td>
           </tr>
           <tr>
@@ -98,7 +98,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-action-active</code>
             </td>
             <td>
-              <code>#3919b7</code>
+              <code>var(--purple-800)</code>
             </td>
           </tr>
           <tr>
@@ -106,7 +106,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-action-subtle</code>
             </td>
             <td>
-              <code>rgba(104, 55, 252, 0.08)</code>
+              <code>oklch(from var(--purple-600) l c h / 0.08)</code>
             </td>
           </tr>
           <tr>
@@ -114,7 +114,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-action-muted</code>
             </td>
             <td>
-              <code>rgba(104, 55, 252, 0.16)</code>
+              <code>oklch(from var(--purple-600) l c h / 0.16)</code>
             </td>
           </tr>
           <tr>
@@ -122,7 +122,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-danger</code>
             </td>
             <td>
-              <code>rgba(239, 77, 86, 0.08)</code>
+              <code>oklch(from var(--red-500) l c h / 0.08)</code>
             </td>
           </tr>
           <tr>
@@ -130,7 +130,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-success</code>
             </td>
             <td>
-              <code>rgba(39, 171, 149, 0.08)</code>
+              <code>oklch(from var(--green-500) l c h / 0.08)</code>
             </td>
           </tr>
           <tr>
@@ -138,7 +138,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-warning</code>
             </td>
             <td>
-              <code>rgba(255, 159, 67, 0.08)</code>
+              <code>oklch(from var(--orange-500) l c h / 0.08)</code>
             </td>
           </tr>
           <tr>
@@ -146,7 +146,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-info</code>
             </td>
             <td>
-              <code>rgba(10, 173, 223, 0.08)</code>
+              <code>oklch(from var(--blue-500) l c h / 0.08)</code>
             </td>
           </tr>
         </tbody>
@@ -165,7 +165,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-default</code>
             </td>
             <td>
-              <code>#1a2634</code>
+              <code>var(--slate-600)</code>
             </td>
           </tr>
           <tr>
@@ -173,7 +173,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-secondary</code>
             </td>
             <td>
-              <code>#656d7b</code>
+              <code>var(--slate-500)</code>
             </td>
           </tr>
           <tr>
@@ -181,7 +181,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-tertiary</code>
             </td>
             <td>
-              <code>#9da4ae</code>
+              <code>var(--slate-300)</code>
             </td>
           </tr>
           <tr>
@@ -189,7 +189,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-disabled</code>
             </td>
             <td>
-              <code>#9da4ae</code>
+              <code>var(--slate-300)</code>
             </td>
           </tr>
           <tr>
@@ -197,7 +197,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-action</code>
             </td>
             <td>
-              <code>#6837fc</code>
+              <code>var(--purple-600)</code>
             </td>
           </tr>
           <tr>
@@ -205,7 +205,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-danger</code>
             </td>
             <td>
-              <code>#ef4d56</code>
+              <code>var(--red-500)</code>
             </td>
           </tr>
           <tr>
@@ -213,7 +213,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-success</code>
             </td>
             <td>
-              <code>#27ab95</code>
+              <code>var(--green-500)</code>
             </td>
           </tr>
           <tr>
@@ -221,7 +221,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-warning</code>
             </td>
             <td>
-              <code>#ff9f43</code>
+              <code>var(--orange-500)</code>
             </td>
           </tr>
           <tr>
@@ -229,7 +229,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-info</code>
             </td>
             <td>
-              <code>#0aaddf</code>
+              <code>var(--blue-500)</code>
             </td>
           </tr>
         </tbody>
@@ -248,7 +248,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-default</code>
             </td>
             <td>
-              <code>rgba(101, 109, 123, 0.16)</code>
+              <code>oklch(from var(--slate-500) l c h / 0.16)</code>
             </td>
           </tr>
           <tr>
@@ -256,7 +256,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-strong</code>
             </td>
             <td>
-              <code>rgba(101, 109, 123, 0.24)</code>
+              <code>oklch(from var(--slate-500) l c h / 0.24)</code>
             </td>
           </tr>
           <tr>
@@ -264,7 +264,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-disabled</code>
             </td>
             <td>
-              <code>rgba(101, 109, 123, 0.08)</code>
+              <code>oklch(from var(--slate-500) l c h / 0.08)</code>
             </td>
           </tr>
           <tr>
@@ -272,7 +272,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-action</code>
             </td>
             <td>
-              <code>#6837fc</code>
+              <code>var(--purple-600)</code>
             </td>
           </tr>
           <tr>
@@ -280,7 +280,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-danger</code>
             </td>
             <td>
-              <code>#ef4d56</code>
+              <code>var(--red-500)</code>
             </td>
           </tr>
           <tr>
@@ -288,7 +288,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-success</code>
             </td>
             <td>
-              <code>#27ab95</code>
+              <code>var(--green-500)</code>
             </td>
           </tr>
           <tr>
@@ -296,7 +296,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-warning</code>
             </td>
             <td>
-              <code>#ff9f43</code>
+              <code>var(--orange-500)</code>
             </td>
           </tr>
           <tr>
@@ -304,7 +304,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-info</code>
             </td>
             <td>
-              <code>#0aaddf</code>
+              <code>var(--blue-500)</code>
             </td>
           </tr>
         </tbody>
@@ -323,7 +323,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-default</code>
             </td>
             <td>
-              <code>#1a2634</code>
+              <code>var(--slate-600)</code>
             </td>
           </tr>
           <tr>
@@ -331,7 +331,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-secondary</code>
             </td>
             <td>
-              <code>#656d7b</code>
+              <code>var(--slate-500)</code>
             </td>
           </tr>
           <tr>
@@ -339,7 +339,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-disabled</code>
             </td>
             <td>
-              <code>#9da4ae</code>
+              <code>var(--slate-300)</code>
             </td>
           </tr>
           <tr>
@@ -347,7 +347,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-action</code>
             </td>
             <td>
-              <code>#6837fc</code>
+              <code>var(--purple-600)</code>
             </td>
           </tr>
           <tr>
@@ -355,7 +355,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-danger</code>
             </td>
             <td>
-              <code>#ef4d56</code>
+              <code>var(--red-500)</code>
             </td>
           </tr>
           <tr>
@@ -363,7 +363,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-success</code>
             </td>
             <td>
-              <code>#27ab95</code>
+              <code>var(--green-500)</code>
             </td>
           </tr>
           <tr>
@@ -371,7 +371,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-warning</code>
             </td>
             <td>
-              <code>#ff9f43</code>
+              <code>var(--orange-500)</code>
             </td>
           </tr>
           <tr>
@@ -379,7 +379,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-info</code>
             </td>
             <td>
-              <code>#0aaddf</code>
+              <code>var(--blue-500)</code>
             </td>
           </tr>
         </tbody>
@@ -483,7 +483,9 @@ export const AllTokens: StoryObj = {
               <code>--shadow-sm</code>
             </td>
             <td>
-              <code>0px 1px 2px rgba(0, 0, 0, 0.05)</code>
+              <code>
+                0px 1px 2px oklch(from var(--slate-1000) l c h / 0.05)
+              </code>
             </td>
             <td>Subtle lift. Buttons on hover, input focus ring companion.</td>
           </tr>
@@ -492,7 +494,9 @@ export const AllTokens: StoryObj = {
               <code>--shadow-md</code>
             </td>
             <td>
-              <code>0px 4px 8px rgba(0, 0, 0, 0.12)</code>
+              <code>
+                0px 4px 8px oklch(from var(--slate-1000) l c h / 0.12)
+              </code>
             </td>
             <td>
               Cards, dropdowns, popovers. Default elevation for floating
@@ -504,7 +508,9 @@ export const AllTokens: StoryObj = {
               <code>--shadow-lg</code>
             </td>
             <td>
-              <code>0px 8px 16px rgba(0, 0, 0, 0.15)</code>
+              <code>
+                0px 8px 16px oklch(from var(--slate-1000) l c h / 0.15)
+              </code>
             </td>
             <td>
               Modals, drawers, slide-over panels. High elevation for overlay
@@ -516,7 +522,9 @@ export const AllTokens: StoryObj = {
               <code>--shadow-xl</code>
             </td>
             <td>
-              <code>0px 12px 24px rgba(0, 0, 0, 0.20)</code>
+              <code>
+                0px 12px 24px oklch(from var(--slate-1000) l c h / 0.20)
+              </code>
             </td>
             <td>
               Toast notifications, command palettes. Maximum elevation for

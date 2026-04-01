@@ -40,6 +40,52 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing']
 const DESCRIBED = ['radius', 'shadow', 'duration', 'easing']
 
+// Build reverse lookups for primitives
+const hexToPrimitive = new Map()
+const rgbToPrimitive = new Map()
+
+function hexToRgb(hex) {
+  const h = hex.replace('#', '')
+  return [
+    parseInt(h.substring(0, 2), 16),
+    parseInt(h.substring(2, 4), 16),
+    parseInt(h.substring(4, 6), 16),
+  ].join(', ')
+}
+
+if (json.primitives) {
+  for (const [name, hex] of Object.entries(json.primitives)) {
+    hexToPrimitive.set(hex.toLowerCase(), `var(--${name})`)
+    rgbToPrimitive.set(hexToRgb(hex), name)
+  }
+}
+
+/**
+ * Replace a colour value with its primitive reference.
+ * - Hex values → var(--primitive)
+ * - rgba(r, g, b, a) where r,g,b matches a primitive → oklch(from var(--primitive) l c h / a)
+ */
+function toPrimitiveRef(val) {
+  if (!val) return val
+
+  // Direct hex match
+  const hexMatch = hexToPrimitive.get(val.toLowerCase())
+  if (hexMatch) return hexMatch
+
+  // rgba match → oklch relative colour
+  const rgbaMatch = val.match(/^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)$/)
+  if (rgbaMatch) {
+    const rgb = `${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]}`
+    const alpha = rgbaMatch[4]
+    const primitiveName = rgbToPrimitive.get(rgb)
+    if (primitiveName) {
+      return `oklch(from var(--${primitiveName}) l c h / ${alpha})`
+    }
+  }
+
+  return val
+}
+
 function makeCssVar(cssVarName, fallback) {
   if (
     !fallback ||
@@ -59,13 +105,22 @@ function buildScssLines() {
   const rootLines = []
   const darkLines = []
 
-  // Colour tokens
+  // Primitive colour custom properties
+  if (json.primitives) {
+    rootLines.push('  // Primitives')
+    for (const [name, hex] of sorted(json.primitives)) {
+      rootLines.push(`  --${name}: ${hex};`)
+    }
+    rootLines.push('')
+  }
+
+  // Colour tokens (referencing primitives where possible)
   for (const [category, entries] of Object.entries(json.color)) {
     rootLines.push(`  // ${cap(category)}`)
     for (const [, e] of sorted(entries)) {
-      rootLines.push(`  ${e.cssVar}: ${e.light};`)
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
       if (e.dark && e.dark !== e.light) {
-        darkLines.push(`  ${e.cssVar}: ${e.dark};`)
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
       }
     }
     rootLines.push('')
@@ -211,7 +266,7 @@ function generateMcpStory() {
   for (const [cat, entries] of Object.entries(json.color)) {
     const data = Object.values(entries).map((e) => ({
       cssVar: e.cssVar,
-      value: e.light,
+      value: toPrimitiveRef(e.light),
     }))
     tables.push(...buildTableRows(`Colour: ${cat}`, data))
   }

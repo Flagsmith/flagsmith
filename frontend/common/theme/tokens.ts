@@ -99,21 +99,25 @@ export const shadow: Record<string, TokenEntry> = {
   'lg': {
     description:
       'Modals, drawers, slide-over panels. High elevation for overlay content.',
-    value: 'var(--shadow-lg, 0px 8px 16px rgba(0, 0, 0, 0.15))',
+    value:
+      'var(--shadow-lg, 0px 8px 16px oklch(from var(--slate-1000) l c h / 0.15))',
   },
   'md': {
     description:
       'Cards, dropdowns, popovers. Default elevation for floating elements.',
-    value: 'var(--shadow-md, 0px 4px 8px rgba(0, 0, 0, 0.12))',
+    value:
+      'var(--shadow-md, 0px 4px 8px oklch(from var(--slate-1000) l c h / 0.12))',
   },
   'sm': {
     description: 'Subtle lift. Buttons on hover, input focus ring companion.',
-    value: 'var(--shadow-sm, 0px 1px 2px rgba(0, 0, 0, 0.05))',
+    value:
+      'var(--shadow-sm, 0px 1px 2px oklch(from var(--slate-1000) l c h / 0.05))',
   },
   'xl': {
     description:
       'Toast notifications, command palettes. Maximum elevation for urgent content.',
-    value: 'var(--shadow-xl, 0px 12px 24px rgba(0, 0, 0, 0.20))',
+    value:
+      'var(--shadow-xl, 0px 12px 24px oklch(from var(--slate-1000) l c h / 0.20))',
   },
 }
 // Duration
