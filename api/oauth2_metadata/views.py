@@ -54,9 +54,20 @@ class DynamicClientRegistrationView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "dcr_register"
 
+    # Map DRF serializer field names to RFC 7591 error codes.
+    _rfc7591_error_codes: dict[str, str] = {
+        "redirect_uris": "invalid_redirect_uri",
+        "client_name": "invalid_client_metadata",
+        "grant_types": "invalid_client_metadata",
+        "response_types": "invalid_client_metadata",
+        "token_endpoint_auth_method": "invalid_client_metadata",
+    }
+
     def post(self, request: Request) -> Response:
         serializer = DCRRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            return self._rfc7591_error_response(serializer.errors)
+
         data = serializer.validated_data
 
         application = create_oauth2_application(
@@ -75,4 +86,21 @@ class DynamicClientRegistrationView(APIView):
                 "client_id_issued_at": int(application.created.timestamp()),
             },
             status=drf_status.HTTP_201_CREATED,
+        )
+
+    def _rfc7591_error_response(self, errors: dict[str, list[str]]) -> Response:
+        """Format validation errors per RFC 7591 section 3.2.2."""
+        first_field = next(iter(errors))
+        error_code = self._rfc7591_error_codes.get(
+            first_field, "invalid_client_metadata"
+        )
+        messages = errors[first_field]
+        description = messages[0] if isinstance(messages[0], str) else str(messages[0])
+
+        return Response(
+            {
+                "error": error_code,
+                "error_description": description,
+            },
+            status=drf_status.HTTP_400_BAD_REQUEST,
         )

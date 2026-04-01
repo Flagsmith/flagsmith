@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { randomBytes, createHash } from "node:crypto";
 
-const CLIENT_ID = "ZLsLu3hhJI4GlhNsGeFVC3K2U3QBGfXtmc0EcyiG";
+const CLIENT_ID = "B4wAl37pg9y1PRsIvAXZ14cTp0FpqpNCtMSI7ETC";
 const REDIRECT_URI = "http://localhost:3000/oauth/callback";
 const API_URL = "http://localhost:8000";
 const PORT = 3000;

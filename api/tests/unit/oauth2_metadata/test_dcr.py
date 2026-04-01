@@ -46,13 +46,21 @@ def test_dcr_register__valid_request__returns_201_with_client_id(
 
 
 @pytest.mark.django_db()
-def test_dcr_register__localhost_http__returns_201(
+@pytest.mark.parametrize(
+    "redirect_uri",
+    [
+        "http://localhost:8080/callback",
+        "http://127.0.0.1:3000/callback",
+        "https://example.com/callback",
+    ],
+    ids=["localhost", "127.0.0.1", "https"],
+)
+def test_dcr_register__valid_redirect_uri__returns_201(
     api_client: APIClient,
+    redirect_uri: str,
 ) -> None:
     # Given
-    payload = _valid_payload(
-        redirect_uris=["http://localhost:8080/callback"],
-    )
+    payload = _valid_payload(redirect_uris=[redirect_uri])
 
     # When
     response = api_client.post(DCR_URL, data=payload, format="json")
@@ -62,151 +70,28 @@ def test_dcr_register__localhost_http__returns_201(
 
 
 @pytest.mark.django_db()
-def test_dcr_register__127_0_0_1_http__returns_201(
+@pytest.mark.parametrize(
+    "client_name",
+    [
+        "Claude Desktop (v2.1-beta)",
+        "My_App.test",
+        "Simple",
+    ],
+    ids=["special-chars", "underscores-dots", "simple"],
+)
+def test_dcr_register__valid_client_name__returns_201(
     api_client: APIClient,
+    client_name: str,
 ) -> None:
     # Given
-    payload = _valid_payload(
-        redirect_uris=["http://127.0.0.1:3000/callback"],
-    )
+    payload = _valid_payload(client_name=client_name)
 
     # When
     response = api_client.post(DCR_URL, data=payload, format="json")
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-
-
-def test_dcr_register__missing_client_name__returns_400(
-    api_client: APIClient,
-) -> None:
-    # Given
-    payload = {"redirect_uris": ["https://example.com/callback"]}
-
-    # When
-    response = api_client.post(DCR_URL, data=payload, format="json")
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "client_name" in response.json()
-
-
-def test_dcr_register__missing_redirect_uris__returns_400(
-    api_client: APIClient,
-) -> None:
-    # Given
-    payload = {"client_name": "Test"}
-
-    # When
-    response = api_client.post(DCR_URL, data=payload, format="json")
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "redirect_uris" in response.json()
-
-
-def test_dcr_register__empty_redirect_uris__returns_400(
-    api_client: APIClient,
-) -> None:
-    # Given
-    payload = _valid_payload(redirect_uris=[])
-
-    # When
-    response = api_client.post(DCR_URL, data=payload, format="json")
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "redirect_uris" in response.json()
-
-
-def test_dcr_register__http_redirect_uri__returns_400(
-    api_client: APIClient,
-) -> None:
-    # Given
-    payload = _valid_payload(
-        redirect_uris=["http://example.com/callback"],
-    )
-
-    # When
-    response = api_client.post(DCR_URL, data=payload, format="json")
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "redirect_uris" in response.json()
-
-
-def test_dcr_register__wildcard_redirect_uri__returns_400(
-    api_client: APIClient,
-) -> None:
-    # Given
-    payload = _valid_payload(
-        redirect_uris=["https://*.example.com/callback"],
-    )
-
-    # When
-    response = api_client.post(DCR_URL, data=payload, format="json")
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "redirect_uris" in response.json()
-
-
-def test_dcr_register__fragment_in_redirect_uri__returns_400(
-    api_client: APIClient,
-) -> None:
-    # Given
-    payload = _valid_payload(
-        redirect_uris=["https://example.com/callback#frag"],
-    )
-
-    # When
-    response = api_client.post(DCR_URL, data=payload, format="json")
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "redirect_uris" in response.json()
-
-
-def test_dcr_register__unsupported_grant_type__returns_400(
-    api_client: APIClient,
-) -> None:
-    # Given
-    payload = _valid_payload(grant_types=["implicit"])
-
-    # When
-    response = api_client.post(DCR_URL, data=payload, format="json")
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "grant_types" in response.json()
-
-
-def test_dcr_register__unsupported_response_type__returns_400(
-    api_client: APIClient,
-) -> None:
-    # Given
-    payload = _valid_payload(response_types=["token"])
-
-    # When
-    response = api_client.post(DCR_URL, data=payload, format="json")
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "response_types" in response.json()
-
-
-def test_dcr_register__unsupported_auth_method__returns_400(
-    api_client: APIClient,
-) -> None:
-    # Given
-    payload = _valid_payload(token_endpoint_auth_method="client_secret_basic")
-
-    # When
-    response = api_client.post(DCR_URL, data=payload, format="json")
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "token_endpoint_auth_method" in response.json()
+    assert response.json()["client_name"] == client_name
 
 
 @pytest.mark.django_db()
@@ -227,7 +112,7 @@ def test_dcr_register__defaults_applied__returns_expected_defaults(
 
 
 @pytest.mark.django_db()
-def test_dcr_register__creates_public_application_in_database(
+def test_dcr_register__valid_request__creates_public_application_in_database(
     api_client: APIClient,
 ) -> None:
     # Given
@@ -247,55 +132,100 @@ def test_dcr_register__creates_public_application_in_database(
     assert application.skip_authorization is False
 
 
-def test_dcr_register__too_many_redirect_uris__returns_400(
+@pytest.mark.parametrize(
+    ("redirect_uris", "expected_fragment"),
+    [
+        (["http://example.com/callback"], "HTTPS"),
+        (["https://example.com/callback#frag"], "Fragment"),
+        (["https://*.example.com/callback"], ""),  # Rejected by URLField
+        ([], ""),  # Empty list
+        ([f"https://example.com/cb{i}" for i in range(6)], ""),  # Too many
+    ],
+    ids=["http-non-localhost", "fragment", "wildcard", "empty-list", "too-many"],
+)
+def test_dcr_register__invalid_redirect_uris__returns_rfc7591_error(
     api_client: APIClient,
+    redirect_uris: list[str],
+    expected_fragment: str,
 ) -> None:
     # Given
-    payload = _valid_payload(
-        redirect_uris=[f"https://example.com/cb{i}" for i in range(6)],
-    )
+    payload = _valid_payload(redirect_uris=redirect_uris)
 
     # When
     response = api_client.post(DCR_URL, data=payload, format="json")
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "redirect_uris" in response.json()
+    data = response.json()
+    assert data["error"] == "invalid_redirect_uri"
+    assert "error_description" in data
+    if expected_fragment:
+        assert expected_fragment in data["error_description"]
 
 
-def test_dcr_register__html_in_client_name__returns_400(
+@pytest.mark.parametrize(
+    ("overrides", "expected_fragment"),
+    [
+        ({"client_name": "<script>alert(1)</script>"}, ""),
+        ({"grant_types": ["implicit"]}, "grant type"),
+        ({"response_types": ["token"]}, "response type"),
+        ({"token_endpoint_auth_method": "client_secret_basic"}, "public clients"),
+    ],
+    ids=["xss-client-name", "bad-grant-type", "bad-response-type", "bad-auth-method"],
+)
+def test_dcr_register__invalid_client_metadata__returns_rfc7591_error(
     api_client: APIClient,
+    overrides: dict[str, object],
+    expected_fragment: str,
 ) -> None:
     # Given
-    payload = _valid_payload(client_name="<script>alert(1)</script>")
+    payload = _valid_payload(**overrides)
 
     # When
     response = api_client.post(DCR_URL, data=payload, format="json")
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "client_name" in response.json()
+    data = response.json()
+    assert data["error"] == "invalid_client_metadata"
+    assert "error_description" in data
+    if expected_fragment:
+        assert expected_fragment in data["error_description"].lower()
 
 
-@pytest.mark.django_db()
-def test_dcr_register__valid_client_name_with_special_chars__returns_201(
+@pytest.mark.parametrize(
+    ("payload", "expected_error"),
+    [
+        (
+            {"redirect_uris": ["https://example.com/callback"]},
+            "invalid_client_metadata",
+        ),
+        (
+            {"client_name": "Test"},
+            "invalid_redirect_uri",
+        ),
+    ],
+    ids=["missing-client-name", "missing-redirect-uris"],
+)
+def test_dcr_register__missing_required_field__returns_rfc7591_error(
     api_client: APIClient,
+    payload: dict[str, object],
+    expected_error: str,
 ) -> None:
-    # Given — parentheses, dots, hyphens are allowed
-    payload = _valid_payload(client_name="Claude Desktop (v2.1-beta)")
-
-    # When
+    # Given / When
     response = api_client.post(DCR_URL, data=payload, format="json")
 
     # Then
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["client_name"] == "Claude Desktop (v2.1-beta)"
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert data["error"] == expected_error
+    assert "error_description" in data
 
 
 def test_dcr_register__get_request__returns_405(
     api_client: APIClient,
 ) -> None:
-    # When
+    # Given / When
     response = api_client.get(DCR_URL)
 
     # Then
@@ -309,12 +239,15 @@ def test_dcr_register__rate_limited__returns_429(
     # Given
     payload = _valid_payload()
 
-    with patch(
-        "rest_framework.throttling.ScopedRateThrottle.allow_request",
-        return_value=False,
-    ), patch(
-        "rest_framework.throttling.ScopedRateThrottle.wait",
-        return_value=60.0,
+    with (
+        patch(
+            "rest_framework.throttling.ScopedRateThrottle.allow_request",
+            return_value=False,
+        ),
+        patch(
+            "rest_framework.throttling.ScopedRateThrottle.wait",
+            return_value=60.0,
+        ),
     ):
         # When
         response = api_client.post(DCR_URL, data=payload, format="json")

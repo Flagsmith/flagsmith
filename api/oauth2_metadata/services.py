@@ -19,9 +19,7 @@ def validate_redirect_uri(uri: str) -> str:
         raise ValidationError(f"Invalid URI: {uri}")
 
     if "*" in uri:
-        raise ValidationError(
-            f"Wildcards are not permitted in redirect URIs: {uri}"
-        )
+        raise ValidationError(f"Wildcards are not permitted in redirect URIs: {uri}")
 
     if parsed.fragment:
         raise ValidationError(f"Fragment components are not permitted: {uri}")
