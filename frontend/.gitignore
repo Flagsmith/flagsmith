@@ -36,3 +36,7 @@ e2e/test-results/
 
 *storybook.log
 storybook-static
+
+# Visual regression snapshots (stored as CI artifacts, not in git)
+e2e/visual-regression-snapshots/
+e2e/visual-regression-screenshots/

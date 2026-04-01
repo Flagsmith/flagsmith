@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup';
-import { byId, log, createHelpers } from '../helpers';
+import { byId, log, createHelpers, visualSnapshot } from '../helpers';
 import { E2E_USER, PASSWORD, E2E_TEST_IDENTITY, E2E_SEGMENT_PROJECT_1, E2E_SEGMENT_PROJECT_2, E2E_SEGMENT_PROJECT_3 } from '../config'
 
 const REMOTE_CONFIG_FEATURE = 'remote_config'
@@ -53,7 +53,7 @@ const segmentRules =  [
   },
 ]
 
-test('Segment test 1 - Create, update, and manage segments with multivariate flags @oss', async ({ page }) => {
+test('Segment test 1 - Create, update, and manage segments with multivariate flags @oss', async ({ page }, testInfo) => {
   const {
     addSegmentOverride,
     assertInputValue,
@@ -114,11 +114,15 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
   await assertInputValue(byId(`rule-${0}-value-0`), `${lastRule.value + 1}`)
   await deleteSegmentFromPage('segment_to_update')
 
+  await visualSnapshot(page, 'segments-list', testInfo)
+
   log('Create segment')
   await createSegment('18_or_19', segmentRules)
 
   log('Add segment trait for user')
   await gotoTraits(E2E_TEST_IDENTITY)
+  await visualSnapshot(page, 'identity-traits', testInfo)
+
   await createTrait('age', 18)
 
   // Wait for trait to be applied and feature values to load
@@ -276,7 +280,7 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
   await deleteFeature('config')
 })
 
-test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page }) => {
+test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page }, testInfo) => {
   const {
     assertUserFeatureValue,
     click,
@@ -336,6 +340,8 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
   // Check that the override value is displayed correctly
   const valueInList = identityRow.locator('.table-column').filter({ hasText: 'small' })
   await expect(valueInList).toBeVisible()
+
+  await visualSnapshot(page, 'feature-identity-overrides', testInfo)
 
   log('Close modal')
   await closeModal()

@@ -4,10 +4,11 @@ import {
     getFlagsmith,
     log,
     createHelpers,
+    visualSnapshot,
 } from '../helpers';
 import { E2E_USER, PASSWORD } from '../config';
 
-test('Versioning tests - Create, edit, and compare feature versions @oss', async ({ page }) => {
+test('Versioning tests - Create, edit, and compare feature versions @oss', async ({ page }, testInfo) => {
     const {
         assertNumberOfVersions,
         click,
@@ -41,6 +42,8 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     await click('#confirm-btn-yes')
     // Feature versioning takes up to a minute to enable on the backend
     await waitForElementVisible(byId('feature-versioning-enabled'))
+
+    await visualSnapshot(page, 'versioning-enabled', testInfo)
 
     log('Create feature 1')
     await createRemoteConfig({ name: 'a', value: 'small' })
