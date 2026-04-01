@@ -176,7 +176,13 @@ def test_dcr_register__invalid_redirect_uris__returns_rfc7591_error(
         ({"response_types": ["token"]}, "response type"),
         ({"token_endpoint_auth_method": "client_secret_basic"}, "public clients"),
     ],
-    ids=["xss-client-name", "blank-client-name", "bad-grant-type", "bad-response-type", "bad-auth-method"],
+    ids=[
+        "xss-client-name",
+        "blank-client-name",
+        "bad-grant-type",
+        "bad-response-type",
+        "bad-auth-method",
+    ],
 )
 def test_dcr_register__invalid_client_metadata__returns_rfc7591_error(
     api_client: APIClient,
