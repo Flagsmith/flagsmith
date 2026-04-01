@@ -34,7 +34,6 @@ const Actions = Object.assign({}, require('./base/_action-constants'), {
   'MIGRATE_PROJECT': 'MIGRATE_PROJECT',
   'OAUTH': 'OAUTH',
   'REFRESH_FEATURES': 'REFRESH_FEATURES',
-  'REMOVE_FLAG': 'REMOVE_FLAG',
   'REMOVE_USER_FLAG': 'REMOVE_USER_FLAG',
   'RESEND_INVITE': 'RESEND_INVITE',
   'SEARCH_FLAGS': 'SEARCH_FLAGS',

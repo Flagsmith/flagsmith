@@ -272,13 +272,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       force: true,
     })
   },
-  removeFlag(projectId, flag) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.REMOVE_FLAG,
-      flag,
-      projectId,
-    })
-  },
   removeUserFlag({ cb, environmentId, identity, identityFlag }) {
     Dispatcher.handleViewAction({
       actionType: Actions.REMOVE_USER_FLAG,

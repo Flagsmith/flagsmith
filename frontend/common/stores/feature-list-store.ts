@@ -955,24 +955,6 @@ const controller = {
         })),
     }
   },
-  removeFlag: (projectId, flag) => {
-    store.saving()
-    API.trackEvent(Constants.events.REMOVE_FEATURE)
-    return data
-      .delete(`${Project.api}projects/${projectId}/features/${flag.id}/`)
-      .then(() => {
-        store.model.features = _.filter(
-          store.model.features,
-          (f) => f.id !== flag.id,
-        )
-        store.model.lastSaved = new Date().valueOf()
-        getStore().dispatch(
-          projectFlagService.util.invalidateTags(['ProjectFlag']),
-        )
-        store.saved({})
-        store.trigger('removed', flag)
-      })
-  },
   searchFeatures: _.throttle(
     (search, environmentId, projectId, filter, pageSize) => {
       store.search = encodeURIComponent(search || '')
@@ -1093,9 +1075,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.EDIT_FEATURE_MV:
       controller.editFeatureMv(projectId, action.flag, action.onComplete)
-      break
-    case Actions.REMOVE_FLAG:
-      controller.removeFlag(projectId, action.flag)
       break
     default:
   }
