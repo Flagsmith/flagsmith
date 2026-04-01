@@ -263,15 +263,15 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         owners: list[FFAdminUser] = validated_data.pop("owners", [])
         group_owners: list[UserPermissionGroup] = validated_data.pop("group_owners", [])
 
-        # Add the default(User creating the feature) owner of the feature
-        # NOTE: pop the user before passing the data to create
         user = validated_data.pop("user", None)
         instance = super(CreateFeatureSerializer, self).create(validated_data)  # type: ignore[no-untyped-call]
-        if user and getattr(user, "is_master_api_key_user", False) is False:
-            instance.owners.add(user)
 
         if owners:
             instance.owners.add(*owners)
+        elif user and getattr(user, "is_master_api_key_user", False) is False:
+            # Auto-add the creating user as owner only when no explicit owners provided
+            instance.owners.add(user)
+
         if group_owners:
             instance.group_owners.add(*group_owners)
 
