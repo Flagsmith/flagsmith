@@ -1,10 +1,13 @@
 from unittest.mock import patch
 
 import pytest
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 from oauth2_provider.models import Application
 from rest_framework import status
 from rest_framework.test import APIClient
+
+from oauth2_metadata.services import validate_redirect_uri
 
 DCR_URL = reverse("oauth2-dcr-register")
 
@@ -254,3 +257,20 @@ def test_dcr_register__rate_limited__returns_429(
 
         # Then
         assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+
+@pytest.mark.parametrize(
+    ("uri", "expected_message"),
+    [
+        ("not-a-uri", "Invalid URI"),
+        ("https://*.example.com/callback", "Wildcards"),
+    ],
+    ids=["invalid-uri", "wildcard"],
+)
+def test_validate_redirect_uri__invalid_input__raises_validation_error(
+    uri: str,
+    expected_message: str,
+) -> None:
+    # Given / When / Then
+    with pytest.raises(ValidationError, match=expected_message):
+        validate_redirect_uri(uri)
