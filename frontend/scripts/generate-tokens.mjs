@@ -64,6 +64,13 @@ if (json.primitives) {
  * Replace a colour value with its primitive reference.
  * - Hex values → var(--primitive)
  * - rgba(r, g, b, a) where r,g,b matches a primitive → oklch(from var(--primitive) l c h / a)
+ *
+ * OKLCH relative colour syntax derives alpha variants from primitives:
+ *   oklch(from var(--purple-600) l c h / 0.08)
+ * This keeps the same lightness (l), chroma (c), and hue (h) from the
+ * primitive but applies a custom alpha. Changing --purple-600 automatically
+ * updates all its alpha variants — no hardcoded RGB values needed.
+ * See: https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/oklch
  */
 function toPrimitiveRef(val) {
   if (!val) return val
