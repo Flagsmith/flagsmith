@@ -70,12 +70,6 @@
 .shadow-xl { box-shadow: var(--shadow-xl); }
 .shadow-none { box-shadow: none; }
 
-// Font weight
-.font-bold { font-weight: var(--font-weight-bold); }
-.font-medium { font-weight: var(--font-weight-medium); }
-.font-regular { font-weight: var(--font-weight-regular); }
-.font-semibold { font-weight: var(--font-weight-semibold); }
-
 // Transitions
 .transition-fast { transition-duration: var(--duration-fast); transition-timing-function: var(--easing-standard); }
 .transition-normal { transition-duration: var(--duration-normal); transition-timing-function: var(--easing-standard); }

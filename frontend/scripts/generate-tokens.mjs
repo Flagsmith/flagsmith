@@ -37,7 +37,7 @@ const esc = (s) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 const lightVal = (e) => e.light ?? e.value
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
-const NON_COLOUR = ['radius', 'font', 'shadow', 'duration', 'easing']
+const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing']
 const DESCRIBED = ['radius', 'shadow', 'duration', 'easing']
 
 function makeCssVar(cssVarName, fallback) {
@@ -324,21 +324,6 @@ function generateUtilities() {
     }
     lines.push('.shadow-none { box-shadow: none; }')
     lines.push('')
-  }
-
-  // Font weight utilities
-  if (json.font) {
-    const weights = Object.entries(json.font).filter(([k]) =>
-      k.startsWith('weight-'),
-    )
-    if (weights.length) {
-      lines.push('// Font weight')
-      for (const [key, e] of weights.sort(([a], [b]) => a.localeCompare(b))) {
-        const cls = key.replace('weight-', '')
-        lines.push(`.font-${cls} { font-weight: var(${e.cssVar}); }`)
-      }
-      lines.push('')
-    }
   }
 
   // Transition utilities
