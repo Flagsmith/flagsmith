@@ -1,5 +1,9 @@
 # UI Patterns & Best Practices
 
+## Storybook First
+
+Before building or composing UI, query Storybook MCP (`list-all-documentation`, then `get-documentation`) to discover existing components and their props. Storybook is the source of truth for the design system — don't grep source files to find components when the catalogue is available.
+
 ## Table Components
 
 ### Pattern: Reusable Table Components
