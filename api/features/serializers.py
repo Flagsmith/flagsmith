@@ -588,7 +588,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
 
         except django.core.exceptions.ValidationError as e:
             raise serializers.ValidationError(str(e))
-        
+
     def validate_feature(self, feature):  # type: ignore[no-untyped-def]
         if self.instance and self.instance.feature_id != feature.id:  # type: ignore[union-attr]
             raise serializers.ValidationError(
@@ -598,9 +598,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
 
     def validate_environment(self, environment):  # type: ignore[no-untyped-def]
         if environment is None:
-            raise serializers.ValidationError(
-                "Environment cannot be null"
-            )
+            raise serializers.ValidationError("Environment cannot be null")
 
         if self.instance and self.instance.environment_id != environment.id:  # type: ignore[union-attr]
             raise serializers.ValidationError(
