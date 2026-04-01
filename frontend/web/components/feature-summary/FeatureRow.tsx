@@ -238,7 +238,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             id: `user-${u.id}`,
             label: getUserDisplayName(u),
           })),
-          ...(projectFlag.owner_groups ?? []).map((g) => ({
+          ...(projectFlag.group_owners ?? []).map((g) => ({
             id: `group-${g.id}`,
             label: g.name,
           })),

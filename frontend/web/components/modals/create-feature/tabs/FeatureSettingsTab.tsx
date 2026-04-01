@@ -173,12 +173,19 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
                   project_id: numericProjectId,
                   user_ids: [id],
                 })
+                  .unwrap()
+                  .catch((e) =>
+                    toast(
+                      e?.data?.[0] || 'Failed to remove owner.',
+                      'danger',
+                    ),
+                  )
               }
             />
           </FormGroup>
           <FormGroup className='mb-3 setting'>
             <FlagOwnerGroups
-              selectedIds={(flagData?.owner_groups ?? []).map((g) => g.id)}
+              selectedIds={(flagData?.group_owners ?? []).map((g) => g.id)}
               onAdd={(id) =>
                 addGroupOwners({
                   feature_id: projectFlag.id,
@@ -192,6 +199,13 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
                   group_ids: [id],
                   project_id: numericProjectId,
                 })
+                  .unwrap()
+                  .catch((e) =>
+                    toast(
+                      e?.data?.[0] || 'Failed to remove group owner.',
+                      'danger',
+                    ),
+                  )
               }
             />
           </FormGroup>
