@@ -14,21 +14,6 @@ def clear_expired_oauth2_tokens() -> None:
 
 
 @register_recurring_task(run_every=timedelta(hours=24))
-def log_new_oauth2_application_registrations() -> None:
-    from oauth2_provider.models import Application
-
-    since = timezone.now() - timedelta(hours=24)
-    count: int = Application.objects.filter(created__gte=since).count()
-    total: int = Application.objects.count()
-    logger.info(
-        "OAuth2 DCR monitoring: %d new application(s) registered in the last 24h "
-        "(total: %d).",
-        count,
-        total,
-    )
-
-
-@register_recurring_task(run_every=timedelta(hours=24))
 def cleanup_stale_oauth2_applications() -> None:
     """Remove DCR applications that were never used to obtain a token.
 

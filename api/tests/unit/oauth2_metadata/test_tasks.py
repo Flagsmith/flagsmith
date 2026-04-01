@@ -8,7 +8,6 @@ from oauth2_provider.models import AccessToken, Application
 from oauth2_metadata.tasks import (
     cleanup_stale_oauth2_applications,
     clear_expired_oauth2_tokens,
-    log_new_oauth2_application_registrations,
 )
 
 
@@ -24,28 +23,6 @@ def test_clear_expired_oauth2_tokens__called__invokes_cleartokens_command(
     # Then
     mock_call_command.assert_called_once_with("cleartokens")
 
-
-@pytest.mark.django_db()
-def test_log_new_oauth2_application_registrations__called__logs_count(
-    mocker: MagicMock,
-) -> None:
-    # Given
-    Application.objects.create(
-        name="Test App",
-        client_type=Application.CLIENT_PUBLIC,
-        authorization_grant_type=Application.GRANT_AUTHORIZATION_CODE,
-        redirect_uris="https://example.com/callback",
-    )
-    mock_logger = mocker.patch("oauth2_metadata.tasks.logger")
-
-    # When
-    log_new_oauth2_application_registrations()
-
-    # Then
-    mock_logger.info.assert_called_once()
-    args = mock_logger.info.call_args
-    assert args[0][1] == 1  # 1 new application
-    assert args[0][2] == 1  # 1 total
 
 
 @pytest.mark.django_db()
