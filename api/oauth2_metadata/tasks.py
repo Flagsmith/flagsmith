@@ -20,17 +20,18 @@ def cleanup_stale_oauth2_applications() -> None:
     An application is considered stale if it was registered more than 14 days
     ago and has no associated access tokens, refresh tokens, or grants.
     """
+    from django.db.models import Exists, OuterRef
+
     from oauth2_provider.models import AccessToken, Application, Grant, RefreshToken
 
     threshold = timezone.now() - timedelta(days=14)
-    stale = (
-        Application.objects.filter(
-            created__lt=threshold,
-            user__isnull=True,  # Only DCR-created apps (no user)
-        )
-        .exclude(pk__in=AccessToken.objects.values("application_id"))
-        .exclude(pk__in=RefreshToken.objects.values("application_id"))
-        .exclude(pk__in=Grant.objects.values("application_id"))
+    stale = Application.objects.filter(
+        created__lt=threshold,
+        user__isnull=True,  # Only DCR-created apps (no user)
+    ).exclude(
+        Exists(AccessToken.objects.filter(application=OuterRef("pk")))
+        | Exists(RefreshToken.objects.filter(application=OuterRef("pk")))
+        | Exists(Grant.objects.filter(application=OuterRef("pk")))
     )
     count, _ = stale.delete()
     if count:
