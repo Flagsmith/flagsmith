@@ -12,7 +12,6 @@ import AccountSettingsPage from './pages/AccountSettingsPage'
 import ProjectStore from 'common/stores/project-store'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
-import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import AccountStore from 'common/stores/account-store'
 import OrganisationLimit from './OrganisationLimit'
@@ -117,10 +116,6 @@ const App = class extends Component {
   }
 
   onLogin = () => {
-    resolveAuthFlow({
-      isAuthenticated: true,
-    })
-
     let redirect = API.getRedirect()
     const invite = API.getInvite()
     if (invite) {
@@ -209,9 +204,6 @@ const App = class extends Component {
   }
 
   onLogout = () => {
-    resolveAuthFlow({
-      isAuthenticated: false,
-    })
     if (document.location.href.includes('saml?')) {
       return
     }

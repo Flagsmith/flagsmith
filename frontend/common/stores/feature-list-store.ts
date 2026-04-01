@@ -1,5 +1,4 @@
 import Constants from 'common/constants'
-import { getIsWidget } from 'components/pages/WidgetPage'
 import ProjectStore from './project-store'
 import {
   createAndSetFeatureVersion,
@@ -935,9 +934,7 @@ const controller = {
               store.loaded()
             })
             .catch((e) => {
-              if (!getIsWidget()) {
-                document.location.href = '/404?entity=environment'
-              }
+              document.location.href = '/404?entity=environment'
               API.ajaxHandler(store, e)
             })
         },
@@ -1020,33 +1017,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
   const projectId = parseInt(action.projectId)
   switch (action.actionType) {
-    case Actions.SEARCH_FLAGS: {
-      if (action.sort) {
-        store.sort = action.sort
-      }
-      controller.searchFeatures(
-        action.search,
-        action.environmentId,
-        projectId,
-        action.filter,
-        action.pageSize,
-      )
-      break
-    }
-    case Actions.GET_FLAGS:
-      store.search = encodeURIComponent(action.search || '')
-      if (action.sort) {
-        store.sort = action.sort
-      }
-      controller.getFeatures(
-        projectId,
-        action.environmentId,
-        action.force,
-        action.page,
-        action.filter,
-        action.pageSize,
-      )
-      break
     case Actions.REFRESH_FEATURES:
       if (
         projectId === store.projectId &&

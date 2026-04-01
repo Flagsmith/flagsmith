@@ -1,4 +1,3 @@
-import { getIsWidget } from 'components/pages/WidgetPage'
 import OrganisationStore from './organisation-store'
 
 import Constants from 'common/constants'
@@ -130,76 +129,41 @@ const controller = {
   },
   getProject: (id, cb, force) => {
     if (!id) {
-      if (!getIsWidget()) {
-        !force && AsyncStorage.removeItem('lastEnv')
-        document.location.href = '/404'
-      }
-    } else if (force) {
-      store.loading()
-
-      return Promise.all([
-        data.get(`${Project.api}projects/${id}/`),
-        data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
-      ])
-        .then(([project, environments]) => {
-          project.max_segments_allowed = project.max_segments_allowed
-          project.max_features_allowed = project.max_features_allowed
-          project.max_segment_overrides_allowed =
-            project.max_segment_overrides_allowed
-          project.total_features = project.total_features || 0
-          project.total_segments = project.total_segments || 0
-          store.model = Object.assign(project, {
-            environments: _.sortBy(environments.results, 'name'),
-          })
-          if (project.organisation !== OrganisationStore.id) {
-            AppActions.selectOrganisation(project.organisation)
-            AppActions.getOrganisation(project.organisation)
-          }
-          store.id = id
-          store.loaded()
-          if (cb) {
-            cb()
-          }
-        })
-        .catch(() => {
-          if (!getIsWidget()) {
-            document.location.href = '/404?entity=project'
-          }
-        })
-    } else if (!store.model || !store.model.environments || store.id !== id) {
-      store.loading()
-
-      Promise.all([
-        data.get(`${Project.api}projects/${id}/`),
-        data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
-      ])
-        .then(([project, environments]) => {
-          project.max_segments_allowed = project.max_segments_allowed
-          project.max_features_allowed = project.max_features_allowed
-          project.max_segment_overrides_allowed =
-            project.max_segment_overrides_allowed
-          project.total_features = project.total_features || 0
-          project.total_segments = project.total_segments || 0
-          store.model = Object.assign(project, {
-            environments: _.sortBy(environments.results, 'name'),
-          })
-          if (project.organisation !== OrganisationStore.id) {
-            AppActions.selectOrganisation(project.organisation)
-            AppActions.getOrganisation(project.organisation)
-          }
-          store.id = id
-          store.loaded()
-          if (cb) {
-            cb()
-          }
-        })
-        .catch(() => {
-          if (!getIsWidget()) {
-            AsyncStorage.removeItem('lastEnv')
-            document.location.href = '/404?entity=project'
-          }
-        })
+      !force && AsyncStorage.removeItem('lastEnv')
+      document.location.href = '/404'
+      return
     }
+
+    if (!force && store.model && store.model.environments && store.id === id) {
+      return
+    }
+
+    store.loading()
+
+    return Promise.all([
+      data.get(`${Project.api}projects/${id}/`),
+      data.get(`${Project.api}environments/?project=${id}`).catch(() => []),
+    ])
+      .then(([project, environments]) => {
+        project.total_features = project.total_features || 0
+        project.total_segments = project.total_segments || 0
+        store.model = Object.assign(project, {
+          environments: _.sortBy(environments.results, 'name'),
+        })
+        if (project.organisation !== OrganisationStore.id) {
+          AppActions.selectOrganisation(project.organisation)
+          AppActions.getOrganisation(project.organisation)
+        }
+        store.id = id
+        store.loaded()
+        if (cb) {
+          cb()
+        }
+      })
+      .catch(() => {
+        AsyncStorage.removeItem('lastEnv')
+        document.location.href = '/404?entity=project'
+      })
   },
   migrateProject: (id) => {
     store.loading()

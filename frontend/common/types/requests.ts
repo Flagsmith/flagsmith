@@ -868,6 +868,7 @@ export type Req = {
     tag_strategy?: TagStrategy
     sort_field?: string
     sort_direction?: 'ASC' | 'DESC'
+    identity?: string
   }
   updateFeatureState: {
     environmentId: string
