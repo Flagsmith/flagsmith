@@ -24,7 +24,6 @@ def test_clear_expired_oauth2_tokens__called__invokes_cleartokens_command(
     mock_call_command.assert_called_once_with("cleartokens")
 
 
-
 @pytest.mark.django_db()
 def test_cleanup_stale_oauth2_applications__stale_app__deletes_it(
     mocker: MagicMock,
