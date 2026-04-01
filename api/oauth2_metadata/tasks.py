@@ -21,7 +21,6 @@ def cleanup_stale_oauth2_applications() -> None:
     ago and has no associated access tokens, refresh tokens, or grants.
     """
     from django.db.models import Exists, OuterRef
-
     from oauth2_provider.models import AccessToken, Application, Grant, RefreshToken
 
     threshold = timezone.now() - timedelta(days=14)

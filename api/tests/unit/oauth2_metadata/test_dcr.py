@@ -272,6 +272,7 @@ def test_validate_redirect_uri__invalid_input__raises_validation_error(
     uri: str,
     expected_message: str,
 ) -> None:
-    # Given / When / Then
+    # Given / When
+    # Then
     with pytest.raises(ValidationError, match=expected_message):
         validate_redirect_uri(uri)

@@ -1,7 +1,10 @@
+import logging
 from urllib.parse import urlparse
 
 from django.core.exceptions import ValidationError
 from oauth2_provider.models import Application
+
+logger = logging.getLogger(__name__)
 
 
 def validate_redirect_uri(uri: str) -> str:
@@ -44,7 +47,13 @@ def create_oauth2_application(
         name=client_name,
         client_type=Application.CLIENT_PUBLIC,
         authorization_grant_type=Application.GRANT_AUTHORIZATION_CODE,
+        client_secret="",
         redirect_uris=" ".join(redirect_uris),
         skip_authorization=False,
+    )
+    logger.info(
+        "OAuth2 DCR: registered application %s (client_id=%s).",
+        client_name,
+        application.client_id,
     )
     return application

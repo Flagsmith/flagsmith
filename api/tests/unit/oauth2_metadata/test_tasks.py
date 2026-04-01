@@ -2,6 +2,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from oauth2_provider.models import AccessToken, Application
 
@@ -25,9 +26,7 @@ def test_clear_expired_oauth2_tokens__called__invokes_cleartokens_command(
 
 
 @pytest.mark.django_db()
-def test_cleanup_stale_oauth2_applications__stale_app__deletes_it(
-    mocker: MagicMock,
-) -> None:
+def test_cleanup_stale_oauth2_applications__stale_app__deletes_it() -> None:
     # Given - an app created 15 days ago with no tokens
     app = Application.objects.create(
         name="Stale App",
@@ -48,14 +47,9 @@ def test_cleanup_stale_oauth2_applications__stale_app__deletes_it(
 
 @pytest.mark.django_db()
 def test_cleanup_stale_oauth2_applications__app_with_token__keeps_it(
-    admin_user: None,
-    mocker: MagicMock,
+    admin_user: AbstractUser,
 ) -> None:
     # Given - an old app that has an access token
-    from django.contrib.auth import get_user_model
-
-    User = get_user_model()
-    user = User.objects.first()
     app = Application.objects.create(
         name="Active App",
         client_type=Application.CLIENT_PUBLIC,
@@ -66,7 +60,7 @@ def test_cleanup_stale_oauth2_applications__app_with_token__keeps_it(
         created=timezone.now() - timedelta(days=15),
     )
     AccessToken.objects.create(
-        user=user,
+        user=admin_user,
         application=app,
         token="test-token",
         expires=timezone.now() + timedelta(hours=1),
@@ -80,9 +74,7 @@ def test_cleanup_stale_oauth2_applications__app_with_token__keeps_it(
 
 
 @pytest.mark.django_db()
-def test_cleanup_stale_oauth2_applications__recent_app__keeps_it(
-    mocker: MagicMock,
-) -> None:
+def test_cleanup_stale_oauth2_applications__recent_app__keeps_it() -> None:
     # Given - an app created 5 days ago with no tokens
     app = Application.objects.create(
         name="Recent App",
