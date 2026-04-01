@@ -54,9 +54,10 @@ def test_dcr_register__valid_request__returns_201_with_client_id(
     [
         "http://localhost:8080/callback",
         "http://127.0.0.1:3000/callback",
+        "http://[::1]:3000/callback",
         "https://example.com/callback",
     ],
-    ids=["localhost", "127.0.0.1", "https"],
+    ids=["localhost", "127.0.0.1", "::1", "https"],
 )
 def test_dcr_register__valid_redirect_uri__returns_201(
     api_client: APIClient,

@@ -11,7 +11,7 @@ def validate_redirect_uri(uri: str) -> str:
     - HTTPS required for all redirect URIs
     - No wildcards, exact match only
     - No fragment components
-    - localhost exception: http://localhost:* and http://127.0.0.1:* permitted
+    - localhost exception: http://localhost:*, http://127.0.0.1:*, and http://[::1]:* permitted
     """
     parsed = urlparse(uri)
 
@@ -24,7 +24,7 @@ def validate_redirect_uri(uri: str) -> str:
     if parsed.fragment:
         raise ValidationError(f"Fragment components are not permitted: {uri}")
 
-    is_localhost = parsed.hostname in ("localhost", "127.0.0.1")
+    is_localhost = parsed.hostname in ("localhost", "127.0.0.1", "::1")
 
     if parsed.scheme != "https" and not (parsed.scheme == "http" and is_localhost):
         raise ValidationError(
