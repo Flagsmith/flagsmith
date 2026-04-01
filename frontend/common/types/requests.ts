@@ -662,6 +662,26 @@ export type Req = {
     project_id: number
     flag_id: number
   }
+  addFlagOwners: {
+    project_id: number
+    feature_id: number
+    user_ids: number[]
+  }
+  removeFlagOwners: {
+    project_id: number
+    feature_id: number
+    user_ids: number[]
+  }
+  addFlagGroupOwners: {
+    project_id: number
+    feature_id: number
+    group_ids: number[]
+  }
+  removeFlagGroupOwners: {
+    project_id: number
+    feature_id: number
+    group_ids: number[]
+  }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
     environment_id: string
