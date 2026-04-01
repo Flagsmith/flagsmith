@@ -161,7 +161,7 @@ urlpatterns = [
 ]
 
 if settings.LICENSING_INSTALLED:  # pragma: no cover
-    from licensing.views import (  # type: ignore[import-not-found]
+    from licensing.views import (  # type: ignore[import-not-found,import-untyped,unused-ignore]
         create_or_update_licence,
     )
 

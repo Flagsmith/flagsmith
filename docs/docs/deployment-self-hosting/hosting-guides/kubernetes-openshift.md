@@ -343,7 +343,24 @@ api:
 
 ### PgBouncer
 
-By default, Flagsmith connects directly to the database - either in-cluster or external. You can enable PgBouncer with `pgbouncer.enabled: true` to have Flagsmith connect to PgBouncer, and zPgBouncer connect to the database.
+By default, Flagsmith connects directly to the database - either in-cluster or external. You can enable PgBouncer with `pgbouncer.enabled: true` to have Flagsmith connect to PgBouncer, and PgBouncer connect to the database.
+
+If you use `databaseExternal.urlFromExistingSecret` to provide the database URL from a pre-existing Kubernetes secret, you must also provide PgBouncer's credentials via a separate existing secret using `pgbouncer.credentialsFromExistingSecret`. This is because Helm cannot read secret values at template time to parse the database URL into PgBouncer's required components.
+
+```yaml
+pgbouncer:
+  enabled: true
+  credentialsFromExistingSecret:
+    enabled: true
+    name: my-pgbouncer-credentials  # must contain POSTGRESQL_HOST, POSTGRESQL_DATABASE, POSTGRESQL_USER, POSTGRESQL_PASSWORD
+
+databaseExternal:
+  enabled: true
+  urlFromExistingSecret:
+    enabled: true
+    name: my-db-url-secret  # DATABASE_URL pointing through PgBouncer
+    key: DATABASE_URL
+```
 
 ### All-in-one Docker image
 
@@ -505,6 +522,8 @@ The following table lists the configurable parameters of the chart and their def
 | `influxdbExternal.tokenFromExistingSecret.enabled` | Use reference to a k8s secret not managed by this chart                   | `false`                        |
 | `influxdbExternal.tokenFromExistingSecret.name`    | Referenced secret name                                                    |                                |
 | `influxdbExternal.tokenFromExistingSecret.key`     | Key within the referenced secret to use                                   |                                |
+| `pgbouncer.credentialsFromExistingSecret.enabled`  | Use an existing secret for PgBouncer credentials instead of generating one. The secret must contain keys: `POSTGRESQL_HOST`, `POSTGRESQL_DATABASE`, `POSTGRESQL_USER`, `POSTGRESQL_PASSWORD`. | `false` |
+| `pgbouncer.credentialsFromExistingSecret.name`     | Name of the existing secret containing PgBouncer credentials.             |                                |
 | `pgbouncer.enabled`                                |                                                                           | `false`                        |
 | `pgbouncer.image.repository`                       |                                                                           | `bitnami/pgbouncer`            |
 | `pgbouncer.image.tag`                              |                                                                           | `1.16.0`                       |

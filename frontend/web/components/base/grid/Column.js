@@ -24,4 +24,4 @@ Column.propTypes = {
   value: OptionalNumber,
 }
 
-module.exports = Column
+export default Column

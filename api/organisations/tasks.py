@@ -12,6 +12,7 @@ from task_processor.decorators import (
     register_task_handler,
 )
 
+from app_analytics.analytics_db_service import get_total_events_count
 from app_analytics.influxdb_wrapper import get_current_api_usage
 from integrations.flagsmith.client import get_client
 from organisations import subscription_info_cache
@@ -81,32 +82,24 @@ def send_org_subscription_cancelled_alert(
         )
 
 
-@register_recurring_task(
-    run_every=timedelta(hours=6),
-)
-def update_organisation_subscription_information_influx_cache_recurring():  # type: ignore[no-untyped-def]
-    """
-    We're redefining the task function here to register a recurring task
-    since the decorators don't stack correctly. (TODO)
-    """
-    update_organisation_subscription_information_influx_cache()  # pragma: no cover
+@register_recurring_task(run_every=timedelta(hours=6))
+def update_organisation_subscription_information_cache_recurring() -> None:
+    update_organisation_subscription_information_cache()
 
 
 @register_task_handler()
-def update_organisation_subscription_information_influx_cache():  # type: ignore[no-untyped-def]
-    subscription_info_cache.update_caches((SubscriptionCacheEntity.INFLUX,))
+def update_organisation_subscription_information_api_usage_cache() -> None:
+    subscription_info_cache.update_caches(SubscriptionCacheEntity.API_USAGE)
 
 
 @register_task_handler(timeout=timedelta(minutes=5))
 def update_organisation_subscription_information_cache() -> None:
     subscription_info_cache.update_caches(
-        (SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.INFLUX)
+        SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE
     )
 
 
-@register_recurring_task(
-    run_every=timedelta(hours=12),
-)
+@register_recurring_task(run_every=timedelta(hours=12))
 def finish_subscription_cancellation() -> None:
     now = timezone.now()
     previously = now + timedelta(hours=-24)
@@ -214,10 +207,19 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             continue
 
         subscription_cache = organisation.subscription_information_cache
-        api_usage = get_current_api_usage(
-            organisation_id=organisation.id,
-            date_start=subscription_cache.current_billing_term_starts_at,
-        )
+        # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
+        if flags.is_feature_enabled(
+            "get_current_api_usage_deprecated"
+        ):  # pragma: no cover
+            api_usage = get_total_events_count(
+                organisation,
+                date_start=subscription_cache.current_billing_term_starts_at,
+            )
+        else:
+            api_usage = get_current_api_usage(
+                organisation_id=organisation.id,
+                date_start=subscription_cache.current_billing_term_starts_at,
+            )
 
         # Grace period for organisations < 200% of usage.
         if (
@@ -347,10 +349,19 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         OrganisationBreachedGracePeriod.objects.get_or_create(organisation=organisation)
 
         subscription_cache = organisation.subscription_information_cache
-        api_usage = get_current_api_usage(
-            organisation_id=organisation.id,
-            date_start=now - timedelta(days=30),
-        )
+        # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
+        if flags.is_feature_enabled(
+            "get_current_api_usage_deprecated"
+        ):  # pragma: no cover
+            api_usage = get_total_events_count(
+                organisation,
+                date_start=now - timedelta(days=30),
+            )
+        else:
+            api_usage = get_current_api_usage(
+                organisation_id=organisation.id,
+                date_start=now - timedelta(days=30),
+            )
         if api_usage / subscription_cache.allowed_30d_api_calls < 1.0:
             logger.info(
                 f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."

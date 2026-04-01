@@ -3,7 +3,7 @@ from environments.models import Environment
 from integrations.new_relic.new_relic import EVENTS_API_URI, NewRelicWrapper
 
 
-def test_new_relic_initialized_correctly():  # type: ignore[no-untyped-def]
+def test_new_relic_wrapper__valid_config__initializes_correctly():  # type: ignore[no-untyped-def]
     # Given
     api_key = "123key"
     app_id = "123id"
@@ -17,7 +17,7 @@ def test_new_relic_initialized_correctly():  # type: ignore[no-untyped-def]
     assert new_relic.url == expected_url
 
 
-def test_new_relic_when_generate_event_data_with_correct_values_then_success(  # type: ignore[no-untyped-def]
+def test_new_relic_generate_event_data__correct_values__returns_expected(  # type: ignore[no-untyped-def]
     django_user_model,
 ):
     # Given
@@ -44,7 +44,7 @@ def test_new_relic_when_generate_event_data_with_correct_values_then_success(  #
     assert event_deployment_data["changelog"] == expected_event_text  # type: ignore[index]
 
 
-def test_new_relic_when_generate_event_data_with_missing_author_then_success():  # type: ignore[no-untyped-def]
+def test_new_relic_generate_event_data__missing_author__returns_system_user():  # type: ignore[no-untyped-def]
     # Given
     log = "some log data"
 
@@ -69,7 +69,7 @@ def test_new_relic_when_generate_event_data_with_missing_author_then_success(): 
     assert event_deployment_data["changelog"] == expected_event_text  # type: ignore[index]
 
 
-def test_new_relic_when_generate_event_data_with_missing_env_then_success(  # type: ignore[no-untyped-def]
+def test_new_relic_generate_event_data__missing_environment__returns_unknown_env(  # type: ignore[no-untyped-def]
     django_user_model,
 ):
     # Given

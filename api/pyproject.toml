@@ -114,7 +114,7 @@ django-cors-headers = "~3.5.0"
 djangorestframework = "~3.15.2"
 gunicorn = "~23.0.0"
 pyparsing = "~2.4.7"
-requests = "~2.32.4"
+requests = "~2.33.0"
 six = "~1.16.0"
 whitenoise = "~6.0.0"
 dj-database-url = "~3.0.1"
@@ -159,11 +159,11 @@ pyngo = "~2.4.1"
 flagsmith = "^5.1.1"
 python-gnupg = "^0.5.1"
 django-redis = "^5.4.0"
-pygithub = "2.1.1"
+pygithub = "~2.8"
 hubspot-api-client = "^12.0.0"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-common = { version = "^3.3.0", extras = [
+flagsmith-common = { version = ">=3.5.0,<4", extras = [
   "common-core",
   "flagsmith-schemas",
   "task-processor",
@@ -191,13 +191,13 @@ pysaml2 = "^7.4.2"
 optional = true
 
 [tool.poetry.group.ldap.dependencies]
-flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.1" }
+flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.2" }
 
 [tool.poetry.group.workflows]
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.3.0" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.3.2" }
 
 [tool.poetry.group.licensing]
 optional = true

@@ -17,7 +17,7 @@ from sse.tasks import (
 )
 
 
-def test_send_environment_update_message_for_project_make_correct_request(  # type: ignore[no-untyped-def]
+def test_send_environment_update_message_for_project__realtime_enabled__posts_to_all_environments(  # type: ignore[no-untyped-def]
     mocker,
     settings,
     realtime_enabled_project,
@@ -59,7 +59,9 @@ def test_send_environment_update_message_for_project_make_correct_request(  # ty
     )
 
 
-def test_send_environment_update_message_make_correct_request(mocker, settings):  # type: ignore[no-untyped-def]
+def test_send_environment_update_message__valid_config__posts_to_sse_endpoint(  # type: ignore[no-untyped-def]
+    mocker, settings
+):
     # Given
     base_url = "http://localhost:8000"
     token = "token"
@@ -82,16 +84,16 @@ def test_send_environment_update_message_make_correct_request(mocker, settings):
     )
 
 
-def test_auth_header_raises_exception_if_token_not_set(settings):  # type: ignore[no-untyped-def]
+def test_get_auth_header__token_not_set__raises_sse_auth_token_not_set(settings):  # type: ignore[no-untyped-def]
     # Given
     settings.SSE_AUTHENTICATION_TOKEN = None
 
-    # When
+    # When / Then
     with pytest.raises(SSEAuthTokenNotSet):
         get_auth_header()  # type: ignore[no-untyped-call]
 
 
-def test_track_sse_usage(  # type: ignore[no-untyped-def]
+def test_update_sse_usage__valid_and_invalid_logs__writes_only_valid_to_influxdb(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
     environment: Environment,
     django_assert_num_queries: DjangoAssertNumQueries,

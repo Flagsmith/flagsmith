@@ -23,6 +23,7 @@ import Tooltip from './Tooltip'
 import SegmentsIcon from './svg/SegmentsIcon'
 import SegmentOverrideActions from './SegmentOverrideActions'
 import Button from './base/forms/Button'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
 const getSegmentId = (segment) =>
   typeof segment === 'object' && segment !== null ? segment.id : segment
@@ -182,13 +183,15 @@ const SegmentOverrideInner = class Override extends React.Component {
               <Row className='gap-2'>
                 <Permission
                   id={environmentId}
-                  permission={'MANAGE_SEGMENT_OVERRIDES'}
+                  permission={EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES}
                   level={'environment'}
                 >
                   {({ permission }) =>
                     Utils.renderWithPermission(
                       permission,
-                      Constants.projectPermissions('Manage Segments'),
+                      Constants.environmentPermissions(
+                        EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
+                      ),
                       <>
                         <SegmentOverrideActions
                           hideViewSegment={hideViewSegment}

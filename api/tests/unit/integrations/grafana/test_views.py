@@ -56,7 +56,7 @@ def test_grafana_organisation_view__create_configuration__persist_expected(
     assert created_config.api_key == data["api_key"]
 
 
-def test_grafana_organisation_view__create_configuration__existing__return_expected(
+def test_grafana_organisation_view__create_configuration_already_exists__returns_400(
     admin_client_new: APIClient,
     organisation: Organisation,
     grafana_organisation_configuration: GrafanaOrganisationConfiguration,
@@ -133,7 +133,7 @@ def test_grafana_organisation_view__delete_configuration__return_expected(
     ).exists()
 
 
-def test_grafana_organisation_view__create_configuration__non_admin__return_expected(
+def test_grafana_organisation_view__create_configuration_as_non_admin__returns_403(
     staff_client: APIClient,
     organisation: Organisation,
     grafana_organisation_configuration: GrafanaOrganisationConfiguration,
@@ -158,7 +158,7 @@ def test_grafana_organisation_view__create_configuration__non_admin__return_expe
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_grafana_organisation_view__get_configuration__non_admin__return_expected(
+def test_grafana_organisation_view__get_configuration_as_non_admin__returns_403(
     staff_client: APIClient,
     organisation: Organisation,
     grafana_organisation_configuration: GrafanaOrganisationConfiguration,
@@ -176,7 +176,7 @@ def test_grafana_organisation_view__get_configuration__non_admin__return_expecte
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_grafana_organisation_view__delete_configuration__non_admin__return_expected(
+def test_grafana_organisation_view__delete_configuration_as_non_admin__returns_403(
     staff_client: APIClient,
     organisation: Organisation,
     grafana_organisation_configuration: GrafanaOrganisationConfiguration,

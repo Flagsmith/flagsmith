@@ -5,7 +5,9 @@ from typing_extensions import TypedDict
 from api.openapi import TypedDictSchemaExtension
 
 
-def test_typeddict_schema_extension__renders_expected() -> None:
+def test_typeddict_schema_extension__nested_typed_dict__renders_expected_schema() -> (
+    None
+):
     # Given
     class Nested(TypedDict):
         usual_str: str
@@ -44,7 +46,7 @@ def test_typeddict_schema_extension__renders_expected() -> None:
     }
 
 
-def test_typeddict_schema_extension__registers_nested_components() -> None:
+def test_typeddict_schema_extension__nested_typed_dict__registers_components() -> None:
     # Given
     class Nested(TypedDict):
         usual_str: str
@@ -86,7 +88,7 @@ def test_typeddict_schema_extension__registers_nested_components() -> None:
     }
 
 
-def test_typeddict_schema_extension__get_name() -> None:
+def test_typeddict_schema_extension__simple_model__returns_correct_name() -> None:
     # Given
     class MyModel(TypedDict):
         field: str

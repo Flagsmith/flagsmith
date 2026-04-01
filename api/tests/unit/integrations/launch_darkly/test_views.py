@@ -10,7 +10,7 @@ from projects.models import Project
 from users.models import FFAdminUser
 
 
-def test_launch_darkly_import_request_view__list__wrong_project__return_expected(
+def test_launch_darkly_import_request_view__list_wrong_project__returns_forbidden(
     import_request: LaunchDarklyImportRequest,
     project: Project,
     api_client: APIClient,
@@ -103,7 +103,7 @@ def test_launch_darkly_import_request_view__create__return_expected(
     }
 
 
-def test_launch_darkly_import_request_view__create__existing_unfinished__return_expected(
+def test_launch_darkly_import_request_view__create_with_existing_unfinished__returns_bad_request(
     ld_client_class_mock: MagicMock,
     project: Project,
     admin_client: APIClient,
@@ -129,7 +129,7 @@ def test_launch_darkly_import_request_view__create__existing_unfinished__return_
     process_launch_darkly_import_request_mock.assert_not_called()
 
 
-def test_launch_darkly_import_request_view__create__existing_finished__return_expected(
+def test_launch_darkly_import_request_view__create_with_existing_finished__returns_created(
     ld_client_class_mock: MagicMock,
     project: Project,
     admin_client: APIClient,

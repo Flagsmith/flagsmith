@@ -4,32 +4,101 @@ sidebar_position: 130
 sidebar_label: Help and Support
 ---
 
-We are here to help! You can contact us for support through any of these channels:
+The more context you provide upfront, the faster we can help. This page will help you solve common issues yourself and,
+if you still need support, give us what we need to diagnose your problem quickly.
 
-* Authenticated users can access support at [app.flagsmith.com](https://app.flagsmith.com) using the chat widget.
-* Email via [support@flagsmith.com](mailto:support@flagsmith.com).
-* Discord via [this invite link](https://discord.gg/hFhxNtXzgm).
+## Before You Contact Us
 
-## Enterprise support
+Flagsmith is fully open source. You can read the code, trace the logic, and find the answer yourself. AI coding
+assistants can help you navigate the codebase quickly - point them at the
+[Flagsmith repo](https://github.com/Flagsmith/flagsmith) or the relevant SDK repo and ask your question.
+
+Beyond that, many issues have already been solved. A quick search can save you time:
+
+- **[FAQ](/support/faq)** - Browse answers to common questions by category
+- **[GitHub Issues](https://github.com/Flagsmith/flagsmith/issues)** - Search open and closed issues for your problem
+- **[Release Notes](https://github.com/Flagsmith/flagsmith/releases)** - Check if your issue was fixed in a newer version
+- **SDK Repositories** - Check issues in your specific SDK repo:
+  - [Python](https://github.com/Flagsmith/flagsmith-python-client)
+  - [JavaScript/Node.js](https://github.com/Flagsmith/flagsmith-nodejs-client)
+  - [React/Next.js](https://github.com/Flagsmith/flagsmith-js-client)
+  - [Java](https://github.com/Flagsmith/flagsmith-java-client)
+  - [.NET](https://github.com/Flagsmith/flagsmith-dotnet-client)
+  - [Go](https://github.com/Flagsmith/flagsmith-go-client)
+  - [Ruby](https://github.com/Flagsmith/flagsmith-ruby-client)
+  - [iOS/Swift](https://github.com/Flagsmith/flagsmith-ios-client)
+  - [Android/Kotlin](https://github.com/Flagsmith/flagsmith-kotlin-android-client)
+  - [Flutter](https://github.com/Flagsmith/flagsmith-flutter-client)
+  - [Rust](https://github.com/Flagsmith/flagsmith-rust-client)
+  - [Elixir](https://github.com/Flagsmith/flagsmith-elixir-client)
+
+## What We Need From You
+
+When you do reach out, including the right information from the start makes a big difference. Here's what helps us
+depending on your issue type.
+
+### SDK or API Issues
+
+- Which SDK and exact version number
+- Are you using a server-side or client-side environment key?
+- Your initialisation code and flag evaluation code (sanitised)
+- What you expected to happen vs what actually happened
+- Exact error messages, stack traces, or console output
+
+### Self-Hosted Infrastructure
+
+- Flagsmith version (Docker image tag, e.g. `v2.221.1`)
+- Deployment method and version (Helm chart version, Docker Compose, etc.)
+- Relevant Helm values or Docker configuration (sanitised - remove secrets)
+- Database type and version (PostgreSQL version, managed vs self-hosted)
+- Container logs from the relevant service (API, task processor, SSE). For Docker: `docker logs <container_name>`. For
+  Kubernetes: `kubectl logs <pod_name> -c <container_name>`. Include the full output, not just the error line - context
+  around the error often matters.
+- For real-time/SSE issues: Redis configuration details
+- For upgrade issues: which version you upgraded from and to
+
+### Dashboard or UI Issues
+
+- Screenshot or short screen recording showing the problem
+- Steps to reproduce - what you clicked, in what order
+- Which project, environment, and flag name are affected
+- Browser and version
+- Any errors in the browser console (open with F12 -> Console tab)
+- For API/network issues: a
+  [HAR file](https://support.zendesk.com/hc/en-us/articles/4408828867098-Workflow-Generating-a-HAR-file-for-troubleshooting)
+  captures the exact request/response cycle and is extremely helpful. Note: HAR files can contain sensitive data like
+  auth tokens - sanitise before sharing.
+
+### SaaS Account or Billing Issues
+
+- Your organisation name in Flagsmith
+- Which project and environment is affected
+- For billing issues: your subscription plan and the change you're requesting
+
+## Getting in Touch
+
+- **In-app chat** - Click the support widget in the Flagsmith dashboard
+- **Email** - [support@flagsmith.com](mailto:support@flagsmith.com)
+- **Community** - [Discord](https://discord.gg/hFhxNtXzgm)
+
+### Enterprise Support
 
 [Flagsmith Enterprise](https://www.flagsmith.com/pricing) customers can also use these support channels:
 
-* Dedicated Customer Success manager for personalised assistance and training.
-* Shared Slack channel for real-time group support between your organisation and the Flagsmith team (available as an add-on).
+- Dedicated Customer Success manager for personalised assistance and training.
+- Shared Slack channel for real-time group support between your organisation and the Flagsmith team (available as an
+  add-on).
 
-## Bug reports and pull requests
+## Bug Reports and Pull Requests
 
-Flagsmith is open source, and we encourage contributions from the community. If you want to submit a specific bug
-report or code change, you can open an issue or pull request directly in the relevant GitHub repository:
+Flagsmith is open source, and we encourage contributions from the community. If you want to submit a specific bug report
+or code change, you can open an issue or pull request directly in the
+[main repository](https://github.com/Flagsmith/flagsmith) or the relevant
+[SDK repository listed above](#before-you-contact-us).
 
-* [Flagsmith API, dashboard and documentation](https://github.com/Flagsmith/flagsmith)
-* Client-side SDKs:
-  - [JavaScript, React](https://github.com/Flagsmith/flagsmith-js-client)
-  - [iOS](https://github.com/Flagsmith/flagsmith-ios-client)
-  - [Android](https://github.com/Flagsmith/flagsmith-kotlin-android-client)
-  - [Flutter](https://github.com/flagsmith/flagsmith-flutter-client)
-* [Server-side SDKs](/integrating-with-flagsmith/sdks/server-side)
-* [Edge Proxy](https://github.com/Flagsmith/edge-proxy)
-* [Terraform provider](https://github.com/Flagsmith/terraform-provider-flagsmith)
-* [Flagsmith CLI](https://github.com/Flagsmith/flagsmith-cli)
-* [Kubernetes Helm charts](https://github.com/Flagsmith/flagsmith-charts)
+Other repositories:
+
+- [Edge Proxy](https://github.com/Flagsmith/edge-proxy)
+- [Terraform provider](https://github.com/Flagsmith/terraform-provider-flagsmith)
+- [Flagsmith CLI](https://github.com/Flagsmith/flagsmith-cli)
+- [Kubernetes Helm charts](https://github.com/Flagsmith/flagsmith-charts)

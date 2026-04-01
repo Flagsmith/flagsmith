@@ -19,7 +19,7 @@ def identity_without_overrides(environment):  # type: ignore[no-untyped-def]
     )
 
 
-def test_map_environment_to_sdk_document__return_expected(
+def test_map_environment_to_sdk_document__with_identity_overrides__returns_expected(
     mocker: "MockerFixture",
     environment: "Environment",
     feature_state: "FeatureState",
@@ -110,7 +110,7 @@ def test_map_environment_to_sdk_document__return_expected(
     }
 
 
-def test_map_environment_to_sdk_document__for_environment_with_identity_overrides_in_local_eval_disabled(
+def test_map_environment_to_sdk_document__identity_overrides_disabled__returns_empty_overrides(
     mocker: "MockerFixture",
     environment: "Environment",
     feature_state: "FeatureState",

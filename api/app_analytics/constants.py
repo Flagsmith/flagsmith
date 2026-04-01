@@ -39,6 +39,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
     "flagsmith-java-sdk": [
         "unknown",
         "8.0.0",
+        "8.0.1",
     ],
     "flagsmith-js-sdk": [
         "unknown",
@@ -52,6 +53,8 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "7.0.2",
         "7.0.3",
         "8.0.0",
+        "8.0.1",
+        "8.0.2",
     ],
     "flagsmith-php-sdk": [
         "unknown",

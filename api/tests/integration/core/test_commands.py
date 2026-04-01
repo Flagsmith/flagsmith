@@ -97,7 +97,7 @@ def test_bootstrap__empty_instance__creates_expected(
     )
 
 
-def test_bootstrap__empty_instance__cli_overrides__creates_expected(
+def test_bootstrap__cli_overrides_provided__creates_expected_entities(
     settings: SettingsWrapper,
     capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
 ) -> None:
@@ -156,9 +156,12 @@ def test_bootstrap__used_instance__skip_expected(
     [*Project.objects.all()] == expected_projects
 
 
-def test_bootstrap__allow_admin_initiation_via_cli__false_by_default__skip_expected(
+def test_bootstrap__cli_initiation_disabled__skips_creation(
     settings: SettingsWrapper,
 ) -> None:
+    # Given
+    # settings.ALLOW_ADMIN_INITIATION_VIA_CLI is False by default
+
     # When
     call_command("bootstrap")
 

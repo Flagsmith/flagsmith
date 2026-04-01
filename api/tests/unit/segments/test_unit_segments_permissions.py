@@ -21,7 +21,7 @@ mock_view = mock.MagicMock()
 segment_permissions = SegmentPermissions()
 
 
-def test_has_permission_returns_false_for_non_existent_project(
+def test_segment_permissions__non_existent_project__returns_false(
     staff_user: FFAdminUser,
 ) -> None:
     # Given
@@ -39,7 +39,9 @@ def test_has_permission_returns_false_for_non_existent_project(
     assert result is False
 
 
-def test_staff_user_has_permission(staff_user: FFAdminUser, project: Project) -> None:
+def test_segment_permissions__staff_user__has_list_and_create_permission(
+    staff_user: FFAdminUser, project: Project
+) -> None:
     # Given
     mock_request = mock.MagicMock()
     mock_request.user = staff_user
@@ -58,7 +60,7 @@ def test_staff_user_has_permission(staff_user: FFAdminUser, project: Project) ->
     assert all(results)
 
 
-def test_project_admin_has_object_permission(
+def test_segment_permissions__project_admin__has_object_permission(
     staff_user: FFAdminUser,
     project: Project,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -85,7 +87,7 @@ def test_project_admin_has_object_permission(
     assert all(results)
 
 
-def test_project_user_has_list_permission(
+def test_segment_permissions__project_user_with_view__has_list_permission(
     project: Project,
     staff_user: FFAdminUser,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -108,7 +110,7 @@ def test_project_user_has_list_permission(
     assert result is True
 
 
-def test_project_user_has_no_create_permission(
+def test_segment_permissions__project_user_with_view__has_no_create_permission(
     project: Project,
     staff_user: FFAdminUser,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -131,7 +133,7 @@ def test_project_user_has_no_create_permission(
     assert result is False
 
 
-def test_project_user_has_object_permission(
+def test_segment_permissions__project_user_with_view__returns_expected_per_action(
     project: Project,
     staff_user: FFAdminUser,
     with_project_permissions: WithProjectPermissionsCallable,
@@ -162,7 +164,7 @@ def test_project_user_has_object_permission(
         )
 
 
-def test_environment_admin_can_get_segments_for_an_identity(
+def test_segment_permissions__environment_admin_with_identity__returns_true(
     project: Project,
     staff_user: FFAdminUser,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -188,7 +190,7 @@ def test_environment_admin_can_get_segments_for_an_identity(
     assert result
 
 
-def test_user_with_view_project_permission_can_list_segments_for_an_identity(  # type: ignore[no-untyped-def]
+def test_segment_permissions__user_with_view_project_permission__can_list_segments_for_identity(  # type: ignore[no-untyped-def]
     segment, django_user_model, mocker
 ):
     # Given

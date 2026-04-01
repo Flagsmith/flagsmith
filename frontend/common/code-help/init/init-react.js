@@ -5,7 +5,7 @@ module.exports = (
   { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_CLIENT },
 ) => `// App root
 import ${LIB_NAME} from "${NPM_CLIENT}";
-import { FlagsmithProvider } from 'flagsmith/react';
+import { FlagsmithProvider } from '@flagsmith/flagsmith/react';
 
 export default function App() {
   return (
