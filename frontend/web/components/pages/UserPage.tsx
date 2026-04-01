@@ -5,13 +5,7 @@ import keyBy from 'lodash/keyBy'
 
 import { getStore } from 'common/store'
 import { getTags } from 'common/services/useTag'
-import {
-  FeatureState,
-  Identity,
-  IdentityFeatureState,
-  IdentityTrait,
-  ProjectFlag,
-} from 'common/types/responses'
+import { Identity, IdentityFeatureState } from 'common/types/responses'
 import API from 'project/api'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
@@ -21,7 +15,6 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import CreateSegmentModal from 'components/modals/CreateSegment'
 import EditIdentity from 'components/EditIdentity'
-import FeatureListStore from 'common/stores/feature-list-store'
 import IdentifierString from 'components/IdentifierString'
 import IdentityProvider from 'common/providers/IdentityProvider'
 import InfoMessage from 'components/InfoMessage'
@@ -37,14 +30,13 @@ import IdentityTraits from 'components/IdentityTraits'
 import { useGetIdentitySegmentsQuery } from 'common/services/useIdentitySegment'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import FeatureOverrideRow from 'components/feature-override/FeatureOverrideRow'
-import FeatureFilters, {
-  FiltersValue,
-  parseFiltersFromUrlParams,
-  getServerFilter,
-  getURLParamsFromFilters,
-} from 'components/feature-page/FeatureFilters'
+import FeatureFilters from 'components/feature-page/FeatureFilters'
 import Project from 'common/project'
 import SettingTitle from 'components/SettingTitle'
+import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
+import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
+import { buildApiFilterParams } from 'common/utils/featureFilterParams'
+import { useFeatureFilters } from './features/hooks/useFeatureFilters'
 
 interface RouteParams {
   environmentId: string
@@ -56,13 +48,12 @@ interface RouteParams {
 const UserPage: FC = () => {
   const match = useRouteMatch<RouteParams>()
   const history = useHistory()
-  const params = Utils.fromParam()
-  const defaultState = parseFiltersFromUrlParams(params)
   const environmentId = match?.params?.environmentId
   const id = match?.params?.id
   const { projectId } = useRouteContext()
 
-  const [filter, setFilter] = useState<FiltersValue>(defaultState)
+  const { filters, goToPage, handleFilterChange, page } =
+    useFeatureFilters(history)
   const [actualFlags, setActualFlags] =
     useState<Record<string, IdentityFeatureState>>()
   const preselect = Utils.fromParam().flag
@@ -80,13 +71,27 @@ const UserPage: FC = () => {
       { skip: !projectId },
     )
 
-  useEffect(() => {
-    const { search, sort } = filter
-    AppActions.searchFeatures(projectId, environmentId, true, search, sort, {
-      ...getServerFilter(filter),
-      identity: id,
-    })
-  }, [filter, environmentId, projectId, id])
+  const { getEnvironmentIdFromKey } = useProjectEnvironments(projectId!)
+
+  const apiParams = environmentId
+    ? buildApiFilterParams(
+        filters,
+        page,
+        environmentId,
+        projectId!,
+        getEnvironmentIdFromKey,
+      )
+    : null
+
+  const { data: featureListData, isFetching: isLoadingFeatures } =
+    useGetFeatureListQuery(
+      apiParams ? { ...apiParams, identity: id } : ({} as any),
+      { skip: !apiParams },
+    )
+
+  const paging = featureListData?.pagination
+  const projectFlags = featureListData?.results
+  const environmentFlags = featureListData?.environmentStates
 
   useEffect(() => {
     AppActions.getIdentity(environmentId, id)
@@ -127,45 +132,24 @@ const UserPage: FC = () => {
   const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data
   const showAliases = Utils.getIsEdge()
 
-  const fetchPage = React.useCallback(
-    (pageNumber: number) => {
-      const { search, sort } = filter
-      AppActions.getFeatures(
-        projectId,
-        environmentId,
-        true,
-        search,
-        sort,
-        pageNumber,
-        { ...getServerFilter(filter), identity: id },
-      )
-    },
-    [environmentId, projectId, filter, id],
-  )
-
   return (
     <div className='app-container container'>
       <div>
         <IdentityProvider onSave={onSave}>
           {({
-            environmentFlags,
             identity,
             identityFlags,
-            isLoading,
-            projectFlags,
+            isLoading: isIdentityLoading,
           }: {
-            environmentFlags: FeatureState[]
             identity: { identity: Identity; identifier: string }
             identityFlags: IdentityFeatureState[]
             isLoading: boolean
-            projectFlags: ProjectFlag[]
-            traits: IdentityTrait[]
           }) => {
             const identityName =
               (identity && identity.identity.identifier) || id
             const isDataLoaded =
               !!actualFlags && !!identityFlags && !!projectFlags && !!projectId
-            return isLoading || !isDataLoaded ? (
+            return isIdentityLoading || isLoadingFeatures || !isDataLoaded ? (
               <div className='text-center'>
                 <Loader />
               </div>
@@ -258,24 +242,23 @@ const UserPage: FC = () => {
                           )}
                           header={
                             <FeatureFilters
-                              value={filter}
+                              value={{
+                                ...filters,
+                                is_archived: filters.showArchived,
+                                page,
+                              }}
                               projectId={projectId}
                               orgId={AccountStore.getOrganisation()?.id}
-                              isLoading={FeatureListStore.isLoading}
+                              isLoading={isLoadingFeatures}
                               onChange={(next) => {
-                                FeatureListStore.isLoading = true
-                                history.replace(
-                                  `${
-                                    document.location.pathname
-                                  }?${Utils.toParam(
-                                    getURLParamsFromFilters(next),
-                                  )}`,
-                                )
-                                setFilter(next)
+                                handleFilterChange({
+                                  ...next,
+                                  showArchived: next.is_archived,
+                                })
                               }}
                             />
                           }
-                          isLoading={FeatureListStore.isLoading}
+                          isLoading={isLoadingFeatures}
                           items={projectFlags}
                           renderRow={({ id: featureId, name }, i) => {
                             const identityFlag = identityFlags[featureId]
@@ -325,16 +308,14 @@ const UserPage: FC = () => {
                             )
                           }}
                           renderSearchWithNoResults
-                          paging={FeatureListStore.paging}
+                          paging={paging}
                           nextPage={() =>
-                            fetchPage(FeatureListStore.paging.next)
+                            goToPage((paging?.currentPage || 1) + 1)
                           }
                           prevPage={() =>
-                            fetchPage(FeatureListStore.paging.previous)
+                            goToPage((paging?.currentPage || 2) - 1)
                           }
-                          goToPage={(pageNumber: number) =>
-                            fetchPage(pageNumber)
-                          }
+                          goToPage={goToPage}
                         />
                       </FormGroup>
                       {!preventAddTrait && (

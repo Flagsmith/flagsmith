@@ -25,7 +25,6 @@ import ChangeRequestDetailPage from './components/pages/ChangeRequestDetailPage'
 import ScheduledChangesPage from './components/pages/ScheduledChangesPage'
 import AuditLogPage from './components/pages/AuditLogPage'
 import ComparePage from './components/pages/ComparePage'
-import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
 import GitHubSetupPage from './components/pages/GitHubSetupPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
@@ -123,7 +122,6 @@ export const routes = {
   'user': '/project/:projectId/environment/:environmentId/users/:identity/:id',
   'user-id': '/project/:projectId/environment/:environmentId/users/:identity',
   'users': '/project/:projectId/environment/:environmentId/users',
-  'widget': '/widget',
 }
 export default (
   <App>
@@ -181,7 +179,6 @@ export default (
         exact
         component={ChangeRequestDetailPage}
       />
-      <Route path={routes.widget} exact component={WidgetPage} />
       <Route path={routes.invite} exact component={InvitePage} />
       <Route path={routes['invite-link']} exact component={InvitePage} />
       <Route path={routes.broken} exact component={BrokenPage} />
