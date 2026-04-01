@@ -50,3 +50,10 @@ test-oss:
 .PHONY: test-enterprise
 test-enterprise:
 	@$(MAKE) test opts="--grep @enterprise"
+
+# Visual regression: run E2E tests with screenshot comparison enabled.
+# Snapshots are shared via volume mount in docker-compose-e2e-tests.yml.
+.PHONY: test-visual
+test-visual:
+	@mkdir -p e2e/visual-regression-snapshots
+	@VISUAL_REGRESSION=1 $(MAKE) test opts="$(opts)"
