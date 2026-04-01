@@ -8,8 +8,8 @@ import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { useHasPermission } from 'common/providers/Permission'
 import FlagOwners from 'components/FlagOwners'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
-import FeatureOwnerSelect from 'components/FeatureOwnerSelect'
 import PlanBasedBanner from 'components/PlanBasedAccess'
+import { useGetProjectQuery } from 'common/services/useProject'
 import Switch from 'components/Switch'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/Icon'
@@ -59,6 +59,12 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
 
   const metadataEnable = Utils.getPlansPermission('METADATA')
   const isEdit = !!projectFlag?.id
+
+  const { data: project } = useGetProjectQuery(
+    { id: typeof projectId === 'string' ? parseInt(projectId, 10) : projectId },
+    { skip: !projectId },
+  )
+  const enforceFeatureOwners = !!project?.enforce_feature_owners
 
   useEffect(() => {
     if (metadataEnable) {
@@ -148,16 +154,40 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
       )}
       {!identity &&
         !projectFlag?.id &&
+        enforceFeatureOwners &&
         onOwnerIdsChange &&
         onGroupOwnerIdsChange && (
-          <FormGroup className='mb-3 setting'>
-            <FeatureOwnerSelect
-              selectedUserIds={ownerIds ?? []}
-              selectedGroupIds={groupOwnerIds ?? []}
-              onUserIdsChange={onOwnerIdsChange}
-              onGroupIdsChange={onGroupOwnerIdsChange}
+          <>
+            <FormGroup className='mb-3 setting'>
+              <FlagOwners
+                selectedIds={ownerIds ?? []}
+                onAdd={(id: number) =>
+                  onOwnerIdsChange([...(ownerIds ?? []), id])
+                }
+                onRemove={(id: number) =>
+                  onOwnerIdsChange((ownerIds ?? []).filter((uid) => uid !== id))
+                }
+              />
+            </FormGroup>
+            <FormGroup className='mb-3 setting'>
+              <FlagOwnerGroups
+                selectedIds={groupOwnerIds ?? []}
+                onAdd={(id: number) =>
+                  onGroupOwnerIdsChange([...(groupOwnerIds ?? []), id])
+                }
+                onRemove={(id: number) =>
+                  onGroupOwnerIdsChange(
+                    (groupOwnerIds ?? []).filter((gid) => gid !== id),
+                  )
+                }
+              />
+            </FormGroup>
+            <PlanBasedBanner
+              className='mb-3'
+              feature={'FLAG_OWNERS'}
+              theme={'description'}
             />
-          </FormGroup>
+          </>
         )}
       <FormGroup className='mb-3 setting'>
         <InputGroup

@@ -7,7 +7,6 @@ import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
 import Icon from 'components/Icon'
-import Tooltip from 'components/Tooltip'
 import FeatureValue from './FeatureValue'
 import FeatureAction, { FeatureActionProps } from './FeatureAction'
 import classNames from 'classnames'
@@ -26,6 +25,7 @@ import AccountStore from 'common/stores/account-store'
 import CondensedFeatureRow from 'components/CondensedFeatureRow'
 import { useHistory } from 'react-router-dom'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
+import { useGetProjectQuery } from 'common/services/useProject'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import FeatureName from './FeatureName'
 import FeatureDescription from './FeatureDescription'
@@ -103,6 +103,12 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     { projectId: projectFlag.project },
     { skip: !projectFlag?.project },
   )
+
+  const { data: projectData } = useGetProjectQuery(
+    { id: projectId },
+    { skip: !projectId },
+  )
+  const enforceFeatureOwners = !!projectData?.enforce_feature_owners
 
   useEffect(() => {
     const { feature } = Utils.fromParam()
@@ -226,16 +232,18 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
           tab,
         }
 
-    const ownerChips = [
-      ...(projectFlag.owners ?? []).map((u) => ({
-        id: `user-${u.id}`,
-        label: getUserDisplayName(u),
-      })),
-      ...(projectFlag.owner_groups ?? []).map((g) => ({
-        id: `group-${g.id}`,
-        label: g.name,
-      })),
-    ]
+    const ownerChips = enforceFeatureOwners
+      ? [
+          ...(projectFlag.owners ?? []).map((u) => ({
+            id: `user-${u.id}`,
+            label: getUserDisplayName(u),
+          })),
+          ...(projectFlag.owner_groups ?? []).map((g) => ({
+            id: `group-${g.id}`,
+            label: g.name,
+          })),
+        ]
+      : []
 
     openModal(
       <Row className='align-items-center'>
@@ -255,26 +263,12 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
           <div className='d-flex align-items-center gap-1 ms-3'>
             <Icon name='people' width={16} fill='#9DA4AE' />
             {ownerChips.slice(0, 3).map((chip) => (
-              <Tooltip
-                key={chip.id}
-                title={<span className='chip chip--xs'>{chip.label}</span>}
-              >
+              <span key={chip.id} className='chip chip--xs'>
                 {chip.label}
-              </Tooltip>
+              </span>
             ))}
             {ownerChips.length > 3 && (
-              <Tooltip
-                title={
-                  <span className='chip chip--xs'>
-                    +{ownerChips.length - 3}
-                  </span>
-                }
-              >
-                {ownerChips
-                  .slice(3)
-                  .map((c) => c.label)
-                  .join(', ')}
-              </Tooltip>
+              <span className='chip chip--xs'>+{ownerChips.length - 3}</span>
             )}
           </div>
         )}
