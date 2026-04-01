@@ -5,8 +5,9 @@ from rest_framework import serializers
 
 from oauth2_metadata.services import validate_redirect_uri
 
-# Allow letters, digits, spaces, hyphens, underscores, dots, and parentheses.
-_CLIENT_NAME_RE = re.compile(r"^[\w\s.\-()]+$", re.UNICODE)
+# Allow ASCII letters, digits, spaces, hyphens, underscores, dots, and parentheses.
+# ASCII-only to prevent Unicode homoglyph spoofing on the consent screen.
+_CLIENT_NAME_RE = re.compile(r"^[\w\s.\-()]+$", re.ASCII)
 
 
 class DCRRequestSerializer(serializers.Serializer[None]):
