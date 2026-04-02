@@ -116,12 +116,6 @@ The following data is **never** included in a project-level export:
 
 :::
 
-### Export format
-
-Project-level exports use a JSON format that is a superset of the
-[environment-level export format](#environment-level-export). An environment-level export file can be imported using
-project-level import (but not the other way around, since it contains additional data).
-
 ### Exporting
 
 On the Export tab of the project settings page, select **Project Export**. Choose which optional data to include, then
@@ -129,21 +123,37 @@ click Export Project.
 
 The export runs asynchronously. Once complete, you can download the export file from the list at the bottom of the page.
 
+:::info
+
+Exporting requires project administrator permissions.
+
+:::
+
 ### Importing
 
 On the Import tab of the project settings page, select **Project Import**. Upload the export file and select the merge
 strategy.
 
+:::info
+
+Importing requires organisation administrator permissions.
+
+:::
+
 When using Overwrite Destructive, segments and their overrides are treated as a single unit: if a segment is
 overwritten, all of its rules, conditions, and associated feature overrides are replaced.
 
+#### How entities are matched
+
+All entities are matched by name across instances, not by internal ID. This means exports are portable between
+Flagsmith instances. Specifically:
+
+- Features and segments are matched by name.
+- Tags are matched by label.
+- Environments are matched by name. If the export contains environments that do not exist in the target project,
+  they are created automatically.
+
 #### Versioning
 
-If the target project uses feature versioning, importing with the Overwrite Destructive strategy will create new
-feature versions for any features that are modified. The Skip strategy does not create new versions.
-
-#### Environments
-
-If the export contains environments that do not exist in the target project, they will be created automatically. If an
-environment with the same name already exists, the import will update feature states in that environment according to
-the selected merge strategy.
+If the target project uses feature versioning, importing with the Overwrite Destructive strategy will create new feature
+versions for any features that are modified. The Skip strategy does not create new versions.
