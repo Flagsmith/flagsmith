@@ -254,15 +254,14 @@ def add_single_seat(subscription_id: str) -> None:
 def _get_additional_seat_addon_id(subscription: SubscriptionOps) -> str:
     addon_id_prefix = "additional-team-members-scale-up-v2"
     addon_suffixes_by_billing_period = {1: "monthly", 6: "semiannual", 12: "annual"}
-    suffix = addon_suffixes_by_billing_period.get(
-        subscription.billing_period, "monthly"
-    )
+    suffix = addon_suffixes_by_billing_period.get(subscription.billing_period)
     if not suffix:
         logger.warning(
             "Unexpected billing period for subscription ID %s: %d",
             subscription.id,
             subscription.billing_period,
         )
+        suffix = "monthly"
     return "-".join([addon_id_prefix, suffix])
 
 
