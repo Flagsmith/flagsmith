@@ -19,6 +19,7 @@ test.describe('Flag Tests', () => {
       waitForElementClickable,
       waitForElementVisible,
       waitForFeatureSwitch,
+      waitForToastsToClear,
     } = createHelpers(page);
 
     log('Login')
@@ -51,6 +52,7 @@ test.describe('Flag Tests', () => {
       { value: 'small', weight: 0 },
     ]})
 
+    await waitForToastsToClear()
     await visualSnapshot(page, 'features-list', testInfo)
 
     log('Create Short Life Feature')

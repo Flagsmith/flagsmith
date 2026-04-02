@@ -71,10 +71,11 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
 
-  /* Visual regression snapshots stored in a shared directory (mounted as a volume in Docker) */
-  snapshotPathTemplate:
-    './e2e/visual-regression-snapshots/{testFileName}/{arg}{ext}',
+  /* Visual regression baselines directory — used by the comparison test */
+  snapshotPathTemplate: './e2e/visual-regression-snapshots/{arg}{ext}',
+
   testDir: './e2e',
+  testIgnore: /.*_visual-regression-compare.*/,
   testMatch: /.*\.pw\.ts$/,
   /* Test timeout */
   timeout: 300000,

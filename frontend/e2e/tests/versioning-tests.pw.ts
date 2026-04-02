@@ -22,6 +22,7 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
         tryItExpect,
         waitForElementVisible,
         waitForFeatureSwitch,
+        waitForToastsToClear,
     } = createHelpers(page)
     const flagsmith = await getFlagsmith()
     const hasFeature = flagsmith.hasFeature("feature_versioning")
@@ -42,6 +43,8 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     await click('#confirm-btn-yes')
     // Feature versioning takes up to a minute to enable on the backend
     await waitForElementVisible(byId('feature-versioning-enabled'))
+    await waitForElementVisible('.toast-message')
+    await waitForToastsToClear()
 
     await visualSnapshot(page, 'versioning-enabled', testInfo)
 
