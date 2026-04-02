@@ -1,6 +1,6 @@
 ---
-title: Updating Flags
-sidebar_label: Updating Flags
+title: Updating Flags (Experimental)
+sidebar_label: Updating Flags (Experimental)
 sidebar_position: 3
 ---
 
