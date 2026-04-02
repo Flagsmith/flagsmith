@@ -31,7 +31,6 @@ from organisations.chargebee.client import chargebee_client
 from organisations.chargebee.constants import (
     ADDITIONAL_API_SCALE_UP_ADDON_ID,
     ADDITIONAL_API_START_UP_ADDON_ID,
-    ADDITIONAL_SEAT_ADDON_ID,
 )
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.constants import CHARGEBEE
@@ -212,13 +211,11 @@ def add_single_seat(subscription_id: str) -> None:
         subscription = chargebee_client.Subscription.retrieve(
             subscription_id
         ).subscription
+        addon_id = _get_additional_seat_addon_id(subscription)
+
         addons = subscription.addons or []
         current_seats = next(
-            (
-                addon.quantity
-                for addon in addons
-                if addon.id == ADDITIONAL_SEAT_ADDON_ID
-            ),
+            (addon.quantity for addon in addons if addon.id == addon_id),
             0,
         )
 
@@ -227,7 +224,7 @@ def add_single_seat(subscription_id: str) -> None:
             SubscriptionOps.UpdateParams(
                 addons=[
                     SubscriptionOps.UpdateAddonParams(
-                        id=ADDITIONAL_SEAT_ADDON_ID,
+                        id=_get_additional_seat_addon_id(subscription),
                         quantity=current_seats + 1,
                     )
                 ],
@@ -252,6 +249,19 @@ def add_single_seat(subscription_id: str) -> None:
         )
         logger.error(msg)
         raise UpgradeSeatsError(msg) from e
+
+
+def _get_additional_seat_addon_id(subscription: SubscriptionOps) -> str:
+    addon_id_prefix = "additional-team-members-scale-up-v2"
+    addon_suffixes_by_billing_period = {1: "monthly", 6: "semiannual", 12: "annual"}
+    suffix = addon_suffixes_by_billing_period.get(subscription.billing_period)
+    if not suffix:
+        logger.warning(
+            "Unexpected billing period for subscription ID %s",
+            subscription.id,
+        )
+        suffix = "monthly"
+    return "-".join([addon_id_prefix, suffix])
 
 
 def add_100k_api_calls_start_up(
