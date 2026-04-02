@@ -34,5 +34,9 @@ common/project.js
 e2e/playwright-report/
 e2e/test-results/
 
-# Visual regression snapshots (stored as CI artifacts, not in git)
+# Visual regression (baselines stored as CI artifacts, not in git)
 e2e/visual-regression-snapshots/
+e2e/visual-regression-screenshots/
+e2e/visual-regression-report/
+e2e/tests/_visual-regression-compare.pw.ts
+e2e/tests/_visual-regression-compare.pw.ts-snapshots/

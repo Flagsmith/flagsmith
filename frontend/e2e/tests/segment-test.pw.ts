@@ -114,6 +114,7 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
   await assertInputValue(byId(`rule-${0}-value-0`), `${lastRule.value + 1}`)
   await deleteSegmentFromPage('segment_to_update')
 
+  await waitForToastsToClear()
   await visualSnapshot(page, 'segments-list', testInfo)
 
   log('Create segment')

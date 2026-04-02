@@ -110,12 +110,13 @@ jobs:
         working-directory: frontend
         run: make test
         env:
-          opts: ${{ inputs.args }}${{ inputs.visual-regression-update && ' --update-snapshots' || '' }}
+          opts: ${{ inputs.args }}
           API_IMAGE: ${{ inputs.api-image }}
           E2E_IMAGE: ${{ inputs.e2e-image }}
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
           E2E_RETRIES: 2
           VISUAL_REGRESSION: ${{ inputs.visual-regression && '1' || '' }}
+          VISUAL_REGRESSION_ARGS: ${{ inputs.visual-regression-update && '--update-snapshots' || '' }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         timeout-minutes: 20
@@ -195,35 +196,43 @@ jobs:
           append: true
           message: ${{ steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary }}
 
-      # Visual regression: upload baselines (for main) or report (for PRs)
-      - name: Upload visual regression baselines
-        if: always() && inputs.visual-regression
+      # Visual regression: after all E2E retries, run comparison and upload results
+      - name: Upload visual regression baselines (main branch)
+        if: always() && inputs.visual-regression-update
         uses: actions/upload-artifact@v4
         with:
           name: visual-regression-baselines
-          path: frontend/e2e/visual-regression-snapshots/
+          path: frontend/e2e/visual-regression-screenshots/
           retention-days: 90
           overwrite: true
 
+      - name: Upload visual regression report
+        if: always() && inputs.visual-regression && !inputs.visual-regression-update
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-report-${{ github.run_id }}-${{ strategy.job-index }}
+          path: frontend/e2e/visual-regression-report/
+          retention-days: 30
+
       - name: Generate visual regression summary
-        if: always() && inputs.visual-regression && github.event_name == 'pull_request'
+        if: always() && inputs.visual-regression && !inputs.visual-regression-update && github.event_name == 'pull_request'
         id: visual-regression-summary
         shell: bash
         run: |
           if [ "${{ steps.download-baseline.outcome }}" != "success" ]; then
             echo "message=No baseline found — first run. Baselines will be generated after merge to main." >> $GITHUB_OUTPUT
           else
-            DIFF_COUNT=$(find frontend/e2e/test-results -name "*-diff.png" 2>/dev/null | wc -l | tr -d ' ')
-            BASELINE_COUNT=$(find frontend/e2e/visual-regression-snapshots -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
-            if [ "$DIFF_COUNT" = "0" ]; then
-              echo "message=No visual changes detected ($BASELINE_COUNT screenshots matched)." >> $GITHUB_OUTPUT
+            SCREENSHOT_COUNT=$(find frontend/e2e/visual-regression-screenshots -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
+            REPORT_EXISTS=$(test -d frontend/e2e/visual-regression-report && echo "true" || echo "false")
+            if [ "$REPORT_EXISTS" = "true" ]; then
+              echo "message=$SCREENSHOT_COUNT screenshots compared. See report for details." >> $GITHUB_OUTPUT
             else
-              echo "message=$DIFF_COUNT visual change(s) detected. See HTML report for diff images." >> $GITHUB_OUTPUT
+              echo "message=$SCREENSHOT_COUNT screenshots captured but comparison did not run." >> $GITHUB_OUTPUT
             fi
           fi
 
       - name: Comment PR with visual regression results
-        if: always() && inputs.visual-regression && github.event_name == 'pull_request' && steps.visual-regression-summary.outputs.message
+        if: always() && inputs.visual-regression && !inputs.visual-regression-update && github.event_name == 'pull_request' && steps.visual-regression-summary.outputs.message
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: visual-regression-results

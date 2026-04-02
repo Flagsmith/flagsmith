@@ -11,6 +11,7 @@ test.describe('Environment Tests', () => {
       login,
       setText,
       waitForElementVisible,
+      waitForToastsToClear,
     } = createHelpers(page);
 
     log('Login')
@@ -20,6 +21,7 @@ test.describe('Environment Tests', () => {
     log('Create environment')
     await click('#create-env-link')
     await createEnvironment('Staging')
+    await waitForToastsToClear()
     await visualSnapshot(page, 'environment-created', testInfo)
 
     log('Edit Environment')

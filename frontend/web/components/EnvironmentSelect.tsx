@@ -41,6 +41,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
         }
         return true
       })
+      .sort((a, b) => a.label.localeCompare(b.label))
   }, [data?.results, ignore, idField])
 
   const foundValue = useMemo(
