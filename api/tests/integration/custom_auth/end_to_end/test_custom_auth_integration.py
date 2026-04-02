@@ -619,11 +619,11 @@ def test_delete_token__valid_token__returns_no_content_and_invalidates(
     assert client.delete(delete_token_url).status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_register__with_sign_up_type__stores_sign_up_type(client, db, settings):  # type: ignore[no-untyped-def]
+def test_register__with_sign_up_type__stores_sign_up_type(client, db):  # type: ignore[no-untyped-def]
     # Given
     password = FFAdminUser.objects.make_random_password()
     sign_up_type = "NO_INVITE"
-    email = "test@example.com"
+    email = f"test-{uuid.uuid4()}@example.com"
     register_data = {
         "email": email,
         "password": password,
