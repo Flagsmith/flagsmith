@@ -18,9 +18,6 @@ from chargebee.models.plan.responses import (  # type: ignore[import-untyped]
 from chargebee.models.portal_session.operations import (  # type: ignore[import-untyped]
     PortalSession as PortalSessionOps,
 )
-from chargebee.models.subscription.operations import (
-    Subscription,
-)
 from chargebee.models.subscription.operations import (  # type: ignore[import-untyped]
     Subscription as SubscriptionOps,
 )
@@ -254,7 +251,7 @@ def add_single_seat(subscription_id: str) -> None:
         raise UpgradeSeatsError(msg) from e
 
 
-def _get_additional_seat_addon_id(subscription: Subscription) -> str:
+def _get_additional_seat_addon_id(subscription: SubscriptionOps) -> str:
     addon_id_prefix = "additional-team-members-scale-up-v2"
     addon_suffixes_by_billing_period = {1: "monthly", 6: "semiannual", 12: "annual"}
     suffix = addon_suffixes_by_billing_period.get(
