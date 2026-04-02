@@ -1,4 +1,5 @@
-import React, { FC } from 'react'
+import { FC } from 'react'
+import flagsmith from '@flagsmith/flagsmith'
 import Project from 'common/project'
 import FeatureAnalytics from 'components/feature-page/FeatureNavTab/FeatureAnalytics'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
@@ -45,6 +46,11 @@ const UsageTab: FC<UsageTabProps> = ({
             target='_blank'
             href='https://docs.flagsmith.com/managing-flags/code-references'
             rel='noreferrer'
+            onClick={() => {
+              flagsmith.trackEvent('code_references_click_docs', {
+                feature_id: featureId,
+              })
+            }}
           >
             Learn more
           </a>

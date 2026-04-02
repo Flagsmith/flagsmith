@@ -62,7 +62,7 @@ from environments.permissions.permissions import (
     NestedEnvironmentPermissions,
 )
 from features.value_types import BOOLEAN, INTEGER, STRING
-from integrations.flagsmith.client import get_client
+from integrations.flagsmith.client import get_openfeature_client
 from projects.code_references.services import (
     annotate_feature_queryset_with_code_references_summary,
 )
@@ -222,12 +222,11 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         # TODO: Delete this after https://github.com/flagsmith/flagsmith/issues/6832 is resolved
         organisation = project.organisation
-        flagsmith_client = get_client("local", local_eval=True)
-        flags = flagsmith_client.get_identity_flags(
-            organisation.flagsmith_identifier,
-            traits=organisation.flagsmith_on_flagsmith_api_traits,
-        )
-        if flags.is_feature_enabled("code_references_ui_stats"):
+        if get_openfeature_client().get_boolean_value(
+            "code_references_ui_stats",
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        ):
             queryset = annotate_feature_queryset_with_code_references_summary(queryset)
         else:
             queryset = queryset.annotate(

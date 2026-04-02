@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import flagsmith from '@flagsmith/flagsmith'
 import { FeatureCodeReferences } from 'common/types/responses'
 import moment from 'moment'
 import CodeReferenceItem from './CodeReferenceItem'
@@ -9,9 +10,11 @@ import CodeReferenceScanIndicator from './CodeReferenceScanIndicator'
 interface RepoCodeReferencesSectionProps {
   repositoryScan: FeatureCodeReferences
   repositoryName: string
+  featureId: number
 }
 
 const RepoCodeReferencesSection: React.FC<RepoCodeReferencesSectionProps> = ({
+  featureId,
   repositoryName,
   repositoryScan,
 }) => {
@@ -42,7 +45,16 @@ const RepoCodeReferencesSection: React.FC<RepoCodeReferencesSectionProps> = ({
       >
         <Row
           className='flex justify-content-between items-center cursor-pointer'
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => {
+            if (!isOpen) {
+              flagsmith.trackEvent('code_references_expand_repo', {
+                feature_id: featureId,
+                refs_count: repositoryScan?.code_references?.length,
+                vcs_provider: repositoryScan?.vcs_provider,
+              })
+            }
+            setIsOpen(!isOpen)
+          }}
         >
           <RepoSectionHeader
             isOpen={isOpen}
@@ -77,6 +89,8 @@ const RepoCodeReferencesSection: React.FC<RepoCodeReferencesSectionProps> = ({
               {repositoryScan?.code_references?.map((codeReference) => (
                 <CodeReferenceItem
                   codeReference={codeReference}
+                  featureId={featureId}
+                  vcsProvider={repositoryScan?.vcs_provider}
                   key={codeReference.permalink}
                 />
               ))}

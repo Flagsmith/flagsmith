@@ -232,7 +232,7 @@ def add_single_seat(subscription_id: str) -> None:
                     )
                 ],
                 prorate=True,
-                invoice_immediately=False,
+                invoice_immediately=True,
             ),
         )
 
