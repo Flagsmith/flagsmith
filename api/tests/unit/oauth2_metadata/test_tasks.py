@@ -26,8 +26,8 @@ def test_clear_expired_oauth2_tokens__called__invokes_cleartokens_command(
 
 
 @pytest.mark.django_db()
-def test_cleanup_stale_oauth2_applications__stale_app__deletes_it() -> None:
-    # Given - an app created 15 days ago with no tokens
+def test_cleanup_stale_oauth2_applications__old_app_with_no_token__deletes_it() -> None:
+    # Given
     app = Application.objects.create(
         name="Stale App",
         client_type=Application.CLIENT_PUBLIC,
@@ -46,10 +46,10 @@ def test_cleanup_stale_oauth2_applications__stale_app__deletes_it() -> None:
 
 
 @pytest.mark.django_db()
-def test_cleanup_stale_oauth2_applications__app_with_token__keeps_it(
+def test_cleanup_stale_oauth2_applications__old_app_with_token__keeps_it(
     admin_user: AbstractUser,
 ) -> None:
-    # Given - an old app that has an access token
+    # Given
     app = Application.objects.create(
         name="Active App",
         client_type=Application.CLIENT_PUBLIC,
