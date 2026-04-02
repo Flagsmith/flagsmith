@@ -2033,14 +2033,14 @@ resolved_reference = "b7fa1f42c333b443763548ea1fe0054f07cdf641"
 
 [[package]]
 name = "flagsmith-common"
-version = "3.3.0"
+version = "3.5.0"
 description = "Flagsmith's common library"
 optional = false
 python-versions = "<4.0,>=3.11"
 groups = ["main", "dev", "licensing", "workflows"]
 files = [
-    {file = "flagsmith_common-3.3.0-py3-none-any.whl", hash = "sha256:dcb94458c7fd1bbc7762080d5c11c1d97507beac48a71132209f322112d8c60d"},
-    {file = "flagsmith_common-3.3.0.tar.gz", hash = "sha256:e2839eda7091f13794efbaa7e20895110f9fbf5953dd67f70585b93e7c5864fa"},
+    {file = "flagsmith_common-3.5.0-py3-none-any.whl", hash = "sha256:6a23c863264351e575d077c9aacf4ab3932975c7d550ef1b33b515f5618b6066"},
+    {file = "flagsmith_common-3.5.0.tar.gz", hash = "sha256:fdeebd3b66c079f5e1dc100141470dda0265fa3659bd6723d5bcd53633aad64e"},
 ]
 
 [package.dependencies]
@@ -2059,11 +2059,13 @@ psycopg2-binary = {version = ">=2.9,<3", optional = true, markers = "extra == \"
 pyfakefs = {version = ">=5,<6", optional = true, markers = "extra == \"test-tools\""}
 pytest-django = {version = ">=4,<5", optional = true, markers = "extra == \"test-tools\""}
 requests = {version = "*", optional = true, markers = "extra == \"common-core\""}
+sentry-sdk = {version = ">=2.0.0,<3.0.0", optional = true, markers = "extra == \"common-core\""}
 simplejson = {version = ">=3,<4", optional = true, markers = "extra == \"common-core\" and extra == \"flagsmith-schemas\""}
-typing-extensions = {version = "*", optional = true, markers = "extra == \"flagsmith-schemas\""}
+structlog = {version = ">=24.4,<26", optional = true, markers = "extra == \"common-core\""}
+typing-extensions = {version = "*", optional = true, markers = "extra == \"common-core\" or extra == \"flagsmith-schemas\""}
 
 [package.extras]
-common-core = ["django (>4,<6)", "django-health-check", "djangorestframework", "djangorestframework-recursive", "drf-spectacular (>=0.28.0,<1)", "drf-writable-nested", "environs (<15)", "gunicorn (>=19.1)", "prometheus-client (>=0.0.16)", "psycopg2-binary (>=2.9,<3)", "requests", "simplejson (>=3,<4)"]
+common-core = ["django (>4,<6)", "django-health-check", "djangorestframework", "djangorestframework-recursive", "drf-spectacular (>=0.28.0,<1)", "drf-writable-nested", "environs (<15)", "gunicorn (>=19.1)", "prometheus-client (>=0.0.16)", "psycopg2-binary (>=2.9,<3)", "requests", "sentry-sdk (>=2.0.0,<3.0.0)", "simplejson (>=3,<4)", "structlog (>=24.4,<26)", "typing-extensions"]
 flagsmith-schemas = ["flagsmith-flag-engine (>6)", "simplejson", "typing-extensions"]
 task-processor = ["backoff (>=2.2.1,<3.0.0)", "django (>4,<6)", "django-health-check", "prometheus-client (>=0.0.16)"]
 test-tools = ["pyfakefs (>=5,<6)", "pytest-django (>=4,<5)"]
@@ -2096,13 +2098,13 @@ files = []
 develop = false
 
 [package.dependencies]
-django-python3-ldap = "^0.15.6"
+django-python3-ldap = ">=0.15.6,<1"
 
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-ldap"
-reference = "v0.1.1"
-resolved_reference = "d7cf0dd9e306a529498839c3f7a1d7c652093228"
+reference = "v0.1.2"
+resolved_reference = "2456465164f39c8ec77c28a029f72119a93c6776"
 
 [[package]]
 name = "flagsmith-private"
@@ -2798,7 +2800,7 @@ pyasn1 = ">=0.4.6"
 
 [[package]]
 name = "licensing"
-version = "0.2.1"
+version = "0.3.0"
 description = "Licensing plugin for Flagsmith application."
 optional = false
 python-versions = ">=3.11,<4.0"
@@ -2813,8 +2815,8 @@ flagsmith-common = ">=3.1.0"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/licensing"
-reference = "v0.2.1"
-resolved_reference = "0c0e1aad17b6f99e2887da3a9cb7aae30c03929c"
+reference = "v0.3.0"
+resolved_reference = "d38953cd93cb99eab7fd92a0467d8bfcccc4cf96"
 
 [[package]]
 name = "markupsafe"
@@ -3701,14 +3703,14 @@ urllib3 = ">=1.26.0"
 
 [[package]]
 name = "pygments"
-version = "2.19.2"
+version = "2.20.0"
 description = "Pygments is a syntax highlighting package written in Python."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b"},
-    {file = "pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887"},
+    {file = "pygments-2.20.0-py3-none-any.whl", hash = "sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176"},
+    {file = "pygments-2.20.0.tar.gz", hash = "sha256:6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f"},
 ]
 
 [package.extras]
@@ -4467,25 +4469,25 @@ files = [
 
 [[package]]
 name = "requests"
-version = "2.32.4"
+version = "2.33.1"
 description = "Python HTTP for Humans."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 groups = ["main", "dev", "saml"]
 files = [
-    {file = "requests-2.32.4-py3-none-any.whl", hash = "sha256:27babd3cda2a6d50b30443204ee89830707d396671944c998b5975b031ac2b2c"},
-    {file = "requests-2.32.4.tar.gz", hash = "sha256:27d0316682c8a29834d3264820024b62a36942083d52caf2f14c0591336d3422"},
+    {file = "requests-2.33.1-py3-none-any.whl", hash = "sha256:4e6d1ef462f3626a1f0a0a9c42dd93c63bad33f9f1c1937509b8c5c8718ab56a"},
+    {file = "requests-2.33.1.tar.gz", hash = "sha256:18817f8c57c6263968bc123d237e3b8b08ac046f5456bd1e307ee8f4250d3517"},
 ]
 
 [package.dependencies]
-certifi = ">=2017.4.17"
+certifi = ">=2023.5.7"
 charset_normalizer = ">=2,<4"
 idna = ">=2.5,<4"
-urllib3 = ">=1.21.1,<3"
+urllib3 = ">=1.26,<3"
 
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
-use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
+use-chardet-on-py3 = ["chardet (>=3.0.2,<8)"]
 
 [[package]]
 name = "requests-futures"
@@ -5671,4 +5673,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.14"
-content-hash = "83fc1419a52f7553b9c7dbbe1405cb3be83d2727e8a9661450e391282d858ea0"
+content-hash = "ac2154a59d1314e4935881ba2ad9161b25e20397410c0e9cc662f8ce0cdd1338"

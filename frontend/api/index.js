@@ -76,6 +76,10 @@ app.get('/config/project-overrides', (req, res) => {
         ? '/api/v1/'
         : process.env.FLAGSMITH_API_URL,
     },
+    {
+      name: 'apiProxyEnabled',
+      value: !!process.env.FLAGSMITH_PROXY_API_URL,
+    },
     { name: 'maintenance', value: envToBool('ENABLE_MAINTENANCE_MODE', false) },
     {
       name: 'flagsmithClientAPI',

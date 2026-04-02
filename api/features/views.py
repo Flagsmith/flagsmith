@@ -795,6 +795,18 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return feature_state_value
 
 
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        extensions={
+            "x-gram": {
+                "name": "update_environment_feature_state",
+                "description": "Updates a feature state in an environment, including enabled status and value. Use this for environments without v2 feature versioning.",
+            },
+        },
+    ),
+)
 class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [EnvironmentFeatureStatePermissions]
 

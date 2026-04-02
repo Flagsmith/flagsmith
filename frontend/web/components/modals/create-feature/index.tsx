@@ -8,7 +8,6 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import IdentityProvider from 'common/providers/IdentityProvider'
 import FeatureListProvider from 'common/providers/FeatureListProvider'
 import AppActions from 'common/dispatcher/app-actions'
-import Project from 'common/project'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import ChangeRequestModal from 'components/modals/ChangeRequestModal'
@@ -380,7 +379,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     controlValue < 0
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
-  const hasCodeReferences = projectFlag?.code_references_counts?.length > 0
 
   let regexValid = true
   try {
@@ -659,21 +657,18 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       />
                     </TabItem>
                   )}
-                  {(!Project.disableAnalytics || hasCodeReferences) && (
-                    <TabItem
-                      tabLabelString='Usage'
-                      tabLabel={
-                        <Row className='justify-content-center'>Usage</Row>
-                      }
-                    >
-                      <UsageTab
-                        projectId={projectId}
-                        featureId={projectFlag.id}
-                        environmentId={environment.id}
-                        hasCodeReferences={hasCodeReferences}
-                      />
-                    </TabItem>
-                  )}
+                  <TabItem
+                    tabLabelString='Usage'
+                    tabLabel={
+                      <Row className='justify-content-center'>Usage</Row>
+                    }
+                  >
+                    <UsageTab
+                      projectId={projectId}
+                      featureId={projectFlag.id}
+                      environmentId={environment.id}
+                    />
+                  </TabItem>
                   {
                     <TabItem
                       data-test='feature_health'
