@@ -141,9 +141,9 @@ def test_dcr_register__valid_request__creates_public_application_in_database(
     [
         (["http://example.com/callback"], "HTTPS"),
         (["https://example.com/callback#frag"], "Fragment"),
-        (["https://*.example.com/callback"], ""),  # Rejected by URLField
-        ([], ""),  # Empty list
-        ([f"https://example.com/cb{i}" for i in range(6)], ""),  # Too many
+        (["https://*.example.com/callback"], "valid URL"),
+        ([], "at least 1"),
+        ([f"https://example.com/cb{i}" for i in range(6)], "no more than 5"),
     ],
     ids=["http-non-localhost", "fragment", "wildcard", "empty-list", "too-many"],
 )
@@ -162,15 +162,13 @@ def test_dcr_register__invalid_redirect_uris__returns_rfc7591_error(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert data["error"] == "invalid_redirect_uri"
-    assert "error_description" in data
-    if expected_fragment:
-        assert expected_fragment in data["error_description"]
+    assert expected_fragment.lower() in data["error_description"].lower()
 
 
 @pytest.mark.parametrize(
     ("overrides", "expected_fragment"),
     [
-        ({"client_name": "<script>alert(1)</script>"}, ""),
+        ({"client_name": "<script>alert(1)</script>"}, "letters"),
         ({"client_name": "   "}, "blank"),
         ({"grant_types": ["implicit"]}, "grant type"),
         ({"response_types": ["token"]}, "response type"),
@@ -199,9 +197,7 @@ def test_dcr_register__invalid_client_metadata__returns_rfc7591_error(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = response.json()
     assert data["error"] == "invalid_client_metadata"
-    assert "error_description" in data
-    if expected_fragment:
-        assert expected_fragment in data["error_description"].lower()
+    assert expected_fragment.lower() in data["error_description"].lower()
 
 
 @pytest.mark.parametrize(

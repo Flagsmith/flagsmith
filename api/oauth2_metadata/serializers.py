@@ -34,9 +34,6 @@ class DCRRequestSerializer(serializers.Serializer[None]):
     )
 
     def validate_client_name(self, value: str) -> str:
-        value = value.strip()
-        if not value:
-            raise serializers.ValidationError("Client name must not be blank.")
         if not _CLIENT_NAME_RE.match(value):
             raise serializers.ValidationError(
                 "Client name may only contain letters, digits, spaces, "
