@@ -218,7 +218,7 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
 
 ## Remove a segment override
 
-Removes a segment override from a feature.
+A separate endpoint for removing a segment override from a feature:
 
 [`POST /api/experiments/environments/{environment_key}/delete-segment-override/`](https://api.flagsmith.com/api/v1/docs/#/experimental/api_experiments_environments_delete_segment_override_create)
 
