@@ -626,6 +626,7 @@ def test_add_single_seat__api_error__raises_upgrade_seats_error(  # type: ignore
         id=subscription_id,
         plan_id="plan-id",
         addons=[],
+        billing_period=1,
     )
 
     # tie that subscription object to the mocked chargebee object
