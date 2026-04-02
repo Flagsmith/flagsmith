@@ -1,5 +1,6 @@
 from unittest import mock
 
+import pytest
 from common.projects.permissions import (
     CREATE_ENVIRONMENT,
 )
@@ -148,36 +149,57 @@ def test_environment_permissions__user_without_create_permission__returns_false(
     assert result is False
 
 
-def test_environment_permissions__create_with_non_integer_project__returns_false(
+@pytest.mark.parametrize(
+    "request_data, expected",
+    [
+        ({"project": "<Project ID>", "name": "Test environment"}, False),
+        ({"name": "Test environment"}, False),
+    ],
+)
+def test_environment_permissions__create_with_invalid_project__returns_false(
     staff_user: FFAdminUser,
+    request_data: dict,
+    expected: bool,
 ) -> None:
     # Given
-    mock_view.action = "create"
-    mock_view.detail = False
-    mock_request.user = staff_user
-    mock_request.data = {"project": "<Project ID>", "name": "Test environment"}
+    view = mock.MagicMock()
+    request = mock.MagicMock()
+    view.action = "create"
+    view.detail = False
+    request.user = staff_user
+    request.data = request_data
 
     # When
-    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+    result = environment_permissions.has_permission(request, view)  # type: ignore[no-untyped-call]
 
     # Then
-    assert result is False
+    assert result is expected
 
 
-def test_environment_permissions__create_with_none_project__returns_false(
+def test_environment_permissions__create_with_string_integer_project__returns_true(
     staff_user: FFAdminUser,
+    project: Project,
 ) -> None:
     # Given
-    mock_view.action = "create"
-    mock_view.detail = False
-    mock_request.user = staff_user
-    mock_request.data = {"name": "Test environment"}
+    create_environment_permission = ProjectPermissionModel.objects.get(
+        key=CREATE_ENVIRONMENT
+    )
+    user_project_permission = UserProjectPermission.objects.create(
+        user=staff_user, project=project
+    )
+    user_project_permission.permissions.set([create_environment_permission])
+    view = mock.MagicMock()
+    request = mock.MagicMock()
+    view.action = "create"
+    view.detail = False
+    request.user = staff_user
+    request.data = {"project": str(project.id), "name": "Test environment"}
 
     # When
-    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+    result = environment_permissions.has_permission(request, view)  # type: ignore[no-untyped-call]
 
     # Then
-    assert result is False
+    assert result is True
 
 
 def test_environment_permissions__list_action__returns_true(
