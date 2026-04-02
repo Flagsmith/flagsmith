@@ -31,11 +31,10 @@ DEFAULT_OPENFEATURE_DOMAIN = "flagsmith-api"
 
 def get_openfeature_client(
     domain: str = DEFAULT_OPENFEATURE_DOMAIN,
-    **flagsmith_kwargs: typing.Any,
 ) -> OpenFeatureClient:
     openfeature_client = openfeature_api.get_client(domain=domain)
     if openfeature_client.get_provider_status() != ProviderStatus.READY:
-        initialise_provider(domain, **(flagsmith_kwargs or get_provider_kwargs()))
+        initialise_provider(domain, **get_provider_kwargs())
     return openfeature_client
 
 

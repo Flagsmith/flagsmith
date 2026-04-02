@@ -84,30 +84,6 @@ def test_get_openfeature_client__provider_ready__skips_initialisation(
     mock_openfeature_api.set_provider.assert_not_called()
 
 
-def test_get_openfeature_client__custom_flagsmith_kwargs__passes_to_provider(
-    settings: SettingsWrapper,
-    mocker: MockerFixture,
-    mock_local_file_handler: MagicMock,
-    mock_local_file_handler_class: MagicMock,
-) -> None:
-    # Given
-    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = True
-
-    mock_openfeature_api = mocker.patch("integrations.flagsmith.client.openfeature_api")
-    mock_client = mock_openfeature_api.get_client.return_value
-    mock_client.get_provider_status.return_value = ProviderStatus.NOT_READY
-
-    mock_flagsmith_class = mocker.patch("integrations.flagsmith.client.Flagsmith")
-    mocker.patch("integrations.flagsmith.client.FlagsmithProvider")
-
-    # When
-    get_openfeature_client(enable_local_evaluation=False)
-
-    # Then
-    call_args = mock_flagsmith_class.call_args
-    assert call_args.kwargs["enable_local_evaluation"] is False
-
-
 def test_initialise_provider__offline_mode_disabled__initialises_with_server_key(
     settings: SettingsWrapper,
     mocker: MockerFixture,
