@@ -104,14 +104,17 @@ The following data can optionally be included in the export. You will be prompte
 | Custom fields and metadata | Off     |                                                           |
 | Integration configurations | Off     | Includes third-party integration settings per environment |
 
-The following data is **never** included in a project-level export:
+:::caution
 
+The following data is **never** included in a project-level export:
 - Users, owners, and group owners
 - Change requests and approvals
 - Scheduled flag changes
 - Version history (only the current live state is exported)
 - Audit logs
 - Flag analytics
+
+:::
 
 ### Export format
 
