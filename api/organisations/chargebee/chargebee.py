@@ -257,9 +257,8 @@ def _get_additional_seat_addon_id(subscription: SubscriptionOps) -> str:
     suffix = addon_suffixes_by_billing_period.get(subscription.billing_period)
     if not suffix:
         logger.warning(
-            "Unexpected billing period for subscription ID %s: %d",
+            "Unexpected billing period for subscription ID %s",
             subscription.id,
-            subscription.billing_period,
         )
         suffix = "monthly"
     return "-".join([addon_id_prefix, suffix])
