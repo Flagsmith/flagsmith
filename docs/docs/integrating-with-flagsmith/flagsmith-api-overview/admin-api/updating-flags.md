@@ -6,7 +6,7 @@ sidebar_position: 3
 
 These experimental endpoints let you update feature flag values and segment overrides via the Admin API. They're
 purpose-built for automation and CI/CD — minimal payloads, no need to look up internal IDs, and they work the same
-regardless of whether your environment uses v1 or v2 feature versioning.
+regardless of whether your environment has Feature Versioning enabled.
 
 :::caution
 
@@ -241,7 +241,7 @@ curl -X POST 'https://api.flagsmith.com/api/experiments/environments/{environmen
 | Feature ID           | `name` or `id` — use one, not both                                           |
 | Value types          | `string`, `integer`, `boolean`                                               |
 | Segment priority     | Optional — omit to add at lowest priority; `1` is highest                    |
-| Feature versioning   | Works the same on v1 and v2 environments                                     |
+| Feature Versioning   | Works the same whether enabled or not                                        |
 | Success response     | `204 No Content`                                                             |
 | Limitations          | No multivariate support; incompatible with change requests                   |
 | Full API schema      | [Swagger Explorer](https://api.flagsmith.com/api/v1/docs/)                   |
