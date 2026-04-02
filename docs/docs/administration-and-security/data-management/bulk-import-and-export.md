@@ -136,9 +136,8 @@ overwritten, all of its rules, conditions, and associated feature overrides are 
 
 #### Versioning
 
-If the target project uses [V2 feature versioning](/managing-flags/version-history), importing with the Overwrite
-Destructive strategy will create new feature versions for any features that are modified. The Skip strategy does not
-create new versions.
+If the target project uses feature versioning, importing with the Overwrite Destructive strategy will create new
+feature versions for any features that are modified. The Skip strategy does not create new versions.
 
 #### Environments
 
