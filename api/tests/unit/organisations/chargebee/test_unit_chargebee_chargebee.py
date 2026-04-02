@@ -546,7 +546,7 @@ def test_add_single_seat__existing_addon__increments_quantity(mocker) -> None:  
                 )
             ],
             prorate=True,
-            invoice_immediately=False,
+            invoice_immediately=True,
         ),
     )
 
@@ -585,7 +585,7 @@ def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(  #
                 )
             ],
             prorate=True,
-            invoice_immediately=False,
+            invoice_immediately=True,
         ),
     )
 
@@ -637,7 +637,7 @@ def test_add_single_seat__api_error__raises_upgrade_seats_error(  # type: ignore
                 )
             ],
             prorate=True,
-            invoice_immediately=False,
+            invoice_immediately=True,
         ),
     )
     assert len(caplog.records) == 1
