@@ -562,7 +562,7 @@ def test_add_single_seat__existing_addon__increments_quantity(mocker) -> None:  
         (7, "additional-team-members-scale-up-v2-monthly"),
     ),
 )
-def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(  # type: ignore[no-untyped-def]
+def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(
     mocker: MockerFixture, billing_period: int, expected_add_on_id: str
 ) -> None:
     # Given
