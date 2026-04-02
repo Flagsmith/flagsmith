@@ -18,6 +18,9 @@ from chargebee.models.plan.responses import (  # type: ignore[import-untyped]
 from chargebee.models.portal_session.operations import (  # type: ignore[import-untyped]
     PortalSession as PortalSessionOps,
 )
+from chargebee.models.subscription.operations import (
+    Subscription,
+)
 from chargebee.models.subscription.operations import (  # type: ignore[import-untyped]
     Subscription as SubscriptionOps,
 )
@@ -31,7 +34,6 @@ from organisations.chargebee.client import chargebee_client
 from organisations.chargebee.constants import (
     ADDITIONAL_API_SCALE_UP_ADDON_ID,
     ADDITIONAL_API_START_UP_ADDON_ID,
-    ADDITIONAL_SEAT_ADDON_ID,
 )
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.constants import CHARGEBEE
@@ -212,13 +214,11 @@ def add_single_seat(subscription_id: str) -> None:
         subscription = chargebee_client.Subscription.retrieve(
             subscription_id
         ).subscription
+        addon_id = _get_additional_seat_addon_id(subscription)
+
         addons = subscription.addons or []
         current_seats = next(
-            (
-                addon.quantity
-                for addon in addons
-                if addon.id == ADDITIONAL_SEAT_ADDON_ID
-            ),
+            (addon.quantity for addon in addons if addon.id == addon_id),
             0,
         )
 
@@ -227,7 +227,7 @@ def add_single_seat(subscription_id: str) -> None:
             SubscriptionOps.UpdateParams(
                 addons=[
                     SubscriptionOps.UpdateAddonParams(
-                        id=ADDITIONAL_SEAT_ADDON_ID,
+                        id=_get_additional_seat_addon_id(subscription),
                         quantity=current_seats + 1,
                     )
                 ],
@@ -252,6 +252,21 @@ def add_single_seat(subscription_id: str) -> None:
         )
         logger.error(msg)
         raise UpgradeSeatsError(msg) from e
+
+
+def _get_additional_seat_addon_id(subscription: Subscription) -> str:
+    addon_id_prefix = "additional-team-members-scale-up-v2"
+    addon_suffixes_by_billing_period = {1: "monthly", 6: "semiannual", 12: "annual"}
+    suffix = addon_suffixes_by_billing_period.get(
+        subscription.billing_period, "monthly"
+    )
+    if not suffix:
+        logger.warning(
+            "Unexpected billing period for subscription ID %s: %d",
+            subscription.id,
+            subscription.billing_period,
+        )
+    return "-".join([addon_id_prefix, suffix])
 
 
 def add_100k_api_calls_start_up(

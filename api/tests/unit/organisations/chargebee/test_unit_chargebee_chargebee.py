@@ -35,7 +35,6 @@ from organisations.chargebee.chargebee import (
 )
 from organisations.chargebee.constants import (
     ADDITIONAL_API_SCALE_UP_ADDON_ID,
-    ADDITIONAL_SEAT_ADDON_ID,
 )
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.exceptions import (
@@ -514,7 +513,7 @@ def test_get_subscription_metadata_from_id__addons_is_none__returns_plan_metadat
 def test_add_single_seat__existing_addon__increments_quantity(mocker) -> None:  # type: ignore[no-untyped-def]
     # Given
     plan_id = "plan-id"
-    addon_id = ADDITIONAL_SEAT_ADDON_ID
+    addon_id = "additional-team-members-scale-up-v2-monthly"
     subscription_id = "subscription-id"
     addon_quantity = 1
 
@@ -523,6 +522,7 @@ def test_add_single_seat__existing_addon__increments_quantity(mocker) -> None:  
         id=subscription_id,
         plan_id=plan_id,
         addons=[mocker.MagicMock(id=addon_id, quantity=addon_quantity)],
+        billing_period=1,
     )
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client", autospec=True
@@ -542,7 +542,7 @@ def test_add_single_seat__existing_addon__increments_quantity(mocker) -> None:  
         SubscriptionOps.UpdateParams(
             addons=[
                 SubscriptionOps.UpdateAddonParams(
-                    id=ADDITIONAL_SEAT_ADDON_ID, quantity=addon_quantity + 1
+                    id=addon_id, quantity=addon_quantity + 1
                 )
             ],
             prorate=True,
@@ -551,8 +551,19 @@ def test_add_single_seat__existing_addon__increments_quantity(mocker) -> None:  
     )
 
 
+@pytest.mark.parametrize(
+    "billing_period,expected_add_on_id",
+    (
+        (1, "additional-team-members-scale-up-v2-monthly"),
+        (6, "additional-team-members-scale-up-v2-semiannual"),
+        (12, "additional-team-members-scale-up-v2-annual"),
+        # unexpected or missing billing period should default to monthly
+        (None, "additional-team-members-scale-up-v2-monthly"),
+        (7, "additional-team-members-scale-up-v2-monthly"),
+    ),
+)
 def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(  # type: ignore[no-untyped-def]
-    mocker,
+    mocker: MockerFixture, billing_period: int, expected_add_on_id: str
 ) -> None:
     # Given
     subscription_id = "subscription-id"
@@ -562,6 +573,7 @@ def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(  #
         id=subscription_id,
         plan_id="plan_id",
         addons=[],
+        billing_period=billing_period,
     )
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client", autospec=True
@@ -580,9 +592,7 @@ def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(  #
         subscription_id,
         SubscriptionOps.UpdateParams(
             addons=[
-                SubscriptionOps.UpdateAddonParams(
-                    id=ADDITIONAL_SEAT_ADDON_ID, quantity=1
-                )
+                SubscriptionOps.UpdateAddonParams(id=expected_add_on_id, quantity=1)
             ],
             prorate=True,
             invoice_immediately=True,
@@ -633,7 +643,7 @@ def test_add_single_seat__api_error__raises_upgrade_seats_error(  # type: ignore
         SubscriptionOps.UpdateParams(
             addons=[
                 SubscriptionOps.UpdateAddonParams(
-                    id=ADDITIONAL_SEAT_ADDON_ID, quantity=1
+                    id="additional-team-members-scale-up-v2-monthly", quantity=1
                 )
             ],
             prorate=True,
