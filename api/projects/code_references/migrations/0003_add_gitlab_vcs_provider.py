@@ -1,0 +1,20 @@
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("code_references", "0002_add_project_repo_created_index"),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name="featureflagcodereferencesscan",
+            name="vcs_provider",
+            field=models.CharField(
+                choices=[("github", "GitHub"), ("gitlab", "GitLab")],
+                default="github",
+                max_length=50,
+            ),
+        ),
+    ]

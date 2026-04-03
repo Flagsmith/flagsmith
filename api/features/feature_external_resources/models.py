@@ -26,6 +26,9 @@ class ResourceType(models.TextChoices):
     # GitHub external resource types
     GITHUB_ISSUE = "GITHUB_ISSUE", "GitHub Issue"
     GITHUB_PR = "GITHUB_PR", "GitHub PR"
+    # GitLab external resource types
+    GITLAB_ISSUE = "GITLAB_ISSUE", "GitLab Issue"
+    GITLAB_MR = "GITLAB_MR", "GitLab MR"
 
 
 tag_by_type_and_state = {
