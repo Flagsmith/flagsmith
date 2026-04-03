@@ -61,7 +61,11 @@ def fetch_gitlab_projects(
     response = requests.get(
         url,
         headers=_build_request_headers(access_token),
-        params={"membership": "true", "per_page": str(params.page_size), "page": str(params.page)},
+        params={
+            "membership": "true",
+            "per_page": str(params.page_size),
+            "page": str(params.page),
+        },
         timeout=GITLAB_API_CALLS_TIMEOUT,
     )
     response.raise_for_status()
@@ -86,9 +90,7 @@ def fetch_search_gitlab_resource(
     params: IssueQueryParams,
 ) -> PaginatedResponse:
     """Search issues or merge requests in a GitLab project."""
-    url = (
-        f"{instance_url}/api/v4/projects/{params.gitlab_project_id}/{resource_type}"
-    )
+    url = f"{instance_url}/api/v4/projects/{params.gitlab_project_id}/{resource_type}"
     query_params: dict[str, str | int] = {
         "per_page": params.page_size,
         "page": params.page,
@@ -238,7 +240,9 @@ def create_flagsmith_flag_label(
         timeout=GITLAB_API_CALLS_TIMEOUT,
     )
     if response.status_code == 409:
-        logger.info("Flagsmith Flag label already exists on project %s", gitlab_project_id)
+        logger.info(
+            "Flagsmith Flag label already exists on project %s", gitlab_project_id
+        )
         return None
 
     response.raise_for_status()

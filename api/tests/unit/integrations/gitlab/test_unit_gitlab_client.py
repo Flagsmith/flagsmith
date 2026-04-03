@@ -268,7 +268,9 @@ def test_create_gitlab_issue__valid_data__creates_issue() -> None:
 
 
 @responses.activate
-def test_get_gitlab_resource_metadata__valid_resource__returns_title_and_state() -> None:
+def test_get_gitlab_resource_metadata__valid_resource__returns_title_and_state() -> (
+    None
+):
     # Given
     responses.add(
         responses.GET,
