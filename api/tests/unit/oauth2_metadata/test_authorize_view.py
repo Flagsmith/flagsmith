@@ -35,6 +35,18 @@ def oauth_application(admin_user: User) -> Application:  # type: ignore[valid-ty
 
 
 @pytest.fixture()
+def verified_oauth_application(admin_user: User) -> Application:  # type: ignore[valid-type]
+    return Application.objects.create(  # type: ignore[no-any-return]
+        name="Verified App",
+        user=admin_user,
+        client_type=Application.CLIENT_PUBLIC,
+        authorization_grant_type=Application.GRANT_AUTHORIZATION_CODE,
+        redirect_uris="https://example.com/callback",
+        skip_authorization=True,
+    )
+
+
+@pytest.fixture()
 def auth_client(admin_user: User) -> APIClient:  # type: ignore[valid-type]
     client = APIClient()
     client.force_authenticate(user=admin_user)
@@ -78,6 +90,33 @@ def test_get__valid_params__returns_application_info(
     assert data["is_verified"] is False
 
 
+def test_get__verified_application__returns_is_verified_true(
+    auth_client: APIClient,
+    verified_oauth_application: Application,
+    pkce_pair: tuple[str, str],
+) -> None:
+    # Given
+    _verifier, challenge = pkce_pair
+    url = reverse(AUTHORIZE_URL)
+
+    # When
+    response = auth_client.get(
+        url,
+        {
+            "client_id": verified_oauth_application.client_id,
+            "response_type": "code",
+            "redirect_uri": "https://example.com/callback",
+            "scope": "mcp",
+            "code_challenge": challenge,
+            "code_challenge_method": "S256",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["is_verified"] is True
+
+
 def test_get__invalid_client_id__returns_400(
     auth_client: APIClient,
     pkce_pair: tuple[str, str],
@@ -106,7 +145,9 @@ def test_get__invalid_client_id__returns_400(
     assert "error" in data
 
 
-def test_get__unauthenticated__returns_401(
+@pytest.mark.parametrize("method", ["get", "post"])
+def test__unauthenticated__returns_401(
+    method: str,
     db: None,
 ) -> None:
     # Given
@@ -114,22 +155,29 @@ def test_get__unauthenticated__returns_401(
     url = reverse(AUTHORIZE_URL)
 
     # When
-    response = client.get(
+    response = getattr(client, method)(
         url,
-        {
-            "client_id": "some-id",
-            "response_type": "code",
-        },
+        {"client_id": "some-id", "response_type": "code"},
     )
 
     # Then
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_post__allow_true__returns_redirect_with_code(
+@pytest.mark.parametrize(
+    "allow, expected_params",
+    [
+        (True, {"state": ["test-state"]}),
+        (False, {"error": ["access_denied"], "state": ["test-state"]}),
+    ],
+    ids=["allow", "deny"],
+)
+def test_post__consent_decision__returns_redirect(
     auth_client: APIClient,
     oauth_application: Application,
     pkce_pair: tuple[str, str],
+    allow: bool,
+    expected_params: dict[str, list[str]],
 ) -> None:
     # Given
     _verifier, challenge = pkce_pair
@@ -139,7 +187,7 @@ def test_post__allow_true__returns_redirect_with_code(
     response = auth_client.post(
         url,
         {
-            "allow": True,
+            "allow": allow,
             "client_id": oauth_application.client_id,
             "response_type": "code",
             "redirect_uri": "https://example.com/callback",
@@ -153,47 +201,11 @@ def test_post__allow_true__returns_redirect_with_code(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    redirect_uri = data["redirect_uri"]
+    redirect_uri = response.json()["redirect_uri"]
     parsed = urlparse(redirect_uri)
     query_params = parse_qs(parsed.query)
-    assert "code" in query_params
-    assert query_params["state"] == ["test-state"]
-
-
-def test_post__allow_false__returns_redirect_with_error(
-    auth_client: APIClient,
-    oauth_application: Application,
-    pkce_pair: tuple[str, str],
-) -> None:
-    # Given
-    _verifier, challenge = pkce_pair
-    url = reverse(AUTHORIZE_URL)
-
-    # When
-    response = auth_client.post(
-        url,
-        {
-            "allow": False,
-            "client_id": oauth_application.client_id,
-            "response_type": "code",
-            "redirect_uri": "https://example.com/callback",
-            "scope": "mcp",
-            "code_challenge": challenge,
-            "code_challenge_method": "S256",
-            "state": "test-state",
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    redirect_uri = data["redirect_uri"]
-    parsed = urlparse(redirect_uri)
-    query_params = parse_qs(parsed.query)
-    assert query_params["error"] == ["access_denied"]
-    assert query_params["state"] == ["test-state"]
+    for key, value in expected_params.items():
+        assert query_params[key] == value
 
 
 def test_post__pkce_params_preserved__code_exchangeable(
@@ -204,7 +216,7 @@ def test_post__pkce_params_preserved__code_exchangeable(
     code_verifier, code_challenge = _pkce_pair()
     authorize_url = reverse(AUTHORIZE_URL)
 
-    # When -- obtain an authorisation code
+    # When
     response = auth_client.post(
         authorize_url,
         {
@@ -225,7 +237,6 @@ def test_post__pkce_params_preserved__code_exchangeable(
     query_params = parse_qs(parsed.query)
     code = query_params["code"][0]
 
-    # When -- exchange the code for a token
     token_url = reverse("oauth2_provider:token")
     token_client = APIClient()
     token_response = token_client.post(
