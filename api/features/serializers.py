@@ -306,22 +306,32 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 
     def validate_owners(self, owners: list[FFAdminUser]) -> list[FFAdminUser]:
         project: Project = self.context["project"]
-        for user in owners:
-            if not user.has_project_permission(VIEW_PROJECT, project):
-                raise serializers.ValidationError(
-                    "Some users do not have access to this project."
-                )
+        invalid_users = [
+            user
+            for user in owners
+            if not user.has_project_permission(VIEW_PROJECT, project)
+        ]
+        if invalid_users:
+            invalid_user_ids = [user.id for user in invalid_users]
+            raise serializers.ValidationError(
+                f"Users with ids {invalid_user_ids} do not have access to this project."
+            )
         return owners
 
     def validate_group_owners(
         self, group_owners: list[UserPermissionGroup]
     ) -> list[UserPermissionGroup]:
         project: Project = self.context["project"]
-        for group in group_owners:
-            if group.organisation_id != project.organisation_id:
-                raise serializers.ValidationError(
-                    "Some groups do not belong to this project's organisation."
-                )
+        invalid_groups = [
+            group
+            for group in group_owners
+            if group.organisation_id != project.organisation_id
+        ]
+        if invalid_groups:
+            invalid_group_ids = [group.id for group in invalid_groups]
+            raise serializers.ValidationError(
+                f"Groups with ids {invalid_group_ids} do not belong to this project's organisation."
+            )
         return group_owners
 
     def validate_name(self, name: str):  # type: ignore[no-untyped-def]

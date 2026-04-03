@@ -4750,6 +4750,7 @@ def test_create_feature__group_owner_from_different_org__returns_400(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "group_owners" in response.json()
+    assert str(other_group.id) in response.json()["group_owners"][0]
 
 
 def test_create_feature__owner_without_project_access__returns_400(
@@ -4773,6 +4774,7 @@ def test_create_feature__owner_without_project_access__returns_400(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "owners" in response.json()
+    assert str(other_user.id) in response.json()["owners"][0]
 
 
 def test_update_feature__owners_in_request_body__returns_200_without_changes(
