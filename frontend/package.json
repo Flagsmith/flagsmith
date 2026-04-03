@@ -63,7 +63,7 @@
     "@dnd-kit/abstract": "^0.3.2",
     "@dnd-kit/helpers": "^0.3.2",
     "@dnd-kit/react": "^0.3.2",
-    "@flagsmith/flagsmith": "^11.0.0-internal.6",
+    "@flagsmith/flagsmith": "11.0.0-internal.7",
     "@gram-ai/elements": "1.27.5",
     "@ionic/react": "^7.5.3",
     "@json-render/react": "0.2.0",
