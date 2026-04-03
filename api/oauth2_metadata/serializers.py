@@ -5,6 +5,18 @@ from rest_framework import serializers
 
 from oauth2_metadata.services import validate_redirect_uri
 
+
+class OAuthConsentSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    allow = serializers.BooleanField()
+    client_id = serializers.CharField()
+    redirect_uri = serializers.CharField()
+    response_type = serializers.CharField()
+    scope = serializers.CharField(required=False, default="mcp")
+    code_challenge = serializers.CharField()
+    code_challenge_method = serializers.CharField()
+    state = serializers.CharField(required=False, allow_blank=True, default="")
+
+
 # Allow ASCII letters, digits, spaces, hyphens, underscores, dots, and parentheses.
 # ASCII-only to prevent Unicode homoglyph spoofing on the consent screen.
 _CLIENT_NAME_RE = re.compile(r"^[\w\s.\-()]+$", re.ASCII)

@@ -1,8 +1,9 @@
 import { createServer } from "node:http";
 import { randomBytes, createHash } from "node:crypto";
 
-const CLIENT_ID = "B4wAl37pg9y1PRsIvAXZ14cTp0FpqpNCtMSI7ETC";
+const CLIENT_ID = "PVuLryS7ISh5gveydoLafTt02q1jMsCiwwOVoMy6";
 const REDIRECT_URI = "http://localhost:3000/oauth/callback";
+const FRONTEND_URL = "http://localhost:8080";
 const API_URL = "http://localhost:8000";
 const PORT = 3000;
 
@@ -13,7 +14,7 @@ const codeChallenge = createHash("sha256")
   .digest("base64url");
 
 const authorizeUrl =
-  `${API_URL}/o/authorize/?` +
+  `${FRONTEND_URL}/oauth/authorize?` +
   new URLSearchParams({
     response_type: "code",
     client_id: CLIENT_ID,
