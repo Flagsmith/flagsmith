@@ -17,6 +17,8 @@ import Button from './base/forms/Button'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
 import each from 'lodash/each'
+import { useGetGitlabIntegrationQuery } from 'common/services/useGitlabIntegration'
+import GitLabSetupPage from './pages/GitLabSetupPage'
 
 const GITHUB_INSTALLATION_SETUP = 'install'
 
@@ -43,6 +45,7 @@ type IntegrationProps = {
     hasIntegrationWithGithub: boolean
     installationId: string
   }
+  hasIntegrationWithGitlab: boolean
 }
 
 const Integration: FC<IntegrationProps> = (props) => {
@@ -50,6 +53,14 @@ const Integration: FC<IntegrationProps> = (props) => {
   const [windowInstallationId, setWindowInstallationId] = useState<string>('')
 
   const add = () => {
+    if (props.integration.isGitlabIntegration && props.projectId) {
+      openModal(
+        'GitLab Integration',
+        <GitLabSetupPage projectId={props.projectId} />,
+        'side-modal',
+      )
+      return
+    }
     const isGithubIntegration =
       props.githubMeta.githubId && props.integration.isExternalInstallation
     if (isGithubIntegration) {
@@ -119,10 +130,12 @@ const Integration: FC<IntegrationProps> = (props) => {
     external,
     image,
     isExternalInstallation,
+    isGitlabIntegration,
     perEnvironment,
     title,
   } = props.integration
   const activeIntegrations = props.activeIntegrations
+  const hasIntegrationWithGitlab = props.hasIntegrationWithGitlab
   const showAdd = !(
     !perEnvironment &&
     activeIntegrations &&
@@ -168,56 +181,68 @@ const Integration: FC<IntegrationProps> = (props) => {
                     Delete Integration
                   </Button>
                 ))}
-              {showAdd && (
-                <>
-                  {external && !isExternalInstallation ? (
-                    <a
-                      href={docs}
-                      target={'_blank'}
-                      className='btn btn-primary btn-xsm ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      rel='noreferrer'
-                    >
-                      Add Integration
-                    </a>
-                  ) : external &&
-                    isExternalInstallation &&
-                    (windowInstallationId ||
-                      props.githubMeta.hasIntegrationWithGithub) ? (
-                    <Button
-                      className='ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      onClick={add}
-                      size='xSmall'
-                    >
-                      Manage Integration
-                    </Button>
-                  ) : external &&
-                    !props.githubMeta.hasIntegrationWithGithub &&
-                    isExternalInstallation ? (
-                    <Button
-                      className='ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      onClick={openChildWin}
-                      size='xSmall'
-                    >
-                      Add Integration
-                    </Button>
-                  ) : (
-                    <Button
-                      className='ml-3'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      onClick={add}
-                      size='xSmall'
-                    >
-                      Add Integration
-                    </Button>
-                  )}
-                </>
+              {isGitlabIntegration ? (
+                <Button
+                  className='ml-3'
+                  id='show-create-segment-btn'
+                  data-test='show-create-segment-btn'
+                  onClick={add}
+                  size='xSmall'
+                >
+                  {hasIntegrationWithGitlab
+                    ? 'Manage Integration'
+                    : 'Add Integration'}
+                </Button>
+              ) : showAdd && (
+                  <>
+                    {external && !isExternalInstallation ? (
+                      <a
+                        href={docs}
+                        target={'_blank'}
+                        className='btn btn-primary btn-xsm ml-3'
+                        id='show-create-segment-btn'
+                        data-test='show-create-segment-btn'
+                        rel='noreferrer'
+                      >
+                        Add Integration
+                      </a>
+                    ) : external &&
+                      isExternalInstallation &&
+                      (windowInstallationId ||
+                        props.githubMeta.hasIntegrationWithGithub) ? (
+                      <Button
+                        className='ml-3'
+                        id='show-create-segment-btn'
+                        data-test='show-create-segment-btn'
+                        onClick={add}
+                        size='xSmall'
+                      >
+                        Manage Integration
+                      </Button>
+                    ) : external &&
+                      !props.githubMeta.hasIntegrationWithGithub &&
+                      isExternalInstallation ? (
+                      <Button
+                        className='ml-3'
+                        id='show-create-segment-btn'
+                        data-test='show-create-segment-btn'
+                        onClick={openChildWin}
+                        size='xSmall'
+                      >
+                        Add Integration
+                      </Button>
+                    ) : (
+                      <Button
+                        className='ml-3'
+                        id='show-create-segment-btn'
+                        data-test='show-create-segment-btn'
+                        onClick={add}
+                        size='xSmall'
+                      >
+                        Add Integration
+                      </Button>
+                    )}
+                  </>
               )}
             </Row>
           </Row>
@@ -251,7 +276,7 @@ const Integration: FC<IntegrationProps> = (props) => {
 interface IntegrationListProps {
   integrations: string[]
   projectId?: string
-  organisationId: string
+  organisationId?: string
 }
 const IntegrationList: FC<IntegrationListProps> = (props) => {
   const [githubId, setGithubId] = useState<number>(0)
@@ -263,6 +288,14 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
   const history = useHistory()
 
   const organisationId = props.organisationId
+
+  const { data: gitlabIntegrationData } = useGetGitlabIntegrationQuery(
+    { project_id: parseInt(props.projectId || '0') },
+    { skip: !props.projectId },
+  )
+  const hasIntegrationWithGitlab = !!(
+    gitlabIntegrationData?.results?.length ?? 0
+  )
 
   useEffect(() => {
     fetch()
@@ -322,7 +355,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
               return allItems
             })
           }
-          if (key !== 'github') {
+          if (!integration.isExternalInstallation && !integration.isGitlabIntegration) {
             return _data
               .get(
                 `${Project.api}projects/${props.projectId}/integrations/${key}/`,
@@ -462,6 +495,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
                 hasIntegrationWithGithub: hasIntegrationWithGithub,
                 installationId: installationId,
               }}
+              hasIntegrationWithGitlab={hasIntegrationWithGitlab}
               activeIntegrations={activeIntegrations[index]}
               integration={Utils.getIntegrationData()[i]}
             />

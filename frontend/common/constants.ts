@@ -492,6 +492,10 @@ const Constants = {
     githubIssue: 'GitHub Issue',
     githubPR: 'Github PR',
   },
+  gitlabType: {
+    gitlabIssue: 'GitLab Issue',
+    gitlabMR: 'GitLab MR',
+  },
   integrationCategoryDescriptions: {
     'All': 'Send data on what flags served to each identity.',
     'Analytics': 'Send data on what flags served to each identity.',
@@ -684,6 +688,18 @@ const Constants = {
       label: 'Pull Request',
       resourceType: 'pulls',
       type: 'GITHUB',
+    },
+    GITLAB_ISSUE: {
+      id: 3,
+      label: 'Issue',
+      resourceType: 'issues',
+      type: 'GITLAB',
+    },
+    GITLAB_MR: {
+      id: 4,
+      label: 'Merge Request',
+      resourceType: 'merge_requests',
+      type: 'GITLAB',
     },
   },
   roles: {

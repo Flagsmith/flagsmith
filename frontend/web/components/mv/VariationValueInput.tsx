@@ -37,11 +37,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
             <>
               {Utils.renderWithPermission(
                 canCreateFeature,
-                readOnly
-                  ? 'Variation values are defined at the feature level and cannot be changed per segment.'
-                  : Constants.projectPermissions(
-                      ProjectPermission.CREATE_FEATURE,
-                    ),
+                Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
                 <ValueEditor
                   data-test={`featureVariationValue${
                     Utils.featureStateToValue(value) || index

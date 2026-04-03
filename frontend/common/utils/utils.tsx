@@ -377,10 +377,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 'identities'
   },
   getIntegrationData() {
-    return Utils.getFlagsmithJSONValue(
+    const data = Utils.getFlagsmithJSONValue(
       'integration_data',
       defaultFlags.integration_data,
     )
+    // Merge default integration entries that may not be in the remote flag yet
+    return { ...defaultFlags.integration_data, ...data }
   },
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType

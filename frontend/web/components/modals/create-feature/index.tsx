@@ -4,6 +4,7 @@ import _ from 'lodash'
 import moment from 'moment'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { useHasGithubIntegration } from 'common/hooks/useHasGithubIntegration'
+import { useHasGitlabIntegration } from 'common/hooks/useHasGitlabIntegration'
 import FeatureListStore from 'common/stores/feature-list-store'
 import IdentityProvider from 'common/providers/IdentityProvider'
 import FeatureListProvider from 'common/providers/FeatureListProvider'
@@ -346,6 +347,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     organisationId,
   } = useHasGithubIntegration()
 
+  const { hasIntegration: hasIntegrationWithGitlab } =
+    useHasGitlabIntegration(projectId)
+
   const { permission: createFeaturePermission } = useHasPermission({
     id: projectId,
     level: 'project',
@@ -687,23 +691,25 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       />
                     </TabItem>
                   }
-                  {hasIntegrationWithGithub && projectFlag?.id && (
-                    <TabItem
-                      data-test='external-resources-links'
-                      tabLabelString='Links'
-                      tabLabel={
-                        <Row className='justify-content-center'>Links</Row>
-                      }
-                    >
-                      <ExternalResourcesLinkTab
-                        githubId={githubId}
-                        organisationId={organisationId}
-                        featureId={projectFlag.id}
-                        projectId={projectId}
-                        environmentId={`${environment.id}`}
-                      />
-                    </TabItem>
-                  )}
+                  {(hasIntegrationWithGithub || hasIntegrationWithGitlab) &&
+                    projectFlag?.id && (
+                      <TabItem
+                        data-test='external-resources-links'
+                        tabLabelString='Links'
+                        tabLabel={
+                          <Row className='justify-content-center'>Links</Row>
+                        }
+                      >
+                        <ExternalResourcesLinkTab
+                          githubId={githubId}
+                          hasIntegrationWithGitlab={hasIntegrationWithGitlab}
+                          organisationId={organisationId}
+                          featureId={projectFlag.id}
+                          projectId={projectId}
+                          environmentId={`${environment.id}`}
+                        />
+                      </TabItem>
+                    )}
                   {!existingChangeRequest && flagId && isVersioned && (
                     <TabItem data-test='change-history' tabLabel='History'>
                       <FeatureHistory
