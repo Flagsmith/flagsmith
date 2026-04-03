@@ -9,8 +9,8 @@ Flagsmith supports two levels of bulk import and export from the UI:
 - **[Environment-level](#environment-level-export)**: export and import default feature states for a single environment.
   Useful for quickly copying feature values between environments or projects.
 - **[Project-level](#project-level-export)**: export and import an entire project's feature configuration, including
-  segments, segment overrides, and optionally identity overrides, tags, and custom fields. Useful for cloning a project
-  or migrating between Flagsmith instances.
+  segments, segment overrides, and optionally identity overrides and tags. Useful for cloning a project or migrating
+  between Flagsmith instances.
 
 For exporting an entire organisation (including all projects), see
 [Organisation Import and Export](organisations-import-export).
@@ -93,20 +93,19 @@ Project-level export always includes the following data:
 | Multivariate options and weights                | Always   |                         |
 | Segments (rules and conditions)                 | Always   |                         |
 | Segment overrides per environment               | Always   |                         |
-| Environment names and keys                      | Always   |                         |
+| Environment names and settings                  | Always   | See below               |
 
 The following data can optionally be included in the export. You will be prompted to select these options in the UI:
 
-| Data                       | Default | Notes                                                     |
-| -------------------------- | ------- | --------------------------------------------------------- |
-| Identity overrides         | Off     | Can significantly increase export size                    |
-| Tags                       | On      |                                                           |
-| Custom fields and metadata | Off     |                                                           |
-| Integration configurations | Off     | Includes third-party integration settings per environment |
+| Data               | Default | Notes                                  |
+| ------------------ | ------- | -------------------------------------- |
+| Tags               | On      |                                        |
+| Identity overrides | Off     | Can significantly increase export size |
 
 :::caution
 
 The following data is **never** included in a project-level export:
+
 - Users, owners, and group owners
 - Change requests and approvals
 - Scheduled flag changes
@@ -115,6 +114,15 @@ The following data is **never** included in a project-level export:
 - Flag analytics
 
 :::
+
+#### Environment settings
+
+The following environment settings are included in the export: change request approval requirements, client trait
+permissions, banner text and colour, hide disabled flags, identity composite key hashing, hide sensitive data, feature
+versioning, and identity overrides in local evaluation.
+
+Environment API keys are **not** exported — new keys are generated automatically for any environments created during
+import.
 
 ### Exporting
 
@@ -145,13 +153,14 @@ overwritten, all of its rules, conditions, and associated feature overrides are 
 
 #### How entities are matched
 
-All entities are matched by name across instances, not by internal ID. This means exports are portable between
-Flagsmith instances. Specifically:
+All entities are matched by name across instances, not by internal ID. This means exports are portable between Flagsmith
+instances. Specifically:
 
 - Features and segments are matched by name.
 - Tags are matched by label.
-- Environments are matched by name. If the export contains environments that do not exist in the target project,
-  they are created automatically.
+- Environments are matched by name. Missing environments are created with settings from the export. For existing
+  environments, the Skip strategy leaves settings unchanged, while Overwrite Destructive updates settings to match the
+  export.
 
 #### Versioning
 
