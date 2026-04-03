@@ -1,6 +1,5 @@
 import React, { FC, useEffect } from 'react'
 import Constants from 'common/constants'
-import Utils from 'common/utils/utils'
 import InfoMessage from 'components/InfoMessage'
 import BlockedOrgInfo from 'components/BlockedOrgInfo'
 import { Organisation } from 'common/types/responses'
@@ -21,10 +20,12 @@ import { initChargebee } from './chargebee'
 export type PaymentProps = {
   isDisableAccountText?: string
   organisation: Organisation
+  isPaymentsEnabled?: boolean
 }
 
 export const Payment: FC<PaymentProps> = ({
   isDisableAccountText,
+  isPaymentsEnabled = false,
   organisation,
 }) => {
   const { error, ready } = useScript(CHARGEBEE_SCRIPT_URL)
@@ -37,11 +38,9 @@ export const Payment: FC<PaymentProps> = ({
 
   useEffect(() => {
     if (ready && !error) {
-      initChargebee({
-        paymentsEnabled: Utils.getFlagsmithHasFeature('payments_enabled'),
-      })
+      initChargebee({ isPaymentsEnabled })
     }
-  }, [ready, error])
+  }, [ready, error, isPaymentsEnabled])
 
   if (isAWS) {
     return (

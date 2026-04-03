@@ -4,10 +4,10 @@ import firstpromoter from 'project/firstPromoter'
 let initialised = false
 
 type InitChargebeeParams = {
-  paymentsEnabled: boolean
+  isPaymentsEnabled: boolean
 }
 
-export const initChargebee = ({ paymentsEnabled }: InitChargebeeParams) => {
+export const initChargebee = ({ isPaymentsEnabled }: InitChargebeeParams) => {
   if (initialised || !Project.chargebee?.site) return
 
   Chargebee.init({ site: Project.chargebee.site })
@@ -21,7 +21,7 @@ export const initChargebee = ({ paymentsEnabled }: InitChargebeeParams) => {
 
   // Handle plan cookie from signup flow
   const planId = API.getCookie('plan')
-  if (planId && paymentsEnabled) {
+  if (planId && isPaymentsEnabled) {
     const link = document.createElement('a')
     link.setAttribute('data-cb-type', 'checkout')
     link.setAttribute('data-cb-plan-id', planId)
