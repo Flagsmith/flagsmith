@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.226.0](https://github.com/Flagsmith/flagsmith/compare/v2.225.0...v2.226.0) (2026-04-03)
+
+
+### Features
+
+* **Dogfooding:** Add OpenFeature SDK for server-side Flagsmith-on-Flagsmith ([#7008](https://github.com/Flagsmith/flagsmith/issues/7008)) ([3e3be2e](https://github.com/Flagsmith/flagsmith/commit/3e3be2e00cf6524418b9d0e0d5b86a093024d937))
+* enforce feature ownership project setting ([#7067](https://github.com/Flagsmith/flagsmith/issues/7067)) ([e8ce5ab](https://github.com/Flagsmith/flagsmith/commit/e8ce5abd567fbd232353c01a5706bc1214baa67a))
+* **saas-billing:** Invoice immediately for new seats ([#7086](https://github.com/Flagsmith/flagsmith/issues/7086)) ([3718766](https://github.com/Flagsmith/flagsmith/commit/3718766fce7a5335f7271714076e6aa1f3179e3d))
+* track-code-references-actions ([#7044](https://github.com/Flagsmith/flagsmith/issues/7044)) ([0ae31e2](https://github.com/Flagsmith/flagsmith/commit/0ae31e2d13432ed8817d03c5c71077cb7aba7f1d))
+
+
+### Bug Fixes
+
+* **chargebee:** Handle addon ids per billing period ([#7108](https://github.com/Flagsmith/flagsmith/issues/7108)) ([db02299](https://github.com/Flagsmith/flagsmith/commit/db02299603e8d760405c44078619f669fbb55678))
+
+
+### Dependency Updates
+
+* bump licensing to support new cli args ([#7098](https://github.com/Flagsmith/flagsmith/issues/7098)) ([cee0c91](https://github.com/Flagsmith/flagsmith/commit/cee0c91e7a67948a636d32bc3af46768c7a70542))
+* Update cryptography to 46.0.6 ([#7111](https://github.com/Flagsmith/flagsmith/issues/7111)) ([d8edc2a](https://github.com/Flagsmith/flagsmith/commit/d8edc2a606aba962257600a2830e686ddd803799))
+* Update picomatch, lodash and path-to-regexp ([#7112](https://github.com/Flagsmith/flagsmith/issues/7112)) ([de6e4e2](https://github.com/Flagsmith/flagsmith/commit/de6e4e2f993a1e28afeab6c33c2e84e269bb3276))
+* Update pyasn1 to 0.6.3 ([#7110](https://github.com/Flagsmith/flagsmith/issues/7110)) ([490bb50](https://github.com/Flagsmith/flagsmith/commit/490bb504fece658a3152b6ab5f4b4e4a1c4de032))
+
+
+### Docs
+
+* add guide for experimental flag update endpoints ([#7083](https://github.com/Flagsmith/flagsmith/issues/7083)) ([0156837](https://github.com/Flagsmith/flagsmith/commit/0156837403f878f02135681d0940125c9bb533d2))
+* Remove deny change request from docs ([#7105](https://github.com/Flagsmith/flagsmith/issues/7105)) ([6dc9b14](https://github.com/Flagsmith/flagsmith/commit/6dc9b144de7cf977a683e4e5fb895d70f9148384))
+* Remove duplicate Prometheus metrics table from monitoring page ([#7107](https://github.com/Flagsmith/flagsmith/issues/7107)) ([652cdd4](https://github.com/Flagsmith/flagsmith/commit/652cdd40f1dc952d0a6e9a31fc53456f80ddf9ca))
+
 ## [2.225.0](https://github.com/Flagsmith/flagsmith/compare/v2.224.0...v2.225.0) (2026-04-02)
 
 
