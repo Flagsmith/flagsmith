@@ -84,38 +84,29 @@ two_hours_ago = now - timedelta(hours=2)
 one_hour_ago = now - timedelta(hours=1)
 
 
-def test_create_feature__with_owners_field__owners_is_read_only(
+def test_create_feature__with_owners__assigns_specified_owners(
     project: Project,
-    admin_client_original: APIClient,
+    admin_client_new: APIClient,
     admin_user: FFAdminUser,
 ) -> None:
     # Given
-    default_value = "This is a value"
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
     data = {
         "name": "test feature",
-        "initial_value": default_value,
-        "project": project.id,
-        "owners": [
-            {
-                "id": 2,
-                "email": "fake_user@mail.com",
-                "first_name": "fake",
-                "last_name": "user",
-            }
-        ],
+        "owners": [admin_user.id],
     }
-    url = reverse("api-v1:projects:project-features-list", args=[project.id])
 
     # When
-    response = admin_client_original.post(
+    response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    assert len(response.json()["owners"]) == 1
-    assert response.json()["owners"][0]["id"] == admin_user.id
-    assert response.json()["owners"][0]["email"] == admin_user.email
+    response_owners = response.json()["owners"]
+    assert len(response_owners) == 1
+    assert response_owners[0]["id"] == admin_user.id
+    assert response_owners[0]["email"] == admin_user.email
 
 
 @mock.patch("features.views.trigger_feature_state_change_webhooks")
@@ -4594,3 +4585,355 @@ def test_create_feature__multivariate_options_provided__sets_type_to_multivariat
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["type"] == MULTIVARIATE
+
+
+def test_create_feature__enforce_owners_enabled_no_owners__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    project.enforce_feature_owners = True
+    project.save()
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "test_feature_no_owners"}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "non_field_errors" in response.json()
+    assert "least one owner" in response.json()["non_field_errors"][0].lower()
+
+
+def test_create_feature__enforce_owners_enabled_with_owners__returns_201(
+    admin_client_new: APIClient,
+    project: Project,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    project.enforce_feature_owners = True
+    project.save()
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {
+        "name": "test_feature_with_owners",
+        "owners": [admin_user.id],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    feature = Feature.objects.get(name="test_feature_with_owners")
+    assert admin_user in feature.owners.all()
+
+
+def test_create_feature__enforce_owners_enabled_with_group_owners__returns_201(
+    admin_client_new: APIClient,
+    project: Project,
+    organisation: Organisation,
+) -> None:
+    # Given
+    project.enforce_feature_owners = True
+    project.save()
+
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {
+        "name": "test_feature_with_group_owners",
+        "group_owners": [group.id],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    feature = Feature.objects.get(name="test_feature_with_group_owners")
+    assert group in feature.group_owners.all()
+
+
+def test_create_feature__enforce_owners_disabled_no_owners__returns_201(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given — enforce_feature_owners defaults to False
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {"name": "test_feature_no_enforcement"}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_create_feature__owners_provided_without_enforcement__returns_201_with_owners(
+    admin_client_new: APIClient,
+    project: Project,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given — enforcement is off, but owners are still provided
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {
+        "name": "test_feature_optional_owners",
+        "owners": [admin_user.id],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    feature = Feature.objects.get(name="test_feature_optional_owners")
+    assert admin_user in feature.owners.all()
+
+
+def test_create_feature__nonexistent_owner__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {
+        "name": "test_feature_invalid_owner",
+        "owners": [999999],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "owners" in response.json()
+
+
+def test_create_feature__group_owner_from_different_org__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    other_org = Organisation.objects.create(name="Other Org")
+    other_group = UserPermissionGroup.objects.create(
+        name="Other Group", organisation=other_org
+    )
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {
+        "name": "test_feature_wrong_org_group",
+        "group_owners": [other_group.id],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "group_owners" in response.json()
+
+
+def test_create_feature__owner_without_project_access__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given — create a user that does not belong to the project's organisation
+    other_user = FFAdminUser.objects.create_user(email="noaccess@example.com")  # type: ignore[no-untyped-call]
+
+    url = reverse("api-v1:projects:project-features-list", args=[project.id])
+    data = {
+        "name": "test_feature_no_access_user",
+        "owners": [other_user.id],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "owners" in response.json()
+
+
+def test_update_feature__owners_in_request_body__returns_200_without_changes(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    admin_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    other_user = FFAdminUser.objects.create_user(email="other@example.com")  # type: ignore[no-untyped-call]
+    other_user.add_organisation(organisation)
+    feature.owners.add(admin_user)
+
+    url = reverse(
+        "api-v1:projects:project-features-detail",
+        args=[project.id, feature.id],
+    )
+    data = {
+        "name": feature.name,
+        "owners": [other_user.id],
+        "group_owners": [group.id],
+    }
+
+    # When
+    response = admin_client_new.patch(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then — owners and group_owners should be unchanged
+    assert response.status_code == status.HTTP_200_OK
+    feature.refresh_from_db()
+    assert list(feature.owners.all()) == [admin_user]
+    assert list(feature.group_owners.all()) == []
+
+
+def test_remove_owners__enforce_owners_last_owner__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    project.enforce_feature_owners = True
+    project.save()
+    feature.owners.add(admin_user)
+
+    url = reverse(
+        "api-v1:projects:project-features-remove-owners",
+        args=[project.id, feature.id],
+    )
+    data = {"user_ids": [admin_user.id]}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    feature.refresh_from_db()
+    assert admin_user in feature.owners.all()
+
+
+def test_remove_owners__enforce_owners_group_owners_remain__returns_200(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    admin_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    project.enforce_feature_owners = True
+    project.save()
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    feature.owners.add(admin_user)
+    feature.group_owners.add(group)
+
+    url = reverse(
+        "api-v1:projects:project-features-remove-owners",
+        args=[project.id, feature.id],
+    )
+    data = {"user_ids": [admin_user.id]}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then — allowed because group owner still exists
+    assert response.status_code == status.HTTP_200_OK
+    feature.refresh_from_db()
+    assert admin_user not in feature.owners.all()
+    assert group in feature.group_owners.all()
+
+
+def test_remove_group_owners__enforce_owners_last_group_owner__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    organisation: Organisation,
+) -> None:
+    # Given
+    project.enforce_feature_owners = True
+    project.save()
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    feature.group_owners.add(group)
+
+    url = reverse(
+        "api-v1:projects:project-features-remove-group-owners",
+        args=[project.id, feature.id],
+    )
+    data = {"group_ids": [group.id]}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    feature.refresh_from_db()
+    assert group in feature.group_owners.all()
+
+
+def test_remove_group_owners__enforce_owners_user_owners_remain__returns_200(
+    admin_client_new: APIClient,
+    project: Project,
+    feature: Feature,
+    admin_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    project.enforce_feature_owners = True
+    project.save()
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    feature.owners.add(admin_user)
+    feature.group_owners.add(group)
+
+    url = reverse(
+        "api-v1:projects:project-features-remove-group-owners",
+        args=[project.id, feature.id],
+    )
+    data = {"group_ids": [group.id]}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then — allowed because user owner still exists
+    assert response.status_code == status.HTTP_200_OK
+    feature.refresh_from_db()
+    assert group not in feature.group_owners.all()
+    assert admin_user in feature.owners.all()
