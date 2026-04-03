@@ -142,7 +142,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
       )}
       <h5>Manage Payment Plan</h5>
       {Utils.getFlagsmithHasFeature('rtk_payment_modal_migration') ? (
-        <PaymentNew viewOnly={false} />
+        <PaymentNew organisation={organisation} />
       ) : (
         <PaymentLegacy viewOnly={false} />
       )}

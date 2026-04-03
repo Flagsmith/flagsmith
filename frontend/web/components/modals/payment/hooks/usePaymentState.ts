@@ -1,25 +1,16 @@
 import { useState } from 'react'
-import AccountStore from 'common/stores/account-store'
 import { Organisation } from 'common/types/responses'
 
-type PaymentState = {
-  organisation: Organisation | null
-  plan: string
-  isAWS: boolean
-  hasActiveSubscription: boolean
-  yearly: boolean
-  setYearly: (yearly: boolean) => void
+type UsePaymentStateParams = {
+  organisation: Organisation
 }
 
-export const usePaymentState = (): PaymentState => {
+export const usePaymentState = ({ organisation }: UsePaymentStateParams) => {
   const [yearly, setYearly] = useState(true)
 
-  const organisation = AccountStore.getOrganisation()
   const plan = organisation?.subscription?.plan ?? ''
   const isAWS = organisation?.subscription?.payment_method === 'AWS_MARKETPLACE'
-  const hasActiveSubscription = !!AccountStore.getOrganisationPlan(
-    organisation?.id,
-  )
+  const hasActiveSubscription = !!organisation?.subscription?.subscription_id
 
   return {
     hasActiveSubscription,

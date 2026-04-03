@@ -1,32 +1,47 @@
 import React, { FC, useEffect } from 'react'
 import Constants from 'common/constants'
+import Utils from 'common/utils/utils'
 import InfoMessage from 'components/InfoMessage'
 import BlockedOrgInfo from 'components/BlockedOrgInfo'
+import { Organisation } from 'common/types/responses'
 import { PricingToggle } from './PricingToggle'
 import { PricingPanel } from './PricingPanel'
 import { startupFeatures, enterpriseFeatures } from './pricingFeatures'
 import {
+  CHARGEBEE_SCRIPT_URL,
   CONTACT_US_URL,
   ON_PREMISE_HOSTING_URL,
   SUPPORT_EMAIL,
   SUPPORT_EMAIL_URL,
 } from './constants'
+import { useScript } from 'common/hooks/useScript'
 import { usePaymentState } from './hooks'
+import { initChargebee } from './chargebee'
 
-type PaymentProps = {
-  viewOnly?: boolean
+export type PaymentProps = {
   isDisableAccountText?: string
+  organisation: Organisation
 }
 
 export const Payment: FC<PaymentProps> = ({
   isDisableAccountText,
-  viewOnly,
+  organisation,
 }) => {
-  const { isAWS, plan, setYearly, yearly } = usePaymentState()
+  const { error, ready } = useScript(CHARGEBEE_SCRIPT_URL)
+  const { hasActiveSubscription, isAWS, plan, setYearly, yearly } =
+    usePaymentState({ organisation })
 
   useEffect(() => {
     API.trackPage(Constants.modals.PAYMENT)
   }, [])
+
+  useEffect(() => {
+    if (ready && !error) {
+      initChargebee({
+        paymentsEnabled: Utils.getFlagsmithHasFeature('payments_enabled'),
+      })
+    }
+  }, [ready, error])
 
   if (isAWS) {
     return (
@@ -37,6 +52,14 @@ export const Payment: FC<PaymentProps> = ({
             contact us
           </a>
         </InfoMessage>
+      </div>
+    )
+  }
+
+  if (!ready) {
+    return (
+      <div className='text-center'>
+        <Loader />
       </div>
     )
   }
@@ -70,7 +93,6 @@ export const Payment: FC<PaymentProps> = ({
             priceYearly='40'
             priceMonthly='45'
             isYearly={yearly}
-            viewOnly={viewOnly}
             chargebeePlanId={
               yearly
                 ? Project.plans?.startup?.annual
@@ -79,14 +101,17 @@ export const Payment: FC<PaymentProps> = ({
             isPurchased={plan.includes('startup')}
             isDisableAccount={isDisableAccountText}
             features={startupFeatures}
+            hasActiveSubscription={hasActiveSubscription}
+            organisationId={organisation.id}
           />
 
           <PricingPanel
             title='Enterprise'
             isYearly={yearly}
-            viewOnly={viewOnly}
             isEnterprise
             features={enterpriseFeatures}
+            hasActiveSubscription={hasActiveSubscription}
+            organisationId={organisation.id}
             headerContent={
               <>
                 Optional{' '}

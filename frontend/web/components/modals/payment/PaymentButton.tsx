@@ -1,28 +1,31 @@
 import React, { FC, ReactNode } from 'react'
-import { usePaymentState, useChargebeeCheckout } from './hooks'
+import { useChargebeeCheckout } from './hooks'
 
 type PaymentButtonProps = {
   'data-cb-plan-id'?: string
   className?: string
   children?: ReactNode
   isDisableAccount?: string
+  hasActiveSubscription: boolean
+  organisationId: number
 }
 
 export const PaymentButton: FC<PaymentButtonProps> = ({
   children,
   className,
+  hasActiveSubscription,
   isDisableAccount,
+  organisationId,
   ...rest
 }) => {
   const planId = rest['data-cb-plan-id']
-  const { hasActiveSubscription, organisation } = usePaymentState()
   const { isLoading, openCheckout } = useChargebeeCheckout({
     onSuccess: isDisableAccount
       ? () => {
           window.location.href = '/organisations'
         }
       : undefined,
-    organisationId: organisation?.id,
+    organisationId,
   })
 
   if (hasActiveSubscription) {

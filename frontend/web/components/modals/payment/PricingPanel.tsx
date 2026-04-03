@@ -12,27 +12,29 @@ export type PricingPanelProps = {
   priceMonthly?: string
   priceYearly?: string
   isYearly: boolean
-  viewOnly?: boolean
   chargebeePlanId?: string
   isPurchased?: boolean
   isEnterprise?: boolean
   isDisableAccount?: string
   features: PricingFeature[]
   headerContent?: ReactNode
+  hasActiveSubscription: boolean
+  organisationId: number
 }
 
 export const PricingPanel = ({
   chargebeePlanId,
   features,
+  hasActiveSubscription,
   headerContent,
   isDisableAccount,
   isEnterprise,
   isPurchased,
   isYearly,
+  organisationId,
   priceMonthly,
   priceYearly,
   title,
-  viewOnly,
 }: PricingPanelProps) => {
   return (
     <Flex
@@ -91,17 +93,19 @@ export const PricingPanel = ({
             <div className='pricing-panel-spacer' />
 
             <div>
-              {!viewOnly && !isEnterprise && chargebeePlanId && (
+              {!isEnterprise && chargebeePlanId && (
                 <PaymentButton
                   data-cb-plan-id={chargebeePlanId}
                   className='btn btn-primary btn-lg full-width mt-3'
                   isDisableAccount={isDisableAccount}
+                  hasActiveSubscription={hasActiveSubscription}
+                  organisationId={organisationId}
                 >
                   {isPurchased ? 'Purchased' : '14 Day Free Trial'}
                 </PaymentButton>
               )}
 
-              {!viewOnly && isEnterprise && (
+              {isEnterprise && (
                 <Button
                   onClick={() => openChat()}
                   className='full-width btn-lg btn-tertiary mt-3'
