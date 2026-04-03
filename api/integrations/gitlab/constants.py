@@ -1,0 +1,7 @@
+GITLAB_API_CALLS_TIMEOUT = 10
+
+GITLAB_FLAGSMITH_LABEL = "Flagsmith Flag"
+GITLAB_FLAGSMITH_LABEL_DESCRIPTION = (
+    "This GitLab Issue/MR is linked to a Flagsmith Feature Flag"
+)
+GITLAB_FLAGSMITH_LABEL_COLOUR = "6633FF"
