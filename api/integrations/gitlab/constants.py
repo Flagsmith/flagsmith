@@ -20,6 +20,14 @@ class GitLabTag(Enum):
     ISSUE_CLOSED = "Issue Closed"
 
 
+class GitLabEventType(Enum):
+    FLAG_UPDATED = "FLAG_UPDATED"
+    FLAG_DELETED = "FLAG_DELETED"
+    FEATURE_EXTERNAL_RESOURCE_ADDED = "FEATURE_EXTERNAL_RESOURCE_ADDED"
+    FEATURE_EXTERNAL_RESOURCE_REMOVED = "FEATURE_EXTERNAL_RESOURCE_REMOVED"
+    SEGMENT_OVERRIDE_DELETED = "SEGMENT_OVERRIDE_DELETED"
+
+
 gitlab_tag_description: dict[str, str] = {
     GitLabTag.MR_OPEN.value: "This feature has a linked MR open",
     GitLabTag.MR_MERGED.value: "This feature has a linked MR merged",

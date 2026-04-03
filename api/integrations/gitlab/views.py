@@ -1,3 +1,4 @@
+import json
 import logging
 from functools import wraps
 from typing import Any, Callable
@@ -5,7 +6,7 @@ from typing import Any, Callable
 import requests
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -211,3 +212,42 @@ def fetch_project_members(request: Request, project_pk: int) -> Response:
         params=ProjectQueryParams(**query_serializer.validated_data),
     )
     return Response(data=data, status=status.HTTP_200_OK)
+
+
+# GitLab webhook event type mapping.
+# See: https://docs.gitlab.com/ee/user/project/integrations/webhook_events.html
+_GITLAB_EVENT_TYPE_MAP: dict[str, str] = {
+    "Merge Request Hook": "merge_request",
+    "Issue Hook": "issue",
+}
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def gitlab_webhook(request: Request, project_pk: int) -> Response:
+    """Receive GitLab webhook events and apply tags to linked features."""
+    gitlab_token = request.headers.get("X-Gitlab-Token")
+    gitlab_event = request.headers.get("X-Gitlab-Event")
+
+    try:
+        gitlab_config = GitLabConfiguration.objects.get(
+            project_id=project_pk, deleted_at__isnull=True
+        )
+    except GitLabConfiguration.DoesNotExist:
+        return Response(
+            {"error": "No GitLab configuration found for this project"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    if not gitlab_token or gitlab_token != gitlab_config.webhook_secret:
+        return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+
+    event_type = _GITLAB_EVENT_TYPE_MAP.get(gitlab_event or "")
+    if not event_type:
+        return Response({"detail": "Event bypassed"}, status=status.HTTP_200_OK)
+
+    from integrations.gitlab.services import handle_gitlab_webhook_event
+
+    payload = json.loads(request.body.decode("utf-8"))
+    handle_gitlab_webhook_event(event_type=event_type, payload=payload)
+    return Response({"detail": "Event processed"}, status=status.HTTP_200_OK)
