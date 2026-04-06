@@ -24,6 +24,7 @@ Using the following authentication methods requires an [Enterprise subscription]
 - [SAML](/administration-and-security/access-control/saml)
 - [Active Directory (LDAP)](/administration-and-security/access-control/ldap)
 - [Microsoft ADFS](/administration-and-security/access-control/adfs)
+- [SCIM provisioning](/administration-and-security/access-control/scim)
 
 Please get in touch in order to integrate with LDAP or ADFS.
 
@@ -47,10 +48,10 @@ If you are self-hosting Flagsmith, you can restrict authentication methods per e
 
 ## Disabling password authentication {#disable-password}
 
-If you are self-hosting Flagsmith, you can disable password authentication by setting the `PREVENT_EMAIL_PASSWORD` 
+If you are self-hosting Flagsmith, you can disable password authentication by setting the `PREVENT_EMAIL_PASSWORD`
 environment variable on the Flagsmith API. This will also hide the username and password fields from the login screen.
 Note that this does not disable password authentication for
 [Django Admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin#email-and-password).
 
-If you have a private cloud Flagsmith instance, contact Flagsmith support to disable password authentication once 
-you have successfully set up an alternative authentication method.
+If you have a private cloud Flagsmith instance, contact Flagsmith support to disable password authentication once you
+have successfully set up an alternative authentication method.
