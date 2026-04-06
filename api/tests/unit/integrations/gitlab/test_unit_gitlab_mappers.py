@@ -1,4 +1,5 @@
 import pytest
+from pytest_mock import MockerFixture
 
 from environments.models import Environment
 from features.models import Feature, FeatureState

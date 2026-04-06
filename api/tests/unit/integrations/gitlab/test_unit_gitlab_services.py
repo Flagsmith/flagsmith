@@ -6,11 +6,12 @@ from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from environments.models import Environment
 from features.feature_external_resources.models import (
     FeatureExternalResource,
     ResourceType,
 )
-from features.models import Feature
+from features.models import Feature, FeatureState
 from integrations.gitlab.constants import GitLabEventType, GitLabTag
 from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.services import (
