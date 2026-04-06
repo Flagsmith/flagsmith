@@ -34,12 +34,13 @@ from projects.tags.models import TagType
         ("unknown_event", "open", {}, None),
     ],
 )
-def test_get_tag_for_event__returns_correct_tag(
+def test_get_tag_for_event__various_events__returns_correct_tag(
     event_type: str,
     action: str,
     metadata: dict[str, object],
     expected_tag: GitLabTag | None,
 ) -> None:
+    # Given
     # When
     result = get_tag_for_event(event_type, action, metadata)
 
