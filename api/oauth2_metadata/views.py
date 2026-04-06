@@ -1,17 +1,23 @@
 from typing import Any
+from urllib.parse import urlencode, urlparse, urlunparse
 
 from django.conf import settings
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest, JsonResponse, QueryDict
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
+from oauth2_provider.exceptions import OAuthToolkitError
+from oauth2_provider.models import get_application_model
+from oauth2_provider.scopes import get_scopes_backend
+from oauth2_provider.views.mixins import OAuthLibMixin
+from rest_framework import status
 from rest_framework import status as drf_status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from oauth2_metadata.serializers import DCRRequestSerializer
+from oauth2_metadata.serializers import DCRRequestSerializer, OAuthConsentSerializer
 from oauth2_metadata.services import create_oauth2_application
 
 
@@ -44,6 +50,94 @@ def authorization_server_metadata(request: HttpRequest) -> JsonResponse:
     }
 
     return JsonResponse(metadata)
+
+
+class OAuthAuthorizeView(OAuthLibMixin, APIView):  # type: ignore[misc]
+    """Validate an OAuth authorisation request and process consent decisions."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """Validate an authorisation request and return application info."""
+        # Bridge DRF auth to Django request so DOT sees the authenticated user.
+        request._request.user = request.user
+
+        try:
+            scopes, credentials = self.validate_authorization_request(request._request)
+        except OAuthToolkitError as e:
+            oauthlib_error = e.oauthlib_error
+            return Response(
+                {
+                    "error": getattr(oauthlib_error, "error", "invalid_request"),
+                    "error_description": getattr(oauthlib_error, "description", str(e)),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        Application = get_application_model()
+        application = Application.objects.get(
+            client_id=credentials["client_id"],
+        )
+        all_scopes = get_scopes_backend().get_all_scopes()
+        scopes_dict: dict[str, str] = {s: all_scopes.get(s, s) for s in scopes}
+        return Response(
+            {
+                "application": {
+                    "name": application.name,
+                    "client_id": application.client_id,
+                },
+                "scopes": scopes_dict,
+                "redirect_uri": credentials.get("redirect_uri", ""),
+                "is_verified": bool(application.skip_authorization),
+            }
+        )
+
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """Process a consent decision and return the redirect URI."""
+        serializer = OAuthConsentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data: dict[str, Any] = serializer.validated_data
+        allow: bool = data.pop("allow")
+
+        # Bridge DRF auth to Django request so DOT sees the authenticated user.
+        request._request.user = request.user
+
+        # DOT's validate_authorization_request reads OAuth params from GET
+        # and also from request.get_full_path() which uses META['QUERY_STRING'].
+        query = QueryDict(mutable=True)
+        for key, value in data.items():
+            query[key] = str(value)
+        request._request.GET = query  # type: ignore[assignment]
+        request._request.META["QUERY_STRING"] = query.urlencode()
+
+        try:
+            scopes, credentials = self.validate_authorization_request(request._request)
+        except OAuthToolkitError as e:
+            oauthlib_error = e.oauthlib_error
+            return Response(
+                {
+                    "error": getattr(oauthlib_error, "error", "invalid_request"),
+                    "error_description": getattr(oauthlib_error, "description", str(e)),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            scopes_str = " ".join(scopes) if isinstance(scopes, list) else scopes
+            uri, _headers, _body, _status = self.create_authorization_response(
+                request._request, scopes_str, credentials, allow
+            )
+        except OAuthToolkitError:
+            # User denied access -- build the error redirect manually.
+            redirect_uri = credentials.get("redirect_uri", data.get("redirect_uri", ""))
+            state = credentials.get("state", data.get("state", ""))
+            error_params: dict[str, str] = {"error": "access_denied"}
+            if state:
+                error_params["state"] = state
+            parsed = urlparse(str(redirect_uri))
+            uri = urlunparse(parsed._replace(query=urlencode(error_params)))
+
+        return Response({"redirect_uri": uri})
 
 
 class DynamicClientRegistrationView(APIView):

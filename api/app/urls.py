@@ -8,6 +8,7 @@ from django.views.generic.base import TemplateView
 
 from oauth2_metadata.views import (
     DynamicClientRegistrationView,
+    OAuthAuthorizeView,
     authorization_server_metadata,
 )
 from users.views import password_reset_redirect
@@ -55,6 +56,11 @@ if not settings.TASK_PROCESSOR_MODE:
         path(
             "robots.txt",
             TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
+        ),
+        path(
+            "api/v1/oauth/authorize/",
+            OAuthAuthorizeView.as_view(),
+            name="oauth-authorize",
         ),
         path(
             "o/register/",
