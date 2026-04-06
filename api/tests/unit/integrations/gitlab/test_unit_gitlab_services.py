@@ -10,9 +10,15 @@ from features.feature_external_resources.models import (
     ResourceType,
 )
 from features.models import Feature
-from integrations.gitlab.constants import GitLabTag
+from pytest_mock import MockerFixture
+
+from integrations.gitlab.constants import GitLabEventType, GitLabTag
 from integrations.gitlab.models import GitLabConfiguration
-from integrations.gitlab.services import get_tag_for_event, handle_gitlab_webhook_event
+from integrations.gitlab.services import (
+    dispatch_gitlab_comment,
+    get_tag_for_event,
+    handle_gitlab_webhook_event,
+)
 from projects.models import Project
 from projects.tags.models import TagType
 
@@ -257,3 +263,52 @@ def test_tag_feature_per_gitlab_event__work_items_url_variant__finds_feature(
     gitlab_tags = feature.tags.filter(type=TagType.GITLAB.value)
     assert gitlab_tags.count() == 1
     assert gitlab_tags.first().label == GitLabTag.ISSUE_CLOSED.value  # type: ignore[union-attr]
+
+
+@pytest.mark.django_db
+def test_dispatch_gitlab_comment__valid_feature__dispatches_task(
+    project: Project,
+    feature: Feature,
+    gitlab_configuration: GitLabConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_task = mocker.patch("integrations.gitlab.tasks.post_gitlab_comment")
+
+    # When
+    dispatch_gitlab_comment(
+        project_id=project.id,
+        event_type=GitLabEventType.FLAG_UPDATED.value,
+        feature=feature,
+    )
+
+    # Then
+    mock_task.delay.assert_called_once()
+    call_kwargs = mock_task.delay.call_args.kwargs["kwargs"]
+    assert call_kwargs["project_id"] == project.id
+    assert call_kwargs["feature_id"] == feature.id
+    assert call_kwargs["event_type"] == GitLabEventType.FLAG_UPDATED.value
+
+
+@pytest.mark.django_db
+def test_dispatch_gitlab_comment__resource_removed__passes_url(
+    project: Project,
+    feature: Feature,
+    gitlab_configuration: GitLabConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_task = mocker.patch("integrations.gitlab.tasks.post_gitlab_comment")
+    resource_url = "https://gitlab.example.com/group/project/-/issues/1"
+
+    # When
+    dispatch_gitlab_comment(
+        project_id=project.id,
+        event_type=GitLabEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
+        feature=feature,
+        url=resource_url,
+    )
+
+    # Then
+    call_kwargs = mock_task.delay.call_args.kwargs["kwargs"]
+    assert call_kwargs["url"] == resource_url

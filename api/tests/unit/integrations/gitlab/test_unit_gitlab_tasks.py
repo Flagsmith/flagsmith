@@ -180,3 +180,53 @@ def test_post_gitlab_comment__resource_removed__posts_to_url(
 
     # Then
     assert len(responses.calls) == 1
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_post_gitlab_comment__unparseable_url__skips_without_error(
+    project: Project,
+    feature: Feature,
+    gitlab_configuration: GitLabConfiguration,
+) -> None:
+    # Given
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/not/a/valid/resource",
+        type=ResourceType.GITLAB_ISSUE,
+        feature=feature,
+        metadata='{"state": "opened"}',
+    )
+
+    # When
+    post_gitlab_comment(
+        project_id=project.id,
+        feature_id=feature.id,
+        feature_name=feature.name,
+        event_type=GitLabEventType.FLAG_UPDATED.value,
+        feature_states=[],
+    )
+
+    # Then
+    assert len(responses.calls) == 0
+
+
+@pytest.mark.django_db
+def test_post_gitlab_comment__resource_removed_no_url__returns_early(
+    project: Project,
+    feature: Feature,
+    gitlab_configuration: GitLabConfiguration,
+) -> None:
+    # Given — resource removed event with no URL
+
+    # When
+    post_gitlab_comment(
+        project_id=project.id,
+        feature_id=feature.id,
+        feature_name=feature.name,
+        event_type=GitLabEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
+        feature_states=[],
+        url=None,
+    )
+
+    # Then
+    assert True  # no error, returns early

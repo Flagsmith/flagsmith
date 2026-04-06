@@ -62,6 +62,37 @@ def test_map_feature_states_to_dicts__resource_removed__skips_env_data(
 
 
 @pytest.mark.django_db
+def test_map_feature_states_to_dicts__with_value__includes_feature_state_value(
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.get(
+        feature=feature,
+        environment=environment,
+        identity__isnull=True,
+        feature_segment__isnull=True,
+    )
+    feature_state.enabled = True
+    feature_state.save()
+    from features.models import FeatureStateValue
+
+    fsv = FeatureStateValue.objects.get(feature_state=feature_state)
+    fsv.string_value = "test_value"
+    fsv.save()
+
+    # When
+    result = map_feature_states_to_dicts(
+        [feature_state],
+        GitLabEventType.FLAG_UPDATED.value,
+    )
+
+    # Then
+    assert result[0]["feature_state_value"] == "test_value"
+
+
+@pytest.mark.django_db
 def test_map_feature_states_to_dicts__empty_list__returns_empty() -> None:
     # Given
     # When
