@@ -322,7 +322,6 @@ def test_dispatch_gitlab_comment__with_feature_states__maps_and_dispatches(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    from environments.models import Environment
     from features.models import FeatureState
 
     mock_task = mocker.patch("integrations.gitlab.tasks.post_gitlab_comment")

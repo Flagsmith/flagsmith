@@ -100,7 +100,6 @@ def test_map_feature_states_to_dicts__with_segment__includes_segment_name(
     mocker: "MockerFixture",
 ) -> None:
     # Given
-    from pytest_mock import MockerFixture
     from unittest.mock import MagicMock
 
     feature_state = FeatureState.objects.get(
@@ -112,7 +111,8 @@ def test_map_feature_states_to_dicts__with_segment__includes_segment_name(
     mock_segment = MagicMock()
     mock_segment.segment.name = "beta_users"
     mocker.patch.object(
-        type(feature_state), "feature_segment",
+        type(feature_state),
+        "feature_segment",
         new_callable=lambda: property(lambda self: mock_segment),
     )
 
