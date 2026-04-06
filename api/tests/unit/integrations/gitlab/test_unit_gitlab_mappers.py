@@ -93,6 +93,40 @@ def test_map_feature_states_to_dicts__with_value__includes_feature_state_value(
 
 
 @pytest.mark.django_db
+def test_map_feature_states_to_dicts__with_segment__includes_segment_name(
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    mocker: "MockerFixture",
+) -> None:
+    # Given
+    from pytest_mock import MockerFixture
+    from unittest.mock import MagicMock
+
+    feature_state = FeatureState.objects.get(
+        feature=feature,
+        environment=environment,
+        identity__isnull=True,
+        feature_segment__isnull=True,
+    )
+    mock_segment = MagicMock()
+    mock_segment.segment.name = "beta_users"
+    mocker.patch.object(
+        type(feature_state), "feature_segment",
+        new_callable=lambda: property(lambda self: mock_segment),
+    )
+
+    # When
+    result = map_feature_states_to_dicts(
+        [feature_state],
+        GitLabEventType.FLAG_UPDATED.value,
+    )
+
+    # Then
+    assert result[0]["segment_name"] == "beta_users"
+
+
+@pytest.mark.django_db
 def test_map_feature_states_to_dicts__empty_list__returns_empty() -> None:
     # Given
     # When

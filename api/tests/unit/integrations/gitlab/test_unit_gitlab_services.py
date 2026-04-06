@@ -311,3 +311,39 @@ def test_dispatch_gitlab_comment__resource_removed__passes_url(
     # Then
     call_kwargs = mock_task.delay.call_args.kwargs["kwargs"]
     assert call_kwargs["url"] == resource_url
+
+
+@pytest.mark.django_db
+def test_dispatch_gitlab_comment__with_feature_states__maps_and_dispatches(
+    project: Project,
+    feature: Feature,
+    environment: "Environment",
+    gitlab_configuration: GitLabConfiguration,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    from environments.models import Environment
+    from features.models import FeatureState
+
+    mock_task = mocker.patch("integrations.gitlab.tasks.post_gitlab_comment")
+    feature_state = FeatureState.objects.get(
+        feature=feature,
+        environment=environment,
+        identity__isnull=True,
+        feature_segment__isnull=True,
+    )
+
+    # When
+    dispatch_gitlab_comment(
+        project_id=project.id,
+        event_type=GitLabEventType.FLAG_UPDATED.value,
+        feature=feature,
+        feature_states=[feature_state],
+        segment_name="beta_users",
+    )
+
+    # Then
+    call_kwargs = mock_task.delay.call_args.kwargs["kwargs"]
+    assert len(call_kwargs["feature_states"]) == 1
+    assert call_kwargs["segment_name"] == "beta_users"
+    assert call_kwargs["feature_states"][0]["environment_name"] == environment.name
