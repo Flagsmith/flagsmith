@@ -5,7 +5,7 @@ import BlockedOrgInfo from 'components/BlockedOrgInfo'
 import { Organisation } from 'common/types/responses'
 import { PricingToggle } from './PricingToggle'
 import { PricingPanel } from './PricingPanel'
-import { startupFeatures, enterpriseFeatures } from './pricingFeatures'
+import { STARTUP_FEATURES, ENTERPRISE_FEATURES } from './pricingFeatures'
 import {
   CHARGEBEE_SCRIPT_URL,
   CONTACT_US_URL,
@@ -99,7 +99,7 @@ export const Payment: FC<PaymentProps> = ({
             }
             isPurchased={plan.includes('startup')}
             isDisableAccount={isDisableAccountText}
-            features={startupFeatures}
+            features={STARTUP_FEATURES}
             hasActiveSubscription={hasActiveSubscription}
             organisationId={organisation.id}
           />
@@ -108,7 +108,7 @@ export const Payment: FC<PaymentProps> = ({
             title='Enterprise'
             isYearly={yearly}
             isEnterprise
-            features={enterpriseFeatures}
+            features={ENTERPRISE_FEATURES}
             hasActiveSubscription={hasActiveSubscription}
             organisationId={organisation.id}
             headerContent={

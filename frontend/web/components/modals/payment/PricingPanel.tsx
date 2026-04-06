@@ -129,7 +129,10 @@ export const PricingPanel = ({
             </span>{' '}
             plus
           </h5>
-          <PricingFeaturesList features={features} />
+          <PricingFeaturesList
+            features={features}
+            iconClass={isEnterprise ? 'text-secondary' : undefined}
+          />
         </div>
       </div>
     </Flex>
