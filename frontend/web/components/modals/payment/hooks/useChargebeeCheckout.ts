@@ -18,6 +18,9 @@ export const useChargebeeCheckout = ({
 
     setIsLoading(true)
     Chargebee.getInstance().openCheckout({
+      close: () => {
+        setIsLoading(false)
+      },
       hostedPage() {
         return _data.post(
           `${Project.api}organisations/${organisationId}/get-hosted-page-url-for-subscription-upgrade/`,
@@ -27,7 +30,6 @@ export const useChargebeeCheckout = ({
       success: (res: any) => {
         AppActions.updateSubscription(res)
         onSuccess?.()
-        setIsLoading(false)
       },
     })
   }
