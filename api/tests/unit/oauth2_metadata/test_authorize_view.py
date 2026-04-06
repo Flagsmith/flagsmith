@@ -24,8 +24,8 @@ def _pkce_pair() -> tuple[str, str]:
 
 
 @pytest.fixture()
-def oauth_application(admin_user: User) -> Application:  # type: ignore[valid-type]
-    return Application.objects.create(  # type: ignore[no-any-return]
+def oauth_application(admin_user: User) -> Application:
+    return Application.objects.create(
         name="Test App",
         user=admin_user,
         client_type=Application.CLIENT_PUBLIC,
@@ -35,8 +35,8 @@ def oauth_application(admin_user: User) -> Application:  # type: ignore[valid-ty
 
 
 @pytest.fixture()
-def verified_oauth_application(admin_user: User) -> Application:  # type: ignore[valid-type]
-    return Application.objects.create(  # type: ignore[no-any-return]
+def verified_oauth_application(admin_user: User) -> Application:
+    return Application.objects.create(
         name="Verified App",
         user=admin_user,
         client_type=Application.CLIENT_PUBLIC,
@@ -47,7 +47,7 @@ def verified_oauth_application(admin_user: User) -> Application:  # type: ignore
 
 
 @pytest.fixture()
-def auth_client(admin_user: User) -> APIClient:  # type: ignore[valid-type]
+def auth_client(admin_user: User) -> APIClient:
     client = APIClient()
     client.force_authenticate(user=admin_user)
     return client
@@ -141,8 +141,36 @@ def test_get__invalid_client_id__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    data = response.json()
-    assert "error" in data
+    assert "error" in response.json()
+
+
+def test_post__invalid_client_id__returns_400(
+    auth_client: APIClient,
+    pkce_pair: tuple[str, str],
+    db: None,
+) -> None:
+    # Given
+    _verifier, challenge = pkce_pair
+    url = reverse(AUTHORIZE_URL)
+
+    # When
+    response = auth_client.post(
+        url,
+        {
+            "allow": True,
+            "client_id": "nonexistent-client-id",
+            "response_type": "code",
+            "redirect_uri": "https://example.com/callback",
+            "scope": "mcp",
+            "code_challenge": challenge,
+            "code_challenge_method": "S256",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "error" in response.json()
 
 
 @pytest.mark.parametrize("method", ["get", "post"])

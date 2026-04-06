@@ -60,7 +60,7 @@ class OAuthAuthorizeView(OAuthLibMixin, APIView):  # type: ignore[misc]
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Validate an authorisation request and return application info."""
         # Bridge DRF auth to Django request so DOT sees the authenticated user.
-        request._request.user = request.user  # type: ignore[assignment]
+        request._request.user = request.user
 
         try:
             scopes, credentials = self.validate_authorization_request(request._request)
@@ -100,14 +100,14 @@ class OAuthAuthorizeView(OAuthLibMixin, APIView):  # type: ignore[misc]
         allow: bool = data.pop("allow")
 
         # Bridge DRF auth to Django request so DOT sees the authenticated user.
-        request._request.user = request.user  # type: ignore[assignment]
+        request._request.user = request.user
 
         # DOT's validate_authorization_request reads OAuth params from GET
         # and also from request.get_full_path() which uses META['QUERY_STRING'].
         query = QueryDict(mutable=True)
         for key, value in data.items():
             query[key] = str(value)
-        request._request.GET = query
+        request._request.GET = query  # type: ignore[assignment]
         request._request.META["QUERY_STRING"] = query.urlencode()
 
         try:
