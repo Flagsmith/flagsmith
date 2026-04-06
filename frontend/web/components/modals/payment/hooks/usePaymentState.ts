@@ -8,14 +8,13 @@ type UsePaymentStateParams = {
 export const usePaymentState = ({ organisation }: UsePaymentStateParams) => {
   const [yearly, setYearly] = useState(true)
 
-  const plan = organisation?.subscription?.plan ?? ''
-  const isAWS = organisation?.subscription?.payment_method === 'AWS_MARKETPLACE'
-  const hasActiveSubscription = !!organisation?.subscription?.subscription_id
+  const plan = organisation.subscription.plan ?? ''
+  const isAWS = organisation.subscription.payment_method === 'AWS_MARKETPLACE'
+  const hasActiveSubscription = !!organisation.subscription.subscription_id
 
   return {
     hasActiveSubscription,
     isAWS,
-    organisation,
     plan,
     setYearly,
     yearly,
