@@ -4,15 +4,13 @@ import secrets
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 from oauth2_provider.models import Application
 from rest_framework import status
 from rest_framework.test import APIClient
 
 AUTHORIZE_URL = "oauth-authorize"
-
-User = get_user_model()
 
 
 def _pkce_pair() -> tuple[str, str]:
@@ -24,7 +22,7 @@ def _pkce_pair() -> tuple[str, str]:
 
 
 @pytest.fixture()
-def oauth_application(admin_user: User) -> Application:
+def oauth_application(admin_user: AbstractUser) -> Application:
     return Application.objects.create(
         name="Test App",
         user=admin_user,
@@ -35,7 +33,7 @@ def oauth_application(admin_user: User) -> Application:
 
 
 @pytest.fixture()
-def verified_oauth_application(admin_user: User) -> Application:
+def verified_oauth_application(admin_user: AbstractUser) -> Application:
     return Application.objects.create(
         name="Verified App",
         user=admin_user,
@@ -47,7 +45,7 @@ def verified_oauth_application(admin_user: User) -> Application:
 
 
 @pytest.fixture()
-def auth_client(admin_user: User) -> APIClient:
+def auth_client(admin_user: AbstractUser) -> APIClient:
     client = APIClient()
     client.force_authenticate(user=admin_user)
     return client
@@ -174,7 +172,7 @@ def test_post__invalid_client_id__returns_400(
 
 
 @pytest.mark.parametrize("method", ["get", "post"])
-def test__unauthenticated__returns_401(
+def test_authorize__unauthenticated__returns_401(
     method: str,
     db: None,
 ) -> None:
