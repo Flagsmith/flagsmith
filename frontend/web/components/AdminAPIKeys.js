@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import data from 'common/data/base/_data'
+import AppActions from 'common/dispatcher/app-actions'
 import OrganisationStore from 'common/stores/organisation-store'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import Token from './Token'
@@ -341,12 +342,23 @@ export default class AdminAPIKeys extends PureComponent {
 
   componentDidMount() {
     this.fetch()
+    AppActions.getOrganisation(this.props.organisationId)
+    OrganisationStore.on('change', this.onOrganisationChange)
+  }
+
+  componentWillUnmount() {
+    OrganisationStore.off('change', this.onOrganisationChange)
+  }
+
+  onOrganisationChange = () => {
+    this.forceUpdate()
   }
 
   componentDidUpdate() {
     if (this.props.organisationId === this.state.organisationId) return
 
     this.fetch()
+    AppActions.getOrganisation(this.props.organisationId)
     this.setState({ organisationId: this.props.organisationId })
   }
 
@@ -446,12 +458,12 @@ export default class AdminAPIKeys extends PureComponent {
             {`Create API Key`}
           </Button>
         </Column>
-        {this.state.isLoading && (
+        {(this.state.isLoading || !OrganisationStore.model?.users) && (
           <div className='text-center'>
             <Loader />
           </div>
         )}
-        {!!apiKeys && !!apiKeys.length && (
+        {!!apiKeys && !!apiKeys.length && !!OrganisationStore.model?.users && (
           <PanelSearch
             className='no-pad'
             items={apiKeys}
@@ -464,9 +476,9 @@ export default class AdminAPIKeys extends PureComponent {
                 ) && (
                   <Flex className='table-column'>
                     <Tooltip title='Created by' place='right'>
-                      This field may be blank if the key was created before
-                      this information was tracked, or if the user has since
-                      left the organisation.
+                      This field may be blank if the key was created before this
+                      information was tracked, or if the user has since left the
+                      organisation.
                     </Tooltip>
                   </Flex>
                 )}
