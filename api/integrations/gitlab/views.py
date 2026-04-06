@@ -95,7 +95,9 @@ class GitLabConfigurationViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
 
     def get_serializer_class(
         self,
-    ) -> type[GitLabConfigurationSerializer] | type[GitLabConfigurationCreateSerializer]:
+    ) -> (
+        type[GitLabConfigurationSerializer] | type[GitLabConfigurationCreateSerializer]
+    ):
         if self.action == "create":
             return GitLabConfigurationCreateSerializer
         return GitLabConfigurationSerializer
