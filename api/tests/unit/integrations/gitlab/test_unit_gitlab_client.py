@@ -4,7 +4,6 @@ import responses
 from requests.exceptions import HTTPError
 from responses.matchers import header_matcher, query_param_matcher
 
-from integrations.gitlab.types import GitLabProject
 from integrations.gitlab.client import (
     _build_paginated_response,
     create_flagsmith_flag_label,
@@ -21,6 +20,7 @@ from integrations.gitlab.dataclasses import (
     PaginatedQueryParams,
     ProjectQueryParams,
 )
+from integrations.gitlab.types import GitLabProject
 
 INSTANCE_URL = "https://gitlab.example.com"
 ACCESS_TOKEN = "test-access-token"
@@ -405,7 +405,9 @@ def test_build_paginated_response__pagination_headers__returns_correct_links(
     resp.headers["x-total-pages"] = x_total_pages
 
     # When
-    results: list[GitLabProject] = [{"id": 1, "name": "p", "path_with_namespace": "g/p"}]
+    results: list[GitLabProject] = [
+        {"id": 1, "name": "p", "path_with_namespace": "g/p"}
+    ]
     result = _build_paginated_response(
         results=results,
         response=resp,
