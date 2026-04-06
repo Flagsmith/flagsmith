@@ -158,18 +158,19 @@ class HubspotLeadTracker(LeadTracker):
         company_kwargs["organisation_id"] = organisation.id
         company_kwargs["active_subscription"] = organisation.subscription.plan
 
-        # As Hubspot creates/associates companies automatically based on contact domain
-        # we need to get the hubspot id when this user creates the company for the first time
-        # and update the company name
+        # HubSpot auto-creates companies from contact email domains and may
+        # enrich them with the correct company name. We look up the company
+        # by domain and only set the name if HubSpot doesn't already have one,
+        # using the email domain as a fallback rather than the Flagsmith org
+        # name (which is often a placeholder like "test" or "ew").
         company = self._get_hubspot_company_by_domain(domain)
         if not company:
             return None
         org_hubspot_id: str = company["id"]
 
-        # Update the company in Hubspot with the name of the created
-        # organisation in Flagsmith, and its numeric ID.
+        existing_name = company.get("properties", {}).get("name")
         self.client.update_company(
-            name=organisation.name,
+            name=domain if not existing_name else None,
             hubspot_company_id=org_hubspot_id,
             flagsmith_organisation_id=organisation.id,
         )

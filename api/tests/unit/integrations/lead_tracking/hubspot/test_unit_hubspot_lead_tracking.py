@@ -151,7 +151,7 @@ def test_track_hubspot_lead_v2__new_user_added_to_org__creates_associations(
     }
     mock_client_existing_contact.update_company.return_value = {
         "id": HUBSPOT_COMPANY_ID,
-        "properties": {"name": organisation.name},
+        "properties": {"name": domain},  # name preserved, not overwritten
     }
     assert getattr(organisation, "hubspot_organisation", None) is None
     # When
