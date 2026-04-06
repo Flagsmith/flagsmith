@@ -317,7 +317,7 @@ def test_dispatch_gitlab_comment__resource_removed__passes_url(
 def test_dispatch_gitlab_comment__with_feature_states__maps_and_dispatches(
     project: Project,
     feature: Feature,
-    environment: "Environment",
+    environment: Environment,
     gitlab_configuration: GitLabConfiguration,
     mocker: MockerFixture,
 ) -> None:

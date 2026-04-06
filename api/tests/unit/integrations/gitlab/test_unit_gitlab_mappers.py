@@ -97,7 +97,7 @@ def test_map_feature_states_to_dicts__with_segment__includes_segment_name(
     project: Project,
     environment: Environment,
     feature: Feature,
-    mocker: "MockerFixture",
+    mocker: MockerFixture,
 ) -> None:
     # Given
     from unittest.mock import MagicMock
