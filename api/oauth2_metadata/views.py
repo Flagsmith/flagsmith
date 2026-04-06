@@ -75,9 +75,18 @@ class OAuthAuthorizeView(OAuthLibMixin, APIView):  # type: ignore[misc]
             )
 
         Application = get_application_model()
-        application = Application.objects.get(
-            client_id=credentials["client_id"],
-        )
+        try:
+            application = Application.objects.get(
+                client_id=credentials["client_id"],
+            )
+        except Application.DoesNotExist:
+            return Response(
+                {
+                    "error": "invalid_request",
+                    "error_description": "Application not found.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         all_scopes = get_scopes_backend().get_all_scopes()
         scopes_dict: dict[str, str] = {s: all_scopes.get(s, s) for s in scopes}
         return Response(
@@ -88,6 +97,9 @@ class OAuthAuthorizeView(OAuthLibMixin, APIView):  # type: ignore[misc]
                 },
                 "scopes": scopes_dict,
                 "redirect_uri": credentials.get("redirect_uri", ""),
+                # skip_authorization is safe to reuse here: this custom view
+                # always shows the consent screen regardless of this flag.
+                # We only use it as a trust signal for the frontend UI.
                 "is_verified": bool(application.skip_authorization),
             }
         )
@@ -104,6 +116,9 @@ class OAuthAuthorizeView(OAuthLibMixin, APIView):  # type: ignore[misc]
 
         # DOT's validate_authorization_request reads OAuth params from GET
         # and also from request.get_full_path() which uses META['QUERY_STRING'].
+        # This is necessary because DOT's OAuthLibMixin is designed for
+        # form-based flows where params arrive via GET. If a DOT upgrade
+        # changes how it reads params, this will need updating.
         query = QueryDict(mutable=True)
         for key, value in data.items():
             query[key] = str(value)
