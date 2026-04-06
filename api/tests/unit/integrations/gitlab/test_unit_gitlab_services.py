@@ -2,6 +2,7 @@ import json
 
 import pytest
 from django.urls import reverse
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -10,8 +11,6 @@ from features.feature_external_resources.models import (
     ResourceType,
 )
 from features.models import Feature
-from pytest_mock import MockerFixture
-
 from integrations.gitlab.constants import GitLabEventType, GitLabTag
 from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.services import (
