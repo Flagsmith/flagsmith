@@ -17,35 +17,11 @@ from .constants import HUBSPOT_FORM_ID_SAAS
 
 logger = logging.getLogger(__name__)
 
-try:
-    import re2 as re  # type: ignore[import-untyped]
-
-    logger.info("Using re2 library for regex.")
-except ImportError:
-    logger.warning("Unable to import re2. Falling back to re.")
-    import re
-
 
 class HubspotLeadTracker(LeadTracker):
     @staticmethod
     def should_track(user: FFAdminUser) -> bool:
-        if not settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            return False
-
-        domain = user.email_domain
-
-        if settings.HUBSPOT_IGNORE_DOMAINS_REGEX and re.match(
-            settings.HUBSPOT_IGNORE_DOMAINS_REGEX, domain
-        ):
-            return False
-
-        if (
-            settings.HUBSPOT_IGNORE_DOMAINS
-            and domain in settings.HUBSPOT_IGNORE_DOMAINS
-        ):
-            return False
-
-        return True
+        return settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     def update_company_active_subscription(
         self, subscription: Subscription
@@ -96,17 +72,9 @@ class HubspotLeadTracker(LeadTracker):
         return hubspot_contact_id
 
     def create_lead(self, user: FFAdminUser, organisation: Organisation) -> None:
-        hubspot_contact_id = self._get_or_create_user_hubspot_id(user)
-        if not hubspot_contact_id:
-            return
-        hubspot_org_id = self._get_organisation_hubspot_id(user, organisation)
-        if not hubspot_org_id:
-            return
-
-        self.client.associate_contact_to_company(
-            contact_id=hubspot_contact_id,
-            company_id=hubspot_org_id,
-        )
+        # Only create the contact. HubSpot handles company creation and
+        # association automatically from the contact's email domain.
+        self._get_or_create_user_hubspot_id(user)
 
     def _get_new_contact_with_retry(
         self, user: FFAdminUser, max_retries: int = 3
@@ -158,19 +126,18 @@ class HubspotLeadTracker(LeadTracker):
         company_kwargs["organisation_id"] = organisation.id
         company_kwargs["active_subscription"] = organisation.subscription.plan
 
-        # HubSpot auto-creates companies from contact email domains and may
-        # enrich them with the correct company name. We look up the company
-        # by domain and only set the name if HubSpot doesn't already have one,
-        # using the email domain as a fallback rather than the Flagsmith org
-        # name (which is often a placeholder like "test" or "ew").
+        # As Hubspot creates/associates companies automatically based on contact domain
+        # we need to get the hubspot id when this user creates the company for the first time
+        # and update the company name
         company = self._get_hubspot_company_by_domain(domain)
         if not company:
             return None
         org_hubspot_id: str = company["id"]
 
-        existing_name = company.get("properties", {}).get("name")
+        # Update the company in Hubspot with the name of the created
+        # organisation in Flagsmith, and its numeric ID.
         self.client.update_company(
-            name=domain if not existing_name else None,
+            name=organisation.name,
             hubspot_company_id=org_hubspot_id,
             flagsmith_organisation_id=organisation.id,
         )

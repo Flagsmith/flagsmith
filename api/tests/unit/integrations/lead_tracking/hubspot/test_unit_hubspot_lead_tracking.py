@@ -145,14 +145,6 @@ def test_track_hubspot_lead_v2__new_user_added_to_org__creates_associations(
         "organisations.models.track_hubspot_lead_v2"
     )
 
-    mock_client_existing_contact.get_company_by_domain.return_value = {
-        "id": HUBSPOT_COMPANY_ID,
-        "properties": {"name": domain},
-    }
-    mock_client_existing_contact.update_company.return_value = {
-        "id": HUBSPOT_COMPANY_ID,
-        "properties": {"name": domain},  # name preserved, not overwritten
-    }
     assert getattr(organisation, "hubspot_organisation", None) is None
     # When
     user.add_organisation(organisation, role=OrganisationRole.ADMIN)
@@ -165,16 +157,10 @@ def test_track_hubspot_lead_v2__new_user_added_to_org__creates_associations(
 
     # Triggering it manually to void the delay
     track_hubspot_lead_v2(user.id, organisation.id)
-    organisation.refresh_from_db()
-    assert organisation.hubspot_organisation is not None
-    assert organisation.hubspot_organisation.hubspot_id == HUBSPOT_COMPANY_ID
 
+    # create_lead only creates the contact, not the company association
     mock_client_existing_contact.create_company.assert_not_called()
-
-    mock_client_existing_contact.associate_contact_to_company.assert_called_once_with(
-        contact_id=HUBSPOT_USER_ID,
-        company_id=HUBSPOT_COMPANY_ID,
-    )
+    mock_client_existing_contact.associate_contact_to_company.assert_not_called()
     mock_client_existing_contact.create_lead_form.assert_not_called()
     mock_client_existing_contact.get_contact.assert_called_once_with(user)
 
@@ -253,38 +239,7 @@ def test_create_lead__existing_hubspot_org__creates_contact_and_associates(
     mock_client.create_lead_form.assert_called_once_with(
         user=user, form_id=HUBSPOT_FORM_ID_SAAS
     )
-    mock_client.associate_contact_to_company.assert_called_once_with(
-        contact_id=HUBSPOT_USER_ID,
-        company_id=HUBSPOT_COMPANY_ID,
-    )
-
-
-def test_create_lead__filtered_domain__skips_company_creation(
-    organisation: Organisation,
-    settings: SettingsWrapper,
-    mock_client_existing_contact: MagicMock,
-    enable_hubspot: None,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    settings.HUBSPOT_IGNORE_ORGANISATION_DOMAINS = ["example.com"]
-
-    user = FFAdminUser.objects.create(
-        email="new.user@example.com",
-        first_name="Frank",
-        last_name="Louis",
-        marketing_consent_given=True,
-    )
-
-    # When
-    tracker = HubspotLeadTracker()
-    tracker.create_lead(user=user, organisation=organisation)
-
-    # Then
-    assert HubspotLead.objects.filter(user=user, hubspot_id=HUBSPOT_USER_ID).exists()
-    mock_client_existing_contact.get_contact.assert_called_once_with(user)
-    mock_client_existing_contact.create_company.assert_not_called()
-    mock_client_existing_contact.associate_contact_to_company.assert_not_called()
+    mock_client.associate_contact_to_company.assert_not_called()
 
 
 def test_update_company_active_subscription__valid_subscription__calls_update_company(
@@ -388,38 +343,6 @@ def test_create_user_hubspot_contact__get_contact_retries__returns_expected_id(
         is hubspot_leads_exists
     )
     assert mock_client.get_contact.call_count == expected_call_count
-
-
-@pytest.mark.parametrize(
-    "hubspot_contact_id, hubspot_org_id",
-    [
-        (None, "org_123"),
-        ("contact_123", None),
-    ],
-)
-def test_create_lead__missing_contact_or_org_id__skips_association(
-    mocker: MockerFixture,
-    hubspot_contact_id: str | None,
-    hubspot_org_id: str | None,
-    staff_user: FFAdminUser,
-    organisation: Organisation,
-) -> None:
-    # Given
-    mock_client = mocker.MagicMock()
-    tracker = HubspotLeadTracker()
-
-    mocker.patch.object(
-        tracker, "_get_or_create_user_hubspot_id", return_value=hubspot_contact_id
-    )
-    mocker.patch.object(
-        tracker, "_get_organisation_hubspot_id", return_value=hubspot_org_id
-    )
-
-    # When
-    tracker.create_lead(staff_user, organisation)
-
-    # Then
-    mock_client.associate_contact_to_company.assert_not_called()
 
 
 def test_register_hubspot_tracker_and_track_user__no_explicit_user__falls_back_to_request_user(
