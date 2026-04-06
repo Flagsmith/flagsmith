@@ -4,6 +4,7 @@ import responses
 from requests.exceptions import HTTPError
 from responses.matchers import header_matcher, query_param_matcher
 
+from integrations.gitlab.types import GitLabProject
 from integrations.gitlab.client import (
     _build_paginated_response,
     create_flagsmith_flag_label,
@@ -90,10 +91,12 @@ def test_fetch_search_gitlab_resource__issues__returns_results() -> None:
     )
 
     # Then
-    assert len(result["results"]) == 1
-    assert result["results"][0]["title"] == "Bug fix"
-    assert result["results"][0]["merged"] is False
-    assert result["results"][0]["draft"] is False
+    results = result["results"]
+    assert len(results) == 1
+    resource = results[0]
+    assert resource["title"] == "Bug fix"  # type: ignore[typeddict-item]
+    assert resource["merged"] is False  # type: ignore[typeddict-item]
+    assert resource["draft"] is False  # type: ignore[typeddict-item]
 
 
 @responses.activate
@@ -128,9 +131,11 @@ def test_fetch_search_gitlab_resource__merge_requests__returns_mr_fields() -> No
     )
 
     # Then
-    assert len(result["results"]) == 1
-    assert result["results"][0]["merged"] is True
-    assert result["results"][0]["draft"] is False
+    results = result["results"]
+    assert len(results) == 1
+    resource = results[0]
+    assert resource["merged"] is True  # type: ignore[typeddict-item]
+    assert resource["draft"] is False  # type: ignore[typeddict-item]
 
 
 @pytest.mark.parametrize(
@@ -155,12 +160,11 @@ def test_fetch_search_gitlab_resource__with_filter__appends_query_param(
         status=200,
         headers={"x-total": "0"},
     )
-    kwargs = {
-        "gitlab_project_id": 1,
-        "project_name": "group/project",
-        filter_field: filter_value,
-    }
-    params = IssueQueryParams(**kwargs)
+    params = IssueQueryParams(
+        gitlab_project_id=1,
+        project_name="group/project",
+        **{filter_field: filter_value},  # type: ignore[arg-type]
+    )
 
     # When
     fetch_search_gitlab_resource(
@@ -172,7 +176,7 @@ def test_fetch_search_gitlab_resource__with_filter__appends_query_param(
 
     # Then
     assert len(responses.calls) == 1
-    request_url: str = responses.calls[0].request.url or ""
+    request_url = responses.calls[0].request.url or ""  # type: ignore[union-attr]
     assert f"{expected_param}=" in request_url
 
 
@@ -401,8 +405,9 @@ def test_build_paginated_response__pagination_headers__returns_correct_links(
     resp.headers["x-total-pages"] = x_total_pages
 
     # When
+    results: list[GitLabProject] = [{"id": 1, "name": "p", "path_with_namespace": "g/p"}]
     result = _build_paginated_response(
-        results=[{"id": 1, "name": "p", "path_with_namespace": "g/p"}],
+        results=results,
         response=resp,
         total_count=10,
     )
