@@ -7,20 +7,19 @@ Flagsmith supports exporting distributed traces and structured logs over
 [OTLP](https://opentelemetry.io/docs/specs/otel/protocol/), the OpenTelemetry Protocol. This lets you send observability
 data to any OTLP-compatible backend (e.g. SigNoz, Grafana Tempo, Jaeger, Datadog) without vendor lock-in.
 
-OTel instrumentation is opt-in — when the endpoint is not configured, no OTel code is loaded and there is no runtime
-overhead.
+OTel instrumentation is opt-in and has no runtime overhead when disabled.
 
 ## Configuration
 
-Set the following environment variables on the Flagsmith API to enable OTel export:
+Set `OTEL_EXPORTER_OTLP_ENDPOINT` to the base OTLP/HTTP URL of your collector (e.g. `http://collector:4318`) to enable
+OTel export. When unset, no OTel code is loaded and there is no runtime overhead.
 
-| Variable                      | Description                                                                         | Default                                       |
-| ----------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------- |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | Base OTLP/HTTP endpoint (e.g. `http://collector:4318`). If unset, OTel is disabled. | _(disabled)_                                  |
-| `OTEL_SERVICE_NAME`           | The `service.name` resource attribute attached to all telemetry.                    | `flagsmith-api` or `flagsmith-task-processor` |
+Standard `OTEL_*` environment variables are also respected by the underlying OTel SDK. For example:
 
-Standard `OTEL_*` environment variables (e.g. `OTEL_RESOURCE_ATTRIBUTES`, `OTEL_EXPORTER_OTLP_HEADERS`) are also
-respected by the underlying OTel SDK.
+- `OTEL_SERVICE_NAME` — overrides the `service.name` resource attribute (defaults to `flagsmith-api` or
+  `flagsmith-task-processor`).
+- `OTEL_RESOURCE_ATTRIBUTES` — adds custom resource attributes.
+- `OTEL_EXPORTER_OTLP_HEADERS` — sets authentication headers for the OTLP exporter.
 
 ### Example: Docker Compose
 
