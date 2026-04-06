@@ -6,6 +6,60 @@ import { Meta } from '@storybook/addon-docs/blocks'
 
 How to add, modify, or remove design tokens. Follow this process to keep the token system consistent.
 
+## Primitives vs Semantic Tokens
+
+The token system has two layers. **You should only use semantic tokens in components** — never reference primitives directly.
+
+**Primitives** (`_primitives.scss`) are raw colour definitions:
+
+```scss
+// These exist so we can change a colour once and update everything that references it.
+// Do NOT use these in components.
+:root {
+  --red-600: #dc2626;
+  --purple-600: #6837fc;
+}
+```
+
+**Semantic tokens** (`_tokens.scss`) reference primitives and carry meaning:
+
+```scss
+// These are what you use in components.
+:root {
+  --color-text-danger: var(--red-600);
+  --color-surface-action: var(--purple-600);
+}
+```
+
+### Usage in SCSS
+
+```scss
+// ✅ Correct — use the semantic token
+.error-message { color: var(--color-text-danger); }
+
+// ❌ Wrong — never reference the primitive
+.error-message { color: var(--red-600); }
+```
+
+### Usage in TypeScript
+
+```typescript
+import { colorTextDanger, colorSurfaceAction } from 'common/theme/tokens'
+
+// Each export is a string: 'var(--color-text-danger, #dc2626)'
+// The fallback ensures the value works even without the CSS loaded.
+```
+
+### Usage with utility classes
+
+```tsx
+// ✅ Auto-generated utility classes from tokens
+<p className="text-danger">Error message</p>
+<div className="bg-surface-action">Action area</div>
+```
+
+---
+
 ## Where tokens live
 
 <table>
