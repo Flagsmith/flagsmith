@@ -31,10 +31,6 @@ export const useScript = (url: string): ScriptState => {
     })
 
     document.head.appendChild(script)
-
-    return () => {
-      document.head.removeChild(script)
-    }
   }, [url])
 
   return state
