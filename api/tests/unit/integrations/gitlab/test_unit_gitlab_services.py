@@ -346,3 +346,91 @@ def test_dispatch_gitlab_comment__with_feature_states__maps_and_dispatches(
     assert len(call_kwargs["feature_states"]) == 1
     assert call_kwargs["segment_name"] == "beta_users"
     assert call_kwargs["feature_states"][0]["environment_name"] == environment.name
+
+
+@pytest.mark.django_db
+def test_tag_feature_per_gitlab_event__no_linked_feature__returns_early(
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+) -> None:
+    # Given — no FeatureExternalResource exists
+    payload = {
+        "object_kind": "merge_request",
+        "project": {"path_with_namespace": "testgroup/testrepo"},
+        "object_attributes": {
+            "action": "merge",
+            "url": "https://gitlab.example.com/testgroup/testrepo/-/merge_requests/99",
+            "state": "merged",
+            "work_in_progress": False,
+        },
+    }
+
+    # When
+    handle_gitlab_webhook_event(event_type="merge_request", payload=payload)
+
+    # Then
+    assert True  # no error, returns early
+
+
+@pytest.mark.django_db
+def test_tag_feature_per_gitlab_event__no_config_for_path__returns_early(
+    project: Project,
+    feature: Feature,
+    gitlab_configuration: GitLabConfiguration,
+) -> None:
+    # Given — resource exists but config project_name doesn't match
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/other/repo/-/merge_requests/1",
+        type=ResourceType.GITLAB_MR,
+        feature=feature,
+        metadata='{"state": "opened"}',
+    )
+    payload = {
+        "object_kind": "merge_request",
+        "project": {"path_with_namespace": "other/repo"},
+        "object_attributes": {
+            "action": "merge",
+            "url": "https://gitlab.example.com/other/repo/-/merge_requests/1",
+            "state": "merged",
+            "work_in_progress": False,
+        },
+    }
+
+    # When
+    handle_gitlab_webhook_event(event_type="merge_request", payload=payload)
+
+    # Then
+    feature.refresh_from_db()
+    assert feature.tags.filter(type=TagType.GITLAB.value).count() == 0
+
+
+@pytest.mark.django_db
+def test_tag_feature_per_gitlab_event__null_tag_for_update__does_not_tag(
+    project: Project,
+    feature: Feature,
+    gitlab_configuration: GitLabConfiguration,
+) -> None:
+    # Given — MR update without draft returns None tag
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/testgroup/testrepo/-/merge_requests/1",
+        type=ResourceType.GITLAB_MR,
+        feature=feature,
+        metadata='{"state": "opened"}',
+    )
+    payload = {
+        "object_kind": "merge_request",
+        "project": {"path_with_namespace": "testgroup/testrepo"},
+        "object_attributes": {
+            "action": "update",
+            "url": "https://gitlab.example.com/testgroup/testrepo/-/merge_requests/1",
+            "state": "opened",
+            "work_in_progress": False,
+        },
+    }
+
+    # When
+    handle_gitlab_webhook_event(event_type="merge_request", payload=payload)
+
+    # Then
+    feature.refresh_from_db()
+    assert feature.tags.filter(type=TagType.GITLAB.value).count() == 0
