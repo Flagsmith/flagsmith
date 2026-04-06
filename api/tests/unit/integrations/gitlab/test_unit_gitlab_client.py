@@ -437,6 +437,6 @@ def test_paginated_query_params__invalid_values__raises_value_error(
 ) -> None:
     # Given
     # When
+    # Then
     with pytest.raises(ValueError, match=expected_error):
         PaginatedQueryParams(page=page, page_size=page_size)
-    # Then — exception raised
