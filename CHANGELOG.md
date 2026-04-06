@@ -1,5 +1,90 @@
 # Changelog
 
+## [2.226.0](https://github.com/Flagsmith/flagsmith/compare/v2.225.0...v2.226.0) (2026-04-03)
+
+
+### Features
+
+* **Dogfooding:** Add OpenFeature SDK for server-side Flagsmith-on-Flagsmith ([#7008](https://github.com/Flagsmith/flagsmith/issues/7008)) ([3e3be2e](https://github.com/Flagsmith/flagsmith/commit/3e3be2e00cf6524418b9d0e0d5b86a093024d937))
+* enforce feature ownership project setting ([#7067](https://github.com/Flagsmith/flagsmith/issues/7067)) ([e8ce5ab](https://github.com/Flagsmith/flagsmith/commit/e8ce5abd567fbd232353c01a5706bc1214baa67a))
+* **saas-billing:** Invoice immediately for new seats ([#7086](https://github.com/Flagsmith/flagsmith/issues/7086)) ([3718766](https://github.com/Flagsmith/flagsmith/commit/3718766fce7a5335f7271714076e6aa1f3179e3d))
+* track-code-references-actions ([#7044](https://github.com/Flagsmith/flagsmith/issues/7044)) ([0ae31e2](https://github.com/Flagsmith/flagsmith/commit/0ae31e2d13432ed8817d03c5c71077cb7aba7f1d))
+
+
+### Bug Fixes
+
+* **chargebee:** Handle addon ids per billing period ([#7108](https://github.com/Flagsmith/flagsmith/issues/7108)) ([db02299](https://github.com/Flagsmith/flagsmith/commit/db02299603e8d760405c44078619f669fbb55678))
+
+
+### Dependency Updates
+
+* bump licensing to support new cli args ([#7098](https://github.com/Flagsmith/flagsmith/issues/7098)) ([cee0c91](https://github.com/Flagsmith/flagsmith/commit/cee0c91e7a67948a636d32bc3af46768c7a70542))
+* Update cryptography to 46.0.6 ([#7111](https://github.com/Flagsmith/flagsmith/issues/7111)) ([d8edc2a](https://github.com/Flagsmith/flagsmith/commit/d8edc2a606aba962257600a2830e686ddd803799))
+* Update picomatch, lodash and path-to-regexp ([#7112](https://github.com/Flagsmith/flagsmith/issues/7112)) ([de6e4e2](https://github.com/Flagsmith/flagsmith/commit/de6e4e2f993a1e28afeab6c33c2e84e269bb3276))
+* Update pyasn1 to 0.6.3 ([#7110](https://github.com/Flagsmith/flagsmith/issues/7110)) ([490bb50](https://github.com/Flagsmith/flagsmith/commit/490bb504fece658a3152b6ab5f4b4e4a1c4de032))
+
+
+### Docs
+
+* add guide for experimental flag update endpoints ([#7083](https://github.com/Flagsmith/flagsmith/issues/7083)) ([0156837](https://github.com/Flagsmith/flagsmith/commit/0156837403f878f02135681d0940125c9bb533d2))
+* Remove deny change request from docs ([#7105](https://github.com/Flagsmith/flagsmith/issues/7105)) ([6dc9b14](https://github.com/Flagsmith/flagsmith/commit/6dc9b144de7cf977a683e4e5fb895d70f9148384))
+* Remove duplicate Prometheus metrics table from monitoring page ([#7107](https://github.com/Flagsmith/flagsmith/issues/7107)) ([652cdd4](https://github.com/Flagsmith/flagsmith/commit/652cdd40f1dc952d0a6e9a31fc53456f80ddf9ca))
+
+## [2.225.0](https://github.com/Flagsmith/flagsmith/compare/v2.224.0...v2.225.0) (2026-04-02)
+
+
+### Features
+
+* **Logging:** Unify logging format ([#7050](https://github.com/Flagsmith/flagsmith/issues/7050)) ([9f1d4ec](https://github.com/Flagsmith/flagsmith/commit/9f1d4ec59e8f66fc4fe7637240ea08e589fc9dfa))
+* tagged-v1-endpoints-for-mcp-usage ([#7052](https://github.com/Flagsmith/flagsmith/issues/7052)) ([61ca107](https://github.com/Flagsmith/flagsmith/commit/61ca1078b0d36cdd6f82e51fb7b1ef5dfc491870))
+
+
+### Bug Fixes
+
+* **ci:** Docker compose migration race condition ([#7068](https://github.com/Flagsmith/flagsmith/issues/7068)) ([c048441](https://github.com/Flagsmith/flagsmith/commit/c048441e77b929cc42cbb07c00f9360f4a7b299f))
+* dissociated-code-references-gate-from-flag-response ([#7065](https://github.com/Flagsmith/flagsmith/issues/7065)) ([a8a876c](https://github.com/Flagsmith/flagsmith/commit/a8a876c59e7547fa29216e74e46e5c6bc2334fa8))
+* Invoke backend logout API on logout button click to prevent broken authentication ([#6820](https://github.com/Flagsmith/flagsmith/issues/6820)) ([b9ea92a](https://github.com/Flagsmith/flagsmith/commit/b9ea92a5b3e0b562d52383ca7c5f476de11f3877))
+* Skip logout endpoint in e2e ([#7089](https://github.com/Flagsmith/flagsmith/issues/7089)) ([9a6aa07](https://github.com/Flagsmith/flagsmith/commit/9a6aa071b178118880658af40d9df07906d712c6))
+* **ui:** replace misleading permission tooltip on segment override variations ([#7011](https://github.com/Flagsmith/flagsmith/issues/7011)) ([184503d](https://github.com/Flagsmith/flagsmith/commit/184503dac955cc8c134f2eec3b38f8e936ede844))
+* use .values("id").distinct().count() in platform_hub for Oracle compatibility ([#7041](https://github.com/Flagsmith/flagsmith/issues/7041)) ([3f71f16](https://github.com/Flagsmith/flagsmith/commit/3f71f16206056f378915651baa29337f403ff777))
+* Version endpoints not returning JSON in all-in-one Docker deployment ([#7079](https://github.com/Flagsmith/flagsmith/issues/7079)) ([2eecc76](https://github.com/Flagsmith/flagsmith/commit/2eecc76f257636922c57e99d20d4d774f0b48aef))
+
+
+### Dependency Updates
+
+* bump brace-expansion in /docs ([#7058](https://github.com/Flagsmith/flagsmith/issues/7058)) ([7399289](https://github.com/Flagsmith/flagsmith/commit/739928976db17be7b589665c5fda382f2cf7de59))
+* bump brace-expansion in /frontend ([#7059](https://github.com/Flagsmith/flagsmith/issues/7059)) ([4d4af67](https://github.com/Flagsmith/flagsmith/commit/4d4af67f6b6b37cc7fc4044fe42ddd0e2d48c8e9))
+* bump cryptography from 46.0.5 to 46.0.6 in /api ([#7060](https://github.com/Flagsmith/flagsmith/issues/7060)) ([9c09ac1](https://github.com/Flagsmith/flagsmith/commit/9c09ac1a067303d2914f6d10006ebbb04cf51f9d))
+* Bump flagsmith-ldap 0.1.1 -&gt; 0.1.2 ([#7082](https://github.com/Flagsmith/flagsmith/issues/7082)) ([377b879](https://github.com/Flagsmith/flagsmith/commit/377b87977cb51d86e62b42ff56830979930bbf1a))
+* bump flatted from 3.3.3 to 3.4.2 in /frontend ([#7006](https://github.com/Flagsmith/flagsmith/issues/7006)) ([c6bc4b4](https://github.com/Flagsmith/flagsmith/commit/c6bc4b4675846a5c3ce2f4fd05b8f07ebeb2ba88))
+* bump handlebars from 4.7.8 to 4.7.9 in /frontend ([#7053](https://github.com/Flagsmith/flagsmith/issues/7053)) ([93eceb7](https://github.com/Flagsmith/flagsmith/commit/93eceb7674b6c1c33ec456d7d4ecf9717d2490dc))
+* bump handlebars from 4.7.8 to 4.7.9 in /frontend ([#7075](https://github.com/Flagsmith/flagsmith/issues/7075)) ([936ae93](https://github.com/Flagsmith/flagsmith/commit/936ae93f520ca6f8c5f0fbce0edb8a1f811c4ded))
+* bump node-forge from 1.3.2 to 1.4.0 in /docs ([#7054](https://github.com/Flagsmith/flagsmith/issues/7054)) ([bbcb826](https://github.com/Flagsmith/flagsmith/commit/bbcb82643a0339c564159075467ac1d7433a94fd))
+* bump path-to-regexp from 0.1.12 to 0.1.13 in /docs ([#7062](https://github.com/Flagsmith/flagsmith/issues/7062)) ([1d9b561](https://github.com/Flagsmith/flagsmith/commit/1d9b5615dcb55a60abcfdb6d2fe197052af81a9e))
+* bump path-to-regexp from 0.1.12 to 0.1.13 in /frontend ([#7061](https://github.com/Flagsmith/flagsmith/issues/7061)) ([df42f93](https://github.com/Flagsmith/flagsmith/commit/df42f93b5289161499c68768e21b330150a05477))
+* bump picomatch from 2.3.1 to 2.3.2 in /docs ([#7047](https://github.com/Flagsmith/flagsmith/issues/7047)) ([a9cb0ca](https://github.com/Flagsmith/flagsmith/commit/a9cb0ca969669753783b10f68b1a353df62c75fa))
+* bump picomatch from 2.3.1 to 2.3.2 in /frontend ([#7046](https://github.com/Flagsmith/flagsmith/issues/7046)) ([ccd9da8](https://github.com/Flagsmith/flagsmith/commit/ccd9da85d8eeb117b2788308a92275c2df922656))
+* bump pygments from 2.19.2 to 2.20.0 in /api ([#7076](https://github.com/Flagsmith/flagsmith/issues/7076)) ([2dcdde2](https://github.com/Flagsmith/flagsmith/commit/2dcdde22fcb8cc68510983e00a83af916d66d9c2))
+* bump requests from 2.32.4 to 2.33.0 in /api ([#7048](https://github.com/Flagsmith/flagsmith/issues/7048)) ([c376a26](https://github.com/Flagsmith/flagsmith/commit/c376a26186466b6a0293c3bc63819ed879bc3d77))
+* bump yaml in /frontend ([#7045](https://github.com/Flagsmith/flagsmith/issues/7045)) ([45e6329](https://github.com/Flagsmith/flagsmith/commit/45e632951a62a28823b1e50b1397a8e8c173ad35))
+* react-migration-to-v19 ([#6764](https://github.com/Flagsmith/flagsmith/issues/6764)) ([13b012e](https://github.com/Flagsmith/flagsmith/commit/13b012eb4b860dc768e6e85241d256bfe8f2afce))
+
+
+### CI
+
+* pre-commit autoupdate ([#7078](https://github.com/Flagsmith/flagsmith/issues/7078)) ([738ef4a](https://github.com/Flagsmith/flagsmith/commit/738ef4aeab57bb6c01cd0ae7681a47cab068939a))
+* **Tests:** Migrate API Pull Request workflow to Depot CI ([#7030](https://github.com/Flagsmith/flagsmith/issues/7030)) ([e09f651](https://github.com/Flagsmith/flagsmith/commit/e09f651e0d593914d99e2aebe5e8c005cff3ad8c))
+
+
+### Docs
+
+* **pgbouncer:** add credentialsFromExistingSecret usage to Kubernete… ([#7037](https://github.com/Flagsmith/flagsmith/issues/7037)) ([1867d0e](https://github.com/Flagsmith/flagsmith/commit/1867d0e88255a8afc2f31354c72f27ce97d525fc))
+
+
+### Refactoring
+
+* create feature migration ([#6925](https://github.com/Flagsmith/flagsmith/issues/6925)) ([eac3aab](https://github.com/Flagsmith/flagsmith/commit/eac3aabc55e7c94c06d9af21765a206b2c433486))
+
 ## [2.224.0](https://github.com/Flagsmith/flagsmith/compare/v2.223.0...v2.224.0) (2026-03-24)
 
 

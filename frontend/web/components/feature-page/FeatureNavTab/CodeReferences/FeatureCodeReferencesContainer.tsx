@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
+import flagsmith from '@flagsmith/flagsmith'
 import { useGetFeatureCodeReferencesQuery } from 'common/services/useCodeReferences'
 import RepoCodeReferencesSection from './components/RepoCodeReferencesSection'
 import { FeatureCodeReferences } from 'common/types/responses'
@@ -34,6 +35,23 @@ const FeatureCodeReferencesContainer: React.FC<
     [data],
   )
 
+  const hasTrackedView = useRef(false)
+  useEffect(() => {
+    if (data.length > 0 && !hasTrackedView.current) {
+      hasTrackedView.current = true
+      const totalRefs = data.reduce(
+        (sum, repo) => sum + repo.code_references.length,
+        0,
+      )
+      flagsmith.trackEvent('code_references_view', {
+        feature_id: featureId,
+        project_id: projectId,
+        repos_count: data.length,
+        total_refs_count: totalRefs,
+      })
+    }
+  }, [data, featureId, projectId])
+
   if (isLoading) {
     return (
       <div className='d-flex justify-content-center items-center'>
@@ -59,6 +77,7 @@ const FeatureCodeReferencesContainer: React.FC<
             key={codeReferencesByRepo[repo].repository_url}
             repositoryName={codeReferencesByRepo[repo].repository_url}
             repositoryScan={codeReferencesByRepo[repo]}
+            featureId={featureId}
           />
         ))}
     </div>

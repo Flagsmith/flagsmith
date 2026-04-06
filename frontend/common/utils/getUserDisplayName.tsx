@@ -1,7 +1,7 @@
 import { AccountModel, User } from 'common/types/responses'
 
 export default function (
-  user: AccountModel | undefined,
+  user: AccountModel | User | undefined,
   defaultName = 'Unknown',
 ) {
   if (!user) {

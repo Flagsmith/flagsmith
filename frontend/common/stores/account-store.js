@@ -356,9 +356,11 @@ const controller = {
       if (!data.token) {
         return
       }
-      ;(Project.cookieAuthEnabled
-        ? data.post(`${Project.api}auth/logout/`, {})
-        : Promise.resolve()
+
+      //Skip logout in E2E since parallel sessions may be using a shared token
+      ;(E2E
+        ? Promise.resolve()
+        : data.post(`${Project.api}auth/logout/`, {})
       ).finally(() => {
         API.setCookie('t', '')
         data.setToken(null)

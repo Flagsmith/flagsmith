@@ -1,7 +1,7 @@
 import React, { useState, FC } from 'react'
-import { IconButton, Collapse } from '@material-ui/core'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
+import useCollapsibleHeight from 'common/hooks/useCollapsibleHeight'
 
 interface AccordionCardProps {
   children?: React.ReactNode
@@ -18,6 +18,7 @@ const AccordionCard: FC<AccordionCardProps> = ({
   title = 'Summary',
 }) => {
   const [open, setOpen] = useState(defaultOpen)
+  const { contentRef, style: collapsibleStyle } = useCollapsibleHeight(open)
 
   return (
     <div className='d-flex flex-column px-3 py-3 accordion-card m-0'>
@@ -36,17 +37,17 @@ const AccordionCard: FC<AccordionCardProps> = ({
           {isLoading && <Loader width='15px' height='15px' />}
         </div>
         {!isLoading && (
-          <IconButton size='small'>
+          <span className='p-1' aria-label={open ? 'Collapse' : 'Expand'}>
             <IonIcon
               className='fs-small me-2 text-muted'
               icon={open ? chevronUp : chevronDown}
             />
-          </IconButton>
+          </span>
         )}
       </div>
-      <Collapse in={open}>
+      <div ref={contentRef} style={collapsibleStyle}>
         <div className='mt-2 mb-2'>{children}</div>
-      </Collapse>
+      </div>
     </div>
   )
 }

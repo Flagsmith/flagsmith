@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import React, { FC } from 'react'
-import { MultiValueProps } from 'react-select/lib/components/MultiValue'
-import { OptionProps } from 'react-select/lib/components/Option'
+import { MultiValueProps } from 'react-select'
+import { OptionProps } from 'react-select'
 
 import { CustomMultiValue } from './CustomMultiValue'
 import { CustomOption } from './CustomOption'
