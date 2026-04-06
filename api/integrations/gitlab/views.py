@@ -3,7 +3,6 @@ from functools import wraps
 from typing import Any, Callable
 
 import requests
-from django.db.utils import IntegrityError
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -21,7 +20,6 @@ from integrations.gitlab.dataclasses import (
     PaginatedQueryParams,
     ProjectQueryParams,
 )
-from integrations.gitlab.exceptions import DuplicateGitLabIntegration
 from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.permissions import HasPermissionToGitLabConfiguration
 from integrations.gitlab.serializers import (
@@ -121,14 +119,6 @@ class GitLabConfigurationViewSet(viewsets.ModelViewSet):  # type: ignore[type-ar
         if getattr(self, "swagger_fake_view", False):
             return GitLabConfiguration.objects.none()
         return GitLabConfiguration.objects.filter(project_id=self.kwargs["project_pk"])
-
-    def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        try:
-            return super().create(request, *args, **kwargs)
-        except IntegrityError as e:
-            if "already exists" in str(e):
-                raise DuplicateGitLabIntegration from e
-            raise
 
     def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         response: Response = super().update(request, *args, **kwargs)
