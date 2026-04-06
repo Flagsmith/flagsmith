@@ -418,3 +418,23 @@ def test_build_paginated_response__pagination_headers__returns_correct_links(
     assert result.get("previous") == expect_previous
     assert result.get("next") == expect_next
     assert result["total_count"] == 10
+
+
+@pytest.mark.parametrize(
+    "page,page_size,expected_error",
+    [
+        (0, 100, "Page must be greater or equal than 1"),
+        (-1, 100, "Page must be greater or equal than 1"),
+        (1, 0, "Page size must be an integer between 1 and 100"),
+        (1, 101, "Page size must be an integer between 1 and 100"),
+    ],
+    ids=["page-zero", "page-negative", "page-size-zero", "page-size-over-100"],
+)
+def test_paginated_query_params__invalid_values__raises_value_error(
+    page: int,
+    page_size: int,
+    expected_error: str,
+) -> None:
+    # When / Then
+    with pytest.raises(ValueError, match=expected_error):
+        PaginatedQueryParams(page=page, page_size=page_size)
