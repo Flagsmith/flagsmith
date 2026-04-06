@@ -900,5 +900,16 @@ export type Req = {
     enabled: boolean
     feature_state_value: FlagsmithValue | null
   }
+  validateOAuthAuthorize: Record<string, string>
+  processOAuthConsent: {
+    allow: boolean
+    client_id: string
+    redirect_uri: string
+    response_type: string
+    scope: string
+    code_challenge: string
+    code_challenge_method: string
+    state?: string
+  }
   // END OF TYPES
 }

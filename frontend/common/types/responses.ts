@@ -1258,5 +1258,14 @@ export type Res = {
     feature_external_resource_id: number
     html_url: string
   }
+  validateOAuthAuthorize: {
+    application: { name: string; client_id: string }
+    scopes: Record<string, string>
+    redirect_uri: string
+    is_verified: boolean
+  }
+  processOAuthConsent: {
+    redirect_uri: string
+  }
   // END OF TYPES
 }

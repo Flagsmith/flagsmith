@@ -42,13 +42,20 @@ if (event) {
 }
 
 const isInvite = document.location.href.includes('invite')
-const isOauth = document.location.href.includes('/oauth')
+const isOauth =
+  document.location.href.includes('/oauth') &&
+  !document.location.pathname.startsWith('/oauth/authorize')
 if (res && !isInvite && !isOauth) {
   AppActions.setToken(res)
 }
 
 function isPublicURL() {
   const pathname = document.location.pathname
+
+  // /oauth/authorize requires auth (consent screen), but /oauth/:type (callbacks) is public.
+  if (pathname.startsWith('/oauth/authorize')) {
+    return false
+  }
 
   const publicPaths = [
     '/',
