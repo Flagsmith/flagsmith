@@ -5,40 +5,12 @@ import {
   useValidateOAuthAuthorizeQuery,
 } from 'common/services/useOAuthAuthorize'
 import Utils from 'common/utils/utils'
+import Icon from 'components/Icon'
+import Logo from 'components/Logo'
 
-const CheckIcon = () => (
-  <svg
-    width='20'
-    height='20'
-    viewBox='0 0 20 20'
-    fill='none'
-    style={{ flexShrink: 0, marginTop: 2 }}
-  >
-    <path
-      d='M16.667 5L7.5 14.167 3.333 10'
-      stroke='#6837fc'
-      strokeWidth='2'
-      strokeLinecap='round'
-      strokeLinejoin='round'
-    />
-  </svg>
-)
-
-const WarningIcon = () => (
-  <svg
-    width='16'
-    height='16'
-    viewBox='0 0 16 16'
-    fill='none'
-    style={{ flexShrink: 0 }}
-  >
-    <path
-      d='M8 1.333A6.667 6.667 0 1 0 14.667 8 6.674 6.674 0 0 0 8 1.333Zm0 10a.667.667 0 1 1 0-1.333.667.667 0 0 1 0 1.333Zm.667-3.333a.667.667 0 0 1-1.334 0V5.333a.667.667 0 0 1 1.334 0V8Z'
-      fill='#e5a00d'
-    />
-  </svg>
-)
-
+// Frontend-maintained scope descriptions. The backend returns `mcp` as an
+// umbrella scope; we expand it into granular descriptions for the consent UI.
+// If a scope is not found here, the backend description is used as fallback.
 const SCOPE_DESCRIPTIONS: Record<string, string[]> = {
   mcp: [
     'Manage feature flags, toggle states, and update values',
@@ -107,7 +79,7 @@ const OAuthAuthorizePage = () => {
   const renderContent = () => {
     if (!hasRequiredParams) {
       return (
-        <div className='card shadow p-4' style={{ maxWidth: 530 }}>
+        <div className='oauth-authorize__card card shadow p-4'>
           <h3>Invalid authorisation request</h3>
           <p className='text-muted'>
             Required OAuth parameters are missing. Please return to the
@@ -119,7 +91,7 @@ const OAuthAuthorizePage = () => {
 
     if (isLoading) {
       return (
-        <div className='card shadow p-4' style={{ maxWidth: 530 }}>
+        <div className='oauth-authorize__card card shadow p-4'>
           <div className='centered-container'>
             <Loader />
           </div>
@@ -129,7 +101,7 @@ const OAuthAuthorizePage = () => {
 
     if (error || !data) {
       return (
-        <div className='card shadow p-4' style={{ maxWidth: 530 }}>
+        <div className='oauth-authorize__card card shadow p-4'>
           <h3>Authorisation error</h3>
           <p className='text-muted'>
             The authorisation request is invalid. The application may have
@@ -140,51 +112,26 @@ const OAuthAuthorizePage = () => {
     }
 
     return (
-      <div className='card shadow p-4' style={{ maxWidth: 530, width: '100%' }}>
+      <div className='oauth-authorize__card card shadow p-4'>
         <div className='text-center mb-4'>
-          <img
-            src='/static/images/nav-logo.png'
-            alt='Flagsmith'
-            style={{ height: 48, marginBottom: 24 }}
-          />
-          <h3 className='mb-0' style={{ fontWeight: 400 }}>
+          <Logo size={48} />
+          <h3 className='oauth-authorize__title mb-0'>
             <strong>{data.application.name}</strong> would like to connect to
             your Flagsmith account
           </h3>
         </div>
 
         {!data.is_verified && (
-          <div
-            className='d-flex align-items-center gap-2 rounded mb-3 px-3 py-2'
-            style={{
-              background: 'rgba(229, 160, 13, 0.1)',
-              border: '1px solid rgba(229, 160, 13, 0.3)',
-              color: '#e5a00d',
-              fontSize: 13,
-            }}
-          >
-            <WarningIcon />
+          <div className='oauth-authorize__warning'>
+            <Icon name='warning' width={16} fill='#e5a00d' />
             <span>
               This application is unverified. Only authorise if you trust it.
             </span>
           </div>
         )}
 
-        <div
-          className='rounded mb-4 px-3 py-3'
-          style={{
-            background: 'rgba(255, 255, 255, 0.04)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-          }}
-        >
-          <p
-            className='mb-3 mt-0'
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              letterSpacing: '0.05em',
-            }}
-          >
+        <div className='oauth-authorize__scope-box'>
+          <p className='oauth-authorize__scope-header mb-3 mt-0'>
             YOUR ACCOUNT WILL BE USED TO:
           </p>
           <div className='d-flex flex-column gap-3'>
@@ -194,16 +141,16 @@ const OAuthAuthorizePage = () => {
                 return descriptions.map((desc, i) => (
                   <div
                     key={`${scope}-${i}`}
-                    className='d-flex align-items-start gap-2'
+                    className='oauth-authorize__scope-item'
                   >
-                    <CheckIcon />
+                    <Icon name='checkmark' width={20} fill='#6837fc' />
                     <span>{desc}</span>
                   </div>
                 ))
               }
               return [
-                <div key={scope} className='d-flex align-items-start gap-2'>
-                  <CheckIcon />
+                <div key={scope} className='oauth-authorize__scope-item'>
+                  <Icon name='checkmark' width={20} fill='#6837fc' />
                   <span>{description}</span>
                 </div>,
               ]
@@ -211,16 +158,16 @@ const OAuthAuthorizePage = () => {
           </div>
         </div>
 
-        <p className='text-muted text-center mb-4' style={{ fontSize: 13 }}>
+        <p className='oauth-authorize__redirect-text text-muted text-center mb-4'>
           You will be redirected to:
           <br />
-          <code style={{ fontSize: 12, wordBreak: 'break-all' }}>
+          <code className='oauth-authorize__redirect-uri'>
             {data.redirect_uri}
           </code>
         </p>
 
         {consentError && (
-          <p className='text-center text-danger mb-2' style={{ fontSize: 14 }}>
+          <p className='oauth-authorize__error text-center text-danger mb-2'>
             {consentError}
           </p>
         )}
@@ -247,14 +194,7 @@ const OAuthAuthorizePage = () => {
     )
   }
 
-  return (
-    <div
-      className='d-flex align-items-center justify-content-center'
-      style={{ minHeight: '100vh', padding: 24 }}
-    >
-      {renderContent()}
-    </div>
-  )
+  return <div className='oauth-authorize'>{renderContent()}</div>
 }
 
 export default OAuthAuthorizePage
