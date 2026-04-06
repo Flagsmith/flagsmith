@@ -62,8 +62,7 @@ def test_map_feature_states_to_dicts__resource_removed__skips_env_data(
 
 
 @pytest.mark.django_db
-def test_map_feature_states_to_dicts__empty_list__returns_empty(
-) -> None:
+def test_map_feature_states_to_dicts__empty_list__returns_empty() -> None:
     # Given
     # When
     result = map_feature_states_to_dicts([], GitLabEventType.FLAG_UPDATED.value)

@@ -65,7 +65,9 @@ def test_generate_body_comment__flag_updated__returns_table() -> None:
     assert "`on`" in result
 
 
-def test_generate_body_comment__segment_override_deleted__returns_segment_text() -> None:
+def test_generate_body_comment__segment_override_deleted__returns_segment_text() -> (
+    None
+):
     # Given
     # When
     result = generate_body_comment(
