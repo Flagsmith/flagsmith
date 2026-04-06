@@ -2034,14 +2034,14 @@ resolved_reference = "b7fa1f42c333b443763548ea1fe0054f07cdf641"
 
 [[package]]
 name = "flagsmith-common"
-version = "3.6.0"
+version = "3.6.1"
 description = "Flagsmith's common library"
 optional = false
 python-versions = "<4.0,>=3.11"
 groups = ["main", "dev", "licensing", "workflows"]
 files = [
-    {file = "flagsmith_common-3.6.0-py3-none-any.whl", hash = "sha256:5326491ba784f069f9f2690b5a1c597ddd2decb7caebd1bfbf9b0e505eb52524"},
-    {file = "flagsmith_common-3.6.0.tar.gz", hash = "sha256:fd7955b538036c42d2a37813b2848a7c247a6cc4a6537ab7b7dff64b4da4efdd"},
+    {file = "flagsmith_common-3.6.1-py3-none-any.whl", hash = "sha256:a51276d0ac683f967cb9e5be4e66d1a8ac6b1cf05b8b00c57097e6371d70d0e8"},
+    {file = "flagsmith_common-3.6.1.tar.gz", hash = "sha256:b9bd84dfb78d61a3579f5a0c1e964bd322772b9e192009f6e69583bc3f099634"},
 ]
 
 [package.dependencies]
