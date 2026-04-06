@@ -44,7 +44,15 @@ from projects.models import Project
             None,
         ),
     ],
-    ids=["mr", "issue", "work-item", "nested-group", "unknown-format", "no-iid", "no-project-path"],
+    ids=[
+        "mr",
+        "issue",
+        "work-item",
+        "nested-group",
+        "unknown-format",
+        "no-iid",
+        "no-project-path",
+    ],
 )
 def test_parse_resource_url__various_urls__returns_correct_tuple(
     url: str,
