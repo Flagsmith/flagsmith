@@ -28,6 +28,15 @@ const defaultFlags = {
       'perEnvironment': false,
       'title': 'Backstage',
     },
+    'code-references': {
+      'description':
+        'Integrate with Code References to track feature flag usage in your codebase, and unlock new functionality in Flagsmith.',
+      'docs': 'https://docs.flagsmith.com/managing-flags/code-references',
+      'external': true,
+      'image': '/static/images/integrations/code-references.svg',
+      'perEnvironment': false,
+      'title': 'Code References',
+    },
     'datadog': {
       'description':
         'Sends events to Datadog for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
@@ -197,7 +206,8 @@ const defaultFlags = {
     },
     'sentry': {
       'description': 'Send flag change events to Sentry.',
-      'docs': 'https://docs.flagsmith.com/third-party-integrations/observability-and-monitoring/sentry',
+      'docs':
+        'https://docs.flagsmith.com/third-party-integrations/observability-and-monitoring/sentry',
       'fields': [
         {
           'key': 'webhook_url',

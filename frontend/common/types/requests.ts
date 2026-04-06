@@ -24,6 +24,7 @@ import {
   StageActionType,
   StageActionBody,
   ChangeRequest,
+  FlagsmithValue,
   TagStrategy,
 } from './responses'
 import { UtmsType } from './utms'
@@ -32,6 +33,7 @@ export type UpdateProjectBody = {
   name: string
   hide_disabled_flags?: boolean
   prevent_flag_defaults?: boolean
+  enforce_feature_owners?: boolean
   enable_realtime_updates?: boolean
   minimum_change_request_approvals?: number | null
   stale_flags_limit_days?: number | null
@@ -234,7 +236,7 @@ export type Req = {
     pages?: (string | undefined)[] // this is needed for edge since it returns no paging info other than a key
     isEdge: boolean
   }>
-  getPermission: { id: number; level: PermissionLevel }
+  getPermission: { id: number | string; level: PermissionLevel }
   getAvailablePermissions: { level: PermissionLevel }
   getTag: { id: number }
   getHealthEvents: { projectId: number }
@@ -250,7 +252,10 @@ export type Req = {
   getTags: {
     projectId: number
   }
-  createTag: { projectId: number; tag: Omit<Tag, 'id'> }
+  createTag: {
+    projectId: number
+    tag: Omit<Tag, 'id' | 'project' | 'type' | 'is_system_tag' | 'is_permanent'>
+  }
   getSegment: { projectId: number; id: number }
   updateAccount: Account
   deleteAccount: {
@@ -648,11 +653,34 @@ export type Req = {
   }
   createProjectFlag: {
     project_id: number
-    body: ProjectFlag
+    body: ProjectFlag & {
+      owners?: number[]
+      group_owners?: number[]
+    }
   }
   removeProjectFlag: {
     project_id: number
     flag_id: number
+  }
+  addFlagOwners: {
+    project_id: number
+    feature_id: number
+    user_ids: number[]
+  }
+  removeFlagOwners: {
+    project_id: number
+    feature_id: number
+    user_ids: number[]
+  }
+  addFlagGroupOwners: {
+    project_id: number
+    feature_id: number
+    group_ids: number[]
+  }
+  removeFlagGroupOwners: {
+    project_id: number
+    feature_id: number
+    group_ids: number[]
   }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {
@@ -666,8 +694,7 @@ export type Req = {
   updateGroup: Req['createGroup'] & {
     orgId: number
     data: UserGroup
-    users: UserGroup['users']
-
+    usersToAdd: number[] | null
     usersToAddAdmin: number[] | null
     usersToRemoveAdmin: number[] | null
     usersToRemove: number[] | null
@@ -883,6 +910,19 @@ export type Req = {
         feature_id: number
       }
     }
+  }
+  getIdentityOverrides: {
+    environmentId: string
+    featureId: number
+    page?: number
+    isEdge: boolean
+  }
+  createIdentityOverride: {
+    environmentId: string
+    identityId: string
+    featureId: number
+    enabled: boolean
+    feature_state_value: FlagsmithValue | null
   }
   // END OF TYPES
 }

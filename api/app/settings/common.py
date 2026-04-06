@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import importlib
-import json
+import logging
 import os
 import warnings
 from datetime import datetime, time, timedelta
@@ -19,7 +19,6 @@ from typing import Any
 
 import dj_database_url
 import django_stubs_ext
-import prometheus_client
 import pytz
 from common.core import ReplicaReadStrategy
 from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
@@ -610,61 +609,11 @@ ENABLE_CHARGEBEE = env.bool("ENABLE_CHARGEBEE", default=False)
 CHARGEBEE_API_KEY = env("CHARGEBEE_API_KEY", default=None)
 CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 
-# Logging configuration
-ACCESS_LOG_EXTRA_ITEMS = env.list("ACCESS_LOG_EXTRA_ITEMS", subcast=str, default=[])
-LOGGING_CONFIGURATION_FILE = env.str("LOGGING_CONFIGURATION_FILE", default=None)
-if LOGGING_CONFIGURATION_FILE:
-    with open(LOGGING_CONFIGURATION_FILE, "r") as f:
-        LOGGING = json.loads(f.read())
-else:
-    LOG_FORMAT = env.str("LOG_FORMAT", default="generic")
-    LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
-    LOGGING = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "generic": {"format": "%(name)-12s %(levelname)-8s %(message)s"},
-            "json": {
-                "()": "util.logging.JsonFormatter",
-                "datefmt": "%Y-%m-%d %H:%M:%S",
-            },
-        },
-        "handlers": {
-            "console": {
-                "level": LOG_LEVEL,
-                "class": "logging.StreamHandler",
-                "formatter": LOG_FORMAT,
-            }
-        },
-        "loggers": {
-            "": {"level": LOG_LEVEL, "handlers": ["console"]},
-            # Not sure why the following loggers are necessary, but it doesn't seem to
-            # write log messages for e.g. features.workflows.core.models without adding
-            # them explicitly.
-            # TODO: move all apps to a parent 'apps' directory and configure the logger
-            #  for that dir
-            "features": {
-                "level": LOG_LEVEL,
-                "handlers": ["console"],
-                "propagate": False,
-            },
-            "task_processor": {
-                "level": LOG_LEVEL,
-                "handlers": ["console"],
-                "propagate": False,
-            },
-            "app_analytics": {
-                "level": LOG_LEVEL,
-                "handlers": ["console"],
-                "propagate": False,
-            },
-            "webhooks": {
-                "level": LOG_LEVEL,
-                "handlers": ["console"],
-                "propagate": False,
-            },
-        },
-    }
+# Logging is configured by flagsmith-common's setup_logging() in ensure_cli_env(),
+# before Django loads. Disable Django's logging config to preserve our setup.
+LOGGING_CONFIG = None
+LOG_FORMAT = env.str("LOG_FORMAT", default="generic")
+LOG_LEVEL = env.str("LOG_LEVEL", default="WARNING")
 
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
 if ENABLE_DB_LOGGING:
@@ -672,10 +621,7 @@ if ENABLE_DB_LOGGING:
         warnings.warn("Setting DEBUG=True to ensure DB logging functions correctly.")
         DEBUG = True
 
-    LOGGING["loggers"]["django.db.backends"] = {
-        "level": "DEBUG",
-        "handlers": ["console"],
-    }
+    logging.getLogger("django.db.backends").setLevel(logging.DEBUG)
 
 CACHE_FLAGS_SECONDS = env.int("CACHE_FLAGS_SECONDS", default=0)
 FLAGS_CACHE_LOCATION = "environment-flags"
@@ -1180,7 +1126,7 @@ CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL", not COOKIE_AUTH_ENABLE
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", COOKIE_AUTH_ENABLED)
 FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
     "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS",
-    default=["sentry-trace"],
+    default=["sentry-trace", "traceparent", "tracestate", "baggage"],
 )
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
@@ -1442,12 +1388,6 @@ if LICENSING_INSTALLED:
     INSTALLED_APPS.append("licensing")
 
 PROMETHEUS_ENABLED = env.bool("PROMETHEUS_ENABLED", False)
-PROMETHEUS_HISTOGRAM_BUCKETS = tuple(
-    env.list(
-        "PROMETHEUS_HISTOGRAM_BUCKETS",
-        default=prometheus_client.Histogram.DEFAULT_BUCKETS,
-    )
-)
 
 DOCGEN_MODE = env.bool("DOCGEN_MODE", default=False)
 

@@ -7,7 +7,7 @@ from rest_framework.test import APIClient
 from environments.models import Environment
 
 
-def test_get_channels_fails_if_user_has_no_permission(
+def test_get_channels__user_without_permission__returns_forbidden(
     staff_client: APIClient, environment: Environment, environment_api_key: str
 ) -> None:
     # Given
@@ -23,7 +23,7 @@ def test_get_channels_fails_if_user_has_no_permission(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_channels_returns_400_when_slack_project_config_does_not_exist(  # type: ignore[no-untyped-def]
+def test_get_channels__no_slack_config__returns_400(  # type: ignore[no-untyped-def]
     admin_client, environment, environment_api_key
 ):
     # Given
@@ -43,7 +43,7 @@ def test_get_channels_returns_400_when_slack_project_config_does_not_exist(  # t
     )
 
 
-def test_get_channels_pagination(  # type: ignore[no-untyped-def]
+def test_get_channels__with_pagination__returns_paginated_results(  # type: ignore[no-untyped-def]
     mocker,
     admin_client,
     environment_api_key,
@@ -66,12 +66,12 @@ def test_get_channels_pagination(  # type: ignore[no-untyped-def]
 
     url = f"{base_url}?limit={page_size}"
 
-    # Let's make the first call
+    # When
     response = admin_client.get(url)
-    # and, verify that slack components were called with correct arguments
+
+    # Then
     mocked_get_channels_data.assert_called_with(limit=page_size)
     mocked_slack_wrapper.assert_called_with(api_token=slack_bot_token)
-    # Next, verify the length of the result
     assert len(response.json()["channels"]) == len(
         slack_channels_data_response.channels
     )
@@ -80,12 +80,11 @@ def test_get_channels_pagination(  # type: ignore[no-untyped-def]
     cursor = response.json()["cursor"]
     url = f"{base_url}?cursor={cursor}&limit={page_size}"
     response = admin_client.get(url)
-    # Finally verify that slack components were called with correct arguments
     mocked_get_channels_data.assert_called_with(cursor=cursor, limit=page_size)
     mocked_slack_wrapper.assert_called_with(api_token=slack_bot_token)
 
 
-def test_get_channels_response_structure(  # type: ignore[no-untyped-def]
+def test_get_channels__valid_config__returns_expected_structure(  # type: ignore[no-untyped-def]
     mocker,
     admin_client,
     environment_api_key,

@@ -88,7 +88,7 @@ const UsersGroups: FC<UsersGroupsType> = ({ orgId, user }) => {
                       updateGroup({
                         data: { ...group, users: group.users.concat([user]) },
                         orgId: `${orgId}`,
-                        users: group.users.concat([user]),
+                        usersToAdd: [user.id],
                         usersToAddAdmin: null,
                         usersToRemove: null,
                         usersToRemoveAdmin: null,
@@ -97,7 +97,7 @@ const UsersGroups: FC<UsersGroupsType> = ({ orgId, user }) => {
                       updateGroup({
                         data: group,
                         orgId: `${orgId}`,
-                        users: group.users,
+                        usersToAdd: null,
                         usersToAddAdmin: null,
                         usersToRemove: [user.id],
                         usersToRemoveAdmin: null,
@@ -115,9 +115,7 @@ const UsersGroups: FC<UsersGroupsType> = ({ orgId, user }) => {
                       updateGroup({
                         data: { ...group, users: group.users.concat([user]) },
                         orgId: `${orgId}`,
-                        users: isInGroup
-                          ? group.users
-                          : group.users.concat([user]),
+                        usersToAdd: isInGroup ? null : [user.id],
                         usersToAddAdmin: [user.id],
                         usersToRemove: null,
                         usersToRemoveAdmin: null,
@@ -126,7 +124,7 @@ const UsersGroups: FC<UsersGroupsType> = ({ orgId, user }) => {
                       updateGroup({
                         data: group,
                         orgId: `${orgId}`,
-                        users: group.users,
+                        usersToAdd: null,
                         usersToAddAdmin: null,
                         usersToRemove: null,
                         usersToRemoveAdmin: [user.id],

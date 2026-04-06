@@ -3,6 +3,7 @@ from typing import Any
 
 from boto3.dynamodb.types import Binary
 from common.test_tools import AssertMetricFixture
+from freezegun import freeze_time
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -32,7 +33,7 @@ def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__retur
     feature: Feature,
     identity_override_document: dict[str, Any],
 ) -> None:
-    # When
+    # Given / When
     results = dynamodb_wrapper_v2.get_identity_overrides_by_environment_id(
         environment_id=environment.id,
         feature_id=feature.id,
@@ -43,7 +44,7 @@ def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__retur
     assert results[0] == identity_override_document
 
 
-def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__last_evaluated_key__call_expected(
+def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__paginates_using_last_evaluated_key(
     flagsmith_environments_v2_table: Table,
     mocker: MockerFixture,
 ) -> None:
@@ -124,6 +125,49 @@ def test_environment_v2_wrapper__update_identity_overrides__put_expected(
     )
 
 
+@freeze_time("2023-01-01T00:00:00Z")
+def test_environment_v2_wrapper__update_identity_overrides_put_frozen_time__stores_created_date(
+    settings: SettingsWrapper,
+    environment: Environment,
+    flagsmith_environments_v2_table: Table,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
+    wrapper = DynamoEnvironmentV2Wrapper()
+
+    identity_uuid = str(uuid.uuid4())
+    override_document = IdentityOverrideV2.parse_obj(
+        {
+            "environment_id": str(environment.id),
+            "document_key": get_environments_v2_identity_override_document_key(
+                feature_id=feature.id, identity_uuid=identity_uuid
+            ),
+            "environment_api_key": environment.api_key,
+            "feature_state": map_feature_state_to_engine(feature_state),
+            "identifier": "identity1",
+            "identity_uuid": identity_uuid,
+        }
+    )
+
+    # When
+    wrapper.update_identity_overrides(
+        changeset=IdentityOverridesV2Changeset(
+            to_delete=[],
+            to_put=[override_document],
+        ),
+    )
+
+    # Then
+    results = flagsmith_environments_v2_table.scan()["Items"]
+    assert len(results) == 1
+    assert results[0] == map_identity_override_to_identity_override_document(
+        override_document,
+    )
+    assert results[0]["created_date"] == "2023-01-01T00:00:00+00:00"
+
+
 def test_environment_v2_wrapper__update_identity_overrides__delete_expected(
     settings: SettingsWrapper,
     environment: Environment,
@@ -189,7 +233,7 @@ def test_environment_v2_wrapper__write_environments__put_expected(
     assert results[0] == map_environment_to_environment_v2_document(environment)
 
 
-def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_enabled__writes_compressed(
+def test_environment_v2_wrapper__write_environments_with_compression__writes_binary_fields(
     environment: Environment,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     flagsmith_environments_v2_table: Table,
@@ -209,7 +253,7 @@ def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_e
     assert isinstance(results[0]["feature_states"], Binary)
 
 
-def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_enabled__observes_metrics(
+def test_environment_v2_wrapper__write_environments_with_compression__observes_metrics(
     environment: Environment,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     flagsmith_environments_v2_table: Table,
@@ -235,13 +279,13 @@ def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_e
     )
 
 
-def test_environment_v2_wrapper__write_environments__uncompressed__observes_size_metric(
+def test_environment_v2_wrapper__write_environments_uncompressed__observes_size_metric(
     environment: Environment,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     flagsmith_environments_v2_table: Table,
     assert_metric: AssertMetricFixture,
 ) -> None:
-    # When
+    # Given / When
     dynamodb_wrapper_v2.write_environments([environment])
 
     # Then
@@ -252,7 +296,7 @@ def test_environment_v2_wrapper__write_environments__uncompressed__observes_size
     )
 
 
-def test_environment_v2_wrapper__write_environments__compress_dynamo_documents_enabled__logs_expected(
+def test_environment_v2_wrapper__write_environments_with_compression__logs_expected(
     environment: Environment,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     flagsmith_environments_v2_table: Table,

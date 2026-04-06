@@ -41,7 +41,7 @@ def _create_api_usage_event(environment_id: int, when: datetime) -> APIUsageRaw:
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.use_analytics_db
-def test_populate_api_usage_bucket_multiple_runs(
+def test_populate_api_usage_bucket__multiple_runs__creates_expected_buckets(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     # Given
@@ -56,7 +56,7 @@ def test_populate_api_usage_bucket_multiple_runs(
         # we don't aggregate them in the same environment
         _create_api_usage_event(999, now - timedelta(minutes=1 * i))
 
-    # Next, let's go 1 hr back in the past and run this
+    # When - go 1 hr back in the past and run this
     freezer.move_to(timezone.now() - timedelta(hours=1))
     populate_api_usage_bucket(bucket_size, run_every=60)
 
@@ -114,7 +114,7 @@ def test_populate_api_usage_bucket_multiple_runs(
 )
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.use_analytics_db
-def test_populate_api_usage_bucket(
+def test_populate_api_usage_bucket__parametrised_bucket_sizes__creates_correct_buckets(
     freezer: FrozenDateTimeFactory,
     bucket_size: int,
     runs_every: int,
@@ -206,7 +206,9 @@ def test_track_request__influx__calls_expected(
 
 
 @pytest.mark.use_analytics_db
-def test_track_feature_evaluation(settings: SettingsWrapper) -> None:
+def test_track_feature_evaluations_by_environment__postgres__inserts_expected(
+    settings: SettingsWrapper,
+) -> None:
     # Given
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = 1
@@ -288,7 +290,9 @@ def test_track_feature_evaluation__influx__calls_expected(
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @pytest.mark.use_analytics_db
-def test_populate_feature_evaluation_bucket_15m(freezer: FrozenDateTimeFactory) -> None:
+def test_populate_feature_evaluation_bucket__multiple_runs_15m__creates_expected_buckets(
+    freezer: FrozenDateTimeFactory,
+) -> None:
     # Given
     environment_id = 1
     bucket_size = 15
@@ -318,7 +322,7 @@ def test_populate_feature_evaluation_bucket_15m(freezer: FrozenDateTimeFactory) 
             1,
             now - timedelta(minutes=1 * i),
         )
-    # Next, let's go 1 hr back in the past and run this
+    # When - go 1 hr back in the past and run this
     freezer.move_to(timezone.now() - timedelta(hours=1))
     populate_feature_evaluation_bucket(bucket_size, run_every=60)
 
@@ -380,7 +384,7 @@ def test_populate_feature_evaluation_bucket_15m(freezer: FrozenDateTimeFactory) 
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
 @pytest.mark.use_analytics_db
-def test_populate_feature_evaluation_bucket__upserts_buckets(
+def test_populate_feature_evaluation_bucket__existing_buckets__upserts_correctly(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     # Given
@@ -466,7 +470,7 @@ def test_populate_feature_evaluation_bucket__source_bucket_size__returns_expecte
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
 @pytest.mark.use_analytics_db
-def test_populate_api_usage_bucket__upserts_buckets(
+def test_populate_api_usage_bucket__existing_buckets__upserts_correctly(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     # Given
@@ -502,7 +506,7 @@ def test_populate_api_usage_bucket__upserts_buckets(
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
 @pytest.mark.use_analytics_db
-def test_populate_api_usage_bucket_using_a_bucket(
+def test_populate_api_usage_bucket__source_bucket_size__aggregates_correctly(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     # Given
@@ -549,16 +553,15 @@ def _create_feature_evaluation_event(
 
 
 @pytest.mark.use_analytics_db
-def test_clean_up_old_analytics_data_does_nothing_if_no_data() -> None:
-    # When
-    clean_up_old_analytics_data()
+def test_clean_up_old_analytics_data__no_data__does_not_raise() -> None:
+    # Given - empty database
 
-    # Then
-    # no exception was raised
+    # When / Then
+    clean_up_old_analytics_data()  # no exception raised
 
 
 @pytest.mark.use_analytics_db
-def test_clean_up_old_analytics_data_removes_old_data(
+def test_clean_up_old_analytics_data__old_data_exists__removes_old_data(
     settings: SettingsWrapper,
 ) -> None:
     # Given

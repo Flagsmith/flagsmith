@@ -139,6 +139,88 @@ Run `minikube ip`. Set this IP and `flagsmith.local` in your `/etc/hosts`, for e
 
 Then access `http://flagsmith.local` in a browser.
 
+### Using Gateway API (alternative to Ingress)
+
+The chart supports [Gateway API](https://gateway-api.sigs.k8s.io/) HTTPRoutes as an alternative to Ingress resources.
+
+#### Prerequisites
+
+Install these independently before enabling HTTPRoutes:
+
+1. **Gateway API CRDs**:
+   ```bash
+   kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/latest/download/standard-install.yaml
+   ```
+2. **A Gateway controller** (e.g., [Envoy Gateway](https://gateway.envoyproxy.io/), Cilium, Istio)
+3. **A GatewayClass and Gateway resource** in your cluster. For example, using Envoy Gateway:
+
+   ```yaml
+   apiVersion: gateway.networking.k8s.io/v1
+   kind: GatewayClass
+   metadata:
+     name: eg
+   spec:
+     controllerName: gateway.envoyproxy.io/gatewayclass-controller
+   ---
+   apiVersion: gateway.networking.k8s.io/v1
+   kind: Gateway
+   metadata:
+     name: my-gateway
+     namespace: gateway-ns
+   spec:
+     gatewayClassName: eg
+     listeners:
+       - name: http
+         port: 80
+         protocol: HTTP
+         allowedRoutes:
+           namespaces:
+             from: All
+   ```
+
+#### Configuration
+
+The chart only manages HTTPRoute resources. The frontend defaults to routing `/` to the frontend service. The API and SSE routes have no defaults — you must provide rules explicitly.
+
+A typical configuration with separate frontend and API routes:
+
+```yaml
+gateway:
+  frontend:
+    enabled: true
+    parentRefs:
+      - name: my-gateway
+        namespace: gateway-ns
+  api:
+    enabled: true
+    parentRefs:
+      - name: my-gateway
+        namespace: gateway-ns
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /api/
+          - path:
+              type: PathPrefix
+              value: /health/
+          - path:
+              type: PathPrefix
+              value: /admin/
+          - path:
+              type: PathPrefix
+              value: /static/admin/
+        backendRefs:
+          - name: flagsmith-api
+            port: 8000
+
+frontend:
+  extraEnv:
+    FLAGSMITH_API_URL: 'https://flagsmith.[MYDOMAIN]/api/v1/'
+```
+
+See the [`values.yaml`](https://github.com/Flagsmith/flagsmith-charts/blob/main/charts/flagsmith/values.yaml) for all available options.
+
 ### Provided Database configuration
 
 By default, the chart creates its own PostgreSQL server within the cluster, referencing [https://github.com/helm/charts/tree/master/stable/postgresql](https://github.com/helm/charts/tree/master/stable/postgresql) for the service.
@@ -261,7 +343,24 @@ api:
 
 ### PgBouncer
 
-By default, Flagsmith connects directly to the database - either in-cluster or external. You can enable PgBouncer with `pgbouncer.enabled: true` to have Flagsmith connect to PgBouncer, and zPgBouncer connect to the database.
+By default, Flagsmith connects directly to the database - either in-cluster or external. You can enable PgBouncer with `pgbouncer.enabled: true` to have Flagsmith connect to PgBouncer, and PgBouncer connect to the database.
+
+If you use `databaseExternal.urlFromExistingSecret` to provide the database URL from a pre-existing Kubernetes secret, you must also provide PgBouncer's credentials via a separate existing secret using `pgbouncer.credentialsFromExistingSecret`. This is because Helm cannot read secret values at template time to parse the database URL into PgBouncer's required components.
+
+```yaml
+pgbouncer:
+  enabled: true
+  credentialsFromExistingSecret:
+    enabled: true
+    name: my-pgbouncer-credentials  # must contain POSTGRESQL_HOST, POSTGRESQL_DATABASE, POSTGRESQL_USER, POSTGRESQL_PASSWORD
+
+databaseExternal:
+  enabled: true
+  urlFromExistingSecret:
+    enabled: true
+    name: my-db-url-secret  # DATABASE_URL pointing through PgBouncer
+    key: DATABASE_URL
+```
 
 ### All-in-one Docker image
 
@@ -423,6 +522,8 @@ The following table lists the configurable parameters of the chart and their def
 | `influxdbExternal.tokenFromExistingSecret.enabled` | Use reference to a k8s secret not managed by this chart                   | `false`                        |
 | `influxdbExternal.tokenFromExistingSecret.name`    | Referenced secret name                                                    |                                |
 | `influxdbExternal.tokenFromExistingSecret.key`     | Key within the referenced secret to use                                   |                                |
+| `pgbouncer.credentialsFromExistingSecret.enabled`  | Use an existing secret for PgBouncer credentials instead of generating one. The secret must contain keys: `POSTGRESQL_HOST`, `POSTGRESQL_DATABASE`, `POSTGRESQL_USER`, `POSTGRESQL_PASSWORD`. | `false` |
+| `pgbouncer.credentialsFromExistingSecret.name`     | Name of the existing secret containing PgBouncer credentials.             |                                |
 | `pgbouncer.enabled`                                |                                                                           | `false`                        |
 | `pgbouncer.image.repository`                       |                                                                           | `bitnami/pgbouncer`            |
 | `pgbouncer.image.tag`                              |                                                                           | `1.16.0`                       |

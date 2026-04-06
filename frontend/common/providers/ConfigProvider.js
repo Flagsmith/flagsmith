@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import flagsmith from 'flagsmith'
+import flagsmith from '@flagsmith/flagsmith'
 import ConfigStore from 'common/stores/config-store'
 
 export default (WrappedComponent) => {
@@ -28,7 +28,6 @@ export default (WrappedComponent) => {
 
       return (
         <WrappedComponent
-          ref='wrappedComponent'
           isLoading={isLoading}
           error={error}
           history={this.props.history}

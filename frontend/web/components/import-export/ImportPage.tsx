@@ -16,6 +16,7 @@ import FeatureImport from './FeatureImport'
 import AccountStore from 'common/stores/account-store'
 import Constants from 'common/constants'
 import { useHistory } from 'react-router-dom'
+import { OrganisationPermission } from 'common/types/permissions.types'
 
 type ImportPageType = {
   projectId: string
@@ -52,9 +53,13 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     if (status?.status?.result === 'success') {
       const count = status.status.requested_flag_count
       const deprecated = status.status.deprecated_flag_count ?? 0
-      let message = `Imported ${count} flag${count !== 1 ? 's' : ''} from LaunchDarkly.`
+      let message = `Imported ${count} flag${
+        count !== 1 ? 's' : ''
+      } from LaunchDarkly.`
       if (deprecated > 0) {
-        message += ` ${deprecated} deprecated flag${deprecated !== 1 ? 's were' : ' was'} archived.`
+        message += ` ${deprecated} deprecated flag${
+          deprecated !== 1 ? 's were' : ' was'
+        } archived.`
       }
       toast(message, 'success', 20000)
       history.push(`/project/${projectId}`)
@@ -94,7 +99,9 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     return (
       <div
         dangerouslySetInnerHTML={{
-          __html: Constants.organisationPermissions('Administrator'),
+          __html: Constants.organisationPermissions(
+            OrganisationPermission.ADMIN,
+          ),
         }}
         className='mt-4'
       />

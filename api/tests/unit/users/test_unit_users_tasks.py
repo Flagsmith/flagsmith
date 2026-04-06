@@ -5,8 +5,8 @@ from users.tasks import (
 )
 
 
-def test_send_email_changed_notification():  # type: ignore[no-untyped-def]
-    # When
+def test_send_email_changed_notification__valid_params__sends_email():  # type: ignore[no-untyped-def]
+    # Given / When
     send_email_changed_notification_email(
         first_name="first_name",
         from_email="fromtest@test.com",

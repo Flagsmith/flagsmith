@@ -36,7 +36,7 @@ Change Requests awaiting approval are listed in the **Change Request** area.
 
 1.  Click on a **Change Request** to view its details.
 2.  Review the current and new Flag values.
-3.  Click **Approve** or **Deny** to record your decision.
+3.  Click **Approve** to record your decision.
 
 ## Publish a Change Request
 

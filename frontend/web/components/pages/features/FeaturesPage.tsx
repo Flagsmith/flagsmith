@@ -1,4 +1,5 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react'
+import cloneDeep from 'lodash/cloneDeep'
 import { useHistory } from 'react-router-dom'
 import CreateFlagModal from 'components/modals/create-feature'
 import Constants from 'common/constants'
@@ -27,6 +28,7 @@ import { useFeatureListWithApiKey } from 'common/hooks/useFeatureListWithApiKey'
 import { useViewMode } from 'common/useViewMode'
 import type { Pagination } from './types'
 import type { ProjectFlag, FeatureState } from 'common/types/responses'
+import { ProjectPermission } from 'common/types/permissions.types'
 
 const DEFAULT_PAGINATION: Pagination = {
   count: 0,
@@ -87,8 +89,9 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
     getEnvironment,
     project,
   } = useProjectEnvironments(projectId)
-  const { data, error, isFetching, isLoading, refetch } =
+  const { currentData, data, error, isFetching, isLoading, refetch } =
     useFeatureListWithApiKey(effectiveFilters, page, environmentId, projectId)
+  const isDataStale = !!data && !currentData
 
   // Backward compatibility: Populate ProjectStore for legacy components (CreateFlag)
   // TODO: Remove this when CreateFlag is migrated to RTK Query
@@ -98,31 +101,21 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
     }
   }, [projectId])
 
-  // Backward compatibility: Populate FeatureListStore for legacy components (CreateFlag modal)
-  // Must pass current filters/search/page so FeatureListStore contains the same features
-  // that RTK Query displays. Otherwise editing features will crash because they're not in the store.
-  // TODO: Remove this when CreateFlag is migrated to RTK Query
   useEffect(() => {
-    if (projectId && environmentId) {
-      AppActions.getFeatures(
-        projectId,
-        environmentId,
-        true,
-        effectiveFilters.search,
-        effectiveFilters.sort,
-        page,
-        {
-          group_owners: effectiveFilters.group_owners?.join(',') || undefined,
-          is_archived: effectiveFilters.showArchived,
-          is_enabled: effectiveFilters.is_enabled,
-          owners: effectiveFilters.owners?.join(',') || undefined,
-          tag_strategy: effectiveFilters.tag_strategy,
-          tags: effectiveFilters.tags?.join(',') || undefined,
-          value_search: effectiveFilters.value_search,
-        },
-      )
+    if (data && environmentId) {
+      // TODO: Remove this when CreateFlag is migrated to RTK Query
+      // This currently avoids duplicate api calls
+      FeatureListStore.envId = environmentId
+      FeatureListStore.projectId = projectId
+      FeatureListStore.environmentId = environmentId
+      FeatureListStore.model = {
+        features: cloneDeep(data.results),
+        keyedEnvironmentFeatures: cloneDeep(data.environmentStates),
+      }
+      FeatureListStore.paging = { ...data.pagination }
+      FeatureListStore.loaded()
     }
-  }, [projectId, environmentId, page, effectiveFilters])
+  }, [data, environmentId, projectId])
 
   // Force re-fetch when legacy Flux store updates features
   // TODO: Remove when all feature mutations use RTK Query
@@ -317,7 +310,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
           id='features-list'
           renderSearchWithNoResults
           itemHeight={65}
-          isLoading={isLoading}
+          isLoading={isLoading || isDataStale}
           paging={paging}
           header={renderHeader()}
           nextPage={handleNextPage}
@@ -333,7 +326,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({
     return (
       <Permission
         level='project'
-        permission='CREATE_FEATURE'
+        permission={ProjectPermission.CREATE_FEATURE}
         id={projectId}
         showTooltip
         permissionName='Create Feature'

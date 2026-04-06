@@ -22,6 +22,7 @@ from features.models import (  # type: ignore[attr-defined]
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
+from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from projects.models import Project
 from segments.models import Segment
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     "use_v2_feature_versioning, total_queries", [(True, 12), (False, 11)]
 )
-def test_get_environment_document(
+def test_get_environment_document__valid_api_key__returns_full_document(
     organisation_one: "Organisation",
     organisation_two: "Organisation",
     organisation_one_project_one: "Project",
@@ -50,8 +51,6 @@ def test_get_environment_document(
         name="Test Environment",
         project=project,
     )
-    if use_v2_feature_versioning:
-        enable_v2_versioning(environment.id)
 
     api_key = EnvironmentAPIKey.objects.create(environment=environment)
     client = APIClient()
@@ -106,6 +105,17 @@ def test_get_environment_document(
             string_value="option-2",
         )
 
+    if use_v2_feature_versioning:
+        enable_v2_versioning(environment.id)
+
+        # create new versions of a given featurestate
+        for _ in range(2):
+            efv = EnvironmentFeatureVersion.objects.create(
+                environment=environment,
+                feature=feature,
+            )
+            efv.publish()
+
     # and the relevant URL to get an environment document
     url = reverse("api-v1:environment-document")
 
@@ -118,6 +128,8 @@ def test_get_environment_document(
     assert len(response.data["project"]["segments"]) == 10
     assert len(response.data["feature_states"]) == 11
     assert len(response.data["identity_overrides"]) == 10
+
+    environment.refresh_from_db()
     assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
         environment.updated_at.timestamp()
     )
@@ -130,7 +142,7 @@ def test_get_environment_document(
         lazy_fixture("environment_v2_versioning"),
     ),
 )
-def test_get_environment_document__identity_overrides(
+def test_get_environment_document__identity_overrides__returns_override_data(
     project: Project,
     environment_: Environment,
 ) -> None:
@@ -222,7 +234,7 @@ def test_get_environment_document__identity_overrides(
     )
 
 
-def test_get_environment_document_fails_with_invalid_key(
+def test_get_environment_document__invalid_api_key__returns_403(
     organisation_one: "Organisation",
     organisation_one_project_one: "Project",
 ) -> None:
@@ -248,7 +260,7 @@ def test_get_environment_document_fails_with_invalid_key(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_environment_document_if_modified_since(
+def test_get_environment_document__if_modified_since_header__returns_304_or_200(
     organisation_one: "Organisation",
     organisation_one_project_one: "Project",
 ) -> None:

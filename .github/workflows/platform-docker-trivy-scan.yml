@@ -101,7 +101,7 @@ jobs:
 
       - name: Scan ${{ matrix.image-name }}:main image
         id: trivy
-        uses: Flagsmith/actions/trivy-scan-image@v0.4.0
+        uses: Flagsmith/actions/trivy-scan-image@v0.4.1
         with:
           image-tag: ${{ env.REGISTRY_URL }}/flagsmith/${{ matrix.image-name }}:main
           category: ${{ matrix.image-name }}

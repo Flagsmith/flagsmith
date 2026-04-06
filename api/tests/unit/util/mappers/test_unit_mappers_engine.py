@@ -6,6 +6,8 @@ import pytz
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
+from environments.identities.models import Identity
+from environments.identities.traits.models import Trait
 from environments.models import Environment
 from features.models import FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
@@ -15,7 +17,7 @@ from integrations.dynatrace.models import DynatraceConfiguration
 from integrations.mixpanel.models import MixpanelConfiguration
 from integrations.segment.models import SegmentConfiguration
 from integrations.webhook.models import WebhookConfiguration
-from segments.models import Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 from util.engine_models.environments.integrations.models import IntegrationModel
 from util.engine_models.environments.models import (
@@ -45,7 +47,6 @@ from util.engine_models.segments.models import (
 from util.mappers import engine
 
 if TYPE_CHECKING:
-    from environments.identities import Identity, Trait  # type: ignore[attr-defined]
     from environments.models import EnvironmentAPIKey
     from features.models import Feature
     from projects.models import Project
@@ -99,7 +100,7 @@ def versioned_segment_feature_state(
     )
 
 
-def test_map_segment_rule_to_engine__return_expected(
+def test_map_segment_rule_to_engine__nested_rule__returns_expected_model(
     segment_rule: SegmentRule,
     identity_matching_segment: "Segment",
 ) -> None:
@@ -130,7 +131,7 @@ def test_map_segment_rule_to_engine__return_expected(
     )
 
 
-def test_map_integration_to_engine__return_expected() -> None:
+def test_map_integration_to_engine__valid_integration__returns_expected_model() -> None:
     # Given
     class TestIntegration(IntegrationsModel):
         class Meta:
@@ -149,8 +150,8 @@ def test_map_integration_to_engine__return_expected() -> None:
     assert result == expected_result
 
 
-def test_map_integration_to_engine__none__return_expected() -> None:
-    # When
+def test_map_integration_to_engine__none__returns_none() -> None:
+    # Given / When
     result = engine.map_integration_to_engine(None)
 
     # Then
@@ -181,7 +182,7 @@ def test_map_integration_to_engine__dynatrace__return_expected() -> None:
     assert result == expected_result
 
 
-def test_map_webhook_config_to_engine__return_expected() -> None:
+def test_map_webhook_config_to_engine__valid_config__returns_expected_model() -> None:
     # Given
     url = "http://someurl"
     secret = "test"
@@ -202,15 +203,15 @@ def test_map_webhook_config_to_engine__return_expected() -> None:
     assert result == expected_result
 
 
-def test_map_webhook_config_to_engine__none__return_expected() -> None:
-    # When
+def test_map_webhook_config_to_engine__none__returns_none() -> None:
+    # Given / When
     result = engine.map_webhook_config_to_engine(None)
 
     # Then
     assert result is None
 
 
-def test_map_feature_state_to_engine__return_expected(
+def test_map_feature_state_to_engine__standard_feature__returns_expected_model(
     feature: "Feature",
     feature_state: FeatureState,
 ) -> None:
@@ -283,7 +284,7 @@ def test_map_feature_state_to_engine__feature_segment__return_expected(
     assert result == expected_result
 
 
-def test_map_environment_to_engine__return_expected(
+def test_map_environment_to_engine__multiple_segments_and_versions__returns_expected_model(
     environment: Environment,
     feature: "Feature",
     feature_state: FeatureState,
@@ -424,7 +425,7 @@ def test_map_environment_to_engine__return_expected(
     assert segment_featurestate.uuid not in segment_feature_state_uuids
 
 
-def test_map_environment_api_key_to_engine__return_expected(
+def test_map_environment_api_key_to_engine__valid_key__returns_expected_model(
     environment: Environment,
     environment_api_key: "EnvironmentAPIKey",
 ) -> None:
@@ -446,7 +447,7 @@ def test_map_environment_api_key_to_engine__return_expected(
     )
 
 
-def test_map_identity_to_engine__return_expected(
+def test_map_identity_to_engine__identity_with_traits_and_overrides__returns_expected_model(
     environment: Environment,
     identity: "Identity",
     feature: "Feature",
@@ -495,7 +496,7 @@ def test_map_identity_to_engine__return_expected(
     assert result == expected_result
 
 
-def test_map_environment_to_engine__returns_correct_feature_state_for_different_versions(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_map_environment_to_engine__different_versions__returns_latest_live_from_feature_state(  # type: ignore[no-untyped-def]
     feature, environment
 ):
     # Given
@@ -540,7 +541,7 @@ def test_map_environment_to_engine__returns_correct_feature_state_for_different_
     assert result.feature_states[0].django_id == v15_feature_state.id
 
 
-def test_map_environment_to_engine_following_migration_to_v2_versioning(
+def test_map_environment_to_engine__after_v2_versioning_migration__returns_latest_versions(
     environment: Environment,
     feature: "Feature",
     feature_state: FeatureState,
@@ -603,7 +604,7 @@ def test_map_environment_to_engine_following_migration_to_v2_versioning(
     assert mapped_segment_override.feature_state_value == v2_segment_override_value
 
 
-def test_map_environment_to_engine_v2_versioning_segment_overrides(
+def test_map_environment_to_engine__v2_versioning_segment_override_removed__returns_remaining_override(
     environment_v2_versioning: Environment,
     segment: Segment,
     feature: "Feature",
@@ -657,3 +658,207 @@ def test_map_environment_to_engine_v2_versioning_segment_overrides(
         environment_model.project.segments[0].feature_states[0].django_id
         == v3_segment_override.id
     )
+
+
+def test_map_environment_to_evaluation_context__no_identity__returns_environment_only(
+    environment: Environment,
+) -> None:
+    # Given / When
+    result = engine.map_environment_to_evaluation_context(environment=environment)
+
+    # Then
+    assert result == {
+        "environment": {
+            "key": environment.api_key,
+            "name": environment.name,
+        },
+    }
+
+
+def test_map_environment_to_evaluation_context__with_identity__returns_identity_context(
+    environment: Environment,
+    identity: Identity,
+) -> None:
+    # Given / When
+    result = engine.map_environment_to_evaluation_context(
+        environment=environment,
+        identity=identity,
+    )
+
+    # Then
+    assert result == {
+        "environment": {
+            "key": environment.api_key,
+            "name": environment.name,
+        },
+        "identity": {
+            "identifier": identity.identifier,
+            "key": identity.get_hash_key(
+                environment.use_identity_composite_key_for_hashing
+            ),
+            "traits": {},
+        },
+    }
+
+
+def test_map_environment_to_evaluation_context__with_explicit_traits__returns_given_traits(
+    environment: Environment,
+    identity: Identity,
+    trait: Trait,
+) -> None:
+    # Given / When
+    result = engine.map_environment_to_evaluation_context(
+        environment=environment,
+        identity=identity,
+        traits=[trait],
+    )
+
+    # Then
+    assert result == {
+        "environment": {
+            "key": environment.api_key,
+            "name": environment.name,
+        },
+        "identity": {
+            "identifier": identity.identifier,
+            "key": identity.get_hash_key(
+                environment.use_identity_composite_key_for_hashing
+            ),
+            "traits": {trait.trait_key: trait.trait_value},
+        },
+    }
+
+
+def test_map_environment_to_evaluation_context__no_explicit_traits__returns_identity_traits(
+    environment: Environment,
+    identity: Identity,
+    trait: Trait,
+) -> None:
+    # Given / When
+    result = engine.map_environment_to_evaluation_context(
+        environment=environment,
+        identity=identity,
+    )
+
+    # Then
+    assert result == {
+        "environment": {
+            "key": environment.api_key,
+            "name": environment.name,
+        },
+        "identity": {
+            "identifier": identity.identifier,
+            "key": identity.get_hash_key(
+                environment.use_identity_composite_key_for_hashing
+            ),
+            "traits": {trait.trait_key: trait.trait_value},
+        },
+    }
+
+
+def test_map_environment_to_evaluation_context__with_segments__returns_segment_contexts(
+    environment: Environment,
+    identity_matching_segment: Segment,
+) -> None:
+    # Given / When
+    result = engine.map_environment_to_evaluation_context(
+        environment=environment,
+        segments=[identity_matching_segment],
+    )
+
+    # Then
+    segment_key = str(identity_matching_segment.pk)
+    assert result == {
+        "environment": {
+            "key": environment.api_key,
+            "name": environment.name,
+        },
+        "segments": {
+            segment_key: engine.map_segment_to_segment_context(
+                identity_matching_segment
+            ),
+        },
+    }
+
+
+def test_map_segment_to_segment_context__segment_with_rule__returns_expected(
+    identity_matching_segment: Segment,
+) -> None:
+    # Given
+    condition = Condition.objects.get(
+        rule__segment=identity_matching_segment,
+    )
+
+    # When
+    result = engine.map_segment_to_segment_context(identity_matching_segment)
+
+    # Then
+    assert result == {
+        "key": str(identity_matching_segment.pk),
+        "name": identity_matching_segment.name,
+        "rules": [
+            {
+                "type": "ALL",
+                "conditions": [
+                    {
+                        "property": condition.property,
+                        "operator": condition.operator,
+                        "value": condition.value,
+                    },
+                ],
+                "rules": [],
+            },
+        ],
+        "metadata": {"pk": identity_matching_segment.pk},
+    }
+
+
+def test_map_rule_to_segment_rule__with_nested_rule__returns_expected(
+    segment_rule: SegmentRule,
+    identity_matching_segment: Segment,
+) -> None:
+    # Given
+    matching_rule = SegmentRule.objects.get(segment=identity_matching_segment)
+    matching_rule.rules.add(segment_rule)
+    condition = Condition.objects.get(rule=matching_rule)
+
+    # When
+    result = engine.map_rule_to_segment_rule(matching_rule)
+
+    # Then
+    assert result == {
+        "type": "ALL",
+        "conditions": [
+            {
+                "property": condition.property,
+                "operator": condition.operator,
+                "value": condition.value,
+            },
+        ],
+        "rules": [
+            {
+                "type": "ALL",
+                "conditions": [],
+                "rules": [],
+            },
+        ],
+    }
+
+
+def test_map_condition_to_segment_condition__valid_condition__returns_expected(
+    identity_matching_segment: Segment,
+) -> None:
+    # Given
+    condition = Condition.objects.get(
+        rule__segment=identity_matching_segment,
+    )
+
+    # When
+    result = engine.map_condition_to_segment_condition(condition)
+
+    # Then
+    assert result == {
+        "property": condition.property,
+        "operator": condition.operator,
+        "value": condition.value,
+    }

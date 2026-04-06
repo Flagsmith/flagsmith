@@ -31,13 +31,13 @@ total_variance_percentage = (
 @pytest.mark.parametrize(
     "hashed_percentage, expected_mv_value",
     (
-        (variant_1_percentage_allocation / 100 - 0.01, variant_1_value),
-        (total_variance_percentage / 100 - 0.01, variant_2_value),
-        (total_variance_percentage / 100 + 0.01, control_value),
+        (variant_1_percentage_allocation - 1, variant_1_value),
+        (total_variance_percentage - 1, variant_2_value),
+        (total_variance_percentage + 1, control_value),
     ),
 )
 @mock.patch("features.models.get_hashed_percentage_for_object_ids")
-def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]
+def test_get_feature_states_for_identity__mv_percentage_allocation__returns_correct_value(  # type: ignore[no-untyped-def]
     mock_get_hashed_percentage_value,
     hashed_percentage,
     expected_mv_value,
@@ -49,6 +49,8 @@ def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]
     identity,
     identity_identifier,
 ):
+    # Given / When
+    # Then
     # Firstly, let's create some features to use
     # one standard feature
     standard_feature_initial_value = "control"
@@ -75,7 +77,7 @@ def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]
         variant_1_percentage_allocation,
         variant_1_value,
     )
-    create_mv_option_with_api(
+    variant_2_mvfo_id = create_mv_option_with_api(
         admin_client,
         project,
         multivariate_feature_id,  # type: ignore[arg-type]
@@ -125,9 +127,11 @@ def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]
     feature_state_data = retrieve_feature_state_response.json()
 
     # now let's amend the data so that all identities should receive variant 2
-    mv_values = feature_state_data["multivariate_feature_state_values"]
-    mv_values[0]["percentage_allocation"] = 0
-    mv_values[1]["percentage_allocation"] = 100
+    for mv_value in feature_state_data["multivariate_feature_state_values"]:
+        if mv_value["multivariate_feature_option"] == variant_2_mvfo_id:
+            mv_value["percentage_allocation"] = 100
+        else:
+            mv_value["percentage_allocation"] = 0
 
     # and PUT the data back
     update_feature_state_response = admin_client.put(
@@ -147,7 +151,7 @@ def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]
     assert values_dict[multivariate_feature_id] == variant_2_value
 
 
-def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_states(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_get_feature_states_for_identity__multiple_mv_features__single_mv_query(  # type: ignore[no-untyped-def]
     sdk_client,
     admin_client,
     project,
@@ -156,6 +160,8 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
     identity_identifier,
     django_assert_num_queries,
 ):
+    # Given / When
+    # Then
     # Firstly, let's create some features to use
     for i in range(2):
         feature_id = create_feature_with_api(
@@ -284,7 +290,7 @@ def transient_identifier(
         pytest.param({}, lazy_fixture("transient_identifier"), id="missing-identifier"),
     ],
 )
-def test_get_feature_states_for_identity__segment_match_expected(
+def test_get_feature_states_for_identity__segment_matching_traits__returns_segment_override(
     sdk_client: APIClient,
     feature: int,
     segment: int,
@@ -428,7 +434,7 @@ def test_get_feature_states_for_identity__transient_trait__segment_match_expecte
     assert flag_data["feature_state_value"] == "segment override"
 
 
-def test_get_feature_states_for_identity__transient_trait__existing_identity__return_expected(
+def test_get_feature_states_for_identity__transient_trait_existing_identity__returns_expected_traits(
     sdk_client: APIClient,
     identity_identifier: str,
     identity: int,
@@ -479,7 +485,7 @@ def test_get_feature_states_for_identity__transient_trait__existing_identity__re
     ]
 
 
-def test_get_feature_states_for_identity__transient_identifier__empty_segment__return_expected(
+def test_get_feature_states_for_identity__transient_identifier_empty_segment__returns_default_value(
     admin_client: APIClient,
     sdk_client: APIClient,
     default_feature_value: str,

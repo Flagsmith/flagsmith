@@ -2,9 +2,13 @@ import React from 'react'
 import cn from 'classnames'
 import { ButtonHTMLAttributes, HTMLAttributeAnchorTarget } from 'react'
 import Icon, { IconName } from 'components/Icon'
-import Constants from 'common/constants'
-import Utils, { PaidFeature } from 'common/utils/utils'
-import PlanBasedBanner from 'components/PlanBasedAccess'
+
+const iconColours = {
+  primary: '#6837fc',
+  white: '#ffffff',
+} as const
+
+export type IconColour = keyof typeof iconColours
 
 export const themeClassNames = {
   danger: 'btn btn-danger',
@@ -28,11 +32,10 @@ export const sizeClassNames = {
 
 export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
   iconRight?: IconName
-  iconRightColour?: keyof typeof Constants.colours
-  iconLeftColour?: keyof typeof Constants.colours
+  iconRightColour?: IconColour
+  iconLeftColour?: IconColour
   iconLeft?: IconName
   href?: string
-  feature?: PaidFeature
   target?: HTMLAttributeAnchorTarget
   theme?: keyof typeof themeClassNames
   size?: keyof typeof sizeClassNames
@@ -47,7 +50,6 @@ export const Button = React.forwardRef<
     {
       children,
       className,
-      feature,
       href,
       iconLeft,
       iconLeftColour,
@@ -63,38 +65,28 @@ export const Button = React.forwardRef<
     },
     ref,
   ) => {
-    const hasPlan = feature ? Utils.getPlansPermission(feature) : true
-    return href || !hasPlan ? (
+    return href ? (
       <a
-        onClick={
-          hasPlan ? (rest.onClick as React.MouseEventHandler) : undefined
-        }
+        onClick={rest.onClick as React.MouseEventHandler}
         className={cn(className, themeClassNames[theme], sizeClassNames[size])}
-        target={hasPlan ? target : '_blank'}
-        href={hasPlan ? href : Constants.getUpgradeUrl()}
+        target={target}
+        href={href}
         rel='noreferrer'
         ref={ref as React.RefObject<HTMLAnchorElement>}
       >
         <div className='d-flex h-100 align-items-center justify-content-center gap-2'>
-          {!!iconLeft && !!hasPlan && (
+          {!!iconLeft && (
             <Icon
-              fill={
-                iconLeftColour ? Constants.colours[iconLeftColour] : undefined
-              }
+              fill={iconLeftColour ? iconColours[iconLeftColour] : undefined}
               name={iconLeft}
               width={iconSize}
             />
           )}
           {children}
-          {!hasPlan && feature && (
-            <PlanBasedBanner feature={feature} theme={'badge'} />
-          )}
         </div>
         {!!iconRight && (
           <Icon
-            fill={
-              iconRightColour ? Constants.colours[iconRightColour] : undefined
-            }
+            fill={iconRightColour ? iconColours[iconRightColour] : undefined}
             className='ml-2'
             name={iconRight}
             width={iconSize}
@@ -116,9 +108,7 @@ export const Button = React.forwardRef<
       >
         {!!iconLeft && (
           <Icon
-            fill={
-              iconLeftColour ? Constants.colours[iconLeftColour] : undefined
-            }
+            fill={iconLeftColour ? iconColours[iconLeftColour] : undefined}
             className='mr-2'
             name={iconLeft}
             width={iconSize}
@@ -127,9 +117,7 @@ export const Button = React.forwardRef<
         {children}
         {!!iconRight && (
           <Icon
-            fill={
-              iconRightColour ? Constants.colours[iconRightColour] : undefined
-            }
+            fill={iconRightColour ? iconColours[iconRightColour] : undefined}
             className='ml-2'
             name={iconRight}
             width={iconSize}

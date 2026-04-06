@@ -38,6 +38,28 @@ export const projectFlagService = service
   })
   .injectEndpoints({
     endpoints: (builder) => ({
+      addFlagGroupOwners: builder.mutation<
+        Res['projectFlag'],
+        Req['addFlagGroupOwners']
+      >({
+        invalidatesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
+        query: ({ feature_id, project_id, ...body }) => ({
+          body,
+          method: 'POST',
+          url: `projects/${project_id}/features/${feature_id}/add-group-owners/`,
+        }),
+      }),
+      addFlagOwners: builder.mutation<Res['projectFlag'], Req['addFlagOwners']>(
+        {
+          invalidatesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
+          query: ({ feature_id, project_id, ...body }) => ({
+            body,
+            method: 'POST',
+            url: `projects/${project_id}/features/${feature_id}/add-owners/`,
+          }),
+        },
+      ),
+
       createProjectFlag: builder.mutation<
         Res['projectFlag'],
         Req['createProjectFlag']
@@ -52,6 +74,7 @@ export const projectFlagService = service
           url: `projects/${query.project_id}/features/`,
         }),
       }),
+
       getFeatureList: builder.query<Res['featureList'], Req['getFeatureList']>({
         providesTags: (_res, _meta, req) => [
           {
@@ -133,6 +156,30 @@ export const projectFlagService = service
         },
       }),
 
+      removeFlagGroupOwners: builder.mutation<
+        Res['projectFlag'],
+        Req['removeFlagGroupOwners']
+      >({
+        invalidatesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
+        query: ({ feature_id, project_id, ...body }) => ({
+          body,
+          method: 'POST',
+          url: `projects/${project_id}/features/${feature_id}/remove-group-owners/`,
+        }),
+      }),
+
+      removeFlagOwners: builder.mutation<
+        Res['projectFlag'],
+        Req['removeFlagOwners']
+      >({
+        invalidatesTags: (res) => [{ id: res?.id, type: 'ProjectFlag' }],
+        query: ({ feature_id, project_id, ...body }) => ({
+          body,
+          method: 'POST',
+          url: `projects/${project_id}/features/${feature_id}/remove-owners/`,
+        }),
+      }),
+
       removeProjectFlag: builder.mutation<void, Req['removeProjectFlag']>({
         invalidatesTags: [
           { id: 'LIST', type: 'ProjectFlag' },
@@ -208,10 +255,14 @@ export async function createProjectFlag(
 }
 
 export const {
+  useAddFlagGroupOwnersMutation,
+  useAddFlagOwnersMutation,
   useCreateProjectFlagMutation,
   useGetFeatureListQuery,
   useGetProjectFlagQuery,
   useGetProjectFlagsQuery,
+  useRemoveFlagGroupOwnersMutation,
+  useRemoveFlagOwnersMutation,
   useRemoveProjectFlagMutation,
   useUpdateProjectFlagMutation,
 } = projectFlagService

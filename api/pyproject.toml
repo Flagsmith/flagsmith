@@ -94,6 +94,14 @@ ignore_missing_imports = true
 module = ["saml.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["licensing.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["openfeature_flagsmith.*"]
+ignore_missing_imports = true
+
 [tool.django-stubs]
 django_settings_module = "app.settings.local"
 
@@ -114,7 +122,7 @@ django-cors-headers = "~3.5.0"
 djangorestframework = "~3.15.2"
 gunicorn = "~23.0.0"
 pyparsing = "~2.4.7"
-requests = "~2.32.4"
+requests = "~2.33.0"
 six = "~1.16.0"
 whitenoise = "~6.0.0"
 dj-database-url = "~3.0.1"
@@ -157,13 +165,15 @@ pydantic = "^2.12.0"
 pydantic-collections = "^0.6.0"
 pyngo = "~2.4.1"
 flagsmith = "^5.1.1"
+openfeature-sdk = ">=0.6.0,<0.9.0"
+openfeature-provider-flagsmith = ">=0.1.6"
 python-gnupg = "^0.5.1"
 django-redis = "^5.4.0"
-pygithub = "2.1.1"
+pygithub = "~2.8"
 hubspot-api-client = "^12.0.0"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-common = { version = "^3.3.0", extras = [
+flagsmith-common = { version = ">=3.5.0,<4", extras = [
   "common-core",
   "flagsmith-schemas",
   "task-processor",
@@ -191,19 +201,19 @@ pysaml2 = "^7.4.2"
 optional = true
 
 [tool.poetry.group.ldap.dependencies]
-flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.1" }
+flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v0.1.2" }
 
 [tool.poetry.group.workflows]
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.3.0" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.3.2" }
 
 [tool.poetry.group.licensing]
 optional = true
 
 [tool.poetry.group.licensing.dependencies]
-licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.2.1" }
+licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.3.0" }
 
 [tool.poetry.group.release-pipelines]
 optional = true
@@ -221,7 +231,7 @@ pytest-lazy-fixture = "~0.6.3"
 moto = "~4.1.3"
 # TODO: move to https://github.com/adamchainz/time-machine
 pytest-freezegun = "^0.4.2"
-setuptools = "*"  # this only exists because pytest-freezegun fails without it
+setuptools = "*"                                              # this only exists because pytest-freezegun fails without it
 pytest-xdist = "~3.6.1"
 pylint = "~2.16.2"
 pep8 = "~1.7.1"

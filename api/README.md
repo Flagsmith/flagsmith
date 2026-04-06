@@ -11,7 +11,9 @@ To install dev dependencies, run `make install`.
 
 To run linters, run `make lint`.
 
-To run tests, run `make docker-up test`.
+To run tests, run `make test`.
+
+To run a subset of tests or an individual test, run `make test opts='<pytest args>'`. If the number of test is too low for xdist, consider adding `-n0` to pytest args.
 
 To prepare a dev database, run `make docker-up django-migrate`.
 

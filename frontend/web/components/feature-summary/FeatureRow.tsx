@@ -14,6 +14,7 @@ import Button from 'components/base/forms/Button'
 import {
   Environment,
   FeatureListProviderData,
+  FeatureState,
   ProjectFlag,
   ReleasePipeline,
 } from 'common/types/responses'
@@ -24,6 +25,8 @@ import AccountStore from 'common/stores/account-store'
 import CondensedFeatureRow from 'components/CondensedFeatureRow'
 import { useHistory } from 'react-router-dom'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
+import { useGetProjectQuery } from 'common/services/useProject'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 import FeatureName from './FeatureName'
 import FeatureDescription from './FeatureDescription'
 import FeatureTags from './FeatureTags'
@@ -39,9 +42,7 @@ export interface FeatureRowProps {
   removeFlag?: (projectFlag: ProjectFlag) => void | Promise<void>
   toggleFlag?: (
     projectFlag: ProjectFlag,
-    environmentFlag:
-      | FeatureListProviderData['environmentFlags'][number]
-      | undefined,
+    environmentFlag: FeatureState | undefined,
     onError?: () => void,
   ) => void | Promise<void>
   index: number
@@ -84,7 +85,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     style,
     toggleFlag,
   } = props
-  const protectedTags = useProtectedTags(projectFlag, projectId)
+  const protectedTags = useProtectedTags(projectFlag, String(projectId))
   const history = useHistory()
   const { id } = projectFlag
 
@@ -99,9 +100,15 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   } = useFeatureRowState(actualEnabled)
 
   const { data: healthEvents } = useGetHealthEventsQuery(
-    { projectId: String(projectFlag.project) },
+    { projectId: projectFlag.project },
     { skip: !projectFlag?.project },
   )
+
+  const { data: projectData } = useGetProjectQuery(
+    { id: projectId },
+    { skip: !projectId },
+  )
+  const enforceFeatureOwners = !!projectData?.enforce_feature_owners
 
   useEffect(() => {
     const { feature } = Utils.fromParam()
@@ -206,7 +213,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       ? {
           environmentFlag,
           environmentId,
-          flagId: environmentFlag?.id,
           history,
           noPermissions: !permission,
           projectFlag,
@@ -216,7 +222,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       : {
           environmentFlag,
           environmentId,
-          flagId: environmentFlag?.id,
           hasUnhealthyEvents:
             isFeatureHealthEnabled && !!featureUnhealthyEvents?.length,
           hideTagsByType: ['UNHEALTHY'],
@@ -227,9 +232,24 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
           tab,
         }
 
+    const ownerChips = enforceFeatureOwners
+      ? [
+          ...(projectFlag.owners ?? []).map((u) => ({
+            id: `user-${u.id}`,
+            label: getUserDisplayName(u),
+          })),
+          ...(projectFlag.group_owners ?? []).map((g) => ({
+            id: `group-${g.id}`,
+            label: g.name,
+          })),
+        ]
+      : []
+
     openModal(
-      <Row>
-        {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
+      <Row className='align-items-center'>
+        <span>
+          {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
+        </span>
         <Button
           onClick={() => {
             Utils.copyToClipboard(projectFlag.name)
@@ -239,6 +259,19 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         >
           <Icon name='copy' />
         </Button>
+        {ownerChips.length > 0 && (
+          <div className='d-flex align-items-center gap-1 ms-3'>
+            <Icon name='people' width={16} fill='#9DA4AE' />
+            {ownerChips.slice(0, 3).map((chip) => (
+              <span key={chip.id} className='chip chip--xs'>
+                {chip.label}
+              </span>
+            ))}
+            {ownerChips.length > 3 && (
+              <span className='chip chip--xs'>+{ownerChips.length - 3}</span>
+            )}
+          </div>
+        )}
       </Row>,
       <ModalComponent {...modalProps} />,
       modalCssClass,
@@ -313,7 +346,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       if (disableControls) return
       editFeature(Constants.featurePanelTabs.HISTORY)
     },
-    projectId,
+    projectId: String(projectId),
     protectedTags,
     readOnly: isReadOnly,
     tags: projectFlag.tags,

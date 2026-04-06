@@ -6,7 +6,7 @@ from organisations.models import Organisation
 from users.models import FFAdminUser
 
 
-def test_create_master_api_key(
+def test_create_master_api_key__valid_data__returns_key_in_response(
     admin_user: FFAdminUser, admin_client: APIClient, organisation: Organisation
 ) -> None:
     # Given
@@ -26,7 +26,7 @@ def test_create_master_api_key(
     assert response.json()["created_by"] == admin_user.id
 
 
-def test_creating_non_admin_master_api_key_without_rbac_returns_400(  # type: ignore[no-untyped-def]
+def test_create_master_api_key__non_admin_without_rbac__returns_400(  # type: ignore[no-untyped-def]
     admin_client, organisation, settings
 ):
     # Given
@@ -48,7 +48,9 @@ def test_creating_non_admin_master_api_key_without_rbac_returns_400(  # type: ig
     ]
 
 
-def test_delete_master_api_key(admin_client, organisation, admin_master_api_key_prefix):  # type: ignore[no-untyped-def]  # noqa: E501
+def test_delete_master_api_key__existing_key__returns_204(  # type: ignore[no-untyped-def]
+    admin_client, organisation, admin_master_api_key_prefix
+):  # noqa: E501
     # Given
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-detail",
@@ -62,7 +64,7 @@ def test_delete_master_api_key(admin_client, organisation, admin_master_api_key_
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_list_master_api_keys(
+def test_list_master_api_keys__active_key_exists__returns_key(
     admin_client: APIClient,
     organisation: int,
     admin_master_api_key_prefix: str,
@@ -83,7 +85,7 @@ def test_list_master_api_keys(
     assert response.json()["results"][0]["has_expired"] is False
 
 
-def test_list_master_api_keys__when_expired(
+def test_list_master_api_keys__when_expired__returns_has_expired_true(
     admin_client: APIClient,
     organisation: Organisation,
     expired_api_key_prefix: str,
@@ -104,7 +106,7 @@ def test_list_master_api_keys__when_expired(
     assert response.json()["results"][0]["has_expired"] is True
 
 
-def test_retrieve_master_api_key(  # type: ignore[no-untyped-def]
+def test_retrieve_master_api_key__existing_key__returns_key_details(  # type: ignore[no-untyped-def]
     admin_client, organisation, admin_master_api_key_prefix
 ):
     # Given
@@ -121,7 +123,7 @@ def test_retrieve_master_api_key(  # type: ignore[no-untyped-def]
     assert response.json()["prefix"] == admin_master_api_key_prefix
 
 
-def test_update_master_api_key(  # type: ignore[no-untyped-def]
+def test_update_master_api_key__rbac_installed__updates_fields(  # type: ignore[no-untyped-def]
     admin_client, organisation, admin_master_api_key_prefix, settings
 ):
     # Given
@@ -151,7 +153,7 @@ def test_update_master_api_key(  # type: ignore[no-untyped-def]
     assert response.json()["is_admin"] is False
 
 
-def test_update_master_api_key_is_admin_returns_400_if_rbac_is_not_installed(  # type: ignore[no-untyped-def]
+def test_update_master_api_key__rbac_not_installed__returns_400(  # type: ignore[no-untyped-def]
     admin_client, organisation, admin_master_api_key_prefix, settings
 ):
     # Given
@@ -179,7 +181,9 @@ def test_update_master_api_key_is_admin_returns_400_if_rbac_is_not_installed(  #
     ]
 
 
-def test_api_returns_403_if_user_is_not_the_org_admin(non_admin_client, organisation):  # type: ignore[no-untyped-def]
+def test_list_master_api_keys__non_admin_user__returns_403(  # type: ignore[no-untyped-def]
+    non_admin_client, organisation
+):
     # Given
     url = reverse(
         "api-v1:organisations:organisation-master-api-keys-list",
@@ -192,7 +196,9 @@ def test_api_returns_403_if_user_is_not_the_org_admin(non_admin_client, organisa
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_create_master_api_key_ignores_organisation_in_body(admin_client, organisation):  # type: ignore[no-untyped-def]  # noqa: E501
+def test_create_master_api_key__wrong_org_in_body__uses_url_org(  # type: ignore[no-untyped-def]
+    admin_client, organisation
+):
     # Given
     list_create_url = reverse(
         "api-v1:organisations:organisation-master-api-keys-list",
@@ -220,7 +226,7 @@ def test_create_master_api_key_ignores_organisation_in_body(admin_client, organi
     assert key.startswith(list_response_json["results"][0]["prefix"])
 
 
-def test_deleted_api_key_is_not_returned_in_list_and_cannot_be_used(
+def test_delete_master_api_key__after_deletion__not_listed_and_unusable(
     admin_client: APIClient,
     organisation: int,
     admin_master_api_key_client: APIClient,

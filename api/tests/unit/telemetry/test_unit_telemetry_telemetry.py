@@ -9,7 +9,7 @@ from tests.unit.telemetry.helpers import get_example_telemetry_data
 
 @responses.activate
 @mock.patch("telemetry.telemetry.TelemetryData")
-def test_self_hosted_telemetry_wrapper_send_heartbeat(MockTelemetryData):  # type: ignore[no-untyped-def]
+def test_send_heartbeat__valid_telemetry_data__sends_request_to_api(MockTelemetryData):  # type: ignore[no-untyped-def]
     # Given
     # we mock the response from the API
     responses.add(

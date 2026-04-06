@@ -23,7 +23,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
 import FeatureListStore from 'common/stores/feature-list-store'
-import SuccessMessage from 'components/SuccessMessage'
+import SuccessMessage from 'components/messages/SuccessMessage'
 import TableSearchFilter from 'components/tables/TableSearchFilter'
 import Utils from 'common/utils/utils'
 import TableTagFilter from 'components/tables/TableTagFilter'
@@ -176,6 +176,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           return {
             created_date: createdDate,
             default_enabled: importItem.enabled,
+            group_owners: [],
             id: i,
             initial_value: importItem.value,
             isNew: true,
@@ -185,7 +186,6 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
             name: importItem.name,
             num_identity_overrides: 0,
             num_segment_overrides: 0,
-            owner_groups: [],
             owners: [],
             project: ProjectStore.model!.id,
             tags: [],

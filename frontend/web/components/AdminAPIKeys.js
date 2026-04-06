@@ -20,7 +20,7 @@ import {
   updateMasterAPIKeyWithMasterAPIKeyRoles,
 } from 'common/services/useMasterAPIKeyWithMasterAPIKeyRole'
 import { setInterceptClose, setModalTitle } from './modals/base/ModalDefault'
-import SuccessMessage from './SuccessMessage'
+import SuccessMessage from './messages/SuccessMessage'
 
 export class CreateAPIKey extends PureComponent {
   state = {

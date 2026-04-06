@@ -13,7 +13,7 @@ from features.multivariate.views import MultivariateFeatureOptionViewSet
 from projects.permissions import NestedProjectPermissions
 
 
-def test_multivariate_feature_options_view_set_get_permissions():  # type: ignore[no-untyped-def]
+def test_multivariate_feature_options_view_set__get_permissions__returns_expected_permissions():  # type: ignore[no-untyped-def]
     # Given
     view_set = MultivariateFeatureOptionViewSet()
 
@@ -37,7 +37,9 @@ def test_multivariate_feature_options_view_set_get_permissions():  # type: ignor
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_get_mv_feature_option_by_uuid(client, project, multivariate_feature):  # type: ignore[no-untyped-def]
+def test_get_mv_feature_option_by_uuid__valid_uuid__returns_option(  # type: ignore[no-untyped-def]
+    client, project, multivariate_feature
+):
     # Given
     mv_option_uuid = multivariate_feature.multivariate_options.first().uuid
     url = reverse(
@@ -57,7 +59,7 @@ def test_get_mv_feature_option_by_uuid(client, project, multivariate_feature):  
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_get_mv_feature_option_by_uuid_returns_404_if_mv_option_does_not_exists(  # type: ignore[no-untyped-def]
+def test_get_mv_feature_option_by_uuid__nonexistent_uuid__returns_404(  # type: ignore[no-untyped-def]
     client, project
 ):
     # Given

@@ -38,7 +38,10 @@ class EnvironmentManager(SoftDeleteManager):  # type: ignore[misc]
                 Prefetch(
                     "project__segments__feature_segments__feature_states",
                     queryset=FeatureState.objects.select_related(
-                        "feature", "feature_state_value", "environment"
+                        "feature",
+                        "feature_state_value",
+                        "environment",
+                        "environment_feature_version",
                     ),
                 ),
                 Prefetch(

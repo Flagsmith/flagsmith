@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react'
+import React, { Component } from 'react'
 import { matchPath, withRouter } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
 import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
@@ -24,6 +24,7 @@ import { getBuildVersion } from 'common/services/useBuildVersion'
 import AccountProvider from 'common/providers/AccountProvider'
 import Nav from './navigation/Nav'
 import 'project/darkMode'
+import GramChat from './GramChat'
 const App = class extends Component {
   static propTypes = {
     children: propTypes.element.isRequired,
@@ -337,6 +338,9 @@ const App = class extends Component {
           }}
         </AccountProvider>
         <ScrollToTop />
+        {AccountStore.getUser() &&
+          Project.gramProjectSlug &&
+          Utils.getFlagsmithHasFeature('gram_chat') && <GramChat />}
       </Provider>
     )
   }
@@ -349,10 +353,3 @@ App.propTypes = {
 }
 
 export default withRouter(ConfigProvider(App))
-
-if (E2E) {
-  const e2e = document.getElementsByClassName('e2e')
-  if (e2e && e2e[0]) {
-    e2e[0].classList.toggle('display-none')
-  }
-}

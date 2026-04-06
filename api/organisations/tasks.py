@@ -12,8 +12,9 @@ from task_processor.decorators import (
     register_task_handler,
 )
 
+from app_analytics.analytics_db_service import get_total_events_count
 from app_analytics.influxdb_wrapper import get_current_api_usage
-from integrations.flagsmith.client import get_client
+from integrations.flagsmith.client import get_openfeature_client
 from organisations import subscription_info_cache
 from organisations.chargebee import (  # type: ignore[attr-defined]
     add_100k_api_calls_scale_up,
@@ -81,32 +82,24 @@ def send_org_subscription_cancelled_alert(
         )
 
 
-@register_recurring_task(
-    run_every=timedelta(hours=6),
-)
-def update_organisation_subscription_information_influx_cache_recurring():  # type: ignore[no-untyped-def]
-    """
-    We're redefining the task function here to register a recurring task
-    since the decorators don't stack correctly. (TODO)
-    """
-    update_organisation_subscription_information_influx_cache()  # pragma: no cover
+@register_recurring_task(run_every=timedelta(hours=6))
+def update_organisation_subscription_information_cache_recurring() -> None:
+    update_organisation_subscription_information_cache()
 
 
 @register_task_handler()
-def update_organisation_subscription_information_influx_cache():  # type: ignore[no-untyped-def]
-    subscription_info_cache.update_caches((SubscriptionCacheEntity.INFLUX,))
+def update_organisation_subscription_information_api_usage_cache() -> None:
+    subscription_info_cache.update_caches(SubscriptionCacheEntity.API_USAGE)
 
 
 @register_task_handler(timeout=timedelta(minutes=5))
 def update_organisation_subscription_information_cache() -> None:
     subscription_info_cache.update_caches(
-        (SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.INFLUX)
+        SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE
     )
 
 
-@register_recurring_task(
-    run_every=timedelta(hours=12),
-)
+@register_recurring_task(run_every=timedelta(hours=12))
 def finish_subscription_cancellation() -> None:
     now = timezone.now()
     previously = now + timedelta(hours=-24)
@@ -120,7 +113,7 @@ def finish_subscription_cancellation() -> None:
 
 # Task enqueued in register_recurring_tasks below.
 def handle_api_usage_notifications() -> None:
-    flagsmith_client = get_client("local", local_eval=True)
+    openfeature_client = get_openfeature_client()
 
     threshold_percentage = min(API_USAGE_ALERT_THRESHOLDS) / 100
     for organisation in Organisation.objects.filter(
@@ -136,10 +129,11 @@ def handle_api_usage_notifications() -> None:
         )
         * threshold_percentage,
     ).select_related("subscription", "subscription_information_cache"):
-        feature_enabled = flagsmith_client.get_identity_flags(
-            organisation.flagsmith_identifier,
-            traits=organisation.flagsmith_on_flagsmith_api_traits,
-        ).is_feature_enabled("api_usage_alerting")
+        feature_enabled = openfeature_client.get_boolean_value(
+            "api_usage_alerting",
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        )
         if not feature_enabled:
             logger.info(
                 f"Skipping processing API usage for organisation {organisation.id}"
@@ -181,7 +175,7 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
         ).values_list("organisation_id", flat=True)
     )
 
-    flagsmith_client = get_client("local", local_eval=True)
+    openfeature_client = get_openfeature_client()
 
     for organisation in (
         Organisation.objects.filter(
@@ -206,18 +200,29 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             "subscription",
         )
     ):
-        flags = flagsmith_client.get_identity_flags(
-            organisation.flagsmith_identifier,
-            traits=organisation.flagsmith_on_flagsmith_api_traits,
-        )
-        if not flags.is_feature_enabled("api_usage_overage_charges"):
+        if not openfeature_client.get_boolean_value(
+            "api_usage_overage_charges",
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        ):
             continue
 
         subscription_cache = organisation.subscription_information_cache
-        api_usage = get_current_api_usage(
-            organisation_id=organisation.id,
-            date_start=subscription_cache.current_billing_term_starts_at,
-        )
+        # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
+        if openfeature_client.get_boolean_value(
+            "get_current_api_usage_deprecated",
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        ):  # pragma: no cover
+            api_usage = get_total_events_count(
+                organisation,
+                date_start=subscription_cache.current_billing_term_starts_at,
+            )
+        else:
+            api_usage = get_current_api_usage(
+                organisation_id=organisation.id,
+                date_start=subscription_cache.current_billing_term_starts_at,
+            )
 
         # Grace period for organisations < 200% of usage.
         if (
@@ -260,7 +265,7 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
                 case _:
                     logger.error(
                         "Unknown subscription plan when trying to bill for overages"
-                        f" {organisation.id=} {organisation.name=} {organisation.subscription.plan=}"
+                        f" {organisation.id=} {organisation.subscription.plan=}"
                     )
                     continue
         except Exception:
@@ -327,16 +332,21 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     )
 
     api_limit_access_blocks = []
-    flagsmith_client = get_client("local", local_eval=True)
+    openfeature_client = get_openfeature_client()
 
     for organisation in organisations:
-        flags = flagsmith_client.get_identity_flags(
-            organisation.flagsmith_identifier,
-            traits=organisation.flagsmith_on_flagsmith_api_traits,
-        )
+        ctx = organisation.openfeature_evaluation_context
 
-        stop_serving = flags.is_feature_enabled("api_limiting_stop_serving_flags")
-        block_access = flags.is_feature_enabled("api_limiting_block_access_to_admin")
+        stop_serving = openfeature_client.get_boolean_value(
+            "api_limiting_stop_serving_flags",
+            default_value=False,
+            evaluation_context=ctx,
+        )
+        block_access = openfeature_client.get_boolean_value(
+            "api_limiting_block_access_to_admin",
+            default_value=False,
+            evaluation_context=ctx,
+        )
 
         if not stop_serving and not block_access:
             continue
@@ -347,10 +357,21 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         OrganisationBreachedGracePeriod.objects.get_or_create(organisation=organisation)
 
         subscription_cache = organisation.subscription_information_cache
-        api_usage = get_current_api_usage(
-            organisation_id=organisation.id,
-            date_start=now - timedelta(days=30),
-        )
+        # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
+        if openfeature_client.get_boolean_value(
+            "get_current_api_usage_deprecated",
+            default_value=False,
+            evaluation_context=ctx,
+        ):  # pragma: no cover
+            api_usage = get_total_events_count(
+                organisation,
+                date_start=now - timedelta(days=30),
+            )
+        else:
+            api_usage = get_current_api_usage(
+                organisation_id=organisation.id,
+                date_start=now - timedelta(days=30),
+            )
         if api_usage / subscription_cache.allowed_30d_api_calls < 1.0:
             logger.info(
                 f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."

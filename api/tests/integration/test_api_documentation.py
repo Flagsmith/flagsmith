@@ -1,10 +1,10 @@
 from django.test import Client
 
 
-def test_api_documentation_specification_loads(
+def test_api_documentation_specification__json_format_requested__loads_successfully(
     client: Client,
 ) -> None:
-    # When
+    # Given / When
     # Request JSON format via Accept header (drf-spectacular defaults to YAML).
     response = client.get("/api/v1/swagger.json", HTTP_ACCEPT="application/json")
 

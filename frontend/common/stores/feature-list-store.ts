@@ -24,7 +24,7 @@ import {
 import Utils from 'common/utils/utils'
 import Actions from 'common/dispatcher/action-constants'
 import Project from 'common/project'
-import flagsmith from 'flagsmith'
+import flagsmith from '@flagsmith/flagsmith'
 import API from 'project/api'
 import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
@@ -766,6 +766,9 @@ const controller = {
               store.model.keyedEnvironmentFeatures[projectFlag.id] = {
                 ...store.model.keyedEnvironmentFeatures[projectFlag.id],
                 ...environmentFeatureState,
+                feature_state_value: Utils.featureStateToValue(
+                  environmentFeatureState.feature_state_value,
+                ),
               }
             }
           })
@@ -854,7 +857,7 @@ const controller = {
       store.projectId = projectId
       store.environmentId = environmentId
       store.page = page
-      store.filter = filter
+      store.filter = filter || {}
       let filterUrl = ''
       const { feature } = Utils.fromParam()
       if (Object.keys(store.filter).length) {

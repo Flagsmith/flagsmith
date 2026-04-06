@@ -217,6 +217,7 @@ export type Project = {
   use_edge_identities: boolean
   show_edge_identity_overrides_for_feature: boolean
   prevent_flag_defaults: boolean
+  enforce_feature_owners: boolean
   enable_realtime_updates: boolean
   max_segments_allowed?: number | null
   max_features_allowed?: number | null
@@ -566,6 +567,18 @@ export type IdentityFeatureState = {
   }[]
 }
 
+export type EdgeIdentityOverrideItem = {
+  feature_state: FeatureState
+  identity_uuid: string
+  identifier: string
+}
+
+export type IdentityOverride = FeatureState & {
+  identity: { id: string; identifier: string }
+  segment?: null
+  overridden_by?: string | null
+}
+
 export type FeatureState = {
   change_request?: number
   created_at: string
@@ -611,7 +624,7 @@ export type ProjectFlag = {
   num_identity_overrides: number | null
   num_segment_overrides: number | null
   owners: User[]
-  owner_groups: UserGroupSummary[]
+  group_owners: UserGroupSummary[]
   metadata: Metadata[] | []
   project: number
   tags: number[]
@@ -623,7 +636,6 @@ export type ProjectFlag = {
     last_successful_repository_scanned_at: string
     last_feature_found_at: string
   }[]
-  environment_feature_state?: FeatureState
 }
 
 export type FeatureListProviderData = {
@@ -1165,6 +1177,7 @@ export type Res = {
   identityFeatureStates: IdentityFeatureState[]
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
+  identityOverrides: PagedResponse<IdentityOverride>
   samlConfiguration: SAMLConfiguration
   samlConfigurations: PagedResponse<SAMLConfiguration>
   samlMetadata: {

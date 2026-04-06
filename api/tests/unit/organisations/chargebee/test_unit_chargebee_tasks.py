@@ -1,7 +1,7 @@
 from organisations.chargebee.tasks import update_chargebee_cache
 
 
-def test_update_chargebee_cache(mocker):  # type: ignore[no-untyped-def]
+def test_update_chargebee_cache__called__refreshes_cache(mocker):  # type: ignore[no-untyped-def]
     # Given
     mock_chargebee_cache = mocker.MagicMock()
     mocker.patch(
