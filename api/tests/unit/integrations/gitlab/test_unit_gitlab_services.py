@@ -99,7 +99,10 @@ def test_gitlab_webhook__invalid_token__returns_400(
         url,
         data="{}",
         content_type="application/json",
-        **{"HTTP_X_GITLAB_TOKEN": "wrong-secret", "HTTP_X_GITLAB_EVENT": "Merge Request Hook"},  # type: ignore[arg-type]
+        **{
+            "HTTP_X_GITLAB_TOKEN": "wrong-secret",
+            "HTTP_X_GITLAB_EVENT": "Merge Request Hook",
+        },  # type: ignore[arg-type]
     )
 
     # Then
@@ -120,7 +123,10 @@ def test_gitlab_webhook__missing_config__returns_404(
         url,
         data="{}",
         content_type="application/json",
-        **{"HTTP_X_GITLAB_TOKEN": "some-secret", "HTTP_X_GITLAB_EVENT": "Merge Request Hook"},  # type: ignore[arg-type]
+        **{
+            "HTTP_X_GITLAB_TOKEN": "some-secret",
+            "HTTP_X_GITLAB_EVENT": "Merge Request Hook",
+        },  # type: ignore[arg-type]
     )
 
     # Then

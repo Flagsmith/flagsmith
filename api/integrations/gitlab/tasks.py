@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 UNLINKED_FEATURE_TEXT = "**The feature flag `%s` was unlinked from the issue/MR**"
 
 
-def _parse_resource_url(resource_url: str) -> tuple[str, GitLabResourceEndpoint, int] | None:
+def _parse_resource_url(
+    resource_url: str,
+) -> tuple[str, GitLabResourceEndpoint, int] | None:
     """Parse a GitLab resource URL into (project_path, resource_type, iid).
 
     Returns None if the URL format is not recognised.
@@ -69,9 +71,7 @@ def post_gitlab_comment(
             deleted_at__isnull=True,
         )
     except GitLabConfiguration.DoesNotExist:
-        logger.warning(
-            "No GitLabConfiguration found for project_id=%s", project_id
-        )
+        logger.warning("No GitLabConfiguration found for project_id=%s", project_id)
         return
 
     if not gitlab_config.gitlab_project_id:

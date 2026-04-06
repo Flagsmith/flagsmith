@@ -153,7 +153,9 @@ def dispatch_gitlab_comment(
             "feature_name": feature.name,
             "event_type": event_type,
             "feature_states": feature_states_data,
-            "url": url if event_type == GitLabEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value else None,
+            "url": url
+            if event_type == GitLabEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
+            else None,
             "segment_name": segment_name,
         },
     )

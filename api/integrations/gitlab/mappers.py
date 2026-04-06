@@ -29,9 +29,7 @@ def map_feature_states_to_dicts(
             env_data["last_updated"] = feature_state.updated_at.strftime(
                 get_format("DATETIME_INPUT_FORMATS")[0]
             )
-            env_data["environment_api_key"] = (
-                feature_state.environment.api_key  # type: ignore[union-attr]
-            )
+            env_data["environment_api_key"] = feature_state.environment.api_key  # type: ignore[union-attr]
 
         if (
             hasattr(feature_state, "feature_segment")

@@ -6,19 +6,10 @@ from typing import Any
 from django.db.models import Q
 from django.utils.formats import get_format
 
-from core.helpers import get_current_site_url
 from features.models import Feature, FeatureState, FeatureStateValue
 from integrations.github.constants import (
-    DELETED_FEATURE_TEXT,
-    DELETED_SEGMENT_OVERRIDE_TEXT,
-    FEATURE_ENVIRONMENT_URL,
-    FEATURE_TABLE_HEADER,
-    FEATURE_TABLE_ROW,
     GITHUB_TAG_COLOR,
-    LINK_FEATURE_TITLE,
-    LINK_SEGMENT_TITLE,
     UNLINKED_FEATURE_TEXT,
-    UPDATED_FEATURE_TEXT,
     GitHubEventType,
     GitHubTag,
     github_tag_description,
