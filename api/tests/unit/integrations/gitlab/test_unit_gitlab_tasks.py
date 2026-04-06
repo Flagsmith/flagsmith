@@ -35,8 +35,16 @@ from projects.models import Project
             "https://gitlab.example.com/unknown/path/to/resource",
             None,
         ),
+        (
+            "https://gitlab.example.com/group/project/-/issues/",
+            None,
+        ),
+        (
+            "https://gitlab.example.com/-/issues/5",
+            None,
+        ),
     ],
-    ids=["mr", "issue", "work-item", "nested-group", "unknown-format"],
+    ids=["mr", "issue", "work-item", "nested-group", "unknown-format", "no-iid", "no-project-path"],
 )
 def test_parse_resource_url__various_urls__returns_correct_tuple(
     url: str,

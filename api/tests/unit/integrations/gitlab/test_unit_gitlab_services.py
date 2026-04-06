@@ -266,6 +266,39 @@ def test_tag_feature_per_gitlab_event__work_items_url_variant__finds_feature(
 
 
 @pytest.mark.django_db
+def test_tag_feature_per_gitlab_event__issues_url_stored_work_items_webhook__finds_feature(
+    project: Project,
+    feature: Feature,
+    gitlab_configuration: GitLabConfiguration,
+) -> None:
+    # Given — resource stored as issues URL
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.example.com/testgroup/testrepo/-/issues/5",
+        type=ResourceType.GITLAB_ISSUE,
+        feature=feature,
+        metadata='{"state": "opened"}',
+    )
+    # Webhook sends work_items URL
+    payload = {
+        "object_kind": "issue",
+        "project": {"path_with_namespace": "testgroup/testrepo"},
+        "object_attributes": {
+            "action": "close",
+            "url": "https://gitlab.example.com/testgroup/testrepo/-/work_items/5",
+        },
+    }
+
+    # When
+    handle_gitlab_webhook_event(event_type="issue", payload=payload)
+
+    # Then
+    feature.refresh_from_db()
+    gitlab_tags = feature.tags.filter(type=TagType.GITLAB.value)
+    assert gitlab_tags.count() == 1
+    assert gitlab_tags.first().label == GitLabTag.ISSUE_CLOSED.value  # type: ignore[union-attr]
+
+
+@pytest.mark.django_db
 def test_dispatch_gitlab_comment__valid_feature__dispatches_task(
     project: Project,
     feature: Feature,
