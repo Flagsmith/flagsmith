@@ -72,7 +72,8 @@ const OAuthAuthorizePage = () => {
     oauthParams.client_id &&
     oauthParams.redirect_uri &&
     oauthParams.response_type &&
-    oauthParams.code_challenge
+    oauthParams.code_challenge &&
+    oauthParams.code_challenge_method
   )
 
   const { data, error, isLoading } = useValidateOAuthAuthorizeQuery(
@@ -96,7 +97,8 @@ const OAuthAuthorizePage = () => {
         allow,
       }).unwrap()
       window.location.href = result.redirect_uri
-    } catch {
+    } catch (e) {
+      console.error('OAuth consent error:', e)
       setIsRedirecting(false)
       setConsentError('Something went wrong. Please try again.')
     }
@@ -213,7 +215,7 @@ const OAuthAuthorizePage = () => {
           You will be redirected to:
           <br />
           <code style={{ fontSize: 12, wordBreak: 'break-all' }}>
-            {oauthParams.redirect_uri}
+            {data.redirect_uri}
           </code>
         </p>
 
