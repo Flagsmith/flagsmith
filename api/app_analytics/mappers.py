@@ -24,7 +24,7 @@ from app_analytics.types import (
     TrackFeatureEvaluationsByEnvironmentData,
     TrackFeatureEvaluationsByEnvironmentKwargs,
 )
-from integrations.flagsmith.client import get_client
+from integrations.flagsmith.client import get_openfeature_client
 
 
 def map_user_agent_to_sdk_user_agent(value: str) -> str | None:
@@ -168,10 +168,9 @@ def map_input_labels_to_labels(input_labels: InputLabels) -> Labels:
 
 
 def map_request_to_labels(request: HttpRequest) -> Labels:
-    if not (
-        get_client("local", local_eval=True)
-        .get_environment_flags()
-        .is_feature_enabled("sdk_metrics_labels")
+    if not get_openfeature_client().get_boolean_value(
+        "sdk_metrics_labels",
+        default_value=False,
     ):
         return {}
     input_labels: InputLabels = _RequestHeaderLabelsModel.model_validate(

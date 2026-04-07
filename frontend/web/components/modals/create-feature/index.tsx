@@ -8,7 +8,6 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import IdentityProvider from 'common/providers/IdentityProvider'
 import FeatureListProvider from 'common/providers/FeatureListProvider'
 import AppActions from 'common/dispatcher/app-actions'
-import Project from 'common/project'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import ChangeRequestModal from 'components/modals/ChangeRequestModal'
@@ -116,6 +115,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     percentage: 0,
   })
   const [skipSaveProjectFeature, setSkipSaveProjectFeature] = useState(false)
+  const [ownerIds, setOwnerIds] = useState<number[]>([])
+  const [groupOwnerIds, setGroupOwnerIds] = useState<number[]>([])
   const [, setTabKey] = useState(0)
 
   const isEdit = !!props.projectFlag
@@ -304,6 +305,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           {
             default_enabled: environmentFlag.enabled,
             description: projectFlag.description,
+            ...(ownerIds.length ? { owners: ownerIds } : {}),
+            ...(groupOwnerIds.length ? { group_owners: groupOwnerIds } : {}),
             initial_value: cleanInputValue(environmentFlag.feature_state_value),
             is_archived: projectFlag.is_archived,
             is_server_key_only: projectFlag.is_server_key_only,
@@ -380,7 +383,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     controlValue < 0
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
-  const hasCodeReferences = projectFlag?.code_references_counts?.length > 0
 
   let regexValid = true
   try {
@@ -659,21 +661,18 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       />
                     </TabItem>
                   )}
-                  {(!Project.disableAnalytics || hasCodeReferences) && (
-                    <TabItem
-                      tabLabelString='Usage'
-                      tabLabel={
-                        <Row className='justify-content-center'>Usage</Row>
-                      }
-                    >
-                      <UsageTab
-                        projectId={projectId}
-                        featureId={projectFlag.id}
-                        environmentId={environment.id}
-                        hasCodeReferences={hasCodeReferences}
-                      />
-                    </TabItem>
-                  )}
+                  <TabItem
+                    tabLabelString='Usage'
+                    tabLabel={
+                      <Row className='justify-content-center'>Usage</Row>
+                    }
+                  >
+                    <UsageTab
+                      projectId={projectId}
+                      featureId={projectFlag.id}
+                      environmentId={environment.id}
+                    />
+                  </TabItem>
                   {
                     <TabItem
                       data-test='feature_health'
@@ -783,6 +782,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   overrideFeatureState={
                     props.identityFlag ? environmentFlag : null
                   }
+                  ownerIds={ownerIds}
+                  groupOwnerIds={groupOwnerIds}
+                  onOwnerIdsChange={setOwnerIds}
+                  onGroupOwnerIdsChange={setGroupOwnerIds}
                   onEnvironmentFlagChange={(changes: any) => {
                     setEnvironmentFlag((prev: any) => ({
                       ...prev,
@@ -811,6 +814,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   regexValid={regexValid}
                   featureLimitPercentage={featureLimitAlert.percentage}
                   hasMetadataRequired={hasMetadataRequired}
+                  ownerIds={ownerIds}
+                  groupOwnerIds={groupOwnerIds}
                 />
               </div>
             )}
