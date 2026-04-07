@@ -35,7 +35,7 @@ import OrganisationUsagePage from './components/pages/OrganisationUsagePage'
 import OrganisationsPage from './components/pages/OrganisationsPage'
 import UsersAndPermissionsPage from './components/pages/UsersAndPermissionsPage'
 import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
-import { SDKKeysGate } from './components/pages/sdk-keys'
+import { SDKKeysPage } from './components/pages/sdk-keys'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
@@ -195,7 +195,7 @@ export default (
       <ParameterizedRoute
         path={routes['sdk-keys']}
         exact
-        component={SDKKeysGate}
+        component={SDKKeysPage}
       />
       <ParameterizedRoute
         path={routes.integrations}
