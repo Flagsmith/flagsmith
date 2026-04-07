@@ -1059,9 +1059,14 @@ def test_change_api_key_updates_environment_document_cache(
 
     # Then
     persistent_environment_document_cache.delete.assert_called_once_with(old_api_key)
-    persistent_environment_document_cache.set_many.assert_called_once_with(
-        {new_api_key: map_environment_to_environment_document(environment)}
-    )
+    persistent_environment_document_cache.set_many.assert_called_once()
+
+    # Get what was actually cached and compare to sdk document
+    cache_payload = persistent_environment_document_cache.set_many.call_args[0][0]
+    cached_document = cache_payload[new_api_key]
+    expected_document = map_environment_to_sdk_document(environment)
+
+    assert cached_document == expected_document
 
 
 def test_get_environment_document_from_cache_triggers_correct_metrics__cache_hit(
