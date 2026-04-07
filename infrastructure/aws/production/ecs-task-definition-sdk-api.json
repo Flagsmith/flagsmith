@@ -219,6 +219,14 @@
                     "value": "https://edge.api.flagsmith.com/api/v1/"
                 },
                 {
+                    "name": "FLAGSMITH_API_URL",
+                    "value": "https://api.flagsmith.com"
+                },
+                {
+                    "name": "FLAGSMITH_FRONTEND_URL",
+                    "value": "https://app.flagsmith.com"
+                },
+                {
                     "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
                     "value": "True"
                 }
