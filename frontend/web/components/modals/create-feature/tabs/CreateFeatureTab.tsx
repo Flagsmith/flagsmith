@@ -21,6 +21,10 @@ type CreateFeatureTabProps = {
   projectFlag: ProjectFlag | null
   identity?: string
   defaultExperiment?: boolean
+  ownerIds?: number[]
+  groupOwnerIds?: number[]
+  onOwnerIdsChange?: (ids: number[]) => void
+  onGroupOwnerIdsChange?: (ids: number[]) => void
   onEnvironmentFlagChange: (changes: Partial<FeatureState>) => void
   onProjectFlagChange: (changes: Partial<ProjectFlag>) => void
   onRemoveMultivariateOption?: (id: number) => void
@@ -35,12 +39,16 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
   featureError,
   featureState,
   featureWarning,
+  groupOwnerIds,
   identity,
   onEnvironmentFlagChange,
+  onGroupOwnerIdsChange,
   onHasMetadataRequiredChange,
+  onOwnerIdsChange,
   onProjectFlagChange,
   onRemoveMultivariateOption,
   overrideFeatureState,
+  ownerIds,
   projectFlag,
   projectId,
 }) => {
@@ -183,6 +191,10 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
             identity={identity}
             projectId={projectId}
             projectFlag={projectFlag}
+            ownerIds={ownerIds}
+            groupOwnerIds={groupOwnerIds}
+            onOwnerIdsChange={onOwnerIdsChange}
+            onGroupOwnerIdsChange={onGroupOwnerIdsChange}
             onChange={onProjectFlagChange}
             onHasMetadataRequiredChange={onHasMetadataRequiredChange}
           />

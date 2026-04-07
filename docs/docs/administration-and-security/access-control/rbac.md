@@ -183,7 +183,7 @@ Permissions can be assigned at four levels: user group, organisation, project, a
 | Manage identities        | Grants read and write access to identities in this environment.                                                          |               |
 | Manage segment overrides | Grants write access to segment overrides in this environment.                                                            |               |
 | Create change request    | Allows creating change requests for features in this environment.                                                        | Yes           |
-| Approve change request   | Allows approving or denying change requests in this environment.                                                         | Yes           |
+| Approve change request   | Allows approving change requests in this environment.                                                         | Yes           |
 | View identities          | Grants read-only access to identities in this environment.                                                               |               |
 
 ### Permission levels explained

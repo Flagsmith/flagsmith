@@ -17,14 +17,6 @@
       border: 1px solid $primary-alfa-32;
     }
 
-    &.MuiChip-root {
-      color: $primary400;
-      .MuiChip-deleteIcon {
-        &:hover {
-          color: $primary400;
-        }
-      }
-    }
 
     .chip-icon {
       color: $primary400;
@@ -36,6 +28,8 @@
   }
 }
 .chip {
+  display: flex;
+  align-items: center;
   align-self: flex-start !important;
   background-color: $primary-alfa-8;
   border: 1px solid $primary-alfa-24;
@@ -129,49 +123,27 @@
     }
   }
 }
-.mui-root {
-  .MuiChip-root {
-    background-color: $primary-alfa-8;
-    border: 1px solid $primary-alfa-24;
-    border-radius: $border-radius;
-    color: $primary600;
+.chip-input {
+  border: 1px solid $input-border-color;
+  padding: 0.5rem;
+  border-radius: $border-radius;
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    min-height: auto;
+  }
+
+  &__input {
+    border: none;
+    outline: none;
+    flex: 1;
+    min-width: 80px;
+    background: transparent;
     font-size: $font-sm;
     line-height: $line-height-sm;
+    padding: 2px 0;
   }
-  .MuiChip-clickable:hover,
-  .MuiChip-clickable:focus {
-    background-color: $primary-alfa-8;
-  }
-  .MuiChip-deleteIcon {
-    width: 18px;
-    height: 18px;
-    margin-right: 12px;
-    &:hover {
-      color: $primary;
-    }
-  }
-  .MuiChip-label {
-    padding-right: 0;
-  }
-}
-
-.WAMuiChipInput-underline-14:before {
-  display: none;
-}
-.WAMuiChipInput-underline-14:after {
-  display: none;
-}
-
-.MuiFormControl-root {
-  border: 1px solid $input-border-color !important;
-  padding: 0.5rem !important;
-  border-radius: $border-radius;
-}
-
-.WAMuiChipInput-chip-16 {
-  margin: 0 8px 0 0 !important;
-}
-.WAMuiChipInput-chipContainer-4 {
-  min-height: auto !important;
-  row-gap: 4px;
 }

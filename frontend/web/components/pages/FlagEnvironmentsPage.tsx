@@ -361,16 +361,16 @@ const FlagEnvironmentsPage: FC = () => {
               </div>
             </div>
           )}
-          {flag.owner_groups && flag.owner_groups.length > 0 && (
+          {flag.group_owners && flag.group_owners.length > 0 && (
             <div className='row mb-3'>
               <div className='col-md-3'>
                 <strong>Owner Groups:</strong>
               </div>
               <div className='col-md-9'>
-                {flag.owner_groups.map((group, index) => (
+                {flag.group_owners.map((group, index) => (
                   <span key={group.id}>
                     {group.name}
-                    {index < flag.owner_groups.length - 1 && ', '}
+                    {index < flag.group_owners.length - 1 && ', '}
                   </span>
                 ))}
               </div>

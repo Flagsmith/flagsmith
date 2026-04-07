@@ -408,25 +408,12 @@ def test_handle_api_usage_notifications__feature_flag_is_off__skips_processing(
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
     )
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = False
 
     # When
     handle_api_usage_notifications()
 
     # Then
     mock_api_usage.assert_not_called()
-
-    client_mock.get_identity_flags.assert_called_once_with(
-        organisation.flagsmith_identifier,
-        traits={
-            "organisation.id": organisation.id,
-            "organisation.name": organisation.name,
-            "subscription.plan": organisation.subscription.plan,
-        },
-    )
 
     assert len(mailoutbox) == 0
     assert (
@@ -442,6 +429,7 @@ def test_handle_api_usage_notifications__usage_below_100_percent__sends_90_perce
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -459,10 +447,7 @@ def test_handle_api_usage_notifications__usage_below_100_percent__sends_90_perce
         "organisations.task_helpers.get_current_api_usage",
     )
     mock_api_usage.return_value = 91
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_alerting")
 
     assert not OrganisationAPIUsageNotification.objects.filter(
         organisation=organisation,
@@ -554,6 +539,7 @@ def test_handle_api_usage_notifications__usage_below_alert_thresholds__sends_no_
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
@@ -576,10 +562,7 @@ def test_handle_api_usage_notifications__usage_below_alert_thresholds__sends_no_
     usage = 21
     assert usage < min(API_USAGE_ALERT_THRESHOLDS)
     mock_api_usage.return_value = usage
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_alerting")
 
     assert not OrganisationAPIUsageNotification.objects.filter(
         organisation=organisation,
@@ -604,6 +587,7 @@ def test_handle_api_usage_notifications__usage_above_100_percent__sends_limit_no
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     usage = 105
@@ -625,11 +609,7 @@ def test_handle_api_usage_notifications__usage_above_100_percent__sends_limit_no
         "organisations.task_helpers.get_current_api_usage",
     )
     mock_api_usage.return_value = usage
-
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_alerting")
 
     assert not OrganisationAPIUsageNotification.objects.filter(
         organisation=organisation,
@@ -718,10 +698,10 @@ def test_handle_api_usage_notifications__processing_error__logs_error_message(
         api_calls_30d=100,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    get_client_mock = mocker.patch("organisations.tasks.get_openfeature_client")
     client_mock = MagicMock()
     get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    client_mock.get_boolean_value.return_value = True
 
     api_usage_patch = mocker.patch(
         "organisations.tasks.handle_api_usage_notification_for_organisation",
@@ -753,6 +733,7 @@ def test_handle_api_usage_notifications__free_account_over_limit__sends_limit_no
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     allowance = MAX_SEATS_IN_FREE_PLAN
@@ -773,11 +754,7 @@ def test_handle_api_usage_notifications__free_account_over_limit__sends_limit_no
         "organisations.task_helpers.get_current_api_usage",
     )
     mock_api_usage.return_value = usage
-
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_alerting")
 
     assert not OrganisationAPIUsageNotification.objects.filter(
         organisation=organisation,
@@ -852,6 +829,7 @@ def test_handle_api_usage_notifications__missing_info_cache__skips_processing(
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
     inspecting_handler: logging.Handler,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     organisation.subscription.plan = SCALE_UP
@@ -862,11 +840,7 @@ def test_handle_api_usage_notifications__missing_info_cache__skips_processing(
     mock_api_usage = mocker.patch(
         "organisations.task_helpers.get_current_api_usage",
     )
-
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    enable_features("api_usage_alerting")
 
     assert not OrganisationAPIUsageNotification.objects.filter(
         organisation=organisation,
@@ -929,7 +903,6 @@ def test_charge_for_api_call_count_overages__scale_up_plan__charges_correct_addo
         "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
         autospec=True,
     )
-
     enable_features("api_usage_overage_charges")
 
     mock_api_usage = mocker.patch(
@@ -990,10 +963,6 @@ def test_charge_for_api_call_count_overages__cancellation_date_set__skips_chargi
         notified_at=now,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
     )
@@ -1005,7 +974,6 @@ def test_charge_for_api_call_count_overages__cancellation_date_set__skips_chargi
     # Then
     assert OrganisationAPIBilling.objects.count() == 0
     mock_api_usage.assert_not_called()
-    client_mock.get_identity_flags.assert_not_called()
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -1042,11 +1010,6 @@ def test_charge_for_api_call_count_overages__flagsmith_feature_disabled__skips_c
         autospec=True,
     )
 
-    get_client_mock = mocker.patch("organisations.tasks.get_client")
-    client_mock = MagicMock()
-    get_client_mock.return_value = client_mock
-    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = False
-
     mock_api_usage = mocker.patch(
         "organisations.tasks.get_current_api_usage",
     )
@@ -1058,14 +1021,6 @@ def test_charge_for_api_call_count_overages__flagsmith_feature_disabled__skips_c
 
     # Then
     # No charges are applied to the account.
-    client_mock.get_identity_flags.assert_called_once_with(
-        organisation.flagsmith_identifier,
-        traits={
-            "organisation.id": organisation.id,
-            "organisation.name": organisation.name,
-            "subscription.plan": organisation.subscription.plan,
-        },
-    )
     mock_chargebee_update.assert_not_called()
     assert OrganisationAPIBilling.objects.count() == 0
 
@@ -1935,7 +1890,6 @@ def test_restrict_use_due_to_api_limit_grace_period_over__previously_breached__b
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_restrict_use_due_to_api_limit_grace_period_over__missing_subscription_cache__does_not_block(
-    mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
     mailoutbox: list[EmailMultiAlternatives],
@@ -1943,7 +1897,6 @@ def test_restrict_use_due_to_api_limit_grace_period_over__missing_subscription_c
 ) -> None:
     # Given
     assert not organisation.has_subscription_information_cache()
-
     enable_features(
         "api_limiting_stop_serving_flags",
         "api_limiting_block_access_to_admin",
@@ -1991,7 +1944,6 @@ def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__doe
     from organisations.tasks import logger
 
     logger.addHandler(inspecting_handler)
-
     enable_features(
         "api_limiting_stop_serving_flags",
         "api_limiting_block_access_to_admin",
