@@ -14,6 +14,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     LifecycleModelMixin,
     hook,
 )
+from openfeature.evaluation_context import EvaluationContext
 from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
 
 from core.models import SoftDeleteExportableModel
@@ -52,7 +53,6 @@ from organisations.subscriptions.exceptions import (
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
-from util.engine_models.identities.traits.types import TraitValue
 from webhooks.models import AbstractBaseExportableWebhookModel
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
@@ -123,16 +123,15 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return self.is_paid and self.subscription.is_enterprise
 
     @property
-    def flagsmith_identifier(self):  # type: ignore[no-untyped-def]
-        return f"org.{self.id}"
-
-    @property
-    def flagsmith_on_flagsmith_api_traits(self) -> dict[str, TraitValue]:
-        return {
-            "organisation.id": self.id,
-            "organisation.name": self.name,
-            "subscription.plan": self.subscription.plan,
-        }
+    def openfeature_evaluation_context(self) -> EvaluationContext:
+        return EvaluationContext(
+            targeting_key=f"org.{self.id}",
+            attributes={
+                "organisation.id": self.id,
+                "organisation.name": self.name,
+                "subscription.plan": self.subscription.plan or "",
+            },
+        )
 
     def over_plan_seats_limit(self, additional_seats: int = 0):  # type: ignore[no-untyped-def]
         if self.has_paid_subscription():

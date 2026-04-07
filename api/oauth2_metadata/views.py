@@ -75,18 +75,9 @@ class OAuthAuthorizeView(OAuthLibMixin, APIView):  # type: ignore[misc]
             )
 
         Application = get_application_model()
-        try:
-            application = Application.objects.get(
-                client_id=credentials["client_id"],
-            )
-        except Application.DoesNotExist:
-            return Response(
-                {
-                    "error": "invalid_request",
-                    "error_description": "Application not found.",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        application = Application.objects.get(
+            client_id=credentials["client_id"],
+        )
         all_scopes = get_scopes_backend().get_all_scopes()
         scopes_dict: dict[str, str] = {s: all_scopes.get(s, s) for s in scopes}
         return Response(

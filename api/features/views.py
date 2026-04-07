@@ -62,7 +62,7 @@ from environments.permissions.permissions import (
     NestedEnvironmentPermissions,
 )
 from features.value_types import BOOLEAN, INTEGER, STRING
-from integrations.flagsmith.client import get_client
+from integrations.flagsmith.client import get_openfeature_client
 from projects.code_references.services import (
     annotate_feature_queryset_with_code_references_summary,
 )
@@ -222,12 +222,11 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         # TODO: Delete this after https://github.com/flagsmith/flagsmith/issues/6832 is resolved
         organisation = project.organisation
-        flagsmith_client = get_client("local", local_eval=True)
-        flags = flagsmith_client.get_identity_flags(
-            organisation.flagsmith_identifier,
-            traits=organisation.flagsmith_on_flagsmith_api_traits,
-        )
-        if flags.is_feature_enabled("code_references_ui_stats"):
+        if get_openfeature_client().get_boolean_value(
+            "code_references_ui_stats",
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        ):
             queryset = annotate_feature_queryset_with_code_references_summary(queryset)
         else:
             queryset = queryset.annotate(
@@ -451,6 +450,11 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         feature = self.get_object()
         serializer = FeatureGroupOwnerInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        self._validate_owner_removal(
+            feature,
+            owners_to_remove=0,
+            group_owners_to_remove=len(serializer.validated_data["group_ids"]),
+        )
         serializer.remove_group_owners(feature)
         response = Response(self.get_serializer(instance=feature).data)
         return response
@@ -484,9 +488,33 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.is_valid(raise_exception=True)
 
         feature = self.get_object()
+        self._validate_owner_removal(
+            feature,
+            owners_to_remove=len(serializer.validated_data["user_ids"]),
+            group_owners_to_remove=0,
+        )
         serializer.remove_users(feature)
 
         return Response(self.get_serializer(instance=feature).data)
+
+    def _validate_owner_removal(
+        self,
+        feature: Feature,
+        owners_to_remove: int,
+        group_owners_to_remove: int,
+    ) -> None:
+        if not feature.project.enforce_feature_owners:
+            return
+        remaining = (
+            feature.owners.count()
+            - owners_to_remove
+            + feature.group_owners.count()
+            - group_owners_to_remove
+        )
+        if remaining < 1:
+            raise serializers.ValidationError(
+                "This project requires at least one owner or group owner per feature."
+            )
 
     @extend_schema(
         parameters=[GetInfluxDataQuerySerializer],

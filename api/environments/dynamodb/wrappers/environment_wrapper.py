@@ -22,7 +22,7 @@ from environments.metrics import (
     flagsmith_dynamo_environment_document_compression_ratio,
     flagsmith_dynamo_environment_document_size_bytes,
 )
-from integrations.flagsmith.client import get_client
+from integrations.flagsmith.client import get_openfeature_client
 from util.mappers import (
     map_environment_to_compressed_environment_document,
     map_environment_to_compressed_environment_v2_document,
@@ -63,7 +63,7 @@ class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper, abc.ABC):
     ) -> "CompressedEnvironmentDocument": ...
 
     def _write_environments(self, environments: Iterable["Environment"]) -> None:
-        flagsmith_client = get_client("local", local_eval=True)
+        openfeature_client = get_openfeature_client()
         prefetch_related_objects(
             environments,
             "project__organisation",
@@ -74,10 +74,11 @@ class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper, abc.ABC):
         with self.table.batch_writer() as writer:
             for environment in environments:
                 organisation = environment.project.organisation
-                if flagsmith_client.get_identity_flags(
-                    organisation.flagsmith_identifier,
-                    traits=organisation.flagsmith_on_flagsmith_api_traits,
-                ).is_feature_enabled("compress_dynamo_documents"):
+                if openfeature_client.get_boolean_value(
+                    "compress_dynamo_documents",
+                    default_value=False,
+                    evaluation_context=organisation.openfeature_evaluation_context,
+                ):
                     result = self._map_compressed_environment_document(environment)
                     writer.put_item(Item=result.document)
 

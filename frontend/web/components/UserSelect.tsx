@@ -9,14 +9,14 @@ interface UserSelectProps {
   value: any[]
   isOpen: boolean
   onToggle: () => void
-  disabled: boolean
-  onRemove?: (id: string) => void
-  onAdd?: (id: string) => void
+  disabled?: boolean
+  onRemove?: (id: number) => void
+  onAdd?: (id: number) => void
   onChange?: (value: any[]) => void
 }
 
 export const UserSelect: React.FC<UserSelectProps> = ({
-  disabled,
+  disabled = false,
   isOpen,
   onAdd,
   onChange,

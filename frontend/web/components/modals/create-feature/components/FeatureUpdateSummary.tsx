@@ -14,16 +14,20 @@ type FeatureUpdateSummaryProps = {
   regexValid: boolean
   featureLimitPercentage: number
   hasMetadataRequired: boolean
+  ownerIds?: number[]
+  groupOwnerIds?: number[]
 }
 
 const FeatureUpdateSummary: FC<FeatureUpdateSummaryProps> = ({
   featureLimitPercentage,
+  groupOwnerIds,
   hasMetadataRequired,
   identity,
   invalid,
   isSaving,
   name,
   onCreateFeature,
+  ownerIds,
   projectId,
   regexValid,
 }) => {
@@ -32,6 +36,10 @@ const FeatureUpdateSummary: FC<FeatureUpdateSummaryProps> = ({
     { skip: !projectId },
   )
   const preventFlagDefaults = !!project?.prevent_flag_defaults
+  const enforceOwners = !!project?.enforce_feature_owners
+  const hasOwners =
+    (ownerIds?.length ?? 0) > 0 || (groupOwnerIds?.length ?? 0) > 0
+  const missingRequiredOwners = enforceOwners && !hasOwners
 
   return (
     <>
@@ -46,6 +54,14 @@ const FeatureUpdateSummary: FC<FeatureUpdateSummaryProps> = ({
             </InfoMessage>
           )}
 
+          {missingRequiredOwners && (
+            <InfoMessage>
+              This project requires at least one user or group owner to be
+              assigned when creating a feature. Please assign an owner in the
+              settings above.
+            </InfoMessage>
+          )}
+
           <Button
             onClick={onCreateFeature}
             data-test='create-feature-btn'
@@ -56,7 +72,8 @@ const FeatureUpdateSummary: FC<FeatureUpdateSummaryProps> = ({
               invalid ||
               !regexValid ||
               featureLimitPercentage >= 100 ||
-              hasMetadataRequired
+              hasMetadataRequired ||
+              missingRequiredOwners
             }
           >
             {isSaving ? 'Creating' : 'Create Feature'}
