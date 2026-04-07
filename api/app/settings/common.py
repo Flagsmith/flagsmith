@@ -15,6 +15,7 @@ import logging
 import os
 import warnings
 from datetime import datetime, time, timedelta
+from functools import lru_cache
 from typing import Any
 
 import dj_database_url
@@ -174,6 +175,28 @@ db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
 DJANGO_DB_CONN_MAX_AGE = 0 if db_conn_max_age == -1 else db_conn_max_age
 
 DATABASE_ROUTERS: list[str] = []
+DATABASES: dict[str, Any] = {}
+
+USE_AZURE_MANAGED_IDENTITY_FOR_DB_AUTH = env(
+    "USE_AZURE_MANAGED_IDENTITY_FOR_DB_AUTH", default=False
+)
+
+
+@lru_cache(maxsize=1)
+def _get_db_password(env_var_name: str) -> str | None:
+    if USE_AZURE_MANAGED_IDENTITY_FOR_DB_AUTH:
+        # Ignore the environment variable and get the password
+        # using Azure Managed Identities authentication.
+        from azure.identity import DefaultAzureCredential
+
+        azure_token = DefaultAzureCredential().get_token(
+            "https://ossrdbms-aad.database.windows.net"
+        )
+        return azure_token.token
+
+    return os.environ.get(env_var_name)
+
+
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
@@ -239,7 +262,7 @@ elif "DJANGO_DB_NAME" in os.environ:
             "ENGINE": "django.db.backends.postgresql",
             "NAME": os.environ["DJANGO_DB_NAME"],
             "USER": os.environ["DJANGO_DB_USER"],
-            "PASSWORD": os.environ["DJANGO_DB_PASSWORD"],
+            "PASSWORD": _get_db_password("DJANGO_DB_PASSWORD"),
             "HOST": os.environ["DJANGO_DB_HOST"],
             "PORT": os.environ["DJANGO_DB_PORT"],
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
@@ -250,7 +273,7 @@ elif "DJANGO_DB_NAME" in os.environ:
             "ENGINE": "django.db.backends.postgresql",
             "NAME": os.environ["DJANGO_DB_NAME_ANALYTICS"],
             "USER": os.environ["DJANGO_DB_USER_ANALYTICS"],
-            "PASSWORD": os.environ["DJANGO_DB_PASSWORD_ANALYTICS"],
+            "PASSWORD": _get_db_password("DJANGO_DB_PASSWORD_ANALYTICS"),
             "HOST": os.environ["DJANGO_DB_HOST_ANALYTICS"],
             "PORT": os.environ["DJANGO_DB_PORT_ANALYTICS"],
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
@@ -261,9 +284,8 @@ elif "DJANGO_DB_NAME" in os.environ:
 # Task processor database — OPTIONALLY SEPARATED
 TASK_PROCESSOR_DATABASE_URL = env("TASK_PROCESSOR_DATABASE_URL", default=None)
 TASK_PROCESSOR_DATABASE_USER = env("TASK_PROCESSOR_DATABASE_USER", default="")
-TASK_PROCESSOR_DATABASE_PASSWORD = env(
-    "TASK_PROCESSOR_DATABASE_PASSWORD",
-    default="",
+TASK_PROCESSOR_DATABASE_PASSWORD = (
+    _get_db_password("TASK_PROCESSOR_DATABASE_PASSWORD") or "",
 )
 TASK_PROCESSOR_DATABASE_HOST = env("TASK_PROCESSOR_DATABASE_HOST", default="")
 TASK_PROCESSOR_DATABASE_PORT = env("TASK_PROCESSOR_DATABASE_PORT", default="")
