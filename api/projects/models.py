@@ -60,6 +60,10 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[d
         default=False,
         help_text="Prevent defaults from being set in all environments when creating a feature.",
     )
+    enforce_feature_owners = models.BooleanField(
+        default=False,
+        help_text="Require at least one user or group owner when creating a feature.",
+    )
     enable_realtime_updates = models.BooleanField(
         default=False,
         help_text="Enable this to trigger a realtime(sse) event whenever the value of a flag changes",

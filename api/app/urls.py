@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic.base import TemplateView
+from oauth2_provider import views as oauth2_views
 
 from oauth2_metadata.views import (
     DynamicClientRegistrationView,
@@ -61,8 +62,27 @@ if not settings.TASK_PROCESSOR_MODE:
             DynamicClientRegistrationView.as_view(),
             name="oauth2-dcr-register",
         ),
-        # Authorize template view for testing: this will be moved to the frontend in following issues
-        path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
+        path(
+            "o/",
+            include(
+                (
+                    [
+                        path("token/", oauth2_views.TokenView.as_view(), name="token"),
+                        path(
+                            "revoke_token/",
+                            oauth2_views.RevokeTokenView.as_view(),
+                            name="revoke-token",
+                        ),
+                        path(
+                            "introspect/",
+                            oauth2_views.IntrospectTokenView.as_view(),
+                            name="introspect",
+                        ),
+                    ],
+                    "oauth2_provider",
+                )
+            ),
+        ),
     ]
 
 if settings.DEBUG:  # pragma: no cover

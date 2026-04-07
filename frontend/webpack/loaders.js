@@ -6,6 +6,13 @@ module.exports = [
         use: ['babel-loader'],
     },
     {
+        // Allow ESM modules from node_modules (e.g. remark-gfm, unified)
+        test: /\.m?js$/,
+        include: /node_modules/,
+        resolve: { fullySpecified: false },
+        type: 'javascript/auto',
+    },
+    {
         test: /\.tsx?$/,
         exclude: /node_modules/,
         use: ['babel-loader'],
