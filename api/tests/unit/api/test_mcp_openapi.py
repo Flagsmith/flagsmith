@@ -2,6 +2,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_django.fixtures import SettingsWrapper
 
 from api.openapi import MCPSchemaGenerator, SchemaGenerator
 from api.openapi_views import CustomSpectacularJSONAPIView, CustomSpectacularYAMLAPIView
@@ -143,10 +144,12 @@ def test_mcp_transform_for_mcp__security_present__removes_operation_level_securi
     assert "security" not in transformed
 
 
-def test_mcp_update_security_for_mcp__existing_scheme__sets_token_auth_security() -> (
-    None
-):
+def test_mcp_update_security_for_mcp__existing_scheme__sets_oauth_and_token_auth(
+    settings: SettingsWrapper,
+) -> None:
     # Given
+    settings.FLAGSMITH_API_URL = "https://api.flagsmith.example.com/"
+    settings.FLAGSMITH_FRONTEND_URL = "https://app.flagsmith.example.com/"
     schema: dict[str, Any] = {
         "components": {
             "securitySchemes": {
@@ -161,9 +164,15 @@ def test_mcp_update_security_for_mcp__existing_scheme__sets_token_auth_security(
     updated = generator._update_security_for_mcp(schema)
 
     # Then
-    assert "TOKEN_AUTH" in updated["components"]["securitySchemes"]
-    assert updated["security"] == [{"TOKEN_AUTH": []}]
     assert "Private" not in updated["components"]["securitySchemes"]
+    assert "TOKEN_AUTH" in updated["components"]["securitySchemes"]
+    oauth2_scheme = updated["components"]["securitySchemes"]["oauth2"]
+    assert oauth2_scheme["type"] == "oauth2"
+    auth_code_flow = oauth2_scheme["flows"]["authorizationCode"]
+    assert auth_code_flow["authorizationUrl"] == "https://app.flagsmith.example.com/oauth/authorize/"
+    assert auth_code_flow["tokenUrl"] == "https://api.flagsmith.example.com/o/token/"
+    assert auth_code_flow["scopes"] == {"mcp": "MCP access"}
+    assert updated["security"] == [{"oauth2": ["mcp"]}, {"TOKEN_AUTH": []}]
 
 
 @pytest.mark.parametrize(
@@ -267,19 +276,26 @@ def test_mcp_schema__full_schema_generated__includes_expected_endpoints_only() -
     assert "/api/v1/users/" not in paths
 
 
-def test_mcp_schema__full_schema_generated__includes_https_server() -> None:
+def test_mcp_schema__full_schema_generated__includes_server_from_settings(
+    settings: SettingsWrapper,
+) -> None:
     # Given
+    settings.FLAGSMITH_API_URL = "https://flagsmith.example.com/"
     generator = MCPSchemaGenerator()
 
     # When
     schema = generator.get_schema(request=None, public=True)
 
     # Then
-    assert schema["servers"] == [{"url": "https://api.flagsmith.com"}]
+    assert schema["servers"] == [{"url": "https://flagsmith.example.com"}]
 
 
-def test_mcp_schema__full_schema_generated__includes_token_auth_security() -> None:
+def test_mcp_schema__full_schema_generated__includes_oauth_and_token_auth(
+    settings: SettingsWrapper,
+) -> None:
     # Given
+    settings.FLAGSMITH_API_URL = "https://api.flagsmith.example.com/"
+    settings.FLAGSMITH_FRONTEND_URL = "https://app.flagsmith.example.com/"
     generator = MCPSchemaGenerator()
 
     # When
@@ -287,4 +303,5 @@ def test_mcp_schema__full_schema_generated__includes_token_auth_security() -> No
 
     # Then
     assert "TOKEN_AUTH" in schema["components"]["securitySchemes"]
-    assert schema["security"] == [{"TOKEN_AUTH": []}]
+    assert "oauth2" in schema["components"]["securitySchemes"]
+    assert schema["security"] == [{"oauth2": ["mcp"]}, {"TOKEN_AUTH": []}]

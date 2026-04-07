@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, Literal
 
+from django.conf import settings
 from drf_spectacular import generators, openapi
 from drf_spectacular.extensions import (
     OpenApiAuthenticationExtension,
@@ -73,7 +74,6 @@ class MCPSchemaGenerator(SchemaGenerator):
     """
 
     MCP_TAG = "mcp"
-    MCP_SERVER_URL = "https://api.flagsmith.com"
 
     def get_schema(
         self, request: Request | None = None, public: bool = False
@@ -84,10 +84,11 @@ class MCPSchemaGenerator(SchemaGenerator):
         schema.pop("$schema", None)
         info = schema.pop("info").copy()
         info["title"] = "mcp_openapi"
+        server_url = settings.FLAGSMITH_API_URL.rstrip("/")
         return {
             "openapi": schema.pop("openapi"),
             "info": info,
-            "servers": [{"url": self.MCP_SERVER_URL}],
+            "servers": [{"url": server_url}],
             **schema,
         }
 
@@ -122,10 +123,25 @@ class MCPSchemaGenerator(SchemaGenerator):
         return operation
 
     def _update_security_for_mcp(self, schema: dict[str, Any]) -> dict[str, Any]:
-        """Update security schemes for MCP (Organisation API Key)."""
+        """Update security schemes for MCP (OAuth + API Key fallback)."""
+        api_url = settings.FLAGSMITH_API_URL.rstrip("/")
+        frontend_url = settings.FLAGSMITH_FRONTEND_URL.rstrip("/")
+        oauth2_settings: dict[str, Any] = settings.OAUTH2_PROVIDER
+        scopes: dict[str, str] = oauth2_settings.get("SCOPES", {})
+
         schema = schema.copy()
         schema["components"] = schema.get("components", {}).copy()
         schema["components"]["securitySchemes"] = {
+            "oauth2": {
+                "type": "oauth2",
+                "flows": {
+                    "authorizationCode": {
+                        "authorizationUrl": f"{frontend_url}/oauth/authorize/",
+                        "tokenUrl": f"{api_url}/o/token/",
+                        "scopes": scopes,
+                    },
+                },
+            },
             "TOKEN_AUTH": {
                 "type": "apiKey",
                 "in": "header",
@@ -133,7 +149,7 @@ class MCPSchemaGenerator(SchemaGenerator):
                 "description": "Organisation API Key. Format: Api-Key <key>",
             },
         }
-        schema["security"] = [{"TOKEN_AUTH": []}]
+        schema["security"] = [{"oauth2": list(scopes.keys())}, {"TOKEN_AUTH": []}]
         return schema
 
 
