@@ -17,35 +17,11 @@ from .constants import HUBSPOT_FORM_ID_SAAS
 
 logger = logging.getLogger(__name__)
 
-try:
-    import re2 as re  # type: ignore[import-untyped]
-
-    logger.info("Using re2 library for regex.")
-except ImportError:
-    logger.warning("Unable to import re2. Falling back to re.")
-    import re
-
 
 class HubspotLeadTracker(LeadTracker):
     @staticmethod
     def should_track(user: FFAdminUser) -> bool:
-        if not settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            return False
-
-        domain = user.email_domain
-
-        if settings.HUBSPOT_IGNORE_DOMAINS_REGEX and re.match(
-            settings.HUBSPOT_IGNORE_DOMAINS_REGEX, domain
-        ):
-            return False
-
-        if (
-            settings.HUBSPOT_IGNORE_DOMAINS
-            and domain in settings.HUBSPOT_IGNORE_DOMAINS
-        ):
-            return False
-
-        return True
+        return settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     def update_company_active_subscription(
         self, subscription: Subscription
@@ -96,17 +72,9 @@ class HubspotLeadTracker(LeadTracker):
         return hubspot_contact_id
 
     def create_lead(self, user: FFAdminUser, organisation: Organisation) -> None:
-        hubspot_contact_id = self._get_or_create_user_hubspot_id(user)
-        if not hubspot_contact_id:
-            return
-        hubspot_org_id = self._get_organisation_hubspot_id(user, organisation)
-        if not hubspot_org_id:
-            return
-
-        self.client.associate_contact_to_company(
-            contact_id=hubspot_contact_id,
-            company_id=hubspot_org_id,
-        )
+        # Only create the contact. HubSpot handles company creation and
+        # association automatically from the contact's email domain.
+        self._get_or_create_user_hubspot_id(user)
 
     def _get_new_contact_with_retry(
         self, user: FFAdminUser, max_retries: int = 3
