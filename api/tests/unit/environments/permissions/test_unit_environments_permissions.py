@@ -158,7 +158,7 @@ def test_environment_permissions__user_without_create_permission__returns_false(
 )
 def test_environment_permissions__create_with_invalid_project__returns_false(
     staff_user: FFAdminUser,
-    request_data: dict,
+    request_data: dict[str, str],
     expected: bool,
 ) -> None:
     # Given
