@@ -1,6 +1,15 @@
 name: Frontend Chromatic
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - frontend/web/components/**
+      - frontend/web/styles/**
+      - frontend/common/theme/**
+      - frontend/documentation/**
+      - frontend/.storybook/**
+      - .github/workflows/frontend-chromatic.yml
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
@@ -14,7 +23,7 @@ jobs:
   chromatic:
     name: Chromatic
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: github.event_name == 'push' || github.event.pull_request.draft == false
 
     defaults:
       run:
@@ -43,3 +52,4 @@ jobs:
           exitZeroOnChanges: true
           exitOnceUploaded: true
           onlyChanged: true
+          autoAcceptChanges: main
