@@ -19,6 +19,7 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from core.constants import STRING
 from core.request_origin import RequestOrigin
+from environments.enums import EnvironmentDocumentCacheMode
 from environments.identities.models import Identity
 from environments.metrics import CACHE_HIT, CACHE_MISS
 from environments.models import (
@@ -41,7 +42,10 @@ from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
 from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
-from util.mappers import map_environment_to_environment_document
+from util.mappers import (
+    map_environment_to_environment_document,
+    map_environment_to_sdk_document,
+)
 
 if typing.TYPE_CHECKING:
     from django.db.models import Model
@@ -1082,9 +1086,14 @@ def test_environment_save__api_key_changed__updates_environment_document_cache(
 
     # Then
     persistent_environment_document_cache.delete.assert_called_once_with(old_api_key)
-    persistent_environment_document_cache.set_many.assert_called_once_with(
-        {new_api_key: map_environment_to_environment_document(environment)}
-    )
+    persistent_environment_document_cache.set_many.assert_called_once()
+
+    # Get what was actually cached and compare to sdk document
+    cache_payload = persistent_environment_document_cache.set_many.call_args[0][0]
+    cached_document = cache_payload[new_api_key]
+    expected_document = map_environment_to_sdk_document(environment)
+
+    assert cached_document == expected_document
 
 
 def test_get_environment_document__cache_hit__triggers_cache_hit_metric(
@@ -1307,3 +1316,21 @@ def test_environment_clone__from_v1_with_v2_flag_enabled__upgrades_to_v2_version
     latest_feature_states = get_environment_flags_queryset(new_environment)
     assert latest_feature_states.count() == 2
     assert {fs.environment_feature_version for fs in latest_feature_states} == {efv}
+
+
+@mock.patch("environments.models.environment_document_cache")
+def test_write_environment_documents__persistent_caching_enabled__caches_sdk_document(
+    mock_document_cache: MagicMock, environment: Environment, settings: typing.Any
+) -> None:
+    # Given
+    settings.CACHE_ENVIRONMENT_DOCUMENT_MODE = EnvironmentDocumentCacheMode.PERSISTENT
+
+    # When
+    Environment.write_environment_documents(environment_id=environment.id)
+
+    # Then
+    cache_payload = mock_document_cache.set_many.call_args[0][0]
+    cached_document = cache_payload[environment.api_key]
+    expected_document = map_environment_to_sdk_document(environment)
+
+    assert cached_document == expected_document
