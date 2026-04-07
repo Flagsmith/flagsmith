@@ -841,7 +841,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return {
       boolean_value: null,
       integer_value: null,
-      string_value: value === null ? null : val || '',
+      string_value: value === null || val === '' ? null : val,
       type: 'unicode',
     }
   },
@@ -869,7 +869,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return {
       boolean_value: null,
       integer_value: null,
-      string_value: value === null ? null : val || '',
+      string_value: value === null || val === '' ? null : val,
       value_type: 'unicode',
     }
   },
