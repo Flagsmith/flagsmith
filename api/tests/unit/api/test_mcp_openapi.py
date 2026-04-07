@@ -169,7 +169,10 @@ def test_mcp_update_security_for_mcp__existing_scheme__sets_oauth_and_token_auth
     oauth2_scheme = updated["components"]["securitySchemes"]["oauth2"]
     assert oauth2_scheme["type"] == "oauth2"
     auth_code_flow = oauth2_scheme["flows"]["authorizationCode"]
-    assert auth_code_flow["authorizationUrl"] == "https://app.flagsmith.example.com/oauth/authorize/"
+    assert (
+        auth_code_flow["authorizationUrl"]
+        == "https://app.flagsmith.example.com/oauth/authorize/"
+    )
     assert auth_code_flow["tokenUrl"] == "https://api.flagsmith.example.com/o/token/"
     assert auth_code_flow["scopes"] == {"mcp": "MCP access"}
     assert updated["security"] == [{"oauth2": ["mcp"]}, {"TOKEN_AUTH": []}]
