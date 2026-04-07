@@ -11,7 +11,7 @@ Link GitLab issues and merge requests to your Flagsmith feature flags. When a
 flag changes state, Flagsmith posts a comment to the linked issue or MR showing
 the flag's current state across all environments.
 
-Flagsmith offers two integration cards depending on your GitLab setup:
+Flagsmith offers two integration options depending on your GitLab setup:
 
 - **GitLab** — for teams using GitLab.com. One-click OAuth.
 - **GitLab Self-Hosted** — for teams running their own GitLab instance. Uses a
