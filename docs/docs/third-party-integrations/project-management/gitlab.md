@@ -70,6 +70,13 @@ posted automatically.
 A **Flagsmith Flag** label is added to linked issues and merge requests so your
 team can filter for them in GitLab.
 
+## Automatic state sync
+
+When a linked issue or merge request changes state in GitLab — closed, merged,
+or reopened — Flagsmith automatically updates the linked feature flag's tags to
+reflect the current state. This is powered by webhooks that Flagsmith registers
+on your GitLab projects automatically.
+
 ## Removing the integration
 
 Go to Integrations > GitLab > Manage Integration > Delete Integration.
