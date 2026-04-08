@@ -5,7 +5,9 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic.base import TemplateView
+from oauth2_provider import views as oauth2_views
 
+from oauth2_metadata.views import authorization_server_metadata
 from users.views import password_reset_redirect
 
 from . import views
@@ -13,6 +15,11 @@ from . import views
 urlpatterns = [
     *core_urlpatterns,
     path("processor/", include("task_processor.urls")),
+    path(
+        ".well-known/oauth-authorization-server",
+        authorization_server_metadata,
+        name="oauth-authorization-server-metadata",
+    ),
 ]
 
 if not settings.TASK_PROCESSOR_MODE:
@@ -46,6 +53,27 @@ if not settings.TASK_PROCESSOR_MODE:
         path(
             "robots.txt",
             TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
+        ),
+        path(
+            "o/",
+            include(
+                (
+                    [
+                        path("token/", oauth2_views.TokenView.as_view(), name="token"),
+                        path(
+                            "revoke_token/",
+                            oauth2_views.RevokeTokenView.as_view(),
+                            name="revoke-token",
+                        ),
+                        path(
+                            "introspect/",
+                            oauth2_views.IntrospectTokenView.as_view(),
+                            name="introspect",
+                        ),
+                    ],
+                    "oauth2_provider",
+                )
+            ),
         ),
     ]
 

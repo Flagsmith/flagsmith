@@ -87,6 +87,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     # Used for managing api keys
     "rest_framework_api_key",
+    "oauth2_provider",
     "rest_framework_simplejwt.token_blacklist",
     "djoser",
     "django.contrib.sites",
@@ -164,6 +165,7 @@ INSTALLED_APPS = [
     "softdelete",
     "metadata",
     "app_analytics",
+    "oauth2_metadata",
 ]
 
 SILENCED_SYSTEM_CHECKS = ["axes.W002"]
@@ -311,6 +313,7 @@ REST_FRAMEWORK = {
         "custom_auth.jwt_cookie.authentication.JWTCookieAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "api_keys.authentication.MasterAPIKeyAuthentication",
+        "oauth2_metadata.authentication.OAuth2BearerTokenAuthentication",
     ),
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
@@ -885,6 +888,26 @@ SIMPLE_JWT = {
         )
     ),
     "SIGNING_KEY": env.str("COOKIE_AUTH_JWT_SIGNING_KEY", default=SECRET_KEY),
+}
+
+# OAuth 2.1 Provider (django-oauth-toolkit)
+FLAGSMITH_API_URL = env.str("FLAGSMITH_API_URL", default="http://localhost:8000")
+FLAGSMITH_FRONTEND_URL = env.str(
+    "FLAGSMITH_FRONTEND_URL", default="http://localhost:8080"
+)
+
+OAUTH2_PROVIDER = {
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 60 * 15,  # 15 minutes
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 60 * 60 * 24 * 30,  # 30 days
+    "ROTATE_REFRESH_TOKEN": True,
+    "PKCE_REQUIRED": True,
+    "ALLOWED_CODE_CHALLENGE_METHODS": ["S256"],
+    "SCOPES": {"mcp": "MCP access"},
+    "DEFAULT_SCOPES": ["mcp"],
+    "ALLOWED_GRANT_TYPES": [
+        "authorization_code",
+        "refresh_token",
+    ],
 }
 
 # Github OAuth credentials
