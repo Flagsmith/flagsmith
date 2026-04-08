@@ -13,6 +13,17 @@ nav a {
     font-weight: bold;
   }
 }
+.account-dropdown-trigger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+
+  &:hover,
+  &:focus {
+    color: var(--color-text-action);
+  }
+}
 .nav-sub-link-disabled {
   cursor: not-allowed;
   span {
