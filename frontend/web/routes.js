@@ -6,9 +6,9 @@ import HomePage from './components/pages/HomePage'
 import Maintenance from './components/Maintenance'
 import CreateOrganisationPage from './components/pages/CreateOrganisationPage'
 import CreateEnvironmentPage from './components/pages/CreateEnvironmentPage'
-import UsersPage from './components/pages/UsersPage'
-import UserPage from './components/pages/UserPage'
-import UserIdPage from './components/pages/UserIdPage'
+import IdentitiesPage from './components/pages/IdentitiesPage'
+import IdentityPage from './components/pages/IdentityPage'
+import IdentityIdPage from './components/pages/IdentityIdPage'
 import IntegrationsPage from './components/pages/IntegrationsPage'
 import FlagsPage from './components/pages/features'
 import SegmentsPage from './components/pages/SegmentsPage'
@@ -120,9 +120,12 @@ export const routes = {
   'segment': '/project/:projectId/segments/:id',
   'segments': '/project/:projectId/segments',
   'signup': '/signup',
-  'user': '/project/:projectId/environment/:environmentId/users/:identity/:id',
-  'user-id': '/project/:projectId/environment/:environmentId/users/:identity',
-  'users': '/project/:projectId/environment/:environmentId/users',
+  'identities': '/project/:projectId/environment/:environmentId/identities',
+  'identity': '/project/:projectId/environment/:environmentId/identities/:identity/:id',
+  'identity-id': '/project/:projectId/environment/:environmentId/identities/:identity',
+  'legacy-identities': '/project/:projectId/environment/:environmentId/users',
+  'legacy-identity': '/project/:projectId/environment/:environmentId/users/:identity/:id',
+  'legacy-identity-id': '/project/:projectId/environment/:environmentId/users/:identity',
   'widget': '/widget',
 }
 export default (
@@ -207,13 +210,21 @@ export default (
         exact
         component={OrganisationIntegrationsPage}
       />
-      <ParameterizedRoute path={routes.users} exact component={UsersPage} />
+      <ParameterizedRoute path={routes.identities} exact component={IdentitiesPage} />
       <ParameterizedRoute
-        path={routes['user-id']}
+        path={routes['identity-id']}
         exact
-        component={UserIdPage}
+        component={IdentityIdPage}
       />
-      <ParameterizedRoute path={routes.user} exact component={UserPage} />
+      <ParameterizedRoute path={routes.identity} exact component={IdentityPage} />
+      {/* Legacy /users routes for backward compatibility */}
+      <ParameterizedRoute path={routes['legacy-identities']} exact component={IdentitiesPage} />
+      <ParameterizedRoute
+        path={routes['legacy-identity-id']}
+        exact
+        component={IdentityIdPage}
+      />
+      <ParameterizedRoute path={routes['legacy-identity']} exact component={IdentityPage} />
       <ParameterizedRoute
         path={routes['create-environment']}
         exact

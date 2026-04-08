@@ -32,7 +32,7 @@ import PanelSearch from 'components/PanelSearch'
 import TryIt from 'components/TryIt'
 import Utils from 'common/utils/utils'
 import _data from 'common/data/base/_data'
-import { removeIdentity } from './UsersPage'
+import { removeIdentity } from './IdentitiesPage'
 import IdentityTraits from 'components/IdentityTraits'
 import { useGetIdentitySegmentsQuery } from 'common/services/useIdentitySegment'
 import useDebouncedSearch from 'common/useDebouncedSearch'
@@ -53,7 +53,7 @@ interface RouteParams {
   identity: string
 }
 
-const UserPage: FC = () => {
+const IdentityPage: FC = () => {
   const match = useRouteMatch<RouteParams>()
   const history = useHistory()
   const params = Utils.fromParam()
@@ -455,7 +455,7 @@ const UserPage: FC = () => {
                           integration again. You can also recreate it in the
                           dashboard from the{' '}
                           <Link
-                            to={`/project/${projectId}/environment/${environmentId}/users`}
+                            to={`/project/${projectId}/environment/${environmentId}/identities`}
                           >
                             Identities Page
                           </Link>
@@ -470,7 +470,7 @@ const UserPage: FC = () => {
                               environmentId,
                               () => {
                                 history.replace(
-                                  `/project/${projectId}/environment/${environmentId}/users`,
+                                  `/project/${projectId}/environment/${environmentId}/identities`,
                                 )
                               },
                             )
@@ -492,4 +492,4 @@ const UserPage: FC = () => {
   )
 }
 
-export default ConfigProvider(UserPage)
+export default ConfigProvider(IdentityPage)

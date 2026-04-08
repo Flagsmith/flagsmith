@@ -127,7 +127,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     window.open(
       `${
         document.location.origin
-      }/project/${projectId}/environment/${environmentId}/users/${encodeURIComponent(
+      }/project/${projectId}/environment/${environmentId}/identities/${encodeURIComponent(
         user.label,
       )}/${user.value}?flag=${encodeURIComponent(feature)}`,
       '_blank',
