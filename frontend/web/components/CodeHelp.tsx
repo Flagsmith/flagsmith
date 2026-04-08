@@ -156,6 +156,7 @@ const SnippetItem: FC<SnippetItemProps> = ({
           size='xSmall'
           iconLeft='copy'
           iconLeftColour='white'
+          iconSize={16}
         >
           Copy Code
         </Button>
@@ -165,12 +166,11 @@ const SnippetItem: FC<SnippetItemProps> = ({
             href={docs}
             className='btn btn-primary'
             size='xSmall'
+            iconLeft='file-text'
+            iconLeftColour='white'
+            iconSize={16}
           >
-            <span className='icon' style={{ marginRight: '2px' }}>
-              <Icon name='file-text' />
-            </span>
-            {languageKey}
-            Docs
+            {languageKey} Docs
           </Button>
         )}
         {github && (
@@ -179,10 +179,10 @@ const SnippetItem: FC<SnippetItemProps> = ({
             href={github}
             className='btn btn-primary'
             size='xSmall'
+            iconLeft='github'
+            iconLeftColour='white'
+            iconSize={16}
           >
-            <span className='icon' style={{ marginRight: '2px' }}>
-              <Icon name='github' />
-            </span>
             {languageKey} GitHub
           </Button>
         )}
