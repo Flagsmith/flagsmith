@@ -56,8 +56,6 @@ module.exports = {
     .concat(extraPlugins)
     .concat(
       require('./pages').map((page) => {
-        // eslint-disable-next-line no-console
-        console.log(page)
         // Use html-webpack-plugin (Rspack-compatible) to preserve Handlebars {{}} syntax
         return new HtmlWebpackPlugin({
           'assets': {

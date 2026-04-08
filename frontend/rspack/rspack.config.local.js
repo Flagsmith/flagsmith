@@ -68,8 +68,6 @@ module.exports = {
     ])
     .concat(
       require('./pages').map((page) => {
-        // eslint-disable-next-line no-console
-        console.log(page)
         return new rspack.HtmlRspackPlugin({
           filename: `${page}.html`,
           template: `./web/${page}.html`,
