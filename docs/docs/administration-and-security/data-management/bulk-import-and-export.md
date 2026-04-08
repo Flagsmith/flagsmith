@@ -154,7 +154,9 @@ overwritten, all of its rules, conditions, and associated feature overrides are 
 All entities are matched by name across instances, not by internal ID. This means exports are portable between Flagsmith
 instances. Specifically:
 
-- Features and segments are matched by name.
+- Features are matched by name (unique per project).
+- Segments are matched by name. If duplicates exist in the target project, the first match is used. If the export
+  contains duplicate segment names, all are imported.
 - Tags are matched by label.
 - Environments are matched by name. Missing environments are created with settings from the export. For existing
   environments, the Skip strategy leaves settings unchanged, while Overwrite Destructive updates settings to match the
