@@ -3,7 +3,7 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 
-const organisationUsageService = service
+export const organisationUsageService = service
   .enhanceEndpoints({ addTagTypes: ['OrganisationUsage'] })
   .injectEndpoints({
     endpoints: (builder) => ({

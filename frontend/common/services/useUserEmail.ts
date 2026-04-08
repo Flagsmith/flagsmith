@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-const userEmailService = service
+export const userEmailService = service
   .enhanceEndpoints({ addTagTypes: ['UserEmail'] })
   .injectEndpoints({
     endpoints: (builder) => ({

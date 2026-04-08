@@ -1,5 +1,4 @@
 import React from 'react'
-import Button from './base/forms/Button'
 import Icon from './icons/Icon'
 import Tooltip from './Tooltip'
 

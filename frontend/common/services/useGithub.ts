@@ -3,7 +3,7 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 
-const githubService = service
+export const githubService = service
   .enhanceEndpoints({ addTagTypes: ['Github'] })
   .injectEndpoints({
     endpoints: (builder) => ({

@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-const rolePermissionGroupService = service
+export const rolePermissionGroupService = service
   .enhanceEndpoints({ addTagTypes: ['RolePermissionGroup', 'GroupWithRole'] })
   .injectEndpoints({
     endpoints: (builder) => ({

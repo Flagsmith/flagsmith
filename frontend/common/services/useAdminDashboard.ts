@@ -2,7 +2,7 @@ import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import { service } from 'common/service'
 
-const adminDashboardService = service
+export const adminDashboardService = service
   .enhanceEndpoints({ addTagTypes: ['AdminDashboard'] })
   .injectEndpoints({
     endpoints: (builder) => ({

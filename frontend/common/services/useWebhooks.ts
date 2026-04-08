@@ -2,7 +2,7 @@ import { service } from 'common/service'
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 
-const webhookService = service
+export const webhookService = service
   .enhanceEndpoints({ addTagTypes: ['Webhooks'] })
   .injectEndpoints({
     endpoints: (builder) => ({

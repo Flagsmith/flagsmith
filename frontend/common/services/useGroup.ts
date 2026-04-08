@@ -4,7 +4,7 @@ import { service } from 'common/service'
 import { getStore } from 'common/store'
 import Utils from 'common/utils/utils'
 
-const groupService = service
+export const groupService = service
   .enhanceEndpoints({
     addTagTypes: ['Group', 'UserGroupPermission', 'GroupSummary'],
   })

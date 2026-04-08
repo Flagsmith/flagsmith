@@ -3,7 +3,7 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 
-const identityFeatureStateService = service
+export const identityFeatureStateService = service
   .enhanceEndpoints({ addTagTypes: ['IdentityFeatureState'] })
   .injectEndpoints({
     endpoints: (builder) => ({

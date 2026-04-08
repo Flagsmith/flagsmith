@@ -3,7 +3,7 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import moment from 'moment'
 
-const featureAnalyticsService = service
+export const featureAnalyticsService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureAnalytics'] })
   .injectEndpoints({
     endpoints: (builder) => ({
