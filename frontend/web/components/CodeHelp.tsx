@@ -3,7 +3,7 @@ import flagsmith from '@flagsmith/flagsmith'
 import Highlight from './Highlight'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { GithubIcon } from './icons/GithubIcon'
 
 type Snippets = Record<string, string>
