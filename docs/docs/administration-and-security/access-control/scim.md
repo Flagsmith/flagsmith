@@ -42,8 +42,8 @@ When your identity provider provisions a user through SCIM:
 
 When your identity provider deprovisions a user (sets `active` to `false` or sends a DELETE request):
 
-1. The user is removed from the organisation in Flagsmith. This also removes all their project and environment permissions
-   within that organisation, and removes them from all
+1. The user is removed from the organisation in Flagsmith. This also removes all their project and environment
+   permissions within that organisation, and removes them from all
    [permission groups](/administration-and-security/access-control/rbac#groups) in that organisation.
 2. The user's data (audit log entries, change request history) is preserved.
 
@@ -76,8 +76,7 @@ between logins, while SAML group sync acts as a reconciliation point at each log
 
 ### 1. Create a SCIM configuration
 
-From the Flagsmith dashboard, click on your organisation name in the top left, then go to **Organisation Settings** >
-**SCIM**.
+From the Flagsmith dashboard, go to **Organisation Settings** > **SSO** > **SCIM**.
 
 Click "Create SCIM Configuration". This generates a SCIM bearer token. Copy this token and store it securely. It is
 shown only once and cannot be retrieved later. If you lose it, you can regenerate a new token from the same page.
@@ -143,7 +142,7 @@ endpoints as defined by the SCIM 2.0 specification.
 
 ## Managing SCIM tokens
 
-You can view and manage SCIM configurations from **Organisation Settings** > **SCIM**. From this page you can:
+You can view and manage SCIM configurations from **Organisation Settings** > **SSO** > **SCIM**. From this page you can:
 
 - Regenerate a SCIM token. This invalidates the previous token immediately.
 - Delete the SCIM configuration. This stops all SCIM provisioning for the organisation. Existing users and groups are
@@ -159,7 +158,8 @@ You can view and manage SCIM configurations from **Organisation Settings** > **S
 
 ### Users are provisioned but cannot log in
 
-- SCIM only manages the user lifecycle (creating accounts, setting group membership). Users still need to authenticate through your SSO provider. Verify that your SAML configuration is set up correctly.
+- SCIM only manages the user lifecycle (creating accounts, setting group membership). Users still need to authenticate
+  through your SSO provider. Verify that your SAML configuration is set up correctly.
 
 ### Group membership is not syncing
 
@@ -170,4 +170,5 @@ You can view and manage SCIM configurations from **Organisation Settings** > **S
 
 ### Deprovisioned users still appear in the organisation
 
-- Check that your identity provider is sending a PATCH request with `active` set to `false`, or a DELETE request, when deprovisioning a user. Some identity providers require explicit configuration to send deprovisioning events.
+- Check that your identity provider is sending a PATCH request with `active` set to `false`, or a DELETE request, when
+  deprovisioning a user. Some identity providers require explicit configuration to send deprovisioning events.
