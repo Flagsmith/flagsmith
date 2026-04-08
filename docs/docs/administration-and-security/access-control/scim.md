@@ -98,6 +98,13 @@ pushing these to Flagsmith immediately.
 
 ## Identity provider guides
 
+:::note
+
+These guides were last verified in April 2026. If your identity provider's UI has changed, refer to their documentation
+for the most up-to-date steps.
+
+:::
+
 ### Okta
 
 1. Open the Flagsmith application in the Okta admin dashboard.
