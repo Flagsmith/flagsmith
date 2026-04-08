@@ -23,6 +23,7 @@ import { getBuildVersion } from 'common/services/useBuildVersion'
 import AccountProvider from 'common/providers/AccountProvider'
 import Nav from './navigation/Nav'
 import 'project/darkMode'
+import GramChat from './GramChat'
 const App = class extends Component {
   static propTypes = {
     children: propTypes.element.isRequired,
@@ -329,6 +330,9 @@ const App = class extends Component {
           }}
         </AccountProvider>
         <ScrollToTop />
+        {AccountStore.getUser() &&
+          Project.gramProjectSlug &&
+          Utils.getFlagsmithHasFeature('gram_chat') && <GramChat />}
       </Provider>
     )
   }

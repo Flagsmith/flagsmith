@@ -1010,3 +1010,48 @@ def test_get_detailed_permissions__admin_viewing_other_user__returns_permissions
             "derived_from": {"groups": [], "roles": []},
         }
     ]
+
+
+def test_update_project__set_enforce_feature_owners__succeeds(
+    admin_client: APIClient,
+    project: Project,
+    organisation: Organisation,
+) -> None:
+    # Given
+    assert project.enforce_feature_owners is False
+    url = reverse("api-v1:projects:project-detail", args=[project.id])
+    data = {
+        "name": project.name,
+        "organisation": organisation.id,
+        "enforce_feature_owners": True,
+    }
+
+    # When
+    response = admin_client.patch(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["enforce_feature_owners"] is True
+    project.refresh_from_db()
+    assert project.enforce_feature_owners is True
+
+
+def test_list_projects__default_enforce_feature_owners__returns_false(
+    admin_client: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-list")
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) > 0
+    assert "enforce_feature_owners" in response.json()[0]
+    assert response.json()[0]["enforce_feature_owners"] is False

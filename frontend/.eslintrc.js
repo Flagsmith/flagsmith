@@ -10,6 +10,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
     'plugin:@dword-design/import-alias/recommended',
+    'plugin:storybook/recommended',
   ],
   'globals': {
     '$': true,

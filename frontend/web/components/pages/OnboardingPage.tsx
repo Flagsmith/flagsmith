@@ -67,7 +67,7 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
                     step={1}
                     currentStep={step}
                     title='Your account'
-                    description='This account will be set as the superuser for the Django Admin. You will be able to set up SSO and OAuth for your team members.'
+                    description='Create your admin account.'
                     completedTitle={`Hey, ${onboarding.first_name}!`}
                   >
                     <OnboardingAccountForm
@@ -83,7 +83,7 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
                     step={2}
                     currentStep={step}
                     title='Your organisation'
-                    description='Organisations are a way for you and other team members to manage projects and their features. Users can be members of multiple organisations.'
+                    description='Create a new organisation to work with your team members.'
                     completedTitle={`Creating the organisation ${onboarding.organisation_name}`}
                   >
                     <OnboardingOrganisationForm

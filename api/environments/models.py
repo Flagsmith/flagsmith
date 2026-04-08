@@ -51,12 +51,11 @@ from environments.metrics import (
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
-from integrations.flagsmith.client import get_client
+from integrations.flagsmith.client import get_openfeature_client
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
 from util.mappers import (
-    map_environment_to_environment_document,
     map_environment_to_sdk_document,
 )
 from webhooks.models import AbstractBaseExportableWebhookModel
@@ -207,13 +206,12 @@ class Environment(
             # we don't want to disable it based on the flag state.
             return
 
-        flagsmith_client = get_client("local", local_eval=True)
         organisation = self.project.organisation
-        enable_v2_versioning = flagsmith_client.get_identity_flags(
-            organisation.flagsmith_identifier,
-            traits=organisation.flagsmith_on_flagsmith_api_traits,
-        ).is_feature_enabled("enable_feature_versioning_for_new_environments")
-        self.use_v2_feature_versioning = enable_v2_versioning
+        self.use_v2_feature_versioning = get_openfeature_client().get_boolean_value(
+            "enable_feature_versioning_for_new_environments",
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        )
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "Project %s - Environment %s" % (self.project.name, self.name)
@@ -361,7 +359,8 @@ class Environment(
         ):
             environment_document_cache.set_many(
                 {
-                    e.api_key: map_environment_to_environment_document(e)
+                    # Use the SDK mapper so the cache perfectly matches the DB fallback
+                    e.api_key: map_environment_to_sdk_document(e)
                     for e in environments
                 }
             )

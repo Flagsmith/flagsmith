@@ -33,6 +33,7 @@ export type UpdateProjectBody = {
   name: string
   hide_disabled_flags?: boolean
   prevent_flag_defaults?: boolean
+  enforce_feature_owners?: boolean
   enable_realtime_updates?: boolean
   minimum_change_request_approvals?: number | null
   stale_flags_limit_days?: number | null
@@ -652,11 +653,34 @@ export type Req = {
   }
   createProjectFlag: {
     project_id: number
-    body: ProjectFlag
+    body: ProjectFlag & {
+      owners?: number[]
+      group_owners?: number[]
+    }
   }
   removeProjectFlag: {
     project_id: number
     flag_id: number
+  }
+  addFlagOwners: {
+    project_id: number
+    feature_id: number
+    user_ids: number[]
+  }
+  removeFlagOwners: {
+    project_id: number
+    feature_id: number
+    user_ids: number[]
+  }
+  addFlagGroupOwners: {
+    project_id: number
+    feature_id: number
+    group_ids: number[]
+  }
+  removeFlagGroupOwners: {
+    project_id: number
+    feature_id: number
+    group_ids: number[]
   }
   updateEnvironment: { id: number; body: Environment }
   createCloneIdentityFeatureStates: {

@@ -235,7 +235,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
         }}
         toggle={() => setShowCustomTool(!showCustomTool)}
       >
-        <p>Let us know what tool you would love to use with feature flags</p>
+        <p>Let us know what tool you would love to use with Flagsmith</p>
         <Input
           className='w-100'
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
