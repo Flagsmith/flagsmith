@@ -22,6 +22,7 @@ Both integrations share the same features once connected.
 ## Setup: GitLab.com
 
 1. In Flagsmith, go to Integrations > **GitLab** > Add Integration.
+1. Enter your **GitLab Group** (e.g. `my-company` — the path from your GitLab URL).
 1. Click "Authorise". You will be sent to GitLab to grant Flagsmith access.
 1. Once back in Flagsmith, the integration is active. ✅
 
@@ -45,6 +46,7 @@ manage labels on your issues and merge requests.
    1. Go to Integrations > **GitLab Self-Hosted** > Add Integration.
    1. Set the **GitLab Instance URL** to your instance
       (e.g. `https://gitlab.example.com`).
+   1. Enter your **GitLab Group** (e.g. `my-company`).
    1. Paste the access token.
    1. Click "Save". ✅
 
@@ -59,7 +61,7 @@ Personal access tokens on GitLab
 ## Linking issues and merge requests to feature flags
 
 1. Open a feature flag and go to the **Link** tab.
-1. Select a GitLab project.
+1. Select a GitLab project from your connected group.
 1. Choose **Issue** or **Merge Request**.
 1. Search and select the item you want to link.
 
