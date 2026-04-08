@@ -151,25 +151,19 @@ const SnippetItem: FC<SnippetItemProps> = ({
       </Highlight>
 
       <div className='flex-column hljs-docs'>
-        <Button
-          onClick={() => onCopy(code)}
-          size='xSmall'
-          iconLeft='copy'
-          iconLeftColour='white'
-          iconSize={16}
-        >
+        <Button onClick={() => onCopy(code)} theme='primary' size='xSmall'>
+          <Icon name='copy' width={16} fill='white' />
           Copy Code
         </Button>
         {docs && (
           <Button
             target='_blank'
             href={docs}
-            className='btn btn-primary'
+            className='btn'
+            theme='primary'
             size='xSmall'
-            iconLeft='file-text'
-            iconLeftColour='white'
-            iconSize={16}
           >
+            <Icon name='file-text' width={16} fill='white' />
             {languageKey} Docs
           </Button>
         )}
@@ -177,12 +171,11 @@ const SnippetItem: FC<SnippetItemProps> = ({
           <Button
             target='_blank'
             href={github}
-            className='btn btn-primary'
+            className='btn'
+            theme='primary'
             size='xSmall'
-            iconLeft='github'
-            iconLeftColour='white'
-            iconSize={16}
           >
+            <Icon name='github' width={16} fill='white' />
             {languageKey} GitHub
           </Button>
         )}
