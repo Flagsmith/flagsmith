@@ -253,6 +253,17 @@ export async function createProjectFlag(
     projectFlagService.endpoints.createProjectFlag.initiate(data, options),
   )
 }
+export async function removeProjectFlag(
+  store: any,
+  data: Req['removeProjectFlag'],
+  options?: Parameters<
+    typeof projectFlagService.endpoints.removeProjectFlag.initiate
+  >[1],
+) {
+  return store.dispatch(
+    projectFlagService.endpoints.removeProjectFlag.initiate(data, options),
+  )
+}
 
 export const {
   useAddFlagGroupOwnersMutation,
