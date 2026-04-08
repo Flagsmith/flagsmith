@@ -77,8 +77,6 @@ Overwrite Destructive merge strategy.
 
 ## Project-level export
 
-<!-- TODO: confirm plan availability -->
-
 Project-level export captures the full feature configuration for a project, including segments and overrides. This is
 the recommended way to clone a project or migrate feature configuration between Flagsmith instances.
 
