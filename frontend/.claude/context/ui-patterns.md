@@ -1,5 +1,9 @@
 # UI Patterns & Best Practices
 
+## Storybook (Optional)
+
+When working on complex or unfamiliar components, you can query Storybook MCP (`list-all-documentation`, then `get-documentation`) to discover existing components, their props, and visual examples. This is optional — for simple changes, grepping the codebase is fine.
+
 ## Table Components
 
 ### Pattern: Reusable Table Components

@@ -1,0 +1,141 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Design System/Decision Framework" />
+
+# Where does a new colour go?
+
+Use this decision framework when you need to add a colour to the codebase. It ensures colours end up in the right layer.
+
+### Is it for tags, projects, or data visualisation?
+
+→ Add to `_categorical.scss` as a CSS custom property.
+→ Does NOT need a primitive scale.
+→ These are decorative identifiers, not UI roles.
+
+### Does it fit an existing colour family?
+
+→ Use the closest primitive from `_primitives.scss`.
+→ Pick the nearest step in the 50–950 scale.
+→ Create or use a semantic token in `tokens.json` for the UI role.
+→ Available families: **slate, purple, red, green, gold, blue, orange**.
+
+### Is it a completely new hue not covered by any family?
+
+→ This is rare. Discuss with the team first.
+→ If approved: add a full 50–950 scale to `_primitives.scss`.
+→ Then create semantic tokens that reference it.
+→ Example: product adds a pink/magenta brand element.
+
+---
+
+## Semantic token categories
+
+<table>
+  <thead>
+    <tr><th>Category</th><th>Token prefix</th><th>Use for</th><th>Examples</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Surface</strong></td><td><code>{'--color-surface-*'}</code></td><td>Backgrounds — page, card, panel, input, hover. Includes action (brand purple) and feedback surfaces.</td><td>Page bg, card bg, button bg (surface-action), banner bg (surface-danger, surface-success).</td></tr>
+    <tr><td><strong>Text</strong></td><td><code>{'--color-text-*'}</code></td><td>Body text, headings, muted/subtle text. Includes feedback text colours.</td><td>Body copy, headings, error text (text-danger), success text (text-success).</td></tr>
+    <tr><td><strong>Border</strong></td><td><code>{'--color-border-*'}</code></td><td>Dividers, input borders, card outlines. Includes feedback borders.</td><td>Input borders, card outlines, error borders (border-danger).</td></tr>
+    <tr><td><strong>Icon</strong></td><td><code>{'--color-icon-*'}</code></td><td>Icon fills — default, secondary, disabled, and feedback variants.</td><td>Navigation icons, status icons (icon-danger, icon-success).</td></tr>
+  </tbody>
+</table>
+
+---
+
+## What is NOT a semantic token
+
+- **Tag colours** — 20 decorative values defined in `_categorical.scss` as CSS custom properties. Users pick these when creating tags. Many don't map to any primitive family (indigo, lime, cerise). Forcing them into scales would reduce visual distinction.
+- **Project colours** — 6 values in `_categorical.scss`, assigned by index for project avatar badges. Decorative, not semantic.
+- **Chart/data viz palettes** — future work. When needed, add `{'--color-chart-*'}` variables to `_categorical.scss`.
+- **Third-party brand colours** — GitHub, Google, etc. Use their official values directly.
+
+---
+
+## How to create a semantic token
+
+### 1. Name it
+
+Follow the naming convention: `--color-[category]-[variant]`
+
+<table>
+  <thead>
+    <tr><th>Part</th><th>Options</th><th>Example</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>category</code></td><td><code>surface</code>, <code>text</code>, <code>border</code>, <code>icon</code></td><td><code>--color-text-</code></td></tr>
+    <tr><td><code>variant</code></td><td><code>default</code>, <code>secondary</code>, <code>disabled</code>, <code>danger</code>, <code>success</code>, <code>warning</code>, <code>info</code>. Surface also has: <code>subtle</code>, <code>muted</code>, <code>emphasis</code>, <code>hover</code>, <code>active</code>. Text also has: <code>tertiary</code>.</td><td><code>--color-text-danger</code></td></tr>
+  </tbody>
+</table>
+
+### 2. Pick the primitive values
+
+Open `_primitives.scss` and choose the right step from the 50–950 scale. The pattern for light vs dark:
+
+<table>
+  <thead>
+    <tr><th>Variant</th><th>Light mode</th><th>Dark mode</th><th>Why</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>default</code></td><td>500–600</td><td>400–500</td><td>Needs to read well on light/dark surfaces</td></tr>
+    <tr><td><code>hover</code></td><td>600–700 (darker)</td><td>400–600 (lighter)</td><td>Light: darken on hover. Dark: lighten on hover.</td></tr>
+    <tr><td><code>active</code></td><td>700–800 (darkest)</td><td>300–400 (lightest)</td><td>More intense than hover in both modes</td></tr>
+    <tr><td><code>subtle</code></td><td>8% opacity of default</td><td>Opaque dark tint</td><td>Light: transparent tint. Dark: opaque to avoid stacking issues.</td></tr>
+  </tbody>
+</table>
+
+### 3. Add to `tokens.json`
+
+Add the token entry to the appropriate colour category with `light` and `dark` values:
+
+```json
+{
+  "color": {
+    "text": {
+      "danger": {
+        "cssVar": "--color-text-danger",
+        "light": "#ef4d56",
+        "dark": "#ef4d56"
+      }
+    }
+  }
+}
+```
+
+Run `git commit` — the pre-commit hook generates `_tokens.scss` and `tokens.ts` automatically.
+
+### 4. Use it
+
+```scss
+// In SCSS — each element type gets its own token
+.banner--danger {
+  background: var(--color-surface-danger);
+  color: var(--color-text-danger);
+  border: 1px solid var(--color-border-danger);
+}
+```
+
+```tsx
+// Icons reference the icon token
+<Icon fill="var(--color-icon-danger)" />
+
+// Or via TS exports
+import { tokens } from 'common/theme/tokens'
+<Icon fill={tokens.icon.danger} />
+```
+
+Dark mode works automatically — no extra overrides needed.
+
+### 5. Verify
+
+- Run Storybook and check the **Design System / Semantic Tokens** story — your new token should appear automatically.
+- Toggle light/dark in the toolbar and confirm both values look correct.
+- Check contrast: text tokens on surface tokens should meet WCAG AA (4.5:1 for normal text, 3:1 for large text).
+
+### Common mistakes
+
+- **Using a hex value instead of the JSON** — always add tokens to `tokens.json`, never edit `_tokens.scss` or `tokens.ts` directly.
+- **Forgetting the `dark` value** — every colour token needs both `light` and `dark` in the JSON. Missing it means the light mode value shows in dark mode.
+- **Using transparency in dark mode subtle tokens** — use opaque values in dark mode to avoid stacking/blending issues with layered surfaces.
+- **Using one token for multiple element types** — don't use `--color-text-danger` for a background. Text, surface, border, and icon each have their own danger token with values optimised for that context.
