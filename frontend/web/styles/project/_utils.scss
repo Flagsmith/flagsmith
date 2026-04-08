@@ -238,6 +238,9 @@
 .pointer-events-none {
     pointer-events: none;
 }
+.opacity-50 {
+    opacity: 0.5;
+}
 
 .bg-primary-opacity-5 {
     background-color: transparentize($primary, 0.95);

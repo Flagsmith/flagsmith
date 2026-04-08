@@ -1,0 +1,162 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Design System/Token Maintenance" />
+
+# Token Maintenance Guide
+
+How to add, modify, or remove design tokens. Follow this process to keep the token system consistent.
+
+## Primitives vs Semantic Tokens
+
+The token system has two layers. **You should only use semantic tokens in components** — never reference primitives directly.
+
+**Primitives** (`_primitives.scss`) are raw colour definitions:
+
+```scss
+// These exist so we can change a colour once and update everything that references it.
+// Do NOT use these in components.
+:root {
+  --red-600: #dc2626;
+  --purple-600: #6837fc;
+}
+```
+
+**Semantic tokens** (`_tokens.scss`) reference primitives and carry meaning:
+
+```scss
+// These are what you use in components.
+:root {
+  --color-text-danger: var(--red-600);
+  --color-surface-action: var(--purple-600);
+}
+```
+
+### Usage in SCSS
+
+```scss
+// ✅ Correct — use the semantic token
+.error-message { color: var(--color-text-danger); }
+
+// ❌ Wrong — never reference the primitive
+.error-message { color: var(--red-600); }
+```
+
+### Usage in TypeScript
+
+```typescript
+import { colorTextDanger, colorSurfaceAction } from 'common/theme/tokens'
+
+// Each export is a string: 'var(--color-text-danger, #dc2626)'
+// The fallback ensures the value works even without the CSS loaded.
+```
+
+### Usage with utility classes
+
+```tsx
+// ✅ Auto-generated utility classes from tokens
+<p className="text-danger">Error message</p>
+<div className="bg-surface-action">Action area</div>
+```
+
+---
+
+## Where tokens live
+
+<table>
+  <thead>
+    <tr><th>File</th><th>Purpose</th><th>When to edit</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>common/theme/tokens.json</code></td><td><strong>Single source of truth.</strong> All token values and descriptions.</td><td>Every token change starts here.</td></tr>
+    <tr><td><code>common/theme/tokens.ts</code></td><td><strong>Generated.</strong> TypeScript exports with <code>var(--token, fallback)</code> pattern.</td><td>Never — auto-generated.</td></tr>
+    <tr><td><code>web/styles/_tokens.scss</code></td><td><strong>Generated.</strong> CSS custom properties with <code>:root</code> and <code>.dark</code>.</td><td>Never — auto-generated.</td></tr>
+    <tr><td><code>web/styles/_token-utilities.scss</code></td><td><strong>Generated.</strong> Utility classes consuming tokens (e.g. <code>.bg-surface-subtle</code>, <code>.icon-secondary</code>).</td><td>Never — auto-generated.</td></tr>
+    <tr><td><code>documentation/TokenReference.generated.stories.tsx</code></td><td><strong>Generated.</strong> Flat JSX for Storybook MCP.</td><td>Never — auto-generated.</td></tr>
+    <tr><td><code>web/styles/_primitives.scss</code></td><td>Raw colour scales (50-950).</td><td>Only when adding a new colour family or adjusting a scale.</td></tr>
+  </tbody>
+</table>
+
+---
+
+## Adding a new non-colour token
+
+Example: adding a new radius value `--radius-3xl` (24px).
+
+1. Add the entry to `tokens.json` in the `radius` object:
+
+```json
+"3xl": { "cssVar": "--radius-3xl", "value": "24px", "description": "Extra-large container corners." }
+```
+
+2. Run `git commit`. The pre-commit hook automatically regenerates `tokens.ts`, `_tokens.scss`, `_token-utilities.scss`, and `TokenReference.generated.stories.tsx`, then stages them. No manual step needed. The new radius utility class (e.g. `.rounded-3xl`) is created automatically.
+
+**Note:** Spacing is handled by Bootstrap utility classes (`gap-2`, `p-3`, `m-4`, etc.) — there are no custom spacing tokens.
+
+---
+
+## Adding a new colour token
+
+Example: adding `--color-text-link`.
+
+1. Add the entry to `tokens.json` under the `color.text` object:
+
+```json
+"link": { "cssVar": "--color-text-link", "light": "#6837fc", "dark": "#906af6" }
+```
+
+2. Run `git commit`. The pre-commit hook regenerates all four files. The colour also appears in the Semantic Tokens visual story (auto-read from CSS vars) and a utility class is created (e.g. `.text-link`).
+
+---
+
+## Modifying a token value
+
+1. Change the value in `tokens.json`.
+2. Run `git commit` — all generated files update automatically.
+
+---
+
+## Removing a token
+
+1. Search the codebase for `var(--token-name)` usages — remove or replace all references first.
+2. Remove the entry from `tokens.json`.
+3. Run `git commit` — the generated files update without the removed token.
+
+---
+
+## The one rule
+
+**Token values must only be defined in `tokens.json`.** No hardcoded hex values, no hardcoded pixel values anywhere else. SCSS files use `var(--token)`. TypeScript uses the exports from `common/theme/tokens`. Utility classes are auto-generated — use `className="bg-surface-subtle"` in JSX instead of writing SCSS.
+
+---
+
+## How the codegen works
+
+<table>
+  <thead>
+    <tr><th>Step</th><th>What happens</th><th>Triggered by</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td><code>scripts/generate-tokens.mjs</code> reads <code>tokens.json</code></td><td>Pre-commit hook (lint-staged) when <code>tokens.json</code> is staged</td></tr>
+    <tr><td>2</td><td>Generates <code>tokens.ts</code>, <code>_tokens.scss</code>, <code>_token-utilities.scss</code>, and <code>TokenReference.generated.stories.tsx</code></td><td>Automatic</td></tr>
+    <tr><td>3</td><td>Generated files are auto-staged and included in the commit</td><td>Automatic</td></tr>
+    <tr><td>4</td><td>Chromatic deploys the updated Storybook. Storybook MCP serves the flat JSX — AI agents can read all token data.</td><td>CI (on PR)</td></tr>
+  </tbody>
+</table>
+
+You can also run `npm run generate:tokens` manually at any time.
+
+---
+
+## Story types
+
+<table>
+  <thead>
+    <tr><th>Story</th><th>Type</th><th>Purpose</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Token Reference</td><td>Auto-generated (codegen)</td><td>MCP-optimised. Every token inlined as flat JSX. AI agents read this.</td></tr>
+    <tr><td>Semantic Colour Tokens</td><td>Auto-generated (runtime)</td><td>Visual. Reads <code>--color-*</code> CSS vars from the DOM. Shows computed colours with theme toggle.</td></tr>
+    <tr><td>Colour Palette</td><td>Auto-generated (build time)</td><td>Visual. Parses <code>_primitives.scss</code> and renders swatch grids.</td></tr>
+    <tr><td>Radius, Elevation, Motion</td><td>Imports from tokens.ts</td><td>Visual. Shows previews (rounded boxes, shadow cards, interactive demos). Data derived from <code>tokens.ts</code>.</td></tr>
+  </tbody>
+</table>

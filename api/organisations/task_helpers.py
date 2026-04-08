@@ -10,7 +10,7 @@ from django.utils import timezone
 from app_analytics.analytics_db_service import get_total_events_count
 from app_analytics.influxdb_wrapper import get_current_api_usage
 from core.helpers import get_current_site_url
-from integrations.flagsmith.client import get_client
+from integrations.flagsmith.client import get_openfeature_client
 from organisations.models import (
     Organisation,
     OrganisationAPIUsageNotification,
@@ -128,13 +128,13 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
 
         allowed_api_calls = subscription_cache.allowed_30d_api_calls
 
-    flagsmith_client = get_client("local", local_eval=True)
-    flags = flagsmith_client.get_identity_flags(
-        organisation.flagsmith_identifier,
-        traits=organisation.flagsmith_on_flagsmith_api_traits,
-    )
+    openfeature_client = get_openfeature_client()
     # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
-    if flags.is_feature_enabled("get_current_api_usage_deprecated"):  # pragma: no cover
+    if openfeature_client.get_boolean_value(
+        "get_current_api_usage_deprecated",
+        default_value=False,
+        evaluation_context=organisation.openfeature_evaluation_context,
+    ):  # pragma: no cover
         api_usage = get_total_events_count(organisation, period_starts_at)
     else:
         api_usage = get_current_api_usage(organisation.id, period_starts_at)

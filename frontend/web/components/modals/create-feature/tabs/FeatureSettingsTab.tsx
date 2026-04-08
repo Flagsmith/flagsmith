@@ -9,6 +9,14 @@ import { useHasPermission } from 'common/providers/Permission'
 import FlagOwners from 'components/FlagOwners'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import PlanBasedBanner from 'components/PlanBasedAccess'
+import { useGetProjectQuery } from 'common/services/useProject'
+import {
+  useAddFlagGroupOwnersMutation,
+  useAddFlagOwnersMutation,
+  useGetProjectFlagQuery,
+  useRemoveFlagGroupOwnersMutation,
+  useRemoveFlagOwnersMutation,
+} from 'common/services/useProjectFlag'
 import Switch from 'components/Switch'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/Icon'
@@ -30,19 +38,27 @@ type FeatureSettingsTabProps = {
   isSaving?: boolean
   invalid?: boolean
   hasMetadataRequired?: boolean
+  ownerIds?: number[]
+  groupOwnerIds?: number[]
+  onOwnerIdsChange?: (ids: number[]) => void
+  onGroupOwnerIdsChange?: (ids: number[]) => void
   onChange: (projectFlag: ProjectFlag) => void
   onHasMetadataRequiredChange: (hasMetadataRequired: boolean) => void
   onSaveSettings?: () => void
 }
 
 const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
+  groupOwnerIds,
   hasMetadataRequired,
   identity,
   invalid,
   isSaving,
   onChange,
+  onGroupOwnerIdsChange,
   onHasMetadataRequiredChange,
+  onOwnerIdsChange,
   onSaveSettings,
+  ownerIds,
   projectFlag,
   projectId,
 }) => {
@@ -50,6 +66,23 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
 
   const metadataEnable = Utils.getPlansPermission('METADATA')
   const isEdit = !!projectFlag?.id
+  const numericProjectId =
+    typeof projectId === 'string' ? parseInt(projectId, 10) : projectId
+
+  const { data: project } = useGetProjectQuery(
+    { id: numericProjectId },
+    { skip: !projectId },
+  )
+  const enforceFeatureOwners = !!project?.enforce_feature_owners
+
+  const { data: flagData } = useGetProjectFlagQuery(
+    { id: projectFlag?.id ?? 0, project: numericProjectId },
+    { skip: !projectFlag?.id },
+  )
+  const [addOwners] = useAddFlagOwnersMutation()
+  const [removeOwners] = useRemoveFlagOwnersMutation()
+  const [addGroupOwners] = useAddFlagGroupOwnersMutation()
+  const [removeGroupOwners] = useRemoveFlagGroupOwnersMutation()
 
   useEffect(() => {
     if (metadataEnable) {
@@ -125,10 +158,56 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
       {!identity && projectFlag?.id && createFeature && (
         <>
           <FormGroup className='mb-3 setting'>
-            <FlagOwners projectId={projectId} id={projectFlag.id} />
+            <FlagOwners
+              selectedIds={(flagData?.owners ?? []).map((o) => o.id)}
+              onAdd={(id) =>
+                addOwners({
+                  feature_id: projectFlag.id,
+                  project_id: numericProjectId,
+                  user_ids: [id],
+                })
+              }
+              onRemove={(id) =>
+                removeOwners({
+                  feature_id: projectFlag.id,
+                  project_id: numericProjectId,
+                  user_ids: [id],
+                })
+                  .unwrap()
+                  .catch((e) =>
+                    toast(
+                      e?.data?.[0] || 'Failed to remove owner.',
+                      'danger',
+                    ),
+                  )
+              }
+            />
           </FormGroup>
           <FormGroup className='mb-3 setting'>
-            <FlagOwnerGroups projectId={projectId} id={projectFlag.id} />
+            <FlagOwnerGroups
+              selectedIds={(flagData?.group_owners ?? []).map((g) => g.id)}
+              onAdd={(id) =>
+                addGroupOwners({
+                  feature_id: projectFlag.id,
+                  group_ids: [id],
+                  project_id: numericProjectId,
+                })
+              }
+              onRemove={(id) =>
+                removeGroupOwners({
+                  feature_id: projectFlag.id,
+                  group_ids: [id],
+                  project_id: numericProjectId,
+                })
+                  .unwrap()
+                  .catch((e) =>
+                    toast(
+                      e?.data?.[0] || 'Failed to remove group owner.',
+                      'danger',
+                    ),
+                  )
+              }
+            />
           </FormGroup>
           <PlanBasedBanner
             className='mb-3'
@@ -137,6 +216,43 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
           />
         </>
       )}
+      {!identity &&
+        !projectFlag?.id &&
+        enforceFeatureOwners &&
+        onOwnerIdsChange &&
+        onGroupOwnerIdsChange && (
+          <>
+            <FormGroup className='mb-3 setting'>
+              <FlagOwners
+                selectedIds={ownerIds ?? []}
+                onAdd={(id: number) =>
+                  onOwnerIdsChange([...(ownerIds ?? []), id])
+                }
+                onRemove={(id: number) =>
+                  onOwnerIdsChange((ownerIds ?? []).filter((uid) => uid !== id))
+                }
+              />
+            </FormGroup>
+            <FormGroup className='mb-3 setting'>
+              <FlagOwnerGroups
+                selectedIds={groupOwnerIds ?? []}
+                onAdd={(id: number) =>
+                  onGroupOwnerIdsChange([...(groupOwnerIds ?? []), id])
+                }
+                onRemove={(id: number) =>
+                  onGroupOwnerIdsChange(
+                    (groupOwnerIds ?? []).filter((gid) => gid !== id),
+                  )
+                }
+              />
+            </FormGroup>
+            <PlanBasedBanner
+              className='mb-3'
+              feature={'FLAG_OWNERS'}
+              theme={'description'}
+            />
+          </>
+        )}
       <FormGroup className='mb-3 setting'>
         <InputGroup
           value={projectFlag?.description || ''}
