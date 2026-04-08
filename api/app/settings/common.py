@@ -1151,7 +1151,7 @@ CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL", not COOKIE_AUTH_ENABLE
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", COOKIE_AUTH_ENABLED)
 FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
     "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS",
-    default=["sentry-trace"],
+    default=["sentry-trace", "traceparent", "tracestate", "baggage"],
 )
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",

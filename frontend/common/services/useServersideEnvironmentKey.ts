@@ -32,7 +32,9 @@ export const serversideEnvironmentKeyService = service
         Res['serversideEnvironmentKeys'],
         Req['getServersideEnvironmentKeys']
       >({
+        // TODO(#7140): remove res?.id tag when legacy ServerSideSDKKeys.js is deleted
         providesTags: (res) => [
+          { id: 'LIST', type: 'ServersideEnvironmentKey' },
           { id: res?.id, type: 'ServersideEnvironmentKey' },
         ],
         query: (query: Req['getServersideEnvironmentKeys']) => ({

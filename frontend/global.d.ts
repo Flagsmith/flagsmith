@@ -92,6 +92,10 @@ declare global {
   }
   const PanelSearch: typeof Component
   const CodeHelp: typeof Component
+  // Chargebee SDK (loaded via useScript)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Chargebee: any
+
   interface Window {
     E2E: boolean
     $crisp: Crisp

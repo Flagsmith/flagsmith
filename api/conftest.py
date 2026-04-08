@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 import boto3
 import openfeature.api as openfeature_api
+import opentelemetry.trace  # noqa: F401 (force-init before pyfakefs can intercept)
 import pytest
 from common.environments.permissions import (
     MANAGE_IDENTITIES,

@@ -1,0 +1,72 @@
+{/* Introduction.mdx */}
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Introduction" />
+
+# Flagsmith Frontend
+
+Welcome to the Flagsmith Storybook — the single source of truth for UI components, design tokens, and visual patterns used across the frontend.
+
+If a component doesn't have a story, it doesn't exist.
+
+## Getting started
+
+```bash
+npm run storybook
+```
+
+Launches Storybook at [http://localhost:6006](http://localhost:6006). Browse the sidebar to explore components and documentation.
+
+## Why Storybook
+
+- **Develop in isolation** — build and test components without spinning up the full app
+- **Visual documentation** — every component variant is visible and interactive
+- **Dark mode validation** — toggle themes in the toolbar to verify both modes
+- **Accessibility** — the a11y addon runs checks automatically on every story
+
+## Dark mode
+
+Use the **Theme** toggle in the toolbar (moon/sun icon) to switch between light and dark mode. Every story should look correct in both themes.
+
+## Writing stories
+
+Create a `*.stories.tsx` file in the `documentation/` directory. Use the existing stories as a reference.
+
+A good story should:
+
+- Cover all meaningful variants of the component
+- Work in both light and dark mode
+- Include representative content, not just placeholder text
+
+## Project structure
+
+<table>
+  <thead>
+    <tr>
+      <th>Path</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>documentation/</td>
+      <td>Storybook stories and documentation (self-contained, portable)</td>
+    </tr>
+    <tr>
+      <td>web/components/</td>
+      <td>React components</td>
+    </tr>
+    <tr>
+      <td>web/styles/</td>
+      <td>SCSS styles and design tokens</td>
+    </tr>
+    <tr>
+      <td>common/</td>
+      <td>Shared state, services, types, and utilities</td>
+    </tr>
+  </tbody>
+</table>
+
+## Links
+
+- [Frontend README](https://github.com/Flagsmith/flagsmith/blob/main/frontend/README.md)

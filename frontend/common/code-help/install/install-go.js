@@ -1,6 +1,6 @@
-module.exports = () => `go get github.com/flagsmith/flagsmith-go-client
+module.exports = () => `go get github.com/Flagsmith/flagsmith-go-client/v5
 
 import (
-  "github.com/flagsmith/flagsmith-go-client"
+  "github.com/Flagsmith/flagsmith-go-client/v5"
 )
 `
