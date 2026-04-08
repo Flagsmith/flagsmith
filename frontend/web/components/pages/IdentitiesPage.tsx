@@ -71,7 +71,7 @@ export const removeIdentity = (
   })
 }
 
-const UsersPage: FC<{ props: any }> = (props) => {
+const IdentitiesPage: FC<{ props: any }> = (props) => {
   const { projectId } = useRouteContext()
   const match = useRouteMatch<RouteParams>()
   const [page, setPage] = useState<{
@@ -250,7 +250,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
                   <Link
                     to={`/project/${projectId}/environment/${
                       props.match.params.environmentId
-                    }/users/${encodeURIComponent(identifier)}/${id}`}
+                    }/identities/${encodeURIComponent(identifier)}/${id}`}
                     className='flex-row flex flex-1 table-column'
                   >
                     <div>
@@ -358,4 +358,4 @@ const UsersPage: FC<{ props: any }> = (props) => {
   )
 }
 
-export default withRouter(ConfigProvider(UsersPage))
+export default withRouter(ConfigProvider(IdentitiesPage))
