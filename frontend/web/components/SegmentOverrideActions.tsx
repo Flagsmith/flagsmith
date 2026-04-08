@@ -26,7 +26,7 @@ function calculateListPosition(
   return { left, top }
 }
 
-export const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
+const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
   canCopyValue,
   canEdit,
   canRemove,

@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-export const groupSummaryService = service
+const groupSummaryService = service
   .enhanceEndpoints({ addTagTypes: ['GroupSummary'] })
   .injectEndpoints({
     endpoints: (builder) => ({

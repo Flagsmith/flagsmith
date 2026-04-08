@@ -250,5 +250,4 @@ const ReleasePipelinesList = ({
   )
 }
 
-export type { ReleasePipelinesListProps }
 export default ReleasePipelinesList

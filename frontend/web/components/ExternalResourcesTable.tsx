@@ -16,7 +16,7 @@ export type ExternalResourcesTableBase = {
   organisationId: string
 }
 
-export type ExternalResourcesTableType = ExternalResourcesTableBase & {
+type ExternalResourcesTableType = ExternalResourcesTableBase & {
   setSelectedResources: (r: ExternalResource[]) => void
 }
 

@@ -77,5 +77,4 @@ const ExpandablePermissionsList = <T,>({
   )
 }
 
-export type { ExpandablePermissionsListProps }
 export default ExpandablePermissionsList

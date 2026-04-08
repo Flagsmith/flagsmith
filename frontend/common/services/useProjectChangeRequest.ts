@@ -38,7 +38,7 @@ export function stripIdsAndDeletedFromRulesAndConditions(
   }
 }
 
-export const projectChangeRequestService = service
+const projectChangeRequestService = service
   .enhanceEndpoints({ addTagTypes: ['ProjectChangeRequest'] })
   .injectEndpoints({
     endpoints: (builder) => ({

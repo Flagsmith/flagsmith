@@ -10,7 +10,7 @@ import { GithubRepository } from 'common/types/responses'
 import Switch from './Switch'
 import Tooltip from './Tooltip'
 
-export type GithubRepositoriesTableType = {
+type GithubRepositoriesTableType = {
   repos: GithubRepository[] | undefined
   githubId: string
   organisationId: string

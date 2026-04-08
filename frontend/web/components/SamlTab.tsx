@@ -14,7 +14,7 @@ import Switch from './Switch'
 import { SAMLConfiguration } from 'common/types/responses'
 import PlanBasedBanner from './PlanBasedAccess'
 
-export type SamlTabType = {
+type SamlTabType = {
   organisationId: number
 }
 

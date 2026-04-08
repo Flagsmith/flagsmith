@@ -11,7 +11,7 @@ type TotalItem = {
   value: number
 }
 
-export interface UsageChartTotalsProps {
+interface UsageChartTotalsProps {
   data: Res['organisationUsage'] | undefined
   selection: string[]
   updateSelection: (key: string) => void

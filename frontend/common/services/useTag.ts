@@ -3,7 +3,7 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import { sortBy } from 'lodash'
 
-export const tagService = service
+const tagService = service
   .enhanceEndpoints({ addTagTypes: ['Tag'] })
   .injectEndpoints({
     endpoints: (builder) => ({

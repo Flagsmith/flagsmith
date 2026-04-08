@@ -27,7 +27,7 @@ type RolePermissionsListProps = {
   group?: UserGroupSummary
 }
 
-export type PermissionsSummaryType = {
+type PermissionsSummaryType = {
   level: PermissionLevel
   levelId: number
   organisationId: number

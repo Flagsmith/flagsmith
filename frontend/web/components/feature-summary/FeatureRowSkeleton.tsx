@@ -5,7 +5,7 @@ interface FeatureRowSkeletonProps {
   style?: CSSProperties
 }
 
-export const FeatureRowSkeleton: FC<FeatureRowSkeletonProps> = ({ style }) => {
+const FeatureRowSkeleton: FC<FeatureRowSkeletonProps> = ({ style }) => {
   return (
     <div
       className='d-none d-lg-flex align-items-lg-center flex-lg-row list-item py-0 list-item-xs fs-small clickable skeleton-row'

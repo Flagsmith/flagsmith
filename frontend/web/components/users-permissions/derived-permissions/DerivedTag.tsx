@@ -21,5 +21,4 @@ const DerivedTag = ({ name, type }: DerivedTagProps) => {
   )
 }
 
-export type { DerivedTagProps }
 export default DerivedTag

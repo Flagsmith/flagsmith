@@ -3,7 +3,7 @@ import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 
-export const releasePipelinesService = service
+const releasePipelinesService = service
   .enhanceEndpoints({ addTagTypes: ['ReleasePipelines'] })
   .injectEndpoints({
     endpoints: (builder) => ({

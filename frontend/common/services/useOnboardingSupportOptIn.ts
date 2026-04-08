@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-export const onboardingSupportOptInService = service
+const onboardingSupportOptInService = service
   .enhanceEndpoints({ addTagTypes: ['OnboardingSupportOptIn'] })
   .injectEndpoints({
     endpoints: (builder) => ({

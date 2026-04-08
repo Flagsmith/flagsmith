@@ -166,5 +166,4 @@ const SinglePipelineStageAction = ({
   )
 }
 
-export type { SinglePipelineStageActionProps }
 export default SinglePipelineStageAction

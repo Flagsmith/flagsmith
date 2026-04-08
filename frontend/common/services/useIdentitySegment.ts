@@ -5,7 +5,7 @@ import Utils from 'common/utils/utils'
 import transformCorePaging from 'common/transformCorePaging'
 import { sortBy } from 'lodash'
 
-export const identitySegmentService = service
+const identitySegmentService = service
   .enhanceEndpoints({ addTagTypes: ['IdentitySegment'] })
   .injectEndpoints({
     endpoints: (builder) => ({

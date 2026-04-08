@@ -104,5 +104,4 @@ const AddToReleasePipelineModal = ({
   )
 }
 
-export type { AddToReleasePipelineModalProps }
 export default AddToReleasePipelineModal

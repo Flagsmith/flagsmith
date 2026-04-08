@@ -6,7 +6,7 @@ export interface OptionType {
   value: string
 }
 
-export interface GroupedOptionType {
+interface GroupedOptionType {
   label: React.ReactNode
   options: OptionType[]
 }

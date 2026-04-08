@@ -46,7 +46,7 @@ function getEntityUrl(params: EntityMetadataParams): string | null {
   }
 }
 
-export const metadataService = service
+const metadataService = service
   .enhanceEndpoints({ addTagTypes: ['Metadata'] })
   .injectEndpoints({
     endpoints: (builder) => ({

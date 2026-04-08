@@ -4,7 +4,7 @@ import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 import transformCorePaging from 'common/transformCorePaging'
 
-export const auditLogService = service
+const auditLogService = service
   .enhanceEndpoints({ addTagTypes: ['AuditLog'] })
   .injectEndpoints({
     endpoints: (builder) => ({

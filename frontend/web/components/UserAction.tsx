@@ -109,7 +109,7 @@ const ActionDropdown = ({
   )
 }
 
-export const UserAction: FC<UserActionProps> = ({
+const UserAction: FC<UserActionProps> = ({
   canEdit,
   canInspectPermissions,
   canRemove,

@@ -4,7 +4,7 @@ import { service } from 'common/service'
 import { projectFlagService } from './useProjectFlag'
 import { getStore } from 'common/store'
 
-export const segmentOverrideService = service
+const segmentOverrideService = service
   .enhanceEndpoints({ addTagTypes: ['SegmentOverride'] })
   .injectEndpoints({
     endpoints: (builder) => ({

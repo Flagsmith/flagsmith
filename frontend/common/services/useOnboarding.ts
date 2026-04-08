@@ -4,7 +4,7 @@ import { service } from 'common/service'
 import { getProfile } from './useProfile'
 import { getStore } from 'common/store'
 
-export const onboardingService = service
+const onboardingService = service
   .enhanceEndpoints({ addTagTypes: ['Onboarding'] })
   .injectEndpoints({
     endpoints: (builder) => ({

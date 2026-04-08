@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-export const featureExportService = service
+const featureExportService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureExport'] })
   .injectEndpoints({
     endpoints: (builder) => ({

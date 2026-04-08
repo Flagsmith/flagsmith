@@ -6,7 +6,7 @@ import SegmentOverridesIcon from './icons/SegmentOverridesIcon'
 import IdentityOverridesIcon from './icons/IdentityOverridesIcon'
 import Constants from 'common/constants'
 
-export interface CondensedFeatureRowProps {
+interface CondensedFeatureRowProps {
   disableControls?: boolean
   readOnly: boolean
   projectFlag: ProjectFlag

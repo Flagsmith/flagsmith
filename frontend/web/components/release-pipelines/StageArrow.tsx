@@ -30,5 +30,4 @@ const StageArrow = ({ onAddStage, showAddStageButton }: StageArrowProps) => {
   )
 }
 
-export type { StageArrowProps }
 export default StageArrow

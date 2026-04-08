@@ -32,7 +32,7 @@ import FeatureDescription from './FeatureDescription'
 import FeatureTags from './FeatureTags'
 import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
 
-export interface FeatureRowProps {
+interface FeatureRowProps {
   disableControls?: boolean
   environmentFlags: FeatureListProviderData['environmentFlags']
   environmentId: string

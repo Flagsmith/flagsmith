@@ -31,7 +31,7 @@ export interface FeatureActionProps {
 
 type ActionType = 'copy' | 'audit' | 'history' | 'remove'
 
-export const FeatureAction: FC<FeatureActionProps> = ({
+const FeatureAction: FC<FeatureActionProps> = ({
   disableE2E,
   featureIndex,
   hideAudit,

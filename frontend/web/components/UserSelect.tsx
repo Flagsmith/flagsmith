@@ -15,7 +15,7 @@ interface UserSelectProps {
   onChange?: (value: any[]) => void
 }
 
-export const UserSelect: React.FC<UserSelectProps> = ({
+const UserSelect: React.FC<UserSelectProps> = ({
   disabled = false,
   isOpen,
   onAdd,

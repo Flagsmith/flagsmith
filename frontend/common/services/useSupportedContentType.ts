@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-export const supportedContentTypeService = service
+const supportedContentTypeService = service
   .enhanceEndpoints({ addTagTypes: ['SupportedContentType'] })
   .injectEndpoints({
     endpoints: (builder) => ({

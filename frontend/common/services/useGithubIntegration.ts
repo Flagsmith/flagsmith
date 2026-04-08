@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-export const githubIntegrationService = service
+const githubIntegrationService = service
   .enhanceEndpoints({ addTagTypes: ['GithubIntegration'] })
   .injectEndpoints({
     endpoints: (builder) => ({

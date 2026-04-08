@@ -12,7 +12,7 @@ import { renderToString } from 'react-dom/server'
 
 import StageSummaryData from './StageSummaryData'
 
-export interface StageStatusProps {
+interface StageStatusProps {
   stageOrder: number
   stageName: string
   totalStages: number
