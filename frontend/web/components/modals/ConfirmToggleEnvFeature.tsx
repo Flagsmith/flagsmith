@@ -54,5 +54,3 @@ const ConfirmToggleEnvFeature: FC<ConfirmToggleEnvFeatureType> = ({
 }
 
 export default ConfirmToggleEnvFeature
-
-export default ConfirmToggleEnvFeature

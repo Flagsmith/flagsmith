@@ -18,7 +18,7 @@ import every from 'lodash/every';
 import get from 'lodash/get';
 import { isMobile } from 'react-device-detect';
 import propTypes from 'prop-types';
-import _Project from 'common/project';
+import Project from 'common/project';
 import moment from 'moment/min/moment.min';
 import React from 'react';
 import ReactDOM from 'react-dom';
