@@ -196,5 +196,8 @@
   "lint-staged": {
     "*.{js,ts,tsx}": "eslint --fix",
     "common/theme/tokens.json": "npm run generate:tokens && git add common/theme/tokens.ts web/styles/_tokens.scss web/styles/_token-utilities.scss documentation/TokenReference.generated.stories.tsx"
+  },
+  "optionalDependencies": {
+    "webpack": "^5.105.4"
   }
 }

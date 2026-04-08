@@ -24,6 +24,10 @@ module.exports = {
   entry: {
     main: './web/main.js',
   },
+  ignoreWarnings: [
+    /Critical dependency: the request of a dependency is an expression/, // framer-motion
+    /Module not found: Can't resolve '\.\/locale'/, // moment
+  ],
   mode: 'production',
   module: {
     rules: require('./loaders')().concat([
@@ -37,12 +41,15 @@ module.exports = {
       },
     ]),
   },
-
   output: {
     clean: true,
     filename: '[name].[fullhash].js',
     path: path.join(__dirname, '../public/static'),
     publicPath: '/static/',
+  },
+
+  performance: {
+    hints: false,
   },
 
   plugins: require('./plugins')

@@ -60,6 +60,7 @@ module.exports = {
     .concat([
       new ReactRefreshPlugin(),
       new rspack.DefinePlugin({
+        SENTRY_RELEASE_VERSION: JSON.stringify(''),
         __DEV__: true,
         whitelabel: JSON.stringify(process.env.WHITELABEL),
       }),

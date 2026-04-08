@@ -24,9 +24,6 @@ class CopyStaticPlugin {
 }
 
 const plugins = [
-  new rspack.DefinePlugin({
-    SENTRY_RELEASE_VERSION: JSON.stringify(''),
-  }),
   // Fixes warning in moment-with-locales.min.js
   // Module not found: Error: Can't resolve './locale' in ...
   new rspack.IgnorePlugin({
