@@ -18,7 +18,7 @@ With SCIM, you can:
 
 - Create Flagsmith users ahead of their first login, so they already have the right group memberships and permissions
   waiting for them.
-- Remove users from your Flagsmith organisation when they are deprovisioned in your identity provider, freeing up seats.
+- Remove users from your Flagsmith organisation when they are deprovisioned in your identity provider
 - Sync group membership so that adding or removing a user from a group in your identity provider is reflected in
   Flagsmith automatically.
 
