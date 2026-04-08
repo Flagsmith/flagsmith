@@ -3,7 +3,7 @@ import Constants from 'common/constants'
 import AppActions from 'common/dispatcher/app-actions'
 import FeatureListStore from 'common/stores/feature-list-store'
 import { useGetProjectQuery } from 'common/services/useProject'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
 import IdentitySelect from 'components/IdentitySelect'
@@ -255,7 +255,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
                   <div className='table-column d-flex align-items-center'>
                     <Button
                       target='_blank'
-                      href={`/project/${projectId}/environment/${environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
+                      href={`/project/${projectId}/environment/${environmentId}/identities/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
                       className='btn btn-link fs-small lh-sm font-weight-medium me-4'
                     >
                       <Icon name='edit' width={20} fill='#6837FC' /> Edit

@@ -15,7 +15,7 @@ import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
 import JSONReference from 'components/JSONReference'
 import Utils from 'common/utils/utils'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import PageTitle from 'components/PageTitle'
 import IdentifierString from 'components/IdentifierString'
 import CodeHelp from 'components/CodeHelp'
@@ -71,7 +71,7 @@ export const removeIdentity = (
   })
 }
 
-const UsersPage: FC<{ props: any }> = (props) => {
+const IdentitiesPage: FC<{ props: any }> = (props) => {
   const { projectId } = useRouteContext()
   const match = useRouteMatch<RouteParams>()
   const [page, setPage] = useState<{
@@ -250,7 +250,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
                   <Link
                     to={`/project/${projectId}/environment/${
                       props.match.params.environmentId
-                    }/users/${encodeURIComponent(identifier)}/${id}`}
+                    }/identities/${encodeURIComponent(identifier)}/${id}`}
                     className='flex-row flex flex-1 table-column'
                   >
                     <div>
@@ -358,4 +358,4 @@ const UsersPage: FC<{ props: any }> = (props) => {
   )
 }
 
-export default withRouter(ConfigProvider(UsersPage))
+export default withRouter(ConfigProvider(IdentitiesPage))

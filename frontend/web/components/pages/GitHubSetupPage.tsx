@@ -1,7 +1,7 @@
 import React, { FC, useState, useEffect } from 'react'
 import OrganisationSelect from 'components/OrganisationSelect'
 import Input from 'components/base/forms/Input'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import InputGroup from 'components/base/forms/InputGroup'
 import ProjectFilter from 'components/ProjectFilter'
 import Utils from 'common/utils/utils'

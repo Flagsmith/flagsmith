@@ -61,7 +61,7 @@ type metadataFieldUpdatedSelectListType = MetadataFieldModelField & {
   new: boolean
 }
 
-export enum MetadataContentType {
+enum MetadataContentType {
   ORGANISATION = 'organisation',
   PROJECT = 'project',
 }

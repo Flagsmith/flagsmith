@@ -7,7 +7,7 @@ import { useGetGithubResourcesQuery } from 'common/services/useGithub'
 import Constants from 'common/constants'
 import MyRepositoriesSelect from './MyRepositoriesSelect'
 
-export type GitHubResourcesSelectType = {
+type GitHubResourcesSelectType = {
   onChange: (value: string) => void
   linkedExternalResources: ExternalResource[] | undefined
   orgId: string

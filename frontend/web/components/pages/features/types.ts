@@ -8,4 +8,4 @@ export type Pagination = {
   previous: string | null
 }
 
-export type EnvironmentFlagsMap = Record<number, FeatureState>
+type EnvironmentFlagsMap = Record<number, FeatureState>

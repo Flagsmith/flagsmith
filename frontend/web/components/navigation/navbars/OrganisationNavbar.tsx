@@ -2,10 +2,10 @@ import React, { FC } from 'react'
 import NavSubLink from 'components/navigation/NavSubLink'
 import { apps, statsChart } from 'ionicons/icons'
 import Utils from 'common/utils/utils'
-import UsersIcon from 'components/svg/UsersIcon'
+import UsersIcon from 'components/icons/UsersIcon'
 import AccountStore from 'common/stores/account-store'
 import Project from 'common/project'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import OverflowNav from 'components/navigation/OverflowNav'
 
 type OrganisationNavType = {}

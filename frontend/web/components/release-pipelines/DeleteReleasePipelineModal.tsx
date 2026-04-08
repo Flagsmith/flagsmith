@@ -53,5 +53,4 @@ const DeleteReleasePipelineModal = ({
   )
 }
 
-export type { DeleteReleasePipelineModalProps }
 export default DeleteReleasePipelineModal
