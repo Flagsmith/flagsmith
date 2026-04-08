@@ -11,50 +11,27 @@ Link GitLab issues and merge requests to your Flagsmith feature flags. When a
 flag changes state, Flagsmith posts a comment to the linked issue or MR showing
 the flag's current state across all environments.
 
-Flagsmith offers two integration options depending on your GitLab setup:
+## Setup
 
-- **GitLab** — for teams using GitLab.com. One-click OAuth.
-- **GitLab Self-Hosted** — for teams running their own GitLab instance. Uses a
-  personal access token.
-
-Both integrations share the same features once connected.
-
-## Setup: GitLab.com
-
-1. In Flagsmith, go to Integrations > **GitLab** > Add Integration.
-1. Enter your **GitLab Group** (e.g. `my-company` — the path from your GitLab URL).
-1. Click "Authorise". You will be sent to GitLab to grant Flagsmith access.
-1. Once back in Flagsmith, the integration is active. ✅
-
-:::note
-
-Flagsmith requests the `api`
-[scope](https://docs.gitlab.com/integration/oauth_provider/), which grants
-read and write access to the GitLab API. This is required to post comments and
-manage labels on your issues and merge requests.
-
-:::
-
-## Setup: Self-hosted GitLab
+The integration requires a token with access to the full GitLab group —
+either a [personal access token](https://docs.gitlab.com/user/profile/personal_access_tokens/)
+or a [group access token](https://docs.gitlab.com/user/group/settings/group_access_tokens/).
+Project access tokens are not supported yet.
 
 1. **In GitLab**
-   1. Open your
-      [Access Tokens settings](https://docs.gitlab.com/user/profile/personal_access_tokens/).
-   1. Create a new token with the `api` scope.
+   1. Create a personal access token or group access token with the `api` scope.
    1. Copy the token — you will not see it again.
 1. **In Flagsmith**
-   1. Go to Integrations > **GitLab Self-Hosted** > Add Integration.
+   1. Go to Integrations > **GitLab** > Add Integration.
    1. Set the **GitLab Instance URL** to your instance
-      (e.g. `https://gitlab.example.com`).
+      (e.g. `https://gitlab.example.com` or `https://gitlab.com`).
    1. Enter your **GitLab Group** (e.g. `my-company`).
    1. Paste the access token.
    1. Click "Save". ✅
 
 :::tip
 
-Personal access tokens on GitLab
-[expire after at most 365 days](https://docs.gitlab.com/user/profile/personal_access_tokens/)
-(400 days on GitLab 17.6+). Remember to rotate your token before it expires.
+Remember to rotate your GitLab access token before it expires.
 
 :::
 
