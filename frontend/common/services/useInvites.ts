@@ -4,7 +4,7 @@ import { service } from 'common/service'
 import Constants from 'common/constants'
 import API from 'project/api'
 
-const invitesService = service
+export const invitesService = service
   .enhanceEndpoints({ addTagTypes: ['Invite'] })
   .injectEndpoints({
     endpoints: (builder) => ({

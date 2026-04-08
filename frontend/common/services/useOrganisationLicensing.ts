@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-const organisationLicensingService = service
+export const organisationLicensingService = service
   .enhanceEndpoints({ addTagTypes: ['OrganisationLicensing'] })
   .injectEndpoints({
     endpoints: (builder) => ({

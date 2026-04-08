@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-const permissionService = service
+export const permissionService = service
   .enhanceEndpoints({ addTagTypes: ['Permission'] })
   .injectEndpoints({
     endpoints: (builder) => ({

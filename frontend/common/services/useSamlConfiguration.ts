@@ -3,7 +3,7 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 
-const samlConfigurationService = service
+export const samlConfigurationService = service
   .enhanceEndpoints({
     addTagTypes: ['SamlConfiguration', 'samlConfigurations'],
   })

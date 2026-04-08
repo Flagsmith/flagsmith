@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-const samlAttributeMappingService = service
+export const samlAttributeMappingService = service
   .enhanceEndpoints({ addTagTypes: ['SamlAttributeMapping'] })
   .injectEndpoints({
     endpoints: (builder) => ({

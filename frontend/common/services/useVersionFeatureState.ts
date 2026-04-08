@@ -22,7 +22,7 @@ const convertFeatureState = (featureState: FeatureState) => {
   }
   return res
 }
-const versionFeatureStateService = service
+export const versionFeatureStateService = service
   .enhanceEndpoints({ addTagTypes: ['VersionFeatureState'] })
   .injectEndpoints({
     endpoints: (builder) => ({

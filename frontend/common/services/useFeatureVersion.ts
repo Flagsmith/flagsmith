@@ -104,7 +104,7 @@ export const getFeatureStateCrud = (
   }
 }
 
-const featureVersionService = service
+export const featureVersionService = service
   .enhanceEndpoints({
     addTagTypes: ['FeatureVersion', 'Environment', 'FeatureList'],
   })

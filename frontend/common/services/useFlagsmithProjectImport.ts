@@ -3,7 +3,7 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import toFormData from 'common/utils/toFormData'
 
-const flagsmithProjectImportService = service
+export const flagsmithProjectImportService = service
   .enhanceEndpoints({ addTagTypes: ['FlagsmithProjectImport'] })
   .injectEndpoints({
     endpoints: (builder) => ({

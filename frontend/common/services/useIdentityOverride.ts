@@ -9,7 +9,7 @@ import {
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 
-const identityOverrideService = service
+export const identityOverrideService = service
   .enhanceEndpoints({ addTagTypes: ['IdentityOverride'] })
   .injectEndpoints({
     endpoints: (builder) => ({

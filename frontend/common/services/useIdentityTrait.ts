@@ -45,7 +45,7 @@ function getTraitBody(
       : Utils.valueToTrait(trait_value)),
   }
 }
-const identityTraitService = service
+export const identityTraitService = service
   .enhanceEndpoints({ addTagTypes: ['IdentityTrait'] })
   .injectEndpoints({
     endpoints: (builder) => ({

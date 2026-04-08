@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-const organisationWebhookService = service
+export const organisationWebhookService = service
   .enhanceEndpoints({ addTagTypes: ['AuditLogWebhook'] })
   .injectEndpoints({
     endpoints: (builder) => ({

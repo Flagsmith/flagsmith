@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-const launchDarklyService = service
+export const launchDarklyService = service
   .enhanceEndpoints({ addTagTypes: ['launchDarklyProjectImport'] })
   .injectEndpoints({
     endpoints: (builder) => ({

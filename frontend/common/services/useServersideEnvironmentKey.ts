@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-const serversideEnvironmentKeyService = service
+export const serversideEnvironmentKeyService = service
   .enhanceEndpoints({ addTagTypes: ['ServersideEnvironmentKey'] })
   .injectEndpoints({
     endpoints: (builder) => ({

@@ -5,7 +5,7 @@ import Project from 'common/project'
 import { StoreStateType } from 'common/store'
 import data from 'common/data/base/_data'
 export const defaultVersionTag = 'Unknown'
-const buildVersionService = service
+export const buildVersionService = service
   .enhanceEndpoints({ addTagTypes: ['BuildVersion'] })
   .injectEndpoints({
     endpoints: (builder) => ({

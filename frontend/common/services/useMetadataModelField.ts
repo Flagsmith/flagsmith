@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
-const metadataModelFieldService = service
+export const metadataModelFieldService = service
   .enhanceEndpoints({ addTagTypes: ['MetadataModelField'] })
   .injectEndpoints({
     endpoints: (builder) => ({
