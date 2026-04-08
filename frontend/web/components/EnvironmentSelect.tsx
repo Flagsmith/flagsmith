@@ -16,6 +16,7 @@ type EnvironmentSelectType = Partial<Omit<Props, 'value'>> & {
 }
 
 const EnvironmentSelect: FC<EnvironmentSelectType> = ({
+  'data-test': dataTestProp,
   idField = 'api_key',
   ignore,
   label,
@@ -41,6 +42,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
         }
         return true
       })
+      .sort((a, b) => a.label.localeCompare(b.label))
   }, [data?.results, ignore, idField])
 
   const foundValue = useMemo(
@@ -53,7 +55,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
     return <div className='mb-2'>{foundValue?.label}</div>
   }
   return (
-    <div>
+    <div data-test={dataTestProp}>
       <Select
         {...rest}
         className='react-select select-xsm'
