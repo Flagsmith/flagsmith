@@ -5,7 +5,7 @@ import { Button } from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import {
   useCreateReleasePipelineMutation,
   useGetReleasePipelineQuery,

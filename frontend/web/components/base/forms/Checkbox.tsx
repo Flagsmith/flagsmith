@@ -1,6 +1,6 @@
 import React, { useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 
 interface CheckboxProps {

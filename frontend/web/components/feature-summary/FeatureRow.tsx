@@ -6,7 +6,7 @@ import CreateExperimentModal from 'components/modals/create-experiment'
 import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import FeatureValue from './FeatureValue'
 import FeatureAction, { FeatureActionProps } from './FeatureAction'
 import classNames from 'classnames'
@@ -32,7 +32,7 @@ import FeatureDescription from './FeatureDescription'
 import FeatureTags from './FeatureTags'
 import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
 
-export interface FeatureRowProps {
+interface FeatureRowProps {
   disableControls?: boolean
   environmentFlags: FeatureListProviderData['environmentFlags']
   environmentId: string

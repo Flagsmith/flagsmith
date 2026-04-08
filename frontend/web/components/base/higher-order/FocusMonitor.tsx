@@ -8,13 +8,13 @@ import React, {
   ForwardRefRenderFunction,
 } from 'react'
 
-export interface FocusMonitorProps {
+interface FocusMonitorProps {
   children: ReactElement
   isHover?: boolean
   onFocusChanged: (hasFocus: boolean) => void
 }
 
-export interface FocusMonitorHandles {
+interface FocusMonitorHandles {
   toggle: () => void
   isActive: () => boolean
 }

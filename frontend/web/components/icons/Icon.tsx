@@ -63,7 +63,7 @@ export type IconName =
   | 'trash-2'
   | 'warning'
 
-export type IconType = React.DetailedHTMLProps<
+type IconType = React.DetailedHTMLProps<
   React.HTMLAttributes<SVGSVGElement>,
   SVGSVGElement
 > & {

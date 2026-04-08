@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import PageTitle from 'components/PageTitle'
 import Utils from 'common/utils/utils'
 import { useRouteMatch } from 'react-router-dom'

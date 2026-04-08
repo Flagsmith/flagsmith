@@ -4,7 +4,7 @@ import Tag from './tags/Tag'
 import Utils from 'common/utils/utils'
 import Button from './base/forms/Button'
 
-export type EnvironmentSelectType = {
+type EnvironmentSelectType = {
   projectId: string | number | undefined
   value?: string[] | string | null
   onChange: (value: string[] | string | undefined) => void

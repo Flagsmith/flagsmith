@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react'
 import classNames from 'classnames'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import { PricingFeaturesList } from './PricingFeaturesList'
 import { PaymentButton } from './PaymentButton'

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
-import Icon from 'components/Icon'
-import type { IconName } from 'components/Icon'
+import Icon from 'components/icons/Icon'
+import type { IconName } from 'components/icons/Icon'
 
 // eslint-disable-next-line @dword-design/import-alias/prefer-alias
 import '../docs.scss'

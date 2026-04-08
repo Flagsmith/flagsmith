@@ -1,7 +1,7 @@
 import React, { useRef, FC, useEffect } from 'react'
 import ModalClose from './modals/base/ModalClose'
 import ModalHR from './modals/ModalHR'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
 
