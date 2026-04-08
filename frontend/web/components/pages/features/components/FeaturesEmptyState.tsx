@@ -70,7 +70,7 @@ export const FeaturesEmptyState: FC<FeaturesEmptyStateProps> = ({
             the{' '}
             <Link
               className='btn-link'
-              to={`/project/${projectId}/environment/${environmentId}/users`}
+              to={`/project/${projectId}/environment/${environmentId}/identities`}
             >
               Identities page
             </Link>
