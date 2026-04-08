@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from 'react'
 import Utils, { planNames } from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
-import { GithubIcon } from './base/icons/GithubIcon'
+import { GithubIcon } from './icons/GithubIcon'
 
 type GithubStarType = {}
 

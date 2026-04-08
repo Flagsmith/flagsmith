@@ -4,7 +4,7 @@ import Highlight from './Highlight'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import Icon from './Icon'
-import { GithubIcon } from './base/icons/GithubIcon'
+import { GithubIcon } from './icons/GithubIcon'
 
 type Snippets = Record<string, string>
 
