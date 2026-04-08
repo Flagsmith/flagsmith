@@ -4,8 +4,7 @@ import Highlight from './Highlight'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import Icon from './Icon'
-import { logoGithub, document } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
+import { GithubIcon } from './base/icons/GithubIcon'
 
 type Snippets = Record<string, string>
 
@@ -168,8 +167,8 @@ const SnippetItem: FC<SnippetItemProps> = ({
             className='btn btn-primary'
             size='xSmall'
           >
-            <span className='icon ion' style={{ marginRight: '2px' }}>
-              <IonIcon icon={document} />
+            <span className='icon' style={{ marginRight: '2px' }}>
+              <Icon name='description' />
             </span>
             {languageKey}
             Docs
@@ -182,8 +181,8 @@ const SnippetItem: FC<SnippetItemProps> = ({
             className='btn btn-primary'
             size='xSmall'
           >
-            <span className='icon ion' style={{ marginRight: '2px' }}>
-              <IonIcon icon={logoGithub} />
+            <span className='icon' style={{ marginRight: '2px' }}>
+              <GithubIcon width={14} height={14} />
             </span>
             {languageKey} GitHub
           </Button>

@@ -1,8 +1,7 @@
 import React, { FC, useEffect, useState } from 'react'
 import Utils, { planNames } from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
-import { IonIcon } from '@ionic/react'
-import { logoGithub } from 'ionicons/icons'
+import { GithubIcon } from './base/icons/GithubIcon'
 
 type GithubStarType = {}
 
@@ -51,7 +50,7 @@ const GithubStar: FC<GithubStarType> = ({}) => {
             : ''
         }
       >
-        <IonIcon style={{ fontSize: 16 }} icon={logoGithub} />
+        <GithubIcon width={16} height={16} />
         {stars !== null && <div className='ms-1'>{formatStars(stars)}</div>}
       </div>
     </a>
