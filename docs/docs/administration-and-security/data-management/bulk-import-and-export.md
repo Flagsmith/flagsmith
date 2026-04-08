@@ -6,8 +6,8 @@ sidebar_position: 30
 
 Flagsmith supports two levels of bulk import and export from the UI:
 
-- **[Environment-level](#environment-level-export)**: export and import default feature states for a single environment.
-  Useful for quickly copying feature values between environments or projects.
+- **[Environment-level](#environment-level-export)**: export features with one environment's values. Useful for copying
+  feature configuration between environments or projects.
 - **[Project-level](#project-level-export)**: export and import an entire project's feature configuration, including
   segments, segment overrides, and optionally identity overrides and tags. Useful for cloning a project or migrating
   between Flagsmith instances.
