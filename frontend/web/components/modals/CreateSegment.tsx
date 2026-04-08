@@ -734,4 +734,4 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
 
 export default LoadingCreateSegment
 
-module.exports = ConfigProvider(LoadingCreateSegment)
+export default ConfigProvider(LoadingCreateSegment)

@@ -35,7 +35,7 @@ import {
   OrganisationPermissionDescriptions,
 } from 'common/types/permissions.types'
 
-const semver = require('semver')
+import semver from 'semver'
 
 export type PaidFeature =
   | 'FLAG_OWNERS'
@@ -67,7 +67,8 @@ export const planNames = {
   scaleUp: 'Scale-Up',
   startup: 'Startup',
 }
-const Utils = Object.assign({}, require('./base/_utils'), {
+import BaseUtils from './base/_utils'
+const Utils = Object.assign({}, BaseUtils, {
   appendImage: (src: string) => {
     const img = document.createElement('img')
     img.src = src

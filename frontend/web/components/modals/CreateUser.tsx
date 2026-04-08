@@ -54,4 +54,4 @@ const CreateUser: FC<CreateUserType> = ({ environmentId }) => {
 
 export default CreateUser
 
-module.exports = CreateUser
+export default CreateUser

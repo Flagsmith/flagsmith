@@ -63,4 +63,4 @@ const ComparePageWithContext = (props) => {
   return <ComparePage {...props} routeContext={context} />
 }
 
-module.exports = withRouter(ConfigProvider(ComparePageWithContext))
+export default withRouter(ConfigProvider(ComparePageWithContext))

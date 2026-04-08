@@ -1,4 +1,5 @@
-const Actions = Object.assign({}, require('./base/_action-constants'), {
+import BaseActions from './base/_action-constants'
+const Actions = Object.assign({}, BaseActions, {
   'ACCEPT_INVITE': 'ACCEPT_INVITE',
   'ACTION_CHANGE_REQUEST': 'ACTION_CHANGE_REQUEST',
   'CHANGE_USER_FLAG': 'CHANGE_USER_FLAG',

@@ -46,4 +46,4 @@ const RebrandBanner = class extends React.Component {
 
 RebrandBanner.propTypes = {}
 
-module.exports = RebrandBanner
+export default RebrandBanner

@@ -33,4 +33,4 @@ AsideTitleLink.displayName = 'AsideTitleLink'
 //     children: OptionalNode,
 // };
 
-module.exports = AsideTitleLink
+export default AsideTitleLink

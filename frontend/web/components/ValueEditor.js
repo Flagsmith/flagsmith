@@ -7,8 +7,8 @@ import Icon from './Icon'
 import { IonIcon } from '@ionic/react'
 import { checkmarkCircle, warning } from 'ionicons/icons'
 
-const toml = require('toml')
-const yaml = require('yaml')
+import toml from 'toml'
+import yaml from 'yaml'
 
 function xmlIsInvalid(xmlStr) {
   const parser = new DOMParser()

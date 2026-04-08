@@ -1,6 +1,6 @@
 import Constants from 'common/constants'
 
-module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }) => `
+export default (envId, { FEATURE_NAME, FEATURE_NAME_ALT }) => `
 use flagsmith::{Flag, Flagsmith, FlagsmithOptions};
 
 let options = FlagsmithOptions {${

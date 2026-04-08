@@ -1,4 +1,4 @@
-const ReactDispatcher = require('flux-react-dispatcher')
+import ReactDispatcher from 'flux-react-dispatcher'
 
 const Dispatcher = new ReactDispatcher()
 
@@ -14,4 +14,4 @@ const theDispatcher = Object.assign(Dispatcher, {
 })
 
 window.Dispatcher = Dispatcher
-module.exports = theDispatcher
+export default theDispatcher

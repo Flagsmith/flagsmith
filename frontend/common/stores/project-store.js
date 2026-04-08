@@ -7,10 +7,9 @@ import { getStore } from 'common/store'
 import { projectService } from 'common/services/useProject'
 import { environmentService } from 'common/services/useEnvironment'
 
-const Dispatcher = require('../dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-
-const data = require('../data/base/_data')
+import Dispatcher from 'common/dispatcher/dispatcher'
+import BaseStore from './base/_store'
+import data from 'common/data/base/_data'
 
 const controller = {
   createEnv: ({

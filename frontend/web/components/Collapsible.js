@@ -1,9 +1,8 @@
 import React, { PureComponent } from 'react'
-import Icon from './Icon'
 import { IonIcon } from '@ionic/react'
-import { chevronDown, chevronForward, createOutline } from 'ionicons/icons'
+import { chevronDown, chevronForward } from 'ionicons/icons'
 
-const cn = require('classnames')
+import cn from 'classnames'
 
 const Collapsible = class extends PureComponent {
   static displayName = 'Collapsible'
@@ -68,4 +67,4 @@ Collapsible.displayName = 'Collapsible'
 //     children: OptionalNode,
 // };
 
-module.exports = Collapsible
+export default Collapsible

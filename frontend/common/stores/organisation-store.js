@@ -4,10 +4,10 @@ import { getStore } from 'common/store'
 import sortBy from 'lodash/sortBy'
 import { getSubscriptionMetadata } from 'common/services/useSubscriptionMetadata'
 
-const Dispatcher = require('../dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-const data = require('../data/base/_data')
-const _ = require('lodash')
+import Dispatcher from 'common/dispatcher/dispatcher'
+import BaseStore from './base/_store'
+import data from 'common/data/base/_data'
+import _ from 'lodash'
 
 const controller = {
   createProject: (name) => {

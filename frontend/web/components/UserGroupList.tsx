@@ -1,16 +1,9 @@
 import React, { FC, ReactNode, useState } from 'react'
-const CreateGroup = require('./modals/CreateGroup')
+import CreateGroup from './modals/CreateGroup'
 import Button from './base/forms/Button'
 import AccountStore from 'common/stores/account-store'
-import {
-  UserGroup,
-  GroupPermission,
-  UserGroupSummary,
-} from 'common/types/responses'
-import {
-  useDeleteGroupMutation,
-  useGetGroupsQuery,
-} from 'common/services/useGroup'
+import { UserGroup, GroupPermission } from 'common/types/responses'
+import { useDeleteGroupMutation } from 'common/services/useGroup'
 import { useGetUserGroupPermissionQuery } from 'common/services/useUserGroupPermission'
 import PanelSearch from './PanelSearch'
 import { sortBy } from 'lodash'

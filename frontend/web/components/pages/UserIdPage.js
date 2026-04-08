@@ -52,4 +52,4 @@ const UserPage = class extends Component {
 
 UserPage.propTypes = {}
 
-module.exports = withRouter(ConfigProvider(UserPage))
+export default withRouter(ConfigProvider(UserPage))

@@ -35,4 +35,4 @@ AsideProjectButton.displayName = 'AsideProjectButton'
 //     children: OptionalNode,
 // };
 
-module.exports = AsideProjectButton
+export default AsideProjectButton
