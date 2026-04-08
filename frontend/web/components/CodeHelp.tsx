@@ -17,12 +17,17 @@ type CodeHelpProps = {
   title?: string
 }
 
+type LanguageOption = {
+  label: string
+  value: number
+}
+
 type SnippetItemProps = {
   code: string
   isVisible: boolean
-  keys: string[]
   language: string
   languageKey: string
+  languageOptions: LanguageOption[]
   onCopy: (s: string) => void
   onLanguageChange: (lang: string) => void
 }
@@ -106,9 +111,9 @@ const getDocsLink = (key: string): string | null => {
 const SnippetItem: FC<SnippetItemProps> = ({
   code,
   isVisible,
-  keys,
   language,
   languageKey,
+  languageOptions,
   onCopy,
   onLanguageChange,
 }) => {
@@ -126,12 +131,7 @@ const SnippetItem: FC<SnippetItemProps> = ({
         onChange={(v: { label: string }) => {
           onLanguageChange(v.label)
         }}
-        options={[...keys]
-          .sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()))
-          .map((v: string, i: number) => ({
-            label: v,
-            value: i,
-          }))}
+        options={languageOptions}
         styles={{
           control: (base: Record<string, unknown>) => ({
             ...base,
@@ -211,6 +211,10 @@ const CodeHelp: FC<CodeHelpProps> = ({
   const tab = language ? Math.max(keys.indexOf(language), 0) : 0
   language = keys[tab]
 
+  const languageOptions = [...keys]
+    .sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()))
+    .map((v, i) => ({ label: v, value: i }))
+
   const copy = (s: string) => {
     Utils.copyToClipboard(s)
   }
@@ -257,8 +261,8 @@ const CodeHelp: FC<CodeHelpProps> = ({
                 key={key}
                 code={code}
                 isVisible={key === language}
-                keys={keys}
                 language={language}
+                languageOptions={languageOptions}
                 languageKey={key}
                 onCopy={copy}
                 onLanguageChange={handleLanguageChange}
