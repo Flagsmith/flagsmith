@@ -159,8 +159,7 @@ You can view and manage SCIM configurations from **Organisation Settings** > **S
 
 ### Users are provisioned but cannot log in
 
-SCIM only manages the user lifecycle (creating accounts, setting group membership). Users still need to authenticate
-through your SSO provider. Verify that your SAML configuration is set up correctly.
+- SCIM only manages the user lifecycle (creating accounts, setting group membership). Users still need to authenticate through your SSO provider. Verify that your SAML configuration is set up correctly.
 
 ### Group membership is not syncing
 
@@ -171,5 +170,4 @@ through your SSO provider. Verify that your SAML configuration is set up correct
 
 ### Deprovisioned users still appear in the organisation
 
-Check that your identity provider is sending a PATCH request with `active` set to `false`, or a DELETE request, when
-deprovisioning a user. Some identity providers require explicit configuration to send deprovisioning events.
+- Check that your identity provider is sending a PATCH request with `active` set to `false`, or a DELETE request, when deprovisioning a user. Some identity providers require explicit configuration to send deprovisioning events.
