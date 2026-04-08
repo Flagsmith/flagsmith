@@ -8,13 +8,9 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import CompareIdentities from 'components/CompareIdentities'
 import PageTitle from 'components/PageTitle'
 import { withRouter } from 'react-router-dom'
-import {
-  RouteContext,
-  useRouteContext,
-} from 'components/providers/RouteContext'
+import { useRouteContext } from 'components/providers/RouteContext'
 
 class ComparePage extends Component {
-  static contextType = RouteContext
   static displayName = 'ComparePage'
 
   static propTypes = {}

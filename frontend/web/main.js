@@ -110,3 +110,8 @@ toastRoot.render(<ToastMessages />)
 if (E2E) {
   document.body.classList.add('disable-transitions')
 }
+
+// Enable HMR - React Refresh handles component-level updates
+if (module.hot) {
+  module.hot.accept()
+}

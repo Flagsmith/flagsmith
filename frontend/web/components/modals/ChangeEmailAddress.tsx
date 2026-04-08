@@ -122,6 +122,4 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
   )
 }
 
-export default ChangeEmailAddress
-
 export default ConfigProvider(ChangeEmailAddress)
