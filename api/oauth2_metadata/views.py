@@ -1,7 +1,6 @@
 from typing import Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from django.conf import settings
 from django.http import HttpRequest, JsonResponse, QueryDict
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
@@ -17,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from oauth2_metadata.dataclasses import OAuthConfig
 from oauth2_metadata.serializers import DCRRequestSerializer, OAuthConsentSerializer
 from oauth2_metadata.services import create_oauth2_application
 
@@ -25,19 +25,16 @@ from oauth2_metadata.services import create_oauth2_application
 @require_GET
 def authorization_server_metadata(request: HttpRequest) -> JsonResponse:
     """RFC 8414 OAuth 2.0 Authorization Server Metadata."""
-    api_url: str = settings.FLAGSMITH_API_URL.rstrip("/")
-    frontend_url: str = settings.FLAGSMITH_FRONTEND_URL.rstrip("/")
-    oauth2_settings: dict[str, Any] = settings.OAUTH2_PROVIDER
-    scopes: dict[str, str] = oauth2_settings.get("SCOPES", {})
+    oauth = OAuthConfig.from_settings()
 
     metadata = {
-        "issuer": api_url,
-        "authorization_endpoint": f"{frontend_url}/oauth/authorize/",
-        "token_endpoint": f"{api_url}/o/token/",
-        "registration_endpoint": f"{api_url}/o/register/",
-        "revocation_endpoint": f"{api_url}/o/revoke_token/",
-        "introspection_endpoint": f"{api_url}/o/introspect/",
-        "scopes_supported": list(scopes.keys()),
+        "issuer": oauth.api_url,
+        "authorization_endpoint": f"{oauth.frontend_url}/oauth/authorize/",
+        "token_endpoint": f"{oauth.api_url}/o/token/",
+        "registration_endpoint": f"{oauth.api_url}/o/register/",
+        "revocation_endpoint": f"{oauth.api_url}/o/revoke_token/",
+        "introspection_endpoint": f"{oauth.api_url}/o/introspect/",
+        "scopes_supported": list(oauth.scopes.keys()),
         "response_types_supported": ["code"],
         "grant_types_supported": ["authorization_code", "refresh_token"],
         "code_challenge_methods_supported": ["S256"],

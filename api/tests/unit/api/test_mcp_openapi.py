@@ -6,6 +6,7 @@ from pytest_django.fixtures import SettingsWrapper
 
 from api.openapi import MCPSchemaGenerator, SchemaGenerator
 from api.openapi_views import CustomSpectacularJSONAPIView, CustomSpectacularYAMLAPIView
+from oauth2_metadata.dataclasses import OAuthConfig
 
 
 def test_mcp_filter_paths__mcp_tagged_operation__includes_path() -> None:
@@ -144,12 +145,15 @@ def test_mcp_transform_for_mcp__security_present__removes_operation_level_securi
     assert "security" not in transformed
 
 
-def test_mcp_update_security_for_mcp__existing_scheme__sets_oauth_and_token_auth(
-    settings: SettingsWrapper,
-) -> None:
+def test_mcp_update_security_for_mcp__existing_scheme__sets_oauth_and_token_auth() -> (
+    None
+):
     # Given
-    settings.FLAGSMITH_API_URL = "https://api.flagsmith.example.com/"
-    settings.FLAGSMITH_FRONTEND_URL = "https://app.flagsmith.example.com/"
+    oauth = OAuthConfig(
+        api_url="https://api.flagsmith.example.com",
+        frontend_url="https://app.flagsmith.example.com",
+        scopes={"mcp": "MCP access"},
+    )
     schema: dict[str, Any] = {
         "components": {
             "securitySchemes": {
@@ -161,7 +165,7 @@ def test_mcp_update_security_for_mcp__existing_scheme__sets_oauth_and_token_auth
     generator = MCPSchemaGenerator()
 
     # When
-    updated = generator._update_security_for_mcp(schema)
+    updated = generator._update_security_for_mcp(schema, oauth)
 
     # Then
     assert "Private" not in updated["components"]["securitySchemes"]

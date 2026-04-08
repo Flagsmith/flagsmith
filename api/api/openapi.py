@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, Any, Literal
 
-from django.conf import settings
 from drf_spectacular import generators, openapi
 from drf_spectacular.extensions import (
     OpenApiAuthenticationExtension,
@@ -11,6 +10,8 @@ from drf_spectacular.plumbing import append_meta as append_meta_orig
 from pydantic import TypeAdapter
 from rest_framework.request import Request
 from typing_extensions import is_typeddict
+
+from oauth2_metadata.dataclasses import OAuthConfig
 
 
 def append_meta(schema: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
@@ -78,17 +79,17 @@ class MCPSchemaGenerator(SchemaGenerator):
     def get_schema(
         self, request: Request | None = None, public: bool = False
     ) -> dict[str, Any]:
+        oauth = OAuthConfig.from_settings()
         schema = super().get_schema(request, public)
         schema["paths"] = self._filter_paths(schema.get("paths", {}))
-        schema = self._update_security_for_mcp(schema)
+        schema = self._update_security_for_mcp(schema, oauth)
         schema.pop("$schema", None)
         info = schema.pop("info").copy()
         info["title"] = "mcp_openapi"
-        server_url = settings.FLAGSMITH_API_URL.rstrip("/")
         return {
             "openapi": schema.pop("openapi"),
             "info": info,
-            "servers": [{"url": server_url}],
+            "servers": [{"url": oauth.api_url}],
             **schema,
         }
 
@@ -122,13 +123,10 @@ class MCPSchemaGenerator(SchemaGenerator):
         operation.pop("security", None)
         return operation
 
-    def _update_security_for_mcp(self, schema: dict[str, Any]) -> dict[str, Any]:
+    def _update_security_for_mcp(
+        self, schema: dict[str, Any], oauth: OAuthConfig
+    ) -> dict[str, Any]:
         """Update security schemes for MCP (OAuth + API Key fallback)."""
-        api_url = settings.FLAGSMITH_API_URL.rstrip("/")
-        frontend_url = settings.FLAGSMITH_FRONTEND_URL.rstrip("/")
-        oauth2_settings: dict[str, Any] = settings.OAUTH2_PROVIDER
-        scopes: dict[str, str] = oauth2_settings.get("SCOPES", {})
-
         schema = schema.copy()
         schema["components"] = schema.get("components", {}).copy()
         schema["components"]["securitySchemes"] = {
@@ -136,9 +134,9 @@ class MCPSchemaGenerator(SchemaGenerator):
                 "type": "oauth2",
                 "flows": {
                     "authorizationCode": {
-                        "authorizationUrl": f"{frontend_url}/oauth/authorize/",
-                        "tokenUrl": f"{api_url}/o/token/",
-                        "scopes": scopes,
+                        "authorizationUrl": f"{oauth.frontend_url}/oauth/authorize/",
+                        "tokenUrl": f"{oauth.api_url}/o/token/",
+                        "scopes": oauth.scopes,
                     },
                 },
             },
@@ -149,7 +147,10 @@ class MCPSchemaGenerator(SchemaGenerator):
                 "description": "Organisation API Key. Format: Api-Key <key>",
             },
         }
-        schema["security"] = [{"oauth2": list(scopes.keys())}, {"TOKEN_AUTH": []}]
+        schema["security"] = [
+            {"oauth2": list(oauth.scopes.keys())},
+            {"TOKEN_AUTH": []},
+        ]
         return schema
 
 
