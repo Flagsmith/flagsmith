@@ -13,19 +13,20 @@ the flag's current state across all environments.
 
 ## Setup
 
-The integration requires a token with access to the full GitLab group —
-either a [personal access token](https://docs.gitlab.com/user/profile/personal_access_tokens/)
-or a [group access token](https://docs.gitlab.com/user/group/settings/group_access_tokens/).
-Project access tokens are not supported yet.
+The integration supports
+[personal access tokens](https://docs.gitlab.com/user/profile/personal_access_tokens/),
+[group access tokens](https://docs.gitlab.com/user/group/settings/group_access_tokens/),
+and [project access tokens](https://docs.gitlab.com/user/project/settings/project_access_tokens/).
+All require the `api` scope. The token type determines which projects are
+accessible in Flagsmith.
 
 1. **In GitLab**
-   1. Create a personal access token or group access token with the `api` scope.
+   1. Create an access token with the `api` scope.
    1. Copy the token — you will not see it again.
 1. **In Flagsmith**
    1. Go to Integrations > **GitLab** > Add Integration.
    1. Set the **GitLab Instance URL** to your instance
       (e.g. `https://gitlab.example.com` or `https://gitlab.com`).
-   1. Enter your **GitLab Group** (e.g. `my-company`).
    1. Paste the access token.
    1. Click "Save". ✅
 
@@ -38,7 +39,7 @@ Remember to rotate your GitLab access token before it expires.
 ## Linking issues and merge requests to feature flags
 
 1. Open a feature flag and go to the **Link** tab.
-1. Select a GitLab project from your connected group.
+1. Select a GitLab project.
 1. Choose **Issue** or **Merge Request**.
 1. Search and select the item you want to link.
 
