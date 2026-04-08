@@ -124,4 +124,4 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
 
 export default ChangeEmailAddress
 
-module.exports = ConfigProvider(ChangeEmailAddress)
+export default ConfigProvider(ChangeEmailAddress)

@@ -48,4 +48,4 @@ const InvitePage = class extends Component {
 
 InvitePage.propTypes = {}
 
-module.exports = withRouter(InvitePage)
+export default withRouter(InvitePage)

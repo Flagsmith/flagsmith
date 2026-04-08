@@ -5,17 +5,23 @@ import './project/project-components'
 import './styles/styles.scss'
 import { BrowserRouter as Router } from 'react-router-dom'
 import { createBrowserHistory } from 'history'
+import { createRoot } from 'react-dom/client'
 import ToastMessages from './project/toast'
 import routes from './routes'
 import Utils from 'common/utils/utils'
 import Project from 'common/project'
 import AccountStore from 'common/stores/account-store'
 import data from 'common/data/base/_data'
+import {
+  openModal,
+  openModal2,
+  openConfirm,
+} from './components/modals/base/Modal'
 
 window.Utils = Utils
-window.openModal = require('./components/modals/base/Modal').openModal
-window.openModal2 = require('./components/modals/base/Modal').openModal2
-window.openConfirm = require('./components/modals/base/Modal').openConfirm
+window.openModal = openModal
+window.openModal2 = openModal2
+window.openConfirm = openConfirm
 
 const rootElement = document.getElementById('app')
 
@@ -86,14 +92,12 @@ setTimeout(() => {
     )
   }
 
-  const { createRoot } = require('react-dom/client')
   const root = createRoot(rootElement)
   root.render(<Router basename={Project.basename || ''}>{routes}</Router>)
 }, 1)
 
 // Setup for toast messages
-const { createRoot: createToastRoot } = require('react-dom/client')
-const toastRoot = createToastRoot(document.getElementById('toast'))
+const toastRoot = createRoot(document.getElementById('toast'))
 toastRoot.render(<ToastMessages />)
 
 if (E2E) {

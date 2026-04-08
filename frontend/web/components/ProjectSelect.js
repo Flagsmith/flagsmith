@@ -63,4 +63,4 @@ const ProjectSelect = class extends Component {
 
 ProjectSelect.propTypes = {}
 
-module.exports = ConfigProvider(ProjectSelect)
+export default ConfigProvider(ProjectSelect)

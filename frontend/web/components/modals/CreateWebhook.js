@@ -187,4 +187,4 @@ const CreateWebhook = class extends Component {
 
 CreateWebhook.propTypes = {}
 
-module.exports = ConfigProvider(CreateWebhook)
+export default ConfigProvider(CreateWebhook)

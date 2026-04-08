@@ -36,11 +36,11 @@ import {
 } from 'common/services/useChangeRequest'
 import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 
-const Dispatcher = require('common/dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-const data = require('../data/base/_data')
-const { createSegmentOverride } = require('../services/useSegmentOverride')
-const { getStore } = require('../store')
+import Dispatcher from 'common/dispatcher/dispatcher'
+import BaseStore from './base/_store'
+import data from 'common/data/base/_data'
+import { createSegmentOverride } from 'common/services/useSegmentOverride'
+import { getStore } from 'common/store'
 let createdFirstFeature = false
 
 const convertSegmentOverrideToFeatureState = (

@@ -38,4 +38,4 @@ const HomePage = class extends React.Component {
   )
 }
 
-module.exports = ConfigProvider(HomePage)
+export default ConfigProvider(HomePage)

@@ -10,12 +10,11 @@ import {
   REGISTER,
   REHYDRATE,
 } from 'redux-persist'
+import storage from 'redux-persist/lib/storage'
 import { Persistor } from 'redux-persist/es/types'
 import { service } from './service'
 // END OF IMPORTS
 const createStore = () => {
-  const storage = require('redux-persist/lib/storage').default
-
   const reducer = combineReducers({
     [service.reducerPath]: service.reducer,
     // END OF REDUCERS

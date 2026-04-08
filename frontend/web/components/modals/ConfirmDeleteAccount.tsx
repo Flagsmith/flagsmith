@@ -151,4 +151,4 @@ const ConfirmDeleteAccount: FC<ConfirmDeleteAccountType> = ({
 
 export default ConfirmDeleteAccount
 
-module.exports = ConfirmDeleteAccount
+export default ConfirmDeleteAccount
