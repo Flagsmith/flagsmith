@@ -15,22 +15,80 @@ assistants can help you navigate the codebase quickly - point them at the
 
 Beyond that, many issues have already been solved. A quick search can save you time:
 
-- **[FAQ](/support/faq)** - Browse answers to common questions by category
-- **[GitHub Issues](https://github.com/Flagsmith/flagsmith/issues)** - Search open and closed issues for your problem
-- **[Release Notes](https://github.com/Flagsmith/flagsmith/releases)** - Check if your issue was fixed in a newer version
-- **SDK Repositories** - Check issues in your specific SDK repo:
-  - [Python](https://github.com/Flagsmith/flagsmith-python-client)
-  - [JavaScript/Node.js](https://github.com/Flagsmith/flagsmith-nodejs-client)
-  - [React/Next.js](https://github.com/Flagsmith/flagsmith-js-client)
-  - [Java](https://github.com/Flagsmith/flagsmith-java-client)
-  - [.NET](https://github.com/Flagsmith/flagsmith-dotnet-client)
-  - [Go](https://github.com/Flagsmith/flagsmith-go-client)
-  - [Ruby](https://github.com/Flagsmith/flagsmith-ruby-client)
-  - [iOS/Swift](https://github.com/Flagsmith/flagsmith-ios-client)
-  - [Android/Kotlin](https://github.com/Flagsmith/flagsmith-kotlin-android-client)
-  - [Flutter](https://github.com/Flagsmith/flagsmith-flutter-client)
-  - [Rust](https://github.com/Flagsmith/flagsmith-rust-client)
-  - [Elixir](https://github.com/Flagsmith/flagsmith-elixir-client)
+-   **[FAQ](/support/faq)** - Browse answers to common questions by category
+-   **[GitHub Issues](https://github.com/Flagsmith/flagsmith/issues)** - Search open and closed issues for your problem
+-   **[Release Notes](https://github.com/Flagsmith/flagsmith/releases)** - Check if your issue was fixed in a newer
+    version
+-   **SDK Repositories** - Check issues in your specific SDK repo:
+    -   [Python](https://github.com/Flagsmith/flagsmith-python-client)
+    -   [JavaScript/Node.js](https://github.com/Flagsmith/flagsmith-nodejs-client)
+    -   [React/Next.js](https://github.com/Flagsmith/flagsmith-js-client)
+    -   [Java](https://github.com/Flagsmith/flagsmith-java-client)
+    -   [.NET](https://github.com/Flagsmith/flagsmith-dotnet-client)
+    -   [Go](https://github.com/Flagsmith/flagsmith-go-client)
+    -   [Ruby](https://github.com/Flagsmith/flagsmith-ruby-client)
+    -   [iOS/Swift](https://github.com/Flagsmith/flagsmith-ios-client)
+    -   [Android/Kotlin](https://github.com/Flagsmith/flagsmith-kotlin-android-client)
+    -   [Flutter](https://github.com/Flagsmith/flagsmith-flutter-client)
+    -   [Rust](https://github.com/Flagsmith/flagsmith-rust-client)
+    -   [Elixir](https://github.com/Flagsmith/flagsmith-elixir-client)
+
+## CVEs and Vulnerability Reports
+
+We actively scan for vulnerabilities across our supply chain and take remediation seriously. If your security scanner
+has flagged a CVE against a Flagsmith image or dependency, this section will help you interpret the results and
+determine whether it needs to be raised with us.
+
+For details on reporting security issues, see our
+[Security Policy](https://github.com/Flagsmith/flagsmith/security/policy).
+
+### How We Scan
+
+We run continuous, automated vulnerability scanning:
+
+-   **[Trivy](https://github.com/Flagsmith/flagsmith/blob/main/.github/workflows/platform-docker-trivy-scan.yml)** scans
+    our Docker images every 3 hours, with results fed into GitHub's security tab via SARIF reporting.
+-   **[Dependabot](https://github.com/Flagsmith/flagsmith/blob/main/.github/dependabot.yml)** monitors Python, Node.js,
+    and documentation dependencies in security-only mode — it raises PRs only for known vulnerabilities, not routine
+    version bumps.
+-   **Docker Scout** provides additional image-level security analysis.
+
+Our Docker images use [Chainguard Wolfi](https://www.flagsmith.com/blog/we-made-docker-images-more-secure-with-oss) as
+the base OS, which significantly reduces the attack surface compared to traditional base images.
+
+### Interpreting Scan Results
+
+Not every CVE that a scanner reports represents a real risk to your Flagsmith deployment. Here's what to consider before
+raising it with us.
+
+#### Lockfile and documentation dependencies are not runtime dependencies
+
+Our repository lockfile includes dependencies for documentation tooling, development utilities, and build-time packages
+that are **not present in the runtime Docker image**. Scanners that analyse the source repository (rather than the
+deployed image) will flag these, but they are not exploitable in a running Flagsmith instance.
+
+#### A CVE in a dependency does not mean it's exploitable
+
+A CVE in a transitive dependency doesn't automatically mean Flagsmith is affected. We assess actual exploitability —
+whether the vulnerable code path is reachable in Flagsmith's context — not just the presence of a flagged package. Many
+CVEs require specific conditions or call patterns that don't apply to how Flagsmith uses the dependency.
+
+#### Check whether it's already fixed
+
+Before reporting a CVE to us, please check whether it exists in the
+[latest Flagsmith release](https://github.com/Flagsmith/flagsmith/releases). Our scanning runs continuously, so newer
+versions will typically have fewer outstanding CVEs. If you're running an older version, the issue may already be
+resolved.
+
+#### Don't let a reported CVE block an upgrade
+
+If you're hesitating to upgrade because the target version has a reported CVE, compare it to what you're currently
+running. Older versions are typically affected by the same vulnerabilities — plus additional ones that have since been
+patched. Staying on an older version is usually the riskier choice.
+
+If you've reviewed the above and believe a CVE is genuinely exploitable in a deployed Flagsmith instance, please report
+it to [support@flagsmith.com](mailto:support@flagsmith.com) with the CVE identifier, the affected Flagsmith version, and
+any context on the suspected impact.
 
 ## What We Need From You
 
@@ -39,55 +97,55 @@ depending on your issue type.
 
 ### SDK or API Issues
 
-- Which SDK and exact version number
-- Are you using a server-side or client-side environment key?
-- Your initialisation code and flag evaluation code (sanitised)
-- What you expected to happen vs what actually happened
-- Exact error messages, stack traces, or console output
+-   Which SDK and exact version number
+-   Are you using a server-side or client-side environment key?
+-   Your initialisation code and flag evaluation code (sanitised)
+-   What you expected to happen vs what actually happened
+-   Exact error messages, stack traces, or console output
 
 ### Self-Hosted Infrastructure
 
-- Flagsmith version (Docker image tag, e.g. `v2.221.1`)
-- Deployment method and version (Helm chart version, Docker Compose, etc.)
-- Relevant Helm values or Docker configuration (sanitised - remove secrets)
-- Database type and version (PostgreSQL version, managed vs self-hosted)
-- Container logs from the relevant service (API, task processor, SSE). For Docker: `docker logs <container_name>`. For
-  Kubernetes: `kubectl logs <pod_name> -c <container_name>`. Include the full output, not just the error line - context
-  around the error often matters.
-- For real-time/SSE issues: Redis configuration details
-- For upgrade issues: which version you upgraded from and to
+-   Flagsmith version (Docker image tag, e.g. `v2.221.1`)
+-   Deployment method and version (Helm chart version, Docker Compose, etc.)
+-   Relevant Helm values or Docker configuration (sanitised - remove secrets)
+-   Database type and version (PostgreSQL version, managed vs self-hosted)
+-   Container logs from the relevant service (API, task processor, SSE). For Docker: `docker logs <container_name>`. For
+    Kubernetes: `kubectl logs <pod_name> -c <container_name>`. Include the full output, not just the error line -
+    context around the error often matters.
+-   For real-time/SSE issues: Redis configuration details
+-   For upgrade issues: which version you upgraded from and to
 
 ### Dashboard or UI Issues
 
-- Screenshot or short screen recording showing the problem
-- Steps to reproduce - what you clicked, in what order
-- Which project, environment, and flag name are affected
-- Browser and version
-- Any errors in the browser console (open with F12 -> Console tab)
-- For API/network issues: a
-  [HAR file](https://support.zendesk.com/hc/en-us/articles/4408828867098-Workflow-Generating-a-HAR-file-for-troubleshooting)
-  captures the exact request/response cycle and is extremely helpful. Note: HAR files can contain sensitive data like
-  auth tokens - sanitise before sharing.
+-   Screenshot or short screen recording showing the problem
+-   Steps to reproduce - what you clicked, in what order
+-   Which project, environment, and flag name are affected
+-   Browser and version
+-   Any errors in the browser console (open with F12 -> Console tab)
+-   For API/network issues: a
+    [HAR file](https://support.zendesk.com/hc/en-us/articles/4408828867098-Workflow-Generating-a-HAR-file-for-troubleshooting)
+    captures the exact request/response cycle and is extremely helpful. Note: HAR files can contain sensitive data like
+    auth tokens - sanitise before sharing.
 
 ### SaaS Account or Billing Issues
 
-- Your organisation name in Flagsmith
-- Which project and environment is affected
-- For billing issues: your subscription plan and the change you're requesting
+-   Your organisation name in Flagsmith
+-   Which project and environment is affected
+-   For billing issues: your subscription plan and the change you're requesting
 
 ## Getting in Touch
 
-- **In-app chat** - Click the support widget in the Flagsmith dashboard
-- **Email** - [support@flagsmith.com](mailto:support@flagsmith.com)
-- **Community** - [Discord](https://discord.gg/hFhxNtXzgm)
+-   **In-app chat** - Click the support widget in the Flagsmith dashboard
+-   **Email** - [support@flagsmith.com](mailto:support@flagsmith.com)
+-   **Community** - [Discord](https://discord.gg/hFhxNtXzgm)
 
 ### Enterprise Support
 
 [Flagsmith Enterprise](https://www.flagsmith.com/pricing) customers can also use these support channels:
 
-- Dedicated Customer Success manager for personalised assistance and training.
-- Shared Slack channel for real-time group support between your organisation and the Flagsmith team (available as an
-  add-on).
+-   Dedicated Customer Success manager for personalised assistance and training.
+-   Shared Slack channel for real-time group support between your organisation and the Flagsmith team (available as an
+    add-on).
 
 ## Bug Reports and Pull Requests
 
@@ -98,7 +156,7 @@ or code change, you can open an issue or pull request directly in the
 
 Other repositories:
 
-- [Edge Proxy](https://github.com/Flagsmith/edge-proxy)
-- [Terraform provider](https://github.com/Flagsmith/terraform-provider-flagsmith)
-- [Flagsmith CLI](https://github.com/Flagsmith/flagsmith-cli)
-- [Kubernetes Helm charts](https://github.com/Flagsmith/flagsmith-charts)
+-   [Edge Proxy](https://github.com/Flagsmith/edge-proxy)
+-   [Terraform provider](https://github.com/Flagsmith/terraform-provider-flagsmith)
+-   [Flagsmith CLI](https://github.com/Flagsmith/flagsmith-cli)
+-   [Kubernetes Helm charts](https://github.com/Flagsmith/flagsmith-charts)
