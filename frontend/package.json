@@ -187,6 +187,7 @@
     "nodemon": "^3.0.1",
     "playwright": "^1.58.2",
     "prettier": "^2.5.1",
+    "raw-loader": "^4.0.2",
     "react-refresh": "^0.14.2",
     "ssgrtk": "^0.3.5",
     "storybook": "^10.3.3",
