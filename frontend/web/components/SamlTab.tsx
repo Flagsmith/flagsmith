@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import Button from './base/forms/Button'
 
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import PanelSearch from './PanelSearch'
 import PageTitle from './PageTitle'
 

@@ -2,7 +2,7 @@ import { FC, useCallback, useLayoutEffect, useRef, useState } from 'react'
 
 import useOutsideClick from 'common/useOutsideClick'
 import Button from './base/forms/Button'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import ActionButton from './ActionButton'
 
 interface SegmentOverrideActionProps {

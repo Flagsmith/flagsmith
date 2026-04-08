@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import InlineModal from './InlineModal'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import classNames from 'classnames'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'

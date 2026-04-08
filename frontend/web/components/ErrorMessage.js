@@ -1,6 +1,6 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Button from './base/forms/Button'
 import Format from 'common/utils/format'
 import Constants from 'common/constants'

@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import { Res } from 'common/types/responses'
-import { IconName } from 'components/Icon'
+import { IconName } from 'components/icons/Icon'
 import StatItem from 'components/StatItem'
 
 type TotalItem = {

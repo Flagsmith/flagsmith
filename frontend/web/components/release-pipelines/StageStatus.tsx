@@ -7,7 +7,7 @@ import {
   StageTriggerType,
 } from 'common/types/responses'
 import classNames from 'classnames'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import { renderToString } from 'react-dom/server'
 
 import StageSummaryData from './StageSummaryData'

@@ -1,6 +1,6 @@
 import React, { FC, FormEvent } from 'react'
-import Tooltip from './Tooltip'
-import UsersIcon from './svg/UsersIcon'
+import Tooltip from 'components/Tooltip'
+import UsersIcon from './UsersIcon'
 
 type IdentityOverridesIconType = {
   count: number | null

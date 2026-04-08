@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 
 import { PermissionLevel } from 'common/types/requests'
 
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Permissions from './Permissions'
 
 type ExpandablePermissionsListProps<T> = {

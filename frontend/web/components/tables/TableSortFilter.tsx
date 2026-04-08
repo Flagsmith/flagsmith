@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import TableFilter from './TableFilter'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import classNames from 'classnames'
 import { SortOrder } from 'common/types/requests'
 

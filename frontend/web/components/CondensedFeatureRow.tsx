@@ -2,8 +2,8 @@ import classNames from 'classnames'
 import Switch from './Switch'
 import { FeatureListProviderData, ProjectFlag } from 'common/types/responses'
 import FeatureValue from './feature-summary/FeatureValue'
-import SegmentOverridesIcon from './SegmentOverridesIcon'
-import IdentityOverridesIcon from './IdentityOverridesIcon'
+import SegmentOverridesIcon from './icons/SegmentOverridesIcon'
+import IdentityOverridesIcon from './icons/IdentityOverridesIcon'
 import Constants from 'common/constants'
 
 export interface CondensedFeatureRowProps {

@@ -2,7 +2,7 @@ import React, { FC, useMemo } from 'react'
 import moment from 'moment'
 import { PagedResponse } from 'common/types/responses'
 import _ from 'lodash'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Paging from './Paging'
 import classNames from 'classnames'
 

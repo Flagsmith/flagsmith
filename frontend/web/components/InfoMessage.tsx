@@ -1,5 +1,5 @@
 import React, { PureComponent, useEffect, useState } from 'react'
-import Icon, { IconName } from './Icon'
+import Icon, { IconName } from './icons/Icon'
 import { chevronForward, close as closeIcon, chevronDown } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import { FC } from 'react'

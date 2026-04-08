@@ -1,6 +1,6 @@
 import React from 'react'
 import { Organisation } from 'common/types/responses'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 import PaymentLegacy from 'components/modals/Payment'
 import PaymentNew from 'components/modals/payment'

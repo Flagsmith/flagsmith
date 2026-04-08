@@ -4,7 +4,7 @@ import {
   useUpdateGithubRepositoryMutation,
 } from 'common/services/useGithubRepository'
 import Button from './base/forms/Button'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import PanelSearch from './PanelSearch'
 import { GithubRepository } from 'common/types/responses'
 import Switch from './Switch'

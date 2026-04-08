@@ -11,7 +11,7 @@ import React, {
 import { AutoSizer, List } from 'react-virtualized'
 import Popover from './base/Popover'
 import Input from './base/forms/Input'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import Button from './base/forms/Button'
