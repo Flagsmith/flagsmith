@@ -4,7 +4,6 @@ import Highlight from './Highlight'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import Icon from './icons/Icon'
-import { GithubIcon } from './icons/GithubIcon'
 
 type Snippets = Record<string, string>
 
@@ -168,7 +167,7 @@ const SnippetItem: FC<SnippetItemProps> = ({
             size='xSmall'
           >
             <span className='icon' style={{ marginRight: '2px' }}>
-              <Icon name='description' />
+              <Icon name='file-text' />
             </span>
             {languageKey}
             Docs
@@ -182,7 +181,7 @@ const SnippetItem: FC<SnippetItemProps> = ({
             size='xSmall'
           >
             <span className='icon' style={{ marginRight: '2px' }}>
-              <GithubIcon width={14} height={14} />
+              <Icon name='github' />
             </span>
             {languageKey} GitHub
           </Button>
