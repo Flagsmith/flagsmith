@@ -1,0 +1,28 @@
+.banner {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--color-text-default);
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+
+  &--success {
+    background: var(--color-surface-success);
+    border: 1px solid var(--color-border-success);
+  }
+
+  &--warning {
+    background: var(--color-surface-warning);
+    border: 1px solid var(--color-border-warning);
+  }
+
+  &--danger {
+    background: var(--color-surface-danger);
+    border: 1px solid var(--color-border-danger);
+  }
+
+  &--info {
+    background: var(--color-surface-info);
+    border: 1px solid var(--color-border-info);
+  }
+}

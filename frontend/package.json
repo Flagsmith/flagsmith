@@ -26,7 +26,10 @@
     "dev": "cross-env npm run env && npx nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
     "dev:local": "ENV=local cross-env npm run env && npx nodemon --watch ./api --ignore server/config/config.json --watch webpack --exec node ./api",
     "bundle": "npx webpack --config ./webpack/webpack.config.prod.js",
-    "bundledjango": "npx webpack --config ./webpack/webpack.config.django.prod.js"
+    "bundledjango": "npx webpack --config ./webpack/webpack.config.django.prod.js",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "generate:tokens": "node scripts/generate-tokens.mjs"
   },
   "engines": {
     "node": "22.x",
@@ -165,6 +168,10 @@
     "@dword-design/eslint-plugin-import-alias": "^2.0.7",
     "@playwright/test": "^1.58.2",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
+    "@storybook/addon-a11y": "^10.3.3",
+    "@storybook/addon-docs": "^10.3.3",
+    "@storybook/addon-webpack5-compiler-swc": "^4.0.2",
+    "@storybook/react-webpack5": "^10.3.3",
     "@types/archiver": "^6.0.2",
     "@types/classnames": "^2.3.1",
     "@types/color": "^3.0.3",
@@ -180,6 +187,7 @@
     "@typescript-eslint/eslint-plugin": "5.4.0",
     "@typescript-eslint/parser": "5.4.0",
     "archiver": "^7.0.1",
+    "chromatic": "^15.2.0",
     "eslint": "^8.0.1",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "2.27.5",
@@ -189,6 +197,7 @@
     "eslint-plugin-react-hooks": "4.3.0",
     "eslint-plugin-sort-destructure-keys": "^1.4.0",
     "eslint-plugin-sort-keys-fix": "^1.1.2",
+    "eslint-plugin-storybook": "^10.3.3",
     "eslint-plugin-unused-imports": "^4.3.0",
     "husky": "^8.0.2",
     "jest": "^30.2.0",
@@ -200,10 +209,12 @@
     "raw-loader": "0.5.1",
     "react-refresh": "^0.14.2",
     "ssgrtk": "^0.3.5",
+    "storybook": "^10.3.3",
     "ts-jest": "^29.4.6",
     "typescript": "5.9.3"
   },
   "lint-staged": {
-    "*.{js,ts,tsx}": "eslint --fix"
+    "*.{js,ts,tsx}": "eslint --fix",
+    "common/theme/tokens.json": "npm run generate:tokens && git add common/theme/tokens.ts web/styles/_tokens.scss web/styles/_token-utilities.scss documentation/TokenReference.generated.stories.tsx"
   }
 }

@@ -1,0 +1,104 @@
+// =============================================================================
+// Storybook Docs Theme Overrides
+// =============================================================================
+// The Storybook docs renderer uses its own styling that doesn't respond to
+// our theme toggle. These overrides ensure documentation pages are readable
+// in both light and dark mode.
+// =============================================================================
+
+// Light mode — fix invisible inline code
+.sbdocs code {
+  color: #1a2634;
+}
+
+.dark {
+  // Docs page background
+  .sbdocs-wrapper {
+    background-color: var(--color-surface-default, #101628);
+    color: var(--color-text-default, #ffffff);
+  }
+
+  .sbdocs-content {
+    color: var(--color-text-default, #ffffff);
+  }
+
+  // Headings
+  .sbdocs h1,
+  .sbdocs h2,
+  .sbdocs h3,
+  .sbdocs h4,
+  .sbdocs h5 {
+    color: var(--color-text-default, #ffffff);
+  }
+
+  // Body text
+  .sbdocs p,
+  .sbdocs li,
+  .sbdocs td,
+  .sbdocs th {
+    color: var(--color-text-default, #ffffff);
+  }
+
+  // Code — inline and blocks
+  .sbdocs code {
+    background-color: var(--color-surface-emphasis, #202839);
+    color: var(--color-text-default, #ffffff);
+  }
+
+  .sbdocs pre {
+    background-color: var(--color-surface-emphasis, #202839);
+    color: var(--color-text-default, #ffffff);
+  }
+
+  // Storybook Source/code block container and all its children
+  .docblock-source,
+  .docblock-source > * {
+    background-color: var(--color-surface-emphasis, #202839) !important;
+    color: var(--color-text-default, #ffffff) !important;
+  }
+
+  // Copy button inside code blocks
+  .docblock-source button {
+    background-color: var(--color-surface-muted, #161d30) !important;
+    color: var(--color-text-default, #ffffff) !important;
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16)) !important;
+  }
+
+  // Syntax highlighting tokens
+  .docblock-source .token {
+    color: var(--color-text-default, #ffffff) !important;
+  }
+
+  // Horizontal rules
+  .sbdocs hr {
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16));
+  }
+
+  // Canvas (story preview) background
+  .docs-story {
+    background-color: var(--color-surface-default, #101628);
+  }
+
+  // Table borders
+  .sbdocs table {
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16));
+  }
+
+  .sbdocs th,
+  .sbdocs td {
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16));
+  }
+
+  // Table row backgrounds (override Storybook's alternating white rows)
+  .sbdocs tr {
+    background-color: var(--color-surface-default, #101628);
+  }
+
+  .sbdocs tr:nth-child(even) {
+    background-color: var(--color-surface-subtle, #15192b);
+  }
+
+  .sbdocs thead tr {
+    background-color: var(--color-surface-muted, #161d30);
+  }
+}
