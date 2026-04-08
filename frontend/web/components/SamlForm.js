@@ -1,6 +1,6 @@
 import React from 'react'
 import data from 'common/data/base/_data'
-import ErrorMessage from './ErrorMessage'
+import ErrorMessage from './messages/ErrorMessage'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
 import ModalHR from './modals/ModalHR'

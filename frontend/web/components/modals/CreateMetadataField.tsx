@@ -26,7 +26,7 @@ import {
   MetadataFieldModelField,
   isRequiredFor,
 } from 'common/types/responses'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 
 type CreateMetadataFieldType = {
   id?: string

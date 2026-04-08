@@ -1,6 +1,6 @@
 import propTypes from 'prop-types'
 import React, { PureComponent } from 'react'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 
 export default class TheComponent extends PureComponent {
   static displayName = 'TheComponent'

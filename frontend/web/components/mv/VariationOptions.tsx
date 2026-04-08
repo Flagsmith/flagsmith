@@ -1,7 +1,7 @@
 import React from 'react'
 import ValueEditor from 'components/ValueEditor'
 import InfoMessage from 'components/InfoMessage'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
 import Utils from 'common/utils/utils'
 import { FlagsmithValue, MultivariateOption } from 'common/types/responses'

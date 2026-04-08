@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import { setInterceptClose } from './base/ModalDefault'
 import PlanBasedAccess from 'components/PlanBasedAccess'

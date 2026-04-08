@@ -6,7 +6,7 @@ import { useDeleteAccountMutation } from 'common/services/useAccount'
 import InputGroup from 'components/base/forms/InputGroup'
 import ModalHR from './ModalHR'
 import AppActions from 'common/dispatcher/app-actions'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 
 type ConfirmDeleteAccountType = {
   lastUserOrganisations: Organisation[]

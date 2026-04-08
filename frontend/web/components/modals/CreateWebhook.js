@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import Constants from 'common/constants'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Highlight from 'components/Highlight'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import TestWebhook from 'components/TestWebhook'
 import ViewDocs from 'components/ViewDocs'
 

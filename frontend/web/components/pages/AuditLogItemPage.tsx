@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import { useGetAuditLogItemQuery } from 'common/services/useAuditLogItem'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import Breadcrumb from 'components/Breadcrumb'
 import PageTitle from 'components/PageTitle'
 import Panel from 'components/base/grid/Panel'

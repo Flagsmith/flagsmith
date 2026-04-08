@@ -6,7 +6,7 @@ import Constants from 'common/constants'
 
 interface ErrorMessageProps {
   error?: any
-  errorMessageClass?: string
+  className?: string
   errorStyles?: React.CSSProperties
   enabledButton?: boolean
 }
@@ -14,11 +14,11 @@ interface ErrorMessageProps {
 const ErrorMessage: React.FC<ErrorMessageProps> = ({
   enabledButton,
   error,
-  errorMessageClass,
+  className,
   errorStyles,
 }) => {
   const errorMessageClassName = `alert alert-danger ${
-    errorMessageClass || 'flex-1 align-items-center'
+    className || 'flex-1 align-items-center'
   }`
 
   const resolvedError =
@@ -35,7 +35,7 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({
     <div
       className={errorMessageClassName}
       style={{
-        display: errorMessageClass ? 'initial' : '',
+        display: className ? 'initial' : '',
         ...errorStyles,
       }}
     >

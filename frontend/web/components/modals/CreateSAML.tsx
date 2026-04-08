@@ -12,7 +12,7 @@ import {
 import { useCreateSamlAttributeMappingMutation } from 'common/services/useSamlAttributeMapping'
 import Button from 'components/base/forms/Button'
 import { Req } from 'common/types/requests'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import { getStore } from 'common/store'
 import XMLUpload from 'components/XMLUpload'
 import { IonIcon } from '@ionic/react'

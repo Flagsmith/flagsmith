@@ -1,5 +1,5 @@
 import { FC, useEffect } from 'react'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 
 type BrokenPageType = {}
 

@@ -19,7 +19,7 @@ import {
 import flagsmith from '@flagsmith/flagsmith'
 import { ReactNode } from 'react'
 import _ from 'lodash'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 import { defaultFlags } from 'common/stores/default-flags'

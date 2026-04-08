@@ -6,7 +6,7 @@ import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import ModalHR from './ModalHR'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 
 type ChangeEmailAddressType = {
   onComplete?: () => void
