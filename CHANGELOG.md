@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.227.0](https://github.com/Flagsmith/flagsmith/compare/v2.226.0...v2.227.0) (2026-04-06)
+
+
+### Features
+
+* Enable OpenTelemetry support ([#7132](https://github.com/Flagsmith/flagsmith/issues/7132)) ([71968be](https://github.com/Flagsmith/flagsmith/commit/71968be048f7a2ded8e1e55bba162c0765c12fae))
+* implement-gram-elements ([#7049](https://github.com/Flagsmith/flagsmith/issues/7049)) ([87fde45](https://github.com/Flagsmith/flagsmith/commit/87fde45d99aadfa211c4a55588e0f3fb382f485e))
+
+
+### Bug Fixes
+
+* **frontend:** avoid PermissionsTabs crash before projects load ([#6993](https://github.com/Flagsmith/flagsmith/issues/6993)) ([f9ec265](https://github.com/Flagsmith/flagsmith/commit/f9ec265ced64b5fb5e66f460d398563184736df8))
+* pinned-flagsmith-to-exact-version ([#7119](https://github.com/Flagsmith/flagsmith/issues/7119)) ([864ab75](https://github.com/Flagsmith/flagsmith/commit/864ab75b3058fdfb1cdd0853f37bc46e66350ced))
+
+
+### Dependency Updates
+
+* bump minimatch and serve-handler in /docs ([#7118](https://github.com/Flagsmith/flagsmith/issues/7118)) ([3bef311](https://github.com/Flagsmith/flagsmith/commit/3bef31114e8daceadac6deae62b08463c97440ba))
+
+
+### Docs
+
+* Update go client version in docs and code help ([#6954](https://github.com/Flagsmith/flagsmith/issues/6954)) ([723d77c](https://github.com/Flagsmith/flagsmith/commit/723d77c0a3e7defb76c629d11ac379a5346648a4))
+
 ## [2.226.0](https://github.com/Flagsmith/flagsmith/compare/v2.225.0...v2.226.0) (2026-04-03)
 
 

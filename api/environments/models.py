@@ -56,7 +56,6 @@ from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
 from util.mappers import (
-    map_environment_to_environment_document,
     map_environment_to_sdk_document,
 )
 from webhooks.models import AbstractBaseExportableWebhookModel
@@ -360,7 +359,8 @@ class Environment(
         ):
             environment_document_cache.set_many(
                 {
-                    e.api_key: map_environment_to_environment_document(e)
+                    # Use the SDK mapper so the cache perfectly matches the DB fallback
+                    e.api_key: map_environment_to_sdk_document(e)
                     for e in environments
                 }
             )
