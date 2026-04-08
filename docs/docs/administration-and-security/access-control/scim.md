@@ -42,7 +42,7 @@ When your identity provider provisions a user through SCIM:
 
 When your identity provider deprovisions a user (sets `active` to `false` or sends a DELETE request):
 
-1. The user is removed from the SCIM organisation. This also removes all their project and environment permissions
+1. The user is removed from the organisation in Flagsmith. This also removes all their project and environment permissions
    within that organisation, and removes them from all
    [permission groups](/administration-and-security/access-control/rbac#groups) in that organisation.
 2. The user's data (audit log entries, change request history) is preserved.
