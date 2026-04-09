@@ -41,7 +41,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
   }, [isDeleted])
   return (
     <Row className='list-item' key={externalResource?.id}>
-      <div className='table-column text-left' style={{ width: '100px' }}>
+      <div className='table-column text-start' style={{ width: '100px' }}>
         <div className='font-weight-medium mb-1'>
           {
             Constants.resourceTypes[

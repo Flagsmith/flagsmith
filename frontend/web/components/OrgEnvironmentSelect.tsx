@@ -102,7 +102,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
         <div>
           <p>Copy the following values to your widget configuration.</p>
           <Row className='mb-4'>
-            <span style={{ width: 150 }} className='mr-2 text-left'>
+            <span style={{ width: 150 }} className='mr-2 text-start'>
               Project ID
             </span>
             <Input
@@ -124,7 +124,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
             </Button>
           </Row>
           <Row>
-            <span style={{ width: 150 }} className='mr-2 text-left'>
+            <span style={{ width: 150 }} className='mr-2 text-start'>
               Environment ID
             </span>
             <Input
@@ -149,7 +149,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
       ) : (
         <PanelSearch
           renderSearchWithNoResults
-          className='no-pad text-left'
+          className='no-pad text-start'
           isLoading={
             organisationsLoading || projectsLoading || environmentsLoading
           }

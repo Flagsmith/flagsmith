@@ -17,7 +17,7 @@ const Radio: React.FC<RadioProps> = ({ checked, label, onChange }) => {
   return (
     <label
       onClick={handleChange}
-      className='relative cursor-pointer flex-row align-items-center'
+      className='position-relative cursor-pointer flex-row align-items-center'
     >
       {checked && <CheckedSVG />} {!checked && <UncheckedSVG />}
       {<span className={classNames('ml-2', className)}>{label}</span>}

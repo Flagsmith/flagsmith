@@ -17,31 +17,15 @@
 .standard-case {
     text-transform: none !important;
 }
-.float-right{
-    float:right;
-}
 .form-cta {
     text-align: right;
 }
 
-.justify-content-center {
-    justify-content: center;
-}
-
-.relative {
-    position: relative !important;
-}
-.left-0 {
-    left: 0 !important;
-}
 .max-w-auto {
   max-width: none !important;
 }
 .top-form-item {
     top: 30px;
-}
-.border-2 {
-  border-width: 2px !important;
 }
 .border-left-1 {
     border-left: 1px solid $hr-border-color !important;
@@ -55,10 +39,6 @@
     margin-top:20px;
 }
 
-
-.text-left{
-    text-align: left;
-}
 
 .disable-transitions {
     .modal-dialog {
@@ -85,10 +65,6 @@
     }
 }
 
-.align-start {
-    align-items: flex-start;
-}
-
 .unread {
     display: inline-block;
     border-radius: 7px;
@@ -105,10 +81,6 @@
     cursor: pointer;
     position: relative;
     bottom: -1px;
-}
-
-.justify-content-end {
-    justify-content: flex-end;
 }
 
 .widget-container {
@@ -165,22 +137,8 @@
 
 .overflow-y-auto{ overflow-y: auto}
 
-.user-select-none {
-    user-select: none;
-}
-.pointer-events-none {
-    pointer-events: none;
-}
-.opacity-50 {
-    opacity: 0.5;
-}
-
 .bg-primary-opacity-5 {
     background-color: transparentize($primary, 0.95);
-}
-
-.border-primary {
-  border-color: $primary !important;
 }
 
 .bg-card {

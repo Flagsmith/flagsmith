@@ -206,7 +206,10 @@ const InviteUsers: FC = () => {
                       )}
                     />
                   </Flex>
-                  <Flex className='mb-2' style={{ position: 'relative' }}>
+                  <Flex
+                    className='mb-2'
+                    style={{ position: 'position-relative' }}
+                  >
                     <Select
                       data-test='select-group'
                       placeholder='Select a group'

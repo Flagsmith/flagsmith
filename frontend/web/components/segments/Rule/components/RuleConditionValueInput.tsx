@@ -106,7 +106,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
   const isDarkMode = getDarkMode()
 
   return (
-    <div className={classNames('relative', className)}>
+    <div className={classNames('position-relative', className)}>
       <Input
         type='text'
         data-test={props['data-test']}

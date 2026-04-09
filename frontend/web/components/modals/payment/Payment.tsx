@@ -86,7 +86,7 @@ export const Payment: FC<PaymentProps> = ({
 
         <PricingToggle isYearly={yearly} onChange={setYearly} />
 
-        <Row className='pricing-container align-start'>
+        <Row className='pricing-container align-items-start'>
           <PricingPanel
             title='Start-Up'
             priceYearly='40'

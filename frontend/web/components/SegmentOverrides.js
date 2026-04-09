@@ -107,7 +107,7 @@ const SegmentOverrideInner = class Override extends React.Component {
         <Row className='p-0 table-header px-3 py-1' space>
           <div
             ref={dragHandleRef}
-            className={classNames('flex flex-1 text-left', {
+            className={classNames('flex flex-1 text-start', {
               'drag-handle': dragHandleRef,
             })}
           >
@@ -430,7 +430,7 @@ const SegmentOverrideListInner = ({
                 }}
                 projectFlag={projectFlag}
               />
-              <div className='text-left'>
+              <div className='text-start'>
                 <JSONReference
                   showNamesButton
                   title={'Segment Override'}
@@ -476,7 +476,7 @@ const SegmentOverrideListInner = ({
               }}
               projectFlag={projectFlag}
             />
-            <div className='text-left'>
+            <div className='text-start'>
               <JSONReference
                 showNamesButton
                 title={'Segment Override'}
@@ -708,7 +708,7 @@ class TheComponent extends Component {
             !this.props.disableCreate &&
             !this.props.showCreateSegment &&
             !this.props.readOnly && (
-              <Row className='text-left gap-2'>
+              <Row className='text-start gap-2'>
                 <div className='flex-1'>
                   <SegmentSelect
                     className='w-100'
@@ -794,7 +794,7 @@ class TheComponent extends Component {
                   <div className='my-4'>
                     <InfoMessage
                       collapseId={'segment-overrides'}
-                      className='mb-4 text-left faint'
+                      className='mb-4 text-start faint'
                     >
                       Segment overrides override the environment defaults,
                       prioritise them by dragging it to the top of the list.
@@ -842,7 +842,7 @@ class TheComponent extends Component {
                       hideViewSegment={this.props.hideViewSegment}
                       highlightSegmentId={this.props.highlightSegmentId}
                     />
-                    <div className='text-left mt-4'>
+                    <div className='text-start mt-4'>
                       <JSONReference
                         showNamesButton
                         title={'Segment Overrides'}

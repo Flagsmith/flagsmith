@@ -213,7 +213,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
           searchPanel={
             !isEdge && (
               <div className='text-center mt-2 mb-2'>
-                <Flex className='text-left'>
+                <Flex className='text-start'>
                   <IdentitySelect
                     isEdge={false}
                     ignoreIds={data?.results?.map((v) => v.identity?.id)}
