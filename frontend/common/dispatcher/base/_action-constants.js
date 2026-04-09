@@ -1,7 +1,7 @@
 /**
  * Created by kyle-ssg on 10/02/15.
  */
-module.exports = {
+export default {
   'LOGIN': 'LOGIN',
   'LOGOUT': 'LOGOUT',
   'REFRESH': 'REFRESH',

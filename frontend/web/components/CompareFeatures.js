@@ -213,4 +213,4 @@ class CompareFeatures extends Component {
   }
 }
 
-module.exports = withRouter(ConfigProvider(CompareFeatures))
+export default withRouter(ConfigProvider(CompareFeatures))

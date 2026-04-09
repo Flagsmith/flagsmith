@@ -67,7 +67,7 @@ import RemoveViewPermissionModal from './RemoveViewPermissionModal'
 import { useHistory } from 'react-router-dom'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 
-const Project = require('common/project')
+import Project from 'common/project'
 
 type EditPermissionModalType = {
   group?: UserGroupSummary

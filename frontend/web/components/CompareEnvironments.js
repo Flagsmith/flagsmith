@@ -474,4 +474,4 @@ class CompareEnvironments extends Component {
   }
 }
 
-module.exports = withRouter(ConfigProvider(CompareEnvironments))
+export default withRouter(ConfigProvider(CompareEnvironments))

@@ -1,6 +1,6 @@
 import Constants from 'common/constants'
 
-module.exports = (envId, { USER_ID }, userId) => `
+export default (envId, { USER_ID }, userId) => `
 use flagsmith::{Flag, Flagsmith, FlagsmithOptions};
 use flagsmith_flag_engine::types::{FlagsmithValue, FlagsmithValueType};
 use flagsmith_flag_engine::identities::Trait;
