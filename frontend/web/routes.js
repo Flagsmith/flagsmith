@@ -86,9 +86,19 @@ export const routes = {
   'gettingStarted': '/getting-started',
   'github-setup': '/github-setup',
   'home': '/home',
+  'identities': '/project/:projectId/environment/:environmentId/identities',
+  'identity':
+    '/project/:projectId/environment/:environmentId/identities/:identity/:id',
+  'identity-id':
+    '/project/:projectId/environment/:environmentId/identities/:identity',
   'integrations': '/project/:projectId/integrations',
   'invite': '/invite/:id',
   'invite-link': '/invite-link/:id',
+  'legacy-identities': '/project/:projectId/environment/:environmentId/users',
+  'legacy-identity':
+    '/project/:projectId/environment/:environmentId/users/:identity/:id',
+  'legacy-identity-id':
+    '/project/:projectId/environment/:environmentId/users/:identity',
   'lifecycle': '/project/:projectId/lifecycle/:section?',
   'login': '/login',
   'maintenance': '/maintenance',
@@ -123,13 +133,6 @@ export const routes = {
   'segment': '/project/:projectId/segments/:id',
   'segments': '/project/:projectId/segments',
   'signup': '/signup',
-  'identities': '/project/:projectId/environment/:environmentId/identities',
-  'identity': '/project/:projectId/environment/:environmentId/identities/:identity/:id',
-  'identity-id': '/project/:projectId/environment/:environmentId/identities/:identity',
-  'legacy-identities': '/project/:projectId/environment/:environmentId/users',
-  'legacy-identity': '/project/:projectId/environment/:environmentId/users/:identity/:id',
-  'legacy-identity-id': '/project/:projectId/environment/:environmentId/users/:identity',
-  'widget': '/widget',
 }
 export default (
   <Switch>
@@ -201,7 +204,6 @@ export default (
           exact
           component={ChangeRequestDetailPage}
         />
-        <Route path={routes.widget} exact component={WidgetPage} />
         <Route path={routes.invite} exact component={InvitePage} />
         <Route path={routes['invite-link']} exact component={InvitePage} />
         <Route path={routes.broken} exact component={BrokenPage} />
@@ -227,165 +229,189 @@ export default (
           exact
           component={OrganisationIntegrationsPage}
         />
-      <ParameterizedRoute path={routes.identities} exact component={IdentitiesPage} />
-      <ParameterizedRoute
-        path={routes['identity-id']}
-        exact
-        component={IdentityIdPage}
-      />
-      <ParameterizedRoute path={routes.identity} exact component={IdentityPage} />
-      {/* Legacy /users routes for backward compatibility */}
-      <ParameterizedRoute path={routes['legacy-identities']} exact component={IdentitiesPage} />
-      <ParameterizedRoute
-        path={routes['legacy-identity-id']}
-        exact
-        component={IdentityIdPage}
-      />
-      <ParameterizedRoute path={routes['legacy-identity']} exact component={IdentityPage} />
-      <ParameterizedRoute
-        path={routes['create-environment']}
-        exact
-        component={CreateEnvironmentPage}
-      />
-      <ParameterizedRoute
-        path={routes.gettingStarted}
-        exact
-        component={GettingStartedPage}
-      />
-      <ParameterizedRoute
-        path={routes['project-settings-in-environment']}
-        exact
-        component={ProjectSettingsPage}
-      />
-      <ParameterizedRoute path={routes.compare} exact component={ComparePage} />
-      <ParameterizedRoute
-        path={routes['feature-history-detail']}
-        exact
-        component={FeatureHistoryDetailPage}
-      />
-      <ParameterizedRoute
-        path={routes['project-settings']}
-        exact
-        component={ProjectSettingsPage}
-      />
-      <ParameterizedRoute
-        path={routes.permissions}
-        exact
-        component={ProjectSettingsPage}
-      />
-      <ParameterizedRoute
-        path={routes.segments}
-        exact
-        component={SegmentsPage}
-      />
-      <ParameterizedRoute path={routes.segment} exact component={SegmentPage} />
-      <ParameterizedRoute
-        path={routes['organisation-settings']}
-        exact
-        component={OrganisationSettingsPage}
-      />
-      <ParameterizedRoute
-        path={routes['organisation-permissions']}
-        exact
-        component={UsersAndPermissionsPage}
-      />
-      <ParameterizedRoute
-        path={routes['organisation-usage']}
-        exact
-        component={OrganisationUsagePage}
-      />
-      <ParameterizedRoute
-        path={routes['release-manager']}
-        exact
-        component={ReleaseManagerPage}
-      />
-      <ParameterizedRoute
-        path={routes['executive-view']}
-        exact
-        component={ExecutiveViewPage}
-      />
-      <ParameterizedRoute
-        path={routes['dev-view']}
-        exact
-        component={DevViewPage}
-      />
-      <ParameterizedRoute
-        path={routes['flag-environments']}
-        exact
-        component={FlagEnvironmentsPage}
-      />
-      <Route
-        path={routes['organisation-settings-redirect']}
-        exact
-        component={OrganisationSettingsRedirectPage}
-      />
-      <ParameterizedRoute
-        path={routes['organisation-projects']}
-        exact
-        component={ProjectsPage}
-      />
-      <ParameterizedRoute
-        path={routes['account-settings']}
-        exact
-        component={AccountSettingsPage}
-      />
-      <ParameterizedRoute
-        path={routes['project-redirect']}
-        exact
-        component={ProjectRedirectPage}
-      />
-      <ParameterizedRoute
-        path={routes['release-pipelines']}
-        exact
-        component={ReleasePipelinesPage}
-      />
-      <ParameterizedRoute
-        path={routes['create-release-pipeline']}
-        exact
-        component={CreateReleasePipelinePage}
-      />
-      <ParameterizedRoute
-        path={routes['release-pipelines-detail']}
-        exact
-        component={ReleasePipelineDetailPage}
-      />
-      <ParameterizedRoute
-        path={routes['release-pipelines-detail-edit']}
-        exact
-        component={CreateReleasePipelinePage}
-      />
-      <ParameterizedRoute
-        path={routes['audit-log-item']}
-        exact
-        component={AuditLogItemPage}
-      />
-      <Route path={routes.account} exact component={AccountSettingsPage} />
-      <ParameterizedRoute
-        path={routes['audit-log']}
-        exact
-        component={AuditLogPage}
-      />
-      <Route
-        path={routes.organisations}
-        exact
-        component={OrganisationsPage}
-      />
-      <ParameterizedRoute
-        path={routes['audit-log-item']}
-        exact
-        component={AuditLogItemPage}
-      />
-      <Route
-        path={routes['create-organisation']}
-        exact
-        component={CreateOrganisationPage}
-      />
-      <Route
-        path={routes['admin-dashboard']}
-        exact
-        component={AdminDashboardPage}
-      />
-      <Route path='*' component={NotFoundPage} />
+        <ParameterizedRoute
+          path={routes.identities}
+          exact
+          component={IdentitiesPage}
+        />
+        <ParameterizedRoute
+          path={routes['identity-id']}
+          exact
+          component={IdentityIdPage}
+        />
+        <ParameterizedRoute
+          path={routes.identity}
+          exact
+          component={IdentityPage}
+        />
+        {/* Legacy /users routes for backward compatibility */}
+        <ParameterizedRoute
+          path={routes['legacy-identities']}
+          exact
+          component={IdentitiesPage}
+        />
+        <ParameterizedRoute
+          path={routes['legacy-identity-id']}
+          exact
+          component={IdentityIdPage}
+        />
+        <ParameterizedRoute
+          path={routes['legacy-identity']}
+          exact
+          component={IdentityPage}
+        />
+        <ParameterizedRoute
+          path={routes['create-environment']}
+          exact
+          component={CreateEnvironmentPage}
+        />
+        <ParameterizedRoute
+          path={routes.gettingStarted}
+          exact
+          component={GettingStartedPage}
+        />
+        <ParameterizedRoute
+          path={routes['project-settings-in-environment']}
+          exact
+          component={ProjectSettingsPage}
+        />
+        <ParameterizedRoute
+          path={routes.compare}
+          exact
+          component={ComparePage}
+        />
+        <ParameterizedRoute
+          path={routes['feature-history-detail']}
+          exact
+          component={FeatureHistoryDetailPage}
+        />
+        <ParameterizedRoute
+          path={routes['project-settings']}
+          exact
+          component={ProjectSettingsPage}
+        />
+        <ParameterizedRoute
+          path={routes.permissions}
+          exact
+          component={ProjectSettingsPage}
+        />
+        <ParameterizedRoute
+          path={routes.segments}
+          exact
+          component={SegmentsPage}
+        />
+        <ParameterizedRoute
+          path={routes.segment}
+          exact
+          component={SegmentPage}
+        />
+        <ParameterizedRoute
+          path={routes['organisation-settings']}
+          exact
+          component={OrganisationSettingsPage}
+        />
+        <ParameterizedRoute
+          path={routes['organisation-permissions']}
+          exact
+          component={UsersAndPermissionsPage}
+        />
+        <ParameterizedRoute
+          path={routes['organisation-usage']}
+          exact
+          component={OrganisationUsagePage}
+        />
+        <ParameterizedRoute
+          path={routes['release-manager']}
+          exact
+          component={ReleaseManagerPage}
+        />
+        <ParameterizedRoute
+          path={routes['executive-view']}
+          exact
+          component={ExecutiveViewPage}
+        />
+        <ParameterizedRoute
+          path={routes['dev-view']}
+          exact
+          component={DevViewPage}
+        />
+        <ParameterizedRoute
+          path={routes['flag-environments']}
+          exact
+          component={FlagEnvironmentsPage}
+        />
+        <Route
+          path={routes['organisation-settings-redirect']}
+          exact
+          component={OrganisationSettingsRedirectPage}
+        />
+        <ParameterizedRoute
+          path={routes['organisation-projects']}
+          exact
+          component={ProjectsPage}
+        />
+        <ParameterizedRoute
+          path={routes['account-settings']}
+          exact
+          component={AccountSettingsPage}
+        />
+        <ParameterizedRoute
+          path={routes['project-redirect']}
+          exact
+          component={ProjectRedirectPage}
+        />
+        <ParameterizedRoute
+          path={routes['release-pipelines']}
+          exact
+          component={ReleasePipelinesPage}
+        />
+        <ParameterizedRoute
+          path={routes['create-release-pipeline']}
+          exact
+          component={CreateReleasePipelinePage}
+        />
+        <ParameterizedRoute
+          path={routes['release-pipelines-detail']}
+          exact
+          component={ReleasePipelineDetailPage}
+        />
+        <ParameterizedRoute
+          path={routes['release-pipelines-detail-edit']}
+          exact
+          component={CreateReleasePipelinePage}
+        />
+        <ParameterizedRoute
+          path={routes['audit-log-item']}
+          exact
+          component={AuditLogItemPage}
+        />
+        <Route path={routes.account} exact component={AccountSettingsPage} />
+        <ParameterizedRoute
+          path={routes['audit-log']}
+          exact
+          component={AuditLogPage}
+        />
+        <Route
+          path={routes.organisations}
+          exact
+          component={OrganisationsPage}
+        />
+        <ParameterizedRoute
+          path={routes['audit-log-item']}
+          exact
+          component={AuditLogItemPage}
+        />
+        <Route
+          path={routes['create-organisation']}
+          exact
+          component={CreateOrganisationPage}
+        />
+        <Route
+          path={routes['admin-dashboard']}
+          exact
+          component={AdminDashboardPage}
+        />
+        <Route path='*' component={NotFoundPage} />
       </Switch>
     </App>
   </Switch>
