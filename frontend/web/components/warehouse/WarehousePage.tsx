@@ -1,11 +1,9 @@
 import React, { FC, useCallback, useState } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
 import EmptyState from './components/EmptyState'
 import ConfigForm from './components/ConfigForm'
 import TestingState from './components/TestingState'
 import ConnectedState from './components/ConnectedState'
 import ErrorState from './components/ErrorState'
-import { pageCrossfade } from 'common/utils/motion'
 import {
   ConnectionState,
   MOCK_CONNECTION_DETAILS,
@@ -113,18 +111,7 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState = 'empty' }) => {
         </div>
       </div>
 
-      <AnimatePresence mode='wait'>
-        <motion.div
-          key={connectionState}
-          variants={pageCrossfade}
-          initial='hidden'
-          animate='visible'
-          exit='exit'
-          className='warehouse-page__content'
-        >
-          {renderState()}
-        </motion.div>
-      </AnimatePresence>
+      <div className='warehouse-page__content'>{renderState()}</div>
     </div>
   )
 }

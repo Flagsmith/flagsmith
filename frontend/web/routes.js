@@ -55,6 +55,7 @@ import ExecutiveViewPage from './components/pages/ExecutiveViewPage'
 import DevViewPage from './components/pages/DevViewPage'
 import AdminDashboardPage from './components/pages/admin-dashboard/AdminDashboardPage'
 import CleanupPage from './components/pages/feature-lifecycle'
+import WarehousePage from './components/warehouse/WarehousePage'
 import OAuthAuthorizePage from './components/pages/OAuthAuthorizePage'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
@@ -106,11 +107,21 @@ export const routes = {
   'legacy-identity-id':
     '/project/:projectId/environment/:environmentId/users/:identity',
   'lifecycle': '/project/:projectId/lifecycle/:section?',
+  'identities': '/project/:projectId/environment/:environmentId/identities',
   'login': '/login',
+  'identity':
+    '/project/:projectId/environment/:environmentId/identities/:identity/:id',
   'maintenance': '/maintenance',
+  'identity-id':
+    '/project/:projectId/environment/:environmentId/identities/:identity',
   'not-found': '/404',
+  'legacy-identities': '/project/:projectId/environment/:environmentId/users',
   'oauth': '/oauth/:type',
+  'legacy-identity':
+    '/project/:projectId/environment/:environmentId/users/:identity/:id',
   'oauth-authorize': '/oauth/authorize',
+  'legacy-identity-id':
+    '/project/:projectId/environment/:environmentId/users/:identity',
   'organisation-integrations': '/organisation/:organisationId/integrations',
   'organisation-permissions': '/organisation/:organisationId/permissions',
   'organisation-projects': '/organisation/:organisationId/projects',
@@ -126,23 +137,14 @@ export const routes = {
     '/project/:projectId/environment/:environmentId/project-settings',
   'release-manager': '/organisation/:organisationId/release-manager',
   'release-pipelines': '/project/:projectId/release-pipelines',
-  'identities': '/project/:projectId/environment/:environmentId/identities',
   'release-pipelines-detail': '/project/:projectId/release-pipelines/:id',
-  'identity':
-    '/project/:projectId/environment/:environmentId/identities/:identity/:id',
   'release-pipelines-detail-edit':
     '/project/:projectId/release-pipelines/:id/edit',
-  'identity-id':
-    '/project/:projectId/environment/:environmentId/identities/:identity',
   'root': '/',
-  'legacy-identities': '/project/:projectId/environment/:environmentId/users',
   'saml': '/saml',
-  'legacy-identity':
-    '/project/:projectId/environment/:environmentId/users/:identity/:id',
+  'warehouse': '/organisation/:organisationId/warehouse',
   'scheduled-change':
     '/project/:projectId/environment/:environmentId/scheduled-changes/:id',
-  'legacy-identity-id':
-    '/project/:projectId/environment/:environmentId/users/:identity',
   'scheduled-changes':
     '/project/:projectId/environment/:environmentId/scheduled-changes',
   'sdk-keys': '/project/:projectId/environment/:environmentId/sdk-keys',
@@ -330,6 +332,11 @@ export default (
           path={routes.segment}
           exact
           component={SegmentPage}
+        />
+        <ParameterizedRoute
+          path={routes.warehouse}
+          exact
+          component={WarehousePage}
         />
         <ParameterizedRoute
           path={routes['organisation-settings']}
