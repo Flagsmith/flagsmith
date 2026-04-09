@@ -8,8 +8,8 @@
   text-align: center;
   flex: 1;
 
-  svg,
-  .icon {
+  > svg,
+  > .icon {
     color: var(--color-icon-secondary);
   }
 
