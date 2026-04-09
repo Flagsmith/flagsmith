@@ -36,3 +36,10 @@ e2e/test-results/
 
 *storybook.log
 storybook-static
+
+# Visual regression (baselines stored as CI artifacts, not in git)
+e2e/visual-regression-snapshots/
+e2e/visual-regression-screenshots/
+e2e/visual-regression-report/
+e2e/tests/_visual-regression-compare.pw.ts
+e2e/tests/_visual-regression-compare.pw.ts-snapshots/

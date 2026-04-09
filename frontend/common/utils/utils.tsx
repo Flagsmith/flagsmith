@@ -9,7 +9,6 @@ import {
   MultivariateFeatureStateValue,
   MultivariateOption,
   Organisation,
-  PConfidence,
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
@@ -143,12 +142,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return res
   },
 
-  convertToPConfidence(value: number) {
-    if (value > 0.05) return 'LOW' as PConfidence
-    if (value >= 0.01) return 'REASONABLE' as PConfidence
-    if (value > 0.002) return 'HIGH' as PConfidence
-    return 'VERY_HIGH' as PConfidence
-  },
   copyToClipboard: async (
     value: string,
     successMessage?: string,

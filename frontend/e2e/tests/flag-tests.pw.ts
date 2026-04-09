@@ -1,9 +1,9 @@
 import { test, expect } from '../test-setup';
-import { byId, log, createHelpers, LONG_TIMEOUT } from '../helpers';
+import { byId, log, createHelpers, LONG_TIMEOUT, visualSnapshot } from '../helpers';
 import { E2E_USER, PASSWORD, E2E_TEST_PROJECT } from '../config';
 
 test.describe('Flag Tests', () => {
-  test('Feature flags can be created, toggled, edited, and deleted across environments @oss', async ({ page }) => {
+  test('Feature flags can be created, toggled, edited, and deleted across environments @oss', async ({ page }, testInfo) => {
     const {
       click,
       createFeature,
@@ -19,10 +19,17 @@ test.describe('Flag Tests', () => {
       waitForElementClickable,
       waitForElementVisible,
       waitForFeatureSwitch,
+      waitForToastsToClear,
     } = createHelpers(page);
 
     log('Login')
+    await page.goto('/login', { waitUntil: 'domcontentloaded' })
+    await page.waitForSelector('[name="email"]', { state: 'visible' })
+    await visualSnapshot(page, 'login', testInfo)
+
     await login(E2E_USER, PASSWORD)
+    await visualSnapshot(page, 'project-list', testInfo)
+
     await gotoProject(E2E_TEST_PROJECT)
 
     // Ensure we're on the Development environment
@@ -44,6 +51,9 @@ test.describe('Flag Tests', () => {
       { value: 'medium', weight: 100 },
       { value: 'small', weight: 0 },
     ]})
+
+    await waitForToastsToClear()
+    await visualSnapshot(page, 'features-list', testInfo)
 
     log('Create Short Life Feature')
     await createFeature({ name: 'short_life_feature', value: false })
@@ -92,6 +102,8 @@ test.describe('Flag Tests', () => {
     await waitForElementVisible(byId('switch-environment-production-active'))
     await waitForFeatureSwitch('header_enabled', 'off')
 
+    await visualSnapshot(page, 'features-list-production', testInfo)
+
     log('Clear down features')
     // Ensure features list is fully loaded before attempting to delete
     await waitForFeatureSwitch('header_enabled', 'off')
@@ -99,7 +111,7 @@ test.describe('Flag Tests', () => {
     await deleteFeature('header_enabled')
   });
 
-  test('Feature flags can have tags added and be archived @oss', async ({ page }) => {
+  test('Feature flags can have tags added and be archived @oss', async ({ page }, testInfo) => {
     const {
       addTagToFeature,
       archiveFeature,
@@ -178,6 +190,8 @@ test.describe('Flag Tests', () => {
       has: page.locator(`span:text-is("test_flag_with_tags")`)
     }).first()
     await archivedFeature.waitFor({ state: 'visible', timeout: 5000 })
+
+    await visualSnapshot(page, 'features-archived-filter', testInfo)
 
   });
 });

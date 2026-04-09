@@ -12,7 +12,7 @@ export interface MultiSelectOption {
   value: string
 }
 
-export interface MultiSelectProps {
+interface MultiSelectProps {
   selectedValues: string[]
   onSelectionChange: (selectedValues: string[]) => void
   options: MultiSelectOption[]

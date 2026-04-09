@@ -3,7 +3,7 @@ import { components } from 'react-select'
 import Switch from './Switch'
 import Tooltip from './Tooltip'
 import BooleanDotIndicator from './BooleanDotIndicator'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { PermissionRoleType } from 'common/types/requests'
 
 const permissionOptions = [

@@ -73,5 +73,4 @@ const DerivedPermissionsList: FC<DerivedPermissionsListType> = ({
   )
 }
 
-export type { DerivedPermissionsListType }
 export default DerivedPermissionsList

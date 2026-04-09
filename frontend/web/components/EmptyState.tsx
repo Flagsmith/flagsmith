@@ -1,5 +1,5 @@
 import React, { FC, ReactNode } from 'react'
-import Icon, { IconName } from './Icon'
+import Icon, { IconName } from './icons/Icon'
 
 type EmptyStateProps = {
   title: string

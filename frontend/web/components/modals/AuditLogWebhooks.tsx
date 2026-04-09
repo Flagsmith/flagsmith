@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import JSONReference from 'components/JSONReference'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Constants from 'common/constants'
 import {
   deleteAuditLogWebhook,

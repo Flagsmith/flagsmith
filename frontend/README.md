@@ -145,6 +145,32 @@ E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/flag-tests.p
     - `trace.zip` - Interactive trace viewer
     - Screenshots and videos
 
+#### Visual Regression
+
+Visual regression screenshots are captured during E2E tests via `visualSnapshot()` calls. They are a no-op unless `VISUAL_REGRESSION=1` is set. Comparison runs as a separate step after all E2E retries complete, so flaky tests don't affect the report.
+
+```bash
+# 1. Run E2E tests with screenshot capture (with retries)
+VISUAL_REGRESSION=1 npm run test
+
+# 2a. Generate/update baselines from captured screenshots
+npm run test:visual:compare -- --update-snapshots
+
+# 2b. Compare screenshots against baselines (generates Playwright report with diffs)
+npm run test:visual:compare
+
+# 3. Open the report
+npm run test:visual:report
+```
+
+Visual diffs never fail CI — they are reported via PR comment and the Playwright HTML report.
+
+Screenshots are saved to `e2e/visual-regression-screenshots/`, baselines to `e2e/visual-regression-snapshots/` (both git-ignored). In CI, the main branch uploads screenshots as baseline artifacts, and PRs download them for comparison.
+
+| Variable | Description |
+|----------|-------------|
+| `VISUAL_REGRESSION=1` | Enable screenshot capture during E2E tests |
+
 #### Claude Code Commands
 
 When using Claude Code, these commands are available for e2e testing:

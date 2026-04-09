@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup'
-import { byId, getFlagsmith, log, createHelpers } from '../helpers'
+import { byId, getFlagsmith, log, createHelpers, visualSnapshot } from '../helpers'
 import {
   E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS,
   E2E_TEST_PROJECT,
@@ -10,7 +10,7 @@ import {
 test.describe('Change Request Tests', () => {
   test('Change requests can be created, approved, and published with 4-eyes approval @enterprise', async ({
     page,
-  }) => {
+  }, testInfo) => {
     const {
       assertChangeRequestCount,
       approveChangeRequest,
@@ -107,6 +107,7 @@ test.describe('Change Request Tests', () => {
 
     log('Go to change requests')
     await gotoChangeRequests()
+    await visualSnapshot(page, 'change-requests-list', testInfo)
 
     log('Open change request')
     await openChangeRequest(0)

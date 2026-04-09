@@ -1,5 +1,5 @@
 import React from 'react'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import { PricingFeature } from './types'
 
 export type PricingFeaturesListProps = {
