@@ -3,12 +3,17 @@ import './docs-theme.scss'
 import { allModes } from './modes'
 import { DocsContainer } from './DocsContainer'
 
-// Minimal globals needed for components that depend on project-components.js
-// Input.js uses window.Utils, SearchableSelect uses global.Select
-import Utils from '../common/utils/utils'
+// Minimal globals needed for components that depend on project-components.js.
+// We can't import the real Utils (circular deps with stores/constants),
+// so we provide only what Input.js actually calls: Utils.keys.isEscape.
 import ReactSelect from 'react-select'
 import Tooltip from '../web/components/Tooltip'
-window.Utils = Utils
+window.Utils = {
+  keys: {
+    isEscape: (e) => e.key === 'Escape' || e.keyCode === 27,
+  },
+  safeParseEventValue: (e) => (e?.target?.value !== undefined ? e.target.value : e),
+}
 global.Select = ReactSelect
 global.Tooltip = Tooltip
 
