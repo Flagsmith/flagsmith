@@ -1,0 +1,53 @@
+.experiment-details-step {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-default);
+  }
+
+  &__required {
+    color: var(--color-text-danger);
+  }
+
+  &__textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-lg);
+    background: transparent;
+    color: var(--color-text-default);
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color var(--duration-fast) var(--easing-standard);
+
+    &::placeholder {
+      color: var(--color-text-disabled);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-border-action);
+    }
+  }
+
+  &__type-cards {
+    display: flex;
+    gap: 12px;
+  }
+}

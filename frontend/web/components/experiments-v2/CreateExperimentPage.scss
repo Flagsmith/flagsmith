@@ -1,0 +1,12 @@
+.create-experiment-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px 48px;
+  min-height: 100vh;
+
+  &__divider {
+    height: 1px;
+    background: var(--color-border-default);
+  }
+}

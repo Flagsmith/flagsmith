@@ -1,0 +1,70 @@
+.experiment-results-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px 32px 24px;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text-default);
+    margin: 0;
+  }
+
+  &__days {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+
+  &__action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+
+    .btn svg {
+      margin-right: 4px;
+    }
+  }
+
+  &__cards {
+    display: flex;
+    gap: 16px;
+  }
+
+  &__table-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-default);
+    margin: 0;
+  }
+}

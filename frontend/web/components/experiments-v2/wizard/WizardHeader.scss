@@ -1,0 +1,39 @@
+.wizard-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__breadcrumb-item {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+
+    &:last-child {
+      color: var(--color-text-default);
+    }
+  }
+
+  &__breadcrumb-separator {
+    font-size: 13px;
+    color: var(--color-text-disabled);
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text-default);
+    margin: 0;
+  }
+}

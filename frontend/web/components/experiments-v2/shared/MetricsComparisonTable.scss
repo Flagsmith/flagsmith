@@ -1,0 +1,63 @@
+.metrics-comparison-table {
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+
+  &__head {
+    display: flex;
+    background: var(--color-surface-emphasis);
+  }
+
+  &__th {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+
+  &__row {
+    display: flex;
+    border-top: 1px solid var(--color-border-default);
+    transition: background var(--duration-fast) var(--easing-standard);
+
+    &:hover {
+      background: var(--color-surface-hover);
+    }
+  }
+
+  &__td {
+    flex: 1;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--color-text-default);
+
+    &--mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    &--positive {
+      color: var(--color-text-success);
+      font-weight: 600;
+    }
+
+    &--negative {
+      color: var(--color-text-danger);
+      font-weight: 600;
+    }
+
+    &--neutral {
+      color: var(--color-text-secondary);
+    }
+
+    &--significance {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    &--significant {
+      color: var(--color-text-success);
+    }
+  }
+}

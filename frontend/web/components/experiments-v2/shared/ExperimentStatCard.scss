@@ -1,0 +1,39 @@
+.experiment-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  flex: 1;
+
+  &__label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  &__value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text-default);
+
+    &--positive {
+      color: var(--color-text-success);
+    }
+
+    &--negative {
+      color: var(--color-text-danger);
+    }
+
+    &--neutral {
+      color: var(--color-text-secondary);
+    }
+  }
+
+  &__subtitle {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+}

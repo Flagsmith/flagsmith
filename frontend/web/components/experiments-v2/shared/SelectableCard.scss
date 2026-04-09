@@ -1,0 +1,71 @@
+.selectable-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-default);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition:
+    border-color var(--duration-fast) var(--easing-standard),
+    background var(--duration-fast) var(--easing-standard);
+
+  &:hover {
+    border-color: var(--color-border-strong);
+  }
+
+  &--selected {
+    border-color: var(--color-border-action);
+    border-width: 2px;
+    background: var(--color-surface-action-subtle);
+
+    svg,
+    .icon {
+      color: var(--color-icon-action);
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    svg,
+    .icon {
+      color: var(--color-icon-secondary);
+      margin-bottom: 4px;
+    }
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-default);
+  }
+
+  &__description {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  &__badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+
+    &--primary {
+      background: var(--color-surface-action);
+      color: #ffffff;
+    }
+
+    &--secondary {
+      border: 1px solid var(--color-border-default);
+      color: var(--color-text-secondary);
+    }
+  }
+}

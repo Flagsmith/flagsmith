@@ -1,0 +1,13 @@
+.wizard-nav-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-default);
+
+  .btn svg {
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+}
