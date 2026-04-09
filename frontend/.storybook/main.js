@@ -66,6 +66,21 @@ const config = {
       ],
     })
 
+    // Stub modules that cause circular dependency crashes in Storybook.
+    // common/utils/utils → account-store → constants creates a webpack
+    // initialisation error. Ionic/stencil also triggers the same chain.
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      [path.resolve(__dirname, '../common/utils/utils')]: path.resolve(
+        __dirname,
+        'stubs/utils.js',
+      ),
+      '@stencil/core/internal/client': false,
+      '@stencil/core': false,
+      '@ionic/react': false,
+      'ionicons/icons': false,
+    }
+
     config.plugins = config.plugins || []
     config.plugins.push(
       new webpack.DefinePlugin({
