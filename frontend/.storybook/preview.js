@@ -3,6 +3,13 @@ import './docs-theme.scss'
 import { allModes } from './modes'
 import { DocsContainer } from './DocsContainer'
 
+// Minimal globals needed for components that depend on project-components.js
+// (SearchableSelect uses global.Select, some components use global.Tooltip)
+import ReactSelect from 'react-select'
+import Tooltip from '../web/components/Tooltip'
+global.Select = ReactSelect
+global.Tooltip = Tooltip
+
 /** @type { import('storybook').Preview } */
 const preview = {
   globalTypes: {
