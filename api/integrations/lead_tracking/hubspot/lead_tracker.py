@@ -5,11 +5,7 @@ from typing import Any
 from django.conf import settings
 
 from integrations.lead_tracking.lead_tracking import LeadTracker
-from organisations.models import (
-    HubspotOrganisation,
-    Organisation,
-    Subscription,
-)
+from organisations.models import Organisation
 from users.models import FFAdminUser, HubspotLead, HubspotTracker
 
 from .client import HubspotClient
@@ -22,25 +18,6 @@ class HubspotLeadTracker(LeadTracker):
     @staticmethod
     def should_track(user: FFAdminUser) -> bool:
         return settings.ENABLE_HUBSPOT_LEAD_TRACKING
-
-    def update_company_active_subscription(
-        self, subscription: Subscription
-    ) -> dict[str, Any] | None:
-        if not subscription.plan:
-            return None
-
-        organisation = subscription.organisation
-
-        # Check if we're missing the associated hubspot id.
-        if not getattr(organisation, "hubspot_organisation", None):
-            return None
-
-        response: dict[str, Any] | None = self.client.update_company(
-            active_subscription=subscription.plan,
-            hubspot_company_id=organisation.hubspot_organisation.hubspot_id,
-        )
-
-        return response
 
     def create_user_hubspot_contact(self, user: FFAdminUser) -> str | None:
         tracker = HubspotTracker.objects.filter(user=user).first()
@@ -105,59 +82,6 @@ class HubspotLeadTracker(LeadTracker):
                 hubspot_contact_id = self.create_user_hubspot_contact(user)
 
         return hubspot_contact_id
-
-    def _get_organisation_hubspot_id(
-        self,
-        user: FFAdminUser,
-        organisation: Organisation,
-    ) -> str | None:
-        """
-        Return the Hubspot API's id for an organisation.
-        """
-        if getattr(organisation, "hubspot_organisation", None):
-            return organisation.hubspot_organisation.hubspot_id
-
-        if user.email_domain in settings.HUBSPOT_IGNORE_ORGANISATION_DOMAINS:
-            return None
-
-        domain = user.email_domain
-        company_kwargs = {"domain": domain}
-        company_kwargs["name"] = organisation.name
-        company_kwargs["organisation_id"] = organisation.id
-        company_kwargs["active_subscription"] = organisation.subscription.plan
-
-        # As Hubspot creates/associates companies automatically based on contact domain
-        # we need to get the hubspot id when this user creates the company for the first time
-        # and update the company name
-        company = self._get_hubspot_company_by_domain(domain)
-        if not company:
-            return None
-        org_hubspot_id: str = company["id"]
-
-        # Update the company in Hubspot with the name of the created
-        # organisation in Flagsmith, and its numeric ID.
-        self.client.update_company(
-            name=organisation.name,
-            hubspot_company_id=org_hubspot_id,
-            flagsmith_organisation_id=organisation.id,
-        )
-
-        # Store the organisation data in the database since we are
-        # unable to look them up via a unique identifier.
-        HubspotOrganisation.objects.create(
-            organisation=organisation,
-            hubspot_id=org_hubspot_id,
-        )
-
-        return org_hubspot_id
-
-    def _get_hubspot_company_by_domain(
-        self,
-        domain: str,
-    ) -> dict[str, Any]:
-        company = self.client.get_company_by_domain(domain)
-
-        return company  # type: ignore[no-any-return]
 
     def _get_client(self) -> HubspotClient:
         return HubspotClient()

@@ -242,68 +242,6 @@ def test_create_lead__existing_hubspot_org__creates_contact_and_associates(
     mock_client.associate_contact_to_company.assert_not_called()
 
 
-def test_update_company_active_subscription__valid_subscription__calls_update_company(
-    db: None, mocker: MockerFixture
-) -> None:
-    # Given
-    mock_client = mocker.MagicMock()
-    mock_response = {"id": "123"}
-    mock_client.update_company.return_value = mock_response
-
-    tracker = HubspotLeadTracker()
-    tracker.client = mock_client
-
-    mock_org = mocker.MagicMock()
-    mock_org.hubspot_organisation.hubspot_id = "hubspot-org-1"
-
-    mock_subscription = mocker.MagicMock()
-    mock_subscription.plan = "scaleup"
-    mock_subscription.organisation = mock_org
-
-    # When
-    result = tracker.update_company_active_subscription(subscription=mock_subscription)
-
-    # Then
-    assert result == mock_response
-    mock_client.update_company.assert_called_once_with(
-        active_subscription="scaleup",
-        hubspot_company_id="hubspot-org-1",
-    )
-
-
-def test_update_company_active_subscription__no_hubspot_org__returns_none(
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    subscription = mocker.MagicMock()
-    subscription.plan = "pro"
-    subscription.organisation = mocker.MagicMock()
-    subscription.organisation.hubspot_organisation = None
-
-    # When
-    tracker = HubspotLeadTracker()
-    result = tracker.update_company_active_subscription(subscription)
-
-    # Then
-    assert result is None
-
-
-def test_update_company_active_subscription__no_plan__returns_none(
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    subscription = mocker.MagicMock()
-    subscription.plan = None
-    subscription.organisation = mocker.MagicMock()
-
-    # When
-    tracker = HubspotLeadTracker()
-    result = tracker.update_company_active_subscription(subscription)
-
-    # Then
-    assert result is None
-
-
 @pytest.mark.parametrize(
     "get_contact_return_values, expected_call_count, expected_hubspot_id, hubspot_leads_exists",
     [
