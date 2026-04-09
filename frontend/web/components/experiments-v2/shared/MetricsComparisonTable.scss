@@ -1,6 +1,7 @@
 .metrics-comparison-table {
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 
   &__head {
@@ -11,8 +12,8 @@
   &__th {
     flex: 1;
     padding: 12px 16px;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--font-caption-size);
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-secondary);
   }
 
@@ -29,21 +30,21 @@
   &__td {
     flex: 1;
     padding: 14px 16px;
-    font-size: 14px;
+    font-size: var(--font-body-size);
     color: var(--color-text-default);
 
     &--mono {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-family);
     }
 
     &--positive {
       color: var(--color-text-success);
-      font-weight: 600;
+      font-weight: var(--font-weight-semibold);
     }
 
     &--negative {
       color: var(--color-text-danger);
-      font-weight: 600;
+      font-weight: var(--font-weight-semibold);
     }
 
     &--neutral {

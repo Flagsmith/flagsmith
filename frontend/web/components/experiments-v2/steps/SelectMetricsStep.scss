@@ -32,13 +32,13 @@
   }
 
   &__empty-title {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-default);
   }
 
   &__empty-desc {
-    font-size: 12px;
+    font-size: var(--font-caption-size);
     color: var(--color-text-secondary);
   }
 }

@@ -61,9 +61,9 @@
   }
 
   &__number {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 600;
+    font-family: var(--font-family);
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-semibold);
   }
 
   &__connector {
@@ -89,14 +89,14 @@
   }
 
   &__title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 16px;
-    font-weight: 600;
+    font-family: var(--font-family);
+    font-size: var(--font-h6-size);
+    font-weight: var(--font-weight-semibold);
   }
 
   &__badge {
-    font-size: 11px;
-    font-weight: 600;
+    font-size: var(--font-caption-xs-size);
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-success);
     background: var(--color-surface-success);
     padding: 3px 10px;
@@ -104,18 +104,18 @@
   }
 
   &__summary {
-    font-size: 13px;
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-secondary);
   }
 
   &__description {
-    font-size: 14px;
+    font-size: var(--font-body-size);
     color: var(--color-text-secondary);
     line-height: 1.5;
   }
 
   &__subtitle {
-    font-size: 13px;
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-disabled);
   }
 }

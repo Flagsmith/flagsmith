@@ -11,6 +11,7 @@
     background: var(--color-surface-subtle);
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
     transition: border-color var(--duration-fast) var(--easing-standard);
 
     &:hover {
@@ -25,9 +26,9 @@
   }
 
   &__section-title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    font-weight: 600;
+    font-family: var(--font-family);
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-default);
   }
 
@@ -39,31 +40,31 @@
   }
 
   &__label {
-    font-size: 13px;
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-secondary);
   }
 
   &__value {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-medium);
     color: var(--color-text-default);
     text-align: right;
 
     &--mono {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-family);
     }
   }
 
   &__badge {
-    font-size: 11px;
-    font-weight: 500;
+    font-size: var(--font-caption-xs-size);
+    font-weight: var(--font-weight-medium);
     padding: 2px 10px;
     border-radius: var(--radius-full);
     text-transform: capitalize;
 
     &--primary {
       background: var(--color-surface-action);
-      color: #ffffff;
+      color: var(--color-surface-default);
     }
 
     &--secondary {
@@ -73,7 +74,7 @@
   }
 
   &__empty {
-    font-size: 13px;
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-disabled);
     font-style: italic;
   }

@@ -47,7 +47,7 @@
   }
 
   &__label-text {
-    font-size: 13px;
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-secondary);
   }
 }
