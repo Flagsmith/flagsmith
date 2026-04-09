@@ -77,5 +77,3 @@ def test_track_hubspot_lead__should_track_false__does_not_create_lead(
 
     # Then
     mock_create_lead.assert_not_called()
-
-
