@@ -37,11 +37,6 @@ on:
         description: Update visual regression baselines (use on main branch)
         required: false
         default: false
-      comment:
-        type: boolean
-        description: Whether to post test results as a PR comment
-        required: false
-        default: true
     secrets:
       GCR_TOKEN:
         description: A token to use for logging into Github Container Registry. If not provided, login does not occur.
@@ -194,7 +189,8 @@ jobs:
             **🔄 Run:** [#${{ github.run_number }} (attempt ${{ github.run_attempt }})](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
       - name: Comment PR with test results
-        if: always() && inputs.comment && github.event_name == 'pull_request' && (steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary)
+        if: always() && github.event_name == 'pull_request' && (steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary)
+        continue-on-error: true
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: playwright-e2e-results
@@ -237,7 +233,8 @@ jobs:
           fi
 
       - name: Comment PR with visual regression results
-        if: always() && inputs.comment && inputs.visual-regression && !inputs.visual-regression-update && github.event_name == 'pull_request' && steps.visual-regression-summary.outputs.message
+        if: always() && inputs.visual-regression && !inputs.visual-regression-update && github.event_name == 'pull_request' && steps.visual-regression-summary.outputs.message
+        continue-on-error: true
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: visual-regression-results
