@@ -1,10 +1,8 @@
 import React, { FC, useState } from 'react'
-import { motion } from 'motion/react'
 import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
 import Icon from 'components/icons/Icon'
 import SelectableCard from 'components/experiments-v2/shared/SelectableCard'
-import { slideInRight } from 'common/utils/motion'
 import {
   MOCK_CONFIG,
   WAREHOUSE_TYPES,
@@ -27,12 +25,7 @@ const ConfigForm: FC<ConfigFormProps> = ({ onCancel, onTestConnection }) => {
   }
 
   return (
-    <motion.div
-      className='wh-config-form'
-      variants={slideInRight}
-      initial='hidden'
-      animate='visible'
-    >
+    <div className='wh-config-form'>
       <div className='wh-config-form__section'>
         <span className='wh-config-form__section-label'>Warehouse Type</span>
         <div className='wh-config-form__type-row'>
@@ -151,7 +144,7 @@ const ConfigForm: FC<ConfigFormProps> = ({ onCancel, onTestConnection }) => {
           </Button>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 

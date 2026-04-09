@@ -1,3 +1,5 @@
+@use '../../../styles/animations';
+
 .wh-testing {
   display: flex;
   flex-direction: column;
@@ -8,7 +10,7 @@
   flex: 1;
 
   &__spinner {
-    @include spinner;
+    @include animations.spinner;
     color: var(--color-icon-action);
   }
 
@@ -52,6 +54,6 @@
     border-radius: var(--radius-full);
     border: 2px solid var(--color-border-default);
     flex-shrink: 0;
-    @include animate-pulse;
+    @include animations.animate-pulse;
   }
 }

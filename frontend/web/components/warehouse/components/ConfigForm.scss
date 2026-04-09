@@ -1,3 +1,5 @@
+@use '../../../styles/animations';
+
 .wh-config-form {
   display: flex;
   flex-direction: column;
@@ -108,7 +110,7 @@
     transition: border-color var(--duration-fast) var(--easing-standard);
 
     &:focus {
-      @include focus-ring;
+      @include animations.focus-ring;
     }
   }
 

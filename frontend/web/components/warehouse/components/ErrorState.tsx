@@ -1,9 +1,7 @@
 import React, { FC } from 'react'
-import { motion } from 'motion/react'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import ConnectionDetailsGrid from './ConnectionDetailsGrid'
-import { shakeX } from 'common/utils/motion'
 import { ConnectionDetail, ConnectionError } from 'components/warehouse/types'
 import './ErrorState.scss'
 
@@ -23,12 +21,7 @@ const ErrorState: FC<ErrorStateProps> = ({
   return (
     <div className='wh-error'>
       {/* Error card */}
-      <motion.div
-        className='wh-error__card'
-        variants={shakeX}
-        initial='idle'
-        animate='shake'
-      >
+      <div className='wh-error__card'>
         <div className='wh-error__top'>
           <div className='wh-error__info'>
             <div className='wh-error__icon-box'>
@@ -70,7 +63,7 @@ const ErrorState: FC<ErrorStateProps> = ({
             </span>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Connection details */}
       <ConnectionDetailsGrid details={details} />
