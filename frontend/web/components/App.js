@@ -145,7 +145,8 @@ const App = class extends Component {
       this.props.location.pathname === '/' ||
       this.props.location.pathname === '/widget' ||
       this.props.location.pathname === '/saml' ||
-      this.props.location.pathname.includes('/oauth') ||
+      (this.props.location.pathname.includes('/oauth') &&
+        !this.props.location.pathname.startsWith('/oauth/authorize')) ||
       this.props.location.pathname === '/login' ||
       this.props.location.pathname === '/signup'
     ) {

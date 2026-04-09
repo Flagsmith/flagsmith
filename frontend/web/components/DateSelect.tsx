@@ -1,5 +1,5 @@
 import DatePicker, { DatePickerProps } from 'react-datepicker'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { useState, FC } from 'react'
 
 export interface DateSelectProps

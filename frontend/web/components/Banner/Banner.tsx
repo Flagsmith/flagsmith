@@ -1,6 +1,6 @@
 import React, { FC, ReactNode } from 'react'
 import cn from 'classnames'
-import Icon, { IconName } from 'components/Icon'
+import Icon, { IconName } from 'components/icons/Icon'
 import './banner.scss'
 
 type BannerVariant = 'success' | 'warning' | 'danger' | 'info'

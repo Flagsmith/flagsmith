@@ -1,5 +1,5 @@
 import { test } from '../test-setup';
-import { byId, log, createHelpers } from '../helpers';
+import { byId, log, createHelpers, visualSnapshot } from '../helpers';
 import {
   PASSWORD,
   E2E_NON_ADMIN_USER_WITH_A_ROLE,
@@ -8,7 +8,7 @@ import {
 } from '../config'
 
 test.describe('Roles Tests', () => {
-  test('Roles can be created with project and environment permissions @enterprise', async ({ page }) => {
+  test('Roles can be created with project and environment permissions @enterprise', async ({ page }, testInfo) => {
     const {
       click,
       closeModal,
@@ -30,6 +30,8 @@ test.describe('Roles Tests', () => {
     await click(byId('organisation-link'))
     await click(byId('users-and-permissions'))
     await waitForElementVisible(byId('tab-item-roles'))
+    await visualSnapshot(page, 'users-and-permissions', testInfo)
+
     log('Create Role')
     await createRole('test_role', [4])
     log('Add project permissions to the Role')

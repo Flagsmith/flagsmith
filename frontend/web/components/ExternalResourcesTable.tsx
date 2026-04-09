@@ -1,7 +1,7 @@
 import React, { FC, useEffect } from 'react'
 import PanelSearch from './PanelSearch'
 import Button from './base/forms/Button'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import {
   useGetExternalResourcesQuery,
   useDeleteExternalResourceMutation,
@@ -16,7 +16,7 @@ export type ExternalResourcesTableBase = {
   organisationId: string
 }
 
-export type ExternalResourcesTableType = ExternalResourcesTableBase & {
+type ExternalResourcesTableType = ExternalResourcesTableBase & {
   setSelectedResources: (r: ExternalResource[]) => void
 }
 

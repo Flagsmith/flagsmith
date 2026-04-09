@@ -3,7 +3,7 @@ import { Res } from 'common/types/responses'
 import SingleSDKLabelsChart from './components/SingleSDKLabelsChart'
 import { MultiSelect } from 'components/base/select/multi-select'
 
-export interface OrganisationUsageMetricsProps {
+interface OrganisationUsageMetricsProps {
   data?: Res['organisationUsage']
   selectedMetrics: string[]
 }

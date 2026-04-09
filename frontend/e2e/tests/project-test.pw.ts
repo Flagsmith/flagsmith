@@ -1,9 +1,9 @@
 import { test, expect } from '../test-setup';
-import { byId, getFlagsmith, log, createHelpers } from '../helpers';
+import { byId, getFlagsmith, log, createHelpers, visualSnapshot } from '../helpers';
 import { E2E_USER, PASSWORD } from '../config'
 
 test.describe('Project Tests', () => {
-  test('Additional Projects can be created and renamed with configurable change request approvals @enterprise', async ({ page }) => {
+  test('Additional Projects can be created and renamed with configurable change request approvals @enterprise', async ({ page }, testInfo) => {
     const {
       assertInputValue,
       assertTextContent,
@@ -26,6 +26,8 @@ test.describe('Project Tests', () => {
     await setText(byId('projectName'), 'Project Settings Test')
     await click(byId('create-project-btn'))
     await waitForElementVisible(byId('features-page'))
+
+    await visualSnapshot(page, 'new-project-features', testInfo)
 
     log('Edit Project')
     await click('#project-link')

@@ -3,7 +3,7 @@ import cx from 'classnames'
 import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { Clipboard } from 'polyfill-react-native'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
 import { checkmarkCircle, warning } from 'ionicons/icons'
 

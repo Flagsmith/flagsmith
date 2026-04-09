@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import RCSwitch, { Props as RCSwitchProps } from 'rc-switch'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 
 export type SwitchProps = RCSwitchProps & {
   checked?: boolean

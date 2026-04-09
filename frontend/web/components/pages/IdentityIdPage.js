@@ -2,8 +2,8 @@ import React, { Component } from 'react'
 import data from 'common/data/base/_data'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { withRouter } from 'react-router-dom'
-const UserPage = class extends Component {
-  static displayName = 'UserPage'
+const IdentityIdPage = class extends Component {
+  static displayName = 'IdentityIdPage'
 
   constructor(props, context) {
     super(props, context)
@@ -29,11 +29,11 @@ const UserPage = class extends Component {
           this.props.history.replace(
             `/project/${params.projectId}/environment/${
               params.environmentId
-            }/users/${params.identity}/${user.identity || user.identity_uuid}`,
+            }/identities/${params.identity}/${user.identity || user.identity_uuid}`,
           )
         } else {
           this.props.history.replace(
-            `/project/${params.projectId}/environment/${params.environmentId}/users/`,
+            `/project/${params.projectId}/environment/${params.environmentId}/identities/`,
           )
         }
       })
@@ -50,6 +50,6 @@ const UserPage = class extends Component {
   }
 }
 
-UserPage.propTypes = {}
+IdentityIdPage.propTypes = {}
 
-module.exports = withRouter(ConfigProvider(UserPage))
+module.exports = withRouter(ConfigProvider(IdentityIdPage))

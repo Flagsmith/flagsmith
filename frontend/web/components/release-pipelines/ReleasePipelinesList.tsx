@@ -2,7 +2,7 @@ import { useDeleteReleasePipelineMutation } from 'common/services/useReleasePipe
 import { PagedResponse, ReleasePipeline } from 'common/types/responses'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
-import Icon, { IconName } from 'components/Icon'
+import Icon, { IconName } from 'components/icons/Icon'
 import DropdownMenu from 'components/base/DropdownMenu'
 import PanelSearch from 'components/PanelSearch'
 import Tag from 'components/tags/Tag'
@@ -250,5 +250,4 @@ const ReleasePipelinesList = ({
   )
 }
 
-export type { ReleasePipelinesListProps }
 export default ReleasePipelinesList

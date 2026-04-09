@@ -2,7 +2,7 @@ import React from 'react'
 import data from 'common/data/base/_data'
 import ErrorMessage from './ErrorMessage'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import ModalHR from './modals/ModalHR'
 
 const SamlForm = class extends React.Component {

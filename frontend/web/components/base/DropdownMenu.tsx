@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
-import Icon, { IconName } from 'components/Icon'
+import Icon, { IconName } from 'components/icons/Icon'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
 import { createPortal } from 'react-dom'

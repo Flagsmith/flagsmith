@@ -1,7 +1,7 @@
 import React, { FC, KeyboardEvent } from 'react'
 import { IonIcon } from '@ionic/react'
 import { checkmarkSharp } from 'ionicons/icons'
-import Icon, { IconName } from './Icon'
+import Icon, { IconName } from './icons/Icon'
 import Utils from 'common/utils/utils'
 
 type VisibilityToggleProps = {

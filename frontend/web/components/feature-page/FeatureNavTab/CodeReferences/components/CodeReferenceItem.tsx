@@ -1,5 +1,5 @@
 import flagsmith from '@flagsmith/flagsmith'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import { CodeReference, VCSProvider } from 'common/types/responses'
 
 interface CodeReferenceItemProps {

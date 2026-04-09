@@ -49,12 +49,14 @@ services:
       FLAGSMITH_API_URL: http://flagsmith-api:8000/api/v1/
       SLACK_TOKEN: ${SLACK_TOKEN}
       GITHUB_ACTION_URL: ${GITHUB_ACTION_URL}
+      VISUAL_REGRESSION: ${VISUAL_REGRESSION:-}
     ports:
       - 3000:3000
     depends_on:
       flagsmith-api:
         condition: service_healthy
-
+    volumes:
+      - ./e2e/visual-regression-snapshots:/srv/flagsmith/e2e/visual-regression-snapshots
     links:
       - flagsmith-api:flagsmith-api
     command: [npm, run, test]
