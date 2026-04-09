@@ -14,8 +14,8 @@
   }
 
   &__title {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: var(--font-h6-size);
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-default);
   }
 
@@ -37,8 +37,8 @@
   }
 
   &__card-name {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-default);
   }
 
@@ -61,13 +61,13 @@
   }
 
   &__detail-label {
-    font-size: 13px;
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-secondary);
   }
 
   &__detail-value {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-medium);
     color: var(--color-text-default);
   }
 
@@ -84,13 +84,13 @@
   }
 
   &__progress-label {
-    font-size: 12px;
+    font-size: var(--font-caption-size);
     color: var(--color-text-secondary);
   }
 
   &__progress-value {
-    font-size: 12px;
-    font-weight: 500;
+    font-size: var(--font-caption-size);
+    font-weight: var(--font-weight-medium);
     color: var(--color-text-default);
   }
 
@@ -127,13 +127,13 @@
   }
 
   &__empty-title {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-default);
   }
 
   &__empty-desc {
-    font-size: 13px;
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-secondary);
     line-height: 1.5;
     max-width: 400px;

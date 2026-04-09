@@ -14,8 +14,8 @@
   }
 
   &__label {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: var(--font-body-sm-size);
+    font-weight: var(--font-weight-medium);
     color: var(--color-text-default);
   }
 
@@ -31,7 +31,7 @@
     border-radius: var(--radius-lg);
     background: transparent;
     color: var(--color-text-default);
-    font-size: 14px;
+    font-size: var(--font-body-size);
     font-family: inherit;
     resize: vertical;
     transition: border-color var(--duration-fast) var(--easing-standard);

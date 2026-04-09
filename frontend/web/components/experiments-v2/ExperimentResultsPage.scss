@@ -17,15 +17,15 @@
   }
 
   &__title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 22px;
-    font-weight: 700;
+    font-family: var(--font-family);
+    font-size: var(--font-h4-size);
+    font-weight: var(--font-weight-bold);
     color: var(--color-text-default);
     margin: 0;
   }
 
   &__days {
-    font-size: 13px;
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-secondary);
   }
 
@@ -36,7 +36,7 @@
   }
 
   &__subtitle {
-    font-size: 13px;
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-secondary);
   }
 
@@ -51,6 +51,7 @@
 
   &__cards {
     display: flex;
+    flex-wrap: wrap;
     gap: 16px;
   }
 
@@ -61,9 +62,9 @@
   }
 
   &__section-title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 16px;
-    font-weight: 700;
+    font-family: var(--font-family);
+    font-size: var(--font-h6-size);
+    font-weight: var(--font-weight-bold);
     color: var(--color-text-default);
     margin: 0;
   }
