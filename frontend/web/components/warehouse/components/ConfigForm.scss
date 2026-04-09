@@ -1,0 +1,120 @@
+.wh-config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__section-label {
+    font-size: var(--font-caption-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    letter-spacing: 0.5px;
+  }
+
+  &__type-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  &__type-card {
+    position: relative;
+    width: 180px;
+
+    &--disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+
+  &__coming-soon {
+    position: absolute;
+    bottom: 12px;
+    left: 16px;
+    font-size: var(--font-caption-xs-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-warning);
+    background: var(--color-surface-warning);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    background: var(--color-surface-subtle);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-lg);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  &__label {
+    font-size: var(--font-caption-size);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+  }
+
+  &__row {
+    display: flex;
+    gap: 16px;
+  }
+
+  &__divider {
+    height: 1px;
+    background: var(--color-border-default);
+  }
+
+  &__select-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    height: 36px;
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    font-size: var(--font-body-sm-size);
+    color: var(--color-text-default);
+    cursor: pointer;
+
+    svg {
+      color: var(--color-icon-secondary);
+    }
+  }
+
+  &__textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    font-family: var(--font-family);
+    font-size: var(--font-caption-size);
+    resize: vertical;
+    transition: border-color var(--duration-fast) var(--easing-standard);
+
+    &:focus {
+      @include focus-ring;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+}
