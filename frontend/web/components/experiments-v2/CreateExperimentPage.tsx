@@ -13,16 +13,26 @@ import {
   EXPERIMENT_WIZARD_STEPS,
   ExperimentWizardState,
   Metric,
+  MOCK_METRICS,
   MOCK_VARIATIONS,
 } from './types'
 import './CreateExperimentPage.scss'
 
 const INITIAL_STATE: ExperimentWizardState = {
-  audience: { segmentId: null, splits: [], trafficPercentage: 50 },
+  audience: { segmentId: 'seg-1', splits: [], trafficPercentage: 50 },
   currentStep: 0,
-  details: { hypothesis: '', name: '', type: null },
-  featureFlagId: null,
-  metrics: [],
+  details: {
+    hypothesis:
+      'Redesigning the checkout button with a clearer CTA will increase conversion rates by at least 15% within 30 days',
+    name: 'Checkout Button Redesign',
+    type: 'ab_test',
+  },
+  featureFlagId: 'flag-1',
+  metrics: [
+    MOCK_METRICS[0],
+    { ...MOCK_METRICS[1], role: 'secondary' },
+    { ...MOCK_METRICS[2], role: 'secondary' },
+  ],
   variations: MOCK_VARIATIONS,
 }
 
