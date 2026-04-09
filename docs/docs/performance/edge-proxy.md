@@ -23,7 +23,7 @@ The Edge Proxy has the same [caveats as running our SDK in Local Evaluation mode
 
 You can think of the Edge Proxy as a copy of our Python Server Side SDK, running in [Local Evaluation Mode](/integrating-with-flagsmith/integration-overview), with an API interface that is compatible with the Flagsmith SDK API.
 
-The Edge Proxy runs as a lightweight Docker container. It connects to the Flagsmith API (either powered by us at `api.flagsmith.com` or self hosted by you) to get environment flags and segment rules. You can then point the Flagsmith SDKs to your Edge Proxy; it implements all the current SDK endpoints. This means you can serve a very large number of requests close to your infrastructure and users, at very low latency. Check out the [architecture below](#architecture).
+The Edge Proxy runs as a lightweight Docker container. It connects to the Flagsmith API (either powered by us at `edge.api.flagsmith.com` or self hosted by you) to get environment flags and segment rules. You can then point the Flagsmith SDKs to your Edge Proxy; it implements all the current SDK endpoints. This means you can serve a very large number of requests close to your infrastructure and users, at very low latency. Check out the [architecture below](#architecture).
 
 The proxy also acts as a local cache, allowing you to make requests to the proxy without hitting the Core API.
 
