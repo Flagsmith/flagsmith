@@ -47,6 +47,8 @@ import CreateReleasePipelinePage from './components/pages/CreateReleasePipelineP
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
 import ExperimentsPage from './components/pages/ExperimentsPage'
+import CreateExperimentPage from './components/experiments-v2/CreateExperimentPage'
+import ExperimentResultsPage from './components/experiments-v2/ExperimentResultsPage'
 import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
 import FlagEnvironmentsPage from './components/pages/FlagEnvironmentsPage'
 import ExecutiveViewPage from './components/pages/ExecutiveViewPage'
@@ -77,7 +79,11 @@ export const routes = {
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
   'executive-view': '/organisation/:organisationId/executive-view',
+  'experiment-results':
+    '/project/:projectId/environment/:environmentId/experiments/:experimentId',
   'experiments': '/project/:projectId/environment/:environmentId/experiments',
+  'experiments-create':
+    '/project/:projectId/environment/:environmentId/experiments/create',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
   'feature-history-detail':
     '/project/:projectId/environment/:environmentId/history/:id/',
@@ -120,13 +126,23 @@ export const routes = {
     '/project/:projectId/environment/:environmentId/project-settings',
   'release-manager': '/organisation/:organisationId/release-manager',
   'release-pipelines': '/project/:projectId/release-pipelines',
+  'identities': '/project/:projectId/environment/:environmentId/identities',
   'release-pipelines-detail': '/project/:projectId/release-pipelines/:id',
+  'identity':
+    '/project/:projectId/environment/:environmentId/identities/:identity/:id',
   'release-pipelines-detail-edit':
     '/project/:projectId/release-pipelines/:id/edit',
+  'identity-id':
+    '/project/:projectId/environment/:environmentId/identities/:identity',
   'root': '/',
+  'legacy-identities': '/project/:projectId/environment/:environmentId/users',
   'saml': '/saml',
+  'legacy-identity':
+    '/project/:projectId/environment/:environmentId/users/:identity/:id',
   'scheduled-change':
     '/project/:projectId/environment/:environmentId/scheduled-changes/:id',
+  'legacy-identity-id':
+    '/project/:projectId/environment/:environmentId/users/:identity',
   'scheduled-changes':
     '/project/:projectId/environment/:environmentId/scheduled-changes',
   'sdk-keys': '/project/:projectId/environment/:environmentId/sdk-keys',
@@ -163,6 +179,16 @@ export default (
           path={routes.features}
           exact
           component={FlagsPage}
+        />
+        <ParameterizedRoute
+          path={routes['experiments-create']}
+          exact
+          component={CreateExperimentPage}
+        />
+        <ParameterizedRoute
+          path={routes['experiment-results']}
+          exact
+          component={ExperimentResultsPage}
         />
         <ParameterizedRoute
           path={routes.experiments}

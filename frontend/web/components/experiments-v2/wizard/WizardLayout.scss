@@ -1,0 +1,17 @@
+.wizard-layout {
+  display: flex;
+  gap: 48px;
+  width: 100%;
+
+  &__sidebar {
+    flex-shrink: 0;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    flex: 1;
+    min-width: 0;
+  }
+}

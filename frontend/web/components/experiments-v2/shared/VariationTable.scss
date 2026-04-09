@@ -1,0 +1,120 @@
+.variation-table {
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+
+  &__head {
+    display: flex;
+    padding: 12px 20px;
+    background: var(--color-surface-muted);
+    gap: 16px;
+  }
+
+  &__th {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+
+    &--name,
+    &--desc {
+      flex: 1;
+    }
+
+    &--value {
+      width: 100px;
+    }
+
+    &--actions {
+      width: 40px;
+    }
+  }
+
+  &__row {
+    display: flex;
+    padding: 16px 20px;
+    gap: 16px;
+    border-top: 1px solid var(--color-border-default);
+    align-items: center;
+    transition: background var(--duration-fast) var(--easing-standard);
+
+    &:hover {
+      background: var(--color-surface-hover);
+    }
+  }
+
+  &__cell {
+    &--name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    &--desc {
+      flex: 1;
+    }
+
+    &--value {
+      width: 100px;
+    }
+
+    &--actions {
+      width: 40px;
+      display: flex;
+      justify-content: center;
+    }
+  }
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+  }
+
+  &__name-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-default);
+  }
+
+  &__control-tag {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    background: var(--color-surface-muted);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+  }
+
+  &__desc-text {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+  }
+
+  &__value-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--color-text-default);
+    background: var(--color-surface-muted);
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+  }
+
+  &__action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--color-icon-secondary);
+    border-radius: var(--radius-sm);
+    transition: color var(--duration-fast) var(--easing-standard);
+
+    &:hover {
+      color: var(--color-icon-danger);
+    }
+  }
+}
