@@ -203,11 +203,6 @@ class AccountSettingsPage extends Component {
                               readOnly: true,
                             }}
                             value={email}
-                            onChange={(e) =>
-                              this.setState({
-                                first_name: Utils.safeParseEventValue(e),
-                              })
-                            }
                             type='text'
                             name='Email Address'
                           />
