@@ -2,6 +2,7 @@ import './project/polyfil'
 import './project/libs'
 import './project/api'
 import './project/project-components'
+
 import './styles/styles.scss'
 import { BrowserRouter as Router } from 'react-router-dom'
 import { createBrowserHistory } from 'history'
