@@ -39,8 +39,6 @@ jobs:
   smoke-test:
     name: Vercel Preview Smoke Test
     runs-on: ubuntu-latest
-    # Only run on non-draft PRs
-    if: github.event.pull_request.draft == false
     steps:
       - name: Wait for Vercel deployments and smoke test
         env:
