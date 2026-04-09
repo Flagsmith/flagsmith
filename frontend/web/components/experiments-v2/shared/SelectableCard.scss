@@ -4,22 +4,24 @@
   justify-content: space-between;
   padding: 16px;
   border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border-default);
+  border: 2px solid transparent;
+  box-shadow: inset 0 0 0 1px var(--color-border-default);
   background: transparent;
   cursor: pointer;
   text-align: left;
   width: 100%;
   transition:
     border-color var(--duration-fast) var(--easing-standard),
+    box-shadow var(--duration-fast) var(--easing-standard),
     background var(--duration-fast) var(--easing-standard);
 
   &:hover {
-    border-color: var(--color-border-strong);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
   }
 
   &--selected {
     border-color: var(--color-border-action);
-    border-width: 2px;
+    box-shadow: none;
     background: var(--color-surface-action-subtle);
 
     svg,
@@ -41,26 +43,26 @@
   }
 
   &__title {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-default);
   }
 
   &__description {
-    font-size: 12px;
+    font-size: var(--font-caption-size);
     color: var(--color-text-secondary);
   }
 
   &__badge {
-    font-size: 11px;
-    font-weight: 600;
+    font-size: var(--font-caption-xs-size);
+    font-weight: var(--font-weight-semibold);
     padding: 4px 12px;
     border-radius: var(--radius-full);
     flex-shrink: 0;
 
     &--primary {
       background: var(--color-surface-action);
-      color: #ffffff;
+      color: var(--color-surface-default);
     }
 
     &--secondary {

@@ -6,17 +6,18 @@
   background: var(--color-surface-subtle);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   flex: 1;
 
   &__label {
-    font-size: 12px;
+    font-size: var(--font-caption-size);
     color: var(--color-text-secondary);
   }
 
   &__value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 28px;
-    font-weight: 700;
+    font-family: var(--font-family);
+    font-size: var(--font-h3-size);
+    font-weight: var(--font-weight-bold);
     color: var(--color-text-default);
 
     &--positive {
@@ -33,7 +34,7 @@
   }
 
   &__subtitle {
-    font-size: 12px;
+    font-size: var(--font-caption-size);
     color: var(--color-text-secondary);
   }
 }

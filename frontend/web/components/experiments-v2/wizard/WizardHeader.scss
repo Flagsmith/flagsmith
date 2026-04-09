@@ -10,7 +10,7 @@
   }
 
   &__breadcrumb-item {
-    font-size: 13px;
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-secondary);
 
     &:last-child {
@@ -19,7 +19,7 @@
   }
 
   &__breadcrumb-separator {
-    font-size: 13px;
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-disabled);
   }
 
@@ -30,9 +30,9 @@
   }
 
   &__title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 22px;
-    font-weight: 700;
+    font-family: var(--font-family);
+    font-size: var(--font-h4-size);
+    font-weight: var(--font-weight-bold);
     color: var(--color-text-default);
     margin: 0;
   }

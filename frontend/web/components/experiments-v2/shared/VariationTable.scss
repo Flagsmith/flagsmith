@@ -1,6 +1,7 @@
 .variation-table {
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 
   &__head {
@@ -11,8 +12,8 @@
   }
 
   &__th {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--font-caption-size);
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.02em;
@@ -75,14 +76,14 @@
   }
 
   &__name-text {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-default);
   }
 
   &__control-tag {
-    font-size: 11px;
-    font-weight: 500;
+    font-size: var(--font-caption-xs-size);
+    font-weight: var(--font-weight-medium);
     color: var(--color-text-secondary);
     background: var(--color-surface-muted);
     padding: 2px 8px;
@@ -90,14 +91,14 @@
   }
 
   &__desc-text {
-    font-size: 13px;
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-secondary);
     line-height: 1.4;
   }
 
   &__value-badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
+    font-family: var(--font-family);
+    font-size: var(--font-body-sm-size);
     color: var(--color-text-default);
     background: var(--color-surface-muted);
     padding: 6px 12px;
