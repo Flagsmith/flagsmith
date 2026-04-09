@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  deployments: read
 
 jobs:
   unit-tests:
@@ -34,3 +35,74 @@ jobs:
 
       - name: Run unit tests
         run: npm run test:unit -- --passWithNoTests
+
+  smoke-test:
+    name: Vercel Preview Smoke Test
+    runs-on: ubuntu-latest
+    # Only run on non-draft PRs
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Wait for Vercel deployments and smoke test
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          ENVIRONMENTS=(
+            "Preview – flagsmith-frontend-preview"
+            "Preview – flagsmith-frontend-staging"
+          )
+
+          for ENV_NAME in "${ENVIRONMENTS[@]}"; do
+            echo "⏳ Waiting for '$ENV_NAME' deployment..."
+            URL=""
+            for i in $(seq 1 60); do
+              # Find the deployment for this commit and environment
+              DEPLOY_ID=$(gh api "repos/$REPO/deployments?sha=$SHA&environment=$(printf '%s' "$ENV_NAME" | jq -sRr @uri)&per_page=1" --jq '.[0].id // empty')
+
+              if [ -n "$DEPLOY_ID" ]; then
+                STATE=$(gh api "repos/$REPO/deployments/$DEPLOY_ID/statuses?per_page=1" --jq '.[0].state // empty')
+                if [ "$STATE" = "success" ]; then
+                  URL=$(gh api "repos/$REPO/deployments/$DEPLOY_ID/statuses?per_page=1" --jq '.[0].environment_url')
+                  echo "✅ '$ENV_NAME' deployed at: $URL"
+                  break
+                elif [ "$STATE" = "failure" ] || [ "$STATE" = "error" ]; then
+                  echo "❌ '$ENV_NAME' deployment failed with state: $STATE"
+                  exit 1
+                fi
+              fi
+              sleep 10
+            done
+
+            if [ -z "$URL" ]; then
+              echo "⚠️ Timed out waiting for '$ENV_NAME' — skipping"
+              continue
+            fi
+
+            # Smoke test the deployment
+            echo "🔍 Testing $URL/health ..."
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$URL/health")
+            if [ "$STATUS" != "200" ]; then
+              echo "❌ /health returned $STATUS"
+              exit 1
+            fi
+
+            echo "🔍 Testing $URL/config/project-overrides ..."
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$URL/config/project-overrides")
+            if [ "$STATUS" != "200" ]; then
+              echo "❌ /config/project-overrides returned $STATUS"
+              exit 1
+            fi
+
+            echo "🔍 Testing $URL/ ..."
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$URL/")
+            if [ "$STATUS" != "200" ]; then
+              echo "❌ / returned $STATUS (this is the index page served by the Express server)"
+              exit 1
+            fi
+
+            echo "✅ All smoke tests passed for '$ENV_NAME'"
+            echo ""
+          done
+
+          echo "🎉 All Vercel preview deployments are healthy"
