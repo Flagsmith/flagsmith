@@ -2,24 +2,6 @@
   padding: 0 16px;
 }
 
-// Match parent specificity: .panel .panel-content .search-list
-.panel .panel-content .search-list--skeleton {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
-// Override first-child border removal for skeletons
-.panel .panel-content .search-list--skeleton .skeleton-row:first-child {
-  border-top: 1px solid $panel-border-color;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
-// Dark mode support
-.dark .panel .panel-content .search-list--skeleton .skeleton-row:first-child {
-  border-top: 1px solid $panel-border-color-dark;
-}
-
 .skeleton {
   background: linear-gradient(90deg, $bg-light300 25%, $bg-light500 50%, $bg-light300 75%);
   background-size: 200% 100%;

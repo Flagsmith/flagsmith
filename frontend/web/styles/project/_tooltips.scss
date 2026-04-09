@@ -14,9 +14,6 @@ $shadow-dark: 0 4px 4px 0 #00000029;
   background-color: white !important;
   z-index: 9999;
 
-  &.tooltip-lg {
-    max-width: 900px;
-  }
   i {
     font-style: normal;
     color: $primary;

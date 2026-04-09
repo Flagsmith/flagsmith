@@ -39,18 +39,6 @@ h6 {
   line-height: $h6-line-height;
 }
 
-.ln {
-  &-xlg {
-    line-height: $line-height-xlg;
-  }
-  &-xsm {
-    line-height: $line-height-xsm;
-  }
-  &-xxsm {
-    line-height: $line-height-xxsm;
-  }
-}
-
 a {
   text-decoration: none;
 }
@@ -88,48 +76,12 @@ a {
   -moz-osx-font-smoothing: grayscale;
 }
 
-a.link-dark {
-  color: $primary;
-}
-
-a.dark {
-  color: $primary900;
-  text-decoration: underline;
-  &:hover {
-    color: lighten($primary900, 10);
-  }
-}
-
 .text-small {
   font-size: 0.75rem !important;
 }
 
 .text-white {
   color: white;
-}
-
-.text {
-  &__link {
-    color: $primary;
-    &:hover {
-      color: lighten($primary, 10);
-    }
-  }
-}
-
-.text-no-decoration {
-  text-decoration: none;
-  &:hover {
-    text-decoration: none;
-  }
-}
-
-.large-para {
-  font-size: 1.25rem;
-}
-
-.bold-link {
-  font-weight: bold !important;
 }
 
 .feature {
@@ -139,7 +91,4 @@ a.dark {
   &--on {
     color: $primary;
   }
-}
-.letter-spacing {
-  letter-spacing: 1px;
 }

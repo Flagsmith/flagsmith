@@ -1,11 +1,3 @@
-.clearfix:after {
-    visibility: hidden;
-    display: block;
-    font-size: 0;
-    content: " ";
-    clear: both;
-    height: 0;
-}
 .hover-color-primary {
     &:hover {
         color: $primary;
@@ -22,20 +14,11 @@
     color: $bg-light300;
     border-color: $danger;
 }
-.clearfix { display: inline-block; }
-/* start commented backslash hack \*/
-* html .clearfix { height: 1%; }
-.clearfix { display: block; }
-/* close commented backslash hack */
-
 .standard-case {
     text-transform: none !important;
 }
 .float-right{
     float:right;
-}
-.text-light {
-    color: white !important;
 }
 .form-cta {
     text-align: right;
@@ -45,14 +28,8 @@
     justify-content: center;
 }
 
-.hidden {
-    display: none;
-}
 .relative {
     position: relative !important;
-}
-.float-left{
-    float:left;
 }
 .left-0 {
     left: 0 !important;
@@ -78,16 +55,9 @@
     margin-top:20px;
 }
 
-.margin-bottom{
-    margin-bottom:20px;
-}
 
 .text-left{
     text-align: left;
-}
-
-.link-style{
-    text-decoration: underline;
 }
 
 .disable-transitions {
@@ -104,26 +74,8 @@
     }
 }
 
-.e2e {
-    background-color: rgba(255,255,255,0.75);
-    pointer-events: none !important;
-    position:fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10000000000;
-}
-
 .show {
     display: block!important;
-}
-
-.ml-auto, .mx-auto {
-    margin-left: auto!important;
-}
-
-.mr-auto, .mx-auto {
-    margin-right: auto!important;
 }
 
 .signup-icon {
@@ -135,21 +87,6 @@
 
 .align-start {
     align-items: flex-start;
-}
-
-.transition-none {
-    transition: none !important;
-    .modal-content {
-        transition: none !important;
-    }
-}
-
-.text-primary {
-    color: $primary !important;
-}
-
-.text-primary {
-    color: $primary !important;
 }
 
 .unread {
@@ -224,10 +161,6 @@
         text-overflow: ellipsis;
         min-width: 0;
     }
-}
-
-.blur {
-    filter: blur(5px);
 }
 
 .overflow-y-auto{ overflow-y: auto}
