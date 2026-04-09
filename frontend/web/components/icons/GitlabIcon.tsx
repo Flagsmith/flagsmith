@@ -7,7 +7,7 @@ interface GitlabIconProps {
   fill?: string
 }
 
-export const GitlabIcon: React.FC<GitlabIconProps> = ({
+const GitlabIcon: React.FC<GitlabIconProps> = ({
   className = '',
   fill = '#000000',
   height = 14,

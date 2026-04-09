@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import { GithubRepository } from 'common/types/responses'
 
-export type RepositoriesSelectType = {
+type RepositoriesSelectType = {
   disabled?: boolean
   value?: string
   repositories: GithubRepository[] | undefined

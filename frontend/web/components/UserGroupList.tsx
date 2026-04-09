@@ -8,7 +8,7 @@ import { useGetUserGroupPermissionQuery } from 'common/services/useUserGroupPerm
 import PanelSearch from './PanelSearch'
 import { sortBy } from 'lodash'
 import InfoMessage from './InfoMessage'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import PermissionsSummaryList from './PermissionsSummaryList'
 import Panel from './base/grid/Panel'
 import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'

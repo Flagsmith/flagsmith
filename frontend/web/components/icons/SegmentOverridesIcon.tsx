@@ -1,6 +1,6 @@
 import React, { FC, FormEvent } from 'react'
-import SegmentsIcon from './svg/SegmentsIcon'
-import Tooltip from './Tooltip'
+import SegmentsIcon from './SegmentsIcon'
+import Tooltip from '../Tooltip'
 
 type SegmentOverridesIconType = {
   count: number | null

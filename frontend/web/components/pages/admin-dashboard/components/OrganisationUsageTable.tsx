@@ -3,7 +3,7 @@ import { OrganisationMetrics, ProjectMetrics } from 'common/types/responses'
 import { SortOrder } from 'common/types/requests'
 import Utils from 'common/utils/utils'
 import PanelSearch from 'components/PanelSearch'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 
 interface OrganisationUsageTableProps {
   days: 30 | 60 | 90

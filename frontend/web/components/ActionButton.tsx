@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import classNames from 'classnames'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Button, { ButtonType } from './base/forms/Button'
 
 type ActionButtonType = {

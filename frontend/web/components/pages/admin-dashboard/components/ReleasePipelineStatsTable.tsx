@@ -6,7 +6,7 @@ import {
 } from 'common/types/responses'
 import { SortOrder } from 'common/types/requests'
 import PanelSearch from 'components/PanelSearch'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 
 interface ReleasePipelineStatsTableProps {
   stats: ReleasePipelineOverview[]

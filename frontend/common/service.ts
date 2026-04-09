@@ -7,7 +7,7 @@ import { StoreStateType } from './store'
 import Project from './project'
 import _data from './data/base/_data'
 
-export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
+const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
   const res: Pick<
     CreateApiOptions<any, any, any, any>,
     | 'baseQuery'
