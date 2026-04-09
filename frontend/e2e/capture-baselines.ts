@@ -16,17 +16,14 @@ function runQuiet(cmd: string) {
 const branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' }).trim()
 
 console.log(`Current branch: ${branch}`)
-console.log('Switching to main to capture baselines...')
+console.log('Checking out main source code (keeping branch e2e tests)...')
+
+// Only checkout main's source code, not e2e/ test files.
+// This ensures both baseline and branch runs use the same test code.
+runQuiet('git checkout main -- web/ common/')
 
 try {
-  runQuiet('git stash --include-untracked -q')
-} catch {
-  // nothing to stash
-}
-runQuiet('git checkout main -q')
-
-try {
-  console.log('Running E2E on main with VISUAL_REGRESSION=1...')
+  console.log('Running E2E on main source with VISUAL_REGRESSION=1...')
   if (fs.existsSync(SCREENSHOTS_DIR)) {
     fs.rmSync(SCREENSHOTS_DIR, { recursive: true })
   }
@@ -41,13 +38,9 @@ try {
   const count = fs.readdirSync(SNAPSHOTS_DIR).filter((f) => f.endsWith('.png')).length
   console.log(`Captured ${count} baseline snapshots`)
 } finally {
-  console.log(`Switching back to ${branch}...`)
-  runQuiet(`git checkout ${branch} -q`)
-  try {
-    runQuiet('git stash pop -q')
-  } catch {
-    // nothing to pop
-  }
+  // Restore branch's source code
+  console.log('Restoring branch source code...')
+  runQuiet('git checkout -- web/ common/')
 }
 
 console.log('Baselines ready. Now run: VISUAL_REGRESSION=1 npm run test && npm run test:visual:compare')

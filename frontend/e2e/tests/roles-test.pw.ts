@@ -19,6 +19,7 @@ test.describe('Roles Tests', () => {
       login,
       logout,
       waitForElementVisible,
+      waitForToastsToClear,
     } = createHelpers(page);
 
     const rolesProject = 'project-my-test-project-7-role'
@@ -26,6 +27,7 @@ test.describe('Roles Tests', () => {
     await login(E2E_USER, PASSWORD)
     await click(byId(rolesProject))
     await createFeature({ name: 'test_feature', value: false })
+    await waitForToastsToClear()
     log('Go to Roles')
     await click(byId('organisation-link'))
     await click(byId('users-and-permissions'))
