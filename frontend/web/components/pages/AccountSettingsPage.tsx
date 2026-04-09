@@ -166,8 +166,8 @@ const AccountSettingsPage: FC = () => {
       <div className='app-container container'>
         <h3>Two-Factor Authentication</h3>
         <p>
-          One of your organisations has enfoced Two-Factor Authentication, please
-          enable it to continue.
+          One of your organisations has enfoced Two-Factor Authentication,
+          please enable it to continue.
         </p>
         <TwoFactor isLoginPage={true} />
       </div>
@@ -210,9 +210,6 @@ const AccountSettingsPage: FC = () => {
                       readOnly: true,
                     }}
                     value={email}
-                    onChange={(e: any) =>
-                      setFirstName(Utils.safeParseEventValue(e))
-                    }
                     type='text'
                     name='Email Address'
                   />
@@ -264,9 +261,7 @@ const AccountSettingsPage: FC = () => {
                   name: 'groupName',
                 }}
                 value={lastName}
-                onChange={(e: any) =>
-                  setLastName(Utils.safeParseEventValue(e))
-                }
+                onChange={(e: any) => setLastName(Utils.safeParseEventValue(e))}
                 isValid={lastName && lastName.length}
                 type='text'
                 name='Last Name*'
