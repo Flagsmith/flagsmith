@@ -1,6 +1,7 @@
 import '../web/styles/styles.scss'
 import './docs-theme.scss'
 import { allModes } from './modes'
+import { DocsContainer } from './DocsContainer'
 
 /** @type { import('storybook').Preview } */
 const preview = {
@@ -45,6 +46,9 @@ const preview = {
       },
     },
     backgrounds: { disable: true },
+    docs: {
+      container: DocsContainer,
+    },
     chromatic: {
       modes: {
         light: allModes.light,

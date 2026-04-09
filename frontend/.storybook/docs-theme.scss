@@ -74,9 +74,50 @@
     border-color: var(--color-border-default, rgba(255, 255, 255, 0.16));
   }
 
-  // Canvas (story preview) background
+  // Canvas wrapper — emotion-styled div with no stable class, child of .sb-anchor
+  .sb-anchor > div {
+    background-color: var(--color-surface-subtle, #15192b) !important;
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16)) !important;
+  }
+
+  // Args/controls table
+  .docblock-argstable {
+    background-color: var(--color-surface-subtle, #15192b) !important;
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16)) !important;
+  }
+
+  .docblock-argstable th,
+  .docblock-argstable td {
+    background-color: var(--color-surface-subtle, #15192b) !important;
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16)) !important;
+    color: var(--color-text-default, #e0e3e9) !important;
+  }
+
+  // Argstable description text, type badges, default values
+  .docblock-argstable td span,
+  .docblock-argstable td p,
+  .docblock-argstable td code,
+  .docblock-argstable td label {
+    color: var(--color-text-secondary, #9da4ae) !important;
+  }
+
+  // Prop names (first column)
+  .docblock-argstable td:first-child span {
+    color: var(--color-text-default, #e0e3e9) !important;
+  }
+
+  // Control values, radio labels, object inspector text
+  .docblock-argstable [class*='css-'] {
+    color: var(--color-text-default, #e0e3e9) !important;
+  }
+
   .docs-story {
-    background-color: var(--color-surface-default, #101628);
+    background-color: var(--color-surface-subtle, #15192b) !important;
+  }
+
+  // Canvas toolbar (zoom, open in new tab icons)
+  .sbdocs-preview [role='toolbar'] {
+    background-color: var(--color-surface-subtle, #15192b) !important;
   }
 
   // Table borders
