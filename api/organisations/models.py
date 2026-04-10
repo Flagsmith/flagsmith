@@ -42,6 +42,7 @@ from organisations.subscriptions.constants import (
     FREE_PLAN_SUBSCRIPTION_METADATA,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
+    MAX_SEATS_IN_SCALE_UP_PLAN,
     SUBSCRIPTION_BILLING_STATUSES,
     SUBSCRIPTION_PAYMENT_METHODS,
     TRIAL_SUBSCRIPTION_ID,
@@ -272,6 +273,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return (
             is_saas()
             and self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+            and self.organisation.num_seats < MAX_SEATS_IN_SCALE_UP_PLAN
         )
 
     @property
