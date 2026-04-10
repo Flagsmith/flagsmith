@@ -41,6 +41,7 @@ class FeatureFlagCodeReferencesScanSerializer(
             "repository_url",
             "project",
             "revision",
+            "vcs_provider",
             "code_references",
         ]
         read_only_fields = [
@@ -67,3 +68,4 @@ class FeatureFlagCodeReferencesRepositoryCountSerializer(
     count = serializers.IntegerField()
     last_successful_repository_scanned_at = serializers.DateTimeField()
     last_feature_found_at = serializers.DateTimeField(allow_null=True)
+    vcs_provider = serializers.ChoiceField(choices=VCSProvider.choices)

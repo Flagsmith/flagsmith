@@ -45,6 +45,8 @@ def test_create_code_reference__valid_payload__returns_201_with_accepted_referen
     assert len(response.data["code_references"]) == 3
     assert response.data["project"] == project.pk
     assert response.data["created_at"] == "2025-04-14T12:30:00Z"
+    assert response.data["vcs_provider"] == "github"
+    assert FeatureFlagCodeReferencesScan.objects.get().vcs_provider == "github"
     assert FeatureFlagCodeReferencesScan.objects.get().code_references == [
         {
             "feature_name": "feature-1",
@@ -381,3 +383,100 @@ def test_get_feature_code_references__feature_not_found__returns_404(
     # Then
     assert response.status_code == 404
     assert response.data["detail"] == "No Feature matches the given query."
+
+
+def test_create_code_reference__with_gitlab_provider__returns_201(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given / When
+    response = admin_client_new.post(
+        f"/api/v1/projects/{project.pk}/code-references/",
+        data={
+            "repository_url": "https://gitlab.com/flagsmith",
+            "revision": "revision-hash",
+            "vcs_provider": "gitlab",  # Explicitly testing GitLab
+            "code_references": [
+                {
+                    "feature_name": "feature-1",
+                    "file_path": "path/to/file1.py",
+                    "line_number": 10,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 201
+    assert response.data["vcs_provider"] == "gitlab"
+    assert FeatureFlagCodeReferencesScan.objects.get().vcs_provider == "gitlab"
+
+
+def test_create_code_reference__with_invalid_provider__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given / When
+    response = admin_client_new.post(
+        f"/api/v1/projects/{project.pk}/code-references/",
+        data={
+            "repository_url": "https://bitbucket.org/flagsmith",
+            "revision": "revision-hash",
+            "vcs_provider": "bitbucket",  # Invalid provider
+            "code_references": [
+                {
+                    "feature_name": "feature-1",
+                    "file_path": "path/to/file1.py",
+                    "line_number": 10,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert "vcs_provider" in response.data
+    assert not FeatureFlagCodeReferencesScan.objects.exists()
+
+
+def test_get_feature_code_references__gitlab_scan__returns_expected_permalinks(
+    admin_client_new: APIClient,
+    feature: Feature,
+    project: Project,
+) -> None:
+    # Given
+    with freezegun.freeze_time("2099-01-01T10:00:00-0300"):
+        FeatureFlagCodeReferencesScan.objects.create(
+            project=project,
+            repository_url="https://gitlab.com/flagsmith/backend",
+            revision="backend-1",
+            vcs_provider="gitlab",
+            code_references=[
+                {
+                    "feature_name": feature.name,
+                    "file_path": "backend/file1.py",
+                    "line_number": 20,
+                },
+            ],
+        )
+
+    # When
+    response = admin_client_new.get(
+        f"/api/v1/projects/{project.pk}/features/{feature.pk}/code-references/",
+    )
+
+    # Then
+    assert response.status_code == 200
+
+    response_data = response.json()
+    assert len(response_data) == 1
+    assert response_data[0]["vcs_provider"] == "gitlab"
+
+    # Assert the permalink uses the GitLab /-/blob/ format
+    permalink = response_data[0]["code_references"][0]["permalink"]
+    assert (
+        permalink
+        == "https://gitlab.com/flagsmith/backend/-/blob/backend-1/backend/file1.py#L20"
+    )
