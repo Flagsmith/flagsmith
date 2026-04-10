@@ -1,20 +1,18 @@
-import React, { FC, useState } from 'react'
-import { sortBy } from 'lodash'
-import Color from 'color'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import React, { FC, useMemo, useState } from 'react'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentTagSelect from 'components/EnvironmentTagSelect'
-import { useGetFeatureAnalyticsQuery } from 'common/services/useFeatureAnalytics'
-import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import Utils from 'common/utils/utils'
+import BarChart from 'components/charts/BarChart'
+import { MultiSelect } from 'components/base/select/multi-select'
+import {
+  useGetEnvironmentAnalyticsQuery,
+  useGetFeatureAnalyticsQuery,
+} from 'common/services/useFeatureAnalytics'
+import { Res } from 'common/types/responses'
+import {
+  aggregateByLabels,
+  buildEnvColorMap,
+  hasLabelledData,
+} from './analyticsUtils'
 
 type FlagAnalyticsType = {
   projectId: string
@@ -28,6 +26,8 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
   projectId,
 }) => {
   const [environmentIds, setEnvironmentIds] = useState(defaultEnvironmentIds)
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([])
+
   const { data, isLoading } = useGetFeatureAnalyticsQuery(
     {
       environment_ids: environmentIds,
@@ -39,45 +39,111 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
       skip: !environmentIds?.length || !featureId || !projectId,
     },
   )
-  const { data: environments } = useGetEnvironmentsQuery({
-    projectId: `${projectId}`,
+
+  const rawResponses = environmentIds.map((envId) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { data: envData } = useGetEnvironmentAnalyticsQuery(
+      {
+        environment_id: envId,
+        feature_id: featureId,
+        period: 30,
+        project_id: projectId,
+      },
+      {
+        skip: !envId || !featureId || !projectId,
+      },
+    )
+    return envData
   })
 
+  const allRawData = useMemo(
+    (): Res['environmentAnalytics'] => rawResponses.filter(Boolean).flat(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(rawResponses)],
+  )
+
+  const isLabelled = hasLabelledData(allRawData)
+
+  const {
+    chartData: labelledChartData,
+    colorMap,
+    labelValues,
+  } = useMemo(
+    () =>
+      isLabelled
+        ? aggregateByLabels(allRawData)
+        : {
+            chartData: [],
+            colorMap: new Map<string, string>(),
+            labelValues: [],
+          },
+    [isLabelled, allRawData],
+  )
+
+  const envColorMap = useMemo(
+    () => buildEnvColorMap(environmentIds),
+    [environmentIds],
+  )
+
+  const labelOptions = useMemo(
+    () => labelValues.map((v) => ({ label: v, value: v })),
+    [labelValues],
+  )
+
+  const filteredLabels =
+    selectedLabels.length > 0
+      ? labelValues.filter((v) => selectedLabels.includes(v))
+      : labelValues
+
   const handleEnvironmentChange = (value: string[] | string | undefined) => {
-    // If cleared (empty array or undefined), revert to default environment IDs
     if (!value || (Array.isArray(value) && value.length === 0)) {
       setEnvironmentIds(defaultEnvironmentIds)
     } else {
-      setEnvironmentIds(value as string[])
+      setEnvironmentIds(Array.isArray(value) ? value : [value])
     }
   }
 
-  // Check if there's any actual data (non-zero counts) across all days and environments
-  const hasData =
-    data &&
-    Array.isArray(data) &&
-    data.length > 0 &&
-    data.some((dayData) =>
-      environmentIds.some((envId) => (dayData[envId] as number) > 0),
-    )
+  const hasData = isLabelled
+    ? labelledChartData.length > 0
+    : data &&
+      Array.isArray(data) &&
+      data.length > 0 &&
+      data.some((dayData) =>
+        environmentIds.some((envId) => Number(dayData[envId] || 0) > 0),
+      )
 
   return (
     <>
       <FormGroup className='mb-4'>
         <h5 className='mb-2'>Flag events for last 30 days</h5>
-        <EnvironmentTagSelect
-          projectId={projectId}
-          idField='id'
-          value={environmentIds}
-          multiple
-          onChange={handleEnvironmentChange}
-        />
+        <div className='d-flex gap-3 mb-3 flex-wrap'>
+          <div className='flex-fill'>
+            <EnvironmentTagSelect
+              projectId={projectId}
+              idField='id'
+              value={environmentIds}
+              multiple
+              onChange={handleEnvironmentChange}
+            />
+          </div>
+          {isLabelled && labelValues.length > 1 && (
+            <div className='flex-fill' style={{ maxWidth: 400 }}>
+              <MultiSelect
+                label='Filter by SDK'
+                options={labelOptions}
+                selectedValues={selectedLabels}
+                onSelectionChange={setSelectedLabels}
+                colorMap={colorMap}
+              />
+            </div>
+          )}
+        </div>
         {isLoading && (
           <div className='text-center'>
             <Loader />
           </div>
         )}
-        {!isLoading && data && !hasData && (
+        {!isLoading && !hasData && (
           <div
             style={{ height: 200 }}
             className='text-center justify-content-center align-items-center text-muted mt-4 d-flex'
@@ -87,50 +153,12 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
           </div>
         )}
         {hasData && (
-          <div>
-            <ResponsiveContainer height={400} width='100%' className='mt-4'>
-              <BarChart data={data}>
-                <CartesianGrid strokeDasharray='3 5' strokeOpacity={0.4} />
-                <XAxis
-                  dataKey='day'
-                  padding='gap'
-                  interval={0}
-                  height={100}
-                  angle={-90}
-                  textAnchor='end'
-                  tick={{ dx: -4, fill: '#656D7B' }}
-                  tickLine={false}
-                  axisLine={{ stroke: '#656D7B' }}
-                />
-                <YAxis
-                  tick={{ fill: '#656D7B' }}
-                  axisLine={{ stroke: '#656D7B' }}
-                />
-                <Tooltip
-                  cursor={{ fill: 'transparent' }}
-                  labelStyle={{ color: '#1a1a1a' }}
-                />
-                {sortBy(environmentIds, (id) =>
-                  environments?.results?.findIndex((env) => `${env.id}` === id),
-                ).map((id) => {
-                  let index = environments?.results.findIndex(
-                    (env) => `${env.id}` === id,
-                  )
-                  if (index === -1) index = 0
-                  return (
-                    <Bar
-                      key={id}
-                      dataKey={id}
-                      stackId='1'
-                      fill={`${Color(Utils.getTagColour(index))
-                        .alpha(0.75)
-                        .rgb()}`}
-                    />
-                  )
-                })}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <BarChart
+            data={isLabelled ? labelledChartData : data || []}
+            series={isLabelled ? filteredLabels : environmentIds}
+            colorMap={isLabelled ? colorMap : envColorMap}
+            xAxisInterval={2}
+          />
         )}
       </FormGroup>
       <InfoMessage>
