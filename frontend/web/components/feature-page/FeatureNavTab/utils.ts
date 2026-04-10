@@ -1,7 +1,5 @@
 import { ChartDataPoint } from 'components/charts/BarChart'
 import { Res } from 'common/types/responses'
-import { CHART_COLOURS } from 'common/theme/tokens'
-import { getCSSVars } from 'common/utils/getCSSVar'
 
 /**
  * Check if the analytics data contains labelled buckets.
@@ -19,7 +17,10 @@ export function hasLabelledData(
  * Aggregate raw environment analytics into label-grouped chart data.
  * Each unique label value becomes a series in the stacked chart.
  */
-export function aggregateByLabels(rawData: Res['environmentAnalytics']): {
+export function aggregateByLabels(
+  rawData: Res['environmentAnalytics'],
+  colors: string[],
+): {
   chartData: ChartDataPoint[]
   colorMap: Map<string, string>
   labelValues: string[]
@@ -46,10 +47,9 @@ export function aggregateByLabels(rawData: Res['environmentAnalytics']): {
     grouped[date][labelValue] = (grouped[date][labelValue] || 0) + entry.count
   })
 
-  const resolvedColors = getCSSVars(CHART_COLOURS)
   const colorMap = new Map<string, string>()
   labelList.forEach((label, index) => {
-    colorMap.set(label, resolvedColors[index % resolvedColors.length])
+    colorMap.set(label, colors[index % colors.length])
   })
 
   return {
@@ -57,18 +57,4 @@ export function aggregateByLabels(rawData: Res['environmentAnalytics']): {
     colorMap,
     labelValues: labelList,
   }
-}
-
-/**
- * Build a color map for environment-based (non-labelled) chart mode.
- */
-export function buildEnvColorMap(
-  environmentIds: string[],
-): Map<string, string> {
-  const resolvedColors = getCSSVars(CHART_COLOURS)
-  const map = new Map<string, string>()
-  environmentIds.forEach((id, index) => {
-    map.set(id, resolvedColors[index % resolvedColors.length])
-  })
-  return map
 }

@@ -4,7 +4,8 @@ import EnvironmentTagSelect from 'components/EnvironmentTagSelect'
 import BarChart from 'components/charts/BarChart'
 import { MultiSelect } from 'components/base/select/multi-select'
 import { useGetFeatureAnalyticsQuery } from 'common/services/useFeatureAnalytics'
-import { aggregateByLabels, buildEnvColorMap, hasLabelledData } from './utils'
+import { useChartColorMap, useChartColors } from 'common/hooks/useChartColors'
+import { aggregateByLabels, hasLabelledData } from './utils'
 
 type FlagAnalyticsType = {
   projectId: string
@@ -19,6 +20,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
 }) => {
   const [environmentIds, setEnvironmentIds] = useState(defaultEnvironmentIds)
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
+  const chartColors = useChartColors()
 
   const { data, isLoading } = useGetFeatureAnalyticsQuery(
     {
@@ -41,19 +43,16 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
   } = useMemo(
     () =>
       isLabelled && data?.rawEntries
-        ? aggregateByLabels(data.rawEntries)
+        ? aggregateByLabels(data.rawEntries, chartColors)
         : {
             chartData: [],
             colorMap: new Map<string, string>(),
             labelValues: [],
           },
-    [isLabelled, data?.rawEntries],
+    [isLabelled, data?.rawEntries, chartColors],
   )
 
-  const envColorMap = useMemo(
-    () => buildEnvColorMap(environmentIds),
-    [environmentIds],
-  )
+  const envColorMap = useChartColorMap(environmentIds)
 
   const labelOptions = useMemo(
     () => labelValues.map((v) => ({ label: v, value: v })),
