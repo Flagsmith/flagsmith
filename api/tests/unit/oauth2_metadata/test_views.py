@@ -37,7 +37,7 @@ def test_metadata_endpoint__unauthenticated__returns_200_with_rfc8414_json(
     assert data["revocation_endpoint"] == "https://api.flagsmith.com/o/revoke_token/"
     assert data["introspection_endpoint"] == "https://api.flagsmith.com/o/introspect/"
     assert data["response_types_supported"] == ["code"]
-    assert data["grant_types_supported"] == ["authorization_code", "refresh_token"]
+    assert data["grant_types_supported"] == ["authorization_code", "refresh_token","client_credentials"]
     assert data["code_challenge_methods_supported"] == ["S256"]
     assert "none" in data["token_endpoint_auth_methods_supported"]
     assert data["introspection_endpoint_auth_methods_supported"] == ["none"]
@@ -108,3 +108,54 @@ def test_metadata_endpoint__post_request__returns_405() -> None:
 
     # Then
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+
+def test_metadata_endpoint__grant_types__derived_from_allowed_grant_types_setting(
+    client: Client,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.OAUTH2_PROVIDER = {
+        **settings.OAUTH2_PROVIDER,
+        "ALLOWED_GRANT_TYPES": ["authorization_code", "client_credentials"],
+    }
+
+    # When
+    response = client.get(reverse(METADATA_URL))
+
+    # Then
+    data = response.json()
+    assert data["grant_types_supported"] == ["authorization_code", "client_credentials"]
+
+
+def test_metadata_endpoint__grant_types__include_client_credentials_by_default(
+    client: Client,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    # Use real settings which now include client_credentials
+    settings.FLAGSMITH_API_URL = "https://api.flagsmith.com"
+    settings.FLAGSMITH_FRONTEND_URL = "https://app.flagsmith.com"
+
+    # When
+    response = client.get(reverse(METADATA_URL))
+
+    # Then
+    data = response.json()
+    assert "client_credentials" in data["grant_types_supported"]
+
+
+def test_metadata_endpoint__scim_scope__present_in_scopes_supported(
+    client: Client,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.FLAGSMITH_API_URL = "https://api.flagsmith.com"
+    settings.FLAGSMITH_FRONTEND_URL = "https://app.flagsmith.com"
+
+    # When
+    response = client.get(reverse(METADATA_URL))
+
+    # Then
+    data = response.json()
+    assert "scim" in data["scopes_supported"]
