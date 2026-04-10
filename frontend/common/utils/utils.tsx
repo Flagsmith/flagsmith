@@ -835,7 +835,7 @@ const Utils = Object.assign({}, BaseUtils, {
     return {
       boolean_value: null,
       integer_value: null,
-      string_value: value === null ? null : val || '',
+      string_value: value === null || val === '' ? null : val,
       type: 'unicode',
     }
   },
@@ -863,7 +863,7 @@ const Utils = Object.assign({}, BaseUtils, {
     return {
       boolean_value: null,
       integer_value: null,
-      string_value: value === null ? null : val || '',
+      string_value: value === null || val === '' ? null : val,
       value_type: 'unicode',
     }
   },
