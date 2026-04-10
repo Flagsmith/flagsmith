@@ -1218,6 +1218,11 @@ export type Res = {
   environmentAnalytics: {
     day: string
     count: number
+    labels?: {
+      user_agent?: string | null
+      client_application_name?: string | null
+      client_application_version?: string | null
+    } | null
   }[]
   featureList: {
     results: ProjectFlag[]
