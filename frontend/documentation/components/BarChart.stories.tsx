@@ -2,8 +2,7 @@ import React, { useMemo, useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 import BarChart, { ChartDataPoint } from 'components/charts/BarChart'
 import { MultiSelect } from 'components/base/select/multi-select'
-import { CHART_COLOURS } from 'common/theme/tokens'
-import { getCSSVars } from 'common/utils/getCSSVar'
+import { useChartColorMap } from 'common/hooks/useChartColors'
 
 // ============================================================================
 // Fake data
@@ -50,15 +49,6 @@ function generateFakeData(days: number, labels: string[]): ChartDataPoint[] {
   return data
 }
 
-function buildColorMap(labels: string[]): Map<string, string> {
-  const resolved = getCSSVars(CHART_COLOURS)
-  const map = new Map<string, string>()
-  labels.forEach((label, i) => {
-    map.set(label, resolved[i % resolved.length])
-  })
-  return map
-}
-
 // ============================================================================
 // Stories
 // ============================================================================
@@ -77,7 +67,7 @@ export const WithLabelledBuckets: Story = {
     () => {
       const labels = useMemo(() => SDKS.slice(0, 5), [])
       const data = useMemo(() => generateFakeData(30, labels), [labels])
-      const colorMap = useMemo(() => buildColorMap(labels), [labels])
+      const colorMap = useChartColorMap(labels)
       const [selectedLabels, setSelectedLabels] = useState<string[]>([])
 
       const filteredLabels =
@@ -88,18 +78,12 @@ export const WithLabelledBuckets: Story = {
       const labelOptions = labels.map((l) => ({ label: l, value: l }))
 
       return (
-        <div style={{ maxWidth: 900 }}>
-          <p
-            style={{
-              color: 'var(--color-text-secondary)',
-              fontSize: 13,
-              marginBottom: 16,
-            }}
-          >
+        <div className='mx-auto' style={{ maxWidth: 900 }}>
+          <p className='text-secondary fs-small mb-3'>
             Stacked by SDK label — each color represents a different SDK sending
             evaluations.
           </p>
-          <div style={{ marginBottom: 16, maxWidth: 400 }}>
+          <div className='mb-3' style={{ maxWidth: 400 }}>
             <MultiSelect
               label='Filter by SDK'
               options={labelOptions}
@@ -125,17 +109,11 @@ export const WithoutLabels: Story = {
     () => {
       const labels = useMemo(() => ['Production', 'Staging', 'Development'], [])
       const data = useMemo(() => generateFakeData(30, labels), [labels])
-      const colorMap = useMemo(() => buildColorMap(labels), [labels])
+      const colorMap = useChartColorMap(labels)
 
       return (
-        <div style={{ maxWidth: 900 }}>
-          <p
-            style={{
-              color: 'var(--color-text-secondary)',
-              fontSize: 13,
-              marginBottom: 16,
-            }}
-          >
+        <div className='mx-auto' style={{ maxWidth: 900 }}>
+          <p className='text-secondary fs-small mb-3'>
             No labels — grouped by environment (current behaviour).
           </p>
           <BarChart
@@ -155,17 +133,11 @@ export const SingleSeries: Story = {
     () => {
       const labels = useMemo(() => ['flagsmith-js-sdk'], [])
       const data = useMemo(() => generateFakeData(30, labels), [labels])
-      const colorMap = useMemo(() => buildColorMap(labels), [labels])
+      const colorMap = useChartColorMap(labels)
 
       return (
-        <div style={{ maxWidth: 900 }}>
-          <p
-            style={{
-              color: 'var(--color-text-secondary)',
-              fontSize: 13,
-              marginBottom: 16,
-            }}
-          >
+        <div className='mx-auto' style={{ maxWidth: 900 }}>
+          <p className='text-secondary fs-small mb-3'>
             Single SDK — no filter needed when there's only one series.
           </p>
           <BarChart
