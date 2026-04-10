@@ -916,7 +916,7 @@ export type IdentityTrait = {
   trait_value: FlagsmithValue
 }
 
-export enum PipelineStatus {
+enum PipelineStatus {
   DRAFT = 'DRAFT',
   ACTIVE = 'ACTIVE',
 }

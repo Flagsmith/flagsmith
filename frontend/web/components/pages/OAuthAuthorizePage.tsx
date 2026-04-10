@@ -5,7 +5,7 @@ import {
   useValidateOAuthAuthorizeQuery,
 } from 'common/services/useOAuthAuthorize'
 import Utils from 'common/utils/utils'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Logo from 'components/Logo'
 
 // Frontend-maintained scope descriptions. The backend returns `mcp` as an

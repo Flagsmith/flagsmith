@@ -11,7 +11,7 @@ import React, {
 import { AutoSizer, List } from 'react-virtualized'
 import Popover from './base/Popover'
 import Input from './base/forms/Input'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import Button from './base/forms/Button'
@@ -21,14 +21,14 @@ import Panel from './base/grid/Panel'
 import Utils from 'common/utils/utils'
 import { SortOrder } from 'common/types/requests'
 
-export type SortOption = {
+type SortOption = {
   value: string
   order: SortOrder
   default?: boolean
   label: string
 }
 
-export interface PanelSearchProps<T> {
+interface PanelSearchProps<T> {
   actionButton?: ReactNode
   filterElement?: ReactNode
   filterRow?: (item: T, search: string, index: number) => boolean

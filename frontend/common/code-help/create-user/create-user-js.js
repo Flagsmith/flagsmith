@@ -1,5 +1,5 @@
 import Constants from 'common/constants'
-module.exports = (
+export default (
   envId,
   {
     LIB_NAME,

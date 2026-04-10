@@ -11,6 +11,65 @@ import {
   ProjectPermission,
   ProjectPermissionDescriptions,
 } from './types/permissions.types'
+import createUserCurl from './code-help/create-user/create-user-curl'
+import createUserDotnet from './code-help/create-user/create-user-dotnet'
+import createUserFlutter from './code-help/create-user/create-user-flutter'
+import createUserGo from './code-help/create-user/create-user-go'
+import createUserIos from './code-help/create-user/create-user-ios'
+import createUserJava from './code-help/create-user/create-user-java'
+import createUserJs from './code-help/create-user/create-user-js'
+import createUserNext from './code-help/create-user/create-user-next'
+import createUserNode from './code-help/create-user/create-user-node'
+import createUserPhp from './code-help/create-user/create-user-php'
+import createUserPython from './code-help/create-user/create-user-python'
+import createUserReact from './code-help/create-user/create-user-react'
+import createUserRuby from './code-help/create-user/create-user-ruby'
+import createUserRust from './code-help/create-user/create-user-rust'
+import initCurl from './code-help/init/init-curl'
+import initDotnet from './code-help/init/init-dotnet'
+import initFlutter from './code-help/init/init-flutter'
+import initGo from './code-help/init/init-go'
+import initIos from './code-help/init/init-ios'
+import initJava from './code-help/init/init-java'
+import initJs from './code-help/init/init-js'
+import initNextAppRouter from './code-help/init/init-next-app-router'
+import initNextPagesRouter from './code-help/init/init-next-pages-router'
+import initNode from './code-help/init/init-node'
+import initPhp from './code-help/init/init-php'
+import initPython from './code-help/init/init-python'
+import initReact from './code-help/init/init-react'
+import initRuby from './code-help/init/init-ruby'
+import initRust from './code-help/init/init-rust'
+import installCurl from './code-help/install/install-curl'
+import installDotnet from './code-help/install/install-dotnet'
+import installFlutter from './code-help/install/install-flutter'
+import installGo from './code-help/install/install-go'
+import installIos from './code-help/install/install-ios'
+import installJava from './code-help/install/install-java'
+import installJs from './code-help/install/install-js'
+import installNode from './code-help/install/install-node'
+import installPhp from './code-help/install/install-php'
+import installPython from './code-help/install/install-python'
+import installRuby from './code-help/install/install-ruby'
+import installRust from './code-help/install/install-rust'
+import traitsCurl from './code-help/traits/traits-curl'
+import traitsDotnet from './code-help/traits/traits-dotnet'
+import traitsFlutter from './code-help/traits/traits-flutter'
+import traitsGo from './code-help/traits/traits-go'
+import traitsIos from './code-help/traits/traits-ios'
+import traitsJava from './code-help/traits/traits-java'
+import traitsJs from './code-help/traits/traits-js'
+import traitsNext from './code-help/traits/traits-next'
+import traitsNode from './code-help/traits/traits-node'
+import traitsPhp from './code-help/traits/traits-php'
+import traitsPython from './code-help/traits/traits-python'
+import traitsReact from './code-help/traits/traits-react'
+import traitsRuby from './code-help/traits/traits-ruby'
+import traitsRust from './code-help/traits/traits-rust'
+import offlineServerCli from './code-help/offline_server/offline-server-cli'
+import offlineServerCurl from './code-help/offline_server/offline-server-curl'
+import offlineClientCli from './code-help/offline_client/offline-client-cli'
+import offlineClientCurl from './code-help/offline_client/offline-client-curl'
 
 const keywords = {
   FEATURE_FUNCTION: 'myCoolFeature',
@@ -35,213 +94,86 @@ const Constants = {
   archivedTag: { color: '#8f8f8f', label: 'Archived' },
   codeHelp: {
     'CREATE_USER': (envId: string, userId: string = keywords.USER_ID) => ({
-      '.NET': require('./code-help/create-user/create-user-dotnet')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'Flutter': require('./code-help/create-user/create-user-flutter')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'Go': require('./code-help/create-user/create-user-go')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'Java': require('./code-help/create-user/create-user-java')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'JavaScript': require('./code-help/create-user/create-user-js')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'Next.js': require('./code-help/create-user/create-user-next')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'Node JS': require('./code-help/create-user/create-user-node')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'PHP': require('./code-help/create-user/create-user-php')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'Python': require('./code-help/create-user/create-user-python')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'React': require('./code-help/create-user/create-user-react')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'React Native': require('./code-help/create-user/create-user-react')(
-        envId,
-        keywordsReactNative,
-        userId,
-      ),
-      'Ruby': require('./code-help/create-user/create-user-ruby')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'Rust': require('./code-help/create-user/create-user-rust')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'curl': require('./code-help/create-user/create-user-curl')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'iOS': require('./code-help/create-user/create-user-ios')(
-        envId,
-        keywords,
-        userId,
-      ),
+      '.NET': createUserDotnet(envId, keywords, userId),
+      'Flutter': createUserFlutter(envId, keywords, userId),
+      'Go': createUserGo(envId, keywords, userId),
+      'Java': createUserJava(envId, keywords, userId),
+      'JavaScript': createUserJs(envId, keywords, userId),
+      'Next.js': createUserNext(envId, keywords, userId),
+      'Node JS': createUserNode(envId, keywords, userId),
+      'PHP': createUserPhp(envId, keywords, userId),
+      'Python': createUserPython(envId, keywords, userId),
+      'React': createUserReact(envId, keywords, userId),
+      'React Native': createUserReact(envId, keywordsReactNative, userId),
+      'Ruby': createUserRuby(envId, keywords, userId),
+      'Rust': createUserRust(envId, keywords, userId),
+      'curl': createUserCurl(envId, keywords, userId),
+      'iOS': createUserIos(envId, keywords, userId),
     }),
 
     'INIT': (envId: string) => ({
-      '.NET': require('./code-help/init/init-dotnet')(envId, keywords),
-      'Flutter': require('./code-help/init/init-flutter')(envId, keywords),
-      'Go': require('./code-help/init/init-go')(envId, keywords),
-      'Java': require('./code-help/init/init-java')(envId, keywords),
-      'JavaScript': require('./code-help/init/init-js')(envId, keywords),
-      'Next.js (app router)': require('./code-help/init/init-next-app-router')(
-        envId,
-        keywords,
-      ),
-      'Next.js (pages router)':
-        require('./code-help/init/init-next-pages-router')(envId, keywords),
-      'Node JS': require('./code-help/init/init-node')(envId, keywords),
-      'PHP': require('./code-help/init/init-php')(envId, keywords),
-      'Python': require('./code-help/init/init-python')(envId, keywords),
-      'React': require('./code-help/init/init-react')(envId, keywords),
-      'React Native': require('./code-help/init/init-react')(
-        envId,
-        keywordsReactNative,
-      ),
-      'Ruby': require('./code-help/init/init-ruby')(envId, keywords),
-      'Rust': require('./code-help/init/init-rust')(envId, keywords),
-      'curl': require('./code-help/init/init-curl')(envId, keywords),
-      'iOS': require('./code-help/init/init-ios')(envId, keywords),
+      '.NET': initDotnet(envId, keywords),
+      'Flutter': initFlutter(envId, keywords),
+      'Go': initGo(envId, keywords),
+      'Java': initJava(envId, keywords),
+      'JavaScript': initJs(envId, keywords),
+      'Next.js (app router)': initNextAppRouter(envId, keywords),
+      'Next.js (pages router)': initNextPagesRouter(envId, keywords),
+      'Node JS': initNode(envId, keywords),
+      'PHP': initPhp(envId, keywords),
+      'Python': initPython(envId, keywords),
+      'React': initReact(envId, keywords),
+      'React Native': initReact(envId, keywordsReactNative),
+      'Ruby': initRuby(envId, keywords),
+      'Rust': initRust(envId, keywords),
+      'curl': initCurl(envId),
+      'iOS': initIos(envId, keywords),
     }),
 
     'INSTALL': {
-      '.NET': require('./code-help/install/install-dotnet')(keywords),
-      'Flutter': require('./code-help/install/install-flutter')(keywords),
-      'Go': require('./code-help/install/install-go')(keywords),
-      'Java': require('./code-help/install/install-java')(keywords),
-      'JavaScript': require('./code-help/install/install-js')(keywords),
-      'Next.js': require('./code-help/install/install-js')(keywords),
-      'Node JS': require('./code-help/install/install-node')(keywords),
-      'PHP': require('./code-help/install/install-php')(keywords),
-      'Python': require('./code-help/install/install-python')(keywords),
-      'React': require('./code-help/install/install-js')(keywords),
-      'React Native': require('./code-help/install/install-js')(
-        keywordsReactNative,
-      ),
-      'Ruby': require('./code-help/install/install-ruby')(keywords),
-      'Rust': require('./code-help/install/install-rust')(keywords),
-      'curl': require('./code-help/install/install-curl')(keywords),
-      'iOS': require('./code-help/install/install-ios')(keywords),
+      '.NET': installDotnet(),
+      'Flutter': installFlutter(),
+      'Go': installGo(),
+      'Java': installJava(),
+      'JavaScript': installJs(keywords),
+      'Next.js': installJs(keywords),
+      'Node JS': installNode(keywords),
+      'PHP': installPhp(),
+      'Python': installPython(),
+      'React': installJs(keywords),
+      'React Native': installJs(keywordsReactNative),
+      'Ruby': installRuby(),
+      'Rust': installRust(),
+      'curl': installCurl(),
+      'iOS': installIos(),
     },
 
     'OFFLINE_LOCAL': (envId: string) => ({
-      'cli': require('common/code-help/offline_server/offline-server-cli')(
-        envId,
-      ),
-      'curl': require('common/code-help/offline_server/offline-server-curl')(
-        envId,
-      ),
+      'cli': offlineServerCli(envId),
+      'curl': offlineServerCurl(envId),
     }),
 
     'OFFLINE_REMOTE': (envId: string) => ({
-      'cli': require('common/code-help/offline_client/offline-client-cli')(
-        envId,
-        keywords,
-      ),
-      'curl': require('common/code-help/offline_client/offline-client-curl')(
-        envId,
-        keywords,
-      ),
+      'cli': offlineClientCli(envId),
+      'curl': offlineClientCurl(envId),
     }),
 
     'USER_TRAITS': (envId: string, userId = keywords.USER_ID) => ({
-      '.NET': require('./code-help/traits/traits-dotnet')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'Flutter': require('./code-help/traits/traits-flutter')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'Go': require('./code-help/traits/traits-go')(envId, keywords, userId),
-      'Java': require('./code-help/traits/traits-java')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'JavaScript': require('./code-help/traits/traits-js')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'Next.js': require('./code-help/traits/traits-next')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'Node JS': require('./code-help/traits/traits-node')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'PHP': require('./code-help/traits/traits-php')(envId, keywords, userId),
-      'Python': require('./code-help/traits/traits-python')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'React': require('./code-help/traits/traits-react')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'React Native': require('./code-help/traits/traits-react')(
-        envId,
-        keywordsReactNative,
-        userId,
-      ),
-      'Ruby': require('./code-help/traits/traits-ruby')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'Rust': require('./code-help/traits/traits-rust')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'curl': require('./code-help/traits/traits-curl')(
-        envId,
-        keywords,
-        userId,
-      ),
-      'iOS': require('./code-help/traits/traits-ios')(envId, keywords, userId),
+      '.NET': traitsDotnet(envId, keywords, userId),
+      'Flutter': traitsFlutter(envId, keywords, userId),
+      'Go': traitsGo(envId, keywords, userId),
+      'Java': traitsJava(envId, keywords, userId),
+      'JavaScript': traitsJs(envId, keywords, userId),
+      'Next.js': traitsNext(envId, keywords, userId),
+      'Node JS': traitsNode(envId, keywords, userId),
+      'PHP': traitsPhp(envId, keywords, userId),
+      'Python': traitsPython(envId, keywords, userId),
+      'React': traitsReact(envId, keywords, userId),
+      'React Native': traitsReact(envId, keywordsReactNative, userId),
+      'Ruby': traitsRuby(envId, keywords, userId),
+      'Rust': traitsRust(envId, keywords, userId),
+      'curl': traitsCurl(envId, keywords, userId),
+      'iOS': traitsIos(envId, keywords, userId),
     }),
     keys: {
       'Java': 'java',

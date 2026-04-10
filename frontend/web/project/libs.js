@@ -18,18 +18,21 @@ import every from 'lodash/every';
 import get from 'lodash/get';
 import { isMobile } from 'react-device-detect';
 import propTypes from 'prop-types';
-// Add this line if you're using flagsmith via npm
-const _Project = require('../../common/project');
+import Project from 'common/project';
+import moment from 'moment/min/moment.min';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Link, NavLink } from 'react-router-dom';
 
 window.isMobile = isMobile || $(window).width() <= 576;
 
 window.flagsmith = flagsmith;
-window.moment = require('moment/min/moment.min');
+window.moment = moment;
 
 window._ = { each, intersection, sortBy, orderBy, filter, find, partial, findIndex, range, map, cloneDeep, keyBy, throttle, every, get };
 
-window.React = require('react');
-window.ReactDOM = require('react-dom');
+window.React = React;
+window.ReactDOM = ReactDOM;
 
 window.propTypes = propTypes;
 
@@ -53,8 +56,8 @@ window.RequiredString = propTypes.string.isRequired;
 window.RequiredNode = propTypes.node.isRequired;
 window.RequiredElement = propTypes.node.isRequired;
 
-window.Link = require('react-router-dom').Link;
-window.NavLink = require('react-router-dom').NavLink;
+window.Link = Link;
+window.NavLink = NavLink;
 
 // Analytics
 if (Project.ga) {

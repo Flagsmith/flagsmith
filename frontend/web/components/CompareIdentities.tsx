@@ -10,7 +10,7 @@ import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import Tag from './tags/Tag'
 import PanelSearch from './PanelSearch'
 import { IdentityFeatureState } from 'common/types/responses'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Switch from './Switch'
 import FeatureValue from './feature-summary/FeatureValue'
 import { sortBy } from 'lodash'
@@ -18,8 +18,8 @@ import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
 import ProjectStore from 'common/stores/project-store'
-import SegmentOverridesIcon from './SegmentOverridesIcon'
-import IdentityOverridesIcon from './IdentityOverridesIcon'
+import SegmentOverridesIcon from './icons/SegmentOverridesIcon'
+import IdentityOverridesIcon from './icons/IdentityOverridesIcon'
 import Tooltip from './Tooltip'
 import PageTitle from './PageTitle'
 import { getDarkMode } from 'project/darkMode'
@@ -127,7 +127,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
     window.open(
       `${
         document.location.origin
-      }/project/${projectId}/environment/${environmentId}/users/${encodeURIComponent(
+      }/project/${projectId}/environment/${environmentId}/identities/${encodeURIComponent(
         user.label,
       )}/${user.value}?flag=${encodeURIComponent(feature)}`,
       '_blank',

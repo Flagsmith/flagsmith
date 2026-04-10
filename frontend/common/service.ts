@@ -4,10 +4,10 @@ import { FetchBaseQueryArgs } from '@reduxjs/toolkit/dist/query/fetchBaseQuery'
 import { CreateApiOptions } from '@reduxjs/toolkit/dist/query/createApi'
 import { StoreStateType } from './store'
 
-const Project = require('./project')
-const _data = require('./data/base/_data.js')
+import Project from './project'
+import _data from './data/base/_data'
 
-export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
+const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
   const res: Pick<
     CreateApiOptions<any, any, any, any>,
     | 'baseQuery'

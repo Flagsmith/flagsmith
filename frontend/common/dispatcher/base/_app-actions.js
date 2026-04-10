@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   login(details) {
     // refresh the entire app
     Dispatcher.handleViewAction({

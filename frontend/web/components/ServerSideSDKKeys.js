@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import ProjectStore from 'common/stores/project-store'
 import Token from './Token'
 import ModalHR from './modals/ModalHR'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { getStore } from 'common/store'
 import {
   createServersideEnvironmentKeys,

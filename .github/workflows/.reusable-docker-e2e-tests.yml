@@ -27,6 +27,16 @@ on:
         description: The runner label to use. Defaults to `depot-ubuntu-latest`
         required: false
         default: depot-ubuntu-latest
+      visual-regression:
+        type: boolean
+        description: Enable visual regression screenshot comparison
+        required: false
+        default: false
+      visual-regression-update:
+        type: boolean
+        description: Update visual regression baselines (use on main branch)
+        required: false
+        default: false
     secrets:
       GCR_TOKEN:
         description: A token to use for logging into Github Container Registry. If not provided, login does not occur.
@@ -78,6 +88,24 @@ jobs:
       - name: Login to Depot Registry
         run: depot pull-token | docker login -u x-token --password-stdin registry.depot.dev
 
+      - name: Prepare visual regression snapshots directory
+        if: inputs.visual-regression
+        working-directory: frontend
+        run: mkdir -p e2e/visual-regression-snapshots
+
+      - name: Download visual regression baselines
+        if: inputs.visual-regression
+        id: download-baseline
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          github_token: ${{ secrets.GCR_TOKEN }}
+          workflow: platform-docker-build-test-publish.yml
+          branch: main
+          name: visual-regression-baselines
+          path: frontend/e2e/visual-regression-snapshots/
+          if_no_artifact_found: warn
+
       - name: Run tests on dockerised frontend
         working-directory: frontend
         run: make test
@@ -87,6 +115,8 @@ jobs:
           E2E_IMAGE: ${{ inputs.e2e-image }}
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
           E2E_RETRIES: 2
+          VISUAL_REGRESSION: ${{ inputs.visual-regression && '1' || '' }}
+          VISUAL_REGRESSION_ARGS: ${{ inputs.visual-regression-update && '--update-snapshots' || '' }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         timeout-minutes: 20
@@ -160,8 +190,55 @@ jobs:
 
       - name: Comment PR with test results
         if: always() && github.event_name == 'pull_request' && (steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary)
+        continue-on-error: true
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: playwright-e2e-results
           append: true
           message: ${{ steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary }}
+
+      # Visual regression: after all E2E retries, run comparison and upload results
+      - name: Upload visual regression baselines (main branch)
+        if: always() && inputs.visual-regression-update
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-baselines
+          path: frontend/e2e/visual-regression-screenshots/
+          retention-days: 90
+          overwrite: true
+
+      - name: Upload visual regression report
+        if: always() && inputs.visual-regression && !inputs.visual-regression-update
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-report-${{ github.run_id }}-${{ strategy.job-index }}
+          path: frontend/e2e/visual-regression-report/
+          retention-days: 30
+
+      - name: Generate visual regression summary
+        if: always() && inputs.visual-regression && !inputs.visual-regression-update && github.event_name == 'pull_request'
+        id: visual-regression-summary
+        shell: bash
+        run: |
+          if [ "${{ steps.download-baseline.outcome }}" != "success" ]; then
+            echo "message=No baseline found — first run. Baselines will be generated after merge to main." >> $GITHUB_OUTPUT
+          else
+            SCREENSHOT_COUNT=$(find frontend/e2e/visual-regression-screenshots -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
+            REPORT_EXISTS=$(test -d frontend/e2e/visual-regression-report && echo "true" || echo "false")
+            if [ "$REPORT_EXISTS" = "true" ]; then
+              echo "message=$SCREENSHOT_COUNT screenshots compared. See report for details." >> $GITHUB_OUTPUT
+            else
+              echo "message=$SCREENSHOT_COUNT screenshots captured but comparison did not run." >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Comment PR with visual regression results
+        if: always() && inputs.visual-regression && !inputs.visual-regression-update && github.event_name == 'pull_request' && steps.visual-regression-summary.outputs.message
+        continue-on-error: true
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: visual-regression-results
+          message: |
+            ## Visual Regression
+            ${{ steps.visual-regression-summary.outputs.message }}
+            [View full report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)

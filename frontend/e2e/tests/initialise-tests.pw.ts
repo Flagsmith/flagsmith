@@ -4,11 +4,12 @@ import {
   createHelpers,
   getFlagsmith,
   log,
+  visualSnapshot,
 } from '../helpers';
 import { E2E_SIGN_UP_USER, PASSWORD } from '../config';
 
 test.describe('Signup', () => {
-  test('Create Organisation and Project @oss', async ({ page }) => {
+  test('Create Organisation and Project @oss', async ({ page }, testInfo) => {
     const { addErrorLogging, click, logout, setText, waitForElementVisible } = createHelpers(page);
     const flagsmith = await getFlagsmith();
 
@@ -22,6 +23,8 @@ test.describe('Signup', () => {
     await click(byId('jsSignup'));
     // Wait for firstName field to be visible after modal opens
     await waitForElementVisible(byId('firstName'));
+    await visualSnapshot(page, 'signup-form', testInfo)
+
     await setText(byId('firstName'), 'Bullet');
     await setText(byId('lastName'), 'Train');
     await setText(byId('email'), E2E_SIGN_UP_USER);
@@ -30,6 +33,8 @@ test.describe('Signup', () => {
     // Wait for navigation and form to load after signup
     await page.waitForURL(/\/create/, { timeout: 20000 });
     await waitForElementVisible('[name="orgName"]');
+    await visualSnapshot(page, 'create-organisation', testInfo)
+
     await setText('[name="orgName"]', 'Flagsmith Ltd 0');
     await click('#create-org-btn');
 

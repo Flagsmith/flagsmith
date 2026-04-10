@@ -2,7 +2,7 @@ import React, { FC, ReactNode, useId } from 'react'
 import { Tooltip as ReactTooltip, PlacesType } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
 import classNames from 'classnames'
-import { sanitize } from 'dompurify'
+import DOMPurify from 'dompurify'
 
 export type TooltipProps = {
   title: ReactNode | React.ReactNode
@@ -33,7 +33,7 @@ const Tooltip: FC<TooltipProps> = ({
     return <>{title}</>
   }
 
-  const content = plainText ? `${children}` : sanitize(children)
+  const content = plainText ? `${children}` : DOMPurify.sanitize(children)
 
   return (
     <>

@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import { Res } from 'common/types/responses'
-import { IconName } from 'components/Icon'
+import { IconName } from 'components/icons/Icon'
 import StatItem from 'components/StatItem'
 
 type TotalItem = {
@@ -11,7 +11,7 @@ type TotalItem = {
   value: number
 }
 
-export interface UsageChartTotalsProps {
+interface UsageChartTotalsProps {
   data: Res['organisationUsage'] | undefined
   selection: string[]
   updateSelection: (key: string) => void

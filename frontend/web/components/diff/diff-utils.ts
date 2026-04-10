@@ -59,7 +59,7 @@ export type TDiffVariation = {
   newWeight: number
   oldWeight: number
 }
-export type TDiffVariations = {
+type TDiffVariations = {
   diffs: TDiffVariation[]
   totalChanges: number
 }
@@ -203,7 +203,7 @@ export const getVariationDiff = (
   } as TDiffVariations
 }
 
-export type TSegmentDiff = {
+type TSegmentDiff = {
   newString: string
   oldString: string
   totalChanges: number

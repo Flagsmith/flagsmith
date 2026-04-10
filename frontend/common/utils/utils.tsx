@@ -9,7 +9,6 @@ import {
   MultivariateFeatureStateValue,
   MultivariateOption,
   Organisation,
-  PConfidence,
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
@@ -35,7 +34,7 @@ import {
   OrganisationPermissionDescriptions,
 } from 'common/types/permissions.types'
 
-const semver = require('semver')
+import semver from 'semver'
 
 export type PaidFeature =
   | 'FLAG_OWNERS'
@@ -67,7 +66,8 @@ export const planNames = {
   scaleUp: 'Scale-Up',
   startup: 'Startup',
 }
-const Utils = Object.assign({}, require('./base/_utils'), {
+import BaseUtils from './base/_utils'
+const Utils = Object.assign({}, BaseUtils, {
   appendImage: (src: string) => {
     const img = document.createElement('img')
     img.src = src
@@ -143,12 +143,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return res
   },
 
-  convertToPConfidence(value: number) {
-    if (value > 0.05) return 'LOW' as PConfidence
-    if (value >= 0.01) return 'REASONABLE' as PConfidence
-    if (value > 0.002) return 'HIGH' as PConfidence
-    return 'VERY_HIGH' as PConfidence
-  },
   copyToClipboard: async (
     value: string,
     successMessage?: string,
@@ -841,7 +835,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return {
       boolean_value: null,
       integer_value: null,
-      string_value: value === null ? null : val || '',
+      string_value: value === null || val === '' ? null : val,
       type: 'unicode',
     }
   },
@@ -869,7 +863,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return {
       boolean_value: null,
       integer_value: null,
-      string_value: value === null ? null : val || '',
+      string_value: value === null || val === '' ? null : val,
       value_type: 'unicode',
     }
   },

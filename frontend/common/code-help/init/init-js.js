@@ -1,5 +1,5 @@
 import Constants from 'common/constants'
-module.exports = (
+export default (
   envId,
   { FEATURE_FUNCTION, FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_CLIENT },
   customFeature,
