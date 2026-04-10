@@ -160,7 +160,6 @@ export const easing: Record<string, TokenEntry> = {
 // Chart colours — use with getCSSVar() for runtime resolution
 export const CHART_COLOURS = [
   '--color-chart-1',
-  '--color-chart-10',
   '--color-chart-2',
   '--color-chart-3',
   '--color-chart-4',
@@ -169,6 +168,7 @@ export const CHART_COLOURS = [
   '--color-chart-7',
   '--color-chart-8',
   '--color-chart-9',
+  '--color-chart-10',
 ] as const
 
 export type TokenCategory = keyof typeof tokens
