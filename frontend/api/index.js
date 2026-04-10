@@ -153,11 +153,8 @@ if (process.env.FLAGSMITH_PROXY_API_URL) {
 }
 
 if (isDev) {
-  // Serve files from src directory and use webpack-dev-server
-  // eslint-disable-next-line
-  console.log('Enabled Webpack Hot Reloading')
-  const webpackMiddleware = require('./middleware/webpack-middleware')
-  webpackMiddleware(app)
+  // In dev mode, use `npm run dev` which starts @rspack/dev-server
+  // This code path only runs if someone starts `node ./api` directly in dev
   app.set('views', 'web/')
   app.use(express.static('web'))
 } else {

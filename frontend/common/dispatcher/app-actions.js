@@ -1,6 +1,7 @@
-const Dispatcher = require('../dispatcher/dispatcher')
+import Dispatcher from './dispatcher'
+import BaseAppActions from './base/_app-actions'
 
-const AppActions = Object.assign({}, require('./base/_app-actions'), {
+const AppActions = Object.assign({}, BaseAppActions, {
   acceptInvite(id) {
     Dispatcher.handleViewAction({
       actionType: Actions.ACCEPT_INVITE,

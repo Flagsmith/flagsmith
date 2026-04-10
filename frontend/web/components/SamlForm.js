@@ -104,4 +104,4 @@ SamlForm.propTypes = {
   toggleComponent: OptionalFunc,
 }
 
-module.exports = ConfigProvider(SamlForm)
+export default ConfigProvider(SamlForm)

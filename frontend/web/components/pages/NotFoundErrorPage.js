@@ -24,4 +24,4 @@ const ComingSoon = class extends Component {
 
 ComingSoon.propTypes = {}
 
-module.exports = ComingSoon
+export default ComingSoon

@@ -6,7 +6,7 @@ import * as amplitude from '@amplitude/analytics-browser'
 import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 import { groupBy } from 'lodash'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
-const Cookies = require('js-cookie')
+import Cookies from 'js-cookie'
 import Project from 'common/project'
 import { AccountModel, User } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'

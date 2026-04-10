@@ -1,9 +1,9 @@
-import React, { FC } from 'react'
+import React, { FC, PropsWithChildren } from 'react'
 import classNames from 'classnames'
 
-type SettingTitleType = {
+type SettingTitleType = PropsWithChildren<{
   danger?: boolean
-}
+}>
 
 const SettingTitle: FC<SettingTitleType> = ({ children, danger }) => {
   return (

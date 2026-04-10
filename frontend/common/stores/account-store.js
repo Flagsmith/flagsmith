@@ -1,8 +1,8 @@
 import { matchPath } from 'react-router-dom'
 import { storageGet, storageSet } from 'common/safeLocalStorage'
-const Dispatcher = require('../dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-const data = require('../data/base/_data')
+import Dispatcher from 'common/dispatcher/dispatcher'
+import BaseStore from './base/_store'
+import data from 'common/data/base/_data'
 import Constants from 'common/constants'
 import dataRelay from 'data-relay'
 import { sortBy } from 'lodash'

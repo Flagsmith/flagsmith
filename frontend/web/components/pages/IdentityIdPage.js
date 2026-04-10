@@ -52,4 +52,4 @@ const IdentityIdPage = class extends Component {
 
 IdentityIdPage.propTypes = {}
 
-module.exports = withRouter(ConfigProvider(IdentityIdPage))
+export default withRouter(ConfigProvider(IdentityIdPage))

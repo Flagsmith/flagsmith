@@ -35,11 +35,11 @@ import {
 } from 'common/services/useChangeRequest'
 import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 
-const Dispatcher = require('common/dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-const data = require('../data/base/_data')
-const { createSegmentOverride } = require('../services/useSegmentOverride')
-const { getStore } = require('../store')
+import Dispatcher from 'common/dispatcher/dispatcher'
+import BaseStore from './base/_store'
+import data from 'common/data/base/_data'
+import { createSegmentOverride } from 'common/services/useSegmentOverride'
+import { getStore } from 'common/store'
 let createdFirstFeature = false
 
 const convertSegmentOverrideToFeatureState = (
@@ -379,15 +379,17 @@ const controller = {
                 )
               environmentFlag.multivariate_feature_state_values =
                 multivariate_feature_state_values
+              const typedValue = Utils.getTypedValue(
+                flag.initial_value,
+                undefined,
+                true,
+              )
               return data.put(
                 `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
                 Object.assign({}, environmentFlag, {
                   enabled: flag.default_enabled,
-                  feature_state_value: Utils.getTypedValue(
-                    flag.initial_value,
-                    undefined,
-                    true,
-                  ),
+                  feature_state_value:
+                    typedValue === '' ? null : typedValue,
                 }),
               )
             })
@@ -804,7 +806,8 @@ const controller = {
           ).then((res) => {
             const data = Object.assign({}, environmentFlag, {
               enabled: flag.default_enabled,
-              feature_state_value: flag.initial_value,
+              feature_state_value:
+                flag.initial_value === '' ? null : flag.initial_value,
             })
             return createAndSetFeatureVersion(getStore(), {
               environmentId: res,

@@ -190,6 +190,7 @@ jobs:
 
       - name: Comment PR with test results
         if: always() && github.event_name == 'pull_request' && (steps.report-summary-success.outputs.summary || steps.report-summary-failure.outputs.summary)
+        continue-on-error: true
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: playwright-e2e-results
@@ -233,6 +234,7 @@ jobs:
 
       - name: Comment PR with visual regression results
         if: always() && inputs.visual-regression && !inputs.visual-regression-update && github.event_name == 'pull_request' && steps.visual-regression-summary.outputs.message
+        continue-on-error: true
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: visual-regression-results
