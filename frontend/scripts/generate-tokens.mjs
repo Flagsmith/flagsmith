@@ -39,6 +39,8 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
 const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing']
 const DESCRIBED = ['radius', 'shadow', 'duration', 'easing']
+// Chart colours are like colour tokens (light/dark) but not under "color"
+const CHART_CATEGORY = 'chart'
 
 // Build reverse lookups for primitives
 const hexToPrimitive = new Map()
@@ -125,6 +127,18 @@ function buildScssLines() {
   for (const [category, entries] of Object.entries(json.color)) {
     rootLines.push(`  // ${cap(category)}`)
     for (const [, e] of sorted(entries)) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  // Chart colour tokens
+  if (json[CHART_CATEGORY]) {
+    rootLines.push('  // Chart')
+    for (const [, e] of sorted(json[CHART_CATEGORY])) {
       rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
       if (e.dark && e.dark !== e.light) {
         darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
@@ -239,6 +253,18 @@ function generateTs() {
   const colourLines = buildTsColourLines()
   const describedBlocks = buildTsDescribedLines()
 
+  // Chart tokens as a flat array for JS chart libraries
+  const chartLines = []
+  if (json[CHART_CATEGORY]) {
+    chartLines.push('// Chart colours — use with getCSSVar() for runtime resolution')
+    chartLines.push(`export const CHART_COLOURS = [`)
+    for (const [, e] of sorted(json[CHART_CATEGORY])) {
+      chartLines.push(`  '${e.cssVar}',`)
+    }
+    chartLines.push('] as const')
+    chartLines.push('')
+  }
+
   const output = [
     '// =============================================================================',
     '// Design Tokens — AUTO-GENERATED from common/theme/tokens.json',
@@ -256,6 +282,7 @@ function generateTs() {
     '',
     ...describedBlocks,
     '',
+    ...chartLines,
     'export type TokenCategory = keyof typeof tokens',
     'export type TokenName<C extends TokenCategory> = keyof (typeof tokens)[C]',
     'export type RadiusScale = keyof typeof radius',
@@ -276,6 +303,16 @@ function generateMcpStory() {
       value: toPrimitiveRef(e.light),
     }))
     tables.push(...buildTableRows(`Colour: ${cat}`, data))
+  }
+
+  // Chart colours
+  if (json[CHART_CATEGORY]) {
+    const chartData = Object.values(json[CHART_CATEGORY]).map((e) => ({
+      cssVar: e.cssVar,
+      value: e.light,
+      description: e.description || '',
+    }))
+    tables.push(...buildTableRows('Chart colours', chartData, { showDescription: true }))
   }
 
   for (const cat of DESCRIBED) {
