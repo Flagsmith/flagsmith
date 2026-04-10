@@ -60,19 +60,24 @@ export const featureAnalyticsService = service
             preBuiltData.push(dayObj)
           }
 
+          const rawEntries: Res['environmentAnalytics'] = []
+
           responses.forEach((response, i) => {
             const environment_id = query.environment_ids[i]
 
             response.data?.forEach((entry) => {
+              rawEntries.push(entry)
               const date = moment(entry.day).format('Do MMM')
               const dayEntry = preBuiltData.find((d) => d.day === date)
               if (dayEntry) {
-                dayEntry[environment_id] = entry.count // Set count for specific environment ID
+                dayEntry[environment_id] = entry.count
               }
             })
           })
           return {
-            data: error ? [] : preBuiltData,
+            data: error
+              ? { chartData: [], rawEntries: [] }
+              : { chartData: preBuiltData, rawEntries },
             error,
           }
         },

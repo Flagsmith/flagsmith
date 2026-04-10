@@ -3,16 +3,8 @@ import InfoMessage from 'components/InfoMessage'
 import EnvironmentTagSelect from 'components/EnvironmentTagSelect'
 import BarChart from 'components/charts/BarChart'
 import { MultiSelect } from 'components/base/select/multi-select'
-import {
-  useGetEnvironmentAnalyticsQuery,
-  useGetFeatureAnalyticsQuery,
-} from 'common/services/useFeatureAnalytics'
-import { Res } from 'common/types/responses'
-import {
-  aggregateByLabels,
-  buildEnvColorMap,
-  hasLabelledData,
-} from './analyticsUtils'
+import { useGetFeatureAnalyticsQuery } from 'common/services/useFeatureAnalytics'
+import { aggregateByLabels, buildEnvColorMap, hasLabelledData } from './utils'
 
 type FlagAnalyticsType = {
   projectId: string
@@ -40,29 +32,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
     },
   )
 
-  const rawResponses = environmentIds.map((envId) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { data: envData } = useGetEnvironmentAnalyticsQuery(
-      {
-        environment_id: envId,
-        feature_id: featureId,
-        period: 30,
-        project_id: projectId,
-      },
-      {
-        skip: !envId || !featureId || !projectId,
-      },
-    )
-    return envData
-  })
-
-  const allRawData = useMemo(
-    (): Res['environmentAnalytics'] => rawResponses.filter(Boolean).flat(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(rawResponses)],
-  )
-
-  const isLabelled = hasLabelledData(allRawData)
+  const isLabelled = hasLabelledData(data?.rawEntries)
 
   const {
     chartData: labelledChartData,
@@ -70,14 +40,14 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
     labelValues,
   } = useMemo(
     () =>
-      isLabelled
-        ? aggregateByLabels(allRawData)
+      isLabelled && data?.rawEntries
+        ? aggregateByLabels(data.rawEntries)
         : {
             chartData: [],
             colorMap: new Map<string, string>(),
             labelValues: [],
           },
-    [isLabelled, allRawData],
+    [isLabelled, data?.rawEntries],
   )
 
   const envColorMap = useMemo(
@@ -105,10 +75,9 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
 
   const hasData = isLabelled
     ? labelledChartData.length > 0
-    : data &&
-      Array.isArray(data) &&
-      data.length > 0 &&
-      data.some((dayData) =>
+    : data?.chartData &&
+      data.chartData.length > 0 &&
+      data.chartData.some((dayData) =>
         environmentIds.some((envId) => Number(dayData[envId] || 0) > 0),
       )
 
@@ -154,7 +123,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
         )}
         {hasData && (
           <BarChart
-            data={isLabelled ? labelledChartData : data || []}
+            data={isLabelled ? labelledChartData : data?.chartData || []}
             series={isLabelled ? filteredLabels : environmentIds}
             colorMap={isLabelled ? colorMap : envColorMap}
             xAxisInterval={2}
