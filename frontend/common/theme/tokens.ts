@@ -157,7 +157,7 @@ export const easing: Record<string, TokenEntry> = {
   },
 }
 
-// Chart colours — use with getCSSVar() for runtime resolution
+// Chart colours — use with useChartColors() hook for runtime resolution
 export const CHART_COLOURS = [
   '--color-chart-1',
   '--color-chart-2',

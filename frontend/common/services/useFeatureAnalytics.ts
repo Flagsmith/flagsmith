@@ -60,6 +60,9 @@ export const featureAnalyticsService = service
             preBuiltData.push(dayObj)
           }
 
+          // Collect raw entries with labels intact for label-based grouping.
+          // chartData aggregates by environment (existing behaviour),
+          // rawEntries preserves per-SDK labels for stacked charts (#6067).
           const rawEntries: Res['environmentAnalytics'] = []
 
           responses.forEach((response, i) => {
