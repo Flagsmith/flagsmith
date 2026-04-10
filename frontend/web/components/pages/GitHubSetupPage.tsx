@@ -277,7 +277,12 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
           </Button>
         </>
       ) : (
-        <h1>Installation Completed</h1>
+        <div>
+          <strong>GitHub installation completed!</strong>
+          <p>
+            <small>You may close this window.</small>
+          </p>
+        </div>
       )}
     </div>
   )
