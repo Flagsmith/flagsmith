@@ -1,4 +1,4 @@
-require('dotenv').config() // trigger Vercel deployment for smoke test CI validation
+require('dotenv').config()
 const fs = require('fs')
 const exphbs = require('express-handlebars')
 const express = require('express')
