@@ -31,7 +31,7 @@ const kebabToCamel = (s) =>
   s.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase())
 
 const sorted = (obj) =>
-  Object.entries(obj).sort(([a], [b]) => a.localeCompare(b))
+  Object.entries(obj).sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
 
 const esc = (s) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 const lightVal = (e) => e.light ?? e.value
