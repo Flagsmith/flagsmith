@@ -30,6 +30,33 @@ export const STARTUP_FEATURES: PricingFeature[] = [
   },
 ]
 
+export const SCALE_UP_FEATURES: PricingFeature[] = [
+  {
+    text: (
+      <>
+        Up to
+        <strong> 5,000,000</strong> Requests per month
+      </>
+    ),
+  },
+  {
+    text: (
+      <>
+        <strong>5+</strong> Team members
+      </>
+    ),
+  },
+  {
+    text: 'User roles and permissions',
+  },
+  {
+    text: 'Change requests',
+  },
+  {
+    text: 'Audit logs',
+  },
+]
+
 export const ENTERPRISE_FEATURES: PricingFeature[] = [
   {
     text: (
