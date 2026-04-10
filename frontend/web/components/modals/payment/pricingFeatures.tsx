@@ -42,7 +42,7 @@ export const SCALE_UP_FEATURES: PricingFeature[] = [
   {
     text: (
       <>
-        <strong>5+</strong> Team members
+        Up to <strong>20</strong> Team members
       </>
     ),
   },
