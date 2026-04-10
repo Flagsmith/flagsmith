@@ -134,6 +134,18 @@
   --color-icon-success: var(--green-500);
   --color-icon-warning: var(--orange-500);
 
+  // Chart
+  --color-chart-1: var(--blue-500);
+  --color-chart-10: var(--purple-600);
+  --color-chart-2: var(--red-500);
+  --color-chart-3: var(--green-500);
+  --color-chart-4: var(--orange-500);
+  --color-chart-5: var(--purple-500);
+  --color-chart-6: var(--blue-600);
+  --color-chart-7: var(--red-600);
+  --color-chart-8: var(--green-600);
+  --color-chart-9: var(--orange-600);
+
   // Radius
   --radius-2xl: 18px;
   --radius-full: 9999px;
@@ -191,6 +203,16 @@
   --color-icon-default: var(--slate-0);
   --color-icon-disabled: oklch(from var(--slate-0) l c h / 0.32);
   --color-icon-secondary: var(--slate-300);
+  --color-chart-1: var(--blue-400);
+  --color-chart-10: var(--purple-300);
+  --color-chart-2: var(--red-400);
+  --color-chart-3: var(--green-400);
+  --color-chart-4: var(--orange-300);
+  --color-chart-5: var(--purple-400);
+  --color-chart-6: var(--blue-300);
+  --color-chart-7: var(--red-300);
+  --color-chart-8: var(--green-300);
+  --color-chart-9: var(--orange-200);
   --shadow-lg: 0px 8px 16px oklch(from var(--slate-1000) l c h / 0.35);
   --shadow-md: 0px 4px 8px oklch(from var(--slate-1000) l c h / 0.30);
   --shadow-sm: 0px 1px 2px oklch(from var(--slate-1000) l c h / 0.20);
