@@ -256,7 +256,7 @@ function generateTs() {
   // Chart tokens as a flat array for JS chart libraries
   const chartLines = []
   if (json[CHART_CATEGORY]) {
-    chartLines.push('// Chart colours — use with getCSSVar() for runtime resolution')
+    chartLines.push('// Chart colours — use with useChartColors() hook for runtime resolution')
     chartLines.push(`export const CHART_COLOURS = [`)
     for (const [, e] of sorted(json[CHART_CATEGORY])) {
       chartLines.push(`  '${e.cssVar}',`)

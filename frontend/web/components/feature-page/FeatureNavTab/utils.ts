@@ -31,6 +31,7 @@ export function aggregateByLabels(
 
   rawData.forEach((entry) => {
     const date = entry.day
+    // Priority: user_agent (SDK name) > client_application_name > 'Unknown'
     const labelValue =
       entry.labels?.user_agent ||
       entry.labels?.client_application_name ||
