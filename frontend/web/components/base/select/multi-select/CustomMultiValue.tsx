@@ -8,45 +8,23 @@ export const CustomMultiValue = ({
 }: MultiValueProps<MultiSelectOption> & { color?: string }) => {
   return (
     <div
-      className='d-flex align-items-center gap-x-1'
+      className='d-flex align-items-center gap-1 rounded-sm text-white overflow-hidden fs-small'
       style={{
         backgroundColor: color,
-        borderRadius: '4px',
-        color: 'white',
-        fontSize: '12px',
-        gap: '4px',
-        maxHeight: '24px',
-        maxWidth: '150px',
-        overflow: 'hidden',
+        maxHeight: 24,
+        maxWidth: 150,
         padding: '2px 6px',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
       }}
     >
-      <span
-        style={{
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
+      <span className='text-nowrap overflow-hidden text-truncate'>
         {data.label}
       </span>
       <button
         {...removeProps}
-        style={{
-          backgroundColor: 'transparent',
-          border: 'none',
-          color: 'white',
-          cursor: 'pointer',
-          fontSize: '14px',
-          lineHeight: '1',
-          margin: 0,
-          padding: 0,
-        }}
-      >
-        ×
-      </button>
+        className='btn-close btn-close-white p-0 border-0'
+        style={{ fontSize: 10 }}
+        aria-label={`Remove ${data.label}`}
+      />
     </div>
   )
 }

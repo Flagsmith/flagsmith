@@ -1,10 +1,14 @@
-@import '../variables';
+// =============================================================================
+// react-select Overrides
+// Uses semantic CSS custom properties for automatic light/dark mode support.
+// No separate .dark {} block needed — tokens resolve differently per theme.
+// =============================================================================
 
 .react-select .react-select {
   input[type='text'] {
     border: none;
+    color: var(--color-text-default) !important;
   }
-
 
   &__menu-list {
     overflow-y: auto;
@@ -12,7 +16,7 @@
     -ms-overflow-style: none;
 
     &::-webkit-scrollbar {
-      display: none; 
+      display: none;
     }
   }
 
@@ -22,11 +26,11 @@
       opacity: 0.5;
     }
     &__indicator {
-      color: $text-icon-light-grey;
+      color: var(--color-icon-secondary);
       padding: 0px 6px 0px 8px;
       cursor: pointer;
       &:hover {
-        color: $text-icon-light-grey;
+        color: var(--color-icon-secondary);
       }
       svg {
         width: 16px;
@@ -48,13 +52,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: normal;
-    color: $input-placeholder-color;
+    color: var(--color-text-tertiary);
   }
   &__indicator {
-    color: $text-icon-light-grey;
+    color: var(--color-icon-secondary);
     padding: 0px 10px 0px 8px;
     &:hover {
-      color: $text-icon-light-grey;
+      color: var(--color-icon-secondary);
     }
     svg {
       width: 22px;
@@ -73,12 +77,13 @@
     padding: 0;
     line-height: $input-line-height;
     font-weight: 500;
+    color: var(--color-text-default);
     & + div {
       margin: 0;
       padding: 0;
     }
     &--is-disabled {
-      color: $text-icon-light-grey;
+      color: var(--color-text-disabled);
     }
   }
 
@@ -96,12 +101,12 @@
     }
   }
   &__control {
-    background: $input-bg;
+    background: var(--color-surface-default);
     height: $input-height;
     border-radius: $border-radius;
-    border: 1px solid $input-border-color;
+    border: 1px solid var(--color-border-default);
     &--is-disabled {
-      border: 1px solid $basic-alpha-8;
+      border: 1px solid var(--color-border-disabled);
       .react-select__indicators {
         opacity: $btn-disabled-opacity;
       }
@@ -198,78 +203,30 @@
 .react-select {
   font-weight: 500;
   line-height: $input-line-height;
-  color: $body-color;
+  color: var(--color-text-default);
   &.select-xsm {
     font-size: $font-size-sm;
   }
   &__option {
-    color: $body-color !important;
-    background: white !important;
+    color: var(--color-text-default) !important;
+    background: var(--color-surface-default) !important;
     padding: 9px 16px;
     cursor: pointer;
     &:hover {
-      background: $bg-light200 !important;
-      cursor:pointer;
+      background: var(--color-surface-hover) !important;
+      cursor: pointer;
     }
     &--is-focused {
-      background: $bg-light300 !important;
+      background: var(--color-surface-muted) !important;
     }
     &--is-selected {
-      background-color: $primary-alfa-8 !important;
+      background-color: var(--color-surface-action-subtle) !important;
     }
   }
   &__menu {
     font-weight: 500;
     margin: 3px;
-    box-shadow: 0px 10px 12px 0px rgba(100, 116, 139, 0.15) !important;
-    background: white !important;
-  }
-}
-.dark {
-  .react-select .react-select,.react-select {
-    input[type='text'] {
-      color: white !important;
-      border: none !important;
-    }
-    &__control {
-      background: $input-bg-dark;
-      border: none;
-      box-shadow: none;
-      border: 1px solid $input-border-color-dark;
-      &--is-disabled {
-        border: 1px solid $black-alpha-32;
-        .react-select__indicator {
-          opacity: $btn-disabled-opacity;
-        }
-      }
-    }
-    &__single-value {
-      color: $text-icon-light;
-      &--is-disabled {
-        color: $text-icon-light-grey;
-      }
-    }
-    &__menu {
-      background: $input-bg-dark !important;
-      margin: 3px;
-      color: $input-bg-dark;
-      box-shadow: 0px 8px 12px 0px rgba(0, 0, 0, 0.12) !important;
-    }
-    &__option {
-      color: white !important;
-      background: $input-bg-dark !important;
-      &:hover {
-        background: $bg-dark200 !important;
-        color: white !important;
-        cursor:pointer;
-      }
-      &--is-focused {
-        background: $bg-dark200 !important;
-        cursor:pointer;
-      }
-      &--is-selected {
-        background-color: $primary-alfa-16 !important;
-      }
-    }
+    box-shadow: var(--shadow-md) !important;
+    background: var(--color-surface-default) !important;
   }
 }

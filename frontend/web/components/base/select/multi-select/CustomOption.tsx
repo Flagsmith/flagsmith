@@ -1,21 +1,9 @@
 import { OptionProps } from 'react-select'
 import { MultiSelectOption } from './MultiSelect'
 import Icon from 'components/icons/Icon'
+import ColorSwatch from 'components/ColorSwatch'
 import { useEffect, useRef } from 'react'
-import { getDarkMode } from 'project/darkMode'
-
-const getOptionColors = (isFocused: boolean) => {
-  const isDarkMode = getDarkMode()
-
-  const focusedBgColor = isDarkMode ? '#202839' : '#f0f0f0'
-  const backgroundColor = isFocused ? focusedBgColor : 'transparent'
-  const textColor = isDarkMode ? 'white' : 'inherit'
-
-  return {
-    backgroundColor,
-    textColor,
-  }
-}
+import classNames from 'classnames'
 
 export const CustomOption = ({
   children,
@@ -33,8 +21,6 @@ export const CustomOption = ({
     }
   }, [props.isFocused])
 
-  const { backgroundColor, textColor } = getOptionColors(props.isFocused)
-
   return (
     <div
       ref={ref}
@@ -42,47 +28,22 @@ export const CustomOption = ({
       role='option'
       aria-selected={props.isSelected}
       aria-disabled={props.isDisabled}
-      style={{
-        alignItems: 'center',
-        backgroundColor,
-        color: textColor,
-        cursor: props.isDisabled ? 'not-allowed' : 'pointer',
-        display: 'flex',
-        gap: '8px',
-        justifyContent: 'space-between',
-        padding: '8px 12px',
-      }}
+      className={classNames(
+        'd-flex align-items-center justify-content-between gap-2 px-3 py-2 cursor-pointer',
+        {
+          'bg-surface-hover': props.isFocused,
+          'cursor-not-allowed': props.isDisabled,
+        },
+      )}
     >
-      <div
-        style={{
-          alignItems: 'center',
-          display: 'flex',
-          flex: 1,
-          gap: '8px',
-          minWidth: 0,
-          wordWrap: 'break-word',
-        }}
-      >
-        {color && (
-          <div
-            aria-hidden='true'
-            style={{
-              backgroundColor: color,
-              borderRadius: '2px',
-              flexShrink: 0,
-              height: '12px',
-              width: '12px',
-            }}
-          />
-        )}
-        <span style={{ flex: 1, minWidth: 0, wordWrap: 'break-word' }}>
-          {children}
-        </span>
+      <div className='d-flex align-items-center flex-fill gap-2 overflow-hidden'>
+        {color && <ColorSwatch color={color} />}
+        <span className='flex-fill overflow-hidden text-break'>{children}</span>
       </div>
       {props.isSelected && (
-        <div aria-hidden='true'>
-          <Icon width={14} name='checkmark-circle' fill='#6837fc' />
-        </div>
+        <span className='icon-action' aria-hidden='true'>
+          <Icon width={14} name='checkmark-circle' />
+        </span>
       )}
     </div>
   )
