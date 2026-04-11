@@ -47,7 +47,8 @@
     "@assistant-ui/react-markdown": "$@assistant-ui/react-markdown",
     "@assistant-ui/react-ai-sdk": {
       "assistant-stream": "0.3.7"
-    }
+    },
+    "axios": "^1.15.0"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.11.3",
