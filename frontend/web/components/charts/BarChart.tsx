@@ -43,13 +43,11 @@ const BarChart: FC<BarChartProps> = ({
           height={80}
           angle={-90}
           textAnchor='end'
-          tick={{ dx: -4, fill: '#656D7B', fontSize: 11 }}
+          tick={{ dx: -4, fontSize: 11 }}
           tickLine={false}
-          axisLine={{ stroke: '#656D7B' }}
         />
         <YAxis
-          tick={{ fill: '#656D7B', fontSize: 11 }}
-          axisLine={{ stroke: '#656D7B' }}
+          tick={{ fontSize: 11 }}
           tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v)}
         />
         <Tooltip cursor={{ fill: 'transparent' }} content={<ChartTooltip />} />
@@ -59,7 +57,7 @@ const BarChart: FC<BarChartProps> = ({
             key={label}
             dataKey={label}
             stackId={stacked ? 'series' : undefined}
-            fill={colorMap.get(label) || '#656D7B'}
+            fill={colorMap.get(label)}
             animationBegin={index * 80}
             animationDuration={600}
             animationEasing='ease-out'
