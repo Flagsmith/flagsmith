@@ -41,14 +41,17 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
     labelValues,
   } = useMemo(
     () =>
-      isLabelled && data?.rawEntries
-        ? aggregateByLabels(data.rawEntries)
+      isLabelled && data?.rawEntries && data?.chartData
+        ? aggregateByLabels(
+            data.rawEntries,
+            data.chartData.map((d) => d.day),
+          )
         : {
             chartData: [],
             colorMap: new Map<string, string>(),
             labelValues: [],
           },
-    [isLabelled, data?.rawEntries],
+    [isLabelled, data?.rawEntries, data?.chartData],
   )
 
   const envColorMap = useMemo(
@@ -74,8 +77,13 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
     }
   }
 
+  // labelledChartData now always has one bucket per day (even when empty),
+  // so we can't use `.length > 0` — check that at least one day has a
+  // non-zero count for one of the label series.
   const hasData = isLabelled
-    ? labelledChartData.length > 0
+    ? labelledChartData.some((dayData) =>
+        labelValues.some((v) => Number(dayData[v] || 0) > 0),
+      )
     : data?.chartData &&
       data.chartData.length > 0 &&
       data.chartData.some((dayData) =>
