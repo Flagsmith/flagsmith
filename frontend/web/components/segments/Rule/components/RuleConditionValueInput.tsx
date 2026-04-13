@@ -124,7 +124,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
         }}
       />
       {showIcon && (
-        <div style={{ position: 'absolute', right: 5, top: 9 }}>
+        <div className='position-absolute' style={{ right: 5, top: 9 }}>
           <Tooltip
             title={
               <div

@@ -267,7 +267,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
             {props.filterElement && props.filterElement}
 
             {sorting && (
-              <Row className='mr-3position-relative'>
+              <Row className='mr-3 position-relative'>
                 <Popover
                   renderTitle={(toggle: () => void, isActive: boolean) => (
                     <a
