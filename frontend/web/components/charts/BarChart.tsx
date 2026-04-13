@@ -23,6 +23,13 @@ type BarChartProps = {
   height?: number
   xAxisInterval?: number
   stacked?: boolean
+  /**
+   * Render recharts' built-in `<Legend />` below the chart. Default `false` —
+   * most consumers already expose a coloured filter UI (tags / MultiSelect)
+   * that serves the same purpose, so a second legend is redundant and can
+   * display raw dataKeys (e.g. numeric env IDs) that are meaningless to users.
+   */
+  showLegend?: boolean
 }
 
 const BarChart: FC<BarChartProps> = ({
@@ -30,6 +37,7 @@ const BarChart: FC<BarChartProps> = ({
   data,
   height = 400,
   series,
+  showLegend = false,
   stacked = true,
   xAxisInterval = 0,
 }) => {
@@ -54,7 +62,7 @@ const BarChart: FC<BarChartProps> = ({
           tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v)}
         />
         <Tooltip cursor={{ fill: 'transparent' }} content={<ChartTooltip />} />
-        <Legend wrapperStyle={{ paddingTop: 16 }} />
+        {showLegend && <Legend wrapperStyle={{ paddingTop: 16 }} />}
         {series.map((label, index) => (
           <Bar
             key={label}
