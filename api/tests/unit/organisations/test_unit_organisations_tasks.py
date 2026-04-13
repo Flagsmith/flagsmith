@@ -2155,3 +2155,90 @@ def test_update_organisation_subscription_information_cache__called__calls_updat
             SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE
         )
     ]
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_handle_api_usage_notifications__cc_recipient_list_set__includes_cc_in_email(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    mailoutbox: list[EmailMultiAlternatives],
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    cs_email = "cs@flagsmith.com"
+    settings.API_USAGE_ALERT_CC_RECIPIENT_LIST = [cs_email]
+
+    now = timezone.now()
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=100,
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=90,
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.task_helpers.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 91
+    enable_features("api_usage_alerting")
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].cc == [cs_email]
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over__cc_recipient_list_set__includes_cc_in_blocked_email(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMultiAlternatives],
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    cs_email = "cs@flagsmith.com"
+    settings.API_USAGE_ALERT_CC_RECIPIENT_LIST = [cs_email]
+
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
+
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=10_000,
+    )
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+
+    mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+        return_value=12_005,
+    )
+
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=120,
+    )
+
+    now = now + timedelta(days=API_USAGE_GRACE_PERIOD + 1)
+    freezer.move_to(now)
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].cc == [cs_email]

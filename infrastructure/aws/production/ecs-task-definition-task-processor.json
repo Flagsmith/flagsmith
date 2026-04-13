@@ -184,6 +184,10 @@
                 {
                     "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
                     "value": "True"
+                },
+                {
+                    "name": "API_USAGE_ALERT_CC_RECIPIENT_LIST",
+                    "value": "customersuccess@flagsmith.com"
                 }
             ],
             "secrets": [

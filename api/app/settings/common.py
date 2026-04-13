@@ -1360,6 +1360,11 @@ WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 
 
 ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)
+API_USAGE_ALERT_CC_RECIPIENT_LIST = env.list(
+    "API_USAGE_ALERT_CC_RECIPIENT_LIST",
+    subcast=str,
+    default=[],
+)
 
 # See DomainAuthMethods in flagsmith-auth-controller repository with auth_controller.models module
 GLOBAL_DOMAIN_AUTH_METHODS = env.dict(
