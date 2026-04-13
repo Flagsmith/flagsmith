@@ -20,7 +20,6 @@ const Project = {
     scaleUp: { annual: 'Scale-Up-v4-USD-Yearly', monthly: 'Scale-Up-v4-USD-Monthly' },
     startup: { annual: 'start-up-12-months-v2', monthly: 'startup-v2' },
   },
-  cookieSameSite: 'lax',
   useSecureCookies: false,
   ...(_globalThis.projectOverrides || {}),
 }
