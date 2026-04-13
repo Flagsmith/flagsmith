@@ -380,15 +380,17 @@ const controller = {
                 )
               environmentFlag.multivariate_feature_state_values =
                 multivariate_feature_state_values
+              const typedValue = Utils.getTypedValue(
+                flag.initial_value,
+                undefined,
+                true,
+              )
               return data.put(
                 `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
                 Object.assign({}, environmentFlag, {
                   enabled: flag.default_enabled,
-                  feature_state_value: Utils.getTypedValue(
-                    flag.initial_value,
-                    undefined,
-                    true,
-                  ),
+                  feature_state_value:
+                    typedValue === '' ? null : typedValue,
                 }),
               )
             })
@@ -805,7 +807,8 @@ const controller = {
           ).then((res) => {
             const data = Object.assign({}, environmentFlag, {
               enabled: flag.default_enabled,
-              feature_state_value: flag.initial_value,
+              feature_state_value:
+                flag.initial_value === '' ? null : flag.initial_value,
             })
             return createAndSetFeatureVersion(getStore(), {
               environmentId: res,
