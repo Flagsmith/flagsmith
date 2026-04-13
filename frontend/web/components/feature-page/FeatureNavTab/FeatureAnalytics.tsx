@@ -26,7 +26,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
   // Needed to assign each environment its tag colour from the project's env
   // list position (stable regardless of which envs the user has selected).
   const { data: environments } = useGetEnvironmentsQuery({
-    projectId: `${projectId}`,
+    projectId: Number(projectId),
   })
 
   const { data, isLoading } = useGetFeatureAnalyticsQuery(
@@ -87,6 +87,15 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
     })
     return map
   }, [sortedEnvIds, environments?.results])
+
+  // env id → env name map, so the tooltip shows "Production" not "22".
+  const envLabelMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    environments?.results?.forEach((env) => {
+      map[`${env.id}`] = env.name
+    })
+    return map
+  }, [environments?.results])
 
   const labelOptions = useMemo(
     () => labelValues.map((v) => ({ label: v, value: v })),
@@ -164,6 +173,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
             data={isLabelled ? labelledChartData : data?.chartData || []}
             series={isLabelled ? filteredLabels : sortedEnvIds}
             colorMap={isLabelled ? colorMap : envColorMap}
+            seriesLabels={isLabelled ? undefined : envLabelMap}
             xAxisInterval={2}
             showLegend={isLabelled}
           />

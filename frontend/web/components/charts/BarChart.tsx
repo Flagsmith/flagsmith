@@ -30,6 +30,12 @@ type BarChartProps = {
    * display raw dataKeys (e.g. numeric env IDs) that are meaningless to users.
    */
   showLegend?: boolean
+  /**
+   * Optional dataKey → display name map, threaded through to the tooltip (and
+   * the legend when enabled). Use this when dataKeys are opaque identifiers
+   * (e.g. numeric env ids) that need a human-readable label on display.
+   */
+  seriesLabels?: Record<string, string>
 }
 
 const BarChart: FC<BarChartProps> = ({
@@ -37,6 +43,7 @@ const BarChart: FC<BarChartProps> = ({
   data,
   height = 400,
   series,
+  seriesLabels,
   showLegend = false,
   stacked = true,
   xAxisInterval = 0,
@@ -61,8 +68,18 @@ const BarChart: FC<BarChartProps> = ({
           axisLine={{ stroke: colorTextSecondary }}
           tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v)}
         />
-        <Tooltip cursor={{ fill: 'transparent' }} content={<ChartTooltip />} />
-        {showLegend && <Legend wrapperStyle={{ paddingTop: 16 }} />}
+        <Tooltip
+          cursor={{ fill: 'transparent' }}
+          content={<ChartTooltip seriesLabels={seriesLabels} />}
+        />
+        {showLegend && (
+          <Legend
+            wrapperStyle={{ paddingTop: 16 }}
+            formatter={(value) =>
+              seriesLabels?.[String(value)] ?? String(value)
+            }
+          />
+        )}
         {series.map((label, index) => (
           <Bar
             key={label}
