@@ -62,7 +62,9 @@ const BarChart: FC<BarChartProps> = ({
         <YAxis
           tick={{ fill: colorTextSecondary, fontSize: 11 }}
           axisLine={{ stroke: colorTextSecondary }}
-          tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v)}
+          tickFormatter={(value) =>
+            value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value
+          }
         />
         <Tooltip
           cursor={{ fill: 'transparent' }}

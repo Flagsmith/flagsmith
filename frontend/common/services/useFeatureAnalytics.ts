@@ -42,22 +42,29 @@ export const featureAnalyticsService = service
             }),
           )
 
-          const error = responses.find((v) => v.isError)?.error
+          const error = responses.find((response) => response.isError)?.error
           const today = moment().startOf('day')
           const startDate = moment(today).subtract(query.period - 1, 'days')
-          const preBuiltData: Res['featureAnalytics'] = []
+
+          // Pre-build one bucket per day with zero counts for each env, and
+          // keep a `day → bucket` map so per-entry lookups below are O(1)
+          // instead of O(days) via Array.find (matters for long periods and
+          // high entry counts).
+          type DayBucket = { day: string } & { [envId: string]: number }
+          const preBuiltData: DayBucket[] = []
+          const bucketByDay = new Map<string, DayBucket>()
           for (
             let date = startDate.clone();
             date.isSameOrBefore(today);
             date.add(1, 'days')
           ) {
-            const dayObj: Res['featureAnalytics'][number] = {
-              day: date.format('Do MMM'),
-            }
+            const day = date.format('Do MMM')
+            const bucket: DayBucket = { day }
             query.environment_ids.forEach((envId) => {
-              dayObj[envId] = 0
+              bucket[envId] = 0
             })
-            preBuiltData.push(dayObj)
+            preBuiltData.push(bucket)
+            bucketByDay.set(day, bucket)
           }
 
           // Collect raw entries with labels intact for label-based grouping.
@@ -66,14 +73,14 @@ export const featureAnalyticsService = service
           const rawEntries: Res['environmentAnalytics'] = []
 
           responses.forEach((response, i) => {
-            const environment_id = query.environment_ids[i]
+            const environmentId = query.environment_ids[i]
 
             response.data?.forEach((entry) => {
               rawEntries.push(entry)
-              const date = moment(entry.day).format('Do MMM')
-              const dayEntry = preBuiltData.find((d) => d.day === date)
-              if (dayEntry) {
-                dayEntry[environment_id] = entry.count
+              const day = moment(entry.day).format('Do MMM')
+              const bucket = bucketByDay.get(day)
+              if (bucket) {
+                bucket[environmentId] = entry.count
               }
             })
           })

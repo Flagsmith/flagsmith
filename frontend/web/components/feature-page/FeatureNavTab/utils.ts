@@ -67,7 +67,7 @@ export function aggregateByLabels(
   })
 
   return {
-    chartData: days.map((d) => grouped[d]),
+    chartData: days.map((day) => grouped[day]),
     colorMap: buildChartColorMap(labelList),
     labelValues: labelList,
   }

@@ -39,19 +39,19 @@ export function useEnvChartProps({
 
   return useMemo(() => {
     const envList = environments?.results ?? []
+    const findIndexById = (id: string) =>
+      envList.findIndex((env) => `${env.id}` === id)
+
     const series = [...environmentIds].sort(
-      (a, b) =>
-        envList.findIndex((e) => `${e.id}` === a) -
-        envList.findIndex((e) => `${e.id}` === b),
+      (idA, idB) => findIndexById(idA) - findIndexById(idB),
     )
 
     const colorMap: Record<string, string> = {}
     const seriesLabels: Record<string, string> = {}
     series.forEach((id) => {
-      let index = envList.findIndex((e) => `${e.id}` === id)
-      if (index === -1) index = 0
+      const index = Math.max(findIndexById(id), 0)
       colorMap[id] = `${Color(Utils.getTagColour(index)).alpha(0.75).rgb()}`
-      const env = envList.find((e) => `${e.id}` === id)
+      const env = envList.find((candidate) => `${candidate.id}` === id)
       if (env) seriesLabels[id] = env.name
     })
 
