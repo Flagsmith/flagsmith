@@ -34,20 +34,30 @@ type BarChartProps = {
    * (e.g. numeric env ids) that need a human-readable label on display.
    */
   seriesLabels?: Record<string, string>
+  /** Fixed bar width in pixels. Default: recharts auto-sizes by available space. */
+  barSize?: number
+  /** Render vertical grid lines (one per x tick). Default `true`. */
+  verticalGrid?: boolean
 }
 
 const BarChart: FC<BarChartProps> = ({
+  barSize,
   colorMap,
   data,
   series,
   seriesLabels,
   showLegend = false,
+  verticalGrid = true,
   xAxisInterval = 0,
 }) => {
   return (
     <ResponsiveContainer height={400} width='100%'>
       <RawBarChart data={data}>
-        <CartesianGrid strokeDasharray='3 5' strokeOpacity={0.4} />
+        <CartesianGrid
+          strokeDasharray='3 5'
+          strokeOpacity={0.4}
+          vertical={verticalGrid}
+        />
         <XAxis
           dataKey='day'
           padding='gap'
@@ -82,6 +92,7 @@ const BarChart: FC<BarChartProps> = ({
             dataKey={label}
             stackId='series'
             fill={colorMap[label]}
+            barSize={barSize}
             animationBegin={index * 80}
             animationDuration={600}
             animationEasing='ease-out'
