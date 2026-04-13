@@ -164,19 +164,6 @@ function buildScssLines() {
   return { rootLines, darkLines }
 }
 
-function buildTsColourLines() {
-  const lines = []
-  for (const [category, entries] of sorted(json.color)) {
-    lines.push(`  ${category}: {`)
-    for (const [key, e] of sorted(entries)) {
-      const v = esc(makeCssVar(e.cssVar, e.light))
-      lines.push(`    ${kebabToCamel(key)}: '${v}',`)
-    }
-    lines.push('  },')
-  }
-  return lines
-}
-
 function buildTsDescribedLines() {
   const blocks = []
   for (const cat of DESCRIBED) {
@@ -196,6 +183,87 @@ function buildTsDescribedLines() {
     blocks.push(lines.join('\n'))
   }
   return blocks
+}
+
+/**
+ * Convert a CSS custom property name to a camelCase JS identifier.
+ *   '--color-text-secondary' → 'colorTextSecondary'
+ *   '--radius-md'            → 'radiusMd'
+ *   '--shadow-sm'            → 'shadowSm'
+ */
+function cssVarToConstName(cssVar) {
+  return kebabToCamel(cssVar.replace(/^--/, ''))
+}
+
+/**
+ * Build flat camelCase constants for every semantic token in tokens.json.
+ *
+ * Each constant is a CSS value string: `var(--token-name, fallback)`. Pass
+ * directly to SVG attributes, inline styles, or any prop that accepts a CSS
+ * value. var() resolves at render; theme toggle updates colours via the CSS
+ * cascade (no hook / DOM read needed).
+ *
+ * Primitives (e.g. --blue-500) are deliberately excluded — they're an
+ * implementation detail of the semantic layer and shouldn't be consumed
+ * directly by app code.
+ */
+function buildFlatConstants() {
+  const lines = []
+
+  lines.push('// =============================================================================')
+  lines.push('// Flat token constants — semantic tokens as CSS value strings.')
+  lines.push('// Use directly in any context that accepts a CSS value:')
+  lines.push('//   <Bar fill={colorChart1} />              (recharts prop)')
+  lines.push('//   style={{ color: colorTextSecondary }}   (inline style)')
+  lines.push('//   border: `1px solid ${colorBorderDefault}` (template strings)')
+  lines.push('// var() resolves at render; theme toggle updates colours via CSS cascade.')
+  lines.push('// =============================================================================')
+  lines.push('')
+
+  // Colour tokens under json.color (border, icon, surface, text)
+  for (const [category, entries] of sorted(json.color)) {
+    lines.push(`// ${cap(category)}`)
+    for (const [, e] of sorted(entries)) {
+      const constName = cssVarToConstName(e.cssVar)
+      const fallback = lightVal(e)
+      lines.push(`export const ${constName} = 'var(${e.cssVar}, ${fallback})'`)
+    }
+    lines.push('')
+  }
+
+  // Chart colour tokens live at json.chart (not under json.color) — emit
+  // their flat constants here, then a CHART_COLOURS palette array for
+  // buildChartColorMap() consumers.
+  if (json[CHART_CATEGORY]) {
+    lines.push('// Chart')
+    for (const [, e] of sorted(json[CHART_CATEGORY])) {
+      const constName = cssVarToConstName(e.cssVar)
+      const fallback = lightVal(e)
+      lines.push(`export const ${constName} = 'var(${e.cssVar}, ${fallback})'`)
+    }
+    lines.push('')
+    lines.push('// Chart palette — indexed access for building colour maps.')
+    lines.push('export const CHART_COLOURS = [')
+    for (const [key] of sorted(json[CHART_CATEGORY])) {
+      lines.push(`  colorChart${key},`)
+    }
+    lines.push('] as const')
+    lines.push('')
+  }
+
+  // Non-colour tokens — radius, shadow, duration, easing
+  for (const cat of NON_COLOUR) {
+    if (!json[cat]) continue
+    lines.push(`// ${cap(cat)}`)
+    for (const [, e] of sorted(json[cat])) {
+      const constName = cssVarToConstName(e.cssVar)
+      const fallback = lightVal(e)
+      lines.push(`export const ${constName} = 'var(${e.cssVar}, ${fallback})'`)
+    }
+    lines.push('')
+  }
+
+  return lines
 }
 
 function buildTableRows(title, entries, opts = {}) {
@@ -250,30 +318,14 @@ function generateScss() {
 }
 
 function generateTs() {
-  const colourLines = buildTsColourLines()
   const describedBlocks = buildTsDescribedLines()
-
-  // Chart tokens as a flat array for JS chart libraries
-  const chartLines = []
-  if (json[CHART_CATEGORY]) {
-    chartLines.push('// Chart colours — use with useChartColors() hook for runtime resolution')
-    chartLines.push(`export const CHART_COLOURS = [`)
-    for (const [, e] of sorted(json[CHART_CATEGORY])) {
-      chartLines.push(`  '${e.cssVar}',`)
-    }
-    chartLines.push('] as const')
-    chartLines.push('')
-  }
+  const flatLines = buildFlatConstants()
 
   const output = [
     '// =============================================================================',
     '// Design Tokens — AUTO-GENERATED from common/theme/tokens.json',
     '// Do not edit manually. Run: npm run generate:tokens',
     '// =============================================================================',
-    '',
-    'export const tokens = {',
-    ...colourLines,
-    '} as const',
     '',
     'export type TokenEntry = {',
     '  value: string',
@@ -282,12 +334,7 @@ function generateTs() {
     '',
     ...describedBlocks,
     '',
-    ...chartLines,
-    'export type TokenCategory = keyof typeof tokens',
-    'export type TokenName<C extends TokenCategory> = keyof (typeof tokens)[C]',
-    'export type RadiusScale = keyof typeof radius',
-    'export type ShadowScale = keyof typeof shadow',
-    '',
+    ...flatLines,
   ]
 
   return output.join('\n')

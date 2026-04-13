@@ -1,20 +1,12 @@
-// Recharts global overrides
-// Recharts renders raw SVG — its tick/axis props only accept hex strings, not
-// var() refs, so colours that could otherwise be inlined live here where CSS
-// resolves them (including dark mode) automatically.
-
-.recharts-cartesian-axis-tick text {
-  fill: var(--color-text-secondary);
-}
-
-.recharts-cartesian-axis-line {
-  stroke: var(--color-text-secondary);
-}
-
-// TODO: delete the rules below (and the .dark block) when
-// SingleSDKLabelsChart and OrganisationUsage migrate to <BarChart />.
-// The new BarChart uses token-based classes via ChartTooltip — these
-// legacy rules only exist to support the two remaining recharts consumers.
+// Recharts global overrides.
+//
+// The new <BarChart /> component passes colour tokens directly as prop values
+// (e.g. `fill={colorTextSecondary}`) which browsers resolve in SVG
+// presentation attributes — no CSS classname plumbing needed.
+//
+// TODO: delete everything below when SingleSDKLabelsChart and
+// OrganisationUsage migrate to <BarChart />. The rules only exist to keep
+// the two remaining raw-recharts consumers styled correctly.
 .recharts-tooltip {
   background-color: $text-icon-light;
   border-radius: $border-radius-lg;

@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { colorTextSecondary } from 'common/theme/tokens'
 import ChartTooltip from './ChartTooltip'
 
 export type ChartDataPoint = {
@@ -43,11 +44,13 @@ const BarChart: FC<BarChartProps> = ({
           height={80}
           angle={-90}
           textAnchor='end'
-          tick={{ dx: -4, fontSize: 11 }}
+          tick={{ dx: -4, fill: colorTextSecondary, fontSize: 11 }}
           tickLine={false}
+          axisLine={{ stroke: colorTextSecondary }}
         />
         <YAxis
-          tick={{ fontSize: 11 }}
+          tick={{ fill: colorTextSecondary, fontSize: 11 }}
+          axisLine={{ stroke: colorTextSecondary }}
           tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v)}
         />
         <Tooltip cursor={{ fill: 'transparent' }} content={<ChartTooltip />} />

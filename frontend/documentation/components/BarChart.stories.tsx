@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 import BarChart, { ChartDataPoint } from 'components/charts/BarChart'
 import { MultiSelect } from 'components/base/select/multi-select'
-import { useChartColorMap } from 'common/hooks/useChartColors'
+import { buildChartColorMap } from 'components/charts/buildChartColorMap'
 
 // ============================================================================
 // Fake data
@@ -67,7 +67,7 @@ export const WithLabelledBuckets: Story = {
     () => {
       const labels = useMemo(() => SDKS.slice(0, 5), [])
       const data = useMemo(() => generateFakeData(30, labels), [labels])
-      const colorMap = useChartColorMap(labels)
+      const colorMap = useMemo(() => buildChartColorMap(labels), [labels])
       const [selectedLabels, setSelectedLabels] = useState<string[]>([])
 
       const filteredLabels =
@@ -109,7 +109,7 @@ export const WithoutLabels: Story = {
     () => {
       const labels = useMemo(() => ['Production', 'Staging', 'Development'], [])
       const data = useMemo(() => generateFakeData(30, labels), [labels])
-      const colorMap = useChartColorMap(labels)
+      const colorMap = useMemo(() => buildChartColorMap(labels), [labels])
 
       return (
         <div className='mx-auto' style={{ maxWidth: 900 }}>
@@ -133,7 +133,7 @@ export const SingleSeries: Story = {
     () => {
       const labels = useMemo(() => ['flagsmith-js-sdk'], [])
       const data = useMemo(() => generateFakeData(30, labels), [labels])
-      const colorMap = useChartColorMap(labels)
+      const colorMap = useMemo(() => buildChartColorMap(labels), [labels])
 
       return (
         <div className='mx-auto' style={{ maxWidth: 900 }}>
