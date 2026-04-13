@@ -18,7 +18,7 @@ const Project = {
   maintenance: false,
   plans: {
     scaleUp: { annual: 'Scale-Up-v4-USD-Yearly', monthly: 'Scale-Up-v4-USD-Monthly' },
-    startup: { annual: 'start-up-12-months-v2', monthly: 'startup-v2' },
+    startup: { annual: 'startup-annual-v2', monthly: 'startup-v2' },
   },
   useSecureCookies: false,
   ...(_globalThis.projectOverrides || {}),

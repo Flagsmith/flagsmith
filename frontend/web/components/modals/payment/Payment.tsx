@@ -106,6 +106,7 @@ export const Payment: FC<PaymentProps> = ({
             features={STARTUP_FEATURES}
             hasActiveSubscription={hasActiveSubscription}
             organisationId={organisation.id}
+            includesFrom='Free'
           />
 
           <PricingPanel
@@ -136,6 +137,7 @@ export const Payment: FC<PaymentProps> = ({
             features={ENTERPRISE_FEATURES}
             hasActiveSubscription={hasActiveSubscription}
             organisationId={organisation.id}
+            includesFrom='Scale-Up'
             headerContent={
               <>
                 Optional{' '}

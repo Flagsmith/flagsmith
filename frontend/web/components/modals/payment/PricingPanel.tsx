@@ -13,7 +13,7 @@ export type PricingPanelProps = {
   priceYearly?: string
   seatPriceMonthly?: string
   seatPriceYearly?: string
-  includesFrom?: string
+  includesFrom: string
   isFeatured?: boolean
   isYearly: boolean
   chargebeePlanId?: string
@@ -144,7 +144,7 @@ export const PricingPanel = ({
           >
             All from{' '}
             <span className={isEnterprise ? 'text-secondary' : 'text-primary'}>
-              {includesFrom ?? (isEnterprise ? 'Scale-Up' : 'Free')},
+              {includesFrom},
             </span>{' '}
             plus
           </h5>
