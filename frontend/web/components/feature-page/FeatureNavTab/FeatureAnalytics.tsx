@@ -118,7 +118,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
             style={{ height: 200 }}
             className='text-center justify-content-center align-items-center text-muted mt-4 d-flex'
           >
-            No analytics data available for the selected environments
+            No analytics data available for the selected environment
             {environmentIds?.length > 1 ? 's' : ''}.
           </div>
         )}
