@@ -97,6 +97,7 @@ export const WithLabelledBuckets: Story = {
             series={filteredLabels}
             colorMap={colorMap}
             xAxisInterval={2}
+            showLegend
           />
         </div>
       )
@@ -121,6 +122,7 @@ export const WithoutLabels: Story = {
             series={labels}
             colorMap={colorMap}
             xAxisInterval={2}
+            showLegend
           />
         </div>
       )
@@ -145,6 +147,7 @@ export const SingleSeries: Story = {
             series={labels}
             colorMap={colorMap}
             xAxisInterval={2}
+            showLegend
           />
         </div>
       )

@@ -1,10 +1,12 @@
 import React, { FC, useMemo, useState } from 'react'
+import Color from 'color'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentTagSelect from 'components/EnvironmentTagSelect'
 import BarChart from 'components/charts/BarChart'
 import { MultiSelect } from 'components/base/select/multi-select'
 import { useGetFeatureAnalyticsQuery } from 'common/services/useFeatureAnalytics'
-import { buildChartColorMap } from 'components/charts/buildChartColorMap'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import Utils from 'common/utils/utils'
 import { aggregateByLabels, hasLabelledData } from './utils'
 
 type FlagAnalyticsType = {
@@ -20,6 +22,12 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
 }) => {
   const [environmentIds, setEnvironmentIds] = useState(defaultEnvironmentIds)
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
+
+  // Needed to assign each environment its tag colour from the project's env
+  // list position (stable regardless of which envs the user has selected).
+  const { data: environments } = useGetEnvironmentsQuery({
+    projectId: `${projectId}`,
+  })
 
   const { data, isLoading } = useGetFeatureAnalyticsQuery(
     {
@@ -54,10 +62,31 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
     [isLabelled, data?.rawEntries, data?.chartData],
   )
 
-  const envColorMap = useMemo(
-    () => buildChartColorMap(environmentIds),
-    [environmentIds],
-  )
+  // Order selected envs by their position in the project env list so the
+  // legend/stack order stays stable regardless of selection order.
+  const sortedEnvIds = useMemo(() => {
+    const envList = environments?.results ?? []
+    return [...environmentIds].sort(
+      (a, b) =>
+        envList.findIndex((e) => `${e.id}` === a) -
+        envList.findIndex((e) => `${e.id}` === b),
+    )
+  }, [environmentIds, environments?.results])
+
+  // Env colour = same `Utils.getTagColour(indexInProjectEnvList)` the env tag
+  // chips use, so bar colour matches the tag chip colour 1:1. 0.75 alpha
+  // softens the fill the way the pre-existing chart did.
+  const envColorMap = useMemo(() => {
+    const map = new Map<string, string>()
+    const envList = environments?.results ?? []
+    sortedEnvIds.forEach((id) => {
+      let index = envList.findIndex((e) => `${e.id}` === id)
+      if (index === -1) index = 0
+      const base = Utils.getTagColour(index)
+      map.set(id, `${Color(base).alpha(0.75).rgb()}`)
+    })
+    return map
+  }, [sortedEnvIds, environments?.results])
 
   const labelOptions = useMemo(
     () => labelValues.map((v) => ({ label: v, value: v })),
@@ -87,7 +116,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
     : data?.chartData &&
       data.chartData.length > 0 &&
       data.chartData.some((dayData) =>
-        environmentIds.some((envId) => Number(dayData[envId] || 0) > 0),
+        sortedEnvIds.some((envId) => Number(dayData[envId] || 0) > 0),
       )
 
   return (
@@ -133,9 +162,10 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
         {hasData && (
           <BarChart
             data={isLabelled ? labelledChartData : data?.chartData || []}
-            series={isLabelled ? filteredLabels : environmentIds}
+            series={isLabelled ? filteredLabels : sortedEnvIds}
             colorMap={isLabelled ? colorMap : envColorMap}
             xAxisInterval={2}
+            showLegend={isLabelled}
           />
         )}
       </FormGroup>
