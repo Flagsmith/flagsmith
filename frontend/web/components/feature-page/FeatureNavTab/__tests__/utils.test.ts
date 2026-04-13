@@ -3,8 +3,7 @@ import {
   aggregateByLabels,
 } from 'components/feature-page/FeatureNavTab/utils'
 import { Res } from 'common/types/responses'
-
-const MOCK_COLORS = ['#blue', '#red', '#green', '#orange', '#purple']
+import { CHART_COLOURS } from 'common/theme/tokens'
 
 describe('hasLabelledData', () => {
   it('returns false for undefined data', () => {
@@ -58,7 +57,7 @@ describe('aggregateByLabels', () => {
       { count: 150, day: '2026-04-02', labels: { user_agent: 'js-sdk' } },
     ]
 
-    const result = aggregateByLabels(data, MOCK_COLORS)
+    const result = aggregateByLabels(data)
 
     expect(result.chartData).toHaveLength(2)
     expect(result.chartData[0]).toEqual({
@@ -78,7 +77,7 @@ describe('aggregateByLabels', () => {
       { count: 75, day: '2026-04-01', labels: { user_agent: 'js-sdk' } },
     ]
 
-    const result = aggregateByLabels(data, MOCK_COLORS)
+    const result = aggregateByLabels(data)
 
     expect(result.chartData[0]['js-sdk']).toBe(125)
   })
@@ -90,36 +89,42 @@ describe('aggregateByLabels', () => {
       { count: 30, day: '2026-04-02', labels: { user_agent: 'js-sdk' } },
     ]
 
-    const result = aggregateByLabels(data, MOCK_COLORS)
+    const result = aggregateByLabels(data)
 
     expect(result.labelValues).toEqual(['js-sdk', 'python-sdk'])
   })
 
-  it('builds a color map from provided colors', () => {
+  it('builds a color map by assigning palette colours in label order', () => {
     const data: Res['environmentAnalytics'] = [
       { count: 10, day: '2026-04-01', labels: { user_agent: 'js-sdk' } },
       { count: 20, day: '2026-04-01', labels: { user_agent: 'python-sdk' } },
     ]
 
-    const result = aggregateByLabels(data, MOCK_COLORS)
+    const result = aggregateByLabels(data)
 
-    expect(result.colorMap.get('js-sdk')).toBe('#blue')
-    expect(result.colorMap.get('python-sdk')).toBe('#red')
+    expect(result.colorMap.get('js-sdk')).toBe(CHART_COLOURS[0])
+    expect(result.colorMap.get('python-sdk')).toBe(CHART_COLOURS[1])
   })
 
-  it('wraps colors when more labels than colors', () => {
-    const data: Res['environmentAnalytics'] = [
-      { count: 1, day: '2026-04-01', labels: { user_agent: 'a' } },
-      { count: 1, day: '2026-04-01', labels: { user_agent: 'b' } },
-      { count: 1, day: '2026-04-01', labels: { user_agent: 'c' } },
-      { count: 1, day: '2026-04-01', labels: { user_agent: 'd' } },
-      { count: 1, day: '2026-04-01', labels: { user_agent: 'e' } },
-      { count: 1, day: '2026-04-01', labels: { user_agent: 'f' } },
-    ]
+  it('wraps colors when more labels than colors in the palette', () => {
+    // 11 labels exceeds the 10-colour palette by one → label 11 reuses index 0.
+    const data: Res['environmentAnalytics'] = Array.from(
+      { length: CHART_COLOURS.length + 1 },
+      (_, i) => ({
+        count: 1,
+        day: '2026-04-01',
+        labels: { user_agent: `sdk-${i}` },
+      }),
+    )
 
-    const result = aggregateByLabels(data, MOCK_COLORS)
+    const result = aggregateByLabels(data)
 
-    expect(result.colorMap.get('f')).toBe('#blue') // wraps to index 0
+    expect(result.colorMap.get(`sdk-${CHART_COLOURS.length - 1}`)).toBe(
+      CHART_COLOURS[CHART_COLOURS.length - 1],
+    )
+    expect(result.colorMap.get(`sdk-${CHART_COLOURS.length}`)).toBe(
+      CHART_COLOURS[0],
+    )
   })
 
   it('falls back to Unknown when no label value', () => {
@@ -128,7 +133,7 @@ describe('aggregateByLabels', () => {
       { count: 20, day: '2026-04-01' },
     ]
 
-    const result = aggregateByLabels(data, MOCK_COLORS)
+    const result = aggregateByLabels(data)
 
     expect(result.labelValues).toEqual(['Unknown'])
     expect(result.chartData[0].Unknown).toBe(30)
@@ -143,7 +148,7 @@ describe('aggregateByLabels', () => {
       },
     ]
 
-    const result = aggregateByLabels(data, MOCK_COLORS)
+    const result = aggregateByLabels(data)
 
     expect(result.labelValues).toEqual(['js-sdk'])
   })

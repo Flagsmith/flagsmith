@@ -3,57 +3,6 @@
 // Do not edit manually. Run: npm run generate:tokens
 // =============================================================================
 
-export const tokens = {
-  border: {
-    action: 'var(--color-border-action, #6837fc)',
-    danger: 'var(--color-border-danger, #ef4d56)',
-    default: 'var(--color-border-default)',
-    disabled: 'var(--color-border-disabled)',
-    info: 'var(--color-border-info, #0aaddf)',
-    strong: 'var(--color-border-strong)',
-    success: 'var(--color-border-success, #27ab95)',
-    warning: 'var(--color-border-warning, #ff9f43)',
-  },
-  icon: {
-    action: 'var(--color-icon-action, #6837fc)',
-    danger: 'var(--color-icon-danger, #ef4d56)',
-    default: 'var(--color-icon-default, #1a2634)',
-    disabled: 'var(--color-icon-disabled, #9da4ae)',
-    info: 'var(--color-icon-info, #0aaddf)',
-    secondary: 'var(--color-icon-secondary, #656d7b)',
-    success: 'var(--color-icon-success, #27ab95)',
-    warning: 'var(--color-icon-warning, #ff9f43)',
-  },
-  surface: {
-    action: 'var(--color-surface-action, #6837fc)',
-    actionActive: 'var(--color-surface-action-active, #3919b7)',
-    actionHover: 'var(--color-surface-action-hover, #4e25db)',
-    actionMuted: 'var(--color-surface-action-muted)',
-    actionSubtle: 'var(--color-surface-action-subtle)',
-    active: 'var(--color-surface-active)',
-    danger: 'var(--color-surface-danger)',
-    default: 'var(--color-surface-default, #ffffff)',
-    emphasis: 'var(--color-surface-emphasis, #e0e3e9)',
-    hover: 'var(--color-surface-hover)',
-    info: 'var(--color-surface-info)',
-    muted: 'var(--color-surface-muted, #eff1f4)',
-    subtle: 'var(--color-surface-subtle, #fafafb)',
-    success: 'var(--color-surface-success)',
-    warning: 'var(--color-surface-warning)',
-  },
-  text: {
-    action: 'var(--color-text-action, #6837fc)',
-    danger: 'var(--color-text-danger, #ef4d56)',
-    default: 'var(--color-text-default, #1a2634)',
-    disabled: 'var(--color-text-disabled, #9da4ae)',
-    info: 'var(--color-text-info, #0aaddf)',
-    secondary: 'var(--color-text-secondary, #656d7b)',
-    success: 'var(--color-text-success, #27ab95)',
-    tertiary: 'var(--color-text-tertiary, #9da4ae)',
-    warning: 'var(--color-text-warning, #ff9f43)',
-  },
-} as const
-
 export type TokenEntry = {
   value: string
   description: string
@@ -157,21 +106,130 @@ export const easing: Record<string, TokenEntry> = {
   },
 }
 
-// Chart colours — use with useChartColors() hook for runtime resolution
+// =============================================================================
+// Flat token constants — semantic tokens as CSS value strings.
+// Use directly in any context that accepts a CSS value:
+//   <Bar fill={colorChart1} />              (recharts prop)
+//   style={{ color: colorTextSecondary }}   (inline style)
+//   border: `1px solid ${colorBorderDefault}` (template strings)
+// var() resolves at render; theme toggle updates colours via CSS cascade.
+// =============================================================================
+
+// Border
+export const colorBorderAction = 'var(--color-border-action, #6837fc)'
+export const colorBorderDanger = 'var(--color-border-danger, #ef4d56)'
+export const colorBorderDefault =
+  'var(--color-border-default, rgba(101, 109, 123, 0.16))'
+export const colorBorderDisabled =
+  'var(--color-border-disabled, rgba(101, 109, 123, 0.08))'
+export const colorBorderInfo = 'var(--color-border-info, #0aaddf)'
+export const colorBorderStrong =
+  'var(--color-border-strong, rgba(101, 109, 123, 0.24))'
+export const colorBorderSuccess = 'var(--color-border-success, #27ab95)'
+export const colorBorderWarning = 'var(--color-border-warning, #ff9f43)'
+
+// Icon
+export const colorIconAction = 'var(--color-icon-action, #6837fc)'
+export const colorIconDanger = 'var(--color-icon-danger, #ef4d56)'
+export const colorIconDefault = 'var(--color-icon-default, #1a2634)'
+export const colorIconDisabled = 'var(--color-icon-disabled, #9da4ae)'
+export const colorIconInfo = 'var(--color-icon-info, #0aaddf)'
+export const colorIconSecondary = 'var(--color-icon-secondary, #656d7b)'
+export const colorIconSuccess = 'var(--color-icon-success, #27ab95)'
+export const colorIconWarning = 'var(--color-icon-warning, #ff9f43)'
+
+// Surface
+export const colorSurfaceAction = 'var(--color-surface-action, #6837fc)'
+export const colorSurfaceActionActive =
+  'var(--color-surface-action-active, #3919b7)'
+export const colorSurfaceActionHover =
+  'var(--color-surface-action-hover, #4e25db)'
+export const colorSurfaceActionMuted =
+  'var(--color-surface-action-muted, rgba(104, 55, 252, 0.16))'
+export const colorSurfaceActionSubtle =
+  'var(--color-surface-action-subtle, rgba(104, 55, 252, 0.08))'
+export const colorSurfaceActive =
+  'var(--color-surface-active, rgba(0, 0, 0, 0.16))'
+export const colorSurfaceDanger =
+  'var(--color-surface-danger, rgba(239, 77, 86, 0.08))'
+export const colorSurfaceDefault = 'var(--color-surface-default, #ffffff)'
+export const colorSurfaceEmphasis = 'var(--color-surface-emphasis, #e0e3e9)'
+export const colorSurfaceHover =
+  'var(--color-surface-hover, rgba(0, 0, 0, 0.08))'
+export const colorSurfaceInfo =
+  'var(--color-surface-info, rgba(10, 173, 223, 0.08))'
+export const colorSurfaceMuted = 'var(--color-surface-muted, #eff1f4)'
+export const colorSurfaceSubtle = 'var(--color-surface-subtle, #fafafb)'
+export const colorSurfaceSuccess =
+  'var(--color-surface-success, rgba(39, 171, 149, 0.08))'
+export const colorSurfaceWarning =
+  'var(--color-surface-warning, rgba(255, 159, 67, 0.08))'
+
+// Text
+export const colorTextAction = 'var(--color-text-action, #6837fc)'
+export const colorTextDanger = 'var(--color-text-danger, #ef4d56)'
+export const colorTextDefault = 'var(--color-text-default, #1a2634)'
+export const colorTextDisabled = 'var(--color-text-disabled, #9da4ae)'
+export const colorTextInfo = 'var(--color-text-info, #0aaddf)'
+export const colorTextSecondary = 'var(--color-text-secondary, #656d7b)'
+export const colorTextSuccess = 'var(--color-text-success, #27ab95)'
+export const colorTextTertiary = 'var(--color-text-tertiary, #9da4ae)'
+export const colorTextWarning = 'var(--color-text-warning, #ff9f43)'
+
+// Chart
+export const colorChart1 = 'var(--color-chart-1, #0aaddf)'
+export const colorChart2 = 'var(--color-chart-2, #ef4d56)'
+export const colorChart3 = 'var(--color-chart-3, #27ab95)'
+export const colorChart4 = 'var(--color-chart-4, #ff9f43)'
+export const colorChart5 = 'var(--color-chart-5, #7a4dfc)'
+export const colorChart6 = 'var(--color-chart-6, #0b8bb2)'
+export const colorChart7 = 'var(--color-chart-7, #e61b26)'
+export const colorChart8 = 'var(--color-chart-8, #13787b)'
+export const colorChart9 = 'var(--color-chart-9, #fa810c)'
+export const colorChart10 = 'var(--color-chart-10, #6837fc)'
+
+// Chart palette — indexed access for building colour maps.
 export const CHART_COLOURS = [
-  '--color-chart-1',
-  '--color-chart-2',
-  '--color-chart-3',
-  '--color-chart-4',
-  '--color-chart-5',
-  '--color-chart-6',
-  '--color-chart-7',
-  '--color-chart-8',
-  '--color-chart-9',
-  '--color-chart-10',
+  colorChart1,
+  colorChart2,
+  colorChart3,
+  colorChart4,
+  colorChart5,
+  colorChart6,
+  colorChart7,
+  colorChart8,
+  colorChart9,
+  colorChart10,
 ] as const
 
-export type TokenCategory = keyof typeof tokens
-export type TokenName<C extends TokenCategory> = keyof (typeof tokens)[C]
-export type RadiusScale = keyof typeof radius
-export type ShadowScale = keyof typeof shadow
+// Radius
+export const radius2xl = 'var(--radius-2xl, 18px)'
+export const radiusFull = 'var(--radius-full, 9999px)'
+export const radiusLg = 'var(--radius-lg, 8px)'
+export const radiusMd = 'var(--radius-md, 6px)'
+export const radiusNone = 'var(--radius-none, 0px)'
+export const radiusSm = 'var(--radius-sm, 4px)'
+export const radiusXl = 'var(--radius-xl, 10px)'
+export const radiusXs = 'var(--radius-xs, 2px)'
+
+// Shadow
+export const shadowLg =
+  'var(--shadow-lg, 0px 8px 16px oklch(from var(--slate-1000) l c h / 0.15))'
+export const shadowMd =
+  'var(--shadow-md, 0px 4px 8px oklch(from var(--slate-1000) l c h / 0.12))'
+export const shadowSm =
+  'var(--shadow-sm, 0px 1px 2px oklch(from var(--slate-1000) l c h / 0.05))'
+export const shadowXl =
+  'var(--shadow-xl, 0px 12px 24px oklch(from var(--slate-1000) l c h / 0.20))'
+
+// Duration
+export const durationFast = 'var(--duration-fast, 100ms)'
+export const durationNormal = 'var(--duration-normal, 200ms)'
+export const durationSlow = 'var(--duration-slow, 300ms)'
+
+// Easing
+export const easingEntrance =
+  'var(--easing-entrance, cubic-bezier(0.0, 0, 0.38, 0.9))'
+export const easingExit = 'var(--easing-exit, cubic-bezier(0.2, 0, 1, 0.9))'
+export const easingStandard =
+  'var(--easing-standard, cubic-bezier(0.2, 0, 0.38, 0.9))'

@@ -1,5 +1,6 @@
 import { ChartDataPoint } from 'components/charts/BarChart'
 import { Res } from 'common/types/responses'
+import { buildChartColorMap } from 'components/charts/buildChartColorMap'
 
 /**
  * Check if the analytics data contains labelled buckets.
@@ -17,10 +18,7 @@ export function hasLabelledData(
  * Aggregate raw environment analytics into label-grouped chart data.
  * Each unique label value becomes a series in the stacked chart.
  */
-export function aggregateByLabels(
-  rawData: Res['environmentAnalytics'],
-  colors: string[],
-): {
+export function aggregateByLabels(rawData: Res['environmentAnalytics']): {
   chartData: ChartDataPoint[]
   colorMap: Map<string, string>
   labelValues: string[]
@@ -48,14 +46,9 @@ export function aggregateByLabels(
     grouped[date][labelValue] = (grouped[date][labelValue] || 0) + entry.count
   })
 
-  const colorMap = new Map<string, string>()
-  labelList.forEach((label, index) => {
-    colorMap.set(label, colors[index % colors.length])
-  })
-
   return {
     chartData: Object.values(grouped),
-    colorMap,
+    colorMap: buildChartColorMap(labelList),
     labelValues: labelList,
   }
 }
