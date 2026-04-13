@@ -209,22 +209,53 @@ def test_over_plan_seats_limit__no_subscription_metadata__returns_true(  # type:
 
 
 @pytest.mark.saas_mode
-def test_is_auto_seat_upgrade_available__scale_up_plan__returns_true(
+@pytest.mark.parametrize(
+    "plan, num_seats, expected",
+    [
+        ("scale-up-v2", 19, True),
+        ("scale-up-v2", 20, False),
+        ("scale-up-v2", 21, False),
+        ("startup-v2", 1, False),
+    ],
+)
+def test_is_auto_seat_upgrade_available__given_plan_and_seat_count__returns_expected(
+    organisation: Organisation,
+    plan: str,
+    num_seats: int,
+    expected: bool,
+) -> None:
+    # Given
+    subscription = organisation.subscription
+    subscription.plan = plan
+    subscription.subscription_id = "subscription-id"
+    subscription.save()
+
+    organisation.users.all().delete()
+    for i in range(num_seats):
+        user = FFAdminUser.objects.create(email=f"seat-{i}@test.com")
+        user.add_organisation(organisation)
+
+    # When
+    result = organisation.is_auto_seat_upgrade_available()
+
+    # Then
+    assert result is expected
+
+
+def test_is_auto_seat_upgrade_available__not_saas__returns_false(
     organisation: Organisation,
 ) -> None:
     # Given
-    plan = "Scale-Up"
-    subscription_id = "subscription-id"
-
-    Subscription.objects.filter(organisation=organisation).update(
-        subscription_id=subscription_id, plan=plan
-    )
+    subscription = organisation.subscription
+    subscription.plan = "scale-up-v2"
+    subscription.subscription_id = "subscription-id"
+    subscription.save()
 
     # When
-    organisation.refresh_from_db()
+    result = organisation.is_auto_seat_upgrade_available()
 
     # Then
-    assert organisation.is_auto_seat_upgrade_available() is True
+    assert result is False
 
 
 def test_subscription__default_for_new_organisation__has_one_max_seat(
@@ -458,16 +489,16 @@ def test_get_subscription_metadata__self_hosted_open_source__returns_free_plan_m
 
 
 @pytest.mark.saas_mode
-def test_add_single_seat__upgradable_plan__calls_chargebee_add_seat(
+def test_add_single_seat__upgradable_plan__calls_chargebee_add_single_seat(
+    organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
     # Given
     subscription_id = "subscription-id"
     subscription = Subscription(subscription_id=subscription_id, plan="scale-up")
+    mocker.patch.object(Subscription, "can_auto_upgrade_seats", new=True)
+    mocked_add_single_seat = mocker.patch("organisations.models.add_single_seat")
 
-    mocked_add_single_seat = mocker.patch(
-        "organisations.models.add_single_seat", autospec=True
-    )
     # When
     subscription.add_single_seat()  # type: ignore[no-untyped-call]
 
