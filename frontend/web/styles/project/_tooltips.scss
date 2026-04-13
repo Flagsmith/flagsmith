@@ -38,36 +38,3 @@ $shadow-dark: 0 4px 4px 0 #00000029;
     }
   }
 }
-
-.recharts-tooltip {
-  background-color: $text-icon-light;
-  border-radius: $border-radius-lg;
-}
-
-.yAxis {
-  font-size: $font-caption-sm;
-  line-height: $line-height-xxsm;
-  font-weight: 500;
-}
-
-.xAxis {
-  font-size: $font-caption-xs;
-  line-height: $line-height-xxsm;
-  font-weight: 500;
-}
-
-.dark {
-  .recharts-tooltip-header {
-    color: $body-color;
-  }
-
-  .xAxis {
-    color: $text-icon-light-grey;
-  }
-
-  .recharts-wrapper {
-    line {
-      stroke: $bg-dark100;
-    }
-  }
-}
