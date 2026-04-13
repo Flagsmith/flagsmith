@@ -10,13 +10,13 @@ const SDK_OPTIONS = [
   { label: 'flagsmith-ruby-sdk', value: 'ruby' },
 ]
 
-const COLOUR_MAP = new Map([
-  ['js', '#0aaddf'],
-  ['python', '#7a4dfc'],
-  ['java', '#ef4d56'],
-  ['go', '#27ab95'],
-  ['ruby', '#ff9f43'],
-])
+const COLOUR_MAP: Record<string, string> = {
+  go: '#27ab95',
+  java: '#ef4d56',
+  js: '#0aaddf',
+  python: '#7a4dfc',
+  ruby: '#ff9f43',
+}
 
 const meta: Meta<typeof MultiSelect> = {
   component: MultiSelect,

@@ -1,13 +1,11 @@
 import React, { FC, useMemo, useState } from 'react'
-import Color from 'color'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentTagSelect from 'components/EnvironmentTagSelect'
 import BarChart from 'components/charts/BarChart'
 import { MultiSelect } from 'components/base/select/multi-select'
 import { useGetFeatureAnalyticsQuery } from 'common/services/useFeatureAnalytics'
-import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import Utils from 'common/utils/utils'
 import { aggregateByLabels, hasLabelledData } from './utils'
+import { useEnvChartProps } from './useEnvChartProps'
 
 type FlagAnalyticsType = {
   projectId: string
@@ -23,12 +21,6 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
   const [environmentIds, setEnvironmentIds] = useState(defaultEnvironmentIds)
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
 
-  // Needed to assign each environment its tag colour from the project's env
-  // list position (stable regardless of which envs the user has selected).
-  const { data: environments } = useGetEnvironmentsQuery({
-    projectId: Number(projectId),
-  })
-
   const { data, isLoading } = useGetFeatureAnalyticsQuery(
     {
       environment_ids: environmentIds,
@@ -43,9 +35,13 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
 
   const isLabelled = hasLabelledData(data?.rawEntries)
 
+  const envChart = useEnvChartProps({ environmentIds, projectId })
+
+  // Labelled-mode derivations — inline useMemos (component-local, no reuse
+  // elsewhere, so not worth extracting into a hook).
   const {
     chartData: labelledChartData,
-    colorMap,
+    colorMap: labelColorMap,
     labelValues,
   } = useMemo(
     () =>
@@ -54,54 +50,13 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
             data.rawEntries,
             data.chartData.map((d) => d.day),
           )
-        : {
-            chartData: [],
-            colorMap: new Map<string, string>(),
-            labelValues: [],
-          },
+        : { chartData: [], colorMap: {}, labelValues: [] },
     [isLabelled, data?.rawEntries, data?.chartData],
   )
-
-  // Order selected envs by their position in the project env list so the
-  // legend/stack order stays stable regardless of selection order.
-  const sortedEnvIds = useMemo(() => {
-    const envList = environments?.results ?? []
-    return [...environmentIds].sort(
-      (a, b) =>
-        envList.findIndex((e) => `${e.id}` === a) -
-        envList.findIndex((e) => `${e.id}` === b),
-    )
-  }, [environmentIds, environments?.results])
-
-  // Env colour = same `Utils.getTagColour(indexInProjectEnvList)` the env tag
-  // chips use, so bar colour matches the tag chip colour 1:1. 0.75 alpha
-  // softens the fill the way the pre-existing chart did.
-  const envColorMap = useMemo(() => {
-    const map = new Map<string, string>()
-    const envList = environments?.results ?? []
-    sortedEnvIds.forEach((id) => {
-      let index = envList.findIndex((e) => `${e.id}` === id)
-      if (index === -1) index = 0
-      const base = Utils.getTagColour(index)
-      map.set(id, `${Color(base).alpha(0.75).rgb()}`)
-    })
-    return map
-  }, [sortedEnvIds, environments?.results])
-
-  // env id → env name map, so the tooltip shows "Production" not "22".
-  const envLabelMap = useMemo(() => {
-    const map: Record<string, string> = {}
-    environments?.results?.forEach((env) => {
-      map[`${env.id}`] = env.name
-    })
-    return map
-  }, [environments?.results])
-
   const labelOptions = useMemo(
     () => labelValues.map((v) => ({ label: v, value: v })),
     [labelValues],
   )
-
   const filteredLabels =
     selectedLabels.length > 0
       ? labelValues.filter((v) => selectedLabels.includes(v))
@@ -115,9 +70,8 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
     }
   }
 
-  // labelledChartData now always has one bucket per day (even when empty),
-  // so we can't use `.length > 0` — check that at least one day has a
-  // non-zero count for one of the label series.
+  // labelledChartData has one bucket per day (including empties), so a plain
+  // length check isn't meaningful — probe for any non-zero series value.
   const hasData = isLabelled
     ? labelledChartData.some((dayData) =>
         labelValues.some((v) => Number(dayData[v] || 0) > 0),
@@ -125,7 +79,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
     : data?.chartData &&
       data.chartData.length > 0 &&
       data.chartData.some((dayData) =>
-        sortedEnvIds.some((envId) => Number(dayData[envId] || 0) > 0),
+        envChart.series.some((envId) => Number(dayData[envId] || 0) > 0),
       )
 
   return (
@@ -149,7 +103,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
                 options={labelOptions}
                 selectedValues={selectedLabels}
                 onSelectionChange={setSelectedLabels}
-                colorMap={colorMap}
+                colorMap={labelColorMap}
               />
             </div>
           )}
@@ -168,16 +122,24 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
             {environmentIds?.length > 1 ? 's' : ''}.
           </div>
         )}
-        {hasData && (
-          <BarChart
-            data={isLabelled ? labelledChartData : data?.chartData || []}
-            series={isLabelled ? filteredLabels : sortedEnvIds}
-            colorMap={isLabelled ? colorMap : envColorMap}
-            seriesLabels={isLabelled ? undefined : envLabelMap}
-            xAxisInterval={2}
-            showLegend={isLabelled}
-          />
-        )}
+        {hasData &&
+          (isLabelled ? (
+            <BarChart
+              data={labelledChartData}
+              series={filteredLabels}
+              colorMap={labelColorMap}
+              xAxisInterval={2}
+              showLegend
+            />
+          ) : (
+            <BarChart
+              data={data?.chartData || []}
+              series={envChart.series}
+              colorMap={envChart.colorMap}
+              seriesLabels={envChart.seriesLabels}
+              xAxisInterval={2}
+            />
+          ))}
       </FormGroup>
       <InfoMessage>
         The Flag Analytics data will be visible in the Dashboard between 30

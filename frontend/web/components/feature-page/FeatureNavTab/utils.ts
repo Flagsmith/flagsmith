@@ -37,7 +37,7 @@ export function aggregateByLabels(
   days: string[],
 ): {
   chartData: ChartDataPoint[]
-  colorMap: Map<string, string>
+  colorMap: Record<string, string>
   labelValues: string[]
 } {
   const grouped: Record<string, ChartDataPoint> = {}

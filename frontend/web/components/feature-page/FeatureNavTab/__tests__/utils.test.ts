@@ -158,8 +158,8 @@ describe('aggregateByLabels', () => {
 
     const result = aggregateByLabels(data, TWO_DAYS)
 
-    expect(result.colorMap.get('js-sdk')).toBe(CHART_COLOURS[0])
-    expect(result.colorMap.get('python-sdk')).toBe(CHART_COLOURS[1])
+    expect(result.colorMap['js-sdk']).toBe(CHART_COLOURS[0])
+    expect(result.colorMap['python-sdk']).toBe(CHART_COLOURS[1])
   })
 
   it('wraps colors when more labels than colors in the palette', () => {
@@ -175,10 +175,10 @@ describe('aggregateByLabels', () => {
 
     const result = aggregateByLabels(data, TWO_DAYS)
 
-    expect(result.colorMap.get(`sdk-${CHART_COLOURS.length - 1}`)).toBe(
+    expect(result.colorMap[`sdk-${CHART_COLOURS.length - 1}`]).toBe(
       CHART_COLOURS[CHART_COLOURS.length - 1],
     )
-    expect(result.colorMap.get(`sdk-${CHART_COLOURS.length}`)).toBe(
+    expect(result.colorMap[`sdk-${CHART_COLOURS.length}`]).toBe(
       CHART_COLOURS[0],
     )
   })

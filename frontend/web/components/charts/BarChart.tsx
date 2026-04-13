@@ -19,10 +19,8 @@ export type ChartDataPoint = {
 type BarChartProps = {
   data: ChartDataPoint[]
   series: string[]
-  colorMap: Map<string, string>
-  height?: number
+  colorMap: Record<string, string>
   xAxisInterval?: number
-  stacked?: boolean
   /**
    * Render recharts' built-in `<Legend />` below the chart. Default `false` —
    * most consumers already expose a coloured filter UI (tags / MultiSelect)
@@ -41,15 +39,13 @@ type BarChartProps = {
 const BarChart: FC<BarChartProps> = ({
   colorMap,
   data,
-  height = 400,
   series,
   seriesLabels,
   showLegend = false,
-  stacked = true,
   xAxisInterval = 0,
 }) => {
   return (
-    <ResponsiveContainer height={height} width='100%'>
+    <ResponsiveContainer height={400} width='100%'>
       <RawBarChart data={data}>
         <CartesianGrid strokeDasharray='3 5' strokeOpacity={0.4} />
         <XAxis
@@ -84,8 +80,8 @@ const BarChart: FC<BarChartProps> = ({
           <Bar
             key={label}
             dataKey={label}
-            stackId={stacked ? 'series' : undefined}
-            fill={colorMap.get(label)}
+            stackId='series'
+            fill={colorMap[label]}
             animationBegin={index * 80}
             animationDuration={600}
             animationEasing='ease-out'
