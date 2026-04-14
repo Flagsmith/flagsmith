@@ -16,7 +16,7 @@ def gitlab_configuration(project: Project) -> GitLabConfiguration:
     )
 
 
-def test_create_configuration__valid_data__persists_and_hides_token(
+def test_create_configuration__valid_data__persists_and_masks_token(
     admin_client_new: APIClient,
     project: Project,
     log: StructuredLogCapture,
@@ -33,7 +33,7 @@ def test_create_configuration__valid_data__persists_and_hides_token(
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    assert "access_token" not in response.json()
+    assert response.json()["access_token"] == "write-only"
 
     config = GitLabConfiguration.objects.get(project=project)
     assert config.gitlab_instance_url == "https://gitlab.example.com"
@@ -69,7 +69,7 @@ def test_create_configuration__already_exists__returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_update_configuration__valid_data__persists_and_hides_token(
+def test_update_configuration__valid_data__persists_and_masks_token(
     admin_client_new: APIClient,
     project: Project,
     gitlab_configuration: GitLabConfiguration,
@@ -87,7 +87,7 @@ def test_update_configuration__valid_data__persists_and_hides_token(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert "access_token" not in response.json()
+    assert response.json()["access_token"] == "write-only"
 
     gitlab_configuration.refresh_from_db()
     assert gitlab_configuration.gitlab_instance_url == "https://gitlab.updated.com"
@@ -129,7 +129,7 @@ def test_delete_configuration__existing__soft_deletes(
     ]
 
 
-def test_list_configurations__existing__hides_token(
+def test_list_configurations__existing__masks_token(
     admin_client_new: APIClient,
     project: Project,
     gitlab_configuration: GitLabConfiguration,
@@ -143,8 +143,8 @@ def test_list_configurations__existing__hides_token(
     assert response.status_code == status.HTTP_200_OK
     results = response.json()
     assert len(results) == 1
-    assert "access_token" not in results[0]
     assert results[0]["gitlab_instance_url"] == "https://gitlab.example.com"
+    assert results[0]["access_token"] == "write-only"
 
 
 def test_create_configuration__non_admin__returns_403(
