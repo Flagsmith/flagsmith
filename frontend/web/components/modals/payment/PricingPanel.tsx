@@ -114,6 +114,7 @@ export const PricingPanel = ({
             <div>
               {!isEnterprise && chargebeePlanId && (
                 <PaymentButton
+                  key={chargebeePlanId}
                   data-cb-plan-id={chargebeePlanId}
                   className='btn btn-primary btn-lg full-width mt-3'
                   isDisableAccount={isDisableAccount}
