@@ -47,11 +47,7 @@ export const SCALE_UP_FEATURES: PricingFeature[] = [
     ),
   },
   {
-    text: (
-      <>
-        Up to <strong>20</strong> Team members
-      </>
-    ),
+    text: 'Additional seats at $60/seat (up to 20)',
   },
   {
     text: 'User roles and permissions',

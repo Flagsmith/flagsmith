@@ -350,7 +350,7 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>
-                                Up to <strong>20</strong> Team members
+                                Additional seats at $60/seat (up to 20)
                               </div>
                             </Row>
                           </li>
