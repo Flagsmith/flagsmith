@@ -167,6 +167,10 @@
                     "value": "INFO"
                 },
                 {
+                    "name": "LOG_FORMAT",
+                    "value": "json"
+                },
+                {
                     "name": "SSE_SERVER_BASE_URL",
                     "value": "https://origin.realtime-staging.flagsmith.com"
                 },
