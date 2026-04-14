@@ -12,6 +12,7 @@ import dataRelay from 'data-relay'
 import { sortBy } from 'lodash'
 import Project from 'common/project'
 import { getStore } from 'common/store'
+import { setSelectedOrganisationId } from 'common/selectedOrganisationSlice'
 import { service } from 'common/service'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 import { createOnboardingSupportOptIn } from 'common/services/useOnboardingSupportOptIn'
@@ -309,6 +310,7 @@ const controller = {
   selectOrganisation: (id) => {
     API.setCookie('organisation', `${id}`)
     store.organisation = find(store.model.organisations, { id })
+    getStore().dispatch(setSelectedOrganisationId(id))
     store.changed()
   },
 
@@ -343,6 +345,9 @@ const controller = {
             store.organisation = foundOrganisation
             AppActions.getOrganisation(orgId)
           }
+        }
+        if (store.organisation?.id) {
+          getStore().dispatch(setSelectedOrganisationId(store.organisation.id))
         }
       }
 
