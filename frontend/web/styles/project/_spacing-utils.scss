@@ -9,10 +9,6 @@
 }
 
 .ml-auto { margin-left: auto !important; }
-.mr-auto { margin-right: auto !important; }
-
-// Negative margin (BS5 has these disabled by default)
-.mt-n1 { margin-top: -0.25rem !important; }
 
 // Custom utilities not in Bootstrap's scale
 .row-gap-4 { row-gap: $spacer; }
