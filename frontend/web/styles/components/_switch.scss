@@ -73,16 +73,6 @@
   -webkit-animation-name: none;
   animation-name: none;
 }
-.widget-mode {
-  .rc-switch {
-    cursor: default;
-    opacity: 1;
-    @extend .rc-switch;
-    &.rc-switch-checked {
-      @extend .rc-switch-checked;
-    }
-  }
-}
 .dark {
   .rc-switch {
     background-color: $switch-bg-dark;
