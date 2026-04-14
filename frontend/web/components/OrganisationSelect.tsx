@@ -17,6 +17,7 @@ const OrganisationSelect: FC<OrganisationSelectProps> = ({
   return (
     <div className="d-flex">
         <Select
+          className="react-select w-100"
           value={
             selectedOrg
               ? { label: selectedOrg.name, value: selectedOrg.id }

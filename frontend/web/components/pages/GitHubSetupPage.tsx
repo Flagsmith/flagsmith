@@ -132,16 +132,16 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
           />
           <div className='mr-4 mb-4'>
             <label>Select your Flagsmith Organisation</label>
-          <div style={{ width: '500px' }}>
+            <div style={{ width: '500px' }}>
               <OrganisationSelect
-              value={organisation ? parseInt(organisation) : undefined}
-              onChange={(organisationId) => {
-                setOrganisation(`${organisationId}`)
-                AppActions.selectOrganisation(organisationId)
-                AppActions.getOrganisation(organisationId)
-              }}
-            />
-          </div>
+                value={organisation ? parseInt(organisation) : undefined}
+                onChange={(organisationId) => {
+                  setOrganisation(`${organisationId}`)
+                  AppActions.selectOrganisation(organisationId)
+                  AppActions.getOrganisation(organisationId)
+                }}
+              />
+            </div>
           </div>
           <label>
             Select your Flagsmith Project and your Github Repository
