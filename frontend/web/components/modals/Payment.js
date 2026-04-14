@@ -340,6 +340,16 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>
+                                <strong>5</strong> Team members
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
                                 Up to <strong>20</strong> Team members
                               </div>
                             </Row>
