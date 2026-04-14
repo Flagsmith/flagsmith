@@ -4,7 +4,7 @@ import Utils from 'common/utils/utils'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 
 type UseEnvChartPropsArgs = {
-  projectId: string
+  projectId: number
   environmentIds: string[]
 }
 
@@ -34,7 +34,7 @@ export function useEnvChartProps({
   projectId,
 }: UseEnvChartPropsArgs): UseEnvChartPropsResult {
   const { data: environments } = useGetEnvironmentsQuery({
-    projectId: Number(projectId),
+    projectId,
   })
 
   return useMemo(() => {

@@ -62,7 +62,7 @@ export function aggregateByLabels(
     }
 
     if (grouped[day]) {
-      grouped[day][labelValue] = (grouped[day][labelValue] || 0) + entry.count
+      grouped[day][labelValue] = (grouped[day][labelValue] ?? 0) + entry.count
     }
   })
 

@@ -8,8 +8,8 @@ import { aggregateByLabels, hasLabelledData } from './utils'
 import { useEnvChartProps } from './useEnvChartProps'
 
 type FlagAnalyticsType = {
-  projectId: string
-  featureId: string
+  projectId: number
+  featureId: number
   defaultEnvironmentIds: string[]
 }
 
