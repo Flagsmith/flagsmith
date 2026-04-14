@@ -1,4 +1,5 @@
 import freezegun
+from pytest_structlog import StructuredLogCapture
 from rest_framework.test import APIClient
 
 from features.models import Feature
@@ -10,6 +11,7 @@ from projects.models import Project
 def test_create_code_reference__valid_payload__returns_201_with_accepted_references(
     admin_client_new: APIClient,
     project: Project,
+    log: StructuredLogCapture,
 ) -> None:
     # Given / When
     response = admin_client_new.post(
@@ -60,6 +62,16 @@ def test_create_code_reference__valid_payload__returns_201_with_accepted_referen
             "feature_name": "feature-2",
             "file_path": "path/to/file3.py",
             "line_number": 30,
+        },
+    ]
+
+    assert log.events == [
+        {
+            "event": "scan.created",
+            "level": "info",
+            "organisation__id": project.organisation_id,
+            "code_references__count": 3,
+            "feature__count": 2,
         },
     ]
 
