@@ -694,6 +694,7 @@ export type Account = {
   pylon_email_signature: string
   sign_up_type: SignupType
   id: number
+  uuid: string
   email: string
   auth_type: AuthType
   is_superuser: boolean
