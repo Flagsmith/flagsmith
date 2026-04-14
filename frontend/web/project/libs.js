@@ -1,21 +1,5 @@
 import flagsmith from '@flagsmith/flagsmith';
 import * as Sentry from '@sentry/browser';
-// Optimise lodash
-import each from 'lodash/each';
-import map from 'lodash/map';
-import filter from 'lodash/filter';
-import find from 'lodash/find';
-import orderBy from 'lodash/orderBy';
-import intersection from 'lodash/intersection';
-import partial from 'lodash/partial';
-import cloneDeep from 'lodash/cloneDeep';
-import findIndex from 'lodash/findIndex';
-import sortBy from 'lodash/sortBy';
-import range from 'lodash/range';
-import keyBy from 'lodash/keyBy';
-import throttle from 'lodash/throttle';
-import every from 'lodash/every';
-import get from 'lodash/get';
 import { isMobile } from 'react-device-detect';
 import propTypes from 'prop-types';
 import Project from 'common/project';
@@ -29,7 +13,6 @@ window.isMobile = isMobile || $(window).width() <= 576;
 window.flagsmith = flagsmith;
 window.moment = moment;
 
-window._ = { each, intersection, sortBy, orderBy, filter, find, partial, findIndex, range, map, cloneDeep, keyBy, throttle, every, get };
 
 window.React = React;
 window.ReactDOM = ReactDOM;

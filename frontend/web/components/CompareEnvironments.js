@@ -1,5 +1,8 @@
 // import propTypes from 'prop-types';
 import React, { Component } from 'react'
+import each from 'lodash/each'
+import sortBy from 'lodash/sortBy'
+import keyBy from 'lodash/keyBy'
 import EnvironmentSelect from './EnvironmentSelect'
 import data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
@@ -81,8 +84,8 @@ class CompareEnvironments extends Component {
         ]) => {
           const changes = []
           const same = []
-          _.each(
-            _.sortBy(environmentLeftProjectFlags.results, (p) => p.name),
+          each(
+            sortBy(environmentLeftProjectFlags.results, (p) => p.name),
             (projectFlagLeft) => {
               const projectFlagRight =
                 environmentRightProjectFlags.results?.find(
@@ -123,11 +126,11 @@ class CompareEnvironments extends Component {
           )
           this.setState({
             changes,
-            environmentLeftFlags: _.keyBy(
+            environmentLeftFlags: keyBy(
               environmentLeftFlags.results,
               'feature',
             ),
-            environmentRightFlags: _.keyBy(
+            environmentRightFlags: keyBy(
               environmentRightFlags.results,
               'feature',
             ),

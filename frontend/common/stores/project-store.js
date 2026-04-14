@@ -1,4 +1,8 @@
 import OrganisationStore from './organisation-store'
+import filter from 'lodash/filter'
+import find from 'lodash/find'
+import findIndex from 'lodash/findIndex'
+import sortBy from 'lodash/sortBy'
 
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
@@ -77,7 +81,7 @@ const controller = {
   deleteEnv: (env) => {
     API.trackEvent(Constants.events.REMOVE_ENVIRONMENT)
     data.delete(`${Project.api}environments/${env.api_key}/`).then(() => {
-      store.model.environments = _.filter(
+      store.model.environments = filter(
         store.model.environments,
         (e) => e.id !== env.id,
       )
@@ -95,7 +99,7 @@ const controller = {
     data
       .put(`${Project.api}environments/${env.api_key}/`, env)
       .then((res) => {
-        const index = _.findIndex(store.model.environments, { id: env.id })
+        const index = findIndex(store.model.environments, { id: env.id })
         store.model.environments[index] = res
         store.saved()
         getStore().dispatch(
@@ -147,7 +151,7 @@ const controller = {
         project.total_features = project.total_features || 0
         project.total_segments = project.total_segments || 0
         store.model = Object.assign(project, {
-          environments: _.sortBy(environments.results, 'name'),
+          environments: sortBy(environments.results, 'name'),
         })
         if (project.organisation !== OrganisationStore.id) {
           AppActions.selectOrganisation(project.organisation)
@@ -174,11 +178,11 @@ const controller = {
 
 const store = Object.assign({}, BaseStore, {
   getEnvironment: (api_key) =>
-    store.model && _.find(store.model.environments, { api_key }),
+    store.model && find(store.model.environments, { api_key }),
   getEnvironmentById: (id) =>
-    store.model && _.find(store.model.environments, { id }),
+    store.model && find(store.model.environments, { id }),
   getEnvironmentIdFromKey: (api_key) => {
-    const env = _.find(store.model.environments, { api_key })
+    const env = find(store.model.environments, { api_key })
     return env && env.id
   },
   getEnvironmentIdFromKeyAsync: async (projectId, apiKey) => {
@@ -191,7 +195,7 @@ const store = Object.assign({}, BaseStore, {
   },
   getEnvs: () => store.model && store.model.environments,
   getIsVersioned: (api_key) => {
-    const env = _.find(store.model.environments, { api_key })
+    const env = find(store.model.environments, { api_key })
     return env && env.use_v2_feature_versioning
   },
   getMaxFeaturesAllowed: () => {

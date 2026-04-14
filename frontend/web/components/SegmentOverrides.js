@@ -1,4 +1,7 @@
 import React, { Component, Fragment } from 'react'
+import cloneDeep from 'lodash/cloneDeep'
+import filter from 'lodash/filter'
+import find from 'lodash/find'
 import classNames from 'classnames'
 import { DragDropProvider } from '@dnd-kit/react'
 import { useSortable, isSortable } from '@dnd-kit/react/sortable'
@@ -420,7 +423,7 @@ const SegmentOverrideListInner = ({
                   setValue(index, value)
                 }}
                 setVariations={(i, override, mvOptions) => {
-                  const newValue = _.cloneDeep(mvOptions)
+                  const newValue = cloneDeep(mvOptions)
                   newValue[i] = {
                     ...newValue[i],
                     percentage_allocation:
@@ -467,7 +470,7 @@ const SegmentOverrideListInner = ({
                 setValue(index, value)
               }}
               setVariations={(i, override, mvOptions) => {
-                const newValue = _.cloneDeep(mvOptions)
+                const newValue = cloneDeep(mvOptions)
                 newValue[i] = {
                   ...newValue[i],
                   percentage_allocation: override.default_percentage_allocation,
@@ -617,7 +620,7 @@ class TheComponent extends Component {
   confirmRemove = (i) => {
     if (!this.props.value[i].id) {
       this.props.onChange(
-        _.filter(this.props.value, (v, index) => index !== i).map((v, i) => ({
+        filter(this.props.value, (v, index) => index !== i).map((v, i) => ({
           ...v,
           priority: i,
         })),
@@ -683,7 +686,7 @@ class TheComponent extends Component {
       if (segment.feature && segment.feature !== this.props.feature)
         return false
       if (this.props.id && this.props.id !== segment.id) return null
-      const foundSegment = _.find(value, (v) => v.segment === segment.id)
+      const foundSegment = find(value, (v) => v.segment === segment.id)
       return !value || !foundSegment || (foundSegment && foundSegment.toRemove)
     }
     const InnerComponent =

@@ -1,5 +1,7 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react'
+import map from 'lodash/map'
+import range from 'lodash/range'
 import propTypes from 'prop-types'
 import cn from 'classnames'
 import { chevronBackOutline, chevronForwardOutline } from 'ionicons/icons'
@@ -29,7 +31,7 @@ export default class Paging extends PureComponent {
       lastPage,
       (currentIndex || currentIndex + 1) + spaceBetween,
     )
-    const range = _.range(from, to)
+    const range = range(from, to)
     const noPages = range.length < 1
     if (noPages && !(paging.next || paging.previous)) {
       return null
@@ -83,7 +85,7 @@ export default class Paging extends PureComponent {
               </>
             )}
             {!noPages &&
-              _.map(range, (index) => (
+              map(range, (index) => (
                 <div
                   key={index}
                   role='button'

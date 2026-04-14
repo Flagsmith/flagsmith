@@ -7,7 +7,11 @@ import { getSubscriptionMetadata } from 'common/services/useSubscriptionMetadata
 import Dispatcher from 'common/dispatcher/dispatcher'
 import BaseStore from './base/_store'
 import data from 'common/data/base/_data'
-import _ from 'lodash'
+import filter from 'lodash/filter'
+import find from 'lodash/find'
+import findIndex from 'lodash/findIndex'
+import keyBy from 'lodash/keyBy'
+import sortBy from 'lodash/sortBy'
 
 const controller = {
   createProject: (name) => {
@@ -75,7 +79,7 @@ const controller = {
       .then(() => {
         API.trackEvent(Constants.events.DELETE_INVITE)
         if (store.model) {
-          store.model.invites = _.filter(
+          store.model.invites = filter(
             store.model.invites,
             (i) => i.id !== id,
           )
@@ -89,11 +93,11 @@ const controller = {
     const idInt = parseInt(id)
     store.saving()
     if (store.model) {
-      store.model.projects = _.filter(
+      store.model.projects = filter(
         store.model.projects,
         (p) => p.id !== idInt,
       )
-      store.model.keyedProjects = _.keyBy(store.model.projects, 'id')
+      store.model.keyedProjects = keyBy(store.model.projects, 'id')
     }
     API.trackEvent(Constants.events.REMOVE_PROJECT)
     data.delete(`${Project.api}projects/${id}/`).then(() => {
@@ -110,7 +114,7 @@ const controller = {
       .then(() => {
         API.trackEvent(Constants.events.DELETE_USER)
         if (store.model) {
-          store.model.users = _.filter(store.model.users, (u) => u.id !== id)
+          store.model.users = filter(store.model.users, (u) => u.id !== id)
         }
         store.saved()
       })
@@ -121,7 +125,7 @@ const controller = {
     data
       .put(`${Project.api}organisations/${store.id}/`, { name })
       .then((res) => {
-        const idx = _.findIndex(store.model.organisations, {
+        const idx = findIndex(store.model.organisations, {
           id: store.organisation.id,
         })
         if (idx !== -1) {
@@ -154,7 +158,7 @@ const controller = {
         if (`${id}` === `${store.id}`) {
           // eslint-disable-next-line prefer-const
           let [_projects, users, invites, subscriptionMeta] = res
-          let projects = _.sortBy(_projects, 'name')
+          let projects = sortBy(_projects, 'name')
 
           store.model = {
             ...store.model,
@@ -215,7 +219,7 @@ const controller = {
               data
                 .get(`${Project.api}environments/?project=${project.id}`)
                 .then((res) => {
-                  projects[i].environments = _.sortBy(res.results, 'name')
+                  projects[i].environments = sortBy(res.results, 'name')
                 })
                 .catch(() => {
                   projects[i].environments = []
@@ -228,7 +232,7 @@ const controller = {
               return textA < textB ? -1 : textA > textB ? 1 : 0
             })
             store.model.projects = projects
-            store.model.keyedProjects = _.keyBy(store.model.projects, 'id')
+            store.model.keyedProjects = keyBy(store.model.projects, 'id')
             store.loaded()
           })
         }
@@ -278,7 +282,7 @@ const controller = {
       )
       .then(() => {
         API.trackEvent(Constants.events.UPDATE_USER_ROLE)
-        const index = _.findIndex(store.model.users, (user) => user.id === id)
+        const index = findIndex(store.model.users, (user) => user.id === id)
         if (index !== -1) {
           store.model.users[index].role = role
           store.saved()

@@ -1,7 +1,7 @@
 import React, { FC, useMemo } from 'react'
 import moment from 'moment'
 import { PagedResponse } from 'common/types/responses'
-import _ from 'lodash'
+import groupBy from 'lodash/groupBy'
 import Icon from './icons/Icon'
 import Paging from './Paging'
 import classNames from 'classnames'
@@ -41,7 +41,7 @@ const DateList = <T extends { [key: string]: any }>({
   renderRow,
 }: DateListType<T>) => {
   const groupedData = useMemo(() => {
-    return _.groupBy(items?.results || [], (item) =>
+    return groupBy(items?.results || [], (item) =>
       moment(item[dateProperty] as unknown as string).format(dateFormat),
     )
   }, [items, dateFormat, dateProperty])

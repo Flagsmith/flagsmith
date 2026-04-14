@@ -1,6 +1,5 @@
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react'
-// @ts-ignore untyped module
-import _ from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 import moment from 'moment'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { useHasGithubIntegration } from 'common/hooks/useHasGithubIntegration'
@@ -86,7 +85,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
 
   const [projectFlag, setProjectFlag] = useState<any>(() =>
     props.projectFlag
-      ? _.cloneDeep(props.projectFlag)
+      ? cloneDeep(props.projectFlag)
       : {
           description: undefined,
           is_archived: undefined,
@@ -100,7 +99,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
 
   const [environmentFlag, setEnvironmentFlag] = useState<any>(() => {
     const sourceFlag = props.identityFlag || props.environmentFlag
-    return sourceFlag ? _.cloneDeep(sourceFlag) : {}
+    return sourceFlag ? cloneDeep(sourceFlag) : {}
   })
 
   const [_changeRequests, setChangeRequests] = useState<any[]>([])
@@ -208,7 +207,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   useEffect(() => {
     const source = props.identityFlag || props.environmentFlag
     if (source?.updated_at) {
-      setEnvironmentFlag(_.cloneDeep(source))
+      setEnvironmentFlag(cloneDeep(source))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [(props.identityFlag || props.environmentFlag)?.updated_at])
@@ -219,7 +218,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   // overwrite the user's unsaved edits to settings/tags/description.
   useEffect(() => {
     if (props.projectFlag) {
-      setProjectFlag(_.cloneDeep(props.projectFlag))
+      setProjectFlag(cloneDeep(props.projectFlag))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.projectFlag?.id])

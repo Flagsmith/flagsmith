@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import sortBy from 'lodash/sortBy'
 import _data from 'common/data/base/_data'
 
 class FlagSelect extends Component {
@@ -43,7 +44,7 @@ class FlagSelect extends Component {
         </div>
       )
     }
-    const options = _.sortBy(
+    const options = sortBy(
       this.state.data
         .map((v) => ({ flag: v, label: v.name, value: v.id }))
         .filter((v) => !(this.props.ignore || []).includes(v.value))
