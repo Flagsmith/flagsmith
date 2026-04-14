@@ -28,14 +28,6 @@ class FlagSelect extends Component {
       .then((res) => this.setState({ data: res.results, isLoading: false }))
   }
 
-  // searchFeatures = _.throttle((search) => {
-  //     this.fetch()
-  // }, 1000)
-  //
-  // search = (e)=>{
-  //     this.setState({search:Utils.safeParseEventValue(e)}, this.searchFeatures)
-  // }
-
   render() {
     if (!this.state.data || this.state.isLoading) {
       return (
