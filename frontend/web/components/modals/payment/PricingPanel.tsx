@@ -11,8 +11,6 @@ export type PricingPanelProps = {
   title: string
   priceMonthly?: string
   priceYearly?: string
-  seatPriceMonthly?: string
-  seatPriceYearly?: string
   includesFrom: string
   isFeatured?: boolean
   isYearly: boolean
@@ -40,8 +38,6 @@ export const PricingPanel = ({
   organisationId,
   priceMonthly,
   priceYearly,
-  seatPriceMonthly,
-  seatPriceYearly,
   title,
 }: PricingPanelProps) => {
   return (
@@ -92,12 +88,6 @@ export const PricingPanel = ({
                     <span className='fs-lg mb-0'>/mo</span>
                   </h1>
                 </Row>
-              )}
-
-              {(seatPriceMonthly || seatPriceYearly) && (
-                <div className='pricing-type pt-1 text-muted'>
-                  + ${isYearly ? seatPriceYearly : seatPriceMonthly}/seat
-                </div>
               )}
 
               {isEnterprise && (

@@ -291,9 +291,6 @@ const Payment = class extends Component {
                             <h5 className='fs-lg mb-0'>/mo</h5>
                           </h1>
                         </Row>
-                        <div className='pricing-type pt-1 text-muted'>
-                          + ${this.state.yearly ? '50' : '60'}/seat
-                        </div>
                         {!viewOnly ? (
                           <>
                             <PaymentButton

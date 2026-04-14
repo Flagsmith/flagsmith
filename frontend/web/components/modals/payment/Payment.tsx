@@ -113,8 +113,6 @@ export const Payment: FC<PaymentProps> = ({
             title='Scale-Up'
             priceYearly='270'
             priceMonthly='300'
-            seatPriceYearly='50'
-            seatPriceMonthly='60'
             isYearly={yearly}
             isFeatured
             chargebeePlanId={
