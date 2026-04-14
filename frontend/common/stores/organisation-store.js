@@ -11,7 +11,6 @@ import filter from 'lodash/filter'
 import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 import keyBy from 'lodash/keyBy'
-import sortBy from 'lodash/sortBy'
 
 const controller = {
   createProject: (name) => {

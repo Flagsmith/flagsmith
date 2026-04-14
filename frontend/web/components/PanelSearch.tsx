@@ -16,7 +16,7 @@ import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
 import Button from './base/forms/Button'
 import Paging from './Paging'
-import filter from 'lodash/filter'
+import lodashFilter from 'lodash/filter'
 import find from 'lodash/find'
 import orderBy from 'lodash/orderBy'
 import Panel from './base/grid/Panel'
@@ -119,7 +119,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
       search = search.replace(/^"+|"+$/g, '')
     }
     if (filterRow && (search || filter)) {
-      const filtered = filter(items, (item, index) =>
+      const filtered = lodashFilter(items, (item, index) =>
         filterRow(item, search.toLowerCase(), index),
       )
       return sortItems(filtered)
