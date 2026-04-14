@@ -1,9 +1,16 @@
-import React, { useEffect } from 'react'
-import PropTypes from 'prop-types'
+import React, { FC, useEffect } from 'react'
 import { close, checkmark } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 
-const PasswordRequirements = ({ onRequirementsMet, password }) => {
+type PasswordRequirementsProps = {
+  onRequirementsMet: (met: boolean) => void
+  password: string
+}
+
+const PasswordRequirements: FC<PasswordRequirementsProps> = ({
+  onRequirementsMet,
+  password,
+}) => {
   const requirements = [
     { label: 'At least 8 characters', test: password.length >= 8 },
     { label: 'Contains a number', test: /\d/.test(password) },
@@ -46,11 +53,6 @@ const PasswordRequirements = ({ onRequirementsMet, password }) => {
       </ul>
     </div>
   )
-}
-
-PasswordRequirements.propTypes = {
-  onRequirementsMet: PropTypes.func.isRequired,
-  password: PropTypes.string.isRequired,
 }
 
 export default PasswordRequirements
