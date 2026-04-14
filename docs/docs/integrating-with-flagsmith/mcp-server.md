@@ -27,9 +27,17 @@ Head to our installation page and pick your client:
 
 We support Cursor, Claude Code, Claude Desktop, Windsurf, Gemini CLI, Codex CLI, and any other client that supports MCP servers.
 
-### Configuration
+### Authentication
 
-You'll need an **Organisation API Key** from Flagsmith:
+The MCP Server supports two authentication methods. You can use either one — both work side by side.
+
+#### OAuth (Recommended)
+
+OAuth lets you authenticate directly in your browser — no API keys to manage. When you first connect, your MCP client will open a browser window where you log in to Flagsmith and authorise access.
+
+#### Organisation API Key
+
+Alternatively, you can authenticate using an Organisation API Key:
 
 1. Go to **Organisation Settings** in your Flagsmith dashboard
 2. Generate a new API Key
@@ -48,7 +56,7 @@ Running your own Flagsmith instance? Point the MCP Server at your API by adding 
 ```bash
 claude mcp add --transport http "flagsmith" \
     "https://app.getgram.ai/mcp/flagsmith-mcp" \
-    --header 'Mcp-Flagsmith-Token-Auth:${MCP_FLAGSMITH_TOKEN_AUTH}'
+    --header 'Mcp-Flagsmith-Token-Auth:${MCP_FLAGSMITH_TOKEN_AUTH}' \
     --header 'Mcp-Flagsmith-Server-Url:https://your-flagsmith-instance.com'
 ```
 
