@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
+import EmptyState from 'components/EmptyState'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentTagSelect from 'components/EnvironmentTagSelect'
 import BarChart from 'components/charts/BarChart'
@@ -118,13 +119,13 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
           </div>
         )}
         {!isLoading && !hasData && (
-          <div
-            style={{ height: 200 }}
-            className='text-center justify-content-center align-items-center text-muted mt-4 d-flex'
-          >
-            No analytics data available for the selected environment
-            {environmentIds?.length > 1 ? 's' : ''}.
-          </div>
+          <EmptyState
+            title='No analytics data'
+            description={`No evaluation data available for the selected environment${
+              environmentIds?.length > 1 ? 's' : ''
+            }.`}
+            icon='bar-chart'
+          />
         )}
         {hasData &&
           (isLabelled ? (
