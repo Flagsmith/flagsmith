@@ -149,7 +149,7 @@ const Payment = class extends Component {
                     Pay Monthly
                   </h5>
                 </div>
-                <Row className='pricing-container align-start'>
+                <Row className='pricing-container align-items-start'>
                   <Flex className='pricing-panel p-2'>
                     <div className='panel panel-default'>
                       <div

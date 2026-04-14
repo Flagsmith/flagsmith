@@ -20,16 +20,17 @@ const Switch: FC<SwitchProps> = ({
 }) => {
   if (E2E) {
     return (
-      <div style={{ display: 'inline-block', height: '28px' }}>
+      <div className='d-inline-block' style={{ height: '28px' }}>
         <button
           role='switch'
           type='button'
           style={{
             color: 'black',
             pointerEvents: 'all',
-            position: 'relative',
           }}
-          className={checked ? 'switch-checked' : 'switch-unchecked'}
+          className={`position-relative ${
+            checked ? 'switch-checked' : 'switch-unchecked'
+          }`}
           {...rest}
           onClick={() => {
             onChange?.(!checked)

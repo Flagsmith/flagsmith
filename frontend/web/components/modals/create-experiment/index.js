@@ -644,7 +644,7 @@ const Index = class extends Component {
                               <div className='pr-3'>
                                 {identity ? (
                                   <div className='mb-3 mt-4'>
-                                    <p className='text-left ml-3 modal-caption fs-small lh-small'>
+                                    <p className='text-start ml-3 modal-caption fs-small lh-small'>
                                       This will update the feature value for the
                                       user <strong>{identityName}</strong> in
                                       <strong>

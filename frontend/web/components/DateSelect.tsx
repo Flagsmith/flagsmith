@@ -27,7 +27,7 @@ const DateSelect: FC<DateSelectProps> = ({
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <Flex style={{ position: 'relative' }}>
+    <Flex className='position-relative'>
       <DatePicker
         className={`${className} ${!isValid && touched ? 'invalid' : ''}`}
         dateFormat={dateFormat}

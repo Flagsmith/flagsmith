@@ -357,7 +357,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
       <Button
         disabled={!name || !typeValue || !metadataFieldSelectList}
         onClick={save}
-        className='float-right'
+        className='float-end'
       >
         {isEdit ? 'Update Custom Field' : 'Create Custom Field'}
       </Button>

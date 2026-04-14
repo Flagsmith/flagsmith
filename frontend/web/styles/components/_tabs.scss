@@ -16,9 +16,6 @@
   .tabs-nav {
     display: none;
   }
-  .tab-line {
-    display: none;
-  }
   .hljs-container {
     code {
 
@@ -51,16 +48,6 @@
       background: $bg-dark300;
     }
   }
-}
-
-.tabs-measure {
-  position: absolute;
-  visibility: hidden;
-  pointer-events: none;
-  height: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  margin: 0 !important;
 }
 
 .tabs-nav {
@@ -144,11 +131,6 @@
   &.tab-active {
     display: block;
   }
-}
-
-.tab-icon {
-  font-size: 1.4em;
-  display: block;
 }
 
 .dark {

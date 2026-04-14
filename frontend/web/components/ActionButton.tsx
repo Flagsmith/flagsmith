@@ -24,7 +24,7 @@ const ActionButton: FC<ActionButtonType> = ({
         onClick()
       }}
     >
-      <div className='pointer-events-none'>
+      <div className='pe-none'>
         <Icon name='more-vertical' width={16} fill='#656D7B' />
       </div>
     </Button>
