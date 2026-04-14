@@ -209,3 +209,40 @@ def test_create_project__edge_enabled__sets_edge_v2_migration_complete(
 
     # Then
     assert project.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
+
+
+def test_is_too_large__environments_exceed_limit__returns_true(
+    project: Project,
+) -> None:
+    # Given
+    from environments.models import Environment
+
+    project.max_environments_allowed = 1
+    project.save()
+
+    Environment.objects.create(name="Env 1", project=project)
+    Environment.objects.create(name="Env 2", project=project)
+
+    # When
+    result = project.is_too_large
+
+    # Then
+    assert result is True
+
+
+def test_is_too_large__environments_within_limit__returns_false(
+    project: Project,
+) -> None:
+    # Given
+    from environments.models import Environment
+
+    project.max_environments_allowed = 100
+    project.save()
+
+    Environment.objects.create(name="Env 1", project=project)
+
+    # When
+    result = project.is_too_large
+
+    # Then
+    assert result is False

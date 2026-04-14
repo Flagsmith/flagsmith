@@ -120,6 +120,7 @@ class ProjectRetrieveSerializer(ProjectListSerializer):
             "max_segments_allowed",
             "max_features_allowed",
             "max_segment_overrides_allowed",
+            "max_environments_allowed",
             "total_features",
             "total_segments",
         )
@@ -128,6 +129,7 @@ class ProjectRetrieveSerializer(ProjectListSerializer):
             "max_segments_allowed",
             "max_features_allowed",
             "max_segment_overrides_allowed",
+            "max_environments_allowed",
             "total_features",
             "total_segments",
         )

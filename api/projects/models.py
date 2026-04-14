@@ -87,6 +87,10 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[d
         default=100,
         help_text="Max segments overrides allowed for any (one) environment within this project",
     )
+    max_environments_allowed = models.IntegerField(
+        default=100,
+        help_text="Max environments allowed for this project",
+    )
     edge_v2_migration_status = models.CharField(
         max_length=50,
         choices=EdgeV2MigrationStatus.choices,
@@ -125,6 +129,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[d
         return (
             self.features.count() > self.max_features_allowed
             or self.live_segment_count() > self.max_segments_allowed
+            or self.environments.count() > self.max_environments_allowed
             or self.environments.annotate(
                 segment_override_count=Count("feature_segments")
             )
