@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentTagSelect from 'components/EnvironmentTagSelect'
 import BarChart from 'components/charts/BarChart'
@@ -34,6 +34,12 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
   )
 
   const isLabelled = hasLabelledData(data?.rawEntries)
+
+  // Clear SDK filter when labelled mode deactivates (e.g. user switches to
+  // an env with no labels) — avoids stale chips in a disabled MultiSelect.
+  useEffect(() => {
+    if (!isLabelled) setSelectedLabels([])
+  }, [isLabelled])
 
   const envChart = useEnvChartProps({ environmentIds, projectId })
 
@@ -96,17 +102,15 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
               onChange={handleEnvironmentChange}
             />
           </div>
-          {isLabelled && labelValues.length > 1 && (
-            <div className='flex-fill' style={{ maxWidth: 400 }}>
-              <MultiSelect
-                label='Filter by SDK'
-                options={labelOptions}
-                selectedValues={selectedLabels}
-                onSelectionChange={setSelectedLabels}
-                colorMap={labelColorMap}
-              />
-            </div>
-          )}
+          <MultiSelect
+            className='w-100'
+            label='Filter by SDK'
+            options={labelOptions}
+            selectedValues={selectedLabels}
+            onSelectionChange={setSelectedLabels}
+            colorMap={labelColorMap}
+            disabled={!isLabelled || labelValues.length <= 1}
+          />
         </div>
         {isLoading && (
           <div className='text-center'>
