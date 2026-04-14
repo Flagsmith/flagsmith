@@ -277,9 +277,6 @@ const Payment = class extends Component {
                           minHeight: '250px',
                         }}
                       >
-                        <span className='fw-bold text-primary fs-small'>
-                          Most Popular
-                        </span>
                         <Row className='pt-4 justify-content-center'>
                           <Icon name='flash' width={32} />
                           <h4 className='mb-0 ml-2'>Scale-Up</h4>

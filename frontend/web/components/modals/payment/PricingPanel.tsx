@@ -12,7 +12,6 @@ export type PricingPanelProps = {
   priceMonthly?: string
   priceYearly?: string
   includesFrom: string
-  isFeatured?: boolean
   isYearly: boolean
   chargebeePlanId?: string
   isPurchased?: boolean
@@ -32,7 +31,6 @@ export const PricingPanel = ({
   includesFrom,
   isDisableAccount,
   isEnterprise,
-  isFeatured,
   isPurchased,
   isYearly,
   organisationId,
@@ -50,11 +48,6 @@ export const PricingPanel = ({
         <div className='p-3 pt-4 pricing-panel-content'>
           <div className='pricing-panel-layout'>
             <div>
-              {isFeatured && (
-                <span className='fw-bold text-primary fs-small'>
-                  Most Popular
-                </span>
-              )}
               {headerContent && (
                 <span
                   className={classNames('featured', {

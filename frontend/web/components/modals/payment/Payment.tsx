@@ -114,7 +114,6 @@ export const Payment: FC<PaymentProps> = ({
             priceYearly='270'
             priceMonthly='300'
             isYearly={yearly}
-            isFeatured
             chargebeePlanId={
               yearly
                 ? Project.plans?.scaleUp?.annual
