@@ -652,7 +652,6 @@ export type FeatureListProviderActions = {
     projectFlag: ProjectFlag,
     environmentFlags: FeatureState | undefined,
   ) => void
-  removeFlag: (projectId: number, projectFlag: ProjectFlag) => void
 }
 
 export type AuthType = 'EMAIL' | 'GITHUB' | 'GOOGLE'

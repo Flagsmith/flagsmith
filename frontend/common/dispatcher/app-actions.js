@@ -200,28 +200,6 @@ const AppActions = Object.assign({}, BaseAppActions, {
       projectId,
     })
   },
-  getFeatures(
-    projectId,
-    environmentId,
-    force,
-    search,
-    sort,
-    page,
-    filter,
-    pageSize,
-  ) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_FLAGS,
-      environmentId,
-      filter,
-      force,
-      page,
-      pageSize,
-      projectId,
-      search,
-      sort,
-    })
-  },
   getIdentity(envId, id) {
     Dispatcher.handleViewAction({
       actionType: Actions.GET_IDENTITY,
@@ -273,13 +251,6 @@ const AppActions = Object.assign({}, BaseAppActions, {
       force: true,
     })
   },
-  removeFlag(projectId, flag) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.REMOVE_FLAG,
-      flag,
-      projectId,
-    })
-  },
   removeUserFlag({ cb, environmentId, identity, identityFlag }) {
     Dispatcher.handleViewAction({
       actionType: Actions.REMOVE_USER_FLAG,
@@ -305,26 +276,6 @@ const AppActions = Object.assign({}, BaseAppActions, {
     Dispatcher.handleViewAction({
       actionType: Actions.EDIT_ENVIRONMENT,
       name,
-    })
-  },
-  searchFeatures(
-    projectId,
-    environmentId,
-    force,
-    search,
-    sort,
-    filter,
-    pageSize,
-  ) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.SEARCH_FLAGS,
-      environmentId,
-      filter,
-      force,
-      pageSize,
-      projectId,
-      search,
-      sort,
     })
   },
   selectOrganisation(id) {
