@@ -78,6 +78,21 @@ def test_list_organisations__authenticated_user__returns_organisation_list(
     assert response.data["results"][0]["name"] == organisation.name
 
 
+def test_retrieve_organisation__non_admin_member__returns_200(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    url = reverse("api-v1:organisations:organisation-detail", args=[organisation.id])
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["id"] == organisation.id
+
+
 def test_get_by_uuid__valid_organisation__returns_organisation(
     admin_client: APIClient,
     organisation: Organisation,
