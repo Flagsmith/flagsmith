@@ -5,7 +5,11 @@ import BlockedOrgInfo from 'components/BlockedOrgInfo'
 import { Organisation } from 'common/types/responses'
 import { PricingToggle } from './PricingToggle'
 import { PricingPanel } from './PricingPanel'
-import { STARTUP_FEATURES, ENTERPRISE_FEATURES } from './pricingFeatures'
+import {
+  STARTUP_FEATURES,
+  SCALE_UP_FEATURES,
+  ENTERPRISE_FEATURES,
+} from './pricingFeatures'
 import {
   CHARGEBEE_SCRIPT_URL,
   CONTACT_US_URL,
@@ -102,6 +106,28 @@ export const Payment: FC<PaymentProps> = ({
             features={STARTUP_FEATURES}
             hasActiveSubscription={hasActiveSubscription}
             organisationId={organisation.id}
+            includesFrom='Free'
+          />
+
+          <PricingPanel
+            title='Scale-Up'
+            priceYearly='270'
+            priceMonthly='300'
+            seatPriceYearly='50'
+            seatPriceMonthly='60'
+            isYearly={yearly}
+            isFeatured
+            chargebeePlanId={
+              yearly
+                ? Project.plans?.scaleUp?.annual
+                : Project.plans?.scaleUp?.monthly
+            }
+            isPurchased={plan.includes('scale-up')}
+            isDisableAccount={isDisableAccountText}
+            features={SCALE_UP_FEATURES}
+            hasActiveSubscription={hasActiveSubscription}
+            organisationId={organisation.id}
+            includesFrom='Start-Up'
           />
 
           <PricingPanel
@@ -111,6 +137,7 @@ export const Payment: FC<PaymentProps> = ({
             features={ENTERPRISE_FEATURES}
             hasActiveSubscription={hasActiveSubscription}
             organisationId={organisation.id}
+            includesFrom='Scale-Up'
             headerContent={
               <>
                 Optional{' '}
@@ -136,13 +163,6 @@ export const Payment: FC<PaymentProps> = ({
             }
           />
         </Row>
-        <div className='text-center mt-4'>
-          *Need something in-between our Enterprise plan for users or API
-          limits?
-          <div>
-            <a href={CONTACT_US_URL}>Reach out</a> to us and we'll help you out
-          </div>
-        </div>
       </div>
     </div>
   )

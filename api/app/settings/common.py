@@ -175,12 +175,16 @@ SITE_ID = 1
 db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
 DJANGO_DB_CONN_MAX_AGE = 0 if db_conn_max_age == -1 else db_conn_max_age
 
+DJANGO_DB_CONN_HEALTH_CHECKS = env.bool("DJANGO_DB_CONN_HEALTH_CHECKS", False)
+
 DATABASE_ROUTERS: list[str] = []
 # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
 if "DATABASE_URL" in os.environ:
     DATABASES = {
         "default": dj_database_url.parse(
-            env("DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
+            env("DATABASE_URL"),
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+            conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         ),
     }
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
@@ -221,17 +225,23 @@ if "DATABASE_URL" in os.environ:
 
     for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
         DATABASES[f"replica_{i}"] = dj_database_url.parse(
-            db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
+            db_url,
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+            conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         )
 
     for i, db_url in enumerate(CROSS_REGION_REPLICA_DATABASE_URLS, start=1):
         DATABASES[f"cross_region_replica_{i}"] = dj_database_url.parse(
-            db_url, conn_max_age=DJANGO_DB_CONN_MAX_AGE
+            db_url,
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+            conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         )
 
     if "ANALYTICS_DATABASE_URL" in os.environ:
         DATABASES["analytics"] = dj_database_url.parse(
-            env("ANALYTICS_DATABASE_URL"), conn_max_age=DJANGO_DB_CONN_MAX_AGE
+            env("ANALYTICS_DATABASE_URL"),
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+            conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         )
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
 elif "DJANGO_DB_NAME" in os.environ:
@@ -245,6 +255,7 @@ elif "DJANGO_DB_NAME" in os.environ:
             "HOST": os.environ["DJANGO_DB_HOST"],
             "PORT": os.environ["DJANGO_DB_PORT"],
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+            "CONN_HEALTH_CHECKS": DJANGO_DB_CONN_HEALTH_CHECKS,
         },
     }
     if "DJANGO_DB_NAME_ANALYTICS" in os.environ:
@@ -256,6 +267,7 @@ elif "DJANGO_DB_NAME" in os.environ:
             "HOST": os.environ["DJANGO_DB_HOST_ANALYTICS"],
             "PORT": os.environ["DJANGO_DB_PORT_ANALYTICS"],
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+            "CONN_HEALTH_CHECKS": DJANGO_DB_CONN_HEALTH_CHECKS,
         }
 
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")

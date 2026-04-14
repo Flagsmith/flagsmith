@@ -7,6 +7,8 @@ import FeatureRow from './feature-summary/FeatureRow'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { withRouter } from 'react-router-dom'
+import { getStore } from 'common/store'
+import { removeProjectFlag } from 'common/services/useProjectFlag'
 
 const featureNameWidth = 300
 
@@ -89,7 +91,7 @@ class CompareFeatures extends Component {
         {this.state.flagId && (
           <div>
             <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-              {({}, { removeFlag, toggleFlag }) => {
+              {({}, { toggleFlag }) => {
                 // Adapt old FeatureListProvider signatures to new FeatureRow signatures
                 const adaptedToggleFlag =
                   (environmentId) =>
@@ -103,7 +105,10 @@ class CompareFeatures extends Component {
                     )
                   }
                 const adaptedRemoveFlag = (projectFlag) => {
-                  removeFlag(this.props.projectId, projectFlag)
+                  removeProjectFlag(getStore(), {
+                    flag_id: projectFlag.id,
+                    project_id: this.props.projectId,
+                  })
                 }
                 const renderRow = (data, i) => {
                   const flagValues = this.state.environmentResults[i]

@@ -14,6 +14,8 @@ import Button from './base/forms/Button'
 import Tooltip from './Tooltip'
 import { withRouter } from 'react-router-dom'
 import { getDarkMode } from 'project/darkMode'
+import { getStore } from 'common/store'
+import { removeProjectFlag } from 'common/services/useProjectFlag'
 
 const featureNameWidth = 300
 
@@ -207,7 +209,7 @@ class CompareEnvironments extends Component {
 
         {this.state.environmentLeft && this.state.environmentRight ? (
           <FeatureListProvider onSave={this.onSave} onError={this.onError}>
-            {({}, { removeFlag, toggleFlag }) => {
+            {({}, { toggleFlag }) => {
               // Adapt old FeatureListProvider signatures to new FeatureRow signatures
               const adaptedToggleFlag =
                 (environmentId) => (projectFlag, environmentFlag, onError) => {
@@ -220,7 +222,10 @@ class CompareEnvironments extends Component {
                   )
                 }
               const adaptedRemoveFlag = (projectFlag) => {
-                removeFlag(this.props.projectId, projectFlag)
+                removeProjectFlag(getStore(), {
+                  flag_id: projectFlag.id,
+                  project_id: this.props.projectId,
+                })
               }
               const renderRow = (p, i, fadeEnabled, fadeValue) => {
                 const environmentLeft = ProjectStore.getEnvironment(

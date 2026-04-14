@@ -280,7 +280,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                   ) : (
                                     <strong>
                                       You will automatically be charged
-                                      $20/month for each additional member that
+                                      $60/month for each additional member that
                                       joins your organisation.
                                     </strong>
                                   )}

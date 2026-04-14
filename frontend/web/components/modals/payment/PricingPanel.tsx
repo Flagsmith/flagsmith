@@ -11,6 +11,10 @@ export type PricingPanelProps = {
   title: string
   priceMonthly?: string
   priceYearly?: string
+  seatPriceMonthly?: string
+  seatPriceYearly?: string
+  includesFrom: string
+  isFeatured?: boolean
   isYearly: boolean
   chargebeePlanId?: string
   isPurchased?: boolean
@@ -27,13 +31,17 @@ export const PricingPanel = ({
   features,
   hasActiveSubscription,
   headerContent,
+  includesFrom,
   isDisableAccount,
   isEnterprise,
+  isFeatured,
   isPurchased,
   isYearly,
   organisationId,
   priceMonthly,
   priceYearly,
+  seatPriceMonthly,
+  seatPriceYearly,
   title,
 }: PricingPanelProps) => {
   return (
@@ -46,6 +54,11 @@ export const PricingPanel = ({
         <div className='p-3 pt-4 pricing-panel-content'>
           <div className='pricing-panel-layout'>
             <div>
+              {isFeatured && (
+                <span className='fw-bold text-primary fs-small'>
+                  Most Popular
+                </span>
+              )}
               {headerContent && (
                 <span
                   className={classNames('featured', {
@@ -79,6 +92,12 @@ export const PricingPanel = ({
                     <span className='fs-lg mb-0'>/mo</span>
                   </h1>
                 </Row>
+              )}
+
+              {(seatPriceMonthly || seatPriceYearly) && (
+                <div className='pricing-type pt-1 text-muted'>
+                  + ${isYearly ? seatPriceYearly : seatPriceMonthly}/seat
+                </div>
               )}
 
               {isEnterprise && (
@@ -125,7 +144,7 @@ export const PricingPanel = ({
           >
             All from{' '}
             <span className={isEnterprise ? 'text-secondary' : 'text-primary'}>
-              {isEnterprise ? 'Start-Up,' : 'Free,'}
+              {includesFrom},
             </span>{' '}
             plus
           </h5>

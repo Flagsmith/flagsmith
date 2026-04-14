@@ -41,6 +41,7 @@ from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
+from util.db import closing_stale_connections
 from util.util import iter_chunked_concat, truncate
 
 logger = logging.getLogger(__name__)
@@ -1113,34 +1114,35 @@ def process_import_request(
 
         ld_client = LaunchDarklyClient(ld_token)
 
-        try:
-            ld_environments = ld_client.get_environments(project_key=ld_project_key)
-            ld_flags = ld_client.get_flags_by_envs(
-                project_key=ld_project_key,
-                environment_keys=[env["key"] for env in ld_environments],
-            )
-            ld_flag_tags = ld_client.get_flag_tags()
-            # ld_segment_tags = ld_client.get_segment_tags()
-            # Keyed by (segment, environment)
-            ld_segments: list[tuple[ld_types.UserSegment, str]] = []
-            for env in ld_environments:
-                ld_segments_for_env = ld_client.get_segments(
+        with closing_stale_connections():
+            try:
+                ld_environments = ld_client.get_environments(project_key=ld_project_key)
+                ld_flags = ld_client.get_flags_by_envs(
                     project_key=ld_project_key,
-                    environment_key=env["key"],
+                    environment_keys=[env["key"] for env in ld_environments],
                 )
-                for segment in ld_segments_for_env:
-                    ld_segments.append((segment, env["key"]))
+                ld_flag_tags = ld_client.get_flag_tags()
+                # ld_segment_tags = ld_client.get_segment_tags()
+                # Keyed by (segment, environment)
+                ld_segments: list[tuple[ld_types.UserSegment, str]] = []
+                for env in ld_environments:
+                    ld_segments_for_env = ld_client.get_segments(
+                        project_key=ld_project_key,
+                        environment_key=env["key"],
+                    )
+                    for segment in ld_segments_for_env:
+                        ld_segments.append((segment, env["key"]))
 
-        except RequestException as exc:
-            _log_error(
-                import_request=import_request,
-                error_message=(
-                    f"{exc.__class__.__name__} "
-                    f"{str(exc.response.status_code) + ' ' if exc.response else ''}"
-                    + f"when requesting {getattr(exc.request, 'path_url', 'unknown')}"
-                ),
-            )
-            raise
+            except RequestException as exc:
+                _log_error(
+                    import_request=import_request,
+                    error_message=(
+                        f"{exc.__class__.__name__} "
+                        f"{str(exc.response.status_code) + ' ' if exc.response else ''}"
+                        + f"when requesting {getattr(exc.request, 'path_url', 'unknown')}"
+                    ),
+                )
+                raise
 
         # Create environments
         environments_by_ld_environment_key = _create_environments_from_ld(

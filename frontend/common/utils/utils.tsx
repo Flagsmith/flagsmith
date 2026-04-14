@@ -397,17 +397,20 @@ const Utils = Object.assign({}, BaseUtils, {
     return EnvironmentPermissionDescriptions.UPDATE_FEATURE_STATE
   },
 
-  getNextPlan: (skipFree?: boolean) => {
+  getNextPlan: () => {
     const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
     if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
       return planNames.enterprise
     }
     switch (currentPlan) {
       case planNames.free: {
-        return skipFree ? planNames.startup : planNames.scaleUp
+        return planNames.startup
       }
       case planNames.startup: {
-        return planNames.startup
+        return planNames.scaleUp
+      }
+      case planNames.scaleUp: {
+        return planNames.enterprise
       }
       default: {
         return planNames.enterprise
@@ -835,7 +838,7 @@ const Utils = Object.assign({}, BaseUtils, {
     return {
       boolean_value: null,
       integer_value: null,
-      string_value: value === null ? null : val || '',
+      string_value: value === null || val === '' ? null : val,
       type: 'unicode',
     }
   },
@@ -863,7 +866,7 @@ const Utils = Object.assign({}, BaseUtils, {
     return {
       boolean_value: null,
       integer_value: null,
-      string_value: value === null ? null : val || '',
+      string_value: value === null || val === '' ? null : val,
       value_type: 'unicode',
     }
   },

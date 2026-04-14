@@ -25,7 +25,6 @@ import ChangeRequestDetailPage from './components/pages/ChangeRequestDetailPage'
 import ScheduledChangesPage from './components/pages/ScheduledChangesPage'
 import AuditLogPage from './components/pages/AuditLogPage'
 import ComparePage from './components/pages/ComparePage'
-import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
 import GitHubSetupPage from './components/pages/GitHubSetupPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
@@ -87,9 +86,19 @@ export const routes = {
   'gettingStarted': '/getting-started',
   'github-setup': '/github-setup',
   'home': '/home',
+  'identities': '/project/:projectId/environment/:environmentId/identities',
+  'identity':
+    '/project/:projectId/environment/:environmentId/identities/:identity/:id',
+  'identity-id':
+    '/project/:projectId/environment/:environmentId/identities/:identity',
   'integrations': '/project/:projectId/integrations',
   'invite': '/invite/:id',
   'invite-link': '/invite-link/:id',
+  'legacy-identities': '/project/:projectId/environment/:environmentId/users',
+  'legacy-identity':
+    '/project/:projectId/environment/:environmentId/users/:identity/:id',
+  'legacy-identity-id':
+    '/project/:projectId/environment/:environmentId/users/:identity',
   'lifecycle': '/project/:projectId/lifecycle/:section?',
   'login': '/login',
   'maintenance': '/maintenance',
@@ -124,13 +133,6 @@ export const routes = {
   'segment': '/project/:projectId/segments/:id',
   'segments': '/project/:projectId/segments',
   'signup': '/signup',
-  'identities': '/project/:projectId/environment/:environmentId/identities',
-  'identity': '/project/:projectId/environment/:environmentId/identities/:identity/:id',
-  'identity-id': '/project/:projectId/environment/:environmentId/identities/:identity',
-  'legacy-identities': '/project/:projectId/environment/:environmentId/users',
-  'legacy-identity': '/project/:projectId/environment/:environmentId/users/:identity/:id',
-  'legacy-identity-id': '/project/:projectId/environment/:environmentId/users/:identity',
-  'widget': '/widget',
 }
 export default (
   <Switch>
@@ -202,7 +204,6 @@ export default (
           exact
           component={ChangeRequestDetailPage}
         />
-        <Route path={routes.widget} exact component={WidgetPage} />
         <Route path={routes.invite} exact component={InvitePage} />
         <Route path={routes['invite-link']} exact component={InvitePage} />
         <Route path={routes.broken} exact component={BrokenPage} />
@@ -228,21 +229,37 @@ export default (
           exact
           component={OrganisationIntegrationsPage}
         />
-      <ParameterizedRoute path={routes.identities} exact component={IdentitiesPage} />
-      <ParameterizedRoute
-        path={routes['identity-id']}
-        exact
-        component={IdentityIdPage}
-      />
-      <ParameterizedRoute path={routes.identity} exact component={IdentityPage} />
-      {/* Legacy /users routes for backward compatibility */}
-      <ParameterizedRoute path={routes['legacy-identities']} exact component={IdentitiesPage} />
         <ParameterizedRoute
-        path={routes['legacy-identity-id']}
+          path={routes.identities}
           exact
-        component={IdentityIdPage}
+          component={IdentitiesPage}
         />
-      <ParameterizedRoute path={routes['legacy-identity']} exact component={IdentityPage} />
+        <ParameterizedRoute
+          path={routes['identity-id']}
+          exact
+          component={IdentityIdPage}
+        />
+        <ParameterizedRoute
+          path={routes.identity}
+          exact
+          component={IdentityPage}
+        />
+        {/* Legacy /users routes for backward compatibility */}
+        <ParameterizedRoute
+          path={routes['legacy-identities']}
+          exact
+          component={IdentitiesPage}
+        />
+        <ParameterizedRoute
+          path={routes['legacy-identity-id']}
+          exact
+          component={IdentityIdPage}
+        />
+        <ParameterizedRoute
+          path={routes['legacy-identity']}
+          exact
+          component={IdentityPage}
+        />
         <ParameterizedRoute
           path={routes['create-environment']}
           exact

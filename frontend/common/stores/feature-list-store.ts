@@ -1,5 +1,4 @@
 import Constants from 'common/constants'
-import { getIsWidget } from 'components/pages/WidgetPage'
 import ProjectStore from './project-store'
 import {
   createAndSetFeatureVersion,
@@ -380,15 +379,17 @@ const controller = {
                 )
               environmentFlag.multivariate_feature_state_values =
                 multivariate_feature_state_values
+              const typedValue = Utils.getTypedValue(
+                flag.initial_value,
+                undefined,
+                true,
+              )
               return data.put(
                 `${Project.api}environments/${environmentId}/featurestates/${environmentFlag.id}/`,
                 Object.assign({}, environmentFlag, {
                   enabled: flag.default_enabled,
-                  feature_state_value: Utils.getTypedValue(
-                    flag.initial_value,
-                    undefined,
-                    true,
-                  ),
+                  feature_state_value:
+                    typedValue === '' ? null : typedValue,
                 }),
               )
             })
@@ -805,7 +806,8 @@ const controller = {
           ).then((res) => {
             const data = Object.assign({}, environmentFlag, {
               enabled: flag.default_enabled,
-              feature_state_value: flag.initial_value,
+              feature_state_value:
+                flag.initial_value === '' ? null : flag.initial_value,
             })
             return createAndSetFeatureVersion(getStore(), {
               environmentId: res,
@@ -935,9 +937,7 @@ const controller = {
               store.loaded()
             })
             .catch((e) => {
-              if (!getIsWidget()) {
-                document.location.href = '/404?entity=environment'
-              }
+              document.location.href = '/404?entity=environment'
               API.ajaxHandler(store, e)
             })
         },
@@ -954,24 +954,6 @@ const controller = {
           segment: fs.segment.id,
         })),
     }
-  },
-  removeFlag: (projectId, flag) => {
-    store.saving()
-    API.trackEvent(Constants.events.REMOVE_FEATURE)
-    return data
-      .delete(`${Project.api}projects/${projectId}/features/${flag.id}/`)
-      .then(() => {
-        store.model.features = _.filter(
-          store.model.features,
-          (f) => f.id !== flag.id,
-        )
-        store.model.lastSaved = new Date().valueOf()
-        getStore().dispatch(
-          projectFlagService.util.invalidateTags(['ProjectFlag']),
-        )
-        store.saved({})
-        store.trigger('removed', flag)
-      })
   },
   searchFeatures: _.throttle(
     (search, environmentId, projectId, filter, pageSize) => {
@@ -1020,33 +1002,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
   const projectId = parseInt(action.projectId)
   switch (action.actionType) {
-    case Actions.SEARCH_FLAGS: {
-      if (action.sort) {
-        store.sort = action.sort
-      }
-      controller.searchFeatures(
-        action.search,
-        action.environmentId,
-        projectId,
-        action.filter,
-        action.pageSize,
-      )
-      break
-    }
-    case Actions.GET_FLAGS:
-      store.search = encodeURIComponent(action.search || '')
-      if (action.sort) {
-        store.sort = action.sort
-      }
-      controller.getFeatures(
-        projectId,
-        action.environmentId,
-        action.force,
-        action.page,
-        action.filter,
-        action.pageSize,
-      )
-      break
     case Actions.REFRESH_FEATURES:
       if (
         projectId === store.projectId &&
@@ -1093,9 +1048,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.EDIT_FEATURE_MV:
       controller.editFeatureMv(projectId, action.flag, action.onComplete)
-      break
-    case Actions.REMOVE_FLAG:
-      controller.removeFlag(projectId, action.flag)
       break
     default:
   }
