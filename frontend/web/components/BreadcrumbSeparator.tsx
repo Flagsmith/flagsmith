@@ -13,7 +13,6 @@ import AccountStore from 'common/stores/account-store'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import { useGetOrganisationsQuery } from 'common/services/useOrganisation'
 import { useHistory } from 'react-router-dom'
-import OrganisationStore from 'common/stores/organisation-store'
 import AppActions from 'common/dispatcher/app-actions'
 import Utils from 'common/utils/utils'
 import { getStore } from 'common/store'
@@ -177,7 +176,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
     }
     AccountStore.on('change', onChangeAccountStore)
     return () => {
-      OrganisationStore.off('change', onChangeAccountStore)
+      AccountStore.off('change', onChangeAccountStore)
     }
     //eslint-disable-next-line
   }, [])
