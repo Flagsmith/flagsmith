@@ -277,9 +277,6 @@ const Payment = class extends Component {
                           minHeight: '250px',
                         }}
                       >
-                        <span className='fw-bold text-primary fs-small'>
-                          Most Popular
-                        </span>
                         <Row className='pt-4 justify-content-center'>
                           <Icon name='flash' width={32} />
                           <h4 className='mb-0 ml-2'>Scale-Up</h4>
@@ -291,9 +288,6 @@ const Payment = class extends Component {
                             <h5 className='fs-lg mb-0'>/mo</h5>
                           </h1>
                         </Row>
-                        <div className='pricing-type pt-1 text-muted'>
-                          + ${this.state.yearly ? '50' : '60'}/seat
-                        </div>
                         {!viewOnly ? (
                           <>
                             <PaymentButton
@@ -346,7 +340,17 @@ const Payment = class extends Component {
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
                               <div className='ml-2'>
-                                Up to <strong>20</strong> Team members
+                                <strong>5</strong> Team members
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
+                                Additional seats at $60/seat (up to 20)
                               </div>
                             </Row>
                           </li>
