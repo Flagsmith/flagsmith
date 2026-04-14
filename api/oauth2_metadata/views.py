@@ -29,6 +29,10 @@ def authorization_server_metadata(request: HttpRequest) -> JsonResponse:
     frontend_url: str = settings.FLAGSMITH_FRONTEND_URL.rstrip("/")
     oauth2_settings: dict[str, Any] = settings.OAUTH2_PROVIDER
     scopes: dict[str, str] = oauth2_settings.get("SCOPES", {})
+    allowed_grant_types: list[str] = oauth2_settings.get(
+        "ALLOWED_GRANT_TYPES",
+        ["authorization_code", "refresh_token"],
+    )
 
     metadata = {
         "issuer": api_url,
@@ -39,7 +43,7 @@ def authorization_server_metadata(request: HttpRequest) -> JsonResponse:
         "introspection_endpoint": f"{api_url}/o/introspect/",
         "scopes_supported": list(scopes.keys()),
         "response_types_supported": ["code"],
-        "grant_types_supported": ["authorization_code", "refresh_token"],
+        "grant_types_supported": allowed_grant_types,
         "code_challenge_methods_supported": ["S256"],
         "token_endpoint_auth_methods_supported": [
             "client_secret_basic",

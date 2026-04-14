@@ -904,11 +904,15 @@ OAUTH2_PROVIDER = {
     "ROTATE_REFRESH_TOKEN": True,
     "PKCE_REQUIRED": True,
     "ALLOWED_CODE_CHALLENGE_METHODS": ["S256"],
-    "SCOPES": {"mcp": "MCP access"},
+    "SCOPES": {
+        "mcp": "MCP access",
+        "scim": "SCIM provisioning access",       
+        },
     "DEFAULT_SCOPES": ["mcp"],
     "ALLOWED_GRANT_TYPES": [
         "authorization_code",
         "refresh_token",
+        "client_credentials",
     ],
 }
 
