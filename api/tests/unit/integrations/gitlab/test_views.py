@@ -21,7 +21,7 @@ def test_create_configuration__valid_data__persists_and_masks_token(
     project: Project,
     log: StructuredLogCapture,
 ) -> None:
-    # When
+    # Given / When
     response = admin_client_new.post(
         f"/api/v1/projects/{project.id}/integrations/gitlab/",
         data={
@@ -55,7 +55,7 @@ def test_create_configuration__already_exists__returns_400(
     project: Project,
     gitlab_configuration: GitLabConfiguration,
 ) -> None:
-    # When
+    # Given / When
     response = admin_client_new.post(
         f"/api/v1/projects/{project.id}/integrations/gitlab/",
         data={
@@ -75,7 +75,7 @@ def test_update_configuration__valid_data__persists_and_masks_token(
     gitlab_configuration: GitLabConfiguration,
     log: StructuredLogCapture,
 ) -> None:
-    # When
+    # Given / When
     response = admin_client_new.put(
         f"/api/v1/projects/{project.id}/integrations/gitlab/{gitlab_configuration.id}/",
         data={
@@ -110,7 +110,7 @@ def test_delete_configuration__existing__soft_deletes(
     gitlab_configuration: GitLabConfiguration,
     log: StructuredLogCapture,
 ) -> None:
-    # When
+    # Given / When
     response = admin_client_new.delete(
         f"/api/v1/projects/{project.id}/integrations/gitlab/{gitlab_configuration.id}/",
     )
@@ -134,7 +134,7 @@ def test_list_configurations__existing__masks_token(
     project: Project,
     gitlab_configuration: GitLabConfiguration,
 ) -> None:
-    # When
+    # Given / When
     response = admin_client_new.get(
         f"/api/v1/projects/{project.id}/integrations/gitlab/",
     )
@@ -151,7 +151,7 @@ def test_create_configuration__non_admin__returns_403(
     staff_client: APIClient,
     project: Project,
 ) -> None:
-    # When
+    # Given / When
     response = staff_client.post(
         f"/api/v1/projects/{project.id}/integrations/gitlab/",
         data={
@@ -170,7 +170,7 @@ def test_delete_configuration__non_admin__returns_403(
     project: Project,
     gitlab_configuration: GitLabConfiguration,
 ) -> None:
-    # When
+    # Given / When
     response = staff_client.delete(
         f"/api/v1/projects/{project.id}/integrations/gitlab/{gitlab_configuration.id}/",
     )
