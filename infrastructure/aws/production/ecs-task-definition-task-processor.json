@@ -166,6 +166,10 @@
                     "value": "True"
                 },
                 {
+                    "name": "OTEL_EXPORTER_ENDPOINT",
+                    "value": "http://adot-collector.metrics.local:4318"
+                },
+                {
                     "name": "ENABLE_API_USAGE_ALERTING",
                     "value": "True"
                 },

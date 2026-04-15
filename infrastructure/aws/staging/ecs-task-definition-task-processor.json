@@ -161,6 +161,10 @@
                     "value": "True"
                 },
                 {
+                    "name": "OTEL_EXPORTER_ENDPOINT",
+                    "value": "http://adot-collector.metrics.local:4318"
+                },
+                {
                     "name": "TASK_PROCESSOR_SLEEP_INTERVAL_MS",
                     "value": "1000"
                 },

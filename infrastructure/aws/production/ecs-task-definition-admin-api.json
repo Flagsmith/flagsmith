@@ -206,6 +206,10 @@
                     "value": "True"
                 },
                 {
+                    "name": "OTEL_EXPORTER_ENDPOINT",
+                    "value": "http://adot-collector.metrics.local:4318"
+                },
+                {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
                     "value": "https://edge.api.flagsmith.com/api/v1/"
                 },
