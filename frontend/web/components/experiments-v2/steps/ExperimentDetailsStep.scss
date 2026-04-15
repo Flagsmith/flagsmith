@@ -50,4 +50,10 @@
     display: flex;
     gap: 12px;
   }
+
+  &__date-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
 }

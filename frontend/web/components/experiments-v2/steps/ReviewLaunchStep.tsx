@@ -71,6 +71,15 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
             </span>
           </div>
         )}
+        {(wizardState.details.startDate || wizardState.details.endDate) && (
+          <div className='review-launch-step__row'>
+            <span className='review-launch-step__label'>Dates</span>
+            <span className='review-launch-step__value'>
+              {wizardState.details.startDate || '—'} →{' '}
+              {wizardState.details.endDate || '—'}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Step 2: Metrics */}

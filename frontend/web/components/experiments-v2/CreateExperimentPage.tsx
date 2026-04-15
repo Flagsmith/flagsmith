@@ -22,9 +22,11 @@ const INITIAL_STATE: ExperimentWizardState = {
   audience: { segmentId: 'seg-1', splits: [], trafficPercentage: 50 },
   currentStep: 0,
   details: {
+    endDate: '2026-05-15',
     hypothesis:
       'Redesigning the checkout button with a clearer CTA will increase conversion rates by at least 15% within 30 days',
     name: 'Checkout Button Redesign',
+    startDate: '2026-04-15',
     type: 'ab_test',
   },
   featureFlagId: 'flag-1',
