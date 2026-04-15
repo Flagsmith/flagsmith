@@ -27,14 +27,6 @@ const ExperimentResultsPage: FC = () => {
             {result.lastUpdated}
           </span>
           <div className='experiment-results-page__actions'>
-            <Button
-              theme='outline'
-              size='small'
-              iconLeft='open-external-link'
-              iconSize={14}
-            >
-              Export
-            </Button>
             <Button theme='danger' size='small'>
               Stop Experiment
             </Button>
@@ -126,7 +118,7 @@ const ExperimentResultsPage: FC = () => {
           </div>
           <div className='experiment-results-page__config-item'>
             <span className='experiment-results-page__config-label'>
-              Audience
+              Segments
             </span>
             <span className='experiment-results-page__config-value'>
               All Users

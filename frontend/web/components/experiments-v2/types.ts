@@ -267,7 +267,7 @@ export const EXPERIMENT_WIZARD_STEPS: WizardStepDef[] = [
   },
   {
     subtitle: 'Define who sees the experiment and traffic allocation',
-    title: 'Audience & Traffic',
+    title: 'Segments & Traffic',
   },
   {
     subtitle: 'Review your configuration and launch',

@@ -142,7 +142,6 @@ const CreateExperimentPage: FC = () => {
         return (
           <AudienceTrafficStep
             audience={state.audience}
-            variations={state.variations}
             onChange={(audience) => setState((prev) => ({ ...prev, audience }))}
           />
         )
