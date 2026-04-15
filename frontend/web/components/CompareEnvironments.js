@@ -313,6 +313,7 @@ class CompareEnvironments extends Component {
                         <FeatureRow
                           condensed
                           isCompareEnv
+                          className='border-left-1 ps-2'
                           fadeEnabled={fadeEnabled}
                           fadeValue={fadeValue}
                           history={this.props.history}
@@ -390,7 +391,7 @@ class CompareEnvironments extends Component {
                                 </div>
                                 <Flex className='table-column'></Flex>
                               </Flex>
-                              <Flex className='flex-row'>
+                              <Flex className='flex-row border-left-1 ps-2'>
                                 <div
                                   className='table-column'
                                   style={{ width: '80px' }}
