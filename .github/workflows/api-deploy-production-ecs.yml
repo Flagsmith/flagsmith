@@ -49,8 +49,8 @@ jobs:
 
       - name: Generate MCP schema
         env:
-          FLAGSMITH_API_URL: ${{ vars.FLAGSMITH_API_URL || 'https://api.flagsmith.com' }}
-          FLAGSMITH_FRONTEND_URL: ${{ vars.FLAGSMITH_FRONTEND_URL || 'https://app.flagsmith.com' }}
+          FLAGSMITH_API_URL: 'https://api.flagsmith.com'
+          FLAGSMITH_FRONTEND_URL: 'https://app.flagsmith.com'
         run: make generate-mcp-spec
 
       - name: Install Gram CLI
