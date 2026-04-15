@@ -55,9 +55,12 @@ const FlagVariationsStep: FC<FlagVariationsStepProps> = ({
           onChange={(opt: OptionType) => {
             onFlagChange(opt.value)
           }}
-          options={MOCK_FLAGS}
+          options={MOCK_FLAGS.filter((f) => f.isMultiVariant)}
           placeholder='Select a feature flag...'
         />
+        <span className='flag-variations-step__hint text-muted fs-small'>
+          Only multi-variant flags can be experimented on.
+        </span>
       </div>
 
       <div className='flag-variations-step__field'>

@@ -24,6 +24,8 @@ export type ExperimentDetails = {
   name: string
   hypothesis: string
   type: ExperimentType | null
+  startDate: string
+  endDate: string
 }
 
 export type Metric = {
@@ -122,6 +124,9 @@ export type LinkedExperiment = {
 export type FlagOption = {
   value: string
   label: string
+  // Experiments can only run on multi-variant flags — single-variant flags
+  // are filtered out of the selector.
+  isMultiVariant: boolean
 }
 
 export type SegmentOption = {
@@ -167,10 +172,10 @@ export const MOCK_METRICS: Metric[] = [
 ]
 
 export const MOCK_FLAGS: FlagOption[] = [
-  { label: 'checkout_button_redesign', value: 'flag-1' },
-  { label: 'new_pricing_page', value: 'flag-2' },
-  { label: 'search_algorithm_v2', value: 'flag-3' },
-  { label: 'onboarding_flow', value: 'flag-4' },
+  { isMultiVariant: true, label: 'checkout_button_redesign', value: 'flag-1' },
+  { isMultiVariant: false, label: 'new_pricing_page', value: 'flag-2' },
+  { isMultiVariant: true, label: 'search_algorithm_v2', value: 'flag-3' },
+  { isMultiVariant: false, label: 'onboarding_flow', value: 'flag-4' },
 ]
 
 export const MOCK_SEGMENTS: SegmentOption[] = [
