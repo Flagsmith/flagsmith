@@ -23,7 +23,7 @@ Use it for human-in-the-loop workflows (asking your IDE assistant to toggle a fl
 
 Head to our installation page and pick your client:
 
-👉 **[Install the Flagsmith MCP Server](https://mcp.flagsmith.com/mcp/flagsmith-mcp/install)**
+👉 **[Install the Flagsmith MCP Server](https://app.getgram.ai/mcp/flagsmith-mcp/install)**
 
 We support Cursor, Claude Code, Claude Desktop, Windsurf, Gemini CLI, Codex CLI, and any other client that supports MCP servers.
 
@@ -31,9 +31,11 @@ We support Cursor, Claude Code, Claude Desktop, Windsurf, Gemini CLI, Codex CLI,
 
 The MCP Server supports two authentication methods. You can use either one — both work side by side.
 
-#### OAuth (Recommended)
+#### OAuth (Recommended for SaaS users)
 
 OAuth lets you authenticate directly in your browser — no API keys to manage. When you first connect, your MCP client will open a browser window where you log in to Flagsmith and authorise access.
+
+> OAuth is currently available for SaaS users only. Self-hosted and private cloud customers should use an Organisation API Key or contact our team.
 
 #### Organisation API Key
 
@@ -49,9 +51,9 @@ MCP_FLAGSMITH_TOKEN_AUTH="Api-Key YOUR_API_KEY_HERE"
 
 > ⚠️ **Important**: The `Api-Key ` prefix is required. The value of your environment variable should look like `Api-Key ser.abc123...`, not just the key itself.
 
-### Self-Hosted Flagsmith
+### Self-Hosted Flagsmith and Private Cloud
 
-Running your own Flagsmith instance? Point the MCP Server at your API by adding the following header during installation:
+Running your own Flagsmith instance or using our Private Cloud? Use Organisation API Key authentication, then point the MCP Server at your API by adding the following headers during installation:
 
 ```bash
 claude mcp add --transport http "flagsmith" \
