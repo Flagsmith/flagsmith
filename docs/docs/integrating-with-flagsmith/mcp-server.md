@@ -31,9 +31,11 @@ We support Cursor, Claude Code, Claude Desktop, Windsurf, Gemini CLI, Codex CLI,
 
 The MCP Server supports two authentication methods. You can use either one — both work side by side.
 
-#### OAuth (Recommended)
+#### OAuth (Recommended for SaaS users)
 
 OAuth lets you authenticate directly in your browser — no API keys to manage. When you first connect, your MCP client will open a browser window where you log in to Flagsmith and authorise access.
+
+> OAuth is currently available for SaaS users only. Self-hosted instances should use an Organisation API Key or contact our team.
 
 #### Organisation API Key
 
@@ -51,7 +53,7 @@ MCP_FLAGSMITH_TOKEN_AUTH="Api-Key YOUR_API_KEY_HERE"
 
 ### Self-Hosted Flagsmith
 
-Running your own Flagsmith instance? Point the MCP Server at your API by adding the following header during installation:
+Running your own Flagsmith instance? Use Organisation API Key authentication and point the MCP Server at your API by adding the following header during installation:
 
 ```bash
 claude mcp add --transport http "flagsmith" \
