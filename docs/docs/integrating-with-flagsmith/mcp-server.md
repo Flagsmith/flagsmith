@@ -53,7 +53,7 @@ MCP_FLAGSMITH_TOKEN_AUTH="Api-Key YOUR_API_KEY_HERE"
 
 ### Self-Hosted Flagsmith and Private Cloud
 
-Running your own Flagsmith instance? Use Organisation API Key authentication and point the MCP Server at your API by adding the following header during installation:
+Running your own Flagsmith instance or using our Private Cloud? Use Organisation API Key authentication, then point the MCP Server at your API by adding the following headers during installation:
 
 ```bash
 claude mcp add --transport http "flagsmith" \
