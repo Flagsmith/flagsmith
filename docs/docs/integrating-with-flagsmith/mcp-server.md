@@ -51,7 +51,7 @@ MCP_FLAGSMITH_TOKEN_AUTH="Api-Key YOUR_API_KEY_HERE"
 
 > ⚠️ **Important**: The `Api-Key ` prefix is required. The value of your environment variable should look like `Api-Key ser.abc123...`, not just the key itself.
 
-### Self-Hosted Flagsmith
+### Self-Hosted Flagsmith and Private Cloud
 
 Running your own Flagsmith instance? Use Organisation API Key authentication and point the MCP Server at your API by adding the following header during installation:
 
