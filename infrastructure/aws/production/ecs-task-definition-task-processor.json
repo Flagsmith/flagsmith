@@ -166,7 +166,7 @@
                     "value": "True"
                 },
                 {
-                    "name": "OTEL_EXPORTER_ENDPOINT",
+                    "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
                     "value": "http://adot-collector.metrics.local:4318"
                 },
                 {
