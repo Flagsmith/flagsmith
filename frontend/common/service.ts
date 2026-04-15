@@ -1,3 +1,4 @@
+import * as amplitude from '@amplitude/analytics-browser'
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/dist/query/react'
 
 import { FetchBaseQueryArgs } from '@reduxjs/toolkit/dist/query/fetchBaseQuery'
@@ -34,6 +35,17 @@ const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
               headers.set('Authorization', `Token ${token}`)
             }
           } catch (e) {}
+        }
+
+        const deviceId = amplitude.getDeviceId()
+        const sessionId = amplitude.getSessionId()
+        const userId = amplitude.getUserId()
+        if (deviceId || sessionId || userId) {
+          const entries: string[] = []
+          if (deviceId) entries.push(`amplitude.device_id=${deviceId}`)
+          if (sessionId) entries.push(`amplitude.session_id=${sessionId}`)
+          if (userId) entries.push(`amplitude.user_id=${userId}`)
+          headers.set('baggage', entries.join(','))
         }
 
         return headers
