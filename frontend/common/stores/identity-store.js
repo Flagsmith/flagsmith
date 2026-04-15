@@ -1,3 +1,5 @@
+import cloneDeep from 'lodash/cloneDeep'
+import keyBy from 'lodash/keyBy'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 
@@ -98,7 +100,7 @@ const controller = {
         const features = (flags && flags.results) || flags
 
         store.model = store.model || {}
-        store.model.features = features && _.keyBy(features, (f) => f.feature)
+        store.model.features = features && keyBy(features, (f) => f.feature)
         store.model.identity = identity
         store.loaded()
       })
@@ -178,7 +180,7 @@ const store = Object.assign({}, BaseStore, {
     return store.model && store.model.features
   },
   getIdentityForEditing() {
-    return store.model && _.cloneDeep(store.model) // immutable
+    return store.model && cloneDeep(store.model) // immutable
   },
   id: 'identity',
 })

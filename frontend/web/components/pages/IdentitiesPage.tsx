@@ -84,13 +84,12 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
   const isEdge = Utils.getIsEdge()
   const showAliases = isEdge
 
-  const [searchType, setSearchType] = useState<'id' | 'alias'>(
-    showAliases
-      ? localStorage.getItem('identity_search_type') === 'alias'
-        ? 'alias'
-        : 'id' || 'id'
-      : 'id',
-  )
+  const [searchType, setSearchType] = useState<'id' | 'alias'>(() => {
+    if (!showAliases) return 'id'
+    return localStorage.getItem('identity_search_type') === 'alias'
+      ? 'alias'
+      : 'id'
+  })
   useEffect(() => {
     localStorage.setItem('identity_search_type', searchType)
   }, [searchType])
@@ -127,9 +126,9 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
         cta={
           <>
             {permission ? (
-              <FormGroup className='float-right'>
+              <FormGroup className='float-end'>
                 <Button
-                  className='float-right'
+                  className='float-end'
                   data-test='show-create-identity-btn'
                   id='show-create-feature-btn'
                   onClick={newUser}

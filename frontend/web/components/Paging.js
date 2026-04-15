@@ -1,5 +1,7 @@
 // import propTypes from 'prop-types';
 import React, { PureComponent } from 'react'
+import map from 'lodash/map'
+import range from 'lodash/range'
 import propTypes from 'prop-types'
 import cn from 'classnames'
 import { chevronBackOutline, chevronForwardOutline } from 'ionicons/icons'
@@ -29,8 +31,8 @@ export default class Paging extends PureComponent {
       lastPage,
       (currentIndex || currentIndex + 1) + spaceBetween,
     )
-    const range = _.range(from, to)
-    const noPages = range.length < 1
+    const pageRange = range(from, to)
+    const noPages = pageRange.length < 1
     if (noPages && !(paging.next || paging.previous)) {
       return null
     }
@@ -57,7 +59,7 @@ export default class Paging extends PureComponent {
         </Button>
         {paging.currentPage ? (
           <Row>
-            {!range.includes(0) && !noPages && (
+            {!pageRange.includes(0) && !noPages && (
               <>
                 <div
                   role='button'
@@ -71,7 +73,7 @@ export default class Paging extends PureComponent {
                 >
                   {1}
                 </div>
-                {!range.includes(1) && !noPages && (
+                {!pageRange.includes(1) && !noPages && (
                   <div
                     className={cn({
                       'fs-small page': true,
@@ -83,7 +85,7 @@ export default class Paging extends PureComponent {
               </>
             )}
             {!noPages &&
-              _.map(range, (index) => (
+              map(pageRange, (index) => (
                 <div
                   key={index}
                   role='button'
@@ -101,8 +103,8 @@ export default class Paging extends PureComponent {
                 </div>
               ))}
             {!noPages &&
-              !range.includes(lastPage - 1) &&
-              !range.includes(lastPage - 2) && (
+              !pageRange.includes(lastPage - 1) &&
+              !pageRange.includes(lastPage - 2) && (
                 <>
                   <div
                     className={cn({
@@ -118,7 +120,7 @@ export default class Paging extends PureComponent {
                   </div>
                 </>
               )}
-            {!noPages && !range.includes(lastPage - 1) && (
+            {!noPages && !pageRange.includes(lastPage - 1) && (
               <>
                 <div
                   role='button'

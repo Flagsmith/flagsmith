@@ -1,4 +1,6 @@
 import React, { Component } from 'react'
+import cloneDeep from 'lodash/cloneDeep'
+import find from 'lodash/find'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import FeatureListStore from 'common/stores/feature-list-store'
@@ -34,7 +36,7 @@ const Index = class extends Component {
     super(props, context)
 
     const projectFlagData = this.props.projectFlag
-      ? _.cloneDeep(this.props.projectFlag)
+      ? cloneDeep(this.props.projectFlag)
       : {
           description: undefined,
           is_archived: undefined,
@@ -46,7 +48,7 @@ const Index = class extends Component {
         }
 
     const sourceFlag = this.props.identityFlag || this.props.environmentFlag
-    const environmentFlagData = sourceFlag ? _.cloneDeep(sourceFlag) : {}
+    const environmentFlagData = sourceFlag ? cloneDeep(sourceFlag) : {}
 
     this.state = {
       changeRequests: [],
@@ -79,7 +81,7 @@ const Index = class extends Component {
       environmentFlagSource.updated_at !== prevEnvironmentFlagSource.updated_at
     ) {
       this.setState({
-        environmentFlag: _.cloneDeep(environmentFlagSource),
+        environmentFlag: cloneDeep(environmentFlagSource),
       })
     }
 
@@ -91,7 +93,7 @@ const Index = class extends Component {
       this.props.projectFlag.updated_at !== prevProps.projectFlag.updated_at
     ) {
       this.setState({
-        projectFlag: _.cloneDeep(this.props.projectFlag),
+        projectFlag: cloneDeep(this.props.projectFlag),
       })
     }
 
@@ -525,7 +527,7 @@ const Index = class extends Component {
                                       projectFlag={projectFlag}
                                       environmentId={this.props.environmentId}
                                       environmentName={
-                                        _.find(project.environments, {
+                                        find(project.environments, {
                                           api_key: this.props.environmentId,
                                         })?.name || ''
                                       }
@@ -644,13 +646,13 @@ const Index = class extends Component {
                               <div className='pr-3'>
                                 {identity ? (
                                   <div className='mb-3 mt-4'>
-                                    <p className='text-left ml-3 modal-caption fs-small lh-small'>
+                                    <p className='text-start ml-3 modal-caption fs-small lh-small'>
                                       This will update the feature value for the
                                       user <strong>{identityName}</strong> in
                                       <strong>
                                         {' '}
                                         {
-                                          _.find(project.environments, {
+                                          find(project.environments, {
                                             api_key: this.props.environmentId,
                                           }).name
                                         }

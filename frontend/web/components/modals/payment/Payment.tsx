@@ -90,7 +90,7 @@ export const Payment: FC<PaymentProps> = ({
 
         <PricingToggle isYearly={yearly} onChange={setYearly} />
 
-        <Row className='pricing-container align-start'>
+        <Row className='pricing-container align-items-start'>
           <PricingPanel
             title='Start-Up'
             priceYearly='40'
@@ -113,10 +113,7 @@ export const Payment: FC<PaymentProps> = ({
             title='Scale-Up'
             priceYearly='270'
             priceMonthly='300'
-            seatPriceYearly='50'
-            seatPriceMonthly='60'
             isYearly={yearly}
-            isFeatured
             chargebeePlanId={
               yearly
                 ? Project.plans?.scaleUp?.annual

@@ -422,7 +422,7 @@ const HomePage: React.FC = () => {
                                       !disableForgotPassword && (
                                         <Link
                                           tabIndex={-1}
-                                          className='float-right'
+                                          className='float-end'
                                           to={`/password-recovery${redirect}`}
                                           onClick={showForgotPassword}
                                         >

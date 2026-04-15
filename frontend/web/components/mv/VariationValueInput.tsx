@@ -104,7 +104,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
         />
       </div>
       {!!onRemove && !readOnly && (
-        <div style={{ position: 'relative', top: '27px' }} className='ml-2'>
+        <div style={{ top: '27px' }} className='ml-2 position-relative'>
           <button
             onClick={onRemove}
             id='delete-multivariate'

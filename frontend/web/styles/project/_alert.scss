@@ -1,20 +1,4 @@
 @import "../variables";
-.alert-shown {
-  .navbar {
-    margin-top: 60px;
-  }
-  .app-container {
-    margin-top: 130px;
-  }
-  &.hide {
-    .navbar {
-      margin-top: 0;
-    }
-    .app-container {
-      margin-top: 70px;
-    }
-  }
-}
 
 .alert {
   border-radius: $border-radius-lg;

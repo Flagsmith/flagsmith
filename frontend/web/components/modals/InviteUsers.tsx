@@ -9,7 +9,8 @@ import { getPlanBasedOption } from 'components/PlanBasedAccess'
 import InputGroup from 'components/base/forms/InputGroup'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Utils from 'common/utils/utils'
-import _ from 'lodash'
+import every from 'lodash/every'
+import map from 'lodash/map'
 import ErrorMessage from 'components/ErrorMessage'
 import AccountStore from 'common/stores/account-store'
 import { close as closeIcon } from 'ionicons/icons'
@@ -81,7 +82,7 @@ const InviteUsers: FC = () => {
   }, [])
 
   const isValid = (): boolean => {
-    return _.every(
+    return every(
       invites,
       (invite) => Utils.isValidEmail(invite.emailAddress) && invite.role,
     )
@@ -190,7 +191,7 @@ const InviteUsers: FC = () => {
                         onChange(invite.temporaryId, 'role', role)
                       }
                       className='pl-2 react-select'
-                      options={_.map(Constants.roles, (label, value) =>
+                      options={map(Constants.roles, (label, value) =>
                         value === 'ADMIN'
                           ? {
                               label,
@@ -206,7 +207,7 @@ const InviteUsers: FC = () => {
                       )}
                     />
                   </Flex>
-                  <Flex className='mb-2' style={{ position: 'relative' }}>
+                  <Flex className='mb-2 position-relative'>
                     <Select
                       data-test='select-group'
                       placeholder='Select a group'
