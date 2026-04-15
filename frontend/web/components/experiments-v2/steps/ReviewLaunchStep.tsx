@@ -140,11 +140,11 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
         </div>
       </div>
 
-      {/* Step 4: Audience & Traffic */}
+      {/* Step 4: Segments & Traffic */}
       <div className='review-launch-step__section'>
         <div className='review-launch-step__section-header'>
           <span className='review-launch-step__section-title'>
-            Audience & Traffic
+            Segments & Traffic
           </span>
           <Button theme='text' size='xSmall' onClick={() => onEditStep(3)}>
             Edit
