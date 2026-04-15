@@ -5,6 +5,7 @@ import EnvironmentTagSelect from 'components/EnvironmentTagSelect'
 import BarChart from 'components/charts/BarChart'
 import { MultiSelect } from 'components/base/select/multi-select'
 import { useGetFeatureAnalyticsQuery } from 'common/services/useFeatureAnalytics'
+import Utils from 'common/utils/utils'
 import { aggregateByLabels, hasLabelledData } from './utils'
 import { useEnvChartProps } from './useEnvChartProps'
 
@@ -34,7 +35,11 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
     },
   )
 
-  const isLabelled = hasLabelledData(data?.rawEntries)
+  // Gated behind the `sdk_usage_charts` flag — same flag that controls the
+  // org-level SDK usage view. When disabled, fall back to env grouping even
+  // if the API happens to return labels.
+  const isSdkViewEnabled = Utils.getFlagsmithHasFeature('sdk_usage_charts')
+  const isLabelled = isSdkViewEnabled && hasLabelledData(data?.rawEntries)
 
   // Clear SDK filter when labelled mode deactivates (e.g. user switches to
   // an env with no labels) — avoids stale chips in a disabled MultiSelect.
