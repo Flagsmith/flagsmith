@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import API from 'project/api'
 
 type SelectedOrganisationState = {
   id: number | undefined
@@ -15,7 +14,6 @@ const selectedOrganisationSlice = createSlice({
   reducers: {
     setSelectedOrganisationId(state, action: PayloadAction<number>) {
       state.id = action.payload
-      API.setCookie('organisation', `${action.payload}`)
     },
   },
 })
