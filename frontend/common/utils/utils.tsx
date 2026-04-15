@@ -17,7 +17,7 @@ import {
 } from 'common/types/responses'
 import flagsmith from '@flagsmith/flagsmith'
 import { ReactNode } from 'react'
-import _ from 'lodash'
+import find from 'lodash/find'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
@@ -500,7 +500,7 @@ const Utils = Object.assign({}, BaseUtils, {
     if (!plans || !plans.length) {
       return false
     }
-    const found = _.find(
+    const found = find(
       plans.map((plan: string) => Utils.getPlanPermission(plan, feature)),
       (perm) => !!perm,
     )

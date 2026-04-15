@@ -1,4 +1,6 @@
 import React, { Component } from 'react'
+import get from 'lodash/get'
+import find from 'lodash/find'
 import { matchPath, withRouter } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
 import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
@@ -55,7 +57,7 @@ const App = class extends Component {
       strict: false,
     })
     const projectId =
-      _.get(match, 'params.projectId') || _.get(match2, 'params.projectId')
+      get(match, 'params.projectId') || get(match2, 'params.projectId')
     return !!projectId && parseInt(projectId)
   }
   getEnvironmentId = (props) => {
@@ -68,7 +70,7 @@ const App = class extends Component {
       strict: false,
     })
 
-    const environmentId = _.get(match, 'params.environmentId')
+    const environmentId = get(match, 'params.environmentId')
     return environmentId
   }
 
@@ -163,7 +165,7 @@ const App = class extends Component {
           }
           if (res) {
             const lastEnv = JSON.parse(res)
-            const lastOrg = _.find(AccountStore.getUser().organisations, {
+            const lastOrg = find(AccountStore.getUser().organisations, {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {

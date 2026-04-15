@@ -1,3 +1,6 @@
+import cloneDeep from 'lodash/cloneDeep'
+import each from 'lodash/each'
+import findIndex from 'lodash/findIndex'
 import data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import FeatureListStore from 'common/stores/feature-list-store'
@@ -56,9 +59,9 @@ export default (WrappedComponent) => {
           const environmentOverride = res2.results.find(
             (v) => !v.feature_segment && !v.identity,
           )
-          _.each(featureStates, (f) => {
+          each(featureStates, (f) => {
             if (f.feature_segment) {
-              const index = _.findIndex(results, { id: f.feature_segment })
+              const index = findIndex(results, { id: f.feature_segment })
               if (index !== -1) {
                 results[index].value = Utils.featureStateToValue(
                   f.feature_state_value,
@@ -188,7 +191,7 @@ export default (WrappedComponent) => {
             priority: i,
           }))
 
-          const originalSegmentOverrides = _.cloneDeep(segmentOverrides)
+          const originalSegmentOverrides = cloneDeep(segmentOverrides)
           this.setState({
             environmentVariations:
               environmentOverride &&

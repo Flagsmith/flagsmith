@@ -1,3 +1,8 @@
+import find from 'lodash/find'
+import findIndex from 'lodash/findIndex'
+import keyBy from 'lodash/keyBy'
+import map from 'lodash/map'
+import throttle from 'lodash/throttle'
 import Constants from 'common/constants'
 import ProjectStore from './project-store'
 import {
@@ -149,7 +154,7 @@ const controller = {
           store.model = {
             features: features.results,
             keyedEnvironmentFeatures:
-              environmentFeatures && _.keyBy(environmentFeatures, 'feature'),
+              environmentFeatures && keyBy(environmentFeatures, 'feature'),
           }
           store.model.lastSaved = new Date().valueOf()
           getStore().dispatch(
@@ -185,7 +190,7 @@ const controller = {
           onComplete(res)
         }
         if (store.model?.features) {
-          const index = _.findIndex(store.model.features, { id: flag.id })
+          const index = findIndex(store.model.features, { id: flag.id })
           store.model.features[index] = controller.parseFlag(flag)
           store.model.lastSaved = new Date().valueOf()
           getStore().dispatch(
@@ -457,12 +462,12 @@ const controller = {
             if (store.model?.keyedEnvironmentFeatures) {
               store.model.keyedEnvironmentFeatures[projectFlag.id] = res
               if (segmentRes) {
-                const feature = _.find(
+                const feature = find(
                   store.model.features,
                   (f) => f.id === projectFlag.id,
                 )
                 if (feature) {
-                  feature.feature_segments = _.map(
+                  feature.feature_segments = map(
                     segmentRes.feature_segments,
                     (segment) => ({
                       ...segment,
@@ -929,7 +934,7 @@ const controller = {
 
               store.model = {
                 features: features.results.map(controller.parseFlag),
-                keyedEnvironmentFeatures: _.keyBy(
+                keyedEnvironmentFeatures: keyBy(
                   environmentFeatures,
                   'feature',
                 ),
@@ -955,7 +960,7 @@ const controller = {
         })),
     }
   },
-  searchFeatures: _.throttle(
+  searchFeatures: throttle(
     (search, environmentId, projectId, filter, pageSize) => {
       store.search = encodeURIComponent(search || '')
       controller.getFeatures(
