@@ -23,7 +23,7 @@ Use it for human-in-the-loop workflows (asking your IDE assistant to toggle a fl
 
 Head to our installation page and pick your client:
 
-👉 **[Install the Flagsmith MCP Server](https://mcp.flagsmith.com/mcp/flagsmith-mcp/install)**
+👉 **[Install the Flagsmith MCP Server](https://app.getgram.ai/mcp/flagsmith-mcp/install)**
 
 We support Cursor, Claude Code, Claude Desktop, Windsurf, Gemini CLI, Codex CLI, and any other client that supports MCP servers.
 
