@@ -6,6 +6,7 @@ from django.conf import settings
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 
+from environments.models import Environment
 from organisations.models import Organisation
 from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
@@ -215,7 +216,6 @@ def test_is_too_large__environments_exceed_limit__returns_true(
     project: Project,
 ) -> None:
     # Given
-    from environments.models import Environment
 
     project.max_environments_allowed = 1
     project.save()
@@ -234,7 +234,6 @@ def test_is_too_large__environments_within_limit__returns_false(
     project: Project,
 ) -> None:
     # Given
-    from environments.models import Environment
 
     project.max_environments_allowed = 100
     project.save()
