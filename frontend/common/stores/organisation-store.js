@@ -68,23 +68,6 @@ const controller = {
         })
       })
   },
-  deleteInvite: (id) => {
-    store.saving()
-    data
-      .delete(`${Project.api}organisations/${store.id}/invites/${id}/`)
-      .then(() => {
-        API.trackEvent(Constants.events.DELETE_INVITE)
-        if (store.model) {
-          store.model.invites = _.filter(
-            store.model.invites,
-            (i) => i.id !== id,
-          )
-        }
-        store.saved()
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
-
   deleteProject: (id) => {
     const idInt = parseInt(id)
     store.saving()
@@ -254,22 +237,6 @@ const controller = {
           }),
       )
   },
-  resendInvite: (id) => {
-    data
-      .post(`${Project.api}organisations/${store.id}/invites/${id}/resend/`)
-      .then(() => {
-        API.trackEvent(Constants.events.RESEND_INVITE)
-        toast('Invite resent successfully')
-      })
-      .catch((e) => {
-        toast(
-          `Failed to resend invite. ${
-            e && e.error ? e.error : 'Please try again later'
-          }`,
-          'danger',
-        )
-      })
-  },
   updateUserRole: (id, role) => {
     data
       .post(
@@ -329,14 +296,8 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     case Actions.DELETE_PROJECT:
       controller.deleteProject(action.id)
       break
-    case Actions.DELETE_INVITE:
-      controller.deleteInvite(action.id)
-      break
     case Actions.DELETE_USER:
       controller.deleteUser(action.id)
-      break
-    case Actions.RESEND_INVITE:
-      controller.resendInvite(action.id)
       break
     case Actions.UPDATE_USER_ROLE:
       controller.updateUserRole(action.id, action.role)

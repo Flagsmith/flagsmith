@@ -71,12 +71,6 @@ const AppActions = Object.assign({}, BaseAppActions, {
       env,
     })
   },
-  deleteInvite(id) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.DELETE_INVITE,
-      id,
-    })
-  },
   deleteOrganisation() {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_ORGANISATION,
@@ -225,12 +219,6 @@ const AppActions = Object.assign({}, BaseAppActions, {
       link,
     })
   },
-  migrateProject(projectId) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.MIGRATE_PROJECT,
-      projectId,
-    })
-  },
   oauthLogin(oauthType, data) {
     Dispatcher.handleViewAction({
       actionType: Actions.OAUTH,
@@ -260,38 +248,16 @@ const AppActions = Object.assign({}, BaseAppActions, {
       identityFlag,
     })
   },
-  resendInvite(id) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.RESEND_INVITE,
-      id,
-    })
-  },
   resetPassword(data) {
     Dispatcher.handleViewAction({
       actionType: Actions.RESET_PASSWORD,
       ...data,
     })
   },
-  saveEnv(name) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.EDIT_ENVIRONMENT,
-      name,
-    })
-  },
   selectOrganisation(id) {
     Dispatcher.handleViewAction({
       actionType: Actions.SELECT_ORGANISATION,
       id,
-    })
-  },
-  toggleFlag(index, environments, comment, environmentFlags, projectFlags) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.TOGGLE_FLAG,
-      comment,
-      environmentFlags,
-      environments,
-      index,
-      projectFlags,
     })
   },
   toggleUserFlag(params) {

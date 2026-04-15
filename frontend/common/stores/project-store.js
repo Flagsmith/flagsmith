@@ -164,12 +164,6 @@ const controller = {
         document.location.href = '/404?entity=project'
       })
   },
-  migrateProject: (id) => {
-    store.loading()
-    data.post(`${Project.api}projects/${id}/migrate-to-edge/`).then(() => {
-      controller.getProject(id, () => store.saved(), true)
-    })
-  },
 }
 
 const store = Object.assign({}, BaseStore, {
@@ -223,9 +217,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
 
   switch (action.actionType) {
-    case Actions.MIGRATE_PROJECT:
-      controller.migrateProject(parseInt(action.projectId))
-      break
     case Actions.GET_PROJECT:
       controller.getProject(parseInt(action.projectId))
       break
