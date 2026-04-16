@@ -348,3 +348,4 @@ App.propTypes = {
 }
 
 export default withRouter(ConfigProvider(App))
+// smoke test validation
