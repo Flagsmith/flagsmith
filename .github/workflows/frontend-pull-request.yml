@@ -58,7 +58,7 @@ jobs:
           for i in $(seq 1 30); do
             URLS=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" \
               --jq '.[] | select(.user.login == "vercel[bot]") | .body' \
-              | grep -o 'https://flagsmith-frontend[^ )]*')
+              | grep -o 'https://flagsmith-frontend[^ )]*\.vercel\.app')
 
             if [ -n "$URLS" ]; then
               break
@@ -84,12 +84,16 @@ jobs:
               echo "✅ /config/project-overrides OK"
             fi
 
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/")
+            RESPONSE=$(curl -s -w '\n%{http_code}' --max-time 30 "$URL/")
+            STATUS=$(echo "$RESPONSE" | tail -1)
             if [ "$STATUS" != "200" ]; then
               echo "⚠️ / returned $STATUS"
               FAILED=1
+            elif ! echo "$RESPONSE" | grep -q 'Flagsmith'; then
+              echo "⚠️ / returned 200 but body doesn't contain expected content"
+              FAILED=1
             else
-              echo "✅ / OK"
+              echo "✅ / OK (status + content)"
             fi
           done
 
