@@ -16,8 +16,8 @@ class GitLabConfigurationViewSet(ProjectIntegrationBaseViewSet):
         self, instance: GitLabConfiguration
     ) -> structlog.typing.FilteringBoundLogger:
         return logger.bind(  # type: ignore[no-any-return]
-            project_id=instance.project.id,
-            organisation_id=instance.project.organisation_id,
+            project__id=instance.project.id,
+            organisation__id=instance.project.organisation_id,
         )
 
     def perform_create(self, serializer: GitLabConfigurationSerializer) -> None:  # type: ignore[override]

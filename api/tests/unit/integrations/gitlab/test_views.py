@@ -44,8 +44,8 @@ def test_create_configuration__valid_data__persists_and_masks_token(
             "event": "gitlab-configuration-created",
             "level": "info",
             "gitlab_instance_url": "https://gitlab.example.com",
-            "project_id": project.id,
-            "organisation_id": project.organisation_id,
+            "project__id": project.id,
+            "organisation__id": project.organisation_id,
         },
     ]
 
@@ -98,8 +98,8 @@ def test_update_configuration__valid_data__persists_and_masks_token(
             "event": "gitlab-configuration-updated",
             "level": "info",
             "gitlab_instance_url": "https://gitlab.updated.com",
-            "project_id": project.id,
-            "organisation_id": project.organisation_id,
+            "project__id": project.id,
+            "organisation__id": project.organisation_id,
         },
     ]
 
@@ -123,8 +123,8 @@ def test_delete_configuration__existing__soft_deletes(
         {
             "event": "gitlab-configuration-deleted",
             "level": "info",
-            "project_id": project.id,
-            "organisation_id": project.organisation_id,
+            "project__id": project.id,
+            "organisation__id": project.organisation_id,
         },
     ]
 
