@@ -39,6 +39,7 @@ jobs:
   smoke-test:
     name: Vercel Preview Smoke Test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Wait for Vercel deployments and smoke test
         env:
