@@ -57,7 +57,7 @@ class _GitLabListView(ListAPIView, abc.ABC, Generic[T]):  # type: ignore[type-ar
         except requests.RequestException as exc:
             logger.error("api-call-failed", exc_info=exc)
             return Response(
-                data={"detail": f"GitLab API error: {exc}"},
+                data={"detail": "GitLab API is unreachable"},
                 status=status.HTTP_424_FAILED_DEPENDENCY,
             )
 

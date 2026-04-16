@@ -204,3 +204,4 @@ def test_browse_gitlab__api_unreachable__returns_424(
 
     # Then
     assert response.status_code == status.HTTP_424_FAILED_DEPENDENCY
+    assert response.json()["detail"] == "GitLab API is unreachable"
