@@ -76,6 +76,7 @@ addopts = [
   '--dist=worksteal',
 ]
 console_output_style = 'count'
+log_level = 'INFO'
 
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]

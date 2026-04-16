@@ -1,4 +1,3 @@
-import logging
 import uuid
 from datetime import timedelta
 from unittest.mock import MagicMock, call
@@ -291,7 +290,7 @@ def test_send_org_subscription_cancelled_alert__valid_organisation__sends_cancel
 
 def test_handle_api_usage_notification_for_organisation__billing_starts_at_is_none__logs_warning(
     organisation: Organisation,
-    inspecting_handler: logging.Handler,
+    caplog: pytest.LogCaptureFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -308,23 +307,20 @@ def test_handle_api_usage_notification_for_organisation__billing_starts_at_is_no
         current_billing_term_starts_at=None,
         current_billing_term_ends_at=None,
     )
-    from organisations.task_helpers import logger
-
-    logger.addHandler(inspecting_handler)
 
     # When
     handle_api_usage_notification_for_organisation(organisation)
 
     # Then
     api_usage_mock.assert_not_called()
-    assert inspecting_handler.messages == [  # type: ignore[attr-defined]
+    assert caplog.messages == [
         f"Paid organisation {organisation.id} is missing billing_starts_at datetime"
     ]
 
 
 def test_handle_api_usage_notification_for_organisation__cancellation_date_is_set__skips_notification(
     organisation: Organisation,
-    inspecting_handler: logging.Handler,
+    caplog: pytest.LogCaptureFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -344,10 +340,6 @@ def test_handle_api_usage_notification_for_organisation__cancellation_date_is_se
         api_calls_30d=usage,
     )
 
-    from organisations.task_helpers import logger
-
-    logger.addHandler(inspecting_handler)
-
     # When
     handle_api_usage_notification_for_organisation(organisation)
 
@@ -355,7 +347,7 @@ def test_handle_api_usage_notification_for_organisation__cancellation_date_is_se
     assert OrganisationAPIUsageNotification.objects.count() == 0
 
     # Check to ensure that error messages haven't been set.
-    assert inspecting_handler.messages == []  # type: ignore[attr-defined]
+    assert caplog.messages == []
 
 
 def test_handle_api_usage_notification_for_organisation__billing_starts_at_over_12_months_ago__uses_12_month_offset(
@@ -678,13 +670,9 @@ def test_handle_api_usage_notifications__usage_above_100_percent__sends_limit_no
 def test_handle_api_usage_notifications__processing_error__logs_error_message(
     mocker: MockerFixture,
     organisation: Organisation,
-    inspecting_handler: logging.Handler,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     # Given
-    from organisations.tasks import logger
-
-    logger.addHandler(inspecting_handler)
-
     now = timezone.now()
     organisation.subscription.plan = SCALE_UP
     organisation.subscription.subscription_id = "fancy_id"
@@ -719,8 +707,8 @@ def test_handle_api_usage_notifications__processing_error__logs_error_message(
         ).count()
         == 0
     )
-    assert len(inspecting_handler.messages) == 1  # type: ignore[attr-defined]
-    error_message = inspecting_handler.messages[0].split("\n")[0]  # type: ignore[attr-defined]
+    assert len(caplog.messages) == 1
+    error_message = caplog.messages[0].split("\n")[0]
 
     assert (
         error_message
@@ -828,7 +816,6 @@ def test_handle_api_usage_notifications__missing_info_cache__skips_processing(
     mocker: MockerFixture,
     organisation: Organisation,
     mailoutbox: list[EmailMultiAlternatives],
-    inspecting_handler: logging.Handler,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
@@ -1328,15 +1315,11 @@ def test_charge_for_api_call_count_overages__startup_plan__charges_correct_addon
 def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_plan_warning(
     organisation: Organisation,
     mocker: MockerFixture,
-    inspecting_handler: logging.Handler,
+    caplog: pytest.LogCaptureFixture,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
-
-    from organisations.tasks import logger
-
-    logger.addHandler(inspecting_handler)
 
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
@@ -1376,7 +1359,7 @@ def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_pla
 
     # Then
     mock_chargebee_update.assert_not_called()
-    assert inspecting_handler.messages == [  # type: ignore[attr-defined]
+    assert caplog.messages == [
         "Unknown subscription plan when trying to bill for overages "
         f"organisation.id={organisation.id} "
         "organisation.subscription.plan='nonstandard-v2'"
@@ -1389,15 +1372,12 @@ def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_pla
 def test_charge_for_api_call_count_overages__billing_exception__logs_error_and_does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
-    inspecting_handler: logging.Handler,
+    caplog: pytest.LogCaptureFixture,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     now = timezone.now()
 
-    from organisations.tasks import logger
-
-    logger.addHandler(inspecting_handler)
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
@@ -1439,7 +1419,7 @@ def test_charge_for_api_call_count_overages__billing_exception__logs_error_and_d
     charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
-    assert inspecting_handler.messages[0].startswith(  # type: ignore[attr-defined]
+    assert caplog.messages[0].startswith(
         f"Unable to charge organisation {organisation.id} due to billing error"
     )
     mock_chargebee_update.assert_not_called()
@@ -1935,15 +1915,12 @@ def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__doe
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
     mailoutbox: list[EmailMultiAlternatives],
-    inspecting_handler: logging.Handler,
+    caplog: pytest.LogCaptureFixture,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     assert not organisation.has_subscription_information_cache()
 
-    from organisations.tasks import logger
-
-    logger.addHandler(inspecting_handler)
     enable_features(
         "api_limiting_stop_serving_flags",
         "api_limiting_block_access_to_admin",
@@ -1987,7 +1964,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__doe
     assert organisation.block_access_to_admin is False
     assert not hasattr(organisation, "api_limit_access_block")
     assert len(mailoutbox) == 0
-    assert inspecting_handler.messages == [  # type: ignore[attr-defined]
+    assert caplog.messages == [
         f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
     ]
 

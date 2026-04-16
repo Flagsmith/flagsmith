@@ -1,4 +1,3 @@
-import logging
 import os
 import site
 import typing
@@ -1251,23 +1250,6 @@ def superuser():  # type: ignore[no-untyped-def]
 def superuser_client(superuser: FFAdminUser, client: APIClient):  # type: ignore[no-untyped-def]
     client.force_login(superuser, backend="django.contrib.auth.backends.ModelBackend")
     return client
-
-
-@pytest.fixture
-def inspecting_handler() -> logging.Handler:
-    """
-    Fixture used to test the output of logger related output.
-    """
-
-    class InspectingHandler(logging.Handler):
-        def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
-            super().__init__(*args, **kwargs)
-            self.messages = []  # type: ignore[var-annotated]
-
-        def handle(self, record: logging.LogRecord) -> None:  # type: ignore[override]
-            self.messages.append(self.format(record))
-
-    return InspectingHandler()
 
 
 @pytest.fixture
