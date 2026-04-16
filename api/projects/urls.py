@@ -19,6 +19,7 @@ from features.import_export.views import (
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
+from integrations.gitlab.views import GitLabConfigurationViewSet
 from integrations.grafana.views import GrafanaProjectConfigurationViewSet
 from integrations.launch_darkly.views import LaunchDarklyImportRequestViewSet
 from integrations.new_relic.views import NewRelicConfigurationViewSet
@@ -64,6 +65,11 @@ projects_router.register(
     r"imports/launch-darkly",
     LaunchDarklyImportRequestViewSet,
     basename="imports-launch-darkly",
+)
+projects_router.register(
+    r"integrations/gitlab",
+    GitLabConfigurationViewSet,
+    basename="integrations-gitlab",
 )
 projects_router.register(
     r"integrations/grafana",
