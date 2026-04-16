@@ -11,7 +11,7 @@ from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 
-logger = structlog.get_logger()
+logger = structlog.get_logger(__name__)
 
 DictList = list[dict[str, Any]]
 
