@@ -9,8 +9,8 @@ on:
 
 permissions:
   contents: read
-  deployments: read
   pull-requests: read
+  statuses: read
 
 jobs:
   unit-tests:
@@ -40,34 +40,63 @@ jobs:
   smoke-test:
     name: Vercel Preview Smoke Test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     continue-on-error: true
     steps:
-      - name: Wait for Vercel comment then smoke test
+      - name: Wait for Vercel deployments to finish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "⏳ Waiting for Vercel deployment checks to complete..."
+
+          for i in $(seq 1 60); do
+            STATUSES=$(gh api "repos/$REPO/commits/$SHA/status" \
+              --jq '.statuses | [.[] | select(.context | test("Vercel"; "i"))]')
+
+            TOTAL=$(echo "$STATUSES" | jq 'length')
+            PENDING=$(echo "$STATUSES" | jq '[.[] | select(.state == "pending")] | length')
+            FAILED=$(echo "$STATUSES" | jq '[.[] | select(.state == "failure" or .state == "error")] | length')
+
+            if [ "$TOTAL" -gt 0 ] && [ "$PENDING" = "0" ]; then
+              if [ "$FAILED" -gt 0 ]; then
+                echo "❌ Vercel deployment failed — skipping smoke test"
+                echo "$STATUSES" | jq -r '.[] | select(.state == "failure" or .state == "error") | "  \(.context): \(.state)"'
+                exit 1
+              fi
+              echo "✅ All $TOTAL Vercel deployments completed"
+              break
+            fi
+
+            if [ "$TOTAL" = "0" ]; then
+              echo "  Waiting for Vercel to start... ($i/60)"
+            else
+              echo "  $PENDING of $TOTAL still deploying... ($i/60)"
+            fi
+            sleep 10
+          done
+
+          if [ "$TOTAL" = "0" ] || [ "$PENDING" != "0" ]; then
+            echo "⚠️ Timed out waiting for Vercel deployments"
+            exit 1
+          fi
+
+      - name: Smoke test preview URLs
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          # Wait for the Vercel bot comment containing preview URLs.
-          # Vercel posts/updates this comment on every push — even for
-          # "Ignored Build Step" skips, the URLs from the previous
-          # build are still live and testable.
-          echo "⏳ Waiting for Vercel bot comment with preview URLs..."
-          URLS=""
-          for i in $(seq 1 30); do
-            URLS=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" \
-              --jq '.[] | select(.user.login == "vercel[bot]") | .body' \
-              | grep -o 'https://flagsmith-frontend[^ )]*\.vercel\.app')
-
-            if [ -n "$URLS" ]; then
-              break
-            fi
-            sleep 10
-          done
+          # Parse frontend preview URLs from the Vercel bot comment.
+          # The comment is guaranteed to be up-to-date because Phase 1
+          # waited for all deployments to complete.
+          URLS=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" \
+            --jq '.[] | select(.user.login == "vercel[bot]") | .body' \
+            | grep -o 'https://flagsmith-frontend[^ )]*\.vercel\.app')
 
           if [ -z "$URLS" ]; then
-            echo "⚠️ No Vercel preview URLs found in PR comments"
+            echo "⚠️ No frontend preview URLs found in Vercel bot comment"
             exit 1
           fi
 
