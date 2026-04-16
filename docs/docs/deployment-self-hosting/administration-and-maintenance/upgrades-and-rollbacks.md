@@ -33,7 +33,7 @@ ORDER BY applied DESC
 2. Run the rollback command inside a Flagsmith API container running the _current_ version of Flagsmith:
 
 ```bash
-python manage.py rollbackmigrationsafter "<datetime from step 1>"
+python manage.py rollbackmigrationsappliedafter "<datetime from step 1>"
 ```
 
 3. Roll back the Flagsmith API to the desired version.

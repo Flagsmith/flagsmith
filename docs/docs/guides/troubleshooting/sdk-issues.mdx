@@ -31,16 +31,16 @@ Server-side SDKs in [local evaluation mode](/integrating-with-flagsmith/integrat
 fetch the full environment document on a refresh interval and evaluate flags locally. The default refresh interval is
 **60 seconds** in most SDKs:
 
-| SDK     | Parameter                                   | Default   |
-| ------- | ------------------------------------------- | --------- |
-| Python  | `environment_refresh_interval_seconds`      | 60 s      |
-| Java    | `withEnvironmentRefreshIntervalSeconds`     | 60 s      |
-| Ruby    | `environment_refresh_interval_seconds`      | 60 s      |
-| Node.js | `environmentRefreshIntervalSeconds`         | 60 s      |
-| .NET    | `EnvironmentRefreshIntervalSeconds`         | 60 s      |
-| Go      | `WithEnvironmentRefreshInterval`            | 60 s      |
-| Rust    | `environment_refresh_interval_milliseconds` | 60 000 ms |
-| PHP     | `environmentTtl`                            | 60 s      |
+| SDK     | Parameter                                       | Default                   |
+| ------- | ----------------------------------------------- | ------------------------- |
+| Python  | `environment_refresh_interval_seconds`          | 60 s                      |
+| Java    | `.withEnvironmentRefreshIntervalSeconds(...)`   | 60 s                      |
+| Ruby    | `environment_refresh_interval_seconds`          | 60 s                      |
+| Node.js | `environmentRefreshIntervalSeconds`             | 60 s                      |
+| .NET    | `EnvironmentRefreshInterval` (`TimeSpan`)       | 60 s                      |
+| Go      | `flagsmith.WithEnvironmentRefreshInterval(...)` | 60 s                      |
+| Rust    | `environment_refresh_interval_mills`            | 60 000 ms                 |
+| PHP     | `environmentTtl`                                | `null` (polling disabled) |
 
 If you lower this interval, the SDK will detect dashboard changes faster. If you raise it, you reduce network calls at
 the cost of staleness.

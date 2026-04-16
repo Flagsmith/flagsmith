@@ -76,7 +76,7 @@ After upgrading the Flagsmith API image, the container fails to start with a mig
    v2.151.0 and later, use:
 
 ```bash
-python manage.py rollbackmigrationsafter "<datetime of previous deployment>"
+python manage.py rollbackmigrationsappliedafter "<datetime of previous deployment>"
 ```
 
 4. If concurrent containers caused a conflict, restart with a single replica, let migrations complete, then scale back
@@ -115,8 +115,9 @@ The API returns `502 Bad Gateway` sporadically. The container is running and mos
 
 1. Check the API container's logs for `[CRITICAL] WORKER TIMEOUT` messages from Gunicorn or `OperationalError`
    exceptions from Django.
-2. If workers are timing out, consider increasing Gunicorn's `--timeout` or `--workers` via the `GUNICORN_CMD_ARGS`
-   environment variable.
+2. If workers are timing out, consider raising `GUNICORN_TIMEOUT` (default 30 s) or `GUNICORN_WORKERS` (default 3). See
+   [Flagsmith's Docker environment variables](/deployment-self-hosting/hosting-guides/docker) for the full list, or use
+   `GUNICORN_CMD_ARGS` to pass arbitrary Gunicorn flags.
 3. Ensure your reverse proxy's upstream timeout is **equal to or greater than** Gunicorn's timeout.
 4. Monitor database connection usage. If connections are exhausted, increase `CONN_MAX_AGE` or add a connection pooler
    such as PgBouncer.
