@@ -1,6 +1,5 @@
 import React, { FC } from 'react'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/icons/Icon'
 import {
   ExperimentWizardState,
   MOCK_FLAGS,
@@ -13,12 +12,6 @@ type ReviewLaunchStepProps = {
   onEditStep: (step: number) => void
 }
 
-const TYPE_CONFIG: Record<string, { icon: string; label: string }> = {
-  ab_test: { icon: 'bar-chart', label: 'A/B Test' },
-  feature_flag: { icon: 'features', label: 'Feature Flag' },
-  multivariate: { icon: 'layers', label: 'Multivariate' },
-}
-
 const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
   onEditStep,
   wizardState,
@@ -28,9 +21,6 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
   const segmentLabel =
     MOCK_SEGMENTS.find((s) => s.value === wizardState.audience.segmentId)
       ?.label ?? 'All Users'
-  const typeConfig = wizardState.details.type
-    ? TYPE_CONFIG[wizardState.details.type]
-    : null
   const splitPerVariation = Math.round(
     wizardState.audience.trafficPercentage /
       Math.max(wizardState.variations.length, 1),
@@ -38,90 +28,13 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
 
   return (
     <div className='review-launch-step'>
-      {/* Step 1: Experiment Details */}
-      <div className='review-launch-step__section'>
-        <div className='review-launch-step__section-header'>
-          <span className='review-launch-step__section-title'>
-            Experiment Details
-          </span>
-          <Button theme='text' size='xSmall' onClick={() => onEditStep(0)}>
-            Edit
-          </Button>
-        </div>
-        <div className='review-launch-step__row'>
-          <span className='review-launch-step__label'>Name</span>
-          <span className='review-launch-step__value'>
-            {wizardState.details.name || '—'}
-          </span>
-        </div>
-        {wizardState.details.hypothesis && (
-          <div className='review-launch-step__row review-launch-step__row--block'>
-            <span className='review-launch-step__label'>Hypothesis</span>
-            <span className='review-launch-step__hypothesis'>
-              {wizardState.details.hypothesis}
-            </span>
-          </div>
-        )}
-        {typeConfig && (
-          <div className='review-launch-step__row'>
-            <span className='review-launch-step__label'>Type</span>
-            <span className='review-launch-step__type-badge'>
-              <Icon name={typeConfig.icon} width={14} />
-              {typeConfig.label}
-            </span>
-          </div>
-        )}
-        {(wizardState.details.startDate || wizardState.details.endDate) && (
-          <div className='review-launch-step__row'>
-            <span className='review-launch-step__label'>Dates</span>
-            <span className='review-launch-step__value'>
-              {wizardState.details.startDate || '—'} →{' '}
-              {wizardState.details.endDate || '—'}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Step 2: Metrics */}
-      <div className='review-launch-step__section'>
-        <div className='review-launch-step__section-header'>
-          <span className='review-launch-step__section-title'>
-            Metrics ({wizardState.metrics.length})
-          </span>
-          <Button theme='text' size='xSmall' onClick={() => onEditStep(1)}>
-            Edit
-          </Button>
-        </div>
-        {wizardState.metrics.length > 0 ? (
-          wizardState.metrics.map((m) => (
-            <div key={m.id} className='review-launch-step__metric-row'>
-              <div className='review-launch-step__metric-info'>
-                <span className='review-launch-step__metric-name'>
-                  {m.name}
-                </span>
-                <span className='review-launch-step__metric-desc'>
-                  {m.description}
-                </span>
-              </div>
-              <span
-                className={`review-launch-step__badge review-launch-step__badge--${m.role}`}
-              >
-                {m.role}
-              </span>
-            </div>
-          ))
-        ) : (
-          <span className='review-launch-step__empty'>No metrics selected</span>
-        )}
-      </div>
-
-      {/* Step 3: Flag & Variations */}
+      {/* Step 1: Flag & Variations */}
       <div className='review-launch-step__section'>
         <div className='review-launch-step__section-header'>
           <span className='review-launch-step__section-title'>
             Flag & Variations
           </span>
-          <Button theme='text' size='xSmall' onClick={() => onEditStep(2)}>
+          <Button theme='text' size='xSmall' onClick={() => onEditStep(0)}>
             Edit
           </Button>
         </div>
@@ -147,6 +60,74 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Step 2: Experiment Details */}
+      <div className='review-launch-step__section'>
+        <div className='review-launch-step__section-header'>
+          <span className='review-launch-step__section-title'>
+            Experiment Details
+          </span>
+          <Button theme='text' size='xSmall' onClick={() => onEditStep(1)}>
+            Edit
+          </Button>
+        </div>
+        <div className='review-launch-step__row'>
+          <span className='review-launch-step__label'>Name</span>
+          <span className='review-launch-step__value'>
+            {wizardState.details.name || '—'}
+          </span>
+        </div>
+        {wizardState.details.hypothesis && (
+          <div className='review-launch-step__row review-launch-step__row--block'>
+            <span className='review-launch-step__label'>Hypothesis</span>
+            <span className='review-launch-step__hypothesis'>
+              {wizardState.details.hypothesis}
+            </span>
+          </div>
+        )}
+        {(wizardState.details.startDate || wizardState.details.endDate) && (
+          <div className='review-launch-step__row'>
+            <span className='review-launch-step__label'>Dates</span>
+            <span className='review-launch-step__value'>
+              {wizardState.details.startDate || '—'} →{' '}
+              {wizardState.details.endDate || '—'}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Step 3: Metrics */}
+      <div className='review-launch-step__section'>
+        <div className='review-launch-step__section-header'>
+          <span className='review-launch-step__section-title'>
+            Metrics ({wizardState.metrics.length})
+          </span>
+          <Button theme='text' size='xSmall' onClick={() => onEditStep(2)}>
+            Edit
+          </Button>
+        </div>
+        {wizardState.metrics.length > 0 ? (
+          wizardState.metrics.map((m) => (
+            <div key={m.id} className='review-launch-step__metric-row'>
+              <div className='review-launch-step__metric-info'>
+                <span className='review-launch-step__metric-name'>
+                  {m.name}
+                </span>
+                <span className='review-launch-step__metric-desc'>
+                  {m.description}
+                </span>
+              </div>
+              <span
+                className={`review-launch-step__badge review-launch-step__badge--${m.role}`}
+              >
+                {m.role}
+              </span>
+            </div>
+          ))
+        ) : (
+          <span className='review-launch-step__empty'>No metrics selected</span>
+        )}
       </div>
 
       {/* Step 4: Segments & Traffic */}

@@ -27,7 +27,6 @@ const INITIAL_STATE: ExperimentWizardState = {
       'Redesigning the checkout button with a clearer CTA will increase conversion rates by at least 15% within 30 days',
     name: 'Checkout Button Redesign',
     startDate: '2026-04-15',
-    type: 'ab_test',
   },
   featureFlagId: 'flag-1',
   metrics: [
@@ -85,22 +84,17 @@ const CreateExperimentPage: FC = () => {
     let completeSummary: string | undefined
     switch (i) {
       case 0:
-        completeSummary = [
-          state.details.name,
-          state.details.type?.replace('_', ' '),
-        ]
-          .filter(Boolean)
-          .join(' · ')
+        completeSummary = `${state.variations.length} variations`
         break
       case 1:
+        completeSummary = state.details.name || undefined
+        break
+      case 2:
         completeSummary = `${
           state.metrics.filter((m) => m.role === 'primary').length
         } primary · ${
           state.metrics.filter((m) => m.role === 'secondary').length
         } secondary`
-        break
-      case 2:
-        completeSummary = `${state.variations.length} variations`
         break
       case 3:
         completeSummary = `${state.audience.trafficPercentage}% traffic`
@@ -115,20 +109,6 @@ const CreateExperimentPage: FC = () => {
     switch (state.currentStep) {
       case 0:
         return (
-          <ExperimentDetailsStep
-            details={state.details}
-            onChange={(details) => setState((prev) => ({ ...prev, details }))}
-          />
-        )
-      case 1:
-        return (
-          <SelectMetricsStep
-            selectedMetrics={state.metrics}
-            onToggleMetric={handleToggleMetric}
-          />
-        )
-      case 2:
-        return (
           <FlagVariationsStep
             featureFlagId={state.featureFlagId}
             variations={state.variations}
@@ -138,6 +118,20 @@ const CreateExperimentPage: FC = () => {
             onVariationsChange={(variations) =>
               setState((prev) => ({ ...prev, variations }))
             }
+          />
+        )
+      case 1:
+        return (
+          <ExperimentDetailsStep
+            details={state.details}
+            onChange={(details) => setState((prev) => ({ ...prev, details }))}
+          />
+        )
+      case 2:
+        return (
+          <SelectMetricsStep
+            selectedMetrics={state.metrics}
+            onToggleMetric={handleToggleMetric}
           />
         )
       case 3:

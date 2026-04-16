@@ -6,8 +6,6 @@
 // Enums & Primitives
 // -----------------------------------------------------------------------------
 
-export type ExperimentType = 'ab_test' | 'multivariate' | 'feature_flag'
-
 export type ExperimentStatus = 'running' | 'paused' | 'completed' | 'draft'
 
 export type WizardStepStatus = 'done' | 'active' | 'upcoming'
@@ -23,7 +21,6 @@ export type LiftDirection = 'positive' | 'negative' | 'neutral'
 export type ExperimentDetails = {
   name: string
   hypothesis: string
-  type: ExperimentType | null
   startDate: string
   endDate: string
 }
@@ -339,16 +336,16 @@ export const MOCK_LINKED_EXPERIMENT: LinkedExperiment = {
 
 export const EXPERIMENT_WIZARD_STEPS: WizardStepDef[] = [
   {
+    subtitle: 'Select the multi-variant flag to experiment on',
+    title: 'Flag & Variations',
+  },
+  {
     subtitle: 'Define the basics of your experiment',
     title: 'Experiment Details',
   },
   {
     subtitle: 'Choose primary and secondary metrics to measure',
     title: 'Select Metrics',
-  },
-  {
-    subtitle: 'Configure your feature flag and test variations',
-    title: 'Flag & Variations',
   },
   {
     subtitle: 'Define who sees the experiment and traffic allocation',
