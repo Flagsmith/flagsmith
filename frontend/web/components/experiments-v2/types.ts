@@ -8,7 +8,7 @@
 
 export type ExperimentType = 'ab_test' | 'multivariate' | 'feature_flag'
 
-export type ExperimentStatus = 'running' | 'paused' | 'completed'
+export type ExperimentStatus = 'running' | 'paused' | 'completed' | 'draft'
 
 export type WizardStepStatus = 'done' | 'active' | 'upcoming'
 
@@ -101,6 +101,86 @@ export type ExperimentResultSummary = {
   liftVsControl: number
   metrics: MetricComparison[]
 }
+
+// -----------------------------------------------------------------------------
+// Experiments List / Table
+// -----------------------------------------------------------------------------
+
+export type ExperimentListItem = {
+  id: string
+  name: string
+  linkedFlag: string
+  status: ExperimentStatus
+  variations: number
+  primaryMetric: string
+  lastUpdated: string
+}
+
+export const MOCK_EXPERIMENTS: ExperimentListItem[] = [
+  {
+    id: 'exp-1',
+    lastUpdated: '2 hours ago',
+    linkedFlag: 'checkout_redesign',
+    name: 'Checkout Flow v2',
+    primaryMetric: 'Checkout Conversion',
+    status: 'running',
+    variations: 2,
+  },
+  {
+    id: 'exp-2',
+    lastUpdated: '1 day ago',
+    linkedFlag: 'pricing_cta_test',
+    name: 'Pricing Page CTA',
+    primaryMetric: 'Revenue per User',
+    status: 'paused',
+    variations: 3,
+  },
+  {
+    id: 'exp-3',
+    lastUpdated: '3 days ago',
+    linkedFlag: 'onboard_wizard_v3',
+    name: 'Onboarding Wizard',
+    primaryMetric: 'Signup Completion',
+    status: 'completed',
+    variations: 2,
+  },
+  {
+    id: 'exp-4',
+    lastUpdated: '5 days ago',
+    linkedFlag: 'search_algo_v2',
+    name: 'Search Algorithm',
+    primaryMetric: 'Click-through Rate',
+    status: 'running',
+    variations: 3,
+  },
+  {
+    id: 'exp-5',
+    lastUpdated: '1 week ago',
+    linkedFlag: 'dark_mode_flag',
+    name: 'Dark Mode Default',
+    primaryMetric: 'Page Load Time',
+    status: 'draft',
+    variations: 2,
+  },
+  {
+    id: 'exp-6',
+    lastUpdated: '2 weeks ago',
+    linkedFlag: 'notif_timing',
+    name: 'Notification Timing',
+    primaryMetric: 'Open Rate',
+    status: 'completed',
+    variations: 2,
+  },
+  {
+    id: 'exp-7',
+    lastUpdated: '3 weeks ago',
+    linkedFlag: 'trial_banner_exp',
+    name: 'Free Trial Banner',
+    primaryMetric: 'Trial Conversion',
+    status: 'completed',
+    variations: 2,
+  },
+]
 
 // -----------------------------------------------------------------------------
 // Flag Detail — Linked Experiment
