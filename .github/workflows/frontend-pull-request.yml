@@ -53,7 +53,7 @@ jobs:
 
           for i in $(seq 1 60); do
             STATUSES=$(gh api "repos/$REPO/commits/$SHA/status" \
-              --jq '.statuses | [.[] | select(.context | test("Vercel"; "i"))]')
+              --jq '.statuses | [.[] | select(.context | test("flagsmith-frontend"; "i"))]')
 
             TOTAL=$(echo "$STATUSES" | jq 'length')
             PENDING=$(echo "$STATUSES" | jq '[.[] | select(.state == "pending")] | length')
@@ -89,11 +89,16 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           # Parse frontend preview URLs from the Vercel bot comment.
-          # The comment is guaranteed to be up-to-date because Phase 1
-          # waited for all deployments to complete.
-          URLS=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" \
-            --jq '.[] | select(.user.login == "vercel[bot]") | .body' \
-            | grep -o 'https://flagsmith-frontend[^ )]*\.vercel\.app')
+          # Short poll to handle the timing gap between Vercel finishing
+          # the deploy and updating the PR comment.
+          URLS=""
+          for i in $(seq 1 6); do
+            URLS=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" \
+              --jq '.[] | select(.user.login == "vercel[bot]") | .body' \
+              | grep -o 'https://flagsmith-frontend[^ )]*\.vercel\.app')
+            [ -n "$URLS" ] && break
+            sleep 5
+          done
 
           if [ -z "$URLS" ]; then
             echo "⚠️ No frontend preview URLs found in Vercel bot comment"
