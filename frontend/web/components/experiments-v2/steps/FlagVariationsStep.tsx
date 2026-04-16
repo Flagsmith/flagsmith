@@ -83,11 +83,21 @@ const FlagVariationsStep: FC<FlagVariationsStepProps> = ({
 
       <div className='flag-variations-step__field'>
         <label className='flag-variations-step__label'>Variations</label>
-        <VariationTable
-          variations={variations}
-          editable
-          onRemove={handleRemove}
-        />
+        {variations.length > 0 ? (
+          <VariationTable
+            variations={variations}
+            editable
+            onRemove={handleRemove}
+          />
+        ) : (
+          <div className='flag-variations-step__no-variations'>
+            <EmptyState
+              title='No variations'
+              description='Add at least 2 variations (control + treatment) to run an experiment.'
+              icon='layers'
+            />
+          </div>
+        )}
       </div>
 
       {showAddForm ? (
