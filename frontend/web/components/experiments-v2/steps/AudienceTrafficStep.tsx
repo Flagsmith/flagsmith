@@ -30,7 +30,7 @@ const AudienceTrafficStep: FC<AudienceTrafficStepProps> = ({
 
       <div className='audience-traffic-step__field'>
         <label className='audience-traffic-step__label'>
-          Traffic Allocation
+          Experiment Enrollment
         </label>
         <div className='audience-traffic-step__slider-row'>
           <input
@@ -50,6 +50,22 @@ const AudienceTrafficStep: FC<AudienceTrafficStepProps> = ({
           <span className='audience-traffic-step__percentage'>
             {audience.trafficPercentage}%
           </span>
+        </div>
+        <div className='audience-traffic-step__split-breakdown'>
+          <div className='audience-traffic-step__split-item'>
+            <span className='audience-traffic-step__split-label'>Control</span>
+            <span className='audience-traffic-step__split-value'>
+              {100 - audience.trafficPercentage}% — current flag value
+            </span>
+          </div>
+          <div className='audience-traffic-step__split-item'>
+            <span className='audience-traffic-step__split-label'>
+              Experiment
+            </span>
+            <span className='audience-traffic-step__split-value'>
+              {audience.trafficPercentage}% — randomly assigned to variations
+            </span>
+          </div>
         </div>
       </div>
 
