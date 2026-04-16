@@ -80,21 +80,21 @@ jobs:
 
             # Smoke test the deployment
             echo "🔍 Testing $URL/health ..."
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$URL/health")
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/health")
             if [ "$STATUS" != "200" ]; then
               echo "❌ /health returned $STATUS"
               exit 1
             fi
 
             echo "🔍 Testing $URL/config/project-overrides ..."
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$URL/config/project-overrides")
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/config/project-overrides")
             if [ "$STATUS" != "200" ]; then
               echo "❌ /config/project-overrides returned $STATUS"
               exit 1
             fi
 
             echo "🔍 Testing $URL/ ..."
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$URL/")
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/")
             if [ "$STATUS" != "200" ]; then
               echo "❌ / returned $STATUS (this is the index page served by the Express server)"
               exit 1
