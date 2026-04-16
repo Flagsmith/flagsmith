@@ -154,6 +154,7 @@ INSTALLED_APPS = [
     "integrations.flagsmith",
     "integrations.launch_darkly",
     "integrations.github",
+    "integrations.gitlab",
     "integrations.grafana",
     # Rate limiting admin endpoints
     "axes",

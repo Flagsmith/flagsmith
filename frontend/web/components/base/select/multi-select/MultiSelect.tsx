@@ -16,7 +16,7 @@ interface MultiSelectProps {
   selectedValues: string[]
   onSelectionChange: (selectedValues: string[]) => void
   options: MultiSelectOption[]
-  colorMap?: Map<string, string>
+  colorMap?: Record<string, string>
   label?: string
   placeholder?: string
   className?: string
@@ -69,12 +69,12 @@ export const MultiSelect: FC<MultiSelectProps> = ({
                 MultiValue: (props: MultiValueProps<MultiSelectOption>) => (
                   <CustomMultiValue
                     {...props}
-                    color={colorMap?.get(props.data.value) || '#5D6D7E'}
+                    color={colorMap?.[props.data.value] || '#5D6D7E'}
                   />
                 ),
               }),
           Option: (props: OptionProps<MultiSelectOption>) => (
-            <CustomOption {...props} color={colorMap?.get(props.data.value)} />
+            <CustomOption {...props} color={colorMap?.[props.data.value]} />
           ),
         }}
         value={selectedValues.map((value) => ({
