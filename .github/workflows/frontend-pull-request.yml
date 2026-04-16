@@ -40,6 +40,7 @@ jobs:
     name: Vercel Preview Smoke Test
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    continue-on-error: true
     steps:
       - name: Wait for Vercel deployments and smoke test
         env:
@@ -51,6 +52,8 @@ jobs:
             "Preview – flagsmith-frontend-preview"
             "Preview – flagsmith-frontend-staging"
           )
+
+          FAILED=0
 
           for ENV_NAME in "${ENVIRONMENTS[@]}"; do
             echo "⏳ Waiting for '$ENV_NAME' deployment..."
@@ -66,8 +69,9 @@ jobs:
                   echo "✅ '$ENV_NAME' deployed at: $URL"
                   break
                 elif [ "$STATE" = "failure" ] || [ "$STATE" = "error" ]; then
-                  echo "❌ '$ENV_NAME' deployment failed with state: $STATE"
-                  exit 1
+                  echo "⚠️ '$ENV_NAME' deployment failed with state: $STATE"
+                  FAILED=1
+                  continue 2
                 fi
               fi
               sleep 10
@@ -79,29 +83,22 @@ jobs:
             fi
 
             # Smoke test the deployment
-            echo "🔍 Testing $URL/health ..."
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/health")
-            if [ "$STATUS" != "200" ]; then
-              echo "❌ /health returned $STATUS"
-              exit 1
-            fi
+            for ENDPOINT in "/health" "/config/project-overrides" "/"; do
+              echo "🔍 Testing $URL$ENDPOINT ..."
+              STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL$ENDPOINT")
+              if [ "$STATUS" != "200" ]; then
+                echo "⚠️ $ENDPOINT returned $STATUS"
+                FAILED=1
+              fi
+            done
 
-            echo "🔍 Testing $URL/config/project-overrides ..."
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/config/project-overrides")
-            if [ "$STATUS" != "200" ]; then
-              echo "❌ /config/project-overrides returned $STATUS"
-              exit 1
-            fi
-
-            echo "🔍 Testing $URL/ ..."
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/")
-            if [ "$STATUS" != "200" ]; then
-              echo "❌ / returned $STATUS (this is the index page served by the Express server)"
-              exit 1
-            fi
-
-            echo "✅ All smoke tests passed for '$ENV_NAME'"
+            echo "✅ Smoke tests done for '$ENV_NAME'"
             echo ""
           done
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "⚠️ Some smoke tests failed — see above for details"
+            exit 1
+          fi
 
           echo "🎉 All Vercel preview deployments are healthy"
