@@ -1,7 +1,7 @@
 import React, { FC, useMemo } from 'react'
 import moment from 'moment'
 import { AggregateUsageDataItem } from 'common/types/responses'
-import BarChart from 'components/charts/BarChart'
+import BarChart, { ChartDataPoint } from 'components/charts/BarChart'
 import UsageAPIDefinitions from './components/UsageAPIDefinitions'
 
 type OrganisationUsageProps = {
@@ -28,11 +28,14 @@ const OrganisationUsage: FC<OrganisationUsageProps> = ({
   isError,
   selection,
 }) => {
-  const formattedData = useMemo(
+  const formattedData: ChartDataPoint[] = useMemo(
     () =>
       chartData.map((d) => ({
-        ...d,
         day: moment(d.day).format('D MMM'),
+        environment_document: d.environment_document ?? 0,
+        flags: d.flags ?? 0,
+        identities: d.identities ?? 0,
+        traits: d.traits ?? 0,
       })),
     [chartData],
   )
@@ -85,7 +88,7 @@ const OrganisationUsage: FC<OrganisationUsageProps> = ({
         </div>
       ) : (
         <BarChart
-          data={formattedData as never}
+          data={formattedData}
           series={series}
           colorMap={colorMap}
           seriesLabels={seriesLabels}
