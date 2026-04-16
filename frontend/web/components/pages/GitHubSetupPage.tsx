@@ -37,7 +37,12 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
     new URLSearchParams(location.search).get('installation_id') || ''
   const githubIntegrationSetupFromFlagsmithValue: string =
     localStorage?.githubIntegrationSetupFromFlagsmith
-  const [organisation, setOrganisation] = useState<string>('')
+  const lastOrgId = localStorage.lastEnv
+    ? JSON.parse(localStorage.lastEnv).orgId
+    : undefined
+  const [organisation, setOrganisation] = useState<string>(
+    lastOrgId ? `${lastOrgId}` : '',
+  )
   const [project, setProject] = useState<any>({})
   const [projects, setProjects] = useState<ProjectType[]>([])
   const [repositoryName, setRepositoryName] = useState<string>('')
@@ -127,15 +132,16 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
           />
           <div className='mr-4 mb-4'>
             <label>Select your Flagsmith Organisation</label>
-            <OrganisationSelect
-              onChange={(organisationId: string) => {
-                setOrganisation(`${organisationId}`)
-                AppActions.selectOrganisation(organisationId)
-                AppActions.getOrganisation(organisationId)
-              }}
-              showSettings={false}
-              firstOrganisation
-            />
+            <div style={{ width: '500px' }}>
+              <OrganisationSelect
+                value={organisation ? parseInt(organisation) : undefined}
+                onChange={(organisationId) => {
+                  setOrganisation(`${organisationId}`)
+                  AppActions.selectOrganisation(organisationId)
+                  AppActions.getOrganisation(organisationId)
+                }}
+              />
+            </div>
           </div>
           <label>
             Select your Flagsmith Project and your Github Repository
