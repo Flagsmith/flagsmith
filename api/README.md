@@ -29,9 +29,90 @@ This codebase includes two kinds of tests:
 
 We avoid class-based tests. To manage test lifecycle and dependencies, we rely on Pytest features such as fixtures, markers, parametrisation, and hooks. Read `conftest.py` for commonly used fixtures.
 
-We recommend naming test functions using the `test_{subject}__{condition}__{expected outcome}` template, e.g. `test_get_version__valid_file_contents__returns_version_number`.
+We enforce the `test_{subject}__{condition}__{expected outcome}` template for test names, e.g. `test_get_version__valid_file_contents__returns_version_number`.
 
 We use the Given When Then structure in all our tests.
+
+### Code guidelines: metrics
+
+Flagsmith's backend exports Prometheus metrics. When planning a feature, consider which metrics should cover it — counters for domain events, histograms for latency or sizes, gauges for cardinalities. See [documentation for existing metrics](../docs/docs/administration-and-security/platform-configuration/metrics.md). Metrics code is hosted in `metrics.py` modules.
+
+Name metrics `flagsmith_{domain}_{entity}_{unit}` and give them a comprehensive description.
+
+### Code guidelines: logs
+
+We use structured logging to mark up interesting operational and product events. Events emitted via structlog also flow through an OpenTelemetry pipeline and may be routed to a CDP or a data warehouse for product analytics.
+
+When planning a feature, decide which moments deserve an event: things a product manager would ask about (an integration set up, a workflow committed, an import completed), or that a future oncall engineer would need to debug an incident. One well-shaped event per moment beats a wall of free-form `logging.info` calls.
+
+```python
+import structlog
+
+# Use logger name as the event domain:
+logger = structlog.get_logger("workflows")
+
+# This will produce a `workflows.change_request.committed` OTLP log event
+# with the following attributes:
+#   - organisation.id
+#   - environment.id
+#   - feature_states.count
+logger.info(
+    "change_request.committed",
+    organisation__id=environment.project.organisation_id,
+    environment__id=environment.id,
+    feature_states__count=change_request.feature_states.count(),
+)
+```
+
+In your tests, verify your logs with the `caplog` fixture:
+
+```python
+from pytest_structlog import StructuredLogCapture
+
+def test_my_view__success__logs_expected(
+    log: StructuredLogCapture,
+) -> None:
+    # Given / When
+    ...
+
+    # Then
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "action.succeeded",
+            "organisation__id": organisation.id,
+        }
+    ]
+```
+
+Conventions:
+
+- Logger name is the domain namespace — typically the app or package (`workflows`, `code_references`, `feature_health`).
+- Event name is `entity.action` in snake_case (`scan.created`, `change_request.committed`). Do not repeat the logger name in the event, i.e `get_logger("saml")` with `"saml.configuration.created"` is redundant.
+- Use double underscore to namespace event attributes, i.e. `namespace__property` will be emitted as `namespace.property`. Include the IDs of the entities the event is about (`organisation__id`, `project__id`, `environment__id`, `feature__id`) so events can be correlated with each other.
+- Bind shared context once with `logger.bind(...)` rather than repeating attributes at every call site.
+- Avoid PII — identify users and organisations by ID.
+
+For errors, use `logger.exception(...)` or pass `exc_info=exc`, and keep the event name actionable (`import.failed`, not `error`).
+
+### Code guidelines: feature flags (Flagsmith on Flagsmith)
+
+To gate and gradually roll out features in the backend, we use the [OpenFeature](https://openfeature.dev/) SDK with a Flagsmith provider running in local evaluation mode:
+
+```python
+from integrations.flagsmith.client import get_openfeature_client
+
+client = get_openfeature_client()
+ai_enabled = client.get_boolean_value(
+    "ai",
+    default_value=False,
+    evaluation_context=organisation.openfeature_evaluation_context,
+)
+```
+
+Organisations expose an `openfeature_evaluation_context` property carrying common traits — use it for org-scoped targeting. For other subjects, build an `EvaluationContext` with a stable `targeting_key` and the attributes your targeting rules need.
+
+Add your feature as early as possible to the Flagsmith on Flagsmith project, and run the `updateflagsmithenvironment` management command to synchronise the local cache. You can use [Flagsmith MCP](https://docs.flagsmith.com/integrating-with-flagsmith/mcp-server) to integrate Flagsmith in your development flow.
 
 ### Code guidelines: migrations
 
@@ -64,20 +145,3 @@ We tend to add our own layers in the following modules:
 - `services.py` for encapsulated business logic. Our goal with this layer is to make the views, models and serialisers leaner, so that the business logic is more clearly defined and easier to compose.
 - `tasks.py` for defining asynchronous and recurring tasks.
 - `types.py` for custom type definitions, including typed dicts.
-
-### Code guidelines: Flagsmith on Flagsmith
-
-To gate and gradually rollout features in the backend, we use the Flagsmith SDK in local evaluation mode: 
-
-```python
-from integrations.flagsmith.client import get_client
-
-flagsmith_client = get_client("local", local_eval=True)
-flags = flagsmith_client.get_identity_flags(
-    organisation.flagsmith_identifier,
-    traits=organisation.flagsmith_on_flagsmith_api_traits,
-)
-ai_enabled = flags.is_feature_enabled("ai")
-```
-
-To modify or add flags, edit [integrations/flagsmith/data/environment.json](integrations/flagsmith/data/environment.json), or run `poetry run python manage.py updateflagsmithenvironment`.
