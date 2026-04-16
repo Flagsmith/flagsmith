@@ -3,6 +3,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import moment from 'moment'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { useHasGithubIntegration } from 'common/hooks/useHasGithubIntegration'
+import { useHasGitLabIntegration } from 'common/hooks/useHasGitLabIntegration'
 import FeatureListStore from 'common/stores/feature-list-store'
 import IdentityProvider from 'common/providers/IdentityProvider'
 import FeatureListProvider from 'common/providers/FeatureListProvider'
@@ -14,7 +15,10 @@ import classNames from 'classnames'
 import { useHasPermission } from 'common/providers/Permission'
 import { setInterceptClose } from 'components/modals/base/ModalDefault'
 import { getStore } from 'common/store'
-import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
+import ExternalResourcesTable from 'components/ExternalResourcesTable'
+import GitHubLinkSection from 'components/GitHubLinkSection'
+import GitLabLinkSection from 'components/GitLabLinkSection'
+import type { ExternalResource } from 'common/types/responses'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
@@ -347,6 +351,12 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     hasIntegration: hasIntegrationWithGithub,
     organisationId,
   } = useHasGithubIntegration()
+  const { hasIntegration: hasGitlabIntegration } =
+    useHasGitLabIntegration(projectId)
+  const isLinksTabEnabled =
+    (hasIntegrationWithGithub || hasGitlabIntegration) && !!projectFlag?.id
+
+  const [linkedResources, setLinkedResources] = useState<ExternalResource[]>()
 
   const { permission: createFeaturePermission } = useHasPermission({
     id: projectId,
@@ -685,7 +695,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       />
                     </TabItem>
                   }
-                  {hasIntegrationWithGithub && projectFlag?.id && (
+                  {isLinksTabEnabled && (
                     <TabItem
                       data-test='external-resources-links'
                       tabLabelString='Links'
@@ -693,12 +703,29 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         <Row className='justify-content-center'>Links</Row>
                       }
                     >
-                      <ExternalResourcesLinkTab
-                        githubId={githubId}
-                        organisationId={organisationId}
-                        featureId={projectFlag.id}
-                        projectId={projectId}
-                        environmentId={`${environment.id}`}
+                      {hasIntegrationWithGithub && (
+                        <GitHubLinkSection
+                          githubId={githubId}
+                          organisationId={organisationId}
+                          featureId={projectFlag.id}
+                          projectId={projectId}
+                          environmentId={`${environment.id}`}
+                          linkedResources={linkedResources}
+                        />
+                      )}
+                      {hasGitlabIntegration && (
+                        <GitLabLinkSection
+                          projectId={projectId}
+                          linkedUrls={[]}
+                        />
+                      )}
+                      <ExternalResourcesTable
+                        featureId={`${projectFlag.id}`}
+                        projectId={`${projectId}`}
+                        organisationId={`${organisationId}`}
+                        setSelectedResources={(r: ExternalResource[]) =>
+                          setLinkedResources(r)
+                        }
                       />
                     </TabItem>
                   )}

@@ -617,6 +617,18 @@ const Constants = {
       resourceType: 'pulls',
       type: 'GITHUB',
     },
+    GITLAB_ISSUE: {
+      id: 3,
+      label: 'Issue',
+      resourceType: 'issue',
+      type: 'GITLAB',
+    },
+    GITLAB_MR: {
+      id: 4,
+      label: 'Merge Request',
+      resourceType: 'merge_request',
+      type: 'GITLAB',
+    },
   },
   roles: {
     'ADMIN': 'Organisation Administrator',

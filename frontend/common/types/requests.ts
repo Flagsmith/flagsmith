@@ -936,5 +936,17 @@ export type Req = {
     code_challenge_method: string
     state?: string
   }
+  getGitLabConfiguration: { project_id: number }
+  getGitLabProjects: PagedRequest<{ project_id: number }>
+  getGitLabIssues: PagedRequest<{
+    project_id: number
+    gitlab_project_id: number
+    state?: string
+  }>
+  getGitLabMergeRequests: PagedRequest<{
+    project_id: number
+    gitlab_project_id: number
+    state?: string
+  }>
   // END OF TYPES
 }
