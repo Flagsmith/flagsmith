@@ -1,6 +1,7 @@
 import React, { FC, useMemo } from 'react'
 import moment from 'moment'
 import { AggregateUsageDataItem } from 'common/types/responses'
+import EmptyState from 'components/EmptyState'
 import BarChart, { ChartDataPoint } from 'components/charts/BarChart'
 import UsageAPIDefinitions from './components/UsageAPIDefinitions'
 
@@ -81,11 +82,15 @@ const OrganisationUsage: FC<OrganisationUsageProps> = ({
   return (
     <>
       {isError || chartData?.length === 0 ? (
-        <div className='py-4 fw-semibold text-center'>
-          {isError
-            ? 'Your organisation does not have recurrent billing periods'
-            : 'No usage recorded.'}
-        </div>
+        <EmptyState
+          title={isError ? 'No billing periods' : 'No usage recorded'}
+          description={
+            isError
+              ? 'Your organisation does not have recurrent billing periods.'
+              : 'No usage data available for the selected period and project.'
+          }
+          icon='bar-chart'
+        />
       ) : (
         <BarChart
           data={formattedData}
