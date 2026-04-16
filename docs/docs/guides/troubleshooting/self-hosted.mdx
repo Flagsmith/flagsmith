@@ -1,0 +1,127 @@
+---
+title: Self-Hosted Issues
+sidebar_label: Self-Hosted
+sidebar_position: 4
+---
+
+import Link from '@docusaurus/Link';
+
+This page covers runtime symptoms specific to self-hosted Flagsmith deployments. For initial setup problems (health
+checks, database connectivity, frontend DNS), see the
+[deployment troubleshooting guide](/deployment-self-hosting/administration-and-maintenance/troubleshooting).
+
+## Task processor is not running jobs
+
+Tasks are queueing up but never being processed. Symptoms include: webhooks not firing, audit logs not being written, or
+analytics data not appearing.
+
+### Common causes
+
+-   **Task processor container is not running.** The task processor is a separate service that must be started alongside
+    the API. Check that a container with the `run-task-processor` command is running (`docker ps` or your orchestrator's
+    pod list).
+-   **`TASK_RUN_METHOD` not set to `TASK_PROCESSOR`.** If this environment variable is not set on the API container,
+    Flagsmith runs tasks in an unmanaged background thread inside the API process instead of sending them to the
+    processor. The processor will have nothing to pick up.
+-   **Database connectivity from the processor.** The task processor must be able to reach the same database as the API
+    (or a dedicated task processor database if you have configured one). Check `DATABASE_URL` and
+    `TASK_PROCESSOR_DATABASE_URL`.
+-   **Sleep interval too high.** The `TASK_PROCESSOR_SLEEP_INTERVAL_MS` environment variable controls how often each
+    worker thread checks for new tasks. The default is 500 ms. If this has been raised significantly, tasks will appear
+    to be delayed.
+
+### Steps to resolve
+
+1. Verify the task processor container is running and check its logs for errors.
+2. Confirm that `TASK_RUN_METHOD=TASK_PROCESSOR` is set on the **API** container.
+3. Check that `DATABASE_URL` (and `TASK_PROCESSOR_DATABASE_URL` if using a separate database) is correct and reachable
+   from the processor container.
+4. Review the processor configuration:
+
+| Environment variable               | Default | Description                                |
+| ---------------------------------- | ------- | ------------------------------------------ |
+| `TASK_PROCESSOR_SLEEP_INTERVAL_MS` | 500     | Milliseconds between polling for new tasks |
+| `TASK_PROCESSOR_NUM_THREADS`       | 5       | Worker threads per processor instance      |
+| `TASK_PROCESSOR_GRACE_PERIOD_MS`   | 20 000  | Time before a task is considered stuck     |
+| `TASK_PROCESSOR_QUEUE_POP_SIZE`    | 10      | Tasks retrieved per polling iteration      |
+
+5. Check the monitoring endpoint at `GET /processor/monitoring` — it returns the number of tasks waiting in the queue. A
+   consistently growing number indicates the processor is not keeping up.
+
+**Related documentation:**
+[Asynchronous Task Processor](/deployment-self-hosting/scaling-and-performance/asynchronous-task-processor)
+
+---
+
+## Database migration failures on upgrade
+
+After upgrading the Flagsmith API image, the container fails to start with a migration error.
+
+### Common causes
+
+-   **Skipped versions.** Flagsmith migrations are designed to be applied sequentially. If you jump from a much older
+    version to the latest, an intermediate migration may fail because it expects a schema state that was never reached.
+-   **Concurrent migration attempts.** If multiple API containers start simultaneously and all attempt to run
+    migrations, they can deadlock or conflict. Ensure only **one** container runs migrations at a time (use an init
+    container or a separate migration job).
+-   **Insufficient database permissions.** The database user must have permission to create, alter, and drop tables and
+    indexes. Read-only replicas will always fail migrations.
+
+### Steps to resolve
+
+1. Read the full traceback in the container logs to identify which migration failed and why.
+2. If you skipped versions, consider upgrading incrementally through intermediate releases.
+3. If you need to roll back, follow the
+   [rollback procedure](/deployment-self-hosting/administration-and-maintenance/upgrades-and-rollbacks). For versions
+   v2.151.0 and later, use:
+
+```bash
+python manage.py rollbackmigrationsafter "<datetime of previous deployment>"
+```
+
+4. If concurrent containers caused a conflict, restart with a single replica, let migrations complete, then scale back
+   up.
+
+:::caution
+
+Rolling back migrations may result in data loss if new models or fields were added. Always take a full database backup
+before attempting a rollback.
+
+:::
+
+**Related documentation:**
+[Upgrades and Rollbacks](/deployment-self-hosting/administration-and-maintenance/upgrades-and-rollbacks)
+
+---
+
+## Intermittent 502s from the API container
+
+The API returns `502 Bad Gateway` sporadically. The container is running and most requests succeed.
+
+### Common causes
+
+-   **Worker processes crashing.** Flagsmith's API runs behind Gunicorn. If a worker runs out of memory or hits an
+    unhandled exception, Gunicorn kills and restarts it. Requests in flight during the restart receive a 502 from the
+    reverse proxy.
+-   **Too few workers.** The default Gunicorn worker count may not be enough for your traffic. If all workers are busy,
+    new connections queue at the proxy and may time out.
+-   **Request timeout mismatch.** If Gunicorn's `--timeout` is longer than your reverse proxy's upstream timeout, the
+    proxy will cut the connection before Gunicorn does, resulting in a 502.
+-   **Database connection exhaustion.** If the API and task processor share a connection pool and traffic spikes, the
+    database may reject new connections. This typically shows as a `502` to the client and a
+    `OperationalError: connection to server ...` in the API logs.
+
+### Steps to resolve
+
+1. Check the API container's logs for `[CRITICAL] WORKER TIMEOUT` messages from Gunicorn or `OperationalError`
+   exceptions from Django.
+2. If workers are timing out, consider increasing Gunicorn's `--timeout` or `--workers` via the `GUNICORN_CMD_ARGS`
+   environment variable.
+3. Ensure your reverse proxy's upstream timeout is **equal to or greater than** Gunicorn's timeout.
+4. Monitor database connection usage. If connections are exhausted, increase `CONN_MAX_AGE` or add a connection pooler
+   such as PgBouncer.
+5. If memory is the bottleneck, raise the container's memory limit or switch Gunicorn to `--worker-class gevent` to
+   reduce per-worker memory usage.
+
+**Related documentation:** [Caching Strategies](/deployment-self-hosting/core-configuration/caching-strategies) •
+[Asynchronous Task Processor](/deployment-self-hosting/scaling-and-performance/asynchronous-task-processor)

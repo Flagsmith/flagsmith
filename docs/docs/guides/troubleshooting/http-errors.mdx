@@ -1,0 +1,172 @@
+---
+title: HTTP Errors
+sidebar_label: HTTP Errors
+sidebar_position: 2
+---
+
+import Link from '@docusaurus/Link';
+
+This page covers common HTTP error codes returned by the Flagsmith API and what to do about each one.
+
+## 401 / 403 — Authentication failures
+
+A `401 Unauthorized` or `403 Forbidden` response means the API could not verify your credentials.
+
+### Common causes
+
+-   **Wrong header name.** The Flags API expects `X-Environment-Key`, while the Admin API expects
+    `Authorization: Api-Key <token>`. Mixing them up will fail silently with a `403`.
+-   **Wrong key type.** The Client-side Environment Key and the Server-side Environment Key are different values. If you
+    are using [local evaluation mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode), you need
+    the **Server-side Environment Key**.
+-   **Expired or revoked Admin API token.** Tokens can be deleted from Organisation Settings at any time. If another
+    team member rotated the token, your requests will start failing.
+-   **Self-hosted: no `ALLOW_ADMIN_INITIATION_VIA_CLI` or wrong `DJANGO_ALLOWED_HOSTS`.** Some self-hosted
+    configurations reject requests before they reach Flagsmith's authentication layer.
+
+### Steps to resolve
+
+1. Confirm which API you are calling — Flags (`/api/v1/flags/`) or Admin (`/api/v1/environments/`, `/api/v1/projects/`,
+   etc.).
+2. Check you are sending the correct header:
+
+-   Flags API: `X-Environment-Key: <your environment key>`
+-   Admin API: `Authorization: Api-Key <your organisation token>`
+
+3. Verify the key value in the Flagsmith dashboard under the relevant Environment or Organisation settings.
+4. For local evaluation, ensure you are using the **Server-side Environment Key**, not the Client-side key.
+
+**Related documentation:**
+[Flags API Authentication](/integrating-with-flagsmith/flagsmith-api-overview/flags-api/authentication) •
+[Admin API Authentication](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication) •
+[Integration Approaches](/best-practices/integration-approaches)
+
+---
+
+## 404 — Endpoint not found
+
+A `404 Not Found` usually means the request URL is wrong, not that a resource is missing.
+
+### Common causes
+
+-   **Wrong base URL.** The SaaS Edge API is at `https://edge.api.flagsmith.com/api/v1/`. The SaaS Admin API is at
+    `https://api.flagsmith.com/api/v1/`. Self-hosted deployments use your own domain.
+-   **Missing `/api/v1/` prefix.** All endpoints are nested under this path.
+-   **Trailing-slash mismatch.** Django (the framework behind the Flagsmith API) expects a trailing slash on most
+    endpoints. `/api/v1/flags` will redirect or 404 depending on server configuration — use `/api/v1/flags/` instead.
+-   **EU vs. US region confusion.** If your project is on the EU cluster, the base URL differs from the default US
+    cluster. Check your project settings in the dashboard.
+
+### Steps to resolve
+
+1. Copy the full URL from the failing request (check browser dev tools or application logs).
+2. Compare it against the [API overview](/integrating-with-flagsmith/flagsmith-api-overview) to confirm the path is
+   correct.
+3. Ensure the URL ends with a trailing slash.
+4. If you are self-hosting, verify that the `API_URL` environment variable in your frontend matches the API's actual
+   address.
+
+**Related documentation:** [Flagsmith API Overview](/integrating-with-flagsmith/flagsmith-api-overview)
+
+---
+
+## 429 — Rate limited
+
+A `429 Too Many Requests` response means you have exceeded a traffic limit.
+
+### How rate limiting works in Flagsmith
+
+-   **SDK endpoints (Flags API)** are _not_ rate limited by design. However, your plan has a monthly request allowance.
+    If you exceed it, Flagsmith may block requests depending on your plan tier.
+-   **Admin API endpoints** are rate limited to **500 requests per minute** per user by default. Self-hosted deployments
+    can adjust this with the `USER_THROTTLE_RATE` environment variable.
+
+### Common causes
+
+-   **Tight polling interval on a client-side SDK.** If `startListening` is set to a very short interval (e.g. 1000 ms)
+    across many clients, aggregate traffic can spike quickly.
+-   **Scripted Admin API calls without backoff.** Bulk operations (creating flags, updating segments) in a tight loop
+    will hit the 500/min limit.
+-   **Free plan limit exceeded.** Free-plan accounts are blocked after exceeding the monthly allowance. A warning email
+    is sent 7 days before blocking begins.
+
+### Steps to resolve
+
+1. Check the `Retry-After` header in the 429 response for how long to wait.
+2. For Admin API scripts, add exponential backoff or reduce request concurrency.
+3. For SDK traffic, consider switching to
+   [local evaluation mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode) which fetches a
+   single environment document instead of per-request API calls.
+4. **Self-hosted: enable server-side caching.** Setting `CACHE_FLAGS_SECONDS` and/or
+   `CACHE_ENVIRONMENT_DOCUMENT_SECONDS` collapses repeated identical requests into a single cache hit, reducing pressure
+   on both the database and the throttle. See
+   [Caching Strategies](/deployment-self-hosting/core-configuration/caching-strategies).
+5. Review your plan usage in **Organisation → Admin Settings** in the dashboard.
+
+**Related documentation:** [System Limits](/administration-and-security/governance-and-compliance/system-limits) •
+[Billing & API Usage](/administration-and-security/billing-api-usage)
+
+---
+
+## 502 / 503 — Transient or upstream failures
+
+A `502 Bad Gateway` or `503 Service Unavailable` means the API server did not return a valid response to the upstream
+proxy or load balancer.
+
+### SaaS
+
+These are typically transient. The Flagsmith SaaS platform runs across multiple AWS regions behind a global edge
+network; brief 502/503 errors can occur during deployments or region failovers.
+
+**What to do:** retry the request with exponential backoff. If the error persists for more than a few minutes, check the
+[Flagsmith status page](https://status.flagsmith.com) or [contact support](/support).
+
+### Self-hosted
+
+Common causes include:
+
+-   **API container is not running or has crashed.** Check `docker ps` or your orchestrator's pod status.
+-   **Database is unreachable.** Verify that `DATABASE_URL` is correct and that network/security-group rules allow the
+    connection.
+-   **Reverse proxy misconfiguration.** If you run Nginx, Traefik, or a cloud load balancer in front of Flagsmith,
+    ensure the upstream target and health-check path (`/health`) are correct.
+-   **Task processor overload.** If the task processor shares a database connection pool with the API and is running
+    behind, it can contribute to connection exhaustion.
+
+**Related documentation:** [Platform Architecture](/flagsmith-concepts/platform-architecture) •
+[Self-Hosted Troubleshooting](/guides/troubleshooting/self-hosted)
+
+---
+
+## 504 / Timeout — Slow responses
+
+A `504 Gateway Timeout` means the API did not respond within the proxy or load balancer's timeout window.
+
+### Common causes
+
+-   **Large environment document.** Environments with thousands of flags, segments, or identities produce a large
+    document that takes longer to serialise.
+-   **Cold cache.** If you have just deployed or restarted the API, the first few requests will hit the database
+    directly before the cache is populated.
+-   **Proxy timeout too short.** The default timeout on many reverse proxies (e.g. Nginx's `proxy_read_timeout`) is 60
+    seconds; some cloud load balancers default to 30 seconds.
+
+### Steps to resolve
+
+1. **Enable caching.** Set `CACHE_FLAGS_SECONDS` and/or `CACHE_ENVIRONMENT_DOCUMENT_SECONDS` to reduce database load on
+   hot paths.
+2. **Increase proxy timeouts.** If the API responds within its own timeout but the proxy cuts the connection, raise the
+   proxy's read timeout.
+3. **Use local evaluation.** Server-side SDKs in local evaluation mode fetch the environment document once and evaluate
+   flags in-process, avoiding per-request latency entirely. The refresh interval defaults to 60 seconds and is
+   configurable per SDK.
+4. **Review environment size.** Consider whether you can archive unused flags or split a large project into smaller
+   ones.
+5. **Diagnose environment volume.** In the dashboard, check your project's flag and segment counts under **Project
+   Settings**. Environments with thousands of flags or deeply nested segment rules produce oversized documents;
+   archiving unused flags, simplifying segments, or moving experimental work into a separate project are often faster
+   wins than raising proxy timeouts. For numerical ceilings on a single project or environment, see
+   [System Limits](/administration-and-security/governance-and-compliance/system-limits).
+
+**Related documentation:** [Caching Strategies](/deployment-self-hosting/core-configuration/caching-strategies) •
+[Local Evaluation Mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode)

@@ -1,0 +1,182 @@
+---
+title: SDK Issues
+sidebar_label: SDK Issues
+sidebar_position: 3
+---
+
+import Link from '@docusaurus/Link';
+
+This page covers common runtime issues with Flagsmith's client-side and server-side SDKs: stale flags, unexpected
+default values, and trait evaluation mismatches.
+
+## Flag updates are delayed or stale
+
+Your application is not seeing flag changes made in the Flagsmith dashboard, or changes take longer to appear than
+expected.
+
+### Client-side SDKs
+
+By default, client-side SDKs fetch flags **once** during initialisation. If you need live updates without a page
+refresh, you must enable polling explicitly:
+
+```javascript
+flagsmith.startListening(30000); // poll every 30 seconds
+```
+
+Each poll counts against your plan's API request allowance. Choose an interval that balances freshness against cost.
+
+### Server-side SDKs in local evaluation mode
+
+Server-side SDKs in [local evaluation mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode)
+fetch the full environment document on a refresh interval and evaluate flags locally. The default refresh interval is
+**60 seconds** in most SDKs:
+
+| SDK     | Parameter                                   | Default   |
+| ------- | ------------------------------------------- | --------- |
+| Python  | `environment_refresh_interval_seconds`      | 60 s      |
+| Java    | `withEnvironmentRefreshIntervalSeconds`     | 60 s      |
+| Ruby    | `environment_refresh_interval_seconds`      | 60 s      |
+| Node.js | `environmentRefreshIntervalSeconds`         | 60 s      |
+| .NET    | `EnvironmentRefreshIntervalSeconds`         | 60 s      |
+| Go      | `WithEnvironmentRefreshInterval`            | 60 s      |
+| Rust    | `environment_refresh_interval_milliseconds` | 60 000 ms |
+| PHP     | `environmentTtl`                            | 60 s      |
+
+If you lower this interval, the SDK will detect dashboard changes faster. If you raise it, you reduce network calls at
+the cost of staleness.
+
+### Server-side SDKs in remote evaluation mode
+
+Remote evaluation makes a network call on every flag check. If responses feel stale, the issue is usually **server-side
+caching**. Check whether `CACHE_FLAGS_SECONDS` or `CACHE_ENVIRONMENT_DOCUMENT_SECONDS` is set on the API. A high value
+here delays how quickly dashboard changes reach your SDK.
+
+### Real-time updates (SSE)
+
+If you need near-instant propagation without polling, Flagsmith supports Server-Sent Events (SSE). SDKs subscribed to
+the real-time stream are notified immediately when flag state changes and refresh their cached values on the next
+evaluation.
+
+-   **Enterprise feature.** Real-time updates require a Flagsmith Enterprise subscription on SaaS, or the real-time
+    service running alongside your self-hosted deployment.
+-   **Self-hosted prerequisite.** The real-time service depends on Redis — make sure it is reachable from both the API
+    and the real-time container.
+-   **Supported SDKs.** Not every SDK has SSE client support. Check the [Real-time Flags](/performance/real-time-flags)
+    page for the current SDK matrix.
+
+If you have enabled real-time updates but changes still aren't propagating, verify that the SDK is configured with the
+correct real-time URL and that your network allows long-lived HTTP connections to that endpoint.
+
+**Related documentation:** [Server-Side SDKs](/integrating-with-flagsmith/sdks/server-side) •
+[Real-time Flags](/performance/real-time-flags) •
+[Caching Strategies](/deployment-self-hosting/core-configuration/caching-strategies)
+
+---
+
+## SDK is returning default values
+
+Your SDK calls are returning the default or fallback value instead of the value configured in the Flagsmith dashboard.
+
+### Common causes
+
+-   **SDK failed to initialise.** If the initial `getFlags` or `init` call failed (network error, wrong API URL, wrong
+    key), the SDK has no flag data and falls back to defaults.
+-   **Wrong Environment Key.** The Client-side Environment Key is different from the Server-side Environment Key. Using
+    the wrong one will either fail authentication or return an empty environment.
+-   **Local evaluation with the Client-side key.** Local evaluation requires the **Server-side Environment Key**. The
+    Client-side key does not have permission to fetch the full environment document.
+-   **Flag not enabled in this environment.** Flags can be enabled in one environment but disabled in another. Check the
+    dashboard for the specific environment your SDK is pointed at.
+-   **Offline handler returning stale data.** If you have configured an offline handler or local file handler, the SDK
+    may be reading from an outdated snapshot rather than the live API.
+
+### Steps to resolve
+
+1. Check your application logs for errors during SDK initialisation. Most SDKs log warnings when the initial fetch
+   fails.
+2. Verify the Environment Key in the dashboard and confirm it matches the value your application is using.
+3. For local evaluation, confirm you are using the Server-side key.
+4. In the dashboard, navigate to the specific environment and check whether the flag is enabled and has the expected
+   value.
+5. If you are using an offline handler, verify that the snapshot file is up to date and accessible.
+
+:::tip
+
+You can define a `default_flag_handler` (Python) or equivalent in other SDKs to control what happens when a flag is
+missing or unreachable. This is useful for graceful degradation, but be aware that if it fires unexpectedly, it can mask
+an initialisation problem.
+
+:::
+
+**Related documentation:** [Offline Handlers](/integrating-with-flagsmith/sdks/server-side#using-an-offline-handler) •
+[Flags API Authentication](/integrating-with-flagsmith/flagsmith-api-overview/flags-api/authentication)
+
+---
+
+## Trait evaluation is inconsistent
+
+Segment rules or identity overrides that depend on traits are not matching the way you expect.
+
+### Common causes
+
+-   **Type mismatch.** Flagsmith stores trait values with a type (string, integer, float, boolean). If your SDK sends a
+    trait value as a string `"42"` but the segment rule expects the integer `42`, the comparison may not match.
+-   **Case sensitivity on trait keys.** Trait keys are case-sensitive. `email` and `Email` are two different traits. If
+    your SDK sets `Email` but the segment rule targets `email`, the rule will not match.
+-   **Trait not set on the identity.** If the trait has never been sent for a given identity, the segment rule will not
+    match. Traits are not automatically created; they only exist once your application sends them via the SDK or API.
+-   **Local evaluation with missing traits.** In local evaluation mode, the SDK evaluates segments using only the traits
+    you provide in the `get_identity_flags` call. If you omit a trait that the segment rule depends on, the rule will
+    not match — even if that trait exists on the server.
+
+### Steps to resolve
+
+1. In the dashboard, navigate to the identity and inspect its traits. Confirm the trait key, value, and type.
+2. Compare the trait key casing in your code against the segment rule definition.
+3. If using local evaluation, ensure you are passing **all** traits that your segment rules depend on.
+4. Test the segment rule in the dashboard by adding the identity manually and checking whether it matches.
+
+:::tip Evaluation order
+
+If a flag value surprises you, keep the precedence in mind — Flagsmith evaluates in this order, highest priority first:
+
+1. **Identity overrides** (set directly on a specific identity).
+2. **Segment overrides** (the first matching segment wins; segments are evaluated top-to-bottom on the feature).
+3. **Environment default** (the value configured on the feature for the current environment).
+
+See [Flag evaluation precedence](/flagsmith-concepts/segments#flag-evaluation-precedence) for the full rules.
+
+:::
+
+**Related documentation:** [Identities & Traits](/flagsmith-concepts/identities) •
+[Segments](/flagsmith-concepts/segments)
+
+---
+
+## Local evaluation mode isn't behaving as expected
+
+You have enabled local evaluation but flags are not matching dashboard state, or certain features don't work.
+
+### Common causes
+
+-   **Using the Client-side Environment Key.** Local evaluation requires the **Server-side Environment Key**. The
+    Client-side key will either fail to fetch the environment document entirely or return an incomplete one.
+-   **Stale environment document.** The SDK refreshes the environment document on a timer (see the
+    [refresh interval table](#server-side-sdks-in-local-evaluation-mode) above). If you changed a flag very recently,
+    the SDK might not have picked it up yet.
+-   **Segment rules that depend on server-side data.** Some segment types (e.g. percentage-based splits on anonymous
+    users) are evaluated server-side. In local evaluation mode, these may behave differently if the SDK does not have
+    the full context.
+
+### Steps to resolve
+
+1. Confirm you are using the Server-side Environment Key.
+2. Check the SDK's refresh interval. If you need near-instant updates, lower the interval (but be aware this increases
+   network calls).
+3. For percentage-based segments, verify that you are passing a consistent identity identifier — the hash-based
+   bucketing relies on it.
+4. Enable debug logging in the SDK to see when the environment document is refreshed and what it contains.
+
+**Related documentation:**
+[Local Evaluation Mode](/integrating-with-flagsmith/integration-overview#local-evaluation-mode) •
+[Server-Side SDKs](/integrating-with-flagsmith/sdks/server-side)

@@ -1,0 +1,41 @@
+---
+title: Troubleshooting
+sidebar_label: Troubleshooting
+sidebar_position: 1
+---
+
+import Link from '@docusaurus/Link';
+
+This guide helps you diagnose common issues with the Flagsmith API, SDKs, and self-hosted deployments. Start from the
+symptom you are seeing, and follow the steps to resolve it.
+
+## What are you seeing?
+
+### HTTP errors from the API
+
+Getting `4xx` or `5xx` responses when calling the Flagsmith API — from your application code, an SDK, or a direct HTTP
+request.
+
+<Link to="/guides/troubleshooting/http-errors">Diagnose HTTP errors →</Link>
+
+### SDK behaving unexpectedly
+
+Flags are stale, default values are returned when they shouldn't be, or trait-based targeting isn't matching the way you
+expect.
+
+<Link to="/guides/troubleshooting/sdk-issues">Diagnose SDK issues →</Link>
+
+### Self-hosted runtime problems
+
+The task processor isn't picking up jobs, a database migration failed on upgrade, or your API containers are returning
+intermittent errors.
+
+<Link to="/guides/troubleshooting/self-hosted">Diagnose self-hosted issues →</Link>
+
+---
+
+:::tip
+
+If your issue isn't covered here, check the [FAQ](/support/faq) or [contact support](/support).
+
+:::
