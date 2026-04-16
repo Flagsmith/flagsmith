@@ -1,5 +1,6 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useMemo, useState } from 'react'
 import Button from 'components/base/forms/Button'
+import EmptyState from 'components/EmptyState'
 import Input from 'components/base/forms/Input'
 import SearchableSelect from 'components/base/select/SearchableSelect'
 import VariationTable from 'components/experiments-v2/shared/VariationTable'
@@ -46,6 +47,23 @@ const FlagVariationsStep: FC<FlagVariationsStepProps> = ({
     onVariationsChange(variations.filter((v) => v.id !== id))
   }
 
+  const eligibleFlags = useMemo(
+    () => MOCK_FLAGS.filter((f) => f.isMultiVariant),
+    [],
+  )
+
+  if (eligibleFlags.length === 0) {
+    return (
+      <div className='flag-variations-step'>
+        <EmptyState
+          title='No multi-variant flags'
+          description='Experiments require a multi-variant feature flag. Create one first, then come back to set up your experiment.'
+          icon='features'
+        />
+      </div>
+    )
+  }
+
   return (
     <div className='flag-variations-step'>
       <div className='flag-variations-step__field'>
@@ -55,7 +73,7 @@ const FlagVariationsStep: FC<FlagVariationsStepProps> = ({
           onChange={(opt: OptionType) => {
             onFlagChange(opt.value)
           }}
-          options={MOCK_FLAGS.filter((f) => f.isMultiVariant)}
+          options={eligibleFlags}
           placeholder='Select a feature flag...'
         />
         <span className='flag-variations-step__hint text-muted fs-small'>
