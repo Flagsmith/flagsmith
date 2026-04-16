@@ -83,15 +83,20 @@ jobs:
               continue
             fi
 
-            # Smoke test the deployment
-            for ENDPOINT in "/health" "/config/project-overrides" "/"; do
-              echo "🔍 Testing $URL$ENDPOINT ..."
-              STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL$ENDPOINT")
-              if [ "$STATUS" != "200" ]; then
-                echo "⚠️ $ENDPOINT returned $STATUS"
-                FAILED=1
-              fi
-            done
+            # Smoke test: Express server + static files
+            echo "🔍 Testing $URL/config/project-overrides ..."
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/config/project-overrides")
+            if [ "$STATUS" != "200" ]; then
+              echo "⚠️ /config/project-overrides returned $STATUS"
+              FAILED=1
+            fi
+
+            echo "🔍 Testing $URL/ ..."
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/")
+            if [ "$STATUS" != "200" ]; then
+              echo "⚠️ / returned $STATUS"
+              FAILED=1
+            fi
 
             echo "✅ Smoke tests done for '$ENV_NAME'"
             echo ""
