@@ -120,9 +120,9 @@ Run `git commit` — the pre-commit hook generates `_tokens.scss` and `tokens.ts
 // Icons reference the icon token
 <Icon fill="var(--color-icon-danger)" />
 
-// Or via TS exports
-import { tokens } from 'common/theme/tokens'
-<Icon fill={tokens.icon.danger} />
+// Or via TS exports — flat camelCase constants
+import { colorIconDanger } from 'common/theme/tokens'
+<Icon fill={colorIconDanger} />
 ```
 
 Dark mode works automatically — no extra overrides needed.

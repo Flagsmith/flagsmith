@@ -1211,14 +1211,22 @@ export type Res = {
   releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
   featureCodeReferences: FeatureCodeReferences[]
-  featureAnalytics: ({
-    day: string
-  } & {
-    [environmentId: string]: number
-  })[]
+  featureAnalytics: {
+    chartData: ({
+      day: string
+    } & {
+      [environmentId: string]: number
+    })[]
+    rawEntries: Res['environmentAnalytics']
+  }
   environmentAnalytics: {
     day: string
     count: number
+    labels?: {
+      user_agent?: string | null
+      client_application_name?: string | null
+      client_application_version?: string | null
+    } | null
   }[]
   featureList: {
     results: ProjectFlag[]
