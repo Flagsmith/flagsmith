@@ -1,5 +1,4 @@
 import json
-import logging
 import typing
 
 import pytest
@@ -120,13 +119,9 @@ def test_create_lead_form__valid_user_data__submits_form_successfully(
 def test_create_lead_form__api_returns_error__logs_error(
     staff_user: FFAdminUser,
     hubspot_client: HubspotClient,
-    inspecting_handler: logging.Handler,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     # Given
-    from integrations.lead_tracking.hubspot.client import logger
-
-    logger.addHandler(inspecting_handler)
-
     hubspot_cookie = "test_hubspot_cookie"
     url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID_SAAS}"
     responses.add(
@@ -141,7 +136,7 @@ def test_create_lead_form__api_returns_error__logs_error(
 
     # Then
     assert response == {"error": "Problem processing."}
-    assert inspecting_handler.messages == [  # type: ignore[attr-defined]
+    assert caplog.messages == [
         "Creating Hubspot lead form for user staff@example.com with hubspot cookie test_hubspot_cookie",
         "Problem posting data to Hubspot's form API due to 400 status code and following response: "
         + '{"error": "Problem processing."}',
