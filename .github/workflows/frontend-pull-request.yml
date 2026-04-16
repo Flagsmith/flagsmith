@@ -63,9 +63,10 @@ jobs:
               DEPLOY_ID=$(gh api "repos/$REPO/deployments?sha=$SHA&environment=$(printf '%s' "$ENV_NAME" | jq -sRr @uri)&per_page=1" --jq '.[0].id // empty')
 
               if [ -n "$DEPLOY_ID" ]; then
-                STATE=$(gh api "repos/$REPO/deployments/$DEPLOY_ID/statuses?per_page=1" --jq '.[0].state // empty')
+                RESULT=$(gh api "repos/$REPO/deployments/$DEPLOY_ID/statuses?per_page=1" --jq '.[0] | "\(.state // "") \(.environment_url // "")"')
+                STATE=$(echo "$RESULT" | cut -d' ' -f1)
                 if [ "$STATE" = "success" ]; then
-                  URL=$(gh api "repos/$REPO/deployments/$DEPLOY_ID/statuses?per_page=1" --jq '.[0].environment_url')
+                  URL=$(echo "$RESULT" | cut -d' ' -f2-)
                   echo "✅ '$ENV_NAME' deployed at: $URL"
                   break
                 elif [ "$STATE" = "failure" ] || [ "$STATE" = "error" ]; then
