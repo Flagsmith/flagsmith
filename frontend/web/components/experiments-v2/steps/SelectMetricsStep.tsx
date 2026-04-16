@@ -1,31 +1,33 @@
 import React, { FC, useMemo, useState } from 'react'
 import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/icons/Icon'
+import EmptyState from 'components/EmptyState'
 import SelectableCard from 'components/experiments-v2/shared/SelectableCard'
 import { Metric, MOCK_METRICS } from 'components/experiments-v2/types'
 import './SelectMetricsStep.scss'
 
 type SelectMetricsStepProps = {
+  availableMetrics?: Metric[]
   selectedMetrics: Metric[]
   onToggleMetric: (metric: Metric) => void
 }
 
 const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
+  availableMetrics = MOCK_METRICS,
   onToggleMetric,
   selectedMetrics,
 }) => {
   const [search, setSearch] = useState('')
 
   const filteredMetrics = useMemo(() => {
-    if (!search) return MOCK_METRICS
+    if (!search) return availableMetrics
     const lower = search.toLowerCase()
-    return MOCK_METRICS.filter(
+    return availableMetrics.filter(
       (m) =>
         m.name.toLowerCase().includes(lower) ||
         m.description.toLowerCase().includes(lower),
     )
-  }, [search])
+  }, [search, availableMetrics])
 
   const isSelected = (metric: Metric) =>
     selectedMetrics.some((m) => m.id === metric.id)
@@ -40,6 +42,23 @@ const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
       label: role === 'primary' ? 'Primary' : 'Secondary',
       variant: role as 'primary' | 'secondary',
     }
+  }
+
+  if (availableMetrics.length === 0) {
+    return (
+      <div className='select-metrics-step'>
+        <EmptyState
+          title='No metrics yet'
+          description='Create your first metric to start measuring experiment outcomes.'
+          icon='bar-chart'
+          action={
+            <Button theme='primary' size='small'>
+              Create Metric
+            </Button>
+          }
+        />
+      </div>
+    )
   }
 
   return (
@@ -67,18 +86,16 @@ const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
           ))}
         </div>
       ) : (
-        <div className='select-metrics-step__empty'>
-          <Icon name='search' width={36} />
-          <span className='select-metrics-step__empty-title'>
-            No metrics found for &ldquo;{search}&rdquo;
-          </span>
-          <span className='select-metrics-step__empty-desc'>
-            Try a different search term, or define a custom metric with SQL
-          </span>
-          <Button theme='primary' size='small'>
-            Define Custom Metric
-          </Button>
-        </div>
+        <EmptyState
+          title={`No metrics found for "${search}"`}
+          description='Try a different search term, or create a new metric.'
+          icon='search'
+          action={
+            <Button theme='primary' size='small'>
+              Create Metric
+            </Button>
+          }
+        />
       )}
     </div>
   )
