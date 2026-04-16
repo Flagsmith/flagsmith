@@ -1,5 +1,6 @@
 import React, { FC } from 'react'
 import SearchableSelect from 'components/base/select/SearchableSelect'
+import EmptyState from 'components/EmptyState'
 import Icon from 'components/icons/Icon'
 import { OptionType } from 'components/base/select/SearchableSelect'
 import { AudienceConfig, MOCK_SEGMENTS } from 'components/experiments-v2/types'
@@ -14,6 +15,18 @@ const AudienceTrafficStep: FC<AudienceTrafficStepProps> = ({
   audience,
   onChange,
 }) => {
+  if (MOCK_SEGMENTS.length === 0) {
+    return (
+      <div className='audience-traffic-step'>
+        <EmptyState
+          title='No segments'
+          description='Create a segment to define who sees the experiment.'
+          icon='people'
+        />
+      </div>
+    )
+  }
+
   return (
     <div className='audience-traffic-step'>
       <div className='audience-traffic-step__field'>
