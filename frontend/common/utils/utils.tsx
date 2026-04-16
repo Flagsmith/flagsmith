@@ -517,15 +517,15 @@ const Utils = Object.assign({}, BaseUtils, {
       case 'RBAC':
       case 'AUDIT':
       case '4_EYES_PROJECT':
-      case '4_EYES': {
+      case '4_EYES':
+      case 'SAML': {
         plan = 'scale-up'
         break
       }
       case 'STALE_FLAGS':
       case 'REALTIME':
       case 'METADATA':
-      case 'RELEASE_PIPELINES':
-      case 'SAML': {
+      case 'RELEASE_PIPELINES': {
         plan = 'enterprise'
         break
       }
