@@ -10,6 +10,7 @@ on:
 permissions:
   contents: read
   deployments: read
+  pull-requests: read
 
 jobs:
   unit-tests:
@@ -42,69 +43,59 @@ jobs:
     timeout-minutes: 10
     continue-on-error: true
     steps:
-      - name: Wait for Vercel deployments and smoke test
+      - name: Wait for Vercel comment then smoke test
         env:
           GH_TOKEN: ${{ github.token }}
-          SHA: ${{ github.event.pull_request.head.sha }}
           REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          ENVIRONMENTS=(
-            "Preview – flagsmith-frontend-preview"
-            "Preview – flagsmith-frontend-staging"
-          )
+          # Wait for the Vercel bot comment containing preview URLs.
+          # Vercel posts/updates this comment on every push — even for
+          # "Ignored Build Step" skips, the URLs from the previous
+          # build are still live and testable.
+          echo "⏳ Waiting for Vercel bot comment with preview URLs..."
+          URLS=""
+          for i in $(seq 1 30); do
+            URLS=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" \
+              --jq '.[] | select(.user.login == "vercel[bot]") | .body' \
+              | grep -o 'https://flagsmith-frontend[^ )]*')
+
+            if [ -n "$URLS" ]; then
+              break
+            fi
+            sleep 10
+          done
+
+          if [ -z "$URLS" ]; then
+            echo "⚠️ No Vercel preview URLs found in PR comments"
+            exit 1
+          fi
 
           FAILED=0
+          for URL in $URLS; do
+            echo ""
+            echo "🔍 Smoke testing $URL ..."
 
-          for ENV_NAME in "${ENVIRONMENTS[@]}"; do
-            echo "⏳ Waiting for '$ENV_NAME' deployment..."
-            URL=""
-            for i in $(seq 1 60); do
-              # Find the deployment for this commit and environment
-              DEPLOY_ID=$(gh api "repos/$REPO/deployments?sha=$SHA&environment=$(printf '%s' "$ENV_NAME" | jq -sRr @uri)&per_page=1" --jq '.[0].id // empty')
-
-              if [ -n "$DEPLOY_ID" ]; then
-                RESULT=$(gh api "repos/$REPO/deployments/$DEPLOY_ID/statuses?per_page=1" --jq '.[0] | "\(.state // "") \(.environment_url // "")"')
-                STATE=$(echo "$RESULT" | cut -d' ' -f1)
-                if [ "$STATE" = "success" ]; then
-                  URL=$(echo "$RESULT" | cut -d' ' -f2-)
-                  echo "✅ '$ENV_NAME' deployed at: $URL"
-                  break
-                elif [ "$STATE" = "failure" ] || [ "$STATE" = "error" ]; then
-                  echo "⚠️ '$ENV_NAME' deployment failed with state: $STATE"
-                  FAILED=1
-                  continue 2
-                fi
-              fi
-              sleep 10
-            done
-
-            if [ -z "$URL" ]; then
-              echo "⚠️ Timed out waiting for '$ENV_NAME' — skipping"
-              continue
-            fi
-
-            # Smoke test: Express server + static files
-            echo "🔍 Testing $URL/config/project-overrides ..."
             STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/config/project-overrides")
             if [ "$STATUS" != "200" ]; then
               echo "⚠️ /config/project-overrides returned $STATUS"
               FAILED=1
+            else
+              echo "✅ /config/project-overrides OK"
             fi
 
-            echo "🔍 Testing $URL/ ..."
             STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/")
             if [ "$STATUS" != "200" ]; then
               echo "⚠️ / returned $STATUS"
               FAILED=1
+            else
+              echo "✅ / OK"
             fi
-
-            echo "✅ Smoke tests done for '$ENV_NAME'"
-            echo ""
           done
 
+          echo ""
           if [ "$FAILED" -ne 0 ]; then
-            echo "⚠️ Some smoke tests failed — see above for details"
+            echo "⚠️ Some smoke tests failed — see above"
             exit 1
           fi
-
-          echo "🎉 All Vercel preview deployments are healthy"
+          echo "🎉 All Vercel previews are healthy"
