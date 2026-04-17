@@ -14,7 +14,7 @@ export const PricingToggle = ({ isYearly, onChange }: PricingToggleProps) => {
           'text-muted': !isYearly,
         })}
       >
-        Pay Yearly (Save 10%)
+        Pay Yearly & Save
       </h5>
       <Switch
         checked={!isYearly}
