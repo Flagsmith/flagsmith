@@ -48,6 +48,10 @@ const GitLabSearchSelect: FC<GitLabSearchSelectProps> = ({
     { skip: !gitlabProjectId },
   )
 
+  const options = data?.results
+    ?.filter((r) => !linkedUrls.includes(r.web_url))
+    .map((r) => ({ label: `${r.title} #${r.iid}`, value: r }))
+
   return (
     <div>
       <Select
@@ -60,15 +64,7 @@ const GitLabSearchSelect: FC<GitLabSearchSelectProps> = ({
         onChange={(v: { value: GitLabIssue | GitLabMergeRequest }) => {
           onChange(v.value)
         }}
-        options={data?.results
-          ?.filter(
-            (r: GitLabIssue | GitLabMergeRequest) =>
-              !linkedUrls.includes(r.web_url),
-          )
-          .map((r: GitLabIssue | GitLabMergeRequest) => ({
-            label: `${r.title} #${r.iid}`,
-            value: r,
-          }))}
+        options={options}
         noOptionsMessage={() =>
           isLoading || isFetching ? (
             <div className='py-2'>
