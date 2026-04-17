@@ -32,13 +32,8 @@ const GitLabProjectSelect: FC<GitLabProjectSelectProps> = ({
         }
         value={
           data?.results
-            ? data.results
-                .map((p) => ({
-                  label: p.path_with_namespace,
-                  value: p.id,
-                }))
-                .find((o) => o.value === value)
-            : null
+            ?.map((p) => ({ label: p.path_with_namespace, value: p.id }))
+            .find((o) => o.value === value) ?? null
         }
         onChange={(v: { value: number }) => onChange(v.value)}
         options={
