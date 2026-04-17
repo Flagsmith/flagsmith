@@ -186,7 +186,7 @@ def test_gitlab_merge_request_list__missing_gitlab_project_id__returns_400(
 
 
 @pytest.mark.usefixtures("gitlab_config")
-def test_browse_gitlab__api_unreachable__returns_424(
+def test_browse_gitlab__api_unreachable__returns_503(
     admin_client: APIClient,
     project: Project,
     mocker: MockerFixture,
@@ -203,5 +203,5 @@ def test_browse_gitlab__api_unreachable__returns_424(
     )
 
     # Then
-    assert response.status_code == status.HTTP_424_FAILED_DEPENDENCY
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     assert response.json()["detail"] == "GitLab API is unreachable"
