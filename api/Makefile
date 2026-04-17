@@ -165,6 +165,7 @@ integrate-private-tests:
 .PHONY: generate-docs
 generate-docs: generate-flagsmith-sdk-openapi
 	poetry run flagsmith docgen metrics > ../docs/docs/administration-and-security/platform-configuration/metrics.md
+	poetry run flagsmith docgen events > ../docs/docs/administration-and-security/platform-configuration/events.md
 
 .PHONY: add-known-sdk-version
 add-known-sdk-version:
