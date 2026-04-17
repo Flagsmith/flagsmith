@@ -24,7 +24,7 @@ class GitLabConfigurationViewSet(ProjectIntegrationBaseViewSet):
         super().perform_create(serializer)
         instance: GitLabConfiguration = serializer.instance  # type: ignore[assignment]
         self._log_for(instance).info(
-            "gitlab-configuration-created",
+            "configuration-created",
             gitlab_instance_url=instance.gitlab_instance_url,
         )
 
@@ -32,11 +32,11 @@ class GitLabConfigurationViewSet(ProjectIntegrationBaseViewSet):
         super().perform_update(serializer)
         instance: GitLabConfiguration = serializer.instance  # type: ignore[assignment]
         self._log_for(instance).info(
-            "gitlab-configuration-updated",
+            "configuration-updated",
             gitlab_instance_url=instance.gitlab_instance_url,
         )
 
     def perform_destroy(self, instance: GitLabConfiguration) -> None:
         log = self._log_for(instance)
         super().perform_destroy(instance)
-        log.info("gitlab-configuration-deleted")
+        log.info("configuration-deleted")
