@@ -1,7 +1,12 @@
 import React, { FC } from 'react'
 import useInfiniteScroll from 'common/useInfiniteScroll'
 import { Req } from 'common/types/requests'
-import { Res, type GitLabIssue, type GitLabMergeRequest } from 'common/types/responses'
+import {
+  Res,
+  type GitLabIssue,
+  type GitLabLinkType,
+  type GitLabMergeRequest,
+} from 'common/types/responses'
 import {
   useGetGitLabIssuesQuery,
   useGetGitLabMergeRequestsQuery,
@@ -10,7 +15,7 @@ import {
 type GitLabSearchSelectProps = {
   projectId: number
   gitlabProjectId: number
-  linkType: 'issue' | 'merge_request'
+  linkType: GitLabLinkType
   value: GitLabIssue | GitLabMergeRequest | null
   onChange: (selection: GitLabIssue | GitLabMergeRequest) => void
   linkedUrls: string[]
@@ -18,8 +23,8 @@ type GitLabSearchSelectProps = {
 
 const GitLabSearchSelect: FC<GitLabSearchSelectProps> = ({
   gitlabProjectId,
-  linkedUrls,
   linkType,
+  linkedUrls,
   onChange,
   projectId,
   value,
@@ -50,9 +55,7 @@ const GitLabSearchSelect: FC<GitLabSearchSelectProps> = ({
         value={value ? { label: `${value.title} #${value.iid}`, value } : null}
         size='select-md'
         placeholder={
-          linkType === 'issue'
-            ? 'Search issues…'
-            : 'Search merge requests…'
+          linkType === 'issue' ? 'Search issues…' : 'Search merge requests…'
         }
         onChange={(v: { value: GitLabIssue | GitLabMergeRequest }) => {
           onChange(v.value)

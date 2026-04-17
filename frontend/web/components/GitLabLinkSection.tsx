@@ -1,10 +1,12 @@
 import React, { FC, useState } from 'react'
 import Constants from 'common/constants'
-import GitLabProjectSelect from 'components/GitLabProjectSelect'
-import GitLabSearchSelect from 'components/GitLabSearchSelect'
-import type { GitLabIssue, GitLabMergeRequest } from 'common/types/responses'
-
-type GitLabLinkType = 'issue' | 'merge_request'
+import GitLabProjectSelect from './GitLabProjectSelect'
+import GitLabSearchSelect from './GitLabSearchSelect'
+import type {
+  GitLabIssue,
+  GitLabLinkType,
+  GitLabMergeRequest,
+} from 'common/types/responses'
 
 type GitLabLinkSectionProps = {
   projectId: number
