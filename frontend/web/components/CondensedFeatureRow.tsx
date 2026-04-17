@@ -74,17 +74,6 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
       </div>
       <Flex className='table-column clickable'>
         <Row>
-          <div
-            onClick={() => permission && !readOnly && editFeature()}
-            style={{ flex: 1 }}
-            className={`overflow-hidden ${fadeValue ? 'faded' : ''}`}
-          >
-            <FeatureValue
-              value={environmentFlags?.[id]?.feature_state_value ?? null}
-              data-test={`feature-value-${index}`}
-            />
-          </div>
-
           <SegmentOverridesIcon
             onClick={(e) => {
               e.stopPropagation()
@@ -100,6 +89,16 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
             count={projectFlag.num_identity_overrides}
             showPlusIndicator={showPlusIndicator}
           />
+          <div
+            onClick={() => permission && !readOnly && editFeature()}
+            style={{ flex: 1 }}
+            className={`overflow-hidden ${fadeValue ? 'faded' : ''}`}
+          >
+            <FeatureValue
+              value={environmentFlags?.[id]?.feature_state_value ?? null}
+              data-test={`feature-value-${index}`}
+            />
+          </div>
         </Row>
       </Flex>
     </Flex>
