@@ -941,12 +941,10 @@ export type Req = {
   getGitLabIssues: PagedRequest<{
     project_id: number
     gitlab_project_id: number
-    state?: string
   }>
   getGitLabMergeRequests: PagedRequest<{
     project_id: number
     gitlab_project_id: number
-    state?: string
   }>
   // END OF TYPES
 }

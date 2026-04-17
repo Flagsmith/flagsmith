@@ -18,7 +18,7 @@ export const gitlabService = service
             page: query.page ?? 1,
             page_size: query.page_size ?? 100,
             search_text: query.q || undefined,
-            state: 'opened',
+            state: 'opened', // Only open items are linkable to feature flags.
           })}`,
         }),
       }),
@@ -35,7 +35,7 @@ export const gitlabService = service
             page: query.page ?? 1,
             page_size: query.page_size ?? 100,
             search_text: query.q || undefined,
-            state: 'opened',
+            state: 'opened', // Only open items are linkable to feature flags.
           })}`,
         }),
       }),
