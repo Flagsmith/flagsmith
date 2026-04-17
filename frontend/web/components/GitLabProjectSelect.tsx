@@ -1,49 +1,37 @@
 import React, { FC } from 'react'
-import { useGetGitLabProjectsQuery } from 'common/services/useGitlab'
+import type { GitLabProject } from 'common/types/responses'
 
 type GitLabProjectSelectProps = {
-  projectId: number
+  projects: GitLabProject[]
+  isLoading: boolean
+  isDisabled: boolean
   value: number | null
   onChange: (id: number) => void
 }
 
 const GitLabProjectSelect: FC<GitLabProjectSelectProps> = ({
+  isDisabled,
+  isLoading,
   onChange,
-  projectId,
+  projects,
   value,
 }) => {
-  const { data, isError, isLoading } = useGetGitLabProjectsQuery({
-    page: 1,
-    page_size: 100,
-    project_id: projectId,
-  })
+  const options = projects.map((p) => ({
+    label: p.path_with_namespace,
+    value: p.id,
+  }))
 
   return (
     <div style={{ minWidth: 250 }}>
       <Select
         className='w-100 react-select'
         size='select-md'
-        placeholder={
-          isLoading
-            ? 'Loading...'
-            : isError
-              ? 'Failed to load projects'
-              : 'Select GitLab Project'
-        }
-        value={
-          data?.results
-            ?.map((p) => ({ label: p.path_with_namespace, value: p.id }))
-            .find((o) => o.value === value) ?? null
-        }
+        placeholder={isLoading ? 'Loading...' : 'Select GitLab Project'}
+        value={options.find((o) => o.value === value) ?? null}
         onChange={(v: { value: number }) => onChange(v.value)}
-        options={
-          data?.results?.map((p) => ({
-            label: p.path_with_namespace,
-            value: p.id,
-          })) ?? []
-        }
+        options={options}
         isLoading={isLoading}
-        isDisabled={isError}
+        isDisabled={isDisabled}
       />
     </div>
   )

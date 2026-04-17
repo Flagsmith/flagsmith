@@ -1,7 +1,9 @@
 import React, { FC, useState } from 'react'
 import Constants from 'common/constants'
+import ErrorMessage from './ErrorMessage'
 import GitLabProjectSelect from './GitLabProjectSelect'
 import GitLabSearchSelect from './GitLabSearchSelect'
+import { useGetGitLabProjectsQuery } from 'common/services/useGitlab'
 import type {
   GitLabIssue,
   GitLabLinkType,
@@ -27,6 +29,17 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
     GitLabIssue | GitLabMergeRequest | null
   >(null)
 
+  const {
+    data: projectsData,
+    isError: isProjectsError,
+    isLoading: isProjectsLoading,
+  } = useGetGitLabProjectsQuery({
+    page: 1,
+    page_size: 100,
+    project_id: projectId,
+  })
+  const projects = projectsData?.results ?? []
+
   return (
     <div>
       <label className='cols-sm-2 control-label'>
@@ -34,7 +47,9 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
       </label>
       <div className='d-flex gap-2 mb-2'>
         <GitLabProjectSelect
-          projectId={projectId}
+          projects={projects}
+          isLoading={isProjectsLoading}
+          isDisabled={isProjectsError}
           value={gitlabProjectId}
           onChange={setGitlabProjectId}
         />
@@ -57,6 +72,9 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
           />
         </div>
       </div>
+      {isProjectsError && (
+        <ErrorMessage error='Failed to load GitLab projects' />
+      )}
       {gitlabProjectId != null && (
         <>
           <GitLabSearchSelect
