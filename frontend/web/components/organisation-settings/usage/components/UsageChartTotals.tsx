@@ -8,6 +8,7 @@ type TotalItem = {
   icon: IconName
   limit: number | null | undefined
   title: string
+  tooltip?: string
   value: number
 }
 
@@ -64,8 +65,11 @@ const UsageChartTotals: FC<UsageChartTotalsProps> = ({
     {
       colour: undefined,
       icon: 'bar-chart',
-      limit: maxApiCalls,
+      limit: undefined,
       title: 'Total API Calls',
+      tooltip: maxApiCalls
+        ? `Your plan limit is ${maxApiCalls.toLocaleString()} / month`
+        : undefined,
       value: data.totals.total,
     },
   ]
@@ -81,6 +85,7 @@ const UsageChartTotals: FC<UsageChartTotalsProps> = ({
             label={item.title}
             value={item.value}
             limit={item.limit}
+            tooltip={item.tooltip}
             visibilityToggle={
               withColor && item.colour
                 ? {

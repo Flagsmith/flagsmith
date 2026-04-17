@@ -14,6 +14,7 @@ import Tag from './tags/Tag'
 import Icon from './icons/Icon'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
+import EmptyState from './EmptyState'
 import Tooltip from './Tooltip'
 import { withRouter } from 'react-router-dom'
 import { getDarkMode } from 'project/darkMode'
@@ -313,6 +314,7 @@ class CompareEnvironments extends Component {
                         <FeatureRow
                           condensed
                           isCompareEnv
+                          className='border-left-1 ps-2'
                           fadeEnabled={fadeEnabled}
                           fadeValue={fadeValue}
                           history={this.props.history}
@@ -344,9 +346,11 @@ class CompareEnvironments extends Component {
                   )}
                   {!this.state.isLoading &&
                     (!this.state.changes || !this.state.changes.length) && (
-                      <div className='text-center mt-2'>
-                        These environments have no flag differences
-                      </div>
+                      <EmptyState
+                        title='No flag differences'
+                        description='These environments have identical flag configurations.'
+                        icon='checkmark-circle'
+                      />
                     )}
                   {!this.state.isLoading &&
                     this.state.changes &&
@@ -390,7 +394,7 @@ class CompareEnvironments extends Component {
                                 </div>
                                 <Flex className='table-column'></Flex>
                               </Flex>
-                              <Flex className='flex-row'>
+                              <Flex className='flex-row border-left-1 ps-2'>
                                 <div
                                   className='table-column'
                                   style={{ width: '80px' }}

@@ -58,7 +58,7 @@ class _GitLabListView(ListAPIView, abc.ABC, Generic[T]):  # type: ignore[type-ar
             logger.error("api-call-failed", exc_info=exc)
             return Response(
                 data={"detail": "GitLab API is unreachable"},
-                status=status.HTTP_424_FAILED_DEPENDENCY,
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
         return self._paginated_response(page_data, request)
