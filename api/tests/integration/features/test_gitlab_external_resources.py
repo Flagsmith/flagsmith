@@ -1,4 +1,5 @@
 import pytest
+from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -12,9 +13,11 @@ def test_create_external_resource__gitlab_issue__returns_201_and_persists_metada
     admin_client: APIClient,
     project: int,
     feature: int,
+    log: StructuredLogCapture,
 ) -> None:
     # Given
     metadata = {"title": "Fix login bug", "state": "opened", "iid": 42}
+    organisation_id = Project.objects.get(id=project).organisation_id
 
     # When
     response = admin_client.post(
@@ -42,14 +45,28 @@ def test_create_external_resource__gitlab_issue__returns_201_and_persists_metada
     assert len(listed) == 1
     assert listed[0]["metadata"] == metadata
 
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "issue.linked",
+            "organisation__id": organisation_id,
+            "project__id": project,
+            "feature__id": feature,
+        },
+    ]
+
 
 @pytest.mark.django_db()
 def test_create_external_resource__gitlab_merge_request__returns_201(
     admin_client: APIClient,
     project: int,
     feature: int,
+    log: StructuredLogCapture,
 ) -> None:
-    # Given / When
+    # Given
+    organisation_id = Project.objects.get(id=project).organisation_id
+
+    # When
     response = admin_client.post(
         f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
         data={
@@ -68,12 +85,23 @@ def test_create_external_resource__gitlab_merge_request__returns_201(
         response_json["url"] == "https://gitlab.com/testorg/testrepo/-/merge_requests/7"
     )
 
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "merge_request.linked",
+            "organisation__id": organisation_id,
+            "project__id": project,
+            "feature__id": feature,
+        },
+    ]
+
 
 @pytest.mark.django_db()
 def test_create_external_resource__gitlab_issue_with_github_also_configured__returns_201(
     admin_client: APIClient,
     project: int,
     feature: int,
+    log: StructuredLogCapture,
 ) -> None:
     # Given
     project_instance = Project.objects.get(id=project)
@@ -103,3 +131,13 @@ def test_create_external_resource__gitlab_issue_with_github_also_configured__ret
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["type"] == "GITLAB_ISSUE"
+
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "issue.linked",
+            "organisation__id": organisation.id,
+            "project__id": project,
+            "feature__id": feature,
+        },
+    ]

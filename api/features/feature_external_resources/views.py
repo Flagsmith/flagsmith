@@ -153,7 +153,8 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
     ) -> Response:
         response = super().create(request, *args, **kwargs)
         structlog.get_logger("gitlab").info(
-            "issue-linked",
+            "issue.linked",
+            organisation__id=feature.project.organisation_id,
             project__id=feature.project_id,
             feature__id=feature.id,
         )
@@ -168,7 +169,8 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
     ) -> Response:
         response = super().create(request, *args, **kwargs)
         structlog.get_logger("gitlab").info(
-            "merge-request-linked",
+            "merge_request.linked",
+            organisation__id=feature.project.organisation_id,
             project__id=feature.project_id,
             feature__id=feature.id,
         )
