@@ -133,7 +133,7 @@ const Payment = class extends Component {
                       'text-muted': !this.state.yearly,
                     })}
                   >
-                    Pay Yearly (Save 10%)
+                    Pay Yearly & Save
                   </h5>
                   <Switch
                     checked={!this.state.yearly}
@@ -284,7 +284,7 @@ const Payment = class extends Component {
                         <Row className='pt-3 justify-content-center'>
                           <h5 className='mb-0 align-self-start'>$</h5>
                           <h1 className='mb-0 d-flex align-items-end'>
-                            {this.state.yearly ? '270' : '300'}{' '}
+                            {this.state.yearly ? '250' : '300'}{' '}
                             <h5 className='fs-lg mb-0'>/mo</h5>
                           </h1>
                         </Row>
