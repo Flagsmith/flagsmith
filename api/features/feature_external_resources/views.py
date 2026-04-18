@@ -1,9 +1,12 @@
 import re
+from typing import Any
 
+import structlog
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from features.models import Feature
@@ -15,7 +18,7 @@ from integrations.github.client import (
 from integrations.github.models import GitHubRepository
 from organisations.models import Organisation
 
-from .models import FeatureExternalResource
+from .models import FeatureExternalResource, ResourceType
 from .serializers import FeatureExternalResourceSerializer
 
 
@@ -57,10 +60,12 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
         ).project.organisation_id
 
         for resource in data if isinstance(data, list) else []:
-            if resource_url := resource.get("url"):
-                resource["metadata"] = get_github_issue_pr_title_and_state(
-                    organisation_id=organisation_id, resource_url=resource_url
-                )
+            resource_type = ResourceType(resource["type"])
+            if resource_type in (ResourceType.GITHUB_ISSUE, ResourceType.GITHUB_PR):
+                if resource_url := resource.get("url"):
+                    resource["metadata"] = get_github_issue_pr_title_and_state(
+                        organisation_id=organisation_id, resource_url=resource_url
+                    )
 
         return Response(data={"results": data})
 
@@ -71,6 +76,23 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
             ),
         )
 
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        resource_type = ResourceType(serializer.validated_data["type"])
+
+        if resource_type in (ResourceType.GITHUB_ISSUE, ResourceType.GITHUB_PR):
+            return self._create_github_link(request, feature, *args, **kwargs)
+        if resource_type == ResourceType.GITLAB_ISSUE:
+            return self._create_gitlab_issue_link(request, feature, *args, **kwargs)
+        if resource_type == ResourceType.GITLAB_MR:
+            return self._create_gitlab_merge_request_link(
+                request, feature, *args, **kwargs
+            )
+
+    def _create_github_link(  # type: ignore[no-untyped-def]
+        self, request, feature, *args, **kwargs
+    ) -> Response:
         github_configuration = (
             Organisation.objects.prefetch_related("github_config")
             .get(id=feature.project.organisation_id)
@@ -121,6 +143,36 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
                 content_type="application/json",
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+    def _create_gitlab_issue_link(
+        self,
+        request: Request,
+        feature: Feature,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Response:
+        response = super().create(request, *args, **kwargs)
+        structlog.get_logger("gitlab").info(
+            "issue-linked",
+            project__id=feature.project_id,
+            feature__id=feature.id,
+        )
+        return response
+
+    def _create_gitlab_merge_request_link(
+        self,
+        request: Request,
+        feature: Feature,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Response:
+        response = super().create(request, *args, **kwargs)
+        structlog.get_logger("gitlab").info(
+            "merge-request-linked",
+            project__id=feature.project_id,
+            feature__id=feature.id,
+        )
+        return response
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         external_resource_id = int(self.kwargs["pk"])

@@ -716,7 +716,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       {hasGitlabIntegration && (
                         <GitLabLinkSection
                           projectId={projectId}
-                          linkedUrls={[]}
+                          featureId={projectFlag.id}
+                          environmentId={`${environment.id}`}
+                          linkedUrls={linkedResources?.map((r) => r.url) ?? []}
                         />
                       )}
                       <ExternalResourcesTable

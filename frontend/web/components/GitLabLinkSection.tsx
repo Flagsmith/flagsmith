@@ -1,8 +1,10 @@
 import React, { FC, useState } from 'react'
+import AppActions from 'common/dispatcher/app-actions'
 import Constants from 'common/constants'
 import ErrorMessage from './ErrorMessage'
 import GitLabProjectSelect from './GitLabProjectSelect'
 import GitLabSearchSelect from './GitLabSearchSelect'
+import { useCreateExternalResourceMutation } from 'common/services/useExternalResource'
 import { useGetGitLabProjectsQuery } from 'common/services/useGitlab'
 import type {
   GitLabIssue,
@@ -12,10 +14,14 @@ import type {
 
 type GitLabLinkSectionProps = {
   projectId: number
+  featureId: number
+  environmentId: string
   linkedUrls: string[]
 }
 
 const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
+  environmentId,
+  featureId,
   linkedUrls,
   projectId,
 }) => {
@@ -23,6 +29,7 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
     (v) => v.type === 'GITLAB',
   )
 
+  const [createExternalResource] = useCreateExternalResourceMutation()
   const [gitlabProjectId, setGitlabProjectId] = useState<number | null>(null)
   const [linkType, setLinkType] = useState<GitLabLinkType>('issue')
   const [selectedItem, setSelectedItem] = useState<
@@ -39,6 +46,36 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
     project_id: projectId,
   })
   const projects = projectsData?.results ?? []
+
+  const linkSelectedItem = () => {
+    if (!selectedItem) return
+
+    const type = Object.keys(Constants.resourceTypes).find(
+      (key: string) =>
+        Constants.resourceTypes[key as keyof typeof Constants.resourceTypes]
+          .resourceType === linkType,
+    )
+
+    createExternalResource({
+      body: {
+        feature: featureId,
+        metadata: {
+          state: selectedItem.state,
+          title: selectedItem.title,
+          ...('merged' in selectedItem && { merged: selectedItem.merged }),
+          ...('draft' in selectedItem && { draft: selectedItem.draft }),
+        },
+        type: type || '',
+        url: selectedItem.web_url,
+      },
+      feature_id: featureId,
+      project_id: projectId,
+    }).then(() => {
+      toast('GitLab link added')
+      setSelectedItem(null)
+      AppActions.refreshFeatures(projectId, environmentId)
+    })
+  }
 
   return (
     <div>
@@ -86,7 +123,11 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
             linkedUrls={linkedUrls}
           />
           <div className='text-right mt-2'>
-            <Button disabled theme='primary'>
+            <Button
+              disabled={!selectedItem}
+              theme='primary'
+              onClick={linkSelectedItem}
+            >
               Link
             </Button>
           </div>
