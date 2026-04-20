@@ -48,7 +48,6 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
             features_pk = self.kwargs["feature_pk"]
             return FeatureExternalResource.objects.filter(feature=features_pk)
 
-    # Override get list view to add github issue/pr name to each linked external resource
     def list(self, request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         queryset = self.get_queryset()  # type: ignore[no-untyped-call]
         serializer = self.get_serializer(queryset, many=True)
@@ -59,13 +58,18 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
             Feature.objects.filter(id=self.kwargs["feature_pk"]),
         ).project.organisation_id
 
+        # Add github issue/PR name to each linked external resource
         for resource in data if isinstance(data, list) else []:
-            resource_type = ResourceType(resource["type"])
-            if resource_type in (ResourceType.GITHUB_ISSUE, ResourceType.GITHUB_PR):
-                if resource_url := resource.get("url"):
-                    resource["metadata"] = get_github_issue_pr_title_and_state(
-                        organisation_id=organisation_id, resource_url=resource_url
-                    )
+            if ResourceType(resource["type"]) not in [
+                ResourceType.GITHUB_ISSUE,
+                ResourceType.GITHUB_PR,
+            ]:
+                continue
+
+            if resource_url := resource.get("url"):
+                resource["metadata"] = get_github_issue_pr_title_and_state(
+                    organisation_id=organisation_id, resource_url=resource_url
+                )
 
         return Response(data={"results": data})
 
