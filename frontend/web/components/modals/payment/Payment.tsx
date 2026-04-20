@@ -111,7 +111,7 @@ export const Payment: FC<PaymentProps> = ({
 
           <PricingPanel
             title='Scale-Up'
-            priceYearly='270'
+            priceYearly='250'
             priceMonthly='300'
             isYearly={yearly}
             chargebeePlanId={
