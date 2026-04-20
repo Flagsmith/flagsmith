@@ -2058,47 +2058,51 @@ name = "flagsmith-common"
 version = "3.8.1"
 description = "Flagsmith's common library"
 optional = false
-python-versions = "<4.0,>=3.11"
+python-versions = ">=3.11,<4.0"
 groups = ["main", "dev", "licensing", "workflows"]
-files = [
-    {file = "flagsmith_common-3.8.1-py3-none-any.whl", hash = "sha256:a0c59af22105cd645beb1dfd8039d807159e4823c592c32e8d7239cf67fe4b2f"},
-    {file = "flagsmith_common-3.8.1.tar.gz", hash = "sha256:45c3c86a7f0d778153367740ed4534dbb959ce8ccb649b6ad043e6e93f302dc9"},
-]
+files = []
+develop = false
 
 [package.dependencies]
-backoff = {version = ">=2.2.1,<3.0.0", optional = true, markers = "extra == \"task-processor\""}
-django = {version = ">4,<6", optional = true, markers = "extra == \"common-core\" or extra == \"task-processor\""}
-django-health-check = {version = "*", optional = true, markers = "extra == \"common-core\" or extra == \"task-processor\""}
-djangorestframework = {version = "*", optional = true, markers = "extra == \"common-core\""}
-djangorestframework-recursive = {version = "*", optional = true, markers = "extra == \"common-core\""}
-drf-spectacular = {version = ">=0.28.0,<1", optional = true, markers = "extra == \"common-core\""}
-drf-writable-nested = {version = "*", optional = true, markers = "extra == \"common-core\""}
-environs = {version = "<15", optional = true, markers = "extra == \"common-core\""}
-flagsmith-flag-engine = {version = ">6", optional = true, markers = "extra == \"flagsmith-schemas\""}
-gunicorn = {version = ">=19.1", optional = true, markers = "extra == \"common-core\""}
-inflection = {version = "*", optional = true, markers = "extra == \"common-core\""}
-opentelemetry-api = {version = ">=1.25,<2", optional = true, markers = "extra == \"common-core\" or extra == \"task-processor\""}
-opentelemetry-exporter-otlp-proto-http = {version = ">=1.25,<2", optional = true, markers = "extra == \"common-core\""}
-opentelemetry-instrumentation-django = {version = ">=0.46b0,<1", optional = true, markers = "extra == \"common-core\""}
-opentelemetry-instrumentation-psycopg2 = {version = ">=0.46b0,<1", optional = true, markers = "extra == \"common-core\""}
-opentelemetry-instrumentation-redis = {version = ">=0.46b0,<1", optional = true, markers = "extra == \"common-core\""}
-opentelemetry-sdk = {version = ">=1.25,<2", optional = true, markers = "extra == \"common-core\""}
-prometheus-client = {version = ">=0.0.16", optional = true, markers = "extra == \"common-core\" or extra == \"task-processor\""}
-psycopg2-binary = {version = ">=2.9,<3", optional = true, markers = "extra == \"common-core\""}
-pyfakefs = {version = ">=5,<6", optional = true, markers = "extra == \"test-tools\""}
-pytest-django = {version = ">=4,<5", optional = true, markers = "extra == \"test-tools\""}
-redis = {version = ">=5,<6", optional = true, markers = "extra == \"common-core\""}
-requests = {version = "*", optional = true, markers = "extra == \"common-core\""}
-sentry-sdk = {version = ">=2.0.0,<3.0.0", optional = true, markers = "extra == \"common-core\""}
-simplejson = {version = ">=3,<4", optional = true, markers = "extra == \"common-core\" and extra == \"flagsmith-schemas\""}
-structlog = {version = ">=24.4,<26", optional = true, markers = "extra == \"common-core\""}
-typing-extensions = {version = "*", optional = true, markers = "extra == \"common-core\" or extra == \"flagsmith-schemas\""}
+backoff = {version = ">=2.2.1,<3.0.0", optional = true}
+django = {version = ">4,<6", optional = true}
+django-health-check = {version = "*", optional = true}
+djangorestframework = {version = "*", optional = true}
+djangorestframework-recursive = {version = "*", optional = true}
+drf-spectacular = {version = ">=0.28.0,<1", optional = true}
+drf-writable-nested = {version = "*", optional = true}
+environs = {version = "<15", optional = true}
+flagsmith-flag-engine = {version = ">6", optional = true}
+gunicorn = {version = ">=19.1", optional = true}
+inflection = {version = "*", optional = true}
+opentelemetry-api = {version = ">=1.25,<2", optional = true}
+opentelemetry-exporter-otlp-proto-http = {version = ">=1.25,<2", optional = true}
+opentelemetry-instrumentation-django = {version = ">=0.46b0,<1", optional = true}
+opentelemetry-instrumentation-psycopg2 = {version = ">=0.46b0,<1", optional = true}
+opentelemetry-instrumentation-redis = {version = ">=0.46b0,<1", optional = true}
+opentelemetry-sdk = {version = ">=1.25,<2", optional = true}
+prometheus-client = {version = ">=0.0.16", optional = true}
+psycopg2-binary = {version = ">=2.9,<3", optional = true}
+pyfakefs = {version = ">=5,<6", optional = true}
+pytest-django = {version = ">=4,<5", optional = true}
+redis = {version = ">=5,<6", optional = true}
+requests = {version = "*", optional = true}
+sentry-sdk = {version = ">=2.0.0,<3.0.0", optional = true}
+simplejson = {version = ">=3,<4", optional = true}
+structlog = {version = ">=24.4,<26", optional = true}
+typing_extensions = {version = "*", optional = true}
 
 [package.extras]
-common-core = ["django (>4,<6)", "django-health-check", "djangorestframework", "djangorestframework-recursive", "drf-spectacular (>=0.28.0,<1)", "drf-writable-nested", "environs (<15)", "gunicorn (>=19.1)", "inflection", "opentelemetry-api (>=1.25,<2)", "opentelemetry-exporter-otlp-proto-http (>=1.25,<2)", "opentelemetry-instrumentation-django (>=0.46b0,<1)", "opentelemetry-instrumentation-psycopg2 (>=0.46b0,<1)", "opentelemetry-instrumentation-redis (>=0.46b0,<1)", "opentelemetry-sdk (>=1.25,<2)", "prometheus-client (>=0.0.16)", "psycopg2-binary (>=2.9,<3)", "redis (>=5,<6)", "requests", "sentry-sdk (>=2.0.0,<3.0.0)", "simplejson (>=3,<4)", "structlog (>=24.4,<26)", "typing-extensions"]
-flagsmith-schemas = ["flagsmith-flag-engine (>6)", "simplejson", "typing-extensions"]
+common-core = ["django (>4,<6)", "django-health-check", "djangorestframework", "djangorestframework-recursive", "drf-spectacular (>=0.28.0,<1)", "drf-writable-nested", "environs (<15)", "gunicorn (>=19.1)", "inflection", "opentelemetry-api (>=1.25,<2)", "opentelemetry-exporter-otlp-proto-http (>=1.25,<2)", "opentelemetry-instrumentation-django (>=0.46b0,<1)", "opentelemetry-instrumentation-psycopg2 (>=0.46b0,<1)", "opentelemetry-instrumentation-redis (>=0.46b0,<1)", "opentelemetry-sdk (>=1.25,<2)", "prometheus-client (>=0.0.16)", "psycopg2-binary (>=2.9,<3)", "redis (>=5,<6)", "requests", "sentry-sdk (>=2.0.0,<3.0.0)", "simplejson (>=3,<4)", "structlog (>=24.4,<26)", "typing_extensions"]
+flagsmith-schemas = ["flagsmith-flag-engine (>6)", "simplejson", "typing_extensions"]
 task-processor = ["backoff (>=2.2.1,<3.0.0)", "django (>4,<6)", "django-health-check", "opentelemetry-api (>=1.25,<2)", "prometheus-client (>=0.0.16)"]
 test-tools = ["pyfakefs (>=5,<6)", "pytest-django (>=4,<5)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/Flagsmith/flagsmith-common.git"
+reference = "feat/docgen-templates-header-partial"
+resolved_reference = "4cee5266249e354441cfd052a831f5a7b31103ed"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -6022,4 +6026,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.14"
-content-hash = "08eec71a36c217755510b16c0583926730755121fbcdfd823af4bef23e195f65"
+content-hash = "3bb49789aefc37e6a3d0d4074d60010b107e0614a9231ade551d8966b221860b"
