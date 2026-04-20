@@ -1,8 +1,5 @@
-import { PropsWithChildren, useEffect, useState } from 'react'
-import {
-  useGetEnvironmentQuery,
-  useGetEnvironmentsQuery,
-} from 'common/services/useEnvironment'
+import { PropsWithChildren } from 'react'
+import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import { useRouteMatch } from 'react-router-dom'
 
 interface RouteParams {
@@ -48,51 +45,26 @@ const EnvironmentReadyChecker = ({
   const match = useRouteMatch<RouteParams>()
   const environmentId = match?.params?.environmentId
   const projectId = match?.params?.projectId
-  // `/environment/create` is the new-env form — the slot is a sentinel, not an ID.
+  // 'create' is the new-env form route sentinel, not an env ID.
   const hasEnvironmentId = !!environmentId && environmentId !== 'create'
-  const [pollingDone, setPollingDone] = useState(false)
-  const [trackedEnvId, setTrackedEnvId] = useState(environmentId)
 
-  // Reset during render when the URL env changes — keeps `skip` in sync with the
-  // new env on the very first render, avoiding a flash of stale children.
-  if (trackedEnvId !== environmentId) {
-    setTrackedEnvId(environmentId)
-    setPollingDone(false)
-  }
-
-  // Source of truth for "does this env belong to this project" — the backend
-  // returns a single env by api_key regardless of project scope, so we can't
-  // rely on a 4xx from the env endpoint alone.
-  const { data: environments, isSuccess: environmentsLoaded } =
-    useGetEnvironmentsQuery(
-      { projectId: Number(projectId) },
-      { skip: !projectId },
-    )
-  const envBelongsToProject = !!environments?.results?.some(
-    (env) => env.api_key === environmentId,
-  )
-  const environmentNotFound =
-    hasEnvironmentId && environmentsLoaded && !envBelongsToProject
-
-  const { data, isLoading } = useGetEnvironmentQuery(
+  const { data, isError } = useGetEnvironmentQuery(
     { id: environmentId || '' },
     {
-      pollingInterval: POLL_INTERVAL_MS,
-      skip: !hasEnvironmentId || pollingDone || environmentNotFound,
+      pollingInterval: data?.is_creating ? POLL_INTERVAL_MS : 0,
+      skip: !hasEnvironmentId,
     },
   )
 
-  // Stop polling once the env resolves (not creating).
-  useEffect(() => {
-    if (data && !data.is_creating) {
-      setPollingDone(true)
-    }
-  }, [data])
+  // Env-by-api_key endpoint isn't project-scoped — verify the match client-side.
+  const wrongProject =
+    !!data && !!projectId && data.project !== Number(projectId)
+  const environmentNotFound = hasEnvironmentId && (wrongProject || isError)
 
   if (!hasEnvironmentId) return children
   if (environmentNotFound) return <NotFoundState />
-  if (isLoading || !environmentsLoaded) return <LoadingState />
-  if (data?.is_creating) return <CreatingState />
+  if (!data) return <LoadingState />
+  if (data.is_creating) return <CreatingState />
   return children
 }
 
