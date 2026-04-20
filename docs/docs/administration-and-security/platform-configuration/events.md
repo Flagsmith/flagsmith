@@ -10,7 +10,7 @@ To learn how to configure this, see [OpenTelemetry](deployment-self-hosting/scal
 
 ## Event catalogue
 
-### `app_analytics.no-analytics-database-configured`
+### `app_analytics.no_analytics_database_configured`
 
 Logged at `warning` from:
  - `api/app_analytics/analytics_db_service.py:74`
@@ -38,7 +38,7 @@ Attributes:
  - `feature.count`
  - `organisation.id`
 
-### `dynamodb.environment-document-compressed`
+### `dynamodb.environment_document_compressed`
 
 Logged at `info` from:
  - `api/environments/dynamodb/wrappers/environment_wrapper.py:92`
@@ -47,7 +47,7 @@ Attributes:
  - `environment_api_key`
  - `environment_id`
 
-### `feature_health.feature-health-event-dismissal-not-supported`
+### `feature_health.feature_health_event_dismissal_not_supported`
 
 Logged at `warning` from:
  - `api/features/feature_health/services.py:127`
@@ -58,7 +58,7 @@ Attributes:
  - `feature_health_event_type`
  - `provider_name`
 
-### `feature_health.feature-health-provider-error`
+### `feature_health.feature_health_provider_error`
 
 Logged at `error` from:
  - `api/features/feature_health/services.py:50`
@@ -68,7 +68,7 @@ Attributes:
  - `provider_id`
  - `provider_name`
 
-### `feature_health.invalid-feature-health-webhook-path-requested`
+### `feature_health.invalid_feature_health_webhook_path_requested`
 
 Logged at `warning` from:
  - `api/features/feature_health/providers/services.py:30`
@@ -76,7 +76,7 @@ Logged at `warning` from:
 Attributes:
  - `path`
 
-### `gitlab.api-call-failed`
+### `gitlab.api_call_failed`
 
 Logged at `error` from:
  - `api/integrations/gitlab/views/browse_gitlab.py:58`
@@ -84,7 +84,7 @@ Logged at `error` from:
 Attributes:
  - `exc_info`
 
-### `gitlab.configuration-created`
+### `gitlab.configuration_created`
 
 Logged at `info` from:
  - `api/integrations/gitlab/views/configuration.py:26`
@@ -94,7 +94,7 @@ Attributes:
  - `organisation.id`
  - `project.id`
 
-### `gitlab.configuration-updated`
+### `gitlab.configuration_updated`
 
 Logged at `info` from:
  - `api/integrations/gitlab/views/configuration.py:34`
@@ -104,7 +104,7 @@ Attributes:
  - `organisation.id`
  - `project.id`
 
-### `gitlab.issues-fetched`
+### `gitlab.issues_fetched`
 
 Logged at `info` from:
  - `api/integrations/gitlab/views/browse_gitlab.py:133`
@@ -113,7 +113,7 @@ Attributes:
  - `gitlab_project_id`
  - `project.id`
 
-### `gitlab.merge-requests-fetched`
+### `gitlab.merge_requests_fetched`
 
 Logged at `info` from:
  - `api/integrations/gitlab/views/browse_gitlab.py:159`
@@ -122,7 +122,7 @@ Attributes:
  - `gitlab_project_id`
  - `project.id`
 
-### `gitlab.projects-fetched`
+### `gitlab.projects_fetched`
 
 Logged at `info` from:
  - `api/integrations/gitlab/views/browse_gitlab.py:108`
@@ -130,7 +130,7 @@ Logged at `info` from:
 Attributes:
  - `project.id`
 
-### `launch_darkly.import-failed`
+### `launch_darkly.import_failed`
 
 Logged at `exception` from:
  - `api/integrations/launch_darkly/tasks.py:36`
@@ -141,7 +141,7 @@ Attributes:
  - `organisation_id`
  - `project_id`
 
-### `launch_darkly.import-rate-limit-reached`
+### `launch_darkly.import_rate_limit_reached`
 
 Logged at `warning` from:
  - `api/integrations/launch_darkly/tasks.py:26`
@@ -154,7 +154,7 @@ Attributes:
  - `project_id`
  - `retry_at`
 
-### `platform_hub.no-analytics-database-configured`
+### `platform_hub.no_analytics_database_configured`
 
 Logged at `warning` from:
  - `api/platform_hub/services.py:116`
@@ -163,7 +163,7 @@ Logged at `warning` from:
 
 Attributes:
 
-### `segments.serializers.segment-revision-created`
+### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
  - `api/segments/serializers.py:141`
@@ -172,7 +172,7 @@ Attributes:
  - `revision_id`
  - `segment_id`
 
-### `sentry_change_tracking.integration-error`
+### `sentry_change_tracking.integration_error`
 
 Logged at `warning` from:
  - `api/integrations/sentry/change_tracking.py:112`
@@ -183,7 +183,7 @@ Attributes:
  - `sentry_response_body`
  - `sentry_response_status`
 
-### `sentry_change_tracking.request-failure`
+### `sentry_change_tracking.request_failure`
 
 Logged at `warning` from:
  - `api/integrations/sentry/change_tracking.py:102`
@@ -224,7 +224,7 @@ Attributes:
  - `feature_states.count`
  - `organisation.id`
 
-### `workflows.missing-live-segment`
+### `workflows.missing_live_segment`
 
 Logged at `warning` from:
  - `api/core/workflows_services.py:114`
@@ -232,7 +232,7 @@ Logged at `warning` from:
 Attributes:
  - `draft_segment`
 
-### `workflows.segment-revision-created`
+### `workflows.segment_revision_created`
 
 Logged at `info` from:
  - `api/core/workflows_services.py:119`
