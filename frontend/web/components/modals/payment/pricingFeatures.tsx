@@ -20,13 +20,13 @@ export const STARTUP_FEATURES: PricingFeature[] = [
     text: 'Unlimited projects',
   },
   {
-    text: 'Email technical support',
-  },
-  {
     text: 'Scheduled flags',
   },
   {
     text: 'Two-factor authentication (2FA)',
+  },
+  {
+    text: 'Email technical support',
   },
 ]
 
@@ -50,6 +50,9 @@ export const SCALE_UP_FEATURES: PricingFeature[] = [
     text: 'Additional seats at $60/seat (up to 20)',
   },
   {
+    text: 'SAML',
+  },
+  {
     text: 'User roles and permissions',
   },
   {
@@ -57,6 +60,9 @@ export const SCALE_UP_FEATURES: PricingFeature[] = [
   },
   {
     text: 'Audit logs',
+  },
+  {
+    text: 'Real-time technical support via chat and Priority Email support',
   },
 ]
 
