@@ -12,16 +12,12 @@ from organisations.subscriptions.permissions import require_minimum_plan
 
 @pytest.fixture
 def saas(mocker: MockerFixture) -> None:
-    mocker.patch(
-        "organisations.subscriptions.permissions.is_saas", return_value=True
-    )
+    mocker.patch("organisations.subscriptions.permissions.is_saas", return_value=True)
 
 
 @pytest.fixture
 def self_hosted(mocker: MockerFixture) -> None:
-    mocker.patch(
-        "organisations.subscriptions.permissions.is_saas", return_value=False
-    )
+    mocker.patch("organisations.subscriptions.permissions.is_saas", return_value=False)
 
 
 @pytest.mark.parametrize(
@@ -129,9 +125,7 @@ def test_require_minimum_plan__has_object_permission__no_organisation_attr__retu
 
     # When / Then
     assert (
-        permission.has_object_permission(
-            MagicMock(spec=Request), MagicMock(), object()
-        )
+        permission.has_object_permission(MagicMock(spec=Request), MagicMock(), object())
         is False
     )
 
