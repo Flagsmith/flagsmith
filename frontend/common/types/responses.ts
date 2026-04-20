@@ -321,8 +321,6 @@ export type GitLabMergeRequest = {
   draft: boolean
 }
 
-export type GitLabLinkType = 'issue' | 'merge_request'
-
 export type GithubPaginatedRepos<T> = {
   total_count: number
   repository_selection: string

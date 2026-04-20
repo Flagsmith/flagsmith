@@ -4,13 +4,13 @@ import { Req } from 'common/types/requests'
 import {
   Res,
   type GitLabIssue,
-  type GitLabLinkType,
   type GitLabMergeRequest,
 } from 'common/types/responses'
 import {
   useGetGitLabIssuesQuery,
   useGetGitLabMergeRequestsQuery,
 } from 'common/services/useGitlab'
+import type { GitLabLinkType } from './GitLabLinkSection'
 
 type GitLabSearchSelectProps = {
   projectId: number
@@ -30,7 +30,7 @@ const GitLabSearchSelect: FC<GitLabSearchSelectProps> = ({
   value,
 }) => {
   const useQuery =
-    linkType === 'issue'
+    linkType === 'GITLAB_ISSUE'
       ? useGetGitLabIssuesQuery
       : (useGetGitLabMergeRequestsQuery as typeof useGetGitLabIssuesQuery)
 
@@ -59,7 +59,9 @@ const GitLabSearchSelect: FC<GitLabSearchSelectProps> = ({
         value={value ? { label: `${value.title} #${value.iid}`, value } : null}
         size='select-md'
         placeholder={
-          linkType === 'issue' ? 'Search issues…' : 'Search merge requests…'
+          linkType === 'GITLAB_ISSUE'
+            ? 'Search issues…'
+            : 'Search merge requests…'
         }
         onChange={(v: { value: GitLabIssue | GitLabMergeRequest }) => {
           onChange(v.value)

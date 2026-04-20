@@ -1,16 +1,11 @@
 import React, { FC, useState } from 'react'
 import AppActions from 'common/dispatcher/app-actions'
-import Constants from 'common/constants'
 import ErrorMessage from './ErrorMessage'
 import GitLabProjectSelect from './GitLabProjectSelect'
 import GitLabSearchSelect from './GitLabSearchSelect'
 import { useCreateExternalResourceMutation } from 'common/services/useExternalResource'
 import { useGetGitLabProjectsQuery } from 'common/services/useGitlab'
-import type {
-  GitLabIssue,
-  GitLabLinkType,
-  GitLabMergeRequest,
-} from 'common/types/responses'
+import type { GitLabIssue, GitLabMergeRequest } from 'common/types/responses'
 
 type GitLabLinkSectionProps = {
   projectId: number
@@ -20,10 +15,12 @@ type GitLabLinkSectionProps = {
   linkedUrls: string[]
 }
 
-const linkTypeLabels: Record<GitLabLinkType, string> = {
-  issue: 'issue',
-  merge_request: 'merge request',
-}
+const gitlabLinkTypes = {
+  GITLAB_ISSUE: { label: 'Issue' },
+  GITLAB_MR: { label: 'Merge Request' },
+} as const
+
+export type GitLabLinkType = keyof typeof gitlabLinkTypes
 
 const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
   environmentId,
@@ -32,13 +29,9 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
   linkedUrls,
   projectId,
 }) => {
-  const gitlabTypes = Object.values(Constants.resourceTypes).filter(
-    (v) => v.type === 'GITLAB',
-  )
-
   const [createExternalResource] = useCreateExternalResourceMutation()
   const [gitlabProjectId, setGitlabProjectId] = useState<number | null>(null)
-  const [linkType, setLinkType] = useState<GitLabLinkType>('issue')
+  const [linkType, setLinkType] = useState<GitLabLinkType>('GITLAB_ISSUE')
   const [selectedItem, setSelectedItem] = useState<
     GitLabIssue | GitLabMergeRequest | null
   >(null)
@@ -57,13 +50,7 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
   const linkSelectedItem = async () => {
     if (!selectedItem) return
 
-    const type = Object.keys(Constants.resourceTypes).find(
-      (key: string) =>
-        Constants.resourceTypes[key as keyof typeof Constants.resourceTypes]
-          .resourceType === linkType,
-    )
-
-    const linkTypeLabel = linkTypeLabels[linkType]
+    const linkTypeLabel = gitlabLinkTypes[linkType].label.toLowerCase()
 
     try {
       await createExternalResource({
@@ -73,7 +60,7 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
             state: selectedItem.state,
             title: selectedItem.title,
           },
-          type: type || '',
+          type: linkType,
           url: selectedItem.web_url,
         },
         feature_id: featureId,
@@ -106,16 +93,17 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
             className='w-100 react-select'
             size='select-md'
             placeholder='Select type'
-            value={gitlabTypes.find((v) => v.resourceType === linkType)}
-            onChange={(v: { resourceType: GitLabLinkType }) => {
-              setLinkType(v.resourceType)
+            value={{
+              label: gitlabLinkTypes[linkType].label,
+              value: linkType,
+            }}
+            onChange={(v: { value: GitLabLinkType }) => {
+              setLinkType(v.value)
               setSelectedItem(null)
             }}
-            options={gitlabTypes.map((e) => ({
-              label: e.label,
-              resourceType: e.resourceType,
-              value: e.id,
-            }))}
+            options={Object.entries(gitlabLinkTypes).map(
+              ([key, { label }]) => ({ label, value: key }),
+            )}
           />
         </div>
       </div>
