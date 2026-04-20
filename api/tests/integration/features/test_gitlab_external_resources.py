@@ -3,13 +3,15 @@ from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from features.feature_external_resources.models import FeatureExternalResource
+from features.models import Feature
 from integrations.github.models import GithubConfiguration
 from integrations.gitlab.models import GitLabConfiguration
 from projects.models import Project
 
 
 @pytest.mark.django_db()
-def test_create_external_resource__gitlab_issue__returns_201_and_persists_metadata(
+def test_create_external_resource__gitlab_issue__returns_201(
     admin_client: APIClient,
     project: int,
     feature: int,
@@ -24,7 +26,7 @@ def test_create_external_resource__gitlab_issue__returns_201_and_persists_metada
         f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
         data={
             "type": "GITLAB_ISSUE",
-            "url": "https://gitlab.com/testorg/testrepo/-/issues/42",
+            "url": "https://gitlab.com/testorg/testrepo/-/work_items/42",
             "feature": feature,
             "metadata": metadata,
         },
@@ -35,15 +37,9 @@ def test_create_external_resource__gitlab_issue__returns_201_and_persists_metada
     assert response.status_code == status.HTTP_201_CREATED
     created = response.json()
     assert created["type"] == "GITLAB_ISSUE"
-    assert created["url"] == "https://gitlab.com/testorg/testrepo/-/issues/42"
+    assert created["url"] == "https://gitlab.com/testorg/testrepo/-/work_items/42"
     assert created["feature"] == feature
     assert created["metadata"] == metadata
-
-    listed = admin_client.get(
-        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
-    ).json()["results"]
-    assert len(listed) == 1
-    assert listed[0]["metadata"] == metadata
 
     assert log.events == [
         {
@@ -64,6 +60,7 @@ def test_create_external_resource__gitlab_merge_request__returns_201(
     log: StructuredLogCapture,
 ) -> None:
     # Given
+    metadata = {"title": "Add login button", "state": "opened"}
     organisation_id = Project.objects.get(id=project).organisation_id
 
     # When
@@ -73,6 +70,7 @@ def test_create_external_resource__gitlab_merge_request__returns_201(
             "type": "GITLAB_MR",
             "url": "https://gitlab.com/testorg/testrepo/-/merge_requests/7",
             "feature": feature,
+            "metadata": metadata,
         },
         format="json",
     )
@@ -84,6 +82,7 @@ def test_create_external_resource__gitlab_merge_request__returns_201(
     assert (
         response_json["url"] == "https://gitlab.com/testorg/testrepo/-/merge_requests/7"
     )
+    assert response_json["metadata"] == metadata
 
     assert log.events == [
         {
@@ -122,7 +121,7 @@ def test_create_external_resource__gitlab_issue_with_github_also_configured__ret
         f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
         data={
             "type": "GITLAB_ISSUE",
-            "url": "https://gitlab.com/testorg/testrepo/-/issues/99",
+            "url": "https://gitlab.com/testorg/testrepo/-/work_items/99",
             "feature": feature,
         },
         format="json",
@@ -141,3 +140,57 @@ def test_create_external_resource__gitlab_issue_with_github_also_configured__ret
             "feature__id": feature,
         },
     ]
+
+
+@pytest.mark.django_db()
+def test_list_external_resources__gitlab_issue__returns_200(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.com/testorg/testrepo/-/work_items/42",
+        type="GITLAB_ISSUE",
+        feature=Feature.objects.get(id=feature),
+        metadata='{"title": "Fix login bug", "state": "opened"}',
+    )
+
+    # When
+    response = admin_client.get(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    results = response.json()["results"]
+    assert len(results) == 1
+    assert results[0]["type"] == "GITLAB_ISSUE"
+    assert results[0]["metadata"] == {"title": "Fix login bug", "state": "opened"}
+
+
+@pytest.mark.django_db()
+def test_list_external_resources__gitlab_merge_request__returns_200(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.com/testorg/testrepo/-/merge_requests/7",
+        type="GITLAB_MR",
+        feature=Feature.objects.get(id=feature),
+        metadata='{"title": "Add login button", "state": "opened"}',
+    )
+
+    # When
+    response = admin_client.get(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    results = response.json()["results"]
+    assert len(results) == 1
+    assert results[0]["type"] == "GITLAB_MR"
+    assert results[0]["metadata"] == {"title": "Add login button", "state": "opened"}
