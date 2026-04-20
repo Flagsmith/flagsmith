@@ -1,5 +1,6 @@
 ---
 title: Monitoring
+sidebar_position: 10
 description: Setting up monitoring integrations like AppDynamics and StatsD.
 ---
 
@@ -90,7 +91,13 @@ For the full list of metrics, see the [Metrics reference](/deployment-self-hosti
 
 ## StatsD
 
-There is currently no specific documentation for setting up StatsD.
+Set `STATSD_HOST` to enable. Optional:
+
+- `STATSD_PORT` — defaults to `8125`.
+- `STATSD_PREFIX` — defaults to `flagsmith.api`.
+
+See the [Gunicorn instrumentation docs](https://gunicorn.org/instrumentation/) for the full list of
+metrics.
 
 ## Task Processor Monitoring
 

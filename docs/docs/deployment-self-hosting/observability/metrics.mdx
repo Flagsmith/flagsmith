@@ -1,7 +1,7 @@
 ---
 title: Metrics
 sidebar_label: Metrics
-sidebar_position: 20
+sidebar_position: 30
 ---
 
 import MetricsCatalogue from './_metrics-catalogue.md';
@@ -15,3 +15,8 @@ When enabled, Flagsmith serves the `/metrics` endpoint on port 9100.
 The metrics provided by Flagsmith are described below.
 
 <MetricsCatalogue />
+
+## StatsD
+
+Flagsmith's Gunicorn worker emits per-request access log metrics (request counts, durations, HTTP statuses) to StatsD
+when configured. See [StatsD](/deployment-self-hosting/observability/monitoring#statsd) for setup.
