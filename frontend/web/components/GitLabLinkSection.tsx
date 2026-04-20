@@ -62,8 +62,6 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
         metadata: {
           state: selectedItem.state,
           title: selectedItem.title,
-          ...('merged' in selectedItem && { merged: selectedItem.merged }),
-          ...('draft' in selectedItem && { draft: selectedItem.draft }),
         },
         type: type || '',
         url: selectedItem.web_url,

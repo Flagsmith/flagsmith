@@ -16,7 +16,7 @@ def test_create_external_resource__gitlab_issue__returns_201_and_persists_metada
     log: StructuredLogCapture,
 ) -> None:
     # Given
-    metadata = {"title": "Fix login bug", "state": "opened", "iid": 42}
+    metadata = {"title": "Fix login bug", "state": "opened"}
     organisation_id = Project.objects.get(id=project).organisation_id
 
     # When
