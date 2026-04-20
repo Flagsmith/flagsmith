@@ -15,13 +15,20 @@ import type {
 type GitLabLinkSectionProps = {
   projectId: number
   featureId: number
+  featureName: string
   environmentId: string
   linkedUrls: string[]
+}
+
+const linkTypeLabels: Record<GitLabLinkType, string> = {
+  issue: 'issue',
+  merge_request: 'merge request',
 }
 
 const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
   environmentId,
   featureId,
+  featureName,
   linkedUrls,
   projectId,
 }) => {
@@ -47,7 +54,7 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
   })
   const projects = projectsData?.results ?? []
 
-  const linkSelectedItem = () => {
+  const linkSelectedItem = async () => {
     if (!selectedItem) return
 
     const type = Object.keys(Constants.resourceTypes).find(
@@ -56,23 +63,28 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
           .resourceType === linkType,
     )
 
-    createExternalResource({
-      body: {
-        feature: featureId,
-        metadata: {
-          state: selectedItem.state,
-          title: selectedItem.title,
+    const linkTypeLabel = linkTypeLabels[linkType]
+
+    try {
+      await createExternalResource({
+        body: {
+          feature: featureId,
+          metadata: {
+            state: selectedItem.state,
+            title: selectedItem.title,
+          },
+          type: type || '',
+          url: selectedItem.web_url,
         },
-        type: type || '',
-        url: selectedItem.web_url,
-      },
-      feature_id: featureId,
-      project_id: projectId,
-    }).then(() => {
-      toast('GitLab link added')
+        feature_id: featureId,
+        project_id: projectId,
+      }).unwrap()
+      toast(`GitLab ${linkTypeLabel} linked to "${featureName}"`)
       setSelectedItem(null)
       AppActions.refreshFeatures(projectId, environmentId)
-    })
+    } catch (error) {
+      toast(`Could not link GitLab ${linkTypeLabel}.`, 'danger')
+    }
   }
 
   return (

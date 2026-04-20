@@ -717,6 +717,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         <GitLabLinkSection
                           projectId={projectId}
                           featureId={projectFlag.id}
+                          featureName={projectFlag.name}
                           environmentId={`${environment.id}`}
                           linkedUrls={linkedResources?.map((r) => r.url) ?? []}
                         />
