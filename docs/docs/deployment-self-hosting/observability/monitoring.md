@@ -86,7 +86,7 @@ If you need additional AppDynamics setup options, you can find the other environ
 
 To enable the Prometheus `/metrics` endpoint, set the `PROMETHEUS_ENABLED` environment variable to `true`.
 
-For the full list of metrics, see the [Metrics reference](/administration-and-security/platform-configuration/metrics).
+For the full list of metrics, see the [Metrics reference](/deployment-self-hosting/observability/metrics).
 
 ## StatsD
 
