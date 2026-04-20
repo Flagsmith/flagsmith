@@ -6,3 +6,6 @@
 /frontend/       @flagsmith/flagsmith-front-end
 /infrastructure/ @flagsmith/flagsmith-infrastructure
 /docs/           @flagsmith/flagsmith-docs
+
+# Specific rules based on file
+/docs/docs/deployment-self-hosting/observability/_events-catalogue.md @flagsmith/flagsmith-product
