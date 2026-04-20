@@ -1,12 +1,10 @@
 import re
-from typing import Any
 
 import structlog
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
-from rest_framework.request import Request
 from rest_framework.response import Response
 
 from features.models import Feature
@@ -74,29 +72,18 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
         return Response(data={"results": data})
 
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        if request.data.get("type") not in [
+            ResourceType.GITHUB_ISSUE,
+            ResourceType.GITHUB_PR,
+        ]:
+            return super().create(request, *args, **kwargs)
+
         feature = get_object_or_404(
             Feature.objects.filter(
                 id=self.kwargs["feature_pk"],
             ),
         )
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        resource_type = ResourceType(serializer.validated_data["type"])
-
-        if resource_type in (ResourceType.GITHUB_ISSUE, ResourceType.GITHUB_PR):
-            return self._create_github_link(request, feature, *args, **kwargs)
-        if resource_type == ResourceType.GITLAB_ISSUE:
-            return self._create_gitlab_issue_link(request, feature, *args, **kwargs)
-        if resource_type == ResourceType.GITLAB_MR:
-            return self._create_gitlab_merge_request_link(
-                request, feature, *args, **kwargs
-            )
-
-    def _create_github_link(  # type: ignore[no-untyped-def]
-        self, request, feature, *args, **kwargs
-    ) -> Response:
         github_configuration = (
             Organisation.objects.prefetch_related("github_config")
             .get(id=feature.project.organisation_id)
@@ -148,37 +135,21 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    def _create_gitlab_issue_link(
-        self,
-        request: Request,
-        feature: Feature,
-        *args: Any,
-        **kwargs: Any,
-    ) -> Response:
-        response = super().create(request, *args, **kwargs)
-        structlog.get_logger("gitlab").info(
-            "issue.linked",
-            organisation__id=feature.project.organisation_id,
-            project__id=feature.project_id,
-            feature__id=feature.id,
-        )
-        return response
+    def perform_create(self, serializer: FeatureExternalResourceSerializer) -> None:  # type: ignore[override]
+        resource = serializer.save()
 
-    def _create_gitlab_merge_request_link(
-        self,
-        request: Request,
-        feature: Feature,
-        *args: Any,
-        **kwargs: Any,
-    ) -> Response:
-        response = super().create(request, *args, **kwargs)
-        structlog.get_logger("gitlab").info(
-            "merge_request.linked",
-            organisation__id=feature.project.organisation_id,
-            project__id=feature.project_id,
-            feature__id=feature.id,
-        )
-        return response
+        log_event_names: dict[ResourceType, tuple[str, str]] = {
+            ResourceType.GITLAB_ISSUE: ("gitlab", "issue.linked"),
+            ResourceType.GITLAB_MR: ("gitlab", "merge_request.linked"),
+        }
+        if (resource_type := ResourceType(resource.type)) in log_event_names:
+            logger_name, event_name = log_event_names[resource_type]
+            structlog.get_logger(logger_name).info(
+                event_name,
+                organisation__id=resource.feature.project.organisation_id,
+                project__id=resource.feature.project_id,
+                feature__id=resource.feature.id,
+            )
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         external_resource_id = int(self.kwargs["pk"])
