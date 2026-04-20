@@ -33,10 +33,7 @@ def require_minimum_plan(minimum: SubscriptionPlanFamily) -> type[BasePermission
     min_rank = _PLAN_RANK[minimum]
 
     def _meets(org: Organisation) -> bool:
-        sub = getattr(org, "subscription", None)
-        if sub is None:
-            return False
-        return _PLAN_RANK.get(sub.subscription_plan_family, -1) >= min_rank
+        return _PLAN_RANK.get(org.subscription.subscription_plan_family, -1) >= min_rank
 
     class _MinimumPlanPermission(BasePermission):
         message = f"This resource requires a {minimum.value} plan or above."
