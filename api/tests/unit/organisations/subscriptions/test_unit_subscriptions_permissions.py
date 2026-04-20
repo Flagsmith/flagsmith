@@ -117,7 +117,7 @@ def test_require_minimum_plan__unknown_organisation_id__returns_false(
     assert permission.has_permission(request, MagicMock()) is False
 
 
-def test_require_minimum_plan__has_object_permission__obj_without_organisation__returns_false(
+def test_require_minimum_plan_has_object_permission__obj_without_organisation__returns_false(
     saas: None,
 ) -> None:
     # Given
