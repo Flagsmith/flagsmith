@@ -74,20 +74,6 @@
     }
   }
 
-  &__delete-banner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex: 1;
-  }
-
-  &__delete-actions {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
   &__table {
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-xl);
