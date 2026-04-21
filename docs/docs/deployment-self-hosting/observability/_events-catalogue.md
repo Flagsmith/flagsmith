@@ -78,7 +78,7 @@ Attributes:
 ### `gitlab.configuration.created`
 
 Logged at `info` from:
- - `api/integrations/gitlab/views/configuration.py:29`
+ - `api/integrations/gitlab/views/configuration.py:26`
 
 Attributes:
  - `gitlab_instance_url`
@@ -88,7 +88,7 @@ Attributes:
 ### `gitlab.configuration.updated`
 
 Logged at `info` from:
- - `api/integrations/gitlab/views/configuration.py:38`
+ - `api/integrations/gitlab/views/configuration.py:34`
 
 Attributes:
  - `gitlab_instance_url`
@@ -98,7 +98,7 @@ Attributes:
 ### `gitlab.feature.tagged`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services.py:210`
+ - `api/integrations/gitlab/services.py:229`
 
 Attributes:
  - `action`
@@ -111,7 +111,7 @@ Attributes:
 ### `gitlab.webhook.deregistered`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services.py:132`
+ - `api/integrations/gitlab/services.py:159`
 
 Attributes:
  - `gitlab.hook.id`
@@ -122,7 +122,7 @@ Attributes:
 ### `gitlab.webhook.deregistration_failed`
 
 Logged at `warning` from:
- - `api/integrations/gitlab/services.py:139`
+ - `api/integrations/gitlab/services.py:152`
 
 Attributes:
  - `exc_info`
@@ -134,7 +134,7 @@ Attributes:
 ### `gitlab.webhook.registered`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services.py:88`
+ - `api/integrations/gitlab/services.py:112`
 
 Attributes:
  - `gitlab.hook.id`
@@ -146,7 +146,7 @@ Attributes:
 ### `gitlab.webhook.registration_failed`
 
 Logged at `error` from:
- - `api/integrations/gitlab/services.py:73`
+ - `api/integrations/gitlab/services.py:97`
 
 Attributes:
  - `exc_info`
