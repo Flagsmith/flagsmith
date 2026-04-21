@@ -1,9 +1,10 @@
 import pytest
+import responses
 from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from integrations.gitlab.models import GitLabConfiguration
+from integrations.gitlab.models import GitLabConfiguration, GitLabWebhook
 from projects.models import Project
 
 
@@ -127,6 +128,145 @@ def test_delete_configuration__existing__soft_deletes(
             "organisation__id": project.organisation_id,
         },
     ]
+
+
+@responses.activate
+def test_delete_configuration__with_registered_webhooks__deregisters_each_and_clears_rows(
+    admin_client_new: APIClient,
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    GitLabWebhook.objects.create(
+        gitlab_configuration=gitlab_configuration,
+        gitlab_project_id=100,
+        gitlab_path_with_namespace="group-a/project-a",
+        gitlab_hook_id=11,
+        secret="secret-a",
+    )
+    GitLabWebhook.objects.create(
+        gitlab_configuration=gitlab_configuration,
+        gitlab_project_id=200,
+        gitlab_path_with_namespace="group-b/project-b",
+        gitlab_hook_id=22,
+        secret="secret-b",
+    )
+    responses.delete(
+        "https://gitlab.example.com/api/v4/projects/100/hooks/11",
+        status=204,
+    )
+    responses.delete(
+        "https://gitlab.example.com/api/v4/projects/200/hooks/22",
+        status=204,
+    )
+
+    # When
+    response = admin_client_new.delete(
+        f"/api/v1/projects/{project.id}/integrations/gitlab/{gitlab_configuration.id}/",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    called = {(c.request.method, c.request.url) for c in responses.calls}
+    assert (
+        "DELETE",
+        "https://gitlab.example.com/api/v4/projects/100/hooks/11",
+    ) in called
+    assert (
+        "DELETE",
+        "https://gitlab.example.com/api/v4/projects/200/hooks/22",
+    ) in called
+
+    deregister_events = [e for e in log.events if e["event"] == "webhook.deregistered"]
+    assert len(deregister_events) == 2
+    assert {e["gitlab__hook__id"] for e in deregister_events} == {11, 22}
+
+    # Rows are cleared so a new config can register the same project afresh.
+    assert not GitLabWebhook.objects.exists()
+
+
+@responses.activate
+def test_delete_configuration__gitlab_delete_fails_for_one__still_removes_config(
+    admin_client_new: APIClient,
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    GitLabWebhook.objects.create(
+        gitlab_configuration=gitlab_configuration,
+        gitlab_project_id=100,
+        gitlab_path_with_namespace="group-a/project-a",
+        gitlab_hook_id=11,
+        secret="secret-a",
+    )
+    GitLabWebhook.objects.create(
+        gitlab_configuration=gitlab_configuration,
+        gitlab_project_id=200,
+        gitlab_path_with_namespace="group-b/project-b",
+        gitlab_hook_id=22,
+        secret="secret-b",
+    )
+    responses.delete(
+        "https://gitlab.example.com/api/v4/projects/100/hooks/11",
+        status=500,
+    )
+    responses.delete(
+        "https://gitlab.example.com/api/v4/projects/200/hooks/22",
+        status=204,
+    )
+
+    # When
+    response = admin_client_new.delete(
+        f"/api/v1/projects/{project.id}/integrations/gitlab/{gitlab_configuration.id}/",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not GitLabConfiguration.objects.filter(project=project).exists()
+    # Second hook still deregistered; failure for the first was logged.
+    assert any(
+        e["event"] == "webhook.deregistered" and e["gitlab__hook__id"] == 22
+        for e in log.events
+    )
+    assert any(
+        e["event"] == "webhook.deregistration_failed" and e["gitlab__hook__id"] == 11
+        for e in log.events
+    )
+
+
+@responses.activate
+def test_delete_configuration__gitlab_hook_already_gone__treats_404_as_success(
+    admin_client_new: APIClient,
+    project: Project,
+    gitlab_configuration: GitLabConfiguration,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    GitLabWebhook.objects.create(
+        gitlab_configuration=gitlab_configuration,
+        gitlab_project_id=100,
+        gitlab_path_with_namespace="group-a/project-a",
+        gitlab_hook_id=11,
+        secret="secret-a",
+    )
+    responses.delete(
+        "https://gitlab.example.com/api/v4/projects/100/hooks/11",
+        status=404,
+    )
+
+    # When
+    response = admin_client_new.delete(
+        f"/api/v1/projects/{project.id}/integrations/gitlab/{gitlab_configuration.id}/",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert any(
+        e["event"] == "webhook.deregistered" and e["gitlab__hook__id"] == 11
+        for e in log.events
+    )
 
 
 def test_list_configurations__existing__masks_token(

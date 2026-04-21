@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 from typing import Any
+from urllib.parse import quote
 
 import requests
 
@@ -8,6 +9,7 @@ from integrations.gitlab.client.types import (
     GitLabMergeRequest,
     GitLabPage,
     GitLabProject,
+    GitLabProjectHook,
     T,
 )
 
@@ -147,3 +149,44 @@ def search_gitlab_merge_requests(
         for item in response.json()
     ]
     return _gitlab_page(results, response.headers)
+
+
+def create_project_hook(
+    instance_url: str,
+    access_token: str,
+    *,
+    project_path: str,
+    hook_url: str,
+    secret: str,
+) -> GitLabProjectHook:
+    encoded_path = quote(project_path, safe="")
+    response = requests.post(
+        f"{instance_url}/api/v4/projects/{encoded_path}/hooks",
+        headers={"PRIVATE-TOKEN": access_token},
+        json={
+            "url": hook_url,
+            "token": secret,
+            "issues_events": True,
+            "merge_requests_events": True,
+            "enable_ssl_verification": True,
+        },
+    )
+    response.raise_for_status()
+    payload = response.json()
+    return {"id": payload["id"], "project_id": payload["project_id"]}
+
+
+def delete_project_hook(
+    instance_url: str,
+    access_token: str,
+    *,
+    project_id: int,
+    hook_id: int,
+) -> None:
+    response = requests.delete(
+        f"{instance_url}/api/v4/projects/{project_id}/hooks/{hook_id}",
+        headers={"PRIVATE-TOKEN": access_token},
+    )
+    if response.status_code == 404:
+        return
+    response.raise_for_status()

@@ -59,6 +59,7 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
           metadata: {
             state: selectedItem.state,
             title: selectedItem.title,
+            ...('draft' in selectedItem ? { draft: selectedItem.draft } : {}),
           },
           type: linkType,
           url: selectedItem.web_url,

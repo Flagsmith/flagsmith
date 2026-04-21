@@ -14,9 +14,12 @@ from integrations.github.client import (
     label_github_issue_pr,
 )
 from integrations.github.models import GitHubRepository
+from integrations.gitlab.models import GitLabConfiguration
+from integrations.gitlab.services import parse_project_path
+from integrations.gitlab.tasks import register_gitlab_webhook
 from organisations.models import Organisation
 
-from .models import FeatureExternalResource, ResourceType
+from .models import GITLAB_RESOURCE_TYPES, FeatureExternalResource, ResourceType
 from .serializers import FeatureExternalResourceSerializer
 
 
@@ -72,10 +75,16 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
         return Response(data={"results": data})
 
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        if request.data.get("type") not in [
+        resource_type = request.data.get("type")
+
+        # GitLab side effects run in ``perform_create`` below.
+        if resource_type in GITLAB_RESOURCE_TYPES:
+            return super().create(request, *args, **kwargs)
+
+        if resource_type not in (
             ResourceType.GITHUB_ISSUE,
             ResourceType.GITHUB_PR,
-        ]:
+        ):
             return super().create(request, *args, **kwargs)
 
         feature = get_object_or_404(
@@ -137,12 +146,21 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
 
     def perform_create(self, serializer: FeatureExternalResourceSerializer) -> None:  # type: ignore[override]
         resource = serializer.save()
+        resource_type = ResourceType(resource.type)
+
+        if resource_type in GITLAB_RESOURCE_TYPES:
+            project_path = parse_project_path(resource.url)
+            config = GitLabConfiguration.objects.filter(
+                project=resource.feature.project,
+            ).first()
+            if config is not None and project_path is not None:
+                register_gitlab_webhook.delay(args=(config.id, project_path))
 
         log_event_names: dict[ResourceType, tuple[str, str]] = {
             ResourceType.GITLAB_ISSUE: ("gitlab", "issue.linked"),
             ResourceType.GITLAB_MR: ("gitlab", "merge_request.linked"),
         }
-        if (resource_type := ResourceType(resource.type)) in log_event_names:
+        if resource_type in log_event_names:
             logger_name, event_name = log_event_names[resource_type]
             structlog.get_logger(logger_name).info(
                 event_name,

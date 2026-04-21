@@ -5,6 +5,7 @@ import re
 from django.db import models
 from django.db.models import Q
 from django_lifecycle import (  # type: ignore[import-untyped]
+    AFTER_DELETE,
     AFTER_SAVE,
     BEFORE_DELETE,
     LifecycleModelMixin,
@@ -30,6 +31,12 @@ class ResourceType(models.TextChoices):
     # GitLab external resource types
     GITLAB_ISSUE = "GITLAB_ISSUE", "GitLab Issue"
     GITLAB_MR = "GITLAB_MR", "GitLab MR"
+
+
+GITLAB_RESOURCE_TYPES: tuple[ResourceType, ...] = (
+    ResourceType.GITLAB_ISSUE,
+    ResourceType.GITLAB_MR,
+)
 
 
 tag_by_type_and_state = {
@@ -134,6 +141,32 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
                 url=None,
                 feature_states=feature_states,
             )
+
+    @hook(AFTER_SAVE, when="type", is_now="GITLAB_ISSUE")  # type: ignore[misc]
+    @hook(AFTER_SAVE, when="type", is_now="GITLAB_MR")  # type: ignore[misc]
+    def apply_gitlab_tag(self) -> None:
+        from integrations.gitlab.services import apply_initial_tag
+
+        apply_initial_tag(self)
+
+    @hook(AFTER_DELETE, when="type", is_now="GITLAB_ISSUE")  # type: ignore[misc]
+    @hook(AFTER_DELETE, when="type", is_now="GITLAB_MR")  # type: ignore[misc]
+    def deregister_gitlab_webhook(self) -> None:
+        from integrations.gitlab.models import GitLabConfiguration
+        from integrations.gitlab.services import parse_project_path
+        from integrations.gitlab.tasks import (
+            deregister_gitlab_webhook as deregister_task,
+        )
+
+        project_path = parse_project_path(self.url)
+        if project_path is None:
+            return
+        config = GitLabConfiguration.objects.filter(
+            project=self.feature.project,
+        ).first()
+        if config is None:
+            return
+        deregister_task.delay(args=(config.id, project_path))
 
     @hook(BEFORE_DELETE, when="type", is_now="GITHUB_ISSUE")  # type: ignore[misc]
     @hook(BEFORE_DELETE, when="type", is_now="GITHUB_PR")  # type: ignore[misc]

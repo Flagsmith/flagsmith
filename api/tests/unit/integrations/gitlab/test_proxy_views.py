@@ -122,7 +122,7 @@ def test_gitlab_issue_list__valid_config__returns_issues(
             "event": "issues.fetched",
             "organisation__id": project.organisation_id,
             "project__id": project.id,
-            "gitlab_project__id": 42,
+            "gitlab__project__id": 42,
         },
     ]
 
@@ -185,7 +185,7 @@ def test_gitlab_merge_request_list__valid_config__returns_merge_requests(
             "event": "merge_requests.fetched",
             "organisation__id": project.organisation_id,
             "project__id": project.id,
-            "gitlab_project__id": 42,
+            "gitlab__project__id": 42,
         },
     ]
 
