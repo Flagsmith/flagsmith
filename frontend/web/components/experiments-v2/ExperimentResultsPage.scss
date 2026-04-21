@@ -140,6 +140,13 @@
     margin: 0;
   }
 
+  &__subsection-title {
+    margin: 16px 0 0 0;
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-default);
+  }
+
   // Config summary
   &__config {
     display: flex;
