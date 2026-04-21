@@ -50,10 +50,18 @@ Once deployed, you'll need to configure your Flagsmith instance:
 As your usage grows, you'll need to consider scaling and performance:
 
 - **[Sizing and Scaling](/deployment-self-hosting/scaling-and-performance/sizing-and-scaling)**: Understand resource requirements and scaling strategies
-- **[Monitoring](/deployment-self-hosting/scaling-and-performance/monitoring)**: Set up monitoring and alerting for your deployment
 - **[Asynchronous Task Processor](/deployment-self-hosting/scaling-and-performance/asynchronous-task-processor)**: Configure background task processing
 - **[Using InfluxDB for Analytics](/deployment-self-hosting/scaling-and-performance/using-influxdb-for-analytics)**: Set up analytics storage
 - **[Load Testing](/deployment-self-hosting/scaling-and-performance/load-testing)**: Test your deployment under load
+
+## Observability
+
+Monitor the health and behaviour of your deployment:
+
+- **[Monitoring](/deployment-self-hosting/observability/monitoring)**: Set up monitoring and alerting
+- **[Metrics](/deployment-self-hosting/observability/metrics)**: Prometheus metrics exported by the backend
+- **[Events](/deployment-self-hosting/observability/events)**: Structured events emitted by the backend
+- **[OpenTelemetry](/deployment-self-hosting/observability/opentelemetry)**: Export traces and logs via OTLP
 
 ## Administration and Maintenance
 

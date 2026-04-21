@@ -53,7 +53,7 @@ relevant section below for more details.
 - `PREVENT_SIGNUP`: Determines whether to prevent new signups.
 - `ENABLE_EMAIL_ACTIVATION`: New user registration will go via email activation flow, default False.
 - `OTEL_EXPORTER_OTLP_ENDPOINT`: Base OTLP/HTTP endpoint (e.g. `http://collector:4318`). If unset, OTel is disabled. See
-  [OpenTelemetry](/deployment-self-hosting/scaling-and-performance/opentelemetry).
+  [OpenTelemetry](/deployment-self-hosting/observability/opentelemetry).
 - `OTEL_SERVICE_NAME`: The `service.name` resource attribute attached to all OTel telemetry. Defaults to
   `flagsmith-api`.
 - `OTEL_TRACING_EXCLUDED_URL_PATHS`: Comma-separated URL paths to exclude from OTel tracing (e.g.

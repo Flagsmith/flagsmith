@@ -66,7 +66,23 @@
         },
         {
             "source": "/integrations/apm/appdynamics",
-            "destination": "https://docs.flagsmith.com/deployment-self-hosting/scaling-and-performance/monitoring#appdynamics"
+            "destination": "https://docs.flagsmith.com/deployment-self-hosting/observability/monitoring#appdynamics"
+        },
+        {
+            "source": "/administration-and-security/platform-configuration/metrics",
+            "destination": "/deployment-self-hosting/observability/metrics"
+        },
+        {
+            "source": "/administration-and-security/platform-configuration/events",
+            "destination": "/deployment-self-hosting/observability/events"
+        },
+        {
+            "source": "/deployment-self-hosting/scaling-and-performance/monitoring",
+            "destination": "/deployment-self-hosting/observability/monitoring"
+        },
+        {
+            "source": "/deployment-self-hosting/scaling-and-performance/opentelemetry",
+            "destination": "/deployment-self-hosting/observability/opentelemetry"
         },
         {
             "source": "/integrations/datadog/",
