@@ -1,8 +1,6 @@
 import React, { FC } from 'react'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
-import Tabs from 'components/navigation/TabMenu/Tabs'
-import TabItem from 'components/navigation/TabMenu/TabItem'
 import StatusBadge from './shared/StatusBadge'
 import ExperimentStatCard from './shared/ExperimentStatCard'
 import MetricsComparisonTable from './shared/MetricsComparisonTable'
@@ -96,14 +94,12 @@ const ExperimentResultsPage: FC = () => {
         <h2 className='experiment-results-page__section-title'>
           Metrics Comparison
         </h2>
-        <Tabs theme='pill' uncontrolled>
-          <TabItem tabLabel='Table'>
-            <MetricsComparisonTable metrics={result.metrics} />
-          </TabItem>
-          <TabItem tabLabel='Trend'>
-            <MetricsTrendChart trends={result.metricTrends} />
-          </TabItem>
-        </Tabs>
+        <MetricsComparisonTable metrics={result.metrics} />
+
+        <h3 className='experiment-results-page__subsection-title'>
+          Trend over time
+        </h3>
+        <MetricsTrendChart trends={result.metricTrends} />
       </div>
 
       {/* Experiment config summary */}
