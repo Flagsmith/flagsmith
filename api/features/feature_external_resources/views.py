@@ -145,23 +145,22 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
             )
 
     def perform_create(self, serializer: FeatureExternalResourceSerializer) -> None:  # type: ignore[override]
-        resource_type = serializer.validated_data.get("type")
+        resource = serializer.save()
+        resource_type = ResourceType(resource.type)
+
         if resource_type in GITLAB_RESOURCE_TYPES:
-            feature = serializer.validated_data["feature"]
-            project_path = parse_project_path(serializer.validated_data.get("url"))
+            project_path = parse_project_path(resource.url)
             config = GitLabConfiguration.objects.filter(
-                project=feature.project,
+                project=resource.feature.project,
             ).first()
             if config is not None and project_path is not None:
                 register_gitlab_webhook.delay(args=(config.id, project_path))
-
-        resource = serializer.save()
 
         log_event_names: dict[ResourceType, tuple[str, str]] = {
             ResourceType.GITLAB_ISSUE: ("gitlab", "issue.linked"),
             ResourceType.GITLAB_MR: ("gitlab", "merge_request.linked"),
         }
-        if (resource_type := ResourceType(resource.type)) in log_event_names:
+        if resource_type in log_event_names:
             logger_name, event_name = log_event_names[resource_type]
             structlog.get_logger(logger_name).info(
                 event_name,
