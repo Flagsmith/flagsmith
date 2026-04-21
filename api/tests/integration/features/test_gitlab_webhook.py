@@ -364,3 +364,31 @@ def test_gitlab_webhook__no_matching_feature__returns_200_and_no_tag_change(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert Feature.objects.get(id=feature).tags.count() == 0
+
+
+@pytest.mark.django_db()
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"object_kind": "issue"},  # missing object_attributes
+        {"object_kind": "push", "object_attributes": {"url": "x"}},  # unknown kind
+        {"object_kind": "issue", "object_attributes": {"state": "opened"}},  # no url
+    ],
+)
+def test_gitlab_webhook__payload_misses_required_field__returns_200_no_op(
+    api_client: APIClient,
+    feature: int,
+    webhook_url: str,
+    payload: dict[str, Any],
+) -> None:
+    # Given / When
+    response = api_client.post(
+        webhook_url,
+        data=payload,
+        format="json",
+        HTTP_X_GITLAB_TOKEN=WEBHOOK_SECRET,
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert Feature.objects.get(id=feature).tags.count() == 0

@@ -327,6 +327,36 @@ def test_create_external_resource__gitlab_api_failure__returns_503(
 
 
 @pytest.mark.django_db()
+def test_create_external_resource__unparseable_url__no_webhook_registered(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+    )
+
+    # When — URL doesn't match our GitLab issue/MR regex.
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": "https://gitlab.example.com/not-a-resource",
+            "feature": feature,
+        },
+        format="json",
+    )
+
+    # Then — link still succeeds, webhook registration silently skipped.
+    assert response.status_code == status.HTTP_201_CREATED
+    assert not GitLabWebhook.objects.exists()
+
+
+@pytest.mark.django_db()
 def test_list_external_resources__gitlab_issue__returns_200(
     admin_client: APIClient,
     project: int,
