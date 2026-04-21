@@ -98,7 +98,7 @@ Attributes:
 ### `gitlab.feature.tagged`
 
 Logged at `info` from:
- - `api/integrations/gitlab/services.py:229`
+ - `api/integrations/gitlab/services.py:241`
 
 Attributes:
  - `action`

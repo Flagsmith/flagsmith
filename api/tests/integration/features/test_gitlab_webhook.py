@@ -72,6 +72,51 @@ def link_feature(
 
 
 @pytest.mark.django_db()
+@pytest.mark.parametrize(
+    "linked_url, payload_url",
+    [
+        (
+            "https://gitlab.example.com/testorg/testrepo/-/issues/42",
+            "https://gitlab.example.com/testorg/testrepo/-/work_items/42",
+        ),
+        (
+            "https://gitlab.example.com/testorg/testrepo/-/work_items/42",
+            "https://gitlab.example.com/testorg/testrepo/-/issues/42",
+        ),
+    ],
+)
+def test_gitlab_webhook__issue_url_variants__still_matches_feature(
+    api_client: APIClient,
+    feature: int,
+    webhook_url: str,
+    link_feature: LinkFeatureFixture,
+    linked_url: str,
+    payload_url: str,
+) -> None:
+    # Given — GitLab may deliver ``work_items`` URLs even when the link uses the
+    # legacy ``issues`` path (or vice versa). Both shapes refer to the same issue.
+    link_feature(linked_url, ResourceType.GITLAB_ISSUE, metadata={"state": "opened"})
+    payload = {
+        "object_kind": "issue",
+        "object_attributes": {"url": payload_url, "state": "closed"},
+    }
+
+    # When
+    response = api_client.post(
+        webhook_url,
+        data=payload,
+        format="json",
+        HTTP_X_GITLAB_TOKEN=WEBHOOK_SECRET,
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    labels = set(Feature.objects.get(id=feature).tags.values_list("label", flat=True))
+    assert GitLabTagLabel.ISSUE_CLOSED.value in labels
+    assert GitLabTagLabel.ISSUE_OPEN.value not in labels
+
+
+@pytest.mark.django_db()
 def test_gitlab_webhook__issue_close_event__switches_tag_to_issue_closed(
     api_client: APIClient,
     feature: int,
