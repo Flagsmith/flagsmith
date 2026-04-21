@@ -190,10 +190,17 @@ const SegmentTrafficStep: FC<SegmentTrafficStepProps> = ({
   return (
     <div className='segment-traffic-step'>
       <div className='segment-traffic-step__env'>
-        <span className='segment-traffic-step__env-label'>Environment</span>
-        <span className='segment-traffic-step__env-value'>
-          {environmentName}
-        </span>
+        <div className='segment-traffic-step__env-item'>
+          <span className='segment-traffic-step__env-label'>Environment</span>
+          <span className='segment-traffic-step__env-value'>
+            {environmentName}
+          </span>
+        </div>
+        <span className='segment-traffic-step__env-divider' aria-hidden />
+        <div className='segment-traffic-step__env-item'>
+          <span className='segment-traffic-step__env-label'>Bucketed by</span>
+          <span className='segment-traffic-step__env-value'>identity</span>
+        </div>
       </div>
 
       <section className='segment-traffic-step__section'>
