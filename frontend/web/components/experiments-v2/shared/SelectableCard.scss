@@ -53,6 +53,23 @@
     color: var(--color-text-secondary);
   }
 
+  &__tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  &__tag {
+    font-size: var(--font-caption-xs-size);
+    font-weight: var(--font-weight-medium);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-emphasis);
+    color: var(--color-text-secondary);
+    font-family: var(--font-family);
+  }
+
   &__badge {
     font-size: var(--font-caption-xs-size);
     font-weight: var(--font-weight-semibold);

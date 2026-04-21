@@ -11,6 +11,8 @@ type SelectableCardProps = {
   title: string
   description: string
   badge?: { label: string; variant: BadgeVariant }
+  /** Small info tags rendered under the title (e.g. measurement type). */
+  tags?: string[]
 }
 
 const SelectableCard: FC<SelectableCardProps> = ({
@@ -19,6 +21,7 @@ const SelectableCard: FC<SelectableCardProps> = ({
   icon,
   onClick,
   selected,
+  tags,
   title,
 }) => {
   return (
@@ -33,6 +36,15 @@ const SelectableCard: FC<SelectableCardProps> = ({
         {icon && <Icon name={icon} width={20} />}
         <span className='selectable-card__title'>{title}</span>
         <span className='selectable-card__description'>{description}</span>
+        {tags && tags.length > 0 && (
+          <div className='selectable-card__tags'>
+            {tags.map((t) => (
+              <span key={t} className='selectable-card__tag'>
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       {badge && (
         <span
