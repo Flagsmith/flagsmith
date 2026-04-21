@@ -5,8 +5,17 @@ import {
   MeasurementType,
   Metric,
   MetricDirection,
+  MetricSource,
 } from 'components/experiments-v2/types'
 import './CreateMetricForm.scss'
+
+const WAREHOUSE_TABLES = [
+  'EVENTS',
+  'PAGE_VIEWS',
+  'SESSIONS',
+  'TRANSACTIONS',
+  'USERS',
+]
 
 type CreateMetricFormProps = {
   initialValues?: Metric
@@ -62,11 +71,42 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
   const [direction, setDirection] = useState<MetricDirection>(
     initialValues?.direction ?? 'higher-better',
   )
+  const [sourceTable, setSourceTable] = useState<string>(
+    initialValues?.source?.table ?? 'EVENTS',
+  )
+  const [sourceEventName, setSourceEventName] = useState<string>(
+    initialValues?.source?.eventName ?? '',
+  )
+  const [sourceValueColumn, setSourceValueColumn] = useState<string>(
+    initialValues?.source?.valueColumn ?? '',
+  )
+  const [sourceFilter, setSourceFilter] = useState<string>(
+    initialValues?.source?.filter ?? '',
+  )
 
   const canSubmit = name.trim().length > 0 && description.trim().length > 0
 
+  const buildSource = (): MetricSource | undefined => {
+    const table = sourceTable.trim()
+    if (!table) return undefined
+    const source: MetricSource = { table, warehouse: 'snowflake' }
+    const needsEventName =
+      measurementType === 'count' || measurementType === 'occurrence'
+    if (needsEventName && sourceEventName.trim()) {
+      source.eventName = sourceEventName.trim()
+    }
+    if (measurementType === 'value' && sourceValueColumn.trim()) {
+      source.valueColumn = sourceValueColumn.trim()
+    }
+    if (sourceFilter.trim()) {
+      source.filter = sourceFilter.trim()
+    }
+    return source
+  }
+
   const handleSubmit = () => {
     if (!canSubmit) return
+    const source = buildSource()
     if (initialValues) {
       onSubmit({
         ...initialValues,
@@ -75,6 +115,7 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
         lastUpdated: 'Just now',
         measurementType,
         name: name.trim(),
+        source,
       })
     } else {
       onSubmit({
@@ -85,6 +126,7 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
         measurementType,
         name: name.trim(),
         role: 'secondary',
+        source,
         usageCount: 0,
       })
     }
@@ -184,6 +226,111 @@ const CreateMetricForm: FC<CreateMetricFormProps> = ({
               {opt.label}
             </label>
           ))}
+        </div>
+      </div>
+
+      <div className='create-metric-form__field'>
+        <label className='create-metric-form__label'>Data Source</label>
+        <span className='create-metric-form__hint text-muted fs-small'>
+          Where this metric is collected from. Reads from your connected
+          warehouse.
+        </span>
+        <div className='create-metric-form__source'>
+          <div className='create-metric-form__source-row'>
+            <div className='create-metric-form__source-col'>
+              <label
+                className='create-metric-form__sublabel'
+                htmlFor='metric-source-warehouse'
+              >
+                Warehouse
+              </label>
+              <div
+                className='create-metric-form__source-pill'
+                id='metric-source-warehouse'
+              >
+                Snowflake &middot;{' '}
+                <span className='create-metric-form__source-pill-path'>
+                  FLAGSMITH_PROD.PUBLIC
+                </span>
+              </div>
+            </div>
+            <div className='create-metric-form__source-col'>
+              <label
+                className='create-metric-form__sublabel'
+                htmlFor='metric-source-table'
+              >
+                Table
+              </label>
+              <select
+                id='metric-source-table'
+                className='create-metric-form__source-select'
+                value={sourceTable}
+                onChange={(e) => setSourceTable(e.target.value)}
+              >
+                {WAREHOUSE_TABLES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {(measurementType === 'count' ||
+            measurementType === 'occurrence') && (
+            <div className='create-metric-form__source-col'>
+              <label
+                className='create-metric-form__sublabel'
+                htmlFor='metric-source-event'
+              >
+                Event name
+              </label>
+              <Input
+                id='metric-source-event'
+                value={sourceEventName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setSourceEventName(e.target.value)
+                }
+                placeholder='e.g. checkout_completed'
+              />
+            </div>
+          )}
+
+          {measurementType === 'value' && (
+            <div className='create-metric-form__source-col'>
+              <label
+                className='create-metric-form__sublabel'
+                htmlFor='metric-source-column'
+              >
+                Value column
+              </label>
+              <Input
+                id='metric-source-column'
+                value={sourceValueColumn}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setSourceValueColumn(e.target.value)
+                }
+                placeholder='e.g. amount_usd'
+              />
+            </div>
+          )}
+
+          <div className='create-metric-form__source-col'>
+            <label
+              className='create-metric-form__sublabel'
+              htmlFor='metric-source-filter'
+            >
+              Filter <span className='text-muted'>(optional)</span>
+            </label>
+            <Input
+              id='metric-source-filter'
+              value={sourceFilter}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setSourceFilter(e.target.value)
+              }
+              placeholder="e.g. status = 'complete'"
+            />
+          </div>
         </div>
       </div>
 
