@@ -80,7 +80,9 @@ def test_require_minimum_plan__organisation_lookup__reads_from_data_and_query_pa
 
 
 @pytest.mark.saas_mode
-def test_require_minimum_plan__no_organisation_in_request__defers_to_object_level() -> None:
+def test_require_minimum_plan__no_organisation_in_request__defers_to_object_level() -> (
+    None
+):
     # Given
     permission = require_minimum_plan(SubscriptionPlanFamily.SCALE_UP)()
     request = MagicMock(spec=Request)
@@ -106,7 +108,9 @@ def test_require_minimum_plan__unknown_organisation_id__returns_false(
 
 
 @pytest.mark.saas_mode
-def test_require_minimum_plan_has_object_permission__obj_without_organisation__returns_false() -> None:
+def test_require_minimum_plan_has_object_permission__obj_without_organisation__returns_false() -> (
+    None
+):
     # Given
     permission = require_minimum_plan(SubscriptionPlanFamily.SCALE_UP)()
 
