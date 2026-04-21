@@ -76,20 +76,8 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         resource_type = request.data.get("type")
 
-        feature = get_object_or_404(
-            Feature.objects.filter(
-                id=self.kwargs["feature_pk"],
-            ),
-        )
-
+        # GitLab side effects run in ``perform_create`` below.
         if resource_type in GITLAB_RESOURCE_TYPES:
-            if config := GitLabConfiguration.objects.filter(
-                project=feature.project,
-            ).first():
-                register_webhook_for_resource(
-                    config=config,
-                    resource_url=request.data.get("url"),
-                )
             return super().create(request, *args, **kwargs)
 
         if resource_type not in (
@@ -97,6 +85,12 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
             ResourceType.GITHUB_PR,
         ):
             return super().create(request, *args, **kwargs)
+
+        feature = get_object_or_404(
+            Feature.objects.filter(
+                id=self.kwargs["feature_pk"],
+            ),
+        )
 
         github_configuration = (
             Organisation.objects.prefetch_related("github_config")
@@ -150,6 +144,17 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
             )
 
     def perform_create(self, serializer: FeatureExternalResourceSerializer) -> None:  # type: ignore[override]
+        resource_type = serializer.validated_data.get("type")
+        if resource_type in GITLAB_RESOURCE_TYPES:
+            feature = serializer.validated_data["feature"]
+            if config := GitLabConfiguration.objects.filter(
+                project=feature.project,
+            ).first():
+                register_webhook_for_resource(
+                    config=config,
+                    resource_url=serializer.validated_data.get("url"),
+                )
+
         resource = serializer.save()
 
         log_event_names: dict[ResourceType, tuple[str, str]] = {
