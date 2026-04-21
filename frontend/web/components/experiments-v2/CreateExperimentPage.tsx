@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from 'react'
+import React, { FC, useCallback, useMemo, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import WizardLayout from './wizard/WizardLayout'
 import WizardSidebar from './wizard/WizardSidebar'
@@ -7,19 +7,29 @@ import WizardNavButtons from './wizard/WizardNavButtons'
 import ExperimentDetailsStep from './steps/ExperimentDetailsStep'
 import SelectMetricsStep from './steps/SelectMetricsStep'
 import FlagVariationsStep from './steps/FlagVariationsStep'
-import AudienceTrafficStep from './steps/AudienceTrafficStep'
+import SegmentTrafficStep from './steps/SegmentTrafficStep'
 import ReviewLaunchStep from './steps/ReviewLaunchStep'
+import { buildExperimentArms, splitEvenly } from './steps/SegmentTrafficStep'
 import {
   EXPERIMENT_WIZARD_STEPS,
   ExperimentWizardState,
   Metric,
+  MIN_VARIATIONS_FOR_EXPERIMENT,
+  MOCK_FLAGS,
   MOCK_METRICS,
   MOCK_VARIATIONS,
+  Variation,
 } from './types'
 import './CreateExperimentPage.scss'
 
+const INITIAL_FLAG = MOCK_FLAGS[0]
+const INITIAL_ARMS = buildExperimentArms(
+  INITIAL_FLAG.controlValue,
+  INITIAL_FLAG.variations,
+)
+
 const INITIAL_STATE: ExperimentWizardState = {
-  audience: { segmentId: 'seg-1', splits: [], trafficPercentage: 50 },
+  controlValue: INITIAL_FLAG.controlValue,
   currentStep: 0,
   details: {
     endDate: '2026-05-15',
@@ -28,12 +38,16 @@ const INITIAL_STATE: ExperimentWizardState = {
     name: 'Checkout Button Redesign',
     startDate: '2026-04-15',
   },
-  featureFlagId: 'flag-1',
+  featureFlagId: INITIAL_FLAG.value,
   metrics: [
     MOCK_METRICS[0],
     { ...MOCK_METRICS[1], role: 'secondary' },
     { ...MOCK_METRICS[2], role: 'secondary' },
   ],
+  segmentTraffic: {
+    segmentId: 'seg-3',
+    weights: splitEvenly(INITIAL_ARMS.map((a) => a.id)),
+  },
   variations: MOCK_VARIATIONS,
 }
 
@@ -78,17 +92,51 @@ const CreateExperimentPage: FC = () => {
     })
   }, [])
 
+  const isCurrentStepValid = useMemo(() => {
+    if (state.currentStep === 0) {
+      return (
+        state.details.name.trim().length > 0 &&
+        state.details.hypothesis.trim().length > 0
+      )
+    }
+    if (state.currentStep === 1) {
+      return (
+        !!state.featureFlagId &&
+        state.variations.length >= MIN_VARIATIONS_FOR_EXPERIMENT
+      )
+    }
+    if (state.currentStep === 3) {
+      if (!state.segmentTraffic.segmentId) return false
+      const sum = (state.segmentTraffic.weights ?? []).reduce(
+        (s, w) => s + w.weight,
+        0,
+      )
+      return sum === 100
+    }
+    return true
+  }, [
+    state.currentStep,
+    state.details.name,
+    state.details.hypothesis,
+    state.featureFlagId,
+    state.variations.length,
+    state.segmentTraffic.segmentId,
+    state.segmentTraffic.weights,
+  ])
+
   const stepsWithSummary = EXPERIMENT_WIZARD_STEPS.map((step, i) => {
     if (i >= state.currentStep) return step
 
     let completeSummary: string | undefined
     switch (i) {
       case 0:
-        completeSummary = `${state.variations.length} variations`
-        break
-      case 1:
         completeSummary = state.details.name || undefined
         break
+      case 1: {
+        const armCount = state.variations.length + 1
+        completeSummary = `${armCount} arm${armCount === 1 ? '' : 's'}`
+        break
+      }
       case 2:
         completeSummary = `${
           state.metrics.filter((m) => m.role === 'primary').length
@@ -96,9 +144,13 @@ const CreateExperimentPage: FC = () => {
           state.metrics.filter((m) => m.role === 'secondary').length
         } secondary`
         break
-      case 3:
-        completeSummary = `${state.audience.trafficPercentage}% traffic`
+      case 3: {
+        const parts = (state.segmentTraffic.weights ?? [])
+          .filter((w) => w.weight > 0)
+          .map((w) => `${w.weight}%`)
+        completeSummary = parts.length > 0 ? parts.join(' / ') : undefined
         break
+      }
       default:
         break
     }
@@ -109,22 +161,36 @@ const CreateExperimentPage: FC = () => {
     switch (state.currentStep) {
       case 0:
         return (
-          <FlagVariationsStep
-            featureFlagId={state.featureFlagId}
-            variations={state.variations}
-            onFlagChange={(flagId) =>
-              setState((prev) => ({ ...prev, featureFlagId: flagId }))
-            }
-            onVariationsChange={(variations) =>
-              setState((prev) => ({ ...prev, variations }))
-            }
+          <ExperimentDetailsStep
+            details={state.details}
+            onChange={(details) => setState((prev) => ({ ...prev, details }))}
           />
         )
       case 1:
         return (
-          <ExperimentDetailsStep
-            details={state.details}
-            onChange={(details) => setState((prev) => ({ ...prev, details }))}
+          <FlagVariationsStep
+            featureFlagId={state.featureFlagId}
+            controlValue={state.controlValue}
+            variations={state.variations}
+            onFlagChange={(flagId) =>
+              setState((prev) => ({ ...prev, featureFlagId: flagId }))
+            }
+            onControlValueChange={(controlValue) =>
+              setState((prev) => ({ ...prev, controlValue }))
+            }
+            onVariationsChange={(variations: Variation[]) =>
+              setState((prev) => {
+                const arms = buildExperimentArms(prev.controlValue, variations)
+                return {
+                  ...prev,
+                  segmentTraffic: {
+                    ...prev.segmentTraffic,
+                    weights: splitEvenly(arms.map((a) => a.id)),
+                  },
+                  variations,
+                }
+              })
+            }
           />
         )
       case 2:
@@ -134,13 +200,22 @@ const CreateExperimentPage: FC = () => {
             onToggleMetric={handleToggleMetric}
           />
         )
-      case 3:
+      case 3: {
+        const flag =
+          MOCK_FLAGS.find((f) => f.value === state.featureFlagId) ?? null
         return (
-          <AudienceTrafficStep
-            audience={state.audience}
-            onChange={(audience) => setState((prev) => ({ ...prev, audience }))}
+          <SegmentTrafficStep
+            segmentTraffic={state.segmentTraffic}
+            flag={flag}
+            controlValue={state.controlValue}
+            variations={state.variations}
+            environmentName='Development'
+            onChange={(segmentTraffic) =>
+              setState((prev) => ({ ...prev, segmentTraffic }))
+            }
           />
         )
+      }
       case 4:
         return <ReviewLaunchStep wizardState={state} onEditStep={goToStep} />
       default:
@@ -174,6 +249,7 @@ const CreateExperimentPage: FC = () => {
           isLastStep={state.currentStep === TOTAL_STEPS - 1}
           onBack={handleBack}
           onContinue={handleContinue}
+          continueDisabled={!isCurrentStepValid}
         />
       </WizardLayout>
     </div>

@@ -14,20 +14,4 @@
     font-weight: var(--font-weight-medium);
     color: var(--color-text-default);
   }
-
-  &__add-form {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 16px;
-    background: var(--color-surface-action-subtle);
-    border: 1px solid var(--color-border-action);
-    border-radius: var(--radius-lg);
-  }
-
-  &__add-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-  }
 }

@@ -1,9 +1,12 @@
 import React, { FC } from 'react'
 import Button from 'components/base/forms/Button'
 import {
+  CONTROL_ARM_ID,
+  CONTROL_COLOUR,
   ExperimentWizardState,
   MOCK_FLAGS,
   MOCK_SEGMENTS,
+  Variation,
 } from 'components/experiments-v2/types'
 import './ReviewLaunchStep.scss'
 
@@ -19,12 +22,20 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
   const flagLabel =
     MOCK_FLAGS.find((f) => f.value === wizardState.featureFlagId)?.label ?? '—'
   const segmentLabel =
-    MOCK_SEGMENTS.find((s) => s.value === wizardState.audience.segmentId)
-      ?.label ?? 'All Users'
-  const splitPerVariation = Math.round(
-    wizardState.audience.trafficPercentage /
-      Math.max(wizardState.variations.length, 1),
-  )
+    MOCK_SEGMENTS.find((s) => s.value === wizardState.segmentTraffic.segmentId)
+      ?.label ?? '—'
+
+  const controlArm: Variation = {
+    colour: CONTROL_COLOUR,
+    description: "Flag's base value — the baseline for comparison",
+    id: CONTROL_ARM_ID,
+    name: 'Control',
+    value: wizardState.controlValue,
+  }
+  const arms: Variation[] = [controlArm, ...wizardState.variations]
+  const weightFor = (armId: string) =>
+    wizardState.segmentTraffic.weights.find((w) => w.armId === armId)?.weight ??
+    0
 
   return (
     <div className='review-launch-step'>
@@ -45,7 +56,7 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
           </span>
         </div>
         <div className='review-launch-step__variations'>
-          {wizardState.variations.map((v) => (
+          {arms.map((v) => (
             <div key={v.id} className='review-launch-step__variation'>
               <span
                 className='review-launch-step__variation-dot'
@@ -144,33 +155,31 @@ const ReviewLaunchStep: FC<ReviewLaunchStepProps> = ({
           <span className='review-launch-step__label'>Segment</span>
           <span className='review-launch-step__value'>{segmentLabel}</span>
         </div>
-        <div className='review-launch-step__row'>
-          <span className='review-launch-step__label'>Total Traffic</span>
-          <span className='review-launch-step__value'>
-            {wizardState.audience.trafficPercentage}%
-          </span>
-        </div>
         <div className='review-launch-step__traffic-split'>
           <div className='review-launch-step__traffic-bar'>
-            {wizardState.variations.map((v) => (
-              <div
-                key={v.id}
-                className='review-launch-step__traffic-segment'
-                style={{
-                  background: v.colour,
-                  width: `${splitPerVariation}%`,
-                }}
-              />
-            ))}
+            {arms.map((v) => {
+              const w = weightFor(v.id)
+              if (w === 0) return null
+              return (
+                <div
+                  key={v.id}
+                  className='review-launch-step__traffic-segment'
+                  style={{
+                    background: v.colour,
+                    width: `${w}%`,
+                  }}
+                />
+              )
+            })}
           </div>
           <div className='review-launch-step__traffic-labels'>
-            {wizardState.variations.map((v) => (
+            {arms.map((v) => (
               <span key={v.id} className='review-launch-step__traffic-label'>
                 <span
                   className='review-launch-step__traffic-label-dot'
                   style={{ background: v.colour }}
                 />
-                {v.name}: {splitPerVariation}%
+                {v.name}: {weightFor(v.id)}%
               </span>
             ))}
           </div>
