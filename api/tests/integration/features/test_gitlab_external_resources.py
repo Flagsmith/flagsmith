@@ -143,7 +143,7 @@ def test_create_external_resource__gitlab_issue_with_github_also_configured__ret
 
 
 @responses.activate
-def test_create_external_resource__gitlab_issue_with_config__registers_webhook_and_tags_feature(
+def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feature(
     admin_client: APIClient,
     organisation: int,
     project: int,
@@ -224,6 +224,57 @@ def test_create_external_resource__gitlab_issue_with_config__registers_webhook_a
             "feature__id": feature,
         },
     ]
+
+
+@responses.activate
+def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature(
+    admin_client: APIClient,
+    organisation: int,
+    project: int,
+    feature: int,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/hooks",
+        json={"id": 77, "project_id": 777},
+        status=201,
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_MR",
+            "url": "https://gitlab.example.com/testorg/testrepo/-/merge_requests/7",
+            "feature": feature,
+            "metadata": {
+                "title": "Add login button",
+                "state": "opened",
+                "draft": False,
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert GitLabWebhook.objects.filter(
+        gitlab_configuration__project=project_instance,
+        gitlab_path_with_namespace="testorg/testrepo",
+    ).exists()
+    assert list(Feature.objects.get(id=feature).tags.values_list("label", "type")) == [
+        ("MR Open", TagType.GITLAB.value)
+    ]
+    assert any(e["event"] == "webhook.registered" for e in log.events) and any(
+        e["event"] == "merge_request.linked" for e in log.events
+    )
 
 
 @responses.activate
