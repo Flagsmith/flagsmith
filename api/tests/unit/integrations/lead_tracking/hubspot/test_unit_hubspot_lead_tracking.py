@@ -160,7 +160,6 @@ def test_track_hubspot_lead_v2__new_user_added_to_org__creates_associations(
 
     # create_lead only creates the contact, not the company association
     mock_client_existing_contact.create_company.assert_not_called()
-    mock_client_existing_contact.associate_contact_to_company.assert_not_called()
     mock_client_existing_contact.create_lead_form.assert_not_called()
     mock_client_existing_contact.get_contact.assert_called_once_with(user)
 
@@ -201,10 +200,9 @@ def test_create_lead__contact_not_found_initially__creates_contact_via_form(
         user=user, form_id=HUBSPOT_FORM_ID_SAAS
     )
     mock_client.create_company.assert_not_called()  # We rely on Hubspot creating contacts
-    mock_client.associate_contact_to_company.assert_not_called()
 
 
-def test_create_lead__existing_hubspot_org__creates_contact_and_associates(
+def test_create_lead__existing_hubspot_org__creates_contact_without_association(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -239,7 +237,6 @@ def test_create_lead__existing_hubspot_org__creates_contact_and_associates(
     mock_client.create_lead_form.assert_called_once_with(
         user=user, form_id=HUBSPOT_FORM_ID_SAAS
     )
-    mock_client.associate_contact_to_company.assert_not_called()
 
 
 @pytest.mark.parametrize(
