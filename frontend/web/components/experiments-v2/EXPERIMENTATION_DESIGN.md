@@ -144,6 +144,95 @@ When a user picks more than one primary metric, we surface a warning about
 the multiple-comparisons problem without blocking. Best practice is one
 primary; the warning explains why and invites the user to demote the rest.
 
+## Data collection — how metrics get measured
+
+The prototype mocks all metric values, but the architecture question is the
+one the demo audience will ask first. Three production-ready approaches,
+and what Flagsmith is set up to do.
+
+### Option A — SDK-based event ingestion (what LaunchDarkly does)
+
+Customer calls `flagsmith.track('checkout_completed', { value: 49.99,
+identity: userId })` from their app. Flagsmith SDKs ship events to a
+collection endpoint. Flagsmith's backend joins each event with the flag
+evaluation the user saw (attribution), aggregates per arm, surfaces the
+roll-up on the results page.
+
+- **Pros**: simplest onboarding for customers — no external tooling needed.
+- **Cons**: biggest backend lift — we'd need an event ingestion service,
+  time-series storage, attribution pipeline, and aggregation. Doable on top
+  of the existing Edge/Task Processor infrastructure.
+
+### Option B — Warehouse-native (what this prototype shows)
+
+Events already live in the customer's data warehouse (Snowflake, BigQuery,
+Databricks). Customer defines a metric by pointing Flagsmith at a warehouse
+table + event name (or value column) + optional filter. Flagsmith pushes
+flag-evaluation records into the same warehouse and runs aggregation
+queries to compute per-arm results.
+
+This is the path shown in the current mocks:
+- `web/components/warehouse/WarehousePage.tsx` — connection config
+  (Snowflake live; BigQuery/Databricks marked "Coming Soon")
+- `ConnectionStats` mock shows `flagEvaluations24h: 1.28M` +
+  `customEvents24h: 84K` flowing into the connected warehouse
+- Metric Library's `CreateMetricForm` includes a **Data Source** section
+  mapping each metric to `{warehouse, table, eventName | valueColumn,
+  filter}`
+- Each mock metric in `MOCK_METRICS` carries a `source` that renders
+  inline in the library (e.g. *"EVENTS · checkout_completed"*)
+
+**Pros**: cheapest for Flagsmith to build — the customer's warehouse does
+the heavy aggregation. Customer owns their data.
+
+**Cons**: requires the customer to have a warehouse. Not viable for
+smaller customers running SaaS without a data pipeline.
+
+**Competitors that ship this model**: Eppo (primary), GrowthBook
+Enterprise, Statsig (warehouse mode).
+
+### Option C — Analytics tool integration
+
+Metric definition lives in the customer's existing analytics tool (Segment,
+Amplitude, Mixpanel, Heap, Google Analytics). Flagsmith pulls aggregates
+via those tools' APIs and attributes by variation.
+
+- **Pros**: leverages what customers already use; fastest to value for
+  teams that have analytics but not a warehouse.
+- **Cons**: every tool's API is different; rate limits, latency, and
+  attribution edge cases multiply per integration.
+
+### What the prototype demonstrates
+
+This build-out shows **Option B (warehouse-native)** end-to-end as mock UI:
+
+1. `Data Warehouse` page under the organisation nav — confirm the
+   connection is live, see stats on event throughput
+2. `Metrics` library — each metric shows its source mapping
+   (`EVENTS · checkout_completed`, `TRANSACTIONS · amount_usd WHERE
+   status = 'complete'`, etc.)
+3. Create / Edit Metric — a **Data Source** section maps the metric to the
+   warehouse table + event/column + optional filter
+4. Experiment Results — per-arm numbers that (in production) would come
+   from aggregation queries against the warehouse
+
+### Recommended sequencing
+
+If this were going from prototype to production:
+
+1. **First**: ship warehouse-native (Option B) — lowest infra risk, serves
+   the experimentation-mature segment. The mocks in this repo are a
+   working starting point.
+2. **Then**: add SDK `track()` (Option A) so customers without a warehouse
+   can still run experiments. Reuses the existing SDK analytics pipeline.
+3. **Later**: selective analytics integrations (Option C) — Segment first
+   because it's the universal fanout layer for the others.
+
+Captured separately in `NOTES.md`: the **sample-size calculator** and
+**guardrail semantic-flip** both depend on the collection pipeline above
+being real — they're the reason this section exists as design intent, not
+just a demo touch.
+
 ## Traffic split mechanics
 
 Weights are edited via number inputs (0–100 each). When a user changes one
