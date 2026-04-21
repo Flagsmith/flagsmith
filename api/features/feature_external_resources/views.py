@@ -15,7 +15,8 @@ from integrations.github.client import (
 )
 from integrations.github.models import GitHubRepository
 from integrations.gitlab.models import GitLabConfiguration
-from integrations.gitlab.services import register_webhook_for_resource
+from integrations.gitlab.services import parse_project_path
+from integrations.gitlab.tasks import register_gitlab_webhook
 from organisations.models import Organisation
 
 from .models import GITLAB_RESOURCE_TYPES, FeatureExternalResource, ResourceType
@@ -147,13 +148,12 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
         resource_type = serializer.validated_data.get("type")
         if resource_type in GITLAB_RESOURCE_TYPES:
             feature = serializer.validated_data["feature"]
-            if config := GitLabConfiguration.objects.filter(
+            project_path = parse_project_path(serializer.validated_data.get("url"))
+            config = GitLabConfiguration.objects.filter(
                 project=feature.project,
-            ).first():
-                register_webhook_for_resource(
-                    config=config,
-                    resource_url=serializer.validated_data.get("url"),
-                )
+            ).first()
+            if config is not None and project_path is not None:
+                register_gitlab_webhook.delay(args=(config.id, project_path))
 
         resource = serializer.save()
 

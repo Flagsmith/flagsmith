@@ -24,7 +24,6 @@ from integrations.gitlab.constants import (
     GITLAB_TAG_KIND_BY_LABEL,
     GitLabTagLabel,
 )
-from integrations.gitlab.exceptions import GitLabApiUnreachable
 from integrations.gitlab.mappers import (
     map_gitlab_resource_to_tag_label,
     map_gitlab_webhook_payload_to_tag_label,
@@ -40,9 +39,33 @@ _RESOURCE_PATH_PATTERN = re.compile(
 )
 
 
+def parse_project_path(resource_url: str | None) -> str | None:
+    """Return the GitLab project's URL-encodable path (``group/subgroup/project``)
+    from an issue or MR URL, or ``None`` if the URL isn't in the expected shape.
+    """
+    if not resource_url:
+        return None
+    match = _RESOURCE_PATH_PATTERN.match(urlparse(resource_url).path)
+    return match.group("path") if match else None
+
+
 def _get_webhook_url(webhook_uuid: uuid.UUID) -> str:
     path = reverse("api-v1:gitlab-webhook", kwargs={"webhook_uuid": str(webhook_uuid)})
     return f"{get_current_site_url()}{path}"
+
+
+def has_live_resource_for_path(
+    config: GitLabConfiguration,
+    project_path: str,
+) -> bool:
+    """True if at least one live ``FeatureExternalResource`` under the config's
+    project still references the given GitLab project path.
+    """
+    urls = FeatureExternalResource.objects.filter(
+        feature__project=config.project,
+        type__in=GITLAB_RESOURCE_TYPES,
+    ).values_list("url", flat=True)
+    return any(parse_project_path(url) == project_path for url in urls)
 
 
 def ensure_webhook_registered(
@@ -95,55 +118,50 @@ def ensure_webhook_registered(
     return webhook
 
 
-def register_webhook_for_resource(
+def deregister_webhook_for_path(
     config: GitLabConfiguration,
-    resource_url: str | None,
+    project_path: str,
 ) -> None:
-    """Register a webhook for the GitLab project referenced by ``resource_url``.
-
-    No-op if the URL doesn't parse as a GitLab issue/MR. Raises
-    :class:`GitLabApiUnreachable` (503) when the call to GitLab fails — the
-    failure is logged before re-raising.
+    """Deregister the webhook previously registered for the given GitLab project
+    path under this config, calling GitLab's DELETE endpoint and removing our
+    local row. No-op if no webhook exists for that pair.
     """
-    match = _RESOURCE_PATH_PATTERN.match(urlparse(resource_url or "").path)
-    if not match:
+    webhook = (
+        GitLabWebhook.objects.all_with_deleted()
+        .filter(
+            gitlab_configuration=config,
+            gitlab_path_with_namespace=project_path,
+        )
+        .first()
+    )
+    if webhook is None:
         return
-    try:
-        ensure_webhook_registered(config, match.group("path"))
-    except requests.RequestException as exc:
-        raise GitLabApiUnreachable() from exc
 
-
-def deregister_webhooks(config: GitLabConfiguration) -> None:
     log = logger.bind(
         organisation__id=config.project.organisation_id,
         project__id=config.project_id,
     )
-    webhooks = GitLabWebhook.objects.all_with_deleted().filter(
-        gitlab_configuration=config,
-    )
-    for webhook in webhooks:
-        try:
-            delete_project_hook(
-                instance_url=config.gitlab_instance_url,
-                access_token=config.access_token,
-                project_id=webhook.gitlab_project_id,
-                hook_id=webhook.gitlab_hook_id,
-            )
-        except requests.RequestException as exc:
-            log.warning(
-                "webhook.deregistration_failed",
-                gitlab__project__id=webhook.gitlab_project_id,
-                gitlab__hook__id=webhook.gitlab_hook_id,
-                exc_info=exc,
-            )
-        else:
-            log.info(
-                "webhook.deregistered",
-                gitlab__project__id=webhook.gitlab_project_id,
-                gitlab__hook__id=webhook.gitlab_hook_id,
-            )
-            webhook.delete()
+    try:
+        delete_project_hook(
+            instance_url=config.gitlab_instance_url,
+            access_token=config.access_token,
+            project_id=webhook.gitlab_project_id,
+            hook_id=webhook.gitlab_hook_id,
+        )
+    except requests.RequestException as exc:
+        log.warning(
+            "webhook.deregistration_failed",
+            gitlab__project__id=webhook.gitlab_project_id,
+            gitlab__hook__id=webhook.gitlab_hook_id,
+            exc_info=exc,
+        )
+    else:
+        log.info(
+            "webhook.deregistered",
+            gitlab__project__id=webhook.gitlab_project_id,
+            gitlab__hook__id=webhook.gitlab_hook_id,
+        )
+        webhook.delete()
 
 
 def set_gitlab_tag(feature: Any, new_label: GitLabTagLabel) -> None:

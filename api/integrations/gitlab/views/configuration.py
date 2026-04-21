@@ -2,12 +2,9 @@ import structlog
 from structlog.typing import FilteringBoundLogger
 
 from integrations.common.views import ProjectIntegrationBaseViewSet
-from integrations.gitlab.models import GitLabConfiguration
+from integrations.gitlab.models import GitLabConfiguration, GitLabWebhook
 from integrations.gitlab.serializers import GitLabConfigurationSerializer
-from integrations.gitlab.tasks import (
-    deregister_gitlab_webhooks,
-    register_gitlab_webhooks,
-)
+from integrations.gitlab.tasks import deregister_gitlab_webhook
 
 logger = structlog.get_logger("gitlab")
 
@@ -30,7 +27,6 @@ class GitLabConfigurationViewSet(ProjectIntegrationBaseViewSet):
             "configuration.created",
             gitlab_instance_url=instance.gitlab_instance_url,
         )
-        register_gitlab_webhooks.delay(args=(instance.id,))
 
     def perform_update(self, serializer: GitLabConfigurationSerializer) -> None:  # type: ignore[override]
         super().perform_update(serializer)
@@ -39,10 +35,15 @@ class GitLabConfigurationViewSet(ProjectIntegrationBaseViewSet):
             "configuration.updated",
             gitlab_instance_url=instance.gitlab_instance_url,
         )
-        register_gitlab_webhooks.delay(args=(instance.id,))
 
     def perform_destroy(self, instance: GitLabConfiguration) -> None:
         log = self._log_for(instance)
+        webhook_paths = list(
+            GitLabWebhook.objects.filter(gitlab_configuration=instance).values_list(
+                "gitlab_path_with_namespace", flat=True
+            )
+        )
         super().perform_destroy(instance)
         log.info("configuration.deleted")
-        deregister_gitlab_webhooks.delay(args=(instance.id,))
+        for path in webhook_paths:
+            deregister_gitlab_webhook.delay(args=(instance.id, path))
