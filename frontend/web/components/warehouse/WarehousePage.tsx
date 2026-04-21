@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import Utils from 'common/utils/utils'
 import EmptyState from './components/EmptyState'
 import ConfigForm from './components/ConfigForm'
 import TestingState from './components/TestingState'
@@ -14,17 +15,39 @@ import {
 } from './types'
 import './WarehousePage.scss'
 
+const VALID_STATES: ConnectionState[] = [
+  'empty',
+  'configuring',
+  'testing',
+  'connected',
+  'error',
+]
+
+const STATE_LABELS: Record<ConnectionState, string> = {
+  configuring: 'Configuring',
+  connected: 'Connected',
+  empty: 'Empty',
+  error: 'Error',
+  testing: 'Testing',
+}
+
 type WarehousePageProps = {
   initialState?: ConnectionState
 }
 
-const WarehousePage: FC<WarehousePageProps> = ({ initialState = 'empty' }) => {
+const WarehousePage: FC<WarehousePageProps> = ({ initialState }) => {
   const { organisationId } = useParams<{ organisationId?: string }>()
   const integrationsUrl = organisationId
     ? `/organisation/${organisationId}/integrations`
     : undefined
-  const [connectionState, setConnectionState] =
-    useState<ConnectionState>(initialState)
+  const params = Utils.fromParam() as Record<string, string | undefined>
+  const stateFromUrl = VALID_STATES.includes(params.state as ConnectionState)
+    ? (params.state as ConnectionState)
+    : undefined
+  const showDemoSwitcher = params.demo === '1'
+  const [connectionState, setConnectionState] = useState<ConnectionState>(
+    initialState ?? stateFromUrl ?? 'empty',
+  )
 
   const handleConnect = useCallback(() => {
     setConnectionState('configuring')
@@ -111,6 +134,28 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState = 'empty' }) => {
           Data Warehouse
         </span>
       </div>
+
+      {showDemoSwitcher && (
+        <div className='warehouse-page__demo-switcher'>
+          <span className='warehouse-page__demo-switcher-label'>
+            Demo state
+          </span>
+          {VALID_STATES.map((s) => (
+            <button
+              key={s}
+              type='button'
+              className={`warehouse-page__demo-switcher-pill ${
+                connectionState === s
+                  ? 'warehouse-page__demo-switcher-pill--active'
+                  : ''
+              }`}
+              onClick={() => setConnectionState(s)}
+            >
+              {STATE_LABELS[s]}
+            </button>
+          ))}
+        </div>
+      )}
 
       {(connectionState === 'connected' || connectionState === 'error') && (
         <p className='warehouse-page__subtitle'>
