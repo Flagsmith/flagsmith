@@ -23,6 +23,10 @@
     color: var(--color-text-danger);
   }
 
+  &__hint {
+    color: var(--color-text-secondary);
+  }
+
   &__textarea {
     width: 100%;
     min-height: 80px;

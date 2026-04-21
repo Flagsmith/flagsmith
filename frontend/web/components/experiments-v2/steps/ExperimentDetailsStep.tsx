@@ -37,9 +37,13 @@ const ExperimentDetailsStep: FC<ExperimentDetailsStepProps> = ({
           className='experiment-details-step__textarea'
           value={details.hypothesis}
           onChange={(e) => onChange({ ...details, hypothesis: e.target.value })}
-          placeholder='Describe what you expect to happen...'
+          placeholder='e.g. Switching to a one-click checkout will increase completion rate by at least 10% within 30 days.'
           rows={3}
         />
+        <span className='experiment-details-step__hint text-muted fs-small'>
+          A good hypothesis names the change, the metric, the expected
+          magnitude, and the timeframe.
+        </span>
       </div>
 
       <div className='experiment-details-step__date-row'>

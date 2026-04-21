@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo, useState } from 'react'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 import WizardLayout from './wizard/WizardLayout'
 import WizardSidebar from './wizard/WizardSidebar'
 import WizardHeader from './wizard/WizardHeader'
@@ -17,6 +17,7 @@ import {
   MIN_VARIATIONS_FOR_EXPERIMENT,
   MOCK_FLAGS,
   MOCK_METRICS,
+  MOCK_SEGMENTS,
   MOCK_VARIATIONS,
   Variation,
 } from './types'
@@ -28,15 +29,20 @@ const INITIAL_ARMS = buildExperimentArms(
   INITIAL_FLAG.variations,
 )
 
+const toISODate = (d: Date) => d.toISOString().slice(0, 10)
+const DEFAULT_START = new Date()
+const DEFAULT_END = new Date(DEFAULT_START)
+DEFAULT_END.setDate(DEFAULT_END.getDate() + 14)
+
 const INITIAL_STATE: ExperimentWizardState = {
   controlValue: INITIAL_FLAG.controlValue,
   currentStep: 0,
   details: {
-    endDate: '2026-05-15',
+    endDate: toISODate(DEFAULT_END),
     hypothesis:
       'Redesigning the checkout button with a clearer CTA will increase conversion rates by at least 15% within 30 days',
     name: 'Checkout Button Redesign',
-    startDate: '2026-04-15',
+    startDate: toISODate(DEFAULT_START),
   },
   featureFlagId: INITIAL_FLAG.value,
   metrics: [
@@ -55,6 +61,14 @@ const TOTAL_STEPS = EXPERIMENT_WIZARD_STEPS.length
 
 const CreateExperimentPage: FC = () => {
   const history = useHistory()
+  const { environmentId, projectId } = useParams<{
+    projectId?: string
+    environmentId?: string
+  }>()
+  const experimentsUrl =
+    projectId && environmentId
+      ? `/project/${projectId}/environment/${environmentId}/experiments`
+      : '/experiments'
   const [state, setState] = useState<ExperimentWizardState>(INITIAL_STATE)
 
   const goToStep = useCallback((step: number) => {
@@ -65,14 +79,36 @@ const CreateExperimentPage: FC = () => {
     goToStep(Math.max(0, state.currentStep - 1))
   }, [state.currentStep, goToStep])
 
+  const handleLaunch = useCallback(() => {
+    const segment = MOCK_SEGMENTS.find(
+      (s) => s.value === state.segmentTraffic.segmentId,
+    )
+    const flag = MOCK_FLAGS.find((f) => f.value === state.featureFlagId)
+    openConfirm({
+      body: (
+        <span>
+          This will start serving variations of{' '}
+          <strong>{flag?.label ?? 'this flag'}</strong> to users matching{' '}
+          <strong>{segment?.label ?? 'the selected segment'}</strong>. You can
+          pause or stop the experiment at any time.
+        </span>
+      ),
+      onYes: () => {
+        toast(`Experiment "${state.details.name}" launched`)
+        history.push(experimentsUrl)
+      },
+      title: 'Launch experiment?',
+      yesText: 'Launch',
+    })
+  }, [state, history, experimentsUrl])
+
   const handleContinue = useCallback(() => {
     if (state.currentStep < TOTAL_STEPS - 1) {
       goToStep(state.currentStep + 1)
     } else {
-      // Launch — for now just alert with mock data
-      alert('Experiment launched! (mock)')
+      handleLaunch()
     }
-  }, [state.currentStep, goToStep])
+  }, [state.currentStep, goToStep, handleLaunch])
 
   const handleCancel = useCallback(() => {
     history.goBack()
