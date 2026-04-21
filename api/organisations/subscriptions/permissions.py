@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from common.core.utils import is_saas
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
