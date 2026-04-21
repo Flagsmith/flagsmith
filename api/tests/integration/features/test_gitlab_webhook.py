@@ -71,7 +71,6 @@ def link_feature(
     return _link
 
 
-@pytest.mark.django_db()
 @pytest.mark.parametrize(
     "linked_url, payload_url",
     [

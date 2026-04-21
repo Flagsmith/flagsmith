@@ -27,6 +27,7 @@ from integrations.gitlab.constants import (
 from integrations.gitlab.mappers import (
     map_gitlab_resource_to_tag_label,
     map_gitlab_webhook_payload_to_tag_label,
+    map_resource_url_to_filter_value,
 )
 from integrations.gitlab.models import GitLabConfiguration, GitLabWebhook
 from integrations.gitlab.types import GitLabWebhookPayload
@@ -200,18 +201,6 @@ def apply_initial_tag(resource: FeatureExternalResource) -> None:
     set_gitlab_tag(resource.feature, label)
 
 
-def _issue_url_variants(url: str) -> list[str]:
-    """GitLab delivers issue webhooks with ``/-/work_items/<iid>`` URLs even when
-    the feature was linked via the legacy ``/-/issues/<iid>`` form (and vice
-    versa). Return both shapes so the matcher finds the stored resource.
-    """
-    if "/-/issues/" in url:
-        return [url, url.replace("/-/issues/", "/-/work_items/", 1)]
-    if "/-/work_items/" in url:
-        return [url, url.replace("/-/work_items/", "/-/issues/", 1)]
-    return [url]
-
-
 def apply_tag_for_event(
     webhook: GitLabWebhook,
     payload: GitLabWebhookPayload,
@@ -227,7 +216,7 @@ def apply_tag_for_event(
     if not (
         feature := Feature.objects.filter(
             project=webhook.gitlab_configuration.project,
-            external_resources__url__in=_issue_url_variants(resource_url),
+            external_resources__url__in=map_resource_url_to_filter_value(resource_url),
             external_resources__type__in=GITLAB_RESOURCE_TYPES,
         ).first()
     ):
