@@ -11,6 +11,8 @@ Link GitLab issues and merge requests to your Flagsmith feature flags. When a
 flag changes state, Flagsmith posts a comment to the linked issue or MR showing
 the flag's current state across all environments.
 
+![GitLab integration overview](/img/integrations/gitlab/intro-screenshot.png)
+
 ## Setup
 
 The integration supports
@@ -30,6 +32,8 @@ accessible in Flagsmith.
    1. Paste the access token.
    1. Click "Save". ✅
 
+![GitLab integration configuration](/img/integrations/gitlab/add-configuration.png)
+
 :::tip
 
 Remember to rotate your GitLab access token before it expires.
@@ -38,10 +42,12 @@ Remember to rotate your GitLab access token before it expires.
 
 ## Linking issues and merge requests to feature flags
 
-1. Open a feature flag and go to the **Link** tab.
+1. Open a feature flag and go to the **Links** tab.
 1. Select a GitLab project.
 1. Choose **Issue** or **Merge Request**.
 1. Search and select the item you want to link.
+
+![Selecting a GitLab issue to link](/img/integrations/gitlab/select-issue-for-linking.png)
 
 Flagsmith will post a comment to the linked issue or MR with the flag's current
 state across all environments. When the flag state changes, a new comment is
