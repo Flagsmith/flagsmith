@@ -2,7 +2,6 @@ from unittest.mock import MagicMock
 
 import pytest
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
-from pytest_mock import MockerFixture
 from rest_framework.request import Request
 
 from organisations.models import Organisation, Subscription
@@ -10,16 +9,7 @@ from organisations.subscriptions.constants import SubscriptionPlanFamily
 from organisations.subscriptions.permissions import require_minimum_plan
 
 
-@pytest.fixture
-def saas(mocker: MockerFixture) -> None:
-    mocker.patch("organisations.subscriptions.permissions.is_saas", return_value=True)
-
-
-@pytest.fixture
-def self_hosted(mocker: MockerFixture) -> None:
-    mocker.patch("organisations.subscriptions.permissions.is_saas", return_value=False)
-
-
+@pytest.mark.saas_mode
 @pytest.mark.parametrize(
     "subscription_fixture, expected",
     [
@@ -30,7 +20,6 @@ def self_hosted(mocker: MockerFixture) -> None:
     ],
 )
 def test_require_minimum_plan__has_permission__plan_matrix(
-    saas: None,
     organisation: Organisation,
     subscription_fixture: Subscription,
     expected: bool,
@@ -45,6 +34,7 @@ def test_require_minimum_plan__has_permission__plan_matrix(
     assert permission.has_permission(request, MagicMock()) is expected
 
 
+@pytest.mark.saas_mode
 @pytest.mark.parametrize(
     "subscription_fixture, expected",
     [
@@ -55,7 +45,6 @@ def test_require_minimum_plan__has_permission__plan_matrix(
     ],
 )
 def test_require_minimum_plan__has_object_permission__plan_matrix(
-    saas: None,
     organisation: Organisation,
     subscription_fixture: Subscription,
     expected: bool,
@@ -72,9 +61,9 @@ def test_require_minimum_plan__has_object_permission__plan_matrix(
     )
 
 
+@pytest.mark.saas_mode
 @pytest.mark.parametrize("source", ["data", "query_params"])
 def test_require_minimum_plan__organisation_lookup__reads_from_data_and_query_params(
-    saas: None,
     organisation: Organisation,
     free_subscription: Subscription,
     source: str,
@@ -90,9 +79,8 @@ def test_require_minimum_plan__organisation_lookup__reads_from_data_and_query_pa
     assert permission.has_permission(request, MagicMock()) is False
 
 
-def test_require_minimum_plan__no_organisation_in_request__defers_to_object_level(
-    saas: None,
-) -> None:
+@pytest.mark.saas_mode
+def test_require_minimum_plan__no_organisation_in_request__defers_to_object_level() -> None:
     # Given
     permission = require_minimum_plan(SubscriptionPlanFamily.SCALE_UP)()
     request = MagicMock(spec=Request)
@@ -103,8 +91,8 @@ def test_require_minimum_plan__no_organisation_in_request__defers_to_object_leve
     assert permission.has_permission(request, MagicMock()) is True
 
 
+@pytest.mark.saas_mode
 def test_require_minimum_plan__unknown_organisation_id__returns_false(
-    saas: None,
     db: None,
 ) -> None:
     # Given
@@ -117,9 +105,8 @@ def test_require_minimum_plan__unknown_organisation_id__returns_false(
     assert permission.has_permission(request, MagicMock()) is False
 
 
-def test_require_minimum_plan_has_object_permission__obj_without_organisation__returns_false(
-    saas: None,
-) -> None:
+@pytest.mark.saas_mode
+def test_require_minimum_plan_has_object_permission__obj_without_organisation__returns_false() -> None:
     # Given
     permission = require_minimum_plan(SubscriptionPlanFamily.SCALE_UP)()
 
@@ -130,6 +117,7 @@ def test_require_minimum_plan_has_object_permission__obj_without_organisation__r
     )
 
 
+@pytest.mark.saas_mode
 @pytest.mark.parametrize(
     "minimum, subscription_fixture, allowed",
     [
@@ -150,7 +138,6 @@ def test_require_minimum_plan_has_object_permission__obj_without_organisation__r
     ],
 )
 def test_require_minimum_plan__plan_hierarchy__honours_ordering(
-    saas: None,
     organisation: Organisation,
     minimum: SubscriptionPlanFamily,
     subscription_fixture: Subscription,
@@ -167,7 +154,6 @@ def test_require_minimum_plan__plan_hierarchy__honours_ordering(
 
 
 def test_require_minimum_plan__self_hosted__bypasses_check(
-    self_hosted: None,
     organisation: Organisation,
     free_subscription: Subscription,
 ) -> None:
