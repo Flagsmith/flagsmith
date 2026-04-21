@@ -25,9 +25,9 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState = 'empty' }) => {
     setConnectionState('configuring')
   }, [])
 
-  const handleTestConnection = useCallback((_config: WarehouseConfig) => {
+  const handleConnectSubmit = useCallback((_config: WarehouseConfig) => {
     setConnectionState('testing')
-    // Simulate testing delay — in real app this would be an API call
+    // Simulate connecting delay — in real app this would be an API call
     setTimeout(() => {
       // Randomly succeed or fail for demo purposes
       setConnectionState(Math.random() > 0.3 ? 'connected' : 'error')
@@ -59,10 +59,7 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState = 'empty' }) => {
         return <EmptyState onConnect={handleConnect} />
       case 'configuring':
         return (
-          <ConfigForm
-            onTestConnection={handleTestConnection}
-            onCancel={handleCancel}
-          />
+          <ConfigForm onConnect={handleConnectSubmit} onCancel={handleCancel} />
         )
       case 'testing':
         return <TestingState />
