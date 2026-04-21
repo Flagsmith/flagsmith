@@ -129,12 +129,6 @@ def deregister_webhooks(config: GitLabConfiguration) -> None:
                 project_id=webhook.gitlab_project_id,
                 hook_id=webhook.gitlab_hook_id,
             )
-            log.info(
-                "webhook.deregistered",
-                gitlab__project__id=webhook.gitlab_project_id,
-                gitlab__hook__id=webhook.gitlab_hook_id,
-            )
-            webhook.delete()
         except requests.RequestException as exc:
             log.warning(
                 "webhook.deregistration_failed",
@@ -142,6 +136,13 @@ def deregister_webhooks(config: GitLabConfiguration) -> None:
                 gitlab__hook__id=webhook.gitlab_hook_id,
                 exc_info=exc,
             )
+        else:
+            log.info(
+                "webhook.deregistered",
+                gitlab__project__id=webhook.gitlab_project_id,
+                gitlab__hook__id=webhook.gitlab_hook_id,
+            )
+            webhook.delete()
 
 
 def set_gitlab_tag(feature: Any, new_label: GitLabTagLabel) -> None:
