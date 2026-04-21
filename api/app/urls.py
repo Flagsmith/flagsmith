@@ -97,6 +97,14 @@ if settings.DEBUG:  # pragma: no cover
     ] + urlpatterns
 
 if settings.SAML_INSTALLED:  # pragma: no cover
+    from saml.views import SamlConfigurationViewSet
+
+    from organisations.subscriptions.constants import SubscriptionPlanFamily
+    from organisations.subscriptions.permissions import require_minimum_plan
+
+    scale_up_permission = require_minimum_plan(SubscriptionPlanFamily.SCALE_UP)
+    SamlConfigurationViewSet.permission_classes += [scale_up_permission]
+
     urlpatterns += [
         path("api/v1/auth/saml/", include("saml.urls")),
     ]
