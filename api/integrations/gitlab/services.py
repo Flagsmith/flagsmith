@@ -1,4 +1,5 @@
 import re
+from urllib.parse import urlsplit
 
 import requests
 import structlog
@@ -18,9 +19,8 @@ from integrations.gitlab.models import GitLabConfiguration
 
 logger = structlog.get_logger("gitlab")
 
-_GITLAB_RESOURCE_URL_PATTERN = re.compile(
-    r"^https?://[^/]+/(?P<path>.+?)/-/"
-    r"(?:issues|work_items|merge_requests)/(?P<iid>\d+)/?$"
+_GITLAB_RESOURCE_PATH_PATTERN = re.compile(
+    r"^/(?P<path>.+?)/-/(?:issues|work_items|merge_requests)/(?P<iid>\d+)/?$"
 )
 
 
@@ -28,13 +28,9 @@ def apply_flagsmith_label_to_resource(
     resource: FeatureExternalResource,
 ) -> None:
     """
-    Ensure the "Flagsmith Flag" label exists on the GitLab project the
-    resource belongs to, and apply it to the resource itself.
-
-    No-op when the project has no ``GitLabConfiguration`` or tagging is
-    disabled. Raises ``rest_framework.exceptions.ValidationError`` when the
-    GitLab API rejects the call — callers running inside
-    ``transaction.atomic`` will see the persisted resource rolled back.
+    Ensure the "Flagsmith Flag" label exists on the resource's GitLab project
+    and apply it to the resource. No-op if tagging is disabled or unconfigured;
+    raises ``ValidationError`` on parse/API failure (rolls back under atomic).
     """
     project = resource.feature.project
     config: GitLabConfiguration | None = GitLabConfiguration.objects.filter(
@@ -92,7 +88,7 @@ def apply_flagsmith_label_to_resource(
 
 
 def _parse_gitlab_resource_url(url: str) -> tuple[str, int]:
-    match = _GITLAB_RESOURCE_URL_PATTERN.match(url)
+    match = _GITLAB_RESOURCE_PATH_PATTERN.match(urlsplit(url).path)
     if not match:
         raise ValidationError({"url": "Could not parse GitLab resource URL."})
     return match["path"], int(match["iid"])

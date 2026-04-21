@@ -105,6 +105,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
           },
         )
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const update = (key: string, e: any) => {
@@ -261,24 +262,38 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
             />
           </div>
         )}
-        {fields.map((field) => (
-          <div key={field.key}>
-            <div>
-              <label
-                htmlFor={field.label.replace(/ /g, '')}
-                className={!modal ? 'mb-1 fw-bold' : ''}
-              >
-                {field.label}
-              </label>
-            </div>
-
-            {readOnly ? (
+        {fields.map((field) => {
+          if (field.inputType === 'checkbox' && !readOnly) {
+            return (
+              <div key={field.key} className='mt-3 mb-2'>
+                <Input
+                  id={field.label.replace(/ /g, '')}
+                  value={
+                    typeof formData[field.key] !== 'undefined'
+                      ? formData[field.key]
+                      : field.default
+                  }
+                  label={field.label}
+                  onChange={(e: any) => update(field.key, e)}
+                  type='checkbox'
+                />
+              </div>
+            )
+          }
+          let fieldControl: React.ReactNode
+          if (readOnly) {
+            fieldControl = (
               <div className='mb-3'>
                 {field.hidden
                   ? formData[field.key].replace(/./g, '*')
                   : formData[field.key]}
               </div>
-            ) : field.options ? (
+            )
+          } else if (field.options) {
+            const selectedOption = field.options.find(
+              (v: IntegrationFieldOption) => v.value === formData[field.key],
+            )
+            fieldControl = (
               <div className='full-width mb-2'>
                 <Select
                   onChange={(v: { value: string }) =>
@@ -286,23 +301,18 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
                   }
                   options={field.options}
                   value={
-                    formData[field.key] &&
-                    field.options.find(
-                      (v: IntegrationFieldOption) =>
-                        v.value === formData[field.key],
-                    )
+                    selectedOption
                       ? {
-                          label: field.options.find(
-                            (v: IntegrationFieldOption) =>
-                              v.value === formData[field.key],
-                          )?.label,
+                          label: selectedOption.label,
                           value: formData[field.key],
                         }
                       : { label: 'Please select' }
                   }
                 />
               </div>
-            ) : (
+            )
+          } else {
+            fieldControl = (
               <Input
                 id={field.label.replace(/ /g, '')}
                 value={
@@ -315,9 +325,22 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
                 type={field.hidden ? 'password' : field.inputType || 'text'}
                 className='full-width mb-2'
               />
-            )}
-          </div>
-        ))}
+            )
+          }
+          return (
+            <div key={field.key}>
+              <div>
+                <label
+                  htmlFor={field.label.replace(/ /g, '')}
+                  className={!modal ? 'mb-1 fw-bold' : ''}
+                >
+                  {field.label}
+                </label>
+              </div>
+              {fieldControl}
+            </div>
+          )
+        })}
         {authorised && id === 'slack' && (
           <div>
             Can't see your channel? Enter your channel ID here (C0xxxxxx)
