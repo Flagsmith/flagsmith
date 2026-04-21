@@ -2,7 +2,6 @@ import uuid
 from typing import Any, Protocol
 
 import pytest
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -44,10 +43,7 @@ def gitlab_webhook(project: int) -> GitLabWebhook:
 
 @pytest.fixture()
 def webhook_url(gitlab_webhook: GitLabWebhook) -> str:
-    return reverse(
-        "api-v1:gitlab-webhook",
-        kwargs={"webhook_uuid": str(gitlab_webhook.uuid)},
-    )
+    return f"/api/v1/gitlab-webhook/{gitlab_webhook.uuid}/"
 
 
 @pytest.fixture()
@@ -328,10 +324,7 @@ def test_gitlab_webhook__unknown_uuid__returns_404(
 ) -> None:
     # Given / When
     response = api_client.post(
-        reverse(
-            "api-v1:gitlab-webhook",
-            kwargs={"webhook_uuid": str(uuid.uuid4())},
-        ),
+        f"/api/v1/gitlab-webhook/{uuid.uuid4()}/",
         data={"object_kind": "issue", "object_attributes": {}},
         format="json",
         HTTP_X_GITLAB_TOKEN="whatever",
