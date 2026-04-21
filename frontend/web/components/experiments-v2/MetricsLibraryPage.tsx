@@ -1,6 +1,5 @@
 import React, { FC, useMemo, useState } from 'react'
 import AccountStore from 'common/stores/account-store'
-import Banner from 'components/Banner/Banner'
 import Button from 'components/base/forms/Button'
 import EmptyState from 'components/EmptyState'
 import Icon from 'components/icons/Icon'
@@ -13,7 +12,6 @@ type Mode =
   | { kind: 'list' }
   | { kind: 'create' }
   | { kind: 'edit'; metric: Metric }
-  | { kind: 'delete'; metric: Metric }
 
 const MetricsLibraryPage: FC = () => {
   const [metrics, setMetrics] = useState<Metric[]>(MOCK_METRICS)
@@ -47,10 +45,28 @@ const MetricsLibraryPage: FC = () => {
     setMode({ kind: 'list' })
   }
 
-  const handleConfirmDelete = () => {
-    if (mode.kind !== 'delete') return
-    setMetrics((prev) => prev.filter((m) => m.id !== mode.metric.id))
-    setMode({ kind: 'list' })
+  const handleDelete = (metric: Metric) => {
+    openConfirm({
+      body: (
+        <span>
+          Delete <strong>{metric.name}</strong>?{' '}
+          {metric.usageCount > 0 ? (
+            <>
+              This metric is used by <strong>{metric.usageCount}</strong>{' '}
+              experiment
+              {metric.usageCount === 1 ? '' : 's'} — deleting it will remove it
+              from those experiments.
+            </>
+          ) : (
+            'This metric is not used by any experiments.'
+          )}
+        </span>
+      ),
+      destructive: true,
+      onYes: () => setMetrics((prev) => prev.filter((m) => m.id !== metric.id)),
+      title: 'Delete metric?',
+      yesText: 'Delete',
+    })
   }
 
   if (mode.kind === 'create' || mode.kind === 'edit') {
@@ -160,7 +176,7 @@ const MetricsLibraryPage: FC = () => {
               </button>
               <button
                 className='metrics-library-page__action-btn metrics-library-page__action-btn--danger'
-                onClick={() => setMode({ kind: 'delete', metric })}
+                onClick={() => handleDelete(metric)}
                 type='button'
                 aria-label={`Delete ${metric.name}`}
               >
@@ -201,38 +217,6 @@ const MetricsLibraryPage: FC = () => {
           </a>
         )}
       </div>
-
-      {mode.kind === 'delete' && (
-        <Banner variant='danger'>
-          <div className='metrics-library-page__delete-banner'>
-            <span>
-              Delete <strong>{mode.metric.name}</strong>?{' '}
-              {mode.metric.usageCount > 0 ? (
-                <>
-                  This metric is used by{' '}
-                  <strong>{mode.metric.usageCount}</strong> experiment
-                  {mode.metric.usageCount === 1 ? '' : 's'} — deleting it will
-                  remove it from those experiments.
-                </>
-              ) : (
-                'This metric is not used by any experiments.'
-              )}
-            </span>
-            <div className='metrics-library-page__delete-actions'>
-              <Button
-                theme='outline'
-                size='small'
-                onClick={() => setMode({ kind: 'list' })}
-              >
-                Cancel
-              </Button>
-              <Button theme='danger' size='small' onClick={handleConfirmDelete}>
-                Delete
-              </Button>
-            </div>
-          </div>
-        </Banner>
-      )}
 
       <div className='metrics-library-page__toolbar'>
         <div className='metrics-library-page__search'>
