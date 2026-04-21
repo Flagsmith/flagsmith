@@ -3,6 +3,22 @@
   flex-direction: column;
   gap: 16px;
 
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  &__title {
+    margin: 0 0 4px 0;
+  }
+
+  &__subtitle {
+    margin: 0;
+    max-width: 640px;
+  }
+
   &__toolbar {
     display: flex;
     align-items: center;

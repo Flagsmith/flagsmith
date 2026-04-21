@@ -49,6 +49,7 @@ import SegmentPage from './components/pages/SegmentPage'
 import ExperimentsPage from './components/pages/ExperimentsPage'
 import CreateExperimentPage from './components/experiments-v2/CreateExperimentPage'
 import ExperimentResultsPage from './components/experiments-v2/ExperimentResultsPage'
+import MetricsLibraryPage from './components/experiments-v2/MetricsLibraryPage'
 import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
 import FlagEnvironmentsPage from './components/pages/FlagEnvironmentsPage'
 import ExecutiveViewPage from './components/pages/ExecutiveViewPage'
@@ -85,6 +86,8 @@ export const routes = {
   'experiments': '/project/:projectId/environment/:environmentId/experiments',
   'experiments-create':
     '/project/:projectId/environment/:environmentId/experiments/create',
+  'experiments-metrics':
+    '/project/:projectId/environment/:environmentId/experiments/metrics',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
   'feature-history-detail':
     '/project/:projectId/environment/:environmentId/history/:id/',
@@ -107,21 +110,11 @@ export const routes = {
   'legacy-identity-id':
     '/project/:projectId/environment/:environmentId/users/:identity',
   'lifecycle': '/project/:projectId/lifecycle/:section?',
-  'identities': '/project/:projectId/environment/:environmentId/identities',
   'login': '/login',
-  'identity':
-    '/project/:projectId/environment/:environmentId/identities/:identity/:id',
   'maintenance': '/maintenance',
-  'identity-id':
-    '/project/:projectId/environment/:environmentId/identities/:identity',
   'not-found': '/404',
-  'legacy-identities': '/project/:projectId/environment/:environmentId/users',
   'oauth': '/oauth/:type',
-  'legacy-identity':
-    '/project/:projectId/environment/:environmentId/users/:identity/:id',
   'oauth-authorize': '/oauth/authorize',
-  'legacy-identity-id':
-    '/project/:projectId/environment/:environmentId/users/:identity',
   'organisation-integrations': '/organisation/:organisationId/integrations',
   'organisation-permissions': '/organisation/:organisationId/permissions',
   'organisation-projects': '/organisation/:organisationId/projects',
@@ -142,7 +135,6 @@ export const routes = {
     '/project/:projectId/release-pipelines/:id/edit',
   'root': '/',
   'saml': '/saml',
-  'warehouse': '/organisation/:organisationId/warehouse',
   'scheduled-change':
     '/project/:projectId/environment/:environmentId/scheduled-changes/:id',
   'scheduled-changes':
@@ -151,6 +143,7 @@ export const routes = {
   'segment': '/project/:projectId/segments/:id',
   'segments': '/project/:projectId/segments',
   'signup': '/signup',
+  'warehouse': '/organisation/:organisationId/warehouse',
 }
 export default (
   <Switch>
@@ -186,6 +179,11 @@ export default (
           path={routes['experiments-create']}
           exact
           component={CreateExperimentPage}
+        />
+        <ParameterizedRoute
+          path={routes['experiments-metrics']}
+          exact
+          component={MetricsLibraryPage}
         />
         <ParameterizedRoute
           path={routes['experiment-results']}
