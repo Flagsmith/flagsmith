@@ -39,25 +39,6 @@
     color: var(--color-text-default);
   }
 
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-  }
-
-  &__title-col {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  &__title {
-    font-size: var(--font-h4-size);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-default);
-    margin: 0;
-  }
-
   &__subtitle {
     font-size: var(--font-body-size);
     color: var(--color-text-secondary);

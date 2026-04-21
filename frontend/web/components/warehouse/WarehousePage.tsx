@@ -112,17 +112,12 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState = 'empty' }) => {
         </span>
       </div>
 
-      <div className='warehouse-page__header'>
-        <div className='warehouse-page__title-col'>
-          <h1 className='warehouse-page__title'>Data Warehouse</h1>
-          {(connectionState === 'connected' || connectionState === 'error') && (
-            <p className='warehouse-page__subtitle'>
-              Stream flag evaluation and custom event data to your warehouse for
-              experimentation and analysis.
-            </p>
-          )}
-        </div>
-      </div>
+      {(connectionState === 'connected' || connectionState === 'error') && (
+        <p className='warehouse-page__subtitle'>
+          Stream flag evaluation and custom event data to your warehouse for
+          experimentation and analysis.
+        </p>
+      )}
 
       <div className='warehouse-page__content'>{renderState()}</div>
     </div>
