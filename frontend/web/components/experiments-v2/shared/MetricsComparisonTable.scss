@@ -15,6 +15,10 @@
     font-size: var(--font-caption-size);
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-secondary);
+
+    &--lift {
+      flex: 2;
+    }
   }
 
   &__row {
@@ -37,18 +41,11 @@
       font-family: var(--font-family);
     }
 
-    &--positive {
-      color: var(--color-text-success);
-      font-weight: var(--font-weight-semibold);
-    }
-
-    &--negative {
-      color: var(--color-text-danger);
-      font-weight: var(--font-weight-semibold);
-    }
-
-    &--neutral {
-      color: var(--color-text-secondary);
+    &--lift {
+      flex: 2;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     &--significance {
@@ -59,6 +56,77 @@
 
     &--significant {
       color: var(--color-text-success);
+    }
+  }
+
+  &__lift-bar {
+    position: relative;
+    flex: 1;
+    height: 8px;
+    min-width: 80px;
+    background: var(--color-surface-emphasis);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  &__lift-bar-axis {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: var(--color-border-default);
+    transform: translateX(-0.5px);
+  }
+
+  &__lift-bar-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--lift-bar-width, 0%);
+    border-radius: var(--radius-sm);
+    transition: width var(--duration-base) var(--easing-standard);
+
+    .metrics-comparison-table__lift-bar--side-right & {
+      left: 50%;
+    }
+
+    .metrics-comparison-table__lift-bar--side-left & {
+      right: 50%;
+    }
+
+    .metrics-comparison-table__lift-bar--tone-positive & {
+      background: var(--color-text-success);
+    }
+
+    .metrics-comparison-table__lift-bar--tone-negative & {
+      background: var(--color-text-danger);
+    }
+
+    .metrics-comparison-table__lift-bar--tone-neutral & {
+      background: var(--color-text-secondary);
+      opacity: 0.5;
+    }
+  }
+
+  &__lift-label {
+    font-family: var(--font-family);
+    font-size: var(--font-body-size);
+    font-weight: var(--font-weight-semibold);
+    min-width: 56px;
+    text-align: right;
+
+    &--positive {
+      color: var(--color-text-success);
+    }
+
+    &--negative {
+      color: var(--color-text-danger);
+    }
+
+    &--neutral {
+      color: var(--color-text-secondary);
+      font-weight: var(--font-weight-regular);
     }
   }
 }
