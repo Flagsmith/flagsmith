@@ -1,0 +1,15 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dw-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6E56CF"/>
+      <stop offset="100%" stop-color="#4A3AA8"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="24" cy="11" rx="15" ry="5" fill="url(#dw-grad)"/>
+  <path d="M9 11 V19 C9 21.7614 15.7157 24 24 24 C32.2843 24 39 21.7614 39 19 V11" fill="url(#dw-grad)" opacity="0.9"/>
+  <path d="M9 19 V27 C9 29.7614 15.7157 32 24 32 C32.2843 32 39 29.7614 39 27 V19" fill="url(#dw-grad)" opacity="0.75"/>
+  <path d="M9 27 V35 C9 37.7614 15.7157 40 24 40 C32.2843 40 39 37.7614 39 35 V27" fill="url(#dw-grad)" opacity="0.6"/>
+  <ellipse cx="24" cy="11" rx="15" ry="5" fill="none" stroke="#4A3AA8" stroke-width="1"/>
+  <ellipse cx="24" cy="19" rx="15" ry="5" fill="none" stroke="#4A3AA8" stroke-width="1" opacity="0.6"/>
+  <ellipse cx="24" cy="27" rx="15" ry="5" fill="none" stroke="#4A3AA8" stroke-width="1" opacity="0.6"/>
+</svg>
