@@ -57,6 +57,34 @@ used elsewhere in the codebase — e.g. `web/main.js`, `IntegrationList.tsx`).
 designers can still see the empty state via the Storybook story or by
 temporarily clearing `MOCK_METRICS`.
 
+## Deferred: "Connected" indicator on the Integrations list card
+
+**Context:** the Data Warehouse entry in `integration_data` uses `external:
+true` with a same-origin link (`/organisation/:organisationId/warehouse`),
+so it renders via `IntegrationList.tsx` lines 144–155 — a plain `<a>` CTA
+with no active-integration row beneath. The card looks identical whether or
+not a warehouse is connected.
+
+Drawer-based integrations (Datadog, Segment, Slack) show a connected row
+via `IntegrationList.tsx` lines 316–354, but that path requires a real
+backend endpoint (`GET /organisations/:id/integrations/:key/`) which the
+warehouse prototype doesn't have. Other `external: true` integrations
+(Jira) have the same gap — it's not specific to us.
+
+**Implication for the demo:** returning users can't tell from the
+Integrations list whether they've already set up a warehouse. They have to
+click through to the Warehouse page to see connection status. Acceptable
+for the prototype; the presentation flow clicks through anyway.
+
+**Two follow-up options if this ships:**
+
+1. **Mock-only:** add `connected?: boolean` to the integration JSON and
+   render a green "Connected" pill in the card header. Cheapest, no backend.
+2. **Real:** add `GET /organisations/:id/integrations/data-warehouse/`
+   returning the stored config, wire `IntegrationList` to fetch it like the
+   drawer-based ones. Matches existing infra and gives us a proper active
+   row (with Edit / Delete controls inline on the card).
+
 ## Deferred: sample-size / duration calculator
 
 **Context:** the Segments & Traffic step (`steps/SegmentTrafficStep.tsx`)
