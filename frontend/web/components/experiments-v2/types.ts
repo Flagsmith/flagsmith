@@ -10,7 +10,7 @@ export type ExperimentStatus = 'running' | 'paused' | 'completed' | 'draft'
 
 export type WizardStepStatus = 'done' | 'active' | 'upcoming'
 
-export type MetricRole = 'primary' | 'secondary'
+export type MetricRole = 'primary' | 'secondary' | 'guardrail'
 
 export type LiftDirection = 'positive' | 'negative' | 'neutral'
 

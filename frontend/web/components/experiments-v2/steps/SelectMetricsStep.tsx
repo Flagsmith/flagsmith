@@ -1,4 +1,5 @@
 import React, { FC, useMemo, useState } from 'react'
+import Banner from 'components/Banner/Banner'
 import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
 import EmptyState from 'components/EmptyState'
@@ -7,6 +8,7 @@ import SelectableCard from 'components/experiments-v2/shared/SelectableCard'
 import {
   Metric,
   MetricDirection,
+  MetricRole,
   MOCK_METRICS,
 } from 'components/experiments-v2/types'
 
@@ -21,10 +23,12 @@ type SelectMetricsStepProps = {
   availableMetrics?: Metric[]
   selectedMetrics: Metric[]
   onToggleMetric: (metric: Metric) => void
+  onSetRole?: (metricId: string, role: MetricRole) => void
 }
 
 const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
   availableMetrics: availableMetricsProp = MOCK_METRICS,
+  onSetRole,
   onToggleMetric,
   selectedMetrics,
 }) => {
@@ -53,14 +57,23 @@ const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
   const getRole = (metric: Metric) =>
     selectedMetrics.find((m) => m.id === metric.id)?.role
 
-  const getBadge = (metric: Metric) => {
+  const getRoleSelector = (metric: Metric) => {
     const role = getRole(metric)
-    if (!isSelected(metric) || !role) return undefined
+    if (!isSelected(metric) || !role || !onSetRole) return undefined
     return {
-      label: role === 'primary' ? 'Primary' : 'Secondary',
-      variant: role as 'primary' | 'secondary',
+      onChange: (v: MetricRole) => onSetRole(metric.id, v),
+      options: [
+        { label: 'Primary', value: 'primary' as MetricRole },
+        { label: 'Secondary', value: 'secondary' as MetricRole },
+        { label: 'Guardrail', value: 'guardrail' as MetricRole },
+      ],
+      value: role,
     }
   }
+
+  const primaryCount = selectedMetrics.filter(
+    (m) => m.role === 'primary',
+  ).length
 
   const handleCreate = (metric: Metric) => {
     setCreatedMetrics((prev) => [...prev, metric])
@@ -124,6 +137,17 @@ const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
         </Button>
       </div>
 
+      {primaryCount > 1 && (
+        <Banner variant='warning'>
+          <span>
+            You have {primaryCount} primary metrics. Best practice is{' '}
+            <strong>one primary metric</strong> to avoid multiple-comparisons
+            issues — pick the single metric you most want to move and demote the
+            rest to secondary.
+          </span>
+        </Banner>
+      )}
+
       {filteredMetrics.length > 0 ? (
         <div className='select-metrics-step__list'>
           {filteredMetrics.map((metric) => (
@@ -132,7 +156,7 @@ const SelectMetricsStep: FC<SelectMetricsStepProps> = ({
               title={metric.name}
               description={metric.description}
               selected={isSelected(metric)}
-              badge={getBadge(metric)}
+              roleSelector={getRoleSelector(metric)}
               tags={[
                 `conversion: ${metric.measurementType}`,
                 directionTag(metric.direction),
