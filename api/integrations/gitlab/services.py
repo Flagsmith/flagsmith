@@ -21,6 +21,7 @@ from integrations.gitlab.client import (
 from integrations.gitlab.constants import (
     GITLAB_TAG_COLOR,
     GITLAB_TAG_DESCRIPTION_BY_LABEL,
+    GITLAB_TAG_KIND_BY_LABEL,
     GitLabTagLabel,
 )
 from integrations.gitlab.exceptions import GitLabApiUnreachable
@@ -152,11 +153,10 @@ def set_gitlab_tag(feature: Any, new_label: GitLabTagLabel) -> None:
     """
     label_value = new_label.value
 
-    kind_prefix = label_value.split(" ", 1)[0]  # "Issue" or "MR"
     feature.tags.remove(
         *feature.tags.filter(
             type=TagType.GITLAB.value,
-            label__startswith=kind_prefix,
+            label__startswith=GITLAB_TAG_KIND_BY_LABEL[new_label],
         )
     )
     tag, _ = Tag.objects.get_or_create(

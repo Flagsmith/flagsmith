@@ -13,6 +13,16 @@ class GitLabTagLabel(Enum):
     MR_DRAFT = "MR Draft"
 
 
+GITLAB_TAG_KIND_BY_LABEL: dict[GitLabTagLabel, str] = {
+    GitLabTagLabel.ISSUE_OPEN: "Issue",
+    GitLabTagLabel.ISSUE_CLOSED: "Issue",
+    GitLabTagLabel.MR_OPEN: "MR",
+    GitLabTagLabel.MR_CLOSED: "MR",
+    GitLabTagLabel.MR_MERGED: "MR",
+    GitLabTagLabel.MR_DRAFT: "MR",
+}
+
+
 GITLAB_TAG_DESCRIPTION_BY_LABEL: dict[GitLabTagLabel, str] = {
     GitLabTagLabel.ISSUE_OPEN: "Has a linked GitLab issue open",
     GitLabTagLabel.ISSUE_CLOSED: "Has a linked GitLab issue closed",
