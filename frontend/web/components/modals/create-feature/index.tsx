@@ -15,8 +15,10 @@ import classNames from 'classnames'
 import { useHasPermission } from 'common/providers/Permission'
 import { setInterceptClose } from 'components/modals/base/ModalDefault'
 import { getStore } from 'common/store'
-import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
+import ExternalResourcesTable from 'components/ExternalResourcesTable'
+import GitHubLinkSection from 'components/GitHubLinkSection'
 import GitLabLinkSection from 'components/GitLabLinkSection'
+import type { ExternalResource } from 'common/types/responses'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
@@ -353,6 +355,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     useHasGitLabIntegration(projectId)
   const isLinksTabEnabled =
     (hasIntegrationWithGithub || hasGitlabIntegration) && !!projectFlag?.id
+
+  const [linkedResources, setLinkedResources] = useState<ExternalResource[]>()
 
   const { permission: createFeaturePermission } = useHasPermission({
     id: projectId,
@@ -700,20 +704,32 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       }
                     >
                       {hasIntegrationWithGithub && (
-                        <ExternalResourcesLinkTab
+                        <GitHubLinkSection
                           githubId={githubId}
                           organisationId={organisationId}
                           featureId={projectFlag.id}
                           projectId={projectId}
                           environmentId={`${environment.id}`}
+                          linkedResources={linkedResources}
                         />
                       )}
                       {hasGitlabIntegration && (
                         <GitLabLinkSection
                           projectId={projectId}
-                          linkedUrls={[]}
+                          featureId={projectFlag.id}
+                          featureName={projectFlag.name}
+                          environmentId={`${environment.id}`}
+                          linkedUrls={linkedResources?.map((r) => r.url) ?? []}
                         />
                       )}
+                      <ExternalResourcesTable
+                        featureId={`${projectFlag.id}`}
+                        projectId={`${projectId}`}
+                        organisationId={`${organisationId}`}
+                        setSelectedResources={(r: ExternalResource[]) =>
+                          setLinkedResources(r)
+                        }
+                      />
                     </TabItem>
                   )}
                   {!existingChangeRequest && flagId && isVersioned && (

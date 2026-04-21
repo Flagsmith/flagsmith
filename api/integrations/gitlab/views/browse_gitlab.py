@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
+from structlog.typing import FilteringBoundLogger
 
 from integrations.gitlab.client import (
     GitLabIssue,
@@ -55,13 +56,19 @@ class _GitLabListView(ListAPIView, abc.ABC, Generic[T]):  # type: ignore[type-ar
         try:
             page_data = self.fetch_page(config, serializer.validated_data)
         except requests.RequestException as exc:
-            logger.error("api-call-failed", exc_info=exc)
+            self._log_for(config).error("api_call.failed", exc_info=exc)
             return Response(
                 data={"detail": "GitLab API is unreachable"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
         return self._paginated_response(page_data, request)
+
+    def _log_for(self, config: GitLabConfiguration) -> FilteringBoundLogger:
+        return logger.bind(  # type: ignore[no-any-return]
+            organisation__id=config.project.organisation_id,
+            project__id=config.project_id,
+        )
 
     def _get_gitlab_config(self) -> GitLabConfiguration:
         return GitLabConfiguration.objects.get(  # type: ignore[no-any-return]
@@ -105,10 +112,7 @@ class BrowseGitLabProjects(_GitLabListView[GitLabProject]):
             page_size=validated_data["page_size"],
         )
 
-        logger.info(
-            "projects-fetched",
-            project__id=self.kwargs["project_pk"],
-        )
+        self._log_for(config).info("projects.fetched")
         return page_data
 
 
@@ -130,10 +134,9 @@ class BrowseGitLabIssues(_GitLabListView[GitLabIssue]):
             state=validated_data.get("state", "opened"),
         )
 
-        logger.info(
-            "issues-fetched",
-            project__id=self.kwargs["project_pk"],
-            gitlab_project_id=validated_data["gitlab_project_id"],
+        self._log_for(config).info(
+            "issues.fetched",
+            gitlab_project__id=validated_data["gitlab_project_id"],
         )
         return page_data
 
@@ -156,9 +159,8 @@ class BrowseGitLabMergeRequests(_GitLabListView[GitLabMergeRequest]):
             state=validated_data.get("state", "opened"),
         )
 
-        logger.info(
-            "merge-requests-fetched",
-            project__id=self.kwargs["project_pk"],
-            gitlab_project_id=validated_data["gitlab_project_id"],
+        self._log_for(config).info(
+            "merge_requests.fetched",
+            gitlab_project__id=validated_data["gitlab_project_id"],
         )
         return page_data

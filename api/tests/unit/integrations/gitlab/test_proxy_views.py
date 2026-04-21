@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 import requests
+from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 
 from integrations.gitlab.models import GitLabConfiguration
@@ -29,6 +30,7 @@ def test_gitlab_project_list__valid_config__returns_paginated_response(
     admin_client: APIClient,
     project: Project,
     mocker: MockerFixture,
+    log: StructuredLogCapture,
 ) -> None:
     # Given
     mocker.patch(
@@ -55,6 +57,15 @@ def test_gitlab_project_list__valid_config__returns_paginated_response(
     assert data["next"] is not None
     assert data["previous"] is None
 
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "projects.fetched",
+            "organisation__id": project.organisation_id,
+            "project__id": project.id,
+        },
+    ]
+
 
 def test_gitlab_project_list__no_gitlab_config__returns_400(
     admin_client: APIClient,
@@ -74,6 +85,7 @@ def test_gitlab_issue_list__valid_config__returns_issues(
     admin_client: APIClient,
     project: Project,
     mocker: MockerFixture,
+    log: StructuredLogCapture,
 ) -> None:
     # Given
     mocker.patch(
@@ -104,6 +116,16 @@ def test_gitlab_issue_list__valid_config__returns_issues(
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["results"][0]["title"] == "Bug"
 
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "issues.fetched",
+            "organisation__id": project.organisation_id,
+            "project__id": project.id,
+            "gitlab_project__id": 42,
+        },
+    ]
+
 
 @pytest.mark.usefixtures("gitlab_config")
 def test_gitlab_issue_list__missing_gitlab_project_id__returns_400(
@@ -124,6 +146,7 @@ def test_gitlab_merge_request_list__valid_config__returns_merge_requests(
     admin_client: APIClient,
     project: Project,
     mocker: MockerFixture,
+    log: StructuredLogCapture,
 ) -> None:
     # Given
     mocker.patch(
@@ -155,6 +178,16 @@ def test_gitlab_merge_request_list__valid_config__returns_merge_requests(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["results"][0]["title"] == "Feature"
+
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "merge_requests.fetched",
+            "organisation__id": project.organisation_id,
+            "project__id": project.id,
+            "gitlab_project__id": 42,
+        },
+    ]
 
 
 def test_gitlab_merge_request_list__no_gitlab_config__returns_400(
@@ -190,6 +223,7 @@ def test_browse_gitlab__api_unreachable__returns_503(
     admin_client: APIClient,
     project: Project,
     mocker: MockerFixture,
+    log: StructuredLogCapture,
 ) -> None:
     # Given
     mocker.patch(
@@ -205,3 +239,14 @@ def test_browse_gitlab__api_unreachable__returns_503(
     # Then
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     assert response.json()["detail"] == "GitLab API is unreachable"
+
+    assert log.events == [
+        {
+            "level": "error",
+            "event": "api_call.failed",
+            "organisation__id": project.organisation_id,
+            "project__id": project.id,
+            "exc_info": mocker.ANY,
+        },
+    ]
+    assert isinstance(log.events[0]["exc_info"], requests.RequestException)

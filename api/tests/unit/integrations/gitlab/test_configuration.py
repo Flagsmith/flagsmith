@@ -41,7 +41,7 @@ def test_create_configuration__valid_data__persists_and_masks_token(
 
     assert log.events == [
         {
-            "event": "configuration-created",
+            "event": "configuration.created",
             "level": "info",
             "gitlab_instance_url": "https://gitlab.example.com",
             "project__id": project.id,
@@ -95,7 +95,7 @@ def test_update_configuration__valid_data__persists_and_masks_token(
 
     assert log.events == [
         {
-            "event": "configuration-updated",
+            "event": "configuration.updated",
             "level": "info",
             "gitlab_instance_url": "https://gitlab.updated.com",
             "project__id": project.id,
@@ -121,7 +121,7 @@ def test_delete_configuration__existing__soft_deletes(
 
     assert log.events == [
         {
-            "event": "configuration-deleted",
+            "event": "configuration.deleted",
             "level": "info",
             "project__id": project.id,
             "organisation__id": project.organisation_id,

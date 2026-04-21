@@ -36,7 +36,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
 
   useEffect(() => {
     if (isDeleted) {
-      toast('External resources was deleted')
+      toast('Link deleted')
     }
   }, [isDeleted])
   return (

@@ -1,4 +1,5 @@
 import structlog
+from structlog.typing import FilteringBoundLogger
 
 from integrations.common.views import ProjectIntegrationBaseViewSet
 from integrations.gitlab.models import GitLabConfiguration
@@ -12,19 +13,17 @@ class GitLabConfigurationViewSet(ProjectIntegrationBaseViewSet):
     model_class = GitLabConfiguration  # type: ignore[assignment]
     pagination_class = None
 
-    def _log_for(
-        self, instance: GitLabConfiguration
-    ) -> structlog.typing.FilteringBoundLogger:
+    def _log_for(self, config: GitLabConfiguration) -> FilteringBoundLogger:
         return logger.bind(  # type: ignore[no-any-return]
-            project__id=instance.project.id,
-            organisation__id=instance.project.organisation_id,
+            project__id=config.project.id,
+            organisation__id=config.project.organisation_id,
         )
 
     def perform_create(self, serializer: GitLabConfigurationSerializer) -> None:  # type: ignore[override]
         super().perform_create(serializer)
         instance: GitLabConfiguration = serializer.instance  # type: ignore[assignment]
         self._log_for(instance).info(
-            "configuration-created",
+            "configuration.created",
             gitlab_instance_url=instance.gitlab_instance_url,
         )
 
@@ -32,11 +31,11 @@ class GitLabConfigurationViewSet(ProjectIntegrationBaseViewSet):
         super().perform_update(serializer)
         instance: GitLabConfiguration = serializer.instance  # type: ignore[assignment]
         self._log_for(instance).info(
-            "configuration-updated",
+            "configuration.updated",
             gitlab_instance_url=instance.gitlab_instance_url,
         )
 
     def perform_destroy(self, instance: GitLabConfiguration) -> None:
         log = self._log_for(instance)
         super().perform_destroy(instance)
-        log.info("configuration-deleted")
+        log.info("configuration.deleted")
