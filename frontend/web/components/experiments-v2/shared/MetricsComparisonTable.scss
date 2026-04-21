@@ -29,6 +29,18 @@
     &:hover {
       background: var(--color-surface-hover);
     }
+
+    &--primary {
+      background: var(--color-surface-action-subtle);
+
+      &:hover {
+        background: var(--color-surface-action-subtle);
+      }
+
+      .metrics-comparison-table__metric-name {
+        font-weight: var(--font-weight-semibold);
+      }
+    }
   }
 
   &__td {
@@ -39,6 +51,12 @@
 
     &--mono {
       font-family: var(--font-family);
+    }
+
+    &--name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     &--lift {
@@ -56,6 +74,34 @@
 
     &--significant {
       color: var(--color-text-success);
+    }
+  }
+
+  &__metric-name {
+    flex: 1;
+  }
+
+  &__role {
+    font-size: var(--font-caption-xs-size);
+    font-weight: var(--font-weight-semibold);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+
+    &--primary {
+      background: var(--color-surface-action);
+      color: var(--color-surface-default);
+    }
+
+    &--secondary {
+      border: 1px solid var(--color-border-default);
+      color: var(--color-text-secondary);
+    }
+
+    &--guardrail {
+      background: var(--color-surface-warning-subtle, #fff7e6);
+      color: var(--color-text-warning, #b36b00);
+      border: 1px solid var(--color-border-warning, #f2c078);
     }
   }
 
