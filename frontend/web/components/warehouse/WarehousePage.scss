@@ -16,6 +16,18 @@
     color: var(--color-text-secondary);
   }
 
+  &__breadcrumb-link {
+    font-size: var(--font-body-sm-size);
+    color: var(--color-text-action);
+    text-decoration: none;
+    transition: color var(--duration-fast) var(--easing-standard);
+
+    &:hover {
+      text-decoration: underline;
+      color: var(--color-text-action);
+    }
+  }
+
   &__breadcrumb-sep {
     font-size: var(--font-body-sm-size);
     color: var(--color-text-disabled);
