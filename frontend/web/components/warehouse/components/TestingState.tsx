@@ -17,7 +17,7 @@ const TestingState: FC<TestingStateProps> = ({
       <div className='wh-testing__spinner'>
         <Icon name='refresh' width={32} />
       </div>
-      <span className='wh-testing__title'>Testing connection...</span>
+      <span className='wh-testing__title'>Connecting…</span>
 
       <motion.div
         className='wh-testing__steps'
