@@ -3,6 +3,34 @@
 Prototype-only decisions and deferred items that aren't worth putting in
 production code but should survive a context handover.
 
+## Demo shortcuts
+
+Query-param affordances baked into the prototype for presenting and
+screenshotting. None of them are visible in normal usage — no query param,
+no demo UI.
+
+### Data Warehouse state shortcuts
+
+Defined in `web/components/warehouse/WarehousePage.tsx`.
+
+- **`?state=<name>`** — jumps directly to a specific connection state
+  without clicking through the full flow. Values:
+  - `empty` (default)
+  - `configuring` — the form with Snowflake / BigQuery / Databricks picker
+    and the two-button Test / Connect footer
+  - `testing` — the 4-step "Connecting…" animation
+  - `connected` — the live-stats + connection-details page
+  - `error` — the auth-failed state with retry / edit actions
+- **`?demo=1`** — shows an inline state-switcher pill bar above the
+  content. Click any pill to switch state live. The bar has a
+  warning-tinted dashed border so it reads unmistakably as demo-only.
+- Combine them: `?demo=1&state=connected` opens on the connected state
+  with the switcher ready for live clicks.
+
+### Experiments empty-metrics shortcut (proposed, not built)
+
+See *Deferred: demo URL param for empty metrics* below.
+
 ## Deferred: demo URL param for empty metrics
 
 **Context:** the Select Metrics step (`steps/SelectMetricsStep.tsx`) has an

@@ -258,6 +258,89 @@ by intent"). Users hit **Split evenly** to reset.
 - **Launch confirmation modal** — no accidental launches. The modal names
   both the flag and segment explicitly.
 
+## Presentation walkthrough
+
+Suggested narrative order for the live demo. Every step below has a
+matching URL or shortcut so you don't have to click through the full
+flow when you want to land on a specific state.
+
+### 1 — Frame the problem (30s)
+
+Open `/project/:id/environment/:id/experiments` (empty-ish or with mock
+list). Motivate: Flagsmith has flags, segments, and identity targeting
+— everything to *run* an experiment, but no workflow to *set one up*.
+This branch adds that.
+
+### 2 — Data collection story (45s)
+
+Open **Organisation Integrations** → show the **Data Warehouse** card
+alongside Jira, Grafana, etc. Click **Add Integration**.
+
+Use `?demo=1&state=empty` on the warehouse URL for the first landing.
+Then cycle the switcher to narrate:
+
+- **Empty** → "no warehouse connected"
+- **Configuring** → the connection form, call out the two-button Test
+  / Connect pattern (Test = verify only; Connect = commit)
+- **Testing** → the 4-step Connecting animation
+- **Connected** → live-stats card with 24h flag evaluations + custom
+  events flowing through, connection details grid
+- **Error** → the auth-failed state with resolution paths
+
+Anchor: *"this is where experiment metrics come from — the warehouse
+does the aggregation, Flagsmith reads the result."* Pair with the
+three-approach framing from the Data collection section above.
+
+### 3 — Metrics library (45s)
+
+Back to the experiments nav → **Metrics**. Point out:
+
+- Each metric shows its warehouse source inline (`EVENTS ·
+  checkout_completed`, `TRANSACTIONS · amount_usd WHERE status =
+  'complete'`, etc.) — the direct handoff from the warehouse story
+- Role system (primary / secondary / guardrail) — highlight this is
+  where Flagsmith differs from LaunchDarkly
+- Create Metric → walk through measurement type cards, direction
+  picker, data source section
+
+### 4 — Create Experiment wizard (90s)
+
+From the Experiments list, **Create Experiment**. Walk the 5 steps:
+
+1. **Details** — name, hypothesis (required, with a real-example
+   placeholder), default dates (+14 days from today)
+2. **Flag** — multi-variant flag picker; read-only variations table.
+   Optional detour: pick `homepage_hero_redesign` (0 variations) to
+   show the blocking banner
+3. **Metrics** — pre-selected Conversion Rate (primary) + Revenue per
+   User (secondary) + Page Load Time (guardrail). Click one to show
+   the three-role segmented control. Add a second primary to surface
+   the soft multi-primary warning
+4. **Segment & Traffic** — select Premium Tier on flag-1 to trigger
+   the inline conflict banner. Reset, play with the auto-balancing
+   weights (change one → watch the others rebalance proportionally)
+5. **Review & Launch** — full summary with per-section edit links.
+   Click **Launch** → confirmation modal → toast + redirect to list
+
+### 5 — Results page (45s)
+
+From the list, click a running experiment. Narrate top-down:
+
+- Stat cards + recommendation callout
+- Metrics comparison table — call out the primary-row emphasis,
+  guardrail badge, zero-centred lift bars
+- Scroll to the trend chart — metric selector + control vs treatment
+  line chart
+
+Anchor: *"this is the loop closed — metrics defined in the library,
+data streaming through the warehouse, results computed per arm."*
+
+### 6 — What's deferred (30s)
+
+Short list from the *What we're deferring* section. Keep it honest —
+this is a workflow prototype, not a production experimentation
+platform. Backend work is the next sprint.
+
 ## What we're deferring
 
 Captured in `NOTES.md`:
