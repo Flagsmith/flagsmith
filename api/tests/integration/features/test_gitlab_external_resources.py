@@ -1,13 +1,20 @@
+import json
+
 import pytest
+import requests
+import responses
+from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from core.helpers import get_current_site_url
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature
 from integrations.github.models import GithubConfiguration
-from integrations.gitlab.models import GitLabConfiguration
+from integrations.gitlab.models import GitLabConfiguration, GitLabWebhook
 from projects.models import Project
+from projects.tags.models import TagType
 
 
 @pytest.mark.django_db()
@@ -95,7 +102,7 @@ def test_create_external_resource__gitlab_merge_request__returns_201(
     ]
 
 
-@pytest.mark.django_db()
+@responses.activate
 def test_create_external_resource__gitlab_issue_with_github_also_configured__returns_201(
     admin_client: APIClient,
     project: int,
@@ -115,6 +122,11 @@ def test_create_external_resource__gitlab_issue_with_github_also_configured__ret
         gitlab_instance_url="https://gitlab.com",
         access_token="glpat-test-token",
     )
+    responses.post(
+        "https://gitlab.com/api/v4/projects/testorg%2Ftestrepo/hooks",
+        json={"id": 1, "project_id": 1},
+        status=201,
+    )
 
     # When
     response = admin_client.post(
@@ -131,15 +143,187 @@ def test_create_external_resource__gitlab_issue_with_github_also_configured__ret
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["type"] == "GITLAB_ISSUE"
 
+
+@responses.activate
+def test_create_external_resource__gitlab_issue_with_config__registers_webhook_and_tags_feature(
+    admin_client: APIClient,
+    organisation: int,
+    project: int,
+    feature: int,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    expected_gitlab_hook_id = 42
+    expected_gitlab_project_id = 777
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+    )
+    responses.post(
+        "https://gitlab.example.com/api/v4/projects/testorg%2Ftestrepo/hooks",
+        json={
+            "id": expected_gitlab_hook_id,
+            "project_id": expected_gitlab_project_id,
+        },
+        status=201,
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": "https://gitlab.example.com/testorg/testrepo/-/issues/42",
+            "feature": feature,
+            "metadata": {"title": "Fix login bug", "state": "opened"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    # Webhook row persisted with GitLab's returned IDs.
+    webhook = GitLabWebhook.objects.get(gitlab_configuration__project=project_instance)
+    assert webhook.gitlab_hook_id == expected_gitlab_hook_id
+    assert webhook.gitlab_project_id == expected_gitlab_project_id
+    assert webhook.gitlab_path_with_namespace == "testorg/testrepo"
+
+    # Registered exactly once with GitLab with the expected payload.
+    [call] = responses.calls
+    assert call.request.headers["PRIVATE-TOKEN"] == "glpat-test-token"
+    assert json.loads(call.request.body) == {
+        "url": f"{get_current_site_url()}/api/v1/gitlab-webhook/{webhook.uuid}/",
+        "token": webhook.secret,
+        "issues_events": True,
+        "merge_requests_events": True,
+        "enable_ssl_verification": True,
+    }
+
+    # Feature tagged `Issue Open`
+    assert list(Feature.objects.get(id=feature).tags.values_list("label", "type")) == [
+        ("Issue Open", TagType.GITLAB.value)
+    ]
+
+    # Product telemetry emitted: webhook registration + link.
     assert log.events == [
         {
             "level": "info",
+            "event": "webhook.registered",
+            "organisation__id": organisation,
+            "project__id": project,
+            "gitlab__project__id": expected_gitlab_project_id,
+            "gitlab__project__path": "testorg/testrepo",
+            "gitlab__hook__id": expected_gitlab_hook_id,
+        },
+        {
+            "level": "info",
             "event": "issue.linked",
-            "organisation__id": organisation.id,
+            "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
         },
     ]
+
+
+@responses.activate
+def test_create_external_resource__second_link_same_gitlab_project__reuses_webhook(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    config = GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+    )
+    GitLabWebhook.objects.create(
+        gitlab_configuration=config,
+        gitlab_project_id=777,
+        gitlab_path_with_namespace="testorg/testrepo",
+        gitlab_hook_id=42,
+        secret="existing-secret",
+    )
+    # No GitLab mock is set up — if registration fires, the call will fail.
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_MR",
+            "url": "https://gitlab.example.com/testorg/testrepo/-/merge_requests/5",
+            "feature": feature,
+            "metadata": {"title": "Add login button", "state": "opened"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert len(responses.calls) == 0
+    assert GitLabWebhook.objects.filter(gitlab_configuration=config).count() == 1
+
+    # Feature tagged with `MR Open`
+    assert list(Feature.objects.get(id=feature).tags.values_list("label", "type")) == [
+        ("MR Open", TagType.GITLAB.value)
+    ]
+
+    # No webhook registration event
+    assert "webhook.registered" not in {event["event"] for event in log.events}
+
+
+def test_create_external_resource__gitlab_api_failure__returns_503(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    mocker: MockerFixture,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    project_instance = Project.objects.get(id=project)
+    GitLabConfiguration.objects.create(
+        project=project_instance,
+        gitlab_instance_url="https://gitlab.example.com",
+        access_token="glpat-test-token",
+    )
+    mocker.patch(
+        "integrations.gitlab.services.create_project_hook",
+        side_effect=requests.RequestException("connection refused"),
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/{feature}/feature-external-resources/",
+        data={
+            "type": "GITLAB_ISSUE",
+            "url": "https://gitlab.example.com/testorg/testrepo/-/issues/1",
+            "feature": feature,
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+    assert response.json()["detail"] == "GitLab API is unreachable"
+    assert not FeatureExternalResource.objects.exists()
+    assert not GitLabWebhook.objects.exists()
+
+    assert log.events == [
+        {
+            "level": "error",
+            "event": "webhook.registration_failed",
+            "organisation__id": project_instance.organisation_id,
+            "project__id": project,
+            "gitlab__project__path": "testorg/testrepo",
+            "exc_info": mocker.ANY,
+        },
+    ]
+    assert isinstance(log.events[0]["exc_info"], requests.RequestException)
 
 
 @pytest.mark.django_db()

@@ -14,9 +14,11 @@ from integrations.github.client import (
     label_github_issue_pr,
 )
 from integrations.github.models import GitHubRepository
+from integrations.gitlab.models import GitLabConfiguration
+from integrations.gitlab.services import register_webhook_for_resource
 from organisations.models import Organisation
 
-from .models import FeatureExternalResource, ResourceType
+from .models import GITLAB_RESOURCE_TYPES, FeatureExternalResource, ResourceType
 from .serializers import FeatureExternalResourceSerializer
 
 
@@ -72,17 +74,29 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
         return Response(data={"results": data})
 
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        if request.data.get("type") not in [
-            ResourceType.GITHUB_ISSUE,
-            ResourceType.GITHUB_PR,
-        ]:
-            return super().create(request, *args, **kwargs)
+        resource_type = request.data.get("type")
 
         feature = get_object_or_404(
             Feature.objects.filter(
                 id=self.kwargs["feature_pk"],
             ),
         )
+
+        if resource_type in GITLAB_RESOURCE_TYPES:
+            if config := GitLabConfiguration.objects.filter(
+                project=feature.project,
+            ).first():
+                register_webhook_for_resource(
+                    config=config,
+                    resource_url=request.data.get("url"),
+                )
+            return super().create(request, *args, **kwargs)
+
+        if resource_type not in (
+            ResourceType.GITHUB_ISSUE,
+            ResourceType.GITHUB_PR,
+        ):
+            return super().create(request, *args, **kwargs)
 
         github_configuration = (
             Organisation.objects.prefetch_related("github_config")

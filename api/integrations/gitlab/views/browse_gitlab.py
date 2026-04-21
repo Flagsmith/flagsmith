@@ -136,7 +136,7 @@ class BrowseGitLabIssues(_GitLabListView[GitLabIssue]):
 
         self._log_for(config).info(
             "issues.fetched",
-            gitlab_project__id=validated_data["gitlab_project_id"],
+            gitlab__project__id=validated_data["gitlab_project_id"],
         )
         return page_data
 
@@ -161,6 +161,6 @@ class BrowseGitLabMergeRequests(_GitLabListView[GitLabMergeRequest]):
 
         self._log_for(config).info(
             "merge_requests.fetched",
-            gitlab_project__id=validated_data["gitlab_project_id"],
+            gitlab__project__id=validated_data["gitlab_project_id"],
         )
         return page_data

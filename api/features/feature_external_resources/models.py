@@ -32,6 +32,12 @@ class ResourceType(models.TextChoices):
     GITLAB_MR = "GITLAB_MR", "GitLab MR"
 
 
+GITLAB_RESOURCE_TYPES: tuple[ResourceType, ...] = (
+    ResourceType.GITLAB_ISSUE,
+    ResourceType.GITLAB_MR,
+)
+
+
 tag_by_type_and_state = {
     ResourceType.GITHUB_ISSUE.value: {
         "open": GitHubTag.ISSUE_OPEN.value,
@@ -134,6 +140,13 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
                 url=None,
                 feature_states=feature_states,
             )
+
+    @hook(AFTER_SAVE, when="type", is_now="GITLAB_ISSUE")  # type: ignore[misc]
+    @hook(AFTER_SAVE, when="type", is_now="GITLAB_MR")  # type: ignore[misc]
+    def apply_gitlab_tag(self) -> None:
+        from integrations.gitlab.services import apply_initial_tag
+
+        apply_initial_tag(self)
 
     @hook(BEFORE_DELETE, when="type", is_now="GITHUB_ISSUE")  # type: ignore[misc]
     @hook(BEFORE_DELETE, when="type", is_now="GITHUB_PR")  # type: ignore[misc]
