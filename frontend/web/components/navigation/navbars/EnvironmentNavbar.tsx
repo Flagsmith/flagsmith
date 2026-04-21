@@ -21,29 +21,35 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
 }) => {
   const date = useRef(moment().toISOString())
 
-  const { data: environments } = useGetEnvironmentsQuery(
-    {
-      projectId: `${projectId}`,
-    },
-    { skip: !projectId },
-  )
-
-  const { data: scheduledData } = useGetChangeRequestsQuery({
-    committed: true,
-    environmentId,
-    live_from_after: date.current,
-    page_size: 1,
-  })
-
-  const { data: changeRequestsData } = useGetChangeRequestsQuery({
-    committed: false,
-    environmentId,
-    page_size: 1,
-  })
+  const { data: environments, isSuccess: environmentsLoaded } =
+    useGetEnvironmentsQuery({ projectId }, { skip: !projectId })
 
   const environment = environments?.results?.find(
     (v) => v.api_key === environmentId,
   )
+
+  const { data: scheduledData } = useGetChangeRequestsQuery(
+    {
+      committed: true,
+      environmentId,
+      live_from_after: date.current,
+      page_size: 1,
+    },
+    { skip: !environment },
+  )
+
+  const { data: changeRequestsData } = useGetChangeRequestsQuery(
+    {
+      committed: false,
+      environmentId,
+      page_size: 1,
+    },
+    { skip: !environment },
+  )
+
+  if (environmentsLoaded && !environment) {
+    return null
+  }
 
   const changeRequests =
     (Utils.changeRequestsEnabled(
@@ -117,7 +123,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                 id={mobile ? undefined : 'users-link'}
                 exact
                 icon='people'
-                to={`/project/${projectId}/environment/${environmentId}/users`}
+                to={`/project/${projectId}/environment/${environmentId}/identities`}
               >
                 Identities
               </SidebarLink>

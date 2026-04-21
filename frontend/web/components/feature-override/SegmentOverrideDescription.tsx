@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import SegmentsIcon from 'components/svg/SegmentsIcon'
+import SegmentsIcon from 'components/icons/SegmentsIcon'
 import FeatureValue from 'components/feature-summary/FeatureValue'
 import { FlagsmithValue } from 'common/types/responses'
 

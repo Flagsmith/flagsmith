@@ -1,6 +1,6 @@
 import Constants from 'common/constants'
 
-module.exports = (
+export default (
   envId,
   { TRAIT_NAME },
   userId,

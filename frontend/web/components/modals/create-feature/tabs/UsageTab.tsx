@@ -23,8 +23,8 @@ const UsageTab: FC<UsageTabProps> = ({
       {!Project.disableAnalytics && (
         <div className='mb-4'>
           <FeatureAnalytics
-            projectId={`${projectId}`}
-            featureId={`${featureId}`}
+            projectId={Number(projectId)}
+            featureId={featureId}
             defaultEnvironmentIds={[`${environmentId}`]}
           />
         </div>

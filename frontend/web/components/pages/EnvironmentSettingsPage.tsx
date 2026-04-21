@@ -12,8 +12,8 @@ import JSONReference from 'components/JSONReference'
 import ColourSelect from 'components/tags/ColourSelect'
 import Constants from 'common/constants'
 import Switch from 'components/Switch'
-import Icon from 'components/Icon'
-import _ from 'lodash'
+import Icon from 'components/icons/Icon'
+import find from 'lodash/find'
 import PageTitle from 'components/PageTitle'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
@@ -376,7 +376,7 @@ const EnvironmentSettingsPage: React.FC = () => {
         onSave={onSave}
       >
         {({ deleteEnv, isLoading, isSaving, project }) => {
-          const env = _.find(project?.environments, {
+          const env = find(project?.environments, {
             api_key: match.params.environmentId,
           })
           if (
@@ -602,7 +602,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                           <Button
                             id='delete-env-btn'
                             onClick={() => {
-                              const envToRemove = _.find(
+                              const envToRemove = find(
                                 project?.environments,
                                 {
                                   api_key: match.params.environmentId,

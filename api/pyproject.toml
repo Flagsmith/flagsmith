@@ -76,6 +76,7 @@ addopts = [
   '--dist=worksteal',
 ]
 console_output_style = 'count'
+log_level = 'INFO'
 
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]
@@ -96,6 +97,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["licensing.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["oauth2_provider.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
@@ -122,7 +127,7 @@ django-cors-headers = "~3.5.0"
 djangorestframework = "~3.15.2"
 gunicorn = "~23.0.0"
 pyparsing = "~2.4.7"
-requests = "~2.33.0"
+requests = "~2.32.4"
 six = "~1.16.0"
 whitenoise = "~6.0.0"
 dj-database-url = "~3.0.1"
@@ -184,6 +189,7 @@ djangorestframework-simplejwt = "^5.5.1"
 structlog = "^24.4.0"
 prometheus-client = "^0.21.1"
 django_cockroachdb = "~4.2"
+django-oauth-toolkit = "^3.0.1"
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -207,7 +213,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.3.2" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.4.0" }
 
 [tool.poetry.group.licensing]
 optional = true

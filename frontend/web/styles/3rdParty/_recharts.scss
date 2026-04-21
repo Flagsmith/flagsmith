@@ -1,0 +1,25 @@
+// Recharts global overrides.
+//
+// The new <BarChart /> component passes colour tokens directly as prop values
+// (e.g. `fill={colorTextSecondary}`) which browsers resolve in SVG
+// presentation attributes — no CSS classname plumbing needed.
+//
+// TODO: delete everything below when SingleSDKLabelsChart and
+// OrganisationUsage migrate to <BarChart />. The rules only exist to keep
+// the two remaining raw-recharts consumers styled correctly.
+.recharts-tooltip {
+  background-color: $text-icon-light;
+  border-radius: $border-radius-lg;
+}
+
+.dark {
+  .recharts-tooltip-header {
+    color: $body-color;
+  }
+
+  .recharts-wrapper {
+    line {
+      stroke: $bg-dark100;
+    }
+  }
+}

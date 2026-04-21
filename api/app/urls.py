@@ -5,7 +5,13 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic.base import TemplateView
+from oauth2_provider import views as oauth2_views
 
+from oauth2_metadata.views import (
+    DynamicClientRegistrationView,
+    OAuthAuthorizeView,
+    authorization_server_metadata,
+)
 from users.views import password_reset_redirect
 
 from . import views
@@ -13,6 +19,11 @@ from . import views
 urlpatterns = [
     *core_urlpatterns,
     path("processor/", include("task_processor.urls")),
+    path(
+        ".well-known/oauth-authorization-server",
+        authorization_server_metadata,
+        name="oauth-authorization-server-metadata",
+    ),
 ]
 
 if not settings.TASK_PROCESSOR_MODE:
@@ -47,6 +58,37 @@ if not settings.TASK_PROCESSOR_MODE:
             "robots.txt",
             TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
         ),
+        path(
+            "api/v1/oauth/authorize/",
+            OAuthAuthorizeView.as_view(),
+            name="oauth-authorize",
+        ),
+        path(
+            "o/register/",
+            DynamicClientRegistrationView.as_view(),
+            name="oauth2-dcr-register",
+        ),
+        path(
+            "o/",
+            include(
+                (
+                    [
+                        path("token/", oauth2_views.TokenView.as_view(), name="token"),
+                        path(
+                            "revoke_token/",
+                            oauth2_views.RevokeTokenView.as_view(),
+                            name="revoke-token",
+                        ),
+                        path(
+                            "introspect/",
+                            oauth2_views.IntrospectTokenView.as_view(),
+                            name="introspect",
+                        ),
+                    ],
+                    "oauth2_provider",
+                )
+            ),
+        ),
     ]
 
 if settings.DEBUG:  # pragma: no cover
@@ -55,6 +97,14 @@ if settings.DEBUG:  # pragma: no cover
     ] + urlpatterns
 
 if settings.SAML_INSTALLED:  # pragma: no cover
+    from saml.views import SamlConfigurationViewSet
+
+    from organisations.subscriptions.constants import SubscriptionPlanFamily
+    from organisations.subscriptions.permissions import require_minimum_plan
+
+    scale_up_permission = require_minimum_plan(SubscriptionPlanFamily.SCALE_UP)
+    SamlConfigurationViewSet.permission_classes += [scale_up_permission]
+
     urlpatterns += [
         path("api/v1/auth/saml/", include("saml.urls")),
     ]

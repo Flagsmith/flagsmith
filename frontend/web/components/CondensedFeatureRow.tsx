@@ -2,11 +2,11 @@ import classNames from 'classnames'
 import Switch from './Switch'
 import { FeatureListProviderData, ProjectFlag } from 'common/types/responses'
 import FeatureValue from './feature-summary/FeatureValue'
-import SegmentOverridesIcon from './SegmentOverridesIcon'
-import IdentityOverridesIcon from './IdentityOverridesIcon'
+import SegmentOverridesIcon from './icons/SegmentOverridesIcon'
+import IdentityOverridesIcon from './icons/IdentityOverridesIcon'
 import Constants from 'common/constants'
 
-export interface CondensedFeatureRowProps {
+interface CondensedFeatureRowProps {
   disableControls?: boolean
   readOnly: boolean
   projectFlag: ProjectFlag
@@ -74,17 +74,6 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
       </div>
       <Flex className='table-column clickable'>
         <Row>
-          <div
-            onClick={() => permission && !readOnly && editFeature()}
-            style={{ flex: 1 }}
-            className={`overflow-hidden ${fadeValue ? 'faded' : ''}`}
-          >
-            <FeatureValue
-              value={environmentFlags?.[id]?.feature_state_value ?? null}
-              data-test={`feature-value-${index}`}
-            />
-          </div>
-
           <SegmentOverridesIcon
             onClick={(e) => {
               e.stopPropagation()
@@ -100,6 +89,16 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
             count={projectFlag.num_identity_overrides}
             showPlusIndicator={showPlusIndicator}
           />
+          <div
+            onClick={() => permission && !readOnly && editFeature()}
+            style={{ flex: 1 }}
+            className={`overflow-hidden ${fadeValue ? 'faded' : ''}`}
+          >
+            <FeatureValue
+              value={environmentFlags?.[id]?.feature_state_value ?? null}
+              data-test={`feature-value-${index}`}
+            />
+          </div>
         </Row>
       </Flex>
     </Flex>

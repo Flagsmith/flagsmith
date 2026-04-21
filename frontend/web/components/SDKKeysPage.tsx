@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import Button from './base/forms/Button'
 import Input from './base/forms/Input'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import ServerSideSDKKeys from './ServerSideSDKKeys'
 import PageTitle from './PageTitle'
 import Utils from 'common/utils/utils'

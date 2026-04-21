@@ -22,7 +22,7 @@ import TabItem from 'components/navigation/TabMenu/TabItem'
 import { AttributeName } from 'common/types/responses'
 import SAMLAttributeMappingTable from 'components/SAMLAttributeMappingTable'
 import Input from 'components/base/forms/Input'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import Project from 'common/project'
 
 type CreateSAML = {

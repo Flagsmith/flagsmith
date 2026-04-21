@@ -6,7 +6,7 @@ from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.models import F
 
 
-logger = structlog.get_logger()
+logger = structlog.get_logger(__name__)
 
 
 def remove_users_from_groups(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:

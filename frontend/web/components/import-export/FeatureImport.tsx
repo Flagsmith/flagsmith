@@ -1,9 +1,8 @@
-import React, { FC, useEffect, useMemo, useState } from 'react'
+import React, { FC, useMemo, useState } from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import Tooltip from 'components/Tooltip'
 import { IonIcon } from '@ionic/react'
 import { informationCircle } from 'ionicons/icons'
-import AppActions from 'common/dispatcher/app-actions'
 import ProjectStore from 'common/stores/project-store'
 import Radio from 'components/base/forms/Radio'
 import { ImportStrategy } from 'common/types/responses'
@@ -13,7 +12,6 @@ import PanelSearch from 'components/PanelSearch'
 import {
   FeatureImportItem,
   FeatureState,
-  ProjectFlag,
   TagStrategy,
 } from 'common/types/responses'
 import FeatureRow from 'components/feature-summary/FeatureRow'
@@ -22,7 +20,6 @@ import { useCreateFlagsmithProjectImportMutation } from 'common/services/useFlag
 import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
-import FeatureListStore from 'common/stores/feature-list-store'
 import SuccessMessage from 'components/messages/SuccessMessage'
 import TableSearchFilter from 'components/tables/TableSearchFilter'
 import Utils from 'common/utils/utils'
@@ -31,6 +28,8 @@ import TableFilterOptions from 'components/tables/TableFilterOptions'
 import { getViewMode, setViewMode } from 'common/useViewMode'
 import TableSortFilter, { SortValue } from 'components/tables/TableSortFilter'
 import { useGetFeatureImportsQuery } from 'common/services/useFeatureImport'
+import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
+import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 
 type FeatureExportType = {
   projectId: string
@@ -48,26 +47,22 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   })
   const [tags, setTags] = useState<(number | string)[]>([])
   const [search, setSearch] = useState('')
-  const [page, setPage] = useState(0)
+  const [page, setPage] = useState(1)
   const env = ProjectStore.getEnvironment(environment)
   const [file, setFile] = useState<File | null>(null)
   const [fileData, setFileData] = useState<FeatureImportItem[] | null>(null)
-  const [currentProjectflags, setCurrentProjectflags] =
-    useState<ProjectFlag[]>()
-  const [currentFeatureStates, setCurrentFeatureStates] =
-    useState<Record<number, FeatureState>>()
 
-  useEffect(() => {
-    const callback = () => {
-      setCurrentProjectflags(FeatureListStore.getProjectFlags())
-      setCurrentFeatureStates(FeatureListStore.getEnvironmentFlags())
-    }
-    FeatureListStore.on('change', callback)
+  const { getEnvironmentIdFromKey, isLoading: _isLoadingEnvs } =
+    useProjectEnvironments(parseInt(projectId))
 
-    return () => {
-      FeatureListStore.off('change', callback)
-    }
-  }, [])
+  const previewEnvId = previewEnvironment
+    ? getEnvironmentIdFromKey(previewEnvironment)
+    : undefined
+
+  const baseEnvId = environment
+    ? getEnvironmentIdFromKey(environment)
+    : undefined
+
   const [showArchived, setShowArchived] = useState(false)
 
   const [tagStrategy, setTagStrategy] = useState<TagStrategy>('UNION')
@@ -77,31 +72,42 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
     sortOrder: SortOrder.ASC,
   })
 
-  useEffect(() => {
-    if (previewEnvironment) {
-      AppActions.getFeatures(
-        projectId,
-        previewEnvironment,
-        true,
-        search,
-        null,
-        page,
-        {
+  // Fetch features for the preview environment (with filters/search)
+  const { isFetching: isLoadingPreview } = useGetFeatureListQuery(
+    previewEnvId
+      ? {
+          environmentId: String(previewEnvId),
           is_archived: showArchived,
+          page,
+          projectId: parseInt(projectId),
+          search: search || undefined,
+          sort_direction: sort.sortOrder,
+          sort_field: sort.sortBy,
           tag_strategy: tagStrategy,
-          tags: tags?.length ? tags : undefined,
-        },
-      )
-    }
-  }, [
-    previewEnvironment,
-    tagStrategy,
-    showArchived,
-    tags,
-    search,
-    projectId,
-    page,
-  ])
+          tags: tags?.length ? tags.join(',') : undefined,
+        }
+      : ({} as any),
+    { skip: !previewEnvId },
+  )
+
+  // Fetch base environment features for comparison with import data
+  const { data: baseFeatureData } = useGetFeatureListQuery(
+    baseEnvId
+      ? {
+          environmentId: String(baseEnvId),
+          page: 1,
+          projectId: parseInt(projectId),
+          search: search || undefined,
+          sort_direction: 'ASC',
+          sort_field: 'name',
+          tags: tags?.length ? tags.join(',') : undefined,
+        }
+      : ({} as any),
+    { skip: !baseEnvId },
+  )
+
+  const currentProjectflags = baseFeatureData?.results
+  const currentFeatureStates = baseFeatureData?.environmentStates
 
   const [createImport, { error, isLoading }] =
     useCreateFlagsmithProjectImportMutation({})
@@ -129,12 +135,6 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
 
   const [strategy, setStrategy] = useState<ImportStrategy>('SKIP')
 
-  useEffect(() => {
-    AppActions.getFeatures(projectId, environment, true, null, null, page, {
-      search,
-      tags: tags?.length ? tags : undefined,
-    })
-  }, [projectId, tags])
   const { featureStates, projectFlags } = useMemo(() => {
     if (fileData) {
       const createdDate = new Date().toISOString()
@@ -212,7 +212,15 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
       return { featureStates, projectFlags }
     }
     return { featureStates: null, projectFlags: null }
-  }, [fileData, currentFeatureStates, currentProjectflags, strategy, env])
+  }, [
+    fileData,
+    currentFeatureStates,
+    currentProjectflags,
+    strategy,
+    env,
+    environment,
+    previewEnvironment,
+  ])
 
   const filteredProjectFlags = useMemo(() => {
     return projectFlags?.filter((projectFlag) => {
@@ -359,7 +367,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
                   />
                   <Row className='flex-fill justify-content-end'>
                     <TableTagFilter
-                      isLoading={FeatureListStore.isLoading}
+                      isLoading={isLoadingPreview}
                       projectId={projectId}
                       className='me-4'
                       tagStrategy={tagStrategy}
@@ -370,7 +378,6 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
                       }}
                       showArchived={showArchived}
                       onChange={(tags) => {
-                        FeatureListStore.isLoading = true
                         if (tags.includes('') && tags.length > 1) {
                           if (!tags.includes('')) {
                             setTags([''])
@@ -399,7 +406,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
                       ]}
                     />
                     <TableSortFilter
-                      isLoading={FeatureListStore.isLoading}
+                      isLoading={isLoadingPreview}
                       value={sort}
                       options={[
                         {

@@ -1,4 +1,6 @@
 @import "variables";
+@import "tokens";
+@import "token-utilities";
 @import "3rdParty/index";
 @import "components/index";
 @import "flexbox/index";
@@ -18,9 +20,6 @@
     display: inline-block;
     margin: 0;
   }
-}
-.display-none {
-  display: none !important;
 }
 .dark .butter-bar {
   background-color: $butter-bar-bg-dark;
@@ -51,19 +50,6 @@ bold, strong {
     .select-language {
       display: none;
     }
-  }
-}
-
-.faint-lg {
-  color: $text-muted;
-  font-size: 1.25em;
-}
-
-.striped-section {
-  padding: 20px;
-
-  &:nth-child(2) {
-    background-color: #f7f7f7;
   }
 }
 
@@ -149,83 +135,8 @@ input:disabled {
   text-align: right;
 }
 
-.inline-block {
-  display: inline-block;
-}
-
 .form-group {
   margin-bottom: 1.5rem;
-}
-
-.header-icon {
-  margin-left: 10px;
-  font-size: 1.5em;
-}
-
-.alert-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  z-index: 200;
-  color: #fff;
-  padding: 15px;
-  font-size: 1.2em;
-  background-color: #384f68;
-  text-align: center;
-  -webkit-transition: all 0.3s ease;
-  -moz-transition: all 0.3s ease;
-  transition: all 0.3s ease;
-
-  a {
-    color: white;
-
-    &.close-btn {
-      font-size: 30px;
-      line-height: 30px;
-    }
-  }
-
-  &__text {
-    font-size: 14px;
-    @media screen and (max-width: 368px) {
-      font-size: 11px;
-    }
-  }
-
-
-  &.slideOut {
-    padding: 0;
-  }
-}
-
-@media screen and (max-width: 576px) {
-
-  .alert-bar {
-    padding: 10px 10px 5px 0;
-    font-size: 1em;
-  }
-
-}
-
-.bottom-banner {
-  position: fixed;
-  bottom: 20px;
-  margin: auto;
-  height: 44px;
-  line-height: 44px;
-  right: 0;
-  text-align: center;
-
-  .inner {
-    padding-left: 10px;
-    padding-right: 10px;
-    height: 44px;
-    background-color: white;
-    display: inline-block;
-    box-shadow: rgba(75, 75, 75, 0.21) 0px 1px 6px, rgba(75, 75, 75, 0.21) 0px 1px 4px;
-  }
 }
 
 .react-select__menu {

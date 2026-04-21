@@ -3,7 +3,7 @@ import { useHistory, useLocation, withRouter } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import ForgotPasswordModal from 'components/modals/ForgotPasswordModal'
 import Card from 'components/Card'
-import NavIconSmall from 'components/svg/NavIconSmall'
+import NavIconSmall from 'components/icons/NavIconSmall'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
@@ -422,7 +422,7 @@ const HomePage: React.FC = () => {
                                       !disableForgotPassword && (
                                         <Link
                                           tabIndex={-1}
-                                          className='float-right'
+                                          className='float-end'
                                           to={`/password-recovery${redirect}`}
                                           onClick={showForgotPassword}
                                         >

@@ -27,6 +27,10 @@ class ResourceType(models.TextChoices):
     GITHUB_ISSUE = "GITHUB_ISSUE", "GitHub Issue"
     GITHUB_PR = "GITHUB_PR", "GitHub PR"
 
+    # GitLab external resource types
+    GITLAB_ISSUE = "GITLAB_ISSUE", "GitLab Issue"
+    GITLAB_MR = "GITLAB_MR", "GitLab MR"
+
 
 tag_by_type_and_state = {
     ResourceType.GITHUB_ISSUE.value: {
@@ -65,8 +69,9 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
             models.Index(fields=["type"]),
         ]
 
-    @hook(AFTER_SAVE)
-    def execute_after_save_actions(self):  # type: ignore[no-untyped-def]
+    @hook(AFTER_SAVE, when="type", is_now="GITHUB_ISSUE")
+    @hook(AFTER_SAVE, when="type", is_now="GITHUB_PR")
+    def notify_github_on_link(self):  # type: ignore[no-untyped-def]
         # Tag the feature with the external resource type
         metadata = json.loads(self.metadata) if self.metadata else {}
         state = metadata.get("state", "open")
@@ -130,8 +135,9 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
                 feature_states=feature_states,
             )
 
-    @hook(BEFORE_DELETE)  # type: ignore[misc]
-    def execute_before_save_actions(self) -> None:
+    @hook(BEFORE_DELETE, when="type", is_now="GITHUB_ISSUE")  # type: ignore[misc]
+    @hook(BEFORE_DELETE, when="type", is_now="GITHUB_PR")  # type: ignore[misc]
+    def notify_github_on_unlink(self) -> None:
         # Add a comment to GitHub Issue/PR when feature is unlinked to the GH external resource
         if (
             Organisation.objects.prefetch_related("github_config")

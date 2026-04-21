@@ -23,13 +23,39 @@ Use it for human-in-the-loop workflows (asking your IDE assistant to toggle a fl
 
 Head to our installation page and pick your client:
 
-👉 **[Install the Flagsmith MCP Server](https://mcp.flagsmith.com/mcp/flagsmith-mcp/install)**
+👉 **[Install the Flagsmith MCP Server](https://app.getgram.ai/mcp/flagsmith-mcp/install)**
 
 We support Cursor, Claude Code, Claude Desktop, Windsurf, Gemini CLI, Codex CLI, and any other client that supports MCP servers.
 
-### Configuration
+### Authentication
 
-You'll need an **Organisation API Key** from Flagsmith:
+The MCP Server supports two authentication methods. You can use either one — both work side by side.
+
+#### 1. OAuth (Recommended for SaaS users)
+
+OAuth lets you authenticate directly in your browser — no API keys to manage. Simply add the MCP server to your client and it will redirect you to the Flagsmith OAuth flow where you can log in and authorise access.
+
+For **Claude Code**:
+
+```bash
+claude mcp add --transport http "flagsmith" \
+    "https://app.getgram.ai/mcp/flagsmith-mcp"
+```
+
+For **Codex CLI**:
+
+```json
+[mcp_servers.flagsmith]
+url = "https://app.getgram.ai/mcp/flagsmith-mcp"
+```
+
+For other clients, visit the **[installation page](https://app.getgram.ai/mcp/flagsmith-mcp/install)** for client-specific instructions.
+
+> OAuth is currently available for SaaS users only. Self-hosted and private cloud customers should use an Organisation API Key or contact our team.
+
+#### 2. Organisation API Key
+
+Alternatively, you can authenticate using an Organisation API Key:
 
 1. Go to **Organisation Settings** in your Flagsmith dashboard
 2. Generate a new API Key
@@ -41,14 +67,14 @@ MCP_FLAGSMITH_TOKEN_AUTH="Api-Key YOUR_API_KEY_HERE"
 
 > ⚠️ **Important**: The `Api-Key ` prefix is required. The value of your environment variable should look like `Api-Key ser.abc123...`, not just the key itself.
 
-### Self-Hosted Flagsmith
+### Self-Hosted Flagsmith and Private Cloud
 
-Running your own Flagsmith instance? Point the MCP Server at your API by adding the following header during installation:
+Running your own Flagsmith instance or using our Private Cloud? Use Organisation API Key authentication, then point the MCP Server at your API by adding the following headers during installation:
 
 ```bash
 claude mcp add --transport http "flagsmith" \
     "https://app.getgram.ai/mcp/flagsmith-mcp" \
-    --header 'Mcp-Flagsmith-Token-Auth:${MCP_FLAGSMITH_TOKEN_AUTH}'
+    --header 'Mcp-Flagsmith-Token-Auth:${MCP_FLAGSMITH_TOKEN_AUTH}' \
     --header 'Mcp-Flagsmith-Server-Url:https://your-flagsmith-instance.com'
 ```
 

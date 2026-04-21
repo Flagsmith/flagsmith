@@ -4,7 +4,7 @@ import _data from 'common/data/base/_data'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
-import Icon from 'components/Icon'
+import Icon from 'components/icons/Icon'
 import firstpromoter from 'project/firstPromoter'
 import Utils from 'common/utils/utils'
 import { openChat } from 'common/loadChat'
@@ -133,7 +133,7 @@ const Payment = class extends Component {
                       'text-muted': !this.state.yearly,
                     })}
                   >
-                    Pay Yearly (Save 10%)
+                    Pay Yearly & Save
                   </h5>
                   <Switch
                     checked={!this.state.yearly}
@@ -149,7 +149,7 @@ const Payment = class extends Component {
                     Pay Monthly
                   </h5>
                 </div>
-                <Row className='pricing-container align-start'>
+                <Row className='pricing-container align-items-start'>
                   <Flex className='pricing-panel p-2'>
                     <div className='panel panel-default'>
                       <div
@@ -240,17 +240,6 @@ const Payment = class extends Component {
                               <span>
                                 <Icon name='checkmark-circle' fill='#27AB95' />
                               </span>
-                              <div className='ml-2'>
-                                Email technical support
-                              </div>
-                            </Row>
-                          </li>
-
-                          <li>
-                            <Row className='mb-3 pricing-features-item'>
-                              <span>
-                                <Icon name='checkmark-circle' fill='#27AB95' />
-                              </span>
                               <div className='ml-2'>Scheduled flags</div>
                             </Row>
                           </li>
@@ -261,6 +250,151 @@ const Payment = class extends Component {
                               </span>
                               <div className='ml-2'>
                                 Two-factor authentication (2FA)
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
+                                Email technical support
+                              </div>
+                            </Row>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </Flex>
+                  <Flex className='pricing-panel p-2'>
+                    <div className='panel panel-default'>
+                      <div
+                        className='panel-content p-3 pt-4 d-flex flex-column justify-content-between'
+                        style={{
+                          backgroundColor: 'rgba(39, 171, 149, 0.08)',
+                          minHeight: '250px',
+                        }}
+                      >
+                        <Row className='pt-4 justify-content-center'>
+                          <Icon name='flash' width={32} />
+                          <h4 className='mb-0 ml-2'>Scale-Up</h4>
+                        </Row>
+                        <Row className='pt-3 justify-content-center'>
+                          <h5 className='mb-0 align-self-start'>$</h5>
+                          <h1 className='mb-0 d-flex align-items-end'>
+                            {this.state.yearly ? '250' : '300'}{' '}
+                            <h5 className='fs-lg mb-0'>/mo</h5>
+                          </h1>
+                        </Row>
+                        {!viewOnly ? (
+                          <>
+                            <PaymentButton
+                              data-cb-plan-id={Project.plans?.scaleUp?.annual}
+                              className={classNames(
+                                'btn btn-primary btn-lg full-width mt-3',
+                                { 'd-none': !this.state.yearly },
+                              )}
+                              isDisableAccount={this.props.isDisableAccountText}
+                            >
+                              {plan.includes('scale-up')
+                                ? 'Purchased'
+                                : '14 Day Free Trial'}
+                            </PaymentButton>
+                            <PaymentButton
+                              data-cb-plan-id={Project.plans?.scaleUp?.monthly}
+                              className={classNames(
+                                'btn btn-primary btn-lg full-width mt-3',
+                                { 'd-none': this.state.yearly },
+                              )}
+                              isDisableAccount={this.props.isDisableAccountText}
+                            >
+                              {plan.includes('scale-up')
+                                ? 'Purchased'
+                                : '14 Day Free Trial'}
+                            </PaymentButton>
+                          </>
+                        ) : null}
+                      </div>
+                      <div className='panel-footer mt-3'>
+                        <h5 className='m-2 mb-4'>
+                          All from{' '}
+                          <span className='text-primary'>Start-Up,</span> plus
+                        </h5>
+                        <ul className='pricing-features mb-0 px-2'>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
+                                Up to
+                                <strong> 5,000,000</strong> Requests per month
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
+                                <strong>5</strong> Team members
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
+                                Additional seats at $60/seat (up to 20)
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>SAML</div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
+                                User roles and permissions
+                              </div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>Change requests</div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>Audit logs</div>
+                            </Row>
+                          </li>
+                          <li>
+                            <Row className='mb-3 pricing-features-item'>
+                              <span>
+                                <Icon name='checkmark-circle' fill='#27AB95' />
+                              </span>
+                              <div className='ml-2'>
+                                Real-time technical support via chat and
+                                Priority Email support
                               </div>
                             </Row>
                           </li>
@@ -320,7 +454,7 @@ const Payment = class extends Component {
                       <div className='panel-footer mt-3'>
                         <h5 className='text-white m-2 mb-4'>
                           All from{' '}
-                          <span className='text-secondary'>Start-Up,</span> plus
+                          <span className='text-secondary'>Scale-Up,</span> plus
                         </h5>
                         <ul className='pricing-features mb-0 px-2'>
                           <li>
@@ -410,16 +544,6 @@ const Payment = class extends Component {
                     </div>
                   </Flex>
                 </Row>
-                <div className='text-center mt-4'>
-                  *Need something in-between our Enterprise plan for users or
-                  API limits?
-                  <div>
-                    <a href={'https://www.flagsmith.com/contact-us'}>
-                      Reach out
-                    </a>{' '}
-                    to us and we'll help you out
-                  </div>
-                </div>
               </div>
             )
           }}

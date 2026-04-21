@@ -1,0 +1,161 @@
+// =============================================================================
+// Storybook Docs Theme Overrides
+// =============================================================================
+// The Storybook docs renderer uses its own styling that doesn't respond to
+// our theme toggle. These overrides ensure documentation pages are readable
+// in both light and dark mode.
+// =============================================================================
+
+// Light mode — fix invisible inline code
+.sbdocs code {
+  color: #1a2634;
+}
+
+.dark {
+  // Docs page background
+  .sbdocs-wrapper {
+    background-color: var(--color-surface-default, #101628);
+    color: var(--color-text-default, #ffffff);
+  }
+
+  .sbdocs-content {
+    color: var(--color-text-default, #ffffff);
+  }
+
+  // Headings
+  .sbdocs h1,
+  .sbdocs h2,
+  .sbdocs h3,
+  .sbdocs h4,
+  .sbdocs h5 {
+    color: var(--color-text-default, #ffffff);
+  }
+
+  // Body text
+  .sbdocs p,
+  .sbdocs li,
+  .sbdocs td,
+  .sbdocs th {
+    color: var(--color-text-default, #ffffff);
+  }
+
+  // Code — inline and blocks
+  .sbdocs code {
+    background-color: var(--color-surface-emphasis, #202839);
+    color: var(--color-text-default, #ffffff);
+  }
+
+  .sbdocs pre {
+    background-color: var(--color-surface-emphasis, #202839);
+    color: var(--color-text-default, #ffffff);
+  }
+
+  // Storybook Source/code block container and all its children
+  .docblock-source,
+  .docblock-source > * {
+    background-color: var(--color-surface-emphasis, #202839) !important;
+    color: var(--color-text-default, #ffffff) !important;
+  }
+
+  // Copy button inside code blocks
+  .docblock-source button {
+    background-color: var(--color-surface-muted, #161d30) !important;
+    color: var(--color-text-default, #ffffff) !important;
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16)) !important;
+  }
+
+  // Syntax highlighting tokens
+  .docblock-source .token {
+    color: var(--color-text-default, #ffffff) !important;
+  }
+
+  // Horizontal rules
+  .sbdocs hr {
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16));
+  }
+
+  // Canvas wrapper — emotion-styled div with no stable class, child of .sb-anchor
+  .sb-anchor > div {
+    background-color: var(--color-surface-subtle, #15192b) !important;
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16)) !important;
+  }
+
+  // Args/controls table
+  .docblock-argstable {
+    background-color: var(--color-surface-subtle, #15192b) !important;
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16)) !important;
+  }
+
+  .docblock-argstable th,
+  .docblock-argstable td {
+    background-color: var(--color-surface-subtle, #15192b) !important;
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16)) !important;
+    color: var(--color-text-default, #e0e3e9) !important;
+  }
+
+  // Argstable description text, type badges, default values
+  .docblock-argstable td span,
+  .docblock-argstable td p,
+  .docblock-argstable td code,
+  .docblock-argstable td label {
+    color: var(--color-text-secondary, #9da4ae) !important;
+  }
+
+  // Prop names (first column)
+  .docblock-argstable td:first-child span {
+    color: var(--color-text-default, #e0e3e9) !important;
+  }
+
+  // Control values, radio labels, object inspector text
+  .docblock-argstable [class*='css-'] {
+    color: var(--color-text-default, #e0e3e9) !important;
+  }
+
+  // Control buttons (Set object, Set string, Set boolean, etc.)
+  .docblock-argstable button {
+    background-color: var(--color-surface-muted, #161d30) !important;
+    color: var(--color-text-default, #e0e3e9) !important;
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16)) !important;
+  }
+
+  // Control inputs (text fields, textareas, number inputs)
+  .docblock-argstable input,
+  .docblock-argstable textarea,
+  .docblock-argstable select {
+    background-color: var(--color-surface-muted, #161d30) !important;
+    color: var(--color-text-default, #e0e3e9) !important;
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16)) !important;
+  }
+
+  .docs-story {
+    background-color: var(--color-surface-subtle, #15192b) !important;
+  }
+
+  // Canvas toolbar (zoom, open in new tab icons)
+  .sbdocs-preview [role='toolbar'] {
+    background-color: var(--color-surface-subtle, #15192b) !important;
+  }
+
+  // Table borders
+  .sbdocs table {
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16));
+  }
+
+  .sbdocs th,
+  .sbdocs td {
+    border-color: var(--color-border-default, rgba(255, 255, 255, 0.16));
+  }
+
+  // Table row backgrounds (override Storybook's alternating white rows)
+  .sbdocs tr {
+    background-color: var(--color-surface-default, #101628);
+  }
+
+  .sbdocs tr:nth-child(even) {
+    background-color: var(--color-surface-subtle, #15192b);
+  }
+
+  .sbdocs thead tr {
+    background-color: var(--color-surface-muted, #161d30);
+  }
+}

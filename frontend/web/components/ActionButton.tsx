@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import classNames from 'classnames'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Button, { ButtonType } from './base/forms/Button'
 
 type ActionButtonType = {
@@ -24,7 +24,7 @@ const ActionButton: FC<ActionButtonType> = ({
         onClick()
       }}
     >
-      <div className='pointer-events-none'>
+      <div className='pe-none'>
         <Icon name='more-vertical' width={16} fill='#656D7B' />
       </div>
     </Button>

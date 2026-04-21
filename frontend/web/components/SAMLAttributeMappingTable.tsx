@@ -6,7 +6,7 @@ import {
 } from 'common/services/useSamlAttributeMapping'
 import PanelSearch from './PanelSearch'
 import Button from './base/forms/Button'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import { SAMLAttributeMapping } from 'common/types/responses'
 import Format from 'common/utils/format'
 import Tooltip from './Tooltip'

@@ -145,6 +145,38 @@ E2E_RETRIES=0 SKIP_BUNDLE=1 E2E_CONCURRENCY=1 npm run test -- tests/flag-tests.p
     - `trace.zip` - Interactive trace viewer
     - Screenshots and videos
 
+#### Visual Regression
+
+Visual regression screenshots are captured during E2E tests via `visualSnapshot()` calls. They are a no-op unless `VISUAL_REGRESSION=1` is set. Comparison runs as a separate step after all E2E retries complete, so flaky tests don't affect the report.
+
+##### Local development
+
+To check for visual regressions locally, capture baselines from main on your machine then compare against your branch. Both runs use the same OS and browser, so diffs reflect actual style changes.
+
+```bash
+# 1. Capture baselines from main (stashes changes, checks out main, runs E2E, switches back)
+npm run test:visual:baselines
+
+# 2. Run E2E tests on your branch with screenshot capture
+VISUAL_REGRESSION=1 npm run test
+
+# 3. Compare screenshots against baselines (generates Playwright report with diffs)
+npm run test:visual:compare
+
+# 4. Open the report
+npm run test:visual:report
+```
+
+##### CI
+
+Visual diffs never fail CI — they are reported via PR comment and the Playwright HTML report.
+
+Screenshots are saved to `e2e/visual-regression-screenshots/`, baselines to `e2e/visual-regression-snapshots/` (both git-ignored). In CI, the main branch uploads screenshots as baseline artifacts, and PRs download them for comparison.
+
+| Variable | Description |
+|----------|-------------|
+| `VISUAL_REGRESSION=1` | Enable screenshot capture during E2E tests |
+
 #### Claude Code Commands
 
 When using Claude Code, these commands are available for e2e testing:
@@ -155,3 +187,5 @@ When using Claude Code, these commands are available for e2e testing:
 - `/e2e-create [description]` - Create a new test following existing patterns
 
 The optional `[N]` argument sets `E2E_REPEAT` to run tests N additional times after passing (defaults to 0). E.g., `/e2e 5` runs tests, then repeats 5 more times to detect flakiness.
+
+- `/visual-regression` - Download CI baselines, run E2E with screenshot capture, compare and report

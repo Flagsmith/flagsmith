@@ -1,0 +1,24 @@
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("feature_external_resources", "0002_featureexternalresource_feature_ext_type_2b2068_idx"),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name="featureexternalresource",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("GITHUB_ISSUE", "GitHub Issue"),
+                    ("GITHUB_PR", "GitHub PR"),
+                    ("GITLAB_ISSUE", "GitLab Issue"),
+                    ("GITLAB_MR", "GitLab MR"),
+                ],
+                max_length=20,
+            ),
+        ),
+    ]

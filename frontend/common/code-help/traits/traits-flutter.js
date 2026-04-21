@@ -1,4 +1,4 @@
-module.exports = (envId, { TRAIT_NAME, USER_ID }, userId) => `
+export default (envId, { TRAIT_NAME, USER_ID }, userId) => `
 final user = Identity(identifier: '${userId || USER_ID}');
 
 // Create a new user trait for the above identity

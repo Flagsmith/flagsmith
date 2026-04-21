@@ -1,7 +1,7 @@
 import React, { FC, useEffect } from 'react'
 import PanelSearch from './PanelSearch'
 import Button from './base/forms/Button'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import {
   useGetExternalResourcesQuery,
   useDeleteExternalResourceMutation,
@@ -16,7 +16,7 @@ export type ExternalResourcesTableBase = {
   organisationId: string
 }
 
-export type ExternalResourcesTableType = ExternalResourcesTableBase & {
+type ExternalResourcesTableType = ExternalResourcesTableBase & {
   setSelectedResources: (r: ExternalResource[]) => void
 }
 
@@ -36,12 +36,12 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
 
   useEffect(() => {
     if (isDeleted) {
-      toast('External resources was deleted')
+      toast('Link deleted')
     }
   }, [isDeleted])
   return (
     <Row className='list-item' key={externalResource?.id}>
-      <div className='table-column text-left' style={{ width: '100px' }}>
+      <div className='table-column text-start' style={{ width: '100px' }}>
         <div className='font-weight-medium mb-1'>
           {
             Constants.resourceTypes[

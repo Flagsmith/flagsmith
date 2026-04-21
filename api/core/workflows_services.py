@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
     from users.models import FFAdminUser
 
-logger = structlog.get_logger()
+logger = structlog.get_logger("workflows")
 
 
 class ChangeRequestCommitService:
@@ -34,6 +34,15 @@ class ChangeRequestCommitService:
 
         self.change_request.committed_at = timezone.now()
         self.change_request.committed_by = committed_by
+
+        if environment := self.change_request.environment:
+            logger.info(
+                "change_request.committed",
+                organisation__id=environment.project.organisation_id,
+                environment__id=environment.id,
+                feature_states__count=self.change_request.feature_states.count(),
+            )
+
         self.change_request.save()
 
     def _publish_feature_states(self) -> None:

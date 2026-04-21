@@ -27,6 +27,7 @@ defaults:
 
 jobs:
   test:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.fork != true
     runs-on: depot-ubuntu-latest-16
     name: API Unit Tests
 

@@ -1,5 +1,5 @@
 import React, { FC, ReactNode } from 'react'
-import Icon from './Icon'
+import Icon from './icons/Icon'
 import Button from './base/forms/Button'
 import Constants from 'common/constants'
 

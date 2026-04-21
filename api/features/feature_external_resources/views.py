@@ -1,5 +1,6 @@
 import re
 
+import structlog
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
@@ -15,7 +16,7 @@ from integrations.github.client import (
 from integrations.github.models import GitHubRepository
 from organisations.models import Organisation
 
-from .models import FeatureExternalResource
+from .models import FeatureExternalResource, ResourceType
 from .serializers import FeatureExternalResourceSerializer
 
 
@@ -45,7 +46,6 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
             features_pk = self.kwargs["feature_pk"]
             return FeatureExternalResource.objects.filter(feature=features_pk)
 
-    # Override get list view to add github issue/pr name to each linked external resource
     def list(self, request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         queryset = self.get_queryset()  # type: ignore[no-untyped-call]
         serializer = self.get_serializer(queryset, many=True)
@@ -56,7 +56,14 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
             Feature.objects.filter(id=self.kwargs["feature_pk"]),
         ).project.organisation_id
 
+        # Add github issue/PR name to each linked external resource
         for resource in data if isinstance(data, list) else []:
+            if ResourceType(resource["type"]) not in [
+                ResourceType.GITHUB_ISSUE,
+                ResourceType.GITHUB_PR,
+            ]:
+                continue
+
             if resource_url := resource.get("url"):
                 resource["metadata"] = get_github_issue_pr_title_and_state(
                     organisation_id=organisation_id, resource_url=resource_url
@@ -65,6 +72,12 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
         return Response(data={"results": data})
 
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        if request.data.get("type") not in [
+            ResourceType.GITHUB_ISSUE,
+            ResourceType.GITHUB_PR,
+        ]:
+            return super().create(request, *args, **kwargs)
+
         feature = get_object_or_404(
             Feature.objects.filter(
                 id=self.kwargs["feature_pk"],
@@ -120,6 +133,22 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
                 data={"detail": "Invalid GitHub Issue/PR URL"},
                 content_type="application/json",
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def perform_create(self, serializer: FeatureExternalResourceSerializer) -> None:  # type: ignore[override]
+        resource = serializer.save()
+
+        log_event_names: dict[ResourceType, tuple[str, str]] = {
+            ResourceType.GITLAB_ISSUE: ("gitlab", "issue.linked"),
+            ResourceType.GITLAB_MR: ("gitlab", "merge_request.linked"),
+        }
+        if (resource_type := ResourceType(resource.type)) in log_event_names:
+            logger_name, event_name = log_event_names[resource_type]
+            structlog.get_logger(logger_name).info(
+                event_name,
+                organisation__id=resource.feature.project.organisation_id,
+                project__id=resource.feature.project_id,
+                feature__id=resource.feature.id,
             )
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]

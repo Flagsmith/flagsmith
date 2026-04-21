@@ -14,6 +14,12 @@ relevant section below for more details.
 
 - `DJANGO_ALLOWED_HOSTS`: Comma-separated list of domains that can access the API. Alternatively `*` to allow any.
 - `DATABASE_URL`: The URL of your PostgreSQL database. Both `postgres://` and `postgresql://` schemas are supported.
+- `DJANGO_DB_CONN_MAX_AGE`: Lifetime of a database connection, in seconds. Defaults to `60`. Set to `-1` to close the
+  connection at the end of each request (Django's default behaviour). See
+  [Django's `CONN_MAX_AGE` docs](https://docs.djangoproject.com/en/stable/ref/databases/#persistent-connections).
+- `DJANGO_DB_CONN_HEALTH_CHECKS`: If `True`, persistent database connections are health checked before being reused.
+  Defaults to `False`. See
+  [Django's `CONN_HEALTH_CHECKS` docs](https://docs.djangoproject.com/en/stable/ref/settings/#std-setting-CONN_HEALTH_CHECKS).
 - `REDIS_URL`: The URL of your Redis instance.
 - `ENV`: The environment the application is running in, e.g. "prod".
 - `SENTRY_DSN`: If you want to send errors to Sentry, specify the DSN here.

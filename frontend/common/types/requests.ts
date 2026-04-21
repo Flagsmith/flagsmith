@@ -892,6 +892,7 @@ export type Req = {
     tag_strategy?: TagStrategy
     sort_field?: string
     sort_direction?: 'ASC' | 'DESC'
+    identity?: string
   }
   updateFeatureState: {
     environmentId: string
@@ -924,5 +925,26 @@ export type Req = {
     enabled: boolean
     feature_state_value: FlagsmithValue | null
   }
+  validateOAuthAuthorize: Record<string, string>
+  processOAuthConsent: {
+    allow: boolean
+    client_id: string
+    redirect_uri: string
+    response_type: string
+    scope: string
+    code_challenge: string
+    code_challenge_method: string
+    state?: string
+  }
+  getGitLabConfiguration: { project_id: number }
+  getGitLabProjects: PagedRequest<{ project_id: number }>
+  getGitLabIssues: PagedRequest<{
+    project_id: number
+    gitlab_project_id: number
+  }>
+  getGitLabMergeRequests: PagedRequest<{
+    project_id: number
+    gitlab_project_id: number
+  }>
   // END OF TYPES
 }

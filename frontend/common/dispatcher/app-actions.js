@@ -1,6 +1,7 @@
-const Dispatcher = require('../dispatcher/dispatcher')
+import Dispatcher from './dispatcher'
+import BaseAppActions from './base/_app-actions'
 
-const AppActions = Object.assign({}, require('./base/_app-actions'), {
+const AppActions = Object.assign({}, BaseAppActions, {
   acceptInvite(id) {
     Dispatcher.handleViewAction({
       actionType: Actions.ACCEPT_INVITE,
@@ -68,12 +69,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_ENVIRONMENT,
       env,
-    })
-  },
-  deleteInvite(id) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.DELETE_INVITE,
-      id,
     })
   },
   deleteOrganisation() {
@@ -199,28 +194,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       projectId,
     })
   },
-  getFeatures(
-    projectId,
-    environmentId,
-    force,
-    search,
-    sort,
-    page,
-    filter,
-    pageSize,
-  ) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_FLAGS,
-      environmentId,
-      filter,
-      force,
-      page,
-      pageSize,
-      projectId,
-      search,
-      sort,
-    })
-  },
   getIdentity(envId, id) {
     Dispatcher.handleViewAction({
       actionType: Actions.GET_IDENTITY,
@@ -246,12 +219,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       link,
     })
   },
-  migrateProject(projectId) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.MIGRATE_PROJECT,
-      projectId,
-    })
-  },
   oauthLogin(oauthType, data) {
     Dispatcher.handleViewAction({
       actionType: Actions.OAUTH,
@@ -272,13 +239,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       force: true,
     })
   },
-  removeFlag(projectId, flag) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.REMOVE_FLAG,
-      flag,
-      projectId,
-    })
-  },
   removeUserFlag({ cb, environmentId, identity, identityFlag }) {
     Dispatcher.handleViewAction({
       actionType: Actions.REMOVE_USER_FLAG,
@@ -288,58 +248,16 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       identityFlag,
     })
   },
-  resendInvite(id) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.RESEND_INVITE,
-      id,
-    })
-  },
   resetPassword(data) {
     Dispatcher.handleViewAction({
       actionType: Actions.RESET_PASSWORD,
       ...data,
     })
   },
-  saveEnv(name) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.EDIT_ENVIRONMENT,
-      name,
-    })
-  },
-  searchFeatures(
-    projectId,
-    environmentId,
-    force,
-    search,
-    sort,
-    filter,
-    pageSize,
-  ) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.SEARCH_FLAGS,
-      environmentId,
-      filter,
-      force,
-      pageSize,
-      projectId,
-      search,
-      sort,
-    })
-  },
   selectOrganisation(id) {
     Dispatcher.handleViewAction({
       actionType: Actions.SELECT_ORGANISATION,
       id,
-    })
-  },
-  toggleFlag(index, environments, comment, environmentFlags, projectFlags) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.TOGGLE_FLAG,
-      comment,
-      environmentFlags,
-      environments,
-      index,
-      projectFlags,
     })
   },
   toggleUserFlag(params) {

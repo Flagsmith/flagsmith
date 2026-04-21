@@ -9,6 +9,7 @@ from django.utils import timezone
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from freezegun.api import FrozenDateTimeFactory
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 
 from audit.constants import (
     CHANGE_REQUEST_APPROVED_MESSAGE,
@@ -141,6 +142,42 @@ def test_change_request_is_approved__minimum_approvals_is_none__returns_true(  #
     assert result is True
 
 
+def test_change_request_has_approvals__approved_approval__returns_true(
+    change_request_no_required_approvals: ChangeRequest,
+) -> None:
+    # Given
+    approver = FFAdminUser.objects.create(email="approver@example.com")
+    ChangeRequestApproval.objects.create(
+        user=approver,
+        change_request=change_request_no_required_approvals,
+        approved_at=timezone.now(),
+    )
+
+    # When
+    result = change_request_no_required_approvals.has_approvals()
+
+    # Then
+    assert result is True
+
+
+def test_change_request_has_approvals__pending_approval_only__returns_false(
+    change_request_no_required_approvals: ChangeRequest,
+) -> None:
+    # Given
+    assignee = FFAdminUser.objects.create(email="assignee@example.com")
+    ChangeRequestApproval.objects.create(
+        user=assignee,
+        change_request=change_request_no_required_approvals,
+        approved_at=None,
+    )
+
+    # When
+    result = change_request_no_required_approvals.has_approvals()
+
+    # Then
+    assert result is False
+
+
 def test_change_request_commit__not_approved__raises_exception(  # type: ignore[no-untyped-def]
     change_request_1_required_approvals,
 ):
@@ -170,6 +207,28 @@ def test_change_request_commit__not_scheduled__sets_committed_at_and_version(  #
 
     assert change_request_no_required_approvals.feature_states.first().version == 2
     assert change_request_no_required_approvals.feature_states.first().live_from == now
+
+
+def test_change_request_commit__valid_request__emits_structlog_event(
+    change_request_no_required_approvals: ChangeRequest,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    user = FFAdminUser.objects.create(email="committer@example.com")
+
+    # When
+    change_request_no_required_approvals.commit(committed_by=user)
+
+    # Then
+    environment = change_request_no_required_approvals.environment
+    assert environment is not None
+    assert {
+        "event": "change_request.committed",
+        "level": "info",
+        "organisation__id": environment.project.organisation_id,
+        "environment__id": environment.id,
+        "feature_states__count": change_request_no_required_approvals.feature_states.count(),
+    } in log.events
 
 
 def test_change_request_create__valid_environment__creates_audit_log(  # type: ignore[no-untyped-def]

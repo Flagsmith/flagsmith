@@ -35,7 +35,7 @@ from .services import delete_segment
 if TYPE_CHECKING:
     from users.models import FFAdminUser
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 @method_decorator(

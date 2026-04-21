@@ -48,6 +48,9 @@ jobs:
           rm -rf ${HOME}/.git-credentials
 
       - name: Generate MCP schema
+        env:
+          FLAGSMITH_API_URL: 'https://api.flagsmith.com'
+          FLAGSMITH_FRONTEND_URL: 'https://app.flagsmith.com'
         run: make generate-mcp-spec
 
       - name: Install Gram CLI

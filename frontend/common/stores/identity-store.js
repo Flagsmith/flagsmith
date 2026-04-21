@@ -1,9 +1,11 @@
+import cloneDeep from 'lodash/cloneDeep'
+import keyBy from 'lodash/keyBy'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 
-const Dispatcher = require('../dispatcher/dispatcher')
-const BaseStore = require('./base/_store')
-const data = require('../data/base/_data')
+import Dispatcher from 'common/dispatcher/dispatcher'
+import BaseStore from './base/_store'
+import data from 'common/data/base/_data'
 
 const controller = {
   changeUserFlag({
@@ -98,7 +100,7 @@ const controller = {
         const features = (flags && flags.results) || flags
 
         store.model = store.model || {}
-        store.model.features = features && _.keyBy(features, (f) => f.feature)
+        store.model.features = features && keyBy(features, (f) => f.feature)
         store.model.identity = identity
         store.loaded()
       })
@@ -178,7 +180,7 @@ const store = Object.assign({}, BaseStore, {
     return store.model && store.model.features
   },
   getIdentityForEditing() {
-    return store.model && _.cloneDeep(store.model) // immutable
+    return store.model && cloneDeep(store.model) // immutable
   },
   id: 'identity',
 })
@@ -226,4 +228,4 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   }
 })
 controller.store = store
-module.exports = controller.store
+export default controller.store

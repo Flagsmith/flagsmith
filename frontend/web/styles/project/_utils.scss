@@ -1,11 +1,3 @@
-.clearfix:after {
-    visibility: hidden;
-    display: block;
-    font-size: 0;
-    content: " ";
-    clear: both;
-    height: 0;
-}
 .hover-color-primary {
     &:hover {
         color: $primary;
@@ -22,49 +14,18 @@
     color: $bg-light300;
     border-color: $danger;
 }
-.clearfix { display: inline-block; }
-/* start commented backslash hack \*/
-* html .clearfix { height: 1%; }
-.clearfix { display: block; }
-/* close commented backslash hack */
-
 .standard-case {
     text-transform: none !important;
-}
-.float-right{
-    float:right;
-}
-.text-light {
-    color: white !important;
 }
 .form-cta {
     text-align: right;
 }
 
-.justify-content-center {
-    justify-content: center;
-}
-
-.hidden {
-    display: none;
-}
-.relative {
-    position: relative !important;
-}
-.float-left{
-    float:left;
-}
-.left-0 {
-    left: 0 !important;
-}
 .max-w-auto {
   max-width: none !important;
 }
 .top-form-item {
     top: 30px;
-}
-.border-2 {
-  border-width: 2px !important;
 }
 .border-left-1 {
     border-left: 1px solid $hr-border-color !important;
@@ -78,17 +39,6 @@
     margin-top:20px;
 }
 
-.margin-bottom{
-    margin-bottom:20px;
-}
-
-.text-left{
-    text-align: left;
-}
-
-.link-style{
-    text-decoration: underline;
-}
 
 .disable-transitions {
     .modal-dialog {
@@ -104,26 +54,8 @@
     }
 }
 
-.e2e {
-    background-color: rgba(255,255,255,0.75);
-    pointer-events: none !important;
-    position:fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10000000000;
-}
-
 .show {
     display: block!important;
-}
-
-.ml-auto, .mx-auto {
-    margin-left: auto!important;
-}
-
-.mr-auto, .mx-auto {
-    margin-right: auto!important;
 }
 
 .signup-icon {
@@ -131,25 +63,6 @@
     path {
         fill: $primary;
     }
-}
-
-.align-start {
-    align-items: flex-start;
-}
-
-.transition-none {
-    transition: none !important;
-    .modal-content {
-        transition: none !important;
-    }
-}
-
-.text-primary {
-    color: $primary !important;
-}
-
-.text-primary {
-    color: $primary !important;
 }
 
 .unread {
@@ -168,14 +81,6 @@
     cursor: pointer;
     position: relative;
     bottom: -1px;
-}
-
-.justify-content-end {
-    justify-content: flex-end;
-}
-
-.widget-container {
-    padding: 10px;
 }
 
 .bg-primary {
@@ -226,25 +131,10 @@
     }
 }
 
-.blur {
-    filter: blur(5px);
-}
-
 .overflow-y-auto{ overflow-y: auto}
-
-.user-select-none {
-    user-select: none;
-}
-.pointer-events-none {
-    pointer-events: none;
-}
 
 .bg-primary-opacity-5 {
     background-color: transparentize($primary, 0.95);
-}
-
-.border-primary {
-  border-color: $primary !important;
 }
 
 .bg-card {

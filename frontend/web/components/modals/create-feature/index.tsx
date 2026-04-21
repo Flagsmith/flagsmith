@@ -1,9 +1,9 @@
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react'
-// @ts-ignore untyped module
-import _ from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 import moment from 'moment'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { useHasGithubIntegration } from 'common/hooks/useHasGithubIntegration'
+import { useHasGitLabIntegration } from 'common/hooks/useHasGitLabIntegration'
 import FeatureListStore from 'common/stores/feature-list-store'
 import IdentityProvider from 'common/providers/IdentityProvider'
 import FeatureListProvider from 'common/providers/FeatureListProvider'
@@ -15,7 +15,10 @@ import classNames from 'classnames'
 import { useHasPermission } from 'common/providers/Permission'
 import { setInterceptClose } from 'components/modals/base/ModalDefault'
 import { getStore } from 'common/store'
-import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
+import ExternalResourcesTable from 'components/ExternalResourcesTable'
+import GitHubLinkSection from 'components/GitHubLinkSection'
+import GitLabLinkSection from 'components/GitLabLinkSection'
+import type { ExternalResource } from 'common/types/responses'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
@@ -86,7 +89,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
 
   const [projectFlag, setProjectFlag] = useState<any>(() =>
     props.projectFlag
-      ? _.cloneDeep(props.projectFlag)
+      ? cloneDeep(props.projectFlag)
       : {
           description: undefined,
           is_archived: undefined,
@@ -100,7 +103,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
 
   const [environmentFlag, setEnvironmentFlag] = useState<any>(() => {
     const sourceFlag = props.identityFlag || props.environmentFlag
-    return sourceFlag ? _.cloneDeep(sourceFlag) : {}
+    return sourceFlag ? cloneDeep(sourceFlag) : {}
   })
 
   const [_changeRequests, setChangeRequests] = useState<any[]>([])
@@ -208,7 +211,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   useEffect(() => {
     const source = props.identityFlag || props.environmentFlag
     if (source?.updated_at) {
-      setEnvironmentFlag(_.cloneDeep(source))
+      setEnvironmentFlag(cloneDeep(source))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [(props.identityFlag || props.environmentFlag)?.updated_at])
@@ -219,7 +222,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   // overwrite the user's unsaved edits to settings/tags/description.
   useEffect(() => {
     if (props.projectFlag) {
-      setProjectFlag(_.cloneDeep(props.projectFlag))
+      setProjectFlag(cloneDeep(props.projectFlag))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.projectFlag?.id])
@@ -348,6 +351,12 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     hasIntegration: hasIntegrationWithGithub,
     organisationId,
   } = useHasGithubIntegration()
+  const { hasIntegration: hasGitlabIntegration } =
+    useHasGitLabIntegration(projectId)
+  const isLinksTabEnabled =
+    (hasIntegrationWithGithub || hasGitlabIntegration) && !!projectFlag?.id
+
+  const [linkedResources, setLinkedResources] = useState<ExternalResource[]>()
 
   const { permission: createFeaturePermission } = useHasPermission({
     id: projectId,
@@ -686,7 +695,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       />
                     </TabItem>
                   }
-                  {hasIntegrationWithGithub && projectFlag?.id && (
+                  {isLinksTabEnabled && (
                     <TabItem
                       data-test='external-resources-links'
                       tabLabelString='Links'
@@ -694,12 +703,32 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         <Row className='justify-content-center'>Links</Row>
                       }
                     >
-                      <ExternalResourcesLinkTab
-                        githubId={githubId}
-                        organisationId={organisationId}
-                        featureId={projectFlag.id}
-                        projectId={projectId}
-                        environmentId={`${environment.id}`}
+                      {hasIntegrationWithGithub && (
+                        <GitHubLinkSection
+                          githubId={githubId}
+                          organisationId={organisationId}
+                          featureId={projectFlag.id}
+                          projectId={projectId}
+                          environmentId={`${environment.id}`}
+                          linkedResources={linkedResources}
+                        />
+                      )}
+                      {hasGitlabIntegration && (
+                        <GitLabLinkSection
+                          projectId={projectId}
+                          featureId={projectFlag.id}
+                          featureName={projectFlag.name}
+                          environmentId={`${environment.id}`}
+                          linkedUrls={linkedResources?.map((r) => r.url) ?? []}
+                        />
+                      )}
+                      <ExternalResourcesTable
+                        featureId={`${projectFlag.id}`}
+                        projectId={`${projectId}`}
+                        organisationId={`${organisationId}`}
+                        setSelectedResources={(r: ExternalResource[]) =>
+                          setLinkedResources(r)
+                        }
                       />
                     </TabItem>
                   )}

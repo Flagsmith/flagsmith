@@ -13,7 +13,7 @@ from util.engine_models.identities.traits.types import map_any_value_to_trait_va
 
 EXPORT_EDGE_IDENTITY_PAGINATION_LIMIT = 20000
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def export_edge_identity_and_overrides(  # noqa: C901

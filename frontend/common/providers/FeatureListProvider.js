@@ -29,10 +29,6 @@ const FeatureListProvider = class extends React.Component {
         totalFeatures: ProjectStore.getTotalFeatures(),
       })
     })
-    this.listenTo(FeatureListStore, 'removed', (data) => {
-      this.props.onRemove?.(data)
-    })
-
     this.listenTo(FeatureListStore, 'saved', (data) => {
       this.props.onSave && this.props.onSave(data)
     })
@@ -235,10 +231,6 @@ const FeatureListProvider = class extends React.Component {
     )
   }
 
-  removeFlag = (projectId, flag) => {
-    AppActions.removeFlag(projectId, flag)
-  }
-
   render() {
     return this.props.children(
       {
@@ -251,7 +243,6 @@ const FeatureListProvider = class extends React.Component {
         editFeatureSettings: this.editFeatureSettings,
         editFeatureValue: this.editFeatureValue,
         environmentHasFlag: FeatureListStore.hasFlagInEnvironment,
-        removeFlag: this.removeFlag,
         toggleFlag: this.toggleFlag,
       },
     )

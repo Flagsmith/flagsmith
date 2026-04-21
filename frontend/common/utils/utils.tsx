@@ -9,7 +9,6 @@ import {
   MultivariateFeatureStateValue,
   MultivariateOption,
   Organisation,
-  PConfidence,
   Project as ProjectType,
   ProjectFlag,
   SegmentCondition,
@@ -18,7 +17,7 @@ import {
 } from 'common/types/responses'
 import flagsmith from '@flagsmith/flagsmith'
 import { ReactNode } from 'react'
-import _ from 'lodash'
+import find from 'lodash/find'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
@@ -35,7 +34,7 @@ import {
   OrganisationPermissionDescriptions,
 } from 'common/types/permissions.types'
 
-const semver = require('semver')
+import semver from 'semver'
 
 export type PaidFeature =
   | 'FLAG_OWNERS'
@@ -67,7 +66,8 @@ export const planNames = {
   scaleUp: 'Scale-Up',
   startup: 'Startup',
 }
-const Utils = Object.assign({}, require('./base/_utils'), {
+import BaseUtils from './base/_utils'
+const Utils = Object.assign({}, BaseUtils, {
   appendImage: (src: string) => {
     const img = document.createElement('img')
     img.src = src
@@ -143,12 +143,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return res
   },
 
-  convertToPConfidence(value: number) {
-    if (value > 0.05) return 'LOW' as PConfidence
-    if (value >= 0.01) return 'REASONABLE' as PConfidence
-    if (value > 0.002) return 'HIGH' as PConfidence
-    return 'VERY_HIGH' as PConfidence
-  },
   copyToClipboard: async (
     value: string,
     successMessage?: string,
@@ -403,17 +397,20 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return EnvironmentPermissionDescriptions.UPDATE_FEATURE_STATE
   },
 
-  getNextPlan: (skipFree?: boolean) => {
+  getNextPlan: () => {
     const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
     if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
       return planNames.enterprise
     }
     switch (currentPlan) {
       case planNames.free: {
-        return skipFree ? planNames.startup : planNames.scaleUp
+        return planNames.startup
       }
       case planNames.startup: {
-        return planNames.startup
+        return planNames.scaleUp
+      }
+      case planNames.scaleUp: {
+        return planNames.enterprise
       }
       default: {
         return planNames.enterprise
@@ -503,7 +500,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (!plans || !plans.length) {
       return false
     }
-    const found = _.find(
+    const found = find(
       plans.map((plan: string) => Utils.getPlanPermission(plan, feature)),
       (perm) => !!perm,
     )
@@ -520,15 +517,15 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'RBAC':
       case 'AUDIT':
       case '4_EYES_PROJECT':
-      case '4_EYES': {
+      case '4_EYES':
+      case 'SAML': {
         plan = 'scale-up'
         break
       }
       case 'STALE_FLAGS':
       case 'REALTIME':
       case 'METADATA':
-      case 'RELEASE_PIPELINES':
-      case 'SAML': {
+      case 'RELEASE_PIPELINES': {
         plan = 'enterprise'
         break
       }
@@ -841,7 +838,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return {
       boolean_value: null,
       integer_value: null,
-      string_value: value === null ? null : val || '',
+      string_value: value === null || val === '' ? null : val,
       type: 'unicode',
     }
   },
@@ -869,7 +866,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return {
       boolean_value: null,
       integer_value: null,
-      string_value: value === null ? null : val || '',
+      string_value: value === null || val === '' ? null : val,
       value_type: 'unicode',
     }
   },

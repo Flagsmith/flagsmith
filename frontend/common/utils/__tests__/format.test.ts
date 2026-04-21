@@ -17,20 +17,6 @@ describe('Format', () => {
     })
   })
 
-  describe('nearestTen', () => {
-    it.each`
-      input | expected
-      ${0}  | ${'00'}
-      ${5}  | ${'05'}
-      ${9}  | ${'09'}
-      ${10} | ${10}
-      ${15} | ${15}
-      ${99} | ${99}
-    `('nearestTen($input) returns $expected', ({ expected, input }) => {
-      expect(Format.nearestTen(input)).toBe(expected)
-    })
-  })
-
   describe('camelCase', () => {
     it.each`
       input            | expected

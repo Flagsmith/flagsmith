@@ -34,6 +34,10 @@
                     "value": "INFO"
                 },
                 {
+                    "name": "LOG_FORMAT",
+                    "value": "json"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
@@ -202,8 +206,20 @@
                     "value": "True"
                 },
                 {
+                    "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+                    "value": "http://adot-collector.metrics.local:4318"
+                },
+                {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
                     "value": "https://edge.api.flagsmith.com/api/v1/"
+                },
+                {
+                    "name": "FLAGSMITH_API_URL",
+                    "value": "https://api.flagsmith.com"
+                },
+                {
+                    "name": "FLAGSMITH_FRONTEND_URL",
+                    "value": "https://app.flagsmith.com"
                 },
                 {
                     "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
