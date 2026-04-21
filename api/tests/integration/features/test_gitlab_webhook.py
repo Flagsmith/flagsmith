@@ -9,7 +9,6 @@ from features.feature_external_resources.models import ResourceType
 from features.models import Feature
 from integrations.gitlab.constants import GitLabTagLabel
 from integrations.gitlab.models import GitLabConfiguration, GitLabWebhook
-from projects.models import Project
 
 WEBHOOK_SECRET = "valid-secret"
 
@@ -25,9 +24,8 @@ class LinkFeatureFixture(Protocol):
 
 @pytest.fixture()
 def gitlab_webhook(project: int) -> GitLabWebhook:
-    project_instance = Project.objects.get(id=project)
     config = GitLabConfiguration.objects.create(
-        project=project_instance,
+        project_id=project,
         gitlab_instance_url="https://gitlab.example.com",
         access_token="glpat-test-token",
     )
