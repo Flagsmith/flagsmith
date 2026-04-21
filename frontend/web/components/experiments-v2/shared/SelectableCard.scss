@@ -70,6 +70,53 @@
     font-family: var(--font-family);
   }
 
+  &__aside {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  &__role-group {
+    display: inline-flex;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-surface-default);
+  }
+
+  &__role-pill {
+    font-size: var(--font-caption-size);
+    font-weight: var(--font-weight-medium);
+    padding: 4px 10px;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition:
+      background var(--duration-fast) var(--easing-standard),
+      color var(--duration-fast) var(--easing-standard);
+
+    + .selectable-card__role-pill {
+      border-left: 1px solid var(--color-border-default);
+    }
+
+    &:hover {
+      background: var(--color-surface-action-subtle);
+      color: var(--color-text-default);
+    }
+
+    &--active {
+      background: var(--color-surface-action);
+      color: var(--color-surface-default);
+
+      &:hover {
+        background: var(--color-surface-action);
+        color: var(--color-surface-default);
+      }
+    }
+  }
+
   &__badge {
     font-size: var(--font-caption-xs-size);
     font-weight: var(--font-weight-semibold);
@@ -85,6 +132,12 @@
     &--secondary {
       border: 1px solid var(--color-border-default);
       color: var(--color-text-secondary);
+    }
+
+    &--guardrail {
+      background: var(--color-surface-warning-subtle, #fff7e6);
+      color: var(--color-text-warning, #b36b00);
+      border: 1px solid var(--color-border-warning, #f2c078);
     }
   }
 }

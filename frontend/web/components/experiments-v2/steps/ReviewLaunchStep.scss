@@ -131,6 +131,12 @@
       border: 1px solid var(--color-border-default);
       color: var(--color-text-secondary);
     }
+
+    &--guardrail {
+      background: var(--color-surface-warning-subtle, #fff7e6);
+      color: var(--color-text-warning, #b36b00);
+      border: 1px solid var(--color-border-warning, #f2c078);
+    }
   }
 
   // Variations

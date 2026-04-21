@@ -14,6 +14,7 @@ import {
   EXPERIMENT_WIZARD_STEPS,
   ExperimentWizardState,
   Metric,
+  MetricRole,
   MIN_VARIATIONS_FOR_EXPERIMENT,
   MOCK_FLAGS,
   MOCK_METRICS,
@@ -48,7 +49,7 @@ const INITIAL_STATE: ExperimentWizardState = {
   metrics: [
     MOCK_METRICS[0],
     { ...MOCK_METRICS[1], role: 'secondary' },
-    { ...MOCK_METRICS[2], role: 'secondary' },
+    { ...MOCK_METRICS[2], role: 'guardrail' },
   ],
   segmentTraffic: {
     segmentId: 'seg-3',
@@ -123,10 +124,23 @@ const CreateExperimentPage: FC = () => {
           metrics: prev.metrics.filter((m) => m.id !== metric.id),
         }
       }
-      const role = prev.metrics.length === 0 ? 'primary' : 'secondary'
+      const hasPrimary = prev.metrics.some((m) => m.role === 'primary')
+      const role: MetricRole = hasPrimary ? 'secondary' : 'primary'
       return { ...prev, metrics: [...prev.metrics, { ...metric, role }] }
     })
   }, [])
+
+  const handleSetMetricRole = useCallback(
+    (metricId: string, role: MetricRole) => {
+      setState((prev) => ({
+        ...prev,
+        metrics: prev.metrics.map((m) =>
+          m.id === metricId ? { ...m, role } : m,
+        ),
+      }))
+    },
+    [],
+  )
 
   const isCurrentStepValid = useMemo(() => {
     if (state.currentStep === 0) {
@@ -173,13 +187,22 @@ const CreateExperimentPage: FC = () => {
         completeSummary = `${armCount} arm${armCount === 1 ? '' : 's'}`
         break
       }
-      case 2:
-        completeSummary = `${
-          state.metrics.filter((m) => m.role === 'primary').length
-        } primary · ${
-          state.metrics.filter((m) => m.role === 'secondary').length
-        } secondary`
+      case 2: {
+        const pCount = state.metrics.filter((m) => m.role === 'primary').length
+        const sCount = state.metrics.filter(
+          (m) => m.role === 'secondary',
+        ).length
+        const gCount = state.metrics.filter(
+          (m) => m.role === 'guardrail',
+        ).length
+        const parts = [
+          `${pCount} primary`,
+          `${sCount} secondary`,
+          gCount > 0 ? `${gCount} guardrail` : null,
+        ].filter(Boolean)
+        completeSummary = parts.join(' · ')
         break
+      }
       case 3: {
         const parts = (state.segmentTraffic.weights ?? [])
           .filter((w) => w.weight > 0)
@@ -234,6 +257,7 @@ const CreateExperimentPage: FC = () => {
           <SelectMetricsStep
             selectedMetrics={state.metrics}
             onToggleMetric={handleToggleMetric}
+            onSetRole={handleSetMetricRole}
           />
         )
       case 3: {
