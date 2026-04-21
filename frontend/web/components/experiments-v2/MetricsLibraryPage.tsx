@@ -148,7 +148,18 @@ const MetricsLibraryPage: FC = () => {
   }
 
   return (
-    <div className='metrics-library-page'>
+    <div className='app-container container metrics-library-page'>
+      <div className='metrics-library-page__header'>
+        <div>
+          <h3 className='metrics-library-page__title'>Metrics</h3>
+          <p className='metrics-library-page__subtitle text-muted'>
+            Metrics track the outcomes you measure across experiments. Primary
+            and secondary metrics drive experiment verdicts; guardrails flag
+            regressions.
+          </p>
+        </div>
+      </div>
+
       {mode.kind === 'delete' && (
         <Banner variant='danger'>
           <div className='metrics-library-page__delete-banner'>
