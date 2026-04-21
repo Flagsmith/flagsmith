@@ -99,6 +99,7 @@ export type WizardStepDef = {
 
 export type MetricComparison = {
   name: string
+  role: MetricRole
   control: string
   treatment: string
   lift: string
@@ -494,6 +495,7 @@ export const MOCK_EXPERIMENT_RESULT: ExperimentResultSummary = {
       liftDirection: 'positive',
       liftValue: 15.3,
       name: 'Conversion Rate',
+      role: 'primary',
       significance: 'p<0.01',
       treatment: '8.3%',
     },
@@ -504,6 +506,7 @@ export const MOCK_EXPERIMENT_RESULT: ExperimentResultSummary = {
       liftDirection: 'positive',
       liftValue: 14.1,
       name: 'Revenue per User',
+      role: 'secondary',
       significance: 'p<0.05',
       treatment: '$27.50',
     },
@@ -514,6 +517,7 @@ export const MOCK_EXPERIMENT_RESULT: ExperimentResultSummary = {
       liftDirection: 'neutral',
       liftValue: -4.2,
       name: 'Page Load Time',
+      role: 'guardrail',
       significance: 'not significant',
       treatment: '2.3s',
     },

@@ -1,6 +1,6 @@
 import React, { CSSProperties, FC } from 'react'
 import Icon from 'components/icons/Icon'
-import { MetricComparison } from 'components/experiments-v2/types'
+import { MetricComparison, MetricRole } from 'components/experiments-v2/types'
 import './MetricsComparisonTable.scss'
 
 type MetricsComparisonTableProps = {
@@ -9,12 +9,28 @@ type MetricsComparisonTableProps = {
 
 type LiftBarStyle = CSSProperties & { '--lift-bar-width': string }
 
+const ROLE_ORDER: Record<MetricRole, number> = {
+  guardrail: 2,
+  primary: 0,
+  secondary: 1,
+}
+
+const ROLE_LABEL: Record<MetricRole, string> = {
+  guardrail: 'Guardrail',
+  primary: 'Primary',
+  secondary: 'Secondary',
+}
+
 const MetricsComparisonTable: FC<MetricsComparisonTableProps> = ({
   metrics,
 }) => {
   const maxMagnitude = metrics.reduce(
     (max, m) => Math.max(max, Math.abs(m.liftValue)),
     0,
+  )
+
+  const ordered = [...metrics].sort(
+    (a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role],
   )
 
   return (
@@ -29,7 +45,7 @@ const MetricsComparisonTable: FC<MetricsComparisonTableProps> = ({
         <span className='metrics-comparison-table__th'>Significance</span>
       </div>
 
-      {metrics.map((metric) => {
+      {ordered.map((metric) => {
         const barWidthPercent =
           maxMagnitude === 0
             ? 0
@@ -44,8 +60,20 @@ const MetricsComparisonTable: FC<MetricsComparisonTableProps> = ({
         }
 
         return (
-          <div key={metric.name} className='metrics-comparison-table__row'>
-            <span className='metrics-comparison-table__td'>{metric.name}</span>
+          <div
+            key={metric.name}
+            className={`metrics-comparison-table__row metrics-comparison-table__row--${metric.role}`}
+          >
+            <span className='metrics-comparison-table__td metrics-comparison-table__td--name'>
+              <span className='metrics-comparison-table__metric-name'>
+                {metric.name}
+              </span>
+              <span
+                className={`metrics-comparison-table__role metrics-comparison-table__role--${metric.role}`}
+              >
+                {ROLE_LABEL[metric.role]}
+              </span>
+            </span>
             <span className='metrics-comparison-table__td metrics-comparison-table__td--mono'>
               {metric.control}
             </span>

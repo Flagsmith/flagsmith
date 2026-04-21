@@ -60,3 +60,30 @@ expectations.
 **Why not built yet:** real feature, not a polish item. Needs backend
 infra for (1) + (2) and a new wizard input for (3). Worth a separate
 sprint once the rest of Experiments v2 ships.
+
+## Deferred: guardrail semantic-flip on the results page
+
+**Context:** metric roles (primary / secondary / guardrail) are now rendered
+on the Experiment Results page via `MetricsComparisonTable`. Primary and
+secondary metrics use the existing lift/significance colouring — positive
+lift renders green, negative renders red.
+
+Guardrails should flip this: a **significant regression** on a guardrail
+(positive lift on a lower-better metric, negative lift on a higher-better
+metric) is a **failure** and should render as danger/warning, not neutral.
+Example: page-load-time goes up 8% with p<0.01 — today that'd render as
+"positive" because the lift bar only looks at `liftValue`'s sign; it should
+render as a red "regression" warning.
+
+**What's needed:**
+1. Propagate `MetricDirection` ('higher-better' | 'lower-better' | 'neither')
+   from `Metric` onto `MetricComparison` (it stops at the wizard today).
+2. Compute "is this a regression?" per metric:
+   `role === 'guardrail' && isSignificant && sign(liftValue) !== wantedDirection`.
+3. When true, override the lift-bar colour and significance label to a
+   danger tone, and consider adding a warning icon in the significance
+   column.
+
+**Why not built yet:** demo showed guardrails as a distinct visual category
+which is the main UX win; the semantic-flip is a correctness refinement that
+needs extra type work and would stretch tomorrow's scope.
