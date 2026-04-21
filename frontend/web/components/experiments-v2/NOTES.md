@@ -57,6 +57,42 @@ used elsewhere in the codebase — e.g. `web/main.js`, `IntegrationList.tsx`).
 designers can still see the empty state via the Storybook story or by
 temporarily clearing `MOCK_METRICS`.
 
+## Design-system note: 1220px rail vs. full-width surfaces
+
+**Context:** every existing Flagsmith page wraps its content in
+`<div className='app-container container'>`, which caps at `max-width:
+1220px` (see `web/styles/project/_layout.scss:10`). That cap is a legacy
+choice sized for ~1280px monitors; on a modern 2560-wide display the
+content floats in the centre with ~670px of dead space on each side.
+
+The new Warehouse page is deliberately **not** wrapped in `app-container
+container` — it spans the viewport (with sensible padding on
+`.warehouse-page`). The stats row, connection-details card, and form all
+breathe naturally.
+
+**This is intentional**, not a consistency bug:
+
+- The 1220px rail is design debt from the existing app, not a target.
+- Modern SaaS (Linear, Vercel, Stripe, Statsig) lets the outer container
+  breathe and constrains inner blocks per-content-type — forms/prose cap
+  at 720–800px for readability, tables and dashboards span wider.
+- The warehouse page is showing what "right" looks like; the rest of the
+  app needs to follow, not the reverse.
+
+**Talking point for the demo:** "Notice how this new surface uses the
+full viewport? That's intentional — it's part of the wider design-system
+refresh we want to do. The 1220px cap on every other page is on our
+audit list (#6606)."
+
+**Follow-up if accepted as a direction:**
+
+- Audit which pages benefit from full-width (usage, analytics, tables,
+  dashboards) vs. narrow (settings forms, prose).
+- Replace the blanket `app-container` cap with per-page width policies, or
+  introduce a `.app-container--wide` / `.app-container--narrow` modifier.
+- Track as part of the design-system audit (#6606), not a one-off warehouse
+  change.
+
 ## Deferred: "Connected" indicator on the Integrations list card
 
 **Context:** the Data Warehouse entry in `integration_data` uses `external:
