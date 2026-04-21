@@ -149,7 +149,7 @@ const IdentityPage: FC = () => {
               (identity && identity.identity.identifier) || id
             const isDataLoaded =
               !!actualFlags && !!identityFlags && !!projectFlags && !!projectId
-            return isIdentityLoading || isLoadingFeatures || !isDataLoaded ? (
+            return isIdentityLoading || !isDataLoaded ? (
               <div className='text-center'>
                 <Loader />
               </div>
