@@ -27,6 +27,7 @@ from integrations.gitlab.constants import (
 from integrations.gitlab.mappers import (
     map_gitlab_resource_to_tag_label,
     map_gitlab_webhook_payload_to_tag_label,
+    map_resource_url_to_filter_value,
 )
 from integrations.gitlab.models import GitLabConfiguration, GitLabWebhook
 from integrations.gitlab.types import GitLabWebhookPayload
@@ -215,7 +216,7 @@ def apply_tag_for_event(
     if not (
         feature := Feature.objects.filter(
             project=webhook.gitlab_configuration.project,
-            external_resources__url=resource_url,
+            external_resources__url__in=map_resource_url_to_filter_value(resource_url),
             external_resources__type__in=GITLAB_RESOURCE_TYPES,
         ).first()
     ):

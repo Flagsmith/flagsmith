@@ -56,6 +56,21 @@ def map_gitlab_resource_to_tag_label(
     return None
 
 
+def map_resource_url_to_filter_value(url: str) -> list[str]:
+    """Return a list of equivalent URL shapes for use as an ``__in`` filter
+    value when looking up a linked GitLab resource.
+
+    GitLab delivers issue webhooks with ``/-/work_items/<iid>`` URLs even when
+    the feature was linked via the legacy ``/-/issues/<iid>`` form, and vice
+    versa. Both shapes refer to the same issue.
+    """
+    if "/-/issues/" in url:
+        return [url, url.replace("/-/issues/", "/-/work_items/", 1)]
+    if "/-/work_items/" in url:
+        return [url, url.replace("/-/work_items/", "/-/issues/", 1)]
+    return [url]
+
+
 def map_gitlab_webhook_payload_to_tag_label(
     payload: GitLabWebhookPayload,
 ) -> GitLabTagLabel | None:
