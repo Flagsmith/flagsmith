@@ -1,4 +1,5 @@
 import React, { FC, useCallback, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import EmptyState from './components/EmptyState'
 import ConfigForm from './components/ConfigForm'
 import TestingState from './components/TestingState'
@@ -18,6 +19,10 @@ type WarehousePageProps = {
 }
 
 const WarehousePage: FC<WarehousePageProps> = ({ initialState = 'empty' }) => {
+  const { organisationId } = useParams<{ organisationId?: string }>()
+  const integrationsUrl = organisationId
+    ? `/organisation/${organisationId}/integrations`
+    : undefined
   const [connectionState, setConnectionState] =
     useState<ConnectionState>(initialState)
 
@@ -89,7 +94,18 @@ const WarehousePage: FC<WarehousePageProps> = ({ initialState = 'empty' }) => {
   return (
     <div className='warehouse-page'>
       <div className='warehouse-page__breadcrumb'>
-        <span className='warehouse-page__breadcrumb-item'>Settings</span>
+        {integrationsUrl ? (
+          <Link
+            className='warehouse-page__breadcrumb-link'
+            to={integrationsUrl}
+          >
+            Organisation Integrations
+          </Link>
+        ) : (
+          <span className='warehouse-page__breadcrumb-item'>
+            Organisation Integrations
+          </span>
+        )}
         <span className='warehouse-page__breadcrumb-sep'>/</span>
         <span className='warehouse-page__breadcrumb-current'>
           Data Warehouse
