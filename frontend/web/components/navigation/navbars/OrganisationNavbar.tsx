@@ -44,17 +44,6 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
       )}
       {AccountStore.isAdmin() && (
         <>
-          {Utils.getFlagsmithHasFeature('experimental_flags') && (
-            <NavSubLink
-              icon={<Icon name='code' />}
-              id='warehouse-link'
-              to={`/organisation/${
-                AccountStore.getOrganisation().id
-              }/warehouse`}
-            >
-              Data Warehouse
-            </NavSubLink>
-          )}
           {Utils.getFlagsmithHasFeature('organisation_integrations') && (
             <NavSubLink
               icon={<Icon name='layers' />}
