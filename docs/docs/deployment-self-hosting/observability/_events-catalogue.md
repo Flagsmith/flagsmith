@@ -65,58 +65,34 @@ Logged at `warning` from:
 Attributes:
  - `path`
 
-### `gitlab.api_call_failed`
+### `gitlab.api_call.failed`
 
 Logged at `error` from:
- - `api/integrations/gitlab/views/browse_gitlab.py:58`
+ - `api/integrations/gitlab/views/browse_gitlab.py:59`
 
 Attributes:
  - `exc_info`
+ - `organisation.id`
+ - `project.id`
 
-### `gitlab.configuration_created`
+### `gitlab.configuration.created`
 
 Logged at `info` from:
- - `api/integrations/gitlab/views/configuration.py:26`
+ - `api/integrations/gitlab/views/configuration.py:25`
 
 Attributes:
  - `gitlab_instance_url`
  - `organisation.id`
  - `project.id`
 
-### `gitlab.configuration_updated`
+### `gitlab.configuration.updated`
 
 Logged at `info` from:
- - `api/integrations/gitlab/views/configuration.py:34`
+ - `api/integrations/gitlab/views/configuration.py:33`
 
 Attributes:
  - `gitlab_instance_url`
  - `organisation.id`
- - `project.id`
-
-### `gitlab.issues_fetched`
-
-Logged at `info` from:
- - `api/integrations/gitlab/views/browse_gitlab.py:133`
-
-Attributes:
- - `gitlab_project_id`
- - `project.id`
-
-### `gitlab.merge_requests_fetched`
-
-Logged at `info` from:
- - `api/integrations/gitlab/views/browse_gitlab.py:159`
-
-Attributes:
- - `gitlab_project_id`
- - `project.id`
-
-### `gitlab.projects_fetched`
-
-Logged at `info` from:
- - `api/integrations/gitlab/views/browse_gitlab.py:108`
-
-Attributes:
  - `project.id`
 
 ### `launch_darkly.import_failed`
