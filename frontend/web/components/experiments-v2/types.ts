@@ -32,6 +32,29 @@ export type ExperimentDetails = {
 export type MeasurementType = 'count' | 'occurrence' | 'value'
 export type MetricDirection = 'higher-better' | 'lower-better' | 'neither'
 
+/**
+ * How a metric is actually collected from the data warehouse.
+ *
+ * In the prototype this is mock — the warehouse path is:
+ * `{type}://{database}.{schema}.{table}` with an optional event name
+ * (for count/occurrence metrics) or value column (for value metrics),
+ * plus an optional SQL-style filter.
+ *
+ * When the metric is first created it may be left unconfigured — in that
+ * case the library shows a "Source not configured" warning.
+ */
+export type MetricSource = {
+  warehouse: 'snowflake' | 'bigquery' | 'databricks'
+  /** e.g. "EVENTS" or "PAGE_VIEWS" inside the connected schema. */
+  table: string
+  /** For count/occurrence metrics — the event name to match. */
+  eventName?: string
+  /** For value metrics — the numeric column to aggregate. */
+  valueColumn?: string
+  /** Optional SQL-style WHERE clause shown as plain text. */
+  filter?: string
+}
+
 export type Metric = {
   id: string
   name: string
@@ -41,6 +64,7 @@ export type Metric = {
   direction: MetricDirection
   usageCount: number
   lastUpdated: string
+  source?: MetricSource
 }
 
 export type Variation = {
@@ -276,6 +300,11 @@ export const MOCK_METRICS: Metric[] = [
     measurementType: 'occurrence',
     name: 'Checkout Conversion Rate',
     role: 'primary',
+    source: {
+      eventName: 'checkout_completed',
+      table: 'EVENTS',
+      warehouse: 'snowflake',
+    },
     usageCount: 3,
   },
   {
@@ -286,6 +315,12 @@ export const MOCK_METRICS: Metric[] = [
     measurementType: 'value',
     name: 'Revenue per User',
     role: 'secondary',
+    source: {
+      filter: "status = 'complete'",
+      table: 'TRANSACTIONS',
+      valueColumn: 'amount_usd',
+      warehouse: 'snowflake',
+    },
     usageCount: 5,
   },
   {
@@ -296,6 +331,11 @@ export const MOCK_METRICS: Metric[] = [
     measurementType: 'value',
     name: 'Page Load Time',
     role: 'secondary',
+    source: {
+      table: 'PAGE_VIEWS',
+      valueColumn: 'load_time_ms',
+      warehouse: 'snowflake',
+    },
     usageCount: 2,
   },
   {
@@ -306,6 +346,11 @@ export const MOCK_METRICS: Metric[] = [
     measurementType: 'occurrence',
     name: 'Cart Abandonment Rate',
     role: 'secondary',
+    source: {
+      eventName: 'cart_abandoned',
+      table: 'EVENTS',
+      warehouse: 'snowflake',
+    },
     usageCount: 1,
   },
   {
@@ -316,6 +361,11 @@ export const MOCK_METRICS: Metric[] = [
     measurementType: 'value',
     name: 'Session Duration',
     role: 'secondary',
+    source: {
+      table: 'SESSIONS',
+      valueColumn: 'duration_seconds',
+      warehouse: 'snowflake',
+    },
     usageCount: 0,
   },
 ]

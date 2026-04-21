@@ -1,4 +1,5 @@
 import React, { FC, useMemo, useState } from 'react'
+import AccountStore from 'common/stores/account-store'
 import Banner from 'components/Banner/Banner'
 import Button from 'components/base/forms/Button'
 import EmptyState from 'components/EmptyState'
@@ -18,6 +19,10 @@ const MetricsLibraryPage: FC = () => {
   const [metrics, setMetrics] = useState<Metric[]>(MOCK_METRICS)
   const [search, setSearch] = useState('')
   const [mode, setMode] = useState<Mode>({ kind: 'list' })
+  const organisationId = AccountStore.getOrganisation()?.id
+  const warehouseUrl = organisationId
+    ? `/organisation/${organisationId}/warehouse`
+    : undefined
 
   const filtered = useMemo(() => {
     if (!search) return metrics
@@ -108,7 +113,28 @@ const MetricsLibraryPage: FC = () => {
         {filtered.map((metric) => (
           <div key={metric.id} className='metrics-library-page__row'>
             <span className='metrics-library-page__td metrics-library-page__td--name'>
-              {metric.name}
+              <span className='metrics-library-page__metric-name'>
+                {metric.name}
+              </span>
+              {metric.source ? (
+                <span className='metrics-library-page__source'>
+                  <Icon name='layers' width={12} />
+                  <code className='metrics-library-page__source-code'>
+                    {metric.source.table}
+                    {metric.source.eventName
+                      ? ` · ${metric.source.eventName}`
+                      : ''}
+                    {metric.source.valueColumn
+                      ? ` · ${metric.source.valueColumn}`
+                      : ''}
+                    {metric.source.filter ? ` · ${metric.source.filter}` : ''}
+                  </code>
+                </span>
+              ) : (
+                <span className='metrics-library-page__source metrics-library-page__source--missing'>
+                  Source not configured
+                </span>
+              )}
             </span>
             <span className='metrics-library-page__td metrics-library-page__td--desc'>
               {metric.description}
@@ -158,6 +184,22 @@ const MetricsLibraryPage: FC = () => {
             regressions.
           </p>
         </div>
+      </div>
+
+      <div className='metrics-library-page__source-banner'>
+        <Icon name='layers' width={16} />
+        <span>
+          Metrics are computed from your <strong>Snowflake</strong> warehouse (
+          <code>FLAGSMITH_PROD.PUBLIC</code>).{' '}
+        </span>
+        {warehouseUrl && (
+          <a
+            className='metrics-library-page__source-banner-link'
+            href={warehouseUrl}
+          >
+            Manage connection &rarr;
+          </a>
+        )}
       </div>
 
       {mode.kind === 'delete' && (
